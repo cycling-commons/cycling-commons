@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Vote</title>
+<meta name="description" content="Rank this region's best riding. The community decides the seasonal best-of, kept fresh by the riders who ride it." />
+<link rel="canonical" href="https://cyclingcommons.org/vote.html" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — Vote" />
+<meta property="og:description" content="Rank this region's best riding. The community decides the seasonal best-of, kept fresh by the riders who ride it." />
+<meta property="og:url" content="https://cyclingcommons.org/vote.html" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/vote.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Vote" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Vote" />
+<meta name="twitter:description" content="Rank this region's best riding. The community decides the seasonal best-of, kept fresh by the riders who ride it." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/vote.jpg" />
+
+<link rel="stylesheet" href="fonts.css" />
+<link rel="stylesheet" href="atlas.css" />
+<style>
+  .vhead{background:var(--ink);color:var(--paper);padding:3rem 0 2.4rem}
+  .vhead .co{color:var(--glacier);margin-bottom:1rem}
+  .round{display:inline-flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--trail);margin-top:.8rem}
+  .vtabs{display:flex;gap:1.4rem;margin:1.4rem 0 0}
+  .vtabs button{background:none;border:none;font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.55);padding:.4rem 0;cursor:pointer;border-bottom:2px solid transparent}
+  .vtabs button.on{color:var(--paper);border-color:var(--trail)}
+  .vgrid{display:grid;grid-template-columns:1fr 320px;gap:2rem;padding:2.2rem 0}
+  @media(max-width:820px){.vgrid{grid-template-columns:1fr}}
+  .cand{display:flex;align-items:center;gap:1rem;padding:1rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+  .cand .nm{flex:1}.cand .nm h4{font-family:var(--serif);font-weight:600;font-size:1.15rem}.cand .nm .m{font-family:var(--mono);font-size:.62rem;color:#595c4d}
+  .cand .scwrap{width:120px}.cand .sc{font-family:var(--mono);font-size:.6rem;color:#595c4d;margin-bottom:.25rem}
+  .add{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .8rem;border:1.5px solid var(--ink);border-radius:5px;background:none;cursor:pointer;white-space:nowrap}
+  .add.in{background:var(--trail);border-color:var(--trail)}
+  .ballot{background:var(--paper-deep);border-radius:10px;padding:1.4rem;align-self:start;position:sticky;top:5rem}
+  .ballot h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:1rem}
+  .bitem{display:flex;align-items:center;gap:.7rem;padding:.55rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-size:.92rem}
+  .bitem .r{font-family:var(--mono);color:var(--trail);font-size:.8rem;width:1.3rem}
+  .bitem .x{margin-left:auto;color:var(--clay);cursor:pointer;font-family:var(--mono);font-size:.7rem}
+  .bempty{color:#595c4d;font-size:.88rem;padding:1rem 0}
+  .vnote{font-size:.78rem;color:#595c4d;margin-top:1rem;line-height:1.5;border-left:2px solid var(--glacier);padding-left:.7rem}
+  .thanks{display:none;text-align:center;padding:4rem 1rem}.thanks.on{display:block}
+  .thanks h2{font-family:var(--serif);font-size:1.8rem;margin:.5rem 0}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+<nav class="topnav"><div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <div class="links"><a href="regions.html">Regions</a><a href="coverage.html">Coverage</a><a href="vote.html" class="on">Vote</a><a href="developers.html">Developers</a><a href="about.html">About</a><a href="licenses.html">Licence</a><a class="acct fill" href="map.html">Explore the map</a><a class="acct" href="login.html">Account</a></div></nav>
+
+<div class="vhead"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">Wallonia, Belgium</div>
+  <h1 class="disp">Rank this region's best.</h1>
+  <div class="round">◷ Summer 2026 round · closes in 47 days · re-ranked, never reset</div>
+  <div class="vtabs"><button class="on" onclick="cat(this,'climbs')">Climbs</button><button onclick="cat(this,'stays')">Stays</button><button onclick="cat(this,'views')">Views</button><button onclick="cat(this,'heritage')">Heritage</button><button onclick="cat(this,'routes')">Routes</button></div>
+</div></div>
+
+<div class="wrap" id="main">
+  <div class="vgrid">
+    <div id="cands"></div>
+    <div class="ballot">
+      <h3>Your ballot · <span id="cat-l">Climbs</span></h3>
+      <div id="ballot"></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:1.2rem" onclick="submitVote()">Submit ballot</button>
+      <div class="vnote">Your vote is private. The Commons records <b>that</b> you voted and <b>when</b> — never a public record of <b>what</b> you ranked.</div>
+    </div>
+  </div>
+</div>
+
+<div class="thanks" id="thanks"><div style="font-size:2.4rem">◬</div><h2>Ballot submitted.</h2><p>Your ranking feeds Wallonia's best-of for this round. Thanks for keeping the atlas sharp.</p><a class="btn btn-g" href="region.html">See the region →</a></div>
+
+<footer class="foot"><div class="wrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+
+<script>
+  const DATA={
+    climbs:[['Côte de la Redoute','△168 m · 8.4%',88],['Mur de Huy','△121 m · 9.3%',81],['Côte de Stockeu','△90 m · 9.0%',74],['Côte de la Roche-aux-Faucons','△135 m · 9.0%',60],['Côte de la Vecquée','△ 3.1 km · 6.4%',40]],
+    stays:[['Cyclist gîte · Amblève','secure storage · used',71],['B&B · Stavelot','bike wash · drying',58],['Hostel · Malmedy','group-friendly',44]],
+    views:[['Signal de Botrange','△694 m · highest point',77],['Barrage de la Gileppe','dam panorama',61],['La Gleize valley','golden-hour',48]],
+    heritage:[['Stavelot Abbey','Benedictine · museums',69],['Eddy Merckx stele · Stockeu','LBL heritage',55],['Coo waterfall','cascade · café',47]],
+    routes:[['Spa · Sankt Vith','126 km · classics',83],['Spa · Coo · Francorchamps','51 km · circuit',66],['Spa · Côte des Hézalles','51 km · mixed',45]]
+  };
+  let curCat='climbs'; const ballot={climbs:[],stays:[],views:[],heritage:[],routes:[]};
+  function renderCands(){
+    const el=document.getElementById('cands');el.innerHTML='';
+    DATA[curCat].forEach((c,i)=>{
+      const inB=ballot[curCat].includes(c[0]);
+      const d=document.createElement('div');d.className='cand';
+      d.innerHTML=`<div class="nm"><h4>${c[0]}</h4><div class="m">${c[1]}</div></div>
+        <div class="scwrap"><div class="sc">${c[2]}% this round</div><div class="bar"><span class="t" style="width:${c[2]}%"></span></div></div>
+        <button class="add ${inB?'in':''}" onclick="toggle('${c[0]}')">${inB?'✓ on ballot':'▲ add'}</button>`;
+      el.appendChild(d);
+    });
+  }
+  function renderBallot(){
+    document.getElementById('cat-l').textContent=curCat[0].toUpperCase()+curCat.slice(1);
+    const el=document.getElementById('ballot');const b=ballot[curCat];
+    el.innerHTML = b.length? '' : '<div class="bempty">Add up to 10 picks, in the order you rate them.</div>';
+    b.forEach((nm,i)=>{const d=document.createElement('div');d.className='bitem';
+      d.innerHTML=`<span class="r">${i+1}</span><span>${nm}</span><span class="x" onclick="toggle('${nm}')">remove</span>`;el.appendChild(d);});
+  }
+  function toggle(nm){const b=ballot[curCat];const i=b.indexOf(nm);if(i>=0)b.splice(i,1);else if(b.length<10)b.push(nm);renderCands();renderBallot();}
+  function cat(btn,c){document.querySelectorAll('.vtabs button').forEach(x=>x.classList.remove('on'));btn.classList.add('on');curCat=c;renderCands();renderBallot();}
+  function submitVote(){document.getElementById('main').style.display='none';document.getElementById('thanks').classList.add('on');window.scrollTo(0,0);}
+  renderCands();renderBallot();
+</script>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Regions</title>
+<meta name="description" content="The Cycling Commons is organised into regions of roughly Wallonia/Flanders size — administrative divisions merged until comparable — so a region is always a meaningful, rideable area. Browse them by continent." />
+<link rel="canonical" href="https://cyclingcommons.org/regions.html" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:title" content="Cycling Commons — Regions" />
+<meta property="og:description" content="Regions of roughly Wallonia/Flanders size, browsable by continent." />
+<meta property="og:url" content="https://cyclingcommons.org/regions.html" />
+
+<link rel="stylesheet" href="fonts.css" />
+<style>
+  :root{--ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;--trail:#FF5A1F;--clay:#B5532E;--glacier:#8FB6A8;--ochre:#C8923A;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif;--sans:"Spline Sans",system-ui,sans-serif;--mono:"Spline Sans Mono",monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);min-height:100svh}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
+
+  .top{display:flex;align-items:center;justify-content:space-between;padding:0.9rem clamp(1.25rem,4vw,3rem) 2.1rem;background:radial-gradient(70% 200% at 90% -50%,rgba(250,190,80,.20),transparent 60%),linear-gradient(105deg,#15301f 0%,#27513a 100%);color:var(--paper);line-height:1.6;border-bottom:1px solid var(--spruce-lift)}
+  .brandblock{position:relative}.brandsub{position:absolute;top:100%;left:0;margin-top:.3rem;line-height:1.6}
+  .links{display:flex;gap:2rem;align-items:center}
+  .links a{font-family:var(--sans,"Spline Sans",sans-serif);font-size:.95rem;color:var(--paper);opacity:.85;transition:opacity .2s}
+  .links a:hover{opacity:1}
+  .acct{border:1.5px solid rgba(239,230,212,.4);padding:.55rem 1.1rem;border-radius:4px;color:var(--paper)!important}
+  .acct:hover{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
+  .acct.fill{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
+  .acct.fill:hover{background:#ff703d;border-color:#ff703d}
+  @media(max-width:780px){.top .links a:not(.acct){display:none}}
+
+  .hero{background:var(--ink);color:var(--paper);padding:3rem clamp(1.25rem,4vw,3rem) 3rem}
+  .hero .wrap{max-width:1000px;margin:0 auto;padding:0}
+.kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+  .kicker::before{content:"";width:13px;height:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23B5532E' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat;transform:translateY(-1px)}
+  .hero .ey{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--glacier);margin-bottom:1.3rem}
+  .hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.03;letter-spacing:-.025em;margin-bottom:.9rem}
+  .hero p{max-width:62ch;color:rgba(239,230,212,.85);line-height:1.6;font-size:1.15rem}
+  .hero p b{color:var(--paper)}
+
+  .wrap{max-width:1000px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,3rem) 3rem}
+
+  .legend{display:flex;gap:1.4rem;flex-wrap:wrap;margin-bottom:1.6rem;font-size:.82rem;color:#4a4d40}
+  .legend b{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase}
+
+  h2.cont{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:2.2rem 0 1rem;padding-bottom:.55rem;
+    border-bottom:1px solid rgba(20,22,14,.16);display:flex;align-items:baseline;gap:.7rem}
+  h2.cont span{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#7a7d6c}
+
+  .country{margin:0 0 1.2rem}
+  .country .ch{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.55rem}
+  .country .ch h3{font-family:var(--sans);font-weight:700;font-size:1.05rem}
+  .country .ch .cc{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
+  .country .ch .n{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
+
+  .regions{display:flex;flex-wrap:wrap;gap:.5rem}
+  .reg{display:inline-flex;align-items:center;gap:.5rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);
+    border-radius:8px;padding:.45rem .7rem;font-size:.9rem}
+  .reg .km{font-family:var(--mono);font-size:.56rem;letter-spacing:.04em;color:#7a7d6c}
+  a.reg.live{background:var(--spruce-lift);color:var(--paper);border-color:var(--spruce-lift)}
+  a.reg.live .km{color:rgba(239,230,212,.7)}
+  a.reg.live:hover{background:var(--trail);color:var(--ink)}
+  a.reg.live .tag{font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;
+    background:rgba(239,230,212,.22);padding:.1rem .3rem;border-radius:3px}
+
+  .empty{color:#7a7d6c;font-size:.9rem;padding:2rem 0}
+
+  .foot{background:var(--ink);color:rgba(239,230,212,.6);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0 4rem;margin-top:2rem}
+  .foot .fwrap{max-width:1120px;margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .foot .mono{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(239,230,212,.5)}
+  .foot a{color:rgba(239,230,212,.8)}.foot a:hover{color:var(--trail)}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+<div class="top">
+  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <div class="links"><a href="regions.html">Regions</a><a href="coverage.html">Coverage</a><a href="vote.html">Vote</a><a href="developers.html">Developers</a><a href="about.html">About</a><a href="licenses.html">Licence</a><a class="acct fill" href="map.html">Explore the map</a><a class="acct" href="login.html">Account</a></div>
+</div>
+
+<div class="hero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">The atlas, by region</div>
+  <h1>Regions</h1>
+  <p>A <b>region</b> is a riding area of roughly <b>Wallonia / Flanders size</b> (~16,900 km²). Where a country's
+  administrative divisions are smaller, they're <b>merged with their neighbours</b> until each region is comparable —
+  so a region is always a meaningful area to ride, vote on, and curate. This is an <b>indicative snapshot</b>;
+  <b>Wallonia</b> is the one live atlas today.</p>
+</div></div>
+
+<div class="wrap">
+  <div class="legend">
+    <span><b>● Live</b> — a built-out region atlas</span>
+    <span><b>○ Indicative</b> — name + merged size, atlas to come</span>
+  </div>
+  <div id="regions-root"><div class="empty">Loading regions…</div></div>
+</div>
+
+<footer class="foot"><div class="fwrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+
+<script src="regions-data.js"></script>
+<script>
+  /* Render Continent → country → regions from the baked CC_REGIONS snapshot.
+     Regions are admin divisions merged to ~Wallonia size (see the spec).
+     Wallonia links to its live atlas; the rest are indicative. */
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const root = document.getElementById('regions-root');
+  const DATA = window.CC_REGIONS || [];
+
+  if (!DATA.length) {
+    root.innerHTML = '<div class="empty">No regions loaded.</div>';
+  } else {
+    root.innerHTML = DATA.map(cont => {
+      const countries = cont.countries.map(co => {
+        const regs = co.regions.map(r => {
+          const km = r.km2 ? `<span class="km">${Number(r.km2).toLocaleString()} km²</span>` : '';
+          if (r.live) {
+            return `<a class="reg live" href="region.html"><span>${esc(r.name)}</span><span class="tag">Live</span>${km}</a>`;
+          }
+          return `<span class="reg"><span>${esc(r.name)}</span>${km}</span>`;
+        }).join('');
+        return `<div class="country">
+            <div class="ch"><h3>${esc(co.name)}</h3><span class="cc">${esc(co.code)}</span><span class="n">${co.regions.length} region${co.regions.length===1?'':'s'}</span></div>
+            <div class="regions">${regs}</div>
+          </div>`;
+      }).join('');
+      const nC = cont.countries.length;
+      return `<h2 class="cont">${esc(cont.continent)}<span>${nC} countr${nC===1?'y':'ies'}</span></h2>${countries}`;
+    }).join('');
+  }
+</script>
+<script src="a11y.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

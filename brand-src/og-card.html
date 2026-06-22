@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>OG card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{--ink:#101E16;--paper:#EFE6D4;--spruce:#1C3A2A;--trail:#FF5A1F;--clay:#C2551F;--glacier:#8FB6A8;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif;--mono:"Spline Sans Mono",monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1200px;height:630px;overflow:hidden}
+  .card{position:relative;width:1200px;height:630px;
+    background:radial-gradient(125% 105% at 78% 10%,#2c5a40 0%,var(--spruce) 42%,#0c1810 92%);
+    color:var(--paper);font-family:var(--serif);display:flex;flex-direction:column;
+    padding:64px 72px}
+  /* grain */
+  .card::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  /* faded decorative mark, bottom-right */
+  .ghost{position:absolute;right:-90px;bottom:-120px;width:560px;height:560px;opacity:.10;color:var(--paper)}
+  /* header */
+  .head{display:flex;align-items:center;gap:16px;z-index:2}
+  .head svg{width:46px;height:60px;color:var(--paper)}
+  .head .wm{font-weight:800;font-size:26px;letter-spacing:-.4px}
+  .head .wm b{color:var(--trail);font-style:italic;font-weight:800}
+  /* body */
+  .body{margin-top:auto;z-index:2}
+  .kick{font-family:var(--mono);font-weight:600;font-size:20px;letter-spacing:.22em;text-transform:uppercase;color:var(--trail);margin-bottom:20px}
+  h1{font-weight:800;font-size:78px;line-height:1.02;letter-spacing:-1.5px;max-width:980px}
+  h1 em{font-style:italic;color:var(--glacier)}
+  /* footer */
+  .foot{margin-top:34px;display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:18px;
+    letter-spacing:.04em;color:rgba(239,230,212,.62);z-index:2}
+  .foot .dot{width:7px;height:7px;border-radius:50%;background:var(--trail);display:inline-block}
+</style>
+</head>
+<body>
+<div class="card">
+  <!-- decorative ghost mark -->
+  <svg class="ghost" viewBox="0 0 100 130" aria-hidden="true"><path d="M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z M76 42 A26 26 0 1 0 24 42 A26 26 0 1 0 76 42 Z" fill="currentColor" fill-rule="evenodd"/></svg>
+
+  <div class="head">
+    <svg viewBox="0 0 100 130" aria-hidden="true"><path d="M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z M76 42 A26 26 0 1 0 24 42 A26 26 0 1 0 76 42 Z" fill="currentColor" fill-rule="evenodd"/><line x1="50" y1="36.5" x2="50" y2="20.5" stroke="#FF5A1F" stroke-width="3.2" stroke-linecap="round"/><line x1="54.76" y1="39.25" x2="68.62" y2="31.25" stroke="#FF5A1F" stroke-width="3.2" stroke-linecap="round"/><line x1="54.76" y1="44.75" x2="68.62" y2="52.75" stroke="#FF5A1F" stroke-width="3.2" stroke-linecap="round"/><line x1="50" y1="47.5" x2="50" y2="63.5" stroke="#FF5A1F" stroke-width="3.2" stroke-linecap="round"/><line x1="45.24" y1="44.75" x2="31.38" y2="52.75" stroke="#FF5A1F" stroke-width="3.2" stroke-linecap="round"/><line x1="45.24" y1="39.25" x2="31.38" y2="31.25" stroke="#FF5A1F" stroke-width="3.2" stroke-linecap="round"/><circle cx="50" cy="42" r="4" fill="currentColor"/></svg>
+    <span class="wm"><b>C</b>ycling <b>C</b>ommons</span>
+  </div>
+
+  <div class="body">
+    <div class="kick" id="kick">THE RIDERS' ATLAS</div>
+    <h1 id="title">Every road. Every trail. One <em>open atlas</em>.</h1>
+  </div>
+
+  <div class="foot"><span class="dot"></span><span>cyclingcommons.org · open cycling data, governed by riders</span></div>
+</div>
+
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.has('kick'))  document.getElementById('kick').textContent = q.get('kick');
+  if (q.has('title')) document.getElementById('title').innerHTML = q.get('title'); // allows <em>
+  // signal readiness once fonts are in
+  document.fonts.ready.then(() => { document.documentElement.setAttribute('data-ready','1'); });
+</script>
+</body>
+</html>

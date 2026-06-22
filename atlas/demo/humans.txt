@@ -1,0 +1,28 @@
+/* TEAM */
+  Maintained by: BikeCoders — https://bikecoders.life
+  Contact: development [at] cyclingcommons.org
+  The Commons is stewarded openly, on a path to an independent foundation.
+  See: https://wiki.cyclingcommons.org/governance/
+
+/* THANKS */
+  OpenStreetMap and its contributors — the ground we build on
+  Every rider who maps a climb, water point, viewpoint, stay or hazard
+  The open-data and open-hospitality communities we link and interoperate with
+
+/* DATA & LICENCE */
+  Data:  Open Database License (ODbL 1.0)
+  Media: Commons Media License (CC BY-SA 4.0)
+  The map belongs to everyone — places, never people: the Commons holds no personal data.
+  Licences: https://cyclingcommons.org/licenses.html
+
+/* SITE */
+  Last update: 2026/06/17
+  Standards: HTML5, CSS3
+  Components: MapLibre GL, PMTiles, OpenFreeMap
+  Wiki: MkDocs Material — https://wiki.cyclingcommons.org
+  Source: https://github.com/cycling-commons/cycling-commons
+
+                  .
+                 /|\
+                / | \      one open atlas
+               /__|__\     for every kind of cycling

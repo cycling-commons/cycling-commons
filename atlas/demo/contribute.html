@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Contribute</title>
+<meta name="description" content="Choose what to contribute to the Cycling Commons — climbs, water, surface, hazards, stays, views and more. One open atlas, built by riders." />
+<link rel="canonical" href="https://cyclingcommons.org/contribute.html" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — Contribute" />
+<meta property="og:description" content="Choose a category and add to the open cycling atlas — climbs, water, surface, hazards, stays, views and more." />
+<meta property="og:url" content="https://cyclingcommons.org/contribute.html" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/index.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Contribute" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Contribute" />
+<meta name="twitter:description" content="Choose a category and add to the open cycling atlas." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/index.jpg" />
+
+<link rel="stylesheet" href="fonts.css" />
+<style>
+  :root{--ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;--trail:#FF5A1F;--clay:#B5532E;--glacier:#8FB6A8;--ochre:#C8923A;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif;--sans:"Spline Sans",system-ui,sans-serif;--mono:"Spline Sans Mono",monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);min-height:100svh}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
+
+  .top{display:flex;align-items:center;justify-content:space-between;padding:1.6rem clamp(1.25rem,4vw,3rem);background:var(--ink);color:var(--paper)}.top .brand b{color:var(--trail);font-style:italic}
+  .top a.back{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.7)}
+  .top a.back:hover{color:var(--trail)}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:2.6rem 2rem}
+  @media(max-width:560px){.wrap{padding:1.8rem 1.25rem}}
+
+  .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  h1{font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1.05}
+  h1 b{color:var(--trail);font-style:italic;font-weight:600}
+  .sub{color:#4a4d40;margin-top:.6rem;max-width:74ch;line-height:1.65}
+
+  .cat-h{font-family:var(--mono);font-size:.92rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-top:2.6rem;display:flex;align-items:baseline;gap:.8rem}
+  .cat-h b{color:var(--clay)}
+  .cat-h span{font-family:var(--sans);font-weight:400;font-size:1rem;letter-spacing:0;text-transform:none;color:#5a5d4d}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1rem}
+  .card{position:relative;display:flex;flex-direction:column;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.3rem;transition:all .22s;overflow:hidden}
+  .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5);border-color:var(--trail)}
+  .card .co{position:absolute;top:.6rem;right:.9rem;font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1;color:var(--ochre);opacity:.45}
+  .card .ic{font-size:1.5rem;margin-bottom:.7rem;display:block}
+  .card h4{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:.3rem}
+  .card p{font-size:.86rem;color:#4a4d40;line-height:1.55;margin-bottom:1rem}
+  .card .go{margin-top:auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+  .card.off{opacity:.55;cursor:default}
+  .card.off:hover{transform:none;box-shadow:none;border-color:rgba(20,22,14,.14)}
+  .card.off .go{color:#7a7d6d}
+
+  .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.84rem;
+    color:#4a4d40;border-radius:0 6px 6px 0;margin-top:2.2rem;line-height:1.55}
+
+  .foot{background:var(--ink);color:rgba(239,230,212,.6);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0;margin-top:2.8rem}
+  .foot .fwrap{max-width:1120px;margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .foot .mono{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(239,230,212,.5)}
+  .foot a{color:rgba(239,230,212,.8)}.foot a:hover{color:var(--trail)}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+<div class="top">
+  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <a class="back" href="map.html">← Back to the map</a>
+</div>
+
+<div class="wrap">
+  <div class="ey">Contribute</div>
+  <h1>Welcome, <b>J. Doe</b> — what would you like to add?</h1>
+  <p class="sub">Pick a category and put it on the map — drop a point, draw a climb, or upload a ride. Every contribution is reviewed by a curator, then joins the open Commons for every rider, everywhere.</p>
+
+  <h3 class="cat-h"><b>Practical</b> <span>utility — aiming for full coverage</span></h3>
+  <div class="grid">
+    <a class="card" href="improve.html?item=road-surface&mode=add"><span class="co">A</span><span class="ic">▰</span><h4>Road surface</h4><p>Map a paved, gravel or pavé segment.</p><span class="go">Add a segment →</span></a>
+    <a class="card" href="improve.html?item=water-fountain&mode=add"><span class="co">C</span><span class="ic">💧</span><h4>Water &amp; food</h4><p>Add a fountain, tap or refill stop.</p><span class="go">Add a point →</span></a>
+    <a class="card" href="improve.html?item=repair-station-malmedy&mode=add"><span class="co">D</span><span class="ic">⚙</span><h4>Bike services</h4><p>Add a shop, pump or repair station.</p><span class="go">Add a point →</span></a>
+    <a class="card" href="improve.html?item=exposed-crosswind-hautes-fagnes&mode=add"><span class="co">F</span><span class="ic">⚠</span><h4>Hazards</h4><p>Report a hazard or road condition.</p><span class="go">Report →</span></a>
+    <a class="card" href="improve.html?item=aywaille-station&mode=add"><span class="co">G</span><span class="ic">🚆</span><h4>Getting there</h4><p>Add a station or bikes-on-train link.</p><span class="go">Add a point →</span></a>
+    <a class="card" href="improve.html?item=shelter-baraque-michel&mode=add"><span class="co">H</span><span class="ic">⛑</span><h4>Shelter &amp; emergency</h4><p>Add a refuge, shelter or emergency point.</p><span class="go">Add a point →</span></a>
+  </div>
+
+  <h3 class="cat-h"><b>Emotional</b> <span>experiential — curated &amp; voted by riders</span></h3>
+  <div class="grid">
+    <a class="card" href="add-climb.html"><span class="co">B</span><span class="ic">⛰</span><h4>Climbs</h4><p>Draw a climb, foot to summit.</p><span class="go">Draw a climb →</span></a>
+    <a class="card" href="improve.html?item=cyclist-friendly-gite-ambleve-valley&mode=add"><span class="co">E</span><span class="ic">⛺</span><h4>Where to sleep</h4><p>Add a bike-friendly stay you've used.</p><span class="go">Add a stay →</span></a>
+    <a class="card" href="improve.html?item=signal-de-botrange&mode=add"><span class="co">I</span><span class="ic">◬</span><h4>Scenic views</h4><p>Add a viewpoint or photo spot.</p><span class="go">Add a point →</span></a>
+    <a class="card" href="improve.html?item=stavelot-abbey&mode=add"><span class="co">J</span><span class="ic">🏛</span><h4>History &amp; culture</h4><p>Add a landmark or heritage site.</p><span class="go">Add a point →</span></a>
+    <a class="card" href="improve.html?item=ride&mode=add"><span class="co">K</span><span class="ic">★</span><h4>Quality rides</h4><p>Upload a GPX/FIT loop and rate it.</p><span class="go">Upload a ride →</span></a>
+  </div>
+
+  <h3 class="cat-h"><b>Derived</b> <span>built automatically — nothing to add</span></h3>
+  <div class="grid">
+    <div class="card off"><span class="co">L</span><span class="ic">◴</span><h4>Ride heatmap</h4><p>Built automatically from contributed rides (anonymised).</p><span class="go">Add a ride in K ↑</span></div>
+  </div>
+
+  <div class="notice">
+    <b>Signed in as J. Doe</b> (demo account). Contributions are attributed only if you opt in; data joins
+    the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>. Provenance is kept; identity is not.
+  </div>
+</div>
+
+<footer class="foot"><div class="fwrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

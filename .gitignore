@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+
+# Docker dev stack — local env override + downloaded heavy data (DEM, Valhalla tiles)
+developers/docker/.env
+developers/docker/data/
+
+# PHP / Symfony API
+api/vendor/
+api/var/
+
+# Python pipeline
+__pycache__/
+*.pyc
+.venv/
+
+# Build output
+dist/
+build/
+.astro/
+.docusaurus/
+.cache/
+
+# MkDocs wiki — local build venv + generated output
+.venv-wiki/
+wiki-dist/
+
+# Local env (never commit secrets)
+.env
+.env.local
+*.local
+
+# Per-deploy runtime config (Mapillary token etc.) — added manually on the server, never committed
+atlas/demo/config.js
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Claude session buffer — never commit
+.remember/
+
+# Local editor todo scratch
+.todo/
+
+# Local browser-test artifacts
+.playwright-mcp/
+/*.png
+atlas/demo/media/*.gpx
+
+# Maintainer-only data-prep — couples to a private upstream DB, not shareable.
+# The generated output (atlas/demo/regions-data.js) is committed; the generator is not.
+tools/regions/
+
+# Internal planning notes — kept local, not part of the public repo. Only docs/specs/ ships.
+docs/*.md
+docs/plans/
+docs/superpowers/

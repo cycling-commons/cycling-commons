@@ -1,0 +1,67 @@
+/* SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 */
+/* Cycling Commons — shared "Riders' Atlas" stylesheet */
+:root{
+  --ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;
+  --trail:#FF5A1F;--clay:#B5532E;--glacier:#8FB6A8;--ochre:#C8923A;
+  --serif:"Bricolage Grotesque",system-ui,sans-serif;--sans:"Spline Sans",system-ui,sans-serif;--mono:"Spline Sans Mono",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.04;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* nav */
+.topnav{position:sticky;top:0;z-index:500;background:radial-gradient(70% 200% at 90% -50%,rgba(250,190,80,.20),transparent 60%),linear-gradient(105deg,#15301f 0%,#27513a 100%);color:var(--paper);line-height:1.6;display:flex;align-items:center;justify-content:space-between;padding:0.9rem clamp(1.25rem,4vw,3rem) 2.1rem;border-bottom:1px solid var(--spruce-lift)}
+.topnav .brandblock{position:relative}
+.topnav .brandsub{position:absolute;top:100%;left:0;margin-top:.3rem;line-height:1.6}
+.topnav .brand{font-family:var(--serif);font-weight:600;font-size:1.6rem;letter-spacing:-.02em}.topnav .brand b{color:var(--trail);font-style:italic}
+.topnav .links{display:flex;gap:2rem;align-items:center}
+.topnav .links a{font-family:var(--sans,"Spline Sans",sans-serif);font-size:.95rem;color:var(--paper);opacity:.85;transition:opacity .2s}
+.topnav .links a:hover{opacity:1}.topnav .links a.on{color:var(--trail);opacity:1}
+.topnav .acct{border:1.5px solid rgba(239,230,212,.4);padding:.55rem 1.1rem;border-radius:4px;color:var(--paper)!important;opacity:1}
+.topnav .acct:hover{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
+.topnav .acct.fill{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
+.topnav .acct.fill:hover{background:#ff703d;border-color:#ff703d}
+@media(max-width:780px){.topnav .links a:not(.acct){display:none}}
+
+/* type */
+.kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.kicker::before{content:"";width:13px;height:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23B5532E' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat;transform:translateY(-1px)}
+h1.disp{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.03;letter-spacing:-.025em}
+h2.disp{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.8rem);line-height:1.07;letter-spacing:-.02em}
+.lead{font-size:1.15rem;max-width:62ch;color:#3a3d30}
+.co{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#595c4d;text-transform:uppercase}
+/* inline text links (in prose) — visible by default */
+.lead a,.tldr a,.note a,.disc a,p a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;font-weight:500}
+.lead a:hover,.tldr a:hover,.note a:hover,.disc a:hover,p a:hover{color:var(--trail)}
+
+/* buttons + chips */
+.btn{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--sans);font-weight:700;font-size:.95rem;padding:.8rem 1.4rem;border-radius:5px;border:1.5px solid transparent;cursor:pointer;transition:all .2s}
+.btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
+.btn-g{border-color:rgba(20,22,14,.3);color:var(--ink)}.btn-g:hover{background:var(--ink);color:var(--paper)}
+.chip{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none}
+.chip:hover{border-color:var(--ink)}.chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+
+/* cards + bars */
+.grid{display:grid;gap:1rem}
+.card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.4rem;transition:all .22s}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
+.tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.2rem .45rem;border:1px solid rgba(20,22,14,.2);border-radius:3px;color:#4a4d40}
+.pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.22rem .5rem;border-radius:30px}
+.bar{height:7px;background:rgba(20,22,14,.12);border-radius:4px;overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--spruce);border-radius:4px}
+.bar>span.t{background:var(--trail)}.bar>span.o{background:var(--ochre)}
+.panel{background:var(--spruce);color:var(--paper);border-radius:10px;padding:clamp(1.4rem,3vw,2.2rem)}
+
+/* sections + footer */
+section.pad{padding:clamp(3rem,7vw,6rem) 0}
+/* a dark hero already separates the intro — tighten the first section under it */
+.ahero+section.pad,.dhero+section.pad,.lhero+section.pad,.chero+section.pad,.phero+section.pad,.rhero+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
+.foot{background:var(--ink);color:rgba(239,230,212,.6);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0 4rem}
+.foot .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.foot .mono{font-size:.64rem;color:rgba(239,230,212,.5)}
+.foot a:hover{color:var(--trail)}

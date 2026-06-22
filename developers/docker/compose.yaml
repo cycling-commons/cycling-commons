@@ -1,0 +1,132 @@
+name: cycling-commons-dev
+
+# Full-stack dev environment for the Cycling Commons.
+#   cp .env.example .env  &&  docker compose up
+# See developers/docker/README.md for the URL table and the opt-in profiles.
+
+services:
+  # ---- the spine: PostgreSQL + PostGIS -------------------------------------
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cyclingcommons}
+      POSTGRES_USER: ${POSTGRES_USER:-cc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cc}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - cc_pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cc} -d ${POSTGRES_DB:-cyclingcommons}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # ---- serving API: Symfony on PHP-FPM, fronted by nginx (mirrors prod) ----
+  api:
+    build: ../../api
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+      APP_SECRET: ${APP_SECRET:-dev-not-secret-change-me}
+      # cache/logs to a container-writable path so the bind-mounted source has no perms issues
+      APP_CACHE_DIR: /tmp/cc-cache
+      APP_LOG_DIR: /tmp/cc-log
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=16&charset=utf8"
+    volumes:
+      - ../../api:/app
+      - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api_web:
+    image: nginx:alpine
+    ports:
+      - "${API_PORT:-8001}:80"
+    volumes:
+      - ../../api:/app:ro
+      - ./nginx/api.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    healthcheck:
+      # 127.0.0.1 (not localhost): alpine resolves localhost to ::1 first, but
+      # nginx only listens on IPv4 :80 — so localhost would falsely report unhealthy.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---- Python pipeline: geospatial/raster/routing (FastAPI scaffold) -------
+  pipeline:
+    build: ../../pipeline
+    environment:
+      DATABASE_DSN: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}"
+      DEM_DIR: /data/dem
+    ports:
+      - "${PIPELINE_PORT:-8002}:8000"
+    volumes:
+      - ../../pipeline:/app
+      - ${DEM_DIR:-./data/dem}:/data/dem:ro   # downloaded DEM (see README)
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health').status==200 else sys.exit(1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---- static frontend (the Atlas map demo in atlas/demo/) ------------------
+  atlas:
+    image: nginx:alpine
+    ports:
+      - "${ATLAS_PORT:-8099}:80"
+    volumes:
+      - ../../atlas/demo:/usr/share/nginx/html:ro
+
+  # ---- reference docs (MkDocs Material, live reload) -----------------------
+  wiki:
+    build:
+      context: ../../
+      dockerfile: developers/docker/wiki/Dockerfile
+    ports:
+      - "${WIKI_PORT:-8000}:8000"
+    volumes:
+      - ../../mkdocs.yml:/docs/mkdocs.yml:ro
+      - ../../wiki:/docs/wiki:ro
+
+  # ---- opt-in: routing engine (consumes a PREBUILT tile set you download) --
+  valhalla:
+    profiles: ["routing"]
+    image: ghcr.io/valhalla/valhalla:latest
+    environment:
+      use_tiles_ignore_pbf: "True"
+      force_rebuild: "False"
+      build_elevation: "False"
+      build_admins: "False"
+      build_time_zones: "False"
+    ports:
+      - "${VALHALLA_PORT:-8003}:8002"
+    volumes:
+      - ${VALHALLA_TILES:-./data/valhalla}:/custom_files   # drop the downloaded tiles here
+
+  # ---- opt-in: S3-compatible object storage for PMTiles --------------------
+  minio:
+    profiles: ["storage"]
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-ccadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-ccadminsecret}
+    ports:
+      - "${MINIO_PORT:-9100}:9000"
+      - "${MINIO_CONSOLE_PORT:-9101}:9001"
+    volumes:
+      - cc_minio:/data
+
+volumes:
+  cc_pgdata:
+  cc_api_vendor:
+  cc_minio:

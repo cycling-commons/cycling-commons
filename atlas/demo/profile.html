@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Contributor profile</title>
+<meta name="description" content="A contributor's public profile on the Cycling Commons — the routes, places and conditions they've shared with the open atlas. Profiles are opt-in." />
+<link rel="canonical" href="https://cyclingcommons.org/profile.html" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="profile" />
+<meta property="og:title" content="Cycling Commons — Contributor profile" />
+<meta property="og:description" content="A contributor's public profile on the Cycling Commons — the routes, places and conditions they've shared with the open atlas. Profiles are opt-in." />
+<meta property="og:url" content="https://cyclingcommons.org/profile.html" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/index.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Contributor profile" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Contributor profile" />
+<meta name="twitter:description" content="A contributor's public profile on the Cycling Commons." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/index.jpg" />
+
+<link rel="stylesheet" href="fonts.css" />
+<style>
+  :root{--ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;--trail:#FF5A1F;--clay:#B5532E;--glacier:#8FB6A8;--ochre:#C8923A;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif;--sans:"Spline Sans",system-ui,sans-serif;--mono:"Spline Sans Mono",monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);min-height:100svh}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
+
+  .top{display:flex;align-items:center;justify-content:space-between;padding:1.6rem clamp(1.25rem,4vw,3rem);background:var(--ink);color:var(--paper)}.top .brand b{color:var(--trail);font-style:italic}
+  .top a.back{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.7)}
+  .top a.back:hover{color:var(--trail)}
+
+  .wrap{max-width:880px;margin:0 auto;padding:2.4rem 2rem}
+  @media(max-width:560px){.wrap{padding:1.6rem 1.25rem}}
+
+  /* header */
+  .head{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap}
+  .ava{width:84px;height:84px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-weight:600;font-size:2rem;color:var(--paper);background:var(--spruce-lift);
+    border:2px solid rgba(20,22,14,.15)}
+  .who h1{font-family:var(--serif);font-weight:600;font-size:1.9rem;line-height:1.05}
+  .who .sub{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin-top:.35rem}
+  .badge{display:inline-flex;align-items:center;gap:.4rem;margin-top:.7rem;font-family:var(--mono);font-size:.6rem;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--spruce-lift);background:rgba(44,84,64,.1);
+    border:1px solid rgba(44,84,64,.3);border-radius:99px;padding:.3rem .6rem}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:#3e7d4f;display:inline-block}
+  /* edit-profile button (sits at the right of the header) */
+  .edit-profile{margin-left:auto;align-self:flex-start;font-family:var(--sans);font-weight:700;font-size:.92rem;
+    padding:.6rem 1.15rem;border-radius:6px;background:var(--ink);color:var(--paper);border:1.5px solid var(--ink);
+    display:inline-flex;align-items:center;gap:.45rem;transition:background .18s}
+  .edit-profile:hover{background:var(--spruce-lift);border-color:var(--spruce-lift)}
+  .bio{margin-top:.8rem;font-size:.92rem;color:#4a4d40;line-height:1.55;max-width:56ch}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin:2rem 0}
+  @media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--paper-deep);border-radius:10px;padding:1rem 1.1rem}
+  .stat b{display:block;font-family:var(--serif);font-weight:600;font-size:1.7rem;line-height:1}
+  .stat span{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+
+  /* sections */
+  h2.sec{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);
+    margin:2.2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid rgba(20,22,14,.14)}
+  .contribs{display:grid;gap:.7rem}
+  .card{display:flex;gap:.9rem;align-items:flex-start;background:var(--paper-deep);border-radius:10px;padding:1rem 1.1rem;
+    border:1px solid rgba(20,22,14,.08);transition:border-color .18s}
+  .card:hover{border-color:var(--trail)}
+  .card .ic{width:34px;height:34px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:1rem;background:var(--ink);color:var(--paper)}
+  .card .bd{flex:1;min-width:0}
+  .card .t{display:block;font-weight:700;font-size:1rem}
+  .card .m{display:block;font-size:.85rem;color:#4a4d40;margin-top:.15rem}
+  .card .meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+  .card .tag{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d}
+  /* category chip + review-status pill */
+  .chip{font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.18rem .42rem;border-radius:4px;background:var(--glacier);color:var(--ink)}
+  .chip.climb{background:var(--trail)} .chip.hazard{background:var(--ochre)} .chip.history{background:var(--clay);color:var(--paper)}
+  .pill{font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.18rem .5rem;border-radius:99px;display:inline-flex;align-items:center;gap:.3rem;border:1px solid transparent}
+  .pill.approved{color:var(--paper);background:var(--spruce-lift);border-color:var(--spruce-lift)}
+  .pill.pending{color:#5a4410;background:rgba(200,146,58,.22);border-color:rgba(200,146,58,.55)}
+  /* per-contribution actions */
+  .card .acts{display:flex;flex-direction:column;gap:.5rem;align-self:center;align-items:flex-end}
+  .card .acts a{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase}
+  .card .acts .view{color:#595c4d}.card .acts .view:hover{color:var(--ink)}
+  .card .acts .edit{color:var(--clay)}.card .acts .edit:hover{color:var(--trail)}
+
+  .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.84rem;
+    color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1.4rem;line-height:1.55}
+
+  .foot{background:var(--ink);color:rgba(239,230,212,.6);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0;margin-top:2.6rem}
+  .foot .fwrap{max-width:1120px;margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .foot .mono{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(239,230,212,.5)}
+  .foot a{color:rgba(239,230,212,.8)}.foot a:hover{color:var(--trail)}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+<div class="top">
+  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <a class="back" href="map.html">← Back to the map</a>
+</div>
+
+<div class="wrap">
+  <div class="head">
+    <div class="ava" id="p-ava">HV</div>
+    <div class="who">
+      <h1 id="p-name">Hanne V.</h1>
+      <div class="sub" id="p-sub">Contributing since 2024 · Wallonia, BE</div>
+      <span class="badge"><span class="dot"></span> Opt-in public contributor</span>
+      <p class="bio" id="p-bio"></p>
+    </div>
+    <a class="edit-profile" id="p-edit" href="#">✎ Edit profile</a>
+  </div>
+
+  <div class="stats" id="p-stats"></div>
+
+  <h2 class="sec">Contributions</h2>
+  <div class="contribs" id="p-contribs"></div>
+
+  <div class="notice">
+    <b>Profiles are opt-in.</b> Only contributions a rider chose to share publicly appear here — anonymous edits
+    are never attributed. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>;
+    provenance is kept so curators can confirm facts, but identity is shown only with consent.
+  </div>
+</div>
+
+<footer class="foot"><div class="fwrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+
+<script src="profiles-data.js"></script>
+<script>
+  /* Render a contributor profile from the shared CC_PROFILES fixture.
+     The "Edit profile" button and each contribution's Edit link expose the
+     full edit flow (settings.html / improve.html) — see
+     docs/specs/2026-06-20-editable-profile-demo-design.md */
+  const u = new URLSearchParams(location.search).get('u');
+  const slug = window.CC_PROFILES[u] ? u : 'hanne-v';
+  const P = window.CC_PROFILES[slug];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  document.getElementById('p-ava').textContent = P.initials;
+  document.getElementById('p-name').textContent = P.name;
+  document.getElementById('p-sub').textContent = `Contributing since ${P.since} · ${P.region}`;
+  document.getElementById('p-bio').textContent = P.bio || '';
+  document.getElementById('p-edit').href = 'settings.html?u=' + encodeURIComponent(slug);
+  document.title = 'Cycling Commons — ' + P.name;
+
+  document.getElementById('p-stats').innerHTML =
+    P.stats.map(s=>`<div class="stat"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('');
+
+  // Each contribution shows a category chip + review-status pill, and offers
+  // View (→ the map item) and Edit (→ the existing improve.html item editor).
+  document.getElementById('p-contribs').innerHTML = P.contribs.map(c => {
+    const cls = String(c.type||'').toLowerCase();
+    const editHref = 'improve.html?item=' + encodeURIComponent(c.item || '');
+    const viewHref = 'map.html?feature=' + encodeURIComponent(c.t);
+    return `<div class="card"><span class="ic">${c.ic}</span>
+       <span class="bd"><span class="t">${esc(c.t)}</span><span class="m">${esc(c.m)}</span>
+         <span class="meta">
+           <span class="chip ${esc(cls)}">${esc(c.type||'')}</span>
+           <span class="pill ${c.status==='approved'?'approved':'pending'}">${c.status==='approved'?'Approved':'Pending'}</span>
+           <span class="tag">${esc(c.tag)}</span>
+         </span></span>
+       <span class="acts"><a class="edit" href="${editHref}">Edit ✎</a><a class="view" href="${viewHref}">View ↗</a></span>
+     </div>`;
+  }).join('');
+</script>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

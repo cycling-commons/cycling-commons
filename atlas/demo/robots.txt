@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Authenticated / curator surfaces — not for indexing
+Disallow: /login.html
+Disallow: /moderate.html
+
+Sitemap: https://cyclingcommons.org/sitemap.xml

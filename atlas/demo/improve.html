@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Improve this place</title>
+<meta name="description" content="Improve a place in the Commons — fix details, flag conditions, and keep the open cycling atlas accurate for every rider." />
+<link rel="canonical" href="https://cyclingcommons.org/improve.html" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — Improve this place" />
+<meta property="og:description" content="Improve a place in the Commons — fix details, flag conditions, and keep the open cycling atlas accurate for every rider." />
+<meta property="og:url" content="https://cyclingcommons.org/improve.html" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/improve.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Improve this place" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Improve this place" />
+<meta name="twitter:description" content="Improve a place in the Commons — fix details, flag conditions, and keep the open cycling atlas accurate for every rider." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/improve.jpg" />
+
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="fonts.css" />
+<style>
+  :root{--ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;--trail:#FF5A1F;--clay:#B5532E;--glacier:#8FB6A8;--ochre:#C8923A;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif;--sans:"Spline Sans",system-ui,sans-serif;--mono:"Spline Sans Mono",monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);min-height:100svh}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
+
+  .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.6rem clamp(1.25rem,4vw,3rem);background:var(--ink);color:var(--paper)}
+  .top a.back{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.7)}
+  .top a.back:hover{color:var(--trail)}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:2.2rem 2rem;display:grid;grid-template-columns:340px 1fr;gap:2.4rem}
+  @media(max-width:820px){.wrap{grid-template-columns:1fr}}
+
+  /* context */
+  .ctx .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem}
+  .ctx h1{font-family:var(--serif);font-weight:600;font-size:1.7rem;line-height:1.1;margin-bottom:.4rem}
+  .ctx .co{font-family:var(--mono);font-size:.68rem;color:#595c4d;margin-bottom:.9rem}
+  .tags{display:flex;gap:.35rem;margin-bottom:1rem}
+  .tag{font-family:var(--mono);font-size:.6rem;padding:.2rem .45rem;border:1px solid rgba(20,22,14,.2);border-radius:3px;color:#4a4d40}
+  #loc{height:200px;border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:1rem}
+  .locate{background:rgba(255,90,31,.1);border:1px solid rgba(255,90,31,.35);border-radius:7px;padding:.6rem .8rem;margin-bottom:.7rem;font-size:.82rem;color:#4a4d40;line-height:1.5}
+  .locate b{color:var(--clay)} .locate.set{background:rgba(44,84,64,.1);border-color:rgba(44,84,64,.35)} .locate.set b{color:var(--spruce-lift)}
+  /* upload queue + consent modal */
+  .ulq{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+  .ulq .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
+  .ulq .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ochre)}
+  .linkrow{display:flex;gap:.5rem;margin-top:1rem}
+  .linkrow input{flex:1}
+  .src-note{font-size:.78rem;color:#4a4d40;margin-top:.5rem;line-height:1.5}
+  .src-note.ok{color:var(--spruce-lift)} .src-note.manual{color:var(--clay)}
+  .modal{position:fixed;inset:0;background:rgba(16,30,22,.55);z-index:2000;display:none;align-items:center;justify-content:center;padding:1.2rem}
+  .modal.open{display:flex}
+  .modal .box{background:var(--paper);border-radius:12px;max-width:460px;padding:1.6rem 1.7rem;box-shadow:0 24px 60px -18px rgba(0,0,0,.5)}
+  .modal h3{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin-bottom:.6rem}
+  .modal p{font-size:.9rem;color:#4a4d40;line-height:1.55;margin-bottom:.8rem}
+  .modal .rules{background:var(--paper-deep);border-radius:8px;padding:.8rem 1rem;font-size:.84rem;line-height:1.55;margin-bottom:1rem}
+  .modal label.ok-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;cursor:pointer;margin-bottom:1.1rem}
+  .modal .mrow{display:flex;gap:.7rem;justify-content:flex-end}
+  .modal .mrow button{font-family:var(--sans);font-weight:700;font-size:.92rem;padding:.6rem 1.2rem;border-radius:6px;cursor:pointer;border:1.5px solid transparent}
+  .modal .b-ok{background:var(--trail);color:var(--ink)} .modal .b-ok[disabled]{opacity:.45;cursor:not-allowed}
+  .modal .b-cancel{background:none;border-color:rgba(20,22,14,.25);color:var(--ink)}
+  .modal .thanks-big{text-align:center}
+  .modal .thanks-big .ic{font-size:2.6rem} .modal .thanks-big h3{font-size:1.6rem;margin-top:.4rem}
+  .modal .demo-note{font-size:.8rem;color:#595c4d;margin-top:.4rem}
+  .maplibregl-canvas{filter:grayscale(.38) sepia(.24) saturate(.82) contrast(.95) brightness(1.03)}
+  .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);transform:rotate(-45deg);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
+  .cc-pin span{transform:rotate(45deg);font-size:.8rem}
+
+  /* ---- add-mode wizard ---- */
+  .wizard{max-width:880px;margin:0 auto;padding:2.2rem 2rem 4rem}
+  .stepper{counter-reset:step;list-style:none;display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-bottom:1.8rem;border-bottom:1px solid rgba(20,22,14,.15);padding-bottom:1rem}
+  .stepper li{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#9a9d8c;display:flex;align-items:center;gap:.45rem}
+  .stepper li::before{content:counter(step);counter-increment:step;display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;border-radius:50%;border:1.5px solid rgba(20,22,14,.25);font-size:.62rem;color:#595c4d}
+  .stepper li.done{color:#5a5d4d}.stepper li.done::before{background:var(--spruce);border-color:var(--spruce);color:var(--paper);content:"✓"}
+  .stepper li.on{color:var(--ink)}.stepper li.on::before{border-color:var(--trail);color:var(--ink)}
+  .wizard .pane{display:none}.wizard .pane.on{display:block}
+  .wizard h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin-bottom:.4rem}
+  .wizard .help{font-size:.9rem;color:#4a4d40;margin-bottom:1.1rem;line-height:1.5}
+  .wizard #wmap{height:clamp(360px,68vh,640px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-top:.8rem;background:var(--paper-deep)}
+  .navrow{position:sticky;bottom:0;display:flex;align-items:center;gap:1rem;margin-top:2rem;padding:1rem 0;border-top:1px solid rgba(20,22,14,.12);background:linear-gradient(to top,var(--paper) 70%,rgba(239,230,212,0))}
+  .navrow .spacer{flex:1}
+  .btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
+  .btn-p:disabled{background:var(--paper-deep);color:#9a9d8c;cursor:not-allowed}
+  .btn-g{background:none;border:1.5px solid rgba(20,22,14,.3);color:var(--ink);font-weight:500}.btn-g:hover{background:var(--ink);color:var(--paper)}
+  .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap;margin-top:.6rem}
+  .readout #wzReset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+  .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.4rem}
+  .card .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.38rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  .card .kv span:first-child{color:#595c4d}
+  /* place search */
+  .csearch{position:relative}
+  .csearch input{width:100%;background:#F8F2E4;border:1.5px solid rgba(20,22,14,.22);border-radius:8px;padding:.65rem .85rem;font-family:var(--sans);font-size:1rem;outline:none}
+  .csearch input:focus{border-color:var(--trail);background:#FCF8EE}
+  .csearch-results{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--paper);border:1px solid rgba(20,22,14,.2);border-radius:0 0 8px 8px;box-shadow:0 14px 28px -14px rgba(20,22,14,.45);max-height:250px;overflow-y:auto}
+  .csearch-results .res{padding:.55rem .8rem;cursor:pointer;border-bottom:1px solid rgba(20,22,14,.08)}
+  .csearch-results .res:hover{background:var(--paper-deep)}
+  .csearch-results .res b{font-size:.92rem;font-weight:500}
+  .csearch-results .res small{display:block;color:#595c4d;font-size:.74rem;font-family:var(--mono)}
+  .csearch-results .res.empty{color:#595c4d;cursor:default}
+  @media(max-width:520px){
+    .wizard{padding:1.4rem 1.1rem 3rem}
+    .wizard h1{font-size:1.4rem}
+    .stepper{gap:.3rem .9rem}
+  }
+  .cur{background:var(--paper-deep);border-radius:8px;padding:1rem 1.1rem}
+  .cur h4{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:.6rem}
+  .cur .kv{display:flex;justify-content:space-between;font-size:.88rem;padding:.35rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  .cur .kv span:first-child{color:#595c4d}
+  .fresh{margin-top:.9rem;font-size:.8rem;color:#4a4d40;display:flex;align-items:center;gap:.4rem}
+  .dot{width:8px;height:8px;border-radius:50%;background:#3e7d4f;display:inline-block}
+
+  /* form */
+  .ftabs{display:flex;gap:.4rem;border-bottom:1px solid rgba(20,22,14,.15);margin-bottom:1.8rem;flex-wrap:wrap}
+  .ftabs button{background:none;border:none;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem .2rem;margin-right:1.3rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .ftabs button.on{color:var(--ink);border-color:var(--trail)}
+  .pane{display:none}.pane.on{display:block}
+  .field{margin-bottom:1.3rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input,.field select,.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
+  .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--trail)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+  @media(max-width:520px){.two{grid-template-columns:1fr}}
+  .radios{display:grid;gap:.6rem}
+  .radio{display:flex;gap:.7rem;align-items:flex-start;padding:.8rem 1rem;border:1.5px solid rgba(20,22,14,.2);border-radius:8px;cursor:pointer;transition:all .18s}
+  .radio:hover{border-color:var(--clay)}
+  .radio input{margin-top:.2rem}
+  .radio b{display:block;font-size:.95rem}.radio small{color:#595c4d;font-size:.82rem}
+  .drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:2rem;text-align:center;color:#595c4d;cursor:pointer}
+  .drop:hover{border-color:var(--trail);color:var(--ink)}
+  .drop .ic{font-size:1.6rem;display:block;margin-bottom:.5rem}
+  .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.8rem 1rem;font-size:.82rem;color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1rem;line-height:1.5}
+  .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
+  .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .submit-row{display:flex;align-items:center;gap:1rem;margin-top:2rem;padding-top:1.6rem;border-top:1px solid rgba(20,22,14,.12);flex-wrap:wrap}
+  .btn{background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:1rem;padding:.85rem 1.6rem;border:none;border-radius:5px;cursor:pointer}
+  .btn:hover{background:#ff703d}
+  .prov{font-size:.8rem;color:#595c4d;flex:1;min-width:200px}
+
+  /* thanks */
+  .thanks{display:none;text-align:center;padding:3rem 1rem}
+  .thanks.on{display:block}
+  .thanks .ic{font-size:2.4rem}
+  .thanks h2{font-family:var(--serif);font-weight:600;font-size:1.8rem;margin:.6rem 0}
+  .thanks p{color:#4a4d40;max-width:42ch;margin:0 auto 1.4rem}
+  .thanks a{font-family:var(--sans);font-weight:700;padding:.7rem 1.3rem;border-radius:5px;background:var(--ink);color:var(--paper)}
+  /* shared site footer */
+  .foot{background:var(--ink);color:rgba(239,230,212,.6);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0}
+  .foot .wrap{max-width:1120px;margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .foot .mono{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(239,230,212,.5)}
+  .foot a{color:rgba(239,230,212,.8)}.foot a:hover{color:var(--trail)}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+<div class="top">
+  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <a class="back" href="map.html">← Back to the map</a>
+</div>
+
+<div class="wrap" id="form-view">
+  <!-- CONTEXT (rendered from edit-items.js by ?item=<id>) -->
+  <div class="ctx">
+    <div class="ey" id="e-ey">Improve this place</div>
+    <h1 id="e-name">Repair station · Malmedy</h1>
+    <div class="co" id="e-co">◎ 50.426°N 6.027°E · Wallonia, BE</div>
+    <div class="tags" id="e-tags"></div>
+    <div id="locate" class="locate" hidden></div>
+    <div id="loc"></div>
+    <div class="cur">
+      <h4>Current details</h4>
+      <div id="e-cur"></div>
+      <div class="fresh"><span class="dot"></span> Confirmed by 3 riders · last seen 11 days ago</div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="frm">
+    <div class="ftabs">
+      <button class="on" onclick="pane(this,'fix')">Fix details</button>
+      <button onclick="pane(this,'add')">Add missing</button>
+      <button onclick="pane(this,'report')">Report a problem</button>
+      <button id="tab-photo" onclick="pane(this,'photo')">Add photos</button>
+      <button id="tab-video" onclick="pane(this,'video')">Add video</button>
+      <button id="tab-track" onclick="pane(this,'track')" hidden>Replace track</button>
+    </div>
+
+    <div class="pane on" id="p-fix"><!-- fields rendered from edit-items.js --></div>
+
+    <div class="pane" id="p-add"><!-- type-specific fields rendered from edit-items.js --></div>
+
+    <div class="pane" id="p-report">
+      <div class="radios">
+        <label class="radio"><input type="radio" name="rep" /><span><b>It's gone / permanently closed</b><small>Remove it from the map (pending confirmation)</small></span></label>
+        <label class="radio"><input type="radio" name="rep" /><span><b>Wrong location</b><small>The pin is in the wrong place</small></span></label>
+        <label class="radio"><input type="radio" name="rep" /><span><b>Wrong details</b><small>Hours, tools or type are incorrect</small></span></label>
+        <label class="radio"><input type="radio" name="rep" /><span><b>Duplicate</b><small>Already mapped elsewhere</small></span></label>
+        <label class="radio"><input type="radio" name="rep" /><span><b>Other</b><small>Something else — tell us below</small></span></label>
+      </div>
+      <div class="field" style="margin-top:1.2rem"><label>Tell us more</label><textarea placeholder="What did you see?"></textarea></div>
+    </div>
+
+    <div class="pane" id="p-photo">
+      <div class="drop" onclick="upload('photo')"><span class="ic">◳</span>Drop photos here, or click to choose<br/><small>JPG · PNG · WebP · HEIC (iPhone) · add several at once · your own photos only</small></div>
+      <div class="ulq" id="q-photo"></div>
+      <div class="linkrow"><input id="lnk-photo" placeholder="…or paste a photo URL (Flickr, Wikimedia, your site) — add as many as you like" /><button class="btn" onclick="linkMedia('photo')">Link</button></div>
+      <div class="src-note" id="srcn-photo"></div>
+      <div class="notice"><b>Photos are licensed CC BY-SA 4.0.</b> Only upload photos you took or are licensed to share — never images scraped or re-hosted from another site. You keep ownership; this keeps the Commons free of infringement.</div>
+    </div>
+
+    <div class="pane" id="p-video">
+      <div class="drop" onclick="upload('video')"><span class="ic">▷</span>Drop a short video here, or click to choose<br/><small>MP4 · MOV · HEVC (iPhone) · keep it under ~30 s · your own footage only</small></div>
+      <div class="ulq" id="q-video"></div>
+      <div class="linkrow"><input id="lnk-video" placeholder="…or paste a video URL (YouTube, Vimeo, your site) — add as many as you like" /><button class="btn" onclick="linkMedia('video')">Link</button></div>
+      <div class="src-note" id="srcn-video"></div>
+      <div class="notice"><b>Video is licensed CC BY-SA 4.0.</b> Only upload clips you filmed yourself. Short and steady is best — a pan of the view or the road surface. No music tracks or copyrighted audio.</div>
+    </div>
+
+    <div class="pane" id="p-track">
+      <div class="drop" onclick="return false"><span class="ic">▲</span>Drop a GPX or FIT file here, or click to choose<br/><small>.gpx / .fit · from your head unit or app · your own recording only</small></div>
+      <div class="notice"><b>Tracks join the Commons as ODbL 1.0.</b> Upload only rides you recorded yourself. We keep the GPS line and derive distance and elevation; personal start/end points can be trimmed before it goes public.</div>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn" onclick="submitImprove()">Submit for review</button>
+      <div class="prov">Your suggestion goes to a curator's review queue. Approved facts join the open Commons under <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Provenance is kept; identity is not.</div>
+    </div>
+  </div>
+</div>
+
+<div class="wizard" id="wizard-view" hidden>
+  <div class="ey" id="w-ey" style="font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem">Contribute · new entry</div>
+  <h1 id="w-name" style="font-family:var(--serif);font-weight:600;font-size:1.7rem;line-height:1.1;margin-bottom:1.2rem">Add a new place</h1>
+  <ol class="stepper" id="stepper">
+    <li class="on" data-s="1" id="step-label-1">Locate</li>
+    <li data-s="2">Details</li>
+    <li data-s="3">Photos &amp; video</li>
+    <li data-s="4">Review</li>
+  </ol>
+  <section class="pane on" data-s="1" id="w-locate"></section>
+  <section class="pane" data-s="2" id="w-details"></section>
+  <section class="pane" data-s="3" id="w-media"></section>
+  <section class="pane" data-s="4" id="w-review"></section>
+  <div class="navrow" id="navrow">
+    <button class="btn btn-g" id="wzBack" onclick="step(WZ.cur-1)" style="visibility:hidden">← Back</button>
+    <span class="spacer"></span>
+    <button class="btn btn-p" id="wzNext" onclick="onNext()">Next →</button>
+  </div>
+</div>
+
+<div class="thanks" id="thanks-view">
+  <div class="ic">◬</div>
+  <h2>Thank you — it's in the queue.</h2>
+  <p>A curator will review your suggestion for <b id="e-thanks-name">Repair station · Malmedy</b>. If others confirm it, it joins the Commons for everyone.</p>
+  <a href="map.html">← Back to the map</a>
+</div>
+
+<div class="modal" id="modal"><div class="box" id="modal-box"></div></div>
+
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="edit-items.js"></script>
+<script>
+  // resolve which item we're editing (?item=<id>), fall back to the service station
+  const _id = new URLSearchParams(location.search).get('item');
+  const E = (window.CC_EDIT && (window.CC_EDIT[_id] || window.CC_EDIT['repair-station-malmedy']))
+            || {ey:'Improve this place', name:'Repair station · Malmedy', icon:'⚙',
+                center:[6.027,50.426], co:'◎ 50.426°N 6.027°E · Wallonia, BE',
+                tags:['tap','OSM','D · services'], cur:[], fields:[]};
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // — add mode (?mode=add): a blank "add a new <type>" form, reached from contribute.html —
+  const ADD = new URLSearchParams(location.search).get('mode')==='add';
+  const TYPE_NAMES = {
+    'road-surface':'road segment', 'water-fountain':'water point', 'repair-station-malmedy':'bike service',
+    'cyclist-friendly-gite-ambleve-valley':'place to sleep', 'exposed-crosswind-hautes-fagnes':'hazard',
+    'aywaille-station':'transport link', 'shelter-baraque-michel':'shelter', 'signal-de-botrange':'viewpoint',
+    'stavelot-abbey':'heritage site', 'ride':'ride',
+    'cote-de-la-redoute':'climb','mur-de-huy':'climb','cote-de-stockeu':'climb','cote-de-la-roche-aux-faucons':'climb'
+  };
+  const typeName = TYPE_NAMES[_id] || 'place';
+
+  // add-mode wizard state (location, entered fields, queued media)
+  const WZ = {cur:1, last:4, loc:null, fields:{}, media:[]};
+
+  // thanks-view name + page title (both modes)
+  document.getElementById('e-thanks-name').textContent = ADD ? ('your new ' + typeName) : E.name;
+  document.title = 'Cycling Commons — ' + (ADD ? ('Add a ' + typeName) : E.name);
+
+  // — field control rendered from the registry (shared by both modes) —
+  function fieldHTML(f){
+    let ctrl;
+    if(f.type==='select') ctrl = `<select>${(f.opts||[]).map(o=>`<option>${esc(o)}</option>`).join('')}</select>`;
+    else if(f.type==='textarea') ctrl = `<textarea placeholder="${esc(f.placeholder||'')}"></textarea>`;
+    else ctrl = `<input value="${ADD?'':esc(f.value||'')}" placeholder="${esc(f.placeholder||'')}" />`;
+    return `<div class="field"><label>${esc(f.label)}</label>${ctrl}</div>`;
+  }
+  const mkPin=()=>{ const el=document.createElement('div'); el.className='cc-pin'; el.innerHTML=`<span>${E.icon||'⚙'}</span>`; return el; };
+
+  // per-type "set the location" first action (add mode)
+  //   point   → one pin (most types)      segment → start + end (road surface)
+  //   none    → no pin, the GPX sets it (rides)   climbs use the dedicated add-climb.html (foot + summit)
+  const LOCATE = !ADD ? 'off' : (_id==='ride' ? 'none' : _id==='road-surface' ? 'segment' : 'point');
+
+  if(!ADD){
+    // ===== FIX / REPORT MODE — existing tabbed two-column layout =====
+    document.getElementById('e-ey').textContent = E.ey;
+    document.getElementById('e-name').textContent = E.name;
+    document.getElementById('e-co').textContent = E.co;
+    document.getElementById('e-tags').innerHTML = (E.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+    document.getElementById('e-cur').innerHTML = (E.cur||[]).map(r=>`<div class="kv"><span>${esc(r.k)}</span><span>${esc(r.v)}</span></div>`).join('');
+    document.getElementById('p-fix').innerHTML = (E.fields||[]).map(fieldHTML).join('');
+    document.getElementById('p-add').innerHTML = (E.addFields||[]).map(fieldHTML).join('')
+      || '<div class="field"><label>Note for riders</label><textarea placeholder="Anything missing about this place?"></textarea></div>';
+    if(E.upload==='track'){ document.getElementById('tab-track').hidden = false; }
+    else { document.getElementById('p-track').remove(); }
+    const map=new maplibregl.Map({container:'loc',style:'https://tiles.openfreemap.org/styles/liberty',
+      center:E.center,zoom:12,interactive:false,attributionControl:false});
+    new maplibregl.Marker({element:mkPin(),anchor:'bottom'}).setLngLat(E.center).addTo(map);
+  } else {
+    // ===== ADD MODE — mobile-first stepped wizard =====
+    document.getElementById('form-view').remove();        // drop the tabbed form (avoids duplicate media ids)
+    document.getElementById('wizard-view').hidden = false;
+    document.getElementById('w-name').textContent = 'Add a new ' + typeName;
+    buildLocate();    // step 1 — search + big map (point / segment / track)
+    buildDetails();   // step 2 — type fields
+    buildMedia();     // step 3 — photos & video
+    refreshGate();
+  }
+
+  /* ===================== ADD-MODE WIZARD ===================== */
+  function step(n){
+    if(n<1||n>WZ.last) return;
+    WZ.cur=n;
+    document.querySelectorAll('#wizard-view .pane').forEach(p=>p.classList.toggle('on',+p.dataset.s===n));
+    document.querySelectorAll('#stepper li').forEach(li=>{
+      li.classList.toggle('on',+li.dataset.s===n);
+      li.classList.toggle('done',+li.dataset.s<n);
+    });
+    document.getElementById('wzBack').style.visibility = n>1 ? 'visible' : 'hidden';
+    document.getElementById('wzNext').textContent = n===WZ.last ? 'Submit for review →' : 'Next →';
+    if(n===WZ.last) renderReview();
+    refreshGate();
+    window.scrollTo(0,0);
+  }
+  function onNext(){ if(WZ.cur===WZ.last){ submitImprove(); } else { step(WZ.cur+1); } }
+  function refreshGate(){
+    const next=document.getElementById('wzNext');
+    if(!next) return;
+    if(WZ.cur===1) next.disabled = !WZ.loc;     // step 1 gates on a chosen location
+    else next.disabled = false;
+  }
+  // rides: demo track upload sets the location (nothing is actually uploaded)
+  function wzTrack(){
+    WZ.loc={type:'track', name:'RIDE_'+(Math.floor(performance.now())%9000+1000)+'.gpx'};
+    document.getElementById('wz-trackq').innerHTML =
+      `<span class="chip"><span class="dot"></span>${esc(WZ.loc.name)} · queued</span>`;
+    if(typeof toast==='function') toast(`${WZ.loc.name} → added (demo, nothing is uploaded)`);
+    refreshGate();
+  }
+
+  // step 1 — Locate: search + big map (point / segment) or track uploader (ride)
+  function buildLocate(){
+    const locate=document.getElementById('w-locate');
+    if(LOCATE==='none'){
+      locate.innerHTML = `<h2>Add your track</h2>
+        <p class="help">Your GPX/FIT recording sets the whole route. Drop it here — we'll derive distance and elevation.</p>
+        <div class="drop" id="wz-track" onclick="wzTrack()"><span class="ic">▲</span>Drop a GPX or FIT file, or click to choose<br/><small>.gpx / .fit · your own recording only</small></div>
+        <div class="ulq" id="wz-trackq"></div>
+        <div class="notice"><b>Tracks join the Commons as ODbL 1.0.</b> Upload only rides you recorded yourself.</div>`;
+      document.getElementById('step-label-1').textContent='Track';
+      return;
+    }
+    const tip = LOCATE==='segment'
+      ? 'Search for the area, then tap the <b>start</b> and the <b>end</b> of the segment.'
+      : 'Search for the place, then tap the map to drop the pin — drag it to fine-tune.';
+    locate.innerHTML = `<h2>Where is it?</h2>
+      <p class="help">${tip}</p>
+      <div class="csearch"><input id="wz-search" type="search" autocomplete="off" placeholder="e.g. a town, street, café — search to jump there…" /><div class="csearch-results" id="wz-results" hidden></div></div>
+      <div id="wmap" role="application" aria-label="Map — tap to set the location"></div>
+      <div class="readout"><span id="wz-readout">◎ Tap the map to set the location</span><span id="wzReset" role="button" tabindex="0">Reset</span></div>`;
+
+    const wmap=new maplibregl.Map({container:'wmap',style:'https://tiles.openfreemap.org/styles/liberty',
+      center:E.center,zoom:12,attributionControl:false});
+    const placed=[];
+    const fmt=ll=>`${ll.lat.toFixed(4)}°N ${ll.lng.toFixed(4)}°E`;
+    function drawSeg(){
+      if(!wmap.isStyleLoaded()){ wmap.once('idle', drawSeg); return; }   // tapped before the style finished loading (slow mobile) — redraw when ready
+      const id='seg'; if(wmap.getLayer(id)) wmap.removeLayer(id); if(wmap.getSource(id)) wmap.removeSource(id);
+      if(placed.length<2) return;
+      wmap.addSource(id,{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:placed.map(m=>m.getLngLat().toArray())}}});
+      wmap.addLayer({id,type:'line',source:id,paint:{'line-color':'#FF5A1F','line-width':4}});
+    }
+    function syncLoc(){
+      const ro=document.getElementById('wz-readout');
+      if(LOCATE==='segment'){
+        if(placed.length<2){ WZ.loc=null; ro.textContent = placed.length===1 ? '◎ Now tap the end of the segment' : '◎ Tap the start of the segment'; }
+        else { WZ.loc={type:'segment',a:placed[0].getLngLat().toArray(),b:placed[1].getLngLat().toArray()};
+               ro.textContent = `✓ ${fmt(placed[0].getLngLat())} → ${fmt(placed[1].getLngLat())}`; }
+      } else {
+        if(!placed.length){ WZ.loc=null; ro.textContent='◎ Tap the map to set the location'; }
+        else { const ll=placed[0].getLngLat(); WZ.loc={type:'point',lng:ll.lng,lat:ll.lat};
+               ro.textContent = `✓ ◎ ${fmt(ll)} — drag the pin or tap again to move it`; }
+      }
+      refreshGate();
+    }
+    wmap.on('click', e=>{
+      const need = LOCATE==='segment' ? 2 : 1;
+      if(placed.length>=need){ placed.forEach(m=>m.remove()); placed.length=0; }
+      const m=new maplibregl.Marker({element:mkPin(),draggable:true,anchor:'bottom'}).setLngLat(e.lngLat).addTo(wmap);
+      m.on('dragend',()=>{ syncLoc(); drawSeg(); });
+      placed.push(m); syncLoc(); drawSeg();
+    });
+    document.getElementById('wzReset').addEventListener('click',()=>{ placed.forEach(m=>m.remove()); placed.length=0; drawSeg(); syncLoc(); });
+
+    // place search (Photon — keyless OSM geocoder, same as add-climb)
+    const search=document.getElementById('wz-search'), results=document.getElementById('wz-results'); let searchT=null;
+    function renderResults(list){
+      if(!list){ results.hidden=true; results.innerHTML=''; return; }
+      if(!list.length){ results.innerHTML='<div class="res empty">No matches</div>'; results.hidden=false; return; }
+      results.innerHTML=list.map(f=>{ const p=f.properties||{}, c=f.geometry.coordinates;
+        const main=p.name||p.street||p.city||'Result';
+        const sub=[p.name?p.street:'',p.city,p.county,p.state,p.country].filter(Boolean).join(', ');
+        return `<div class="res" data-lng="${c[0]}" data-lat="${c[1]}"><b>${esc(main)}</b><small>${esc(sub)}</small></div>`;
+      }).join('');
+      results.hidden=false;
+      results.querySelectorAll('.res[data-lat]').forEach(el=>el.addEventListener('click',()=>{
+        wmap.flyTo({center:[+el.dataset.lng,+el.dataset.lat],zoom:14});
+        search.value=el.querySelector('b').textContent; results.hidden=true;
+      }));
+    }
+    function geocode(q){ fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6`)
+      .then(r=>r.json()).then(d=>renderResults(d.features||[]))
+      .catch(()=>{ results.innerHTML='<div class="res empty">Search unavailable — tap the map instead</div>'; results.hidden=false; }); }
+    search.addEventListener('input',()=>{ const q=search.value.trim(); clearTimeout(searchT);
+      if(q.length<3){ renderResults(null); return; } searchT=setTimeout(()=>geocode(q),320); });
+    search.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(searchT); const q=search.value.trim(); if(q.length>=2) geocode(q); } });
+    document.addEventListener('click',e=>{ if(!e.target.closest('.csearch')) results.hidden=true; });
+  }
+
+  // step 2 — Details: type fields, persisted into WZ.fields
+  function buildDetails(){
+    const details=document.getElementById('w-details');
+    const dFields = (E.fields&&E.fields.length) ? E.fields
+      : [{label:'Note for riders',type:'textarea',placeholder:'Anything riders should know about this place?'}];
+    details.innerHTML = `<h2>The details</h2><p class="help">Tell riders what's here. You can leave optional fields blank.</p>`
+      + dFields.map(fieldHTML).join('');
+    details.querySelectorAll('input,select,textarea').forEach((el,i)=>{
+      const label = dFields[i] ? dFields[i].label : ('field'+i);
+      WZ.fields[label]=el.value||'';
+      el.addEventListener('input',()=>{ WZ.fields[label]=el.value; });
+      el.addEventListener('change',()=>{ WZ.fields[label]=el.value; });
+    });
+  }
+
+  // step 3 — Photos & video: own step, reuses the existing consent/queue handlers
+  function buildMedia(){
+    document.getElementById('w-media').innerHTML = `
+      <h2>Photos &amp; video</h2>
+      <p class="help">Optional, but a photo helps riders trust the spot. Your own media only — it joins the Commons under CC BY-SA 4.0.</p>
+      <div class="drop" onclick="upload('photo')"><span class="ic">◳</span>Drop photos here, or click to choose<br/><small>JPG · PNG · WebP · HEIC · your own photos only</small></div>
+      <div class="ulq" id="q-photo"></div>
+      <div class="linkrow"><input id="lnk-photo" placeholder="…or paste a photo URL (Flickr, Wikimedia, your site)" /><button class="btn btn-p" onclick="linkMedia('photo')">Link</button></div>
+      <div class="src-note" id="srcn-photo"></div>
+      <div class="drop" style="margin-top:1.2rem" onclick="upload('video')"><span class="ic">▷</span>Drop a short video here, or click to choose<br/><small>MP4 · MOV · HEVC · under ~30 s · your own footage only</small></div>
+      <div class="ulq" id="q-video"></div>
+      <div class="linkrow"><input id="lnk-video" placeholder="…or paste a video URL (YouTube, Vimeo, your site)" /><button class="btn btn-p" onclick="linkMedia('video')">Link</button></div>
+      <div class="src-note" id="srcn-video"></div>
+      <div class="notice"><b>Media is licensed CC BY-SA 4.0.</b> Only upload photos/clips you took yourself — never scraped or re-hosted from another site.</div>`;
+  }
+
+  // step 4 — Review: summarise WZ into a card
+  function renderReview(){
+    const locTxt = !WZ.loc ? '—'
+      : WZ.loc.type==='point'   ? `◎ ${WZ.loc.lat.toFixed(4)}°N ${WZ.loc.lng.toFixed(4)}°E`
+      : WZ.loc.type==='segment' ? `${WZ.loc.a[1].toFixed(4)}°N ${WZ.loc.a[0].toFixed(4)}°E → ${WZ.loc.b[1].toFixed(4)}°N ${WZ.loc.b[0].toFixed(4)}°E`
+      : `Track · ${WZ.loc.name}`;
+    const rows = Object.entries(WZ.fields).filter(([,v])=>v && String(v).trim())
+      .map(([k,v])=>`<div class="kv"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('')
+      || '<div class="kv"><span>Details</span><span>—</span></div>';
+    const media = (WZ.media&&WZ.media.length) ? WZ.media.map(esc).join(' · ') : 'none added';
+    document.getElementById('w-review').innerHTML = `
+      <h2>Review &amp; submit</h2>
+      <p class="help">Check it over. Your suggestion goes to a curator's review queue before it joins the Commons.</p>
+      <div class="card">
+        <div class="kv"><span>New ${esc(typeName)}</span><span>${esc(locTxt)}</span></div>
+        ${rows}
+        <div class="kv"><span>Media</span><span>${media}</span></div>
+      </div>
+      <p class="prov" style="font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5">Approved facts join the open Commons under <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Provenance is kept; identity is not.</p>`;
+  }
+
+  function pane(btn,id){
+    document.querySelectorAll('.ftabs button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+    document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+    document.getElementById('p-'+id).classList.add('on');
+  }
+  function submitImprove(){
+    const fv=document.getElementById('form-view'); if(fv) fv.style.display='none';
+    const wv=document.getElementById('wizard-view'); if(wv) wv.hidden=true;
+    document.getElementById('thanks-view').classList.add('on');
+    window.scrollTo(0,0);
+  }
+
+  /* ---- media upload: first-time consent/donation, then simulate a queue (demo) ---- */
+  const RULES = {
+    photo:{ noun:'photo', rule:'Only photos you took, or are licensed to share — never images scraped or re-hosted from another site.' },
+    video:{ noun:'video', rule:'Only clips you filmed yourself — no copyrighted music or footage.' }
+  };
+  const queues = {photo:[], video:[]};
+  let _pendingDone = null;
+  const consented = k => localStorage.getItem('cc_consent_'+k)==='1';
+  const openModal = ()=>document.getElementById('modal').classList.add('open');
+  function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+  document.getElementById('modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
+
+  let _toastT=null;
+  function toast(msg){
+    let t=document.getElementById('cc-toast');
+    if(!t){ t=document.createElement('div'); t.id='cc-toast'; t.className='cc-toast'; document.body.appendChild(t); }
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('show'), 2800);
+  }
+  function queueAdd(kind, name){
+    queues[kind].push(name);
+    document.getElementById('q-'+kind).innerHTML =
+      queues[kind].map(n=>`<span class="chip"><span class="dot"></span>${esc(n)} · queued</span>`).join('');
+    toast(`${name} → added to your upload queue · demo, nothing is actually uploaded`);
+    if(typeof WZ!=='undefined') WZ.media=[...queues.photo.map(n=>'📷 '+n), ...queues.video.map(n=>'🎬 '+n)];   // mirror for the review step
+  }
+  function openConsent(kind, onDone){
+    _pendingDone = onDone;
+    const r = RULES[kind];
+    document.getElementById('modal-box').innerHTML =
+      `<h3>Before you add a ${r.noun}</h3>
+       <p>Your ${r.noun} joins the <b>open Commons</b> so every rider can use it. That only works if it's genuinely free to share.</p>
+       <div class="rules"><b>The rules.</b> ${r.rule} You keep ownership — the Commons just gets a licence to share it.</div>
+       <label class="ok-check"><input type="checkbox" id="ok-check" /><span>I took / own this ${r.noun} and I'm <b>donating</b> it to the Commons under <b>CC BY-SA 4.0</b>.</span></label>
+       <div class="mrow"><button class="b-cancel" onclick="closeModal()">Cancel</button><button class="b-ok" id="ok-btn" disabled onclick="acceptConsent('${kind}')">Donate it</button></div>`;
+    document.getElementById('ok-check').onchange = e => document.getElementById('ok-btn').disabled = !e.target.checked;
+    openModal();
+  }
+  function acceptConsent(kind){
+    localStorage.setItem('cc_consent_'+kind,'1');
+    document.getElementById('modal-box').innerHTML =
+      `<div class="thanks-big"><div class="ic">🙏</div><h3>Thank you!</h3>
+       <p>You just made the map better for everyone who rides here.</p>
+       <div class="demo-note">This is a demo — nothing is actually uploaded.</div>
+       <div class="mrow" style="justify-content:center;margin-top:1.1rem"><button class="b-ok" onclick="finishConsent()">Nice</button></div></div>`;
+  }
+  function finishConsent(){ closeModal(); const d=_pendingDone; _pendingDone=null; if(d) d(); }
+  function upload(kind){
+    const run = ()=>queueAdd(kind, kind==='photo' ? `IMG_${1000+queues.photo.length}.jpg` : `CLIP_${1+queues.video.length}.mp4`);
+    consented(kind) ? run() : openConsent(kind, run);
+  }
+  const KNOWN_SOURCES = {
+    'commons.wikimedia.org':{name:'Wikimedia Commons', note:'author &amp; licence read from the Commons file page and validated automatically'},
+    'wikipedia.org':{name:'Wikipedia', note:'author &amp; licence read from Wikimedia and validated automatically'},
+    'flickr.com':{name:'Flickr', note:'rights-holder &amp; licence read from Flickr and validated automatically'},
+    'unsplash.com':{name:'Unsplash', note:'Unsplash licence detected automatically'},
+    'youtube.com':{name:'YouTube', note:'channel &amp; licence read from YouTube — Creative Commons clips only'},
+    'vimeo.com':{name:'Vimeo', note:'creator &amp; licence read from Vimeo — Creative Commons clips only'}
+  };
+  function linkMedia(kind){
+    const url = document.getElementById('lnk-'+kind).value.trim(); if(!url) return;
+    const run = ()=>{
+      const note = document.getElementById('srcn-'+kind);
+      let host=''; try{ host=new URL(url).hostname.replace(/^www\./,''); }catch(e){ host=''; }
+      const key = Object.keys(KNOWN_SOURCES).find(k=>host.endsWith(k));
+      if(key){ const s=KNOWN_SOURCES[key]; note.className='src-note ok';
+        note.innerHTML = `✓ <b>${s.name}</b> recognised — ${s.note}.`; queueAdd(kind, `${host} link`); }
+      else { note.className='src-note manual';
+        note.innerHTML = `⚠ Unknown source — you'll need to confirm the rights-holder and licence yourself before this can go public.`;
+        queueAdd(kind, `${host||'link'} · needs licence`); }
+      document.getElementById('lnk-'+kind).value=''; document.getElementById('lnk-'+kind).focus();   // ready for the next link
+    };
+    consented(kind) ? run() : openConsent(kind, run);
+  }
+</script>
+<footer class="foot"><div class="wrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

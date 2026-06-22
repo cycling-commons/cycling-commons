@@ -1,0 +1,69 @@
+site_name: Cycling Commons Wiki
+site_url: https://wiki.cyclingcommons.org/
+site_description: >-
+  Reference documentation for the Cycling Commons — the open, non-personal
+  cycling-data commons. Manifesto, data catalog, curation & voting, governance.
+site_author: Cycling Commons contributors
+copyright: >-
+  Data ODbL 1.0 · Media CC BY-SA 4.0 ·
+  © Cycling Commons contributors + OpenStreetMap · stewarded by BikeCoders
+
+repo_url: https://github.com/cycling-commons/cycling-commons
+repo_name: cycling-commons/cycling-commons
+edit_uri: edit/main/wiki/
+
+# The markdown lives in wiki/; the hand-built map demo lives in atlas/demo/. Build the
+# wiki to wiki-dist/ (not mkdocs's default ./site) to keep build output out of the tree.
+docs_dir: wiki
+site_dir: wiki-dist
+
+theme:
+  name: material
+  language: en
+  font:
+    text: Hanken Grotesk
+    code: Spline Sans Mono
+  palette:
+    scheme: atlas            # custom scheme — colours defined in stylesheets/extra.css
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.footer
+    - content.action.edit
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+    - toc.follow
+
+extra_css:
+  - stylesheets/extra.css
+
+# Ordered to match the "Start here" list on the wiki home page.
+nav:
+  - Home: index.md
+  - Manifesto: manifesto.md
+  - Data catalog: data-catalog.md
+  - The landscape: landscape.md
+  - Curation & voting: curation-and-voting.md
+  - Contributing: contributing.md
+  - Governance: governance.md
+  - Building the Commons: building.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.details
+
+plugins:
+  - search

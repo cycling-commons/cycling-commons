@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://wiki.cyclingcommons.org/
+    about: Check the wiki first. For open questions, email development@cyclingcommons.org.
+  - name: Report a security vulnerability
+    url: https://github.com/cycling-commons/cycling-commons/security/advisories/new
+    about: Please report security issues privately — not as a public issue. See SECURITY.md.

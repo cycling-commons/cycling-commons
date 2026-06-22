@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Contributors</title>
+<meta name="description" content="Built by riders. Recognition without surveillance — we celebrate contributions to the open Commons, never personal data." />
+<link rel="canonical" href="https://cyclingcommons.org/contributors.html" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — Contributors" />
+<meta property="og:description" content="Built by riders. Recognition without surveillance — we celebrate contributions to the open Commons, never personal data." />
+<meta property="og:url" content="https://cyclingcommons.org/contributors.html" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/contributors.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Contributors" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Contributors" />
+<meta name="twitter:description" content="Built by riders. Recognition without surveillance — we celebrate contributions to the open Commons, never personal data." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/contributors.jpg" />
+
+<link rel="stylesheet" href="fonts.css" />
+<link rel="stylesheet" href="atlas.css" />
+<style>
+  .chero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .rec-note{font-size:.9rem;color:#595c4d;margin-top:-.4rem;max-width:62ch}
+  .ack{margin-top:1.2rem}
+  .ack .row{display:flex;align-items:center;gap:.85rem;padding:.6rem .2rem;border-bottom:1px solid rgba(20,22,14,.08)}
+  .ack .row[hidden]{display:none}
+  .ack .av{width:32px;height:32px;border-radius:50%;background:var(--spruce);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.62rem;flex:none}
+  .ack .nm{font-family:var(--mono);font-size:.9rem}
+  .ack .rg{color:#7a7d6c;font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:30px;padding:.18rem .5rem}
+  .ack .st{margin-left:auto;font-family:var(--mono);font-size:.7rem;color:#595c4d;text-align:right;white-space:nowrap}
+  .ack .st b{font-family:var(--serif);font-size:1.05rem;color:var(--ink);margin-right:.35rem}
+  @media(max-width:520px){.ack .rg{display:none}.ack .st{font-size:.64rem}}
+  .ack-bar{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+  .ack-q,.ack-rg{font-family:var(--mono);font-size:.85rem;padding:.5rem .8rem;border:1px solid rgba(20,22,14,.2);border-radius:6px;background:var(--paper);color:var(--ink)}
+  .ack-q{flex:1;min-width:200px}
+  .ack-q:focus,.ack-rg:focus{outline:none;border-color:var(--trail)}
+  .ack-empty{font-size:.9rem;color:#7a7d6c;margin-top:1.2rem}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+<nav class="topnav"><div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <div class="links"><a href="regions.html">Regions</a><a href="coverage.html">Coverage</a><a href="vote.html">Vote</a><a href="developers.html">Developers</a><a href="about.html">About</a><a href="licenses.html">Licence</a><a class="acct fill" href="map.html">Explore the map</a><a class="acct" href="login.html">Account</a></div></nav>
+
+<div class="chero"><div class="wrap" style="max-width:820px">
+  <div class="kicker" style="color:var(--trail)">Contributors</div>
+  <h1 class="disp">Built by riders.</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">Recognition without surveillance. We celebrate <b>what</b> people contribute — facts, confirmations, give-backs to OpenStreetMap — never who they are or where they ride. Provenance is kept; identity is not.</p>
+</div></div>
+
+<section class="pad"><div class="wrap" style="max-width:820px">
+
+  <div class="kicker">Recently active · with thanks</div>
+  <p class="rec-note">No ranking — contributors are listed alphabetically, never by volume. Search by name, or filter to a region.</p>
+  <div class="ack-bar">
+    <input class="ack-q" type="search" placeholder="Search by name…" aria-label="Search contributors by name" />
+    <select class="ack-rg" aria-label="Filter contributors by region"><option value="">All regions</option></select>
+  </div>
+  <div class="ack" id="ack"></div>
+  <p class="ack-empty" id="ack-empty" hidden>No contributors match.</p>
+
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-top:2.4rem">
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">312k</b><div class="co" style="margin-top:.3rem">Facts contributed</div></div>
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">9.4k</b><div class="co" style="margin-top:.3rem">Active contributors</div></div>
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">1,840</b><div class="co" style="margin-top:.3rem">Facts sent to OSM</div></div>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="wrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+<script>
+/* Contributor acknowledgment wall — non-ranked, alphabetical, filterable by
+   name or region. Sample (non-personal) handles; identity is never stored. */
+(function(){
+  const C=[
+    {h:'rider#0c7d',r:'Wallonia',f:1204,o:18},        {h:'rider#1ab8',r:'Flanders',f:2140,o:41},
+    {h:'rider#2e55',r:'Wallonia',f:1090,o:19},        {h:'rider#3f90',r:'Hauts-de-France',f:430,o:7},
+    {h:'rider#4f2a',r:'Wallonia',f:1873,o:36},        {h:'rider#5b12',r:'Limburg (NL)',f:660,o:11},
+    {h:'rider#6a4e',r:'Flanders',f:884,o:13},         {h:'rider#72c1',r:'Rheinland',f:512,o:9},
+    {h:'rider#7d88',r:'Wallonia',f:1320,o:24},        {h:'rider#88fa',r:'Hauts-de-France',f:902,o:14},
+    {h:'rider#9c01',r:'Flanders',f:1402,o:28},        {h:'rider#a3e7',r:'Wallonia',f:745,o:12},
+    {h:'rider#b5d2',r:'Limburg (NL)',f:1560,o:30},    {h:'rider#c019',r:'Rheinland',f:388,o:5},
+    {h:'rider#d4aa',r:'Wallonia',f:2210,o:44},        {h:'rider#e6f3',r:'Flanders',f:970,o:16}
+  ].sort((a,b)=>a.h.localeCompare(b.h));
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const wall=document.getElementById('ack');
+  const q=document.querySelector('.ack-q');
+  const rg=document.querySelector('.ack-rg');
+  const empty=document.getElementById('ack-empty');
+  [...new Set(C.map(c=>c.r))].sort().forEach(r=>{const o=document.createElement('option');o.textContent=r;rg.appendChild(o);});
+  wall.innerHTML=C.map(c=>`<div class="row" data-name="${esc(c.h)}" data-region="${esc(c.r)}"><span class="av">${esc(c.h.slice(6,8).toUpperCase())}</span><span class="nm">${esc(c.h)}</span><span class="rg">${esc(c.r)}</span><span class="st"><b>${c.f.toLocaleString()}</b>facts · ${c.o} to OSM</span></div>`).join('');
+  const chips=[...wall.children];
+  function apply(){
+    const t=q.value.trim().toLowerCase(), reg=rg.value; let n=0;
+    chips.forEach(el=>{
+      const ok=(!t||el.dataset.name.toLowerCase().includes(t))&&(!reg||el.dataset.region===reg);
+      el.hidden=!ok; if(ok)n++;
+    });
+    empty.hidden=n>0;
+  }
+  q.addEventListener('input',apply); rg.addEventListener('change',apply);
+})();
+</script>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+/* SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 */
+/* Cycling Commons — "atlas" theme for Material for MkDocs.
+   Mirrors the palette and type of the hand-built site (atlas/demo/atlas.css) by
+   overriding Material's CSS custom properties — the supported theming path. */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..600&display=swap");
+
+[data-md-color-scheme="atlas"] {
+  /* atlas palette */
+  --cc-ink:#101E16; --cc-paper:#EFE6D4; --cc-paper-deep:#E2D5BC;
+  --cc-spruce:#1C3A2A; --cc-spruce-lift:#2C5440; --cc-trail:#FF5A1F;
+  --cc-clay:#B5532E; --cc-glacier:#8FB6A8; --cc-ochre:#C8923A;
+
+  /* base surface + text */
+  --md-default-bg-color: var(--cc-paper);
+  --md-default-fg-color: #101E16;
+  --md-default-fg-color--light: rgba(16,30,22,.66);
+  --md-default-fg-color--lighter: rgba(16,30,22,.40);
+  --md-default-fg-color--lightest: rgba(16,30,22,.10);
+
+  /* primary = top app bar (ink bg, paper text) */
+  --md-primary-fg-color: var(--cc-ink);
+  --md-primary-fg-color--light: var(--cc-spruce);
+  --md-primary-fg-color--dark: #0f1f16;
+  --md-primary-bg-color: var(--cc-paper);
+  --md-primary-bg-color--light: rgba(239,230,212,.75);
+
+  /* accent = hover / active */
+  --md-accent-fg-color: var(--cc-trail);
+  --md-accent-fg-color--transparent: rgba(255,90,31,.1);
+
+  /* prose links — clay, like the site */
+  --md-typeset-a-color: var(--cc-clay);
+
+  /* code blocks — dark spruce */
+  --md-code-bg-color: #16241b;
+  --md-code-fg-color: #e7e0cf;
+
+  /* footer */
+  --md-footer-bg-color: var(--cc-ink);
+  --md-footer-bg-color--dark: #0b1610;
+}
+
+/* serif display headings — Fraunces, matching the site */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-nav__title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -.01em;
+}
+
+/* trail-orange on hover for nav + links */
+.md-typeset a:hover { color: var(--cc-trail); }
+.md-nav__link:hover,
+.md-nav__link--active { color: var(--cc-trail); }

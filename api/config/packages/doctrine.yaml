@@ -1,0 +1,6 @@
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+        # DBAL only for now (no ORM) — enough for the db-check endpoint.
+        # When entities arrive, add a `doctrine.orm` section and a mapping for
+        # PostGIS geometry types.

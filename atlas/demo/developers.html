@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Developers</title>
+<meta name="description" content="An open API, free for anyone to build on. Query the Commons by type and area, or pull bulk dumps per country — open by default." />
+<link rel="canonical" href="https://cyclingcommons.org/developers.html" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — Developers" />
+<meta property="og:description" content="An open API, free for anyone to build on. Query the Commons by type and area, or pull bulk dumps per country — open by default." />
+<meta property="og:url" content="https://cyclingcommons.org/developers.html" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/developers.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Developers" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Developers" />
+<meta name="twitter:description" content="An open API, free for anyone to build on. Query the Commons by type and area, or pull bulk dumps per country — open by default." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/developers.jpg" />
+
+<link rel="stylesheet" href="fonts.css" />
+<link rel="stylesheet" href="atlas.css" />
+<style>
+  .dhero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .dhero .lead{color:rgba(239,230,212,.85)}
+  .ep{display:flex;align-items:center;gap:.8rem;padding:.9rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-family:var(--mono);font-size:.85rem;flex-wrap:wrap}
+  .ep .verb{background:var(--spruce);color:var(--paper);font-size:.62rem;letter-spacing:.08em;padding:.2rem .5rem;border-radius:3px}
+  .ep .path{color:var(--ink)}.ep .desc{margin-left:auto;font-family:var(--sans);font-size:.85rem;color:#595c4d;text-transform:none;letter-spacing:0}
+  .code{background:var(--ink);color:var(--paper);border-radius:10px;padding:1.3rem 1.5rem;font-family:var(--mono);font-size:.82rem;line-height:1.7;overflow-x:auto;margin-top:1rem}
+  .code .k{color:var(--glacier)}.code .s{color:var(--trail)}.code .c{color:#8f9281}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:2rem}@media(max-width:760px){.two{grid-template-columns:1fr}}
+  .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.9rem;color:#4a4d40}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+<nav class="topnav"><div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <div class="links"><a href="regions.html">Regions</a><a href="coverage.html">Coverage</a><a href="vote.html">Vote</a><a href="developers.html" class="on">Developers</a><a href="about.html">About</a><a href="licenses.html">Licence</a><a class="acct fill" href="map.html">Explore the map</a><a class="acct" href="login.html">Account</a></div></nav>
+
+<div class="dhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">Build on the Commons</div>
+  <h1 class="disp">An open API. Free. For anyone to build on.</h1>
+  <p class="lead" style="margin-top:1rem">Query the Commons by type and area, or pull bulk dumps per country. Open by default — that's what makes it a commons. Reads are open and anonymous, within fair-use rate limits; writes need a free account token. We rate-limit and monitor for abuse so it stays fast and free for everyone.</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="kicker">Endpoints</div>
+  <div class="ep"><span class="verb">GET</span><span class="path">/v1/features</span><span class="desc">filter by <code>type</code>, <code>bbox</code>, <code>region</code></span></div>
+  <div class="ep"><span class="verb">GET</span><span class="path">/v1/regions/{id}/best</span><span class="desc">the curated best-of for a region</span></div>
+  <div class="ep"><span class="verb">GET</span><span class="path">/v1/export/{country}.geojson</span><span class="desc">bulk ODbL dump</span></div>
+  <div class="ep"><span class="verb">POST</span><span class="path">/v1/features</span><span class="desc">contribute (token + goes to review)</span></div>
+
+  <div class="two" style="margin-top:2.4rem">
+    <div>
+      <div class="kicker">Example request</div>
+      <div class="code"><span class="c"># all drinking water in a bounding box</span><br/>curl <span class="s">"https://api.cyclingcommons.org/v1/features\<br/>&nbsp;&nbsp;?type=water&bbox=5.6,50.3,6.1,50.6"</span></div>
+    </div>
+    <div>
+      <div class="kicker">Response</div>
+      <div class="code">{<br/>&nbsp;<span class="k">"type"</span>:<span class="s">"FeatureCollection"</span>,<br/>&nbsp;<span class="k">"licence"</span>:<span class="s">"ODbL-1.0"</span>,<br/>&nbsp;<span class="k">"features"</span>:[{<br/>&nbsp;&nbsp;<span class="k">"category"</span>:<span class="s">"water"</span>,<br/>&nbsp;&nbsp;<span class="k">"name"</span>:<span class="s">"Fountain · Spa"</span>,<br/>&nbsp;&nbsp;<span class="k">"potable"</span>:true,<br/>&nbsp;&nbsp;<span class="k">"confirmed"</span>:3<br/>&nbsp;}]<br/>}</div>
+    </div>
+  </div>
+</div></section>
+
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap">
+  <div class="two">
+    <div>
+      <div class="kicker">Required attribution</div>
+      <div class="code" style="background:var(--spruce)">Contains data from the<br/><span class="s">Cycling Commons</span> © contributors<br/>and © <span class="s">OpenStreetMap</span> contributors,<br/>under the Open Database License.</div>
+    </div>
+    <div>
+      <div class="kicker">The rules</div>
+      <div class="note"><b>Rate limits &amp; fair use.</b> Anonymous reads are <b>rate-limited</b> — a commons isn't a CDN and we don't have infinite servers. A free API key raises your limit; for heavy or repeated use, pull the <b>per-country bulk exports</b> instead of hammering the live API. Writes need a free account token and pass through review. Licences: data <b>ODbL 1.0</b>, media <b>CC BY-SA 4.0</b> — see the <a href="licenses.html">plain-language summary</a>. Attribute, share-alike, keep open; commercial use is fine.</div>
+    </div>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="wrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

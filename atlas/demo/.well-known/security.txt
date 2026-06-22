@@ -1,0 +1,10 @@
+# Cycling Commons — security contact (RFC 9116)
+# The open Commons is non-personal map data, but the platform also holds account
+# data (emails, salted password hashes) and security logs (IP addresses) — so
+# vulnerabilities matter to us. Please report privately first; we'll respond.
+
+Contact: mailto:development@cyclingcommons.org
+Expires: 2027-06-17T00:00:00.000Z
+Preferred-Languages: en, nl, fr
+Canonical: https://cyclingcommons.org/.well-known/security.txt
+Policy: https://github.com/cycling-commons/cycling-commons

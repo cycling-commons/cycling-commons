@@ -1,0 +1,17 @@
+# Normalise line endings: text is stored with LF in the repo, checked out native.
+* text=auto eol=lf
+
+# Binary assets — never normalise or diff as text.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.pmtiles binary
+
+# Verbatim licence texts: don't diff, and keep out of GitHub's language stats.
+licenses/*.txt -diff linguist-vendored
+LICENSE        -diff

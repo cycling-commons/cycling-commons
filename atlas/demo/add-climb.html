@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Add a climb</title>
+<meta name="description" content="Add a climb to the Commons — search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
+<link rel="canonical" href="https://cyclingcommons.org/add-climb.html" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — Add a climb" />
+<meta property="og:description" content="Add a climb to the Commons — search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
+<meta property="og:url" content="https://cyclingcommons.org/add-climb.html" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/add-climb.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Add a climb" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Add a climb" />
+<meta name="twitter:description" content="Add a climb to the Commons — search the place, trace the route, and capture surface, traffic and gradient for every kind of rider." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/add-climb.jpg" />
+
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="fonts.css" />
+<style>
+  :root{--ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;--trail:#FF5A1F;--clay:#B5532E;--glacier:#8FB6A8;--ochre:#C8923A;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif;--sans:"Spline Sans",system-ui,sans-serif;--mono:"Spline Sans Mono",monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);min-height:100svh;line-height:1.6}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
+
+  /* top bar */
+  .top{display:flex;align-items:center;justify-content:space-between;padding:1.6rem clamp(1.25rem,4vw,3rem);background:var(--ink);color:var(--paper)}.top .brand b{color:var(--trail);font-style:italic}
+  .top a.back{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.7)}
+  .top a.back:hover{color:var(--trail)}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:2.2rem 2rem}
+  .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem}
+  h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.05;margin-bottom:.4rem}
+  .sub{color:#4a4d40;margin-bottom:1.6rem}
+
+  /* stepper */
+  .stepper{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-bottom:2rem;border-bottom:1px solid rgba(20,22,14,.15);padding-bottom:1rem}
+  .stepper li{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#9a9d8c;display:flex;align-items:center;gap:.45rem}
+  .stepper li::before{content:counter(step);counter-increment:step;display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;border-radius:50%;border:1.5px solid rgba(20,22,14,.25);font-size:.62rem;color:#595c4d}
+  .stepper{counter-reset:step}
+  .stepper li.done{color:#5a5d4d}.stepper li.done::before{background:var(--spruce);border-color:var(--spruce);color:var(--paper);content:"✓"}
+  .stepper li.on{color:var(--ink)}.stepper li.on::before{border-color:var(--trail);color:var(--ink)}
+
+  /* panes */
+  .pane{display:none}.pane.on{display:block;animation:fade .4s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .pane h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin-bottom:.3rem}
+  .pane .help{color:#595c4d;font-size:.9rem;margin-bottom:1.3rem}
+
+  .field{margin-bottom:1.3rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input,.field select,.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
+  .field input[readonly]{color:#595c4d}
+  .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--trail)}
+  .field .fhelp{font-family:var(--mono);font-size:.62rem;color:#9a9d8c;margin-top:.35rem;text-transform:none;letter-spacing:0}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+  @media(max-width:520px){.two{grid-template-columns:1fr}}
+
+  /* step 1 map */
+  #cmap{height:clamp(400px,60vh,640px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:.8rem;background:var(--paper-deep)}
+  .maplibregl-canvas{filter:grayscale(.38) sepia(.24) saturate(.82) contrast(.95) brightness(1.03)}
+  .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
+  .readout #reset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+  .cc-marker{line-height:0;filter:drop-shadow(0 3px 6px rgba(20,22,14,.4))}
+  .cc-pin{position:relative;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);transform:rotate(-45deg);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
+  .cc-pin span{transform:rotate(45deg);font-size:.8rem;line-height:1}
+  .cc-pin.foot{background:var(--spruce)}.cc-pin.summit{background:var(--trail)}
+
+  /* place search */
+  .csearch{position:relative}
+  .csearch input{background:#F8F2E4;border:1.5px solid rgba(20,22,14,.22);border-radius:8px;padding:.65rem .85rem}
+  .csearch input::placeholder{color:#9a9d8c}
+  .csearch input:focus{border-color:var(--trail);background:#FCF8EE}
+  .csearch-results{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--paper);border:1px solid rgba(20,22,14,.2);border-radius:0 0 8px 8px;box-shadow:0 14px 28px -14px rgba(20,22,14,.45);max-height:250px;overflow-y:auto}
+  .csearch-results .res{padding:.55rem .8rem;cursor:pointer;border-bottom:1px solid rgba(20,22,14,.08)}
+  .csearch-results .res:hover{background:var(--paper-deep)}
+  .csearch-results .res b{font-size:.92rem;font-weight:500}
+  .csearch-results .res small{display:block;color:#595c4d;font-size:.74rem;font-family:var(--mono)}
+  .csearch-results .res.empty{color:#595c4d;cursor:default}
+
+  /* name preview */
+  .namepreview{font-family:var(--serif);font-weight:600;font-size:1.4rem;color:var(--ink);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px dashed rgba(20,22,14,.2)}
+  .namepreview.empty{color:#9a9d8c;font-style:italic}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:.45rem}
+  .chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none}
+  .chip:hover{border-color:var(--ink)}.chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+
+  /* photo drop + notice */
+  .drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:2rem;text-align:center;color:#595c4d;cursor:pointer}
+  .drop:hover{border-color:var(--trail);color:var(--ink)}
+  .drop .ic{font-size:1.6rem;display:block;margin-bottom:.5rem}
+  .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.8rem 1rem;font-size:.82rem;color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1rem;line-height:1.5}
+
+  /* review card */
+  .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.4rem}
+  .card .co{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:#595c4d;text-transform:uppercase}
+  .card h3{font-family:var(--serif);font-weight:600;font-size:1.35rem;margin:.2rem 0 .6rem}
+  .card .rtags{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.8rem}
+  .card .rtags span{font-family:var(--mono);font-size:.58rem;padding:.18rem .4rem;border:1px solid rgba(20,22,14,.2);border-radius:3px;color:#4a4d40}
+  .card .rtags .t-traf.t-trafficfree,.card .rtags .t-traf.t-quiet{border-color:var(--glacier);color:#3e7d4f}
+  .card .rtags .t-traf.t-moderate{border-color:var(--ochre);color:#8a6d1f}
+  .card .rtags .t-traf.t-busy{border-color:var(--clay);color:var(--clay)}
+  .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.38rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  .kv span:first-child{color:#595c4d}
+  .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
+
+  /* nav row */
+  .navrow{display:flex;align-items:center;gap:1rem;margin-top:2rem;padding-top:1.6rem;border-top:1px solid rgba(20,22,14,.12)}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--sans);font-weight:700;font-size:1rem;padding:.85rem 1.6rem;border:none;border-radius:5px;cursor:pointer}
+  .btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
+  .btn-p:disabled{background:var(--paper-deep);color:#9a9d8c;cursor:not-allowed}
+  .btn-g{background:none;border:1.5px solid rgba(20,22,14,.3);color:var(--ink);font-weight:500}.btn-g:hover{background:var(--ink);color:var(--paper)}
+  .navrow .spacer{flex:1}
+
+  /* submitted */
+  .done-ic{font-size:2.4rem;text-align:center}
+  .pane.submitted{text-align:center;padding:1rem}
+  .pane.submitted h2{font-size:1.9rem;margin:.5rem 0}
+  .pane.submitted p{color:#4a4d40;max-width:46ch;margin:0 auto 1.4rem}
+
+  /* journey diagram */
+  .journey{background:var(--ink);color:var(--paper);padding:clamp(2.4rem,5vw,4rem) 0;position:relative;overflow:hidden}
+  .journey .jwrap{max-width:980px;margin:0 auto;padding:0 2rem;position:relative;z-index:1}
+  .journey .ey{color:var(--ochre)}
+  .journey h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.5rem,3vw,2.1rem);margin-bottom:.5rem}
+  .journey .jsub{color:rgba(239,230,212,.7);font-size:.92rem;margin-bottom:2rem;max-width:60ch}
+  .spine{display:flex;flex-wrap:wrap;align-items:stretch;gap:.6rem}
+  .jnode{flex:1;min-width:130px;background:var(--spruce);border:1px solid var(--spruce-lift);border-radius:8px;padding:.85rem .9rem;display:flex;flex-direction:column;gap:.4rem}
+  .jnode .jdot{width:8px;height:8px;border-radius:50%;background:var(--glacier)}
+  .jnode .jt{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--glacier)}
+  .jnode .jl{font-size:.86rem;line-height:1.35}
+  .jnode.goal{background:var(--spruce-lift)}.jnode.goal .jdot{background:var(--trail)}
+  .jarrow{align-self:center;color:var(--ochre);font-family:var(--mono);font-size:1rem}
+  .jnode.here{box-shadow:0 0 0 2px var(--trail);position:relative}
+  .jnode.here::after{content:"you are here";position:absolute;top:-.6rem;right:.5rem;background:var(--trail);color:var(--ink);font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .35rem;border-radius:3px}
+  .branches{display:flex;gap:.6rem;margin-top:.9rem;flex-wrap:wrap}
+  .jbranch{flex:1;min-width:180px;border:1px dashed rgba(239,230,212,.3);border-radius:8px;padding:.7rem .9rem;font-size:.82rem;color:rgba(239,230,212,.85)}
+  .jbranch b{color:var(--clay);font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:.2rem}
+  .branch-lead{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.5);margin:1.2rem 0 .3rem}
+  @media(max-width:680px){.spine{flex-direction:column}.jarrow{transform:rotate(90deg)}}
+
+  /* footer */
+  .foot{background:var(--ink);color:rgba(239,230,212,.55);border-top:1px solid rgba(239,230,212,.14);padding:1.6rem 2rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .foot .mono{font-size:.62rem;color:rgba(239,230,212,.45)}
+
+  .chip:focus-visible,#reset:focus-visible,.drop:focus-visible,.btn:focus-visible,a:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:4px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  /* shared site footer */
+  .foot{background:var(--ink);color:rgba(239,230,212,.6);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0}
+  .foot .wrap{max-width:1120px;margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .foot .mono{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(239,230,212,.5)}
+  .foot a{color:rgba(239,230,212,.8)}.foot a:hover{color:var(--trail)}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+<div class="top">
+  <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+  <a class="back" href="map.html">← Back to the map</a>
+</div>
+
+<main class="wrap" id="wiz">
+  <div class="ey">Add to the atlas</div>
+  <h1 class="disp">Add a climb.</h1>
+  <p class="sub">Found a climb the atlas is missing? Draw it, describe it, and send it to the curators.</p>
+
+  <ol class="stepper" id="stepper">
+    <li class="on" data-s="1">Where</li>
+    <li data-s="2">Profile</li>
+    <li data-s="3">Details</li>
+    <li data-s="4">Review</li>
+    <li data-s="5">Submitted</li>
+  </ol>
+
+  <!-- STEP 1 — WHERE -->
+  <section class="pane on" data-s="1">
+    <h2>Where does it climb?</h2>
+    <p class="help">Search for the area, then click the <b>foot</b> of the climb and its <b>summit</b>. We'll draw the line and measure its length.</p>
+    <div class="field csearch">
+      <label for="placeSearch">Find a place or street</label>
+      <input id="placeSearch" type="search" autocomplete="off" placeholder="e.g. La Redoute, Remouchamps — or a town, col, street…" />
+      <div class="csearch-results" id="searchResults" hidden></div>
+    </div>
+    <div id="cmap" role="application" aria-label="Map — click the foot then the summit of the climb"></div>
+    <div class="readout"><span id="readout">◎ … → ▲ … · —</span><span id="reset" role="button" tabindex="0">Reset</span></div>
+  </section>
+
+  <!-- STEP 2 — PROFILE -->
+  <section class="pane" data-s="2">
+    <h2>The profile</h2>
+    <p class="help">Length is measured from your line. Add the rest.</p>
+    <div class="namepreview empty" id="namePreview">Unnamed climb</div>
+    <div class="field"><label for="fName">Climb name</label><input id="fName" placeholder="e.g. Côte de La Redoute" /></div>
+    <div class="two">
+      <div class="field"><label for="fLen">Length (km)</label><input id="fLen" type="number" step="0.1" min="0" /></div>
+      <div class="field"><label for="fGain">Elevation gain (m)</label><input id="fGain" type="number" step="1" min="0" placeholder="e.g. 161" /><div class="fhelp">From your computer/GPS — in production this is sampled from an open elevation model (DEM).</div></div>
+    </div>
+    <div class="two">
+      <div class="field"><label for="fAvg">Avg gradient</label><input id="fAvg" readonly value="—" /></div>
+      <div class="field"><label for="fMax">Max gradient (%) — optional</label><input id="fMax" type="number" step="0.1" min="0" placeholder="e.g. 20" /></div>
+    </div>
+    <div class="two">
+      <div class="field"><label for="fSurface">Surface</label>
+        <select id="fSurface"><option>Asphalt</option><option>Concrete</option><option>Gravel</option><option>Cobbles</option><option>Mixed</option></select>
+      </div>
+      <div class="field"><label for="fSurfaceQ">Surface quality</label>
+        <select id="fSurfaceQ"><option>Smooth</option><option>Good</option><option>Worn</option><option>Rough</option><option>Broken / loose</option></select>
+      </div>
+    </div>
+    <div class="field"><label for="fTraffic">Traffic</label>
+      <select id="fTraffic"><option>Traffic-free</option><option>Quiet</option><option>Moderate</option><option>Busy</option></select>
+      <div class="fhelp">How much motor traffic shares the climb.</div>
+    </div>
+  </section>
+
+  <!-- STEP 3 — DETAILS -->
+  <section class="pane" data-s="3">
+    <h2>Details</h2>
+    <p class="help">Who's this climb for, and anything riders should know? All optional.</p>
+    <div class="field"><label>Targeted audience</label>
+      <div class="chips" id="disc">
+        <span class="chip on">Road</span><span class="chip">Gravel</span><span class="chip">MTB</span>
+        <span class="chip">Touring</span><span class="chip">Bikepacking</span><span class="chip">E-bike</span>
+        <span class="chip">Recumbent</span><span class="chip">Handbike</span>
+      </div>
+      <div class="fhelp" id="audienceHint"></div>
+    </div>
+    <div class="field"><label for="fNote">Note for riders</label><textarea id="fNote" placeholder="Surface changes, a brutal final ramp, the view from the top…"></textarea></div>
+    <div class="field"><label>Add a photo — optional</label>
+      <div class="drop" onclick="return false"><span class="ic">◳</span>Drop a photo here, or click to choose<br/><small>JPG / PNG · your own photo only</small></div>
+      <div class="notice"><b>Photos are licensed CC BY-SA 4.0.</b> Only upload photos you took or are licensed to share — never images scraped or re-hosted from another site. You keep ownership; this keeps the Commons free of infringement.</div>
+    </div>
+    <div class="field"><label for="fOsm">Already in OpenStreetMap?</label>
+      <select id="fOsm"><option>Unknown</option><option>Yes</option><option>No</option></select>
+    </div>
+  </section>
+
+  <!-- STEP 4 — REVIEW -->
+  <section class="pane" data-s="4">
+    <h2>Review your climb</h2>
+    <p class="help">Check the facts before sending it to the curators.</p>
+    <div class="card" id="reviewBody"></div>
+    <div class="prov">Your climb goes to a curator's review queue. Approved facts join the Commons under <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Provenance is kept; identity is not.</div>
+  </section>
+
+  <!-- STEP 5 — SUBMITTED -->
+  <section class="pane submitted" data-s="5">
+    <div class="done-ic">◬</div>
+    <h2>It's in the queue.</h2>
+    <p>A curator will review <b id="doneName">your climb</b>. If it checks out, it joins the Commons backlog — and becomes eligible for the next voting round. Follow its journey below.</p>
+    <a class="btn btn-g" href="map.html">← Back to the map</a>
+  </section>
+
+  <!-- NAV -->
+  <div class="navrow" id="navrow">
+    <button class="btn btn-g" id="backBtn" onclick="step(cur-1)" style="visibility:hidden">← Back</button>
+    <span class="spacer"></span>
+    <button class="btn btn-p" id="nextBtn" onclick="onNext()">Next →</button>
+  </div>
+</main>
+
+<!-- GOVERNANCE JOURNEY -->
+<section class="journey">
+  <div class="jwrap">
+    <div class="ey">How contributions become the atlas</div>
+    <h2>The journey of a climb</h2>
+    <p class="jsub">Nothing you add goes live unchecked. Every climb is reviewed, then earns its place — and the best rise through the community's vote, re-ranked each round, never reset.</p>
+    <div class="spine">
+      <div class="jnode" id="youAreHere"><span class="jdot"></span><span class="jt">You</span><span class="jl">You draw &amp; submit the climb</span></div>
+      <span class="jarrow">→</span>
+      <div class="jnode"><span class="jdot"></span><span class="jt">Curators</span><span class="jl">Review queue — checked by trusted curators</span></div>
+      <span class="jarrow">→</span>
+      <div class="jnode"><span class="jdot"></span><span class="jt">Approved</span><span class="jl">Joins the “Everything” backlog of the Commons</span></div>
+      <span class="jarrow">→</span>
+      <div class="jnode"><span class="jdot"></span><span class="jt">Eligible</span><span class="jl">In the running for the next voting round</span></div>
+      <span class="jarrow">→</span>
+      <div class="jnode goal"><span class="jdot"></span><span class="jt">Curated</span><span class="jl">Voted up into the region's best-of</span></div>
+    </div>
+    <div class="branch-lead">…or, from review</div>
+    <div class="branches">
+      <div class="jbranch"><b>⟲ Needs info</b>A curator sends it back with a question — you refine and resubmit.</div>
+      <div class="jbranch"><b>✕ Rejected</b>Duplicate or not a climb — declined with a reason, nothing lost.</div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot"><div class="wrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
+
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+  const S={start:null,summit:null,lengthKm:0,name:'',gain:0,maxGrad:'',surface:'Asphalt',
+           surfaceQ:'Smooth',traffic:'Traffic-free',disciplines:new Set(['Road']),note:'',osm:'Unknown'};
+  let cur=1;
+
+  /* ---------- step navigation ---------- */
+  function step(n){
+    if(n<1||n>5) return;
+    cur=n;
+    document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',+p.dataset.s===n));
+    document.querySelectorAll('#stepper li').forEach(li=>{
+      li.classList.toggle('on',+li.dataset.s===n);
+      li.classList.toggle('done',+li.dataset.s<n);
+    });
+    document.getElementById('backBtn').style.visibility = (n>1&&n<5)?'visible':'hidden';
+    const next=document.getElementById('nextBtn');
+    next.textContent = n===4?'Submit for review →':'Next →';
+    next.style.display = n===5?'none':'inline-flex';
+    if(n===2) onEnterProfile();
+    if(n===3) updateAudienceHint();
+    if(n===4) renderReview();
+    refreshGate();
+    window.scrollTo(0,0);
+  }
+  function onNext(){ if(cur===4){submitClimb();} else {step(cur+1);} }
+  function refreshGate(){
+    const next=document.getElementById('nextBtn');
+    if(cur===1) next.disabled=!(S.start&&S.summit);
+    else if(cur===2) next.disabled=!(S.name && S.gain>0);
+    else next.disabled=false;
+  }
+
+  /* ---------- step 1: draw the segment ---------- */
+  const cmap=new maplibregl.Map({container:'cmap',style:'https://tiles.openfreemap.org/styles/liberty',
+    center:[5.74,50.49],zoom:11,attributionControl:false});
+  cmap.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-right');
+  cmap.addControl(new maplibregl.AttributionControl({customAttribution:'© OpenStreetMap contributors · ODbL'}),'bottom-right');
+  let footM=null,topM=null;
+  cmap.on('load',()=>{
+    cmap.addSource('climb',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:[]}}});
+    cmap.addLayer({id:'climb',type:'line',source:'climb',
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color':'#FF5A1F','line-width':4}});
+    addRegionBoundary('Wallonia');
+  });
+  // region boundary — dim outside the region (spotlight) + dashed outline, beneath the climb line
+  function addRegionBoundary(name){
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=jsonv2&polygon_geojson=1&limit=1`)
+      .then(r=>r.json()).then(d=>{
+        if(!d[0]||!d[0].geojson||cmap.getSource('region')) return;
+        const g=d[0].geojson;
+        const polys = g.type==='MultiPolygon' ? g.coordinates : [g.coordinates];
+        const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
+        const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...polys.map(p=>p[0])]}};
+        cmap.addSource('region-mask',{type:'geojson',data:mask});
+        cmap.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
+        cmap.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.2}},'climb');
+        cmap.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.9}},'climb');
+      }).catch(()=>{});
+  }
+  cmap.on('click',e=>{
+    const ll=[e.lngLat.lng,e.lngLat.lat];
+    if(!S.start){S.start=ll; footM=mkMarker(ll,'●','foot');}
+    else if(!S.summit){S.summit=ll; topM=mkMarker(ll,'▲','summit');}
+    else return;
+    drawClimb();
+  });
+  function mkMarker(ll,glyph,cls){
+    // Inline SVG marker with fixed pixel attributes — robust against the marker
+    // CSS-sizing quirk. foot = spruce, summit = trail.
+    const fill=cls==='summit'?'#FF5A1F':'#1C3A2A';
+    const wrap=document.createElement('div'); wrap.className='cc-marker';
+    wrap.innerHTML=
+      `<svg width="24" height="32" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">`+
+      `<path d="M12 1 C6 1 1 5.6 1 11.4 C1 19 12 31 12 31 C12 31 23 19 23 11.4 C23 5.6 18 1 12 1 Z" `+
+      `fill="${fill}" stroke="#EFE6D4" stroke-width="2"/>`+
+      `<circle cx="12" cy="11" r="3.4" fill="#EFE6D4"/></svg>`;
+    return new maplibregl.Marker({element:wrap,anchor:'bottom'}).setLngLat(ll).addTo(cmap);
+  }
+  function haversineKm(a,b){ // a,b = [lng,lat]
+    const R=6371,toR=x=>x*Math.PI/180;
+    const dLat=toR(b[1]-a[1]),dLng=toR(b[0]-a[0]);
+    const s=Math.sin(dLat/2)**2+Math.cos(toR(a[1]))*Math.cos(toR(b[1]))*Math.sin(dLng/2)**2;
+    return R*2*Math.atan2(Math.sqrt(s),Math.sqrt(1-s));
+  }
+  function fmt(ll){return ll?`${ll[1].toFixed(3)}°N ${ll[0].toFixed(3)}°E`:'…';}
+  let routeSeq=0; // guards against out-of-order/stale route responses
+  function setReadout(){
+    document.getElementById('readout').textContent=
+      `◎ ${fmt(S.start)} → ▲ ${fmt(S.summit)} · ${S.lengthKm?S.lengthKm.toFixed(1)+' km':'—'}`;
+  }
+  function drawClimb(){
+    if(S.start&&S.summit){
+      const src=cmap.getSource('climb');
+      if(src) src.setData({type:'Feature',geometry:{type:'LineString',coordinates:[S.start,S.summit]}});
+      S.lengthKm=haversineKm(S.start,S.summit); // instant straight-line estimate
+      setReadout(); refreshGate();
+      routeClimb(); // upgrade to the road-following route
+    } else {
+      setReadout(); refreshGate();
+    }
+  }
+  // Snap the climb to the actual road between foot and summit (OSRM, keyless).
+  // A climb is never a straight line; falls back to the straight segment offline.
+  function routeClimb(){
+    const seq=++routeSeq;
+    const a=S.start, b=S.summit;
+    const url=`https://router.project-osrm.org/route/v1/driving/${a[0]},${a[1]};${b[0]},${b[1]}?overview=full&geometries=geojson`;
+    fetch(url).then(r=>r.json()).then(d=>{
+      if(seq!==routeSeq||!S.start||!S.summit) return;        // a newer click/reset superseded this
+      if(d.code!=='Ok'||!d.routes||!d.routes[0]) return;     // keep straight-line fallback
+      const route=d.routes[0];
+      const src=cmap.getSource('climb');
+      if(src) src.setData({type:'Feature',geometry:route.geometry});
+      S.lengthKm=route.distance/1000;
+      setReadout();
+    }).catch(()=>{}); // offline → straight line stays
+  }
+  function resetClimb(){
+    S.start=S.summit=null; S.lengthKm=0;
+    footM&&footM.remove(); topM&&topM.remove(); footM=topM=null;
+    const src=cmap.getSource('climb'); if(src) src.setData({type:'Feature',geometry:{type:'LineString',coordinates:[]}});
+    drawClimb();
+  }
+  const resetBtn=document.getElementById('reset');
+  resetBtn.addEventListener('click',resetClimb);
+  resetBtn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();resetClimb();}});
+
+  // place search — geocode with Photon (keyless, OSM-based; Nominatim/Photon in production too)
+  const search=document.getElementById('placeSearch');
+  const results=document.getElementById('searchResults');
+  let searchT=null;
+  function renderResults(list){
+    if(!list){ results.hidden=true; results.innerHTML=''; return; }
+    if(!list.length){ results.innerHTML='<div class="res empty">No matches</div>'; results.hidden=false; return; }
+    results.innerHTML=list.map(f=>{
+      const p=f.properties||{}, c=f.geometry.coordinates;
+      const main=p.name||p.street||p.city||'Result';
+      const sub=[p.name?p.street:'',p.city,p.county,p.state,p.country].filter(Boolean).join(', ');
+      return `<div class="res" data-lng="${c[0]}" data-lat="${c[1]}"><b>${main}</b><small>${sub}</small></div>`;
+    }).join('');
+    results.hidden=false;
+    results.querySelectorAll('.res[data-lat]').forEach(el=>el.addEventListener('click',()=>{
+      cmap.flyTo({center:[+el.dataset.lng,+el.dataset.lat],zoom:14});
+      search.value=el.querySelector('b').textContent; results.hidden=true;
+    }));
+  }
+  function geocode(q){
+    fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6`)
+      .then(r=>r.json()).then(d=>renderResults(d.features||[]))
+      .catch(()=>{ results.innerHTML='<div class="res empty">Search unavailable — click the map instead</div>'; results.hidden=false; });
+  }
+  search.addEventListener('input',()=>{
+    const q=search.value.trim(); clearTimeout(searchT);
+    if(q.length<3){ renderResults(null); return; }
+    searchT=setTimeout(()=>geocode(q),320);
+  });
+  search.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(searchT); const q=search.value.trim(); if(q.length>=2) geocode(q); } });
+  document.addEventListener('click',e=>{ if(!e.target.closest('.csearch')) results.hidden=true; });
+
+  /* ---------- step 2: profile ---------- */
+  function avgGrad(){
+    const len=parseFloat(document.getElementById('fLen').value)||0;
+    return len>0?(S.gain/(len*1000))*100:0;
+  }
+  function onEnterProfile(){
+    const fLen=document.getElementById('fLen');
+    if(!fLen.value && S.lengthKm) fLen.value=S.lengthKm.toFixed(1);
+    syncProfile();
+  }
+  function syncProfile(){
+    S.name=document.getElementById('fName').value.trim();
+    S.gain=parseFloat(document.getElementById('fGain').value)||0;
+    S.maxGrad=document.getElementById('fMax').value;
+    S.surface=document.getElementById('fSurface').value;
+    S.surfaceQ=document.getElementById('fSurfaceQ').value;
+    S.traffic=document.getElementById('fTraffic').value;
+    const np=document.getElementById('namePreview');
+    np.textContent=S.name||'Unnamed climb'; np.classList.toggle('empty',!S.name);
+    document.getElementById('fAvg').value = avgGrad()?avgGrad().toFixed(1)+' %':'—';
+    refreshGate();
+  }
+  ['fName','fLen','fGain','fMax','fSurface','fSurfaceQ','fTraffic'].forEach(id=>
+    document.getElementById(id).addEventListener('input',syncProfile));
+
+  /* ---------- step 3: details ---------- */
+  // Rough, general gradient feasibility by audience. Handbikes are arm-powered,
+  // so sustained gradients well below leg-powered cycling — surface these.
+  function updateAudienceHint(){
+    const hint=document.getElementById('audienceHint'); if(!hint) return;
+    const avg=avgGrad();
+    if(S.disciplines.has('Handbike')){
+      if(avg>6){
+        hint.innerHTML=`⚠ ${avg.toFixed(1)}% avg is steep for handbikes — most handcyclists sustain ~6% (≈10% on short ramps). Note an accessible alternative if there is one.`;
+        hint.style.color='var(--clay)';
+      } else if(avg>0){
+        hint.textContent=`~${avg.toFixed(1)}% avg — within reach for many handcyclists (≈6% sustained is a common comfortable max).`;
+        hint.style.color='';
+      } else {
+        hint.textContent='Handbike: most handcyclists sustain ~6% (≈10% on short ramps).';
+        hint.style.color='';
+      }
+    } else {
+      hint.textContent='Rough gradient ceilings — road & MTB: 15%+ · gravel ~12% (traction) · loaded touring ~10% · handbike ~6%.';
+      hint.style.color='';
+    }
+  }
+  document.querySelectorAll('#disc .chip').forEach(c=>{
+    c.setAttribute('role','button'); c.setAttribute('tabindex','0');
+    c.setAttribute('aria-pressed', c.classList.contains('on')?'true':'false');
+    const toggle=()=>{
+      c.classList.toggle('on');
+      const on=c.classList.contains('on');
+      c.setAttribute('aria-pressed', on?'true':'false');
+      const k=c.textContent.trim();
+      on?S.disciplines.add(k):S.disciplines.delete(k);
+      updateAudienceHint();
+    };
+    c.addEventListener('click',toggle);
+    c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+  });
+  document.getElementById('fNote').addEventListener('input',e=>S.note=e.target.value);
+  document.getElementById('fOsm').addEventListener('input',e=>S.osm=e.target.value);
+
+  /* ---------- step 4: review ---------- */
+  function renderReview(){
+    const len=(parseFloat(document.getElementById('fLen').value)||S.lengthKm||0).toFixed(1);
+    document.getElementById('reviewBody').innerHTML=`
+      <span class="co">◎ ${fmt(S.start)} → ▲ ${fmt(S.summit)}</span>
+      <h3>${S.name||'Unnamed climb'}</h3>
+      <div class="rtags">${[...S.disciplines].map(d=>`<span>${d}</span>`).join('')}<span class="t-surf">${S.surface} · ${S.surfaceQ}</span><span class="t-traf t-${S.traffic.toLowerCase().replace(/[^a-z]/g,'')}">${S.traffic}</span></div>
+      <div class="kv"><span>Length</span><span>${len} km</span></div>
+      <div class="kv"><span>Elevation gain</span><span>△ ${S.gain} m</span></div>
+      <div class="kv"><span>Avg gradient</span><span>${avgGrad().toFixed(1)} %</span></div>
+      <div class="kv"><span>Max gradient</span><span>${S.maxGrad?S.maxGrad+' %':'—'}</span></div>
+      <div class="kv"><span>Surface</span><span>${S.surface} · ${S.surfaceQ}</span></div>
+      <div class="kv"><span>Traffic</span><span>${S.traffic}</span></div>
+      <div class="kv"><span>Already in OSM?</span><span>${S.osm}</span></div>
+      ${S.note?`<p style="margin-top:.7rem;font-size:.9rem">${S.note.replace(/</g,'&lt;')}</p>`:''}`;
+  }
+
+  /* ---------- step 5: submit ---------- */
+  function submitClimb(){
+    document.getElementById('doneName').textContent = S.name||'your climb';
+    step(5);
+    document.getElementById('youAreHere').classList.add('here');
+  }
+
+  refreshGate();
+</script>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

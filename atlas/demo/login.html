@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Account</title>
+<meta name="description" content="Join the atlas. Sign in to contribute climbs, places and fixes to the open cycling Commons." />
+<link rel="canonical" href="https://cyclingcommons.org/login.html" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — Account" />
+<meta property="og:description" content="Join the atlas. Sign in to contribute climbs, places and fixes to the open cycling Commons." />
+<meta property="og:url" content="https://cyclingcommons.org/login.html" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/login.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Account" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Account" />
+<meta name="twitter:description" content="Join the atlas. Sign in to contribute climbs, places and fixes to the open cycling Commons." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/login.jpg" />
+
+<link rel="stylesheet" href="fonts.css" />
+<style>
+  :root{--ink:#101E16;--paper:#EFE6D4;--paper-deep:#E2D5BC;--spruce:#1C3A2A;--spruce-lift:#2C5440;--trail:#FF5A1F;--clay:#B5532E;--glacier:#8FB6A8;--ochre:#C8923A;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif;--sans:"Spline Sans",system-ui,sans-serif;--mono:"Spline Sans Mono",monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);min-height:100svh}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.04;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* ===== AUTH ===== */
+  .auth{display:grid;grid-template-columns:1fr 1fr;min-height:100svh}
+  .panel{position:relative;overflow:hidden;color:var(--paper);display:flex;flex-direction:column;justify-content:space-between;padding:2.4rem;
+    background:radial-gradient(120% 90% at 70% 20%,#27513a,var(--spruce) 45%,#0f1f16 85%,var(--ink))}
+  .panel svg{position:absolute;inset:0;width:100%;height:100%;opacity:.4}
+  .panel svg path{fill:none;stroke:var(--ochre);stroke-width:1.1;opacity:.5}
+  .panel svg path:nth-child(even){stroke:var(--glacier);opacity:.3}
+  .panel .top,.panel .mid,.panel .bot{position:relative;z-index:2}
+  .panel .brand{font-family:var(--serif);font-weight:600;font-size:1.65rem}
+  .panel .brand b{color:var(--trail);font-style:italic}
+  .panel .mid h1{font-family:var(--serif);font-weight:500;font-size:clamp(2rem,3.6vw,3rem);line-height:1.05;letter-spacing:-.02em;max-width:14ch}
+  .panel .mid p{margin-top:1rem;max-width:32ch;color:rgba(239,230,212,.85)}
+  .panel .bot{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;color:rgba(239,230,212,.6);text-transform:uppercase}
+  .panel .pnav{display:flex;flex-wrap:wrap;gap:.2rem .9rem;margin-top:.9rem}
+  .panel .pnav a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.65);transition:color .2s}
+  .panel .pnav a:hover{color:var(--trail)}
+
+  .formwrap{display:flex;align-items:center;justify-content:center;padding:2.4rem}
+  .card{width:100%;max-width:380px}
+  .tabs{display:flex;gap:.4rem;margin-bottom:2rem;border-bottom:1px solid rgba(20,22,14,.15)}
+  .tabs button{background:none;border:none;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.6rem .2rem;margin-right:1.2rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button.on{color:var(--ink);border-color:var(--trail)}
+  .field{margin-bottom:1.3rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none}
+  .field input:focus{border-color:var(--trail)}
+  .row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;font-size:.85rem}
+  .row-between a{color:var(--clay)}
+  .btn{width:100%;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:1rem;padding:.9rem;border:none;border-radius:5px;cursor:pointer;transition:background .2s}
+  .btn:hover{background:#ff703d}
+  .reassure{margin-top:1.6rem;font-size:.82rem;color:#5a5d4d;line-height:1.5;border-left:2px solid var(--glacier);padding-left:.8rem}
+  .demo{display:block;text-align:center;margin-top:1.8rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);cursor:pointer}
+  .back-in{display:block;margin-top:1.4rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+  .hide{display:none!important}
+
+  /* ===== DASHBOARD ===== */
+  .dash{min-height:100svh;display:flex;flex-direction:column}
+  .dtop{background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2rem}
+  .dtop .brand{font-family:var(--serif);font-weight:600;font-size:1.5rem}
+  .dtop .brand b{color:var(--trail);font-style:italic}
+  .dtop .who{display:flex;align-items:center;gap:.8rem;font-size:.9rem}
+  .dtop .av{width:34px;height:34px;border-radius:50%;background:var(--trail);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600}
+  .dtop a.out{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.6);cursor:pointer}
+  .dtabs{display:flex;gap:1.6rem;padding:0 2rem;background:var(--paper-deep);border-bottom:1px solid rgba(20,22,14,.12)}
+  .dtabs button{background:none;border:none;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:1rem .2rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .dtabs button.on{color:var(--ink);border-color:var(--trail)}
+  .dbody{flex:1;padding:2.2rem;max-width:880px;width:100%;margin:0 auto}
+  .dpane{display:none} .dpane.on{display:block}
+  .stats{display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:2rem;padding-bottom:1.6rem;border-bottom:1px solid rgba(20,22,14,.12)}
+  .stat .n{font-family:var(--serif);font-size:2rem;font-weight:600}
+  .stat .l{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+  .stat .n.t{color:var(--trail)}
+  .item{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+  .item .tag{font-family:var(--mono);font-size:.58rem;padding:.25rem .45rem;border-radius:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}
+  .item h4{flex:1;font-size:1rem;font-weight:500}
+  .item .co{font-family:var(--mono);font-size:.62rem;color:#595c4d}
+  .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px}
+  .pill.ok{background:#3e7d4f;color:#fff} .pill.pend{background:var(--ochre);color:var(--ink)} .pill.conf{background:var(--spruce);color:var(--paper)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+  .rc{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.1rem}
+  .rc h4{font-family:var(--serif);font-weight:600;font-size:1.15rem} .rc .co{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin-top:.3rem}
+  .setrow{display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+  .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.88rem;color:#4a4d40;margin:1.4rem 0;border-radius:0 6px 6px 0}
+  .danger{color:var(--clay);font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+  .actions{display:flex;gap:.8rem;margin-top:2rem;flex-wrap:wrap}
+  .lnk{font-family:var(--sans);font-weight:700;font-size:.9rem;padding:.7rem 1.2rem;border-radius:5px;cursor:pointer}
+  .lnk.p{background:var(--trail);color:var(--ink)} .lnk.g{border:1.5px solid var(--ink)}
+  .rounding{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem}
+  @media(max-width:780px){.auth{grid-template-columns:1fr}.panel{min-height:38svh}}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+</head>
+<body>
+
+<!-- ============ AUTH ============ -->
+<div class="auth" id="auth">
+  <div class="panel">
+    <svg viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <path d="M-20,640 C160,580 260,680 420,620 C560,570 640,640 820,600"/>
+      <path d="M-20,540 C150,490 280,580 440,520 C600,470 660,540 820,500"/>
+      <path d="M-20,440 C160,400 260,470 420,420 C560,380 660,440 820,400"/>
+      <path d="M-20,330 C150,300 280,370 440,320 C600,280 660,330 820,300"/>
+      <path d="M-20,220 C160,190 260,250 420,210 C560,180 660,220 820,190"/>
+    </svg>
+    <div class="top"><div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+      <nav class="pnav"><a href="map.html">Map</a><a href="regions.html">Regions</a><a href="vote.html">Vote</a><a href="developers.html">Developers</a><a href="about.html">About</a></nav>
+    </div>
+    <div class="mid">
+      <h1>Join the atlas.</h1>
+      <p>A free account to add places, rank a region's best, and help keep the map honest.</p>
+    </div>
+    <div class="bot">FREE · OPEN · NO RIDE DATA · ◎ YOU ARE HERE 51.92°N 4.48°E</div>
+  </div>
+
+  <div class="formwrap">
+    <div class="card">
+      <div class="tabs">
+        <button class="on" data-t="in" onclick="authTab('in')">Sign in</button>
+        <button data-t="up" onclick="authTab('up')">Create account</button>
+      </div>
+
+      <div id="t-in">
+        <div class="field"><label>Email</label><input type="email" placeholder="you@example.com" /></div>
+        <div class="field"><label>Password</label><input type="password" placeholder="••••••••" /></div>
+        <div class="row-between"><label style="display:flex;gap:.4rem;align-items:center;font-size:.85rem"><input type="checkbox" style="width:auto" /> Stay signed in</label><a href="#t-reset" onclick="authReset();return false;">Forgot?</a></div>
+        <button class="btn" onclick="showDash()">Sign in</button>
+      </div>
+
+      <div id="t-up" class="hide">
+        <div class="field"><label>Display name</label><input type="text" placeholder="How you'll appear" /></div>
+        <div class="field"><label>Email</label><input type="email" placeholder="you@example.com" /></div>
+        <div class="field"><label>Password</label><input type="password" placeholder="At least 10 characters" /></div>
+        <button class="btn" onclick="showDash()">Create free account</button>
+        <p class="reassure">A free Cycling Commons account stores <b>what you contribute</b> — facts, edits, votes — kept separate from who you are. To run the account we hold your email and a salted password hash; we never track your rides. The account is the Commons', not any app's. <a href="privacy.html">Privacy policy</a>.</p>
+      </div>
+
+      <div id="t-reset" class="hide">
+        <div id="reset-form">
+          <div class="field"><label>Email</label><input type="email" placeholder="you@example.com" /></div>
+          <button class="btn" onclick="resetSent()">Send reset link</button>
+          <p class="reassure">We'll email a one-time link to set a new password. The Commons only knows your email and what you contribute — nothing about how you ride.</p>
+        </div>
+        <p id="reset-done" class="reassure hide">If an account exists for that email, a reset link is on its way. Check your inbox.</p>
+        <a class="back-in" href="#t-in" onclick="authTab('in');return false;">← Back to sign in</a>
+      </div>
+
+      <span class="demo" onclick="showDash()">↳ Preview the account dashboard →</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div class="dash hide" id="dash">
+  <div class="dtop">
+    <div class="brandblock" style="display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none"><a class="brand" href="index.html"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></a><div class="brandsub" style="font-family:var(--mono,'Spline Sans Mono',monospace);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap"><span class="cc-coord">N 48.87° · E 2.29°</span><br>OPEN ATLAS — EST. 2026</div></div>
+    <div class="who"><span id="dash-name">M. Rider</span><span class="av" id="dash-av">M</span><a class="out" onclick="showAuth()">Sign out</a></div>
+  </div>
+  <div class="dtabs">
+    <button class="on" onclick="dTab(this,'contrib')">Contributions</button>
+    <button onclick="dTab(this,'votes')">Votes</button>
+    <button onclick="dTab(this,'saved')">Saved regions</button>
+    <button onclick="dTab(this,'settings')">Settings</button>
+  </div>
+  <div class="dbody">
+
+    <div class="dpane on" id="p-contrib">
+      <div class="stats">
+        <div class="stat"><div class="n">142</div><div class="l">Facts contributed</div></div>
+        <div class="stat"><div class="n t">38</div><div class="l">Confirmed by others</div></div>
+        <div class="stat"><div class="n">9</div><div class="l">Sent back to OSM</div></div>
+      </div>
+      <div class="item"><span class="tag" style="background:var(--glacier)">water</span><h4>Fountain · Spa centre</h4><span class="co">50.49°N 5.86°E</span><span class="pill ok">approved</span></div>
+      <div class="item"><span class="tag" style="background:var(--trail);color:#fff">climb</span><h4>Côte de Stockeu · gradient edit</h4><span class="co">50.39°N 5.77°E</span><span class="pill pend">pending</span></div>
+      <div class="item"><span class="tag" style="background:var(--ochre)">hazard</span><h4>Road closure · N66</h4><span class="co">50.42°N 5.80°E</span><span class="pill conf">confirmed ×3</span></div>
+      <div class="item"><span class="tag" style="background:var(--clay);color:#fff">stay</span><h4>B&amp;B Vallée de l'Amblève</h4><span class="co">50.45°N 5.62°E</span><span class="pill ok">approved</span></div>
+      <div class="actions"><a class="lnk p" href="map.html">Explore the map →</a><a class="lnk g" href="moderate.html">Open moderation →</a></div>
+    </div>
+
+    <div class="dpane" id="p-votes">
+      <div class="rounding">◷ Summer 2026 round closes in 47 days</div>
+      <div class="item"><span class="tag" style="background:var(--spruce);color:#fff">region</span><h4>Wallonia — best climbs</h4><span class="co">4 / 10 ranked</span><span class="pill conf">voting</span></div>
+      <div class="item"><span class="tag" style="background:var(--spruce);color:#fff">region</span><h4>Dolomites — best views</h4><span class="co">7 / 10 ranked</span><span class="pill conf">voting</span></div>
+      <div class="note">Your votes are private. The Commons records <b>that</b> you voted and <b>when</b> — never a public record of <b>what</b> you voted for.</div>
+    </div>
+
+    <div class="dpane" id="p-saved">
+      <div class="cards">
+        <a class="rc" href="region.html"><h4>Wallonia</h4><div class="co">BE · 18 climbs · 42 water</div></a>
+        <a class="rc" href="regions.html"><h4>Dolomites</h4><div class="co">IT · 31 climbs · 12 views</div></a>
+        <a class="rc" href="regions.html"><h4>Peak District</h4><div class="co">UK · gravel · 9 stays</div></a>
+      </div>
+    </div>
+
+    <div class="dpane" id="p-settings">
+      <div class="setrow"><div><b>Display name</b><div class="val" id="set-name" style="font-size:.85rem;color:#595c4d">M. Rider</div></div><a class="danger" id="act-name" onclick="editName(this)">Edit</a></div>
+      <div class="setrow"><div><b>Units</b><div class="val" id="set-units" style="font-size:.85rem;color:#595c4d">Metric · km, m</div></div><a class="danger" onclick="switchUnits()">Switch</a></div>
+      <div class="setrow"><div><b>Email · round reminders</b><div class="val" id="set-email" style="font-size:.85rem;color:#595c4d">On</div></div><a class="danger" onclick="toggleEmail()">Manage</a></div>
+      <div class="note"><b>Privacy.</b> Your contributions join the open Commons as facts about places (with provenance), kept separate from who you are. The account itself holds personal data — your email and a salted password hash — which stays private and is never published. No ride tracking. See the <a href="privacy.html">privacy policy</a>.</div>
+      <div class="setrow" style="border:none"><div><b>Delete account</b><div style="font-size:.85rem;color:#595c4d">Removes your identity; contributed facts stay in the Commons, de-linked.</div></div><a class="danger" onclick="deleteAccount()">Delete</a></div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
+  .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .inline-edit{font-family:var(--sans);font-size:.85rem;padding:.2rem .4rem;border:1.5px solid var(--trail);border-radius:5px;background:var(--paper);color:var(--ink);min-width:160px;outline:none}
+</style>
+<script>
+  function authTab(t){
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+    document.getElementById('t-in').classList.toggle('hide',t!=='in');
+    document.getElementById('t-up').classList.toggle('hide',t!=='up');
+    document.getElementById('t-reset').classList.toggle('hide',t!=='reset');
+  }
+  // "Forgot?" — no tab button, so deselect both tabs and show the reset panel.
+  function authReset(){
+    authTab('reset');
+    document.getElementById('reset-form').classList.remove('hide');
+    document.getElementById('reset-done').classList.add('hide');
+  }
+  function resetSent(){
+    document.getElementById('reset-form').classList.add('hide');
+    document.getElementById('reset-done').classList.remove('hide');
+  }
+  function showDash(){document.getElementById('auth').classList.add('hide');document.getElementById('dash').classList.remove('hide');window.scrollTo(0,0);}
+  function showAuth(){document.getElementById('dash').classList.add('hide');document.getElementById('auth').classList.remove('hide');}
+  function dTab(btn,id){
+    document.querySelectorAll('.dtabs button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+    document.querySelectorAll('.dpane').forEach(p=>p.classList.remove('on'));
+    document.getElementById('p-'+id).classList.add('on');
+  }
+
+  /* Account settings — interactive in the prototype. Nothing persists: each
+     action updates the screen and shows a toast. Inline edits / toggles only,
+     no overlays (mobile-friendly). */
+  let _toastT=null;
+  function toast(msg){
+    let t=document.getElementById('cc-toast');
+    if(!t){ t=document.createElement('div'); t.id='cc-toast'; t.className='cc-toast'; document.body.appendChild(t); }
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('show'), 2600);
+  }
+  function editName(a){
+    const row=document.getElementById('set-name');
+    if(a.dataset.editing){                                   // Save
+      const v=(row.querySelector('input').value||'').trim();
+      const name=v||row.dataset.prev||'M. Rider';
+      row.textContent=name;
+      document.getElementById('dash-name').textContent=name;
+      const av=document.getElementById('dash-av'); if(av) av.textContent=(name.trim()[0]||'M').toUpperCase();
+      a.textContent='Edit'; delete a.dataset.editing;
+      toast('Display name updated — demo, not stored');
+    } else {                                                 // Edit
+      const cur=row.textContent.trim(); row.dataset.prev=cur;
+      row.innerHTML='<input class="inline-edit" aria-label="Display name" value="'+cur.replace(/"/g,'&quot;')+'" />';
+      const inp=row.querySelector('input'); inp.focus(); inp.select();
+      inp.addEventListener('keydown', e=>{ if(e.key==='Enter') editName(a); if(e.key==='Escape'){ row.textContent=cur; a.textContent='Edit'; delete a.dataset.editing; } });
+      a.textContent='Save'; a.dataset.editing='1';
+    }
+  }
+  function switchUnits(){
+    const el=document.getElementById('set-units');
+    const metric=el.textContent.trim().indexOf('Metric')===0;
+    el.textContent=metric?'Imperial · mi, ft':'Metric · km, m';
+    toast('Units switched to '+(metric?'Imperial':'Metric')+' — demo, not stored');
+  }
+  function toggleEmail(){
+    const el=document.getElementById('set-email');
+    const on=el.textContent.trim()==='On';
+    el.textContent=on?'Off':'On';
+    toast('Round reminders turned '+(on?'off':'on')+' — demo, not stored');
+  }
+  function deleteAccount(){
+    if(confirm('Delete your account?\n\nYour identity is removed; the facts you contributed stay in the open Commons, de-linked from you.')){
+      toast('Demo — your account isn’t actually deleted.');
+    }
+  }
+</script>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+<script src="races.js"></script>
+</body>
+</html>

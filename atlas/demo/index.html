@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — The Riders' Atlas</title>
+<meta name="description" content="An open, community-built atlas of the world's best cycling — climbs, water, viewpoints, bike-friendly stays and road conditions. Open data, governed by riders." />
+<link rel="canonical" href="https://cyclingcommons.org/" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="https://cyclingcommons.org/licenses.html" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — The Riders' Atlas" />
+<meta property="og:description" content="An open, community-built atlas of the world's best cycling — climbs, water, viewpoints, bike-friendly stays and road conditions. Open data, governed by riders." />
+<meta property="og:url" content="https://cyclingcommons.org/" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/index.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — The Riders' Atlas" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — The Riders' Atlas" />
+<meta name="twitter:description" content="An open, community-built atlas of the world's best cycling — climbs, water, viewpoints, bike-friendly stays and road conditions. Open data, governed by riders." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/index.jpg" />
+
+<link rel="stylesheet" href="fonts.css" />
+<style>
+  :root{
+    --ink:#101E16; --paper:#EFE6D4; --paper-deep:#E2D5BC;
+    --spruce:#1C3A2A; --spruce-lift:#2C5440; --trail:#FF5A1F;
+    --clay:#B5532E; --glacier:#8FB6A8; --ochre:#C8923A;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif; --sans:"Spline Sans",system-ui,sans-serif; --mono:"Spline Sans Mono",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  /* grain overlay */
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.045;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.16em;font-size:.72rem}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 clamp(1.25rem,4vw,3rem)}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- NAV ---------- */
+  nav{position:absolute;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0.9rem clamp(1.25rem,4vw,3rem)}
+  .brand{font-family:var(--serif);font-weight:600;font-size:1.6rem;color:var(--paper);letter-spacing:-.02em}
+  .brand b{color:var(--trail);font-style:italic;font-weight:600}
+  .nav-links{display:flex;gap:2rem;align-items:center}
+  .nav-links a{color:var(--paper);font-size:.95rem;opacity:.85;transition:opacity .2s}
+  .nav-links a:hover{opacity:1}
+  .nav-cta{border:1.5px solid rgba(239,230,212,.4);padding:.55rem 1.1rem;border-radius:4px;transition:all .25s}
+  .nav-cta:hover{background:var(--trail);border-color:var(--trail);color:var(--ink)!important;opacity:1!important}
+  .nav-cta.fill{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
+  .nav-cta.fill:hover{background:#ff703d;border-color:#ff703d}
+  @media(max-width:760px){.nav-links a:not(.nav-cta){display:none}}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;min-height:100svh;display:flex;flex-direction:column;color:var(--paper);overflow:hidden;
+    background:radial-gradient(120% 90% at 75% 15%,#27513a 0%,var(--spruce) 38%,#0f1f16 80%,var(--ink) 100%)}
+  .hero-contours{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
+  .hero-contours path{fill:none;stroke:var(--ride-outer,var(--ochre));stroke-width:1.7;opacity:.85;transition:stroke .6s ease}
+  .hero-contours path:nth-child(even){stroke:var(--ride-inner,var(--glacier));opacity:.55}
+  /* map-style surface line types — solid road, dashed gravel, dotted path, dash-dot track, long-dash bridleway */
+  .hero-contours .s-gravel{stroke-dasharray:13 8}
+  .hero-contours .s-path{stroke-dasharray:2 7;stroke-linecap:round}
+  .hero-contours .s-track{stroke-dasharray:15 6 3 6}
+  .hero-contours .s-bridle{stroke-dasharray:20 11}
+  /* draw-on: left-to-right wipe (works with dashed lines, unlike a dashoffset draw) */
+  .hero .hero-contours{clip-path:inset(0 100% 0 0);animation:wipe 2.8s ease-out forwards}
+  @keyframes wipe{to{clip-path:inset(0 0 0 0)}}
+  .hero-glow{position:absolute;width:60vw;height:60vw;right:-12vw;top:-14vw;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,90,31,.22),transparent 62%);filter:blur(20px)}
+  .corner{position:absolute;font-family:var(--mono);text-transform:uppercase;letter-spacing:.16em;font-size:.68rem;color:rgba(239,230,212,.55);z-index:5}
+  .corner.tl{top:3.5rem;left:clamp(1.25rem,4vw,3rem)} .corner.tr{top:4.4rem;right:clamp(1.25rem,4vw,3rem);text-align:right}
+  .corner.br{bottom:1.6rem;right:clamp(1.25rem,4vw,3rem);text-align:right}
+
+  .hero-inner{position:relative;z-index:10;padding-bottom:clamp(2.5rem,6vw,5rem);padding-top:8rem;width:100%}
+  .eyebrow{display:inline-flex;align-items:center;gap:.6rem;color:var(--trail);margin-bottom:1.4rem}
+  .eyebrow::before{content:"";width:13px;height:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23FF5A1F' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat;transform:translateY(-1px)}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.7rem,6.4vw,6rem);line-height:1.02;letter-spacing:-.025em;max-width:15ch}
+  h1 em{font-style:italic;color:var(--trail)}
+  .hero p.lede{font-size:clamp(1.05rem,1.7vw,1.3rem);max-width:46ch;margin:1.6rem 0 2.2rem;color:rgba(239,230,212,.88)}
+  .cta-row{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+  .btn{font-family:var(--sans);font-weight:700;font-size:1rem;padding:.95rem 1.6rem;border-radius:4px;cursor:pointer;border:1.5px solid transparent;display:inline-flex;align-items:center;gap:.6rem;transition:all .25s}
+  .btn .arw{display:inline-block;font-weight:800;font-size:1.15em;transition:transform .25s}
+  .btn:hover .arw{transform:translateX(5px)}
+  .btn-primary{background:var(--trail);color:var(--ink)}
+  .btn-primary:hover{background:#ff703d}
+  .btn-ghost{background:var(--ink);border-color:rgba(239,230,212,.45);color:var(--paper)}
+  .btn-ghost:hover{background:var(--spruce);border-color:var(--paper)}
+  .ticks{display:flex;gap:2rem;flex-wrap:wrap;margin-top:2.4rem}
+  .tick{font-family:var(--mono);font-size:.74rem;font-weight:700;letter-spacing:.1em;color:rgba(239,230,212,.95)}
+  .tick b{display:block;font-family:var(--serif);font-size:1.5rem;letter-spacing:0;color:var(--paper);text-transform:none}
+
+  /* reveal */
+  .rv{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+  .rv.in{opacity:1;transform:none}
+  .rv[data-d="1"]{transition-delay:.08s}.rv[data-d="2"]{transition-delay:.16s}.rv[data-d="3"]{transition-delay:.24s}.rv[data-d="4"]{transition-delay:.32s}
+
+  /* ---------- DISCIPLINE STRIP (pinned to hero bottom) ---------- */
+  .disc{margin-top:auto;color:var(--paper);width:100%;position:relative;z-index:10;
+    padding:clamp(1.4rem,3vw,2.4rem) 0}
+  .disc .wrap{display:flex;align-items:baseline;gap:.5rem .9rem;flex-wrap:nowrap}
+  .disc .label{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;color:var(--glacier);flex:none;white-space:nowrap}
+  .disc .chips{display:flex;flex-wrap:wrap;gap:.4rem;min-width:0}
+  .chip{font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;padding:.4rem .85rem;border:1px solid rgba(239,230,212,.28);border-radius:40px;color:var(--paper);user-select:none;white-space:nowrap}
+  @media(max-width:640px){.disc .wrap{flex-wrap:wrap}}
+
+  /* ---------- SECTIONS ---------- */
+  section.pad{padding:clamp(4rem,9vw,8rem) 0;position:relative}
+  .kicker{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;color:var(--clay);margin-bottom:1.1rem;display:flex;align-items:center;gap:.6rem}
+  .kicker::before{content:"";width:13px;height:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23B5532E' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat;transform:translateY(-1px)}
+  h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.9rem,3.6vw,3.1rem);line-height:1.06;letter-spacing:-.02em;max-width:18ch}
+  .lead{font-size:1.15rem;max-width:60ch;margin-top:1.2rem;color:#3a3d30}
+
+  .split{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(2rem,5vw,5rem);align-items:center}
+  @media(max-width:820px){.split{grid-template-columns:1fr}}
+  .open-list{margin-top:2rem;display:grid;gap:1.1rem}
+  .open-item{display:flex;gap:1rem;align-items:flex-start;padding-bottom:1.1rem;border-bottom:1px solid rgba(20,22,14,.12)}
+  .open-item .t{font-family:var(--mono);font-size:.7rem;padding:.3rem .55rem;border-radius:4px;white-space:nowrap;margin-top:.2rem}
+  .t.open{background:var(--spruce);color:var(--paper)} .t.priv{background:var(--clay);color:var(--paper)}
+  .open-item h4{font-size:1.05rem;font-weight:700} .open-item p{font-size:.95rem;color:#4a4d40}
+
+  /* curation card */
+  .panel{background:var(--spruce);color:var(--paper);border-radius:8px;padding:clamp(1.6rem,3vw,2.4rem);position:relative;overflow:hidden}
+  .panel .pin{position:absolute;top:1.2rem;right:1.4rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;color:var(--glacier)}
+  .panel h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin-bottom:1.1rem}
+  .rank{display:flex;align-items:center;gap:.9rem;padding:.7rem 0;border-bottom:1px solid rgba(239,230,212,.14)}
+  .rank .n{font-family:var(--mono);color:var(--trail);font-size:.85rem;width:1.4rem}
+  .rank .nm{flex:1;font-weight:500}
+  .rank .co{font-family:var(--mono);font-size:.66rem;color:rgba(239,230,212,.55)}
+  .silo-more{display:block;margin-top:1rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--trail);text-decoration:underline}
+  .silo-more:hover{color:#ff703d}
+  .vs{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;color:var(--trail);margin:1.4rem 0 .4rem;text-align:center}
+
+  /* catalog grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:2.6rem}
+  .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.3rem;position:relative;transition:all .25s;overflow:hidden}
+  .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
+  .card .co{position:absolute;top:.6rem;right:.9rem;font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1;letter-spacing:0;color:var(--ochre);opacity:.45}
+  .cat-h{font-family:var(--mono);font-size:.92rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-top:2.8rem;display:flex;align-items:baseline;gap:.8rem}
+  .cat-h b{color:var(--clay)}
+  .cat-h span{font-family:var(--sans);font-weight:400;font-size:1rem;letter-spacing:0;text-transform:none;color:#5a5d4d}
+  .cat-h:first-of-type{margin-top:2.2rem}
+  .cat-h + .grid{margin-top:1rem}
+  .card .ic{font-size:1.5rem;margin-bottom:.7rem;display:block}
+  .card h4{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:.3rem}
+  .card p{font-size:.86rem;color:#4a4d40;margin-bottom:.8rem}
+  .card.suggest{background:transparent;border:1px dashed rgba(20,22,14,.32);display:flex;flex-direction:column;justify-content:center}
+  .card.suggest:hover{border-color:var(--clay);transform:translateY(-3px);box-shadow:none}
+  .card.suggest .co{color:var(--clay);opacity:.5}
+  .card.suggest h4{color:var(--clay)}
+  .card.suggest p{margin-bottom:.7rem}
+  .card.suggest a{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);text-decoration:none;font-weight:600}
+  .card.suggest a:hover{text-decoration:underline}
+  .tags{display:flex;gap:.35rem;flex-wrap:wrap}
+  .tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;padding:.2rem .4rem;border:1px solid rgba(20,22,14,.2);border-radius:3px;color:#4a4d40}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:.3rem}
+  .dot.g{background:#3e7d4f}.dot.o{background:var(--ochre)}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;margin-top:3rem}
+  @media(max-width:760px){.steps{grid-template-columns:1fr}}
+  .step{position:relative}
+  .step .no{display:block;padding-bottom:.8rem;margin-bottom:.9rem;border-bottom:2px solid var(--ink);font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--clay)}
+  .step h4{font-family:var(--serif);font-weight:600;font-size:1.35rem;margin-bottom:.5rem}
+  .step p{font-size:.95rem;color:#4a4d40}
+
+  /* CTA + footer */
+  .cta-band{background:var(--ink);color:var(--paper);text-align:center;padding:clamp(4rem,8vw,7rem) 0;position:relative;overflow:hidden}
+  .cta-band h2{margin:0 auto;max-width:20ch}
+  .cta-band .btn-row{display:flex;gap:1rem;justify-content:center;margin-top:2rem;flex-wrap:wrap}
+  footer{background:var(--ink);color:rgba(239,230,212,.6);border-top:1px solid rgba(239,230,212,.14);padding:2.4rem 0}
+  footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center}
+  footer .mono{font-size:.68rem;color:rgba(239,230,212,.5)}
+  footer a{color:rgba(239,230,212,.8)}footer a:hover{color:var(--trail)}
+
+  @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.rv{transition:none;opacity:1;transform:none}}
+</style>
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="brand/logo-favicon.svg" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://cyclingcommons.org/#org",
+      "name": "Cycling Commons",
+      "url": "https://cyclingcommons.org/",
+      "logo": "https://cyclingcommons.org/brand/icon-512.png",
+      "description": "An open, community-built atlas of the world's best cycling \u2014 climbs, water, viewpoints, bike-friendly stays and road conditions. Open data, governed by riders.",
+      "sameAs": [
+        "https://github.com/cycling-commons/cycling-commons",
+        "https://wiki.cyclingcommons.org/",
+        "https://bikecoders.life"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://cyclingcommons.org/#website",
+      "name": "Cycling Commons",
+      "url": "https://cyclingcommons.org/",
+      "publisher": { "@id": "https://cyclingcommons.org/#org" }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<nav>
+  <div class="brand" style="flex:none"><img src="brand/logo-nav.svg" alt="Cycling Commons" style="height:1.8rem;display:block"></div>
+  <div class="nav-links">
+    <a href="regions.html">Regions</a>
+    <a href="coverage.html">Coverage</a>
+    <a href="vote.html">Vote</a>
+    <a href="developers.html">Developers</a>
+    <a href="about.html">About</a>
+    <a href="licenses.html">Licence</a>
+    <a href="map.html" class="nav-cta fill">Explore the map</a>
+    <a href="login.html" class="nav-cta">Account</a>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <svg class="hero-contours" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path class="s-road"   d="M-50,720 C260,640 420,760 700,690 C980,620 1180,710 1500,650"/>
+    <path class="s-gravel" d="M-50,640 C240,560 460,680 720,600 C1000,520 1200,620 1500,560"/>
+    <path class="s-path"   d="M-50,560 C260,500 440,600 700,520 C980,440 1200,540 1500,470"/>
+    <path class="s-track"  d="M-50,470 C220,420 480,520 740,440 C1000,370 1220,460 1500,390"/>
+    <path class="s-bridle" d="M-50,380 C260,340 440,430 700,360 C980,290 1200,370 1500,300"/>
+  </svg>
+  <div class="hero-glow"></div>
+  <div class="corner tl"><span id="heroCoord">N 51.92° · E 04.48°</span><br/>OPEN ATLAS — EST. 2026</div>
+  <div class="corner tr">ODbL 1.0 · CC BY-SA 4.0<br/>STEWARDED BY BIKECODERS</div>
+  <div class="corner br">SCROLL ↓</div>
+
+  <div class="hero-inner">
+    <div class="wrap">
+      <div class="eyebrow mono rv in">OPEN CYCLING DATA · FOR EVERYONE</div>
+      <h1 class="rv in" data-d="1">Every road.<br/>Every trail.<br/>One <em>open atlas</em>.</h1>
+      <p class="lede rv in" data-d="2">A community-built map of the world's best riding — climbs, water, views, bike-friendly stays — free for anyone to use, build on, and improve.</p>
+      <div class="cta-row rv in" data-d="3">
+        <a class="btn btn-primary" href="map.html">Explore the map <span class="arw">→</span></a>
+        <a class="btn btn-ghost" href="contribute.html">Contribute <span class="arw">→</span></a>
+      </div>
+      <div class="ticks rv in" data-d="4">
+        <div class="tick">Launching<b>2026</b></div>
+        <div class="tick">Disciplines<b>12</b></div>
+        <div class="tick">Licence<b>Dual</b></div>
+        <div class="tick">Owned by<b>You &amp; Everybody</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- discipline strip — pinned to the bottom of the hero viewport -->
+  <div class="disc">
+    <div class="wrap">
+      <span class="label">FOR EVERY KIND OF CYCLING —</span>
+      <div class="chips">
+        <span class="chip">Road</span><span class="chip">Gravel</span><span class="chip">MTB</span><span class="chip">Touring</span><span class="chip">Bikepacking</span><span class="chip">Cargo</span><span class="chip">E-bike</span><span class="chip">Urban</span><span class="chip">Recumbent</span><span class="chip">Trike</span><span class="chip">Handbike</span><span class="chip">Tandem</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== FRAGMENTATION ===================== -->
+<section class="pad">
+  <div class="wrap split">
+    <div>
+      <div class="kicker rv">ONE PLACE, NOT A DOZEN APPS</div>
+      <h2 class="rv" data-d="1">Cycling knowledge is scattered. The Commons gathers it.</h2>
+      <p class="lead rv" data-d="2">Today every layer lives in its own silo — one app for climbs, another for routes, another for bike-friendly stays, another for road conditions — and most are closed. Riders stitch a dozen tools together and the data never joins up. The Commons brings the non-personal knowledge into one open place, free to query and build on.</p>
+      <p class="lead rv" data-d="2" style="margin-top:1.1rem">And where good open data already exists, we don't rebuild it — we <b>partner</b>. We link and interoperate with other open-data communities (such as open hospitality networks for places to sleep) instead of walling off our own copy. Open data should join up, not fragment further.</p>
+    </div>
+    <div class="panel rv" data-d="2">
+      <span class="pin">TODAY → ONE ATLAS</span>
+      <h3>A different app for everything</h3>
+      <div class="rank"><span class="n">→</span><span class="nm">Climbs &amp; cols</span><span class="co">closed silo</span></div>
+      <div class="rank"><span class="n">→</span><span class="nm">Quality rides &amp; ratings</span><span class="co">closed silo</span></div>
+      <div class="rank"><span class="n">→</span><span class="nm">Scenic, views &amp; heritage</span><span class="co">scattered</span></div>
+      <div class="rank"><span class="n">→</span><span class="nm">Bike-friendly stays</span><span class="co">closed silo</span></div>
+      <div class="rank"><span class="n">→</span><span class="nm">Road surface &amp; conditions</span><span class="co">scattered</span></div>
+      <div class="rank" style="border:none"><span class="n">→</span><span class="nm">Water · food · services</span><span class="co">scattered</span></div>
+      <a class="silo-more" href="https://wiki.cyclingcommons.org/landscape/">See every provider in each area →</a>
+      <div class="vs">— GATHERED · OPEN · PARTNERED —</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== WHAT IT IS ===================== -->
+<section class="pad" id="what">
+  <div class="wrap split">
+    <div>
+      <div class="kicker rv">THE PRINCIPLE</div>
+      <h2 class="rv" data-d="1">Open data about the world — never about you.</h2>
+      <p class="lead rv" data-d="2">The Commons holds the map: climbs, water, hazards, stays — facts about places, never about people. No identity, no tracking, nothing personal. Built on OpenStreetMap, given back to it, governed by its community.</p>
+    </div>
+    <div class="open-list rv" data-d="2">
+      <div class="open-item"><span class="t open">IN</span><div><h4>The world's riding data</h4><p>Climbs, water points, scenic views, heritage POIs, bike-friendly stays, road conditions — open under ODbL.</p></div></div>
+      <div class="open-item"><span class="t priv">OUT</span><div><h4>Anything personal</h4><p>Your identity and private data — the Commons never collects it. It maps the world, not the rider.</p></div></div>
+      <div class="open-item" style="border:none"><span class="t open">FREE</span><div><h4>For anyone at all</h4><p>Query it, export it, build on it. That's what makes it a commons.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CURATION ===================== -->
+<section class="pad" id="curation" style="background:var(--paper-deep)">
+  <div class="wrap split">
+    <div>
+      <div class="kicker rv">CURATION, NOT OVERLOAD</div>
+      <h2 class="rv" data-d="1">The best of a region, chosen by riders.</h2>
+      <p class="lead rv" data-d="2">Arrive somewhere new and see the climbs, views and routes worth your weekend — voted by the riders who know it, refreshed each season. Utility data like water aims for full coverage; the firehose waits in the backlog if you want it all.</p>
+    </div>
+    <div class="panel rv" data-d="2">
+      <span class="pin">WALLONIA · BEST CLIMBS · SUMMER 2026</span>
+      <h3>This region's best</h3>
+      <div class="rank"><span class="n">01</span><span class="nm">La Redoute</span><span class="co">△ 161 m · 9.7%</span></div>
+      <div class="rank"><span class="n">02</span><span class="nm">Côte de Stockeu</span><span class="co">△ 100 m · 9.0%</span></div>
+      <div class="rank"><span class="n">03</span><span class="nm">Mur de Huy</span><span class="co">△ 128 m · 9.3%</span></div>
+      <div class="rank" style="border:none"><span class="n">04</span><span class="nm">Côte de La Roche</span><span class="co">△ 112 m · 6.2%</span></div>
+      <div class="vs">— VOTED · NOT DUMPED —</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CATALOG ===================== -->
+<section class="pad">
+  <div class="wrap">
+    <div class="kicker rv">WHAT'S IN THE ATLAS</div>
+    <h2 class="rv" data-d="1" style="max-width:none">A field guide to the whole ride.</h2>
+
+    <h3 class="cat-h rv" data-d="1"><b>Practical</b> <span>utility — aiming for full coverage</span></h3>
+    <div class="grid">
+      <div class="card rv" data-d="1"><span class="co">A</span><span class="ic">▰</span><h4>Road surface</h4><p>Paved, gravel or pavé — drawn so you pick the right bike.</p><div class="tags"><span class="tag">OSM</span><span class="tag">edit</span></div></div>
+      <div class="card rv" data-d="1"><span class="co">C</span><span class="ic">💧</span><h4>Water points</h4><p>Fountains, taps, refill points — plus café &amp; resupply stops.</p><div class="tags"><span class="tag">tap</span><span class="tag">OSM</span></div></div>
+      <div class="card rv" data-d="2"><span class="co">D</span><span class="ic">⚙</span><h4>Bike services</h4><p>Shops, repair stations, e-bike charging.</p><div class="tags"><span class="tag">edit</span><span class="tag">OSM</span></div></div>
+      <div class="card rv" data-d="2"><span class="co">F</span><span class="ic">⚠</span><h4>Hazards</h4><p><span class="dot g"></span>confirmed <span class="dot o"></span>ageing — kept fresh.</p><div class="tags"><span class="tag">safety</span></div></div>
+      <div class="card rv" data-d="3"><span class="co">G</span><span class="ic">🚆</span><h4>Getting there</h4><p>Stations with bikes-on-train — the gateway to the climbs.</p><div class="tags"><span class="tag">OSM</span><span class="tag">edit</span></div></div>
+      <div class="card rv" data-d="3"><span class="co">H</span><span class="ic">⛑</span><h4>Shelter &amp; emergency</h4><p>Refuges, shelters &amp; emergency points on exposed terrain.</p><div class="tags"><span class="tag">OSM</span><span class="tag">tap</span></div></div>
+      <div class="card suggest rv" data-d="3"><span class="co">+</span><span class="ic">✎</span><h4>What's missing?</h4><p>This list isn't fixed — tell us the practical layer you'd ride for.</p><a href="contribute.html">Suggest a layer →</a></div>
+    </div>
+
+    <h3 class="cat-h rv" data-d="1"><b>Emotional</b> <span>experiential — curated &amp; voted by riders</span></h3>
+    <div class="grid">
+      <div class="card rv" data-d="1"><span class="co">B</span><span class="ic">⛰</span><h4>Climbs</h4><p>Length, gradient, surface, the famous ramps.</p><div class="tags"><span class="tag">auto</span><span class="tag">edit</span></div></div>
+      <div class="card rv" data-d="1"><span class="co">E</span><span class="ic">⛺</span><h4>Where to sleep</h4><p>Bike-friendly stays riders actually used.</p><div class="tags"><span class="tag">tap</span><span class="tag">edit</span></div></div>
+      <div class="card rv" data-d="2"><span class="co">I</span><span class="ic">◬</span><h4>Scenic views</h4><p>Viewpoints, panoramas, the photo spot worth stopping for.</p><div class="tags"><span class="tag">tap</span><span class="tag">edit</span></div></div>
+      <div class="card rv" data-d="2"><span class="co">J</span><span class="ic">🏛</span><h4>History &amp; culture</h4><p>Landmarks, local stories &amp; cycling-heritage sites to ride past.</p><div class="tags"><span class="tag">edit</span><span class="tag">media-later</span></div></div>
+      <div class="card rv" data-d="3"><span class="co">K</span><span class="ic">★</span><h4>Quality rides</h4><p>Loops with quietness, scenery &amp; bike-type suitability.</p><div class="tags"><span class="tag">GPX</span><span class="tag">tap</span></div></div>
+      <div class="card suggest rv" data-d="3"><span class="co">+</span><span class="ic">✎</span><h4>What would you ride for?</h4><p>These layers grow with the community — propose one we haven't mapped yet.</p><a href="contribute.html">Suggest a layer →</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="pad" style="background:var(--paper-deep)">
+  <div class="wrap">
+    <div class="kicker rv">HOW IT GROWS</div>
+    <h2 class="rv" data-d="1">One tap at a time.</h2>
+    <div class="steps">
+      <div class="step rv" data-d="1"><span class="no">01 / SPOT</span><h4>Spot something</h4><p>A water tap, a road closure, a view worth stopping for — the kind of thing only someone who's there would know.</p></div>
+      <div class="step rv" data-d="2"><span class="no">02 / CONTRIBUTE</span><h4>Tap or vote</h4><p>One tap adds a fact. One vote ranks a region's best. No forms — richness accretes.</p></div>
+      <div class="step rv" data-d="3"><span class="no">03 / EXPLORE</span><h4>Everyone explores</h4><p>The whole community — and anyone building on the open data — gets a better map.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<div class="cta-band">
+  <svg class="hero-contours" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="opacity:.3">
+    <path d="M-50,300 C260,260 440,330 700,280 C980,230 1200,300 1500,250"/>
+    <path d="M-50,220 C240,190 470,260 720,210 C1000,160 1200,220 1500,180"/>
+    <path d="M-50,140 C260,120 440,180 700,140 C980,100 1200,150 1500,120"/>
+  </svg>
+  <div class="wrap" style="position:relative;z-index:2">
+    <h2>The map belongs to everyone.</h2>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="map.html">Explore the map <span class="arw">→</span></a>
+      <a class="btn btn-ghost" href="login.html">Create a free account</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="mono">CYCLING COMMONS · OPEN CYCLING DATA · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CYCLING COMMONS CONTRIBUTORS + OPENSTREETMAP</div>
+    <div class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></div>
+  </div>
+</footer>
+
+
+<script src="races.js"></script>
+<script>
+  // staggered reveal on scroll
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.18});
+  document.querySelectorAll('.rv:not(.in)').forEach(el=>io.observe(el));
+
+  // discipline chip toggle (visual)
+
+  // ---- quiet easter egg: the hero "ride line" (contours) + coordinate take the
+  //      colour & finish of the race that's on now, else the next one up — no
+  //      label, just there for anyone who notices (yellow lines + Paris during
+  //      the Tour, pink + Roma during the Giro…). Each event defines a theme
+  //      (outer/inner colour, windows) + a finish location.
+  //      One-day classics listed before stage races so a classic inside a
+  //      Grand Tour window still wins.
+  // rainbow=true → UCI World Championships (rainbow jersey); the ride line is
+  // drawn in the UCI rainbow stripes instead of the two-colour scheme.
+  // NOTE: Worlds/Unbound dates & host cities below are plausible placeholders
+  // for 2026 — confirm against the real calendars before launch.
+  // race calendar + helpers now live in races.js (shared with the header tagline)
+  const {RACES, RAINBOW, pickRace, fmtCoord} = window.CC;
+  function applyRace(r){
+    const hero=document.querySelector('.hero');
+    const paths=document.querySelectorAll('.hero .hero-contours path');
+    if(r.rainbow){
+      // Worlds: paint the 5 lines in UCI stripes, blue at the top → green at the
+      // bottom. Paths are in DOM order low→high on screen, so map from the bottom.
+      paths.forEach((p,i)=>{ const c=RAINBOW[(RAINBOW.length-1-i+RAINBOW.length)%RAINBOW.length]; p.style.stroke=c; p.style.opacity=c==='#141414'?'1':'.85'; });
+    } else {
+      paths.forEach(p=>{ p.style.stroke=''; p.style.opacity=''; }); // fall back to CSS vars
+      hero.style.setProperty('--ride-outer', r.outer);
+      hero.style.setProperty('--ride-inner', r.inner);
+    }
+    // quiet signal only: the coordinate becomes the race finish. No label.
+    document.getElementById('heroCoord').textContent=fmtCoord(r.finish.lat,r.finish.lng);
+  }
+
+  // initial state: auto-pick by today's date
+  const autoPick=pickRace();
+  applyRace(autoPick.r);
+
+</script>
+<script src="a11y.js"></script>
+<script src="preview.js"></script>
+<script src="quicknav.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Cycling Commons wiki — pinned for reproducible builds.
+# Material 9.7.6 already caps mkdocs<2; we pin the framework explicitly too so a
+# future MkDocs 2.0 can never slip in transitively. Upgrade deliberately, not by `-U`.
+mkdocs==1.6.1
+mkdocs-material==9.7.6

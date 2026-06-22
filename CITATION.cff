@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: Cycling Commons
+message: "If you use the Cycling Commons data or software, please cite it as below."
+type: software
+authors:
+  - name: "Cycling Commons contributors"
+  - name: "BikeCoders"
+    website: "https://bikecoders.life"
+abstract: >-
+  An open, community-built commons of non-personal cycling data — climbs, water points,
+  viewpoints, bike-friendly stays and road conditions — served by a source-available platform.
+  Data is licensed under ODbL 1.0, media under CC BY-SA 4.0, and the platform code under the
+  PolyForm Shield License 1.0.0.
+repository-code: "https://github.com/cycling-commons/cycling-commons"
+url: "https://cyclingcommons.org"
+license-url: "https://github.com/cycling-commons/cycling-commons/blob/main/LICENSE"
+keywords:
+  - cycling
+  - openstreetmap
+  - open-data
+  - odbl
+  - commons
+  - maplibre
