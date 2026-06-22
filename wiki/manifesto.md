@@ -58,5 +58,5 @@ friendliness, gradient limits, and surface suitability are data the Commons acti
 afterthought.
 
 **XI. Never scraped, never sold, never enclosed.** Data is contributed or already open — never
-scraped. The Commons is not a Stichting's asset to one day paywall. Its licence and its governance are
+scraped. The Commons is not a foundation's asset to one day paywall. Its licence and its governance are
 built so it *cannot* be enclosed later, even by the people who started it.
