@@ -10,7 +10,7 @@ for, the heritage worth a detour, the rides worth doing for their own sake) — 
 use, build on, and improve. The map belongs to everyone — places, never people.
 
 Maintained by **[BikeCoders](https://bikecoders.life)** as a standalone, open-data project.
-Commercial apps build on top of the Commons — through its open data and API — and contribute back,
+Even commercial apps can build on top of the Commons — through its open data and API — and contribute back,
 but the Commons is independent and built to outlive any single app.
 
 ## Why this exists
