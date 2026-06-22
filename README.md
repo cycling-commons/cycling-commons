@@ -4,9 +4,10 @@ Every rider carries a private map: the fountain that saved a hot July, the climb
 hour, the back road that's somehow always empty. Today that knowledge lives in one head and dies
 there. Cycling Commons is where it lives instead.
 
-An open, community-built commons of **non-personal** cycling data — climbs, water points,
-viewpoints, bike-friendly stays, road conditions — free for anyone to use, build on, and improve.
-The map belongs to everyone — places, never people.
+An open, community-built commons of **non-personal** cycling data — both the practical (climbs,
+water, bike-friendly stays, road conditions) and the experiential (the viewpoints worth stopping
+for, the heritage worth a detour, the rides worth doing for their own sake) — free for anyone to
+use, build on, and improve. The map belongs to everyone — places, never people.
 
 Maintained by **[BikeCoders](https://bikecoders.life)** as a standalone, open-data project.
 Commercial apps build on top of the Commons — through its open data and API — and contribute back,
