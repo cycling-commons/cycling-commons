@@ -35,4 +35,14 @@
   link.textContent='Skip to content';
   link.addEventListener('click',()=>{ const t=document.getElementById(target.id); if(t) t.focus(); });
   document.body.insertBefore(link,document.body.firstChild);
+
+  // Open off-site links — the wiki subdomain and any external site — in a new
+  // tab, with rel="noopener noreferrer" so the new page can't reach back via
+  // window.opener. Same-host links (relative or cyclingcommons.org) stay in place.
+  for(const a of document.querySelectorAll('a[href]')){
+    if(/^https?:$/.test(a.protocol) && a.hostname && a.hostname!==location.hostname){
+      a.target='_blank';
+      a.rel='noopener noreferrer';
+    }
+  }
 })();
