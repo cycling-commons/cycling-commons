@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 
-{#- Inject site-wide visitor analytics (Umami, self-hosted). data-* attributes can't be
-    expressed via mkdocs.yml extra_javascript, so it lives in this theme override. Umami's
-    tracker hooks the History API, so it also records Material's instant navigations. -#}
+{#- Site-wide visitor analytics (self-hosted Umami), guarded to the production wiki host so
+    local `mkdocs serve` is never tracked. The wiki uses its OWN Umami website-id (separate
+    property from the main site) — set it below. Nothing loads until it's configured. -#}
 {% block extrahead %}
   {{ super() }}
-  <script defer src="https://analytics.bikecoders.life/script.js" data-website-id="e230cd93-eb85-4455-b185-8bed827ca8fa"></script>
+  <script>
+    (function () {
+      if (location.hostname !== 'wiki.cyclingcommons.org') return;   // prod wiki only
+      var id = 'a1471170-eacb-4c8b-91c4-6a4f2389cb7a';               // the wiki's own Umami website-id
+      if (id === 'WIKI_UMAMI_WEBSITE_ID') return;                    // not configured yet → don't load
+      var s = document.createElement('script'); s.defer = true;
+      s.src = 'https://analytics.bikecoders.life/script.js';
+      s.setAttribute('data-website-id', id);
+      document.head.appendChild(s);
+    })();
+  </script>
 {% endblock %}
