@@ -34,8 +34,8 @@ start:
    open-data foundation precedents) at a defined milestone — real external contributors, or a
    threshold of verified data.
 
-The public pre-commitment plus the open licence is what makes "we will spin it out" believable rather
-than a trap. The foundation is formalised when there is a community to govern — not before.
+The public pre-commitment plus the open licence is what makes "we will spin it out" credible rather
+than hollow. The foundation is formalised when there is a community to govern — not before.
 
 ## Ostrom's design principles, applied
 
