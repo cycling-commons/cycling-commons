@@ -7,8 +7,10 @@ authors:
   - name: "BikeCoders"
     website: "https://bikecoders.life"
 abstract: >-
-  An open, community-built commons of non-personal cycling data — climbs, water points,
-  viewpoints, bike-friendly stays and road conditions — served by a source-available platform.
+  An open, community-built commons of non-personal cycling data — both the practical (climbs,
+  water, bike-friendly stays, road conditions) and the experiential (viewpoints, heritage, quality
+  rides) — distinguished by a curation layer in which riders curate, vote on, and keep it fresh,
+  served by a source-available platform.
   Data is licensed under ODbL 1.0, media under CC BY-SA 4.0, and the platform code under the
   PolyForm Shield License 1.0.0.
 repository-code: "https://github.com/cycling-commons/cycling-commons"
