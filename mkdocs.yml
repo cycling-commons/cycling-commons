@@ -19,6 +19,7 @@ site_dir: wiki-dist
 
 theme:
   name: material
+  custom_dir: overrides       # overrides/main.html injects site-wide visitor analytics
   language: en
   logo: assets/logo-mark.svg
   favicon: assets/favicon.svg
