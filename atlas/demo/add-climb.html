@@ -198,7 +198,7 @@
       <div class="csearch-results" id="searchResults" hidden></div>
     </div>
     <div id="cmap" role="application" aria-label="Map — click the foot then the summit of the climb"></div>
-    <div class="readout"><span id="readout">◎ … → ▲ … · —</span><span id="reset" role="button" tabindex="0">Reset</span></div>
+    <div class="readout"><span id="readout">Tap the map to set the foot of the climb.</span><span id="reset" role="button" tabindex="0">Reset</span></div>
   </section>
 
   <!-- STEP 2 — PROFILE -->
@@ -391,8 +391,10 @@
   function fmt(ll){return ll?`${ll[1].toFixed(3)}°N ${ll[0].toFixed(3)}°E`:'…';}
   let routeSeq=0; // guards against out-of-order/stale route responses
   function setReadout(){
-    document.getElementById('readout').textContent=
-      `◎ ${fmt(S.start)} → ▲ ${fmt(S.summit)} · ${S.lengthKm?S.lengthKm.toFixed(1)+' km':'—'}`;
+    const el=document.getElementById('readout');
+    if(!S.start)       el.textContent='Tap the map to set the foot of the climb.';
+    else if(!S.summit) el.textContent='Foot set — now tap the summit.';
+    else               el.textContent=`Climb set · ${S.lengthKm?S.lengthKm.toFixed(1)+' km':'measuring…'}`;
   }
   function drawClimb(){
     if(S.start&&S.summit){
@@ -531,7 +533,7 @@
   function renderReview(){
     const len=(parseFloat(document.getElementById('fLen').value)||S.lengthKm||0).toFixed(1);
     document.getElementById('reviewBody').innerHTML=`
-      <span class="co">◎ ${fmt(S.start)} → ▲ ${fmt(S.summit)}</span>
+      <span class="co">Foot ${fmt(S.start)} → Summit ${fmt(S.summit)}</span>
       <h3>${S.name||'Unnamed climb'}</h3>
       <div class="rtags">${[...S.disciplines].map(d=>`<span>${d}</span>`).join('')}<span class="t-surf">${S.surface} · ${S.surfaceQ}</span><span class="t-traf t-${S.traffic.toLowerCase().replace(/[^a-z]/g,'')}">${S.traffic}</span></div>
       <div class="kv"><span>Length</span><span>${len} km</span></div>
