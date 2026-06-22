@@ -16,9 +16,11 @@ but the Commons is independent and built to outlive any single app.
 ## Why this exists
 
 Cycling knowledge is scattered — climbs in one app, routes in another, road conditions nowhere — and
-much of it is closed. OpenStreetMap is open, but thin on the cycling-specific layers that matter. The
-Commons gathers this knowledge into one open place, and rather than an endless list, it answers the
-question a rider actually asks: **what's the best riding here?**
+much of it is closed. OpenStreetMap is open, but raw and thin on the cycling-specific layers that
+matter. The Commons's real value is the **curation layer** on top: riders don't just contribute facts
+— they curate, vote, and keep them fresh, adding the cycling judgment that raw data lacks and closed
+apps lock away. So rather than an endless list, it answers the question a rider actually asks:
+**what's the best riding here?**
 
 ## What's open — and what never is
 
