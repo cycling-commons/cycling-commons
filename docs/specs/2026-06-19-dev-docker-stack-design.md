@@ -35,7 +35,7 @@ developers/docker/
   api/nginx.conf              # nginx vhost fronting php-fpm
   pipeline/Dockerfile         # python:3.12-slim + uvicorn/fastapi
   atlas/demo/                       # (served by stock nginx image, mounts ../../atlas/demo)
-api/                          # Symfony 7 app (scaffold)
+api/                          # Symfony 7 LTS app (scaffold)
 pipeline/                     # FastAPI app (scaffold)
 ```
 
@@ -59,7 +59,7 @@ App code lives at repo root (`api/`, `pipeline/`); all Docker glue lives in `dev
 
 ## Scaffolds (minimal but functional — they must actually boot and connect)
 
-**`api/` (Symfony 7):**
+**`api/` (Symfony 7 LTS):**
 - `composer.json` pinned (symfony/framework-bundle, doctrine-bundle, doctrine/dbal)
 - `.env` with `DATABASE_URL` pointing at the `db` service (postgresql, PostGIS-aware)
 - Routes: `GET /health` → `{status:"ok"}`; `GET /api/db-check` → runs `SELECT postgis_version()` via DBAL and returns it (proves nginx→fpm→Symfony→PostGIS works end to end)

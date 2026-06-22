@@ -80,7 +80,7 @@ and why; if you have strong reasons for a different choice, open an issue.
     from the DEM. (The prototype's curated climbs are handmade — labelled "OSM roads · geometry
     handmade"; `add-climb.html` uses OSRM only for the live draw-a-route preview.)
   - A **serving API and the everyday logic** — queries, the contribution write-path, the seasonal
-    vote tally, the freshness/decay lifecycle, the moderation queue — built on **Symfony**, where the
+    vote tally, the freshness/decay lifecycle, the moderation queue — built on **Symfony 7 LTS**, where the
     maintainers are strongest. It reads the same PostGIS the pipeline writes.
 
   The rule of thumb: if a job needs a raster, a road graph, or OSM topology, it's Python; if it's
