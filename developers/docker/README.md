@@ -25,7 +25,7 @@ Then open:
 | API ↔ DB   | http://localhost:8001/api/db-check | proves nginx → php-fpm → Symfony → PostGIS |
 | Pipeline   | http://localhost:8002/health     | FastAPI health check |
 | Pipe ↔ DB  | http://localhost:8002/db         | proves pipeline → PostGIS |
-| Postgres   | `localhost:5433`                 | PostGIS 16 (host port 5433 to avoid a local 5432; `.env` for creds) |
+| Postgres   | `localhost:5433`                 | PostGIS 18 (host port 5433 to avoid a local 5432; `.env` for creds) |
 
 The API and pipeline ship only **connectivity scaffolding** (health + DB-version endpoints) —
 real endpoints and the geo pipeline get built on top.

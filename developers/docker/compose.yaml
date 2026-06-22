@@ -7,7 +7,7 @@ name: cycling-commons-dev
 services:
   # ---- the spine: PostgreSQL + PostGIS -------------------------------------
   db:
-    image: postgis/postgis:16-3.4
+    image: postgis/postgis:18-3.6
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-cyclingcommons}
       POSTGRES_USER: ${POSTGRES_USER:-cc}
@@ -33,7 +33,7 @@ services:
       # cache/logs to a container-writable path so the bind-mounted source has no perms issues
       APP_CACHE_DIR: /tmp/cc-cache
       APP_LOG_DIR: /tmp/cc-log
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=16&charset=utf8"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=18&charset=utf8"
     volumes:
       - ../../api:/app
       - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount

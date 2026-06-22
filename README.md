@@ -55,9 +55,9 @@ docker compose up --build
 |---------|-----|------------|
 | Frontend | http://localhost:8099 | the MapLibre prototype (`atlas/demo/`) |
 | Wiki | http://localhost:8000 | MkDocs Material (`wiki/`) |
-| API | http://localhost:8001/health · `/api/db-check` | Symfony on nginx + PHP-FPM → PostGIS |
+| API | http://localhost:8001/health · `/api/db-check` | Symfony 7 LTS on nginx + PHP-FPM → PostGIS |
 | Pipeline | http://localhost:8002/health · `/db` | Python/FastAPI geospatial tier → PostGIS |
-| Database | `localhost:5433` | PostgreSQL 16 + PostGIS (host port 5433) |
+| Database | `localhost:5433` | PostgreSQL 18 + PostGIS (host port 5433) |
 
 Heavy, data-dependent services are opt-in: `--profile routing` (Valhalla, on a prebuilt tile set
 you download) and `--profile storage` (MinIO for PMTiles). Full details and the architecture

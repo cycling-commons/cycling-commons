@@ -45,7 +45,7 @@ App code lives at repo root (`api/`, `pipeline/`); all Docker glue lives in `dev
 
 | Service | Image / build | Host port | Notes |
 |---|---|---|---|
-| `db` | `postgis/postgis:16-3.4` | 5432 | named volume `cc_pgdata`; init SQL enables PostGIS; healthcheck `pg_isready` |
+| `db` | `postgis/postgis:18-3.6` | 5432 | named volume `cc_pgdata`; init SQL enables PostGIS; healthcheck `pg_isready` |
 | `api` | build `developers/docker/api` (php:8.3-fpm) + nginx | 8001 | mounts `../../api`; Doctrine→PostGIS; `composer install` at build; healthcheck `/health` |
 | `pipeline` | build `developers/docker/pipeline` (python:3.12) | 8002 | mounts `../../pipeline` + DEM dir; `uvicorn --reload`; healthcheck `/health` |
 | `atlas` | `nginx:alpine` | 8099 | mounts `../../atlas/demo` read-only; matches current dev port |
