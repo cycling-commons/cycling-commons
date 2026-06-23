@@ -14,7 +14,7 @@ Finding, rating and racing climbs, cols, gradients, segment times and KOMs.
 - **Strava** (Segments / Local Legends) — closed, freemium. The de-facto global KOM standard everyone benchmarks against; leaderboards increasingly paywalled.
 - **VeloViewer** — closed, paid. Deep segment/climb analytics on the Strava API (VAM, category, 3D profiles).
 - **climbfinder** — closed, freemium. The broadest, best-UX European climb-profile database.
-- **CyclingCols** — closed (community), free. ~5,100 cols across 24 countries — completist col-bagging.
+- **CyclingCols** — closed (community), free. A broad community catalogue of cols across many countries — for riders ticking off climbs one by one.
 - **myCols** — closed, free. Worldwide climbs with history/storytelling per ascent.
 - **PJAMM Cycling** — closed, freemium. Global steepest/hardest climbs + a proprietary difficulty index (PDI) and Street View.
 - **salite.ch** — closed (volunteer), free. Veteran European archive, deep on Italy/Switzerland.
@@ -29,14 +29,14 @@ Finding, rating and racing climbs, cols, gradients, segment times and KOMs.
 ## Quality rides & ratings
 Route planning, navigation, ride sharing, and cyclist-experience ratings (quietness, scenery, surface).
 
-- **Komoot** — closed, freemium. Surface/bike-type routing + ~850M community Highlights & Trail View.
+- **Komoot** — closed, freemium. Surface/bike-type routing + a vast community Highlights layer & Trail View.
 - **RideWithGPS** — closed, freemium. Precise planning, cue sheets, club/event tooling.
 - **Strava Routes / Heatmap** — closed, freemium. Routes from aggregated activity; "where cyclists actually ride."
 - **cycle.travel** — mixed (OSM base), free. Genuinely quietness-optimised routing from real traffic data.
-- **Bikemap** — closed, freemium. ~9.9M user routes with surface filters.
+- **Bikemap** — closed, freemium. Millions of user routes with surface filters.
 - **CycleStreets** — open (non-profit, OSM), free. Explicit fastest/balanced/**quietest** modes (UK).
 - **Garmin Connect / Wahoo / Hammerhead** — closed (with hardware). Popularity routing + Climb previews on devices.
-- **Outdooractive** — closed, freemium. Large multi-sport route portal, strong in DACH.
+- **Outdooractive** — mixed, freemium. Large multi-sport route portal, strong in DACH.
 - **BRouter** — **open-source**, free. The configurable routing engine behind many other tools.
 - **CyclOSM / OpenCycleMap** — **open** (OSM), free. The open cycling map styles others embed.
 - **kurviger / Relive / Cyql** — closed, freemium. Scenic-road planning / ride videos / club ride org.
@@ -53,10 +53,10 @@ Viewpoints, panoramas, photo spots, landmarks, cultural/heritage sites worth rid
 - **Wikiloc** — closed, freemium. Tens of millions of trails with geotagged waypoints (viewpoints, fountains, ruins).
 - **Atlas Obscura** — closed, free to browse. Offbeat cultural/heritage sites.
 - **izi.TRAVEL** — mixed, free. Location-triggered audio guides at heritage sites.
-- **Wikipedia / Wikimedia Commons** — **open** (CC), free. The canonical open heritage knowledge base + ~100M geotagged photos — but not packaged for cyclists.
+- **Wikipedia / Wikimedia Commons** — **open** (CC), free. The canonical open heritage knowledge base + millions of geotagged photos — but not packaged for cyclists.
 - **OpenStreetMap** (`tourism=viewpoint`, `historic=*`) — **open** (ODbL), free. The upstream POI source most apps render.
 - **Google Maps / Places** — closed. Unmatched coverage + Street View, but ToS forbids bulk reuse.
-- **Mapillary** — mixed (Meta). Crowd street-level imagery, an open-ish Street View alternative.
+- **Mapillary** — mixed (Meta). Crowd street-level imagery; photos are **CC BY-SA** (open, and usable to trace into OSM), but the platform, derived data, and API are Meta-owned and under Meta's terms.
 - **Polarsteps / Spotted by Locals** — closed. Personal trip diaries / locals' city guides.
 - **FATMAP** — **defunct** — a 3D scenic-discovery map **shut down by its owner Strava**: a concrete example of a knowledge silo simply vanishing and taking its curated data with it.
 
@@ -65,18 +65,18 @@ Viewpoints, panoramas, photo spots, landmarks, cultural/heritage sites worth rid
 ## Bike-friendly stays
 Cyclist-friendly accommodation and hospitality networks.
 
-- **Warmshowers** — non-profit, web free / app paid. The original ~185k-member bike-touring hospitality network.
+- **Warmshowers** — non-profit, web free / app paid. The original large-scale bike-touring hospitality network.
 - **Booking.com / Airbnb / HostelWorld** — closed. Scale, but cyclist-friendliness is an unverified amenity flag.
-- **Bett+Bike** (ADFC, Germany) — closed scheme, free to search. ~5,800 certified properties; the model others copied.
+- **Bett+Bike** (ADFC, Germany) — closed scheme, free to search. Thousands of certified properties; the model others copied.
 - **Accueil Vélo** (France) — closed scheme, free. Tightly integrated with France's cycle-route network.
 - **Albergabici** (Italy) / **Fietsers Welkom!** (Netherlands) / **Cyclists Welcome** (Cycling UK) — closed national schemes.
-- **20+ EuroVelo national labels** — closed national silos (~20,800 certified businesses across **incompatible** systems).
+- **EuroVelo national labels** — numerous closed national silos (thousands of certified businesses across **incompatible** systems).
 - **iOverlander / Park4Night** — mixed, freemium. Crowd-sourced wild-camp / overnight spots for self-supported tourers.
 - **Couchsurfing** — closed, paid. Broad reach, declining trust after monetisation.
 - **Trustroots & Couchers.org** — **open-source**, free. Community-run alternatives with cyclist circles.
 - **biroto / cyclefriendlyhotels / beds4cyclists** — closed aggregators competing with the national labels.
 
-**Fragmentation:** extreme. Cyclist-welcome quality is splintered across 20+ incompatible national labels plus private aggregators, mainstream OTAs reduce it to a checkbox, and the community-owned options are small and don't interoperate.
+**Fragmentation:** extreme. Cyclist-welcome quality is splintered across many incompatible national labels plus private aggregators, mainstream OTAs reduce it to a checkbox, and the community-owned options are small and don't interoperate.
 
 ## Road surface & conditions
 Surface type & quality, gravel/pavé, hazards, closures, traffic/safety, live conditions.
@@ -100,7 +100,7 @@ Surface type & quality, gravel/pavé, hazards, closures, traffic/safety, live co
 Drinking water/refill, resupply (shops/bakeries), cyclist cafés, bike shops & repair stations, e-bike charging.
 
 - **OpenStreetMap** (`amenity=drinking_water` / `bicycle_repair_station` / `shop=bicycle`) — **open** (ODbL), free. The only cross-app shared source — but thinly mapped.
-- **Refill** — closed (UK charity), free. 300,000+ free tap-water refill points.
+- **Refill** — closed (UK charity), free. A large network of free tap-water refill points.
 - **TrailTap / WeTap** — crowdsourced, free. Cyclist/walker fountain & refill maps (UK / global, patchy coverage).
 - **Komoot** — closed, freemium. In-ride resupply/POI alerts along a route.
 - **Google Maps** — closed, free. The default resupply tool — but nothing cyclist-specific or refill-aware.
