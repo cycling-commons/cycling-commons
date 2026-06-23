@@ -35,8 +35,8 @@
     --serif:"Bricolage Grotesque",system-ui,sans-serif; --sans:"Spline Sans",system-ui,sans-serif; --mono:"Spline Sans Mono",monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:var(--sans);color:var(--ink);height:100svh;overflow:hidden}
-  .app{display:grid;grid-template-columns:340px 1fr;grid-template-rows:minmax(0,1fr);height:100svh}
+  body{font-family:var(--sans);color:var(--ink);height:100svh;overflow:hidden;display:flex;flex-direction:column}
+  .app{display:grid;grid-template-columns:340px 1fr;grid-template-rows:minmax(0,1fr);flex:1;min-height:0}
   .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
   a{color:inherit;text-decoration:none}
 
@@ -134,11 +134,6 @@
   .map-top .sub{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:#5a5d4d;text-transform:uppercase;margin-top:.15rem}
   .map-top .add-climb{display:inline-block;margin-top:.6rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.4rem .7rem;border-radius:5px;font-weight:500}
   .map-top .add-climb:hover{background:#ff703d}
-  .map-demo{position:absolute;top:1.2rem;left:50%;transform:translateX(-50%);z-index:1001;max-width:min(90vw,560px);
-    background:rgba(20,30,22,.92);color:var(--paper);border:1px solid var(--ochre);border-radius:999px;
-    padding:.5rem 1rem;backdrop-filter:blur(6px);font-size:.74rem;line-height:1.35;text-align:center;
-    box-shadow:0 6px 18px -8px rgba(20,22,14,.5)}
-  .map-demo b{color:var(--ochre)}
 
   /* ---------- MAPILLARY VIEWER DOCK ---------- */
   .mly-dock{position:absolute;left:0;right:0;bottom:0;height:clamp(280px,44vh,480px);z-index:1300;background:var(--ink);
@@ -263,6 +258,7 @@
 <script defer src="analytics.js"></script>
 </head>
 <body>
+<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b> — a glimpse of what the open atlas will hold. Launching 2026.</div>
 <div class="app">
   <!-- ============ FILTER RAIL ============ -->
   <aside class="rail">
@@ -357,7 +353,6 @@
       <div class="sub">Curated best-of · Summer 2026</div>
       <a class="add-climb" href="contribute.html">+ Contribute</a>
     </div>
-    <div class="map-demo"><b>Demo coverage</b> — a glimpse of what the open atlas will hold. Launching 2026.</div>
     <div class="legend">
       <h4>Road surface · A</h4>
       <div class="skey">
