@@ -172,6 +172,8 @@
   <a class="back" href="map.html">← Back to the map</a>
 </div>
 
+<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b> — a preview of how improving the atlas will work. Launching 2026.</div>
+
 <div class="wrap" id="form-view">
   <!-- CONTEXT (rendered from edit-items.js by ?item=<id>) -->
   <div class="ctx">
@@ -274,12 +276,30 @@
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="edit-items.js"></script>
 <script>
-  // resolve which item we're editing (?item=<id>), fall back to the service station
-  const _id = new URLSearchParams(location.search).get('item');
-  const E = (window.CC_EDIT && (window.CC_EDIT[_id] || window.CC_EDIT['repair-station-malmedy']))
-            || {ey:'Improve this place', name:'Repair station · Malmedy', icon:'⚙',
-                center:[6.027,50.426], co:'◎ 50.426°N 6.027°E · Wallonia, BE',
-                tags:['tap','OSM','D · services'], cur:[], fields:[]};
+  // resolve which item we're editing. Curated items come from the shared registry
+  // (edit-items.js) via ?item=<id>. Any other map feature passes its own name/type/
+  // location in the URL, so we build a faithful editor for it rather than defaulting
+  // to an unrelated item. Only a no-context direct visit falls back to the demo place.
+  const _q = new URLSearchParams(location.search);
+  const _id = _q.get('item');
+  const _nm = _q.get('name'), _ty = _q.get('type');
+  const _lat = parseFloat(_q.get('lat')), _lng = parseFloat(_q.get('lng'));
+  const _hasLL = isFinite(_lat) && isFinite(_lng);
+  const E = (window.CC_EDIT && window.CC_EDIT[_id])
+    || (_nm ? {
+         ey:'Improve this place', name:_nm, icon:'✎',
+         center:_hasLL ? [_lng,_lat] : [5.86,50.49],
+         co:_hasLL ? `◎ ${_lat.toFixed(3)}°N ${_lng.toFixed(3)}°E · Wallonia, BE` : '◎ Wallonia, BE',
+         tags:(_ty ? [_ty] : []).concat('OSM'),
+         cur:[],
+         fields:[
+           {label:'What would you change?', type:'textarea', placeholder:'Correct the details, or add what riders should know.'},
+           {label:'Still here and accurate?', type:'select', opts:['Yes — confirmed','Needs an update','No longer there','Unsure']}
+         ]
+       }
+    : {ey:'Improve this place', name:'Repair station · Malmedy', icon:'⚙',
+       center:[6.027,50.426], co:'◎ 50.426°N 6.027°E · Wallonia, BE',
+       tags:['tap','OSM','D · services'], cur:[], fields:[]});
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
   // — add mode (?mode=add): a blank "add a new <type>" form, reached from contribute.html —
@@ -592,7 +612,6 @@
 </script>
 <footer class="foot"><div class="wrap"><span class="mono">CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CONTRIBUTORS + OSM</span><span class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="join.html">Get involved</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></span></div></footer>
 <script src="a11y.js"></script>
-<script src="preview.js"></script>
 <script src="races.js"></script>
 </body>
 </html>

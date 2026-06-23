@@ -86,8 +86,7 @@
   .toggle button.on{background:var(--spruce-lift)}
   .hint{font-size:.78rem;color:rgba(239,230,212,.5);margin-top:.6rem;line-height:1.5}
 
-  /* extra bottom space so the fixed "Inspirational preview" pill (preview.js, bottom-left) never covers the footer */
-  .rail-foot{padding:1.1rem 1.4rem 3.6rem;border-top:1px solid rgba(239,230,212,.14);display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+  .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgba(239,230,212,.14);display:flex;align-items:center;justify-content:space-between;gap:.6rem}
   .rail-foot .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgba(239,230,212,.7)}
   .rail-foot .res b{color:var(--trail);font-size:1.15rem}
   .export{background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.55rem .85rem;border-radius:5px;border:none;cursor:pointer;white-space:nowrap}
@@ -135,6 +134,11 @@
   .map-top .sub{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:#5a5d4d;text-transform:uppercase;margin-top:.15rem}
   .map-top .add-climb{display:inline-block;margin-top:.6rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.4rem .7rem;border-radius:5px;font-weight:500}
   .map-top .add-climb:hover{background:#ff703d}
+  .map-demo{position:absolute;top:1.2rem;left:50%;transform:translateX(-50%);z-index:1001;max-width:min(90vw,560px);
+    background:rgba(20,30,22,.92);color:var(--paper);border:1px solid var(--ochre);border-radius:999px;
+    padding:.5rem 1rem;backdrop-filter:blur(6px);font-size:.74rem;line-height:1.35;text-align:center;
+    box-shadow:0 6px 18px -8px rgba(20,22,14,.5)}
+  .map-demo b{color:var(--ochre)}
 
   /* ---------- MAPILLARY VIEWER DOCK ---------- */
   .mly-dock{position:absolute;left:0;right:0;bottom:0;height:clamp(280px,44vh,480px);z-index:1300;background:var(--ink);
@@ -351,8 +355,9 @@
     <div class="map-top">
       <div class="rg">Wallonia, Belgium</div>
       <div class="sub">Curated best-of · Summer 2026</div>
-      <a class="add-climb" href="add-climb.html">+ Add a climb</a>
+      <a class="add-climb" href="contribute.html">+ Contribute</a>
     </div>
+    <div class="map-demo"><b>Demo coverage</b> — a glimpse of what the open atlas will hold. Launching 2026.</div>
     <div class="legend">
       <h4>Road surface · A</h4>
       <div class="skey">
@@ -1257,10 +1262,16 @@
           ? `<div class="cc-up">Shared by <b>${f.uploader.name}</b> · <a href="profile.html?u=${slug(f.uploader.name)}">view profile</a></div>`
           : `<div class="cc-up">Shared anonymously</div>`)
       : '';
-    // every feature is editable — point at its entry in the shared edit registry (edit-items.js)
+    // every feature is editable — curated items resolve to their entry in the shared
+    // edit registry (edit-items.js); for the rest we also pass the feature's own name,
+    // type and location so improve.html opens a faithful editor, not a default item.
     const editId = f.edit || slug(f.name);
     const editLbl = layer.key==='experience' ? '✎ Edit this ride' : '✎ Edit this item';
-    const edit = `<a class="cc-d-act edit" href="improve.html?item=${editId}">${editLbl}</a>`;
+    const ell = f.geom && f.geom.ll;                    // [lat,lng] for point features
+    const editQ = `item=${editId}&name=${encodeURIComponent(f.name)}`
+      + `&type=${encodeURIComponent(layer.letter + ' · ' + layer.label)}`
+      + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
+    const edit = `<a class="cc-d-act edit" href="improve.html?${editQ}">${editLbl}</a>`;
     const vote = f.cur ? `<a class="cc-d-act" href="vote.html">▲ Vote in this round</a>` : '';
     const act = edit + vote;
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
@@ -1510,6 +1521,5 @@
   // initial render runs from map.on('load') above (sources need the style loaded)
 </script>
 <script src="a11y.js"></script>
-<script src="preview.js"></script>
 </body>
 </html>

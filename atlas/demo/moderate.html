@@ -99,6 +99,7 @@
 
   <main class="map-wrap">
     <div id="map"></div>
+    <div style="position:absolute;top:1.2rem;left:50%;transform:translateX(-50%);z-index:1001;max-width:min(90vw,560px);background:rgba(20,30,22,.92);color:#EFE6D4;border:1px solid #C8923A;border-radius:999px;padding:.5rem 1rem;backdrop-filter:blur(6px);font-size:.74rem;line-height:1.35;text-align:center;box-shadow:0 6px 18px -8px rgba(20,22,14,.5)"><b style="color:#C8923A">Demo</b> — a preview of the curator review flow. Launching 2026.</div>
     <div class="clear" id="clear" style="display:none"><div class="ic">◬</div><h3>Queue clear</h3><div>Nothing left to review. Nice.</div></div>
     <div class="review" id="review"></div>
   </main>
@@ -178,6 +179,5 @@
   renderQueue();renderMarkers();
 </script>
 <script src="a11y.js"></script>
-<script src="preview.js"></script>
 </body>
 </html>
