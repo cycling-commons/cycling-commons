@@ -43,9 +43,12 @@
       '.cc-close{background:none;border:0;color:var(--paper,#EFE6D4);font-size:1.7rem;',
         'line-height:1;cursor:pointer;padding:.2rem .5rem;opacity:.85}',
       '.cc-close:hover{opacity:1}',
-      '.cc-drawer-nav{display:flex;flex-direction:column}',
-      '.cc-drawer-nav a{color:var(--paper,#EFE6D4);font-size:1.06rem;padding:.85rem .25rem;',
-        'border-bottom:1px solid rgba(239,230,212,.12);opacity:.92;text-decoration:none}',
+      // position:static + align-items:stretch guard against bare `nav{}` page
+      // rules (e.g. the landing page) leaking into the cloned container.
+      '.cc-drawer-nav{display:flex;flex-direction:column;align-items:stretch;position:static}',
+      '.cc-drawer-nav a{box-sizing:border-box;width:100%;color:var(--paper,#EFE6D4);',
+        'font-size:1.06rem;padding:.85rem .25rem;border-bottom:1px solid rgba(239,230,212,.12);',
+        'opacity:.92;text-decoration:none}',
       '.cc-drawer-nav a:hover{opacity:1}',
       '.cc-drawer-nav a.on{color:var(--trail,#FF5A1F);opacity:1}',
       // CTA links (Get involved / Explore the map / Account) become buttons
@@ -119,13 +122,27 @@
     closeBtn.innerHTML = '✕';
     head.appendChild(closeBtn);
 
-    var dnav = document.createElement('nav');
+    // A <div>, not a <nav>: a <nav> element would inherit any page-level
+    // `nav{...}` styles (the landing page absolutely-positions its nav).
+    var dnav = document.createElement('div');
     dnav.className = 'cc-drawer-nav';
+    var ctas = [];
     for (var i = 0; i < anchors.length; i++) {
       var clone = anchors[i].cloneNode(true);
       clone.removeAttribute('id');
-      dnav.appendChild(clone);
+      if (clone.classList.contains('acct') || clone.classList.contains('nav-cta')) {
+        ctas.push(clone);                       // defer CTAs so we can reorder them
+      } else {
+        dnav.appendChild(clone);                // regular links keep their order
+      }
     }
+    // CTAs go at the bottom, with the filled "Explore the map" ahead of the
+    // rest (Get involved, Account). Array.sort is stable, so the others keep
+    // their original relative order.
+    ctas.sort(function (a, b) {
+      return (a.classList.contains('fill') ? 0 : 1) - (b.classList.contains('fill') ? 0 : 1);
+    });
+    ctas.forEach(function (c) { dnav.appendChild(c); });
 
     drawer.appendChild(head);
     drawer.appendChild(dnav);
