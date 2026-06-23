@@ -93,7 +93,8 @@
   .export:hover{background:#ff703d}
 
   /* ---------- MAP ---------- */
-  .map-wrap{position:relative}
+  .map-wrap{position:relative;flex:1;min-height:0}
+  .mapcol{display:flex;flex-direction:column;min-height:0}
   #map{position:absolute;inset:0;background:var(--paper-deep)}
   .maplibregl-canvas{filter:none}
   .maplibregl-map{font-family:var(--sans)}
@@ -258,7 +259,6 @@
 <script defer src="analytics.js"></script>
 </head>
 <body>
-<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b> — a glimpse of what the open atlas will hold. Launching 2026.</div>
 <div class="app">
   <!-- ============ FILTER RAIL ============ -->
   <aside class="rail">
@@ -346,6 +346,8 @@
   </aside>
 
   <!-- ============ MAP ============ -->
+  <div class="mapcol">
+    <div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b> — a glimpse of what the open atlas will hold. Launching 2026.</div>
   <main class="map-wrap">
     <div id="map"></div>
     <div class="map-top">
@@ -391,6 +393,7 @@
       <div class="mly-loading" id="mlyLoad"><span class="mly-spin"></span>Loading street-level…</div>
     </section>
   </main>
+  </div>
 </div>
 
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

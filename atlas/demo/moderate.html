@@ -33,7 +33,7 @@
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:var(--sans);color:var(--ink);height:100svh;overflow:hidden}
   a{color:inherit;text-decoration:none}
-  .app{display:grid;grid-template-columns:360px 1fr;height:100svh}
+  .app{display:grid;grid-template-columns:360px 1fr;grid-template-rows:minmax(0,1fr);height:100svh}
 
   .rail{background:var(--ink);color:var(--paper);display:flex;flex-direction:column;border-right:1px solid var(--spruce-lift)}
   .rh{padding:1.2rem 1.4rem;border-bottom:1px solid rgba(239,230,212,.14)}
@@ -57,7 +57,8 @@
   .rf{padding:.9rem 1.4rem;border-top:1px solid rgba(239,230,212,.14);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:rgba(239,230,212,.55);display:flex;justify-content:space-between}
   .rf kbd{background:var(--spruce-lift);padding:.1rem .35rem;border-radius:3px;color:var(--paper)}
 
-  .map-wrap{position:relative}
+  .map-wrap{position:relative;flex:1;min-height:0}
+  .mapcol{display:flex;flex-direction:column;min-height:0}
   #map{position:absolute;inset:0;background:var(--paper-deep)}
   .maplibregl-canvas{filter:grayscale(.42) sepia(.2) saturate(.8) contrast(.95) brightness(1.03)}
   .maplibregl-ctrl-attrib{font-family:var(--mono);font-size:.6rem}
@@ -97,12 +98,14 @@
     <div class="rf"><span>Moderation queue · Wallonia</span><span><kbd>J</kbd><kbd>K</kbd> move · <kbd>A</kbd> approve · <kbd>R</kbd> reject</span></div>
   </aside>
 
+  <div class="mapcol">
+    <div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b> — a preview of the curator review flow. Launching 2026.</div>
   <main class="map-wrap">
     <div id="map"></div>
-    <div style="position:absolute;top:1.2rem;left:50%;transform:translateX(-50%);z-index:1001;max-width:min(90vw,560px);background:rgba(20,30,22,.92);color:#EFE6D4;border:1px solid #C8923A;border-radius:999px;padding:.5rem 1rem;backdrop-filter:blur(6px);font-size:.74rem;line-height:1.35;text-align:center;box-shadow:0 6px 18px -8px rgba(20,22,14,.5)"><b style="color:#C8923A">Demo</b> — a preview of the curator review flow. Launching 2026.</div>
     <div class="clear" id="clear" style="display:none"><div class="ic">◬</div><h3>Queue clear</h3><div>Nothing left to review. Nice.</div></div>
     <div class="review" id="review"></div>
   </main>
+  </div>
 </div>
 
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
