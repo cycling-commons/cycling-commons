@@ -12,7 +12,7 @@ Informative *and* stunning.
 
 ## 1. Voice & feel
 - **Adventurous, not corporate.** Expedition almanac, field journal, well-made map.
-- **Every discipline.** Road, gravel, MTB, touring, bikepacking, e-bike, urban/commute, cargo — the
+- **Every discipline.** Road, gravel, MTB, touring, bikepacking, e-bike, urban/commute — the
   imagery and language never default to lycra-and-tarmac.
 - **Open & communal.** Warm, generous, hand-made-but-precise. The map belongs to everyone.
 
