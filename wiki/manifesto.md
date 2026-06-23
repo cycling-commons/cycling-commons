@@ -9,11 +9,18 @@ silos or lost entirely. The Cycling Commons exists to set it free and keep it fr
 ## The theory underneath: Ostrom, not Hardin
 
 The lazy assumption — Garrett Hardin's "Tragedy of the Commons" (1968) — says a shared resource is
-doomed to be overused and ruined. **Elinor Ostrom disproved it.** Her work *Governing the Commons*
-(1990) won the 2009 Nobel Prize in Economics by showing that communities the world over have
-sustainably governed shared resources for centuries — *without* privatising them and *without* a
+doomed to be overused and ruined. **Elinor Ostrom showed that's not inevitable.** Her work *Governing
+the Commons* (1990) won the 2009 Nobel Prize in Economics by showing that communities the world over
+have sustainably governed shared resources for centuries — *without* privatising them and *without* a
 central owner — when a handful of design principles are in place: clear boundaries, rules made by the
 people affected, monitoring, graduated sanctions, and cheap conflict resolution.
+
+Hardin's tragedy is about *rivalrous* resources — a pasture, a fishery — where one person's taking
+depletes another's share. Open data is the opposite: non-rivalrous, and better the more it is used —
+you cannot overgraze a dataset. So the risk to a cycling commons is not overuse. It is **enclosure**
+(someone privatising what the community built) and **neglect** (too few contributors, or spam drowning
+the signal). Ostrom's principles are what guard against *those* failures — the threat model an open
+dataset actually faces.
 
 The Cycling Commons is a deliberate, modern application of Ostrom's principles to cycling data. The
 [Governance](governance.md) page maps each principle to a concrete part of the system. This is why the

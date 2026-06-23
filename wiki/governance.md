@@ -48,12 +48,36 @@ resources (see [Manifesto](manifesto.md)). Each maps to a concrete part of the s
 | **2. Rules fit local conditions** | Curation is **per region**; the curated target `X` scales with local density |
 | **3. Collective-choice (those affected make the rules)** | The seasonal **voting rounds** — riders rank their own regions |
 | **4. Monitoring** | The **freshness model** — timestamps, reporter counts, confirm/decay |
-| **5. Graduated sanctions** | Vote-integrity guards; contributor terms; escalating response to abuse |
-| **6. Cheap conflict resolution** | Open, lightweight curator review and dispute flow |
-| **7. Recognised right to organise** | The foundation structure; no external owner can override the community |
-| **8. Nested enterprises** | Regions nested in countries; rider → curator → steward → foundation |
+| **5. Graduated sanctions** | *(aspirational)* Escalating consequences for rule-breaking — warn → restrict → remove, sized to severity and repeat offence rather than a first-strike ban. Aimed at abuse: spam, vote-rigging, vandalism |
+| **6. Cheap conflict resolution** | A fast, low-cost way to settle *good-faith* disagreements — a contested edit, a curation call — without escalation or cost. Adjudication between members, not punishment |
+| **7. Recognised right to organise** | The community's right to self-govern is recognised from outside: the *Stichting* gives it legal standing independent of BikeCoders, and the ODbL fork/exit right means no upstream or platform can deny it |
+| **8. Nested enterprises** | Self-governing regions nested under a coordinating core: rider → regional curators → core stewardship → foundation (see [Regional governance](#regional-governance-subsidiarity-not-hierarchy)) |
 
 Together these cover the common failure modes of a shared data resource — spam, gaming, and enclosure.
+
+## Regional governance: subsidiarity, not hierarchy
+
+The aim is for each region to govern its own map — its curators, its seasonal rounds, its own sense of
+what the region's best climbs, finest views, and top rides are — nested under a core that keeps the
+regions interoperable. That is principle #8 (nested enterprises) made real: governance, not merely a
+data hierarchy.
+
+The line to hold is **subsidiarity**: decisions sit at the lowest competent level, and the higher level
+only handles what the lower one can't. "Supervision to keep regions aligned" can quietly collapse the
+nesting back into hierarchy — and if it does, the Commons loses the very property that makes it a
+commons. So the division of labour we aim for:
+
+- **Core team's job = coordination, not taste.** Shared schema, data standards, anti-abuse /
+  vote-integrity, cross-region *consistency of process*, and being the backstop for disputes a region
+  can't resolve. That is legitimate "supervision."
+- **Region's job = the actual map.** What counts as this region's best climb, finest view, or top ride
+  stays local, and the core team does **not** override it. The moment "alignment" means the core team
+  can overrule a region's *judgment*, it is no longer a nested commons — it is a company with regional
+  moderators.
+
+"Keep aligned" therefore means aligned **standards**, not aligned **opinions**. Most regions won't have
+a curator community at the start; this is the structure the Commons grows into as local communities
+form.
 
 ## The sensing boundary: how activity becomes a place-fact
 
