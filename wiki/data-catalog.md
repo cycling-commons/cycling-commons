@@ -1,12 +1,12 @@
 # The Commons — Data Catalog
 
-Everything a rider can contribute to the open cycling Commons. All of it is **non-personal**
-(about the *world*, never a person's identity), **community-contributed**, and useful to
-**anyone**. Never scraped; contributed by riders — reports, edits, and aggregate, anonymous signals.
+Everything a rider can contribute to the open cycling Commons — climbs, water, stays, hazards,
+viewpoints, and more. All of it is **community-contributed**, useful to **anyone**, and
+**non-personal** (about the *world*, never a person's identity). Never scraped; contributed by riders — reports, edits, and aggregate, anonymous signals.
 
 ## Principles
-- **Non-personal only.** No identity, no tracking, nothing personal. The Commons is the map, not the rider.
 - **Build on OSM, don't reinvent it.** Items tagged **[OSM]** already have a home in OpenStreetMap (ODbL). Sync with / contribute back to OSM for those; layer cycling-specific curation on top. the Commons's added value is *curation, normalization, freshness, and the cycling lens* — not re-collecting the base map.
+- **Non-personal only.** No identity, no tracking, nothing personal. The Commons is the map, not the rider.
 - **Media is a first-class, consent-gated contribution.** Photos and video join the Commons under **CC BY-SA 4.0** with provenance — the contributor explicitly confirms they own it and *donate* it (first-time consent), or links a photo from a recognised source whose licence is validated. Never scraped. Marked **[media]**. (Multiple photos per item, plus short video; galleries show as a slideshow.)
 - **Closed providers are signposted, not absorbed.** Bike-friendly-stay *schemes* (national cyclist-accommodation networks) are a referral layer that links out — not part of the open Commons. Only data riders contribute (or that's already open) goes in the Commons.
 
