@@ -33,6 +33,70 @@ LAYERS = {
             ("amenity", "compressed_air", "Pump"),
         ],
     },
+    "scenic": {
+        "title": "scenic viewpoints",
+        "js_var": "CC_SCENIC_OSM",
+        "out": "scenic-osm.js",
+        "cap_per_province": 24,
+        "selectors": [
+            ("tourism", "viewpoint", "Viewpoint"),
+            ("natural", "peak", "Peak"),
+            ("waterway", "waterfall", "Waterfall"),
+        ],
+    },
+    "history": {
+        "title": "history & culture",
+        "js_var": "CC_HISTORY_OSM",
+        "out": "history-osm.js",
+        "cap_per_province": 30,
+        "selectors": [
+            ("historic", "castle", "Castle"),
+            ("historic", "fort", "Fort"),
+            ("historic", "ruins", "Ruins"),
+            ("historic", "monument", "Monument"),
+            ("historic", "memorial", "Memorial"),
+            ("historic", "archaeological_site", "Archaeological site"),
+            ("historic", "manor", "Manor"),
+            ("historic", "monastery", "Monastery"),
+        ],
+    },
+    "stays": {
+        "title": "overnight stays",
+        "js_var": "CC_STAYS_OSM",
+        "out": "stays-osm.js",
+        "cap_per_province": 28,
+        "selectors": [
+            ("tourism", "camp_site", "Campsite"),
+            ("tourism", "hostel", "Hostel"),
+            ("tourism", "guest_house", "Guest house"),
+            ("tourism", "chalet", "Chalet"),
+            ("tourism", "wilderness_hut", "Wilderness hut"),
+            ("tourism", "alpine_hut", "Mountain hut"),
+            ("tourism", "motel", "Motel"),
+            ("tourism", "hotel", "Hotel"),
+        ],
+    },
+    "shelter": {
+        "title": "shelter & emergency",
+        "js_var": "CC_SHELTER_OSM",
+        "out": "shelter-osm.js",
+        "cap_per_province": 20,
+        "selectors": [
+            ("amenity", "shelter", "Shelter"),
+            ("emergency", "phone", "Emergency phone"),
+            ("emergency", "defibrillator", "Defibrillator"),
+        ],
+    },
+    "transit": {
+        "title": "getting there (rail)",
+        "js_var": "CC_TRANSIT_OSM",
+        "out": "transit-osm.js",
+        "cap_per_province": 20,
+        "selectors": [
+            ("railway", "station", "Train station"),
+            ("railway", "halt", "Train halt"),
+        ],
+    },
 }
 
 
