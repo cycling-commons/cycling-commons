@@ -35,11 +35,34 @@ def query(ql: str) -> dict:
             raise
 
 
-def elements_to_features(elements, type_map, prov):
+def get_json(url):
+    """Cached GET → parsed JSON (shares the Overpass .cache dir). Returns None on HTTP error."""
+    CACHE.mkdir(exist_ok=True)
+    key = CACHE / ("get_" + hashlib.sha1(url.encode()).hexdigest() + ".json")
+    if key.exists():
+        return json.loads(key.read_text())
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "CyclingCommons/wallonia-harvest"})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                out = json.loads(r.read())
+            key.write_text(json.dumps(out))
+            return out
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 502, 503, 504) and attempt < 2:
+                time.sleep(3 * (attempt + 1))
+                continue
+            return None
+        except (urllib.error.URLError, ValueError):
+            return None
+
+
+def elements_to_features(elements, type_map, prov, extra=None):
     """Map raw Overpass elements (node, or way/relation with `center`) to GeoJSON point features.
 
     `type_map` is a list of (key, value, label); the first matching tag picks the feature's `t`.
-    A private `_id` ("<type>/<id>") is attached for dedupe and stripped before serialization.
+    `extra` is an optional list of tag keys to stash on a private `_tags` dict (for ranking/enrichment).
+    A private `_id` ("<type>/<id>") is attached for dedupe; private keys are stripped before serialization.
     """
     feats = []
     for el in elements:
@@ -62,6 +85,7 @@ def elements_to_features(elements, type_map, prov):
             "type": "Feature",
             "properties": props,
             "geometry": {"type": "Point", "coordinates": [round(lon, 5), round(lat, 5)]},
+            "_tags": {k: tags[k] for k in (extra or []) if tags.get(k)},
             "_id": f'{el["type"]}/{el["id"]}',
         })
     return feats

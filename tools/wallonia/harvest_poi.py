@@ -46,14 +46,17 @@ def dedupe(features):
 
 
 def rank_and_cap(features, cap):
-    """Stable-sort so named features come first, then truncate to `cap`."""
-    ranked = sorted(features, key=lambda f: 0 if f["properties"].get("n") else 1)
-    return ranked[:cap]
+    """Sort by notability (Wikidata/Wikipedia first, then named), then truncate to `cap`."""
+    def score(f):
+        t = f.get("_tags", {})
+        return (0 if (t.get("wikidata") or t.get("wikipedia")) else 1,
+                0 if f["properties"].get("n") else 1)
+    return sorted(features, key=score)[:cap]
 
 
 def to_fixture_js(features, js_var, header):
-    """Strip `_id`, wrap features in a FeatureCollection assigned to `window.<js_var>`."""
-    clean = [{k: v for k, v in f.items() if k != "_id"} for f in features]
+    """Strip private (_-prefixed) keys, wrap features in a FeatureCollection on window.<js_var>."""
+    clean = [{k: v for k, v in f.items() if not k.startswith("_")} for f in features]
     fc = {"type": "FeatureCollection", "features": clean}
     return header + "window." + js_var + "=" + json.dumps(fc, ensure_ascii=False, separators=(",", ":")) + ";\n"
 
@@ -64,7 +67,7 @@ def harvest(cfg):
     all_feats, by_prov = [], {}
     for prov, area_id in sorted(areas.items()):
         res = overpass.query(build_query(cfg["selectors"], area_id))
-        feats = overpass.elements_to_features(res.get("elements", []), cfg["selectors"], prov)
+        feats = overpass.elements_to_features(res.get("elements", []), cfg["selectors"], prov, cfg.get("extra_tags"))
         feats = rank_and_cap(dedupe(feats), cfg["cap_per_province"])
         by_prov[prov] = len(feats)
         all_feats.extend(feats)

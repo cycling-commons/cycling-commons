@@ -53,6 +53,8 @@ LAYERS = {
         "js_var": "CC_HISTORY_OSM",
         "out": "history-osm.js",
         "cap_per_province": 30,
+        "extra_tags": ["wikidata", "wikipedia"],
+        "enrich": True,
         "selectors": [
             ("historic", "castle", "Castle"),
             ("historic", "fort", "Fort"),
@@ -141,17 +143,24 @@ def run(layer_keys=None, report=False):
             continue
         cfg = LAYERS[key]
         res = harvest_poi.harvest(cfg)
+        enriched = 0
+        if cfg.get("enrich"):
+            from . import enrich as _enrich
+            enriched = _enrich.enrich(res["features"])
         note = ""
         if cfg.get("sim"):
             note = ("// NOTE: ~1/3 of points flagged '" + cfg["sim"]["confirmed"] + "'"
                     + (" + a star rating" if cfg["sim"].get("rating") else "")
                     + " (props c/r) — SIMULATED demo data, not real verification.\n")
+        if enriched:
+            note += ("// Enriched: props.desc © Wikipedia contributors (CC BY-SA 4.0); props.photo © "
+                     "Wikimedia Commons (per-file licence in photo.license).\n")
         js = harvest_poi.to_fixture_js(
             res["features"], cfg["js_var"],
             _header(cfg["title"], cfg["selectors"], len(res["features"]), note))
         (DEMO / cfg["out"]).write_text(js, encoding="utf-8")
         nconf = sum(1 for f in res["features"] if f["properties"].get("c"))
-        extra = f", {nconf} simulated-confirmed" if nconf else ""
+        extra = (f", {nconf} simulated-confirmed" if nconf else "") + (f", {enriched} enriched" if enriched else "")
         print(f"{key}: {len(res['features'])} points{extra} -> atlas/demo/{cfg['out']}")
         if report:
             for prov, n in sorted(res["by_prov"].items()):
