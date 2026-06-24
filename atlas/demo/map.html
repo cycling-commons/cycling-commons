@@ -402,6 +402,11 @@
 <script src="surface-data.js"></script>
 <script src="water-osm.js"></script>
 <script src="services-osm.js"></script>
+<script src="scenic-osm.js"></script>
+<script src="history-osm.js"></script>
+<script src="stays-osm.js"></script>
+<script src="shelter-osm.js"></script>
+<script src="transit-osm.js"></script>
 <script>
   const map = new maplibregl.Map({
     container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
@@ -611,30 +616,39 @@
     map.on('mouseleave','water-osm',()=>map.getCanvas().style.cursor='');
   }
 
-  // all Wallonia bike-service points (OSM) as a dot layer, toggled with the Bike services layer
-  function addServicesOsm(){
-    if(!window.CC_SERVICES_OSM || map.getSource('services-osm')) return;
-    map.addSource('services-osm',{type:'geojson',data:CC_SERVICES_OSM});
-    map.addLayer({id:'services-osm',type:'circle',source:'services-osm',
+  // generic bulk-OSM dot layer for a catalog POI layer (toggled with that layer; coloured by it)
+  function addOsmDots(key, data, srcDesc){
+    const id=key+'-osm';
+    if(!data || map.getSource(id)) return;
+    const color=(layerByKey[key]||{}).color||'#6b6f5e';
+    map.addSource(id,{type:'geojson',data});
+    map.addLayer({id,type:'circle',source:id,
       layout:{visibility:'none'},
-      paint:{'circle-color':'#6b6f5e','circle-stroke-color':'#2a2c24','circle-stroke-width':1,
+      paint:{'circle-color':color,'circle-stroke-color':'#1b1d16','circle-stroke-width':1,
         'circle-radius':['interpolate',['linear'],['zoom'],8,2.4,13,4,18,6]}});
-    map.on('click','services-osm',e=>{
-      const p=e.features[0].properties, ll=e.lngLat;
-      openDrawer(layerByKey['services'], {
-        name:p.n||p.t||'Bike service', headline:(p.t||'Bike service')+' · OSM', cur:false,
+    map.on('click',id,e=>{
+      const p=e.features[0].properties, ll=e.lngLat, lbl=(layerByKey[key]||{}).label||'Place';
+      openDrawer(layerByKey[key], {
+        name:p.n||p.t||lbl, headline:(p.t||lbl)+' · OSM', cur:false,
         geom:{ll:[ll.lat,ll.lng]},
         record:[
-          {label:'Type', value:p.t||'Bike service', method:'OSM'},
+          {label:'Type', value:p.t||lbl, method:'OSM'},
           {label:'Province', value:p.prov||'Wallonia'},
           {label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]}
         ],
-        source:'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)' });
+        source:srcDesc });
     });
-    map.on('mouseenter','services-osm',()=>map.getCanvas().style.cursor='pointer');
-    map.on('mouseleave','services-osm',()=>map.getCanvas().style.cursor='');
+    map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
+    map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
   }
-  map.on('load',()=>{ addSatellite(); addHeatmap(); addMapillary(); addWaterOsm(); addServicesOsm(); addRegionBoundary('Wallonia'); render();
+  map.on('load',()=>{ addSatellite(); addHeatmap(); addMapillary(); addWaterOsm();
+    addOsmDots('services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)');
+    addOsmDots('scenic', window.CC_SCENIC_OSM, 'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)');
+    addOsmDots('history', window.CC_HISTORY_OSM, 'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)');
+    addOsmDots('stays', window.CC_STAYS_OSM, 'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)');
+    addOsmDots('shelter', window.CC_SHELTER_OSM, 'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)');
+    addOsmDots('transit', window.CC_TRANSIT_OSM, 'OpenStreetMap (railway=station / railway=halt)');
+    addRegionBoundary('Wallonia'); render();
     // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from a profile page)
     const fp = new URLSearchParams(location.search).get('feature');
     if(fp) openFeatureByName(fp);
@@ -1164,8 +1178,9 @@
   function render(){
     markers.forEach(m=>m.remove()); markers=[];
     clearDynamic();
-    if(map.getLayer('water-osm')) map.setLayoutProperty('water-osm','visibility', active.has('water')?'visible':'none');
-    if(map.getLayer('services-osm')) map.setLayoutProperty('services-osm','visibility', active.has('services')?'visible':'none');
+    ['water','services','scenic','history','stays','shelter','transit'].forEach(k=>{
+      const id=k+'-osm'; if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', active.has(k)?'visible':'none');
+    });
     let n=0;
     CATALOG.forEach(layer=>{
       if(!active.has(layer.key)) return;
@@ -1433,7 +1448,8 @@
     const el=document.createElement('div');
     el.className='layer'; el.style.setProperty('--c',layer.color); el.dataset.key=layer.key;
     if(!active.has(layer.key)) el.classList.add('off');
-    const ct=layer.features.length + (layer.key==='water' && window.CC_WATER_OSM ? CC_WATER_OSM.features.length : 0) + (layer.key==='services' && window.CC_SERVICES_OSM ? CC_SERVICES_OSM.features.length : 0);
+    const osmFx=window['CC_'+layer.key.toUpperCase()+'_OSM'];
+    const ct=layer.features.length + (osmFx ? osmFx.features.length : 0);
     el.innerHTML=`<span class="sw">${layer.icon}</span><span class="nm">${layer.letter} · ${layer.label}</span><span class="ct">${ct}</span>`;
     el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
     lc.appendChild(el);
