@@ -130,6 +130,14 @@
   .map-ctrl .mc-ov.on{opacity:1;background:rgba(62,125,79,.28);border-color:#3e7d4f}
   .map-ctrl .mc-ov.mc-off,.map-ctrl .mc-ov.mc-off:hover{opacity:.38;cursor:not-allowed}
   .map-ctrl .mc-ic{font-size:.82rem}
+  .map-ctrl .mc-toggle{display:none;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
+  /* mobile: collapse the panel to a small layers icon; tap to expand */
+  @media(max-width:760px){
+    .map-ctrl{min-width:0;gap:.35rem;top:.8rem;right:.8rem}
+    .map-ctrl .mc-toggle{display:flex}
+    .map-ctrl:not(.open) .mc-seg,.map-ctrl:not(.open) .mc-ov{display:none}
+    .map-ctrl.open{min-width:9.5rem}
+  }
 
   .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgba(239,230,212,.92);border-radius:8px;padding:.7rem 1rem;backdrop-filter:blur(6px)}
   .map-top .rg{font-family:var(--serif);font-weight:600;font-size:1.05rem}
@@ -367,6 +375,11 @@
       </div>
     </div>
     <div class="map-ctrl" aria-label="Base map and overlays">
+      <button class="mc-toggle" id="mcToggle" type="button" aria-label="Map layers" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+          <path d="M12 2.5 22 8 12 13.5 2 8z"/><path d="M2.5 12 12 17 21.5 12"/><path d="M2.5 16 12 21 21.5 16"/>
+        </svg>
+      </button>
       <div class="mc-seg" id="baseSeg">
         <button class="on" data-b="map">Map</button>
         <button data-b="satellite">Satellite</button>
@@ -1552,6 +1565,19 @@
     // no Mapillary token → coverage tiles can't load; show the control as unavailable instead of a dead toggle
     ovStreet.classList.add('mc-off');
     ovStreet.title='Street-level needs a Mapillary token — set MAPILLARY_TOKEN in map.html';
+  }
+  // mobile: the control collapses to a small layers icon — tap to expand, and
+  // collapse again after a choice is made
+  const mcToggle=document.getElementById('mcToggle');
+  const mapCtrl=document.querySelector('.map-ctrl');
+  if(mcToggle && mapCtrl){
+    mcToggle.onclick=()=>{
+      const open=mapCtrl.classList.toggle('open');
+      mcToggle.setAttribute('aria-expanded', open?'true':'false');
+    };
+    mapCtrl.querySelectorAll('#baseSeg button, #ovStreet').forEach(b=>b.addEventListener('click',()=>{
+      if(window.innerWidth<=760){ mapCtrl.classList.remove('open'); mcToggle.setAttribute('aria-expanded','false'); }
+    }));
   }
 
   // mode toggle

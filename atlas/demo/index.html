@@ -75,6 +75,8 @@
   .corner{position:absolute;font-family:var(--mono);text-transform:uppercase;letter-spacing:.16em;font-size:.68rem;color:rgba(239,230,212,.55);z-index:5}
   .corner.tl{top:3.5rem;left:clamp(1.25rem,4vw,3rem)} .corner.tr{top:4.4rem;right:clamp(1.25rem,4vw,3rem);text-align:right}
   .corner.br{bottom:1.6rem;right:clamp(1.25rem,4vw,3rem);text-align:right}
+  /* mobile: drop the top-right licence/stewardship banner (it crowds the hero) */
+  @media(max-width:760px){.corner.tr{display:none}}
 
   .hero-inner{position:relative;z-index:10;padding-bottom:clamp(2.5rem,6vw,5rem);padding-top:8rem;width:100%}
   .eyebrow{display:inline-flex;align-items:center;gap:.6rem;color:var(--trail);margin-bottom:1.4rem}
@@ -385,7 +387,7 @@
 
 <footer>
   <div class="wrap">
-    <div class="mono">CYCLING COMMONS · OPEN CYCLING DATA · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · © CYCLING COMMONS CONTRIBUTORS + OPENSTREETMAP</div>
+    <div class="mono">CYCLING COMMONS · OPEN CYCLING DATA · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · CODE POLYFORM SHIELD 1.0.0 · © CYCLING COMMONS CONTRIBUTORS + OPENSTREETMAP</div>
     <div class="mono"><a href="https://wiki.cyclingcommons.org/">Wiki</a> · <a href="https://wiki.cyclingcommons.org/governance/">Governance</a> · <a href="https://github.com/cycling-commons/cycling-commons">GitHub</a> · <a href="join.html">Get involved</a> · <a href="pages.html">All pages</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · stewarded by <a href="https://bikecoders.life">BikeCoders</a></div>
   </div>
 </footer>
