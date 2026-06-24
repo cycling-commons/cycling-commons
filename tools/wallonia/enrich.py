@@ -34,8 +34,7 @@ def _wikidata_entities(ids):
             for k, v in (ent.get("sitelinks") or {}).items():
                 if k.endswith("wiki") and k[:-4] in ("en", "fr", "nl", "de"):
                     sl[k[:-4]] = v.get("title")
-            desc = (ent.get("descriptions", {}).get("en")
-                    or ent.get("descriptions", {}).get("fr") or {}).get("value")
+            desc = (ent.get("descriptions", {}).get("en") or {}).get("value")
             out[qid] = {"image": img, "sitelinks": sl, "desc": desc}
     return out
 
@@ -88,17 +87,13 @@ def enrich(features):
     for f in features:
         t, props = f.get("_tags", {}), f["properties"]
         ent = ents.get(t.get("wikidata"))
-        # description: prefer the Wikipedia summary, else the Wikidata one-liner
-        lang_title = None
-        if t.get("wikipedia") and ":" in t["wikipedia"]:
-            lang, title = t["wikipedia"].split(":", 1)
-            lang_title = (lang, title)
-        elif ent and ent["sitelinks"]:
-            for lang in ("en", "fr", "nl", "de"):
-                if ent["sitelinks"].get(lang):
-                    lang_title = (lang, ent["sitelinks"][lang])
-                    break
-        desc = _wikipedia_summary(*lang_title) if lang_title else None
+        # English-only description: English Wikipedia summary, else the English Wikidata one-liner
+        en_title = None
+        if ent and ent["sitelinks"].get("en"):
+            en_title = ent["sitelinks"]["en"]
+        elif t.get("wikipedia", "").startswith("en:"):
+            en_title = t["wikipedia"].split(":", 1)[1]
+        desc = _wikipedia_summary("en", en_title) if en_title else None
         if not desc and ent and ent.get("desc"):
             desc = ent["desc"][:1].upper() + ent["desc"][1:]
         if desc:

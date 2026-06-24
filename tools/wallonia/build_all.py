@@ -42,6 +42,9 @@ LAYERS = {
         "js_var": "CC_SCENIC_OSM",
         "out": "scenic-osm.js",
         "cap_per_province": 24,
+        "extra_tags": ["wikidata", "wikipedia"],
+        "enrich": True,
+        "validate_photo": True,
         "selectors": [
             ("tourism", "viewpoint", "Viewpoint"),
             ("natural", "peak", "Peak"),
@@ -55,6 +58,7 @@ LAYERS = {
         "cap_per_province": 30,
         "extra_tags": ["wikidata", "wikipedia"],
         "enrich": True,
+        "validate_photo": True,
         "selectors": [
             ("historic", "castle", "Castle"),
             ("historic", "fort", "Fort"),
@@ -119,10 +123,12 @@ def annotate_water():
     feats = payload["features"]
     nconf = 0
     for f in feats:
-        f["properties"].pop("c", None)  # idempotent on re-run
+        f["properties"].pop("c", None)
+        f["properties"].pop("sim", None)  # idempotent on re-run
         lon, lat = f["geometry"]["coordinates"]
         if int(hashlib.sha1(f"{lon},{lat}".encode()).hexdigest(), 16) % 3 == 0:
             f["properties"]["c"] = "Confirmed potable"
+            f["properties"]["sim"] = 1
             nconf += 1
     header = (
         "// SPDX-License-Identifier: ODbL-1.0\n"
@@ -147,6 +153,10 @@ def run(layer_keys=None, report=False):
         if cfg.get("enrich"):
             from . import enrich as _enrich
             enriched = _enrich.enrich(res["features"])
+        if cfg.get("validate_photo"):                       # a real photo = a validated spot → large pin
+            for f in res["features"]:
+                if f["properties"].get("photo"):
+                    f["properties"]["c"] = "Pictured"
         note = ""
         if cfg.get("sim"):
             note = ("// NOTE: ~1/3 of points flagged '" + cfg["sim"]["confirmed"] + "'"

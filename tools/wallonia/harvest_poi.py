@@ -20,6 +20,7 @@ def simulate(features, sim):
     for f in features:
         if _hash(f["_id"]) % 3 == 0:
             f["properties"]["c"] = sim["confirmed"]
+            f["properties"]["sim"] = 1          # marks this confirmation as SIMULATED (vs real validations)
             if sim.get("rating"):
                 f["properties"]["r"] = _RATINGS[_hash(f["_id"] + "r") % len(_RATINGS)]
 
