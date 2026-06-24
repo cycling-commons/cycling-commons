@@ -582,6 +582,7 @@
   // all Wallonia drinking-water points (OSM) as an efficient dot layer, toggled with the Water layer
   function addWaterOsm(){
     if(!window.CC_WATER_OSM || map.getSource('water-osm')) return;
+    osmLayers['water']={data:CC_WATER_OSM, water:true};
     // build a small water-droplet icon (just the drop, no pin/marker around it) once
     if(!map.hasImage('water-drop')){
       const S=2, W=14*S, H=18*S, cx=W/2;
@@ -597,55 +598,51 @@
         return new Uint8Array(x.getImageData(0,0,W,H).data.buffer);
       };
       map.addImage('water-drop', {width:W, height:H, data:drop('#3E8FB0','#0d2b3a')}, {pixelRatio:S});
-      // green droplet = simulated "confirmed potable" (see water-osm.js header — demo flag, not real verification)
-      map.addImage('water-drop-ok', {width:W, height:H, data:drop('#2e9e54','#0d3a1f')}, {pixelRatio:S});
     }
     map.addSource('water-osm',{type:'geojson',data:CC_WATER_OSM});
     map.addLayer({id:'water-osm',type:'symbol',source:'water-osm',
-      layout:{visibility:'none','icon-image':['case',['has','c'],'water-drop-ok','water-drop'],'icon-allow-overlap':true,
+      filter:['!',['has','c']],
+      layout:{visibility:'none','icon-image':'water-drop','icon-allow-overlap':true,
         'icon-size':['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]}});
-    map.on('click','water-osm',e=>{
-      const p=e.features[0].properties, ll=e.lngLat;
-      const potable = p.c
-        ? {label:'Potable', value:p.c+' · simulated demo flag (not utility-verified)', method:'demo'}
-        : {label:'Potable', value:'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
-      openDrawer(layerByKey['water'], {
-        name:p.n||p.t||'Drinking water', headline:'drinking water · OSM', cur:!!p.c,
-        geom:{ll:[ll.lat,ll.lng]},
-        record:[
-          {label:'Type', value:p.t||'Drinking water', method:'OSM'},
-          potable,
-          {label:'Verify', value:'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}
-        ],
-        source:'OpenStreetMap (amenity=drinking_water / drinking_water=yes)' });
-    });
+    map.on('click','water-osm',e=>{ const p=e.features[0].properties; openDrawer(layerByKey['water'], waterDrawer(p, e.lngLat)); });
     map.on('mouseenter','water-osm',()=>map.getCanvas().style.cursor='pointer');
     map.on('mouseleave','water-osm',()=>map.getCanvas().style.cursor='');
   }
 
-  // generic bulk-OSM dot layer for a catalog POI layer (toggled with that layer; coloured by it)
+  // registry of bulk-OSM dot layers so render() can promote confirmed (simulated) points to icon pins
+  const osmLayers = {};
+  // drawer card for a generic bulk-OSM point — shared by the dot click handler and the confirmed pin
+  function osmDrawer(layer, p, ll, src){
+    const lbl=(layer||{}).label||'Place';
+    const rec=[{label:'Type', value:p.t||lbl, method:'OSM'},{label:'Province', value:p.prov||'Wallonia'}];
+    if(p.c) rec.push({label:'Status', value:p.c+' · simulated', method:'demo'});
+    if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'});
+    rec.push({label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
+    return {name:p.n||p.t||lbl, headline:(p.t||lbl)+' · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec, source:src};
+  }
+  // drawer card for a water point — shared by the droplet click handler and the confirmed pin
+  function waterDrawer(p, ll){
+    const potable = p.c
+      ? {label:'Potable', value:p.c+' · simulated demo flag (not utility-verified)', method:'demo'}
+      : {label:'Potable', value:'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
+    return {name:p.n||p.t||'Drinking water', headline:'drinking water · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
+      record:[{label:'Type', value:p.t||'Drinking water', method:'OSM'}, potable,
+        {label:'Verify', value:'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}],
+      source:'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
+  }
+  // generic bulk-OSM dot layer; confirmed points are filtered out here (they render as icon pins in render())
   function addOsmDots(key, data, srcDesc){
     const id=key+'-osm';
     if(!data || map.getSource(id)) return;
+    osmLayers[key]={data, src:srcDesc};
     const color=(layerByKey[key]||{}).color||'#6b6f5e';
     map.addSource(id,{type:'geojson',data});
     map.addLayer({id,type:'circle',source:id,
+      filter:['!',['has','c']],
       layout:{visibility:'none'},
-      paint:{'circle-color':color,
-        'circle-stroke-color':['case',['has','c'],'#2e9e54','#1b1d16'],
-        'circle-stroke-width':['case',['has','c'],2.2,1],
+      paint:{'circle-color':color,'circle-stroke-color':'#1b1d16','circle-stroke-width':1,
         'circle-radius':['interpolate',['linear'],['zoom'],8,2.4,13,4,18,6]}});
-    map.on('click',id,e=>{
-      const p=e.features[0].properties, ll=e.lngLat, lbl=(layerByKey[key]||{}).label||'Place';
-      const rec=[{label:'Type', value:p.t||lbl, method:'OSM'},{label:'Province', value:p.prov||'Wallonia'}];
-      if(p.c) rec.push({label:'Status', value:p.c+' · simulated', method:'demo'});
-      if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'});
-      rec.push({label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
-      openDrawer(layerByKey[key], {
-        name:p.n||p.t||lbl, headline:(p.t||lbl)+' · OSM', cur:!!p.c,
-        geom:{ll:[ll.lat,ll.lng]},
-        record:rec, source:srcDesc });
-    });
+    map.on('click',id,e=>{ const p=e.features[0].properties; openDrawer(layerByKey[key], osmDrawer(layerByKey[key], p, e.lngLat, srcDesc)); });
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
     map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
   }
@@ -1260,6 +1257,28 @@
         });
         return;
       }
+    });
+    // confirmed/validated (simulated) bulk-OSM points get the category icon pin; unverified stay as dots
+    Object.keys(osmLayers).forEach(key=>{
+      if(!active.has(key)) return;
+      const layer=layerByKey[key], info=osmLayers[key];
+      if(!layer || !info.data) return;
+      info.data.features.forEach(ft=>{
+        const p=ft.properties; if(!p.c) return;
+        const co=ft.geometry.coordinates, lngLat=[co[0],co[1]], llo={lat:co[1],lng:co[0]};
+        const drawerF = info.water ? waterDrawer(p, llo) : osmDrawer(layer, p, llo, info.src);
+        const el=pinEl(layer, true);
+        el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
+        el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline);
+        el.addEventListener('click', ()=>{ openDrawer(layer, drawerF); flyToPin(lngLat); });
+        el.addEventListener('mouseenter', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
+        el.addEventListener('mouseleave', hideTip);
+        el.addEventListener('focus', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
+        el.addEventListener('blur', hideTip);
+        el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDrawer(layer, drawerF); flyToPin(lngLat); }});
+        markers.push(new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat(lngLat).addTo(map));
+        n++;
+      });
     });
     // stacking, bottom → top: ride lines, climb lines, road-surface lines, then Mapillary on top
     const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
