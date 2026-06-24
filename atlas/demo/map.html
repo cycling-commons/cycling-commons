@@ -487,7 +487,7 @@
 <script>
   const map = new maplibregl.Map({
     container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
-    center:[5.72,50.44], zoom:9, attributionControl:false
+    bounds:[[2.84,49.45],[6.41,50.85]], fitBoundsOptions:{padding:24}, attributionControl:false  // all of Wallonia visible on load
   });
   map.addControl(new maplibregl.AttributionControl({customAttribution:'© OpenStreetMap contributors · ODbL'}),'bottom-right');
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
@@ -696,8 +696,8 @@
   function osmDrawer(layer, p, ll, src){
     const lbl=(layer||{}).label||'Place';
     const rec=[{label:'Type', value:p.t||lbl, method:'OSM'},{label:'Province', value:p.prov||'Wallonia'}];
-    if(p.c) rec.push({label:'Status', value:p.c+' · simulated', method:'demo'});
-    if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'});
+    if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
+      if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
     rec.push({label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
     const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec, source:src};
     if(p.desc) d.desc=p.desc;
