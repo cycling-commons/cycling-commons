@@ -4,6 +4,8 @@
 Usage: PYTHONPATH=tools python3 -m wallonia.build_all [layer ...] [--report]
 """
 import sys
+import json
+import hashlib
 import pathlib
 import datetime
 from . import harvest_poi
@@ -13,12 +15,13 @@ DEMO = ROOT / "atlas/demo"
 WALLONIA_BBOX = (2.84, 49.45, 6.41, 50.85)  # (minlon, minlat, maxlon, maxlat)
 
 
-def _header(title, selectors, n):
+def _header(title, selectors, n, note=""):
     sels = ", ".join(f"{k}={v}" for k, v, _ in selectors)
     today = datetime.date.today().isoformat()
     return (f"// SPDX-License-Identifier: ODbL-1.0\n"
             f"// Wallonia {title} © OpenStreetMap contributors (ODbL). Selectors: {sels}.\n"
-            f"// Region-balanced across the 5 Walloon provinces. Harvested {today} · {n} points.\n")
+            f"// Region-balanced across the 5 Walloon provinces. Harvested {today} · {n} points.\n"
+            + (note or ""))
 
 
 LAYERS = {
@@ -32,6 +35,7 @@ LAYERS = {
             ("amenity", "bicycle_repair_station", "Repair station"),
             ("amenity", "compressed_air", "Pump"),
         ],
+        "sim": {"confirmed": "Confirmed", "rating": True},
     },
     "scenic": {
         "title": "scenic viewpoints",
@@ -100,15 +104,55 @@ LAYERS = {
 }
 
 
+def annotate_water():
+    """SIMULATION — flag ~1/3 of the existing curated water points as confirmed potable.
+
+    Reads/rewrites the existing atlas/demo/water-osm.js in place (the points are NOT re-harvested,
+    so the curated set is preserved). Selection is deterministic by coordinates and idempotent.
+    The `c` flag is SIMULATED demo data, not real potability verification.
+    """
+    path = DEMO / "water-osm.js"
+    txt = path.read_text(encoding="utf-8")
+    payload = json.loads(txt.split("window.CC_WATER_OSM=", 1)[1].rsplit(";", 1)[0])
+    feats = payload["features"]
+    nconf = 0
+    for f in feats:
+        f["properties"].pop("c", None)  # idempotent on re-run
+        lon, lat = f["geometry"]["coordinates"]
+        if int(hashlib.sha1(f"{lon},{lat}".encode()).hexdigest(), 16) % 3 == 0:
+            f["properties"]["c"] = "Confirmed potable"
+            nconf += 1
+    header = (
+        "// SPDX-License-Identifier: ODbL-1.0\n"
+        "// Wallonia drinking-water points © OpenStreetMap contributors (ODbL). amenity=drinking_water +\n"
+        "// fountain/tap/spring with drinking_water=yes, within the Wallonie admin area. Potability is OSM-tagged,\n"
+        "// not utility-verified. {t:type, n:name, c:confirmed-potable}.\n"
+        "// NOTE: the `c` flag (~1/3 of points) is SIMULATED demo data, NOT real potability verification.\n")
+    path.write_text(
+        header + "window.CC_WATER_OSM=" + json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + ";\n",
+        encoding="utf-8")
+    print(f"water: {nconf}/{len(feats)} flagged confirmed-potable (simulated) -> atlas/demo/water-osm.js")
+
+
 def run(layer_keys=None, report=False):
-    for key in (layer_keys or list(LAYERS)):
+    for key in (layer_keys or (list(LAYERS) + ["water"])):
+        if key == "water":
+            annotate_water()
+            continue
         cfg = LAYERS[key]
         res = harvest_poi.harvest(cfg)
+        note = ""
+        if cfg.get("sim"):
+            note = ("// NOTE: ~1/3 of points flagged '" + cfg["sim"]["confirmed"] + "'"
+                    + (" + a star rating" if cfg["sim"].get("rating") else "")
+                    + " (props c/r) — SIMULATED demo data, not real verification.\n")
         js = harvest_poi.to_fixture_js(
             res["features"], cfg["js_var"],
-            _header(cfg["title"], cfg["selectors"], len(res["features"])))
+            _header(cfg["title"], cfg["selectors"], len(res["features"]), note))
         (DEMO / cfg["out"]).write_text(js, encoding="utf-8")
-        print(f"{key}: {len(res['features'])} points -> atlas/demo/{cfg['out']}")
+        nconf = sum(1 for f in res["features"] if f["properties"].get("c"))
+        extra = f", {nconf} simulated-confirmed" if nconf else ""
+        print(f"{key}: {len(res['features'])} points{extra} -> atlas/demo/{cfg['out']}")
         if report:
             for prov, n in sorted(res["by_prov"].items()):
                 print(f"    {prov:16} {n}")
