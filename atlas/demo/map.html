@@ -103,6 +103,7 @@
   .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);transform:rotate(-45deg);box-shadow:0 3px 8px rgba(20,22,14,.4);border:2px solid var(--paper)}
   .cc-pin span{transform:rotate(45deg);font-size:.85rem;line-height:1}
   .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
+  .cc-cluster{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:15px;background:var(--c);color:#fff;font:600 13px/1 'Spline Sans Mono',ui-monospace,monospace;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(20,22,14,.45);cursor:pointer}
 
   .maplibregl-popup-content{background:var(--ink);color:var(--paper);border-radius:8px;box-shadow:0 12px 30px -10px rgba(20,22,14,.6);padding:.9rem 1.1rem}
   .maplibregl-popup-anchor-top .maplibregl-popup-tip{border-bottom-color:var(--ink)}
@@ -646,6 +647,65 @@
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
     map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
   }
+  // --- clustering for confirmed (validated/simulated) points: count bubble at low zoom → icon pins when spread ---
+  const confState = {};   // srcId -> {key, layer, info, onScreen:{}}
+  function setupConfClusters(){
+    Object.keys(osmLayers).forEach(key=>{
+      const info=osmLayers[key]; if(!info || !info.data) return;
+      const confirmed = info.data.features.filter(f=>f.properties.c);
+      const srcId=key+'-conf';
+      if(!confirmed.length || map.getSource(srcId)) return;
+      map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
+        data:{type:'FeatureCollection', features:confirmed}});
+      // invisible layer so the clustered source loads tiles (querySourceFeatures needs rendered tiles)
+      map.addLayer({id:srcId+'-hit', type:'circle', source:srcId, paint:{'circle-radius':0,'circle-opacity':0}});
+      confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}};
+    });
+  }
+  function clusterEl(layer, count){
+    const d=document.createElement('div');
+    d.className='cc-cluster'; d.style.setProperty('--c', layer.color); d.textContent=count;
+    return d;
+  }
+  function confLeafPin(st, p, co){
+    const lngLat=[co[0],co[1]], llo={lat:co[1],lng:co[0]};
+    const drawerF = st.info.water ? waterDrawer(p, llo) : osmDrawer(st.layer, p, llo, st.info.src);
+    const el=pinEl(st.layer, true);
+    el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
+    el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline);
+    el.addEventListener('click', ()=>{ openDrawer(st.layer, drawerF); flyToPin(lngLat); });
+    el.addEventListener('mouseenter', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('focus', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
+    el.addEventListener('blur', hideTip);
+    return el;
+  }
+  function updateConfMarkers(){
+    Object.keys(confState).forEach(srcId=>{
+      const st=confState[srcId], on=st.onScreen;
+      if(!active.has(st.key)){ for(const k in on) on[k].remove(); st.onScreen={}; return; }
+      if(!map.getSource(srcId) || !map.isSourceLoaded(srcId)) return;
+      const feats=map.querySourceFeatures(srcId), next={};
+      for(const f of feats){
+        const co=f.geometry.coordinates, p=f.properties;
+        const key = p.cluster ? 'c'+p.cluster_id : 'l'+co[0].toFixed(5)+','+co[1].toFixed(5);
+        if(next[key]) continue;
+        let m=on[key];
+        if(!m){
+          if(p.cluster){
+            const el=clusterEl(st.layer, p.point_count_abbreviated); el.style.cursor='pointer';
+            el.addEventListener('click', ()=>{ map.getSource(srcId).getClusterExpansionZoom(p.cluster_id,(err,z)=>{ if(!err) map.easeTo({center:co, zoom:z+0.2}); }); });
+            m=new maplibregl.Marker({element:el, anchor:'center'}).setLngLat(co).addTo(map);
+          } else {
+            m=new maplibregl.Marker({element:confLeafPin(st, p, co), anchor:'bottom'}).setLngLat(co).addTo(map);
+          }
+        }
+        next[key]=m;
+      }
+      for(const k in on){ if(!next[k]) on[k].remove(); }
+      st.onScreen=next;
+    });
+  }
   map.on('load',()=>{ addSatellite(); addHeatmap(); addMapillary(); addWaterOsm();
     addOsmDots('services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)');
     addOsmDots('scenic', window.CC_SCENIC_OSM, 'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)');
@@ -653,7 +713,7 @@
     addOsmDots('stays', window.CC_STAYS_OSM, 'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)');
     addOsmDots('shelter', window.CC_SHELTER_OSM, 'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)');
     addOsmDots('transit', window.CC_TRANSIT_OSM, 'OpenStreetMap (railway=station / railway=halt)');
-    addRegionBoundary('Wallonia'); render();
+    addRegionBoundary('Wallonia'); setupConfClusters(); map.on('render', updateConfMarkers); render();
     // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from a profile page)
     const fp = new URLSearchParams(location.search).get('feature');
     if(fp) openFeatureByName(fp);
@@ -1258,28 +1318,8 @@
         return;
       }
     });
-    // confirmed/validated (simulated) bulk-OSM points get the category icon pin; unverified stay as dots
-    Object.keys(osmLayers).forEach(key=>{
-      if(!active.has(key)) return;
-      const layer=layerByKey[key], info=osmLayers[key];
-      if(!layer || !info.data) return;
-      info.data.features.forEach(ft=>{
-        const p=ft.properties; if(!p.c) return;
-        const co=ft.geometry.coordinates, lngLat=[co[0],co[1]], llo={lat:co[1],lng:co[0]};
-        const drawerF = info.water ? waterDrawer(p, llo) : osmDrawer(layer, p, llo, info.src);
-        const el=pinEl(layer, true);
-        el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
-        el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline);
-        el.addEventListener('click', ()=>{ openDrawer(layer, drawerF); flyToPin(lngLat); });
-        el.addEventListener('mouseenter', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
-        el.addEventListener('mouseleave', hideTip);
-        el.addEventListener('focus', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
-        el.addEventListener('blur', hideTip);
-        el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDrawer(layer, drawerF); flyToPin(lngLat); }});
-        markers.push(new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat(lngLat).addTo(map));
-        n++;
-      });
-    });
+    // confirmed/validated points are clustered (count bubble → category icon pins); unverified stay as dots
+    updateConfMarkers();
     // stacking, bottom → top: ride lines, climb lines, road-surface lines, then Mapillary on top
     const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
     dynamicIds.filter(id=>id.startsWith('experience-')).forEach(liftGroup);    // ride lines (bottom of the three)
