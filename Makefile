@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -74,3 +74,7 @@ up-storage: ## Start the stack + MinIO (S3-compatible, ports 9100/9101)
 
 up-all: ## Start the stack + every opt-in profile (routing + storage)
 	@$(DOCKER_COMP) --profile routing --profile storage up --detach
+
+## —— 🗺️  Wallonia data ————————————————————————————————————————————————————————
+wallonia-data: ## Harvest Wallonia OSM layers into atlas/demo/*-osm.js (one/some: make wallonia-data l="services")
+	@PYTHONPATH=tools python3 -m wallonia.build_all $(l) --report
