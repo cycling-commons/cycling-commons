@@ -225,6 +225,7 @@
   .cc-up{margin-top:1rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:rgba(239,230,212,.6)}
   .cc-up b{color:var(--paper)}
   .cc-up a{color:var(--glacier);text-decoration:underline}
+  .cc-d-desc{font-size:.92rem;line-height:1.55;color:rgba(239,230,212,.82);margin:.9rem 0 .2rem}
   .cc-d-photo{margin:1rem 0 0}
   .cc-d-photo>img{width:100%;border-radius:8px;display:block;cursor:zoom-in}
   .cc-d-photo figcaption{font-size:.6rem;color:rgba(239,230,212,.5);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
@@ -633,7 +634,11 @@
     if(p.c) rec.push({label:'Status', value:p.c+' · simulated', method:'demo'});
     if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'});
     rec.push({label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
-    return {name:p.n||p.t||lbl, headline:(p.t||lbl)+' · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec, source:src};
+    const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec, source:src};
+    if(p.desc) d.desc=p.desc;
+    let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
+    if(photo) d.photo=photo;
+    return d;
   }
   // drawer card for a water point — shared by the droplet click handler and the confirmed pin
   function waterDrawer(p, ll){
@@ -1417,8 +1422,9 @@
     const edit = `<a class="cc-d-act edit" href="improve.html?${editQ}">${editLbl}</a>`;
     const vote = f.cur ? `<a class="cc-d-act" href="vote.html">▲ Vote in this round</a>` : '';
     const act = edit + vote;
+    const desc = f.desc ? `<p class="cc-d-desc">${f.desc}</p>` : '';
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
-      <div class="cc-d-name">${f.name}</div>${cur}${photo}${diff}${elev}${grad}
+      <div class="cc-d-name">${f.name}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
       <div class="cc-d-src">Source · ${f.source}</div>${act}`;
   }
