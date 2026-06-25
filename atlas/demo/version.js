@@ -9,7 +9,7 @@
  * (the server pulls the repo and runs its own deploy command), so there's no in-CI filesystem step
  * that reaches the served files. A true auto deploy-timestamp would have to be a one-liner in the
  * server's deploy script (outside this repo). Keeping it a hand-edited constant here is simplest. */
-window.CC_VERSION = { number: 'v1', date: '2026-06-25' };
+window.CC_VERSION = { number: 'Demo v0.1.0', date: '2026-06-25' };
 
 (function () {
   var V = window.CC_VERSION;
