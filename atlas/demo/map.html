@@ -1402,6 +1402,20 @@
     if(show && layer.key==='climbs') show = activeSurface.has(f.sq) && activeTraffic.has(f.tr);
     return show;
   }
+  // legend count = shown/total: in Curated only confirmed/curated count; in Everything everything does
+  function layerCounts(layer){
+    const osmFx=window['CC_'+layer.key.toUpperCase()+'_OSM'];
+    const osmTotal=osmFx?osmFx.features.length:0;
+    const osmConf=osmFx?osmFx.features.filter(f=>f.properties&&f.properties.c).length:0;
+    const shown=layer.features.filter(f=>featureVisible(layer,f)).length + (mode==='all'?osmTotal:osmConf);
+    return {shown, total:layer.features.length+osmTotal};
+  }
+  function updateCounts(){
+    CATALOG.forEach(layer=>{
+      const c=layerCounts(layer), el=document.querySelector(`#layers .layer[data-key="${layer.key}"] .ct`);
+      if(el) el.textContent=`${c.shown}/${c.total}`;
+    });
+  }
   function flyToPin(lngLat){   // centre + slow zoom-in on click; offset left so the drawer doesn't cover it
     map.flyTo({center:lngLat, zoom:Math.max(map.getZoom(),14), offset:[-150,0], duration:1700, essential:true});
   }
@@ -1493,6 +1507,7 @@
     dynamicIds.filter(id=>id.startsWith('surface-')).forEach(liftGroup);       // road-surface lines, above routes
     ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); }); // Mapillary line + dots on the very top
     document.getElementById('count').textContent=n;
+    updateCounts();   // legend shows shown/total, refreshed on mode + layer changes
   }
 
   function photoList(f){ return f.photos || (f.photo ? [f.photo] : []); }
@@ -1691,8 +1706,8 @@
     const el=document.createElement('div');
     el.className='layer'; el.style.setProperty('--c',layer.color); el.dataset.key=layer.key;
     if(!active.has(layer.key)) el.classList.add('off');
-    const osmFx=window['CC_'+layer.key.toUpperCase()+'_OSM'];
-    const ct=layer.features.length + (osmFx ? osmFx.features.length : 0);
+    const _lc=layerCounts(layer);
+    const ct=`${_lc.shown}/${_lc.total}`;
     el.innerHTML=`<span class="sw">${layer.icon}</span><span class="nm">${layer.letter} · ${layer.label}</span><span class="ct">${ct}</span>`;
     el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
     lc.appendChild(el);
