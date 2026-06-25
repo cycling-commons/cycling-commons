@@ -62,7 +62,7 @@ h2.disp{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.
 section.pad{padding:clamp(3rem,7vw,6rem) 0}
 /* a dark hero already separates the intro — tighten the first section under it */
 .ahero+section.pad,.dhero+section.pad,.lhero+section.pad,.chero+section.pad,.phero+section.pad,.rhero+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
-.foot{background:var(--ink);color:rgba(239,230,212,.6);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0 4rem}
+.foot{background:var(--ink);color:rgba(239,230,212,.8);border-top:1px solid rgba(239,230,212,.14);padding:2rem 0 4rem}
 .foot .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-.foot .mono{font-size:.64rem;color:rgba(239,230,212,.5)}
+.foot .mono{font-size:.64rem;color:rgba(239,230,212,.72)}  /* lightened: ≈7.7:1 on --ink (WCAG AAA); was .5 ≈4.4:1 */
 .foot a:hover{color:var(--trail)}

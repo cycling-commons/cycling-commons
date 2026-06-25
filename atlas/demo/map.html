@@ -1146,7 +1146,7 @@
         ],
         source:'OSM' }
     ]}
-    ,{ key:'scenic', letter:'I', label:'Scenic views', color:'#2C5440', icon:'◬', kind:'point', exp:true, features:[
+    ,{ key:'scenic', letter:'I', label:'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, features:[
       { name:'Signal de Botrange', headline:'694 m · highest point of Belgium', cur:true,
         edit:'signal-de-botrange',
         geom:{ll:[50.5010,6.0940]},
@@ -1211,7 +1211,23 @@
     'Chevron':{ll:[50.4200,5.7600], wiki:'https://en.wikipedia.org/wiki/Stoumont', info:'Village of Stoumont in the Amblève valley.'},
     'La Gleize':{ll:[50.4150,5.8500], wiki:'https://en.wikipedia.org/wiki/La_Gleize', info:'Amblève-valley village of Stoumont, known for its WWII history (a preserved King Tiger tank).'},
     'Trois-Ponts':{ll:[50.3700,5.8730], wiki:'https://en.wikipedia.org/wiki/Trois-Ponts', info:'"Three bridges" — confluence of the Amblève and Salm, on the LBL roads.'},
-    'Tiège':{ll:[50.5300,5.8900], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Hamlet of Sart/Jalhay on the plateau above Spa.'}
+    'Tiège':{ll:[50.5300,5.8900], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Hamlet of Sart/Jalhay on the plateau above Spa.'},
+    // major Wallonia cities (t:'City') — searchable anchors to fly to; far-west ones have no Commons data nearby yet
+    'Namur':{t:'City', ll:[50.4674,4.8720], wiki:'https://en.wikipedia.org/wiki/Namur', info:'Capital of Wallonia, where the Sambre meets the Meuse beneath its citadel.'},
+    'Liège':{t:'City', ll:[50.6451,5.5736], wiki:'https://en.wikipedia.org/wiki/Li%C3%A8ge', info:'Largest city of eastern Wallonia, on the Meuse — start of Liège–Bastogne–Liège.'},
+    'Charleroi':{t:'City', ll:[50.4109,4.4447], wiki:'https://en.wikipedia.org/wiki/Charleroi', info:'Former industrial hub on the Sambre, heart of the Pays Noir.'},
+    'Mons':{t:'City', ll:[50.4542,3.9563], wiki:'https://en.wikipedia.org/wiki/Mons', info:'Capital of Hainaut, a UNESCO-listed belfry town.'},
+    'Tournai':{t:'City', ll:[50.6071,3.3892], wiki:'https://en.wikipedia.org/wiki/Tournai', info:'Among the oldest cities in Belgium, on the Scheldt near the French border.'},
+    'Arlon':{t:'City', ll:[49.6839,5.8113], wiki:'https://en.wikipedia.org/wiki/Arlon', info:'Capital of Luxembourg province, in the far south-east.'},
+    'Bastogne':{t:'City', ll:[50.0028,5.7186], wiki:'https://en.wikipedia.org/wiki/Bastogne', info:'Ardennes town famed for the WWII Battle of the Bulge, on the LBL roads.'},
+    'Dinant':{t:'City', ll:[50.2605,4.9118], wiki:'https://en.wikipedia.org/wiki/Dinant', info:'Meuse-valley town under a clifftop citadel; birthplace of Adolphe Sax.'},
+    'Verviers':{t:'City', ll:[50.5911,5.8625], wiki:'https://en.wikipedia.org/wiki/Verviers', info:'Wool-trade town on the Vesdre, gateway to the Hautes Fagnes.'},
+    'Huy':{t:'City', ll:[50.5186,5.2393], wiki:'https://en.wikipedia.org/wiki/Huy', info:'Meuse town below the Mur de Huy, the Flèche Wallonne finish.'},
+    'Marche-en-Famenne':{t:'City', ll:[50.2275,5.3450], wiki:'https://en.wikipedia.org/wiki/Marche-en-Famenne', info:'Hub of the Famenne, between the Condroz and the Ardennes.'},
+    'La Roche-en-Ardenne':{t:'City', ll:[50.1827,5.5765], wiki:'https://en.wikipedia.org/wiki/La_Roche-en-Ardenne', info:'Castle town in a bend of the Ourthe, deep in the Ardennes.'},
+    'Wavre':{t:'City', ll:[50.7173,4.6122], wiki:'https://en.wikipedia.org/wiki/Wavre', info:'Capital of Walloon Brabant, on the Dyle.'},
+    'Nivelles':{t:'City', ll:[50.5977,4.3270], wiki:'https://en.wikipedia.org/wiki/Nivelles', info:'Brabant town around its Romanesque collegiate church.'},
+    'Malmedy':{t:'City', ll:[50.4259,6.0283], wiki:'https://en.wikipedia.org/wiki/Malmedy', info:'East-cantons town below the Hautes Fagnes, near the Stavelot roads.'}
   };
   const cityLink = name => `<a class="cc-city" data-city="${name}">${name}</a>`;
   // distance (km) between [lat,lng] points; a feature's representative point for radius search
@@ -1385,7 +1401,8 @@
     if(!boundLayerIds.has(id)){
       map.on('click',id,()=>openDrawer(layer,f));
       map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-      map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
+      map.on('mousemove',id,e=>showTip(f.headline||f.name, e.lngLat));   // surface type (e.g. "Asphalt · Excellent") on hover
+      map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
       boundLayerIds.add(id);
     }
   }
@@ -1769,7 +1786,8 @@
     const escH = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     // built once — CATALOG is fully populated (climbs + rides folded in) by this point
     const SEARCH_IDX=[];
-    Object.keys(CITIES).forEach(name=>SEARCH_IDX.push({name, key:slug(name), kind:'Town', badge:'◎', color:'#3E7D8C', go:()=>openCity(name)}));
+    Object.keys(CITIES).forEach(name=>{ const big=CITIES[name].t==='City';   // big cities stand apart from hamlets: ochre ◉ "City" vs teal ◎ "Town"
+      SEARCH_IDX.push({name, key:slug(name), kind: big?'City':'Town', badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', go:()=>openCity(name)}); });
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
       SEARCH_IDX.push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openFeatureByName(f.name)}); }));
     let sMatches=[], sHL=-1;
@@ -1900,5 +1918,6 @@
   // initial render runs from map.on('load') above (sources need the style loaded)
 </script>
 <script src="a11y.js"></script>
+  <script src="version.js"></script>
 </body>
 </html>
