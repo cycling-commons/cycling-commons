@@ -7,10 +7,29 @@ POI layers). Climbs without a Wikidata item, or whose coordinates fall outside W
 Excludes the five climbs already curated in map.html (Redoute, Mur de Huy, Stockeu, Roche-aux-Faucons,
 Hockai).
 """
+import re
 import json
 import pathlib
 import urllib.parse
 from . import overpass, enrich
+
+
+def _stats_from_desc(desc):
+    """Pull (length_km, avg_pct) out of a Wikipedia blurb like 'a 2,200 m climb with an average of 7.6%'."""
+    if not desc:
+        return None, None
+    km = None
+    m = re.search(r'([\d][\d.,]*)\s*m\b', desc)
+    if m:
+        try:
+            metres = int(float(m.group(1).replace(",", "").replace(" ", "")))
+            if metres >= 200:                 # a real climb length, not a stray '1 m'
+                km = round(metres / 1000, 1)
+        except ValueError:
+            pass
+    p = re.search(r'(\d+[.,]?\d*)\s*%', desc)
+    avg = float(p.group(1).replace(",", ".")) if p else None
+    return km, avg
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "atlas/demo/climbs-data.js"
@@ -75,12 +94,14 @@ def build():
     for qid, f in zip([x["_tags"]["wikidata"] for x in feats], feats):
         m = meta[qid]
         p = f["properties"]
-        headline = f"{m['km']} km · {m['avg']}% avg" if m["km"] and m["avg"] else "Legendary Ardennes climb"
+        dkm, davg = _stats_from_desc(p.get("desc"))      # Wikipedia stats win over my seed estimate
+        km, avg = (dkm or m["km"]), (davg or m["avg"])
+        headline = f"{km} km · {avg}% avg" if km and avg else "Legendary Ardennes climb"
         record = []
-        if m["km"]:
-            record.append({"label": "Length", "value": f"{m['km']} km"})
-        if m["avg"]:
-            record.append({"label": "Average gradient", "value": f"{m['avg']}%"})
+        if km:
+            record.append({"label": "Length", "value": f"{km} km"})
+        if avg:
+            record.append({"label": "Average gradient", "value": f"{avg}%"})
         record.append({"label": "Famous for", "value": m["race"]})
         record.append({"label": "Surface", "value": "Asphalt", "method": "OSM"})
         climb = {"name": m["name"], "headline": headline, "cur": True, "sq": "Good", "tr": "Quiet",
