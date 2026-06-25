@@ -8,10 +8,76 @@ Excludes the five climbs already curated in map.html (Redoute, Mur de Huy, Stock
 Hockai).
 """
 import re
+import math
 import json
+import bisect
 import pathlib
 import urllib.parse
 from . import overpass, enrich
+
+# Climb feet (bottom) supplied by hand — the one thing no open dataset has. {name: [lat, lon]}
+FEET = {
+    "Côte de Bohissau": [50.494791, 5.111816],
+    "Côte d'Ereffe": [50.478930, 5.266503],
+    "Côte de Cherave": [50.510257, 5.220367],
+}
+
+
+def _hav(a, b):
+    """Metres between two [lon, lat] points."""
+    R = 6371000.0
+    la1, lo1, la2, lo2 = map(math.radians, [a[1], a[0], b[1], b[0]])
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(h))
+
+
+def _at(cum, coords, elev, d):
+    """Interpolate (elevation, [lon, lat]) at cumulative distance d along the track."""
+    i = bisect.bisect_left(cum, d)
+    if i <= 0:
+        return elev[0], coords[0][:2]
+    if i >= len(cum):
+        return elev[-1], coords[-1][:2]
+    t = (d - cum[i - 1]) / (cum[i] - cum[i - 1]) if cum[i] > cum[i - 1] else 0
+    e = elev[i - 1] + t * (elev[i] - elev[i - 1])
+    lon = coords[i - 1][0] + t * (coords[i][0] - coords[i - 1][0])
+    lat = coords[i - 1][1] + t * (coords[i][1] - coords[i - 1][1])
+    return e, [lon, lat]
+
+
+def _trace_climb(foot, top):
+    """BRouter foot→top → {route, grad(12 seg), steep, km, avg, max} from real geometry + elevation."""
+    ll = f"{foot[1]:.6f},{foot[0]:.6f}|{top[1]:.6f},{top[0]:.6f}"
+    gj = overpass.get_json("https://brouter.de/brouter?lonlats=" + ll
+                           + "&profile=trekking&alternativeidx=0&format=geojson")
+    if not gj or not gj.get("features"):
+        return None
+    coords = gj["features"][0]["geometry"]["coordinates"]
+    if len(coords) < 3:
+        return None
+    elev = [c[2] if len(c) > 2 else 0 for c in coords]
+    cum = [0.0]
+    for i in range(1, len(coords)):
+        cum.append(cum[-1] + _hav(coords[i - 1], coords[i]))
+    total = cum[-1]
+    if total < 200:
+        return None
+    route = [[round(c[1], 5), round(c[0], 5)] for c in coords]
+    avg = round(100 * (elev[-1] - elev[0]) / total, 1)
+    if avg < 1.5:                       # foot→top doesn't ascend → the top coord is wrong (e.g. bad Wikidata point)
+        return None
+    N = 12
+    grad, mids = [], []
+    for s in range(N):
+        e0, _ = _at(cum, coords, elev, total * s / N)
+        e1, _ = _at(cum, coords, elev, total * (s + 1) / N)
+        grad.append(max(0, round(100 * (e1 - e0) / (total / N))))
+        _, pm = _at(cum, coords, elev, total * (s + 0.5) / N)
+        mids.append(pm)
+    mx = max(grad)
+    si = grad.index(mx)
+    return {"route": route, "grad": grad, "km": round(total / 1000, 1), "avg": avg, "max": mx,
+            "steep": {"at": [round(mids[si][1], 5), round(mids[si][0], 5)], "pct": f"~{mx}%"}}
 
 
 def _stats_from_desc(desc):
@@ -94,19 +160,29 @@ def build():
     for qid, f in zip([x["_tags"]["wikidata"] for x in feats], feats):
         m = meta[qid]
         p = f["properties"]
-        dkm, davg = _stats_from_desc(p.get("desc"))      # Wikipedia stats win over my seed estimate
-        km, avg = (dkm or m["km"]), (davg or m["avg"])
+        traced = _trace_climb(FEET[m["name"]], m["ll"]) if m["name"] in FEET else None
+        if m["name"] in FEET and not traced:
+            print(f"  ! {m['name']}: foot given but trace invalid — the TOP coord looks wrong (Wikidata point bad?)")
+        if traced:                                       # BRouter geometry is authoritative
+            km, avg = traced["km"], traced["avg"]
+        else:
+            dkm, davg = _stats_from_desc(p.get("desc"))  # else Wikipedia stats (over my seed estimate)
+            km, avg = (dkm or m["km"]), (davg or m["avg"])
         headline = f"{km} km · {avg}% avg" if km and avg else "Legendary Ardennes climb"
         record = []
         if km:
             record.append({"label": "Length", "value": f"{km} km"})
         if avg:
             record.append({"label": "Average gradient", "value": f"{avg}%"})
+        if traced:
+            record.append({"label": "Max gradient", "value": f"~{traced['max']}% (steepest ramp)"})
         record.append({"label": "Famous for", "value": m["race"]})
         record.append({"label": "Surface", "value": "Asphalt", "method": "OSM"})
         climb = {"name": m["name"], "headline": headline, "cur": True, "sq": "Good", "tr": "Quiet",
                  "geom": {"ll": m["ll"]}, "record": record,
-                 "source": "Wikidata (P625) · OpenStreetMap"}
+                 "source": "Wikidata (P625) · OpenStreetMap" + (" · BRouter" if traced else "")}
+        if traced:
+            climb["route"], climb["grad"], climb["steep"] = traced["route"], traced["grad"], traced["steep"]
         if p.get("desc"):
             # "côte" mistranslates to "coast"; in a climb context it's always a climb/hill
             climb["desc"] = p["desc"].replace("Coast", "Climb").replace("coast", "climb")
