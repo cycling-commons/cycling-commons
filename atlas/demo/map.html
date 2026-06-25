@@ -70,6 +70,17 @@
   .search{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(239,230,212,.3);color:var(--paper);font-family:var(--sans);font-size:.95rem;padding:.5rem 0;outline:none}
   .search::placeholder{color:rgba(239,230,212,.45)}
   .search:focus{border-color:var(--trail)}
+  /* live search results (towns + named Commons features) — in-flow under the input so the scroll
+     container never clips them */
+  .search-res{list-style:none;margin:.5rem 0 0;max-height:300px;overflow-y:auto;border:1px solid rgba(239,230,212,.16);border-radius:8px;background:rgba(20,33,24,.55)}
+  .search-res li{margin:0}
+  .search-res button{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(239,230,212,.07);color:var(--paper);font-family:var(--sans);font-size:.86rem;padding:.5rem .55rem;cursor:pointer;transition:background .12s}
+  .search-res li:last-child button{border-bottom:none}
+  .search-res button:hover,.search-res button.hl{background:rgba(255,90,31,.14)}
+  .search-res .sw{flex:0 0 auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.66rem;font-weight:700}
+  .search-res .snm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45)}
+  .search-empty{padding:.6rem .55rem;font-size:.8rem;color:rgba(239,230,212,.5)}
 
   .chips{display:flex;flex-wrap:wrap;gap:.4rem}
   .chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .65rem;border:1px solid rgba(239,230,212,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none}
@@ -86,6 +97,13 @@
   .toggle{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
   .toggle button{flex:1;background:transparent;color:var(--paper);font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem;border:none;cursor:pointer;transition:all .18s}
   .toggle button.on{background:var(--spruce-lift)}
+  /* discipline filter — compacted (visual-only chips, see markup note): smaller pad/type + tighter gap */
+  #disc{gap:.3rem}
+  #disc .chip{padding:.26rem .5rem;font-size:.6rem;letter-spacing:.05em}
+  /* view mode is a primary control → its active state must read unmistakably "on":
+     orange fill like .chip.on (not the subtle spruce the other toggles use) */
+  #mode{border-color:var(--trail)}
+  #mode button.on{background:var(--trail);color:var(--ink);font-weight:700}
   .hint{font-size:.78rem;color:rgba(239,230,212,.5);margin-top:.6rem;line-height:1.5}
 
   .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgba(239,230,212,.14);display:flex;align-items:center;justify-content:space-between;gap:.6rem}
@@ -102,8 +120,10 @@
   .maplibregl-map{font-family:var(--sans)}
   .maplibregl-ctrl-attrib{font-family:var(--mono);font-size:.6rem}
 
-  .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);transform:rotate(-45deg);box-shadow:0 3px 8px rgba(20,22,14,.4);border:2px solid var(--paper)}
-  .cc-pin span{transform:rotate(45deg);font-size:.85rem;line-height:1}
+  /* tilted teardrop: the 50% 50% 50% 0 radius makes the drop point down-left (the look we want) with
+     NO rotate — so the glyph inside stays upright on its own (don't rotate .cc-pin or the span) */
+  .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(20,22,14,.4);border:2px solid var(--paper)}
+  .cc-pin span{font-size:.85rem;line-height:1}
   .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
   .cc-cluster{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:15px;background:var(--c);color:#fff;font:600 13px/1 'Spline Sans Mono',ui-monospace,monospace;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(20,22,14,.45);cursor:pointer}
 
@@ -354,9 +374,24 @@
     <div class="rail-scroll">
       <div class="grp">
         <h3>Region</h3>
-        <input class="search" placeholder="Search a country, region, place…" />
+        <input class="search" id="search" placeholder="Search a climb, town, viewpoint…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="Search the Commons" />
+        <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
       </div>
 
+      <!-- View mode is the primary filter (curated best-of vs the full backlog), so it sits right
+           under Region. Its active button is styled bright (#mode in the CSS) so the current mode
+           is obvious at a glance. -->
+      <div class="grp">
+        <h3>View mode</h3>
+        <div class="toggle" id="mode">
+          <button class="on" data-m="curated">Curated best-of</button>
+          <button data-m="all">Everything</button>
+        </div>
+        <div class="hint">Curated shows riders' best climbs, stays &amp; views. Utility data (water, hazards, services) aims for full coverage.</div>
+      </div>
+
+      <!-- Discipline chips are a visual stub for now: they toggle but don't yet filter the map
+           (the dataset isn't discipline-tagged). Compact styling lives at #disc in the CSS. -->
       <div class="grp">
         <h3>Discipline</h3>
         <div class="chips" id="disc">
@@ -389,15 +424,6 @@
           <span class="chip" data-km="20">~20 km</span><span class="chip" data-km="50">~50 km</span><span class="chip" data-km="80">~80 km</span><span class="chip" data-km="125">~125 km</span>
         </div>
         <div class="hint">Suggests a popular loop (faked for now). The real planner stitches a route from the heatmap.</div>
-      </div>
-
-      <div class="grp">
-        <h3>View mode</h3>
-        <div class="toggle" id="mode">
-          <button class="on" data-m="curated">Curated best-of</button>
-          <button data-m="all">Everything</button>
-        </div>
-        <div class="hint">Curated shows riders' best climbs, stays &amp; views. Utility data (water, hazards, services) aims for full coverage.</div>
       </div>
 
       <div class="grp">
@@ -843,7 +869,15 @@
     addOsmDots('stays', window.CC_STAYS_OSM, 'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)');
     addOsmDots('shelter', window.CC_SHELTER_OSM, 'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)');
     addOsmDots('transit', window.CC_TRANSIT_OSM, 'OpenStreetMap (railway=station / railway=halt)');
-    addRegionBoundary('Wallonia'); setupConfClusters(); map.on('render', updateConfMarkers); render();
+    addRegionBoundary('Wallonia'); setupConfClusters();
+    // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
+    // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a
+    // flyTo, is what made zooming/flying stutter. MapLibre repositions the existing markers smoothly on
+    // its own mid-animation; we only need to add/remove on moveend (motion stops) and idle (tiles loaded).
+    let _confRAF=null;
+    const scheduleConfMarkers=()=>{ if(_confRAF) return; _confRAF=requestAnimationFrame(()=>{ _confRAF=null; updateConfMarkers(); }); };
+    map.on('moveend', scheduleConfMarkers); map.on('idle', scheduleConfMarkers);
+    render();
     // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from a profile page)
     const fp = new URLSearchParams(location.search).get('feature');
     if(fp) openFeatureByName(fp);
@@ -1710,6 +1744,44 @@
 
   // mobile: filters bottom-sheet — the rail-foot peek toggles it
   const app=document.querySelector('.app');
+  /* ---------- sidebar search: towns + named Commons features (local index, no geocoder) ---------- */
+  const sBox=document.getElementById('search'), sRes=document.getElementById('searchRes');
+  if(sBox && sRes){
+    const escH = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    // built once — CATALOG is fully populated (climbs + rides folded in) by this point
+    const SEARCH_IDX=[];
+    Object.keys(CITIES).forEach(name=>SEARCH_IDX.push({name, key:slug(name), kind:'Town', badge:'◎', color:'#3E7D8C', go:()=>openCity(name)}));
+    CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
+      SEARCH_IDX.push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openFeatureByName(f.name)}); }));
+    let sMatches=[], sHL=-1;
+    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; sBox.setAttribute('aria-expanded','false'); };
+    const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
+    function pickS(i){ const m=sMatches[i]; if(!m) return; sBox.value=m.name; closeS();
+      if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
+      m.go(); }
+    function runS(){
+      const q=slug(sBox.value.trim());
+      if(!q){ closeS(); return; }
+      const starts=[], has=[];                                  // prefix matches rank above substring matches
+      for(const it of SEARCH_IDX){ const i=it.key.indexOf(q); if(i===0) starts.push(it); else if(i>0) has.push(it); }
+      sMatches=starts.concat(has).slice(0,8); sHL=-1;
+      sRes.hidden=false; sBox.setAttribute('aria-expanded','true');
+      sRes.innerHTML = sMatches.length
+        ? sMatches.map((m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`).join('')
+        : '<li class="search-empty">No match in the Wallonia demo yet.</li>';
+      sRes.querySelectorAll('button').forEach(b=>b.onclick=()=>pickS(+b.dataset.i));
+    }
+    sBox.addEventListener('input', runS);
+    sBox.addEventListener('keydown', e=>{
+      if(sRes.hidden){ if(e.key==='ArrowDown') runS(); return; }
+      if(e.key==='ArrowDown'){ e.preventDefault(); sHL=Math.min(sHL+1, sMatches.length-1); hlS(); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); sHL=Math.max(sHL-1, 0); hlS(); }
+      else if(e.key==='Enter'){ e.preventDefault(); pickS(sHL<0?0:sHL); }
+      else if(e.key==='Escape'){ closeS(); }
+    });
+    document.addEventListener('click', e=>{ if(e.target!==sBox && !e.target.closest('#searchRes')) closeS(); });
+  }
+
   const sheetHandle=document.querySelector('.rail-foot .res');
   if(app && sheetHandle){
     sheetHandle.addEventListener('click',()=>{ if(window.innerWidth<=820) app.classList.toggle('sheet-open'); });

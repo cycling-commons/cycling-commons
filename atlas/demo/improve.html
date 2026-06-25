@@ -74,8 +74,9 @@
   .modal .thanks-big .ic{font-size:2.6rem} .modal .thanks-big h3{font-size:1.6rem;margin-top:.4rem}
   .modal .demo-note{font-size:.8rem;color:#595c4d;margin-top:.4rem}
   .maplibregl-canvas{filter:grayscale(.38) sepia(.24) saturate(.82) contrast(.95) brightness(1.03)}
-  .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);transform:rotate(-45deg);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
-  .cc-pin span{transform:rotate(45deg);font-size:.8rem}
+  /* tilted teardrop (50% 50% 50% 0 radius points down-left) with no rotate → the glyph stays upright */
+  .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
+  .cc-pin span{font-size:.8rem}
 
   /* ---- add-mode wizard ---- */
   .wizard{max-width:880px;margin:0 auto;padding:2.2rem 2rem 4rem}
@@ -350,6 +351,10 @@
     const map=new maplibregl.Map({container:'loc',style:'https://tiles.openfreemap.org/styles/liberty',
       center:E.center,zoom:12,interactive:false,attributionControl:false});
     new maplibregl.Marker({element:mkPin(),anchor:'bottom'}).setLngLat(E.center).addTo(map);
+    // deep-link straight to a tab — e.g. the map's "Add the first photo" CTA arrives with ?add=photo,
+    // so open the Add-photos tab instead of dumping the rider on the default Fix-details tab.
+    const _tab=_q.get('add'), _tabBtn=_tab && document.getElementById('tab-'+_tab);
+    if(_tabBtn && !_tabBtn.hidden) pane(_tabBtn, _tab);
   } else {
     // ===== ADD MODE — mobile-first stepped wizard =====
     document.getElementById('form-view').remove();        // drop the tabbed form (avoids duplicate media ids)
