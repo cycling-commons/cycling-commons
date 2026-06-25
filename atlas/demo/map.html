@@ -756,7 +756,10 @@
   function osmDrawer(layer, p, ll, src){
     const lbl=(layer||{}).label||'Place';
     const pivot=p.src==='pivot';   // official Tourisme Wallonie accommodation (CC-BY), not OSM
-    const rec=[{label:'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'},{label:'Province', value:p.prov||'Wallonia'}];
+    const rec=[{label:'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'}];
+    if(p.town) rec.push({label:'Town', value:p.town});
+    rec.push({label:'Province', value:p.prov||'Wallonia'});
+    if(pivot) rec.push({label:'Listed', value:'Official Tourisme Wallonie registry', method:'official'});
     if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
       if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
     if(pivot && p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});

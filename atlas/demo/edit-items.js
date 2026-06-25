@@ -162,12 +162,14 @@ window.CC_EDIT = {
     ey:'Improve this stay', name:'Cyclist-friendly gîte · Amblève valley', icon:'⛺',
     center:[5.6200,50.4500], co:'◎ 50.450°N 5.620°E · near Aywaille, BE',
     tags:['stay','community','E · where to sleep'],
-    cur:[ {k:'Type',v:'Gîte / guesthouse'}, {k:'Secure bike storage',v:'Yes'}, {k:'Area',v:'Amblève valley'} ],
+    cur:[ {k:'Type',v:'Gîte / guesthouse'}, {k:'Town',v:'Aywaille'}, {k:'Secure bike storage',v:'Yes'}, {k:'Area',v:'Amblève valley'} ],
     fields:[
       {label:'Name', value:'Cyclist-friendly gîte · Amblève valley'},
+      {label:'Town / commune', value:'Aywaille'},
+      {label:'Website', placeholder:'https://… (the place’s own site)'},
       {label:'Secure bike storage', type:'select', opts:['Yes — locked room','Yes — garage/shed','On request','No']},
       {label:'Drying / washing for kit', type:'select', opts:['Unknown','Yes','No']},
-      {label:'Booking link', placeholder:'https://…'},
+      {label:'Booking link', placeholder:'https://… (booking platform, if any)'},
       {label:'Note for riders', type:'textarea', placeholder:'What makes it good for cyclists?'}
     ],
     addFields:[

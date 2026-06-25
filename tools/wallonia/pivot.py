@@ -137,7 +137,9 @@ def harvest(report=False):
     # 4) GeoJSON features → fixture
     feats = []
     for r in chosen:
-        props = {"t": r["type"], "n": r["nom"], "prov": r["prov"]}
+        # official registry entry → a verified spot (large pin); `c` is the verification label.
+        props = {"t": r["type"], "n": r["nom"], "town": r["commune"], "prov": r["prov"],
+                 "c": "Official listing"}
         if r["web"].startswith("http"):
             props["web"] = r["web"]
         feats.append({"type": "Feature", "properties": props,
@@ -149,7 +151,8 @@ def harvest(report=False):
         "// Source: PIVOT \"Les offres touristiques en Wallonie\" via Géoportail de la Wallonie\n"
         "//   (geoservices.wallonie.be/arcgis/rest/services/TOURISME/OFFRES_TOURISTIQUES). NOT OSM.\n"
         f"// Region-balanced across the 5 Walloon provinces. Harvested {today} · {len(feats)} points.\n"
-        "// Attribute as: \"Source : Tourisme Wallonie (TW)\". {t:type, n:name, prov:province, web:site}.\n")
+        "// Official registry entries → flagged verified (c='Official listing'), render as confirmed pins.\n"
+        "// Attribute as: \"Source : Tourisme Wallonie (TW)\". {t:type, n:name, town, prov:province, c, web:site}.\n")
     (DEMO / "stays-pivot.js").write_text(to_fixture_js(feats, "CC_STAYS_PIVOT", header), encoding="utf-8")
     print(f"pivot stays: {len(feats)} points -> atlas/demo/stays-pivot.js")
     if report:
