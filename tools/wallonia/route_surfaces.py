@@ -5,6 +5,7 @@ Each ride's loop is routed through BRouter, whose GeoJSON carries the OSM way-ta
 per segment; contiguous same-surface stretches become A·Road-surface segments. Output:
 atlas/demo/route-surfaces.js (window.CC_ROUTE_SURFACES) — merged into the surface layer in map.html.
 """
+import re
 import json
 import math
 import pathlib
@@ -13,7 +14,7 @@ from . import overpass
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 ROUTES_JS = ROOT / "atlas/demo/routes-data.js"
-OUT = ROOT / "atlas/demo/route-surfaces.js"
+SURFACE_DATA = ROOT / "atlas/demo/surface-data.js"   # ride surfaces are appended into CC_SURFACE.segments here
 
 # cls → (surface label, smoothness, traffic) — cls drives colour/pattern in map.html's SURFACE_STYLE
 SURF = {
@@ -133,11 +134,14 @@ def build():
         s = _segments(gj, r["name"])
         allsegs.extend(s)
         print(f"  {r['name']}: {len(s)} segments  {dict(Counter(x['cls'] for x in s))}")
-    hdr = ("// SPDX-License-Identifier: ODbL-1.0\n"
-           "// Surface along each quality-ride, derived from OpenStreetMap via BRouter (way surface=*). ODbL 1.0.\n")
-    OUT.write_text(hdr + 'window.CC_ROUTE_SURFACES={"segments":' + json.dumps(allsegs, ensure_ascii=False) + "};\n",
-                   encoding="utf-8")
-    print(f"route surfaces: {len(allsegs)} segments from {len(data['routes'])} rides -> atlas/demo/route-surfaces.js")
+    # append into CC_SURFACE.segments (the existing surface layer merge picks them up — no map.html change).
+    # marker-wrapped so re-running replaces them rather than duplicating; the demo segments are preserved.
+    sd = SURFACE_DATA.read_text(encoding="utf-8")
+    sd = re.sub(r",/\*RS_START\*/.*?/\*RS_END\*/", "", sd, flags=re.S)
+    idx = sd.rindex("]")                          # the segments-array close
+    inject = ",/*RS_START*/" + ",".join(json.dumps(s, ensure_ascii=False) for s in allsegs) + "/*RS_END*/"
+    SURFACE_DATA.write_text(sd[:idx] + inject + sd[idx:], encoding="utf-8")
+    print(f"route surfaces: injected {len(allsegs)} segments from {len(data['routes'])} rides into surface-data.js")
 
 
 if __name__ == "__main__":
