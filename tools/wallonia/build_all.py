@@ -75,6 +75,9 @@ LAYERS = {
         "js_var": "CC_STAYS_OSM",
         "out": "stays-osm.js",
         "cap_per_province": 28,
+        "extra_tags": ["wikidata", "wikipedia"],
+        "enrich": True,
+        "validate_photo": True,
         "selectors": [
             ("tourism", "camp_site", "Campsite"),
             ("tourism", "hostel", "Hostel"),
@@ -102,6 +105,9 @@ LAYERS = {
         "js_var": "CC_TRANSIT_OSM",
         "out": "transit-osm.js",
         "cap_per_province": 20,
+        "extra_tags": ["wikidata", "wikipedia"],
+        "enrich": True,
+        "validate_photo": True,
         "selectors": [
             ("railway", "station", "Train station"),
             ("railway", "halt", "Train halt"),
