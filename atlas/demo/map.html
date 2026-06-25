@@ -88,8 +88,9 @@
   .chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
 
   .layer{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;cursor:pointer;user-select:none}
-  .layer .sw{width:21px;height:21px;border-radius:5px;flex-shrink:0;border:1.5px solid var(--c);background:var(--c);display:flex;align-items:center;justify-content:center;font-size:.74rem;line-height:1;color:var(--paper);transition:all .18s}
-  .layer.off .sw{background:transparent;color:var(--c)}
+  .layer .sw{width:21px;height:21px;border-radius:5px;flex-shrink:0;border:1.5px solid var(--c);background:var(--c);display:flex;align-items:center;justify-content:center;font-size:.78rem;line-height:1;color:var(--ic,#fff);transition:all .18s}
+  .layer .sw .sw-g{display:inline-block;font-style:normal;line-height:1;filter:var(--ig,none)}  /* force colour-emoji to a flat white/black silhouette */
+  .layer.off .sw{opacity:.45}
   .layer .nm{flex:1;font-size:.92rem}
   .layer.off .nm{opacity:.45}
   .layer .ct{font-family:var(--mono);font-size:.66rem;color:rgba(239,230,212,.5)}
@@ -903,7 +904,7 @@
   // One real, verified Ardennes example per catalog type (A–K). geom.ll = [lat,lng].
   // record[] rows render in the detail drawer; omit any attribute we cannot verify.
   const CATALOG = [
-    { key:'surface', letter:'A', label:'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:false, features:[] }
+    { key:'surface', letter:'A', label:'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, features:[] }
     ,{ key:'climbs', letter:'B', label:'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, features:[
       { name:'Côte de la Redoute', headline:'2.0 km · 8.4% avg', cur:true, sq:'Smooth', tr:'Quiet',
         geom:{ll:[50.49222,5.69924]},
@@ -1272,7 +1273,7 @@
   // populate A · Road surface from the hand-picked OSM segments
   if(window.CC_SURFACE){
     layerByKey['surface'].features = CC_SURFACE.segments.map(s=>({
-      name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:false, edit:'road-surface',
+      name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
       geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
       photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
       source:'OSM (surface=*)',
@@ -1474,6 +1475,7 @@
       }
       if(layer.kind==='surface'){
         layer.features.forEach((f,i)=>{
+          if(!((mode==='all')||!layer.exp||f.cur)) return;
           drawSurfaceLine(`${layer.key}-${i}`, f.geom.path, f.surfaceClass, layer, f);
           n++;
         });
@@ -1704,11 +1706,12 @@
   const lc=document.getElementById('layers');
   CATALOG_AZ.forEach(layer=>{
     const el=document.createElement('div');
-    el.className='layer'; el.style.setProperty('--c',layer.color); el.dataset.key=layer.key;
+    el.className='layer'; el.style.setProperty('--c',layer.color); el.style.setProperty('--ic',txtOn(layer.color));
+    el.style.setProperty('--ig', txtOn(layer.color)==='#fff' ? 'brightness(0) invert(1)' : 'brightness(0)'); el.dataset.key=layer.key;
     if(!active.has(layer.key)) el.classList.add('off');
     const _lc=layerCounts(layer);
     const ct=`${_lc.shown}/${_lc.total}`;
-    el.innerHTML=`<span class="sw">${layer.icon}</span><span class="nm">${layer.letter} · ${layer.label}</span><span class="ct">${ct}</span>`;
+    el.innerHTML=`<span class="sw"><i class="sw-g">${layer.icon}</i></span><span class="nm">${layer.letter} · ${layer.label}</span><span class="ct">${ct}</span>`;
     el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
     lc.appendChild(el);
   });
