@@ -63,6 +63,17 @@
   .card.off{opacity:.55;cursor:default}
   .card.off:hover{transform:none;box-shadow:none;border-color:rgba(20,22,14,.14)}
   .card.off .go{color:#7a7d6d}
+  /* mobile: smaller cards — 2 up on bigger phones, 1 up on small ones */
+  @media(max-width:560px){
+    .grid{grid-template-columns:repeat(2,1fr);gap:.7rem}
+    .card{padding:.85rem}
+    .card .co{font-size:1.5rem;top:.45rem;right:.6rem}
+    .card .ic{font-size:1.25rem;margin-bottom:.35rem}
+    .card h4{font-size:1rem;margin-bottom:.25rem}
+    .card p{font-size:.76rem;line-height:1.45;margin-bottom:.7rem}
+    .card .go{font-size:.56rem}
+  }
+  @media(max-width:380px){ .grid{grid-template-columns:1fr} }
 
   .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.84rem;
     color:#4a4d40;border-radius:0 6px 6px 0;margin-top:2.2rem;line-height:1.55}
