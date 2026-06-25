@@ -762,7 +762,7 @@
     if(pivot) rec.push({label:'Listed', value:'Official Tourisme Wallonie registry', method:'official'});
     if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
       if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
-    if(pivot && p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
+    if(p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
     rec.push(pivot
       ? {label:'Source', value:'Tourisme Wallonie (TW) · CC-BY 4.0', links:[{label:'Géoportail de la Wallonie',href:'https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html'}]}
       : {label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});

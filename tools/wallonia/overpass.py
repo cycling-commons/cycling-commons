@@ -80,6 +80,12 @@ def elements_to_features(elements, type_map, prov, extra=None):
         props = {"t": label}
         if tags.get("name"):
             props["n"] = tags["name"]
+        town = tags.get("addr:city") or tags.get("addr:town") or tags.get("addr:village")
+        if town:
+            props["town"] = town
+        web = tags.get("website") or tags.get("contact:website") or tags.get("url")
+        if web and web.startswith("http"):
+            props["web"] = web.split(";")[0].strip()
         props["prov"] = prov
         feats.append({
             "type": "Feature",
