@@ -23,6 +23,7 @@ SURF = {
     "gravel": ("Gravel", "Variable", "Open road"),
     "pave": ("Sett (pavé)", "Rough", "Open road"),
     "ground": ("Unpaved", "Variable", "Open road"),
+    "unverified": ("Surface unverified", "—", "—"),   # OSM has no surface tag here — invite a rider to tag it
 }
 
 
@@ -36,8 +37,7 @@ def _hav(a, b):  # metres between two [lon, lat]
 def _cls(waytags):
     tg = dict(x.split("=", 1) for x in waytags.split() if "=" in x)
     hw, s = tg.get("highway", ""), tg.get("surface", "")
-    # The actual `surface=` tag wins over the highway type: an UNPAVED cycleway is a gravel/dirt
-    # path, NOT a (paved) RAVeL. So check surface first; only an asphalt/untagged cycleway is RAVeL.
+    # The actual `surface=` tag wins over the highway type — check it first.
     if s in ("sett", "cobblestone", "paving_stones", "unhewn_cobblestone"):
         return "pave"
     if s in ("ground", "dirt", "earth", "grass", "sand", "mud"):
@@ -45,7 +45,9 @@ def _cls(waytags):
     if s in ("gravel", "fine_gravel", "compacted", "unpaved", "pebblestone"):
         return "gravel"
     if hw == "cycleway" or "route_bicycle" in waytags:
-        return "cycleway"   # cycleway with a paved/asphalt or untagged surface → RAVeL
+        # Only a hard-surfaced cycleway is a (paved) RAVeL. An UNtagged cycleway is genuinely
+        # ambiguous (paved RAVeL vs unpaved gravel track) — don't guess, mark it unverified.
+        return "cycleway" if s in ("asphalt", "concrete", "paved", "chipseal") else "unverified"
     if s in ("asphalt", "concrete", "paved", "chipseal", "metal", "concrete:plates"):
         return "paved"
     if hw == "track":
@@ -120,7 +122,7 @@ def _segments(gj, ride):
             continue
         surf, smooth, traf = SURF[r["cls"]]
         segs.append({"name": f"{ride} · {surf}", "surface": surf, "smoothness": smooth,
-                     "width": "—", "traffic": traf, "cls": r["cls"], "path": r["path"]})
+                     "width": "—", "traffic": traf, "cls": r["cls"], "edit": "road-surface", "path": r["path"]})
     return segs
 
 
@@ -136,17 +138,6 @@ def build():
         s = _segments(gj, r["name"])
         allsegs.extend(s)
         print(f"  {r['name']}: {len(s)} segments  {dict(Counter(x['cls'] for x in s))}")
-    # Field correction: OSM under-tags surface on the Hautes Fagnes cycleways (forest/moor gravel
-    # tracks), so they derive as "RAVeL". Confirmed gravel on the ground — force cycleway→gravel for
-    # segments lying ENTIRELY within the plateau box (segments that exit it, e.g. back toward Spa, are
-    # left alone so a genuinely paved stretch isn't mislabelled).
-    FAGNES = (50.46, 50.51, 6.01, 6.13)            # lat0, lat1, lon0, lon1 — path points are [lat, lon]
-    gsurf, gsmooth, gtraf = SURF["gravel"]
-    for s in allsegs:
-        if s["cls"] == "cycleway" and all(FAGNES[0] <= p[0] <= FAGNES[1] and FAGNES[2] <= p[1] <= FAGNES[3] for p in s["path"]):
-            s["cls"] = "gravel"
-            s["surface"], s["smoothness"], s["traffic"] = gsurf, gsmooth, gtraf
-            s["name"] = s["name"].replace(" · Cycleway · RAVeL", " · Gravel")
     # append into CC_SURFACE.segments (the existing surface layer merge picks them up — no map.html change).
     # marker-wrapped so re-running replaces them rather than duplicating; the demo segments are preserved.
     sd = SURFACE_DATA.read_text(encoding="utf-8")

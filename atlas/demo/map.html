@@ -65,8 +65,10 @@
   .skey{display:flex;flex-direction:column;gap:.55rem;margin-top:.1rem}
   .skey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--paper)}
   .skey-ln{width:34px;height:4px;border-radius:2px;flex:none;background:var(--sc)}
-  .skey-ln.dash{background:repeating-linear-gradient(90deg,var(--sc) 0 8px,transparent 8px 13px)}
-  .skey-ln.dot{background:repeating-linear-gradient(90deg,var(--sc) 0 3px,transparent 3px 7px)}
+  /* gaps use the map's line casing colour (#FBF4E4), not the dark panel — so the swatch reads
+     colour-over-white exactly like the dashed surface lines on the map */
+  .skey-ln.dash{background:repeating-linear-gradient(90deg,var(--sc) 0 8px,#FBF4E4 8px 13px)}
+  .skey-ln.dot{background:repeating-linear-gradient(90deg,var(--sc) 0 3px,#FBF4E4 3px 7px)}
   .search{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(239,230,212,.3);color:var(--paper);font-family:var(--sans);font-size:.95rem;padding:.5rem 0;outline:none}
   .search::placeholder{color:rgba(239,230,212,.45)}
   .search:focus{border-color:var(--trail)}
@@ -476,6 +478,7 @@
         <div class="skey-row"><span class="skey-ln dash" style="--sc:#C8923A"></span>Gravel</div>
         <div class="skey-row"><span class="skey-ln dot" style="--sc:#6E7B96"></span>Pavé · cobbles</div>
         <div class="skey-row"><span class="skey-ln dash" style="--sc:#6E5849"></span>Ground · dirt</div>
+        <div class="skey-row"><span class="skey-ln dash" style="--sc:#D92D20"></span>Surface unverified</div>
       </div>
     </div>
     <div class="map-ctrl" aria-label="Base map and overlays">
@@ -586,7 +589,7 @@
   const MAPILLARY_TOKEN = window.MAPILLARY_TOKEN || 'MLY|PASTE_TOKEN_HERE';
   const MLY_ENABLED = /^MLY\|/.test(MAPILLARY_TOKEN) && !/PASTE_TOKEN_HERE/.test(MAPILLARY_TOKEN);
   const MLY_GREEN = '#05CB63';
-  let mlyOn=false, mlyMarker=null, mlyViewer=null, mlyLoading=null, _dockTimer=null;
+  let mlyOn=false, mlyMarker=null, mlyViewer=null, mlyLoading=null;
 
   // coverage line source/layer — Mapillary sequence vector tiles, hidden until toggled on
   function addMapillary(){
@@ -638,15 +641,10 @@
   }
   // open the image nearest a clicked point — straight from the vector tiles, no Graph-API call
   function openMapillaryAtPoint(point){
-    // defer one tick: if the same tap also opened a feature drawer (its handler fires
-    // in the same click), that cancels this — a feature always wins over street-level
-    clearTimeout(_dockTimer);
-    _dockTimer=setTimeout(()=>{ _dockTimer=null;
-      openMapillaryDock();
-      const id=nearestImageId(point);
-      if(id!=null) openMapillaryImage(String(id));
-      else mlyDockMessage('Zoom in and click a green dot to open street-level here.');
-    },0);
+    openMapillaryDock();
+    const id=nearestImageId(point);
+    if(id!=null) openMapillaryImage(String(id));
+    else mlyDockMessage('Zoom in and click a green dot to open street-level here.');
   }
   // (legacy) resolve the nearest image via the Graph API — kept as a fallback, no longer wired to clicks
   async function openMapillaryAt(lngLat){
@@ -1382,7 +1380,8 @@
     paved:{color:'#4E6E66'},                           // asphalt/concrete — solid slate
     gravel:{color:'#C8923A',dash:[2,1.5],cap:'butt'},  // gravel/compacted — dashed ochre
     pave:{color:'#6E7B96',dash:[1,1.5],cap:'butt'},    // sett/cobbles (pavé) — square slate-grey dashes (matches the legend; distinct from brown ground)
-    ground:{color:'#6E5849',dash:[2,1.5],cap:'butt'}   // ground/dirt — dashed brown
+    ground:{color:'#6E5849',dash:[2,1.5],cap:'butt'},  // ground/dirt — dashed brown
+    unverified:{color:'#D92D20',dash:[2.5,2.5],cap:'butt'} // OSM has no surface tag — red dashes over the white casing ("needs a tag")
   };
   const surfaceStyle=cls=>SURFACE_STYLE[cls]||{color:'#4E8C84'};
   function drawSurfaceLine(id, latlngs, cls, layer, f){
@@ -1622,7 +1621,6 @@
       a.addEventListener('mouseleave', clearHighlight);
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
-    if(window.innerWidth<=820){ clearTimeout(_dockTimer); _dockTimer=null; mlyClose(); }   // feature wins over street-level on mobile — cancel any pending dock + close an open one
     document.getElementById('drawerClose').focus({preventScroll:true});
   }
   // city info card: fly to the town, show its info + everything in the Commons within 5 km
@@ -1645,7 +1643,6 @@
       b.onmouseenter=()=>highlightAt(p); b.onmouseleave=clearHighlight;
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
-    if(window.innerWidth<=820){ clearTimeout(_dockTimer); _dockTimer=null; mlyClose(); }
     flyToPin([c.ll[1],c.ll[0]]);
     document.getElementById('drawerClose').focus({preventScroll:true});
   }
