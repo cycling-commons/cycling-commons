@@ -135,12 +135,12 @@
   .map-ctrl .mc-toggle{display:none;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
   /* mobile: collapse the panel to a small layers icon; tap to expand */
   @media(max-width:760px){
-    .map-ctrl{min-width:0;gap:.35rem;top:.8rem;right:.8rem}
+    .map-ctrl{min-width:0;gap:.35rem;top:.8rem;right:.8rem;padding:.3rem}
     .map-ctrl .mc-toggle{display:flex}
     .map-ctrl:not(.open) .mc-seg,.map-ctrl:not(.open) .mc-ov{display:none}
     .map-ctrl.open{min-width:9.5rem}
     /* road-surface legend collapses to an icon, left of the layers icon */
-    .legend{bottom:auto;top:.8rem;right:3.6rem;padding:.45rem;min-width:0}
+    .legend{bottom:auto;top:.8rem;right:3.8rem;padding:.3rem;min-width:0}
     .legend .lg-toggle{display:flex}
     .legend:not(.open) h4,.legend:not(.open) .skey{display:none}
     .legend.open{right:.8rem;padding:.7rem .9rem}
@@ -151,18 +151,17 @@
   .map-top .sub{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:#5a5d4d;text-transform:uppercase;margin-top:.15rem}
   .map-top .add-climb{display:inline-block;margin-top:.6rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.4rem .7rem;border-radius:5px;font-weight:500}
   .map-top .add-climb:hover{background:#ff703d}
-  .map-top .add-climb .ac-ic{display:none}   /* desktop shows the "+ Contribute" text */
+  .contrib-fab{display:none}
   /* placed AFTER the desktop .map-top block so these win the cascade on mobile */
   @media(max-width:760px){
-    /* backdrop-filter:none so the card stops being the containing block for the
-       position:fixed Contribute FAB (which must anchor to the viewport) */
-    .map-top{top:.8rem;left:.8rem;padding:.4rem .6rem;max-width:52vw;backdrop-filter:none;-webkit-backdrop-filter:none}
+    .map-top{top:.8rem;left:.8rem;padding:.4rem .6rem;max-width:52vw}
     .map-top .rg{font-size:.85rem}
-    .map-top .sub{display:none}
-    /* + Contribute -> small floating up-arrow button, bottom-right */
-    .map-top .add-climb{position:fixed;right:.8rem;bottom:5.2rem;z-index:1100;width:2.7rem;height:2.7rem;margin:0;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
-    .map-top .add-climb .ac-tx{display:none}
-    .map-top .add-climb .ac-ic{display:block}
+    .map-top .sub,.map-top .add-climb{display:none}   /* contribute moves to the FAB */
+    /* a top-level FAB (NOT inside .map-top, which is a z:1000 stacking context that
+       would trap it under the filters peek) — anchored to .map-wrap, above the peek */
+    .contrib-fab{display:flex;align-items:center;justify-content:center;position:absolute;right:.8rem;bottom:5.5rem;z-index:1505;width:2.9rem;height:2.9rem;border-radius:50%;background:var(--trail);color:var(--ink);box-shadow:0 6px 16px -6px rgba(0,0,0,.55)}
+    .contrib-fab:active{background:#ff703d}
+    .app.dock-open .contrib-fab{display:none}
   }
 
   /* ---------- MAPILLARY VIEWER DOCK ---------- */
@@ -195,6 +194,7 @@
   .cc-drawer-x{position:absolute;top:.9rem;right:1rem;background:none;border:none;color:rgba(239,230,212,.7);
     font-size:1rem;cursor:pointer;line-height:1}
   .cc-drawer-x:hover{color:var(--trail)}
+  .cc-d-scrim{display:none}   /* desktop: no scrim; the mobile bottom-sheet rules enable it */
   .cc-d-type{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
     background:var(--c,#FF5A1F);display:inline-block;padding:.25rem .55rem;border-radius:4px}
   .cc-d-name{font-family:var(--serif);font-weight:600;font-size:1.55rem;line-height:1.1;margin:.7rem 0 .2rem}
@@ -312,8 +312,13 @@
     .mapcol{padding-top:2.9rem}
     .demo-banner{padding:.35rem .6rem;font-size:.7rem}
     /* feature detail -> bottom slide-up */
-    .cc-drawer{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;max-height:82svh;transform:translateY(102%);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);z-index:1550;padding:1.2rem 1.3rem 2rem}
+    .cc-drawer{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;max-height:80vh;max-height:80svh;transform:translateY(102%);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);z-index:1550;padding:1.2rem 1.3rem 2rem}
     .cc-drawer.open{transform:none}
+    /* bigger, pinned close target so it's always reachable on the bottom sheet */
+    .cc-drawer-x{position:sticky;top:0;float:right;width:2.4rem;height:2.4rem;margin:-.4rem -.4rem .2rem 0;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:rgba(20,33,24,.9);border-radius:50%;z-index:2}
+    /* tap the dimmed area above the sheet to close it */
+    .cc-d-scrim{display:block;position:fixed;inset:0;z-index:1540;background:rgba(16,30,22,.4);opacity:0;pointer-events:none;transition:opacity .25s ease}
+    .cc-drawer.open ~ .cc-d-scrim{opacity:1;pointer-events:auto}
     .cc-lightbox{z-index:1600}
     /* keep map zoom/attribution above the sheet peek */
     .maplibregl-ctrl-bottom-left{bottom:3.4rem}
@@ -423,7 +428,7 @@
     <div class="map-top">
       <div class="rg">Wallonia, Belgium</div>
       <div class="sub">Curated best-of · Summer 2026</div>
-      <a class="add-climb" href="contribute.html" aria-label="Contribute a place"><svg class="ac-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 10l5-5 5 5M5 20h14"/></svg><span class="ac-tx">+ Contribute</span></a>
+      <a class="add-climb" href="contribute.html">+ Contribute</a>
     </div>
     <div class="legend">
       <button class="lg-toggle" id="lgToggle" type="button" aria-label="Surface legend" aria-expanded="false">
@@ -450,10 +455,12 @@
       </div>
       <button class="mc-ov" id="ovStreet"><span class="mc-ic">📷</span>Street-level</button>
     </div>
+    <a class="contrib-fab" href="contribute.html" aria-label="Contribute a place"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 10l5-5 5 5M5 20h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" aria-hidden="true" aria-label="Feature detail">
       <button class="cc-drawer-x" id="drawerClose" aria-label="Close detail">✕</button>
       <div class="cc-drawer-body" id="drawerBody"></div>
     </aside>
+    <div class="cc-d-scrim" id="drawerScrim"></div>
     <div class="cc-tooltip" id="tip" hidden></div>
     <div class="cc-lightbox" id="lightbox" aria-hidden="true">
       <button class="cc-lb-x" aria-label="Close image">✕</button>
@@ -1197,7 +1204,7 @@
       name:r.name, headline:`${r.km} km · ${r.difficulty.label}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities,                                              // searchable start/through towns
-      photo:wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
+      photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
       source:'Contributed GPX (GPS track only)',
       record:[
         {label:'Distance', value:r.km+' km'},
@@ -1495,7 +1502,7 @@
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${f.name}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${f.source}</div>${act}`;
+      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}`;
   }
   function gradStrip(grad){
     const max=Math.max(...grad), avg=Math.round(grad.reduce((a,b)=>a+b,0)/grad.length);
@@ -1600,6 +1607,7 @@
     lb.setAttribute('aria-hidden','true'); lb.querySelector('img').src='';
   }
   document.getElementById('drawerClose').onclick=closeDrawer;
+  document.getElementById('drawerScrim').onclick=closeDrawer;   // tap the dimmed area above the bottom sheet to close
   document.querySelector('.cc-lb-prev').onclick=e=>{ e.stopPropagation(); lbStep(-1); };
   document.querySelector('.cc-lb-next').onclick=e=>{ e.stopPropagation(); lbStep(1); };
   document.getElementById('lightbox').addEventListener('click',e=>{ if(e.target.id==='lightbox'||e.target.classList.contains('cc-lb-x')) closeLightbox(); });
