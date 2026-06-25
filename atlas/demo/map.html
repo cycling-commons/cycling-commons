@@ -35,6 +35,7 @@
     --serif:"Bricolage Grotesque",system-ui,sans-serif; --sans:"Spline Sans",system-ui,sans-serif; --mono:"Spline Sans Mono",monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
+  html{height:100%;overflow:hidden}   /* never let the page itself scroll (drawer/dock translate off-screen → would otherwise create scroll, shoving the overlay off the top) */
   body{font-family:var(--sans);color:var(--ink);height:100svh;overflow:hidden;display:flex;flex-direction:column}
   .app{display:grid;grid-template-columns:340px 1fr;grid-template-rows:minmax(0,1fr);flex:1;min-height:0}
   .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
@@ -251,6 +252,13 @@
   .cc-d-photo>img{width:100%;border-radius:8px;display:block;cursor:zoom-in}
   .cc-d-photo figcaption{font-size:.6rem;color:rgba(239,230,212,.5);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
   .cc-d-photo figcaption a{color:rgba(239,230,212,.72);text-decoration:underline}
+  /* no-photo placeholder = a contributor CTA (links to the improve wizard's media step) */
+  .cc-d-addphoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;margin:1rem 0 0;padding:1.5rem 1rem;min-height:118px;border:1.5px dashed rgba(239,230,212,.26);border-radius:8px;background:rgba(239,230,212,.03);text-decoration:none;text-align:center;transition:border-color .15s,background .15s}
+  .cc-d-addphoto:hover{border-color:var(--trail);background:rgba(255,90,31,.06)}
+  .cc-ap-cam{color:rgba(239,230,212,.55);transition:color .15s}
+  .cc-d-addphoto:hover .cc-ap-cam{color:var(--trail)}
+  .cc-ap-t{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.5)}
+  .cc-ap-b{font-weight:600;font-size:.92rem;color:var(--trail)}
   .cc-d-thumbs{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
   .cc-d-thumb{width:54px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.5;border:1px solid rgba(239,230,212,.2);transition:opacity .15s,border-color .15s}
   .cc-d-thumb.on,.cc-d-thumb:hover{opacity:1;border-color:var(--paper)}
@@ -309,7 +317,7 @@
     .app.sheet-open .rail-foot{box-shadow:none}
     .app.sheet-open .rail-foot .res::after{content:" · Close ▴"}
     /* map fills the cell; clear the fixed top bar */
-    .mapcol{padding-top:2.9rem}
+    .mapcol{padding-top:3.7rem}   /* clear the ~55px fixed top bar (+ small gap) */
     .demo-banner{padding:.35rem .6rem;font-size:.7rem}
     /* feature detail -> bottom slide-up */
     .cc-drawer{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;max-height:80vh;max-height:80svh;transform:translateY(102%);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);z-index:1550;padding:1.2rem 1.3rem 2rem}
@@ -551,7 +559,7 @@
   const MAPILLARY_TOKEN = window.MAPILLARY_TOKEN || 'MLY|PASTE_TOKEN_HERE';
   const MLY_ENABLED = /^MLY\|/.test(MAPILLARY_TOKEN) && !/PASTE_TOKEN_HERE/.test(MAPILLARY_TOKEN);
   const MLY_GREEN = '#05CB63';
-  let mlyOn=false, mlyMarker=null, mlyViewer=null, mlyLoading=null;
+  let mlyOn=false, mlyMarker=null, mlyViewer=null, mlyLoading=null, _dockTimer=null;
 
   // coverage line source/layer — Mapillary sequence vector tiles, hidden until toggled on
   function addMapillary(){
@@ -603,10 +611,15 @@
   }
   // open the image nearest a clicked point — straight from the vector tiles, no Graph-API call
   function openMapillaryAtPoint(point){
-    openMapillaryDock();
-    const id=nearestImageId(point);
-    if(id!=null) openMapillaryImage(String(id));
-    else mlyDockMessage('Zoom in and click a green dot to open street-level here.');
+    // defer one tick: if the same tap also opened a feature drawer (its handler fires
+    // in the same click), that cancels this — a feature always wins over street-level
+    clearTimeout(_dockTimer);
+    _dockTimer=setTimeout(()=>{ _dockTimer=null;
+      openMapillaryDock();
+      const id=nearestImageId(point);
+      if(id!=null) openMapillaryImage(String(id));
+      else mlyDockMessage('Zoom in and click a green dot to open street-level here.');
+    },0);
   }
   // (legacy) resolve the nearest image via the Graph API — kept as a fallback, no longer wired to clicks
   async function openMapillaryAt(lngLat){
@@ -1459,7 +1472,13 @@
       <img src="${pl[0].sm}" alt="${f.name}" data-i="0" />
       <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
       ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${p.sm}" data-i="${i}" alt="${f.name} — photo ${i+1}" />`).join('')}</div>` : ''}
-    </figure>` : '';
+    </figure>` : `<a class="cc-d-addphoto" href="improve.html?item=${f.edit||slug(f.name)}&name=${encodeURIComponent(f.name)}&type=${encodeURIComponent(layer.letter+' · '+layer.label)}&add=photo" aria-label="Add a photo of ${f.name}">
+      <svg class="cc-ap-cam" viewBox="0 0 48 36" width="42" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="1.5" y="7.5" width="45" height="27" rx="4"/><path d="M16 7.5l3-4h10l3 4" stroke-linejoin="round"/><circle cx="24" cy="21.5" r="8"/><path d="M40.5 13h.01" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <span class="cc-ap-t">No photo yet</span>
+      <span class="cc-ap-b">＋ Add the first photo</span>
+    </a>`;
     let recs = f.record;
     if(layer.key==='climbs'){                          // climbs share suitability rows
       recs = recs.concat([
@@ -1534,7 +1553,8 @@
       a.addEventListener('mouseleave', clearHighlight);
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
-    document.getElementById('drawerClose').focus();
+    if(window.innerWidth<=820){ clearTimeout(_dockTimer); _dockTimer=null; mlyClose(); }   // feature wins over street-level on mobile — cancel any pending dock + close an open one
+    document.getElementById('drawerClose').focus({preventScroll:true});
   }
   // city info card: fly to the town, show its info + everything in the Commons within 5 km
   function openCity(name){
@@ -1556,8 +1576,9 @@
       b.onmouseenter=()=>highlightAt(p); b.onmouseleave=clearHighlight;
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
+    if(window.innerWidth<=820){ clearTimeout(_dockTimer); _dockTimer=null; mlyClose(); }
     flyToPin([c.ll[1],c.ll[0]]);
-    document.getElementById('drawerClose').focus();
+    document.getElementById('drawerClose').focus({preventScroll:true});
   }
   // open a specific feature by name (deep-link from e.g. a profile page): activate its layer, draw, zoom in
   function openFeatureByName(name){
