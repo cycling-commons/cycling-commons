@@ -529,6 +529,13 @@
 <script src="scenic-osm.js"></script>
 <script src="history-osm.js"></script>
 <script src="stays-osm.js"></script>
+<script src="stays-pivot.js"></script>
+<script>/* E·Where-to-sleep also carries the official Tourisme Wallonie accommodation set
+   (CC-BY 4.0, separate fixture). Merge it into the stays dots, each tagged src='pivot' so the
+   drawer credits Tourisme Wallonie / Géoportail — NOT OSM. Counts + curated toggle then just work. */
+(function(){ var O=window.CC_STAYS_OSM, P=window.CC_STAYS_PIVOT; if(O&&P&&!O._pivot){
+  P.features.forEach(function(f){ f.properties.src='pivot'; });
+  O.features=O.features.concat(P.features); O._pivot=1; } })();</script>
 <script src="shelter-osm.js"></script>
 <script src="transit-osm.js"></script>
 <script>
@@ -742,11 +749,16 @@
   // drawer card for a generic bulk-OSM point — shared by the dot click handler and the confirmed pin
   function osmDrawer(layer, p, ll, src){
     const lbl=(layer||{}).label||'Place';
-    const rec=[{label:'Type', value:p.t||lbl, method:'OSM'},{label:'Province', value:p.prov||'Wallonia'}];
+    const pivot=p.src==='pivot';   // official Tourisme Wallonie accommodation (CC-BY), not OSM
+    const rec=[{label:'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'},{label:'Province', value:p.prov||'Wallonia'}];
     if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
       if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
-    rec.push({label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
-    const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec, source:src};
+    if(pivot && p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
+    rec.push(pivot
+      ? {label:'Source', value:'Tourisme Wallonie (TW) · CC-BY 4.0', links:[{label:'Géoportail de la Wallonie',href:'https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html'}]}
+      : {label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
+    const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+(pivot?'Tourisme Wallonie':'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
+      source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie':src};
     if(p.desc) d.desc=p.desc;
     if(p.descTr) d.descTr=1;
     let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
