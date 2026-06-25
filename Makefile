@@ -78,3 +78,6 @@ up-all: ## Start the stack + every opt-in profile (routing + storage)
 ## —— 🗺️  Wallonia data ————————————————————————————————————————————————————————
 wallonia-data: ## Harvest Wallonia OSM layers into atlas/demo/*-osm.js (one/some: make wallonia-data l="services")
 	@PYTHONPATH=tools python3 -m wallonia.build_all $(l) --report
+
+pivot-data: ## Harvest official Wallonia accommodation (Tourisme Wallonie, CC-BY) into atlas/demo/stays-pivot.js
+	@PYTHONPATH=tools python3 -m wallonia.pivot --report
