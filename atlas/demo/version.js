@@ -30,8 +30,8 @@ window.CC_VERSION = { number: 'Demo v0.1.0', date: '2026-06-25' };
     if (rail) {
       var r = document.createElement('span');
       r.className = 'cc-ver';
-      r.textContent = ' · ' + label.toUpperCase();
-      r.style.cssText = 'font-family:var(--mono,monospace);font-size:.58rem;letter-spacing:.08em;opacity:.7';
+      r.innerHTML = ('Build ' + V.number).toUpperCase() + (V.date ? '<br>' + V.date : '');   // date on its own line
+      r.style.cssText = 'font-family:var(--mono,monospace);font-size:.58rem;letter-spacing:.08em;opacity:.7;line-height:1.35;text-align:right';
       rail.appendChild(r);
       return;
     }
