@@ -1409,7 +1409,8 @@
     markers.forEach(m=>m.remove()); markers=[];
     clearDynamic();
     ['water','services','scenic','history','stays','shelter','transit'].forEach(k=>{
-      const id=k+'-osm'; if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', active.has(k)?'visible':'none');
+      // unverified dots show only in Everything mode; Curated best-of keeps just the confirmed pins
+      const id=k+'-osm'; if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', (active.has(k) && mode==='all')?'visible':'none');
     });
     let n=0;
     CATALOG.forEach(layer=>{
