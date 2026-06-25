@@ -246,6 +246,7 @@
   .cc-up b{color:var(--paper)}
   .cc-up a{color:var(--glacier);text-decoration:underline}
   .cc-d-desc{font-size:.92rem;line-height:1.55;color:rgba(239,230,212,.82);margin:.9rem 0 .2rem}
+  .cc-d-tr{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgba(239,230,212,.42);text-transform:uppercase}
   .cc-d-photo{margin:1rem 0 0}
   .cc-d-photo>img{width:100%;border-radius:8px;display:block;cursor:zoom-in}
   .cc-d-photo figcaption{font-size:.6rem;color:rgba(239,230,212,.5);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
@@ -702,6 +703,7 @@
     rec.push({label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
     const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec, source:src};
     if(p.desc) d.desc=p.desc;
+    if(p.descTr) d.descTr=1;
     let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
     if(photo) d.photo=photo;
     return d;
@@ -1489,7 +1491,7 @@
     const edit = `<a class="cc-d-act edit" href="improve.html?${editQ}">${editLbl}</a>`;
     const vote = f.cur ? `<a class="cc-d-act" href="vote.html">▲ Vote in this round</a>` : '';
     const act = edit + vote;
-    const desc = f.desc ? `<p class="cc-d-desc">${f.desc}</p>` : '';
+    const desc = f.desc ? `<p class="cc-d-desc">${f.desc}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${f.name}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}

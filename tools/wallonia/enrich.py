@@ -7,12 +7,42 @@ Sources (all cached via overpass.get_json):
   - Commons imageinfo       → photo thumbnail URL + LICENCE + credit (only free licences are kept)
 """
 import re
+import json
+import hashlib
 import urllib.parse
+import urllib.request
 from . import overpass
 
 WD_API = "https://www.wikidata.org/w/api.php"
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
 FREE = ("cc0", "cc by", "cc-by", "public domain", "pd-", "no restrictions", "attribution")
+
+
+def _translate(text, src):
+    """Machine-translate `text` from `src` (e.g. 'fr') to English via MyMemory. Caches successes only."""
+    text = " ".join(text.split())[:450]
+    if not text:
+        return None
+    overpass.CACHE.mkdir(exist_ok=True)
+    key = overpass.CACHE / ("tr_" + hashlib.sha1((src + "|" + text).encode()).hexdigest() + ".txt")
+    if key.exists():
+        return key.read_text(encoding="utf-8") or None
+    # the `de` contact email raises MyMemory's daily limit (public project contact, not a secret)
+    url = ("https://api.mymemory.translated.net/get?de=paceline@cyclingcommons.com&langpair="
+           + src + "|en&q=" + urllib.parse.quote(text))
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "CyclingCommons/wallonia-harvest"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            d = json.loads(r.read())
+    except Exception:
+        return None
+    if d.get("responseStatus") != 200:
+        return None
+    out = ((d.get("responseData") or {}).get("translatedText") or "").strip()
+    if not out or "WARNING" in out.upper() or "LIMIT" in out.upper() or out.lower() == text.lower():
+        return None      # rate-limited / unusable → NOT cached, so it retries next run
+    key.write_text(out, encoding="utf-8")
+    return out
 
 
 def _wikidata_entities(ids):
@@ -87,13 +117,25 @@ def enrich(features):
     for f in features:
         t, props = f.get("_tags", {}), f["properties"]
         ent = ents.get(t.get("wikidata"))
-        # English-only description: English Wikipedia summary, else the English Wikidata one-liner
+        # description (English): English Wikipedia → else translate a FR/NL/DE article → else Wikidata one-liner
         en_title = None
         if ent and ent["sitelinks"].get("en"):
             en_title = ent["sitelinks"]["en"]
         elif t.get("wikipedia", "").startswith("en:"):
             en_title = t["wikipedia"].split(":", 1)[1]
         desc = _wikipedia_summary("en", en_title) if en_title else None
+        translated = False
+        if not desc:
+            for lang in ("fr", "nl", "de"):
+                title = ent["sitelinks"].get(lang) if ent else None
+                if not title and t.get("wikipedia", "").startswith(lang + ":"):
+                    title = t["wikipedia"].split(":", 1)[1]
+                if title:
+                    src = _wikipedia_summary(lang, title)
+                    tr = _translate(src, lang) if src else None
+                    if tr:
+                        desc, translated = tr, True
+                        break
         if not desc and ent and ent.get("desc"):
             desc = ent["desc"][:1].upper() + ent["desc"][1:]
         if desc:
@@ -101,6 +143,8 @@ def enrich(features):
             if len(desc) > 260:
                 desc = desc[:257].rsplit(" ", 1)[0] + "…"
             props["desc"] = desc
+            if translated:
+                props["descTr"] = 1
         # photo: from Wikidata P18, only if Commons reports a free licence
         if ent and ent["image"] in imginfo:
             info = imginfo[ent["image"]]

@@ -87,7 +87,10 @@ def build():
                  "geom": {"ll": m["ll"]}, "record": record,
                  "source": "Wikidata (P625) · OpenStreetMap"}
         if p.get("desc"):
-            climb["desc"] = p["desc"]
+            # "côte" mistranslates to "coast"; in a climb context it's always a climb/hill
+            climb["desc"] = p["desc"].replace("Coast", "Climb").replace("coast", "climb")
+        if p.get("descTr"):
+            climb["descTr"] = 1
         if p.get("photo"):
             climb["photo"] = p["photo"]
         climbs.append(climb)
