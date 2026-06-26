@@ -27,6 +27,17 @@ The API, pipeline, site, and tooling.
   competes with the Cycling Commons. By submitting a pull request you agree your contribution is
   provided under that licence.
 
+## Running the web app
+
+Requires PHP 8.4 and Composer. From the repo root:
+
+    make app-install
+    make app-serve     # http://127.0.0.1:8000
+    make app-test      # phpunit + phpstan + psalm + SPDX/licence gates
+
+Config: copy any `api/.env` values you need into `api/.env.local` (gitignored).
+Never commit real secrets — `api/.env` holds placeholders only.
+
 ## Ground rules
 
 - Be kind — this project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).

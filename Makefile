@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data app-install app-serve app-test app-rector
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -74,6 +74,19 @@ up-storage: ## Start the stack + MinIO (S3-compatible, ports 9100/9101)
 
 up-all: ## Start the stack + every opt-in profile (routing + storage)
 	@$(DOCKER_COMP) --profile routing --profile storage up --detach
+
+## —— 🌐 Symfony web app ——————————————————————————————————————————————————————————
+app-install: ## install PHP deps for the Symfony app
+	cd api && composer install
+
+app-serve: ## run the Symfony app locally at http://127.0.0.1:8000
+	cd api && php -S 127.0.0.1:8000 -t public
+
+app-test: ## run the app test suite + static analysis + gates
+	cd api && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && ./tools/check-spdx.sh && ./tools/check-licenses.sh
+
+app-rector: ## apply Rector refactors (advisory; review the diff before committing)
+	cd api && vendor/bin/rector process
 
 ## —— 🗺️  Wallonia data ————————————————————————————————————————————————————————
 wallonia-data: ## Harvest Wallonia OSM layers into atlas/demo/*-osm.js (one/some: make wallonia-data l="services")

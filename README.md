@@ -67,6 +67,17 @@ diagram are in [`developers/docker/README.md`](developers/docker/README.md).
 > the real query/contribution logic and the geo pipeline get built on top. See
 > [`wiki/building.md`](wiki/building.md) for the target stack.
 
+## Running the web app
+
+Requires PHP 8.4 and Composer.
+
+    make app-install
+    make app-serve     # http://127.0.0.1:8000
+    make app-test      # phpunit + phpstan + psalm + SPDX/licence gates
+
+Config: copy any `api/.env` values you need into `api/.env.local` (gitignored).
+Never commit real secrets — `api/.env` holds placeholders only.
+
 ## Documentation
 
 - [Manifesto](wiki/manifesto.md) — the principles, grounded in Ostrom's *Governing the Commons*
