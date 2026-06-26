@@ -383,7 +383,7 @@
     </div>
     <div class="rail-scroll">
       <div class="grp">
-        <h3>Region</h3>
+        <h3>Search in Wallonia</h3>
         <input class="search" id="search" placeholder="Search a climb, town, viewpoint…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="Search the Commons" />
         <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
       </div>
@@ -1682,6 +1682,20 @@
     const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
     return true;
   }
+  // open a PIVOT accommodation point (Tourisme Wallonie, CC-BY) from search — these are bulk
+  // stays merged into the map, not CATALOG features, so activate the E layer, draw + zoom in
+  function openStayPivot(f){
+    const layer=layerByKey.stays; if(!layer) return false;
+    if(!active.has('stays')){
+      active.add('stays');
+      const t=document.querySelector('#layers .layer[data-key="stays"]'); if(t) t.classList.remove('off');
+      render();
+    }
+    const c=f.geometry.coordinates;                       // [lng,lat]
+    openDrawer(layer, osmDrawer(layer, f.properties, {lng:c[0], lat:c[1]}, (osmLayers.stays||{}).src||''));
+    flyToPin(c);
+    return true;
+  }
   // pulsing highlight marker — show where a hovered list item / town sits on the map
   let hlMarker=null;
   function highlightAt(ll){
@@ -1846,6 +1860,10 @@
       SEARCH_IDX.push({name, key:slug(name), kind: big?'City':'Town', badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', go:()=>openCity(name)}); });
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
       SEARCH_IDX.push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openFeatureByName(f.name)}); }));
+    // PIVOT accommodation (Tourisme Wallonie, CC-BY) — bulk stays, not CATALOG features → index explicitly
+    (window.CC_STAYS_PIVOT && window.CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties; if(!p || !p.n) return;
+      const layer=layerByKey.stays; if(!layer) return;
+      SEARCH_IDX.push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openStayPivot(f)}); });
     let sMatches=[], sHL=-1;
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
