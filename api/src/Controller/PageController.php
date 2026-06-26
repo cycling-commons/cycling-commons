@@ -13,7 +13,11 @@ final class PageController extends AbstractController
     #[Route('/', name: 'home')]
     public function home(): Response
     {
-        return $this->stub('Cycling Commons');
+        return $this->render('pages/index.html.twig', [
+            'page_title' => 'Cycling Commons',
+            'page_description' => "An open, community-built map of the world's best riding.",
+            'nav_active' => '',
+        ]);
     }
 
     #[Route('/about', name: 'about')]
@@ -29,7 +33,11 @@ final class PageController extends AbstractController
     #[Route('/regions', name: 'regions')]
     public function regions(): Response
     {
-        return $this->stub('Regions', 'regions');
+        return $this->render('pages/regions.html.twig', [
+            'page_title' => 'Cycling Commons — Regions',
+            'page_description' => 'The Cycling Commons is organised into regions of roughly Wallonia/Flanders size — browse them by continent.',
+            'nav_active' => 'regions',
+        ]);
     }
 
     #[Route('/coverage', name: 'coverage')]
@@ -51,7 +59,11 @@ final class PageController extends AbstractController
     #[Route('/developers', name: 'developers')]
     public function developers(): Response
     {
-        return $this->stub('Developers', 'developers');
+        return $this->render('pages/developers.html.twig', [
+            'page_title' => 'Cycling Commons — Developers',
+            'page_description' => 'An open API, free for anyone to build on. Query the Commons by type and area, or pull bulk dumps per country — open by default.',
+            'nav_active' => 'developers',
+        ]);
     }
 
     #[Route('/licenses', name: 'licenses')]
@@ -67,19 +79,31 @@ final class PageController extends AbstractController
     #[Route('/join', name: 'join')]
     public function join(): Response
     {
-        return $this->stub('Get involved');
+        return $this->render('pages/join.html.twig', [
+            'page_title' => 'Cycling Commons — Get involved',
+            'page_description' => 'Help build the open cycling commons — riders with local knowledge, developers, social, fundraisers, and legal. Code, knowledge, or a few hours of expertise: there\'s room for you.',
+            'nav_active' => '',
+        ]);
     }
 
     #[Route('/contributors', name: 'contributors')]
     public function contributors(): Response
     {
-        return $this->stub('Contributors');
+        return $this->render('pages/contributors.html.twig', [
+            'page_title' => 'Cycling Commons — Contributors',
+            'page_description' => 'Built by riders. Recognition without surveillance — we celebrate contributions to the open Commons, never personal data.',
+            'nav_active' => '',
+        ]);
     }
 
     #[Route('/region', name: 'region')]
     public function region(): Response
     {
-        return $this->stub('Region', 'regions');
+        return $this->render('pages/region.html.twig', [
+            'page_title' => 'Cycling Commons — Region',
+            'page_description' => "Wallonia's best riding in one open layer — the Ardennes classics: climbs, views and routes, kept fresh by the riders who know them.",
+            'nav_active' => 'regions',
+        ]);
     }
 
     #[Route('/privacy', name: 'privacy')]

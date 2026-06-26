@@ -1,0 +1,85 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .ahero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .ahero .lead{color:rgba(239,230,212,.85)}
+  .hnote{margin-top:1.4rem;padding:1rem 1.2rem;border-left:3px solid var(--trail);
+    background:var(--paper-deep);border-radius:0 6px 6px 0;font-size:.95rem;color:#3b3d31}
+  .howto{margin-top:1.2rem;padding-left:1.1rem;display:flex;flex-direction:column;gap:.9rem}
+  .howto li{font-size:.95rem;color:#4a4d40;line-height:1.55}
+  .howto a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;font-weight:500}
+  .howto a:hover{color:var(--trail)}
+  .roles{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem;margin-top:1.6rem}
+  @media(max-width:680px){.roles{grid-template-columns:1fr}}
+  .roles .card .rk{font-family:var(--mono);font-size:.7rem;color:var(--clay)}
+  .roles .card h3{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:.3rem 0 .55rem}
+  .roles .card p{font-size:.92rem;color:#4a4d40;margin-bottom:.95rem;line-height:1.5}
+  .roles .card .rl{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--clay);text-decoration:none;font-weight:600}
+  .roles .card .rl:hover{color:var(--trail)}
+</style>
+{% endblock %}
+{% block body %}
+<div class="ahero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}join.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}join.title{% endtrans %}</h1>
+  <p class="lead" style="margin-top:1rem">{% trans %}join.lead1{% endtrans %}</p>
+  <p class="lead" style="margin-top:1rem">{% trans %}join.lead2{% endtrans %}</p>
+</div></div>
+
+<section class="pad"><div class="wrap" style="max-width:820px">
+  <div class="kicker">{% trans %}join.heart_kicker{% endtrans %}</div>
+  <h2 class="disp">{{ 'join.heart_h2'|trans|raw }}</h2>
+  <p class="lead" style="margin-top:1rem">{% trans %}join.heart_lead{% endtrans %}</p>
+  <div class="hnote"><b>{{ 'join.hnote_b'|trans }}</b> {{ 'join.hnote_body'|trans|raw }}</div>
+  <ul class="howto">
+    <li><b>{{ 'join.howto1_b'|trans }}</b> {% trans %}join.howto1_body_pre{% endtrans %} <a href="https://www.openstreetmap.org">OpenStreetMap</a>{% trans %}join.howto1_body_post{% endtrans %}</li>
+    <li><b>{{ 'join.howto2_b'|trans }}</b> {% trans %}join.howto2_body_pre{% endtrans %}<a href="{{ path('map') }}">{% trans %}join.howto2_themap{% endtrans %}</a>{% trans %}join.howto2_mid1{% endtrans %}<a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{% trans %}join.howto2_addclimb{% endtrans %}</a>{% trans %}join.howto2_mid2{% endtrans %} <a href="mailto:info@cyclingcommons.org?subject=Prototype%20feedback">{% trans %}join.howto2_email{% endtrans %}</a> {% trans %}join.howto2_mid3{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{% trans %}join.howto2_issue{% endtrans %}</a> {{ 'join.howto2_post'|trans|raw }}</li>
+    <li><b>{{ 'join.howto3_b'|trans }}</b> <a href="https://github.com/cycling-commons/cycling-commons/issues/new?template=contribute_place.md">{% trans %}join.howto3_link{% endtrans %}</a>{% trans %}join.howto3_post{% endtrans %}</li>
+    <li><b>{{ 'join.howto4_b'|trans }}</b> <a href="mailto:info@cyclingcommons.org?subject=Notify%20me%20when%20contribution%20opens">{% trans %}join.howto4_link{% endtrans %}</a>{% trans %}join.howto4_post{% endtrans %}</li>
+  </ul>
+</div></section>
+
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap">
+  <div class="kicker">{% trans %}join.skills_kicker{% endtrans %}</div>
+  <h2 class="disp">{% trans %}join.skills_h2{% endtrans %}</h2>
+  <div class="roles">
+    <div class="card">
+      <span class="rk">{% trans %}join.role1_rk{% endtrans %}</span>
+      <h3>{% trans %}join.role1_h{% endtrans %}</h3>
+      <p>{{ 'join.role1_p'|trans|raw }}</p>
+      <a class="rl" href="https://github.com/cycling-commons/cycling-commons">{% trans %}join.role1_link{% endtrans %}</a>
+    </div>
+    <div class="card">
+      <span class="rk">{% trans %}join.role2_rk{% endtrans %}</span>
+      <h3>{% trans %}join.role2_h{% endtrans %}</h3>
+      <p>{% trans %}join.role2_p{% endtrans %}</p>
+      <a class="rl" href="mailto:info@cyclingcommons.org?subject=Get%20involved%20%E2%80%94%20community">{% trans %}join.role2_link{% endtrans %}</a>
+    </div>
+    <div class="card">
+      <span class="rk">{% trans %}join.role3_rk{% endtrans %}</span>
+      <h3>{% trans %}join.role3_h{% endtrans %}</h3>
+      <p>{% trans %}join.role3_p{% endtrans %}</p>
+      <a class="rl" href="mailto:info@cyclingcommons.org?subject=Get%20involved%20%E2%80%94%20funding">{% trans %}join.role3_link{% endtrans %}</a>
+    </div>
+    <div class="card">
+      <span class="rk">{% trans %}join.role4_rk{% endtrans %}</span>
+      <h3>{% trans %}join.role4_h{% endtrans %}</h3>
+      <p>{{ 'join.role4_p'|trans|raw }}</p>
+      <a class="rl" href="mailto:info@cyclingcommons.org?subject=Get%20involved%20%E2%80%94%20legal">{% trans %}join.role4_link{% endtrans %}</a>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:1.8rem">{{ 'join.also_welcome'|trans|raw }} <a href="mailto:info@cyclingcommons.org?subject=Get%20involved">{% trans %}join.also_tell{% endtrans %}</a></p>
+</div></section>
+
+<section class="pad" style="background:var(--ink);color:var(--paper)"><div class="wrap" style="max-width:760px">
+  <div class="kicker" style="color:var(--trail)">{% trans %}join.start_kicker{% endtrans %}</div>
+  <h2 class="disp">{% trans %}join.start_h2{% endtrans %}</h2>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:1rem">{% trans %}join.start_lead{% endtrans %}</p>
+  <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
+    <a class="btn btn-p" href="https://github.com/cycling-commons/cycling-commons">{% trans %}join.start_cta_code{% endtrans %}</a>
+    <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="mailto:info@cyclingcommons.org?subject=Get%20involved">{% trans %}join.start_cta_email{% endtrans %}</a>
+  </div>
+</div></section>
+{% endblock %}

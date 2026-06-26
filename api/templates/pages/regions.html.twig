@@ -1,0 +1,89 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .rhero{background:var(--ink);color:var(--paper);padding:3rem clamp(1.25rem,4vw,3rem) 3rem}
+  .rhero .wrap{max-width:1000px;margin:0 auto;padding:0}
+  .rhero .ey{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--glacier);margin-bottom:1.3rem}
+  .rhero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.03;letter-spacing:-.025em;margin-bottom:.9rem}
+  .rhero p{max-width:62ch;color:rgba(239,230,212,.85);line-height:1.6;font-size:1.15rem}
+  .rhero p b{color:var(--paper)}
+
+  .rwrap{max-width:1000px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,3rem) 3rem}
+
+  .legend{display:flex;gap:1.4rem;flex-wrap:wrap;margin-bottom:1.6rem;font-size:.82rem;color:#4a4d40}
+  .legend b{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase}
+
+  h2.cont{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:2.2rem 0 1rem;padding-bottom:.55rem;
+    border-bottom:1px solid rgba(20,22,14,.16);display:flex;align-items:baseline;gap:.7rem}
+  h2.cont span{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#7a7d6c}
+
+  .country{margin:0 0 1.2rem}
+  .country .ch{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.55rem}
+  .country .ch h3{font-family:var(--sans);font-weight:700;font-size:1.05rem}
+  .country .ch .cc{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
+  .country .ch .n{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
+
+  .regions{display:flex;flex-wrap:wrap;gap:.5rem}
+  .reg{display:inline-flex;align-items:center;gap:.5rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);
+    border-radius:8px;padding:.45rem .7rem;font-size:.9rem}
+  .reg .km{font-family:var(--mono);font-size:.56rem;letter-spacing:.04em;color:#7a7d6c}
+  a.reg.live{background:var(--spruce-lift);color:var(--paper);border-color:var(--spruce-lift)}
+  a.reg.live .km{color:rgba(239,230,212,.7)}
+  a.reg.live:hover{background:var(--trail);color:var(--ink)}
+  a.reg.live .tag{font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;
+    background:rgba(239,230,212,.22);padding:.1rem .3rem;border-radius:3px}
+
+  .empty{color:#7a7d6c;font-size:.9rem;padding:2rem 0}
+</style>
+{% endblock %}
+{% block body %}
+<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">{% trans %}regions.demo_label{% endtrans %}</b> {{ 'regions.demo_body'|trans|raw }}</div>
+
+<div class="rhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}regions.kicker{% endtrans %}</div>
+  <h1>{% trans %}regions.title{% endtrans %}</h1>
+  <p>{{ 'regions.lead'|trans|raw }}</p>
+</div></div>
+
+<div class="rwrap">
+  <div class="legend">
+    <span><b>{% trans %}regions.legend_live{% endtrans %}</b> {% trans %}regions.legend_live_desc{% endtrans %}</span>
+    <span><b>{% trans %}regions.legend_indicative{% endtrans %}</b> {% trans %}regions.legend_indicative_desc{% endtrans %}</span>
+  </div>
+  <div id="regions-root"><div class="empty">{% trans %}regions.loading{% endtrans %}</div></div>
+</div>
+{% endblock %}
+{% block body_scripts %}
+<script src="{{ asset('data/regions-data.js') }}"></script>
+<script>
+  /* Render Continent → country → regions from the baked CC_REGIONS snapshot.
+     Regions are admin divisions merged to ~Wallonia size (see the spec).
+     Wallonia links to its live atlas; the rest are indicative. */
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const root = document.getElementById('regions-root');
+  const DATA = window.CC_REGIONS || [];
+
+  if (!DATA.length) {
+    root.innerHTML = '<div class="empty">{{ 'regions.no_regions'|trans }}</div>';
+  } else {
+    root.innerHTML = DATA.map(cont => {
+      const countries = cont.countries.map(co => {
+        const regs = co.regions.map(r => {
+          const km = r.km2 ? `<span class="km">${Number(r.km2).toLocaleString()} km²</span>` : '';
+          if (r.live) {
+            return `<a class="reg live" href="{{ path('region') }}"><span>${esc(r.name)}</span><span class="tag">Live</span>${km}</a>`;
+          }
+          return `<span class="reg"><span>${esc(r.name)}</span>${km}</span>`;
+        }).join('');
+        return `<div class="country">
+            <div class="ch"><h3>${esc(co.name)}</h3><span class="cc">${esc(co.code)}</span><span class="n">${co.regions.length} region${co.regions.length===1?'':'s'}</span></div>
+            <div class="regions">${regs}</div>
+          </div>`;
+      }).join('');
+      const nC = cont.countries.length;
+      return `<h2 class="cont">${esc(cont.continent)}<span>${nC} countr${nC===1?'y':'ies'}</span></h2>${countries}`;
+    }).join('');
+  }
+</script>
+{% endblock %}
