@@ -35,7 +35,11 @@ final class PageController extends AbstractController
     #[Route('/coverage', name: 'coverage')]
     public function coverage(): Response
     {
-        return $this->stub('Coverage', 'coverage');
+        return $this->render('pages/coverage.html.twig', [
+            'page_title' => 'Cycling Commons — Coverage',
+            'page_description' => 'How complete is the map? See what\'s covered, what\'s thin, and where to help — transparent monitoring of the open cycling Commons.',
+            'nav_active' => 'coverage',
+        ]);
     }
 
     #[Route('/vote', name: 'vote')]
@@ -53,7 +57,11 @@ final class PageController extends AbstractController
     #[Route('/licenses', name: 'licenses')]
     public function licenses(): Response
     {
-        return $this->stub('Licence', 'licenses');
+        return $this->render('pages/licenses.html.twig', [
+            'page_title' => 'Cycling Commons — Licence',
+            'page_description' => 'The short version, in plain language — what you can do with Commons data, media, and code — ODbL data, CC BY-SA media, PolyForm Shield (source-available) code.',
+            'nav_active' => 'licenses',
+        ]);
     }
 
     #[Route('/join', name: 'join')]
@@ -77,19 +85,31 @@ final class PageController extends AbstractController
     #[Route('/privacy', name: 'privacy')]
     public function privacy(): Response
     {
-        return $this->stub('Privacy');
+        return $this->render('pages/privacy.html.twig', [
+            'page_title' => 'Cycling Commons — Privacy',
+            'page_description' => 'How the Cycling Commons handles personal data — in plain language. Built to need as little as possible, and to keep what you contribute separate from who you are. GDPR-aligned.',
+            'nav_active' => '',
+        ]);
     }
 
     #[Route('/terms', name: 'terms')]
     public function terms(): Response
     {
-        return $this->stub('Terms');
+        return $this->render('pages/terms.html.twig', [
+            'page_title' => 'Cycling Commons — Terms',
+            'page_description' => 'The terms for using the Cycling Commons site and account — short, readable, and aligned with the open licences. Governed by the law of the Netherlands.',
+            'nav_active' => '',
+        ]);
     }
 
     #[Route('/pages', name: 'pages')]
     public function pages(): Response
     {
-        return $this->stub('All pages');
+        return $this->render('pages/pages.html.twig', [
+            'page_title' => 'Cycling Commons — All pages',
+            'page_description' => 'The whole Commons, page by page — a tour of every public, contributor and curator surface.',
+            'nav_active' => '',
+        ]);
     }
 
     #[Route('/map', name: 'map')]

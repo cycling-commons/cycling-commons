@@ -1,0 +1,41 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .phero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-top:1.8rem}
+  @media(max-width:600px){.pg{grid-template-columns:repeat(2,1fr);gap:.7rem}}
+  .pg a{display:flex;min-width:0}
+  .pg .card{flex:1;min-width:0;overflow-wrap:break-word}
+  .pg .card h4{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin-bottom:.3rem}
+  .pg .card .lab{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+  .pg .card p{font-size:.86rem;color:#4a4d40;margin-top:.4rem}
+</style>
+{% endblock %}
+{% block body %}
+<div class="phero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}pages.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}pages.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}pages.lead{% endtrans %}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="pg">
+    <a href="{{ path('home') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_landing_h{% endtrans %}</h4><p>{% trans %}pages.card_landing_p{% endtrans %}</p></div></a>
+    <a href="{{ path('map') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_map_h{% endtrans %}</h4><p>{% trans %}pages.card_map_p{% endtrans %}</p></div></a>
+    <a href="{{ path('region') }}"><div class="card"><div class="lab">{% trans %}pages.lab_public{% endtrans %}</div><h4>{% trans %}pages.card_region_h{% endtrans %}</h4><p>{% trans %}pages.card_region_p{% endtrans %}</p></div></a>
+    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_contribute_h{% endtrans %}</h4><p>{% trans %}pages.card_contribute_p{% endtrans %}</p></div></a>
+    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_addclimb_h{% endtrans %}</h4><p>{% trans %}pages.card_addclimb_p{% endtrans %}</p></div></a>
+    <a href="{{ path('vote') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_vote_h{% endtrans %}</h4><p>{% trans %}pages.card_vote_p{% endtrans %}</p></div></a>
+    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_improve_h{% endtrans %}</h4><p>{% trans %}pages.card_improve_p{% endtrans %}</p></div></a>
+    <a href="{{ path('login') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_login_h{% endtrans %}</h4><p>{% trans %}pages.card_login_p{% endtrans %}</p></div></a>
+    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_curator{% endtrans %}</div><h4>{% trans %}pages.card_moderate_h{% endtrans %}</h4><p>{% trans %}pages.card_moderate_p{% endtrans %}</p></div></a>
+    <a href="{{ path('developers') }}"><div class="card"><div class="lab">{% trans %}pages.lab_opendata{% endtrans %}</div><h4>{% trans %}pages.card_developers_h{% endtrans %}</h4><p>{% trans %}pages.card_developers_p{% endtrans %}</p></div></a>
+    <a href="{{ path('licenses') }}"><div class="card"><div class="lab">{% trans %}pages.lab_opendata{% endtrans %}</div><h4>{% trans %}pages.card_licenses_h{% endtrans %}</h4><p>{% trans %}pages.card_licenses_p{% endtrans %}</p></div></a>
+    <a href="{{ path('coverage') }}"><div class="card"><div class="lab">{% trans %}pages.lab_transparency{% endtrans %}</div><h4>{% trans %}pages.card_coverage_h{% endtrans %}</h4><p>{% trans %}pages.card_coverage_p{% endtrans %}</p></div></a>
+    <a href="{{ path('contributors') }}"><div class="card"><div class="lab">{% trans %}pages.lab_community{% endtrans %}</div><h4>{% trans %}pages.card_contributors_h{% endtrans %}</h4><p>{% trans %}pages.card_contributors_p{% endtrans %}</p></div></a>
+    <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_community{% endtrans %}</div><h4>{% trans %}pages.card_profile_h{% endtrans %}</h4><p>{% trans %}pages.card_profile_p{% endtrans %}</p></div></a>
+    <a href="{{ path('about') }}"><div class="card"><div class="lab">{% trans %}pages.lab_identity{% endtrans %}</div><h4>{% trans %}pages.card_about_h{% endtrans %}</h4><p>{% trans %}pages.card_about_p{% endtrans %}</p></div></a>
+  </div>
+</div></section>
+{% endblock %}

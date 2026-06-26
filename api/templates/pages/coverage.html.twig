@@ -1,0 +1,52 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .chero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .kpis{display:flex;gap:2.4rem;flex-wrap:wrap;margin-top:1.6rem}
+  .kpis .k b{font-family:var(--serif);font-size:2.2rem;display:block}.kpis .k.t b{color:var(--trail)}
+  .kpis .k span{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+  table{width:100%;border-collapse:collapse;margin-top:1rem}
+  th{text-align:left;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;padding:.6rem .8rem;border-bottom:1px solid rgba(20,22,14,.15)}
+  td{padding:.7rem .8rem;border-bottom:1px solid rgba(20,22,14,.08);font-size:.92rem;vertical-align:middle}
+  td .bar{width:120px}
+  .gaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1.6rem}
+</style>
+{% endblock %}
+{% block body %}
+<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">{% trans %}coverage.demo_label{% endtrans %}</b> {% trans %}coverage.demo_body{% endtrans %}</div>
+
+<div class="chero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}coverage.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}coverage.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}coverage.lead{% endtrans %}</p>
+  <div class="kpis">
+    <div class="k"><b>312k</b><span>{% trans %}coverage.kpi_facts{% endtrans %}</span></div>
+    <div class="k t"><b>41%</b><span>{% trans %}coverage.kpi_confirmed{% endtrans %}</span></div>
+    <div class="k"><b>1,840</b><span>{% trans %}coverage.kpi_osm{% endtrans %}</span></div>
+    <div class="k"><b>27</b><span>{% trans %}coverage.kpi_countries{% endtrans %}</span></div>
+  </div>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="kicker">{% trans %}coverage.table_kicker{% endtrans %}</div>
+  <table>
+    <tr><th>{% trans %}coverage.th_country{% endtrans %}</th><th>{% trans %}coverage.th_climbs{% endtrans %}</th><th>{% trans %}coverage.th_water{% endtrans %}</th><th>{% trans %}coverage.th_stays{% endtrans %}</th><th>{% trans %}coverage.th_overall{% endtrans %}</th></tr>
+    <tr><td>{% trans %}coverage.country_belgium{% endtrans %}</td><td><div class="bar"><span style="width:88%"></span></div></td><td><div class="bar"><span style="width:74%"></span></div></td><td><div class="bar"><span class="o" style="width:52%"></span></div></td><td class="mono">71%</td></tr>
+    <tr><td>{% trans %}coverage.country_netherlands{% endtrans %}</td><td><div class="bar"><span style="width:64%"></span></div></td><td><div class="bar"><span style="width:81%"></span></div></td><td><div class="bar"><span class="o" style="width:48%"></span></div></td><td class="mono">64%</td></tr>
+    <tr><td>{% trans %}coverage.country_france{% endtrans %}</td><td><div class="bar"><span style="width:57%"></span></div></td><td><div class="bar"><span class="o" style="width:43%"></span></div></td><td><div class="bar"><span class="o" style="width:31%"></span></div></td><td class="mono">44%</td></tr>
+    <tr><td>{% trans %}coverage.country_italy{% endtrans %}</td><td><div class="bar"><span style="width:72%"></span></div></td><td><div class="bar"><span class="o" style="width:38%"></span></div></td><td><div class="bar"><span class="o" style="width:22%"></span></div></td><td class="mono">44%</td></tr>
+    <tr><td>{% trans %}coverage.country_germany{% endtrans %}</td><td><div class="bar"><span class="o" style="width:49%"></span></div></td><td><div class="bar"><span style="width:69%"></span></div></td><td><div class="bar"><span class="o" style="width:40%"></span></div></td><td class="mono">53%</td></tr>
+  </table>
+</div></section>
+
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap">
+  <div class="kicker">{% trans %}coverage.gaps_kicker{% endtrans %}</div>
+  <div class="gaps">
+    <div class="card"><b>{% trans %}coverage.gap1_title{% endtrans %}</b><p style="font-size:.88rem;color:#4a4d40">{% trans %}coverage.gap1_body{% endtrans %}</p></div>
+    <div class="card"><b>{% trans %}coverage.gap2_title{% endtrans %}</b><p style="font-size:.88rem;color:#4a4d40">{% trans %}coverage.gap2_body{% endtrans %}</p></div>
+    <div class="card"><b>{% trans %}coverage.gap3_title{% endtrans %}</b><p style="font-size:.88rem;color:#4a4d40">{% trans %}coverage.gap3_body{% endtrans %}</p></div>
+  </div>
+  <p style="margin-top:1.6rem;font-size:.95rem;color:#4a4d40">{% trans %}coverage.gaps_cta_pre{% endtrans %} <a href="{{ path('contributors') }}">{% trans %}coverage.gaps_cta_link{% endtrans %}</a>{% trans %}coverage.gaps_cta_post{% endtrans %}</p>
+</div></section>
+{% endblock %}

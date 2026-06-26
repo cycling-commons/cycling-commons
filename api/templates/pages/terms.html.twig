@@ -1,0 +1,92 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .lhero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .legal{max-width:760px}
+  .legal h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;letter-spacing:-.01em;margin:2.4rem 0 .5rem}
+  .legal h2:first-of-type{margin-top:0}
+  .legal h2 .n{font-family:var(--mono);font-size:.8rem;color:var(--clay);margin-right:.5rem;vertical-align:.12em}
+  .legal p{font-size:1rem;color:#3a3d30;margin:.55rem 0;line-height:1.65}
+  .legal ul{list-style:none;margin:.5rem 0}
+  .legal li{font-size:.96rem;color:#3a3d30;line-height:1.6;padding:.28rem 0 .28rem 1.4rem;position:relative}
+  .legal li::before{content:"–";position:absolute;left:0;color:var(--clay);font-weight:700}
+  .legal b{color:var(--ink)}
+  .legal a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
+  .legal a:hover{color:var(--trail)}
+  .banner{background:var(--spruce);color:var(--paper);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;font-size:.96rem;line-height:1.6}
+  .banner b{color:var(--trail)}
+  .disc{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin:0 0 1.4rem}
+  .upd{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin:0 0 2rem}
+</style>
+{% endblock %}
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}terms.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}terms.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}terms.lead{% endtrans %}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="legal">
+    <div class="disc"><b>{% trans %}terms.prototype_bold{% endtrans %}</b> {% trans %}terms.prototype_body{% endtrans %}</div>
+    <p class="upd">{% trans %}terms.last_updated{% endtrans %}</p>
+
+    <h2><span class="n">1</span>{% trans %}terms.h1_accepting{% endtrans %}</h2>
+    <p>{% trans %}terms.accepting_p1_pre{% endtrans %} <a href="{{ path('privacy') }}">{% trans %}terms.accepting_p1_privacy{% endtrans %}</a>{% trans %}terms.accepting_p1_mid{% endtrans %} <b>{% trans %}terms.accepting_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}terms.accepting_p1_mid2{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}terms.accepting_p1_governance{% endtrans %}</a>{% trans %}terms.accepting_p1_post{% endtrans %}</p>
+
+    <h2><span class="n">2</span>{% trans %}terms.h2_who{% endtrans %}</h2>
+    <p>{{ 'terms.who_body'|trans|raw }}</p>
+
+    <h2><span class="n">3</span>{% trans %}terms.h3_account{% endtrans %}</h2>
+    <ul>
+      <li>{% trans %}terms.account_password{% endtrans %}</li>
+      <li>{% trans %}terms.account_unauthorised{% endtrans %}</li>
+      <li>{% trans %}terms.account_suspend{% endtrans %}</li>
+    </ul>
+
+    <h2><span class="n">4</span>{% trans %}terms.h4_using{% endtrans %}</h2>
+    <p>{% trans %}terms.using_intro{% endtrans %}</p>
+    <ul>
+      <li>{% trans %}terms.using_no_illegal{% endtrans %}</li>
+      <li>{{ 'terms.using_no_personal'|trans|raw }}</li>
+      <li>{% trans %}terms.using_no_reidentify_pre{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}terms.using_no_reidentify_link{% endtrans %}</a>{% trans %}terms.using_no_reidentify_post{% endtrans %}</li>
+      <li>{% trans %}terms.using_no_scrape_pre{% endtrans %} <a href="{{ path('developers') }}">{% trans %}terms.using_no_scrape_link{% endtrans %}</a>{% trans %}terms.using_no_scrape_post{% endtrans %}</li>
+    </ul>
+
+    <h2><span class="n">5</span>{% trans %}terms.h5_contributions{% endtrans %}</h2>
+    <p>{% trans %}terms.contributions_p1_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/blob/main/licenses/COMMONS-TERMS-CLAUSE.md">{% trans %}terms.contributions_p1_link{% endtrans %}</a>{{ 'terms.contributions_p1_mid'|trans|raw }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_odbl{% endtrans %}</a>{{ 'terms.contributions_p1_mid2'|trans|raw }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_ccbysa{% endtrans %}</a>{% trans %}terms.contributions_p1_post{% endtrans %}</p>
+    <p>{% trans %}terms.contributions_p2{% endtrans %}</p>
+
+    <h2><span class="n">6</span>{% trans %}terms.h6_opendata{% endtrans %}</h2>
+    <p>{% trans %}terms.opendata_pre{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}terms.opendata_link{% endtrans %}</a>{% trans %}terms.opendata_mid{% endtrans %} <a href="{{ path('developers') }}">{% trans %}terms.opendata_dev_link{% endtrans %}</a>{% trans %}terms.opendata_post{% endtrans %}</p>
+
+    <h2><span class="n">7</span>{% trans %}terms.h7_code{% endtrans %}</h2>
+    <p>{{ 'terms.code_pre'|trans|raw }} <a href="{{ path('licenses') }}">{% trans %}terms.code_link{% endtrans %}</a>{% trans %}terms.code_post{% endtrans %}</p>
+
+    <h2><span class="n">8</span>{% trans %}terms.h8_preview{% endtrans %}</h2>
+    <div class="banner"><b>{% trans %}terms.preview_bold{% endtrans %}</b> {{ 'terms.preview_body'|trans|raw }}</div>
+
+    <h2><span class="n">9</span>{% trans %}terms.h9_warranty{% endtrans %}</h2>
+    <p>{{ 'terms.warranty_body'|trans|raw }}</p>
+
+    <h2><span class="n">10</span>{% trans %}terms.h10_liability{% endtrans %}</h2>
+    <p>{% trans %}terms.liability_body{% endtrans %}</p>
+
+    <h2><span class="n">11</span>{% trans %}terms.h11_suspension{% endtrans %}</h2>
+    {# TODO: point at path('settings') once that route exists (Plan 3) #}
+    <p>{% trans %}terms.suspension_pre{% endtrans %} <a href="{{ path('login') }}">{% trans %}terms.suspension_link{% endtrans %}</a>{% trans %}terms.suspension_post{% endtrans %}</p>
+
+    <h2><span class="n">12</span>{% trans %}terms.h12_governing{% endtrans %}</h2>
+    <p>{{ 'terms.governing_body'|trans|raw }}</p>
+
+    <h2><span class="n">13</span>{% trans %}terms.h13_changes{% endtrans %}</h2>
+    <p>{% trans %}terms.changes_body{% endtrans %}</p>
+
+    <h2><span class="n">14</span>{% trans %}terms.h14_contact{% endtrans %}</h2>
+    <p>{% trans %}terms.contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a>{% trans %}terms.contact_post{% endtrans %}</p>
+
+    <div class="disc" style="margin:2rem 0 0">{% trans %}terms.footer_disc_pre{% endtrans %} <a href="{{ path('privacy') }}">{% trans %}terms.footer_disc_privacy{% endtrans %}</a> {% trans %}terms.footer_disc_mid{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}terms.footer_disc_licences{% endtrans %}</a>{% trans %}terms.footer_disc_post{% endtrans %}</div>
+  </div>
+</div></section>
+{% endblock %}
