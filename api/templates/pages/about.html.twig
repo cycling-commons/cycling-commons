@@ -1,0 +1,55 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .ahero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .ahero .lead{color:rgba(239,230,212,.85)}
+  .princ{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem 2.4rem;margin-top:1.6rem}
+  @media(max-width:680px){.princ{grid-template-columns:1fr}}
+  .princ .p b{font-family:var(--serif);font-size:1.1rem}.princ .p p{font-size:.92rem;color:#4a4d40}
+  .princ .p .n{font-family:var(--mono);color:var(--clay);font-size:.7rem}
+</style>
+{% endblock %}
+{% block body %}
+<div class="ahero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}about.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}about.title{% endtrans %}</h1>
+  <p class="lead" style="margin-top:1rem">{% trans %}about.lead1{% endtrans %}</p>
+  <p class="lead" style="margin-top:1rem">{% trans %}about.lead2{% endtrans %}</p>
+</div></div>
+
+<section class="pad"><div class="wrap" style="max-width:760px">
+  <div class="kicker">{% trans %}about.problem_kicker{% endtrans %}</div>
+  <h2 class="disp">{% trans %}about.problem_title{% endtrans %}</h2>
+  <p class="lead" style="margin-top:1rem">{% trans %}about.problem_lead1{% endtrans %}</p>
+  <p class="lead" style="margin-top:1rem">{% trans %}about.problem_lead2{% endtrans %}</p>
+</div></section>
+
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap">
+  <div class="kicker">{% trans %}about.believe_kicker{% endtrans %}</div>
+  <div class="princ">
+    <div class="p"><span class="n">{% trans %}about.believe_princ1_num{% endtrans %}</span><br/><b>{% trans %}about.believe_princ1_title{% endtrans %}</b><p>{% trans %}about.believe_princ1_body{% endtrans %}</p></div>
+    <div class="p"><span class="n">{% trans %}about.believe_princ2_num{% endtrans %}</span><br/><b>{% trans %}about.believe_princ2_title{% endtrans %}</b><p>{% trans %}about.believe_princ2_body{% endtrans %}</p></div>
+    <div class="p"><span class="n">{% trans %}about.believe_princ3_num{% endtrans %}</span><br/><b>{% trans %}about.believe_princ3_title{% endtrans %}</b><p>{% trans %}about.believe_princ3_body{% endtrans %}</p></div>
+    <div class="p"><span class="n">{% trans %}about.believe_princ4_num{% endtrans %}</span><br/><b>{% trans %}about.believe_princ4_title{% endtrans %}</b><p>{% trans %}about.believe_princ4_body{% endtrans %}</p></div>
+  </div>
+  <p class="lead" style="margin-top:1.8rem;max-width:66ch"><b>Elinor Ostrom</b> {% trans %}about.believe_ostrom{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}about.believe_ostrom_link{% endtrans %}</a> {% trans %}about.believe_ostrom_suffix{% endtrans %}</p>
+</div></section>
+
+<section class="pad"><div class="wrap" style="max-width:760px">
+  <div class="kicker">{% trans %}about.partners_kicker{% endtrans %}</div>
+  <h2 class="disp">{% trans %}about.partners_title{% endtrans %}</h2>
+  <p class="lead" style="margin-top:1rem">{% trans %}about.partners_lead1_pre{% endtrans %} <b>{% trans %}about.partners_lead1_osm{% endtrans %}</b> {% trans %}about.partners_lead1_mid{% endtrans %} <b>{% trans %}about.partners_lead1_partner{% endtrans %}</b>{% trans %}about.partners_lead1_post{% endtrans %}</p>
+  <p class="lead" style="margin-top:1rem">{% trans %}about.partners_lead2{% endtrans %}</p>
+</div></section>
+
+<section class="pad" style="background:var(--ink);color:var(--paper)"><div class="wrap" style="max-width:760px">
+  <div class="kicker" style="color:var(--trail)">{% trans %}about.steward_kicker{% endtrans %}</div>
+  <h2 class="disp">{% trans %}about.steward_title{% endtrans %}</h2>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:1rem">{% trans %}about.steward_lead{% endtrans %} <i>{% trans %}about.steward_stichting{% endtrans %}</i>{% trans %}about.steward_lead_post{% endtrans %}</p>
+  <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
+    <a class="btn btn-p" href="{{ path('map') }}">{% trans %}about.steward_cta_map{% endtrans %}</a>
+    <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('login') }}">{% trans %}about.steward_cta_account{% endtrans %}</a>
+  </div>
+</div></section>
+{% endblock %}
