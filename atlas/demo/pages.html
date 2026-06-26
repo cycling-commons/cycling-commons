@@ -30,8 +30,9 @@
 <style>
   .phero{background:var(--ink);color:var(--paper);padding:3rem 0}
   .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-top:1.8rem}
-  .pg a{display:flex}
-  .pg .card{flex:1}
+  @media(max-width:600px){.pg{grid-template-columns:repeat(2,1fr);gap:.7rem}}   /* phones: keep two columns instead of collapsing to one */
+  .pg a{display:flex;min-width:0}        /* let the grid tracks shrink below the cards' content width (no overflow at narrow widths) */
+  .pg .card{flex:1;min-width:0;overflow-wrap:break-word}
   .pg .card h4{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin-bottom:.3rem}
   .pg .card .lab{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .pg .card p{font-size:.86rem;color:#4a4d40;margin-top:.4rem}
