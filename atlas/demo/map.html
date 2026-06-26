@@ -764,9 +764,7 @@
     if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
       if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
     if(p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
-    rec.push(pivot
-      ? {label:'Source', value:'Tourisme Wallonie (TW) · CC-BY 4.0', links:[{label:'Géoportail de la Wallonie',href:'https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html'}]}
-      : {label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
+    // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
     const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+(pivot?'Tourisme Wallonie':'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
       source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie':src};
     if(p.desc) d.desc=p.desc;
@@ -1610,7 +1608,7 @@
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${f.name}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}`;
+      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}`;
   }
   function gradStrip(grad){
     const max=Math.max(...grad), avg=Math.round(grad.reduce((a,b)=>a+b,0)/grad.length);
