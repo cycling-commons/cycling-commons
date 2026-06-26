@@ -145,7 +145,7 @@
   .legend h4{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;color:var(--glacier);margin-bottom:.6rem;text-transform:uppercase}
   .legend .row{display:flex;align-items:center;gap:.5rem;font-size:.78rem;margin:.25rem 0}
   .legend .d{width:10px;height:10px;border-radius:50%;background:var(--c)}
-  .legend .lg-toggle{display:none;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
+  .legend .lg-toggle{display:none;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
   /* on-map base/overlay switcher (top-right) — like a normal map's layer control */
   .map-ctrl{position:absolute;top:1.2rem;right:1.2rem;z-index:1000;display:flex;flex-direction:column;gap:.4rem;background:rgba(20,22,14,.9);border-radius:8px;padding:.5rem;backdrop-filter:blur(6px);min-width:9.5rem}
   .map-ctrl .mc-seg{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
@@ -156,15 +156,15 @@
   .map-ctrl .mc-ov.on{opacity:1;background:rgba(62,125,79,.28);border-color:#3e7d4f}
   .map-ctrl .mc-ov.mc-off,.map-ctrl .mc-ov.mc-off:hover{opacity:.38;cursor:not-allowed}
   .map-ctrl .mc-ic{font-size:.82rem}
-  .map-ctrl .mc-toggle{display:none;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
+  .map-ctrl .mc-toggle{display:none;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
   /* mobile: collapse the panel to a small layers icon; tap to expand */
   @media(max-width:760px){
-    .map-ctrl{min-width:0;gap:.35rem;top:.8rem;right:.8rem;padding:.3rem}
+    .map-ctrl{min-width:0;gap:.35rem;top:.8rem;right:.8rem;padding:.25rem}
     .map-ctrl .mc-toggle{display:flex}
     .map-ctrl:not(.open) .mc-seg,.map-ctrl:not(.open) .mc-ov{display:none}
     .map-ctrl.open{min-width:9.5rem}
     /* road-surface legend collapses to an icon, left of the layers icon */
-    .legend{bottom:auto;top:.8rem;right:3.8rem;padding:.3rem;min-width:0}
+    .legend{bottom:auto;top:.8rem;right:3.3rem;padding:.25rem;min-width:0}
     .legend .lg-toggle{display:flex}
     .legend:not(.open) h4,.legend:not(.open) .skey{display:none}
     .legend.open{right:.8rem;padding:.7rem .9rem}
@@ -181,9 +181,10 @@
     .map-top{top:.8rem;left:.8rem;padding:.4rem .6rem;max-width:52vw}
     .map-top .rg{font-size:.85rem}
     .map-top .sub,.map-top .add-climb{display:none}   /* contribute moves to the FAB */
-    /* a top-level FAB (NOT inside .map-top, which is a z:1000 stacking context that
-       would trap it under the filters peek) — anchored to .map-wrap, above the peek */
-    .contrib-fab{display:flex;align-items:center;justify-content:center;position:absolute;right:.8rem;bottom:5.5rem;z-index:1505;width:2.9rem;height:2.9rem;border-radius:50%;background:var(--trail);color:var(--ink);box-shadow:0 6px 16px -6px rgba(0,0,0,.55)}
+    /* a top-level FAB anchored to the map, sitting in the top-right control row just left of the
+       legend/layers icons. z-index below those panels (1000) so an opened panel covers it rather
+       than the FAB poking through. */
+    .contrib-fab{display:flex;align-items:center;justify-content:center;position:absolute;top:.8rem;right:5.8rem;z-index:999;width:2.3rem;height:2.3rem;border-radius:50%;background:var(--trail);color:var(--ink);box-shadow:0 6px 16px -6px rgba(0,0,0,.55)}
     .contrib-fab:active{background:#ff703d}
     .app.dock-open .contrib-fab{display:none}
   }
@@ -215,10 +216,13 @@
   .cc-drawer::-webkit-scrollbar{width:6px}
   .cc-drawer::-webkit-scrollbar-thumb{background:var(--spruce-lift);border-radius:3px}
   .cc-drawer.open{transform:none}
+  .cc-drawer:focus{outline:none}           /* panel receives focus on open for a11y; no visible ring on the container */
   .cc-drawer.dragging{transition:none}     /* track the finger 1:1 while drag-dismissing (mobile) */
-  .cc-drawer-x{position:absolute;top:.9rem;right:1rem;background:none;border:none;color:rgba(239,230,212,.7);
+  .cc-drawer-x{position:absolute;top:.9rem;right:1.4rem;background:none;border:none;color:rgba(239,230,212,.7);
     font-size:1rem;cursor:pointer;line-height:1}
   .cc-drawer-x:hover{color:var(--trail)}
+  .cc-drawer-x:focus{outline:none}                                           /* no square when focused on open */
+  .cc-drawer-x:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}   /* keyboard users keep a ring */
   .cc-d-scrim{display:none}   /* desktop: no scrim; the mobile bottom-sheet rules enable it */
   .cc-d-type{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
     background:var(--c,#FF5A1F);display:inline-block;padding:.25rem .55rem;border-radius:4px}
@@ -346,8 +350,10 @@
     /* feature detail -> bottom slide-up */
     .cc-drawer{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;max-height:80vh;max-height:80svh;transform:translateY(102%);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);z-index:1550;padding:1.2rem 1.3rem 2rem}
     .cc-drawer.open{transform:none}
-    /* pinned close target so it's always reachable on the bottom sheet */
-    .cc-drawer-x{position:sticky;top:0;float:right;width:2.1rem;height:2.1rem;margin:-.3rem -.8rem .2rem 0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;z-index:2}
+    /* pinned close target so it's always reachable on the bottom sheet; right edge lines up with the content/image.
+       float:right lets the category/title wrap up beside it (no empty top-left gap); right:auto cancels the desktop
+       rule's right inset, which a sticky box would otherwise apply as a 1.4rem leftward offset. */
+    .cc-drawer-x{position:sticky;top:0;right:auto;float:right;margin:-.3rem 0 .2rem;width:2.1rem;height:2.1rem;display:flex;align-items:center;justify-content:flex-end;font-size:1.1rem;z-index:2}
     /* tap the dimmed area above the sheet to close it */
     .cc-d-scrim{display:block;position:fixed;inset:0;z-index:1540;background:rgba(16,30,22,.4);opacity:0;pointer-events:none;transition:opacity .25s ease}
     .cc-drawer.open ~ .cc-d-scrim{opacity:1;pointer-events:auto}
@@ -470,7 +476,7 @@
     </div>
     <div class="legend">
       <button class="lg-toggle" id="lgToggle" type="button" aria-label="Surface legend" aria-expanded="false">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
       <h4>Road surface · A</h4>
       <div class="skey">
@@ -484,7 +490,7 @@
     </div>
     <div class="map-ctrl" aria-label="Base map and overlays">
       <button class="mc-toggle" id="mcToggle" type="button" aria-label="Map layers" aria-expanded="false">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
           <path d="M12 2.5 22 8 12 13.5 2 8z"/><path d="M2.5 12 12 17 21.5 12"/><path d="M2.5 16 12 21 21.5 16"/>
         </svg>
       </button>
@@ -494,8 +500,8 @@
       </div>
       <button class="mc-ov" id="ovStreet"><span class="mc-ic">📷</span>Street-level</button>
     </div>
-    <a class="contrib-fab" href="contribute.html" aria-label="Contribute a place"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 10l5-5 5 5M5 20h14"/></svg></a>
-    <aside class="cc-drawer" id="drawer" aria-hidden="true" aria-label="Feature detail">
+    <a class="contrib-fab" href="contribute.html" aria-label="Contribute a place"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 10l5-5 5 5M5 20h14"/></svg></a>
+    <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="Feature detail">
       <button class="cc-drawer-x" id="drawerClose" aria-label="Close detail">✕</button>
       <div class="cc-drawer-body" id="drawerBody"></div>
     </aside>
@@ -1637,7 +1643,7 @@
       a.addEventListener('mouseleave', clearHighlight);
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
-    document.getElementById('drawerClose').focus({preventScroll:true});
+    d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
   }
   // city info card: fly to the town, show its info + everything in the Commons within 5 km
   function openCity(name){
@@ -1660,7 +1666,7 @@
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
     flyToPin([c.ll[1],c.ll[0]]);
-    document.getElementById('drawerClose').focus({preventScroll:true});
+    d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
   }
   // open a specific feature by name (deep-link from e.g. a profile page): activate its layer, draw, zoom in
   function openFeatureByName(name){
