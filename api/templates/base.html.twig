@@ -1,0 +1,17 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+<!DOCTYPE html>
+<html lang="{{ app.request.locale|default('en') }}">
+<head>
+{% include 'partials/_head.html.twig' %}
+{% block head_styles %}{% endblock %}
+</head>
+<body>
+{% include 'partials/_nav.html.twig' %}
+{% block body %}{% endblock %}
+{% include 'partials/_footer.html.twig' %}
+<script src="{{ asset('js/a11y.js') }}"></script>
+<script src="{{ asset('js/nav.js') }}" defer></script>
+<script src="{{ asset('js/version.js') }}"></script>
+{% block body_scripts %}{% endblock %}
+</body>
+</html>

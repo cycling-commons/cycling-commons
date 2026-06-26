@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+nav:
+  tagline: 'OPEN ATLAS — EST. 2026'
+  regions: 'Regions'
+  coverage: 'Coverage'
+  vote: 'Vote'
+  developers: 'Developers'
+  about: 'About'
+  licence: 'Licence'
+  get_involved: 'Get involved'
+  explore_map: 'Explore the map'
+  account: 'Account'
+footer:
+  rights: 'CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · CODE POLYFORM SHIELD 1.0.0 · © CONTRIBUTORS + OSM'
+  wiki: 'Wiki'
+  governance: 'Governance'
+  github: 'GitHub'
+  get_involved: 'Get involved'
+  all_pages: 'All pages'
+  privacy: 'Privacy'
+  terms: 'Terms'
+  stewarded_by: 'stewarded by'
