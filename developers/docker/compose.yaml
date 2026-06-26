@@ -15,7 +15,9 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - cc_pgdata:/var/lib/postgresql/data
+      # PG18 images store data in a major-version subdir; mount the parent so PGDATA
+      # (/var/lib/postgresql/18/docker) is persisted and pg_upgrade --link stays possible.
+      - cc_pgdata:/var/lib/postgresql
       - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cc} -d ${POSTGRES_DB:-cyclingcommons}"]
@@ -97,6 +99,7 @@ services:
     volumes:
       - ../../mkdocs.yml:/docs/mkdocs.yml:ro
       - ../../wiki:/docs/wiki:ro
+      - ../../overrides:/docs/overrides:ro   # theme.custom_dir in mkdocs.yml (analytics partial; host-guarded, off in dev)
 
   # ---- opt-in: routing engine (consumes a PREBUILT tile set you download) --
   valhalla:

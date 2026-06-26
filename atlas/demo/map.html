@@ -383,7 +383,7 @@
     </div>
     <div class="rail-scroll">
       <div class="grp">
-        <h3>Region</h3>
+        <h3>Search in Wallonia</h3>
         <input class="search" id="search" placeholder="Search a climb, town, viewpoint…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="Search the Commons" />
         <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
       </div>
@@ -764,9 +764,7 @@
     if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
       if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
     if(p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
-    rec.push(pivot
-      ? {label:'Source', value:'Tourisme Wallonie (TW) · CC-BY 4.0', links:[{label:'Géoportail de la Wallonie',href:'https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html'}]}
-      : {label:'Source', value:'OpenStreetMap', links:[{label:'View on OSM',href:'https://www.openstreetmap.org'}]});
+    // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
     const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+(pivot?'Tourisme Wallonie':'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
       source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie':src};
     if(p.desc) d.desc=p.desc;
@@ -1294,7 +1292,6 @@
         {label:'Distance', value:r.km+' km'},
         {label:'Starts at', value:cityLink(cities[0])},
         {label:'Towns on route', value:cities.map(cityLink).join(' · ')},
-        {label:'Privacy', value:`First & last ~${startM}–${endM} m trimmed`, method:'k-anon'},
         {label:'Season', value:r.season},
         {label:'Quietness', value:i%2?'Mixed — some main road':'Quiet — low traffic', method:'auto · tap'},
         {label:'Scenic rating', value:stars(4+(i%2)), method:'community tap'},
@@ -1611,7 +1608,7 @@
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${f.name}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}`;
+      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}`;
   }
   function gradStrip(grad){
     const max=Math.max(...grad), avg=Math.round(grad.reduce((a,b)=>a+b,0)/grad.length);
@@ -1681,6 +1678,20 @@
     }
     openDrawer(layer,f);
     const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
+    return true;
+  }
+  // open a PIVOT accommodation point (Tourisme Wallonie, CC-BY) from search — these are bulk
+  // stays merged into the map, not CATALOG features, so activate the E layer, draw + zoom in
+  function openStayPivot(f){
+    const layer=layerByKey.stays; if(!layer) return false;
+    if(!active.has('stays')){
+      active.add('stays');
+      const t=document.querySelector('#layers .layer[data-key="stays"]'); if(t) t.classList.remove('off');
+      render();
+    }
+    const c=f.geometry.coordinates;                       // [lng,lat]
+    openDrawer(layer, osmDrawer(layer, f.properties, {lng:c[0], lat:c[1]}, (osmLayers.stays||{}).src||''));
+    flyToPin(c);
     return true;
   }
   // pulsing highlight marker — show where a hovered list item / town sits on the map
@@ -1847,6 +1858,10 @@
       SEARCH_IDX.push({name, key:slug(name), kind: big?'City':'Town', badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', go:()=>openCity(name)}); });
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
       SEARCH_IDX.push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openFeatureByName(f.name)}); }));
+    // PIVOT accommodation (Tourisme Wallonie, CC-BY) — bulk stays, not CATALOG features → index explicitly
+    (window.CC_STAYS_PIVOT && window.CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties; if(!p || !p.n) return;
+      const layer=layerByKey.stays; if(!layer) return;
+      SEARCH_IDX.push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openStayPivot(f)}); });
     let sMatches=[], sHL=-1;
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
