@@ -1,7 +1,7 @@
 # HTML → Symfony migration (presentation + auth foundation) — design
 
 **Date:** 2026-06-26
-**Status:** Approved design, pending spec review → implementation plan
+**Status:** Approved — writing the implementation plan next
 **Scope of this spec:** Move the static `atlas/demo/` prototype into the Symfony app as server-rendered pages, and stand up a real authentication foundation (accounts, login, registration, email verification, password reset, 2FA, roles). The query/contribution data API and domain entities (climbs, votes, hazards…) are **explicitly out of scope** here.
 
 ---
@@ -17,6 +17,7 @@
 | Auth strategy | **Build fresh, lift patterns** from `bikecoderslife/bundle` | Genericizing the bundle into a `MappedSuperclass` would force a refactor of the live Upstream Platform consumer (its `auth` schema, `app_code`, `User extends BaseUser`). Not worth it. CyclingCommons gets its own minimal auth using the same libraries; the bundle is a **pattern reference only — not a dependency**. |
 | Asset pipeline | **AssetMapper** (no Node/Vite build) | Keeps the stack boring and self-hostable; no build step for a future foundation to operate. |
 | App location | Keep the Symfony app in **`api/`** for now | Avoids churning the docker/nginx wiring. A rename to `app/`/`web/` is a later, orthogonal cleanup. |
+| i18n | **Wire `symfony/translation` from the start** | Pan-European project (Wallonia FR/NL, future regions; wiki already EN+FR). Extract user-facing strings to `\|trans` *during* the Twig port; ship EN first, add FR/NL later. Retrofitting i18n after the port is the expensive path. |
 
 ---
 
@@ -168,17 +169,39 @@ Implements `UserInterface`, `PasswordAuthenticatedUserInterface`, `TwoFactorInte
 
 ## 10. Phasing
 
-0. **Bootstrap** — bump PHP 8.4 / Symfony 7.4; add Twig, AssetMapper, Doctrine ORM, Security, scheb/2fa, verify-email, reset-password, EasyAdmin, Mailer.
-1. **Chrome + simplest pages** — `base.html.twig` + nav/footer partials + asset import; convert the simplest static pages (about, privacy, terms, licenses, coverage, 404) to validate the shell.
-2. **Remaining content pages** — index, join, contributors, developers, regions, region.
+0. **Bootstrap** — bump PHP 8.4 / Symfony 7.4; add Twig, AssetMapper, Doctrine ORM, Security, scheb/2fa, verify-email, reset-password, EasyAdmin, Mailer, **`symfony/translation`**; set up `.env` placeholders + a documented required-vars list; stand up **CI** (phpunit, phpstan, php-cs-fixer, SPDX-header check) and Dependabot.
+1. **Chrome + simplest pages** — `base.html.twig` + nav/footer partials + asset import; convert the simplest static pages (about, privacy, terms, licenses, coverage, 404) to validate the shell. **Extract user-facing strings to `|trans` (EN catalogue) from the first template onward.**
+2. **Remaining content pages** — index, join, contributors, developers, regions, region (continuing string extraction).
 3. **Map shell** — extract `map.html` → Twig shell + `assets/map/*.js`; visual parity check (isolated).
-4. **Auth foundation** — `User` entity + migration; `security.yaml`; login/register/verify/reset; 2FA setup/login + backup codes; profile/settings wired; lockout; deletion service.
-5. **Contribution/moderation pages** — templated + auth-gated; EasyAdmin admin + moderation queue; domain persistence stubbed.
-6. **Cutover** — smoke + auth tests green; nginx switched to Symfony; `atlas/demo/` retired (history preserved) once parity verified.
+4. **Auth foundation** — `User` entity + migration; `security.yaml`; login/register/verify/reset; 2FA setup/login + backup codes; profile/settings wired; lockout; deletion service. **Auth + email strings translatable; SPDX headers on all new files.**
+5. **Contribution/moderation pages** — templated + auth-gated; EasyAdmin admin + moderation queue; domain persistence stubbed. **DataFixtures + `make create-curator` command + updated README/CONTRIBUTING/Makefile.**
+6. **Cutover** — smoke + auth tests green; **`/security-review` on the auth code**; **`privacy.html` updated for account data**; **font/brand redistribution licences verified**; nginx switched to Symfony; `atlas/demo/` retired (history preserved) once parity verified.
 
 ---
 
-## 11. Out of scope / YAGNI (deferred to later specs)
+## 11. Cross-cutting concerns (public / source-available repo)
+
+CyclingCommons is **source-available (PolyForm Shield) + open data (ODbL), in a public repo** — not OSI open-source. Building in the open imposes obligations that hold regardless of the licence; these shape the implementation plan.
+
+**11.1 Secrets (hard constraint).** The committed `.env` holds **placeholders only**; real values (`APP_SECRET`, DB password, `MAILER_DSN`, OAuth/2FA-related secrets) live in `.env.local` (gitignored) or deployment secrets. The Mapillary token leaves `config.js` for env-injected Twig (§8). A documented required-vars list ships so contributors can run locally without any secret. No secret value is ever read into the working session.
+
+**11.2 SPDX headers on every new file.** Each new PHP/Twig/JS file carries the project header — `LicenseRef-PolyForm-Shield-1.0.0` for code, `ODbL-1.0` for data fixtures — matching the existing convention. A CI check rejects files without one.
+
+**11.3 Privacy / GDPR.** Real accounts now store email + password hash + 2FA secret + IP/login logs — personal data. `privacy.html` is updated to reflect account-data processing (the platform can no longer imply "no personal data"). GDPR coverage: **deletion** (Art. 17) via `UserDeletionService` (in scope); **data export** (Art. 20) noted for a near-term follow-up; email is consent-/transaction-scoped. We do **not** depend on the proprietary `GdprComplianceBundle`.
+
+**11.4 Redistributable assets.** Moving `fonts/`, `brand/`, `media/` into `assets/` publishes them; this is only lawful with redistribution rights. **Web-font licences are verified before bundling**; anything without redistribution rights stays out of the public repo (served from a licensed CDN or replaced).
+
+**11.5 Security is public.** Attackers read the auth code, so it must be correct by construction — argon2id hashing, CSRF, secure session/cookie flags, rate-limiting, plus the 2FA + lockout above; no security-through-obscurity. A `/security-review` pass on the auth code precedes go-live; Dependabot watches the new PHP deps; `SECURITY.md` already defines disclosure.
+
+**11.6 i18n from the start.** `symfony/translation` is wired in phase 0 and user-facing strings are extracted to `|trans` (EN catalogue) **during** the Twig port — far cheaper than a later re-port. FR/NL catalogues are added when ready (wiki is already EN+FR). Auth and email strings are translatable too.
+
+**11.7 Contributor DX + CI.** Contributors must be able to run it: DataFixtures + a `make create-curator` console command + updated `README`/`CONTRIBUTING`/`Makefile` for the new app. CI on every PR runs `phpunit` (smoke + auth), `phpstan`, `php-cs-fixer`, and the SPDX-header check — gating community contributions ahead of the existing staging/prod deploy workflows.
+
+**11.8 Decision transparency (ADRs).** The big calls (MediaWiki-no, Symfony, fresh-auth-not-bundle, single-`User`) are recorded as short ADRs alongside these specs in `docs/specs/`, linked from one "Architecture / decisions" page in the wiki — specs stay in-repo and public, the curated wiki is not bloated with dated implementation detail.
+
+---
+
+## 12. Out of scope / YAGNI (deferred to later specs)
 
 - No JS framework (React/Vue) — AssetMapper + vanilla, as today.
 - No query/contribution **data API** or domain entities (climbs, votes, hazards, surfaces).
@@ -186,10 +209,12 @@ Implements `UserInterface`, `PasswordAuthenticatedUserInterface`, `TwoFactorInte
 - No per-region curator **Voter** (coarse `ROLE_CURATOR` now).
 - No genericization of `bikecoderslife/bundle`; no shared dependency; Upstream Platform untouched.
 - No email-at-rest encryption (the reference bundle's disabled, infra-specific feature).
+- Only the **EN** translation catalogue now; FR/NL catalogues added in a later pass (the `|trans` keys are put in place now).
+- No **GDPR data-export** (Art. 20) endpoint yet — near-term follow-up, not this phase.
 
 ---
 
-## 12. Open risks / watch-items
+## 13. Open risks / watch-items
 
 - **Map extraction** is the largest single unit (1,999 lines); risk of behavioral drift. Mitigation: migrate in isolation (phase 3), visual parity check, keep `atlas/demo/map.html` until verified.
 - **AssetMapper vs the existing global-`<script>` data fixtures**: the `*-osm.js` files assign globals; confirm they load correctly under AssetMapper's importmap (may need to keep them as plain `<script>` includes rather than ES modules initially).
