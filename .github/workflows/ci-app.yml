@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+name: App CI
+on:
+  pull_request:
+    paths: ['api/**', '.github/workflows/ci-app.yml']
+  push:
+    branches: [main]
+    paths: ['api/**']
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv, pdo, pdo_pgsql
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: ./tools/check-spdx.sh
+      - run: ./tools/check-licenses.sh
+      - run: vendor/bin/php-cs-fixer fix --dry-run --diff
+      - run: vendor/bin/phpstan analyse --no-progress
+      - run: vendor/bin/psalm --no-cache
+      - name: Rector (advisory)
+        run: vendor/bin/rector process --dry-run
+        continue-on-error: true
+      - run: php bin/phpunit

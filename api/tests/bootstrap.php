@@ -1,4 +1,5 @@
 <?php
+
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 
 use Symfony\Component\Dotenv\Dotenv;

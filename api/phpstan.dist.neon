@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+parameters:
+    level: 6
+    paths:
+        - src
+    excludePaths:
+        - src/Kernel.php
