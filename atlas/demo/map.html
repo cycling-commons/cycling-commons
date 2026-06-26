@@ -1294,7 +1294,6 @@
         {label:'Distance', value:r.km+' km'},
         {label:'Starts at', value:cityLink(cities[0])},
         {label:'Towns on route', value:cities.map(cityLink).join(' · ')},
-        {label:'Privacy', value:`First & last ~${startM}–${endM} m trimmed`, method:'k-anon'},
         {label:'Season', value:r.season},
         {label:'Quietness', value:i%2?'Mixed — some main road':'Quiet — low traffic', method:'auto · tap'},
         {label:'Scenic rating', value:stars(4+(i%2)), method:'community tap'},
