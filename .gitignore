@@ -27,6 +27,7 @@ wiki-dist/
 
 # Local env (never commit secrets)
 .env
+!api/.env
 .env.local
 *.local
 
