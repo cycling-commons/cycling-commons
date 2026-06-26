@@ -104,7 +104,7 @@ Today the nav is built client-side by `nav.js`. Migrating, **render nav + footer
 
 ### 7.1 `User` entity (single entity, role-based — no separate `AdminUser` table)
 
-The reference bundle splits `User`/`AdminUser` because of its multi-tenant platform; CyclingCommons does not need that split. One `User`, identified by email, with roles.
+The reference bundle splits `User`/`AdminUser` because in the multi-tenant Upstream Platform platform, operators are an organizationally separate population (separate table, firewall, username login, mandatory 2FA). CyclingCommons is the opposite: curators are **trusted riders, not a staff class** (per the commons/Ostrom governance) — a rider *becomes* a curator by earning `ROLE_CURATOR`, keeping one identity, profile, and contribution history (which matters for provenance). So: one `User`, identified by email, with roles `ROLE_USER` → `ROLE_CURATOR` → `ROLE_ADMIN`. Hard operator-isolation (a separate login domain) is **deferred** — added only if a concrete need appears; 2FA-on-elevated-roles + lockout cover the near-term risk.
 
 Fields:
 - Identity/auth: `id`, `uuid`, `email` (unique), `password` (hash), `roles` (json), `displayName`, `createdAt`, `updatedAt`
@@ -142,7 +142,7 @@ Implements `UserInterface`, `PasswordAuthenticatedUserInterface`, `TwoFactorInte
 
 ### 7.5 Admin / moderation UI
 
-**EasyAdmin 4** (consistent with the reference bundle) provides the `/admin` backend (gated `ROLE_ADMIN`) for user/account administration. The curator review queue (`moderate.html`) becomes a **custom Twig page at `/moderate`** (gated `ROLE_CURATOR`) with approve / reject / needs-info actions — kept separate so curators don't need full admin access. Domain-data persistence behind those actions is deferred with the data API.
+**EasyAdmin 4** (consistent with the reference bundle) provides the `/admin` backend (gated `ROLE_ADMIN`) for user/account administration. The curator review queue (`moderate.html`) becomes a **custom Twig page at `/moderate`**, built in the site's own branded UI (same `base.html.twig`, with map / photo / item context) rather than a generic admin panel — curators are community riders and review *within the product*, not in a back-office tool. Gated `ROLE_CURATOR`, with approve / reject / needs-info actions. EasyAdmin's generic CRUD is poorly suited to "review this proposed climb with its route on a map", so it's reserved for dry record/user admin. **In this phase the page and queue UI are built; the approve/reject persistence is stubbed until the data API exists.**
 
 ### 7.6 Mail
 
