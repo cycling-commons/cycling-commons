@@ -72,7 +72,7 @@ diagram are in [`developers/docker/README.md`](developers/docker/README.md).
 Requires PHP 8.4 and Composer.
 
     make app-install
-    make app-serve     # http://127.0.0.1:8000
+    make app-serve     # http://127.0.0.1:8010
     make app-test      # phpunit + phpstan + psalm + cs-fixer + SPDX/licence gates
 
 Config: copy any `api/.env` values you need into `api/.env.local` (gitignored).

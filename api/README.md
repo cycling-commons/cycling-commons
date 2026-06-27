@@ -8,8 +8,8 @@ From the **repo root**:
 
 ```sh
 make app-install   # composer install
-make app-serve     # php -S 127.0.0.1:8000 -t public
-make app-test      # phpunit + phpstan + psalm + SPDX/licence gates
+make app-serve     # php -S 127.0.0.1:8010 -t public
+make app-test      # phpunit + phpstan + psalm + cs-fixer + SPDX/licence gates
 ```
 
 Or directly from `api/`:

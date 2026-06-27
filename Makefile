@@ -79,8 +79,8 @@ up-all: ## Start the stack + every opt-in profile (routing + storage)
 app-install: ## install PHP deps for the Symfony app
 	cd api && composer install
 
-app-serve: ## run the Symfony app locally at http://127.0.0.1:8000
-	cd api && php -S 127.0.0.1:8000 -t public
+app-serve: ## run the Symfony app locally at http://127.0.0.1:8010
+	cd api && php -S 127.0.0.1:8010 -t public
 
 app-test: ## run the app test suite + static analysis + gates
 	cd api && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh
