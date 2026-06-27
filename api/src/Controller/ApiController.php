@@ -11,6 +11,9 @@ use Symfony\Component\Routing\Attribute\Route;
 /**
  * Dev-scaffold endpoints. These exist to prove the wiring works end to end;
  * the real query / contribution / moderation routes get built on top.
+ *
+ * @api Instantiated by Symfony's router, never referenced from code — `@api`
+ *      tells Psalm this (and its actions) is a live entry point, not dead code.
  */
 class ApiController
 {

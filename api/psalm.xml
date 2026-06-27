@@ -14,13 +14,4 @@
             <file name="src/Kernel.php" />
         </ignoreFiles>
     </projectFiles>
-    <issueHandlers>
-        <!-- Controllers are entry points invoked by the router/container; static
-             analysis cannot see those call sites, so UnusedClass is a false positive. -->
-        <UnusedClass>
-            <errorLevel type="suppress">
-                <directory name="src/Controller" />
-            </errorLevel>
-        </UnusedClass>
-    </issueHandlers>
 </psalm>

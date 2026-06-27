@@ -8,6 +8,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+/**
+ * Server-renders the static content pages through the shared Twig layout.
+ *
+ * @api Instantiated by Symfony's router, never referenced from code — `@api`
+ *      tells Psalm this (and its actions) is a live entry point, not dead code.
+ */
 final class PageController extends AbstractController
 {
     #[Route('/', name: 'home')]
