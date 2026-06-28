@@ -25,4 +25,17 @@ final class MapPageTest extends WebTestCase
         // the application script is the extracted asset, not inline
         self::assertGreaterThan(0, $crawler->filter('script[src*="map/map"]')->count());
     }
+
+    public function testMapillaryTokenInjectedBeforeAppScript(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        $tokenPos = strpos($html, 'window.MAPILLARY_TOKEN =');
+        self::assertNotFalse($tokenPos, 'Mapillary token global must be injected into the map shell');
+        $appPos = strpos($html, 'map/map');   // the AssetMapper-versioned map.js script src
+        self::assertNotFalse($appPos, 'map.js app script must be present');
+        self::assertLessThan($appPos, $tokenPos, 'window.MAPILLARY_TOKEN must be defined before map.js loads');
+    }
 }
