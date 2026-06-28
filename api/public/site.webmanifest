@@ -1,0 +1,14 @@
+{
+  "name": "Cycling Commons",
+  "short_name": "Commons",
+  "description": "An open, community-built atlas of the world's best cycling — climbs, water, viewpoints, bike-friendly stays and road conditions.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101E16",
+  "theme_color": "#101E16",
+  "icons": [
+    { "src": "/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
