@@ -14,4 +14,16 @@
             <file name="src/Kernel.php" />
         </ignoreFiles>
     </projectFiles>
+    <issueHandlers>
+        <!--
+            Doctrine ServiceEntityRepository constructors forward $registry to the parent
+            via parent::__construct() — Psalm's dead-param analysis does not follow
+            super-constructor calls, so it incorrectly flags $registry and other params.
+        -->
+        <PossiblyUnusedParam>
+            <errorLevel type="suppress">
+                <directory name="src/Repository" />
+            </errorLevel>
+        </PossiblyUnusedParam>
+    </issueHandlers>
 </psalm>

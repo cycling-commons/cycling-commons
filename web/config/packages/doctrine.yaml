@@ -1,6 +1,8 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
+        # Exclude PostGIS extension schemas from Doctrine's schema diff tool
+        schema_filter: '~^(?!topology\.)~'
 
     orm:
         auto_generate_proxy_classes: true

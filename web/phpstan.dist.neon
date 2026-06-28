@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+
 parameters:
     level: 6
     paths:
