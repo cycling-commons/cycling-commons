@@ -216,6 +216,91 @@ final class TwoFactorTest extends WebTestCase
         self::assertStringNotContainsString('/2fa', $location);
     }
 
+    // ── Enforcer gate tests (TwoFactorSetupEnforcer) ────────────────────────
+
+    /**
+     * ROLE_CURATOR without a TOTP secret must be redirected to /2fa/setup on ANY
+     * subsequent request, not only immediately after login (gate test).
+     *
+     * Without the TwoFactorSetupEnforcer subscriber this test FAILS: the user is fully
+     * authenticated and can reach /profile directly. With the subscriber it PASSES.
+     */
+    public function testElevatedRoleWithoutSecretIsBlockedOnEveryRequest(): void
+    {
+        $client = static::createClient();
+
+        $email = 'curator-gate@example.com';
+        $data = $this->createUser($email, 'hunter2secure!', role: 'ROLE_CURATOR', withTotp: false);
+
+        // Log in — LoginSuccessHandler redirects to /2fa/setup (advisory).
+        $this->submitLogin($client, $email, $data['plain']);
+        self::assertResponseRedirects('/2fa/setup');
+
+        // Attempt to navigate directly to /profile, bypassing the login redirect.
+        $client->request('GET', '/profile');
+        self::assertTrue($client->getResponse()->isRedirection(), 'Should be redirected away from /profile');
+        $location = (string) $client->getResponse()->headers->get('Location');
+        self::assertStringContainsString('/2fa/setup', $location, 'Must redirect to 2FA setup, not elsewhere');
+        self::assertStringNotContainsString('/profile', $location, 'Must NOT reach /profile without 2FA');
+    }
+
+    /**
+     * ROLE_CURATOR who HAS completed 2FA setup (totpSecret set, twoFaEnabled) and is fully
+     * authenticated must NOT be redirected to /2fa/setup — they have already enrolled.
+     */
+    public function testElevatedRoleWithCompletedTwoFactorCanReachProfile(): void
+    {
+        $client = static::createClient();
+
+        $email = 'curator-enrolled@example.com';
+        $data = $this->createUser($email, 'hunter2secure!', role: 'ROLE_CURATOR', withTotp: true);
+
+        // Login → scheb intercepts → 2FA interstitial.
+        $this->submitLogin($client, $email, $data['plain']);
+        self::assertResponseRedirects('/2fa');
+        $crawler = $client->followRedirect();
+
+        // Complete the TOTP challenge.
+        self::assertIsString($data['secret']);
+        $form = $crawler->filter('form')->form();
+        $form['_auth_code'] = $this->currentTotpCode($data['secret']);
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        // Now fully authenticated + enrolled — must NOT be bounced to setup.
+        $client->request('GET', '/profile');
+        if ($client->getResponse()->isRedirection()) {
+            $loc = (string) $client->getResponse()->headers->get('Location');
+            self::assertStringNotContainsString('/2fa/setup', $loc, 'Enrolled user must not be redirected to setup');
+        } else {
+            // 200/403/404 all acceptable — anything but a setup redirect.
+            self::assertContains($client->getResponse()->getStatusCode(), [200, 403, 404]);
+        }
+    }
+
+    /**
+     * A plain ROLE_USER without 2FA must NOT be forced to /2fa/setup —
+     * 2FA is optional for non-elevated roles.
+     */
+    public function testPlainUserWithoutTwoFactorCanReachProfile(): void
+    {
+        $client = static::createClient();
+
+        $email = 'plain-gate@example.com';
+        $data = $this->createUser($email, 'hunter2secure!', role: 'ROLE_USER', withTotp: false);
+
+        $this->submitLogin($client, $email, $data['plain']);
+        $client->followRedirect(); // follow → home
+
+        $client->request('GET', '/profile');
+        if ($client->getResponse()->isRedirection()) {
+            $loc = (string) $client->getResponse()->headers->get('Location');
+            self::assertStringNotContainsString('/2fa/setup', $loc, 'Plain user must not be sent to 2FA setup');
+        } else {
+            self::assertContains($client->getResponse()->getStatusCode(), [200, 403, 404]);
+        }
+    }
+
     public function testSetupFlowEnablesTwoFactorAndShowsBackupCodes(): void
     {
         $client = static::createClient();
