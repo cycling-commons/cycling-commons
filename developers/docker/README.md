@@ -40,14 +40,14 @@ browser ──> pipeline (FastAPI) ───────────────
                                                          ┘
 ```
 
-Source folders (`atlas/demo/`, `wiki/`, `api/`, `pipeline/`) are bind-mounted, so edits reload live.
-The API's `vendor/` lives in a named volume so the bind mount doesn't hide the installed
-dependencies; after changing `api/composer.json`, run `docker compose exec api composer install`
+Source folders (`atlas/demo/`, `wiki/`, `web/`, `pipeline/`) are bind-mounted, so edits reload live.
+The web app's `vendor/` lives in a named volume so the bind mount doesn't hide the installed
+dependencies; after changing `web/composer.json`, run `docker compose exec api composer install`
 (or `docker compose build api`).
 
 **Local bundles (when they land):** develop them with Composer **path repositories**, not manual
-symlinks. Because `vendor/` is a named volume, a host-side symlink into `api/vendor/` isn't visible
-inside the container. Instead declare the package in `api/composer.json`
+symlinks. Because `vendor/` is a named volume, a host-side symlink into `web/vendor/` isn't visible
+inside the container. Instead declare the package in `web/composer.json`
 (`{ "type": "path", "url": "../foo-bundle" }`), make sure its source is bind-mounted into the
 container, and `composer install` wires it up.
 

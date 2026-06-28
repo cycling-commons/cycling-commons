@@ -5,9 +5,9 @@ node_modules/
 developers/docker/.env
 developers/docker/data/
 
-# PHP / Symfony API
-api/vendor/
-api/var/
+# PHP / Symfony web app
+web/vendor/
+web/var/
 
 # Python pipeline
 __pycache__/
@@ -27,7 +27,7 @@ wiki-dist/
 
 # Local env (never commit secrets)
 .env
-!api/.env
+!web/.env
 .env.local
 *.local
 

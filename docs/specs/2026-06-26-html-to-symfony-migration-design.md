@@ -16,7 +16,7 @@
 | Scope | **Presentation + auth foundation** | Migrate all pages now; wire real accounts/auth/2FA now. Data API + contribution persistence deferred to a later spec. |
 | Auth strategy | **Build fresh, lift patterns** from `bikecoderslife/bundle` | Genericizing the bundle into a `MappedSuperclass` would force a refactor of the live Upstream Platform consumer (its `auth` schema, `app_code`, `User extends BaseUser`). Not worth it. CyclingCommons gets its own minimal auth using the same libraries; the bundle is a **pattern reference only — not a dependency**. |
 | Asset pipeline | **AssetMapper** (no Node/Vite build) | Keeps the stack boring and self-hostable; no build step for a future foundation to operate. |
-| App location | Keep the Symfony app in **`api/`** for now | Avoids churning the docker/nginx wiring. A rename to `app/`/`web/` is a later, orthogonal cleanup. |
+| App location | Symfony app lives in **`web/`** (renamed from `api/`) | `api/` read as "external API only"; the app serves the whole site, so `web/` is clearer. `/api/*` stays a route prefix within it. |
 | i18n | **Wire `symfony/translation` from the start** | Pan-European project (Wallonia FR/NL, future regions; wiki already EN+FR). Extract user-facing strings to `\|trans` *during* the Twig port; ship EN first, add FR/NL later. Retrofitting i18n after the port is the expensive path. |
 
 ---
@@ -31,7 +31,7 @@
 
 ## 3. Architecture overview
 
-The existing Symfony project (`api/`) becomes **the web application**: it serves Twig-rendered HTML and reserves `/api/*` for future JSON endpoints.
+The existing Symfony project (`web/`) becomes **the web application**: it serves Twig-rendered HTML and reserves `/api/*` for future JSON endpoints.
 
 ```
 Request → nginx → PHP-FPM → Symfony router → Controller → Twig (base.html.twig) → HTML
@@ -45,10 +45,10 @@ Map     → map Twig shell boots MapLibre JS, which fetches the static *-osm.js 
 
 ---
 
-## 4. Proposed Symfony app structure (`api/`)
+## 4. Proposed Symfony app structure (`web/`)
 
 ```
-api/
+web/
   assets/
     styles/        atlas.css, fonts.css
     fonts/ brand/ media/
@@ -218,5 +218,5 @@ CyclingCommons is **source-available (PolyForm Shield) + open data (ODbL), in a 
 
 - **Map extraction** is the largest single unit (1,999 lines); risk of behavioral drift. Mitigation: migrate in isolation (phase 3), visual parity check, keep `atlas/demo/map.html` until verified.
 - **AssetMapper vs the existing global-`<script>` data fixtures**: the `*-osm.js` files assign globals; confirm they load correctly under AssetMapper's importmap (may need to keep them as plain `<script>` includes rather than ES modules initially).
-- **`api/` naming** becomes slightly misleading once it serves the whole site; flagged for a later rename.
+- **Directory naming** — resolved: renamed `api/` → `web/` (it serves the whole site, not just an API). `/api/*` remains a route prefix within the app.
 - **2FA enforcement timing** for curators: enforce at login-success redirect vs. at the access-control layer — decide during phase 4 (login-success redirect is the reference pattern).

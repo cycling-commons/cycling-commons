@@ -2,16 +2,16 @@
 name: App CI
 on:
   pull_request:
-    paths: ['api/**', '.github/workflows/ci-app.yml']
+    paths: ['web/**', '.github/workflows/ci-app.yml']
   push:
     branches: [main]
-    paths: ['api/**']
+    paths: ['web/**']
 jobs:
   app:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: api
+        working-directory: web
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2

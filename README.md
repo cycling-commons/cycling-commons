@@ -35,7 +35,7 @@ apps lock away. So rather than an endless list, it answers the question a rider 
 |------|---------|-------|
 | [`wiki/`](wiki/) | `wiki.cyclingcommons.org` | all reference documentation |
 | [`atlas/demo/`](atlas/demo/) | `cyclingcommons.org` | the static map demo (the clickable prototype) |
-| [`api/`](api/) | `api.cyclingcommons.org` | the query/contribution API *(to be built)* |
+| [`web/`](web/) | `cyclingcommons.org` | the Symfony web app — server-rendered site + future `/api/*` JSON |
 | [`pipeline/`](pipeline/) | — | the Python/FastAPI geospatial tier *(to be built)* |
 | [`tools/`](tools/) | — | data-generation & maintenance tooling (e.g. regional clustering) |
 | [`developers/`](developers/) | — | the Docker dev stack and contributor setup |
@@ -55,7 +55,7 @@ docker compose up --build
 |---------|-----|------------|
 | Frontend | http://localhost:8099 | the MapLibre prototype (`atlas/demo/`) |
 | Wiki | http://localhost:8000 | MkDocs Material (`wiki/`) |
-| API | http://localhost:8001/health · `/api/db-check` | Symfony 7 LTS on nginx + PHP-FPM → PostGIS |
+| Web app | http://localhost:8001/ · `/health` · `/api/db-check` | Symfony 7 LTS on nginx + PHP-FPM → PostGIS |
 | Pipeline | http://localhost:8002/health · `/db` | Python/FastAPI geospatial tier → PostGIS |
 | Database | `localhost:5433` | PostgreSQL 18 + PostGIS (host port 5433) |
 
@@ -75,8 +75,8 @@ Requires PHP 8.4 and Composer.
     make app-serve     # http://127.0.0.1:8010
     make app-test      # phpunit + phpstan + psalm + cs-fixer + SPDX/licence gates
 
-Config: copy any `api/.env` values you need into `api/.env.local` (gitignored).
-Never commit real secrets — `api/.env` holds placeholders only.
+Config: copy any `web/.env` values you need into `web/.env.local` (gitignored).
+Never commit real secrets — `web/.env` holds placeholders only.
 
 ## Documentation
 
