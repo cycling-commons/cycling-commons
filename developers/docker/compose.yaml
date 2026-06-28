@@ -116,6 +116,11 @@ services:
     volumes:
       - ${VALHALLA_TILES:-./data/valhalla}:/custom_files   # drop the downloaded tiles here
 
+  # ---- dev mail catcher (Mailpit) — UI at http://localhost:${MAILPIT_UI_PORT:-8025} ----
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["${MAILPIT_UI_PORT:-8025}:8025", "1025"]
+
   # ---- opt-in: S3-compatible object storage for PMTiles --------------------
   minio:
     profiles: ["storage"]

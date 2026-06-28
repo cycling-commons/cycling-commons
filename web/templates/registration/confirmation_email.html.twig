@@ -1,0 +1,38 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Email verification confirmation email — plain HTML, no base layout. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Confirm your Cycling Commons account</title>
+</head>
+<body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:2rem;color:#14160e">
+  <p style="font-family:monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#5a5d4d">
+    Cycling Commons
+  </p>
+
+  <h1 style="font-size:1.6rem;font-weight:600;margin:.5rem 0 1rem">
+    Welcome{% if displayName is defined and displayName %}, {{ displayName }}{% endif %}!
+  </h1>
+
+  <p>Thanks for creating a Cycling Commons account. Please confirm your email address by clicking the button below.</p>
+
+  <p style="margin:2rem 0">
+    <a href="{{ signedUrl }}"
+       style="display:inline-block;background:#e85d26;color:#fff;font-weight:700;font-size:1rem;padding:.8rem 1.6rem;border-radius:5px;text-decoration:none">
+      Confirm my email
+    </a>
+  </p>
+
+  <p style="font-size:.85rem;color:#5a5d4d">
+    This link expires {{ expiresAtMessageKey|trans(expiresAtMessageData, 'VerifyEmailBundle') }}.
+    If you didn't create an account, you can safely ignore this email.
+  </p>
+
+  <hr style="border:none;border-top:1px solid #ddd;margin:2rem 0">
+  <p style="font-size:.75rem;color:#8a8d7a">
+    Cycling Commons · open cycling atlas ·
+    <a href="https://cyclingcommons.org" style="color:#8a8d7a">cyclingcommons.org</a>
+  </p>
+</body>
+</html>

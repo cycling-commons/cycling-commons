@@ -1,5 +1,5 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
-{# Login page — ported from atlas/demo/login.html, Symfony form fields. #}
+{# Registration page — mirrors the login page's two-panel auth layout. #}
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
@@ -21,16 +21,18 @@
   .field{margin-bottom:1.3rem}
   .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
   .field input[type=email],
+  .field input[type=text],
   .field input[type=password]{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none}
   .field input:focus{border-color:var(--trail)}
-  .row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;font-size:.85rem}
-  .row-between a{color:var(--clay)}
+  .field-check{display:flex;gap:.6rem;align-items:flex-start;margin-bottom:1.4rem;font-size:.85rem}
+  .field-check input{width:auto;margin-top:.2rem;flex-shrink:0}
   .btn-submit{width:100%;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:1rem;padding:.9rem;border:none;border-radius:5px;cursor:pointer;transition:background .2s}
   .btn-submit:hover{background:#ff703d}
   .reassure{margin-top:1.6rem;font-size:.82rem;color:#5a5d4d;line-height:1.5;border-left:2px solid var(--glacier);padding-left:.8rem}
   .auth-alt-link{display:block;margin-top:1.4rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;text-align:center}
   .auth-alt-link a{color:var(--clay)}
   .alert-error{background:rgba(181,83,46,.1);border-left:3px solid var(--clay);color:var(--clay);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  .field-errors{list-style:none;padding:0;margin:.3rem 0 0;font-size:.8rem;color:var(--clay)}
   @media(max-width:780px){.auth{grid-template-columns:1fr}.panel{min-height:32svh;padding:1.6rem}}
 </style>
 {% endblock %}
@@ -48,8 +50,8 @@
       <path d="M-20,220 C160,190 260,250 420,210 C560,180 660,220 820,190"/>
     </svg>
     <div class="mid">
-      <h1>Join the atlas.</h1>
-      <p>A free account to add places, rank a region's best, and help keep the map honest.</p>
+      <h1>Add your mark.</h1>
+      <p>A free account to contribute climbs, places and fixes — open data, yours to keep.</p>
     </div>
     <div class="bot">FREE · OPEN · NO RIDE DATA</div>
   </div>
@@ -57,53 +59,59 @@
   {# ── Right form panel ── #}
   <div class="formwrap">
     <div class="card">
-      <p class="auth-heading">Sign in</p>
+      <p class="auth-heading">Create a free account</p>
 
-      {% if error %}
-        <div class="alert-error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-      {% endif %}
+      {% for flash in app.flashes('verify_email_error') %}
+        <div class="alert-error" role="alert">{{ flash }}</div>
+      {% endfor %}
 
-      <form method="post" action="{{ path('login') }}" novalidate>
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}" />
+      {{ form_start(registrationForm, {attr: {novalidate: 'novalidate'}}) }}
 
         <div class="field">
-          <label for="username">Email</label>
-          <input type="email" id="username" name="_username"
-                 value="{{ last_username }}"
-                 autocomplete="email"
-                 placeholder="you@example.com"
-                 required />
+          {{ form_label(registrationForm.email) }}
+          {{ form_widget(registrationForm.email) }}
+          {{ form_errors(registrationForm.email) }}
         </div>
 
         <div class="field">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="_password"
-                 autocomplete="current-password"
-                 placeholder="••••••••"
-                 required />
+          {{ form_label(registrationForm.displayName) }}
+          {{ form_widget(registrationForm.displayName) }}
+          {{ form_errors(registrationForm.displayName) }}
         </div>
 
-        <div class="row-between">
-          <label style="display:flex;gap:.4rem;align-items:center;font-size:.85rem">
-            <input type="checkbox" name="_remember_me" style="width:auto" />
-            Stay signed in
+        <div class="field">
+          {{ form_label(registrationForm.plainPassword.first) }}
+          {{ form_widget(registrationForm.plainPassword.first) }}
+          {{ form_errors(registrationForm.plainPassword.first) }}
+        </div>
+
+        <div class="field">
+          {{ form_label(registrationForm.plainPassword.second) }}
+          {{ form_widget(registrationForm.plainPassword.second) }}
+          {{ form_errors(registrationForm.plainPassword) }}
+        </div>
+
+        <div class="field-check">
+          {{ form_widget(registrationForm.agreeTerms) }}
+          <label for="{{ registrationForm.agreeTerms.vars.id }}">
+            I agree to the <a href="{{ path('terms') }}">terms of service</a>
           </label>
-          {# TODO Task 5: replace # with path('reset_password_request') once RegistrationController/ResetPasswordController are wired #}
-          <a href="#">Forgot?</a>
         </div>
+        {{ form_errors(registrationForm.agreeTerms) }}
 
-        <button type="submit" class="btn-submit">Sign in</button>
-      </form>
+        <button type="submit" class="btn-submit">Create account</button>
+
+      {{ form_end(registrationForm) }}
 
       <p class="reassure">
-        A free Cycling Commons account stores <strong>what you contribute</strong> — facts, edits, votes —
-        kept separate from who you are. We hold your email and a salted password hash; we never track your rides.
+        We hold your email and a salted password hash — nothing else.
+        We never track your rides or sell your data.
         <a href="{{ path('privacy') }}">Privacy policy</a>.
       </p>
 
       <p class="auth-alt-link">
-        No account yet?
-        <a href="{{ path('register') }}">Create a free account</a>
+        Already have an account?
+        <a href="{{ path('login') }}">Sign in</a>
       </p>
     </div>
   </div>
