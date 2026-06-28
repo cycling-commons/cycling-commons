@@ -1,0 +1,337 @@
+/* SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 */
+  :root{
+    --ink:#101E16; --paper:#EFE6D4; --paper-deep:#E2D5BC;
+    --spruce:#1C3A2A; --spruce-lift:#2C5440; --trail:#FF5A1F;
+    --clay:#B5532E; --glacier:#8FB6A8; --ochre:#C8923A;
+    --serif:"Bricolage Grotesque",system-ui,sans-serif; --sans:"Spline Sans",system-ui,sans-serif; --mono:"Spline Sans Mono",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{height:100%;overflow:hidden}   /* never let the page itself scroll (drawer/dock translate off-screen → would otherwise create scroll, shoving the overlay off the top) */
+  body{font-family:var(--sans);color:var(--ink);height:100svh;overflow:hidden;display:flex;flex-direction:column}
+  .app{display:grid;grid-template-columns:340px 1fr;grid-template-rows:minmax(0,1fr);flex:1;min-height:0}
+  .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- RAIL ---------- */
+  .rail{background:var(--ink);color:var(--paper);display:flex;flex-direction:column;border-right:1px solid var(--spruce-lift);z-index:1000}
+  .rail-head{padding:1.3rem 1.4rem;border-bottom:1px solid rgba(239,230,212,.14)}
+  .rail-head .brand{font-family:var(--serif);font-weight:600;font-size:1.55rem}
+  .rail-head .brand b{color:var(--trail);font-style:italic}
+  .rail-head .co{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:rgba(239,230,212,.5);margin-top:.3rem;text-transform:uppercase}
+  .rail-nav{display:flex;flex-wrap:wrap;gap:.2rem .9rem;margin-top:.8rem}
+  .rail-nav a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6);transition:color .2s}
+  .rail-nav a:hover,.rail-nav a.on{color:var(--trail)}
+  .rail-burger{display:none;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .rail-scroll{flex:1;min-height:0;overflow-y:auto;padding:1.2rem 1.4rem;scrollbar-width:thin;scrollbar-color:rgba(239,230,212,.45) transparent}
+  .rail-scroll::-webkit-scrollbar{width:9px}
+  .rail-scroll::-webkit-scrollbar-track{background:rgba(0,0,0,.2)}
+  .rail-scroll::-webkit-scrollbar-thumb{background:rgba(239,230,212,.42);border-radius:5px;border:2px solid transparent;background-clip:padding-box}
+  .rail-scroll::-webkit-scrollbar-thumb:hover{background:rgba(239,230,212,.6);background-clip:padding-box}
+  .grp{margin-bottom:1.7rem}
+  .grp h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;color:var(--glacier);margin-bottom:.8rem;text-transform:uppercase}
+  .grp h3.dl-head{display:flex;align-items:center;gap:.6rem}
+  .dl-all{margin-left:auto;background:transparent;border:1px solid rgba(239,230,212,.25);color:var(--glacier);font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .45rem;border-radius:4px;cursor:pointer;transition:all .15s}
+  .dl-all:hover{border-color:var(--trail);color:var(--trail)}
+  /* road-surface key — how the A·Road surface layer is drawn (colour + line pattern); shown in the on-map legend */
+  .skey{display:flex;flex-direction:column;gap:.55rem;margin-top:.1rem}
+  .skey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--paper)}
+  .skey-ln{width:34px;height:4px;border-radius:2px;flex:none;background:var(--sc)}
+  /* gaps use the map's line casing colour (#FBF4E4), not the dark panel — so the swatch reads
+     colour-over-white exactly like the dashed surface lines on the map */
+  .skey-ln.dash{background:repeating-linear-gradient(90deg,var(--sc) 0 8px,#FBF4E4 8px 13px)}
+  .skey-ln.dot{background:repeating-linear-gradient(90deg,var(--sc) 0 3px,#FBF4E4 3px 7px)}
+  .search{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(239,230,212,.3);color:var(--paper);font-family:var(--sans);font-size:.95rem;padding:.5rem 0;outline:none}
+  .search::placeholder{color:rgba(239,230,212,.45)}
+  .search:focus{border-color:var(--trail)}
+  /* live search results (towns + named Commons features) — in-flow under the input so the scroll
+     container never clips them */
+  .search-res{list-style:none;margin:.5rem 0 0;max-height:300px;overflow-y:auto;border:1px solid rgba(239,230,212,.16);border-radius:8px;background:rgba(20,33,24,.55)}
+  .search-res li{margin:0}
+  .search-res button{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(239,230,212,.07);color:var(--paper);font-family:var(--sans);font-size:.86rem;padding:.5rem .55rem;cursor:pointer;transition:background .12s}
+  .search-res li:last-child button{border-bottom:none}
+  .search-res button:hover,.search-res button.hl{background:rgba(255,90,31,.14)}
+  .search-res .sw{flex:0 0 auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.66rem;font-weight:700}
+  .search-res .snm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45)}
+  .search-empty{padding:.6rem .55rem;font-size:.8rem;color:rgba(239,230,212,.5)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:.4rem}
+  .chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .65rem;border:1px solid rgba(239,230,212,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none}
+  .chip:hover{border-color:var(--paper)}
+  .chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+
+  .layer{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;cursor:pointer;user-select:none}
+  .layer .sw{width:21px;height:21px;border-radius:5px;flex-shrink:0;border:1.5px solid var(--c);background:var(--c);display:flex;align-items:center;justify-content:center;font-size:.78rem;line-height:1;color:var(--ic,#fff);transition:all .18s}
+  .layer .sw .sw-g{display:inline-block;font-style:normal;line-height:1;filter:var(--ig,none)}  /* force colour-emoji to a flat white/black silhouette */
+  .layer.off .sw{opacity:.45}
+  .layer .nm{flex:1;font-size:.92rem}
+  .layer.off .nm{opacity:.45}
+  .layer .ct{font-family:var(--mono);font-size:.66rem;color:rgba(239,230,212,.5)}
+
+  .toggle{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
+  .toggle button{flex:1;background:transparent;color:var(--paper);font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem;border:none;cursor:pointer;transition:all .18s}
+  .toggle button.on{background:var(--spruce-lift)}
+  /* discipline filter — compacted (visual-only chips, see markup note): smaller pad/type + tighter gap */
+  #disc{gap:.3rem}
+  #disc .chip{padding:.26rem .5rem;font-size:.6rem;letter-spacing:.05em}
+  /* view mode is a primary control → its active state must read unmistakably "on":
+     orange fill like .chip.on (not the subtle spruce the other toggles use) */
+  #mode{border-color:var(--trail)}
+  #mode button.on{background:var(--trail);color:var(--ink);font-weight:700}
+  .hint{font-size:.78rem;color:rgba(239,230,212,.5);margin-top:.6rem;line-height:1.5}
+
+  .rail-foot{padding:1.1rem 1.4rem;border-top:1px solid rgba(239,230,212,.14);display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+  .rail-foot .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgba(239,230,212,.7)}
+  .rail-foot .res b{color:var(--trail);font-size:1.15rem}
+  .export{background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.55rem .85rem;border-radius:5px;border:none;cursor:pointer;white-space:nowrap}
+  .export:hover{background:#ff703d}
+
+  /* ---------- MAP ---------- */
+  .map-wrap{position:relative;flex:1;min-height:0}
+  .mapcol{display:flex;flex-direction:column;min-height:0}
+  #map{position:absolute;inset:0;background:var(--paper-deep)}
+  .maplibregl-canvas{filter:none}
+  .maplibregl-map{font-family:var(--sans)}
+  .maplibregl-ctrl-attrib{font-family:var(--mono);font-size:.6rem}
+
+  /* tilted teardrop: the 50% 50% 50% 0 radius makes the drop point down-left (the look we want) with
+     NO rotate — so the glyph inside stays upright on its own (don't rotate .cc-pin or the span) */
+  .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(20,22,14,.4);border:2px solid var(--paper)}
+  .cc-pin span{font-size:.85rem;line-height:1}
+  .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
+  .cc-cluster{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:15px;background:var(--c);color:#fff;font:600 13px/1 'Spline Sans Mono',ui-monospace,monospace;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(20,22,14,.45);cursor:pointer}
+
+  .maplibregl-popup-content{background:var(--ink);color:var(--paper);border-radius:8px;box-shadow:0 12px 30px -10px rgba(20,22,14,.6);padding:.9rem 1.1rem}
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip{border-bottom-color:var(--ink)}
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip{border-top-color:var(--ink)}
+  .maplibregl-popup-anchor-left .maplibregl-popup-tip{border-right-color:var(--ink)}
+  .maplibregl-popup-anchor-right .maplibregl-popup-tip{border-left-color:var(--ink)}
+  .pop .pop-co{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--glacier);text-transform:uppercase}
+  .pop h4{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:.2rem 0 .5rem}
+  .pop .pop-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem}
+  .pop .pop-tags span{font-family:var(--mono);font-size:.58rem;padding:.15rem .35rem;border:1px solid rgba(239,230,212,.3);border-radius:3px;color:rgba(239,230,212,.8)}
+  .pop .pop-vote{font-family:var(--mono);font-size:.62rem;color:var(--trail);letter-spacing:.08em;cursor:pointer}
+
+  .legend{position:absolute;bottom:1.2rem;right:1.2rem;background:rgba(20,22,14,.9);color:var(--paper);border-radius:8px;padding:.9rem 1.1rem;z-index:1000;backdrop-filter:blur(6px)}
+  .legend h4{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;color:var(--glacier);margin-bottom:.6rem;text-transform:uppercase}
+  .legend .row{display:flex;align-items:center;gap:.5rem;font-size:.78rem;margin:.25rem 0}
+  .legend .d{width:10px;height:10px;border-radius:50%;background:var(--c)}
+  .legend .lg-toggle{display:none;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
+  /* on-map base/overlay switcher (top-right) — like a normal map's layer control */
+  .map-ctrl{position:absolute;top:1.2rem;right:1.2rem;z-index:1000;display:flex;flex-direction:column;gap:.4rem;background:rgba(20,22,14,.9);border-radius:8px;padding:.5rem;backdrop-filter:blur(6px);min-width:9.5rem}
+  .map-ctrl .mc-seg{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
+  .map-ctrl .mc-seg button{flex:1;background:transparent;color:var(--paper);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.42rem .3rem;border:none;cursor:pointer;transition:background .18s}
+  .map-ctrl .mc-seg button.on{background:var(--spruce-lift)}
+  .map-ctrl .mc-ov{display:flex;align-items:center;gap:.45rem;background:transparent;border:1px solid rgba(239,230,212,.2);border-radius:6px;color:var(--paper);font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;padding:.42rem .5rem;cursor:pointer;opacity:.7;transition:all .18s}
+  .map-ctrl .mc-ov:hover{opacity:1}
+  .map-ctrl .mc-ov.on{opacity:1;background:rgba(62,125,79,.28);border-color:#3e7d4f}
+  .map-ctrl .mc-ov.mc-off,.map-ctrl .mc-ov.mc-off:hover{opacity:.38;cursor:not-allowed}
+  .map-ctrl .mc-ic{font-size:.82rem}
+  .map-ctrl .mc-toggle{display:none;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer}
+  /* mobile: collapse the panel to a small layers icon; tap to expand */
+  @media(max-width:760px){
+    .map-ctrl{min-width:0;gap:.35rem;top:.8rem;right:.8rem;padding:.25rem}
+    .map-ctrl .mc-toggle{display:flex}
+    .map-ctrl:not(.open) .mc-seg,.map-ctrl:not(.open) .mc-ov{display:none}
+    .map-ctrl.open{min-width:9.5rem}
+    /* road-surface legend collapses to an icon, left of the layers icon */
+    .legend{bottom:auto;top:.8rem;right:3.3rem;padding:.25rem;min-width:0}
+    .legend .lg-toggle{display:flex}
+    .legend:not(.open) h4,.legend:not(.open) .skey{display:none}
+    .legend.open{right:.8rem;padding:.7rem .9rem}
+  }
+
+  .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgba(239,230,212,.92);border-radius:8px;padding:.7rem 1rem;backdrop-filter:blur(6px)}
+  .map-top .rg{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+  .map-top .sub{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:#5a5d4d;text-transform:uppercase;margin-top:.15rem}
+  .map-top .add-climb{display:inline-block;margin-top:.6rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.4rem .7rem;border-radius:5px;font-weight:500}
+  .map-top .add-climb:hover{background:#ff703d}
+  .contrib-fab{display:none}
+  /* placed AFTER the desktop .map-top block so these win the cascade on mobile */
+  @media(max-width:760px){
+    .map-top{top:.8rem;left:.8rem;padding:.4rem .6rem;max-width:52vw}
+    .map-top .rg{font-size:.85rem}
+    .map-top .sub,.map-top .add-climb{display:none}   /* contribute moves to the FAB */
+    /* a top-level FAB anchored to the map, sitting in the top-right control row just left of the
+       legend/layers icons. z-index below those panels (1000) so an opened panel covers it rather
+       than the FAB poking through. */
+    .contrib-fab{display:flex;align-items:center;justify-content:center;position:absolute;top:.8rem;right:5.8rem;z-index:999;width:2.3rem;height:2.3rem;border-radius:50%;background:var(--trail);color:var(--ink);box-shadow:0 6px 16px -6px rgba(0,0,0,.55)}
+    .contrib-fab:active{background:#ff703d}
+    .app.dock-open .contrib-fab{display:none}
+  }
+
+  /* ---------- MAPILLARY VIEWER DOCK ---------- */
+  .mly-dock{position:absolute;left:0;right:0;bottom:0;height:clamp(280px,44vh,480px);z-index:1300;background:var(--ink);
+    border-top:1px solid var(--spruce-lift);box-shadow:0 -12px 30px -16px rgba(0,0,0,.6);
+    transform:translateY(102%);transition:transform .28s ease, top .28s ease, left .28s ease, right .28s ease, bottom .28s ease;
+    display:flex;flex-direction:column}
+  .mly-dock.open{transform:none}
+  .mly-dock.full{top:4vh;left:4vw;right:4vw;bottom:4vh;height:auto;border-radius:10px;border:1px solid var(--spruce-lift)}
+  .mly-bar{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;border-bottom:1px solid rgba(239,230,212,.14);flex-shrink:0;position:relative;z-index:3}
+  .mly-bar .mly-t{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--glacier);flex:1}
+  .mly-bar button{background:none;border:1px solid rgba(239,230,212,.25);color:var(--paper);border-radius:5px;
+    width:30px;height:26px;cursor:pointer;font-size:.9rem;line-height:1;transition:all .18s}
+  .mly-bar button:hover{border-color:var(--paper);color:var(--trail)}
+  .mly-view{flex:1;min-height:0;position:relative;background:#000}
+  .mly-loading{position:absolute;inset:0;z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;background:var(--ink);color:var(--glacier);font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:1rem}
+  .mly-dock.loading .mly-loading{display:flex}
+  .mly-spin{width:28px;height:28px;border:3px solid rgba(143,182,168,.25);border-top-color:var(--glacier);border-radius:50%;animation:mly-spin .8s linear infinite}
+  @keyframes mly-spin{to{transform:rotate(360deg)}}
+  .toggle button:disabled{opacity:.4;cursor:not-allowed}
+  .toggle button:disabled:hover{background:transparent}
+  .cc-pin.cam span{font-size:.9rem}
+
+  .cc-drawer{position:absolute;top:0;right:0;height:100%;width:min(380px,90vw);z-index:1200;
+    background:var(--ink);color:var(--paper);box-shadow:-12px 0 36px -16px rgba(0,0,0,.6);
+    transform:translateX(102%);transition:transform .26s ease;overflow-y:auto;padding:1.4rem 1.4rem 2rem;scrollbar-width:thin;scrollbar-color:var(--spruce-lift) transparent}
+  .cc-drawer::-webkit-scrollbar{width:6px}
+  .cc-drawer::-webkit-scrollbar-thumb{background:var(--spruce-lift);border-radius:3px}
+  .cc-drawer.open{transform:none}
+  .cc-drawer:focus{outline:none}           /* panel receives focus on open for a11y; no visible ring on the container */
+  .cc-drawer.dragging{transition:none}     /* track the finger 1:1 while drag-dismissing (mobile) */
+  .cc-drawer-x{position:absolute;top:.9rem;right:1.4rem;background:none;border:none;color:rgba(239,230,212,.7);
+    font-size:1rem;cursor:pointer;line-height:1}
+  .cc-drawer-x:hover{color:var(--trail)}
+  .cc-drawer-x:focus{outline:none}                                           /* no square when focused on open */
+  .cc-drawer-x:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}   /* keyboard users keep a ring */
+  .cc-d-scrim{display:none}   /* desktop: no scrim; the mobile bottom-sheet rules enable it */
+  .cc-d-type{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
+    background:var(--c,#FF5A1F);display:inline-block;padding:.25rem .55rem;border-radius:4px}
+  .cc-d-name{font-family:var(--serif);font-weight:600;font-size:1.55rem;line-height:1.1;margin:.7rem 0 .2rem}
+  .cc-d-cur{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:#FF8A52;font-weight:600}
+  .cc-d-rec{list-style:none;margin:1.1rem 0 0;padding:0}
+  .cc-d-rec li{display:flex;gap:.8rem;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(239,230,212,.12);font-size:.9rem}
+  .cc-d-rec .k{color:rgba(239,230,212,.6);font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;flex:none;max-width:46%}
+  .cc-d-rec .v{text-align:right;font-weight:400;color:rgba(239,230,212,.78)}
+  .cc-d-rec .v.warn{color:#E8A33D;font-weight:600}
+  .cc-d-rec .m{display:inline-block;margin-left:.4rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--glacier);border:1px solid rgba(143,182,168,.5);border-radius:3px;padding:0 .25rem}
+  .cc-d-fresh{margin-top:1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase}
+  .cc-d-fresh.fresh{color:#7fcf9a}.cc-d-fresh.ageing{color:var(--ochre)}.cc-d-fresh.stale{color:var(--clay)}
+  .cc-d-src{margin-top:1rem;font-size:.72rem;color:rgba(239,230,212,.55);line-height:1.5}
+  .cc-d-act{display:inline-block;margin-top:1.2rem;margin-right:.5rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.5rem .8rem;border-radius:5px}
+  .cc-d-act.edit{background:transparent;color:var(--paper);border:1px solid rgba(239,230,212,.45)}
+  .cc-d-act.edit:hover{border-color:var(--trail);color:var(--trail)}
+  .cc-diff{margin-top:1rem;display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.62rem;
+    letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+  .cc-diff-scale{display:flex;align-items:center;gap:.34rem}
+  .cc-diff-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:.62rem;font-weight:600;border:1.5px solid rgba(178,91,232,.45);color:rgba(239,230,212,.5);cursor:default;transition:transform .12s}
+  .cc-diff-dot:hover{transform:scale(1.12);border-color:#B25BE8;color:var(--paper)}
+  .cc-diff-dot.on{width:30px;height:30px;font-size:.82rem;font-weight:800;color:#fff;
+    background:var(--p);border-color:var(--p);box-shadow:0 0 0 3px rgba(106,44,143,.28)}
+  .cc-diff-lbl{margin-left:auto;color:var(--paper);font-size:.74rem;letter-spacing:.04em;font-weight:700}
+  .cc-city{color:#7FC9E0;text-decoration:underline;cursor:pointer}
+  .cc-city:hover{color:var(--paper)}
+  .cc-city-info{font-size:.92rem;color:rgba(239,230,212,.85);line-height:1.55;margin-top:.7rem}
+  .cc-city-links{margin-top:.6rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase}
+  .cc-city-links a{color:rgba(239,230,212,.85);text-decoration:underline}
+  .cc-city-ua{color:rgba(239,230,212,.42)}
+  .cc-near-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem}
+  .cc-near-list{list-style:none;margin:0;padding:0}
+  .cc-near{display:flex;align-items:center;gap:.55rem;width:100%;background:none;border:none;border-bottom:1px solid rgba(239,230,212,.1);padding:.5rem 0;color:var(--paper);font-family:var(--sans);font-size:.9rem;text-align:left;cursor:pointer}
+  .cc-near:hover{color:var(--trail)}
+  .cc-near-k{width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.6rem;font-weight:700;flex:none}
+  .cc-near-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cc-near em{font-style:normal;font-family:var(--mono);font-size:.62rem;color:rgba(239,230,212,.55);flex:none}
+  .cc-near-empty{color:rgba(239,230,212,.5);font-size:.88rem;padding:.4rem 0}
+  .cc-elev-cap{margin-top:.9rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:rgba(239,230,212,.6)}
+  .cc-elev-cap em{color:rgba(239,230,212,.4);font-style:normal}
+  .cc-elev{width:100%;height:64px;display:block;margin-top:.3rem}
+  .cc-grad{display:flex;align-items:flex-end;gap:2px;margin-top:.45rem;height:42px}
+  .cc-grad-bar{flex:1;border-radius:2px 2px 0 0;min-height:6px;transition:opacity .15s}
+  .cc-grad-bar:hover{opacity:.7}
+  .cc-up{margin-top:1rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:rgba(239,230,212,.6)}
+  .cc-up b{color:var(--paper)}
+  .cc-up a{color:var(--glacier);text-decoration:underline}
+  .cc-d-desc{font-size:.92rem;line-height:1.55;color:rgba(239,230,212,.82);margin:.9rem 0 .2rem}
+  .cc-d-tr{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgba(239,230,212,.42);text-transform:uppercase}
+  .cc-d-photo{margin:1rem 0 0}
+  .cc-d-photo>img{width:100%;border-radius:8px;display:block;cursor:zoom-in}
+  .cc-d-photo figcaption{font-size:.6rem;color:rgba(239,230,212,.5);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
+  .cc-d-photo figcaption a{color:rgba(239,230,212,.72);text-decoration:underline}
+  /* no-photo placeholder = a contributor CTA (links to the improve wizard's media step) */
+  .cc-d-addphoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;margin:1rem 0 0;padding:1.5rem 1rem;min-height:118px;border:1.5px dashed rgba(239,230,212,.26);border-radius:8px;background:rgba(239,230,212,.03);text-decoration:none;text-align:center;transition:border-color .15s,background .15s}
+  .cc-d-addphoto:hover{border-color:var(--trail);background:rgba(255,90,31,.06)}
+  .cc-ap-cam{color:rgba(239,230,212,.55);transition:color .15s}
+  .cc-d-addphoto:hover .cc-ap-cam{color:var(--trail)}
+  .cc-ap-t{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.5)}
+  .cc-ap-b{font-weight:600;font-size:.92rem;color:var(--trail)}
+  .cc-d-thumbs{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
+  .cc-d-thumb{width:54px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.5;border:1px solid rgba(239,230,212,.2);transition:opacity .15s,border-color .15s}
+  .cc-d-thumb.on,.cc-d-thumb:hover{opacity:1;border-color:var(--paper)}
+  .cc-d-link{display:inline-block;margin-left:.35rem;margin-top:.35rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--glacier);border:1px solid rgba(143,182,168,.5);border-radius:4px;padding:.15rem .45rem;text-decoration:none}
+  .cc-d-link:hover{background:var(--glacier);color:var(--ink)}
+  .cc-lightbox{position:absolute;inset:0;z-index:1400;display:none;align-items:center;justify-content:center;
+    background:rgba(10,16,12,.92);padding:3vmin;flex-direction:column;gap:.8rem}
+  .cc-lightbox.open{display:flex}
+  .cc-lightbox img{max-width:100%;max-height:82vh;border-radius:8px;box-shadow:0 18px 50px -12px rgba(0,0,0,.7)}
+  .cc-lb-stage{display:flex;flex-direction:column;align-items:center;gap:.7rem;max-width:88%}
+  .cc-lb-cap{font-family:var(--mono);font-size:.66rem;color:rgba(239,230,212,.7);text-align:center;line-height:1.6}
+  .cc-lb-cap a{color:rgba(239,230,212,.85);text-decoration:underline}
+  .cc-lb-x{position:absolute;top:1rem;right:1.2rem;background:none;border:none;color:var(--paper);font-size:1.4rem;cursor:pointer;z-index:2}
+  .cc-lb-x:hover{color:var(--trail)}
+  .cc-lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;
+    background:rgba(16,30,22,.55);border:1px solid rgba(239,230,212,.3);color:var(--paper);font-size:2rem;line-height:1;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:2}
+  .cc-lb-nav:hover{background:var(--trail);color:var(--ink);border-color:var(--trail)}
+  .cc-lb-prev{left:1.4rem}.cc-lb-next{right:1.4rem}
+  .cc-lb-nav[hidden]{display:none}
+  .cc-steep{display:flex;align-items:center;gap:.18rem;background:var(--ink);color:#C79BE8;
+    font-family:var(--mono);font-weight:700;font-size:.6rem;letter-spacing:.01em;line-height:1;
+    padding:.16rem .42rem;border-radius:10px;border:1.5px solid #8B45C0;
+    box-shadow:0 2px 7px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
+  .cc-steep::before{content:"▲";font-size:.55rem;color:#C79BE8}
+  .cc-highlight{width:18px;height:18px;border-radius:50%;background:rgba(255,90,31,.85);border:2px solid var(--paper);
+    box-shadow:0 0 0 0 rgba(255,90,31,.55);animation:cc-pulse 1.25s infinite;pointer-events:none}
+  @keyframes cc-pulse{0%{box-shadow:0 0 0 0 rgba(255,90,31,.55)}70%{box-shadow:0 0 0 18px rgba(255,90,31,0)}100%{box-shadow:0 0 0 0 rgba(255,90,31,0)}}
+  .cc-tooltip{position:absolute;z-index:1300;pointer-events:none;background:var(--ink);color:var(--paper);
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.03em;padding:.3rem .55rem;border-radius:4px;
+    white-space:nowrap;transform:translate(-50%,-130%);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  /* ---- MOBILE: map is the hero; filters become a bottom sheet ---- */
+  @media(max-width:820px){
+    .app{grid-template-columns:1fr;grid-template-rows:1fr}
+    /* re-skin the rail in place: head -> slim top bar, scroll+foot -> bottom sheet
+       (no markup duplicated, so all filter JS keeps working) */
+    .rail{position:fixed;inset:0;z-index:1500;max-height:none;border-right:none;background:transparent;pointer-events:none;display:block}
+    .rail-head{position:fixed;top:0;left:0;right:0;z-index:1500;pointer-events:auto;background:var(--ink);padding:.5rem .9rem;display:flex;align-items:center;gap:.7rem;border-bottom:1px solid rgba(239,230,212,.14)}
+    .rail-head .brand img{height:1.3rem}
+    .rail-head .co{display:none}
+    /* top-bar nav collapses to a hamburger; tap -> dropdown panel */
+    .rail-burger{display:flex;margin-left:auto}
+    .rail-nav{position:fixed;top:2.7rem;right:.6rem;margin:0;padding:.4rem .2rem;flex-direction:column;align-items:stretch;gap:0;min-width:9.5rem;background:var(--ink);border:1px solid var(--spruce-lift);border-radius:10px;box-shadow:0 14px 34px -16px rgba(0,0,0,.7);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:1502}
+    .rail-head.nav-open .rail-nav{opacity:1;transform:none;pointer-events:auto}
+    .rail-nav a{font-size:.78rem;letter-spacing:.04em;text-transform:none;padding:.6rem .8rem;border-radius:6px;color:var(--paper);opacity:.9}
+    .rail-nav a.on,.rail-nav a:hover{background:var(--spruce-lift);opacity:1}
+    /* bottom sheet body (peeks closed via max-height:0, no transform -> no map reflow) */
+    .rail-scroll{position:fixed;left:0;right:0;bottom:0;z-index:1500;pointer-events:auto;background:var(--ink);max-height:0;padding-top:0;padding-bottom:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6)}
+    /* always-visible peek handle */
+    .rail-foot{position:fixed;left:0;right:0;bottom:0;z-index:1501;pointer-events:auto;background:var(--ink);border-top:1px solid rgba(239,230,212,.14);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);user-select:none}
+    .rail-foot::before{content:"";position:absolute;top:.4rem;left:50%;transform:translateX(-50%);width:34px;height:4px;border-radius:2px;background:rgba(239,230,212,.3)}
+    .rail-foot .res{cursor:pointer}
+    .rail-foot .res::after{content:" · Filters ▾";color:var(--glacier);font-size:.62rem}
+    .app.sheet-open .rail-scroll{max-height:78svh;padding:1rem 1.3rem 6.5rem;overflow-y:auto}
+    .app.sheet-open .rail-foot{box-shadow:none}
+    .app.sheet-open .rail-foot .res::after{content:" · Close ▴"}
+    /* map fills the cell; clear the fixed top bar */
+    .mapcol{padding-top:3.7rem}   /* clear the ~55px fixed top bar (+ small gap) */
+    .demo-banner{padding:.35rem .6rem;font-size:.7rem}
+    /* feature detail -> bottom slide-up */
+    .cc-drawer{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;max-height:80vh;max-height:80svh;transform:translateY(102%);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);z-index:1550;padding:1.2rem 1.3rem 2rem}
+    .cc-drawer.open{transform:none}
+    /* pinned close target so it's always reachable on the bottom sheet; right edge lines up with the content/image.
+       float:right lets the category/title wrap up beside it (no empty top-left gap); right:auto cancels the desktop
+       rule's right inset, which a sticky box would otherwise apply as a 1.4rem leftward offset. */
+    .cc-drawer-x{position:sticky;top:0;right:auto;float:right;margin:-.3rem 0 .2rem;width:2.1rem;height:2.1rem;display:flex;align-items:center;justify-content:flex-end;font-size:1.1rem;z-index:2}
+    /* tap the dimmed area above the sheet to close it */
+    .cc-d-scrim{display:block;position:fixed;inset:0;z-index:1540;background:rgba(16,30,22,.4);opacity:0;pointer-events:none;transition:opacity .25s ease}
+    .cc-drawer.open ~ .cc-d-scrim{opacity:1;pointer-events:auto}
+    .cc-lightbox{z-index:1600}
+    /* keep map zoom/attribution above the sheet peek */
+    .maplibregl-ctrl-bottom-left{bottom:3.4rem}
+    .maplibregl-ctrl-bottom-right{bottom:3.2rem}
+    /* street-level dock takes the bottom -> hide the sheet peek */
+    .app.dock-open .rail-foot,.app.dock-open .rail-scroll{display:none}
+  }
