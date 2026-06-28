@@ -1,0 +1,87 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Two-factor enrolment: scan the QR (or type the secret), confirm with a code, then store backup codes. #}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style>
+  .setup-wrap{max-width:560px;margin:0 auto;padding:2.4rem 1.4rem 4rem}
+  .setup-wrap h1{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.6rem);line-height:1.06;letter-spacing:-.02em;color:var(--ink)}
+  .setup-wrap .lead{margin-top:.8rem;color:#5a5d4d;line-height:1.55}
+  .step{margin-top:2rem;padding-top:1.6rem;border-top:1px solid rgba(20,22,14,.12)}
+  .step-no{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay)}
+  .step h2{font-family:var(--sans);font-weight:700;font-size:1.05rem;margin:.3rem 0 .8rem;color:var(--ink)}
+  .qr{display:block;width:220px;height:220px;border:1px solid rgba(20,22,14,.12);border-radius:8px;background:#fff;padding:8px}
+  .secret{display:inline-block;margin-top:.8rem;font-family:var(--mono);font-size:1.05rem;letter-spacing:.18em;background:rgba(20,22,14,.05);padding:.5rem .8rem;border-radius:5px;word-break:break-all}
+  .field{margin-top:.8rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input[type=text]{width:100%;max-width:240px;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--mono);font-size:1.3rem;letter-spacing:.3em;padding:.45rem 0;outline:none}
+  .field input:focus{border-color:var(--trail)}
+  .btn-submit{margin-top:1.4rem;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:1rem;padding:.8rem 1.8rem;border:none;border-radius:5px;cursor:pointer;transition:background .2s}
+  .btn-submit:hover{background:#ff703d}
+  .alert-error{background:rgba(181,83,46,.1);border-left:3px solid var(--clay);color:var(--clay);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-top:.6rem}
+  .codes{list-style:none;padding:0;margin:1rem 0;display:grid;grid-template-columns:1fr 1fr;gap:.6rem;max-width:360px}
+  .codes li{font-family:var(--mono);font-size:1.1rem;letter-spacing:.12em;background:rgba(20,22,14,.05);padding:.55rem .7rem;border-radius:5px;text-align:center}
+  .warn{margin-top:1.4rem;font-size:.86rem;color:var(--clay);line-height:1.5;border-left:3px solid var(--clay);padding-left:.8rem}
+  .done-link{display:inline-block;margin-top:1.6rem;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;text-decoration:none;padding:.8rem 1.8rem;border-radius:5px}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="setup-wrap">
+
+  {% if setup_complete %}
+    <p class="step-no">Two-factor enabled</p>
+    <h1>{{ 'Save your backup codes' }}</h1>
+    <p class="lead">
+      Two-factor authentication is now active on your account. Store these single-use backup codes
+      somewhere safe — each one lets you sign in once if you lose your authenticator app.
+    </p>
+
+    <ul class="codes">
+      {% for code in backup_codes %}
+        <li>{{ code }}</li>
+      {% endfor %}
+    </ul>
+
+    <p class="warn">
+      This is the only time these codes are shown — copy them now. Each code is consumed the moment
+      it is used. Treat them like passwords.
+    </p>
+
+    <a class="done-link" href="{{ path('home') }}">Done</a>
+
+  {% else %}
+    <h1>Set up two-factor authentication</h1>
+    <p class="lead">
+      Protect your account with a one-time code from an authenticator app
+      (Google Authenticator, Aegis, 1Password, etc.).
+    </p>
+
+    <div class="step">
+      <p class="step-no">Step 1</p>
+      <h2>Scan this QR code</h2>
+      <img class="qr" src="{{ qr_code_uri }}" alt="TOTP QR code" width="220" height="220" />
+      <p class="lead" style="margin-top:1rem">Can't scan it? Enter this key manually:</p>
+      <code class="secret">{{ manual_secret }}</code>
+    </div>
+
+    <div class="step">
+      <p class="step-no">Step 2</p>
+      <h2>Enter the 6-digit code</h2>
+
+      {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+        <div class="field">
+          {{ form_widget(form.code) }}
+          {% if not form.code.vars.valid %}
+            <div class="alert-error" role="alert">
+              {% for error in form.code.vars.errors %}{{ error.message }}{% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn-submit">Verify &amp; enable</button>
+      {{ form_end(form) }}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
