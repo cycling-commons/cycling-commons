@@ -1,5 +1,10 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 twig:
     file_name_pattern: '*.twig'
+    globals:
+        # Injected into the map shell; empty disables street-level imagery (parity
+        # with the config.js placeholder). Real value lives only in .env.local.
+        mapillary_token: '%env(MAPILLARY_TOKEN)%'
 
 when@test:
     twig:
