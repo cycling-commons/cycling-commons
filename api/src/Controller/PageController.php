@@ -142,14 +142,26 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/map', name: 'map')]
-    public function map(): Response
-    {
-        return $this->stub('Map');
-    }
-
     #[Route('/login', name: 'login')]
     public function login(): Response
+    {
+        return $this->stub('Account');
+    }
+
+    #[Route('/contribute', name: 'contribute')]
+    public function contribute(): Response
+    {
+        return $this->stub('Contribute');
+    }
+
+    #[Route('/improve', name: 'improve')]
+    public function improve(): Response
+    {
+        return $this->stub('Improve');
+    }
+
+    #[Route('/profile', name: 'profile')]
+    public function profile(): Response
     {
         return $this->stub('Account');
     }

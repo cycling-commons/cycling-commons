@@ -1,0 +1,210 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+<!DOCTYPE html>
+<html lang="{{ app.request.locale|default('en') }}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cycling Commons — Map</title>
+<meta name="description" content="Explore the Commons on one open map — climbs, water, viewpoints, bike-friendly stays and road conditions. Filter by surface, traffic and what matters to your ride." />
+<link rel="canonical" href="https://cyclingcommons.org/map" />
+<link type="text/plain" rel="author" href="https://cyclingcommons.org/humans.txt" />
+<link rel="license" href="{{ path('licenses') }}" />
+<meta name="theme-color" content="#101E16" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta property="og:site_name" content="Cycling Commons" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cycling Commons — Map" />
+<meta property="og:description" content="Explore the Commons on one open map — climbs, water, viewpoints, bike-friendly stays and road conditions. Filter by surface, traffic and what matters to your ride." />
+<meta property="og:url" content="https://cyclingcommons.org/map" />
+<meta property="og:image" content="https://cyclingcommons.org/brand/og/map.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Cycling Commons — Map" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cycling Commons — Map" />
+<meta name="twitter:description" content="Explore the Commons on one open map — climbs, water, viewpoints, bike-friendly stays and road conditions. Filter by surface, traffic and what matters to your ride." />
+<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/map.jpg" />
+
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
+<link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
+<script defer src="{{ asset('js/analytics.js') }}"></script>
+</head>
+<body>
+<div class="app">
+  <!-- ============ FILTER RAIL ============ -->
+  <aside class="rail">
+    <div class="rail-head">
+      <a class="brand" href="{{ path('home') }}" style="flex:none"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons" style="height:1.8rem;display:block"></a>
+      <div class="co">◎ Wallonia · 50.32°N 5.01°E</div>
+      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">Map</a><a href="{{ path('regions') }}">Regions</a><a href="{{ path('vote') }}">Vote</a><a href="{{ path('developers') }}">Developers</a><a href="{{ path('about') }}">About</a><a href="{{ path('login') }}">Account</a></nav>
+      <button class="rail-burger" id="railBurger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="railNav">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+    <div class="rail-scroll">
+      <div class="grp">
+        <h3>Search in Wallonia</h3>
+        <input class="search" id="search" placeholder="Search a climb, town, viewpoint…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="Search the Commons" />
+        <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
+      </div>
+
+      <!-- View mode is the primary filter (curated best-of vs the full backlog), so it sits right
+           under Region. Its active button is styled bright (#mode in the CSS) so the current mode
+           is obvious at a glance. -->
+      <div class="grp">
+        <h3>View mode</h3>
+        <div class="toggle" id="mode">
+          <button class="on" data-m="curated">Curated best-of</button>
+          <button data-m="all">Everything</button>
+        </div>
+        <div class="hint">Curated shows riders' best climbs, stays &amp; views. Utility data (water, hazards, services) aims for full coverage.</div>
+      </div>
+
+      <!-- Discipline chips are a visual stub for now: they toggle but don't yet filter the map
+           (the dataset isn't discipline-tagged). Compact styling lives at #disc in the CSS. -->
+      <div class="grp">
+        <h3>Discipline</h3>
+        <div class="chips" id="disc">
+          <span class="chip on">Road</span><span class="chip on">Gravel</span><span class="chip">MTB</span>
+          <span class="chip">Touring</span><span class="chip">Bikepacking</span><span class="chip">E-bike</span>
+          <span class="chip">Urban</span><span class="chip">Recumbent</span><span class="chip">Handbike</span>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3 class="dl-head">Data layers <button class="dl-all" id="layersAll" type="button">deselect all</button></h3>
+        <div id="layers"></div>
+      </div>
+
+      <div class="grp">
+        <h3>Ride heatmap <span style="color:var(--ochre);letter-spacing:.08em">· derived (L)</span></h3>
+        <div class="toggle" id="heattoggle">
+          <button class="on" data-h="off">Off</button>
+          <button data-h="on">Heatmap</button>
+        </div>
+        <div class="chips" id="season" style="margin-top:.6rem">
+          <span class="chip on" data-s="all">All</span><span class="chip" data-s="spring">Spring</span><span class="chip" data-s="summer">Summer</span><span class="chip" data-s="autumn">Autumn</span><span class="chip" data-s="winter">Winter</span>
+        </div>
+        <div class="hint">Popular lines from sample rides. Seasons are illustrative; the real system anonymizes rides at ingest.</div>
+      </div>
+
+      <div class="grp">
+        <h3>Plan a loop from Spa</h3>
+        <div class="chips" id="planner">
+          <span class="chip" data-km="20">~20 km</span><span class="chip" data-km="50">~50 km</span><span class="chip" data-km="80">~80 km</span><span class="chip" data-km="125">~125 km</span>
+        </div>
+        <div class="hint">Suggests a popular loop (faked for now). The real planner stitches a route from the heatmap.</div>
+      </div>
+
+      <div class="grp">
+        <h3>Freshness</h3>
+        <div class="chips">
+          <span class="chip on">Confirmed</span><span class="chip">Ageing</span><span class="chip">All</span>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3>Climb surface</h3>
+        <div class="chips" id="sqf">
+          <span class="chip on" data-v="Smooth">Smooth</span><span class="chip on" data-v="Good">Good</span>
+          <span class="chip on" data-v="Worn">Worn</span><span class="chip on" data-v="Rough">Rough</span>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3>Climb traffic</h3>
+        <div class="chips" id="trf">
+          <span class="chip on" data-v="Traffic-free">Free</span><span class="chip on" data-v="Quiet">Quiet</span>
+          <span class="chip on" data-v="Moderate">Moderate</span><span class="chip on" data-v="Busy">Busy</span>
+        </div>
+      </div>
+    </div>
+    <div class="rail-foot">
+      <div class="res"><b id="count">0</b> places shown</div>
+    </div>
+  </aside>
+
+  <!-- ============ MAP ============ -->
+  <div class="mapcol">
+    <div class="demo-banner" style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b> — a glimpse of what the open atlas will hold. Launching 2026.</div>
+  <main class="map-wrap">
+    <div id="map"></div>
+    <div class="map-top">
+      <div class="rg">Wallonia, Belgium</div>
+      <div class="sub">Curated best-of · Summer 2026</div>
+      <a class="add-climb" href="{{ path('contribute') }}">+ Contribute</a>
+    </div>
+    <div class="legend">
+      <button class="lg-toggle" id="lgToggle" type="button" aria-label="Surface legend" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <h4>Road surface · A</h4>
+      <div class="skey">
+        <div class="skey-row"><span class="skey-ln" style="--sc:#3E9C8A"></span>Cycleway · RAVeL</div>
+        <div class="skey-row"><span class="skey-ln" style="--sc:#4E6E66"></span>Paved · asphalt</div>
+        <div class="skey-row"><span class="skey-ln dash" style="--sc:#C8923A"></span>Gravel</div>
+        <div class="skey-row"><span class="skey-ln dot" style="--sc:#6E7B96"></span>Pavé · cobbles</div>
+        <div class="skey-row"><span class="skey-ln dash" style="--sc:#6E5849"></span>Ground · dirt</div>
+        <div class="skey-row"><span class="skey-ln dash" style="--sc:#D92D20"></span>Surface unverified</div>
+      </div>
+    </div>
+    <div class="map-ctrl" aria-label="Base map and overlays">
+      <button class="mc-toggle" id="mcToggle" type="button" aria-label="Map layers" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+          <path d="M12 2.5 22 8 12 13.5 2 8z"/><path d="M2.5 12 12 17 21.5 12"/><path d="M2.5 16 12 21 21.5 16"/>
+        </svg>
+      </button>
+      <div class="mc-seg" id="baseSeg">
+        <button class="on" data-b="map">Map</button>
+        <button data-b="satellite">Satellite</button>
+      </div>
+      <button class="mc-ov" id="ovStreet"><span class="mc-ic">📷</span>Street-level</button>
+    </div>
+    <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="Contribute a place"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 10l5-5 5 5M5 20h14"/></svg></a>
+    <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="Feature detail">
+      <button class="cc-drawer-x" id="drawerClose" aria-label="Close detail">✕</button>
+      <div class="cc-drawer-body" id="drawerBody"></div>
+    </aside>
+    <div class="cc-d-scrim" id="drawerScrim"></div>
+    <div class="cc-tooltip" id="tip" hidden></div>
+    <div class="cc-lightbox" id="lightbox" aria-hidden="true">
+      <button class="cc-lb-x" aria-label="Close image">✕</button>
+      <button class="cc-lb-nav cc-lb-prev" aria-label="Previous image" hidden>‹</button>
+      <div class="cc-lb-stage"><img alt="" /><div class="cc-lb-cap"></div></div>
+      <button class="cc-lb-nav cc-lb-next" aria-label="Next image" hidden>›</button>
+    </div>
+    <section class="mly-dock" id="mlyDock" aria-hidden="true" aria-label="Street-level imagery viewer">
+      <div class="mly-bar">
+        <span class="mly-t" id="mlyTitle">Mapillary · street-level</span>
+        <button id="mlyFull" title="Expand / collapse" aria-label="Expand viewer">⤢</button>
+        <button id="mlyClose" title="Close" aria-label="Close viewer">✕</button>
+      </div>
+      <div class="mly-view" id="mlyView"></div>
+      <div class="mly-loading" id="mlyLoad"><span class="mly-spin"></span>Loading street-level…</div>
+    </section>
+  </main>
+  </div>
+</div>
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{{ asset('data/routes-data.js') }}"></script>
+<script src="{{ asset('data/climbs-data.js') }}"></script>
+<script>window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode|raw }};</script>
+<script src="{{ asset('data/surface-data.js') }}"></script>
+<script src="{{ asset('data/water-osm.js') }}"></script>
+<script src="{{ asset('data/services-osm.js') }}"></script>
+<script src="{{ asset('data/scenic-osm.js') }}"></script>
+<script src="{{ asset('data/history-osm.js') }}"></script>
+<script src="{{ asset('data/stays-osm.js') }}"></script>
+<script src="{{ asset('data/stays-pivot.js') }}"></script>
+<script src="{{ asset('map/stays-merge.js') }}"></script>
+<script src="{{ asset('data/shelter-osm.js') }}"></script>
+<script src="{{ asset('data/transit-osm.js') }}"></script>
+<script src="{{ asset('map/map.js') }}"></script>
+<script src="{{ asset('js/a11y.js') }}"></script>
+<script src="{{ asset('js/version.js') }}"></script>
+</body>
+</html>
