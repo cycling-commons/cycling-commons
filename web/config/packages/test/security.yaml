@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+#
+# Test-environment security overrides.
+#
+# login_throttling is raised to 100 attempts so that Symfony's per-IP throttle
+# does NOT trip during LockoutTest.  The per-account hard lock (LoginThrottleListener)
+# fires at 5 failures as usual, so the test observes exactly that mechanism.
+
+when@test:
+    security:
+        firewalls:
+            main:
+                login_throttling:
+                    max_attempts: 100
