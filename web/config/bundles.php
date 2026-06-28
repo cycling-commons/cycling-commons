@@ -1,4 +1,5 @@
 <?php
+
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 
 return [
@@ -14,4 +15,5 @@ return [
     Scheb\TwoFactorBundle\SchebTwoFactorBundle::class => ['all' => true],
     Symfony\UX\TwigComponent\TwigComponentBundle::class => ['all' => true],
     EasyCorp\Bundle\EasyAdminBundle\EasyAdminBundle::class => ['all' => true],
+    DAMA\DoctrineTestBundle\DAMADoctrineTestBundle::class => ['test' => true],
 ];

@@ -27,6 +27,7 @@
         "symfony/form": "7.4.*",
         "symfony/framework-bundle": "^7.4",
         "symfony/mailer": "7.4.*",
+        "symfony/rate-limiter": "7.4.*",
         "symfony/runtime": "^7.4",
         "symfony/security-bundle": "7.4.*",
         "symfony/translation": "^7.4",
@@ -64,6 +65,7 @@
         }
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^8.6",
         "friendsofphp/php-cs-fixer": "^3.95",
         "phpstan/phpstan": "^2.2",
         "phpstan/phpstan-doctrine": "^2.0",

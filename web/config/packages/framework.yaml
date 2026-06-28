@@ -5,4 +5,7 @@ framework:
         log: true
     router:
         utf8: true
-    session: false
+    session:
+        handler_id: null
+        cookie_secure: auto
+        cookie_samesite: lax
