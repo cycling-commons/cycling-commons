@@ -1,0 +1,239 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+  .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem}
+  h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.05;margin-bottom:.4rem}
+  .sub{color:#4a4d40;margin-bottom:1.6rem}
+
+  /* stepper */
+  .stepper{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-bottom:2rem;border-bottom:1px solid rgba(20,22,14,.15);padding-bottom:1rem}
+  .stepper li{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#9a9d8c;display:flex;align-items:center;gap:.45rem}
+  .stepper li::before{content:counter(step);counter-increment:step;display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;border-radius:50%;border:1.5px solid rgba(20,22,14,.25);font-size:.62rem;color:#595c4d}
+  .stepper{counter-reset:step}
+  .stepper li.done{color:#5a5d4d}.stepper li.done::before{background:var(--spruce);border-color:var(--spruce);color:var(--paper);content:"✓"}
+  .stepper li.on{color:var(--ink)}.stepper li.on::before{border-color:var(--trail);color:var(--ink)}
+
+  /* panes */
+  .pane{display:none}.pane.on{display:block;animation:fade .4s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .pane h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin-bottom:.3rem}
+  .pane .help{color:#595c4d;font-size:.9rem;margin-bottom:1.3rem}
+
+  .field{margin-bottom:1.3rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input,.field select,.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
+  .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--trail)}
+  .field .fhelp{font-family:var(--mono);font-size:.62rem;color:#9a9d8c;margin-top:.35rem;text-transform:none;letter-spacing:0}
+
+  /* step 1 map */
+  #wmap{height:clamp(360px,68vh,640px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:.8rem;background:var(--paper-deep)}
+  .maplibregl-canvas{filter:grayscale(.38) sepia(.24) saturate(.82) contrast(.95) brightness(1.03)}
+  .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
+  .readout #wzReset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+  .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
+  .cc-pin span{font-size:.8rem}
+
+  /* place search */
+  .csearch{position:relative}
+  .csearch input{background:#F8F2E4;border:1.5px solid rgba(20,22,14,.22);border-radius:8px;padding:.65rem .85rem}
+  .csearch input::placeholder{color:#9a9d8c}
+  .csearch input:focus{border-color:var(--trail);background:#FCF8EE}
+  .csearch-results{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--paper);border:1px solid rgba(20,22,14,.2);border-radius:0 0 8px 8px;box-shadow:0 14px 28px -14px rgba(20,22,14,.45);max-height:250px;overflow-y:auto}
+  .csearch-results .res{padding:.55rem .8rem;cursor:pointer;border-bottom:1px solid rgba(20,22,14,.08)}
+  .csearch-results .res:hover{background:var(--paper-deep)}
+  .csearch-results .res b{font-size:.92rem;font-weight:500}
+  .csearch-results .res small{display:block;color:#595c4d;font-size:.74rem;font-family:var(--mono)}
+  .csearch-results .res.empty{color:#595c4d;cursor:default}
+
+  /* upload queue + consent */
+  .ulq{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+  .ulq .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
+  .ulq .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ochre)}
+  .linkrow{display:flex;gap:.5rem;margin-top:.8rem}
+  .linkrow input{flex:1;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:.9rem;padding:.4rem 0;outline:none}
+  .linkrow input:focus{border-color:var(--trail)}
+  .src-note{font-size:.78rem;color:#4a4d40;margin-top:.5rem;line-height:1.5}
+  .src-note.ok{color:var(--spruce-lift)}.src-note.manual{color:var(--clay)}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(16,30,22,.55);z-index:2000;display:none;align-items:center;justify-content:center;padding:1.2rem}
+  .modal.open{display:flex}
+  .modal .box{background:var(--paper);border-radius:12px;max-width:460px;padding:1.6rem 1.7rem;box-shadow:0 24px 60px -18px rgba(0,0,0,.5)}
+  .modal h3{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin-bottom:.6rem}
+  .modal p{font-size:.9rem;color:#4a4d40;line-height:1.55;margin-bottom:.8rem}
+  .modal .rules{background:var(--paper-deep);border-radius:8px;padding:.8rem 1rem;font-size:.84rem;line-height:1.55;margin-bottom:1rem}
+  .modal label.ok-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;cursor:pointer;margin-bottom:1.1rem}
+  .modal .mrow{display:flex;gap:.7rem;justify-content:flex-end}
+  .modal .mrow button{font-family:var(--sans);font-weight:700;font-size:.92rem;padding:.6rem 1.2rem;border-radius:6px;cursor:pointer;border:1.5px solid transparent}
+  .modal .b-ok{background:var(--trail);color:var(--ink)}.modal .b-ok[disabled]{opacity:.45;cursor:not-allowed}
+  .modal .b-cancel{background:none;border-color:rgba(20,22,14,.25);color:var(--ink)}
+  .modal .thanks-big{text-align:center}
+  .modal .thanks-big .ic{font-size:2.6rem}.modal .thanks-big h3{font-size:1.6rem;margin-top:.4rem}
+  .modal .demo-note{font-size:.8rem;color:#595c4d;margin-top:.4rem}
+
+  /* drop zone */
+  .drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:2rem;text-align:center;color:#595c4d;cursor:pointer}
+  .drop:hover{border-color:var(--trail);color:var(--ink)}
+  .drop .ic{font-size:1.6rem;display:block;margin-bottom:.5rem}
+  .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.8rem 1rem;font-size:.82rem;color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1rem;line-height:1.5}
+
+  /* review card */
+  .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.4rem}
+  .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.38rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  .kv span:first-child{color:#595c4d}
+  .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
+
+  /* nav row */
+  .navrow{position:sticky;bottom:0;display:flex;align-items:center;gap:1rem;margin-top:2rem;padding:1rem 0;border-top:1px solid rgba(20,22,14,.12);background:linear-gradient(to top,var(--paper) 70%,rgba(239,230,212,0))}
+  .navrow .spacer{flex:1}
+
+  /* submitted (client-side wizard) */
+  .pane.submitted{text-align:center;padding:1rem}
+  .pane.submitted h2{font-size:1.9rem;margin:.5rem 0}
+  .pane.submitted p{color:#4a4d40;max-width:46ch;margin:0 auto 1.4rem}
+
+  /* server-side receipt (POST stub state) */
+  .receipt{text-align:center;padding:4rem 1rem}
+  .receipt h2{font-family:var(--serif);font-size:1.8rem;margin:.5rem 0}
+  .receipt .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin-top:.5rem}
+  .receipt .stub-note{display:inline-block;margin-top:1.2rem;font-size:.82rem;color:#6b5320;background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:6px;padding:.5rem 1rem;max-width:520px;line-height:1.5}
+
+  .btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
+  .btn-p:disabled,.btn-p[disabled]{background:var(--paper-deep);color:#9a9d8c;cursor:not-allowed}
+  .btn-g:hover{background:var(--ink);color:var(--paper)}
+
+  .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
+  .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .btn:focus-visible,#wzReset:focus-visible,.drop:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:4px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+{% endblock %}
+{% block body %}
+{% if receipt is not null %}
+{# ── SERVER-SIDE RECEIPT (honest stub state after POST) ── #}
+<div class="wrap" id="main">
+  <div class="receipt">
+    <div style="font-size:2.4rem">◬</div>
+    <h2>{{ 'improve.receipt.heading'|trans }}</h2>
+    <p>{{ 'improve.receipt.body'|trans }}</p>
+    <p class="ref">{{ 'improve.receipt.reference'|trans }} {{ receipt.reference }}</p>
+    <p class="stub-note">{{ 'improve.receipt.stub_note'|trans }}</p>
+    <div style="margin-top:2rem">
+      <a class="btn btn-g" href="{{ path('map') }}">{{ 'improve.receipt.cta'|trans }}</a>
+    </div>
+  </div>
+</div>
+{% else %}
+{# ── WIZARD ── #}
+<div class="wrap" id="wiz">
+  <div class="ey">{{ 'improve.eyebrow'|trans }}</div>
+  <h1 class="disp">{{ 'improve.title'|trans }}</h1>
+  <p class="sub">{{ 'improve.lead'|trans }}</p>
+
+  {{ form_start(form, {attr: {id: 'improve-form', novalidate: 'novalidate'}}) }}
+
+  {# Hidden fields filled by client JS #}
+  {{ form_widget(form.lat) }}
+  {{ form_widget(form.lng) }}
+  {{ form_widget(form.place) }}
+  {{ form_widget(form.mode) }}
+  {{ form_widget(form.subject) }}
+
+  <ol class="stepper" id="stepper">
+    <li class="on" data-s="1" id="step-label-1">{{ 'improve.step1.label'|trans }}</li>
+    <li data-s="2">{{ 'improve.step2.label'|trans }}</li>
+    <li data-s="3">{{ 'improve.step3.label'|trans }}</li>
+    <li data-s="4">{{ 'improve.step4.label'|trans }}</li>
+  </ol>
+
+  {# STEP 1 — LOCATE #}
+  <section class="pane on" data-s="1" id="w-locate">
+    <h2>{{ 'improve.step1.heading'|trans }}</h2>
+    <p class="help">{{ 'improve.step1.help'|trans }}</p>
+    <div class="field csearch">
+      <label for="wz-search">{{ 'improve.step1.search_label'|trans }}</label>
+      <input id="wz-search" type="search" autocomplete="off" placeholder="{{ 'improve.step1.search_placeholder'|trans }}" />
+      <div class="csearch-results" id="wz-results" hidden></div>
+    </div>
+    <div id="wmap" role="application" aria-label="{{ 'improve.step1.map_aria'|trans }}"></div>
+    <div class="readout">
+      <span id="wz-readout">{{ 'improve.step1.readout_initial'|trans }}</span>
+      <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
+    </div>
+  </section>
+
+  {# STEP 2 — DETAILS #}
+  <section class="pane" data-s="2" id="w-details">
+    <h2>{{ 'improve.step2.heading'|trans }}</h2>
+    <p class="help">{{ 'improve.step2.help'|trans }}</p>
+    <div class="field">
+      <label for="{{ form.whatChanged.vars.id }}">{{ 'improve.step2.what_changed_label'|trans }}</label>
+      {{ form_widget(form.whatChanged, {attr: {placeholder: 'improve.step2.what_changed_placeholder'|trans}}) }}
+    </div>
+    <div class="field">
+      <label for="{{ form.note.vars.id }}">{{ 'improve.step2.note_label'|trans }}</label>
+      {{ form_widget(form.note, {attr: {placeholder: 'improve.step2.note_placeholder'|trans}}) }}
+    </div>
+  </section>
+
+  {# STEP 3 — PHOTOS & VIDEO #}
+  <section class="pane" data-s="3" id="w-media">
+    <h2>{{ 'improve.step3.heading'|trans }}</h2>
+    <p class="help">{{ 'improve.step3.help'|trans }}</p>
+    <div class="field">
+      <label>{{ 'improve.step3.photo_label'|trans }}</label>
+      <div class="drop" id="drop-photo">
+        <span class="ic">◳</span>{{ 'improve.step3.photo_drop'|trans }}<br/>
+        <small>{{ 'improve.step3.photo_types'|trans }}</small>
+      </div>
+      <div class="ulq" id="q-photo"></div>
+      <div class="linkrow">
+        {{ form_widget(form.photoUrl, {attr: {id: 'lnk-photo', placeholder: 'improve.step3.photo_url_placeholder'|trans}}) }}
+        <button class="btn btn-p" type="button" id="btn-link-photo">{{ 'improve.step3.link_btn'|trans }}</button>
+      </div>
+      <div class="src-note" id="srcn-photo"></div>
+    </div>
+    <div class="field">
+      <label>{{ 'improve.step3.video_label'|trans }}</label>
+      <div class="drop" id="drop-video">
+        <span class="ic">▷</span>{{ 'improve.step3.video_drop'|trans }}<br/>
+        <small>{{ 'improve.step3.video_types'|trans }}</small>
+      </div>
+      <div class="ulq" id="q-video"></div>
+      <div class="linkrow">
+        {{ form_widget(form.videoUrl, {attr: {id: 'lnk-video', placeholder: 'improve.step3.video_url_placeholder'|trans}}) }}
+        <button class="btn btn-p" type="button" id="btn-link-video">{{ 'improve.step3.link_btn'|trans }}</button>
+      </div>
+      <div class="src-note" id="srcn-video"></div>
+    </div>
+    <div class="notice"><b>{{ 'improve.step3.notice_b'|trans }}</b> {{ 'improve.step3.notice'|trans }}</div>
+  </section>
+
+  {# STEP 4 — REVIEW & SUBMIT #}
+  <section class="pane" data-s="4" id="w-review">
+    <h2>{{ 'improve.step4.heading'|trans }}</h2>
+    <p class="help">{{ 'improve.step4.help'|trans }}</p>
+    <div class="card" id="reviewBody"></div>
+    <p class="prov">{{ 'improve.step4.prov'|trans }}</p>
+  </section>
+
+  {# NAV ROW #}
+  <div class="navrow" id="navrow">
+    <button class="btn btn-g" id="backBtn" type="button" style="visibility:hidden">← {{ 'improve.nav.back'|trans }}</button>
+    <span class="spacer"></span>
+    <button class="btn btn-p" id="nextBtn" type="button">{{ 'improve.nav.next'|trans }} →</button>
+  </div>
+
+  {{ form_end(form) }}
+</div>
+<div class="modal" id="modal"><div class="box" id="modal-box"></div></div>
+{% endif %}
+{% endblock %}
+{% block body_scripts %}
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{{ asset('contribute/improve.js') }}"></script>
+{% endblock %}

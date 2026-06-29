@@ -8,6 +8,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\AddClimbType;
+use App\Form\ImproveType;
 use App\Form\VoteType;
 use App\Service\ContributionStubInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -90,6 +91,39 @@ final class ContributeController extends AbstractController
             'page_title' => 'Cycling Commons — Vote',
             'page_description' => "Rank this region's best riding. The community decides the seasonal best-of, kept fresh by the riders who ride it.",
             'nav_active' => 'vote',
+            'receipt' => null,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/improve', name: 'improve')]
+    #[IsGranted('ROLE_USER')]
+    public function improve(Request $request): Response
+    {
+        $form = $this->createForm(ImproveType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var array<string, mixed> $data */
+            $data = $form->getData();
+            /** @var User $user */
+            $user = $this->getUser();
+
+            $receipt = $this->contributionStub->submit('improve', $data, $user);
+
+            return $this->render('contribute/improve.html.twig', [
+                'page_title' => 'Cycling Commons — Improve / add a place',
+                'page_description' => 'Improve a place in the Commons — fix details, flag conditions, and keep the open cycling atlas accurate for every rider.',
+                'nav_active' => 'improve',
+                'receipt' => $receipt,
+                'form' => null,
+            ]);
+        }
+
+        return $this->render('contribute/improve.html.twig', [
+            'page_title' => 'Cycling Commons — Improve / add a place',
+            'page_description' => 'Improve a place in the Commons — fix details, flag conditions, and keep the open cycling atlas accurate for every rider.',
+            'nav_active' => 'improve',
             'receipt' => null,
             'form' => $form,
         ]);

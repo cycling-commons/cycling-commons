@@ -142,12 +142,6 @@ final class PageController extends AbstractController
         return $this->stub('Contribute');
     }
 
-    #[Route('/improve', name: 'improve')]
-    public function improve(): Response
-    {
-        return $this->stub('Improve');
-    }
-
     #[Route('/moderate', name: 'moderate')]
     public function moderate(): Response
     {
