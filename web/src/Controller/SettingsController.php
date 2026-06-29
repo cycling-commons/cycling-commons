@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\SettingsPasswordType;
 use App\Form\SettingsType;
+use App\Service\UserDeletionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,6 +33,7 @@ final class SettingsController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly UserDeletionService $deletionService,
     ) {
     }
 
@@ -84,5 +86,56 @@ final class SettingsController extends AbstractController
             'profileForm' => $profileForm,
             'passwordForm' => $passwordForm,
         ]);
+    }
+
+    /**
+     * Step 1 of account deletion: validate CSRF, send a one-time code by email.
+     */
+    #[Route('/settings/delete-request', name: 'settings_delete_request', methods: ['POST'])]
+    public function deleteRequest(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('delete_request', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Invalid security token. Please try again.');
+
+            return $this->redirectToRoute('settings');
+        }
+
+        $this->deletionService->requestDeletion($user);
+        $this->addFlash('success', 'Check your email for the deletion code. It expires in 1 hour.');
+
+        return $this->redirectToRoute('settings');
+    }
+
+    /**
+     * Step 2 of account deletion: validate CSRF + code, delete the account, invalidate session.
+     */
+    #[Route('/settings/delete-confirm', name: 'settings_delete_confirm', methods: ['POST'])]
+    public function deleteConfirm(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('delete_confirm', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Invalid security token. Please try again.');
+
+            return $this->redirectToRoute('settings');
+        }
+
+        $code = (string) $request->request->get('deletion_code', '');
+
+        if (!$this->deletionService->confirmDeletion($user, $code)) {
+            $this->addFlash('error', 'Invalid or expired deletion code.');
+
+            return $this->redirectToRoute('settings');
+        }
+
+        $request->getSession()->invalidate();
+
+        $this->addFlash('success', 'Your account has been permanently deleted.');
+
+        return $this->redirectToRoute('home');
     }
 }

@@ -7,3 +7,11 @@ services:
         resource: '../src/'
         exclude:
             - '../src/Kernel.php'
+
+    _instanceof:
+        App\Service\UserDeletionHookInterface:
+            tags: ['app.user_deletion_hook']
+
+    App\Service\UserDeletionService:
+        arguments:
+            $hooks: !tagged_iterator app.user_deletion_hook

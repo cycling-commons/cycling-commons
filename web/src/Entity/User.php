@@ -69,6 +69,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $lockedUntil = null;
 
+    #[ORM\Column(type: 'string', length: 16, nullable: true)]
+    private ?string $deletionCode = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $deletionRequestedAt = null;
+
     #[ORM\Column(type: 'boolean')]
     private bool $publicProfile = false;
 
@@ -329,5 +335,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function getUpdatedAt(): ?\DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function getDeletionCode(): ?string
+    {
+        return $this->deletionCode;
+    }
+
+    public function setDeletionCode(?string $deletionCode): static
+    {
+        $this->deletionCode = $deletionCode;
+
+        return $this;
+    }
+
+    public function getDeletionRequestedAt(): ?\DateTimeImmutable
+    {
+        return $this->deletionRequestedAt;
+    }
+
+    public function setDeletionRequestedAt(?\DateTimeImmutable $deletionRequestedAt): static
+    {
+        $this->deletionRequestedAt = $deletionRequestedAt;
+
+        return $this;
     }
 }
