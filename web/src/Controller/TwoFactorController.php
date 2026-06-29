@@ -70,7 +70,8 @@ final class TwoFactorController extends AbstractController
 
                 $user->setTotpSecret($pendingSecret);
                 $user->setTwoFaEnabled(true);
-                $user->setBackupCodes($backupCodes);
+                // Store only SHA-256 hashes; the plaintext codes are shown once below.
+                $user->setBackupCodes(array_map(static fn (string $c): string => hash('sha256', $c), $backupCodes));
                 $entityManager->flush();
 
                 $session->remove(self::PENDING_SECRET_KEY);

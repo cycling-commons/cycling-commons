@@ -63,7 +63,8 @@ final class TwoFactorTest extends WebTestCase
         if ($withTotp && null !== $secret) {
             $user->setTotpSecret($secret);
             $user->setTwoFaEnabled(true);
-            $user->setBackupCodes($backupCodes);
+            // Stored as hashes (matching real storage); plaintext codes are entered at login.
+            $user->setBackupCodes(array_map(static fn (string $c): string => hash('sha256', $c), $backupCodes));
         }
 
         $em->persist($user);
@@ -169,8 +170,8 @@ final class TwoFactorTest extends WebTestCase
 
         // The used backup code is consumed (no longer stored on the user).
         $user = $this->fetchUser($email);
-        self::assertNotContains($backupCode, $user->getBackupCodes(), 'Used backup code must be invalidated.');
-        self::assertContains('ffff-9999', $user->getBackupCodes(), 'Unused backup codes remain.');
+        self::assertNotContains(hash('sha256', $backupCode), $user->getBackupCodes(), 'Used backup code must be invalidated.');
+        self::assertContains(hash('sha256', 'ffff-9999'), $user->getBackupCodes(), 'Unused backup codes remain.');
 
         // Reuse must fail: a fresh browser session + the same code does not complete 2FA.
         $client->restart();
@@ -182,6 +183,31 @@ final class TwoFactorTest extends WebTestCase
         $client->submit($form2);
         // Rejected → bounced back to the interstitial (still 2FA in progress).
         self::assertResponseRedirects('/2fa');
+    }
+
+    public function testTotpSecretIsEncryptedAtRestAndBackupCodesHashed(): void
+    {
+        static::createClient();
+
+        $email = '2fa-enc@example.com';
+        $data = $this->createUser($email, 'hunter2secure!', withTotp: true, backupCodes: ['aaaa-1111']);
+        $secret = $data['secret'];
+        self::assertIsString($secret);
+
+        // Raw DB column must NOT hold the plaintext seed — it is AES-GCM ciphertext (base64).
+        $conn = static::getContainer()->get('doctrine.dbal.default_connection');
+        $rawSecret = $conn->fetchOne('SELECT totp_secret FROM users WHERE email = ?', [$email]);
+        self::assertIsString($rawSecret);
+        self::assertNotSame($secret, $rawSecret, 'TOTP secret must be encrypted at rest.');
+        self::assertNotFalse(base64_decode($rawSecret, true), 'Stored value should be base64 ciphertext.');
+
+        // Through the ORM it decrypts transparently back to the original secret.
+        $user = $this->fetchUser($email);
+        self::assertSame($secret, $user->getTotpSecret());
+
+        // Backup codes are stored hashed, never in plaintext.
+        self::assertContains(hash('sha256', 'aaaa-1111'), $user->getBackupCodes());
+        self::assertNotContains('aaaa-1111', $user->getBackupCodes());
     }
 
     public function testElevatedRoleWithoutSecretIsRedirectedToSetup(): void

@@ -56,7 +56,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'boolean')]
     private bool $twoFaEnabled = false;
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    // Encrypted at rest (AES-256-GCM, key from APP_SECRET) — a DB leak alone
+    // does not expose the authenticator seed.
+    #[ORM\Column(type: 'encrypted_string', nullable: true)]
     private ?string $totpSecret = null;
 
     /** @var list<string> */
@@ -158,13 +160,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[\Override]
     public function isBackupCode(string $code): bool
     {
-        return in_array($code, $this->backupCodes, true);
+        return in_array(hash('sha256', $code), $this->backupCodes, true);
     }
 
     #[\Override]
     public function invalidateBackupCode(string $code): void
     {
-        $i = array_search($code, $this->backupCodes, true);
+        $i = array_search(hash('sha256', $code), $this->backupCodes, true);
         if (false !== $i) {
             unset($this->backupCodes[$i]);
             $this->backupCodes = array_values($this->backupCodes);
