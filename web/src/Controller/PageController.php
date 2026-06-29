@@ -136,12 +136,6 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/contribute', name: 'contribute')]
-    public function contribute(): Response
-    {
-        return $this->stub('Contribute');
-    }
-
     #[Route('/moderate', name: 'moderate')]
     public function moderate(): Response
     {

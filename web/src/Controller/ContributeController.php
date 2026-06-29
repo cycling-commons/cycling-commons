@@ -30,6 +30,16 @@ final class ContributeController extends AbstractController
     ) {
     }
 
+    #[Route('/contribute', name: 'contribute')]
+    public function index(): Response
+    {
+        return $this->render('contribute/index.html.twig', [
+            'page_title' => 'Cycling Commons — Contribute',
+            'page_description' => 'Choose what to contribute to the Cycling Commons — climbs, water, surface, hazards, stays, views and more. One open atlas, built by riders.',
+            'nav_active' => '',
+        ]);
+    }
+
     #[Route('/add-climb', name: 'add_climb')]
     #[IsGranted('ROLE_USER')]
     public function addClimb(Request $request): Response
