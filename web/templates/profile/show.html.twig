@@ -1,0 +1,163 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Profile page — ported from atlas/demo/profile.html, shows app.user data. #}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style>
+  .wrap{max-width:880px;margin:0 auto;padding:2.4rem 2rem}
+  @media(max-width:560px){.wrap{padding:1.6rem 1.25rem}}
+
+  /* header */
+  .head{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap}
+  .ava{width:84px;height:84px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-weight:600;font-size:2rem;color:var(--paper);background:var(--spruce-lift);
+    border:2px solid rgba(20,22,14,.15)}
+  .who h1{font-family:var(--serif);font-weight:600;font-size:1.9rem;line-height:1.05}
+  .who .sub{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin-top:.35rem}
+  .badge{display:inline-flex;align-items:center;gap:.4rem;margin-top:.7rem;font-family:var(--mono);font-size:.6rem;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--spruce-lift);background:rgba(44,84,64,.1);
+    border:1px solid rgba(44,84,64,.3);border-radius:99px;padding:.3rem .6rem}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:#3e7d4f;display:inline-block}
+  .badge.private{color:var(--clay);background:rgba(181,83,46,.08);border-color:rgba(181,83,46,.3)}
+  .badge.private .dot{background:var(--clay)}
+
+  /* edit-profile button */
+  .edit-profile{margin-left:auto;align-self:flex-start;font-family:var(--sans);font-weight:700;font-size:.92rem;
+    padding:.6rem 1.15rem;border-radius:6px;background:var(--ink);color:var(--paper);border:1.5px solid var(--ink);
+    display:inline-flex;align-items:center;gap:.45rem;transition:background .18s;text-decoration:none}
+  .edit-profile:hover{background:var(--spruce-lift);border-color:var(--spruce-lift)}
+
+  /* info grid */
+  .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;margin:2rem 0}
+  @media(max-width:560px){.info-grid{grid-template-columns:1fr}}
+  .info-card{background:var(--paper-deep);border-radius:10px;padding:1rem 1.1rem}
+  .info-card .label{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.3rem}
+  .info-card .value{font-size:.95rem;font-weight:600;word-break:break-all}
+
+  /* sections */
+  h2.sec{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);
+    margin:2.2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid rgba(20,22,14,.14)}
+
+  /* status rows */
+  .status-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;
+    border-bottom:1px solid rgba(20,22,14,.1);font-size:.9rem}
+  .status-row:last-child{border-bottom:none}
+  .status-row .label{color:#595c4d;font-size:.82rem}
+  .pill{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.2rem .55rem;border-radius:99px;display:inline-flex;align-items:center;gap:.3rem;border:1px solid transparent}
+  .pill.yes{color:var(--paper);background:var(--spruce-lift);border-color:var(--spruce-lift)}
+  .pill.no{color:#5a4410;background:rgba(200,146,58,.22);border-color:rgba(200,146,58,.55)}
+  .pill.role{color:var(--paper);background:var(--ink)}
+
+  .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.84rem;
+    color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1.4rem;line-height:1.55}
+
+  /* flash messages */
+  .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);
+    padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  .flash-error{background:rgba(181,83,46,.1);border-left:3px solid var(--clay);color:var(--clay);
+    padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="wrap">
+
+  {% for msg in app.flashes('success') %}
+    <div class="flash-success" role="alert">{{ msg }}</div>
+  {% endfor %}
+  {% for msg in app.flashes('error') %}
+    <div class="flash-error" role="alert">{{ msg }}</div>
+  {% endfor %}
+
+  {# ── Header ── #}
+  <div class="head">
+    <div class="ava" aria-hidden="true">
+      {{- cc_user.displayName|upper|slice(0,2) -}}
+    </div>
+    <div class="who">
+      <h1>{{ cc_user.displayName }}</h1>
+      <div class="sub">{{ cc_user.email }}</div>
+      {% if cc_user.publicProfile %}
+        <span class="badge"><span class="dot"></span> Opt-in public contributor</span>
+      {% else %}
+        <span class="badge private"><span class="dot"></span> Private profile</span>
+      {% endif %}
+    </div>
+    <a class="edit-profile" href="{{ path('settings') }}">✎ Edit profile</a>
+  </div>
+
+  {# ── Account info ── #}
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="label">Email</div>
+      <div class="value">{{ cc_user.email }}</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Display name</div>
+      <div class="value">{{ cc_user.displayName }}</div>
+    </div>
+  </div>
+
+  {# ── Account status ── #}
+  <h2 class="sec">Account status</h2>
+  <div>
+    <div class="status-row">
+      <span class="label">Email verified</span>
+      {% if cc_user.emailVerified %}
+        <span class="pill yes">✓ Verified</span>
+      {% else %}
+        <span class="pill no">Pending verification</span>
+      {% endif %}
+    </div>
+
+    <div class="status-row">
+      <span class="label">Two-factor authentication (2FA)</span>
+      {% if cc_user.twoFaEnabled and cc_user.totpSecret %}
+        <span class="pill yes">✓ Enabled</span>
+      {% else %}
+        <span class="pill no">Not enabled</span>
+      {% endif %}
+    </div>
+
+    <div class="status-row">
+      <span class="label">Public profile</span>
+      {% if cc_user.publicProfile %}
+        <span class="pill yes">✓ Opt-in public</span>
+      {% else %}
+        <span class="pill no">Private</span>
+      {% endif %}
+    </div>
+
+    <div class="status-row">
+      <span class="label">Roles</span>
+      <span>
+        {% for role in cc_user.roles %}
+          <span class="pill role" style="margin-left:.2rem">{{ role }}</span>
+        {% endfor %}
+      </span>
+    </div>
+  </div>
+
+  {# ── Quick links ── #}
+  <h2 class="sec">Account actions</h2>
+  <div>
+    <div class="status-row">
+      <span>Edit display name &amp; privacy settings</span>
+      <a href="{{ path('settings') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">Go to settings ↗</a>
+    </div>
+    <div class="status-row">
+      <span>Set up / manage two-factor authentication</span>
+      <a href="{{ path('2fa_setup') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">Manage 2FA ↗</a>
+    </div>
+  </div>
+
+  <div class="notice">
+    <b>Profiles are opt-in.</b> Only contributions a rider chose to share publicly appear here —
+    anonymous edits are never attributed. Data joins the Commons under <b>ODbL 1.0</b>, media under
+    <b>CC BY-SA 4.0</b>; provenance is kept so curators can confirm facts, but identity is shown
+    only with consent.
+  </div>
+
+</div>
+{% endblock %}

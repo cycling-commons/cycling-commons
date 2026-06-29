@@ -154,12 +154,6 @@ final class PageController extends AbstractController
         return $this->stub('Improve');
     }
 
-    #[Route('/profile', name: 'profile')]
-    public function profile(): Response
-    {
-        return $this->stub('Account');
-    }
-
     // --- Stub routes: real implementations land in later plans. ---
 
     private function stub(string $title, string $navActive = ''): Response
