@@ -26,6 +26,7 @@ final class EncryptedStringType extends Type
     private const IV_LEN = 12;
     private const TAG_LEN = 16;
 
+    #[\Override]
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         // Match a plain string(255) column so swapping a `string` field to this
@@ -35,6 +36,7 @@ final class EncryptedStringType extends Type
         return $platform->getStringTypeDeclarationSQL($column);
     }
 
+    #[\Override]
     public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
     {
         if (null === $value || '' === $value) {
@@ -51,6 +53,7 @@ final class EncryptedStringType extends Type
         return base64_encode($iv.$tag.$ciphertext);
     }
 
+    #[\Override]
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?string
     {
         if (null === $value || '' === $value) {
