@@ -78,6 +78,13 @@ Requires PHP 8.4 and Composer.
 Config: copy any `web/.env` values you need into `web/.env.local` (gitignored).
 Never commit real secrets — `web/.env` holds placeholders only.
 
+**Dev mail UI (Mailpit):** when the Docker stack is running, all outbound email (registration
+confirmation, password-reset, etc.) is caught by Mailpit at <http://localhost:8025>.
+
+**Bootstrap an admin account:**
+
+    make app-create-admin email=you@example.com password=secret
+
 ## Documentation
 
 - [Manifesto](wiki/manifesto.md) — the principles, grounded in Ostrom's *Governing the Commons*

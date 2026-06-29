@@ -38,6 +38,14 @@ Requires PHP 8.4 and Composer. From the repo root:
 Config: copy any `web/.env` values you need into `web/.env.local` (gitignored).
 Never commit real secrets — `web/.env` holds placeholders only.
 
+**Dev mail UI (Mailpit):** when the Docker stack is running, all outbound email (registration
+confirmation, password-reset links, etc.) is captured by Mailpit at <http://localhost:8025> —
+no real emails are sent in local development.
+
+**Bootstrap an admin account** (requires the Docker DB to be running and migrations applied):
+
+    make app-create-admin email=you@example.com password=secret
+
 ## Ground rules
 
 - Be kind — this project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).

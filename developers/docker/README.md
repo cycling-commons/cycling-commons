@@ -30,6 +30,21 @@ Then open:
 The API and pipeline ship only **connectivity scaffolding** (health + DB-version endpoints) —
 real endpoints and the geo pipeline get built on top.
 
+## Dev mail (Mailpit)
+
+All outbound email from the Symfony app (registration confirmation, password-reset links, 2FA
+setup) is caught by [Mailpit](https://mailpit.axllent.org/) — no real mail is sent in local
+development. Open the inbox at **<http://localhost:8025>**.
+
+## Bootstrap an admin account
+
+After `docker compose up` and with Symfony migrations applied, create the first admin user from
+the repo root:
+
+```sh
+make app-create-admin email=you@example.com password=secret
+```
+
 ## How it's wired
 
 ```
