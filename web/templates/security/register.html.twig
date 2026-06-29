@@ -102,10 +102,6 @@
 
       {{ form_end(registrationForm) }}
 
-      <p class="reassure">
-        {{ 'security.register.reassure'|trans({'%url%': path('privacy')})|raw }}
-      </p>
-
       <p class="auth-alt-link">
         {{ 'security.register.already_account'|trans }}
         <a href="{{ path('login') }}">{{ 'security.register.sign_in_link'|trans }}</a>

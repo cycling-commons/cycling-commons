@@ -11,8 +11,6 @@
   if (window.__ccNavDrawer) return;          // guard against double-init
   window.__ccNavDrawer = true;
 
-  var BREAKPOINT = 1100;                      // matches atlas.css .topnav links breakpoint
-
   function ready(fn) {
     if (document.readyState !== 'loading') fn();
     else document.addEventListener('DOMContentLoaded', fn);
@@ -60,8 +58,11 @@
         'color:var(--trail,#FF5A1F)}',
       '.cc-drawer-nav a.acct.fill,.cc-drawer-nav a.nav-cta.fill{background:var(--trail,#FF5A1F);',
         'border-color:var(--trail,#FF5A1F);color:var(--ink,#101E16)}',
-      '@media(max-width:' + BREAKPOINT + 'px){',
-        '.cc-burger{display:flex}.cc-nav-links{display:none!important}}',
+      // Collapse is fit-based (toggled by JS), not a fixed breakpoint: the full
+      // nav shows whenever it fits the bar, and the burger appears only when the
+      // links would overflow — so it adapts to any width / zoom level.
+      '.cc-collapsed .cc-burger{display:flex}',
+      '.cc-collapsed .cc-nav-links{display:none!important}',
       '@media(prefers-reduced-motion:reduce){.cc-drawer,.cc-scrim{transition:none}}'
     ].join('');
     var style = document.createElement('style');
@@ -149,6 +150,15 @@
     document.body.appendChild(scrim);
     document.body.appendChild(drawer);
 
+    // Fit-based collapse: measure with the full nav shown; if the links overflow
+    // the bar, switch to the burger. Re-evaluated on resize. Width/zoom-agnostic.
+    var navBar = links.parentNode;
+    function fit() {
+      navBar.classList.remove('cc-collapsed');
+      if (navBar.scrollWidth > navBar.clientWidth + 1) navBar.classList.add('cc-collapsed');
+    }
+    fit();
+
     var opened = false;                         // source of truth, set synchronously
 
     function focusables() {
@@ -209,8 +219,15 @@
       }
     });
 
+    var rafPending = false;
     window.addEventListener('resize', function () {
-      if (isOpen() && window.innerWidth > BREAKPOINT) close();
+      if (rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(function () {
+        rafPending = false;
+        fit();
+        if (isOpen() && !navBar.classList.contains('cc-collapsed')) close();
+      });
     });
   });
 })();

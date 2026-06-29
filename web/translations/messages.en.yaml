@@ -588,7 +588,6 @@ security:
     heading: 'Create a free account'
     agree_terms: 'I agree to the <a href="%url%">terms of service</a>'
     submit: 'Create account'
-    reassure: 'We hold your email and a salted password hash — nothing else. We never track your rides or sell your data. <a href="%url%">Privacy policy</a>.'
     already_account: 'Already have an account?'
     sign_in_link: 'Sign in'
   reset_request:
