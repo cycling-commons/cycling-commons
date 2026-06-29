@@ -359,7 +359,7 @@ error404:
   cta_home: 'Back to the atlas'
 home:
   eyebrow: 'OPEN CYCLING DATA · A PREVIEW OF WHAT COULD BE'
-  h1: 'Every road.<br/>Every trail.<br/>One <em>open atlas</em>.'
+  h1: 'Every road.<br/>Every trail.<br/>One <em>open atlas</em><span class="endp">.</span>'
   lede: 'A community-built map of the world''s best riding — climbs, water, views, bike-friendly stays — free for anyone to use, build on, and improve.'
   cta_map: 'Explore the map'
   cta_contribute: 'Contribute'

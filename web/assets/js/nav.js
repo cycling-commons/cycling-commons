@@ -11,7 +11,7 @@
   if (window.__ccNavDrawer) return;          // guard against double-init
   window.__ccNavDrawer = true;
 
-  var BREAKPOINT = 780;                       // matches the existing CSS breakpoint
+  var BREAKPOINT = 1100;                      // matches atlas.css .topnav links breakpoint
 
   function ready(fn) {
     if (document.readyState !== 'loading') fn();
