@@ -125,7 +125,7 @@ final class TwoFactorTest extends WebTestCase
 
         // Submit a valid TOTP code at the check path.
         $code = $this->currentTotpCode($data['secret']);
-        $form = $crawler->filter('form')->form();
+        $form = $crawler->selectButton('Verify')->form();
         $form['_auth_code'] = $code;
         $client->submit($form);
 
@@ -161,7 +161,7 @@ final class TwoFactorTest extends WebTestCase
         $crawler = $client->followRedirect();
 
         // Complete 2FA with the backup code.
-        $form = $crawler->filter('form')->form();
+        $form = $crawler->selectButton('Verify')->form();
         $form['_auth_code'] = $backupCode;
         $client->submit($form);
         self::assertResponseRedirects();
@@ -177,7 +177,7 @@ final class TwoFactorTest extends WebTestCase
         $this->submitLogin($client, $email, $data['plain']);
         self::assertResponseRedirects('/2fa');
         $crawler2 = $client->followRedirect();
-        $form2 = $crawler2->filter('form')->form();
+        $form2 = $crawler2->selectButton('Verify')->form();
         $form2['_auth_code'] = $backupCode;
         $client->submit($form2);
         // Rejected → bounced back to the interstitial (still 2FA in progress).
@@ -262,7 +262,7 @@ final class TwoFactorTest extends WebTestCase
 
         // Complete the TOTP challenge.
         self::assertIsString($data['secret']);
-        $form = $crawler->filter('form')->form();
+        $form = $crawler->selectButton('Verify')->form();
         $form['_auth_code'] = $this->currentTotpCode($data['secret']);
         $client->submit($form);
         self::assertResponseRedirects();
@@ -320,7 +320,7 @@ final class TwoFactorTest extends WebTestCase
         $secret = trim($crawler->filter('code.secret')->text());
         self::assertNotSame('', $secret);
 
-        $form = $crawler->filter('form')->form();
+        $form = $crawler->selectButton('Verify & enable')->form();
         $form['two_factor_setup[code]'] = $this->currentTotpCode($secret);
         $client->submit($form);
 

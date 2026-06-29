@@ -260,10 +260,8 @@ final class ProfileSettingsTest extends WebTestCase
         // Success flash must appear
         self::assertSelectorTextContains('.flash-success', 'Password changed');
 
-        // Can re-login with the NEW password
-        $client->request('GET', '/logout');
-        $client->followRedirect(); // follow logout redirect to home
-        $client->followRedirects(false);
+        // Can re-login with the NEW password (logout is POST + CSRF — submit the nav form)
+        $client->submitForm('Log out');
 
         $this->loginAs($client, $email, $newPlain);
         $client->request('GET', '/profile');
