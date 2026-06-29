@@ -699,6 +699,26 @@ settings:
   label_deletion_code: 'Deletion code (from email)'
   submit_password: 'Change password'
   submit_delete_confirm: 'Permanently delete my account'
+vote:
+  kicker: 'Wallonia, Belgium'
+  title: 'Rank this region''s best.'
+  round: '◷ Summer 2026 round · closes in 47 days · re-ranked, never reset'
+  tab_climbs: 'Climbs'
+  tab_stays: 'Stays'
+  tab_views: 'Views'
+  tab_heritage: 'Heritage'
+  tab_routes: 'Routes'
+  ballot_heading: 'Your ballot'
+  submit: 'Submit ballot'
+  privacy_note: 'Your vote is private. The Commons records that you voted and when — never a public record of what you ranked.'
+  error:
+    ballot_empty: 'Please add at least one item to your ballot before submitting.'
+  receipt:
+    heading: 'Ballot recorded.'
+    body: 'Your ranking has been queued for review. The Commons records that you voted — not what you ranked.'
+    reference: 'Reference:'
+    stub_note: 'Note: this is a preview — votes are queued for review and not yet persisted to a live tally. Launching 2026.'
+    cta: 'See the region →'
 registration:
   email:
     title: 'Confirm your Cycling Commons account'

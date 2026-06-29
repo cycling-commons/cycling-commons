@@ -56,12 +56,6 @@ final class PageController extends AbstractController
         ]);
     }
 
-    #[Route('/vote', name: 'vote')]
-    public function vote(): Response
-    {
-        return $this->stub('Vote', 'vote');
-    }
-
     #[Route('/developers', name: 'developers')]
     public function developers(): Response
     {
