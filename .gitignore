@@ -64,3 +64,7 @@ tools/regions/
 docs/*.md
 docs/plans/
 docs/superpowers/
+
+# Agent scratch (worktrees, SDD ledger) — local only, never committed.
+.claude/
+.superpowers/
