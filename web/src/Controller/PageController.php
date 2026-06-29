@@ -154,6 +154,12 @@ final class PageController extends AbstractController
         return $this->stub('Improve');
     }
 
+    #[Route('/moderate', name: 'moderate')]
+    public function moderate(): Response
+    {
+        return $this->stub('Moderate', '');
+    }
+
     // --- Stub routes: real implementations land in later plans. ---
 
     private function stub(string $title, string $navActive = ''): Response

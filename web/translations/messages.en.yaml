@@ -10,6 +10,12 @@ nav:
   get_involved: 'Get involved'
   explore_map: 'Explore the map'
   account: 'Account'
+  login: 'Log in'
+  profile: 'Profile'
+  settings: 'Settings'
+  logout: 'Log out'
+  moderate: 'Moderate'
+  admin: 'Admin'
 footer:
   rights: 'CYCLING COMMONS · DATA ODbL 1.0 · MEDIA CC BY-SA 4.0 · CODE POLYFORM SHIELD 1.0.0 · © CONTRIBUTORS + OSM'
   wiki: 'Wiki'

@@ -14,6 +14,18 @@
     <a href="{{ path('licenses') }}"{% if a == 'licenses' %} class="on"{% endif %}>{{ 'nav.licence'|trans }}</a>
     <a class="acct join" href="{{ path('join') }}">{{ 'nav.get_involved'|trans }}</a>
     <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>
-    <a class="acct" href="{{ path('login') }}">{{ 'nav.account'|trans }}</a>
+    {% if app.user %}
+      <a class="acct" href="{{ path('profile') }}">{{ 'nav.profile'|trans }}</a>
+      <a class="acct" href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
+      {% if is_granted('ROLE_CURATOR') %}
+        <a class="acct" href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}</a>
+      {% endif %}
+      {% if is_granted('ROLE_ADMIN') %}
+        <a class="acct" href="{{ path('admin') }}">{{ 'nav.admin'|trans }}</a>
+      {% endif %}
+      <a class="acct" href="{{ path('logout') }}">{{ 'nav.logout'|trans }}</a>
+    {% else %}
+      <a class="acct" href="{{ path('login') }}">{{ 'nav.login'|trans }}</a>
+    {% endif %}
   </div>
 </nav>
