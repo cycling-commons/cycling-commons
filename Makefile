@@ -38,8 +38,8 @@ logs: ## Follow logs for all services (or one: make logs c=pipeline)
 ps: ## Show the status of the stack
 	@$(DOCKER_COMP) ps
 
-sh: ## Open a shell in a container (default api; make sh c=pipeline)
-	@$(DOCKER_COMP) exec $(or $(c),api) sh
+sh: ## Open a shell in a container (default app; make sh c=pipeline)
+	@$(DOCKER_COMP) exec $(or $(c),app) sh
 
 ## —— 🗂️  Workspace ———————————————————————————————————————————————————————————
 git-status: ## Show git status of this repo + all sibling repos in the workspace

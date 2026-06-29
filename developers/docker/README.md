@@ -50,14 +50,14 @@ make app-create-admin email=you@example.com password=secret
 ```
 browser ──> atlas (nginx, static)            :8099
 browser ──> wiki  (mkdocs serve)             :8000
-browser ──> api_web (nginx) ──> api (php-fpm, Symfony) ──┐
+browser ──> web (nginx) ──> app (php-fpm, Symfony) ──────┐
 browser ──> pipeline (FastAPI) ─────────────────────────┼─> db (PostGIS) :5432
                                                          ┘
 ```
 
 Source folders (`atlas/demo/`, `wiki/`, `web/`, `pipeline/`) are bind-mounted, so edits reload live.
 The web app's `vendor/` lives in a named volume so the bind mount doesn't hide the installed
-dependencies; after changing `web/composer.json`, run `docker compose exec api composer install`
+dependencies; after changing `web/composer.json`, run `docker compose exec app composer install`
 (or `docker compose build api`).
 
 **Local bundles (when they land):** develop them with Composer **path repositories**, not manual

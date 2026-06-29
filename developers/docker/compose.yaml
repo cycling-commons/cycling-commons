@@ -25,8 +25,8 @@ services:
       timeout: 5s
       retries: 12
 
-  # ---- serving API: Symfony on PHP-FPM, fronted by nginx (mirrors prod) ----
-  api:
+  # ---- serving the web app: Symfony on PHP-FPM, fronted by nginx (mirrors prod) ----
+  app:
     build: ../../web
     environment:
       APP_ENV: dev
@@ -43,15 +43,15 @@ services:
       db:
         condition: service_healthy
 
-  api_web:
+  web:
     image: nginx:alpine
     ports:
       - "${API_PORT:-8001}:80"
     volumes:
       - ../../web:/app:ro
-      - ./nginx/api.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - api
+      - app
     healthcheck:
       # 127.0.0.1 (not localhost): alpine resolves localhost to ::1 first, but
       # nginx only listens on IPv4 :80 — so localhost would falsely report unhealthy.
