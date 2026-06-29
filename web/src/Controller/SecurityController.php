@@ -30,7 +30,7 @@ final class SecurityController extends AbstractController
         ]);
     }
 
-    #[Route('/logout', name: 'logout', methods: ['GET'])]
+    #[Route('/logout', name: 'logout', methods: ['POST'])]
     public function logout(): never
     {
         // Intercepted by the security firewall; this body is never executed.

@@ -73,13 +73,15 @@ final class NavAuthTest extends WebTestCase
         self::assertSelectorTextContains('nav', 'Log in');
         self::assertSelectorNotExists('a[href*="/profile"]');
         self::assertSelectorNotExists('a[href*="/settings"]');
-        self::assertSelectorNotExists('a[href*="/logout"]');
+        // logout is now a POST form button — no <a href="/logout"> for anon users
+        self::assertSelectorNotExists('form[action*="/logout"]');
         self::assertSelectorNotExists('a[href*="/moderate"]');
         self::assertSelectorNotExists('a[href*="/admin"]');
     }
 
     /**
      * Plain ROLE_USER sees Profile/Settings/Log out; no Moderate or Admin.
+     * Logout is rendered as a POST form (CSRF-protected), not a plain link.
      */
     public function testRoleUserSeesAccountLinks(): void
     {
@@ -93,7 +95,10 @@ final class NavAuthTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href*="/profile"]');
         self::assertSelectorExists('a[href*="/settings"]');
-        self::assertSelectorExists('a[href*="/logout"]');
+        // logout is a POST form with CSRF token, not a bare link
+        self::assertSelectorExists('form[action*="/logout"]');
+        self::assertSelectorExists('form[action*="/logout"] input[name="_csrf_token"]');
+        self::assertSelectorExists('form[action*="/logout"] button[type="submit"]');
         self::assertSelectorNotExists('a[href*="/moderate"]');
         self::assertSelectorNotExists('a[href*="/admin"]');
     }

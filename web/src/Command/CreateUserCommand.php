@@ -36,7 +36,7 @@ final class CreateUserCommand extends Command
     {
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'The user\'s email address')
-            ->addArgument('password', InputArgument::REQUIRED, 'The plain-text password (hashed on creation)')
+            ->addArgument('password', InputArgument::OPTIONAL, 'The plain-text password — omit to be prompted securely (hashed on creation)')
             ->addOption('role', null, InputOption::VALUE_REQUIRED, 'Extra role: ROLE_ADMIN or ROLE_CURATOR (ROLE_USER is always granted)', 'ROLE_USER')
             ->addOption('display-name', null, InputOption::VALUE_REQUIRED, 'Display name (defaults to the email local part)', null)
         ;
@@ -49,8 +49,16 @@ final class CreateUserCommand extends Command
 
         /** @var string $email */
         $email = $input->getArgument('email');
-        /** @var string $plain */
+        /** @var string|null $plain */
         $plain = $input->getArgument('password');
+        if (null === $plain || '' === $plain) {
+            $plain = $io->askHidden('Password (input hidden)');
+            if (null === $plain || '' === $plain) {
+                $io->error('Password cannot be empty.');
+
+                return Command::FAILURE;
+            }
+        }
         /** @var string $role */
         $role = $input->getOption('role');
         /** @var string|null $displayName */

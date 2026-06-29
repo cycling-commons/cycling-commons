@@ -17,7 +17,7 @@ security:
                 enable_csrf: true
                 default_target_path: home
                 success_handler: App\Security\LoginSuccessHandler  # enforces 2FA setup for elevated roles; else default target
-            logout: { path: logout, target: home }
+            logout: { path: logout, target: home, enable_csrf: true }
             remember_me:
                 secret: '%kernel.secret%'
                 lifetime: 604800

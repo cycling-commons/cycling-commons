@@ -42,8 +42,10 @@ After `docker compose up` and with Symfony migrations applied, create the first 
 the repo root:
 
 ```sh
-make app-create-admin email=you@example.com password=secret
+make app-create-admin email=you@example.com
 ```
+
+The command prompts securely for the password (input hidden, never visible on screen or in shell history).
 
 ## How it's wired
 

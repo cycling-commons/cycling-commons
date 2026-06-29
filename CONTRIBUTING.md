@@ -44,7 +44,9 @@ no real emails are sent in local development.
 
 **Bootstrap an admin account** (requires the Docker DB to be running and migrations applied):
 
-    make app-create-admin email=you@example.com password=secret
+    make app-create-admin email=you@example.com
+
+The command prompts securely for the password (input hidden, never visible on screen or in shell history). Pass it as a positional argument only in non-interactive scripts.
 
 ## Ground rules
 

@@ -53,9 +53,10 @@ final class UserCrudController extends AbstractCrudController
 
         yield TextField::new('displayName', 'Display Name');
 
+        // ROLE_USER is always implied by User::getRoles() — listing it here is misleading.
+        // Admins toggle only the elevated roles; ROLE_USER is never stored explicitly.
         yield ChoiceField::new('roles')
             ->setChoices([
-                'User' => 'ROLE_USER',
                 'Curator' => 'ROLE_CURATOR',
                 'Admin' => 'ROLE_ADMIN',
             ])

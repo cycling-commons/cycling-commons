@@ -88,8 +88,8 @@ app-test: ## run the app test suite + static analysis + gates
 app-rector: ## apply Rector refactors (advisory; review the diff before committing)
 	cd web && vendor/bin/rector process
 
-app-create-admin: ## Bootstrap an admin user: make app-create-admin email=you@example.com password=secret
-	cd web && php bin/console app:user:create --role=ROLE_ADMIN $(email) $(password)
+app-create-admin: ## Bootstrap an admin user: make app-create-admin email=you@example.com  (prompts for password)
+	cd web && php bin/console app:user:create --role=ROLE_ADMIN $(email)
 
 ## —— 🗺️  Wallonia data ————————————————————————————————————————————————————————
 wallonia-data: ## Harvest Wallonia OSM layers into atlas/demo/*-osm.js (one/some: make wallonia-data l="services")

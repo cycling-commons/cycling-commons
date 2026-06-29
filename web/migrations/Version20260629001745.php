@@ -29,7 +29,6 @@ final class Version20260629001745 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE SCHEMA topology');
         $this->addSql('ALTER TABLE users DROP deletion_code');
         $this->addSql('ALTER TABLE users DROP deletion_requested_at');
     }
