@@ -168,8 +168,6 @@
     <path class="s-bridle" d="M-50,380 C260,340 440,430 700,360 C980,290 1200,370 1500,300"/>
   </svg>
   <div class="hero-glow"></div>
-  <div class="corner tl"><span id="heroCoord">{{ 'home.corner_tl_coord'|trans }}</span><br/>{{ 'home.corner_tl_label'|trans }}</div>
-  <div class="corner tr">{{ 'home.corner_tr'|trans|raw }}</div>
   <div class="corner br">{{ 'home.corner_br'|trans }}</div>
 
   <div class="hero-inner">
@@ -334,8 +332,6 @@
       hero.style.setProperty('--ride-outer', r.outer);
       hero.style.setProperty('--ride-inner', r.inner);
     }
-    // quiet signal only: the coordinate becomes the race finish. No label.
-    document.getElementById('heroCoord').textContent=fmtCoord(r.finish.lat,r.finish.lng);
   }
   const autoPick=pickRace();
   applyRace(autoPick.r);
