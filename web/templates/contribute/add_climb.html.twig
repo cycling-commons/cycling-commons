@@ -1,0 +1,306 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+  .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem}
+  h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.05;margin-bottom:.4rem}
+  .sub{color:#4a4d40;margin-bottom:1.6rem}
+
+  /* stepper */
+  .stepper{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-bottom:2rem;border-bottom:1px solid rgba(20,22,14,.15);padding-bottom:1rem}
+  .stepper li{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#9a9d8c;display:flex;align-items:center;gap:.45rem}
+  .stepper li::before{content:counter(step);counter-increment:step;display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;border-radius:50%;border:1.5px solid rgba(20,22,14,.25);font-size:.62rem;color:#595c4d}
+  .stepper{counter-reset:step}
+  .stepper li.done{color:#5a5d4d}.stepper li.done::before{background:var(--spruce);border-color:var(--spruce);color:var(--paper);content:"✓"}
+  .stepper li.on{color:var(--ink)}.stepper li.on::before{border-color:var(--trail);color:var(--ink)}
+
+  /* panes */
+  .pane{display:none}.pane.on{display:block;animation:fade .4s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .pane h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin-bottom:.3rem}
+  .pane .help{color:#595c4d;font-size:.9rem;margin-bottom:1.3rem}
+
+  .field{margin-bottom:1.3rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input,.field select,.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
+  .field input[readonly]{color:#595c4d}
+  .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--trail)}
+  .field .fhelp{font-family:var(--mono);font-size:.62rem;color:#9a9d8c;margin-top:.35rem;text-transform:none;letter-spacing:0}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+  @media(max-width:520px){.two{grid-template-columns:1fr}}
+
+  /* step 1 map */
+  #cmap{height:clamp(400px,60vh,640px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:.8rem;background:var(--paper-deep)}
+  .maplibregl-canvas{filter:grayscale(.38) sepia(.24) saturate(.82) contrast(.95) brightness(1.03)}
+  .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
+  .readout #reset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+  .cc-marker{line-height:0;filter:drop-shadow(0 3px 6px rgba(20,22,14,.4))}
+
+  /* place search */
+  .csearch{position:relative}
+  .csearch input{background:#F8F2E4;border:1.5px solid rgba(20,22,14,.22);border-radius:8px;padding:.65rem .85rem}
+  .csearch input::placeholder{color:#9a9d8c}
+  .csearch input:focus{border-color:var(--trail);background:#FCF8EE}
+  .csearch-results{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--paper);border:1px solid rgba(20,22,14,.2);border-radius:0 0 8px 8px;box-shadow:0 14px 28px -14px rgba(20,22,14,.45);max-height:250px;overflow-y:auto}
+  .csearch-results .res{padding:.55rem .8rem;cursor:pointer;border-bottom:1px solid rgba(20,22,14,.08)}
+  .csearch-results .res:hover{background:var(--paper-deep)}
+  .csearch-results .res b{font-size:.92rem;font-weight:500}
+  .csearch-results .res small{display:block;color:#595c4d;font-size:.74rem;font-family:var(--mono)}
+  .csearch-results .res.empty{color:#595c4d;cursor:default}
+
+  /* name preview */
+  .namepreview{font-family:var(--serif);font-weight:600;font-size:1.4rem;color:var(--ink);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px dashed rgba(20,22,14,.2)}
+  .namepreview.empty{color:#9a9d8c;font-style:italic}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:.45rem}
+  .chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none}
+  .chip:hover{border-color:var(--ink)}.chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+
+  /* photo drop + notice */
+  .drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:2rem;text-align:center;color:#595c4d;cursor:pointer}
+  .drop:hover{border-color:var(--trail);color:var(--ink)}
+  .drop .ic{font-size:1.6rem;display:block;margin-bottom:.5rem}
+  .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.8rem 1rem;font-size:.82rem;color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1rem;line-height:1.5}
+
+  /* review card */
+  .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.4rem}
+  .card .co{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:#595c4d;text-transform:uppercase}
+  .card h3{font-family:var(--serif);font-weight:600;font-size:1.35rem;margin:.2rem 0 .6rem}
+  .card .rtags{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.8rem}
+  .card .rtags span{font-family:var(--mono);font-size:.58rem;padding:.18rem .4rem;border:1px solid rgba(20,22,14,.2);border-radius:3px;color:#4a4d40}
+  .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.38rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  .kv span:first-child{color:#595c4d}
+  .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
+
+  /* nav row */
+  .navrow{display:flex;align-items:center;gap:1rem;margin-top:2rem;padding-top:1.6rem;border-top:1px solid rgba(20,22,14,.12)}
+  .navrow .spacer{flex:1}
+
+  /* submitted (demo wizard client side) */
+  .done-ic{font-size:2.4rem;text-align:center}
+  .pane.submitted{text-align:center;padding:1rem}
+  .pane.submitted h2{font-size:1.9rem;margin:.5rem 0}
+  .pane.submitted p{color:#4a4d40;max-width:46ch;margin:0 auto 1.4rem}
+
+  /* server-side receipt (POST stub state) */
+  .receipt{text-align:center;padding:4rem 1rem}
+  .receipt h2{font-family:var(--serif);font-size:1.8rem;margin:.5rem 0}
+  .receipt .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin-top:.5rem}
+  .receipt .stub-note{display:inline-block;margin-top:1.2rem;font-size:.82rem;color:#6b5320;background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:6px;padding:.5rem 1rem;max-width:520px;line-height:1.5}
+
+  /* journey diagram */
+  .journey{background:var(--ink);color:var(--paper);padding:clamp(2.4rem,5vw,4rem) 0;position:relative;overflow:hidden}
+  .journey .jwrap{max-width:980px;margin:0 auto;padding:0 2rem;position:relative;z-index:1}
+  .journey .ey{color:var(--ochre)}
+  .journey h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.5rem,3vw,2.1rem);margin-bottom:.5rem}
+  .journey .jsub{color:rgba(239,230,212,.7);font-size:.92rem;margin-bottom:2rem;max-width:60ch}
+  .spine{display:flex;flex-wrap:wrap;align-items:stretch;gap:.6rem}
+  .jnode{flex:1;min-width:130px;background:var(--spruce);border:1px solid var(--spruce-lift);border-radius:8px;padding:.85rem .9rem;display:flex;flex-direction:column;gap:.4rem}
+  .jnode .jdot{width:8px;height:8px;border-radius:50%;background:var(--glacier)}
+  .jnode .jt{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--glacier)}
+  .jnode .jl{font-size:.86rem;line-height:1.35}
+  .jnode.goal{background:var(--spruce-lift)}.jnode.goal .jdot{background:var(--trail)}
+  .jarrow{align-self:center;color:var(--ochre);font-family:var(--mono);font-size:1rem}
+  .jnode.here{box-shadow:0 0 0 2px var(--trail);position:relative}
+  .jnode.here::after{content:"you are here";position:absolute;top:-.6rem;right:.5rem;background:var(--trail);color:var(--ink);font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .35rem;border-radius:3px}
+  .branches{display:flex;gap:.6rem;margin-top:.9rem;flex-wrap:wrap}
+  .jbranch{flex:1;min-width:180px;border:1px dashed rgba(239,230,212,.3);border-radius:8px;padding:.7rem .9rem;font-size:.82rem;color:rgba(239,230,212,.85)}
+  .jbranch b{color:var(--clay);font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:.2rem}
+  .branch-lead{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.5);margin:1.2rem 0 .3rem}
+  @media(max-width:680px){.spine{flex-direction:column}.jarrow{transform:rotate(90deg)}}
+
+  .chip:focus-visible,#reset:focus-visible,.drop:focus-visible,.btn:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:4px}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+{% endblock %}
+{% block body %}
+{% if receipt is not null %}
+{# ── SERVER-SIDE RECEIPT (honest stub state after POST) ── #}
+<div class="wrap" id="main">
+  <div class="receipt">
+    <div style="font-size:2.4rem">◬</div>
+    <h2>{{ 'add_climb.receipt.heading'|trans }}</h2>
+    <p>{{ 'add_climb.receipt.body'|trans }}</p>
+    <p class="ref">{{ 'add_climb.receipt.reference'|trans }} {{ receipt.reference }}</p>
+    <p class="stub-note">{{ 'add_climb.receipt.stub_note'|trans }}</p>
+    <div style="margin-top:2rem">
+      <a class="btn btn-g" href="{{ path('map') }}">{{ 'add_climb.receipt.cta'|trans }}</a>
+    </div>
+  </div>
+</div>
+{% else %}
+{# ── WIZARD ── #}
+<div class="wrap" id="wiz">
+  <div class="ey">{{ 'add_climb.eyebrow'|trans }}</div>
+  <h1 class="disp">{{ 'add_climb.title'|trans }}</h1>
+  <p class="sub">{{ 'add_climb.lead'|trans }}</p>
+
+  {{ form_start(form, {attr: {id: 'add-climb-form', novalidate: 'novalidate'}}) }}
+
+  {# Hidden geocoded location fields (filled by add-climb.js) #}
+  {{ form_widget(form.lat) }}
+  {{ form_widget(form.lng) }}
+  {{ form_widget(form.place) }}
+
+  <ol class="stepper" id="stepper">
+    <li class="on" data-s="1">{{ 'add_climb.step1.label'|trans }}</li>
+    <li data-s="2">{{ 'add_climb.step2.label'|trans }}</li>
+    <li data-s="3">{{ 'add_climb.step3.label'|trans }}</li>
+    <li data-s="4">{{ 'add_climb.step4.label'|trans }}</li>
+    <li data-s="5">{{ 'add_climb.step5.label'|trans }}</li>
+  </ol>
+
+  {# STEP 1 — WHERE #}
+  <section class="pane on" data-s="1">
+    <h2>{{ 'add_climb.step1.heading'|trans }}</h2>
+    <p class="help">{{ 'add_climb.step1.help'|trans }}</p>
+    <div class="field csearch">
+      <label for="placeSearch">{{ 'add_climb.step1.search_label'|trans }}</label>
+      <input id="placeSearch" type="search" autocomplete="off" placeholder="{{ 'add_climb.step1.search_placeholder'|trans }}" />
+      <div class="csearch-results" id="searchResults" hidden></div>
+    </div>
+    <div id="cmap" role="application" aria-label="{{ 'add_climb.step1.map_aria'|trans }}"></div>
+    <div class="readout">
+      <span id="readout">{{ 'add_climb.step1.readout_initial'|trans }}</span>
+      <span id="reset" role="button" tabindex="0">{{ 'add_climb.step1.reset'|trans }}</span>
+    </div>
+  </section>
+
+  {# STEP 2 — PROFILE #}
+  <section class="pane" data-s="2">
+    <h2>{{ 'add_climb.step2.heading'|trans }}</h2>
+    <p class="help">{{ 'add_climb.step2.help'|trans }}</p>
+    <div class="namepreview empty" id="namePreview">{{ 'add_climb.step2.name_placeholder'|trans }}</div>
+    <div class="field">
+      <label for="{{ form.fName.vars.id }}">{{ 'add_climb.step2.name_label'|trans }}</label>
+      {{ form_widget(form.fName, {attr: {placeholder: 'add_climb.step2.name_input_placeholder'|trans}}) }}
+    </div>
+    <div class="two">
+      <div class="field">
+        <label for="{{ form.fLen.vars.id }}">{{ 'add_climb.step2.len_label'|trans }}</label>
+        {{ form_widget(form.fLen, {attr: {step: '0.1', min: '0'}}) }}
+      </div>
+      <div class="field">
+        <label for="{{ form.fGain.vars.id }}">{{ 'add_climb.step2.gain_label'|trans }}</label>
+        {{ form_widget(form.fGain, {attr: {step: '1', min: '0', placeholder: 'e.g. 161'}}) }}
+        <div class="fhelp">{{ 'add_climb.step2.gain_help'|trans }}</div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="field">
+        <label for="fAvgDisplay">{{ 'add_climb.step2.avg_label'|trans }}</label>
+        <input id="fAvgDisplay" readonly value="—" />
+        {{ form_widget(form.fAvg, {attr: {style: 'display:none'}}) }}
+      </div>
+      <div class="field">
+        <label for="{{ form.fMax.vars.id }}">{{ 'add_climb.step2.max_label'|trans }}</label>
+        {{ form_widget(form.fMax, {attr: {step: '0.1', min: '0', placeholder: 'e.g. 20'}}) }}
+      </div>
+    </div>
+    <div class="two">
+      <div class="field">
+        <label for="{{ form.fSurface.vars.id }}">{{ 'add_climb.step2.surface_label'|trans }}</label>
+        {{ form_widget(form.fSurface) }}
+      </div>
+      <div class="field">
+        <label for="{{ form.fSurfaceQ.vars.id }}">{{ 'add_climb.step2.surface_q_label'|trans }}</label>
+        {{ form_widget(form.fSurfaceQ) }}
+      </div>
+    </div>
+    <div class="field">
+      <label for="{{ form.fTraffic.vars.id }}">{{ 'add_climb.step2.traffic_label'|trans }}</label>
+      {{ form_widget(form.fTraffic) }}
+      <div class="fhelp">{{ 'add_climb.step2.traffic_help'|trans }}</div>
+    </div>
+  </section>
+
+  {# STEP 3 — DETAILS #}
+  <section class="pane" data-s="3">
+    <h2>{{ 'add_climb.step3.heading'|trans }}</h2>
+    <p class="help">{{ 'add_climb.step3.help'|trans }}</p>
+    <div class="field">
+      <label>{{ 'add_climb.step3.audience_label'|trans }}</label>
+      <div class="chips" id="disc">
+        <span class="chip on">Road</span><span class="chip">Gravel</span><span class="chip">MTB</span>
+        <span class="chip">Touring</span><span class="chip">Bikepacking</span><span class="chip">E-bike</span>
+        <span class="chip">Recumbent</span><span class="chip">Handbike</span>
+      </div>
+      <div class="fhelp" id="audienceHint"></div>
+    </div>
+    <div class="field">
+      <label for="{{ form.fNote.vars.id }}">{{ 'add_climb.step3.note_label'|trans }}</label>
+      {{ form_widget(form.fNote, {attr: {placeholder: 'add_climb.step3.note_placeholder'|trans}}) }}
+    </div>
+    <div class="field">
+      <label>{{ 'add_climb.step3.photo_label'|trans }}</label>
+      <div class="drop" onclick="return false">
+        <span class="ic">◳</span>{{ 'add_climb.step3.photo_drop'|trans }}<br/>
+        <small>{{ 'add_climb.step3.photo_types'|trans }}</small>
+      </div>
+      <div class="notice"><b>{{ 'add_climb.step3.photo_notice_b'|trans }}</b> {{ 'add_climb.step3.photo_notice'|trans }}</div>
+    </div>
+    <div class="field">
+      <label for="{{ form.fOsm.vars.id }}">{{ 'add_climb.step3.osm_label'|trans }}</label>
+      {{ form_widget(form.fOsm) }}
+    </div>
+  </section>
+
+  {# STEP 4 — REVIEW #}
+  <section class="pane" data-s="4">
+    <h2>{{ 'add_climb.step4.heading'|trans }}</h2>
+    <p class="help">{{ 'add_climb.step4.help'|trans }}</p>
+    <div class="card" id="reviewBody"></div>
+    <div class="prov">{{ 'add_climb.step4.prov'|trans }}</div>
+  </section>
+
+  {# STEP 5 — SUBMITTED (client-side wizard only; real POST uses receipt above) #}
+  <section class="pane submitted" data-s="5">
+    <div class="done-ic">◬</div>
+    <h2>{{ 'add_climb.step5.heading'|trans }}</h2>
+    <p>{{ 'add_climb.step5.body_pre'|trans }} <b id="doneName">{{ 'add_climb.step5.your_climb'|trans }}</b>{{ 'add_climb.step5.body_post'|trans }}</p>
+    <a class="btn btn-g" href="{{ path('map') }}">{{ 'add_climb.step5.cta'|trans }}</a>
+  </section>
+
+  {# NAV ROW #}
+  <div class="navrow" id="navrow">
+    <button class="btn btn-g" id="backBtn" type="button" style="visibility:hidden">← {{ 'add_climb.nav.back'|trans }}</button>
+    <span class="spacer"></span>
+    <button class="btn btn-p" id="nextBtn" type="button">{{ 'add_climb.nav.next'|trans }} →</button>
+  </div>
+
+  {{ form_end(form) }}
+</div>
+{% endif %}
+
+{# GOVERNANCE JOURNEY — always visible #}
+<section class="journey">
+  <div class="jwrap">
+    <div class="ey">{{ 'add_climb.journey.eyebrow'|trans }}</div>
+    <h2>{{ 'add_climb.journey.title'|trans }}</h2>
+    <p class="jsub">{{ 'add_climb.journey.lead'|trans }}</p>
+    <div class="spine">
+      <div class="jnode" id="youAreHere"><span class="jdot"></span><span class="jt">{{ 'add_climb.journey.node_you_t'|trans }}</span><span class="jl">{{ 'add_climb.journey.node_you_l'|trans }}</span></div>
+      <span class="jarrow">→</span>
+      <div class="jnode"><span class="jdot"></span><span class="jt">{{ 'add_climb.journey.node_curators_t'|trans }}</span><span class="jl">{{ 'add_climb.journey.node_curators_l'|trans }}</span></div>
+      <span class="jarrow">→</span>
+      <div class="jnode"><span class="jdot"></span><span class="jt">{{ 'add_climb.journey.node_approved_t'|trans }}</span><span class="jl">{{ 'add_climb.journey.node_approved_l'|trans }}</span></div>
+      <span class="jarrow">→</span>
+      <div class="jnode"><span class="jdot"></span><span class="jt">{{ 'add_climb.journey.node_eligible_t'|trans }}</span><span class="jl">{{ 'add_climb.journey.node_eligible_l'|trans }}</span></div>
+      <span class="jarrow">→</span>
+      <div class="jnode goal"><span class="jdot"></span><span class="jt">{{ 'add_climb.journey.node_curated_t'|trans }}</span><span class="jl">{{ 'add_climb.journey.node_curated_l'|trans }}</span></div>
+    </div>
+    <div class="branch-lead">{{ 'add_climb.journey.branch_lead'|trans }}</div>
+    <div class="branches">
+      <div class="jbranch"><b>{{ 'add_climb.journey.branch_needs_info_b'|trans }}</b>{{ 'add_climb.journey.branch_needs_info'|trans }}</div>
+      <div class="jbranch"><b>{{ 'add_climb.journey.branch_rejected_b'|trans }}</b>{{ 'add_climb.journey.branch_rejected'|trans }}</div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block body_scripts %}
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{{ asset('contribute/add-climb.js') }}"></script>
+{% endblock %}
