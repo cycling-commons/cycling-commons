@@ -51,10 +51,14 @@ final class ImproveType extends AbstractType
             ->add('photoUrl', UrlType::class, [
                 'label' => false,
                 'required' => false,
+                // Don't let Symfony's FixUrlProtocolListener turn an empty
+                // optional field into the bare string "http://".
+                'default_protocol' => null,
             ])
             ->add('videoUrl', UrlType::class, [
                 'label' => false,
                 'required' => false,
+                'default_protocol' => null,
             ])
             ->add('lat', HiddenType::class, [
                 'label' => false,
