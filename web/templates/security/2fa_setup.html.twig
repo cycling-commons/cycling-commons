@@ -30,11 +30,10 @@
 <div class="setup-wrap">
 
   {% if setup_complete %}
-    <p class="step-no">Two-factor enabled</p>
-    <h1>{{ 'Save your backup codes' }}</h1>
+    <p class="step-no">{{ 'twofactor.setup.complete_kicker'|trans }}</p>
+    <h1>{{ 'twofactor.setup.complete_h1'|trans }}</h1>
     <p class="lead">
-      Two-factor authentication is now active on your account. Store these single-use backup codes
-      somewhere safe — each one lets you sign in once if you lose your authenticator app.
+      {{ 'twofactor.setup.complete_lead'|trans }}
     </p>
 
     <ul class="codes">
@@ -44,30 +43,28 @@
     </ul>
 
     <p class="warn">
-      This is the only time these codes are shown — copy them now. Each code is consumed the moment
-      it is used. Treat them like passwords.
+      {{ 'twofactor.setup.complete_warn'|trans }}
     </p>
 
-    <a class="done-link" href="{{ path('home') }}">Done</a>
+    <a class="done-link" href="{{ path('home') }}">{{ 'twofactor.setup.done'|trans }}</a>
 
   {% else %}
-    <h1>Set up two-factor authentication</h1>
+    <h1>{{ 'twofactor.setup.h1'|trans }}</h1>
     <p class="lead">
-      Protect your account with a one-time code from an authenticator app
-      (Google Authenticator, Aegis, 1Password, etc.).
+      {{ 'twofactor.setup.lead'|trans }}
     </p>
 
     <div class="step">
-      <p class="step-no">Step 1</p>
-      <h2>Scan this QR code</h2>
-      <img class="qr" src="{{ qr_code_uri }}" alt="TOTP QR code" width="220" height="220" />
-      <p class="lead" style="margin-top:1rem">Can't scan it? Enter this key manually:</p>
+      <p class="step-no">{{ 'twofactor.setup.step1_no'|trans }}</p>
+      <h2>{{ 'twofactor.setup.step1_h2'|trans }}</h2>
+      <img class="qr" src="{{ qr_code_uri }}" alt="{{ 'twofactor.setup.qr_alt'|trans }}" width="220" height="220" />
+      <p class="lead" style="margin-top:1rem">{{ 'twofactor.setup.manual_label'|trans }}</p>
       <code class="secret">{{ manual_secret }}</code>
     </div>
 
     <div class="step">
-      <p class="step-no">Step 2</p>
-      <h2>Enter the 6-digit code</h2>
+      <p class="step-no">{{ 'twofactor.setup.step2_no'|trans }}</p>
+      <h2>{{ 'twofactor.setup.step2_h2'|trans }}</h2>
 
       {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
         <div class="field">
@@ -78,7 +75,7 @@
             </div>
           {% endif %}
         </div>
-        <button type="submit" class="btn-submit">Verify &amp; enable</button>
+        <button type="submit" class="btn-submit">{{ 'twofactor.setup.submit'|trans }}</button>
       {{ form_end(form) }}
     </div>
   {% endif %}

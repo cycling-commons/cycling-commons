@@ -34,27 +34,26 @@
       <path d="M-20,440 C160,400 260,470 420,420 C560,380 660,440 820,400"/>
     </svg>
     <div class="mid">
-      <h1>Almost there.</h1>
-      <p>Check your inbox and click the link to confirm your email address.</p>
+      <h1>{{ 'security.check_email.panel_h1'|trans }}</h1>
+      <p>{{ 'security.check_email.panel_p'|trans }}</p>
     </div>
-    <div class="bot">FREE · OPEN · NO RIDE DATA</div>
+    <div class="bot">{{ 'security.check_email.panel_bot'|trans }}</div>
   </div>
 
   <div class="formwrap">
     <div class="card">
-      <p class="auth-heading">Verify your email</p>
+      <p class="auth-heading">{{ 'security.check_email.heading'|trans }}</p>
 
       <div class="check-icon" aria-hidden="true">✉️</div>
 
-      <p>A confirmation link has been sent to your email address. The link expires in one hour.</p>
+      <p>{{ 'security.check_email.body'|trans }}</p>
       <p style="margin-top:1rem;font-size:.9rem;color:#5a5d4d">
-        Didn't receive it? Check your spam folder or
-        <a href="{{ path('register') }}">try registering again</a>.
+        {{ 'security.check_email.no_email'|trans({'%url%': path('register')})|raw }}
       </p>
 
       <p class="auth-alt-link">
-        Already verified?
-        <a href="{{ path('login') }}">Sign in</a>
+        {{ 'security.check_email.already_verified'|trans }}
+        <a href="{{ path('login') }}">{{ 'security.check_email.sign_in_link'|trans }}</a>
       </p>
     </div>
   </div>

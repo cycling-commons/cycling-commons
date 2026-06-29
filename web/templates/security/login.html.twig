@@ -4,7 +4,6 @@
 
 {% block head_styles %}
 <style>
-  /* ===== AUTH LAYOUT ===== */
   .auth{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100svh - var(--nav-h,64px))}
   .panel{position:relative;overflow:hidden;color:var(--paper);display:flex;flex-direction:column;justify-content:space-between;padding:2.4rem;
     background:radial-gradient(120% 90% at 70% 20%,#27513a,var(--spruce) 45%,#0f1f16 85%,var(--ink))}
@@ -48,16 +47,16 @@
       <path d="M-20,220 C160,190 260,250 420,210 C560,180 660,220 820,190"/>
     </svg>
     <div class="mid">
-      <h1>Join the atlas.</h1>
-      <p>A free account to add places, rank a region's best, and help keep the map honest.</p>
+      <h1>{{ 'security.login.panel_h1'|trans }}</h1>
+      <p>{{ 'security.login.panel_p'|trans }}</p>
     </div>
-    <div class="bot">FREE · OPEN · NO RIDE DATA</div>
+    <div class="bot">{{ 'security.login.panel_bot'|trans }}</div>
   </div>
 
   {# ── Right form panel ── #}
   <div class="formwrap">
     <div class="card">
-      <p class="auth-heading">Sign in</p>
+      <p class="auth-heading">{{ 'security.login.heading'|trans }}</p>
 
       {% if error %}
         <div class="alert-error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
@@ -67,7 +66,7 @@
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}" />
 
         <div class="field">
-          <label for="username">Email</label>
+          <label for="username">{{ 'security.login.label_email'|trans }}</label>
           <input type="email" id="username" name="_username"
                  value="{{ last_username }}"
                  autocomplete="email"
@@ -76,7 +75,7 @@
         </div>
 
         <div class="field">
-          <label for="password">Password</label>
+          <label for="password">{{ 'security.login.label_password'|trans }}</label>
           <input type="password" id="password" name="_password"
                  autocomplete="current-password"
                  placeholder="••••••••"
@@ -86,23 +85,17 @@
         <div class="row-between">
           <label style="display:flex;gap:.4rem;align-items:center;font-size:.85rem">
             <input type="checkbox" name="_remember_me" style="width:auto" />
-            Stay signed in
+            {{ 'security.login.remember_me'|trans }}
           </label>
-          <a href="{{ path('reset_password_request') }}">Forgot?</a>
+          <a href="{{ path('reset_password_request') }}">{{ 'security.login.forgot'|trans }}</a>
         </div>
 
-        <button type="submit" class="btn-submit">Sign in</button>
+        <button type="submit" class="btn-submit">{{ 'security.login.submit'|trans }}</button>
       </form>
 
-      <p class="reassure">
-        A free Cycling Commons account stores <strong>what you contribute</strong> — facts, edits, votes —
-        kept separate from who you are. We hold your email and a salted password hash; we never track your rides.
-        <a href="{{ path('privacy') }}">Privacy policy</a>.
-      </p>
-
       <p class="auth-alt-link">
-        No account yet?
-        <a href="{{ path('register') }}">Create a free account</a>
+        {{ 'security.login.no_account'|trans }}
+        <a href="{{ path('register') }}">{{ 'security.login.create_account_link'|trans }}</a>
       </p>
     </div>
   </div>

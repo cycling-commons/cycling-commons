@@ -81,13 +81,13 @@
       {{- cc_user.displayName|upper|slice(0,2) -}}
     </div>
     <div>
-      <div class="ey">Your profile</div>
-      <h1>Settings</h1>
+      <div class="ey">{{ 'settings.eyebrow'|trans }}</div>
+      <h1>{{ 'settings.heading'|trans }}</h1>
     </div>
   </div>
 
   {# ── Profile settings (display name + public profile toggle) ── #}
-  <h2 class="sec">Identity &amp; privacy</h2>
+  <h2 class="sec">{{ 'settings.section_identity'|trans }}</h2>
 
   {{ form_start(profileForm, {attr: {novalidate: 'novalidate'}}) }}
 
@@ -98,15 +98,15 @@
     </div>
 
     <div class="field">
-      <label>Email</label>
+      <label>{{ 'settings.label_email'|trans }}</label>
       <input type="email" value="{{ cc_user.email }}" readonly aria-label="Email address (read-only)" />
-      <div class="hint">To change your email address, <a href="mailto:info@cyclingcommons.org" style="color:var(--clay)">contact support</a>.</div>
+      <div class="hint">{{ 'settings.email_hint'|trans|raw }}</div>
     </div>
 
     <div class="toggle">
       <span class="lab">
-        <b>Public profile</b>
-        <small>When off, your profile is hidden and contributions stay anonymous.</small>
+        <b>{{ 'settings.toggle_public_b'|trans }}</b>
+        <small>{{ 'settings.toggle_public_small'|trans }}</small>
       </span>
       <label class="sw">
         {{ form_widget(profileForm.publicProfile, {attr: {class: ''}}) }}
@@ -116,14 +116,14 @@
     {{ form_errors(profileForm.publicProfile) }}
 
     <div class="submit-row">
-      <button type="submit" class="btn">Save profile</button>
-      <a class="btn-ghost" href="{{ path('profile') }}">Cancel</a>
+      <button type="submit" class="btn">{{ 'settings.submit_profile'|trans }}</button>
+      <a class="btn-ghost" href="{{ path('profile') }}">{{ 'settings.cancel'|trans }}</a>
     </div>
 
   {{ form_end(profileForm) }}
 
   {# ── Security ── #}
-  <h2 class="sec">Security</h2>
+  <h2 class="sec">{{ 'settings.section_security'|trans }}</h2>
 
   {# Password change form #}
   {{ form_start(passwordForm, {attr: {novalidate: 'novalidate', id: 'password-form'}}) }}
@@ -147,7 +147,7 @@
     </div>
 
     <div class="submit-row">
-      <button type="submit" class="btn">Change password</button>
+      <button type="submit" class="btn">{{ 'settings.submit_password'|trans }}</button>
     </div>
 
   {{ form_end(passwordForm) }}
@@ -156,54 +156,53 @@
   <div style="margin-top:1.6rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.1)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 0">
       <span>
-        <b style="display:block;font-size:.95rem">Two-factor authentication (2FA)</b>
+        <b style="display:block;font-size:.95rem">{{ 'settings.twofa_label'|trans }}</b>
         <small style="color:#595c4d;font-size:.82rem">
           {% if cc_user.twoFaEnabled and cc_user.totpSecret %}
-            2FA is enabled on your account.
+            {{ 'settings.twofa_enabled'|trans }}
           {% else %}
-            Add an extra layer of security to your account.
+            {{ 'settings.twofa_disabled'|trans }}
           {% endif %}
         </small>
       </span>
       <a href="{{ path('2fa_setup') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">
-        {% if cc_user.twoFaEnabled and cc_user.totpSecret %}Manage 2FA ↗{% else %}Set up 2FA ↗{% endif %}
+        {% if cc_user.twoFaEnabled and cc_user.totpSecret %}{{ 'settings.twofa_manage'|trans }}{% else %}{{ 'settings.twofa_setup'|trans }}{% endif %}
       </a>
     </div>
   </div>
 
   <div class="notice">
-    <b>Profiles are opt-in.</b> Only contributions you choose to show appear publicly — anonymous edits
-    are never attributed. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>.
+    {{ 'settings.notice'|trans|raw }}
   </div>
 
   {# ── Danger zone ── #}
   <div class="danger-zone" id="delete">
-    <h2 class="sec">Danger zone</h2>
+    <h2 class="sec">{{ 'settings.section_danger'|trans }}</h2>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem">
       <div>
-        <b style="display:block;font-size:.95rem">Delete account</b>
-        <small style="color:#595c4d;font-size:.82rem">Permanently remove your account and all personal data. This cannot be undone.</small>
+        <b style="display:block;font-size:.95rem">{{ 'settings.delete_account_b'|trans }}</b>
+        <small style="color:#595c4d;font-size:.82rem">{{ 'settings.delete_account_small'|trans }}</small>
       </div>
       {# Step 1: request a deletion code by email #}
       <form method="post" action="{{ path('settings_delete_request') }}">
         <input type="hidden" name="_token" value="{{ csrf_token('delete_request') }}">
-        <button type="submit" class="btn-danger">Send deletion code</button>
+        <button type="submit" class="btn-danger">{{ 'settings.submit_delete_request'|trans }}</button>
       </form>
     </div>
 
     {# Step 2: enter the code to confirm deletion #}
     <details style="margin-top:.6rem">
       <summary style="font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);cursor:pointer">
-        I have a code — confirm deletion
+        {{ 'settings.delete_summary'|trans }}
       </summary>
       <form method="post" action="{{ path('settings_delete_confirm') }}" style="margin-top:1rem">
         <input type="hidden" name="_token" value="{{ csrf_token('delete_confirm') }}">
         <div class="field" style="margin-bottom:.8rem">
-          <label for="deletion_code">Deletion code (from email)</label>
+          <label for="deletion_code">{{ 'settings.label_deletion_code'|trans }}</label>
           <input type="text" id="deletion_code" name="deletion_code" maxlength="8" autocomplete="off"
                  placeholder="XXXXXXXX" style="letter-spacing:.16em;text-transform:uppercase;max-width:180px">
         </div>
-        <button type="submit" class="btn-danger">Permanently delete my account</button>
+        <button type="submit" class="btn-danger">{{ 'settings.submit_delete_confirm'|trans }}</button>
       </form>
     </details>
   </div>

@@ -79,58 +79,58 @@
       <h1>{{ cc_user.displayName }}</h1>
       <div class="sub">{{ cc_user.email }}</div>
       {% if cc_user.publicProfile %}
-        <span class="badge"><span class="dot"></span> Opt-in public contributor</span>
+        <span class="badge"><span class="dot"></span> {{ 'profile.badge_public'|trans }}</span>
       {% else %}
-        <span class="badge private"><span class="dot"></span> Private profile</span>
+        <span class="badge private"><span class="dot"></span> {{ 'profile.badge_private'|trans }}</span>
       {% endif %}
     </div>
-    <a class="edit-profile" href="{{ path('settings') }}">✎ Edit profile</a>
+    <a class="edit-profile" href="{{ path('settings') }}">{{ 'profile.edit_link'|trans }}</a>
   </div>
 
   {# ── Account info ── #}
   <div class="info-grid">
     <div class="info-card">
-      <div class="label">Email</div>
+      <div class="label">{{ 'profile.label_email'|trans }}</div>
       <div class="value">{{ cc_user.email }}</div>
     </div>
     <div class="info-card">
-      <div class="label">Display name</div>
+      <div class="label">{{ 'profile.label_display_name'|trans }}</div>
       <div class="value">{{ cc_user.displayName }}</div>
     </div>
   </div>
 
   {# ── Account status ── #}
-  <h2 class="sec">Account status</h2>
+  <h2 class="sec">{{ 'profile.section_status'|trans }}</h2>
   <div>
     <div class="status-row">
-      <span class="label">Email verified</span>
+      <span class="label">{{ 'profile.status_email_verified'|trans }}</span>
       {% if cc_user.emailVerified %}
-        <span class="pill yes">✓ Verified</span>
+        <span class="pill yes">{{ 'profile.pill_verified'|trans }}</span>
       {% else %}
-        <span class="pill no">Pending verification</span>
+        <span class="pill no">{{ 'profile.pill_pending'|trans }}</span>
       {% endif %}
     </div>
 
     <div class="status-row">
-      <span class="label">Two-factor authentication (2FA)</span>
+      <span class="label">{{ 'profile.status_2fa'|trans }}</span>
       {% if cc_user.twoFaEnabled and cc_user.totpSecret %}
-        <span class="pill yes">✓ Enabled</span>
+        <span class="pill yes">{{ 'profile.pill_2fa_enabled'|trans }}</span>
       {% else %}
-        <span class="pill no">Not enabled</span>
+        <span class="pill no">{{ 'profile.pill_2fa_not_enabled'|trans }}</span>
       {% endif %}
     </div>
 
     <div class="status-row">
-      <span class="label">Public profile</span>
+      <span class="label">{{ 'profile.status_public_profile'|trans }}</span>
       {% if cc_user.publicProfile %}
-        <span class="pill yes">✓ Opt-in public</span>
+        <span class="pill yes">{{ 'profile.pill_public_yes'|trans }}</span>
       {% else %}
-        <span class="pill no">Private</span>
+        <span class="pill no">{{ 'profile.pill_public_no'|trans }}</span>
       {% endif %}
     </div>
 
     <div class="status-row">
-      <span class="label">Roles</span>
+      <span class="label">{{ 'profile.status_roles'|trans }}</span>
       <span>
         {% for role in cc_user.roles %}
           <span class="pill role" style="margin-left:.2rem">{{ role }}</span>
@@ -140,23 +140,20 @@
   </div>
 
   {# ── Quick links ── #}
-  <h2 class="sec">Account actions</h2>
+  <h2 class="sec">{{ 'profile.section_actions'|trans }}</h2>
   <div>
     <div class="status-row">
-      <span>Edit display name &amp; privacy settings</span>
-      <a href="{{ path('settings') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">Go to settings ↗</a>
+      <span>{{ 'profile.action_edit_privacy'|trans }}</span>
+      <a href="{{ path('settings') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">{{ 'profile.action_settings_link'|trans }}</a>
     </div>
     <div class="status-row">
-      <span>Set up / manage two-factor authentication</span>
-      <a href="{{ path('2fa_setup') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">Manage 2FA ↗</a>
+      <span>{{ 'profile.action_2fa'|trans }}</span>
+      <a href="{{ path('2fa_setup') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">{{ 'profile.action_2fa_link'|trans }}</a>
     </div>
   </div>
 
   <div class="notice">
-    <b>Profiles are opt-in.</b> Only contributions a rider chose to share publicly appear here —
-    anonymous edits are never attributed. Data joins the Commons under <b>ODbL 1.0</b>, media under
-    <b>CC BY-SA 4.0</b>; provenance is kept so curators can confirm facts, but identity is shown
-    only with consent.
+    {{ 'profile.notice'|trans|raw }}
   </div>
 
 </div>

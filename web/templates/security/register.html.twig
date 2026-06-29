@@ -4,7 +4,6 @@
 
 {% block head_styles %}
 <style>
-  /* ===== AUTH LAYOUT ===== */
   .auth{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100svh - var(--nav-h,64px))}
   .panel{position:relative;overflow:hidden;color:var(--paper);display:flex;flex-direction:column;justify-content:space-between;padding:2.4rem;
     background:radial-gradient(120% 90% at 70% 20%,#27513a,var(--spruce) 45%,#0f1f16 85%,var(--ink))}
@@ -50,16 +49,16 @@
       <path d="M-20,220 C160,190 260,250 420,210 C560,180 660,220 820,190"/>
     </svg>
     <div class="mid">
-      <h1>Add your mark.</h1>
-      <p>A free account to contribute climbs, places and fixes — open data, yours to keep.</p>
+      <h1>{{ 'security.register.panel_h1'|trans }}</h1>
+      <p>{{ 'security.register.panel_p'|trans }}</p>
     </div>
-    <div class="bot">FREE · OPEN · NO RIDE DATA</div>
+    <div class="bot">{{ 'security.register.panel_bot'|trans }}</div>
   </div>
 
   {# ── Right form panel ── #}
   <div class="formwrap">
     <div class="card">
-      <p class="auth-heading">Create a free account</p>
+      <p class="auth-heading">{{ 'security.register.heading'|trans }}</p>
 
       {% for flash in app.flashes('verify_email_error') %}
         <div class="alert-error" role="alert">{{ flash }}</div>
@@ -94,24 +93,22 @@
         <div class="field-check">
           {{ form_widget(registrationForm.agreeTerms) }}
           <label for="{{ registrationForm.agreeTerms.vars.id }}">
-            I agree to the <a href="{{ path('terms') }}">terms of service</a>
+            {{ 'security.register.agree_terms'|trans({'%url%': path('terms')})|raw }}
           </label>
         </div>
         {{ form_errors(registrationForm.agreeTerms) }}
 
-        <button type="submit" class="btn-submit">Create account</button>
+        <button type="submit" class="btn-submit">{{ 'security.register.submit'|trans }}</button>
 
       {{ form_end(registrationForm) }}
 
       <p class="reassure">
-        We hold your email and a salted password hash — nothing else.
-        We never track your rides or sell your data.
-        <a href="{{ path('privacy') }}">Privacy policy</a>.
+        {{ 'security.register.reassure'|trans({'%url%': path('privacy')})|raw }}
       </p>
 
       <p class="auth-alt-link">
-        Already have an account?
-        <a href="{{ path('login') }}">Sign in</a>
+        {{ 'security.register.already_account'|trans }}
+        <a href="{{ path('login') }}">{{ 'security.register.sign_in_link'|trans }}</a>
       </p>
     </div>
   </div>
