@@ -52,6 +52,32 @@ no real emails are sent in local development.
 
 The command prompts securely for the password (input hidden, never visible on screen or in shell history). Pass it as a positional argument only in non-interactive scripts.
 
+## Contribution + moderation pages
+
+### What exists
+
+| Page | Route | Auth required |
+|------|-------|---------------|
+| `/contribute` | `contribute` | none (public hub) |
+| `/add-climb` | `add_climb` | ROLE_USER (login required) |
+| `/improve` | `improve` | ROLE_USER (login required) |
+| `/vote` | `vote` | ROLE_USER (login required) |
+| `/moderate` | `moderate` | ROLE_CURATOR + 2FA enrolled |
+
+`/moderate` is the curator review surface (approve / reject / needs-info). Curators who have not enrolled in 2FA are redirected to `/2fa/setup` until enrolment is complete.
+
+### Persistence boundary
+
+> **Heads-up:** contribution and moderation form submissions are currently **stubbed**. Each submission generates a `CC-…` receipt and is logged, but **no data is persisted** and nothing is published to the Commons. The stub (`ContributionStubService`) is an explicit seam — the body will be replaced when the data-API spec lands; the interface and call sites remain unchanged.
+
+### Seed sample accounts for local review
+
+    cd web && php bin/console doctrine:fixtures:load
+
+> **Warning: this PURGES the database** before seeding — use only on a local/dev DB.
+
+Loads `curator@example.test` (ROLE_CURATOR, 2FA preset, password `curator-dev-pass!`) and `rider@example.test` (ROLE_USER, password `rider-dev-pass!`), plus a sample moderation queue at `/moderate`.
+
 ## Ground rules
 
 - Be kind — this project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).

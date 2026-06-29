@@ -91,6 +91,42 @@ confirmation, password-reset, etc.) is caught by Mailpit at <http://localhost:80
 
 The command prompts securely for the password (input hidden, never visible on screen or in shell history). Pass it as a positional argument only in non-interactive scripts.
 
+## Contribution + moderation workflow
+
+### Contribution pages (requires login / ROLE_USER)
+
+| Page | Route | What it does |
+|------|-------|--------------|
+| `/contribute` | `contribute` | Public hub — links to all contribution flows |
+| `/add-climb` | `add_climb` | Wizard to describe and trace a climb |
+| `/improve` | `improve` | Step-by-step form to fix or update a place |
+| `/vote` | `vote` | Cast a seasonal vote for the best riding in a region |
+
+All three action pages (`/add-climb`, `/improve`, `/vote`) require a verified account (`ROLE_USER`). The `/contribute` hub is public.
+
+### Curator moderation queue (requires ROLE_CURATOR + 2FA)
+
+`/moderate` is the branded review surface for curators — approve, reject, or request info on pending submissions. Access requires `ROLE_CURATOR`. Curators who have not yet enrolled in 2FA are automatically redirected to `/2fa/setup` until enrolment is complete.
+
+### Persistence boundary — what is and is not saved
+
+> **Important:** contribution and moderation actions are currently **stubbed**. Submitting a form records intent — a flash, a log line, and a `CC-…` receipt reference — via `ContributionStubService`, but **no domain data is persisted** and nothing is published. Real persistence will be wired in as part of the future data-API spec. Users and curators are told this explicitly in the UI.
+
+### Seed the local dev database with sample accounts and a queue
+
+    cd web && php bin/console doctrine:fixtures:load
+
+> **Warning: `doctrine:fixtures:load` PURGES the entire database before seeding.** Only run this against a local/dev DB.
+
+After loading, two accounts are available:
+
+| Email | Password | Role | Notes |
+|-------|----------|------|-------|
+| `curator@example.test` | `curator-dev-pass!` | ROLE_CURATOR | 2FA preset — can reach `/moderate` immediately |
+| `rider@example.test` | `rider-dev-pass!` | ROLE_USER | plain rider account |
+
+The fixtures also populate a small sample moderation queue visible at `/moderate`. These are dev-only fixtures; no real submissions exist until the data-API layer is built.
+
 ## Documentation
 
 - [Manifesto](wiki/manifesto.md) — the principles, grounded in Ostrom's *Governing the Commons*

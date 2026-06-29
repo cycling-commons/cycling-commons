@@ -36,16 +36,40 @@ All outbound email from the Symfony app (registration confirmation, password-res
 setup) is caught by [Mailpit](https://mailpit.axllent.org/) — no real mail is sent in local
 development. Open the inbox at **<http://localhost:8025>**.
 
-## Bootstrap an admin account
+## Bootstrap accounts
 
-After `docker compose up` and with Symfony migrations applied, create the first admin user from
-the repo root:
+After `docker compose up` and with Symfony migrations applied, create users from the repo root:
 
 ```sh
-make app-create-admin email=you@example.com
+make app-create-admin email=you@example.com    # ROLE_ADMIN
+make app-create-curator email=you@example.com  # ROLE_CURATOR (for /moderate)
 ```
 
-The command prompts securely for the password (input hidden, never visible on screen or in shell history).
+Both commands prompt securely for the password (input hidden, never visible on screen or in shell history).
+
+Curators who have not yet enrolled in 2FA are redirected to `/2fa/setup` on first login to a protected page — enrolment is required before `/moderate` is accessible.
+
+## Seed sample accounts and a dev moderation queue
+
+```sh
+docker compose exec app php bin/console doctrine:fixtures:load
+```
+
+> **Warning: `doctrine:fixtures:load` PURGES the entire database before seeding.** Only run this against a local/dev DB.
+
+Loads `curator@example.test` (ROLE_CURATOR, 2FA preset) and `rider@example.test` (ROLE_USER), plus a sample moderation queue at `/moderate`.
+
+## Contribution and moderation pages
+
+| Page | URL | Auth |
+|------|-----|------|
+| Contribute hub | http://localhost:8001/contribute | public |
+| Add a climb | http://localhost:8001/add-climb | ROLE_USER |
+| Improve a place | http://localhost:8001/improve | ROLE_USER |
+| Vote | http://localhost:8001/vote | ROLE_USER |
+| Moderate queue | http://localhost:8001/moderate | ROLE_CURATOR + 2FA |
+
+**Note:** contribution and moderation form submissions are currently stubbed — they issue a `CC-…` receipt and write a log line but do not persist data. This is an explicit seam; real persistence arrives with the future data-API spec.
 
 ## How it's wired
 
