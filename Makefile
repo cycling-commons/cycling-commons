@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data app-install app-serve app-test app-rector app-create-admin
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data app-install app-serve app-test app-rector app-create-admin app-create-curator
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -90,6 +90,9 @@ app-rector: ## apply Rector refactors (advisory; review the diff before committi
 
 app-create-admin: ## Bootstrap an admin user: make app-create-admin email=you@example.com  (prompts for password)
 	cd web && php bin/console app:user:create --role=ROLE_ADMIN $(email)
+
+app-create-curator: ## Bootstrap a curator user: make app-create-curator email=you@example.com  (prompts for password)
+	cd web && php bin/console app:user:create --role=ROLE_CURATOR $(email)
 
 ## —— 🗺️  Wallonia data ————————————————————————————————————————————————————————
 wallonia-data: ## Harvest Wallonia OSM layers into atlas/demo/*-osm.js (one/some: make wallonia-data l="services")

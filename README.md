@@ -85,6 +85,10 @@ confirmation, password-reset, etc.) is caught by Mailpit at <http://localhost:80
 
     make app-create-admin email=you@example.com
 
+**Bootstrap a curator account** (to access `/moderate`):
+
+    make app-create-curator email=you@example.com
+
 The command prompts securely for the password (input hidden, never visible on screen or in shell history). Pass it as a positional argument only in non-interactive scripts.
 
 ## Documentation

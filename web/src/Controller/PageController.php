@@ -135,20 +135,4 @@ final class PageController extends AbstractController
             'nav_active' => '',
         ]);
     }
-
-    #[Route('/moderate', name: 'moderate')]
-    public function moderate(): Response
-    {
-        return $this->stub('Moderate', '');
-    }
-
-    // --- Stub routes: real implementations land in later plans. ---
-
-    private function stub(string $title, string $navActive = ''): Response
-    {
-        return $this->render('stub.html.twig', [
-            'page_title' => $title,
-            'nav_active' => $navActive,
-        ]);
-    }
 }

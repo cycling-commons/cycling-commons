@@ -1,0 +1,86 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .mh{background:var(--ink);color:var(--paper);padding:2.4rem 0 2rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ochre);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem}
+  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
+  .mh .pend-count{font-family:var(--mono);font-size:.68rem;color:var(--ochre);margin-left:.8rem}
+
+  .stub-banner{background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:7px;padding:.75rem 1.1rem;font-size:.83rem;color:#6b5320;margin:1.6rem 0;line-height:1.5}
+  .stub-banner b{color:#B5532E}
+
+  .q-list{margin:1.8rem 0}
+  .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.3rem 1.4rem;margin-bottom:1.1rem;background:var(--paper)}
+  .q-meta{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
+  .q-tag{font-family:var(--mono);font-size:.57rem;letter-spacing:.07em;text-transform:uppercase;padding:.2rem .45rem;border-radius:3px;color:var(--ink)}
+  .q-tag--new{background:#FF5A1F}.q-tag--edit{background:#8FB6A8}.q-tag--hazard{background:#C8923A}.q-tag--photo{background:#B5532E;color:var(--paper)}
+  .q-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:auto}
+  .q-title{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin-bottom:.25rem}
+  .q-submitter{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin-bottom:.5rem}
+  .q-body{font-size:.9rem;line-height:1.5;color:#333;margin-bottom:.6rem}
+  .q-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.55rem .75rem;font-size:.86rem;margin-bottom:.7rem}
+  .q-was{color:#8a8d7d;text-decoration:line-through}
+  .q-now{color:var(--trail)}
+  .q-actions{margin-top:.9rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.9rem}
+  .q-act-form textarea{display:none}
+  .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+  .btn-act{font-family:var(--sans);font-weight:700;font-size:.82rem;padding:.6rem 1rem;border-radius:5px;border:none;cursor:pointer}
+  .btn-approve{background:#3e7d4f;color:#fff}
+  .btn-reject{background:transparent;color:var(--clay);border:1.5px solid var(--clay)}
+  .btn-needs-info{background:transparent;color:#555;border:1.5px solid rgba(20,22,14,.3)}
+
+  .receipt-box{background:var(--paper-deep);border:1px solid rgba(20,22,14,.15);border-radius:9px;padding:1.8rem 1.6rem;margin:1.8rem 0;text-align:center}
+  .receipt-box .ic{font-size:2.2rem;margin-bottom:.4rem}
+  .receipt-box h2{font-family:var(--serif);font-size:1.5rem;margin-bottom:.4rem}
+  .receipt-box .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin-top:.4rem}
+  .receipt-box .stub-note{display:inline-block;margin-top:1rem;font-size:.82rem;color:#6b5320;background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:6px;padding:.5rem 1rem;max-width:520px;line-height:1.5}
+
+  .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
+  .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
+  .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
+</style>
+{% endblock %}
+{% block body %}
+<div class="mh">
+  <div class="wrap">
+    <div class="kicker">{{ 'moderate.kicker'|trans }}</div>
+    <h1>{{ 'moderate.title'|trans }}</h1>
+    <div>
+      <span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span>
+      <span class="pend-count">{{ items|length }} {{ 'moderate.pending'|trans }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="main">
+  <div class="stub-banner">
+    <b>{{ 'moderate.stub_banner_bold'|trans }}</b> {{ 'moderate.stub_banner_body'|trans }}
+  </div>
+
+  {% if receipt is not null %}
+  <div class="receipt-box">
+    <div class="ic">&#9650;</div>
+    <h2>{{ 'moderate.receipt.heading'|trans }}</h2>
+    <p>{{ 'moderate.receipt.body'|trans }}</p>
+    <p class="ref">{{ 'moderate.receipt.reference'|trans }} {{ receipt.reference }}</p>
+    <p class="stub-note">{{ 'moderate.receipt.stub_note'|trans }}</p>
+  </div>
+  {% endif %}
+
+  {% if items is empty %}
+  <div class="empty-queue">
+    <div class="ic">&#9650;</div>
+    <h3>{{ 'moderate.empty.heading'|trans }}</h3>
+    <p>{{ 'moderate.empty.body'|trans }}</p>
+  </div>
+  {% else %}
+  <div class="q-list">
+    {% for item in items %}
+      {% include 'moderate/_queue_item.html.twig' with {item: item, form: forms[item.id]} %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

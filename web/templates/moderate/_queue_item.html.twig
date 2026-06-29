@@ -1,0 +1,39 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Partial: one pending submission row in the moderation queue.
+
+  Parameters:
+    item   array  — queue item from SampleQueue::items()
+    form   FormView — ModerationDecisionType for this item
+#}
+<div class="q-item" data-item-id="{{ item.id }}">
+  <div class="q-meta">
+    <span class="q-tag q-tag--{{ item.type }}">{{ ('moderate.type.' ~ item.type)|trans }}</span>
+    <span class="q-when">{{ item.when }}</span>
+  </div>
+  <h3 class="q-title">{{ item.title }}</h3>
+  <div class="q-submitter">{{ item.who }} &middot; {{ item.lat|number_format(3) }}&deg;N {{ item.lng|number_format(3) }}&deg;E</div>
+  {% if item.body %}
+    <p class="q-body">{{ item.body }}</p>
+  {% endif %}
+  {% if item.was %}
+    <div class="q-diff">
+      <div class="q-was">{{ item.was }}</div>
+      <div class="q-now">{{ item.now }}</div>
+    </div>
+  {% endif %}
+
+  <div class="q-actions">
+    {{ form_start(form, {action: path('moderate_decide'), method: 'POST', attr: {class: 'q-act-form'}}) }}
+      {{ form_widget(form.submission_id, {value: item.id}) }}
+      <div class="q-decision-row">
+        {{ form_label(form.decision, 'moderate.action.decision_label'|trans) }}
+        {{ form_widget(form.decision) }}
+      </div>
+      {{ form_widget(form.note) }}
+      <div class="q-act-btns">
+        <button type="submit" class="btn-act btn-decide">{{ 'moderate.action.submit'|trans }}</button>
+      </div>
+    {{ form_end(form) }}
+  </div>
+</div>

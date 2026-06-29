@@ -46,6 +46,10 @@ no real emails are sent in local development.
 
     make app-create-admin email=you@example.com
 
+**Bootstrap a curator account** (to access `/moderate`):
+
+    make app-create-curator email=you@example.com
+
 The command prompts securely for the password (input hidden, never visible on screen or in shell history). Pass it as a positional argument only in non-interactive scripts.
 
 ## Ground rules
