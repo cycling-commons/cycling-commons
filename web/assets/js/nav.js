@@ -61,7 +61,10 @@
       // Collapse is fit-based (toggled by JS), not a fixed breakpoint: the full
       // nav shows whenever it fits the bar, and the burger appears only when the
       // links would overflow — so it adapts to any width / zoom level.
-      '.cc-collapsed .cc-burger{display:flex}',
+      // 3 tiers: full → compact (secondary links drop into the burger, the CTA
+      // buttons stay inline) → collapsed (everything in the burger).
+      '.cc-compact .cc-burger,.cc-collapsed .cc-burger{display:flex}',
+      '.cc-compact .cc-nav-links a:not(.acct){display:none}',
       '.cc-collapsed .cc-nav-links{display:none!important}',
       '@media(prefers-reduced-motion:reduce){.cc-drawer,.cc-scrim{transition:none}}'
     ].join('');
@@ -154,8 +157,14 @@
     // the bar, switch to the burger. Re-evaluated on resize. Width/zoom-agnostic.
     var navBar = links.parentNode;
     function fit() {
-      navBar.classList.remove('cc-collapsed');
-      if (navBar.scrollWidth > navBar.clientWidth + 1) navBar.classList.add('cc-collapsed');
+      navBar.classList.remove('cc-compact', 'cc-collapsed');        // tier 1: full nav
+      if (navBar.scrollWidth > navBar.clientWidth + 1) {
+        navBar.classList.add('cc-compact');                          // tier 2: CTAs + burger, secondary links in drawer
+        if (navBar.scrollWidth > navBar.clientWidth + 1) {
+          navBar.classList.remove('cc-compact');
+          navBar.classList.add('cc-collapsed');                      // tier 3: burger only
+        }
+      }
     }
     fit();
 
