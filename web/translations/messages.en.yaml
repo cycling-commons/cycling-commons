@@ -949,5 +949,6 @@ registration:
     welcome_pre: 'Welcome'
     body: 'Thanks for creating a Cycling Commons account. Please confirm your email address by clicking the button below.'
     confirm_btn: 'Confirm my email'
+    link_fallback: 'Button not working? Paste this link into your browser:'
     ignore_notice: 'If you didn''t create an account, you can safely ignore this email.'
     footer: 'Cycling Commons · open cycling atlas · <a href="https://cyclingcommons.org" style="color:#8a8d7a">cyclingcommons.org</a>'

@@ -7,8 +7,9 @@
   <title>{{ 'registration.email.title'|trans }}</title>
 </head>
 <body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:2rem;color:#14160e">
-  <p style="font-family:monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#5a5d4d">
-    {{ 'registration.email.sender'|trans }}
+  <p style="margin:0 0 1.25rem">
+    <img src="{{ absolute_url(asset('brand/logo-square.png')) }}" alt="{{ 'registration.email.sender'|trans }}"
+         width="56" height="56" style="display:block;width:56px;height:56px;border:0;outline:none">
   </p>
 
   <h1 style="font-size:1.6rem;font-weight:600;margin:.5rem 0 1rem">
@@ -22,6 +23,11 @@
        style="display:inline-block;background:#e85d26;color:#fff;font-weight:700;font-size:1rem;padding:.8rem 1.6rem;border-radius:5px;text-decoration:none">
       {{ 'registration.email.confirm_btn'|trans }}
     </a>
+  </p>
+
+  <p style="font-size:.82rem;color:#5a5d4d;line-height:1.5;word-break:break-all">
+    {{ 'registration.email.link_fallback'|trans }}<br>
+    <a href="{{ signedUrl }}" style="color:#c2551f">{{ signedUrl }}</a>
   </p>
 
   <p style="font-size:.85rem;color:#5a5d4d">
