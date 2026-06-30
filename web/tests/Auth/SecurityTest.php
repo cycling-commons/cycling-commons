@@ -65,7 +65,7 @@ final class SecurityTest extends WebTestCase
         self::assertResponseRedirects('/login', 302);
     }
 
-    public function testValidLoginRedirectsToHome(): void
+    public function testValidLoginRedirectsToAccountDashboard(): void
     {
         $client = static::createClient();
 
@@ -81,13 +81,11 @@ final class SecurityTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        // form_login posts to check_path (same /login), then redirects to default_target_path (home = /)
-        self::assertResponseRedirects();
+        // form_login posts to check_path (same /login); LoginSuccessHandler then
+        // sends a plain user to the account dashboard (/profile), not home.
+        self::assertResponseRedirects('/profile');
         $client->followRedirect();
-
         self::assertResponseIsSuccessful();
-        // Should land on home (/), not back on /login
-        self::assertStringNotContainsString('/login', (string) $client->getRequest()->getUri());
     }
 
     public function testInvalidPasswordShowsError(): void

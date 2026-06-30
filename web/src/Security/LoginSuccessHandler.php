@@ -38,7 +38,7 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
     use TargetPathTrait;
 
     private const string FIREWALL_NAME = 'main';
-    private const string DEFAULT_TARGET_ROUTE = 'home';
+    private const string DEFAULT_TARGET_ROUTE = 'profile';
     private const string TWO_FACTOR_LOGIN_ROUTE = '2fa_login';
 
     public function __construct(

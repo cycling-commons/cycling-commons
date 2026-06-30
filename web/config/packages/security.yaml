@@ -15,7 +15,7 @@ security:
                 login_path: login
                 check_path: login
                 enable_csrf: true
-                default_target_path: home
+                default_target_path: profile
                 success_handler: App\Security\LoginSuccessHandler  # enforces 2FA setup for elevated roles; else default target
             logout: { path: logout, target: home, enable_csrf: true }
             remember_me:
