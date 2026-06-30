@@ -58,14 +58,10 @@
         'color:var(--trail,#FF5A1F)}',
       '.cc-drawer-nav a.acct.fill,.cc-drawer-nav a.nav-cta.fill{background:var(--trail,#FF5A1F);',
         'border-color:var(--trail,#FF5A1F);color:var(--ink,#101E16)}',
-      // Collapse is fit-based (toggled by JS), not a fixed breakpoint: the full
-      // nav shows whenever it fits the bar, and the burger appears only when the
-      // links would overflow — so it adapts to any width / zoom level.
-      // 3 tiers: full → compact (secondary links drop into the burger, the CTA
-      // buttons stay inline) → collapsed (everything in the burger).
-      '.cc-compact .cc-burger,.cc-collapsed .cc-burger{display:flex}',
-      '.cc-compact .cc-nav-links a:not(.acct){display:none}',
-      '.cc-collapsed .cc-nav-links{display:none!important}',
+      // Collapse is priority-plus, driven by fit() below (not a fixed
+      // breakpoint): the burger's inline display is toggled by JS. CTA blocks
+      // never wrap past two lines, so "Explore the map" can't break into three.
+      '.cc-nav-links a.acct,.cc-nav-links a.nav-cta{white-space:nowrap}',
       '@media(prefers-reduced-motion:reduce){.cc-drawer,.cc-scrim{transition:none}}'
     ].join('');
     var style = document.createElement('style');
@@ -153,18 +149,36 @@
     document.body.appendChild(scrim);
     document.body.appendChild(drawer);
 
-    // Fit-based collapse: measure with the full nav shown; if the links overflow
-    // the bar, switch to the burger. Re-evaluated on resize. Width/zoom-agnostic.
+    // Priority-plus collapse, re-evaluated on resize (width/zoom-agnostic).
+    // The burger always holds the full menu (the drawer was cloned from every
+    // anchor). Inline, we keep the CTA blocks (Get involved / Explore the map /
+    // Log in) and show as many secondary links as fit, dropping them from the
+    // END one at a time. Only when NO secondary links remain and it still
+    // overflows do we hide the blocks too (burger-only). So the states are:
+    //   all links + blocks            → (fits) no burger
+    //   N links + blocks + burger     → N counts down 5,4,3,2,1,0 as width shrinks
+    //   blocks + burger               → links all in the drawer
+    //   burger only                   → even the blocks don't fit
     var navBar = links.parentNode;
+    var inlineAnchors = Array.prototype.slice.call(links.querySelectorAll('a'));
+    var inlineSub = inlineAnchors.filter(function (a) {
+      return !a.classList.contains('acct') && !a.classList.contains('nav-cta');
+    });
+    var inlineBlocks = inlineAnchors.filter(function (a) {
+      return a.classList.contains('acct') || a.classList.contains('nav-cta');
+    });
+    function fits() { return navBar.scrollWidth <= navBar.clientWidth + 1; }
     function fit() {
-      navBar.classList.remove('cc-compact', 'cc-collapsed');        // tier 1: full nav
-      if (navBar.scrollWidth > navBar.clientWidth + 1) {
-        navBar.classList.add('cc-compact');                          // tier 2: CTAs + burger, secondary links in drawer
-        if (navBar.scrollWidth > navBar.clientWidth + 1) {
-          navBar.classList.remove('cc-compact');
-          navBar.classList.add('cc-collapsed');                      // tier 3: burger only
-        }
+      inlineSub.forEach(function (a) { a.style.display = ''; });
+      inlineBlocks.forEach(function (a) { a.style.display = ''; });
+      burger.style.display = 'none';
+      if (fits()) return;                                  // everything fits — no burger
+      burger.style.display = 'flex';                        // need the burger now
+      for (var i = inlineSub.length - 1; i >= 0 && !fits(); i--) {
+        inlineSub[i].style.display = 'none';                // drop secondary links, last first
       }
+      if (fits()) return;                                  // blocks (+ any links that fit) + burger
+      inlineBlocks.forEach(function (a) { a.style.display = 'none'; });  // burger-only
     }
     fit();
 
@@ -235,7 +249,8 @@
       requestAnimationFrame(function () {
         rafPending = false;
         fit();
-        if (isOpen() && !navBar.classList.contains('cc-collapsed')) close();
+        // If the burger is no longer shown (everything fits inline), close any open drawer.
+        if (isOpen() && burger.style.display === 'none') close();
       });
     });
   });
