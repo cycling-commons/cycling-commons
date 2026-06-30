@@ -24,7 +24,10 @@
   .field input[readonly]{opacity:.55;cursor:default}
   .field input:focus:not([readonly]){border-color:var(--trail)}
   .field .hint{font-size:.78rem;color:#595c4d;margin-top:.35rem}
-  .field-errors{list-style:none;padding:0;margin:.3rem 0 0;font-size:.8rem;color:var(--clay)}
+  .field-errors,.wrap form ul{list-style:none;padding:0;margin:.5rem 0 .2rem}
+  .field-errors li,.wrap form ul li{display:flex;gap:.45rem;align-items:flex-start;font-size:.8rem;color:var(--clay);line-height:1.4;padding:.45rem .65rem;margin-top:.35rem;background:rgba(181,83,46,.09);border:1px solid rgba(181,83,46,.28);border-radius:5px}
+  .field-errors li::before,.wrap form ul li::before{content:"\26A0";flex:none;font-size:.9em;line-height:1.4}
+  input.is-invalid{border-bottom-color:var(--clay)}
 
   /* toggle switch */
   .toggle{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
@@ -89,7 +92,7 @@
   {# ── Profile settings (display name + public profile toggle) ── #}
   <h2 class="sec">{{ 'settings.section_identity'|trans }}</h2>
 
-  {{ form_start(profileForm, {attr: {novalidate: 'novalidate'}}) }}
+  {{ form_start(profileForm, {attr: {novalidate: 'novalidate', class: 'cc-validate'}}) }}
 
     <div class="field">
       {{ form_label(profileForm.displayName) }}
@@ -126,7 +129,7 @@
   <h2 class="sec">{{ 'settings.section_security'|trans }}</h2>
 
   {# Password change form #}
-  {{ form_start(passwordForm, {attr: {novalidate: 'novalidate', id: 'password-form'}}) }}
+  {{ form_start(passwordForm, {attr: {novalidate: 'novalidate', id: 'password-form', class: 'cc-validate'}}) }}
 
     <div class="field">
       {{ form_label(passwordForm.currentPassword) }}
@@ -208,4 +211,8 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block body_scripts %}
+<script src="{{ asset('js/auth-validate.js') }}" defer></script>
 {% endblock %}
