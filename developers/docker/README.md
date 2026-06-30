@@ -33,8 +33,18 @@ real endpoints and the geo pipeline get built on top.
 ## Dev mail (Mailpit)
 
 All outbound email from the Symfony app (registration confirmation, password-reset links, 2FA
-setup) is caught by [Mailpit](https://mailpit.axllent.org/) — no real mail is sent in local
-development. Open the inbox at **<http://localhost:8025>**.
+setup) is sent to a [Mailpit](https://mailpit.axllent.org/) **on the host** at
+`host.docker.internal:1025` — no real mail is sent in local development. Open the inbox at
+**<http://localhost:8025>**.
+
+The stack intentionally does **not** bundle its own Mailpit (a local one collided with a shared
+host instance on `:8025`). If you don't already have a Mailpit running, start one:
+
+```
+docker run -d --name mailpit -p 8025:8025 -p 1025:1025 axllent/mailpit
+```
+
+Override `MAILER_DSN` if your Mailpit lives elsewhere.
 
 ## Bootstrap accounts
 

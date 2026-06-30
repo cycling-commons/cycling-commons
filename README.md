@@ -78,8 +78,10 @@ Requires PHP 8.4 and Composer.
 Config: copy any `web/.env` values you need into `web/.env.local` (gitignored).
 Never commit real secrets — `web/.env` holds placeholders only.
 
-**Dev mail UI (Mailpit):** when the Docker stack is running, all outbound email (registration
-confirmation, password-reset, etc.) is caught by Mailpit at <http://localhost:8025>.
+**Dev mail (Mailpit):** outbound email (registration confirmation, password-reset, etc.) is
+sent to a [Mailpit](https://mailpit.axllent.org/) on the host at `:1025`; read it at
+<http://localhost:8025>. The stack does **not** bundle its own Mailpit (it collided with a
+shared host instance). No Mailpit yet? `docker run -d -p 8025:8025 -p 1025:1025 axllent/mailpit`.
 
 **Bootstrap an admin account:**
 

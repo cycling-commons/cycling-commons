@@ -36,9 +36,14 @@ services:
       APP_CACHE_DIR: /tmp/cc-cache
       APP_LOG_DIR: /tmp/cc-log
       DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=18&charset=utf8"
+      # Mail goes to a Mailpit on the host (e.g. a shared dev instance on :1025/:8025).
+      # The stack no longer bundles its own Mailpit — it collided with the host's :8025.
+      MAILER_DSN: "${MAILER_DSN:-smtp://host.docker.internal:1025}"
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # so the container can reach the host's Mailpit
     depends_on:
       db:
         condition: service_healthy
@@ -116,10 +121,10 @@ services:
     volumes:
       - ${VALHALLA_TILES:-./data/valhalla}:/custom_files   # drop the downloaded tiles here
 
-  # ---- dev mail catcher (Mailpit) — UI at http://localhost:${MAILPIT_UI_PORT:-8025} ----
-  mailpit:
-    image: axllent/mailpit:latest
-    ports: ["${MAILPIT_UI_PORT:-8025}:8025", "1025"]
+  # Mail catcher: the stack expects a Mailpit reachable on the host at
+  # host.docker.internal:1025 (a shared dev instance). It is intentionally NOT
+  # bundled here — a local mailpit collided with the host's :8025. Don't have one?
+  #   docker run -d --name mailpit -p 8025:8025 -p 1025:1025 axllent/mailpit
 
   # ---- opt-in: S3-compatible object storage for PMTiles --------------------
   minio:
