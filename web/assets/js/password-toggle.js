@@ -19,7 +19,10 @@
     if (document.getElementById('cc-pw-style')) return;
     var css = [
       '.cc-pw-wrap{position:relative;display:block}',
-      '.cc-pw-wrap input{padding-right:2.4rem!important}',
+      // Keep the underline style when the field is revealed (type=text), so the
+      // input doesn't fall back to the browser's default box border.
+      '.cc-pw-wrap input{padding-right:2.4rem!important;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);border-radius:0;background:transparent}',
+      '.cc-pw-wrap input:focus{border-bottom-color:var(--trail,#FF5A1F);outline:none}',
       '.cc-pw-toggle{position:absolute;right:0;bottom:.15rem;display:flex;align-items:center;justify-content:center;',
         'width:2rem;height:2rem;padding:0;background:none;border:0;cursor:pointer;color:#5a5d4d;opacity:.7;',
         '-webkit-tap-highlight-color:transparent}',
