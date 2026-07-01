@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\Writer\SvgWriter;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Totp\TotpAuthenticatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -99,10 +100,15 @@ final class TwoFactorController extends AbstractController
         ]);
     }
 
-    /** Render the otpauth:// URI as an inline PNG data-URI for an <img> tag. */
+    /**
+     * Render the otpauth:// URI as an inline SVG data-URI for an <img> tag.
+     * SVG (not PNG) so we don't require the GD/Imagick PHP extension — the QR
+     * still scans identically and stays crisp at any size.
+     */
     private function buildQrCodeDataUri(string $otpauthUri): string
     {
         return (new Builder())->build(
+            writer: new SvgWriter(),
             data: $otpauthUri,
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::Medium,
