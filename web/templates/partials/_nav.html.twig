@@ -14,6 +14,12 @@
     <a href="{{ path('licenses') }}"{% if a == 'licenses' %} class="on"{% endif %}>{{ 'nav.licence'|trans }}</a>
     <a class="acct join" href="{{ path('join') }}">{{ 'nav.get_involved'|trans }}</a>
     <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>
+    {% if app.user %}
+      {% include 'partials/_account_chip.html.twig' %}
+    {% else %}
+      <a class="acct" href="{{ path('login') }}">{{ 'nav.login'|trans }}</a>
+    {% endif %}
+    {# Language switcher last (far right): its pill shape sits apart from the square CTA/account controls. #}
     {% set _locales = {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch'} %}
     <div class="lang-menu" data-nav-menu>
       <button type="button" class="lang-chip" data-nav-toggle aria-haspopup="true" aria-expanded="false" aria-controls="cc-lang-dd" aria-label="{{ 'nav.language'|trans }}">
@@ -27,10 +33,5 @@
         {% endfor %}
       </div>
     </div>
-    {% if app.user %}
-      {% include 'partials/_account_chip.html.twig' %}
-    {% else %}
-      <a class="acct" href="{{ path('login') }}">{{ 'nav.login'|trans }}</a>
-    {% endif %}
   </div>
 </nav>
