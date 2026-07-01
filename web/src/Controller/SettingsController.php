@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\SettingsPasswordType;
 use App\Form\SettingsType;
+use App\Routing\LocalePrefix;
 use App\Service\UserDeletionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +28,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.
  */
+#[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_USER')]
 final class SettingsController extends AbstractController
 {

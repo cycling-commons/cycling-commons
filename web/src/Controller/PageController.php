@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -13,9 +14,14 @@ use Symfony\Component\Routing\Attribute\Route;
  * page_title/page_description are translation keys (see the `meta` catalog
  * group); the layout translates them in the <head>.
  *
+ * The class-level localized prefix serves English clean (`/regions`) and the
+ * other locales under a path prefix (`/fr/regions`); Symfony sets `_locale`
+ * from the matched path.
+ *
  * @api Instantiated by Symfony's router, never referenced from code — `@api`
  *      tells Psalm this (and its actions) is a live entry point, not dead code.
  */
+#[Route(LocalePrefix::PATHS)]
 final class PageController extends AbstractController
 {
     #[Route('/', name: 'home')]

@@ -25,7 +25,12 @@ use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
 /**
  * @api Instantiated by Symfony's router; never referenced from code.
  */
-#[Route('/reset-password')]
+#[Route([
+    'en' => '/reset-password',
+    'fr' => '/fr/reset-password',
+    'nl' => '/nl/reset-password',
+    'de' => '/de/reset-password',
+])]
 final class ResetPasswordController extends AbstractController
 {
     use ResetPasswordControllerTrait;

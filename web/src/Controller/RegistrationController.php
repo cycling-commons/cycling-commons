@@ -28,7 +28,12 @@ final class RegistrationController extends AbstractController
     {
     }
 
-    #[Route('/register', name: 'register')]
+    #[Route([
+        'en' => '/register',
+        'fr' => '/fr/register',
+        'nl' => '/nl/register',
+        'de' => '/de/register',
+    ], name: 'register')]
     public function register(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,

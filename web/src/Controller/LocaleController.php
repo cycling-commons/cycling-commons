@@ -37,12 +37,31 @@ final class LocaleController extends AbstractController
             $this->em->flush();
         }
 
-        // Return to the originating page, but only if it is our own host.
+        // Preferred: the caller (nav switcher) passes `to` — the current page
+        // already re-generated in the target locale, so localized routes land
+        // on their prefixed path. Only accept our own relative paths.
+        $to = $request->query->get('to');
+        if (\is_string($to) && $this->isSafeInternalPath($to)) {
+            return $this->redirect($to);
+        }
+
+        // Fallback: return to the originating page, but only if it is our host.
         $referer = $request->headers->get('referer');
         if (\is_string($referer) && str_starts_with($referer, $request->getSchemeAndHttpHost())) {
             return $this->redirect($referer);
         }
 
         return $this->redirectToRoute('home');
+    }
+
+    /**
+     * A path we may redirect to must be root-relative and not protocol-relative
+     * (`//host`) or a backslash trick — otherwise it is an open-redirect vector.
+     */
+    private function isSafeInternalPath(string $path): bool
+    {
+        return str_starts_with($path, '/')
+            && !str_starts_with($path, '//')
+            && !str_starts_with($path, '/\\');
     }
 }

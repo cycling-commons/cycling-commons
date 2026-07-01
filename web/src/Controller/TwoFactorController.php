@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\TwoFactorSetupType;
+use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
@@ -29,6 +30,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * @api Instantiated by Symfony's router; never referenced from code.
  *      `@api` tells Psalm this is a live entry point, not dead code.
  */
+#[Route(LocalePrefix::PATHS)]
 final class TwoFactorController extends AbstractController
 {
     /** Session key holding the not-yet-confirmed TOTP secret. */

@@ -30,14 +30,18 @@ security:
                 check_path: 2fa_login_check
 
     access_control:
-        - { path: ^/(login|register|reset-password|verify), roles: PUBLIC_ACCESS }
+        # Localized routes carry an optional /fr|/nl|/de prefix (English is clean); the
+        # `(/(fr|nl|de))?` group keeps these rules matching both. `logout`, `verify`,
+        # scheb's `/2fa` interstitial, `/api`, and `/admin` stay unprefixed (see i18n design).
+        - { path: '^(/(fr|nl|de))?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
+        - { path: ^/verify, roles: PUBLIC_ACCESS }
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.
         # Must precede the ^/2fa rule below, which guards scheb's interstitial (/2fa, /2fa_check)
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.
-        - { path: ^/2fa/setup, roles: ROLE_USER }
+        - { path: '^(/(fr|nl|de))?/2fa/setup', roles: ROLE_USER }
         - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
-        - { path: ^/(profile|settings), roles: ROLE_USER }
-        - { path: ^/moderate, roles: ROLE_CURATOR }
+        - { path: '^(/(fr|nl|de))?/(profile|settings)', roles: ROLE_USER }
+        - { path: '^(/(fr|nl|de))?/moderate', roles: ROLE_CURATOR }
         - { path: ^/admin, roles: ROLE_ADMIN }
 
     role_hierarchy:

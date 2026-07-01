@@ -15,7 +15,12 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
  */
 final class SecurityController extends AbstractController
 {
-    #[Route('/login', name: 'login')]
+    #[Route([
+        'en' => '/login',
+        'fr' => '/fr/login',
+        'nl' => '/nl/login',
+        'de' => '/de/login',
+    ], name: 'login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {

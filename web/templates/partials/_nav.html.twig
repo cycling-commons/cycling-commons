@@ -21,6 +21,9 @@
     {% endif %}
     {# Language switcher last (far right): its pill shape sits apart from the square CTA/account controls. #}
     {% set _locales = {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch'} %}
+    {# `to` is the current page re-generated in the target locale, so localized routes
+       land on their prefixed path; locale_switch still records the choice (session + user). #}
+    {% set _alt = locale_alternates().urls %}
     <div class="lang-menu" data-nav-menu>
       <button type="button" class="lang-chip" data-nav-toggle aria-haspopup="true" aria-expanded="false" aria-controls="cc-lang-dd" aria-label="{{ 'nav.language'|trans }}">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
@@ -29,7 +32,7 @@
       </button>
       <div class="acct-dropdown lang-dropdown" id="cc-lang-dd" data-nav-dd role="menu" hidden>
         {% for code, label in _locales %}
-          <a role="menuitem" href="{{ path('locale_switch', {_locale: code}) }}"{% if app.request.locale == code %} aria-current="true"{% endif %}>{{ label }}</a>
+          <a role="menuitem" href="{{ path('locale_switch', {_locale: code}|merge(_alt[code] is defined ? {to: _alt[code]} : {})) }}"{% if app.request.locale == code %} aria-current="true"{% endif %}>{{ label }}</a>
         {% endfor %}
       </div>
     </div>

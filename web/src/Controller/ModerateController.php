@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
 use App\Moderation\SampleQueue;
+use App\Routing\LocalePrefix;
 use App\Service\ContributionStubInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,6 +27,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.
  */
+#[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_CURATOR')]
 final class ModerateController extends AbstractController
 {

@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Form\AddClimbType;
 use App\Form\ImproveType;
 use App\Form\VoteType;
+use App\Routing\LocalePrefix;
 use App\Service\ContributionStubInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.
  */
+#[Route(LocalePrefix::PATHS)]
 final class ContributeController extends AbstractController
 {
     public function __construct(

@@ -5,6 +5,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -16,6 +17,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.
  */
+#[Route(LocalePrefix::PATHS)]
 #[IsGranted('ROLE_USER')]
 final class ProfileController extends AbstractController
 {

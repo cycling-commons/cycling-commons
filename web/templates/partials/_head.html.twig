@@ -4,6 +4,11 @@
 <title>{{ page_title|default('Cycling Commons')|trans }}</title>
 <meta name="description" content="{{ page_description|default('Cycling Commons is an open, community-built map of the world\'s best riding.')|trans }}" />
 <link rel="canonical" href="{{ app.request.schemeAndHttpHost ~ app.request.pathInfo }}" />
+{% set _alt = locale_alternates() %}
+{% if _alt.localized %}
+{% for code, url in _alt.urls %}<link rel="alternate" hreflang="{{ code }}" href="{{ app.request.schemeAndHttpHost ~ url }}" />
+{% endfor %}<link rel="alternate" hreflang="x-default" href="{{ app.request.schemeAndHttpHost ~ _alt.urls['en'] }}" />
+{% endif %}
 <meta name="theme-color" content="#101E16" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
