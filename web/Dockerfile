@@ -3,10 +3,11 @@
 FROM php:8.4-fpm
 
 # pdo_pgsql for PostgreSQL/PostGIS; gettext for sokil/php-isocodes translations
-# (app:world:import); git+unzip for composer.
+# (app:world:import); intl (needs libicu-dev) for EasyAdmin date/time formatting
+# and locale-aware i18n; git+unzip for composer.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq-dev git unzip \
-    && docker-php-ext-install pdo_pgsql gettext \
+    && apt-get install -y --no-install-recommends libpq-dev libicu-dev git unzip \
+    && docker-php-ext-install pdo_pgsql gettext intl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
