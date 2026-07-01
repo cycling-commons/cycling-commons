@@ -36,9 +36,10 @@ services:
       APP_CACHE_DIR: /tmp/cc-cache
       APP_LOG_DIR: /tmp/cc-log
       DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=18&charset=utf8"
-      # Mail goes to a Mailpit on the host (e.g. a shared dev instance on :1025/:8025).
-      # The stack no longer bundles its own Mailpit — it collided with the host's :8025.
-      MAILER_DSN: "${MAILER_DSN:-smtp://host.docker.internal:1025}"
+      # Email is caught by the bundled Mailpit over the internal network (see below).
+      # To use a shared host instance instead, override MAILER_DSN, e.g.
+      #   MAILER_DSN=smtp://host.docker.internal:1025
+      MAILER_DSN: "${MAILER_DSN:-smtp://mailpit:1025}"
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount
@@ -47,6 +48,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
   web:
     image: nginx:alpine
@@ -121,10 +124,18 @@ services:
     volumes:
       - ${VALHALLA_TILES:-./data/valhalla}:/custom_files   # drop the downloaded tiles here
 
-  # Mail catcher: the stack expects a Mailpit reachable on the host at
-  # host.docker.internal:1025 (a shared dev instance). It is intentionally NOT
-  # bundled here — a local mailpit collided with the host's :8025. Don't have one?
-  #   docker run -d --name mailpit -p 8025:8025 -p 1025:1025 axllent/mailpit
+  # ---- mail catcher: Mailpit (bundled, so the stack is self-contained) ------
+  # The app sends to mailpit:1025 over the internal network — no host SMTP port.
+  # Only the web UI is published, on ${MAILPIT_UI_PORT:-8025}. If that collides
+  # with a shared host Mailpit, set MAILPIT_UI_PORT (e.g. 8026), or point the app
+  # at your host instance with MAILER_DSN=smtp://host.docker.internal:1025.
+  mailpit:
+    image: axllent/mailpit
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
 
   # ---- opt-in: S3-compatible object storage for PMTiles --------------------
   minio:

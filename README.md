@@ -107,9 +107,9 @@ Config: copy any `web/.env` values you need into `web/.env.local` (gitignored).
 Never commit real secrets — `web/.env` holds placeholders only.
 
 **Dev mail (Mailpit):** outbound email (registration confirmation, password-reset, etc.) is
-sent to a [Mailpit](https://mailpit.axllent.org/) on the host at `:1025`; read it at
-<http://localhost:8025>. The stack does **not** bundle its own Mailpit (it collided with a
-shared host instance). No Mailpit yet? `docker run -d -p 8025:8025 -p 1025:1025 axllent/mailpit`.
+caught by the **bundled** [Mailpit](https://mailpit.axllent.org/) — nothing leaves your machine.
+Read it at <http://localhost:8025>. Already run a Mailpit on `:8025`? Set `MAILPIT_UI_PORT`
+(e.g. `8026`), or point the app at yours with `MAILER_DSN=smtp://host.docker.internal:1025`.
 
 **Bootstrap an admin account:**
 

@@ -33,18 +33,22 @@ real endpoints and the geo pipeline get built on top.
 ## Dev mail (Mailpit)
 
 All outbound email from the Symfony app (registration confirmation, password-reset links, 2FA
-setup) is sent to a [Mailpit](https://mailpit.axllent.org/) **on the host** at
-`host.docker.internal:1025` — no real mail is sent in local development. Open the inbox at
-**<http://localhost:8025>**.
+setup) is caught by the **bundled Mailpit** — no real mail is sent in local development. The app
+talks to it over the internal network (`mailpit:1025`), so no host SMTP port is published; only
+the web inbox is exposed, at **<http://localhost:8025>**.
 
-The stack intentionally does **not** bundle its own Mailpit (a local one collided with a shared
-host instance on `:8025`). If you don't already have a Mailpit running, start one:
+Already running a Mailpit on `:8025` (e.g. a shared instance across projects)? Either move this
+one's inbox aside:
 
 ```
-docker run -d --name mailpit -p 8025:8025 -p 1025:1025 axllent/mailpit
+MAILPIT_UI_PORT=8026   # in developers/docker/.env
 ```
 
-Override `MAILER_DSN` if your Mailpit lives elsewhere.
+…or skip the bundled one and point the app at yours:
+
+```
+MAILER_DSN=smtp://host.docker.internal:1025
+```
 
 ## Bootstrap accounts
 
