@@ -58,7 +58,7 @@ Each action is **conditionally displayed** (`Action::displayIf(...)`) so admins 
 | **Execute account removal** | `deletionRequestedAt != null` | Remove account per §7 | **yes** |
 | **Cancel pending removal** | `deletionRequestedAt != null` | Clear `deletionRequestedAt` + `deletionCode` | no |
 
-**Search & filters** on the User index: search by email/displayName; filter by role, `emailVerified`, locked state, `country`, `locale`, `createdAt`.
+**Search & filters** on the User index: search by email/displayName; filter by `emailVerified`, `publicProfile`, `country`, `locale`, `createdAt`. **Deferred:** the **role** filter (needs a custom jsonb-containment filter) and the boolean **locked** filter (needs a `lockedUntil > now` custom filter) — both require a custom EA filter class; role/lock *visibility* is partly covered by the dashboard count cards (§8) meanwhile.
 
 ## 5. Audit trail — `AdminActionLog`
 
@@ -153,3 +153,10 @@ Moderation-queue depth is **omitted** for now: the queue is still `SampleQueue` 
 1. **Dashboard** — ✅ minimal real dashboard **in scope** (counts + recent signups, §8). *(confirmed 2026-07-01)*
 2. **Reset-request diagnostics** — ✅ **in scope** as a read-only list + single-row purge (§5.1). *(confirmed 2026-07-01)*
 3. **Inactivity lifecycle (§9)** — ✅ 12 / 22 / 23m-final / 24-month figures + anonymize-not-delete **confirmed**; graduates to its own spec when scheduled. *(confirmed 2026-07-01)*
+
+## 14. Tracked follow-ups (post-starter, non-blocking)
+
+Surfaced by the final whole-branch review of the shipped starter — recorded so they aren't implicit:
+
+1. **CSRF-harden the destructive actions.** The support actions are EA GET links (gated `ROLE_ADMIN`) with a client-side `confirm()` on destructive ones — not CSRF-token protected (an accepted starter tradeoff). The cross-site `<img>`/subresource vector is already neutralized by `cookie_samesite: lax` (session + remember-me); the residual is a top-level link the admin actively clicks (which also hits the confirm). **Before a real multi-admin deployment**, convert the destructive handlers (grant/revoke admin, remove account, disarm 2FA) to POST + CSRF token. Not a merge blocker for an admin-only back-office; should not linger once a second admin exists.
+2. **Complete the User-index filters.** Add the deferred **role** (custom jsonb-containment) and **locked** (`lockedUntil > now`) filters as a custom EA filter class (see §4).
