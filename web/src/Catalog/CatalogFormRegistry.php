@@ -1,0 +1,192 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Catalog;
+
+/**
+ * The per-type field schemas that make the improve wizard type-aware.
+ *
+ * This is the Symfony port of the demo registry in `atlas/demo/edit-items.js`,
+ * lifted from per-feature entries to per-type schemas (the four demo climbs
+ * collapse to one Climbs schema, etc.). Design source of truth:
+ * docs/specs/edit-items/<LETTER>-*.md and 2026-06-18-catalog-v2-and-per-type-forms.md §4.
+ *
+ * Fixture data, NOT a domain schema — there is no catalog-item persistence yet
+ * (every submission still goes through {@see \App\Service\ContributionStubService}).
+ *
+ * @api Injected into the improve form/controller to build type-aware fields.
+ */
+final class CatalogFormRegistry
+{
+    private const array UNKNOWN_YES_NO = ['Unknown', 'Yes', 'No'];
+
+    public function for(ItemType $type): ItemFieldSet
+    {
+        return match ($type) {
+            ItemType::RoadSurface => new ItemFieldSet(
+                fields: [
+                    CatalogField::select('surface', 'Surface', ['Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Ground']),
+                    CatalogField::select('smoothness', 'Smoothness', ['Excellent', 'Good', 'Intermediate', 'Bad', 'Very bad']),
+                    CatalogField::text('width', 'Width (m)', default: '3.0'),
+                    CatalogField::select('traffic', 'Traffic', ['Quiet', 'Moderate', 'Busy', 'Car-free (RAVeL)']),
+                    CatalogField::textarea('note', 'Note', 'e.g. resurfaced in 2025, or pavé through the village'),
+                ],
+                addFields: [
+                    CatalogField::select('lit', 'Lit at night?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('segregated', 'Segregated from cars?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('seasonalClosure', 'Seasonal closure?', ['None', 'Winter', 'Forestry']),
+                ],
+            ),
+
+            ItemType::Climbs => new ItemFieldSet(
+                fields: [
+                    CatalogField::text('name', 'Name'),
+                    CatalogField::select('surface', 'Surface', ['Smooth asphalt', 'Asphalt', 'Worn asphalt', 'Cobbles', 'Gravel']),
+                    CatalogField::text('avgGradient', 'Average gradient (%)'),
+                    CatalogField::text('maxGradient', 'Max gradient (%)'),
+                    CatalogField::textarea('correction', 'Anything to correct?', 'e.g. the foot starts at the bridge, not the square'),
+                ],
+                addFields: [
+                    CatalogField::select('waterOnClimb', 'Water on climb?', self::UNKNOWN_YES_NO),
+                    CatalogField::text('hairpins', 'Hairpins (count)', placeholder: 'e.g. 3'),
+                    CatalogField::select('shade', 'Shade / exposure', ['Unknown', 'Wooded', 'Exposed']),
+                ],
+            ),
+
+            ItemType::WaterFood => new ItemFieldSet(
+                fields: [
+                    CatalogField::select('type', 'Type', ['Public fountain', 'Drinking tap', 'Cemetery tap', 'Café — refill point']),
+                    CatalogField::select('potable', 'Potable?', ['Yes (public supply)', 'Unsigned — use judgement', 'No / non-potable']),
+                    CatalogField::select('seasonal', 'Seasonal availability', ['Year-round', 'Summer only', 'Frost-shut in winter', 'Unknown']),
+                    CatalogField::textarea('note', 'Note for riders', 'e.g. low flow, or hard to spot behind the church'),
+                ],
+                addFields: [
+                    CatalogField::select('bottleFill', 'Bottle-fill friendly?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('cost', 'Cost', ['Free', 'Customers only']),
+                ],
+            ),
+
+            ItemType::BikeServices => new ItemFieldSet(
+                fields: [
+                    CatalogField::text('name', 'Name'),
+                    CatalogField::select('pumpValve', 'Pump valve', ['Presta + Schrader', 'Presta only', 'Schrader only', 'No pump']),
+                    CatalogField::text('openingHours', 'Opening hours', default: '24/7'),
+                    CatalogField::text('tools', 'Tools available', placeholder: 'e.g. chain tool, work stand'),
+                    CatalogField::textarea('correction', 'Anything to correct?', "What's wrong or out of date?"),
+                ],
+                addFields: [
+                    CatalogField::select('workStand', 'Work stand?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('chainTool', 'Chain tool?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('ebikeCharging', 'E-bike charging?', self::UNKNOWN_YES_NO),
+                ],
+            ),
+
+            ItemType::WhereToSleep => new ItemFieldSet(
+                fields: [
+                    CatalogField::text('name', 'Name'),
+                    CatalogField::text('town', 'Town / commune'),
+                    CatalogField::text('website', 'Website', placeholder: 'https://… (the place’s own site)'),
+                    CatalogField::select('bikeStorage', 'Secure bike storage', ['Yes — locked room', 'Yes — garage/shed', 'On request', 'No']),
+                    CatalogField::select('dryingWashing', 'Drying / washing for kit', self::UNKNOWN_YES_NO),
+                    CatalogField::text('bookingLink', 'Booking link', placeholder: 'https://… (booking platform, if any)'),
+                    CatalogField::textarea('note', 'Note for riders', 'What makes it good for cyclists?'),
+                ],
+                addFields: [
+                    CatalogField::select('pets', 'Pets allowed?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('meals', 'Meals / breakfast?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('toolsToBorrow', 'Tools to borrow?', self::UNKNOWN_YES_NO),
+                ],
+            ),
+
+            ItemType::Hazards => new ItemFieldSet(
+                fields: [
+                    CatalogField::select('hazardType', 'Hazard type', ['Crosswind / fog', 'Ice / frost', 'Loose surface / gravel', 'Flooding', 'Roadworks', 'Other']),
+                    CatalogField::select('severity', 'Severity', ['Low', 'Moderate', 'High']),
+                    CatalogField::select('worstWhen', 'When is it worst?', ['Autumn / winter', 'Year-round', 'After rain', 'Windy days']),
+                    CatalogField::select('stillPresent', 'Still present?', ['Yes — confirmed today', 'Reduced', 'Gone — clear now']),
+                    CatalogField::textarea('whatYouSaw', 'What did you see?', 'Describe the conditions'),
+                ],
+                addFields: [
+                    CatalogField::text('detour', 'Alternative / detour', placeholder: 'e.g. drop to the valley road'),
+                    CatalogField::select('timeOfDay', 'Time of day', ['Any', 'Morning', 'Afternoon', 'Evening']),
+                ],
+            ),
+
+            ItemType::GettingThere => new ItemFieldSet(
+                fields: [
+                    CatalogField::select('bikesOnBoard', 'Bikes on board', ['Allowed with supplement', 'Allowed, free', 'Restricted at peak', 'Not allowed']),
+                    CatalogField::select('stepFree', 'Step-free access', self::UNKNOWN_YES_NO),
+                    CatalogField::select('bikeParking', 'Bike parking at station', ['Unknown', 'Covered racks', 'Open racks', 'None']),
+                    CatalogField::textarea('note', 'Note for riders', 'e.g. which platform for the climbs'),
+                ],
+                addFields: [
+                    CatalogField::select('liftRamp', 'Lift / ramp?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('bikeTicket', 'Bike ticket needed?', self::UNKNOWN_YES_NO),
+                ],
+            ),
+
+            ItemType::Shelter => new ItemFieldSet(
+                fields: [
+                    CatalogField::select('shelterType', 'Shelter type', ['Refuge / chapel', 'Bus shelter', 'Café (seasonal)', 'Picnic hut']),
+                    CatalogField::select('alwaysAccessible', 'Always accessible?', ['Yes — open structure', 'Daytime only', 'Seasonal', 'Unknown']),
+                    CatalogField::select('waterNearby', 'Water nearby?', self::UNKNOWN_YES_NO),
+                    CatalogField::textarea('note', 'Note for riders', 'How useful is it in bad weather?'),
+                ],
+                addFields: [
+                    CatalogField::select('seating', 'Bench / seating?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('phoneSignal', 'Phone signal?', self::UNKNOWN_YES_NO),
+                ],
+            ),
+
+            ItemType::ScenicViews => new ItemFieldSet(
+                fields: [
+                    CatalogField::text('name', 'Name'),
+                    CatalogField::select('type', 'Type', ['Viewpoint / high point', 'Monument', 'Heritage site', 'Nature reserve']),
+                    CatalogField::select('bikeAccess', 'Access for bikes', ['Roadside', 'Short walk', 'Path only']),
+                    CatalogField::text('whatYouSee', 'What can you see?'),
+                    CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
+                ],
+                addFields: [
+                    CatalogField::select('bestLight', 'Best light / time', ['Any', 'Morning', 'Golden hour', 'Sunset']),
+                    CatalogField::select('bench', 'Bench?', self::UNKNOWN_YES_NO),
+                ],
+            ),
+
+            ItemType::HistoryCulture => new ItemFieldSet(
+                fields: [
+                    CatalogField::text('name', 'Name'),
+                    CatalogField::select('type', 'Type', ['Heritage site', 'Museum', 'Monument', 'Religious site']),
+                    CatalogField::select('bikeParking', 'Bike parking', self::UNKNOWN_YES_NO),
+                    CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
+                ],
+                addFields: [
+                    CatalogField::text('openingHours', 'Opening hours', placeholder: 'e.g. 10:00–18:00'),
+                    CatalogField::select('entryFee', 'Entry fee?', ['Free', 'Paid', 'Unknown']),
+                    CatalogField::text('cyclingStory', 'Cycling story / link', placeholder: 'A heritage note worth riding past for'),
+                ],
+            ),
+
+            ItemType::QualityRides => new ItemFieldSet(
+                fields: [
+                    CatalogField::text('rideName', 'Ride name', placeholder: 'e.g. Spa · Sankt Vith'),
+                    CatalogField::select('difficulty', 'Difficulty', ['Gentle', 'Moderate', 'Hard', 'Very hard']),
+                    CatalogField::select('bestSeason', 'Best season', ['Spring', 'Summer', 'Autumn', 'Winter', 'Any']),
+                    CatalogField::select('dominantSurface', 'Dominant surface', ['Asphalt', 'Mixed', 'Gravel']),
+                    CatalogField::textarea('note', 'Note for riders', 'What is this loop like?'),
+                ],
+                addFields: [
+                    CatalogField::select('quietness', 'Quietness rating (1–5)', ['1', '2', '3', '4', '5']),
+                    CatalogField::select('scenic', 'Scenic rating (1–5)', ['1', '2', '3', '4', '5']),
+                    CatalogField::select('friendliness', 'Cycling-friendliness (1–5)', ['1', '2', '3', '4', '5']),
+                    CatalogField::select('bikeTypes', 'Suitable bike types', ['Road', 'Gravel', 'MTB', 'E-bike', 'Any']),
+                    CatalogField::select('handbike', 'Handbike-friendly?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('gradientLimited', 'Gradient-limited?', ['No', '≤6%', '≤9%']),
+                    CatalogField::select('bestDirection', 'Best direction', ['Clockwise', 'Counter-clockwise', 'Either']),
+                ],
+            ),
+        };
+    }
+}
