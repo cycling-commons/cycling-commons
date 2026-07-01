@@ -1095,6 +1095,11 @@ js:
   err_checkbox: 'Bitte aktiviere dieses Kästchen, um fortzufahren.'
   err_terms: 'Du musst den Nutzungsbedingungen zustimmen.'
 admin:
+  menu:
+    dashboard: 'Dashboard'
+    users: 'Benutzer'
+    activity: 'Aktivität'
+    reset_requests: 'Zurücksetzungsanfragen'
   action:
     unlock: 'Konto entsperren'
     disarm_2fa: '2FA deaktivieren'

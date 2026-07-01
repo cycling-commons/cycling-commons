@@ -1095,6 +1095,11 @@ js:
   err_checkbox: 'Please check this box to continue.'
   err_terms: 'You must agree to the terms of service.'
 admin:
+  menu:
+    dashboard: 'Dashboard'
+    users: 'Users'
+    activity: 'Activity'
+    reset_requests: 'Reset requests'
   action:
     unlock: 'Unlock account'
     disarm_2fa: 'Disarm 2FA'

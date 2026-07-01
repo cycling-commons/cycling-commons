@@ -1095,6 +1095,11 @@ js:
   err_checkbox: 'Veuillez cocher cette case pour continuer.'
   err_terms: 'Vous devez accepter les conditions d''utilisation.'
 admin:
+  menu:
+    dashboard: 'Tableau de bord'
+    users: 'Utilisateurs'
+    activity: 'Activité'
+    reset_requests: 'Demandes de réinitialisation'
   action:
     unlock: 'Déverrouiller le compte'
     disarm_2fa: 'Désactiver la 2FA'

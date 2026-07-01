@@ -1095,6 +1095,11 @@ js:
   err_checkbox: 'Vink dit vakje aan om door te gaan.'
   err_terms: 'Je moet akkoord gaan met de servicevoorwaarden.'
 admin:
+  menu:
+    dashboard: 'Dashboard'
+    users: 'Gebruikers'
+    activity: 'Activiteit'
+    reset_requests: 'Reset-verzoeken'
   action:
     unlock: 'Account ontgrendelen'
     disarm_2fa: '2FA uitschakelen'

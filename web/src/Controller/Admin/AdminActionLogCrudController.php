@@ -43,7 +43,7 @@ final class AdminActionLogCrudController extends AbstractCrudController
     {
         return $crud
             ->setEntityLabelInSingular('Activity')
-            ->setEntityLabelInPlural('Activity')
+            ->setEntityLabelInPlural('Activities')
             ->setDefaultSort(['createdAt' => 'DESC']);
     }
 
