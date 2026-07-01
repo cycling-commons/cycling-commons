@@ -2,3 +2,4 @@
 services:
     App\Tests\Auth\SpyDeletionHook:
         tags: ['app.user_deletion_hook']
+
