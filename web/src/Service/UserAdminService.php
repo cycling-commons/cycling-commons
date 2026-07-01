@@ -14,6 +14,8 @@ use Doctrine\ORM\EntityManagerInterface;
  * Administrative support operations on a User account. All mutations flush and
  * write an audit row (AdminActionLogger). Guardrails prevent an admin from
  * locking themselves out or removing the last administrator.
+ *
+ * @api Autowired by the DI container; consumed by UserCrudController.
  */
 final class UserAdminService
 {

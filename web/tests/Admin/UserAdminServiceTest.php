@@ -145,7 +145,7 @@ final class UserAdminServiceTest extends KernelTestCase
         self::assertNull($this->em->getRepository(User::class)->find($id), 'User row must be gone.');
 
         $logs = static::getContainer()->get(\App\Repository\AdminActionLogRepository::class)
-            ->findBy(['action' => \App\Service\UserAdminService::REMOVE_ACCOUNT]);
+            ->findBy(['action' => UserAdminService::REMOVE_ACCOUNT]);
         self::assertCount(1, $logs);
         self::assertStringContainsString('gone@example.com', (string) $logs[0]->getNote());
         self::assertNull($logs[0]->getTargetUser(), 'FK is SET NULL after the target row is removed.');

@@ -24,9 +24,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatableInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Symfony\Component\Translation\TranslatableMessage;
 
 /**
  * CRUD + support-desk actions for the User entity.
@@ -119,60 +119,70 @@ final class UserCrudController extends AbstractCrudController
 
     // ── Action handlers (one per support operation) ────────────────────────────
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function unlock(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->unlock($t, $a), 'admin.flash.unlocked');
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function disarm_2fa(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->disarmTwoFa($t, $a), 'admin.flash.2fa_disarmed');
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function verify_email(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->verifyEmail($t, $a), 'admin.flash.email_verified');
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function unverify_email(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->unverifyEmail($t, $a), 'admin.flash.email_unverified');
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function grant_curator(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->grantCurator($t, $a), 'admin.flash.role_changed');
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function revoke_curator(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->revokeCurator($t, $a), 'admin.flash.role_changed');
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function grant_admin(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->grantAdmin($t, $a), 'admin.flash.role_changed');
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function revoke_admin(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->revokeAdmin($t, $a), 'admin.flash.role_changed');
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function remove_account(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->removeAccount($t, $a), 'admin.flash.account_removed', backToIndex: true);
     }
 
+    /** @param AdminContext<User> $context */
     #[AdminRoute]
     public function cancel_removal(AdminContext $context): RedirectResponse
     {
@@ -182,6 +192,7 @@ final class UserCrudController extends AbstractCrudController
     // ── Shared handler plumbing ────────────────────────────────────────────────
 
     /**
+     * @param AdminContext<User>         $context
      * @param callable(User, User): void $op
      */
     private function run(AdminContext $context, callable $op, string $successKey, bool $backToIndex = false): RedirectResponse
