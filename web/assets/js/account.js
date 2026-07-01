@@ -27,5 +27,10 @@
     Array.prototype.forEach.call(tabs, function (b) {
       b.addEventListener('click', function () { activate(b.dataset.pane); });
     });
+
+    // Open a specific pane from ?tab= (e.g. the Votes/Saved links on /settings
+    // point back here as /profile?tab=votes).
+    var initial = new URLSearchParams(window.location.search).get('tab');
+    if (initial && document.getElementById('p-' + initial)) activate(initial);
   });
 })();

@@ -116,9 +116,9 @@ final class ProfileSettingsTest extends WebTestCase
         $client->request('GET', '/profile');
 
         self::assertResponseIsSuccessful();
-        // Account dashboard: display name in the heading/top bar, email in the Settings tab.
+        // Account dashboard shows the display name in the (a11y) heading + top bar.
         self::assertSelectorTextContains('h1', 'Hanne V');
-        self::assertSelectorTextContains('#p-settings', $email);
+        self::assertSelectorTextContains('.dtop', 'Hanne V');
     }
 
     public function testAuthenticatedUserCanViewSettings(): void
@@ -260,8 +260,9 @@ final class ProfileSettingsTest extends WebTestCase
         // Success flash must appear
         self::assertSelectorTextContains('.flash-success', 'Password changed');
 
-        // Can re-login with the NEW password (logout is POST + CSRF — submit the nav form)
-        $client->submitForm('Log out');
+        // Can re-login with the NEW password (logout is POST + CSRF — submit the
+        // account shell's sign-out form)
+        $client->submitForm('Sign out');
 
         $this->loginAs($client, $email, $newPlain);
         $client->request('GET', '/profile');

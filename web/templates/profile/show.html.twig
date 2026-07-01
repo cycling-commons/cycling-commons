@@ -26,8 +26,8 @@
   .dtop .out:hover{color:var(--trail)}
 
   .dtabs{display:flex;gap:1.6rem;padding:0 clamp(1.25rem,4vw,2rem);background:var(--paper-deep);border-bottom:1px solid rgba(20,22,14,.12);overflow-x:auto}
-  .dtabs button{background:none;border:none;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:1rem .2rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
-  .dtabs button.on{color:var(--ink);border-color:var(--trail)}
+  .dtabs a,.dtabs button{background:none;border:none;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:1rem .2rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;text-decoration:none}
+  .dtabs a.on,.dtabs button.on{color:var(--ink);border-color:var(--trail)}
 
   .dbody{padding:2.2rem clamp(1.25rem,4vw,2rem);max-width:880px;width:100%;margin:0 auto}
   .dpane{display:none} .dpane.on{display:block}
@@ -90,7 +90,7 @@
     <button class="on" data-pane="contrib" role="tab" aria-selected="true">{{ 'account.tab_contributions'|trans }}</button>
     <button data-pane="votes" role="tab" aria-selected="false">{{ 'account.tab_votes'|trans }}</button>
     <button data-pane="saved" role="tab" aria-selected="false">{{ 'account.tab_saved'|trans }}</button>
-    <button data-pane="settings" role="tab" aria-selected="false">{{ 'account.tab_settings'|trans }}</button>
+    <a href="{{ path('settings') }}">{{ 'account.tab_settings'|trans }}</a>
   </nav>
 {% endblock %}
 
@@ -135,34 +135,6 @@
       <a class="rc" href="{{ path('regions') }}"><h4>Dolomites</h4><div class="co">IT · 31 climbs · 12 views</div></a>
       <a class="rc" href="{{ path('regions') }}"><h4>Peak District</h4><div class="co">UK · gravel · 9 stays</div></a>
     </div>
-  </section>
-
-  {# ── Settings (real identity + account status; edit forms live at /settings) ── #}
-  <section class="dpane" id="p-settings" role="tabpanel">
-    <div class="setrow"><div><b>{{ 'account.set_display_name'|trans }}</b><div class="val">{{ cc_user.displayName }}</div></div><a class="manage" href="{{ path('settings') }}">{{ 'account.manage'|trans }} →</a></div>
-    <div class="setrow"><div><b>{{ 'account.set_email'|trans }}</b><div class="val">{{ cc_user.email }}</div></div><a class="manage" href="{{ path('settings') }}">{{ 'account.manage'|trans }} →</a></div>
-
-    <h2 class="setsec">{{ 'profile.section_status'|trans }}</h2>
-    <div class="status-row">
-      <span class="label">{{ 'profile.status_email_verified'|trans }}</span>
-      {% if cc_user.emailVerified %}<span class="pill yes">{{ 'profile.pill_verified'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_pending'|trans }}</span>{% endif %}
-    </div>
-    <div class="status-row">
-      <span class="label">{{ 'profile.status_2fa'|trans }}</span>
-      <span>{% if cc_user.twoFaEnabled and cc_user.totpSecret %}<span class="pill yes">{{ 'profile.pill_2fa_enabled'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_2fa_not_enabled'|trans }}</span>{% endif %} <a class="manage" href="{{ path('2fa_setup') }}">{{ 'account.manage'|trans }} →</a></span>
-    </div>
-    <div class="status-row">
-      <span class="label">{{ 'profile.status_public_profile'|trans }}</span>
-      <span>{% if cc_user.publicProfile %}<span class="pill yes">{{ 'profile.pill_public_yes'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_public_no'|trans }}</span>{% endif %} <a class="manage" href="{{ path('settings') }}">{{ 'account.manage'|trans }} →</a></span>
-    </div>
-    <div class="status-row">
-      <span class="label">{{ 'profile.status_roles'|trans }}</span>
-      <span>{% for role in cc_user.roles %}<span class="pill role">{{ role }}</span>{% endfor %}</span>
-    </div>
-
-    <div class="note">{{ 'account.privacy_note'|trans|raw }}</div>
-
-    <div class="setrow" style="border:none"><div><b>{{ 'account.delete_account'|trans }}</b><div class="val">{{ 'account.delete_note'|trans }}</div></div><a class="manage" href="{{ path('settings') }}#delete">{{ 'account.manage'|trans }} →</a></div>
   </section>
 
 </div>
