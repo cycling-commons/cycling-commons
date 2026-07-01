@@ -19,6 +19,8 @@ setup: ## First-time dev setup: start the stack, install deps, migrate, seed wor
 	@$(DOCKER_COMP) up --build --force-recreate --detach --wait
 	@echo "→ Installing PHP dependencies…"
 	@$(DOCKER_COMP) exec -T app composer install --no-interaction --no-progress
+	@echo "→ Publishing bundle web assets (EasyAdmin CSS/JS → public/bundles)…"
+	@$(DOCKER_COMP) exec -T app php bin/console assets:install public --symlink --relative
 	@echo "→ Running database migrations…"
 	@$(DOCKER_COMP) exec -T app php bin/console doctrine:migrations:migrate --no-interaction
 	@echo "→ Importing world reference data (continents, countries, subdivisions)…"
