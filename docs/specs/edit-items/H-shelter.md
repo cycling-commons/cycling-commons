@@ -4,6 +4,7 @@
 - **Map depiction:** ⛑ pin, colour #9A8FB6
 - **Edit-item id:** `shelter-baraque-michel` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Refuges, cabanes and emergency shelter on exposed terrain.

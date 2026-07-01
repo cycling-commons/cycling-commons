@@ -4,6 +4,7 @@
 - **Map depiction:** ⚠ pin, colour #C8923A
 - **Edit-item id:** `exposed-crosswind-hautes-fagnes` in `atlas/demo/edit-items.js`, dynamic — needs freshness
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Persistent, real hazards — crosswind and fog exposure, ice, loose surface — kept fresh by rider confirmations so stale warnings age out.

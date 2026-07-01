@@ -4,6 +4,7 @@
 - **Map depiction:** ⛺ pin, colour #B5532E
 - **Edit-item id:** `cyclist-friendly-gite-ambleve-valley` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Bike-friendly stays riders actually used — gîtes and B&Bs with secure storage and a welcome for muddy kit.

@@ -82,9 +82,9 @@ docker compose exec app php bin/console doctrine:fixtures:load --no-interaction 
 | Service | URL | What it is |
 |---------|-----|------------|
 | Frontend | http://localhost:8099 | the MapLibre prototype (`atlas/demo/`) |
-| Wiki | http://localhost:8000 | MkDocs Material (`wiki/`) |
+| Wiki | http://localhost:8013 | MkDocs Material (`wiki/`) |
 | Web app | http://localhost:8001/ · `/health` · `/api/db-check` | Symfony 7 LTS on nginx + PHP-FPM → PostGIS |
-| Pipeline | http://localhost:8002/health · `/db` | Python/FastAPI geospatial tier → PostGIS |
+| Pipeline | http://localhost:8012/health · `/db` | Python/FastAPI geospatial tier → PostGIS |
 | Database | `localhost:5433` | PostgreSQL 18 + PostGIS (host port 5433) |
 
 Heavy, data-dependent services are opt-in: `--profile routing` (Valhalla, on a prebuilt tile set

@@ -20,11 +20,11 @@ Then open:
 | Service    | URL                              | What it is |
 |------------|----------------------------------|------------|
 | Frontend   | http://localhost:8099            | the MapLibre prototype (`atlas/demo/`) |
-| Wiki       | http://localhost:8000            | MkDocs Material (`wiki/`), live reload |
+| Wiki       | http://localhost:8013            | MkDocs Material (`wiki/`), live reload |
 | API        | http://localhost:8001/health     | Symfony health check |
 | API ↔ DB   | http://localhost:8001/api/db-check | proves nginx → php-fpm → Symfony → PostGIS |
-| Pipeline   | http://localhost:8002/health     | FastAPI health check |
-| Pipe ↔ DB  | http://localhost:8002/db         | proves pipeline → PostGIS |
+| Pipeline   | http://localhost:8012/health     | FastAPI health check |
+| Pipe ↔ DB  | http://localhost:8012/db         | proves pipeline → PostGIS |
 | Postgres   | `localhost:5433`                 | PostGIS 18 (host port 5433 to avoid a local 5432; `.env` for creds) |
 
 The API and pipeline ship only **connectivity scaffolding** (health + DB-version endpoints) —
@@ -89,7 +89,7 @@ Loads `curator@example.test` (ROLE_CURATOR, 2FA preset) and `rider@example.test`
 
 ```
 browser ──> atlas (nginx, static)            :8099
-browser ──> wiki  (mkdocs serve)             :8000
+browser ──> wiki  (mkdocs serve)             :8013
 browser ──> web (nginx) ──> app (php-fpm, Symfony) ──────┐
 browser ──> pipeline (FastAPI) ─────────────────────────┼─> db (PostGIS) :5432
                                                          ┘
@@ -125,7 +125,7 @@ docker compose --profile storage up
 
 The **DEM** directory (`DEM_DIR`, default `./data/dem`) is mounted into the pipeline at
 `/data/dem` even without a profile; drop your downloaded DEM there and check
-http://localhost:8002/dem.
+http://localhost:8012/dem.
 
 ## Common commands
 

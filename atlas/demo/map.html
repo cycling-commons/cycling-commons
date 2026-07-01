@@ -388,16 +388,17 @@
         <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
       </div>
 
-      <!-- View mode is the primary filter (curated best-of vs the full backlog), so it sits right
+      <!-- View mode is the primary filter (best-of vs full coverage), so it sits right
            under Region. Its active button is styled bright (#mode in the CSS) so the current mode
-           is obvious at a glance. -->
+           is obvious at a glance. The differentiator is votability, not verification: best-of =
+           top-voted votable spots; utility data (water, hazards…) is coverage and never "best-of". -->
       <div class="grp">
         <h3>View mode</h3>
         <div class="toggle" id="mode">
-          <button class="on" data-m="curated">Curated best-of</button>
+          <button class="on" data-m="curated">Best-of</button>
           <button data-m="all">Everything</button>
         </div>
-        <div class="hint">Curated shows riders' best climbs, stays &amp; views. Utility data (water, hazards, services) aims for full coverage.</div>
+        <div class="hint">Best-of shows riders' top-voted climbs, stays &amp; views. Everything adds full utility coverage — water, services, hazards — plus unverified spots.</div>
       </div>
 
       <!-- Discipline chips are a visual stub for now: they toggle but don't yet filter the map
@@ -471,7 +472,7 @@
     <div id="map"></div>
     <div class="map-top">
       <div class="rg">Wallonia, Belgium</div>
-      <div class="sub">Curated best-of · Summer 2026</div>
+      <div class="sub">Best-of · Summer 2026</div>
       <a class="add-climb" href="contribute.html">+ Contribute</a>
     </div>
     <div class="legend">
@@ -1553,7 +1554,7 @@
     return `© ${credit} · <a href="${ccUrl(p.license)}" target="_blank" rel="noopener">${p.license}</a> · <a href="${p.source}" target="_blank" rel="noopener">Wikimedia Commons ↗</a>`;
   }
   function buildRecord(layer, f){
-    const cur = f.cur ? `<div class="cc-d-cur">▲ Curated best-of</div>` : '';
+    const cur = f.cur ? `<div class="cc-d-cur">▲ Best-of</div>` : '';
     const pl = photoList(f);
     const photo = pl.length ? `<figure class="cc-d-photo">
       <img src="${pl[0].sm}" alt="${f.name}" data-i="0" />
@@ -1939,7 +1940,7 @@
   document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on'); mode=b.dataset.m;
-    document.querySelector('.map-top .sub').textContent = (mode==='curated'?'Curated best-of · Summer 2026':'Everything · full backlog');
+    document.querySelector('.map-top .sub').textContent = (mode==='curated'?'Best-of · Summer 2026':'Everything · full coverage');
     render();
   });
   // discipline + freshness chips (visual)

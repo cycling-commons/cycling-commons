@@ -4,6 +4,7 @@
 - **Map depiction:** ◬ pin, colour #2C5440
 - **Edit-item id:** `signal-de-botrange` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Viewpoints, panoramas — the photo spot worth stopping for. (Split from the old "Scenic & cultural": this is the viewpoint/panorama half; heritage is now J.)

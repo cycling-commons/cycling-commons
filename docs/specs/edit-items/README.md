@@ -51,21 +51,81 @@ it varies by type:
 - `[tap]` — one-tap community confirmation ("still here / still true").
 - `[edit]` — a richer community edit (typed fields, ratings, notes).
 
+## Item lifecycle and votability
+
+Every catalog item moves through a lifecycle. The **map's view-mode toggle (Best-of ↔ Everything) is
+driven by _votability_, not verification** — verification is only the gate that lets a votable item
+start collecting votes.
+
+```
+Submitted → [moderation: spam / abuse / duplicate — ROLE_CURATOR]   ← off the public map
+   → Unverified  — public but unconfirmed; shows only in Everything as a small
+                   "unverified · help confirm" dot; NOT votable
+   → [verification gate: ≥ X independent community confirmations ([tap] "still here / still true")]
+   → Verified    — a full pin.                     ◀── utility / coverage types stop here
+   → Votable     — votable types only; now accrues votes
+   → Best-of     — top-voted; this is what Best-of mode surfaces
+```
+
+- **X** (confirmations to verify) is **not one global number** — it's a tier + modifiers model
+  (see [Verification threshold (X)](#verification-threshold-x) below).
+- **Votable types** climb the funnel toward best-of: they are *rankable*, and riders vote on which are
+  the best. **Utility / coverage types** stop at *verified* — they are **never votable and never
+  "best-of"**, because their value is *completeness*, not ranking. A waterpoint isn't a best-of
+  candidate; you just need to know it's there.
+- **Two kinds of "unverified"** collapse to the same on-map treatment (a help-confirm dot in
+  Everything): a fresh single-rider submission awaiting corroboration, and a bulk **`[OSM]` import** we
+  mirror but haven't confirmed. Neither is votable until it clears the verification gate.
+- The word **_curated_ is deliberately avoided** for this axis — items rise by community **votes**, not
+  editorial hand-picking. (Moderation is a separate spam/abuse gate, not a quality ranking.)
+
+**View modes, restated in these terms:**
+- **Best-of** = top-voted votable items only — the inspiration / trip-planning map.
+- **Everything** = full coverage: all utility + every votable item at any funnel stage + unverified
+  dots — the on-the-road / completeness map.
+
+Per-pin state carries the trust/vote signal (unverified dot → verified pin → votable → best-of marker);
+the toggle no longer stands in for "trusted". Each per-type spec below tags its **Lifecycle** row
+accordingly.
+
+### Verification threshold (X)
+
+X is **not one global number** and **not eleven per-type knobs** — it's a small set of **tiers**
+(assigned per type via the catalog) plus **cross-cutting modifiers**. It's a trust ↔ throughput dial:
+too low verifies false positives (spam, stale, wrong-location); too high starves coverage in
+low-traffic regions.
+
+| Tier | Types | Base X | Behaviour |
+|---|---|---|---|
+| **Objective utility** | water *existence*, bike services, getting there, road surface | ~2 | existence is binary → cheap to confirm |
+| **Experiential / votable** | climbs, where to sleep, scenic views, history, quality rides | ~2–3 | verification only confirms it *exists*; the **voting** layer does the quality filtering, so no punishing bar |
+| **Safety / time-sensitive** | hazards, shelter & emergency, the water *potable* flag | ~1 to publish | publish fast, then rely on **freshness decay** (the `freshness` field) — auto-stale after N days unless re-confirmed |
+
+**Modifiers** adjust the base (floor 1): `[OSM]` provenance −1 (imports arrive source-vetted, and may
+seed as verified-by-source / community-unconfirmed); trusted contributor or curator −1; bootstrap phase
+or low-density region −1 (seed coverage early, tighten as the community grows).
+
+**Notes**
+- **Config, not constants** — base X and modifiers are tunable per region / launch phase without a deploy.
+- **Risk can live at the field, not the item** — "this fountain exists" (low X) ≠ "this water is potable"
+  (never fully verifiable → *labelled* "Unsigned — use judgement", not gated). See [C-water-food](C-water-food.md).
+- The numbers above are **starting points (TBD)** — the *structure* (tiers + modifiers + decay) is what's fixed.
+
 ## The items
 
-| Letter | Type | Spec | Map | Editable |
-|---|---|---|---|---|
-| **A** | Road surface | [A-road-surface.md](A-road-surface.md) | line (by surface) | yes |
-| **B** | Climbs | [B-climbs.md](B-climbs.md) | line + foot pin | yes |
-| **C** | Water & food | [C-water-food.md](C-water-food.md) | pin | yes (2 fountains → 1 edit item) |
-| **D** | Bike services | [D-bike-services.md](D-bike-services.md) | pin | yes (default edit item) |
-| **E** | Where to sleep | [E-where-to-sleep.md](E-where-to-sleep.md) | pin | yes |
-| **F** | Hazards & conditions | [F-hazards.md](F-hazards.md) | pin | yes |
-| **G** | Getting there | [G-getting-there.md](G-getting-there.md) | pin | yes |
-| **H** | Shelter & emergency | [H-shelter.md](H-shelter.md) | pin | yes |
-| **I** | Scenic views | [I-scenic-views.md](I-scenic-views.md) | pin | yes |
-| **J** | History & culture | [J-history-culture.md](J-history-culture.md) | pin | yes |
-| **K** | Quality rides | [K-quality-rides.md](K-quality-rides.md) | line + GPX/FIT | yes (1 shared ride edit item) |
-| **L** | Ride heatmap | — | derived overlay | **no** (auto/aggregate, never per-rider) |
+| Letter | Type | Spec | Map | Votable? | Editable |
+|---|---|---|---|---|---|
+| **A** | Road surface | [A-road-surface.md](A-road-surface.md) | line (by surface) | utility | yes |
+| **B** | Climbs | [B-climbs.md](B-climbs.md) | line + foot pin | **votable** | yes |
+| **C** | Water & food | [C-water-food.md](C-water-food.md) | pin | utility | yes (2 fountains → 1 edit item) |
+| **D** | Bike services | [D-bike-services.md](D-bike-services.md) | pin | utility | yes (default edit item) |
+| **E** | Where to sleep | [E-where-to-sleep.md](E-where-to-sleep.md) | pin | **votable** | yes |
+| **F** | Hazards & conditions | [F-hazards.md](F-hazards.md) | pin | utility | yes |
+| **G** | Getting there | [G-getting-there.md](G-getting-there.md) | pin | utility | yes |
+| **H** | Shelter & emergency | [H-shelter.md](H-shelter.md) | pin | utility | yes |
+| **I** | Scenic views | [I-scenic-views.md](I-scenic-views.md) | pin | **votable** | yes |
+| **J** | History & culture | [J-history-culture.md](J-history-culture.md) | pin | **votable** | yes |
+| **K** | Quality rides | [K-quality-rides.md](K-quality-rides.md) | line + GPX/FIT | **votable** | yes (1 shared ride edit item) |
+| **L** | Ride heatmap | — | derived overlay | — | **no** (auto/aggregate, never per-rider) |
 
 L is intentionally not editable: it is a derived, anonymized aggregate.

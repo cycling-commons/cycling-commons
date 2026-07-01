@@ -4,6 +4,7 @@
 - **Map depiction:** gradient-coloured line + foot pin, icon ⛰, colour #6A2C8F
 - **Edit-item id:** `cote-de-la-redoute`, `mur-de-huy`, `cote-de-stockeu`, `cote-de-la-roche-aux-faucons` in `atlas/demo/edit-items.js` (one edit item per climb)
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 A linear feature (foot → summit) with a gradient profile; the layer that closed databases lock down.

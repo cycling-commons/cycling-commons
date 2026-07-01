@@ -4,6 +4,7 @@
 - **Map depiction:** 🚆 pin, colour #3E7D8C
 - **Edit-item id:** `aywaille-station` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Multimodal access points — stations with bikes-on-train, the gateway to the climbs.

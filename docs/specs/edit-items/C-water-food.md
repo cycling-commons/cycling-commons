@@ -4,6 +4,7 @@
 - **Map depiction:** pin, icon 💧, colour #8FB6A8
 - **Edit-item id:** `water-fountain` in `atlas/demo/edit-items.js`, shared by both fountains (Stavelot + Coo) — editing either opens the same edit item
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Ride-critical drinking water / refill points (fountains, taps, cemetery taps, cafés).

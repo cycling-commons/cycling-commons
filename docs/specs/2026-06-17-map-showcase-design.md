@@ -90,7 +90,10 @@ Extend each feature beyond the current thin shape to carry the full record. Per 
   id, name, type: 'B',            // catalog letter
   geom: { kind:'point'|'line'|'area', ll | path | polygon },
   headline,                       // one-line stat for tooltip ("8.9% avg · 2.0 km")
-  cur: true|false,                // curated/best-of flag (drives curated vs everything)
+  cur: true|false,                // demo best-of flag (drives Best-of vs Everything). In production this is
+                                  // DERIVED, not hand-set: an item is best-of only if it's a *votable* type
+                                  // that's been verified and top-voted. Utility/coverage types are never
+                                  // best-of. See edit-items/README.md#item-lifecycle-and-votability.
   sq?, tr?,                       // surface/traffic (climbs) for the existing chip filters
   record: [                       // ordered attribute rows for the drawer
     { label, value, method?: 'OSM'|'edit'|'auto'|'safety' }
@@ -106,7 +109,7 @@ Only attributes with a real value appear in `record`; unknowns are omitted (no b
 
 - "Data layers" expands from 6 → the full **A–K**, each labelled by letter + name, with a
   count, individually toggleable. Group ordering follows the catalog.
-- Existing controls stay and compose: search box, curated/everything mode, surface/traffic
+- Existing controls stay and compose: search box, Best-of/Everything mode, surface/traffic
   chips, discipline chips. Together they *define* the visible feature set.
 - Line and area types (A, J, K) render as MapLibre sources/layers (not markers); their rail
   toggles control layer visibility the same way.
@@ -115,7 +118,7 @@ Only attributes with a real value appear in `record`; unknowns are omitted (no b
 
 - **Hover / keyboard-focus** a feature → lightweight tooltip: `name · headline`.
 - **Click / Enter** → right-side **detail drawer** slides in:
-  - Header: type chip (letter + name), feature name, curated badge if applicable.
+  - Header: type chip (letter + name), feature name, best-of badge if applicable.
   - Body: the `record` rows; method tag per row where relevant.
   - Freshness block for `[safety]`/dynamic items (state + last-confirmed).
   - Source/provenance line.
@@ -129,7 +132,7 @@ Only attributes with a real value appear in `record`; unknowns are omitted (no b
 
 - "Inspirational preview" badge unchanged.
 - Drawer shows provenance per record; nothing is asserted as live.
-- Map result count reflects the real curated example set, not invented totals.
+- Map result count reflects the real best-of example set, not invented totals.
 
 ## Scope
 

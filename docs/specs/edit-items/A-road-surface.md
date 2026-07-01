@@ -5,6 +5,7 @@
   lines so the surface (e.g. a gravel sector along a ride) reads on top.
 - **Edit-item id:** `road-surface` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Real road/path segments (RAVeL cycleway, forest gravel, pavé/sett) shown as lines coloured and patterned by surface, so riders can pick the right bike for the terrain.

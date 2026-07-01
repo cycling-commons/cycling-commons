@@ -4,6 +4,7 @@
 - **Map depiction:** line, icon ★, colour #FF5A1F (brand orange)
 - **Edit-item id:** `ride` in `atlas/demo/edit-items.js` — **shared by all six contributed GPX loops** (one ride edit flow, not six)
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Contributed GPX loops that carry the wiki's cyclist-experience attributes — quietness, scenery, friendliness, suitability, accessibility, and best direction to ride. "Quality rides" is the rider-facing name for these cyclist-experience attributes, surfacing how a loop actually feels to ride rather than just its geometry.

@@ -4,6 +4,7 @@
 - **Map depiction:** 🏛 pin, colour #6E5849
 - **Edit-item id:** `stavelot-abbey` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Landmarks, local stories and cycling-heritage sites to ride past. (Split out from the old "Scenic & cultural" — the heritage/POI half.)

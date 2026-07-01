@@ -4,6 +4,7 @@
 - **Map depiction:** ⚙ pin, colour #6b6f5e
 - **Edit-item id:** `repair-station-malmedy` in `atlas/demo/edit-items.js`, also the default/fallback edit item when `improve.html` gets no `?item=`
 - **Editable:** yes · Frontend demo · 2026-06-18
+- **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
 Shops, public repair stations, pumps and e-bike charging — the places riders reach for when something breaks or runs flat.

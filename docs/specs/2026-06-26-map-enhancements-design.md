@@ -17,7 +17,7 @@
 
 When this lands:
 
-1. **Shareable state** — pan/zoom, which layers are on, curated-vs-Everything mode, and the open
+1. **Shareable state** — pan/zoom, which layers are on, Best-of-vs-Everything mode, and the open
    feature all survive a reload and copy-paste into a fresh tab. The existing `?feature=` link keeps
    working.
 2. **Take it with you** — every climb, route, and POI in the drawer has a one-click GPX download that
@@ -51,7 +51,9 @@ Verified against the code and data before writing:
 - The drawer's `elevSvg(f.elev)` (map.html ~1622) takes a flat array of elevation **values** (no coords)
   and draws a static SVG polyline. `gradStrip(f.grad)` (~1616) draws the illustrative gradient bars.
 - `mode` is `let mode = 'curated'` (map.html 1324), toggled by `#mode button[data-m]` (1924–1927;
-  values `'curated'` / `'all'`).
+  values `'curated'` / `'all'`). The button **labels** now read "Best-of" / "Everything" (internal
+  values stay `'curated'`/`'all'`); the axis is *votability*, not verification — see
+  [edit-items lifecycle & votability](edit-items/README.md#item-lifecycle-and-votability).
 - Active layers live in an `active` Set keyed by `CATALOG` key `k` (1466, `active.has(k)`). `CATALOG`
   is defined at 926; each layer has a `.letter` (A–K), `.key`, `.exp`, `.features`, `.color`.
 - `render()` (1461) redraws all layers from `active` + `mode`. `openDrawer(layer, f)` (~1632) fills the
