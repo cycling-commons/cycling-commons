@@ -1,160 +1,149 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
-{# Profile page — ported from atlas/demo/profile.html, shows app.user data. #}
+{# Account dashboard — the logged-in "user environment" (the post-login landing).
+   Ported from the demo login.html post-login view. The contribution / vote /
+   saved-region figures are PREVIEW sample data (persistence is stubbed — see the
+   Demo banner); the real bits are the user identity, sign-out, the moderation
+   gate, and the Settings links to the real /settings page. When the data-API
+   lands (Plan 5), the controller feeds these panes real rows. #}
 {% extends 'base.html.twig' %}
+
+{% set cc_words = cc_user.displayName|trim|split(' ') %}
+{% set cc_initials = (cc_words|length > 1 ? cc_words|first|first ~ cc_words|last|first : cc_user.displayName|trim|slice(0, 2))|upper %}
 
 {% block head_styles %}
 <style>
-  .wrap{max-width:880px;margin:0 auto;padding:2.4rem 2rem}
-  @media(max-width:560px){.wrap{padding:1.6rem 1.25rem}}
+  .demo-banner{background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4}
+  .demo-banner b{color:var(--clay)}
 
-  /* header */
-  .head{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap}
-  .ava{width:84px;height:84px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
-    font-family:var(--serif);font-weight:600;font-size:2rem;color:var(--paper);background:var(--spruce-lift);
-    border:2px solid rgba(20,22,14,.15)}
-  .who h1{font-family:var(--serif);font-weight:600;font-size:1.9rem;line-height:1.05}
-  .who .sub{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin-top:.35rem}
-  .badge{display:inline-flex;align-items:center;gap:.4rem;margin-top:.7rem;font-family:var(--mono);font-size:.6rem;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--spruce-lift);background:rgba(44,84,64,.1);
-    border:1px solid rgba(44,84,64,.3);border-radius:99px;padding:.3rem .6rem}
-  .badge .dot{width:7px;height:7px;border-radius:50%;background:#3e7d4f;display:inline-block}
-  .badge.private{color:var(--clay);background:rgba(181,83,46,.08);border-color:rgba(181,83,46,.3)}
-  .badge.private .dot{background:var(--clay)}
+  .dtop{background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem clamp(1.25rem,4vw,2rem)}
+  .dtop .brandblock{display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none}
+  .dtop .brand img{height:1.8rem;display:block}
+  .dtop .brandsub{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap}
+  .dtop .who{display:flex;align-items:center;gap:.8rem;font-size:.9rem}
+  .dtop .who .uname{color:var(--paper)}
+  .dtop .av{width:34px;height:34px;border-radius:50%;background:var(--trail);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;flex:none}
+  .dtop .out{background:none;border:0;font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.6);cursor:pointer;padding:0}
+  .dtop .out:hover{color:var(--trail)}
 
-  /* edit-profile button */
-  .edit-profile{margin-left:auto;align-self:flex-start;font-family:var(--sans);font-weight:700;font-size:.92rem;
-    padding:.6rem 1.15rem;border-radius:6px;background:var(--ink);color:var(--paper);border:1.5px solid var(--ink);
-    display:inline-flex;align-items:center;gap:.45rem;transition:background .18s;text-decoration:none}
-  .edit-profile:hover{background:var(--spruce-lift);border-color:var(--spruce-lift)}
+  .dtabs{display:flex;gap:1.6rem;padding:0 clamp(1.25rem,4vw,2rem);background:var(--paper-deep);border-bottom:1px solid rgba(20,22,14,.12);overflow-x:auto}
+  .dtabs button{background:none;border:none;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:1rem .2rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+  .dtabs button.on{color:var(--ink);border-color:var(--trail)}
 
-  /* info grid */
-  .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;margin:2rem 0}
-  @media(max-width:560px){.info-grid{grid-template-columns:1fr}}
-  .info-card{background:var(--paper-deep);border-radius:10px;padding:1rem 1.1rem}
-  .info-card .label{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.3rem}
-  .info-card .value{font-size:.95rem;font-weight:600;word-break:break-all}
+  .dbody{padding:2.2rem clamp(1.25rem,4vw,2rem);max-width:880px;width:100%;margin:0 auto}
+  .dpane{display:none} .dpane.on{display:block}
 
-  /* sections */
-  h2.sec{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);
-    margin:2.2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid rgba(20,22,14,.14)}
+  .stats{display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:2rem;padding-bottom:1.6rem;border-bottom:1px solid rgba(20,22,14,.12)}
+  .stat .n{font-family:var(--serif);font-size:2rem;font-weight:600}
+  .stat .n.t{color:var(--trail)}
+  .stat .l{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
 
-  /* status rows */
-  .status-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;
-    border-bottom:1px solid rgba(20,22,14,.1);font-size:.9rem}
-  .status-row:last-child{border-bottom:none}
-  .status-row .label{color:#595c4d;font-size:.82rem}
-  .pill{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
-    padding:.2rem .55rem;border-radius:99px;display:inline-flex;align-items:center;gap:.3rem;border:1px solid transparent}
-  .pill.yes{color:var(--paper);background:var(--spruce-lift);border-color:var(--spruce-lift)}
-  .pill.no{color:#5a4410;background:rgba(200,146,58,.22);border-color:rgba(200,146,58,.55)}
-  .pill.role{color:var(--paper);background:var(--ink)}
+  .item{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+  .item .tag{font-family:var(--mono);font-size:.58rem;padding:.25rem .45rem;border-radius:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}
+  .item h4{flex:1;font-size:1rem;font-weight:500}
+  .item .co{font-family:var(--mono);font-size:.62rem;color:#595c4d}
+  .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px}
+  .pill.ok{background:#3e7d4f;color:#fff} .pill.pend{background:var(--ochre);color:var(--ink)} .pill.conf{background:var(--spruce);color:var(--paper)}
 
-  .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.84rem;
-    color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1.4rem;line-height:1.55}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+  .rc{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.1rem;display:block}
+  .rc h4{font-family:var(--serif);font-weight:600;font-size:1.15rem} .rc .co{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin-top:.3rem}
 
-  /* flash messages */
-  .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);
-    padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
-  .flash-error{background:rgba(181,83,46,.1);border-left:3px solid var(--clay);color:var(--clay);
-    padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  .setrow{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+  .setrow .val{font-size:.85rem;color:#595c4d;margin-top:.2rem}
+  .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.88rem;color:#4a4d40;margin:1.4rem 0;border-radius:0 6px 6px 0}
+  .manage{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);white-space:nowrap}
+
+  .rounding{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem}
+  .actions{display:flex;gap:.8rem;margin-top:2rem;flex-wrap:wrap}
+  .lnk{font-family:var(--sans);font-weight:700;font-size:.9rem;padding:.7rem 1.2rem;border-radius:5px;cursor:pointer;display:inline-block}
+  .lnk.p{background:var(--trail);color:var(--ink)} .lnk.g{border:1.5px solid var(--ink)}
+
+  /* visually-hidden page heading (a11y; the visible identity lives in .dtop) */
+  .acct-id{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
 {% endblock %}
 
-{% block body %}
-<div class="wrap">
+{% block chrome %}
+  <div class="demo-banner"><b>Demo</b> — {{ 'account.demo_banner'|trans }}</div>
 
-  {% for msg in app.flashes('success') %}
-    <div class="flash-success" role="alert">{{ msg }}</div>
-  {% endfor %}
-  {% for msg in app.flashes('error') %}
-    <div class="flash-error" role="alert">{{ msg }}</div>
-  {% endfor %}
-
-  {# ── Header ── #}
-  <div class="head">
-    <div class="ava" aria-hidden="true">
-      {{- cc_user.displayName|upper|slice(0,2) -}}
+  <header class="dtop">
+    <div class="brandblock">
+      <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
+      <div class="brandsub"><span class="cc-coord">N 48.87° · E 2.29°</span><br>{{ 'account.brandsub'|trans }}</div>
     </div>
     <div class="who">
-      <h1>{{ cc_user.displayName }}</h1>
-      <div class="sub">{{ cc_user.email }}</div>
-      {% if cc_user.publicProfile %}
-        <span class="badge"><span class="dot"></span> {{ 'profile.badge_public'|trans }}</span>
-      {% else %}
-        <span class="badge private"><span class="dot"></span> {{ 'profile.badge_private'|trans }}</span>
+      <span class="uname">{{ cc_user.displayName }}</span>
+      <span class="av" aria-hidden="true">{{ cc_initials }}</span>
+      <form method="post" action="{{ path('logout') }}" style="display:inline">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+        <button type="submit" class="out">{{ 'account.sign_out'|trans }}</button>
+      </form>
+    </div>
+  </header>
+
+  <nav class="dtabs" aria-label="{{ 'account.sections'|trans }}">
+    <button class="on" data-pane="contrib" role="tab" aria-selected="true">{{ 'account.tab_contributions'|trans }}</button>
+    <button data-pane="votes" role="tab" aria-selected="false">{{ 'account.tab_votes'|trans }}</button>
+    <button data-pane="saved" role="tab" aria-selected="false">{{ 'account.tab_saved'|trans }}</button>
+    <button data-pane="settings" role="tab" aria-selected="false">{{ 'account.tab_settings'|trans }}</button>
+  </nav>
+{% endblock %}
+
+{% block body %}
+<h1 class="acct-id">{{ 'account.heading'|trans }} — {{ cc_user.displayName }}</h1>
+
+<div class="dbody">
+
+  {# ── Contributions (PREVIEW data — data-API/Plan 5 replaces the figures) ── #}
+  <section class="dpane on" id="p-contrib" role="tabpanel">
+    <div class="stats">
+      <div class="stat"><div class="n">142</div><div class="l">{{ 'account.stat_facts'|trans }}</div></div>
+      <div class="stat"><div class="n t">38</div><div class="l">{{ 'account.stat_confirmed'|trans }}</div></div>
+      <div class="stat"><div class="n">9</div><div class="l">{{ 'account.stat_osm'|trans }}</div></div>
+    </div>
+
+    <div class="item"><span class="tag" style="background:var(--glacier)">water</span><h4>Fountain · Spa centre</h4><span class="co">50.49°N 5.86°E</span><span class="pill ok">{{ 'account.status_approved'|trans }}</span></div>
+    <div class="item"><span class="tag" style="background:var(--trail);color:#fff">climb</span><h4>Côte de Stockeu · gradient edit</h4><span class="co">50.39°N 5.77°E</span><span class="pill pend">{{ 'account.status_pending'|trans }}</span></div>
+    <div class="item"><span class="tag" style="background:var(--ochre)">hazard</span><h4>Road closure · N66</h4><span class="co">50.42°N 5.80°E</span><span class="pill conf">{{ 'account.status_confirmed'|trans }} ×3</span></div>
+    <div class="item"><span class="tag" style="background:var(--clay);color:#fff">stay</span><h4>B&amp;B Vallée de l'Amblève</h4><span class="co">50.45°N 5.62°E</span><span class="pill ok">{{ 'account.status_approved'|trans }}</span></div>
+
+    <div class="actions">
+      <a class="lnk p" href="{{ path('map') }}">{{ 'account.explore_map'|trans }} →</a>
+      {% if is_granted('ROLE_CURATOR') %}
+        <a class="lnk g" href="{{ path('moderate') }}">{{ 'account.open_moderation'|trans }} →</a>
       {% endif %}
     </div>
-    <a class="edit-profile" href="{{ path('settings') }}">{{ 'profile.edit_link'|trans }}</a>
-  </div>
+  </section>
 
-  {# ── Account info ── #}
-  <div class="info-grid">
-    <div class="info-card">
-      <div class="label">{{ 'profile.label_email'|trans }}</div>
-      <div class="value">{{ cc_user.email }}</div>
-    </div>
-    <div class="info-card">
-      <div class="label">{{ 'profile.label_display_name'|trans }}</div>
-      <div class="value">{{ cc_user.displayName }}</div>
-    </div>
-  </div>
+  {# ── Votes (PREVIEW) ── #}
+  <section class="dpane" id="p-votes" role="tabpanel">
+    <div class="rounding">◷ {{ 'account.vote_round'|trans }}</div>
+    <div class="item"><span class="tag" style="background:var(--spruce);color:#fff">region</span><h4>Wallonia — best climbs</h4><span class="co">4 / 10 ranked</span><span class="pill conf">{{ 'account.status_voting'|trans }}</span></div>
+    <div class="item"><span class="tag" style="background:var(--spruce);color:#fff">region</span><h4>Dolomites — best views</h4><span class="co">7 / 10 ranked</span><span class="pill conf">{{ 'account.status_voting'|trans }}</span></div>
+    <div class="note">{{ 'account.votes_note'|trans|raw }}</div>
+  </section>
 
-  {# ── Account status ── #}
-  <h2 class="sec">{{ 'profile.section_status'|trans }}</h2>
-  <div>
-    <div class="status-row">
-      <span class="label">{{ 'profile.status_email_verified'|trans }}</span>
-      {% if cc_user.emailVerified %}
-        <span class="pill yes">{{ 'profile.pill_verified'|trans }}</span>
-      {% else %}
-        <span class="pill no">{{ 'profile.pill_pending'|trans }}</span>
-      {% endif %}
+  {# ── Saved regions (PREVIEW) ── #}
+  <section class="dpane" id="p-saved" role="tabpanel">
+    <div class="cards">
+      <a class="rc" href="{{ path('regions') }}"><h4>Wallonia</h4><div class="co">BE · 18 climbs · 42 water</div></a>
+      <a class="rc" href="{{ path('regions') }}"><h4>Dolomites</h4><div class="co">IT · 31 climbs · 12 views</div></a>
+      <a class="rc" href="{{ path('regions') }}"><h4>Peak District</h4><div class="co">UK · gravel · 9 stays</div></a>
     </div>
+  </section>
 
-    <div class="status-row">
-      <span class="label">{{ 'profile.status_2fa'|trans }}</span>
-      {% if cc_user.twoFaEnabled and cc_user.totpSecret %}
-        <span class="pill yes">{{ 'profile.pill_2fa_enabled'|trans }}</span>
-      {% else %}
-        <span class="pill no">{{ 'profile.pill_2fa_not_enabled'|trans }}</span>
-      {% endif %}
-    </div>
-
-    <div class="status-row">
-      <span class="label">{{ 'profile.status_public_profile'|trans }}</span>
-      {% if cc_user.publicProfile %}
-        <span class="pill yes">{{ 'profile.pill_public_yes'|trans }}</span>
-      {% else %}
-        <span class="pill no">{{ 'profile.pill_public_no'|trans }}</span>
-      {% endif %}
-    </div>
-
-    <div class="status-row">
-      <span class="label">{{ 'profile.status_roles'|trans }}</span>
-      <span>
-        {% for role in cc_user.roles %}
-          <span class="pill role" style="margin-left:.2rem">{{ role }}</span>
-        {% endfor %}
-      </span>
-    </div>
-  </div>
-
-  {# ── Quick links ── #}
-  <h2 class="sec">{{ 'profile.section_actions'|trans }}</h2>
-  <div>
-    <div class="status-row">
-      <span>{{ 'profile.action_edit_privacy'|trans }}</span>
-      <a href="{{ path('settings') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">{{ 'profile.action_settings_link'|trans }}</a>
-    </div>
-    <div class="status-row">
-      <span>{{ 'profile.action_2fa'|trans }}</span>
-      <a href="{{ path('2fa_setup') }}" style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)">{{ 'profile.action_2fa_link'|trans }}</a>
-    </div>
-  </div>
-
-  <div class="notice">
-    {{ 'profile.notice'|trans|raw }}
-  </div>
+  {# ── Settings (real identity; links to the real /settings page) ── #}
+  <section class="dpane" id="p-settings" role="tabpanel">
+    <div class="setrow"><div><b>{{ 'account.set_display_name'|trans }}</b><div class="val">{{ cc_user.displayName }}</div></div><a class="manage" href="{{ path('settings') }}">{{ 'account.manage'|trans }} →</a></div>
+    <div class="setrow"><div><b>{{ 'account.set_email'|trans }}</b><div class="val">{{ cc_user.email }}</div></div><a class="manage" href="{{ path('settings') }}">{{ 'account.manage'|trans }} →</a></div>
+    <div class="setrow"><div><b>{{ 'account.set_2fa'|trans }}</b><div class="val">{% if cc_user.twoFaEnabled and cc_user.totpSecret %}{{ 'account.on'|trans }}{% else %}{{ 'account.off'|trans }}{% endif %}</div></div><a class="manage" href="{{ path('2fa_setup') }}">{{ 'account.manage'|trans }} →</a></div>
+    <div class="note">{{ 'account.privacy_note'|trans|raw }}</div>
+    <div class="setrow" style="border:none"><div><b>{{ 'account.delete_account'|trans }}</b><div class="val">{{ 'account.delete_note'|trans }}</div></div><a class="manage" href="{{ path('settings') }}#delete">{{ 'account.manage'|trans }} →</a></div>
+  </section>
 
 </div>
+{% endblock %}
+
+{% block body_scripts %}
+<script src="{{ asset('js/account.js') }}" defer></script>
 {% endblock %}

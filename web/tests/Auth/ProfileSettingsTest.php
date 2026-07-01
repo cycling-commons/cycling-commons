@@ -116,9 +116,9 @@ final class ProfileSettingsTest extends WebTestCase
         $client->request('GET', '/profile');
 
         self::assertResponseIsSuccessful();
-        // Should show the user's email and display name
+        // Account dashboard: display name in the heading/top bar, email in the Settings tab.
         self::assertSelectorTextContains('h1', 'Hanne V');
-        self::assertSelectorTextContains('.sub', $email);
+        self::assertSelectorTextContains('#p-settings', $email);
     }
 
     public function testAuthenticatedUserCanViewSettings(): void
