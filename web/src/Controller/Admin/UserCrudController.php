@@ -9,7 +9,6 @@ namespace App\Controller\Admin;
 use App\Entity\User;
 use App\Service\GuardrailViolationException;
 use App\Service\UserAdminService;
-use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -49,7 +48,6 @@ final class UserCrudController extends AbstractCrudController
     public function __construct(
         private readonly UserAdminService $svc,
         private readonly AdminUrlGenerator $urls,
-        private readonly EntityManagerInterface $em,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -111,6 +109,7 @@ final class UserCrudController extends AbstractCrudController
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REVOKE_CURATOR, 'admin.action.revoke_curator', 'fa fa-user', true, fn (User $u) => $this->svc->hasRole($u, 'ROLE_CURATOR')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::GRANT_ADMIN, 'admin.action.grant_admin', 'fa fa-user-gear', true, fn (User $u) => !$this->svc->hasRole($u, 'ROLE_ADMIN')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REVOKE_ADMIN, 'admin.action.revoke_admin', 'fa fa-user-minus', true, fn (User $u) => $this->svc->hasRole($u, 'ROLE_ADMIN')))
+            // Shown only for accounts with a pending self-requested deletion (deletionRequestedAt set).
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REMOVE_ACCOUNT, 'admin.action.remove_account', 'fa fa-trash', true, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::CANCEL_REMOVAL, 'admin.action.cancel_removal', 'fa fa-rotate-left', false, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
             ->add(Crud::PAGE_INDEX, Action::DETAIL);

@@ -7,6 +7,7 @@ namespace App\Tests\Admin;
 use App\Controller\Admin\DashboardController;
 use App\Controller\Admin\UserCrudController;
 use App\Entity\User;
+use App\Repository\AdminActionLogRepository;
 use App\Repository\UserRepository;
 use App\Service\UserAdminService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -73,6 +74,10 @@ final class UserAdminActionsTest extends WebTestCase
         $reloaded = static::getContainer()->get(UserRepository::class)->findByEmail('locked@example.com');
         self::assertNotNull($reloaded);
         self::assertFalse($reloaded->isLocked());
+
+        $logs = static::getContainer()->get(AdminActionLogRepository::class)
+            ->findBy(['action' => UserAdminService::UNLOCK]);
+        self::assertCount(1, $logs, 'unlock action must write exactly one audit row');
     }
 
     public function testRevokingLastAdminIsBlockedWithFlash(): void
