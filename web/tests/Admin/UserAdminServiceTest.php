@@ -101,6 +101,9 @@ final class UserAdminServiceTest extends KernelTestCase
 
         $this->svc->revokeCurator($t, $admin);
         self::assertNotContains('ROLE_CURATOR', $t->getRoles());
+
+        $stored = $this->em->getConnection()->fetchOne('SELECT roles FROM users WHERE id = ?', [$t->getId()]);
+        self::assertStringNotContainsString('ROLE_USER', (string) $stored);
     }
 
     public function testCannotRevokeOwnAdmin(): void
@@ -116,7 +119,8 @@ final class UserAdminServiceTest extends KernelTestCase
     {
         $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
         $other = $this->user('other@example.com', ['ROLE_ADMIN']);
-        // Remove `other` first so `admin`… actually keep admin as the sole admin target:
+        // Drain down to a single admin ($lastAdmin) by revoking the other two,
+        // then verify revoking the sole remaining admin is blocked.
         $lastAdmin = $this->user('last@example.com', ['ROLE_ADMIN']);
         // With three admins, revoking one is fine; drop two to leave `lastAdmin` alone.
         $this->svc->revokeAdmin($admin, $lastAdmin);

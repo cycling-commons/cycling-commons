@@ -97,14 +97,14 @@ final class UserAdminService
 
     // ── Guardrails ────────────────────────────────────────────────────────────
 
-    protected function assertNotSelf(User $target, User $actor): void
+    private function assertNotSelf(User $target, User $actor): void
     {
         if ($target->getId() === $actor->getId()) {
             throw new GuardrailViolationException('You cannot perform this action on your own account.');
         }
     }
 
-    protected function assertNotLastAdmin(User $target): void
+    private function assertNotLastAdmin(User $target): void
     {
         if ($this->hasRole($target, 'ROLE_ADMIN') && $this->users->countWithRole('ROLE_ADMIN') <= 1) {
             throw new GuardrailViolationException('Cannot remove the last remaining administrator.');
