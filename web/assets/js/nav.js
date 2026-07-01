@@ -10,6 +10,7 @@
   'use strict';
   if (window.__ccNavDrawer) return;          // guard against double-init
   window.__ccNavDrawer = true;
+  var T = window.ccT || function (k, fb) { return fb; };
 
   function ready(fn) {
     if (document.readyState !== 'loading') fn();
@@ -100,7 +101,7 @@
     var burger = document.createElement('button');
     burger.type = 'button';
     burger.className = 'cc-burger';
-    burger.setAttribute('aria-label', 'Open menu');
+    burger.setAttribute('aria-label', T('nav_open', 'Open menu'));
     burger.setAttribute('aria-expanded', 'false');
     burger.setAttribute('aria-controls', 'cc-drawer');
     burger.innerHTML = '<span></span><span></span><span></span>';
@@ -116,7 +117,7 @@
     drawer.id = 'cc-drawer';
     drawer.setAttribute('role', 'dialog');
     drawer.setAttribute('aria-modal', 'true');
-    drawer.setAttribute('aria-label', 'Menu');
+    drawer.setAttribute('aria-label', T('nav_menu', 'Menu'));
     drawer.setAttribute('aria-hidden', 'true');
 
     var head = document.createElement('div');
@@ -124,7 +125,7 @@
     var closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'cc-close';
-    closeBtn.setAttribute('aria-label', 'Close menu');
+    closeBtn.setAttribute('aria-label', T('nav_close', 'Close menu'));
     closeBtn.innerHTML = '✕';
     head.appendChild(closeBtn);
 

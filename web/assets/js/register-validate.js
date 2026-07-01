@@ -7,6 +7,8 @@
 (function () {
   'use strict';
 
+  var T = window.ccT || function (k, fb, vars) { var s = fb; if (vars) { for (var p in vars) { s = s.replace('%' + p + '%', vars[p]); } } return s; };
+
   function ready(fn) {
     if (document.readyState !== 'loading') fn();
     else document.addEventListener('DOMContentLoaded', fn);
@@ -50,26 +52,26 @@
       function fail(input, msg) { addError(input, msg); if (!first) first = input; }
 
       var ev = email.value.trim();
-      if (!ev) fail(email, 'Please enter your email address.');
-      else if (!EMAIL_RE.test(ev)) fail(email, 'Please enter a valid email address.');
+      if (!ev) fail(email, T('err_email_required', 'Please enter your email address.'));
+      else if (!EMAIL_RE.test(ev)) fail(email, T('err_email_invalid', 'Please enter a valid email address.'));
 
       if (name) {
         var nv = name.value.trim();
-        if (!nv) fail(name, 'Please enter a display name.');
-        else if (nv.length < 2) fail(name, 'Display name must be at least 2 characters.');
+        if (!nv) fail(name, T('err_name_required', 'Please enter a display name.'));
+        else if (nv.length < 2) fail(name, T('err_name_min', 'Display name must be at least %count% characters.', {count: 2}));
       }
 
       if (pass) {
-        if (!pass.value) fail(pass, 'Please enter a password.');
-        else if (pass.value.length < 12) fail(pass, 'Password must be at least 12 characters.');
+        if (!pass.value) fail(pass, T('err_password_required', 'Please enter a password.'));
+        else if (pass.value.length < 12) fail(pass, T('err_password_min', 'Password must be at least %count% characters.', {count: 12}));
       }
 
       if (confirm && pass && pass.value && confirm.value !== pass.value) {
-        fail(confirm, 'The password fields must match.');
+        fail(confirm, T('err_mismatch', 'The password fields must match.'));
       }
 
       if (terms && !terms.checked) {
-        fail(terms, 'You must agree to the terms of service.');
+        fail(terms, T('err_terms', 'You must agree to the terms of service.'));
       }
 
       if (first) {

@@ -14,6 +14,7 @@
 (function () {
   'use strict';
 
+  var T = window.ccT || function (k, fb, vars) { var s = fb; if (vars) { for (var p in vars) { s = s.replace('%' + p + '%', vars[p]); } } return s; };
   var PW_MIN = 12;                              // matches server Length(min: 12) on new passwords
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -49,7 +50,7 @@
       }
       function enterMsg(el, fallback) {
         var lab = labelFor(el);
-        return lab ? ('Please enter your ' + lab.toLowerCase() + '.') : fallback;
+        return lab ? T('err_field', 'Please enter your %field%.', {field: lab.toLowerCase()}) : fallback;
       }
 
       form.addEventListener('submit', function (e) {
@@ -67,30 +68,30 @@
           // Confirm-password field: must match its _first sibling.
           if (/_second$/.test(id)) {
             var firstEl = document.getElementById(id.replace(/_second$/, '_first'));
-            if (firstEl && firstEl.value && el.value !== firstEl.value) fail(el, 'The password fields must match.');
+            if (firstEl && firstEl.value && el.value !== firstEl.value) fail(el, T('err_mismatch', 'The password fields must match.'));
             return;
           }
 
           if (el.type === 'email') {
             var ev = el.value.trim();
-            if (el.required && !ev) fail(el, 'Please enter your email address.');
-            else if (ev && !EMAIL_RE.test(ev)) fail(el, 'Please enter a valid email address.');
+            if (el.required && !ev) fail(el, T('err_email_required', 'Please enter your email address.'));
+            else if (ev && !EMAIL_RE.test(ev)) fail(el, T('err_email_invalid', 'Please enter a valid email address.'));
             return;
           }
 
           if (el.type === 'password') {
-            if (el.required && !el.value) { fail(el, enterMsg(el, 'Please enter a password.')); return; }
+            if (el.required && !el.value) { fail(el, enterMsg(el, T('err_password_required', 'Please enter a password.'))); return; }
             if (/_first$/.test(id) && el.value && el.value.length < PW_MIN) {
-              fail(el, 'Password must be at least ' + PW_MIN + ' characters.');
+              fail(el, T('err_password_min', 'Password must be at least %count% characters.', {count: PW_MIN}));
             }
             return;
           }
 
           if (el.required) {
             if (el.type === 'checkbox') {
-              if (!el.checked) fail(el, labelFor(el) || 'Please check this box to continue.');
+              if (!el.checked) fail(el, labelFor(el) || T('err_checkbox', 'Please check this box to continue.'));
             } else if (!el.value.trim()) {
-              fail(el, enterMsg(el, 'This field is required.'));
+              fail(el, enterMsg(el, T('err_required', 'This field is required.')));
             }
           }
         });

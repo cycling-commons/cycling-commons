@@ -9,6 +9,18 @@
 {% block chrome %}{% include 'partials/_nav.html.twig' %}{% endblock %}
 {% block body %}{% endblock %}
 {% block footer %}{% include 'partials/_footer.html.twig' %}{% endblock %}
+<script>
+window.CC_I18N = {{ {
+  pw_show: 'js.pw_show'|trans, pw_hide: 'js.pw_hide'|trans,
+  nav_open: 'js.nav_open'|trans, nav_menu: 'js.nav_menu'|trans, nav_close: 'js.nav_close'|trans,
+  err_field: 'js.err_field'|trans, err_required: 'js.err_required'|trans,
+  err_email_required: 'js.err_email_required'|trans, err_email_invalid: 'js.err_email_invalid'|trans,
+  err_password_required: 'js.err_password_required'|trans, err_password_min: 'js.err_password_min'|trans,
+  err_name_required: 'js.err_name_required'|trans, err_name_min: 'js.err_name_min'|trans,
+  err_mismatch: 'js.err_mismatch'|trans, err_checkbox: 'js.err_checkbox'|trans, err_terms: 'js.err_terms'|trans
+}|json_encode|raw }};
+window.ccT = function (k, fb, vars) { var s = (window.CC_I18N && window.CC_I18N[k]) || fb; if (vars) { for (var p in vars) { s = s.replace('%' + p + '%', vars[p]); } } return s; };
+</script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/nav.js') }}" defer></script>
 <script src="{{ asset('js/nav-menus.js') }}" defer></script>
