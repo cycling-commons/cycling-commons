@@ -17,6 +17,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
                 alias: App
+            World:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/World/Entity'
+                prefix: 'App\World\Entity'
+                alias: World
 
 when@prod:
     doctrine:

@@ -7,6 +7,8 @@ services:
         resource: '../src/'
         exclude:
             - '../src/Kernel.php'
+            - '../src/World/Entity/'
+            - '../src/World/Resources/'
 
     _instanceof:
         App\Service\UserDeletionHookInterface:

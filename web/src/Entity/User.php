@@ -5,6 +5,7 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use App\World\Entity\Country;
 use Doctrine\ORM\Mapping as ORM;
 use Scheb\TwoFactorBundle\Model\BackupCodeInterface;
 use Scheb\TwoFactorBundle\Model\Totp\TotpConfiguration;
@@ -46,6 +47,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     #[ORM\Column(type: 'string', length: 100)]
     private string $displayName = '';
+
+    // Optional home country (World bundle reference data).
+    #[ORM\ManyToOne(targetEntity: Country::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Country $country = null;
 
     #[ORM\Column(type: 'boolean')]
     private bool $emailVerified = false;
@@ -227,6 +233,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDisplayName(string $displayName): static
     {
         $this->displayName = $displayName;
+
+        return $this;
+    }
+
+    public function getCountry(): ?Country
+    {
+        return $this->country;
+    }
+
+    public function setCountry(?Country $country): static
+    {
+        $this->country = $country;
 
         return $this;
     }

@@ -290,4 +290,33 @@ final class ProfileSettingsTest extends WebTestCase
         // Symfony form validation fails → 422
         self::assertResponseStatusCodeSame(422);
     }
+
+    public function testSettingsUpdatePersistsCountry(): void
+    {
+        $client = static::createClient();
+
+        $em = static::getContainer()->get('doctrine')->getManager();
+        $belgium = $em->getRepository(\App\World\Entity\Country::class)->findOneBy(['iso2' => 'BE']);
+        if (null === $belgium) {
+            self::markTestSkipped('World reference data not seeded — run app:world:import on the test DB.');
+        }
+
+        $email = 'country-save@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Rider');
+        $this->loginAs($client, $email, $plain);
+
+        $crawler = $client->request('GET', '/settings');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('select[name="settings[country]"]');
+
+        $form = $crawler->selectButton('Save profile')->form([
+            'settings[displayName]' => 'Rider',
+            'settings[country]' => (string) $belgium->getId(),
+        ]);
+        $client->submit($form);
+        self::assertResponseRedirects('/settings');
+
+        $user = $this->fetchUser($email);
+        self::assertSame('BE', $user->getCountry()?->getIso2());
+    }
 }
