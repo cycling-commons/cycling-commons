@@ -2,10 +2,11 @@
 # PHP 8.4: composer.json/composer.lock require php >=8.4 (Symfony 7.4 + PHP 8.4 target).
 FROM php:8.4-fpm
 
-# pdo_pgsql for PostgreSQL/PostGIS; git+unzip for composer.
+# pdo_pgsql for PostgreSQL/PostGIS; gettext for sokil/php-isocodes translations
+# (app:world:import); git+unzip for composer.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libpq-dev git unzip \
-    && docker-php-ext-install pdo_pgsql \
+    && docker-php-ext-install pdo_pgsql gettext \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

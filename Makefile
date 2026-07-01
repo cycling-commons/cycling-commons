@@ -15,6 +15,26 @@ help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
 
 ## —— 🚲 Stack ————————————————————————————————————————————————————————————————
+setup: ## First-time dev setup: start the stack, install deps, migrate, seed world data + demo users
+	@$(DOCKER_COMP) up --build --force-recreate --detach --wait
+	@echo "→ Installing PHP dependencies…"
+	@$(DOCKER_COMP) exec -T app composer install --no-interaction --no-progress
+	@echo "→ Running database migrations…"
+	@$(DOCKER_COMP) exec -T app php bin/console doctrine:migrations:migrate --no-interaction
+	@echo "→ Importing world reference data (continents, countries, subdivisions)…"
+	@$(DOCKER_COMP) exec -T app php bin/console app:world:import
+	@echo "→ Loading demo accounts (keeps the world tables)…"
+	@$(DOCKER_COMP) exec -T app php bin/console doctrine:fixtures:load --no-interaction \
+		--purge-exclusions=world_continent --purge-exclusions=world_country --purge-exclusions=world_subdivision
+	@$(DOCKER_COMP) exec -T app php bin/console cache:clear
+	@echo ""
+	@echo "✔ Setup complete — open http://localhost:$${API_PORT:-8001}"
+	@echo "  Demo logins (password: password1234):"
+	@echo "    admin@example.test      ROLE_ADMIN   (2FA preset)"
+	@echo "    moderator@example.test  ROLE_CURATOR (2FA preset)"
+	@echo "    user@example.test       ROLE_USER    (public profile)"
+	@echo "    anon@example.test       ROLE_USER    (private / anonymous)"
+
 up: ## Start the dev stack in detached mode (recreates stale containers)
 	@$(DOCKER_COMP) up --detach
 

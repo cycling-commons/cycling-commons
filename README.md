@@ -43,12 +43,40 @@ apps lock away. So rather than an endless list, it answers the question a rider 
 
 ## Developer setup — Docker
 
-The whole stack runs in one reproducible environment so every contributor works the same way:
+The whole stack runs in one reproducible environment so every contributor works the same way.
+
+**Quick start — one command:**
+
+```sh
+make setup
+```
+
+`make setup` starts the Docker stack, installs PHP dependencies, runs the database migrations,
+imports the world reference data (continents · countries · subdivisions) and loads four
+ready-to-use demo accounts, then prints their logins. It is idempotent — re-run it any time to
+reset the local dev data. (It uses sensible defaults; copy `developers/docker/.env.example` to
+`developers/docker/.env` only if you want to override ports/credentials.)
+
+**Demo logins** — all with password `password1234`:
+
+| Account | Role | Notes |
+|---------|------|-------|
+| `admin@example.test` | `ROLE_ADMIN` | 2FA preset; reaches `/admin` |
+| `moderator@example.test` | `ROLE_CURATOR` | 2FA preset; reaches `/moderate` |
+| `user@example.test` | `ROLE_USER` | public profile, home country set |
+| `anon@example.test` | `ROLE_USER` | private / anonymous profile |
+
+Prefer to run it by hand? The stack is plain Docker Compose:
 
 ```sh
 cd developers/docker
 cp .env.example .env
-docker compose up --build
+docker compose up --build --wait
+# then, once: migrate, seed reference data, load demo users
+docker compose exec app php bin/console doctrine:migrations:migrate --no-interaction
+docker compose exec app php bin/console app:world:import
+docker compose exec app php bin/console doctrine:fixtures:load --no-interaction \
+  --purge-exclusions=world_continent --purge-exclusions=world_country --purge-exclusions=world_subdivision
 ```
 
 | Service | URL | What it is |
@@ -114,20 +142,28 @@ All three action pages (`/add-climb`, `/improve`, `/vote`) require a verified ac
 
 > **Important:** contribution and moderation actions are currently **stubbed**. Submitting a form records intent — a flash, a log line, and a `CC-…` receipt reference — via `ContributionStubService`, but **no domain data is persisted** and nothing is published. Real persistence will be wired in as part of the future data-API spec. Users and curators are told this explicitly in the UI.
 
-### Seed the local dev database with sample accounts and a queue
+### Seed the local dev database with demo accounts + world data
 
-    cd web && php bin/console doctrine:fixtures:load
+The one-command path is **`make setup`** (see [Developer setup](#developer-setup--docker)) — it
+migrates, imports the world reference data (`app:world:import`: 7 continents · 249 countries ·
+~5k subdivisions) and loads the four demo accounts below. To (re)load just the demo accounts
+while keeping the world tables:
 
-> **Warning: `doctrine:fixtures:load` PURGES the entire database before seeding.** Only run this against a local/dev DB.
+    docker compose exec app php bin/console doctrine:fixtures:load --no-interaction \
+      --purge-exclusions=world_continent --purge-exclusions=world_country --purge-exclusions=world_subdivision
 
-After loading, two accounts are available:
+> **`doctrine:fixtures:load` purges the database before seeding** — that is why the world tables
+> are excluded above, and why you should only run it against a local/dev DB.
 
 | Email | Password | Role | Notes |
 |-------|----------|------|-------|
-| `curator@example.test` | `curator-dev-pass!` | ROLE_CURATOR | 2FA preset — can reach `/moderate` immediately |
-| `rider@example.test` | `rider-dev-pass!` | ROLE_USER | plain rider account |
+| `admin@example.test` | `password1234` | ROLE_ADMIN | 2FA preset — reaches `/admin` |
+| `moderator@example.test` | `password1234` | ROLE_CURATOR | 2FA preset — reaches `/moderate` |
+| `user@example.test` | `password1234` | ROLE_USER | public profile, home country set |
+| `anon@example.test` | `password1234` | ROLE_USER | private / anonymous profile |
 
-The fixtures also populate a small sample moderation queue visible at `/moderate`. These are dev-only fixtures; no real submissions exist until the data-API layer is built.
+The fixtures also drive a small sample moderation queue at `/moderate`. These are dev-only
+fixtures; no real contribution data exists until the data-API layer is built.
 
 ## Documentation
 

@@ -76,6 +76,8 @@ final class ImportWorldDataCommand extends Command
         $this->em->flush();
 
         // 3) Subdivisions (sokil/php-isocodes, ISO 3166-2) -------------------
+        // Uses sokil's default gettext driver (ext-gettext is installed in the image);
+        // -db-only ships English msgids, so names come out canonical English.
         $subDb = (new IsoCodesFactory())->getSubdivisions();
         $subRepo = $this->em->getRepository(Subdivision::class);
         /** @var array<string, Subdivision> $byCode */
