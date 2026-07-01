@@ -129,4 +129,48 @@ final class UserAdminServiceTest extends KernelTestCase
         $this->expectException(GuardrailViolationException::class);
         $this->svc->revokeAdmin($lastAdmin, $lastAdmin); // now the only admin
     }
+
+    public function testRemoveAccountDeletesRowAndKeepsAuditTrail(): void
+    {
+        $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
+        $this->user('keep@example.com', ['ROLE_ADMIN']); // not last admin
+        $t = $this->user('gone@example.com');
+        $t->setDeletionRequestedAt(new \DateTimeImmutable());
+        $this->em->flush();
+        $id = $t->getId();
+
+        $this->svc->removeAccount($t, $admin);
+        $this->em->clear();
+
+        self::assertNull($this->em->getRepository(User::class)->find($id), 'User row must be gone.');
+
+        $logs = static::getContainer()->get(\App\Repository\AdminActionLogRepository::class)
+            ->findBy(['action' => \App\Service\UserAdminService::REMOVE_ACCOUNT]);
+        self::assertCount(1, $logs);
+        self::assertStringContainsString('gone@example.com', (string) $logs[0]->getNote());
+        self::assertNull($logs[0]->getTargetUser(), 'FK is SET NULL after the target row is removed.');
+    }
+
+    public function testCannotRemoveOwnAccount(): void
+    {
+        $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
+        $this->user('keep@example.com', ['ROLE_ADMIN']);
+
+        $this->expectException(GuardrailViolationException::class);
+        $this->svc->removeAccount($admin, $admin);
+    }
+
+    public function testCancelPendingRemovalClearsFields(): void
+    {
+        $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
+        $t = $this->user('t@example.com');
+        $t->setDeletionRequestedAt(new \DateTimeImmutable());
+        $t->setDeletionCode('ABC123');
+        $this->em->flush();
+
+        $this->svc->cancelPendingRemoval($t, $admin);
+
+        self::assertNull($t->getDeletionRequestedAt());
+        self::assertNull($t->getDeletionCode());
+    }
 }

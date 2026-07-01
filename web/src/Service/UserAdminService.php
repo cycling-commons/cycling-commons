@@ -95,6 +95,28 @@ final class UserAdminService
         $this->commit($actor, self::REVOKE_ADMIN, $target);
     }
 
+    public function removeAccount(User $target, User $actor): void
+    {
+        $this->assertNotSelf($target, $actor);
+        $this->assertNotLastAdmin($target);
+
+        // Log first (target still exists); the target FK becomes NULL when the
+        // row is deleted (ON DELETE SET NULL), so snapshot the email into the note.
+        // Commons rule: personal data goes; contributed data (none yet) is anonymised,
+        // never cascade-deleted — see docs/specs/2026-07-01-admin-panel-account-support-design.md §7.
+        $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account: '.$target->getEmail());
+
+        $this->em->remove($target);
+        $this->em->flush();
+    }
+
+    public function cancelPendingRemoval(User $target, User $actor): void
+    {
+        $target->setDeletionRequestedAt(null);
+        $target->setDeletionCode(null);
+        $this->commit($actor, self::CANCEL_REMOVAL, $target);
+    }
+
     // ── Guardrails ────────────────────────────────────────────────────────────
 
     private function assertNotSelf(User $target, User $actor): void
