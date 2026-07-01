@@ -54,4 +54,41 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->executeQuery($sql, ['role' => json_encode([$role])])
             ->fetchOne();
     }
+
+    public function countAll(): int
+    {
+        return $this->count([]);
+    }
+
+    public function countUnverified(): int
+    {
+        return $this->count(['emailVerified' => false]);
+    }
+
+    public function countLocked(): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u.lockedUntil > :now')
+            ->setParameter('now', new \DateTimeImmutable())
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countPendingRemoval(): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u.deletionRequestedAt IS NOT NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return list<User>
+     */
+    public function recentSignups(int $limit = 10): array
+    {
+        return $this->findBy([], ['createdAt' => 'DESC'], $limit);
+    }
 }

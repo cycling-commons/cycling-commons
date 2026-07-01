@@ -1,0 +1,49 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.dashboard.title'|trans }}{% endblock %}
+
+{% block main %}
+    <div class="row">
+        {% set cards = [
+            { label: 'admin.dashboard.members', value: stats.members },
+            { label: 'admin.dashboard.curators', value: stats.curators },
+            { label: 'admin.dashboard.admins', value: stats.admins },
+            { label: 'admin.dashboard.unverified', value: stats.unverified },
+            { label: 'admin.dashboard.locked', value: stats.locked },
+            { label: 'admin.dashboard.pending_removal', value: stats.pendingRemoval },
+        ] %}
+        {% for card in cards %}
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold">{{ card.value }}</div>
+                        <div class="text-muted">{{ card.label|trans }}</div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h2 class="h5 mt-4">{{ 'admin.dashboard.recent'|trans }}</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>{{ 'admin.dashboard.col_user'|trans }}</th>
+                <th>{{ 'admin.dashboard.col_country'|trans }}</th>
+                <th>{{ 'admin.dashboard.col_registered'|trans }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in stats.recent %}
+                <tr>
+                    <td>{{ u.displayName }} &middot; <span class="text-muted">{{ u.email }}</span></td>
+                    <td>{{ u.country ? u.country.name : '—' }}</td>
+                    <td>{{ u.createdAt ? u.createdAt|date('Y-m-d H:i') : '—' }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="3" class="text-muted">{{ 'admin.dashboard.no_recent'|trans }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
