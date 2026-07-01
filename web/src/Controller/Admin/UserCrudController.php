@@ -21,6 +21,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -73,7 +76,15 @@ final class UserCrudController extends AbstractCrudController
     {
         return $filters
             ->add(BooleanFilter::new('emailVerified', 'Email verified'))
-            ->add(BooleanFilter::new('publicProfile', 'Public profile'));
+            ->add(BooleanFilter::new('publicProfile', 'Public profile'))
+            ->add(EntityFilter::new('country'))
+            ->add(ChoiceFilter::new('locale')->setChoices([
+                'English' => 'en',
+                'Français' => 'fr',
+                'Nederlands' => 'nl',
+                'Deutsch' => 'de',
+            ]))
+            ->add(DateTimeFilter::new('createdAt', 'Registered'));
     }
 
     #[\Override]
