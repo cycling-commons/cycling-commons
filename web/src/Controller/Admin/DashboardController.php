@@ -50,5 +50,7 @@ final class DashboardController extends AbstractDashboardController
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
         yield MenuItem::linkTo(UserCrudController::class, 'Users', 'fa fa-users')->setAction('index');
+        yield MenuItem::linkTo(AdminActionLogCrudController::class, 'Activity', 'fa fa-clock-rotate-left')->setAction('index');
+        yield MenuItem::linkTo(ResetPasswordRequestCrudController::class, 'Reset requests', 'fa fa-key')->setAction('index');
     }
 }

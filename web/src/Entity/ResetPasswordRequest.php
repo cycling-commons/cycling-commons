@@ -42,4 +42,9 @@ class ResetPasswordRequest implements ResetPasswordRequestInterface
     {
         return $this->user;
     }
+
+    public function isActive(): bool
+    {
+        return $this->getExpiresAt() > new \DateTimeImmutable();
+    }
 }
