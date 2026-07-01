@@ -43,6 +43,11 @@
   .item .co{font-family:var(--mono);font-size:.62rem;color:#595c4d}
   .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px}
   .pill.ok{background:#3e7d4f;color:#fff} .pill.pend{background:var(--ochre);color:var(--ink)} .pill.conf{background:var(--spruce);color:var(--paper)}
+  .pill.yes{color:var(--paper);background:var(--spruce-lift)} .pill.no{color:#5a4410;background:rgba(200,146,58,.22)} .pill.role{color:var(--paper);background:var(--ink);margin-left:.2rem}
+
+  .setsec{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin:1.8rem 0 .8rem;padding-bottom:.5rem;border-bottom:1px solid rgba(20,22,14,.14)}
+  .status-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-size:.9rem}
+  .status-row .label{color:#595c4d;font-size:.85rem}
 
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
   .rc{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.1rem;display:block}
@@ -132,12 +137,31 @@
     </div>
   </section>
 
-  {# ── Settings (real identity; links to the real /settings page) ── #}
+  {# ── Settings (real identity + account status; edit forms live at /settings) ── #}
   <section class="dpane" id="p-settings" role="tabpanel">
     <div class="setrow"><div><b>{{ 'account.set_display_name'|trans }}</b><div class="val">{{ cc_user.displayName }}</div></div><a class="manage" href="{{ path('settings') }}">{{ 'account.manage'|trans }} →</a></div>
     <div class="setrow"><div><b>{{ 'account.set_email'|trans }}</b><div class="val">{{ cc_user.email }}</div></div><a class="manage" href="{{ path('settings') }}">{{ 'account.manage'|trans }} →</a></div>
-    <div class="setrow"><div><b>{{ 'account.set_2fa'|trans }}</b><div class="val">{% if cc_user.twoFaEnabled and cc_user.totpSecret %}{{ 'account.on'|trans }}{% else %}{{ 'account.off'|trans }}{% endif %}</div></div><a class="manage" href="{{ path('2fa_setup') }}">{{ 'account.manage'|trans }} →</a></div>
+
+    <h2 class="setsec">{{ 'profile.section_status'|trans }}</h2>
+    <div class="status-row">
+      <span class="label">{{ 'profile.status_email_verified'|trans }}</span>
+      {% if cc_user.emailVerified %}<span class="pill yes">{{ 'profile.pill_verified'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_pending'|trans }}</span>{% endif %}
+    </div>
+    <div class="status-row">
+      <span class="label">{{ 'profile.status_2fa'|trans }}</span>
+      <span>{% if cc_user.twoFaEnabled and cc_user.totpSecret %}<span class="pill yes">{{ 'profile.pill_2fa_enabled'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_2fa_not_enabled'|trans }}</span>{% endif %} <a class="manage" href="{{ path('2fa_setup') }}">{{ 'account.manage'|trans }} →</a></span>
+    </div>
+    <div class="status-row">
+      <span class="label">{{ 'profile.status_public_profile'|trans }}</span>
+      <span>{% if cc_user.publicProfile %}<span class="pill yes">{{ 'profile.pill_public_yes'|trans }}</span>{% else %}<span class="pill no">{{ 'profile.pill_public_no'|trans }}</span>{% endif %} <a class="manage" href="{{ path('settings') }}">{{ 'account.manage'|trans }} →</a></span>
+    </div>
+    <div class="status-row">
+      <span class="label">{{ 'profile.status_roles'|trans }}</span>
+      <span>{% for role in cc_user.roles %}<span class="pill role">{{ role }}</span>{% endfor %}</span>
+    </div>
+
     <div class="note">{{ 'account.privacy_note'|trans|raw }}</div>
+
     <div class="setrow" style="border:none"><div><b>{{ 'account.delete_account'|trans }}</b><div class="val">{{ 'account.delete_note'|trans }}</div></div><a class="manage" href="{{ path('settings') }}#delete">{{ 'account.manage'|trans }} →</a></div>
   </section>
 
