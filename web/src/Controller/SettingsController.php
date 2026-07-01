@@ -49,7 +49,16 @@ final class SettingsController extends AbstractController
 
         if ($profileForm->isSubmitted() && $profileForm->isValid()) {
             $this->em->flush();
-            $this->addFlash('success', 'Profile settings saved.');
+
+            // Apply the (possibly changed) language choice immediately; clearing it
+            // falls back to the browser/site default on the next request.
+            if (null !== $user->getLocale()) {
+                $request->getSession()->set('_locale', $user->getLocale());
+            } else {
+                $request->getSession()->remove('_locale');
+            }
+
+            $this->addFlash('success', 'flash.profile_saved');
 
             return $this->redirectToRoute('settings');
         }
@@ -63,7 +72,7 @@ final class SettingsController extends AbstractController
             $currentPassword = $passwordForm->get('currentPassword')->getData();
 
             if (!$this->passwordHasher->isPasswordValid($user, $currentPassword)) {
-                $this->addFlash('password_error', 'Current password is incorrect.');
+                $this->addFlash('password_error', 'flash.current_password_incorrect');
 
                 return $this->redirectToRoute('settings');
             }
@@ -73,14 +82,14 @@ final class SettingsController extends AbstractController
             $user->setPassword($this->passwordHasher->hashPassword($user, $newPassword));
             $this->em->flush();
 
-            $this->addFlash('success', 'Password changed successfully.');
+            $this->addFlash('success', 'flash.password_changed');
 
             return $this->redirectToRoute('settings');
         }
 
         return $this->render('settings/index.html.twig', [
-            'page_title' => 'Cycling Commons — Settings',
-            'page_description' => 'Manage your Cycling Commons account settings.',
+            'page_title' => 'meta.settings_title',
+            'page_description' => 'meta.settings_description',
             'nav_active' => '',
             'cc_user' => $user,
             'profileForm' => $profileForm,
@@ -98,13 +107,13 @@ final class SettingsController extends AbstractController
         $user = $this->getUser();
 
         if (!$this->isCsrfTokenValid('delete_request', $request->request->get('_token'))) {
-            $this->addFlash('error', 'Invalid security token. Please try again.');
+            $this->addFlash('error', 'flash.invalid_token');
 
             return $this->redirectToRoute('settings');
         }
 
         $this->deletionService->requestDeletion($user);
-        $this->addFlash('success', 'Check your email for the deletion code. It expires in 1 hour.');
+        $this->addFlash('success', 'flash.deletion_code_sent');
 
         return $this->redirectToRoute('settings');
     }
@@ -119,7 +128,7 @@ final class SettingsController extends AbstractController
         $user = $this->getUser();
 
         if (!$this->isCsrfTokenValid('delete_confirm', $request->request->get('_token'))) {
-            $this->addFlash('error', 'Invalid security token. Please try again.');
+            $this->addFlash('error', 'flash.invalid_token');
 
             return $this->redirectToRoute('settings');
         }
@@ -127,14 +136,14 @@ final class SettingsController extends AbstractController
         $code = (string) $request->request->get('deletion_code', '');
 
         if (!$this->deletionService->confirmDeletion($user, $code)) {
-            $this->addFlash('error', 'Invalid or expired deletion code.');
+            $this->addFlash('error', 'flash.deletion_code_invalid');
 
             return $this->redirectToRoute('settings');
         }
 
         $request->getSession()->invalidate();
 
-        $this->addFlash('success', 'Your account has been permanently deleted.');
+        $this->addFlash('success', 'flash.account_deleted');
 
         return $this->redirectToRoute('home');
     }

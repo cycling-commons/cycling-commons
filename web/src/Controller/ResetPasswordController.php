@@ -51,8 +51,8 @@ final class ResetPasswordController extends AbstractController
 
         return $this->render('security/reset_password_request.html.twig', [
             'requestForm' => $form,
-            'page_title' => 'Cycling Commons — Reset password',
-            'page_description' => 'Request a password reset link for your Cycling Commons account.',
+            'page_title' => 'meta.reset_request_title',
+            'page_description' => 'meta.reset_request_description',
         ]);
     }
 
@@ -67,8 +67,8 @@ final class ResetPasswordController extends AbstractController
 
         return $this->render('security/reset_password_check_email.html.twig', [
             'resetToken' => $resetToken,
-            'page_title' => 'Cycling Commons — Check your email',
-            'page_description' => 'A reset link has been sent if an account with that email exists.',
+            'page_title' => 'meta.reset_check_email_title',
+            'page_description' => 'meta.reset_check_email_description',
         ]);
     }
 
@@ -119,15 +119,15 @@ final class ResetPasswordController extends AbstractController
 
             $this->cleanSessionAfterReset();
 
-            $this->addFlash('success', 'Your password has been reset. You can now sign in with your new password.');
+            $this->addFlash('success', 'flash.password_reset');
 
             return $this->redirectToRoute('login');
         }
 
         return $this->render('security/reset_password.html.twig', [
             'resetForm' => $form,
-            'page_title' => 'Cycling Commons — Set new password',
-            'page_description' => 'Set a new password for your Cycling Commons account.',
+            'page_title' => 'meta.reset_new_title',
+            'page_description' => 'meta.reset_new_description',
         ]);
     }
 

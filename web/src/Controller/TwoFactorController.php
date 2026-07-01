@@ -80,8 +80,8 @@ final class TwoFactorController extends AbstractController
                 return $this->render('security/2fa_setup.html.twig', [
                     'backup_codes' => $backupCodes,
                     'setup_complete' => true,
-                    'page_title' => 'Cycling Commons — Two-factor enabled',
-                    'page_description' => 'Two-factor authentication is now protecting your Cycling Commons account.',
+                    'page_title' => 'meta.twofa_enabled_title',
+                    'page_description' => 'meta.twofa_enabled_description',
                 ]);
             }
 
@@ -95,8 +95,8 @@ final class TwoFactorController extends AbstractController
             'setup_complete' => false,
             'qr_code_uri' => $this->buildQrCodeDataUri($totpAuthenticator->getQRContent($user)),
             'manual_secret' => $pendingSecret,
-            'page_title' => 'Cycling Commons — Set up two-factor',
-            'page_description' => 'Add an authenticator app to protect your Cycling Commons account.',
+            'page_title' => 'meta.twofa_setup_title',
+            'page_description' => 'meta.twofa_setup_description',
         ]);
     }
 

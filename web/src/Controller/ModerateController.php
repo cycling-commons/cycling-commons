@@ -50,8 +50,8 @@ final class ModerateController extends AbstractController
         }
 
         return $this->render('moderate/index.html.twig', [
-            'page_title' => 'Cycling Commons — Moderate',
-            'page_description' => 'Curator surface for the Commons — review submissions, resolve flags, and keep the open cycling atlas trustworthy.',
+            'page_title' => 'meta.moderate_title',
+            'page_description' => 'meta.moderate_description',
             'nav_active' => 'moderate',
             'items' => $items,
             'forms' => $forms,
@@ -108,8 +108,8 @@ final class ModerateController extends AbstractController
         }
 
         return $this->render('moderate/index.html.twig', [
-            'page_title' => 'Cycling Commons — Moderate',
-            'page_description' => 'Curator surface for the Commons — review submissions, resolve flags, and keep the open cycling atlas trustworthy.',
+            'page_title' => 'meta.moderate_title',
+            'page_description' => 'meta.moderate_description',
             'nav_active' => 'moderate',
             'items' => $items,
             'forms' => $forms,

@@ -68,15 +68,15 @@ final class RegistrationController extends AbstractController
             );
 
             return $this->render('security/check_email.html.twig', [
-                'page_title' => 'Cycling Commons — Check your email',
-                'page_description' => 'Check your inbox to confirm your email address and activate your account.',
+                'page_title' => 'meta.register_check_email_title',
+                'page_description' => 'meta.register_check_email_description',
             ]);
         }
 
         return $this->render('security/register.html.twig', [
             'registrationForm' => $form,
-            'page_title' => 'Cycling Commons — Create account',
-            'page_description' => 'Create a free Cycling Commons account to contribute climbs, places and fixes to the open cycling atlas.',
+            'page_title' => 'meta.register_title',
+            'page_description' => 'meta.register_description',
         ]);
     }
 
@@ -105,7 +105,7 @@ final class RegistrationController extends AbstractController
             return $this->redirectToRoute('register');
         }
 
-        $this->addFlash('success', 'Your email has been verified. You can now sign in.');
+        $this->addFlash('success', 'flash.email_verified');
 
         return $this->redirectToRoute('login');
     }

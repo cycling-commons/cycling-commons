@@ -103,7 +103,7 @@ app-serve: ## run the Symfony app locally at http://127.0.0.1:8010
 	cd web && php -S 127.0.0.1:8010 -t public
 
 app-test: ## run the app test suite + static analysis + gates
-	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh
+	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh && ./tools/check-translations.sh
 
 app-rector: ## apply Rector refactors (advisory; review the diff before committing)
 	cd web && vendor/bin/rector process

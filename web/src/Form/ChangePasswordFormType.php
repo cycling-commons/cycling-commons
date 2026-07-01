@@ -22,10 +22,10 @@ final class ChangePasswordFormType extends AbstractType
             'type' => PasswordType::class,
             'mapped' => false,
             'first_options' => [
-                'label' => 'New password',
+                'label' => 'form.label_new_password',
                 'attr' => [
                     'autocomplete' => 'new-password',
-                    'placeholder' => 'At least 12 characters',
+                    'placeholder' => 'form.ph_min12',
                 ],
                 'constraints' => [
                     new NotBlank(message: 'Please enter a new password.'),
@@ -33,10 +33,10 @@ final class ChangePasswordFormType extends AbstractType
                 ],
             ],
             'second_options' => [
-                'label' => 'Confirm new password',
+                'label' => 'form.label_confirm_new_password',
                 'attr' => [
                     'autocomplete' => 'new-password',
-                    'placeholder' => 'Repeat new password',
+                    'placeholder' => 'form.ph_repeat_new_password',
                 ],
             ],
             'invalid_message' => 'The password fields must match.',

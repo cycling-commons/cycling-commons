@@ -53,6 +53,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Country $country = null;
 
+    // Preferred UI language (short code: en|fr|nl|de). Null = follow the
+    // language switcher / browser / site default.
+    #[ORM\Column(type: 'string', length: 5, nullable: true)]
+    private ?string $locale = null;
+
     #[ORM\Column(type: 'boolean')]
     private bool $emailVerified = false;
 
@@ -245,6 +250,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setCountry(?Country $country): static
     {
         $this->country = $country;
+
+        return $this;
+    }
+
+    public function getLocale(): ?string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(?string $locale): static
+    {
+        $this->locale = $locale;
 
         return $this;
     }

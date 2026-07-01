@@ -24,12 +24,12 @@ final class TwoFactorSetupType extends AbstractType
     {
         $builder->add('code', TextType::class, [
             'mapped' => false,
-            'label' => 'Verification code',
+            'label' => 'form.label_verification_code',
             'attr' => [
                 'autocomplete' => 'one-time-code',
                 'inputmode' => 'numeric',
                 'pattern' => '[0-9]*',
-                'placeholder' => '123456',
+                'placeholder' => 'form.ph_code',
                 'autofocus' => 'autofocus',
             ],
             'constraints' => [

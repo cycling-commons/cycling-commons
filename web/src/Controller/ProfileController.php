@@ -26,8 +26,8 @@ final class ProfileController extends AbstractController
         $user = $this->getUser();
 
         return $this->render('profile/show.html.twig', [
-            'page_title' => 'Cycling Commons — Your profile',
-            'page_description' => 'Your contributor profile on the Cycling Commons.',
+            'page_title' => 'meta.profile_title',
+            'page_description' => 'meta.profile_description',
             'nav_active' => '',
             'cc_user' => $user,
         ]);

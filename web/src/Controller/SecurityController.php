@@ -25,8 +25,8 @@ final class SecurityController extends AbstractController
         return $this->render('security/login.html.twig', [
             'last_username' => $authenticationUtils->getLastUsername(),
             'error' => $authenticationUtils->getLastAuthenticationError(),
-            'page_title' => 'Cycling Commons — Account',
-            'page_description' => 'Join the atlas. Sign in to contribute climbs, places and fixes to the open cycling Commons.',
+            'page_title' => 'meta.login_title',
+            'page_description' => 'meta.login_description',
         ]);
     }
 

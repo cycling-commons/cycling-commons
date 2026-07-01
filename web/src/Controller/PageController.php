@@ -10,6 +10,8 @@ use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Server-renders the static content pages through the shared Twig layout.
+ * page_title/page_description are translation keys (see the `meta` catalog
+ * group); the layout translates them in the <head>.
  *
  * @api Instantiated by Symfony's router, never referenced from code — `@api`
  *      tells Psalm this (and its actions) is a live entry point, not dead code.
@@ -20,8 +22,8 @@ final class PageController extends AbstractController
     public function home(): Response
     {
         return $this->render('pages/index.html.twig', [
-            'page_title' => 'Cycling Commons',
-            'page_description' => "An open, community-built map of the world's best riding.",
+            'page_title' => 'meta.home_title',
+            'page_description' => 'meta.home_description',
             'nav_active' => '',
         ]);
     }
@@ -30,8 +32,8 @@ final class PageController extends AbstractController
     public function about(): Response
     {
         return $this->render('pages/about.html.twig', [
-            'page_title' => 'Cycling Commons — About',
-            'page_description' => "Cycling Commons is an open, community-built map of the world's best riding. Open data anyone can use, governed by the riders who build it.",
+            'page_title' => 'meta.about_title',
+            'page_description' => 'meta.about_description',
             'nav_active' => 'about',
         ]);
     }
@@ -40,8 +42,8 @@ final class PageController extends AbstractController
     public function regions(): Response
     {
         return $this->render('pages/regions.html.twig', [
-            'page_title' => 'Cycling Commons — Regions',
-            'page_description' => 'The Cycling Commons is organised into regions of roughly Wallonia/Flanders size — browse them by continent.',
+            'page_title' => 'meta.regions_title',
+            'page_description' => 'meta.regions_description',
             'nav_active' => 'regions',
         ]);
     }
@@ -50,8 +52,8 @@ final class PageController extends AbstractController
     public function coverage(): Response
     {
         return $this->render('pages/coverage.html.twig', [
-            'page_title' => 'Cycling Commons — Coverage',
-            'page_description' => 'How complete is the map? See what\'s covered, what\'s thin, and where to help — transparent monitoring of the open cycling Commons.',
+            'page_title' => 'meta.coverage_title',
+            'page_description' => 'meta.coverage_description',
             'nav_active' => 'coverage',
         ]);
     }
@@ -60,8 +62,8 @@ final class PageController extends AbstractController
     public function developers(): Response
     {
         return $this->render('pages/developers.html.twig', [
-            'page_title' => 'Cycling Commons — Developers',
-            'page_description' => 'An open API, free for anyone to build on. Query the Commons by type and area, or pull bulk dumps per country — open by default.',
+            'page_title' => 'meta.developers_title',
+            'page_description' => 'meta.developers_description',
             'nav_active' => 'developers',
         ]);
     }
@@ -70,8 +72,8 @@ final class PageController extends AbstractController
     public function licenses(): Response
     {
         return $this->render('pages/licenses.html.twig', [
-            'page_title' => 'Cycling Commons — Licence',
-            'page_description' => 'The short version, in plain language — what you can do with Commons data, media, and code — ODbL data, CC BY-SA media, PolyForm Shield (source-available) code.',
+            'page_title' => 'meta.licenses_title',
+            'page_description' => 'meta.licenses_description',
             'nav_active' => 'licenses',
         ]);
     }
@@ -80,8 +82,8 @@ final class PageController extends AbstractController
     public function join(): Response
     {
         return $this->render('pages/join.html.twig', [
-            'page_title' => 'Cycling Commons — Get involved',
-            'page_description' => 'Help build the open cycling commons — riders with local knowledge, developers, social, fundraisers, and legal. Code, knowledge, or a few hours of expertise: there\'s room for you.',
+            'page_title' => 'meta.join_title',
+            'page_description' => 'meta.join_description',
             'nav_active' => '',
         ]);
     }
@@ -90,8 +92,8 @@ final class PageController extends AbstractController
     public function contributors(): Response
     {
         return $this->render('pages/contributors.html.twig', [
-            'page_title' => 'Cycling Commons — Contributors',
-            'page_description' => 'Built by riders. Recognition without surveillance — we celebrate contributions to the open Commons, never personal data.',
+            'page_title' => 'meta.contributors_title',
+            'page_description' => 'meta.contributors_description',
             'nav_active' => '',
         ]);
     }
@@ -100,8 +102,8 @@ final class PageController extends AbstractController
     public function region(): Response
     {
         return $this->render('pages/region.html.twig', [
-            'page_title' => 'Cycling Commons — Region',
-            'page_description' => "Wallonia's best riding in one open layer — the Ardennes classics: climbs, views and routes, kept fresh by the riders who know them.",
+            'page_title' => 'meta.region_title',
+            'page_description' => 'meta.region_description',
             'nav_active' => 'regions',
         ]);
     }
@@ -110,8 +112,8 @@ final class PageController extends AbstractController
     public function privacy(): Response
     {
         return $this->render('pages/privacy.html.twig', [
-            'page_title' => 'Cycling Commons — Privacy',
-            'page_description' => 'How the Cycling Commons handles personal data — in plain language. Built to need as little as possible, and to keep what you contribute separate from who you are. GDPR-aligned.',
+            'page_title' => 'meta.privacy_title',
+            'page_description' => 'meta.privacy_description',
             'nav_active' => '',
         ]);
     }
@@ -120,8 +122,8 @@ final class PageController extends AbstractController
     public function terms(): Response
     {
         return $this->render('pages/terms.html.twig', [
-            'page_title' => 'Cycling Commons — Terms',
-            'page_description' => 'The terms for using the Cycling Commons site and account — short, readable, and aligned with the open licences. Governed by the law of the Netherlands.',
+            'page_title' => 'meta.terms_title',
+            'page_description' => 'meta.terms_description',
             'nav_active' => '',
         ]);
     }
@@ -130,8 +132,8 @@ final class PageController extends AbstractController
     public function pages(): Response
     {
         return $this->render('pages/pages.html.twig', [
-            'page_title' => 'Cycling Commons — All pages',
-            'page_description' => 'The whole Commons, page by page — a tour of every public, contributor and curator surface.',
+            'page_title' => 'meta.pages_title',
+            'page_description' => 'meta.pages_description',
             'nav_active' => '',
         ]);
     }

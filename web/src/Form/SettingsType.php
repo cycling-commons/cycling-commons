@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -27,10 +28,10 @@ final class SettingsType extends AbstractType
     {
         $builder
             ->add('displayName', TextType::class, [
-                'label' => 'Display name',
+                'label' => 'form.label_display_name',
                 'attr' => [
                     'autocomplete' => 'name',
-                    'placeholder' => 'Your public display name',
+                    'placeholder' => 'form.ph_display_name_settings',
                 ],
                 'constraints' => [
                     new NotBlank(message: 'Please enter a display name.'),
@@ -43,8 +44,8 @@ final class SettingsType extends AbstractType
             ->add('country', EntityType::class, [
                 'class' => Country::class,
                 'required' => false,
-                'label' => 'Country',
-                'placeholder' => 'Select your country (optional)',
+                'label' => 'form.label_country',
+                'placeholder' => 'form.ph_country',
                 'choice_label' => 'name',
                 // Group the options under their continent.
                 'group_by' => static fn (Country $c): ?string => $c->getContinent()?->getName(),
@@ -53,10 +54,23 @@ final class SettingsType extends AbstractType
                     ->orderBy('c.name', 'ASC'),
                 'attr' => ['autocomplete' => 'country-name'],
             ])
-            ->add('publicProfile', CheckboxType::class, [
-                'label' => 'Public profile',
+            ->add('locale', ChoiceType::class, [
+                'label' => 'form.label_language',
                 'required' => false,
-                'help' => 'When off, your profile is hidden and contributions stay anonymous.',
+                'placeholder' => 'form.ph_language',
+                // Endonyms — the same in every locale, so keep them out of the translator.
+                'choices' => [
+                    'English' => 'en',
+                    'Français' => 'fr',
+                    'Nederlands' => 'nl',
+                    'Deutsch' => 'de',
+                ],
+                'choice_translation_domain' => false,
+            ])
+            ->add('publicProfile', CheckboxType::class, [
+                'label' => 'form.label_public_profile',
+                'required' => false,
+                'help' => 'form.help_public_profile',
             ]);
     }
 

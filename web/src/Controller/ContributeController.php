@@ -34,8 +34,8 @@ final class ContributeController extends AbstractController
     public function index(): Response
     {
         return $this->render('contribute/index.html.twig', [
-            'page_title' => 'Cycling Commons — Contribute',
-            'page_description' => 'Choose what to contribute to the Cycling Commons — climbs, water, surface, hazards, stays, views and more. One open atlas, built by riders.',
+            'page_title' => 'meta.contribute_title',
+            'page_description' => 'meta.contribute_description',
             'nav_active' => '',
         ]);
     }
@@ -56,8 +56,8 @@ final class ContributeController extends AbstractController
             $receipt = $this->contributionStub->submit('climb', $data, $user);
 
             return $this->render('contribute/add_climb.html.twig', [
-                'page_title' => 'Cycling Commons — Add a climb',
-                'page_description' => 'Add a climb to the Commons — search the place, trace the route, and capture surface, traffic and gradient for every kind of rider.',
+                'page_title' => 'meta.add_climb_title',
+                'page_description' => 'meta.add_climb_description',
                 'nav_active' => 'add_climb',
                 'receipt' => $receipt,
                 'form' => null,
@@ -65,8 +65,8 @@ final class ContributeController extends AbstractController
         }
 
         return $this->render('contribute/add_climb.html.twig', [
-            'page_title' => 'Cycling Commons — Add a climb',
-            'page_description' => 'Add a climb to the Commons — search the place, trace the route, and capture surface, traffic and gradient for every kind of rider.',
+            'page_title' => 'meta.add_climb_title',
+            'page_description' => 'meta.add_climb_description',
             'nav_active' => 'add_climb',
             'receipt' => null,
             'form' => $form,
@@ -89,8 +89,8 @@ final class ContributeController extends AbstractController
             $receipt = $this->contributionStub->submit('vote', $data, $user);
 
             return $this->render('contribute/vote.html.twig', [
-                'page_title' => 'Cycling Commons — Vote',
-                'page_description' => "Rank this region's best riding. The community decides the seasonal best-of, kept fresh by the riders who ride it.",
+                'page_title' => 'meta.vote_title',
+                'page_description' => 'meta.vote_description',
                 'nav_active' => 'vote',
                 'receipt' => $receipt,
                 'form' => null,
@@ -98,8 +98,8 @@ final class ContributeController extends AbstractController
         }
 
         return $this->render('contribute/vote.html.twig', [
-            'page_title' => 'Cycling Commons — Vote',
-            'page_description' => "Rank this region's best riding. The community decides the seasonal best-of, kept fresh by the riders who ride it.",
+            'page_title' => 'meta.vote_title',
+            'page_description' => 'meta.vote_description',
             'nav_active' => 'vote',
             'receipt' => null,
             'form' => $form,
@@ -122,8 +122,8 @@ final class ContributeController extends AbstractController
             $receipt = $this->contributionStub->submit('improve', $data, $user);
 
             return $this->render('contribute/improve.html.twig', [
-                'page_title' => 'Cycling Commons — Improve / add a place',
-                'page_description' => 'Improve a place in the Commons — fix details, flag conditions, and keep the open cycling atlas accurate for every rider.',
+                'page_title' => 'meta.improve_title',
+                'page_description' => 'meta.improve_description',
                 'nav_active' => 'improve',
                 'receipt' => $receipt,
                 'form' => null,
@@ -131,8 +131,8 @@ final class ContributeController extends AbstractController
         }
 
         return $this->render('contribute/improve.html.twig', [
-            'page_title' => 'Cycling Commons — Improve / add a place',
-            'page_description' => 'Improve a place in the Commons — fix details, flag conditions, and keep the open cycling atlas accurate for every rider.',
+            'page_title' => 'meta.improve_title',
+            'page_description' => 'meta.improve_description',
             'nav_active' => 'improve',
             'receipt' => null,
             'form' => $form,

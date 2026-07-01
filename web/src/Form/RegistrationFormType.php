@@ -25,12 +25,12 @@ final class RegistrationFormType extends AbstractType
     {
         $builder
             ->add('email', EmailType::class, [
-                'label' => 'Email',
-                'attr' => ['autocomplete' => 'email', 'placeholder' => 'you@example.com'],
+                'label' => 'form.label_email',
+                'attr' => ['autocomplete' => 'email', 'placeholder' => 'form.ph_email'],
             ])
             ->add('displayName', TextType::class, [
-                'label' => 'Display name',
-                'attr' => ['autocomplete' => 'nickname', 'placeholder' => 'Seen on your contributions'],
+                'label' => 'form.label_display_name',
+                'attr' => ['autocomplete' => 'nickname', 'placeholder' => 'form.ph_display_name_register'],
                 'constraints' => [
                     new NotBlank(message: 'Please enter a display name.'),
                     new Length(min: 2, max: 100, minMessage: 'Display name must be at least {{ limit }} characters.'),
@@ -40,23 +40,23 @@ final class RegistrationFormType extends AbstractType
                 'type' => PasswordType::class,
                 'mapped' => false,
                 'first_options' => [
-                    'label' => 'Password',
-                    'attr' => ['autocomplete' => 'new-password', 'placeholder' => 'At least 12 characters'],
+                    'label' => 'form.label_password',
+                    'attr' => ['autocomplete' => 'new-password', 'placeholder' => 'form.ph_min12'],
                     'constraints' => [
                         new NotBlank(message: 'Please enter a password.'),
                         new Length(min: 12, minMessage: 'Password must be at least {{ limit }} characters.'),
                     ],
                 ],
                 'second_options' => [
-                    'label' => 'Confirm password',
-                    'attr' => ['autocomplete' => 'new-password', 'placeholder' => 'Repeat password'],
+                    'label' => 'form.label_confirm_password',
+                    'attr' => ['autocomplete' => 'new-password', 'placeholder' => 'form.ph_repeat_password'],
                 ],
                 'invalid_message' => 'The password fields must match.',
             ])
             ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
                 'required' => false,
-                'label' => 'I agree to the terms of service',
+                'label' => 'form.label_terms',
                 'constraints' => [
                     new IsTrue(message: 'You must agree to the terms of service.'),
                 ],

@@ -1,16 +1,16 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>{{ page_title|default('Cycling Commons') }}</title>
-<meta name="description" content="{{ page_description|default('Cycling Commons is an open, community-built map of the world\'s best riding.') }}" />
+<title>{{ page_title|default('Cycling Commons')|trans }}</title>
+<meta name="description" content="{{ page_description|default('Cycling Commons is an open, community-built map of the world\'s best riding.')|trans }}" />
 <link rel="canonical" href="{{ app.request.schemeAndHttpHost ~ app.request.pathInfo }}" />
 <meta name="theme-color" content="#101E16" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <meta property="og:site_name" content="Cycling Commons" />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="{{ page_title|default('Cycling Commons') }}" />
-<meta property="og:description" content="{{ page_description|default('Cycling Commons is an open, community-built map of the world\'s best riding.') }}" />
+<meta property="og:title" content="{{ page_title|default('Cycling Commons')|trans }}" />
+<meta property="og:description" content="{{ page_description|default('Cycling Commons is an open, community-built map of the world\'s best riding.')|trans }}" />
 <meta property="og:image" content="{{ page_og_image|default('https://cyclingcommons.org/brand/og/default.jpg') }}" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />

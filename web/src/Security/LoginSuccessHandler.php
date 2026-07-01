@@ -62,6 +62,11 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 
         $user = $token->getUser();
 
+        // Apply the user's saved language preference for the rest of the session.
+        if ($user instanceof User && null !== $user->getLocale()) {
+            $request->getSession()->set('_locale', $user->getLocale());
+        }
+
         if ($user instanceof User && $this->requiresTwoFactorSetup($user)) {
             return new RedirectResponse($this->urlGenerator->generate('2fa_setup'));
         }

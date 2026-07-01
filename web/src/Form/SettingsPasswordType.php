@@ -28,11 +28,11 @@ final class SettingsPasswordType extends AbstractType
     {
         $builder
             ->add('currentPassword', PasswordType::class, [
-                'label' => 'Current password',
+                'label' => 'form.label_current_password',
                 'mapped' => false,
                 'attr' => [
                     'autocomplete' => 'current-password',
-                    'placeholder' => 'Your current password',
+                    'placeholder' => 'form.ph_current_password',
                 ],
                 'constraints' => [
                     new NotBlank(message: 'Please enter your current password.'),
@@ -42,10 +42,10 @@ final class SettingsPasswordType extends AbstractType
                 'type' => PasswordType::class,
                 'mapped' => false,
                 'first_options' => [
-                    'label' => 'New password',
+                    'label' => 'form.label_new_password',
                     'attr' => [
                         'autocomplete' => 'new-password',
-                        'placeholder' => 'At least 12 characters',
+                        'placeholder' => 'form.ph_min12',
                     ],
                     'constraints' => [
                         new NotBlank(message: 'Please enter a new password.'),
@@ -53,10 +53,10 @@ final class SettingsPasswordType extends AbstractType
                     ],
                 ],
                 'second_options' => [
-                    'label' => 'Confirm new password',
+                    'label' => 'form.label_confirm_new_password',
                     'attr' => [
                         'autocomplete' => 'new-password',
-                        'placeholder' => 'Repeat new password',
+                        'placeholder' => 'form.ph_repeat_new_password',
                     ],
                 ],
                 'invalid_message' => 'The password fields must match.',
