@@ -38,18 +38,28 @@ final class ItemTypeTest extends TestCase
         self::assertCount(11, array_unique($slugs));
     }
 
-    public function testFromSlugResolvesKnownType(): void
+    public function testFromParamResolvesCanonicalSlug(): void
     {
-        self::assertSame(ItemType::WaterFood, ItemType::fromSlug('water-food'));
-        self::assertSame(ItemType::RoadSurface, ItemType::fromSlug('road-surface'));
+        self::assertSame(ItemType::WaterFood, ItemType::fromParam('water-food'));
+        self::assertSame(ItemType::RoadSurface, ItemType::fromParam('road-surface'));
     }
 
-    public function testFromSlugFallsBackToDefaultForUnknown(): void
+    public function testFromParamResolvesCatalogLetter(): void
+    {
+        // The A–K letter is the identifier the map layers carry (layer.letter),
+        // so links can deep-link by letter too — case-insensitively.
+        self::assertSame(ItemType::WhereToSleep, ItemType::fromParam('E'));
+        self::assertSame(ItemType::WhereToSleep, ItemType::fromParam('e'));
+        self::assertSame(ItemType::QualityRides, ItemType::fromParam('K'));
+    }
+
+    public function testFromParamFallsBackToDefaultForUnknown(): void
     {
         // The demo falls back to the service station (D · bike services) for a
         // bare improve page with no/unknown item — edit-item-and-profile §3.1.
-        self::assertSame(ItemType::BikeServices, ItemType::fromSlug('nope-not-a-type'));
-        self::assertSame(ItemType::BikeServices, ItemType::fromSlug(null));
+        self::assertSame(ItemType::BikeServices, ItemType::fromParam('nope-not-a-type'));
+        self::assertSame(ItemType::BikeServices, ItemType::fromParam(''));
+        self::assertSame(ItemType::BikeServices, ItemType::fromParam(null));
         self::assertSame(ItemType::BikeServices, ItemType::default());
     }
 

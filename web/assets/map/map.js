@@ -1012,7 +1012,7 @@
       <img src="${pl[0].sm}" alt="${f.name}" data-i="0" />
       <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
       ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${p.sm}" data-i="${i}" alt="${f.name} — photo ${i+1}" />`).join('')}</div>` : ''}
-    </figure>` : `<a class="cc-d-addphoto" href="/improve?item=${f.edit||slug(f.name)}&name=${encodeURIComponent(f.name)}&type=${encodeURIComponent(layer.letter+' · '+layer.label)}&add=photo" aria-label="Add a photo of ${f.name}">
+    </figure>` : `<a class="cc-d-addphoto" href="/improve?item=${f.edit||slug(f.name)}&name=${encodeURIComponent(f.name)}&type=${layer.letter}&add=photo" aria-label="Add a photo of ${f.name}">
       <svg class="cc-ap-cam" viewBox="0 0 48 36" width="42" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="1.5" y="7.5" width="45" height="27" rx="4"/><path d="M16 7.5l3-4h10l3 4" stroke-linejoin="round"/><circle cx="24" cy="21.5" r="8"/><path d="M40.5 13h.01" stroke-width="3" stroke-linecap="round"/>
       </svg>
@@ -1052,7 +1052,7 @@
     const editLbl = layer.key==='experience' ? '✎ Edit this ride' : '✎ Edit this item';
     const ell = f.geom && f.geom.ll;                    // [lat,lng] for point features
     const editQ = `item=${editId}&name=${encodeURIComponent(f.name)}`
-      + `&type=${encodeURIComponent(layer.letter + ' · ' + layer.label)}`
+      + `&type=${layer.letter}`
       + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
     const edit = `<a class="cc-d-act edit" href="/improve?${editQ}">${editLbl}</a>`;
     const vote = f.cur ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';

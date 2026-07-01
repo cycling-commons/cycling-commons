@@ -143,6 +143,18 @@ final class ImproveTest extends WebTestCase
         self::assertSelectorExists('#wiz[data-track="1"]');
     }
 
+    public function testLetterQueryResolvesType(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'letter');
+
+        // Map deep-links carry the catalog letter (layer.letter) — E is sleep.
+        $client->request('GET', '/improve?type=E&mode=add');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[name="improve[details][bikeStorage]"]');
+    }
+
     // ── Deep-link with an opaque feature id still resolves ────────────────────
 
     public function testDeepLinkWithItemAndModeReturns200(): void

@@ -37,17 +37,30 @@ enum ItemType: string
     case QualityRides = 'quality-rides';
 
     /**
-     * Resolve a URL/query slug to a type, falling back to the default when the
-     * slug is null or unknown — mirrors the demo's fallback to the service
+     * Resolve a URL/query value to a type. Accepts a canonical slug (the nice
+     * ?type=water-food form the hub uses) or a catalog letter A–K (the
+     * identifier the map layers carry, layer.letter). Falls back to the default
+     * when null/empty/unknown — mirrors the demo's fallback to the service
      * station for a bare improve page (edit-item-and-profile §3.1).
      */
-    public static function fromSlug(?string $slug): self
+    public static function fromParam(?string $value): self
     {
-        if (null === $slug) {
+        if (null === $value || '' === $value) {
             return self::default();
         }
 
-        return self::tryFrom($slug) ?? self::default();
+        if (null !== $slug = self::tryFrom($value)) {
+            return $slug;
+        }
+
+        $letter = strtoupper($value);
+        foreach (self::cases() as $type) {
+            if ($type->letter() === $letter) {
+                return $type;
+            }
+        }
+
+        return self::default();
     }
 
     /** D · Bike services — the demo's no-param fallback item. */

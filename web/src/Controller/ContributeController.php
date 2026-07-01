@@ -113,9 +113,9 @@ final class ContributeController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function improve(Request $request): Response
     {
-        // ?type=<A–K slug> picks the type-aware form; unknown/absent → the
-        // default (D · bike services), mirroring the demo's fallback item.
-        $type = ItemType::fromSlug($request->query->getString('type'));
+        // ?type=<A–K slug or letter> picks the type-aware form; unknown/absent →
+        // the default (D · bike services), mirroring the demo's fallback item.
+        $type = ItemType::fromParam($request->query->getString('type'));
 
         $form = $this->createForm(ImproveType::class, null, ['catalog_type' => $type]);
         $form->handleRequest($request);

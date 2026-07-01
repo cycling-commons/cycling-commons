@@ -48,12 +48,35 @@ final class ContributeHubTest extends WebTestCase
         $crawler = $client->request('GET', '/contribute');
 
         self::assertResponseIsSuccessful();
-        // Several improve links exist (different item= params); assert at least one
+        // Several improve links exist (different type= params); assert at least one
         self::assertGreaterThan(
             0,
             $crawler->filter('a[href^="/improve"]')->count(),
             'Expected at least one link to /improve on the contribute hub.',
         );
+    }
+
+    public function testCardsDeepLinkToTheTypeAwareWizard(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/contribute');
+
+        self::assertResponseIsSuccessful();
+
+        // Each category card carries its canonical ?type= slug so the wizard
+        // opens the right per-type form (not the default bike-services one).
+        foreach (['water-food', 'where-to-sleep', 'quality-rides', 'road-surface'] as $slug) {
+            self::assertGreaterThan(
+                0,
+                $crawler->filter('a[href*="type='.$slug.'"]')->count(),
+                "Expected a contribute card deep-linking to ?type={$slug}.",
+            );
+        }
+
+        // The stale demo item slugs must be gone.
+        $body = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('item=water-fountain', $body);
+        self::assertStringNotContainsString('item=repair-station', $body);
     }
 
     public function testPageContainsVoteLink(): void
