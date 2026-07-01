@@ -27,6 +27,42 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .topnav .acct.fill{background:var(--trail);border-color:var(--trail);color:var(--ink)!important}
 .topnav .acct.fill:hover{background:#ff703d;border-color:#ff703d}
 .topnav .acct.join{border-color:var(--trail);color:var(--trail)!important}.topnav .acct.join:hover{background:var(--trail);color:var(--ink)!important}
+/* logged-in account chip + dropdown — used in the public topnav AND the account-shell dtop */
+.acct-menu{position:relative;flex:none}
+.acct-chip{display:inline-flex;align-items:center;gap:.5rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.26rem .7rem .26rem .28rem;color:var(--paper);cursor:pointer;font-family:var(--sans);font-size:.9rem;line-height:1;transition:border-color .2s}
+.acct-chip:hover,.acct-chip[aria-expanded=true]{border-color:var(--trail)}
+.acct-chip .av{width:30px;height:30px;border-radius:50%;background:var(--trail);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:.82rem;flex:none}
+.acct-chip .acct-name{max-width:14ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct-chip .acct-caret{opacity:.65;transition:transform .18s}
+.acct-chip[aria-expanded=true] .acct-caret{transform:rotate(180deg)}
+.acct-dropdown{position:absolute;top:calc(100% + .55rem);right:0;min-width:200px;background:var(--paper);border:1px solid rgba(20,22,14,.12);border-radius:8px;box-shadow:0 14px 36px -12px rgba(0,0,0,.5);padding:.4rem;z-index:600}
+.acct-dropdown[hidden]{display:none}
+.acct-dropdown a,.acct-dropdown button{display:block;width:100%;box-sizing:border-box;text-align:left;background:none;border:0;font-family:var(--sans);font-size:.9rem;color:var(--ink)!important;opacity:1!important;padding:.55rem .7rem;border-radius:5px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.acct-dropdown a:hover,.acct-dropdown button:hover{background:rgba(20,22,14,.06)}
+.acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}
+.acct-dropdown form button{color:var(--clay)!important}
+@media(max-width:560px){.acct-chip .acct-name,.acct-chip .acct-caret{display:none}.acct-chip{padding:.26rem;border-radius:50%}}
+/* language switcher */
+.topnav .lang-menu{position:relative;flex:none}
+.topnav .lang-chip{display:inline-flex;align-items:center;gap:.32rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.34rem .55rem;color:var(--paper);cursor:pointer;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;line-height:1;transition:border-color .2s}
+.topnav .lang-chip:hover,.topnav .lang-chip[aria-expanded=true]{border-color:var(--trail)}
+.topnav .lang-chip svg{opacity:.7;flex:none}
+.topnav .lang-chip .lang-caret{transition:transform .18s}
+.topnav .lang-chip[aria-expanded=true] .lang-caret{transform:rotate(180deg)}
+.topnav .lang-dropdown{min-width:160px}
+.topnav .lang-dropdown a[aria-current=true]{color:var(--trail)!important;font-weight:600}
+
+/* forms — every native <select> shares ONE look (underline field + custom
+   chevron) so dropdowns never need per-page styling again. All selects in the
+   app sit on light surfaces; override locally only if one ever lands on dark. */
+select{font-family:var(--sans);font-size:1rem;color:var(--ink);background-color:transparent;
+  border:none;border-bottom:1.5px solid rgba(20,22,14,.25);border-radius:0;
+  padding:.45rem 1.6rem .45rem 0;outline:none;cursor:pointer;
+  -webkit-appearance:none;-moz-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a5d4d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .1rem center;background-size:1rem}
+select:focus{border-bottom-color:var(--trail)}
+select option{color:var(--ink)}
 
 /* type */
 .kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}

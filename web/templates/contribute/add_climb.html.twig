@@ -23,10 +23,11 @@
 
   .field{margin-bottom:1.3rem}
   .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
-  .field input,.field select,.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
+  .field input,.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
+  .field select{width:100%}  /* look is global (atlas.css) */
   .field input[readonly]{color:#595c4d}
   .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
-  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--trail)}
+  .field input:focus,.field textarea:focus{border-color:var(--trail)}
   .field .fhelp{font-family:var(--mono);font-size:.62rem;color:#9a9d8c;margin-top:.35rem;text-transform:none;letter-spacing:0}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
   @media(max-width:520px){.two{grid-template-columns:1fr}}
