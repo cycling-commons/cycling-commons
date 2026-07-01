@@ -826,6 +826,8 @@ improve:
     label: 'Details'
     heading: 'Die Details'
     help: 'Sag Fahrern, was du weißt. Beschreibe, was du hinzufügst oder änderst.'
+    fix_heading: 'Aktuelle Angaben korrigieren'
+    add_heading: 'Fehlende Angaben ergänzen'
     what_changed_label: 'Was fügst du hinzu oder änderst du?'
     what_changed_placeholder: 'Den Ort beschreiben, Details korrigieren oder notieren, was falsch ist…'
     note_label: 'Zusätzlicher Hinweis für Fahrer — optional'

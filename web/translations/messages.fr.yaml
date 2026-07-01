@@ -826,6 +826,8 @@ improve:
     label: 'Détails'
     heading: 'Les détails'
     help: 'Dites aux cyclistes ce que vous savez. Décrivez ce que vous ajoutez ou modifiez.'
+    fix_heading: 'Corriger les détails actuels'
+    add_heading: 'Ajouter les informations manquantes'
     what_changed_label: 'Qu''ajoutez-vous ou modifiez-vous ?'
     what_changed_placeholder: 'Décrivez le lieu, corrigez les détails, ou signalez ce qui est incorrect…'
     note_label: 'Note supplémentaire pour les cyclistes — optionnel'

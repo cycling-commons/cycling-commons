@@ -826,6 +826,8 @@ improve:
     label: 'Details'
     heading: 'De details'
     help: 'Vertel fietsers wat je weet. Beschrijf wat je toevoegt of wijzigt.'
+    fix_heading: 'Huidige gegevens corrigeren'
+    add_heading: 'Ontbrekende gegevens toevoegen'
     what_changed_label: 'Wat voeg je toe of wijzig je?'
     what_changed_placeholder: 'Beschrijf de plek, corrigeer de gegevens, of noteer wat er niet klopt…'
     note_label: 'Extra notitie voor fietsers — optioneel'

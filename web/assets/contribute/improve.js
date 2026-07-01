@@ -11,28 +11,21 @@
   var _id = _q.get('item') || '';
   var ADD = _q.get('mode') === 'add';
 
-  var TYPE_NAMES = {
-    'road-surface': 'road segment',
-    'water-fountain': 'water point',
-    'repair-station': 'bike service',
-    'cyclist-friendly-gite': 'place to sleep',
-    'exposed-crosswind': 'hazard',
-    'transport-link': 'transport link',
-    'shelter': 'shelter',
-    'viewpoint': 'viewpoint',
-    'heritage-site': 'heritage site',
-    'ride': 'ride'
-  };
-  var typeName = TYPE_NAMES[_id] || (_id ? _id.replace(/-/g, ' ') : 'place');
+  // The catalog type + how to set its location come from the server (the
+  // controller resolves ?type= into ItemType and renders these on #wiz).
+  var _type = wiz.dataset.type || '';
+  var _locMode = wiz.dataset.locationMode || 'point';
+  var typeName = wiz.dataset.type ? wiz.dataset.type.replace(/-/g, ' ') : 'place';
 
-  // Registry defaults (center/icon per type)
+  // Registry defaults (a generic Wallonia centre; the pin glyph is per-type)
   var DEFAULTS = {
     center: [5.86, 50.49],
-    icon: '✎'
+    icon: wiz.dataset.icon || '✎'
   };
 
-  // Locate mode: point (most), segment (road-surface), none/track (ride)
-  var LOCATE = !ADD ? 'off' : (_id === 'ride' ? 'none' : _id === 'road-surface' ? 'segment' : 'point');
+  // Locate mode: point (most), segment (road surface), none/track (ride) —
+  // only active in add mode; editing an existing item skips step 1.
+  var LOCATE = !ADD ? 'off' : _locMode;
 
   // Wizard state
   var WZ = { cur: 1, last: 4, loc: null, media: [] };

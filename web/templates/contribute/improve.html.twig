@@ -20,6 +20,8 @@
   @keyframes fade{from{opacity:0}to{opacity:1}}
   .pane h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin-bottom:.3rem}
   .pane .help{color:#595c4d;font-size:.9rem;margin-bottom:1.3rem}
+  .subhead{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:1.6rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid rgba(20,22,14,.12)}
+  .subhead:first-of-type{margin-top:.3rem}
 
   .field{margin-bottom:1.3rem}
   .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
@@ -130,8 +132,12 @@
 </div>
 {% else %}
 {# ── WIZARD ── #}
-<div class="wrap" id="wiz">
-  <div class="ey">{{ 'improve.eyebrow'|trans }}</div>
+<div class="wrap" id="wiz"
+     data-type="{{ item_type.value }}"
+     data-location-mode="{{ item_type.locationMode.value }}"
+     data-icon="{{ item_type.icon }}"
+     data-track="{{ item_type.hasTrackUpload ? '1' : '0' }}">
+  <div class="ey">{{ item_type.eyebrow }} · {{ item_type.letter }} · {{ item_type.label }}</div>
   <h1 class="disp">{{ 'improve.title'|trans }}</h1>
   <p class="sub">{{ 'improve.lead'|trans }}</p>
 
@@ -167,18 +173,28 @@
     </div>
   </section>
 
-  {# STEP 2 — DETAILS #}
+  {# STEP 2 — DETAILS (type-aware: Fix-details + Add-missing panes) #}
   <section class="pane" data-s="2" id="w-details">
     <h2>{{ 'improve.step2.heading'|trans }}</h2>
     <p class="help">{{ 'improve.step2.help'|trans }}</p>
-    <div class="field">
-      <label for="{{ form.whatChanged.vars.id }}">{{ 'improve.step2.what_changed_label'|trans }}</label>
-      {{ form_widget(form.whatChanged, {attr: {placeholder: 'improve.step2.what_changed_placeholder'|trans}}) }}
-    </div>
-    <div class="field">
-      <label for="{{ form.note.vars.id }}">{{ 'improve.step2.note_label'|trans }}</label>
-      {{ form_widget(form.note, {attr: {placeholder: 'improve.step2.note_placeholder'|trans}}) }}
-    </div>
+
+    <h3 class="subhead">{{ 'improve.step2.fix_heading'|trans }}</h3>
+    {% for child in form.details %}
+      <div class="field">
+        {{ form_label(child) }}
+        {{ form_widget(child) }}
+      </div>
+    {% endfor %}
+
+    {% if form.extras|length > 0 %}
+      <h3 class="subhead">{{ 'improve.step2.add_heading'|trans }}</h3>
+      {% for child in form.extras %}
+        <div class="field">
+          {{ form_label(child) }}
+          {{ form_widget(child) }}
+        </div>
+      {% endfor %}
+    {% endif %}
   </section>
 
   {# STEP 3 — PHOTOS & VIDEO #}

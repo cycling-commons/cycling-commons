@@ -13,7 +13,12 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Improve page: auth-gate, rendering, and CSRF-protected POST to the contribution stub.
+ * Improve page: auth-gate, type-aware rendering (A–K), and CSRF-protected POST
+ * to the contribution stub.
+ *
+ * The wizard's Details step is driven by the catalog registry — each type
+ * renders its own Fix-details (`improve[details][*]`) and Add-missing
+ * (`improve[extras][*]`) fields. Persistence is still stubbed.
  *
  * All tests use a plain ROLE_USER to avoid triggering TwoFactorSetupEnforcer
  * (which redirects elevated roles without a TOTP secret to /2fa/setup).
@@ -61,6 +66,14 @@ final class ImproveTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    private function loginFreshUser(KernelBrowser $client, string $tag): void
+    {
+        $email = "improve-{$tag}@example.com";
+        $plain = 'securepass12345!';
+        $this->createUser($email, $plain);
+        $this->loginAs($client, $email, $plain);
+    }
+
     // ── Auth-gate ────────────────────────────────────────────────────────────
 
     public function testAnonGetImproveRedirectsToLogin(): void
@@ -71,40 +84,73 @@ final class ImproveTest extends WebTestCase
         self::assertResponseRedirects('/login', 302);
     }
 
-    // ── Authenticated GET ────────────────────────────────────────────────────
+    // ── Authenticated GET — default type (D · bike services) ─────────────────
 
-    public function testAuthenticatedUserCanGetImprovePage(): void
+    public function testDefaultTypeRendersItsOwnFields(): void
     {
         $client = static::createClient();
-
-        $email = 'improve-get@example.com';
-        $plain = 'securepass12345!';
-        $this->createUser($email, $plain);
-        $this->loginAs($client, $email, $plain);
+        $this->loginFreshUser($client, 'get');
 
         $client->request('GET', '/improve');
 
         self::assertResponseIsSuccessful();
-        // Wizard heading present
         self::assertSelectorTextContains('h1.disp', 'Improve or add a place');
-        // Step 1 is active
         self::assertSelectorExists('.stepper li.on');
-        // whatChanged field present in DOM
-        self::assertSelectorExists('[name="improve[whatChanged]"]');
+        // No-param fallback is D · bike services — its typed fields, not a
+        // generic "what changed" textarea.
+        self::assertSelectorExists('[name="improve[details][pumpValve]"]');
+        self::assertSelectorNotExists('[name="improve[whatChanged]"]');
     }
 
-    // ── Authenticated GET with query params (deep-link) ──────────────────────
+    // ── Type-aware rendering ─────────────────────────────────────────────────
+
+    public function testTypeQueryRendersThatTypesFields(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'water');
+
+        $client->request('GET', '/improve?type=water-food');
+
+        self::assertResponseIsSuccessful();
+        // Water & food keeps the "Unsigned — use judgement" potable option.
+        self::assertSelectorExists('[name="improve[details][potable]"]');
+        self::assertSelectorNotExists('[name="improve[details][pumpValve]"]');
+    }
+
+    public function testRoadSurfaceExposesSegmentLocationMode(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'surface');
+
+        $client->request('GET', '/improve?type=road-surface&mode=add');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[name="improve[details][surface]"]');
+        // The client wizard reads how to set the location off the container.
+        self::assertSelectorExists('#wiz[data-location-mode="segment"]');
+    }
+
+    public function testRideExposesTrackUploadMode(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'ride');
+
+        $client->request('GET', '/improve?type=quality-rides&mode=add');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[name="improve[details][rideName]"]');
+        self::assertSelectorExists('#wiz[data-location-mode="none"]');
+        self::assertSelectorExists('#wiz[data-track="1"]');
+    }
+
+    // ── Deep-link with an opaque feature id still resolves ────────────────────
 
     public function testDeepLinkWithItemAndModeReturns200(): void
     {
         $client = static::createClient();
+        $this->loginFreshUser($client, 'deep');
 
-        $email = 'improve-deep@example.com';
-        $plain = 'securepass12345!';
-        $this->createUser($email, $plain);
-        $this->loginAs($client, $email, $plain);
-
-        $client->request('GET', '/improve?item=water-fountain&mode=add');
+        $client->request('GET', '/improve?type=water-food&item=water-fountain&mode=add');
 
         self::assertResponseIsSuccessful();
     }
@@ -114,30 +160,25 @@ final class ImproveTest extends WebTestCase
     public function testValidPostShowsHonestStubReceipt(): void
     {
         $client = static::createClient();
-
-        $email = 'improve-post@example.com';
-        $plain = 'securepass12345!';
-        $this->createUser($email, $plain);
-        $this->loginAs($client, $email, $plain);
+        $this->loginFreshUser($client, 'post');
 
         $crawler = $client->request('GET', '/improve');
         self::assertResponseIsSuccessful();
 
         // Select the "Next →" button to get the right form (not nav logout form).
         $form = $crawler->selectButton('Next →')->form([
-            'improve[whatChanged]' => 'The water fountain is now operational. It has a dog bowl too.',
-            'improve[note]' => 'Open year-round, tested July 2026.',
-            'improve[lat]' => '50.499',
-            'improve[lng]' => '5.739',
-            'improve[place]' => 'Remouchamps, Wallonia',
+            'improve[details][name]' => 'Malmedy repair point',
+            'improve[details][correction]' => 'A work stand was added this spring.',
+            'improve[lat]' => '50.426',
+            'improve[lng]' => '6.027',
+            'improve[place]' => 'Malmedy, Wallonia',
         ]);
         $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        // Honest stub state: queued for review / not yet persisted
+        // Honest stub state: queued for review / not yet persisted.
         self::assertSelectorTextContains('.receipt h2', 'Suggestion submitted.');
         self::assertSelectorTextContains('.receipt .stub-note', 'not yet persisted');
-        // Reference is present (CC- prefix)
         self::assertSelectorTextContains('.receipt .ref', 'CC-');
     }
 }

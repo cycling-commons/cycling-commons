@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\ItemType;
 use App\Entity\User;
 use App\Form\AddClimbType;
 use App\Form\ImproveType;
@@ -112,7 +113,11 @@ final class ContributeController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function improve(Request $request): Response
     {
-        $form = $this->createForm(ImproveType::class);
+        // ?type=<A–K slug> picks the type-aware form; unknown/absent → the
+        // default (D · bike services), mirroring the demo's fallback item.
+        $type = ItemType::fromSlug($request->query->getString('type'));
+
+        $form = $this->createForm(ImproveType::class, null, ['catalog_type' => $type]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -121,12 +126,14 @@ final class ContributeController extends AbstractController
             /** @var User $user */
             $user = $this->getUser();
 
-            $receipt = $this->contributionStub->submit('improve', $data, $user);
+            // TODO(data-api): persist the catalog edit via the data API (later spec).
+            $receipt = $this->contributionStub->submit('improve', ['type' => $type->value] + $data, $user);
 
             return $this->render('contribute/improve.html.twig', [
                 'page_title' => 'meta.improve_title',
                 'page_description' => 'meta.improve_description',
                 'nav_active' => 'improve',
+                'item_type' => $type,
                 'receipt' => $receipt,
                 'form' => null,
             ]);
@@ -136,6 +143,7 @@ final class ContributeController extends AbstractController
             'page_title' => 'meta.improve_title',
             'page_description' => 'meta.improve_description',
             'nav_active' => 'improve',
+            'item_type' => $type,
             'receipt' => null,
             'form' => $form,
         ]);
