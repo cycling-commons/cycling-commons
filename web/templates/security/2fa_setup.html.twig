@@ -3,6 +3,7 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
 <style>
   .setup-wrap{max-width:560px;margin:0 auto;padding:2.4rem 1.4rem 4rem}
   .setup-wrap h1{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.6rem);line-height:1.06;letter-spacing:-.02em;color:var(--ink)}
@@ -26,6 +27,8 @@
 </style>
 {% endblock %}
 
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'settings'} %}{% endblock %}
+
 {% block body %}
 <div class="setup-wrap">
 
@@ -46,7 +49,7 @@
       {{ 'twofactor.setup.complete_warn'|trans }}
     </p>
 
-    <a class="done-link" href="{{ path('home') }}">{{ 'twofactor.setup.done'|trans }}</a>
+    <a class="done-link" href="{{ path('profile') }}">{{ 'twofactor.setup.done'|trans }}</a>
 
   {% else %}
     <h1>{{ 'twofactor.setup.h1'|trans }}</h1>
