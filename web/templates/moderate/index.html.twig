@@ -1,12 +1,13 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
 <style>
-  .mh{background:var(--ink);color:var(--paper);padding:2.4rem 0 2rem}
-  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ochre);margin-bottom:.6rem}
-  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem}
-  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
-  .mh .pend-count{font-family:var(--mono);font-size:.68rem;color:var(--ochre);margin-left:.8rem}
+  .mh{padding:2rem 0 1.4rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
+  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
+  .mh .pend-count{font-family:var(--mono);font-size:.68rem;color:var(--clay);margin-left:.8rem}
 
   .stub-banner{background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:7px;padding:.75rem 1.1rem;font-size:.83rem;color:#6b5320;margin:1.6rem 0;line-height:1.5}
   .stub-banner b{color:#B5532E}
@@ -25,6 +26,9 @@
   .q-now{color:var(--trail)}
   .q-actions{margin-top:.9rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.9rem}
   .q-act-form textarea{display:none}
+  .q-decision-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}
+  .q-decision-row label{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:0}
+  .q-decision-row select{max-width:220px}
   .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
   .btn-act{font-family:var(--sans);font-weight:700;font-size:.82rem;padding:.6rem 1rem;border-radius:5px;border:none;cursor:pointer}
   .btn-approve{background:#3e7d4f;color:#fff}
@@ -42,6 +46,9 @@
   .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
 </style>
 {% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate'} %}{% endblock %}
+
 {% block body %}
 <div class="mh">
   <div class="wrap">

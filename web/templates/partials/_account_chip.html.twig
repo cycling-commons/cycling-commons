@@ -1,0 +1,23 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Logged-in account chip + dropdown. Reused in the public topnav AND the
+   account-shell dtop so the account menu is identical on every logged-in
+   surface. Assumes app.user is set. Wired by assets/js/nav-menus.js. #}
+{% set _words = app.user.displayName|trim|split(' ') %}
+{% set _initials = (_words|length > 1 ? _words|first|first ~ _words|last|first : app.user.displayName|trim|slice(0, 2))|upper %}
+<div class="acct-menu" data-nav-menu>
+  <button type="button" class="acct-chip" data-nav-toggle aria-haspopup="true" aria-expanded="false" aria-controls="cc-acct-dd">
+    <span class="av" aria-hidden="true">{{ _initials }}</span>
+    <span class="acct-name">{{ app.user.displayName }}</span>
+    <svg class="acct-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
+  <div class="acct-dropdown" id="cc-acct-dd" data-nav-dd role="menu" hidden>
+    <a role="menuitem" href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
+    <a role="menuitem" href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
+    {% if is_granted('ROLE_CURATOR') %}<a role="menuitem" href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}</a>{% endif %}
+    {% if is_granted('ROLE_ADMIN') %}<a role="menuitem" href="{{ path('admin') }}">{{ 'nav.admin'|trans }}</a>{% endif %}
+    <form method="post" action="{{ path('logout') }}" role="none">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+      <button type="submit" role="menuitem">{{ 'nav.logout'|trans }}</button>
+    </form>
+  </div>
+</div>

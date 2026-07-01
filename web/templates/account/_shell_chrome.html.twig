@@ -1,12 +1,9 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
-{# Shared account-shell chrome: demo banner + dark identity bar + account tabs.
-   Included by the dashboard (/profile), settings (/settings) and 2FA setup so
-   the logged-in account area is one continuous environment.
-   Param: `active` = contrib | votes | saved | settings. Needs `cc_user`. #}
-{# Works whether the page passes `cc_user` (dashboard/settings) or not (2FA). #}
-{% set _u = cc_user|default(app.user) %}
-{% set _words = _u.displayName|trim|split(' ') %}
-{% set _initials = (_words|length > 1 ? _words|first|first ~ _words|last|first : _u.displayName|trim|slice(0, 2))|upper %}
+{# Shared account-shell chrome: demo banner + dark identity bar + section tabs.
+   Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
+   moderation queue (/moderate) so the logged-in area is one continuous
+   environment with the same account chip used in the public nav.
+   Param: `active` = contrib | votes | saved | settings | moderate. #}
 {% set active = active|default('contrib') %}
 <div class="demo-banner"><b>Demo</b> — {{ 'account.demo_banner'|trans }}</div>
 <header class="dtop">
@@ -14,18 +11,13 @@
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
     <div class="brandsub"><span class="cc-coord">N 48.87° · E 2.29°</span><br>{{ 'account.brandsub'|trans }}</div>
   </div>
-  <div class="who">
-    <span class="uname">{{ _u.displayName }}</span>
-    <span class="av" aria-hidden="true">{{ _initials }}</span>
-    <form method="post" action="{{ path('logout') }}" style="display:inline">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
-      <button type="submit" class="out">{{ 'account.sign_out'|trans }}</button>
-    </form>
-  </div>
+  {% include 'partials/_account_chip.html.twig' %}
 </header>
 <nav class="dtabs" aria-label="{{ 'account.sections'|trans }}">
   <a href="{{ path('profile') }}" data-pane="contrib" class="{{ active == 'contrib' ? 'on' : '' }}">{{ 'account.tab_contributions'|trans }}</a>
   <a href="{{ path('profile') }}?tab=votes" data-pane="votes" class="{{ active == 'votes' ? 'on' : '' }}">{{ 'account.tab_votes'|trans }}</a>
   <a href="{{ path('profile') }}?tab=saved" data-pane="saved" class="{{ active == 'saved' ? 'on' : '' }}">{{ 'account.tab_saved'|trans }}</a>
-  <a href="{{ path('settings') }}" data-pane="settings" class="{{ active == 'settings' ? 'on' : '' }}">{{ 'account.tab_settings'|trans }}</a>
+  {% if is_granted('ROLE_CURATOR') %}
+    <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}</a>
+  {% endif %}
 </nav>

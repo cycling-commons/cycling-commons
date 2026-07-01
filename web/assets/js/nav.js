@@ -83,7 +83,13 @@
   ready(function () {
     var links = findNavLinks();
     if (!links) return;                         // nothing collapsible on this page
-    var anchors = links.querySelectorAll('a');
+    // Exclude the account chip's dropdown links: that menu manages its own
+    // open/close, so its anchors must not be cloned into the drawer or toggled
+    // by fit() (fit would set display:none on them and break the open dropdown).
+    var anchors = Array.prototype.filter.call(
+      links.querySelectorAll('a'),
+      function (a) { return !a.closest('[data-nav-menu]'); }
+    );
     if (!anchors.length) return;
 
     injectStyles();
@@ -160,7 +166,10 @@
     //   blocks + burger               → links all in the drawer
     //   burger only                   → even the blocks don't fit
     var navBar = links.parentNode;
-    var inlineAnchors = Array.prototype.slice.call(links.querySelectorAll('a'));
+    var inlineAnchors = Array.prototype.filter.call(
+      links.querySelectorAll('a'),
+      function (a) { return !a.closest('[data-nav-menu]'); }
+    );
     var inlineSub = inlineAnchors.filter(function (a) {
       return !a.classList.contains('acct') && !a.classList.contains('nav-cta');
     });

@@ -14,16 +14,21 @@
     <a href="{{ path('licenses') }}"{% if a == 'licenses' %} class="on"{% endif %}>{{ 'nav.licence'|trans }}</a>
     <a class="acct join" href="{{ path('join') }}">{{ 'nav.get_involved'|trans }}</a>
     <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>
+    {% set _locales = {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch'} %}
+    <div class="lang-menu" data-nav-menu>
+      <button type="button" class="lang-chip" data-nav-toggle aria-haspopup="true" aria-expanded="false" aria-controls="cc-lang-dd" aria-label="{{ 'nav.language'|trans }}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
+        <span>{{ app.request.locale|upper }}</span>
+        <svg class="lang-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="acct-dropdown lang-dropdown" id="cc-lang-dd" data-nav-dd role="menu" hidden>
+        {% for code, label in _locales %}
+          <a role="menuitem" href="{{ path('locale_switch', {_locale: code}) }}"{% if app.request.locale == code %} aria-current="true"{% endif %}>{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
     {% if app.user %}
-      <a class="acct" href="{{ path('profile') }}">{{ 'nav.profile'|trans }}</a>
-      <a class="acct" href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
-      {% if is_granted('ROLE_CURATOR') %}
-        <a class="acct" href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}</a>
-      {% endif %}
-      {% if is_granted('ROLE_ADMIN') %}
-        <a class="acct" href="{{ path('admin') }}">{{ 'nav.admin'|trans }}</a>
-      {% endif %}
-      <form method="post" action="{{ path('logout') }}" style="display:inline"><input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}"><button type="submit" class="acct">{{ 'nav.logout'|trans }}</button></form>
+      {% include 'partials/_account_chip.html.twig' %}
     {% else %}
       <a class="acct" href="{{ path('login') }}">{{ 'nav.login'|trans }}</a>
     {% endif %}
