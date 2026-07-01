@@ -13,3 +13,8 @@ services:
         public: true
         autowire: true
         autoconfigure: true
+
+    App\Service\UserAdminService:
+        public: true
+        autowire: true
+        autoconfigure: true

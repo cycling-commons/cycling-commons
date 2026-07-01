@@ -41,4 +41,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->findOneBy(['email' => $email]);
     }
+
+    /**
+     * Count users whose stored roles JSON contains the given role.
+     * Postgres jsonb containment; roles is stored as JSON text like ["ROLE_ADMIN"].
+     */
+    public function countWithRole(string $role): int
+    {
+        $sql = 'SELECT COUNT(*) FROM users WHERE roles::jsonb @> :role::jsonb';
+
+        return (int) $this->getEntityManager()->getConnection()
+            ->executeQuery($sql, ['role' => json_encode([$role])])
+            ->fetchOne();
+    }
 }
