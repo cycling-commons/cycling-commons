@@ -1094,3 +1094,23 @@ js:
   err_mismatch: 'Les mots de passe ne correspondent pas.'
   err_checkbox: 'Veuillez cocher cette case pour continuer.'
   err_terms: 'Vous devez accepter les conditions d''utilisation.'
+admin:
+  action:
+    unlock: 'Déverrouiller le compte'
+    disarm_2fa: 'Désactiver la 2FA'
+    verify_email: "Marquer l'e-mail comme vérifié"
+    unverify_email: "Annuler la vérification de l'e-mail"
+    grant_curator: 'Accorder curateur'
+    revoke_curator: 'Retirer curateur'
+    grant_admin: 'Accorder admin'
+    revoke_admin: 'Retirer admin'
+    remove_account: 'Supprimer le compte'
+    cancel_removal: 'Annuler la suppression'
+  flash:
+    unlocked: 'Compte déverrouillé.'
+    2fa_disarmed: 'Authentification à deux facteurs désactivée.'
+    email_verified: "E-mail marqué comme vérifié."
+    email_unverified: "Vérification de l'e-mail annulée."
+    role_changed: 'Rôles mis à jour.'
+    account_removed: 'Compte supprimé.'
+    removal_cancelled: 'Suppression en attente annulée.'

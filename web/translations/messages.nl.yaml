@@ -1094,3 +1094,23 @@ js:
   err_mismatch: 'De wachtwoorden komen niet overeen.'
   err_checkbox: 'Vink dit vakje aan om door te gaan.'
   err_terms: 'Je moet akkoord gaan met de servicevoorwaarden.'
+admin:
+  action:
+    unlock: 'Account ontgrendelen'
+    disarm_2fa: '2FA uitschakelen'
+    verify_email: 'E-mail als geverifieerd markeren'
+    unverify_email: 'E-mailverificatie intrekken'
+    grant_curator: 'Curator toekennen'
+    revoke_curator: 'Curator intrekken'
+    grant_admin: 'Beheerder toekennen'
+    revoke_admin: 'Beheerder intrekken'
+    remove_account: 'Account verwijderen'
+    cancel_removal: 'Verwijdering annuleren'
+  flash:
+    unlocked: 'Account ontgrendeld.'
+    2fa_disarmed: 'Tweefactorauthenticatie uitgeschakeld.'
+    email_verified: 'E-mail als geverifieerd gemarkeerd.'
+    email_unverified: 'E-mailverificatie ingetrokken.'
+    role_changed: 'Rollen bijgewerkt.'
+    account_removed: 'Account verwijderd.'
+    removal_cancelled: 'Openstaande verwijdering geannuleerd.'

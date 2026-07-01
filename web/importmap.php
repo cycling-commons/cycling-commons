@@ -16,4 +16,8 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+    'admin_confirm' => [
+        'path' => './assets/admin_confirm.js',
+        'entrypoint' => true,
+    ],
 ];

@@ -1094,3 +1094,23 @@ js:
   err_mismatch: 'The password fields must match.'
   err_checkbox: 'Please check this box to continue.'
   err_terms: 'You must agree to the terms of service.'
+admin:
+  action:
+    unlock: 'Unlock account'
+    disarm_2fa: 'Disarm 2FA'
+    verify_email: 'Mark email verified'
+    unverify_email: 'Unverify email'
+    grant_curator: 'Grant curator'
+    revoke_curator: 'Revoke curator'
+    grant_admin: 'Grant admin'
+    revoke_admin: 'Revoke admin'
+    remove_account: 'Remove account'
+    cancel_removal: 'Cancel removal'
+  flash:
+    unlocked: 'Account unlocked.'
+    2fa_disarmed: 'Two-factor authentication disarmed.'
+    email_verified: 'Email marked as verified.'
+    email_unverified: 'Email verification revoked.'
+    role_changed: 'Roles updated.'
+    account_removed: 'Account removed.'
+    removal_cancelled: 'Pending removal cancelled.'

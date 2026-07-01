@@ -1094,3 +1094,23 @@ js:
   err_mismatch: 'Die Passwörter stimmen nicht überein.'
   err_checkbox: 'Bitte aktiviere dieses Kästchen, um fortzufahren.'
   err_terms: 'Du musst den Nutzungsbedingungen zustimmen.'
+admin:
+  action:
+    unlock: 'Konto entsperren'
+    disarm_2fa: '2FA deaktivieren'
+    verify_email: 'E-Mail als verifiziert markieren'
+    unverify_email: 'E-Mail-Verifizierung aufheben'
+    grant_curator: 'Kurator gewähren'
+    revoke_curator: 'Kurator entziehen'
+    grant_admin: 'Admin gewähren'
+    revoke_admin: 'Admin entziehen'
+    remove_account: 'Konto entfernen'
+    cancel_removal: 'Entfernung abbrechen'
+  flash:
+    unlocked: 'Konto entsperrt.'
+    2fa_disarmed: 'Zwei-Faktor-Authentifizierung deaktiviert.'
+    email_verified: 'E-Mail als verifiziert markiert.'
+    email_unverified: 'E-Mail-Verifizierung aufgehoben.'
+    role_changed: 'Rollen aktualisiert.'
+    account_removed: 'Konto entfernt.'
+    removal_cancelled: 'Ausstehende Entfernung abgebrochen.'

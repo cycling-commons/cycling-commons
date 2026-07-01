@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
@@ -39,9 +40,15 @@ final class DashboardController extends AbstractDashboardController
     }
 
     #[\Override]
+    public function configureAssets(): Assets
+    {
+        return Assets::new()->addAssetMapperEntry('admin_confirm');
+    }
+
+    #[\Override]
     public function configureMenuItems(): iterable
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
-        yield MenuItem::linkTo('Users', 'fa fa-users', UserCrudController::class);
+        yield MenuItem::linkTo(UserCrudController::class, 'Users', 'fa fa-users')->setAction('index');
     }
 }
