@@ -193,11 +193,21 @@
         refreshGate();
       }
 
+      // Confirm on release that the corrected location was captured — syncLoc()
+      // has already written it to the hidden lat/lng fields the form submits.
+      function announceMove() {
+        if (WZ.loc && WZ.loc.type === 'point') {
+          toast('Pin moved to ' + WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E — submit to record it');
+        } else if (WZ.loc && WZ.loc.type === 'segment') {
+          toast('Segment updated — submit to record it');
+        }
+      }
+
       wmap.on('click', function (e) {
         var need = LOCATE === 'segment' ? 2 : 1;
         if (placed.length >= need) { placed.forEach(function (m) { m.remove(); }); placed.length = 0; }
         var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(e.lngLat).addTo(wmap);
-        m.on('dragend', function () { syncLoc(); drawSeg(); });
+        m.on('dragend', function () { syncLoc(); drawSeg(); announceMove(); });
         placed.push(m);
         syncLoc();
         drawSeg();
@@ -208,7 +218,7 @@
       if (hasCoords && LOCATE === 'point') {
         wmap.on('load', function () {
           var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat([initLng, initLat]).addTo(wmap);
-          m.on('dragend', function () { syncLoc(); });
+          m.on('dragend', function () { syncLoc(); announceMove(); });
           placed.push(m);
           syncLoc();
         });
