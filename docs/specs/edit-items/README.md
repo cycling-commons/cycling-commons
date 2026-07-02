@@ -68,6 +68,27 @@ it varies by type:
 - `[tap]` — one-tap community confirmation ("still here / still true").
 - `[edit]` — a richer community edit (typed fields, ratings, notes).
 
+## Change history & field-level diffs
+Every catalog item keeps a **per-field change history** — the durable record behind the
+`[edit]` tag. Each accepted change appends one entry:
+
+- **what** — the field that changed, with its **old value → new value** (a field-level diff);
+- **who** — the contributor (kept for provenance; identity stays opt-in public per the profile rules);
+- **when** — a timestamp.
+
+The history is **append-only** and per item: a submission is one entry, a later correction (by a
+rider or a curator) is another. It is the source of truth for:
+
+- the **moderation "was → now" diff** a curator reviews before deciding
+  (see [`2026-07-02-map-based-moderation-design.md`](../2026-07-02-map-based-moderation-design.md));
+- an item's public "last confirmed / last edited" line and the freshness signal;
+- honest provenance — we can always show *what* changed and *when*, without exposing rider tracks.
+
+**Persistence is deferred to the data-API** — there is no history table yet. In the demo/stub era the
+diff is carried by the `was`/`now` fixture fields (e.g. `SampleQueue`); when the data-API lands, the
+service that replaces `ContributionStubService` writes one history entry per accepted change, and the
+per-type forms' submissions become history entries rather than throwaway stub receipts.
+
 ## Item lifecycle and votability
 
 Every catalog item moves through a lifecycle. The **map's view-mode toggle (Best-of ↔ Everything) is
