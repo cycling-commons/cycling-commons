@@ -11,21 +11,29 @@
   var _id = _q.get('item') || '';
   var ADD = _q.get('mode') === 'add';
 
+  // An existing item's coordinates, when we arrive from the map's "Edit this
+  // item" link (?lat=&lng=). We show the map centred there so the contributor
+  // can SEE and correct the location — not just when adding a new place.
+  var initLat = parseFloat(_q.get('lat'));
+  var initLng = parseFloat(_q.get('lng'));
+  var hasCoords = !isNaN(initLat) && !isNaN(initLng);
+
   // The catalog type + how to set its location come from the server (the
   // controller resolves ?type= into ItemType and renders these on #wiz).
   var _type = wiz.dataset.type || '';
   var _locMode = wiz.dataset.locationMode || 'point';
   var typeName = wiz.dataset.type ? wiz.dataset.type.replace(/-/g, ' ') : 'place';
 
-  // Registry defaults (a generic Wallonia centre; the pin glyph is per-type)
+  // Registry defaults (item coords when editing, else a generic Wallonia centre)
   var DEFAULTS = {
-    center: [5.86, 50.49],
+    center: hasCoords ? [initLng, initLat] : [5.86, 50.49],
     icon: wiz.dataset.icon || '✎'
   };
 
-  // Locate mode: point (most), segment (road surface), none/track (ride) —
-  // only active in add mode; editing an existing item skips step 1.
-  var LOCATE = !ADD ? 'off' : _locMode;
+  // Locate mode: point (most), segment (road surface), none/track (ride).
+  // Show the map when adding a place, OR when editing one that has coordinates
+  // (so its location is visible and correctable); otherwise skip step 1.
+  var LOCATE = (ADD || hasCoords) ? _locMode : 'off';
 
   // Wizard state
   var WZ = { cur: 1, last: 4, loc: null, media: [] };
@@ -135,7 +143,7 @@
         container: 'wmap',
         style: 'https://tiles.openfreemap.org/styles/liberty',
         center: DEFAULTS.center,
-        zoom: 12,
+        zoom: hasCoords ? 14 : 12,
         attributionControl: false
       });
       wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
@@ -194,6 +202,17 @@
         syncLoc();
         drawSeg();
       });
+
+      // Editing a located point: pre-place the pin at the item's coordinates so
+      // the map opens on it and the contributor can drag to correct it.
+      if (hasCoords && LOCATE === 'point') {
+        wmap.on('load', function () {
+          var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat([initLng, initLat]).addTo(wmap);
+          m.on('dragend', function () { syncLoc(); });
+          placed.push(m);
+          syncLoc();
+        });
+      }
 
       var wzReset = document.getElementById('wzReset');
       if (wzReset) {
