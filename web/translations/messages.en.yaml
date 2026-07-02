@@ -940,6 +940,7 @@ moderate:
     needs_info: 'Needs info'
     decision_label: 'Decision'
     submit: 'Record decision'
+    view: 'View on map ↗'
   error:
     submission_id_required: 'Submission ID is required.'
     decision_required: 'A decision is required.'

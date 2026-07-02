@@ -21,6 +21,7 @@ final class SampleQueue
      * Each item is a map with:
      *   id       int
      *   type     string  new|edit|hazard|photo
+     *   letter   string  catalog letter A-K (the item's editable type)
      *   title    string
      *   lat      float
      *   lng      float
@@ -30,7 +31,7 @@ final class SampleQueue
      *   was      string  (optional) previous value for edit items
      *   now      string  (optional) new value for edit items
      *
-     * @return list<array{id:int,type:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}>
+     * @return list<array{id:int,type:string,letter:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}>
      */
     public static function items(): array
     {
@@ -39,6 +40,7 @@ final class SampleQueue
                 'id' => 1,
                 'type' => 'new',
                 'title' => 'Côte de la Vecquée',
+                'letter' => 'B',
                 'lat' => 50.47,
                 'lng' => 5.86,
                 'who' => 'rider#4f2a',
@@ -51,6 +53,7 @@ final class SampleQueue
                 'id' => 2,
                 'type' => 'hazard',
                 'title' => 'Road closure · N66',
+                'letter' => 'F',
                 'lat' => 50.42,
                 'lng' => 5.80,
                 'who' => 'rider#9c01',
@@ -63,6 +66,7 @@ final class SampleQueue
                 'id' => 3,
                 'type' => 'edit',
                 'title' => 'Repair station · Malmedy',
+                'letter' => 'D',
                 'lat' => 50.426,
                 'lng' => 6.027,
                 'who' => 'rider#1ab8',
@@ -75,6 +79,7 @@ final class SampleQueue
                 'id' => 4,
                 'type' => 'photo',
                 'title' => 'Signal de Botrange — viewpoint',
+                'letter' => 'I',
                 'lat' => 50.501,
                 'lng' => 6.094,
                 'who' => 'rider#7d33',
@@ -87,6 +92,7 @@ final class SampleQueue
                 'id' => 5,
                 'type' => 'new',
                 'title' => 'Gîte des Fagnes',
+                'letter' => 'E',
                 'lat' => 50.49,
                 'lng' => 6.05,
                 'who' => 'rider#2e55',
@@ -99,6 +105,7 @@ final class SampleQueue
                 'id' => 6,
                 'type' => 'edit',
                 'title' => 'Fountain · Spa centre',
+                'letter' => 'C',
                 'lat' => 50.4925,
                 'lng' => 5.8639,
                 'who' => 'rider#88fa',

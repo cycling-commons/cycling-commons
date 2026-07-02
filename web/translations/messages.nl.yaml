@@ -940,6 +940,7 @@ moderate:
     needs_info: 'Meer info nodig'
     decision_label: 'Beslissing'
     submit: 'Beslissing registreren'
+    view: 'Op de kaart bekijken ↗'
   error:
     submission_id_required: 'Inzending-ID is verplicht.'
     decision_required: 'Een beslissing is verplicht.'

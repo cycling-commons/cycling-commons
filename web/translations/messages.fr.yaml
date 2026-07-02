@@ -940,6 +940,7 @@ moderate:
     needs_info: 'Informations manquantes'
     decision_label: 'Décision'
     submit: 'Enregistrer la décision'
+    view: 'Voir sur la carte ↗'
   error:
     submission_id_required: 'L''identifiant de soumission est requis.'
     decision_required: 'Une décision est requise.'

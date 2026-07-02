@@ -124,6 +124,41 @@ final class ModerateTest extends WebTestCase
         self::assertSelectorExists('.q-act-form');
     }
 
+    /**
+     * Each queue item must be viewable: a link that opens the item at its
+     * coordinates (in a new tab) so the curator can see and correct the
+     * location on the map before deciding.
+     */
+    public function testQueueItemsLinkToViewSubmissionAtItsLocation(): void
+    {
+        $client = static::createClient();
+
+        $curator = $this->createUser(
+            'moderate-view@example.com',
+            'hunter2secure!',
+            roles: ['ROLE_CURATOR'],
+            totpSecret: 'JBSWY3DPEHPK3PXP',
+            twoFaEnabled: true,
+        );
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/moderate');
+        self::assertResponseIsSuccessful();
+
+        // One view link per sample item, opening in a new tab.
+        $viewLinks = $crawler->filter('.q-item a.q-view[target="_blank"]');
+        self::assertSame(count(SampleQueue::items()), $viewLinks->count());
+
+        // The first item (a climb at 50.47,5.86) links to the editor at its
+        // coordinates with the right catalog type (B · climbs).
+        $href = (string) $viewLinks->first()->attr('href');
+        self::assertStringContainsString('/improve', $href);
+        self::assertStringContainsString('type=B', $href);
+        self::assertStringContainsString('lat=50.47', $href);
+        self::assertStringContainsString('lng=5.86', $href);
+        self::assertStringContainsString('noopener', (string) $viewLinks->first()->attr('rel'));
+    }
+
     // ── Decision POST ────────────────────────────────────────────────────────
 
     /**

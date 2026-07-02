@@ -12,7 +12,13 @@
     <span class="q-when">{{ item.when }}</span>
   </div>
   <h3 class="q-title">{{ item.title }}</h3>
-  <div class="q-submitter">{{ item.who }} &middot; {{ item.lat|number_format(3) }}&deg;N {{ item.lng|number_format(3) }}&deg;E</div>
+  <div class="q-submitter">
+    {{ item.who }} &middot; {{ item.lat|number_format(3) }}&deg;N {{ item.lng|number_format(3) }}&deg;E
+    &middot;
+    <a class="q-view"
+       href="{{ path('improve', {type: item.letter, item: item.id, name: item.title, lat: item.lat, lng: item.lng}) }}"
+       target="_blank" rel="noopener">{{ 'moderate.action.view'|trans }}</a>
+  </div>
   {% if item.body %}
     <p class="q-body">{{ item.body }}</p>
   {% endif %}
