@@ -89,6 +89,17 @@
   .kv span:first-child{color:#595c4d}
   .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
 
+  /* votability / lifecycle context */
+  .lifecycle{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-left:2px solid var(--spruce);border-radius:0 8px 8px 0;padding:1.1rem 1.3rem;margin-top:1.3rem}
+  .lifecycle .lc-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-bottom:.7rem}
+  .lifecycle .lc-funnel{font-size:.86rem;color:#3f4234;line-height:1.6;margin-bottom:.6rem}
+  .lifecycle .lc-funnel b{white-space:nowrap}
+  .lifecycle .lc-verdict{font-size:.9rem;line-height:1.6;color:var(--ink);margin-bottom:.6rem}
+  .lifecycle .lc-verdict.is-votable{border-left:2px solid var(--trail);padding-left:.7rem}
+  .lifecycle .lc-verdict.is-utility{border-left:2px solid var(--glacier);padding-left:.7rem}
+  .lifecycle .lc-prov{font-size:.76rem;color:#595c4d;line-height:1.6}
+  .lifecycle .lc-prov code{font-family:var(--mono);font-size:.72rem;background:rgba(20,22,14,.06);padding:.05rem .3rem;border-radius:3px}
+
   /* nav row */
   .navrow{position:sticky;bottom:0;display:flex;align-items:center;gap:1rem;margin-top:2rem;padding:1rem 0;border-top:1px solid rgba(20,22,14,.12);background:linear-gradient(to top,var(--paper) 70%,rgba(239,230,212,0))}
   .navrow .spacer{flex:1}
@@ -235,6 +246,17 @@
     <h2>{{ 'improve.step4.heading'|trans }}</h2>
     <p class="help">{{ 'improve.step4.help'|trans }}</p>
     <div class="card" id="reviewBody"></div>
+
+    {# Votability / lifecycle context — where this suggestion goes next #}
+    <div class="lifecycle">
+      <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
+      <p class="lc-funnel">{{ 'improve.lifecycle.funnel'|trans|raw }}</p>
+      <p class="lc-verdict {{ item_type.isVotable ? 'is-votable' : 'is-utility' }}">
+        {{ (item_type.isVotable ? 'improve.lifecycle.votable_note' : 'improve.lifecycle.utility_note')|trans({'%type%': item_type.label})|raw }}
+      </p>
+      <p class="lc-prov">{{ 'improve.lifecycle.provenance'|trans|raw }}</p>
+    </div>
+
     <p class="prov">{{ 'improve.step4.prov'|trans|raw }}</p>
   </section>
 

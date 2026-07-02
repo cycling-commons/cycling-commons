@@ -852,6 +852,12 @@ improve:
     heading: 'Controleren &amp; indienen'
     help: 'Controleer het even. Jouw suggestie gaat naar de beoordelingswachtrij van een curator voordat hij in de Commons komt.'
     prov: 'Goedgekeurde feiten komen in de open Commons terecht onder <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Herkomst wordt bijgehouden; identiteit niet.'
+  lifecycle:
+    heading: 'Wat er met je suggestie gebeurt'
+    funnel: 'Niets gaat meteen live. Elke suggestie doorloopt dezelfde trechter: <b>curatorcontrole</b> → <b>niet-geverifieerd</b> (een « help bevestigen »-stip op de kaart) → <b>geverifieerd</b> (een volledige speld, zodra een paar fietsers het bevestigen).'
+    votable_note: '<b>%type%</b> is een <b>stembaar</b> type — eenmaal geverifieerd stemmen fietsers het omhoog in de trechter richting de <b>best-of</b>-kaart.'
+    utility_note: '<b>%type%</b> is een <b>nuts</b>type — het wordt voor dekking geverifieerd zodra een paar fietsers het bevestigen, en altijd getoond; het wordt nooit gerangschikt of gestemd.'
+    provenance: 'Herkomst wordt per feit bewaard: <code>[tap]</code> een bevestiging met één tik · <code>[edit]</code> een rijkere bewerking zoals deze · <code>[OSM]</code> overgenomen uit OpenStreetMap · <code>[auto]</code> afgeleid door de pijplijn.'
   nav:
     back: 'Terug'
     next: 'Volgende'

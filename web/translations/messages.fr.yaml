@@ -852,6 +852,12 @@ improve:
     heading: 'Réviser & soumettre'
     help: 'Vérifiez. Votre suggestion est envoyée dans la file de révision d''un curateur avant de rejoindre le Commons.'
     prov: 'Les faits approuvés rejoignent le Commons ouvert sous <b>ODbL</b> (données) / <b>CC BY-SA 4.0</b> (médias). La provenance est conservée ; l''identité ne l''est pas.'
+  lifecycle:
+    heading: 'Ce qu''il advient de votre suggestion'
+    funnel: 'Rien n''est publié instantanément. Chaque suggestion suit le même entonnoir : <b>contrôle du curateur</b> → <b>non vérifié</b> (un point « à confirmer » sur la carte) → <b>vérifié</b> (une épingle complète, une fois confirmée par quelques cyclistes).'
+    votable_note: '<b>%type%</b> est un type <b>votable</b> — une fois vérifié, les cyclistes le font monter dans l''entonnoir vers la carte <b>best-of</b>.'
+    utility_note: '<b>%type%</b> est un type <b>utilitaire</b> — vérifié pour la couverture dès que quelques cyclistes le confirment, et toujours affiché ; jamais classé ni voté.'
+    provenance: 'La provenance est conservée par fait : <code>[tap]</code> une confirmation en un geste · <code>[edit]</code> une modification plus riche comme celle-ci · <code>[OSM]</code> repris d''OpenStreetMap · <code>[auto]</code> dérivé par le pipeline.'
   nav:
     back: 'Précédent'
     next: 'Suivant'

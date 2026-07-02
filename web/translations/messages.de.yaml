@@ -852,6 +852,12 @@ improve:
     heading: 'Prüfen &amp; einreichen'
     help: 'Überprüfe es noch einmal. Dein Vorschlag kommt in die Prüfwarteschlange eines Kurators, bevor er The Commons beitritt.'
     prov: 'Genehmigte Fakten treten dem offenen Commons unter <b>ODbL</b> (Daten) / <b>CC BY-SA 4.0</b> (Medien) bei. Provenienz wird festgehalten; Identität nicht.'
+  lifecycle:
+    heading: 'Was mit deinem Vorschlag geschieht'
+    funnel: 'Nichts geht sofort live. Jeder Vorschlag durchläuft denselben Trichter: <b>Kuratoren-Prüfung</b> → <b>unbestätigt</b> (ein „Bitte bestätigen“-Punkt auf der Karte) → <b>bestätigt</b> (eine vollständige Markierung, sobald einige Fahrer sie bestätigen).'
+    votable_note: '<b>%type%</b> ist ein <b>abstimmbarer</b> Typ — einmal bestätigt, stimmen Fahrer ihn im Trichter hoch zur <b>Best-of</b>-Karte.'
+    utility_note: '<b>%type%</b> ist ein <b>Nutz</b>typ — er wird zur Abdeckung bestätigt, sobald einige Fahrer ihn bestätigen, und immer angezeigt; er wird nie eingestuft oder gewählt.'
+    provenance: 'Die Herkunft wird pro Fakt festgehalten: <code>[tap]</code> eine Ein-Tipp-Bestätigung · <code>[edit]</code> eine reichere Bearbeitung wie diese · <code>[OSM]</code> aus OpenStreetMap übernommen · <code>[auto]</code> von der Pipeline abgeleitet.'
   nav:
     back: 'Zurück'
     next: 'Weiter'

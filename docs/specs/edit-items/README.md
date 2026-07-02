@@ -9,6 +9,23 @@ These specs are the **design source of truth** for [`atlas/demo/edit-items.js`](
 (the registry rendered by [`atlas/demo/improve.html`](../../../atlas/demo/improve.html)) and for the catalog
 [`2026-06-18-catalog-v2-and-per-type-forms.md`](../2026-06-18-catalog-v2-and-per-type-forms.md).
 
+## Production implementation (Symfony)
+
+The real, server-rendered port of this registry lives in the Symfony app:
+
+- **Catalog source of truth** — [`web/src/Catalog/`](../../../web/src/Catalog/): `ItemType` (the A–K enum
+  carrying letter/label/icon/eyebrow, `locationMode` point/segment/none, and `isVotable()` per the funnel
+  table below) and `CatalogFormRegistry` (each type's *Fix-details* + *Add-missing* fields, lifted from
+  `edit-items.js` to per-type schemas). `LocationMode`, `FieldKind`, `CatalogField`, `ItemFieldSet` support them.
+- **Type-aware form** — [`web/src/Form/ImproveType.php`](../../../web/src/Form/ImproveType.php) builds the
+  Details step from the registry; [`web/templates/contribute/improve.html.twig`](../../../web/templates/contribute/improve.html.twig)
+  renders it and surfaces this **votability/lifecycle context** in the review step.
+- **Reachability** — the contribute hub deep-links each card with `?type=<slug>`; the map drawer's Edit/Add-photo
+  links use `?type=<letter>` (`ItemType::fromParam()` resolves either).
+
+**Persistence is still stubbed** — every submission flows through `ContributionStubService`
+(`// TODO(data-api)`); there are no catalog-item domain entities yet. That's a later data-API spec.
+
 ## Common to every type
 These panes behave the same across all edit items, so the per-type specs don't repeat them:
 

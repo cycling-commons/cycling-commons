@@ -852,6 +852,12 @@ improve:
     heading: 'Review & submit'
     help: 'Check it over. Your suggestion goes to a curator''s review queue before it joins the Commons.'
     prov: 'Approved facts join the open Commons under <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Provenance is kept; identity is not.'
+  lifecycle:
+    heading: 'What happens to your suggestion'
+    funnel: 'Nothing goes live instantly. Every suggestion moves through the same funnel: <b>curator check</b> → <b>unverified</b> (a help-confirm dot on the map) → <b>verified</b> (a full pin, once a few riders confirm it).'
+    votable_note: '<b>%type%</b> is a <b>votable</b> type — once it is verified, riders vote it up the funnel toward the <b>best-of</b> map.'
+    utility_note: '<b>%type%</b> is a <b>utility</b> type — it is verified for coverage once a few riders confirm it, and always shown; it is never ranked or voted.'
+    provenance: 'Provenance is kept per fact: <code>[tap]</code> a one-tap confirmation · <code>[edit]</code> a richer edit like this one · <code>[OSM]</code> mirrored from OpenStreetMap · <code>[auto]</code> derived by the pipeline.'
   nav:
     back: 'Back'
     next: 'Next'

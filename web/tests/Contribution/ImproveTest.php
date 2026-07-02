@@ -143,6 +143,33 @@ final class ImproveTest extends WebTestCase
         self::assertSelectorExists('#wiz[data-track="1"]');
     }
 
+    // ── Votability / lifecycle context (funnel model) ────────────────────────
+
+    public function testVotableTypeShowsVotabilityContext(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'votable');
+
+        $client->request('GET', '/improve?type=climbs');
+
+        self::assertResponseIsSuccessful();
+        // Climbs (B) are a votable type — the wizard says so, tying into the
+        // verification→votable→best-of funnel from the edit-items spec.
+        self::assertSelectorTextContains('.lc-verdict', 'votable');
+    }
+
+    public function testUtilityTypeShowsCoverageContext(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'utility');
+
+        $client->request('GET', '/improve?type=water-food');
+
+        self::assertResponseIsSuccessful();
+        // Water & food (C) is a utility type — verified for coverage, never ranked.
+        self::assertSelectorTextContains('.lc-verdict', 'utility');
+    }
+
     public function testLetterQueryResolvesType(): void
     {
         $client = static::createClient();
