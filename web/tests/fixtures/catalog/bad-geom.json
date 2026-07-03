@@ -1,0 +1,2 @@
+{"layer":"services","letter":"D","features":[
+ {"type":"Feature","properties":{"t":"Bike shop","source":"osm","ref":"node/9002"},"geometry":{"type":"LineString","coordinates":[[4.2,50.1],[4.3,50.2]]}}]}

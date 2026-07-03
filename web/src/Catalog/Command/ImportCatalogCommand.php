@@ -1,0 +1,186 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Catalog\Command;
+
+use App\Catalog\Import\AttributeVocabulary;
+use App\Catalog\Import\ProvinceMap;
+use App\Catalog\ItemType;
+use Doctrine\DBAL\Connection;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+/**
+ * Imports catalog export artifacts (tools/wallonia/out) into the database:
+ * regions first, then item layers; upsert by (source, source_ref); region
+ * membership recomputed every run. Updates never touch lifecycle state.
+ *
+ * @api Console entry point, invoked by the router of humans (make/CLI).
+ */
+#[AsCommand(name: 'app:catalog:import', description: 'Import catalog export artifacts (regions, items) into the database')]
+final class ImportCatalogCommand extends Command
+{
+    /** Geometry kind each letter must carry (registry LocationMode made concrete). */
+    private const array GEOMETRY_KIND = [
+        'A' => 'LineString',
+        'B' => 'Point', 'C' => 'Point', 'D' => 'Point', 'E' => 'Point', 'F' => 'Point',
+        'G' => 'Point', 'H' => 'Point', 'I' => 'Point', 'J' => 'Point',
+    ];
+
+    /** Property keys consumed into columns — never stored as attributes. */
+    private const array CONSUMED_KEYS = ['n', 'name', 'prov', 'source', 'ref'];
+
+    public function __construct(
+        private readonly Connection $db,
+        private readonly AttributeVocabulary $vocabulary,
+    ) {
+        parent::__construct();
+    }
+
+    #[\Override]
+    protected function configure(): void
+    {
+        $this->addArgument('dir', InputArgument::REQUIRED, 'Directory holding the export artifacts');
+    }
+
+    #[\Override]
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+        $dir = rtrim((string) $input->getArgument('dir'), '/');
+        if (!is_dir($dir)) {
+            $io->error(sprintf('Not a directory: %s', $dir));
+
+            return Command::FAILURE;
+        }
+
+        try {
+            $regions = $this->importRegions($dir, $io);
+            $items = $this->importItemLayers($dir, $io);
+            $assigned = $this->recomputeMembership();
+        } catch (\InvalidArgumentException $e) {
+            $io->error($e->getMessage());
+
+            return Command::FAILURE;
+        }
+
+        $io->success(sprintf('Catalog import: %d region(s), %d item(s) upserted, %d region-assigned.', $regions, $items, $assigned));
+
+        return Command::SUCCESS;
+    }
+
+    private function importRegions(string $dir, SymfonyStyle $io): int
+    {
+        $count = 0;
+        foreach (glob($dir.'/region-*.geojson') ?: [] as $file) {
+            /** @var array{properties: array{slug: string, name: string, area_km2?: float|int}, geometry: array<string, mixed>} $feature */
+            $feature = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
+            $this->db->executeStatement(
+                'INSERT INTO region (slug, name, geom, area_km2, created_at, updated_at)
+                 VALUES (:slug, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :area, NOW(), NOW())
+                 ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, geom = EXCLUDED.geom,
+                   area_km2 = EXCLUDED.area_km2, updated_at = NOW()',
+                [
+                    'slug' => $feature['properties']['slug'],
+                    'name' => $feature['properties']['name'],
+                    'geom' => json_encode($feature['geometry'], \JSON_THROW_ON_ERROR),
+                    'area' => $feature['properties']['area_km2'] ?? null,
+                ],
+            );
+            ++$count;
+            $io->writeln(sprintf('  region %s', $feature['properties']['slug']));
+        }
+
+        return $count;
+    }
+
+    private function importItemLayers(string $dir, SymfonyStyle $io): int
+    {
+        $subdivisions = $this->subdivisionIdsByCode();
+        $total = 0;
+        foreach (glob($dir.'/*.json') ?: [] as $file) {
+            /** @var array{layer?: string, letter?: string, features?: list<array{properties: array<string, mixed>, geometry: array{type: string, coordinates: array<mixed>}}>} $payload */
+            $payload = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
+            if (!isset($payload['letter'], $payload['features'])) {
+                continue; // routes.json / heat.json are handled by their own importers (Task 6)
+            }
+            $letter = (string) $payload['letter'];
+            $type = ItemType::fromParam($letter);
+            $expectedGeometry = self::GEOMETRY_KIND[$letter]
+                ?? throw new \InvalidArgumentException(sprintf('No geometry kind for letter %s', $letter));
+
+            foreach ($payload['features'] as $feature) {
+                $props = $feature['properties'];
+                $geometry = $feature['geometry'];
+                if ($geometry['type'] !== $expectedGeometry) {
+                    throw new \InvalidArgumentException(sprintf('Letter %s expects %s geometry, got %s (ref %s)', $letter, $expectedGeometry, $geometry['type'], (string) ($props['ref'] ?? '?')));
+                }
+
+                $attributes = array_diff_key($props, array_flip(self::CONSUMED_KEYS));
+                $this->vocabulary->assertValid($type, $attributes);
+
+                $prov = (string) ($props['prov'] ?? '');
+                $this->db->executeStatement(
+                    'INSERT INTO item (letter, name, geom, country_code, subdivision_id, state, source, source_ref, attributes, created_at, updated_at, imported_at)
+                     VALUES (:letter, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :cc, :sub, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())
+                     ON CONFLICT (source, source_ref) DO UPDATE SET
+                       letter = EXCLUDED.letter, name = EXCLUDED.name, geom = EXCLUDED.geom,
+                       country_code = EXCLUDED.country_code, subdivision_id = EXCLUDED.subdivision_id,
+                       attributes = EXCLUDED.attributes, updated_at = NOW(), imported_at = NOW()',
+                    [
+                        'letter' => $letter,
+                        'name' => (string) ($props['n'] ?? $props['name'] ?? ''),
+                        'geom' => json_encode($geometry, \JSON_THROW_ON_ERROR),
+                        'cc' => 'BE',
+                        'sub' => $subdivisions[ProvinceMap::CODES[$prov] ?? ''] ?? null,
+                        'state' => 'unverified',
+                        'source' => (string) $props['source'],
+                        'ref' => (string) $props['ref'],
+                        'attrs' => json_encode($attributes, \JSON_THROW_ON_ERROR),
+                    ],
+                );
+                ++$total;
+            }
+            $io->writeln(sprintf('  %s: %d feature(s)', basename($file), \count($payload['features'])));
+        }
+
+        return $total;
+    }
+
+    /** @return array<string, int> subdivision code => id (empty when world data is not seeded) */
+    private function subdivisionIdsByCode(): array
+    {
+        $codes = array_values(ProvinceMap::CODES);
+        $placeholders = implode(', ', array_fill(0, \count($codes), '?'));
+
+        /** @var list<array{code: string, id: int|string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            sprintf('SELECT code, id FROM world_subdivision WHERE code IN (%s)', $placeholders),
+            $codes,
+        );
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row['code']] = (int) $row['id'];
+        }
+
+        return $map;
+    }
+
+    private function recomputeMembership(): int
+    {
+        $this->db->executeStatement('UPDATE item SET region_id = NULL');
+        $assigned = (int) $this->db->executeStatement(
+            'UPDATE item SET region_id = r.id FROM region r WHERE ST_Contains(r.geom, ST_PointOnSurface(item.geom))',
+        );
+
+        return $assigned;
+    }
+}

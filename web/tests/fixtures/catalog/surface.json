@@ -1,0 +1,2 @@
+{"layer":"surface","letter":"A","features":[
+ {"type":"Feature","properties":{"surface":"Asphalt","smoothness":"Good","width":"3.0 m","traffic":"Quiet","cls":"paved","name":"Test seg","source":"osm","ref":"way/2001"},"geometry":{"type":"LineString","coordinates":[[4.2,50.1],[4.3,50.2]]}}]}
