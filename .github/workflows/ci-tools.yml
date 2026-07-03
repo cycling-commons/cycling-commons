@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+name: ci-tools
+on:
+  pull_request:
+    paths: ['tools/**', '.github/workflows/ci-tools.yml']
+  push:
+    branches: [main]
+    paths: ['tools/**']
+jobs:
+  wallonia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pytest
+      - run: cd tools && python3 -m pytest wallonia/tests -q

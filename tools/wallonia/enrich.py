@@ -27,6 +27,8 @@ def _translate(text, src):
     key = overpass.CACHE / ("tr_" + hashlib.sha1((src + "|" + text).encode()).hexdigest() + ".txt")
     if key.exists():
         return key.read_text(encoding="utf-8") or None
+    if overpass.STRICT:
+        raise RuntimeError(f"strict-cache: no cached translation ({key.name})")
     # the `de` contact email raises MyMemory's daily limit (public project contact, not a secret)
     url = ("https://api.mymemory.translated.net/get?de=paceline@cyclingcommons.com&langpair="
            + src + "|en&q=" + urllib.parse.quote(text))

@@ -2,6 +2,7 @@
 """Cached Overpass client + element→feature mapping for the Wallonia harvest."""
 import hashlib
 import json
+import os
 import pathlib
 import time
 import urllib.request
@@ -11,6 +12,10 @@ import urllib.parse
 ENDPOINT = "https://overpass-api.de/api/interpreter"
 CACHE = pathlib.Path(__file__).resolve().parent / ".cache"
 
+# Strict cached-replay mode: a cache miss is an error, never a live call.
+# Set via WALLONIA_STRICT_CACHE=1 or export.py's --strict-cache flag.
+STRICT = os.environ.get("WALLONIA_STRICT_CACHE") == "1"
+
 
 def query(ql: str) -> dict:
     """POST an Overpass QL query, returning parsed JSON. Caches by sha1(ql); retries on 429/5xx."""
@@ -18,6 +23,8 @@ def query(ql: str) -> dict:
     key = CACHE / (hashlib.sha1(ql.encode()).hexdigest() + ".json")
     if key.exists():
         return json.loads(key.read_text())
+    if STRICT:
+        raise RuntimeError(f"strict-cache: no cached Overpass response (cache key {key})")
     data = ("data=" + urllib.parse.quote(ql)).encode()
     for attempt in range(3):
         try:
@@ -41,6 +48,8 @@ def get_json(url):
     key = CACHE / ("get_" + hashlib.sha1(url.encode()).hexdigest() + ".json")
     if key.exists():
         return json.loads(key.read_text())
+    if STRICT:
+        raise RuntimeError(f"strict-cache: no cached response for {url}")
     for attempt in range(3):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "CyclingCommons/wallonia-harvest"})

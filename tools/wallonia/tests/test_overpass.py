@@ -1,6 +1,7 @@
 import sys
 import pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
+import pytest
 from wallonia import overpass
 
 
@@ -26,3 +27,17 @@ def test_way_uses_center_and_omits_missing_name():
     assert feats[0]["geometry"]["coordinates"] == [4.2, 50.1]
     assert "n" not in feats[0]["properties"]
     assert feats[0]["_id"] == "way/9"
+
+
+def test_strict_cache_raises_on_miss_without_touching_network(monkeypatch, tmp_path):
+    monkeypatch.setattr(overpass, "CACHE", tmp_path)   # empty cache dir
+    monkeypatch.setattr(overpass, "STRICT", True)
+
+    def bomb(*args, **kwargs):
+        raise AssertionError("live HTTP attempted in strict-cache mode")
+
+    monkeypatch.setattr(overpass.urllib.request, "urlopen", bomb)
+    with pytest.raises(RuntimeError, match="strict-cache"):
+        overpass.query('[out:json];node(1);out;')
+    with pytest.raises(RuntimeError, match="strict-cache"):
+        overpass.get_json("https://example.test/x.json")

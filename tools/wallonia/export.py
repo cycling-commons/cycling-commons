@@ -247,6 +247,7 @@ def run_fixtures():
 
 
 if __name__ == "__main__":
+    overpass.STRICT = overpass.STRICT or "--strict-cache" in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not only or "fixtures" in only:
         run_fixtures()
