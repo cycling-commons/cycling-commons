@@ -19,6 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Table(name: 'recommended_route')]
 #[ORM\Index(name: 'idx_route_region', columns: ['region_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_route_source_ref', columns: ['source', 'source_ref'])]
 class RecommendedRoute
 {
     #[ORM\Id]

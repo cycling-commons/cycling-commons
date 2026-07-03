@@ -22,6 +22,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_item_letter_state', columns: ['letter', 'state'])]
 #[ORM\Index(name: 'idx_item_country', columns: ['country_code'])]
 #[ORM\Index(name: 'idx_item_region', columns: ['region_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_item_source_ref_letter', columns: ['source', 'source_ref', 'letter'])]
 class Item
 {
     #[ORM\Id]

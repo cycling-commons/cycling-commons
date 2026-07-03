@@ -43,9 +43,12 @@ final class ImportCatalogCommandTest extends KernelTestCase
         $src = __DIR__.'/../fixtures/catalog';
         $dir = sys_get_temp_dir().'/catalog-import-'.$subset.'-'.getmypid();
         @mkdir($dir, 0777, true);
-        $files = 'ok' === $subset
-            ? ['region-square.geojson', 'services.json', 'surface.json']
-            : ['bad-key' === $subset ? 'bad-key.json' : 'bad-geom.json'];
+        $files = match ($subset) {
+            'ok' => ['region-square.geojson', 'services.json', 'surface.json'],
+            'bad-key' => ['bad-key.json'],
+            'bad-source' => ['bad-source.json'],
+            default => ['bad-geom.json'],
+        };
         foreach ($files as $f) {
             copy($src.'/'.$f, $dir.'/'.$f);
         }
@@ -155,6 +158,36 @@ final class ImportCatalogCommandTest extends KernelTestCase
         $tester = $this->runImport($this->fixturesDir('bad-geom'));
         self::assertSame(1, $tester->getStatusCode());
         self::assertStringContainsString('LineString', $tester->getDisplay());
+    }
+
+    public function testUnknownSourceFails(): void
+    {
+        // A drifted/hand-made export with an invalid source (e.g. wrong case
+        // "OSM") must not reach the DB: it would insert fine into the varchar
+        // column and only blow up later, poisoning every ORM read that
+        // hydrates the ItemSource enum.
+        $tester = $this->runImport($this->fixturesDir('bad-source'));
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('bad-source.json', $tester->getDisplay());
+        self::assertStringContainsString('OSM', $tester->getDisplay());
+    }
+
+    public function testMissingRefFails(): void
+    {
+        $dir = sys_get_temp_dir().'/catalog-import-missing-ref-'.getmypid();
+        @mkdir($dir, 0777, true);
+        file_put_contents($dir.'/services.json', json_encode(
+            ['layer' => 'services', 'letter' => 'D', 'features' => [[
+                'type' => 'Feature',
+                'properties' => ['t' => 'Bike shop', 'source' => 'osm'], // no 'ref'
+                'geometry' => ['type' => 'Point', 'coordinates' => [4.4, 50.7]],
+            ]]],
+            \JSON_THROW_ON_ERROR,
+        ));
+
+        $tester = $this->runImport($dir);
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('services.json', $tester->getDisplay());
     }
 
     public function testSubdivisionResolvedWhenWorldDataPresent(): void

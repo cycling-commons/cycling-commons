@@ -8,6 +8,7 @@ namespace App\Catalog\Command;
 
 use App\Catalog\Import\AttributeVocabulary;
 use App\Catalog\Import\ProvinceMap;
+use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -129,6 +130,8 @@ final class ImportCatalogCommand extends Command
                 $attributes = array_diff_key($props, array_flip(self::CONSUMED_KEYS));
                 $this->vocabulary->assertValid($type, $attributes);
 
+                [$source, $ref] = $this->resolveSourceRef($props, $file);
+
                 $prov = (string) ($props['prov'] ?? '');
                 $this->db->executeStatement(
                     'INSERT INTO item (letter, name, geom, country_code, subdivision_id, state, source, source_ref, attributes, created_at, updated_at, imported_at)
@@ -144,8 +147,8 @@ final class ImportCatalogCommand extends Command
                         'cc' => 'BE',
                         'sub' => $subdivisions[ProvinceMap::CODES[$prov] ?? ''] ?? null,
                         'state' => 'unverified',
-                        'source' => (string) $props['source'],
-                        'ref' => (string) $props['ref'],
+                        'source' => $source,
+                        'ref' => $ref,
                         'attrs' => json_encode($attributes, \JSON_THROW_ON_ERROR),
                     ],
                 );
@@ -163,9 +166,10 @@ final class ImportCatalogCommand extends Command
         if (!is_file($file)) {
             return 0;
         }
-        /** @var array{routes: list<array{name: string, source: string, ref: string, distance_m: int, ascent_m: int, geometry: array<string, mixed>, attributes: array<string, mixed>}>} $payload */
+        /** @var array{routes: list<array{name: string, source?: mixed, ref?: mixed, distance_m: int, ascent_m: int, geometry: array<string, mixed>, attributes: array<string, mixed>}>} $payload */
         $payload = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
         foreach ($payload['routes'] as $route) {
+            [$source, $ref] = $this->resolveSourceRef($route, $file);
             $this->db->executeStatement(
                 'INSERT INTO recommended_route (name, geom, distance_m, ascent_m, state, source, source_ref, attributes, created_at, updated_at, imported_at)
                  VALUES (:name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :dist, :ascent, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())
@@ -179,8 +183,8 @@ final class ImportCatalogCommand extends Command
                     'dist' => $route['distance_m'],
                     'ascent' => $route['ascent_m'],
                     'state' => 'unverified',
-                    'source' => $route['source'],
-                    'ref' => $route['ref'],
+                    'source' => $source,
+                    'ref' => $ref,
                     'attrs' => json_encode($route['attributes'], \JSON_THROW_ON_ERROR),
                 ],
             );
@@ -217,6 +221,31 @@ final class ImportCatalogCommand extends Command
         $io->writeln(sprintf('  heat.json: %d point(s)', \count($payload['points'])));
 
         return \count($payload['points']);
+    }
+
+    /**
+     * Validates and extracts the (source, ref) pair a file-supplied record must
+     * carry: both keys present and non-empty, and `source` a real ItemSource —
+     * a drifted/hand-made export with a bad or missing source would otherwise
+     * insert fine into the varchar column and only blow up later, poisoning
+     * every ORM read that hydrates the enum.
+     *
+     * @param array<string, mixed> $record
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function resolveSourceRef(array $record, string $file): array
+    {
+        $source = $record['source'] ?? null;
+        $ref = $record['ref'] ?? null;
+        if (!\is_string($source) || '' === $source || !\is_string($ref) || '' === $ref) {
+            throw new \InvalidArgumentException(sprintf('%s: record missing required source/ref (source=%s, ref=%s)', basename($file), \is_string($source) && '' !== $source ? $source : '<missing>', \is_string($ref) && '' !== $ref ? $ref : '<missing>'));
+        }
+        if (null === ItemSource::tryFrom($source)) {
+            throw new \InvalidArgumentException(sprintf('%s: unknown source "%s" for ref %s', basename($file), $source, $ref));
+        }
+
+        return [$source, $ref];
     }
 
     /** @return array<string, int> subdivision code => id (empty when world data is not seeded) */
