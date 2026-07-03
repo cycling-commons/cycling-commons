@@ -19,14 +19,16 @@ import re
 import sys
 import unicodedata
 
-from . import climbs as climbs_mod
-from . import overpass
+from . import build_all, climbs as climbs_mod, harvest_poi, overpass
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 DEMO = ROOT / "atlas/demo"
 OUT = pathlib.Path(__file__).resolve().parent / "out"
 
 WALLONIA = {"slug": "wallonia", "name": "Wallonia", "area_km2": 16901}
+
+LETTERS = {"services": "D", "scenic": "I", "history": "J",
+           "stays": "E", "shelter": "H", "transit": "G"}
 
 
 def slug(text):
@@ -177,6 +179,34 @@ def wallonia_region_feature():
     return {"type": "Feature", "properties": dict(WALLONIA), "geometry": geom}
 
 
+def poi_feature(raw):
+    props = dict(raw["properties"])
+    props["source"], props["ref"] = "osm", raw["_id"]
+    return {"type": "Feature", "properties": props, "geometry": raw["geometry"]}
+
+
+def run_harvest():
+    """Replay the cached harvest for the six OSM POI layers, keeping _id refs.
+
+    Mirrors build_all.run()'s per-layer flow (harvest -> enrich -> photo
+    validation) so exported properties match the committed fixtures; the
+    .cache dir makes this an offline, deterministic replay.
+    """
+    from . import enrich
+    for key, letter in LETTERS.items():
+        cfg = build_all.LAYERS[key]
+        res = harvest_poi.harvest(cfg)
+        feats = res["features"]
+        if cfg.get("enrich"):
+            enrich.enrich(feats)
+        if cfg.get("validate_photo"):
+            for f in feats:
+                if f["properties"].get("photo"):
+                    f["properties"]["c"] = "Pictured"
+        write(f"{key}.json", {"layer": key, "letter": letter,
+                              "features": [poi_feature(f) for f in feats]})
+
+
 def write(name, payload):
     OUT.mkdir(exist_ok=True)
     path = OUT / name
@@ -199,3 +229,5 @@ if __name__ == "__main__":
     only = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not only or "fixtures" in only:
         run_fixtures()
+    if not only or "harvest" in only:
+        run_harvest()

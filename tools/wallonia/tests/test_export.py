@@ -86,6 +86,17 @@ def test_parse_surface_fixture_without_injected_block():
     assert segs[0]["path"] == [[50.1, 4.2], [50.2, 4.3]]
 
 
+def test_poi_feature_moves_id_into_ref():
+    raw = {"type": "Feature", "properties": {"t": "Bike shop", "n": "X", "prov": "Namur"},
+           "geometry": {"type": "Point", "coordinates": [4.9, 50.3]},
+           "_id": "node/42", "_tags": {"wikidata": "Q1"}}
+    f = export.poi_feature(raw)
+    assert f["properties"]["ref"] == "node/42"
+    assert f["properties"]["source"] == "osm"
+    assert "_id" not in f and "_tags" not in f
+    assert f["properties"]["t"] == "Bike shop"
+
+
 def test_climb_features_preserves_fixture_source_as_attribution(monkeypatch):
     """Deviation (approved): fixture climb 'source' citation preserved as 'attribution'
     instead of being overwritten by the provenance key."""
