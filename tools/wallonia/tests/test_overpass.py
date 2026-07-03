@@ -13,6 +13,7 @@ def test_node_becomes_point_feature():
         "type": "Feature",
         "properties": {"t": "Bike shop", "n": "Vélo Plus", "prov": "Liège"},
         "geometry": {"type": "Point", "coordinates": [5.0, 50.5]},
+        "_tags": {},
         "_id": "node/1",
     }]
 
