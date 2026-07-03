@@ -59,11 +59,11 @@ The catalog exists only as static JavaScript fixtures, three times over: `tools/
 | `region_id` | `bigint` FK → `region`, nullable + btree | the operational unit (§4.4) — assigned at import via `ST_PointOnSurface` containment, recomputed every run |
 | `state` | enum `submitted / unverified / verified / rejected / retired` | imported rows enter **`unverified`** (on the map, but not past the community verification gate); user submissions (phase B) enter `submitted`; `retired` is curator-decided, never automatic |
 | `source` | enum `osm / pivot / wikidata / user / auto` | the provenance tags from edit-items |
-| `source_ref` | `text`, nullable | `node/123`, `way/456`, `Q2093`, PIVOT id; **unique `(source, source_ref)`** (Postgres treats NULL refs as distinct — fine for `auto`) |
+| `source_ref` | `text`, nullable | `node/123`, `way/456`, `Q2093`, PIVOT id; **unique `(source, source_ref, letter)`** — identity is entity × classification, so one OSM entity may legitimately hold a row in two layers (e.g. heritage + scenic) (Postgres treats NULL refs as distinct — fine for `auto`) |
 | `attributes` | `jsonb` | **only registry-declared keys** — unknown keys are an import error, not a passthrough; today's fixture fields (`t, prov, c, sim, r, desc, photo`, per-letter form fields) map here |
 | `created_at` / `updated_at` / `imported_at` | `timestamptz` | `imported_at` = last harvest touch (staleness signal, replaces auto-retire) |
 
-Indexes: GiST(`geom`) — *the* map read path is viewport bbox + filter; btree(`letter`, `state`); btree(`country_code`); unique(`source`, `source_ref`).
+Indexes: GiST(`geom`) — *the* map read path is viewport bbox + filter; btree(`letter`, `state`); btree(`country_code`); unique(`source`, `source_ref`, `letter`).
 
 ### 4.2 `recommended_route` — letter K (11 rows at import)
 
@@ -93,13 +93,13 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 ## 5. Harvest export (Python, `tools/wallonia`)
 
 - Additive `--export` output alongside the existing fixture writing: **one GeoJSON/JSONL file per layer** that *keeps* what `to_fixture_js` strips — `_id` (OSM type+id), source metadata, raw per-feature fields. `atlas/demo/*.js` keep being written unchanged (`main`'s HTML demo consumes them); the export is a second artifact, not a replacement.
-- All sources export: 7 OSM POI layers, PIVOT stays (ArcGIS id as ref), Wikidata climbs (`Q…` as ref), surface segments (OSM way refs if `route_surfaces.py` has them stable, else `source='auto'`, NULL ref), routes, and the heat point set.
+- All sources export: 7 OSM POI layers, PIVOT stays (ArcGIS id as ref), Wikidata climbs (`Q…` as ref), surface segments (OSM way refs if `route_surfaces.py` has them stable, else `source='auto'` with a synthetic ref carrying a per-segment coordinate discriminator — `fx:surface:<slug>:<lat>,<lng>` from the first path vertex, so segments of one route/surface class never collapse onto one upsert key), routes, and the heat point set. Water exports dedupe exact-duplicate coordinate refs (keep first occurrence).
 - **Region polygon export:** one GeoJSON for the Wallonia region — `slug`, `name`, `area_km2`, and geometry = the union of the five province admin polygons `regions.py` already fetches from Overpass.
 - Geo harvesting stays Python (project boundary); export files are the handoff artifact.
 
 ## 6. Importer (PHP, `app:catalog:import <path>`)
 
-- Modeled on `app:world:import`: **idempotent upsert by `(source, source_ref)`** — insert ⇒ `state='unverified'`; update ⇒ refresh fields + `imported_at`. Acceptance: run twice, row counts and content identical.
+- Modeled on `app:world:import`: **idempotent upsert — items by `(source, source_ref, letter)`, routes by `(source, source_ref)`** — insert ⇒ `state='unverified'`; update ⇒ refresh fields + `imported_at`. Acceptance: run twice, row counts and content identical.
 - **Regions import first** (upsert by `slug`), then items/routes — `region_id` assigned per row by `ST_PointOnSurface` containment (§4.4), recomputed on every run.
 - Letter mapping from the layer file; `country_code='BE'`; subdivision resolved from the harvest province tag (nullable fallback).
 - Attributes validated through the catalog registry (unknown key ⇒ error; wrong geometry kind for letter ⇒ error).
