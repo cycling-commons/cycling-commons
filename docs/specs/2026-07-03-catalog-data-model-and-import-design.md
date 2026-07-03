@@ -55,8 +55,8 @@ The catalog exists only as static JavaScript fixtures, three times over: `tools/
 | `name` | `text` | |
 | `geom` | `geometry(Geometry, 4326)` | Point for most letters, LineString for A (surface); expected geometry kind per letter is declared by the catalog registry and validated at import/edit time |
 | `country_code` | `char(2)` | denormalized filter column (moderation world overview, future queries) |
-| `subdivision_id` | `bigint` FK → `world_subdivision`, nullable | resolved from the harvest's per-province tag |
-| `region_id` | `bigint` FK → `region`, nullable + btree | the operational unit (§4.4) — assigned at import via `ST_PointOnSurface` containment, recomputed every run |
+| `subdivision_id` | `bigint`, nullable, plain indexed column (no FK constraint) → `world_subdivision.id` | resolved from the harvest's per-province tag |
+| `region_id` | `bigint`, nullable, plain indexed column (no FK constraint) + btree | the operational unit (§4.4) — assigned at import via `ST_PointOnSurface` containment, recomputed every run |
 | `state` | enum `submitted / unverified / verified / rejected / retired` | imported rows enter **`unverified`** (on the map, but not past the community verification gate); user submissions (phase B) enter `submitted`; `retired` is curator-decided, never automatic |
 | `source` | enum `osm / pivot / wikidata / user / auto` | the provenance tags from edit-items |
 | `source_ref` | `text`, nullable | `node/123`, `way/456`, `Q2093`, PIVOT id; **unique `(source, source_ref, letter)`** — identity is entity × classification, so one OSM entity may legitimately hold a row in two layers (e.g. heritage + scenic) (Postgres treats NULL refs as distinct — fine for `auto`) |
@@ -84,7 +84,7 @@ Indexes: GiST(`geom`) — *the* map read path is viewport bbox + filter; btree(`
 | `area_km2` | `real` | from the clustering pipeline; informational |
 | `created_at` / `updated_at` | `timestamptz` | |
 
-**Membership:** `item.region_id` and `recommended_route.region_id` — nullable `bigint` FK + btree index, assigned at import by a deterministic rule: the region whose polygon contains `ST_PointOnSurface(geom)` (guaranteed on-geometry for points *and* lines, so border-crossing segments get exactly one home region; the map still finds them from neighboring viewports via GiST). `heat_point` carries no region — it is never moderated or voted. Membership is recomputed on every import run, so regions can be split/merged later without touching items' schema.
+**Membership:** `item.region_id` and `recommended_route.region_id` — nullable `bigint`, plain indexed column (no FK constraint) + btree index, assigned at import by a deterministic rule: the region whose polygon contains `ST_PointOnSurface(geom)` (guaranteed on-geometry for points *and* lines, so border-crossing segments get exactly one home region; the map still finds them from neighboring viewports via GiST). `heat_point` carries no region — it is never moderated or voted. Membership is recomputed on every import run, so regions can be split/merged later without touching items' schema.
 
 ### 4.5 Geometry in Doctrine
 
@@ -148,3 +148,14 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 
 - **Plan 1 — model + import:** migrations (4 tables — `region`, `item`, `recommended_route`, `heat_point` — + enums + indexes), geometry DBAL type, entities, harvest `--export` (incl. the Wallonia region polygon), `app:catalog:import` (regions first, then membership-assigning item/route import), idempotency + validation + membership tests. DB is a (temporarily) shadow source of truth.
 - **Plan 2 — serving flip:** `CatalogProvider` + `/map/catalog.json`, `map.js` fetch-init refactor, K-rename, fixture retirement, parity acceptance (counts + Playwright), i18n keys.
+
+## Follow-ups (Plan 2 era)
+
+Deferred from the final review of plan 1 (model + import):
+
+- Widen the import catch beyond `\InvalidArgumentException` — clean errors for malformed JSON/DBAL failures.
+- Wrap import in a transaction.
+- `--strict-cache` mode for export enrichment (live-HTTP fallback caused the transit drift).
+- Run `tools/wallonia` tests in CI.
+- E2e assert for route state preservation on upsert.
+- Only bump `updated_at` when content actually changed (matters for change-history).
