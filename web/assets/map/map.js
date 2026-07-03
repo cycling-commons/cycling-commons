@@ -674,10 +674,10 @@
         ],
         source:'OSM' }
     ]}
-    ,{ key:'experience', letter:'K', label:'Quality rides', color:'#FF5A1F', icon:'★', kind:'line', exp:false, features:[] }
+    ,{ key:'experience', letter:'K', label:'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, features:[] }
   ];
 
-  const active = new Set(CATALOG.map(l => l.key));   // all layers (incl. K · Quality rides) on by default
+  const active = new Set(CATALOG.map(l => l.key));   // all layers (incl. K · Recommended routes) on by default
   const layerByKey = Object.fromEntries(CATALOG.map(l => [l.key, l]));
 
   // Towns referenced by routes — each links to a place on the map + a city info card.
@@ -732,7 +732,7 @@
     let j=loop.length-1,e=0; while(j>i+1 && e<endM/1000){ e+=haversine(loop[j],loop[j-1]); j--; }
     return loop.slice(i, j+1);
   }
-  // populate K · Quality rides with every uploaded sample route + its cyclist-experience attributes
+  // populate K · Recommended routes with every uploaded sample route + its cyclist-experience attributes
   if(window.CC_CLIMBS){ layerByKey['climbs'].features = layerByKey['climbs'].features.concat(CC_CLIMBS); }
   if(window.CC_ROUTES){
     const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);

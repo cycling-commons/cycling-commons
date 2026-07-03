@@ -101,7 +101,7 @@ enum ItemType: string
             self::Shelter => 'Shelter & emergency',
             self::ScenicViews => 'Scenic views',
             self::HistoryCulture => 'History & culture',
-            self::QualityRides => 'Quality rides',
+            self::QualityRides => 'Recommended routes',
         };
     }
 
