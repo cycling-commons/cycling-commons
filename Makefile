@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data app-install app-serve app-test app-rector app-create-admin app-create-curator
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export app-install app-serve app-test app-rector app-create-admin app-create-curator
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -122,3 +122,6 @@ wallonia-data: ## Harvest Wallonia OSM layers into atlas/demo/*-osm.js (one/some
 
 pivot-data: ## Harvest official Wallonia accommodation (Tourisme Wallonie, CC-BY) into atlas/demo/stays-pivot.js
 	@PYTHONPATH=tools python3 -m wallonia.pivot --report
+
+wallonia-export: ## Export catalog import artifacts (fixtures + cached harvest) to tools/wallonia/out/
+	cd tools && python3 -m wallonia.export
