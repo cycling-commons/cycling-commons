@@ -1,6 +1,6 @@
 # Spec — Catalog data model, Wallonia import, DB-served map (data-API phase A)
 
-- **Status:** Draft for review
+- **Status:** Approved — implementing (plan 1 landed)
 - **Date:** 2026-07-03
 - **Scope:** The first data-API phase: a durable domain model for the map catalog (`region` + `item` + `recommended_route` + `heat_point`), an idempotent Wallonia import with source provenance and day-one region membership, and `/map` served from the database with the static catalog fixtures retired. **One spec → two implementation plans** (§12).
 - **Surfaces:**
