@@ -78,6 +78,9 @@ final class ModerateController extends AbstractController
         $form = $this->createForm(ModerationDecisionType::class);
         $form->handleRequest($request);
 
+        $wantsJson = $request->isXmlHttpRequest()
+            || \in_array('application/json', $request->getAcceptableContentTypes(), true);
+
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var array<string, mixed> $data */
             $data = $form->getData();
@@ -85,6 +88,16 @@ final class ModerateController extends AbstractController
             $user = $this->getUser();
 
             $receipt = $this->contributionStub->submit('moderation_decision', $data, $user);
+
+            if ($wantsJson) {
+                return $this->json([
+                    'reference' => $receipt->reference,
+                    'kind' => $receipt->kind,
+                    'persisted' => $receipt->persisted,
+                    'decision' => $data['decision'],
+                    'submission_id' => $data['submission_id'],
+                ]);
+            }
 
             $items = SampleQueue::items();
 
@@ -123,6 +136,10 @@ final class ModerateController extends AbstractController
                 'method' => 'POST',
             ]);
             $forms[$item['id']] = $newForm->createView();
+        }
+
+        if ($wantsJson) {
+            return $this->json(['error' => 'invalid_decision'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         return $this->render('moderate/index.html.twig', [
