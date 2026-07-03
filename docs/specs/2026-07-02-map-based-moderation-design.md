@@ -39,7 +39,8 @@ Two gaps:
 `MapController` injects, **only when `is_granted('ROLE_CURATOR')`**:
 - `window.CC_IS_CURATOR = true`
 - `window.CC_PENDING` — the pending submissions as pins (`{id, type, letter, title, lat, lng, who, when, body, was, now, country, region}`), from `SampleQueue`.
-- `window.CC_MOD_CSRF` — a CSRF token for the AJAX decision endpoint.
+
+`MapController` injects no CSRF value — the map page renders no decision form. The drawer's `fetch` obtains the AJAX decision token itself at decision time (see §6).
 
 For anyone else (anonymous or plain `ROLE_USER`) **none of these are emitted** — the pending layer, its data, and the curator flag are simply absent from the page source. Gating is therefore *by absence of data*, backed by the decision endpoint's own `#[IsGranted('ROLE_CURATOR')]`. `/map` itself stays public; no `access_control` change.
 
@@ -64,7 +65,7 @@ Selecting a pending pin opens the standard drawer (`buildRecord`) with a curator
 
 - Buttons **`fetch`-POST** `{submission_id, decision, note, _csrf}` to a **content-negotiated `moderate_decide`**: it returns **JSON** for an `XMLHttpRequest` / `Accept: application/json` request (map drawer) and keeps the existing **HTML receipt** for the queue-page form POST. Both paths call `ContributionStubService::submit('moderation_decision', …)`.
 - On a JSON success: the pin **fades from the pending layer for this session** (optimistic) and a toast shows **"Decision recorded — preview, not yet persisted."** No server state changes; a **preview banner** on the moderation surfaces states this.
-- **CSRF:** the AJAX token is `window.CC_MOD_CSRF`; the endpoint validates it (same token id the form uses).
+- **CSRF:** `MapController` injects no CSRF value; the map page renders no decision form to carry one. Instead the drawer's `fetch` obtains the stateless CSRF `_token` itself: on first use it fetches the rendered `/moderate` page and reads the decision form's `moderation_decision[_token]` input, caching the result as a promise for the session; a failed POST clears the cached token so the next attempt fetches a fresh one. The endpoint validates it as the same token id the queue-page form uses.
 - **Honesty ([[prototype-cta-real-channels]]):** the optimistic hide is a *session-only* affordance so a curator can keep moving; nothing claims the decision was saved. The toast and banner say "preview / not yet persisted."
 
 ## 7. Deep-link — `/map?pending=<id>`
@@ -112,3 +113,13 @@ The design principle is documented in [`edit-items/README.md` → *Change histor
 - **CSRF on AJAX:** reuse the form's token id; don't disable CSRF for the endpoint.
 - **Optimistic hide is session-only:** never imply persistence; the preview banner + toast are mandatory (honest-stub rule).
 - **Filters are presentational:** do not treat country/region filters as an authorization boundary — that is the deferred per-region Voter.
+
+## 13. Follow-ups (data-API era)
+
+These share a common trigger — **real submissions replacing `SampleQueue`** — and are deferred rather than fixed now because the fixture data doesn't exercise the risk they cover:
+
+- **Client-side HTML-escape in the drawer's pending block.** `buildRecord`'s pending branch interpolates `s.title`/`s.body`/`s.was`/`s.now` unescaped (see the `TODO(data-api)` comment in `map.js`); safe today because `SampleQueue` is trusted fixture data, but a stored-XSS risk in the curator session once real submissions flow through.
+- **Preserve filter context after the HTML decide re-render.** `ModerateController::decide()`'s non-AJAX branch re-renders the queue with empty filters instead of redirecting back to the curator's active `country`/`region`/`type` query — a redirect-after-POST would keep the filtered view intact across a decision.
+- **Relocate the type list.** `ModerateController::TYPES` duplicates knowledge that belongs next to the data source; once submissions come from the data API, move the type enumeration there.
+- **`moderationToken()` should reject on selector miss.** It currently caches `''` if the `moderation_decision[_token]` input isn't found on the fetched `/moderate` page, silently sending an empty token; it should reject the promise instead so a missing form fails loudly rather than as a confusing 4xx from the decision endpoint.
+- **Revisit per-call `Collator` if the dataset grows.** `SampleQueue::distinct()` constructs a new `\Collator('en')` on every call; fine for a handful of fixture items, worth caching or hoisting once the dataset is real and larger.
