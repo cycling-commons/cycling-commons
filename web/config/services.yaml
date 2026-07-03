@@ -9,6 +9,7 @@ services:
             - '../src/Kernel.php'
             - '../src/World/Entity/'
             - '../src/World/Resources/'
+            - '../src/Catalog/Entity/'
 
     _instanceof:
         App\Service\UserDeletionHookInterface:

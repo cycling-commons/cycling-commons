@@ -6,6 +6,7 @@ doctrine:
         types:
             # AES-256-GCM at-rest encryption (key derived from APP_SECRET) for the TOTP secret
             encrypted_string: App\Doctrine\EncryptedStringType
+            geometry: App\Catalog\Doctrine\GeometryType
 
     orm:
         auto_generate_proxy_classes: true
@@ -22,6 +23,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/World/Entity'
                 prefix: 'App\World\Entity'
                 alias: World
+            Catalog:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Catalog/Entity'
+                prefix: 'App\Catalog\Entity'
+                alias: Catalog
 
 when@prod:
     doctrine:
