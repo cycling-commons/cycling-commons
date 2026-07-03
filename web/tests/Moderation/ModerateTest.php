@@ -125,9 +125,10 @@ final class ModerateTest extends WebTestCase
     }
 
     /**
-     * Each queue item must be viewable: a link that opens the item at its
-     * coordinates (in a new tab) so the curator can see and correct the
-     * location on the map before deciding.
+     * Each queue item must be viewable: a link that opens the item on the
+     * real map (in a new tab) so the curator can see and correct the
+     * location before deciding. See ModerateOverviewTest for the
+     * '/map?pending=<id>' deep-link contract.
      */
     public function testQueueItemsLinkToViewSubmissionAtItsLocation(): void
     {
@@ -149,13 +150,9 @@ final class ModerateTest extends WebTestCase
         $viewLinks = $crawler->filter('.q-item a.q-view[target="_blank"]');
         self::assertSame(count(SampleQueue::items()), $viewLinks->count());
 
-        // The first item (a climb at 50.47,5.86) links to the editor at its
-        // coordinates with the right catalog type (B · climbs).
+        // The first item links to the real map, deep-linked to its pending id.
         $href = (string) $viewLinks->first()->attr('href');
-        self::assertStringContainsString('/improve', $href);
-        self::assertStringContainsString('type=B', $href);
-        self::assertStringContainsString('lat=50.47', $href);
-        self::assertStringContainsString('lng=5.86', $href);
+        self::assertStringContainsString('/map?pending=1', $href);
         self::assertStringContainsString('noopener', (string) $viewLinks->first()->attr('rel'));
     }
 

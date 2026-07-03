@@ -952,6 +952,14 @@ moderate:
   empty:
     heading: 'Wachtrij leeg'
     body: 'Niets meer te beoordelen. Goed gedaan.'
+  filter:
+    country: 'Land'
+    region: 'Regio'
+    type: 'Type'
+    all: 'Alle'
+    apply: 'Toepassen'
+  overview:
+    showing: '%shown% van %total% in behandeling'
 registration:
   email:
     title: 'Bevestig je Cycling Commons-account'

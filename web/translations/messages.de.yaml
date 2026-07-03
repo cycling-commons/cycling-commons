@@ -952,6 +952,14 @@ moderate:
   empty:
     heading: 'Warteschlange leer'
     body: 'Nichts mehr zu prüfen. Super.'
+  filter:
+    country: 'Land'
+    region: 'Region'
+    type: 'Typ'
+    all: 'Alle'
+    apply: 'Anwenden'
+  overview:
+    showing: '%shown% von %total% ausstehend'
 registration:
   email:
     title: 'Dein Cycling-Commons-Konto bestätigen'

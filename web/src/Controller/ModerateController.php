@@ -37,11 +37,15 @@ final class ModerateController extends AbstractController
     }
 
     #[Route('/moderate', name: 'moderate')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $items = SampleQueue::items();
+        $country = $request->query->getString('country');
+        $region = $request->query->getString('region');
+        $type = $request->query->getString('type');
 
-        // Build one decision form per queue item.
+        $items = SampleQueue::filtered($country ?: null, $region ?: null, $type ?: null);
+
+        // Build one decision form per shown queue item.
         $forms = [];
         foreach ($items as $item) {
             $form = $this->createForm(ModerationDecisionType::class, null, [
@@ -57,6 +61,11 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'items' => $items,
             'forms' => $forms,
+            'total' => \count(SampleQueue::items()),
+            'filters' => ['country' => $country, 'region' => $region, 'type' => $type],
+            'countries' => SampleQueue::countries(),
+            'regions' => SampleQueue::regions(),
+            'types' => ['new', 'edit', 'hazard', 'photo'],
             'receipt' => null,
         ]);
     }
@@ -93,6 +102,11 @@ final class ModerateController extends AbstractController
                 'nav_active' => 'moderate',
                 'items' => $items,
                 'forms' => $forms,
+                'total' => \count($items),
+                'filters' => ['country' => '', 'region' => '', 'type' => ''],
+                'countries' => SampleQueue::countries(),
+                'regions' => SampleQueue::regions(),
+                'types' => ['new', 'edit', 'hazard', 'photo'],
                 'receipt' => $receipt,
             ]);
         }
@@ -115,6 +129,11 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'items' => $items,
             'forms' => $forms,
+            'total' => \count($items),
+            'filters' => ['country' => '', 'region' => '', 'type' => ''],
+            'countries' => SampleQueue::countries(),
+            'regions' => SampleQueue::regions(),
+            'types' => ['new', 'edit', 'hazard', 'photo'],
             'receipt' => null,
         ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
     }

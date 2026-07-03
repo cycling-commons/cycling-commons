@@ -12,6 +12,10 @@
   .stub-banner{background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:7px;padding:.75rem 1.1rem;font-size:.83rem;color:#6b5320;margin:1.6rem 0;line-height:1.5}
   .stub-banner b{color:#B5532E}
 
+  .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0 0 1.4rem}
+  .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
+  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.35rem .5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
+
   .q-list{margin:1.8rem 0}
   .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.3rem 1.4rem;margin-bottom:1.1rem;background:var(--paper)}
   .q-meta{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
@@ -59,7 +63,7 @@
     <h1>{{ 'moderate.title'|trans }}</h1>
     <div>
       <span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span>
-      <span class="pend-count">{{ items|length }} {{ 'moderate.pending'|trans }}</span>
+      <span class="pend-count">{{ 'moderate.overview.showing'|trans({'%shown%': items|length, '%total%': total}) }}</span>
     </div>
   </div>
 </div>
@@ -68,6 +72,28 @@
   <div class="stub-banner">
     <b>{{ 'moderate.stub_banner_bold'|trans }}</b> {{ 'moderate.stub_banner_body'|trans }}
   </div>
+
+  <form class="mod-filters" method="get" action="{{ path('moderate') }}">
+    <label>{{ 'moderate.filter.country'|trans }}
+      <select name="country" onchange="this.form.submit()">
+        <option value="">{{ 'moderate.filter.all'|trans }}</option>
+        {% for c in countries %}<option value="{{ c }}"{{ filters.country == c ? ' selected' }}>{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ 'moderate.filter.region'|trans }}
+      <select name="region" onchange="this.form.submit()">
+        <option value="">{{ 'moderate.filter.all'|trans }}</option>
+        {% for r in regions %}<option value="{{ r }}"{{ filters.region == r ? ' selected' }}>{{ r }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ 'moderate.filter.type'|trans }}
+      <select name="type" onchange="this.form.submit()">
+        <option value="">{{ 'moderate.filter.all'|trans }}</option>
+        {% for t in types %}<option value="{{ t }}"{{ filters.type == t ? ' selected' }}>{{ ('moderate.type.' ~ t)|trans }}</option>{% endfor %}
+      </select>
+    </label>
+    <noscript><button type="submit" class="btn-act btn-needs-info">{{ 'moderate.filter.apply'|trans }}</button></noscript>
+  </form>
 
   {% if receipt is not null %}
   <div class="receipt-box">

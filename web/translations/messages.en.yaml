@@ -952,6 +952,14 @@ moderate:
   empty:
     heading: 'Queue clear'
     body: 'Nothing left to review. Nice.'
+  filter:
+    country: 'Country'
+    region: 'Region'
+    type: 'Type'
+    all: 'All'
+    apply: 'Apply'
+  overview:
+    showing: 'showing %shown% of %total% pending'
 registration:
   email:
     title: 'Confirm your Cycling Commons account'

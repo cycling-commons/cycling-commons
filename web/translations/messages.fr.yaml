@@ -952,6 +952,14 @@ moderate:
   empty:
     heading: 'File vide'
     body: 'Plus rien à examiner. Parfait.'
+  filter:
+    country: 'Pays'
+    region: 'Région'
+    type: 'Type'
+    all: 'Tous'
+    apply: 'Appliquer'
+  overview:
+    showing: '%shown% sur %total% en attente'
 registration:
   email:
     title: 'Confirmez votre compte Cycling Commons'
