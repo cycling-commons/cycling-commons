@@ -190,26 +190,18 @@
   </div>
 </div>
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="{{ asset('data/routes-data.js') }}"></script>
-<script src="{{ asset('data/climbs-data.js') }}"></script>
 <script>window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode|raw }};</script>
-<script src="{{ asset('data/surface-data.js') }}"></script>
-<script src="{{ asset('data/water-osm.js') }}"></script>
-<script src="{{ asset('data/services-osm.js') }}"></script>
-<script src="{{ asset('data/scenic-osm.js') }}"></script>
-<script src="{{ asset('data/history-osm.js') }}"></script>
-<script src="{{ asset('data/stays-osm.js') }}"></script>
-<script src="{{ asset('data/stays-pivot.js') }}"></script>
-<script src="{{ asset('map/stays-merge.js') }}"></script>
-<script src="{{ asset('data/shelter-osm.js') }}"></script>
-<script src="{{ asset('data/transit-osm.js') }}"></script>
 {% if is_granted('ROLE_CURATOR') and pending is defined %}
 <script>
   window.CC_IS_CURATOR = true;
   window.CC_PENDING = {{ pending|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {% endif %}
-<script src="{{ asset('map/map.js') }}"></script>
+<script>
+  window.CC_CATALOG_URL = {{ path('map_catalog')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+</script>
+<script src="{{ asset('map/catalog-load.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/version.js') }}"></script>
 </body>
