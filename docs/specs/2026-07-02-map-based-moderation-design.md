@@ -1,6 +1,6 @@
 # Spec — Map-based moderation (curator pending layer + world-overview queue)
 
-- **Status:** Draft for review
+- **Status:** Approved — implementing
 - **Date:** 2026-07-02
 - **Scope:** Curator moderation *on the real map* + the `/moderate` queue reframed as a filterable world overview. Persistence stays stubbed (data-API deferred).
 - **Surfaces:**
