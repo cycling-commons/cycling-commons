@@ -365,9 +365,12 @@
       .setHTML(`<div class="pop"><div class="pop-co">Coordinates · copied</div>${c}</div>`).addTo(map);
   });
 
-  // curator keyboard: A approve / R reject when a pending drawer is open (not while typing a note)
+  // curator keyboard: A approve / R reject when a pending drawer is open — plain keys only
+  // (never on Ctrl/Cmd/Alt combos, e.g. Ctrl+R reload; never while typing in any input)
   document.addEventListener('keydown', e=>{
-    if(e.target && e.target.classList && e.target.classList.contains('cc-mod-note')) return;
+    if(e.ctrlKey||e.metaKey||e.altKey) return;
+    const t=e.target;
+    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)) return;
     const box=document.querySelector('#drawer.open .cc-mod'); if(!box) return;
     if(e.key==='a'||e.key==='A'){ const b=box.querySelector('.cc-mod-btn.approve'); if(b){ e.preventDefault(); b.click(); } }
     if(e.key==='r'||e.key==='R'){ const b=box.querySelector('.cc-mod-btn.reject'); if(b){ e.preventDefault(); b.click(); } }
