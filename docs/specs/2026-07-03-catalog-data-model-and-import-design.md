@@ -2,7 +2,7 @@
 
 - **Status:** Draft for review
 - **Date:** 2026-07-03
-- **Scope:** The first data-API phase: a durable domain model for the map catalog (`item` + `recommended_route` + `heat_point`), an idempotent Wallonia import with source provenance, and `/map` served from the database with the static catalog fixtures retired. **One spec → two implementation plans** (§12).
+- **Scope:** The first data-API phase: a durable domain model for the map catalog (`region` + `item` + `recommended_route` + `heat_point`), an idempotent Wallonia import with source provenance and day-one region membership, and `/map` served from the database with the static catalog fixtures retired. **One spec → two implementation plans** (§12).
 - **Surfaces:**
   - `web/src/Catalog/*` (new: entities, enums, geometry DBAL type, `CatalogProvider`, import command), `web/migrations/*`
   - `web/src/Controller/MapController.php`, `web/assets/map/map.js`, `web/templates/map/index.html.twig`, `web/assets/data/*` (retired)
@@ -20,7 +20,7 @@ The catalog exists only as static JavaScript fixtures, three times over: `tools/
 
 **Goals**
 
-- A **durable catalog model** with per-row provenance (`source` + `source_ref`), lifecycle state, and geometry — designed for tens of millions of rows even though it starts with ~1,600 across the three tables (~1,560 items + 11 routes + the heat set).
+- A **durable catalog model** with per-row provenance (`source` + `source_ref`), lifecycle state, geometry, and day-one region membership — designed for tens of millions of rows even though it starts with ~1,600 (~1,560 items + 11 routes + the heat set + 1 seed region).
 - An **idempotent import** from a new harvest export that preserves source ids (run twice → identical rows).
 - `/map` **reads the database** (cacheable catalog endpoint); all eleven catalog fixture files retire. Acceptance is byte-level parity, not vibes.
 - The model is **forward-compatible** with phases B (submissions/moderation on real data) and C (edit application + field-level change history + re-harvest conflict queue) without schema rework.
@@ -41,7 +41,8 @@ The catalog exists only as static JavaScript fixtures, three times over: `tools/
 2. **One generic `item` entity** (letters A–J), not per-type entities or Doctrine inheritance: common/filterable fields are real columns, type-specific detail lives in registry-validated `jsonb`. This is the planet-scale feature-store shape (osm2pgsql, Overture); per-type tables would fragment every cross-cutting concern (queue, history, votes) into polymorphic references.
 3. **The boundary is product-semantic, not geometric**: *atomic editable catalog feature* → `item` (points **and** lines — surface segments are letter-A items); *curated composition* → `recommended_route`; *computed aggregate* → `heat_point`. Only L (heatmap) is non-editable catalog; it is not an item.
 4. **Rename:** layer K "Quality rides" becomes **"Recommended routes"** (map label + legend + i18n where applicable).
-5. **Scale commitments** (§10) are part of the contract, not advice.
+5. **Regions are a day-one entity.** Regions become the operational unit of the community model — per-region moderator groups (the per-region curator Security Voter the moderation spec defers), a user's preferred/active region, and region-scoped voting all anchor to it. Those *consumers* come in later phases, but the entity and item membership exist from day one so nothing ever retrofits: a `region` table with polygon geometry, and a denormalized `region_id` computed at import (same precompute pattern as `country_code`/`subdivision_id`). Day-one seed: **Wallonia as one region** — the clustering target (`tools/regions/cc_merge.py`, 16,900 km²) is Wallonia-sized by definition, and its polygon is the union of the five province admin areas the harvest already fetches. World rollout of algorithmic regions is a later Python pipeline (§11); membership is recomputed at import, so regions can split/merge without schema change.
+6. **Scale commitments** (§10) are part of the contract, not advice.
 
 ## 4. Data model
 
@@ -55,6 +56,7 @@ The catalog exists only as static JavaScript fixtures, three times over: `tools/
 | `geom` | `geometry(Geometry, 4326)` | Point for most letters, LineString for A (surface); expected geometry kind per letter is declared by the catalog registry and validated at import/edit time |
 | `country_code` | `char(2)` | denormalized filter column (moderation world overview, future queries) |
 | `subdivision_id` | `bigint` FK → `world_subdivision`, nullable | resolved from the harvest's per-province tag |
+| `region_id` | `bigint` FK → `region`, nullable + btree | the operational unit (§4.4) — assigned at import via `ST_PointOnSurface` containment, recomputed every run |
 | `state` | enum `submitted / unverified / verified / rejected / retired` | imported rows enter **`unverified`** (on the map, but not past the community verification gate); user submissions (phase B) enter `submitted`; `retired` is curator-decided, never automatic |
 | `source` | enum `osm / pivot / wikidata / user / auto` | the provenance tags from edit-items |
 | `source_ref` | `text`, nullable | `node/123`, `way/456`, `Q2093`, PIVOT id; **unique `(source, source_ref)`** (Postgres treats NULL refs as distinct — fine for `auto`) |
@@ -65,13 +67,26 @@ Indexes: GiST(`geom`) — *the* map read path is viewport bbox + filter; btree(`
 
 ### 4.2 `recommended_route` — letter K (11 rows at import)
 
-`id` bigint identity · `name` · `geom geometry(LineString, 4326)` + GiST · `distance_m` / `ascent_m` (real columns — they are display/sort fields, not jsonb) · `state`, `source`, `source_ref`, `attributes`, timestamps as in `item`.
+`id` bigint identity · `name` · `geom geometry(LineString, 4326)` + GiST · `distance_m` / `ascent_m` (real columns — they are display/sort fields, not jsonb) · `region_id` (as in `item` — routes are votable, and voting is region-scoped) · `state`, `source`, `source_ref`, `attributes`, timestamps as in `item`.
 
 ### 4.3 `heat_point` — layer L (seeded from today's `CC_ROUTES.heat`)
 
 `id` bigint identity · `geom geometry(Point, 4326)` + GiST · `weight` real · `source` (`auto` for now) · `computed_at`. **Not** an item: no name, no lifecycle, no attributes, never editable, never in the moderation queue. This is the table most likely to explode when real rides feed it — first candidate for partitioning and tile/aggregation serving.
 
-### 4.4 Geometry in Doctrine
+### 4.4 `region` — the operational unit (day-one seed: Wallonia)
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `bigint` generated identity | |
+| `slug` | `text`, unique | stable reference (`wallonia`) — the upsert key |
+| `name` | `text` | display name |
+| `geom` | `geometry(MultiPolygon, 4326)` | GiST index; complex boundaries `ST_Subdivide`'d at scale |
+| `area_km2` | `real` | from the clustering pipeline; informational |
+| `created_at` / `updated_at` | `timestamptz` | |
+
+**Membership:** `item.region_id` and `recommended_route.region_id` — nullable `bigint` FK + btree index, assigned at import by a deterministic rule: the region whose polygon contains `ST_PointOnSurface(geom)` (guaranteed on-geometry for points *and* lines, so border-crossing segments get exactly one home region; the map still finds them from neighboring viewports via GiST). `heat_point` carries no region — it is never moderated or voted. Membership is recomputed on every import run, so regions can be split/merged later without touching items' schema.
+
+### 4.5 Geometry in Doctrine
 
 One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read `ST_AsGeoJSON`) rather than a full spatial ORM package — matches the project's plain-SQL migration style; complex spatial queries stay raw SQL/DBAL where they belong.
 
@@ -79,11 +94,13 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 
 - Additive `--export` output alongside the existing fixture writing: **one GeoJSON/JSONL file per layer** that *keeps* what `to_fixture_js` strips — `_id` (OSM type+id), source metadata, raw per-feature fields. `atlas/demo/*.js` keep being written unchanged (`main`'s HTML demo consumes them); the export is a second artifact, not a replacement.
 - All sources export: 7 OSM POI layers, PIVOT stays (ArcGIS id as ref), Wikidata climbs (`Q…` as ref), surface segments (OSM way refs if `route_surfaces.py` has them stable, else `source='auto'`, NULL ref), routes, and the heat point set.
+- **Region polygon export:** one GeoJSON for the Wallonia region — `slug`, `name`, `area_km2`, and geometry = the union of the five province admin polygons `regions.py` already fetches from Overpass.
 - Geo harvesting stays Python (project boundary); export files are the handoff artifact.
 
 ## 6. Importer (PHP, `app:catalog:import <path>`)
 
 - Modeled on `app:world:import`: **idempotent upsert by `(source, source_ref)`** — insert ⇒ `state='unverified'`; update ⇒ refresh fields + `imported_at`. Acceptance: run twice, row counts and content identical.
+- **Regions import first** (upsert by `slug`), then items/routes — `region_id` assigned per row by `ST_PointOnSurface` containment (§4.4), recomputed on every run.
 - Letter mapping from the layer file; `country_code='BE'`; subdivision resolved from the harvest province tag (nullable fallback).
 - Attributes validated through the catalog registry (unknown key ⇒ error; wrong geometry kind for letter ⇒ error).
 - **Batched DBAL writes**, not ORM-per-entity — the pattern that survives world scale; Doctrine is the application's path, never the import loop.
@@ -108,6 +125,7 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 
 - **Parity is the end-to-end test of the import**: per-layer feature counts from `/map/catalog.json` equal the retired fixtures' counts exactly; sampled features byte-match after shape serialization; Playwright pass as anonymous rider shows identical rendering, 0 console errors.
 - Import idempotency test (run twice, diff row set); registry-validation tests (unknown key, wrong geometry kind); geometry round-trip unit test for the DBAL type; endpoint tests (shape, cache headers, state filtering).
+- Region membership test: after import, every item/route has `region_id` = Wallonia (the seed region covers the whole harvest area — 100% assignment is the expected outcome, and a NULL is a data smell worth failing on).
 - Standard gates: phpunit, phpstan, psalm, cs-fixer, SPDX, translations (K-rename keys ×4 locales), `node --check`.
 
 ## 10. Scale commitments (contract, not advice)
@@ -123,9 +141,10 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 - **Phase B:** `Submission` entity replaces `SampleQueue` (its shape is the de-facto schema: `{id, type: new|edit|hazard|photo, letter, country, region, title, lat, lng, who, when, body, was, now}` + the four stub payload kinds); decisions persist with an audit trail; moderation spec §13 hardening fires (drawer HTML-escape, filter-context redirect, TYPES relocation, `moderationToken` reject-on-miss).
 - **Phase C:** append-only per-field change history (time-partitionable from its first migration); approved edits mutate `item.attributes`/columns; the importer gains the conflict filter — skip locally-edited fields, and where OSM's value *also* changed, write an **`osm_sync`** submission to the queue (*was* = our value, *now* = OSM's; decisions mean **load OSM / keep ours**).
 - **Later:** ride ingestion → heat aggregation (Python); vector tiles; upstreaming to OSM (dissolves forks when it lands).
-- **Region polygon storage** (any phase, additive): the model already answers "all items in `<arbitrary polygon>`" via the GiST index (`ST_Intersects(item.geom, :polygon)` — index-pruned bbox pass, then exact test; `ST_Intersects` over `ST_Within` so border-crossing line items belong to the region). What phase A does *not* store is named region geometry: `world_subdivision` is plain reference data. When named-region queries are wanted, add `geom geometry(MultiPolygon, 4326)` to `world_subdivision` (boundaries from OSM admin/GADM) and/or a standalone `region` table for arbitrary/algorithmic regions (the Wallonia-grain uniform-clustering system fits there). Routine filters keep using the denormalized `country_code`/`subdivision_id` — membership computed once at import; live spatial queries are for regions not precomputed. Complex boundaries get `ST_Subdivide`'d at scale.
+- **Region consumers** (the entity + membership are day-one, §4.4; the systems that hang off it are not): **per-region moderator groups** (the per-region curator Security Voter the moderation spec defers), a user's **preferred/active region** (`User.region_id`), and **region-scoped voting**. Ad-hoc spatial queries ("all items in `<arbitrary polygon>`") work day one via GiST + `ST_Intersects` — no region row required.
+- **World region rollout**: the Wallonia-grain clustering pipeline (`tools/regions`) gains polygon emission — union of member division admin polygons per cluster — and world regions import like any region rows; `world_subdivision` may additionally gain boundary geometry (OSM admin/GADM). Membership recompute at import means the region map can evolve without item-schema changes.
 
 ## 12. Plan split
 
-- **Plan 1 — model + import:** migrations (3 tables + enums + indexes), geometry DBAL type, entities, harvest `--export`, `app:catalog:import`, seed import of Wallonia data, idempotency + validation tests. DB is a (temporarily) shadow source of truth.
+- **Plan 1 — model + import:** migrations (4 tables — `region`, `item`, `recommended_route`, `heat_point` — + enums + indexes), geometry DBAL type, entities, harvest `--export` (incl. the Wallonia region polygon), `app:catalog:import` (regions first, then membership-assigning item/route import), idempotency + validation + membership tests. DB is a (temporarily) shadow source of truth.
 - **Plan 2 — serving flip:** `CatalogProvider` + `/map/catalog.json`, `map.js` fetch-init refactor, K-rename, fixture retirement, parity acceptance (counts + Playwright), i18n keys.
