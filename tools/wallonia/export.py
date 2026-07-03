@@ -227,7 +227,12 @@ def write(name, payload):
     OUT.mkdir(exist_ok=True)
     path = OUT / name
     path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-    n = len(payload.get("features") or payload.get("routes") or payload.get("points") or [1])
+    for key in ("features", "routes", "points"):
+        if key in payload:
+            n = len(payload[key])
+            break
+    else:
+        n = 1  # region Feature file: no layer-list key, always exactly one feature
     print(f"  {name}: {n}")
 
 

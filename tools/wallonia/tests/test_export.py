@@ -121,6 +121,22 @@ def test_poi_feature_moves_id_into_ref():
     assert f["properties"]["t"] == "Bike shop"
 
 
+def test_write_reports_zero_for_genuinely_empty_layer(monkeypatch, tmp_path, capsys):
+    """An empty features/routes/points list must print 0, not fall through to
+    the region-file default of 1 (falsy-`or` chain bug)."""
+    monkeypatch.setattr(export, "OUT", tmp_path)
+    export.write("empty.json", {"layer": "services", "letter": "D", "features": []})
+    assert "empty.json: 0" in capsys.readouterr().out
+
+
+def test_write_reports_one_for_region_feature_file(monkeypatch, tmp_path, capsys):
+    """The region export is a bare GeoJSON Feature (no features/routes/points
+    key) and always counts as exactly one."""
+    monkeypatch.setattr(export, "OUT", tmp_path)
+    export.write("region-wallonia.geojson", {"type": "Feature", "properties": {}, "geometry": {}})
+    assert "region-wallonia.geojson: 1" in capsys.readouterr().out
+
+
 def test_climb_features_preserves_fixture_source_as_attribution(monkeypatch):
     """Deviation (approved): fixture climb 'source' citation preserved as 'attribution'
     instead of being overwritten by the provenance key."""
