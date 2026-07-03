@@ -926,7 +926,6 @@ moderate:
   kicker: 'Moderation queue'
   title: 'Review pending submissions.'
   role_label: 'Curator'
-  pending: 'pending review'
   stub_banner_bold: 'Preview only.'
   stub_banner_body: 'This is a preview of the curator review flow. Decisions are recorded but not yet persisted to the live atlas — pending the data API. Launching 2026.'
   type:

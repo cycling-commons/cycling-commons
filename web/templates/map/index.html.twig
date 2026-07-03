@@ -206,7 +206,7 @@
 {% if is_granted('ROLE_CURATOR') and pending is defined %}
 <script>
   window.CC_IS_CURATOR = true;
-  window.CC_PENDING = {{ pending|json_encode|raw }};
+  window.CC_PENDING = {{ pending|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {% endif %}
 <script src="{{ asset('map/map.js') }}"></script>

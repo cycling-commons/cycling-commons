@@ -35,6 +35,16 @@ final class SampleQueueFilterTest extends TestCase
         self::assertLessThan(count(SampleQueue::items()), count($nl));
     }
 
+    public function testFilterByRegionReturnsOnlyThatRegion(): void
+    {
+        $limburg = SampleQueue::filtered(null, 'Limburg', null);
+        self::assertNotEmpty($limburg);
+        foreach ($limburg as $item) {
+            self::assertSame('Limburg', $item['region']);
+        }
+        self::assertLessThan(count(SampleQueue::items()), count($limburg));
+    }
+
     public function testFilterByTypeReturnsOnlyThatType(): void
     {
         $hazards = SampleQueue::filtered(null, null, 'hazard');

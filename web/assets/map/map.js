@@ -1089,6 +1089,7 @@
     let edit = `<a class="cc-d-act edit" href="/improve?${editQ}">${editLbl}</a>`;
     let moderate = '';
     if(layer.pendingLayer && f.pending){
+      // TODO(data-api): s.title/s.body/s.was/s.now are trusted fixtures today — HTML-escape before interpolating once real submissions flow here (stored-XSS-in-curator-session risk).
       const s=f.pending;
       // Pending items carry their own catalog letter (A–K) + coords → a faithful edit link.
       edit = `<a class="cc-d-act edit" href="/improve?type=${s.letter}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${s.lat}&lng=${s.lng}">✎ Edit this item</a>`;

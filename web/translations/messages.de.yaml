@@ -926,7 +926,6 @@ moderate:
   kicker: 'Moderationswarteschlange'
   title: 'Ausstehende Einreichungen prüfen.'
   role_label: 'Kurator'
-  pending: 'ausstehend zur Prüfung'
   stub_banner_bold: 'Nur Vorschau.'
   stub_banner_body: 'Dies ist eine Vorschau des Kuratorenprüfablaufs. Entscheidungen werden erfasst, aber noch nicht dauerhaft im Live-Atlas gespeichert — ausstehend bis zur Daten-API. Start 2026.'
   type:

@@ -926,7 +926,6 @@ moderate:
   kicker: 'Moderatiewachtrij'
   title: 'Beoordeel ingediende bijdragen.'
   role_label: 'Curator'
-  pending: 'in afwachting van beoordeling'
   stub_banner_bold: 'Alleen voorbeeld.'
   stub_banner_body: 'Dit is een voorbeeld van de curatorbeoordelingsstroom. Beslissingen worden geregistreerd maar nog niet opgeslagen in de live atlas — in afwachting van de data-API. Lancering 2026.'
   type:

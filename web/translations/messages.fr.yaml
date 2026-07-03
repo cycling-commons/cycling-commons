@@ -926,7 +926,6 @@ moderate:
   kicker: 'File de modération'
   title: 'Examinez les soumissions en attente.'
   role_label: 'Curateur'
-  pending: 'en attente d''examen'
   stub_banner_bold: 'Aperçu uniquement.'
   stub_banner_body: 'Il s''agit d''un aperçu du flux de révision du curateur. Les décisions sont enregistrées mais ne sont pas encore persistées dans l''atlas en direct — en attente de l''API de données. Lancement en 2026.'
   type:
