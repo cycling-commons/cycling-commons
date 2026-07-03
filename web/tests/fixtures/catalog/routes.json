@@ -1,0 +1,4 @@
+{"layer":"routes","routes":[
+ {"name":"Test loop","source":"auto","ref":"fx:route:test-loop","distance_m":12300,"ascent_m":210,
+  "geometry":{"type":"LineString","coordinates":[[4.4,50.6],[4.5,50.7],[4.4,50.6]]},
+  "attributes":{"season":"summer","start":[50.6,4.4],"elev":[100,120,100],"difficulty":{"score":2,"label":"easy"}}}]}

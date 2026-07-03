@@ -64,6 +64,8 @@ final class ImportCatalogCommand extends Command
         try {
             $regions = $this->importRegions($dir, $io);
             $items = $this->importItemLayers($dir, $io);
+            $routes = $this->importRoutes($dir, $io);
+            $heat = $this->importHeat($dir, $io);
             $assigned = $this->recomputeMembership();
         } catch (\InvalidArgumentException $e) {
             $io->error($e->getMessage());
@@ -71,7 +73,7 @@ final class ImportCatalogCommand extends Command
             return Command::FAILURE;
         }
 
-        $io->success(sprintf('Catalog import: %d region(s), %d item(s) upserted, %d region-assigned.', $regions, $items, $assigned));
+        $io->success(sprintf('Catalog import: %d region(s), %d item(s) upserted, %d route(s), %d heat point(s), %d region-assigned.', $regions, $items, $routes, $heat, $assigned));
 
         return Command::SUCCESS;
     }
@@ -154,6 +156,67 @@ final class ImportCatalogCommand extends Command
         return $total;
     }
 
+    private function importRoutes(string $dir, SymfonyStyle $io): int
+    {
+        $file = $dir.'/routes.json';
+        if (!is_file($file)) {
+            return 0;
+        }
+        /** @var array{routes: list<array{name: string, source: string, ref: string, distance_m: int, ascent_m: int, geometry: array<string, mixed>, attributes: array<string, mixed>}>} $payload */
+        $payload = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
+        foreach ($payload['routes'] as $route) {
+            $this->db->executeStatement(
+                'INSERT INTO recommended_route (name, geom, distance_m, ascent_m, state, source, source_ref, attributes, created_at, updated_at, imported_at)
+                 VALUES (:name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :dist, :ascent, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())
+                 ON CONFLICT (source, source_ref) DO UPDATE SET
+                   name = EXCLUDED.name, geom = EXCLUDED.geom, distance_m = EXCLUDED.distance_m,
+                   ascent_m = EXCLUDED.ascent_m, attributes = EXCLUDED.attributes,
+                   updated_at = NOW(), imported_at = NOW()',
+                [
+                    'name' => $route['name'],
+                    'geom' => json_encode($route['geometry'], \JSON_THROW_ON_ERROR),
+                    'dist' => $route['distance_m'],
+                    'ascent' => $route['ascent_m'],
+                    'state' => 'unverified',
+                    'source' => $route['source'],
+                    'ref' => $route['ref'],
+                    'attrs' => json_encode($route['attributes'], \JSON_THROW_ON_ERROR),
+                ],
+            );
+        }
+        $io->writeln(sprintf('  routes.json: %d route(s)', \count($payload['routes'])));
+
+        return \count($payload['routes']);
+    }
+
+    private function importHeat(string $dir, SymfonyStyle $io): int
+    {
+        $file = $dir.'/heat.json';
+        if (!is_file($file)) {
+            return 0;
+        }
+        /** @var array{points: list<array{0: float, 1: float, 2?: string}>} $payload */
+        $payload = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
+        $this->db->executeStatement("DELETE FROM heat_point WHERE source = 'auto'");
+        foreach (array_chunk($payload['points'], 500) as $chunk) {
+            $values = [];
+            $params = [];
+            foreach ($chunk as $i => $point) {
+                // fixture order is [lat, lng, season] — ST_Point takes (x=lng, y=lat)
+                $values[] = sprintf('(ST_SetSRID(ST_Point(:lng%1$d, :lat%1$d), 4326), 1.0, \'auto\', NOW())', $i);
+                $params['lng'.$i] = $point[1];
+                $params['lat'.$i] = $point[0];
+            }
+            $this->db->executeStatement(
+                'INSERT INTO heat_point (geom, weight, source, computed_at) VALUES '.implode(', ', $values),
+                $params,
+            );
+        }
+        $io->writeln(sprintf('  heat.json: %d point(s)', \count($payload['points'])));
+
+        return \count($payload['points']);
+    }
+
     /** @return array<string, int> subdivision code => id (empty when world data is not seeded) */
     private function subdivisionIdsByCode(): array
     {
@@ -179,6 +242,11 @@ final class ImportCatalogCommand extends Command
         $this->db->executeStatement('UPDATE item SET region_id = NULL');
         $assigned = (int) $this->db->executeStatement(
             'UPDATE item SET region_id = r.id FROM region r WHERE ST_Contains(r.geom, ST_PointOnSurface(item.geom))',
+        );
+
+        $this->db->executeStatement('UPDATE recommended_route SET region_id = NULL');
+        $assigned += (int) $this->db->executeStatement(
+            'UPDATE recommended_route SET region_id = r.id FROM region r WHERE ST_Contains(r.geom, ST_PointOnSurface(recommended_route.geom))',
         );
 
         return $assigned;
