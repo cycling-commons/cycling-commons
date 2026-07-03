@@ -204,12 +204,13 @@ final class ImportCatalogCommand extends Command
             $params = [];
             foreach ($chunk as $i => $point) {
                 // fixture order is [lat, lng, season] — ST_Point takes (x=lng, y=lat)
-                $values[] = sprintf('(ST_SetSRID(ST_Point(:lng%1$d, :lat%1$d), 4326), 1.0, \'auto\', NOW())', $i);
+                $values[] = sprintf('(ST_SetSRID(ST_Point(:lng%1$d, :lat%1$d), 4326), 1.0, \'auto\', :season%1$d, NOW())', $i);
                 $params['lng'.$i] = $point[1];
                 $params['lat'.$i] = $point[0];
+                $params['season'.$i] = $point[2] ?? null;
             }
             $this->db->executeStatement(
-                'INSERT INTO heat_point (geom, weight, source, computed_at) VALUES '.implode(', ', $values),
+                'INSERT INTO heat_point (geom, weight, source, season, computed_at) VALUES '.implode(', ', $values),
                 $params,
             );
         }

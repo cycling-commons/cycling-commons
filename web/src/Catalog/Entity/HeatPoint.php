@@ -34,6 +34,10 @@ class HeatPoint
     #[ORM\Column(type: 'string', length: 10, enumType: ItemSource::class)]
     private ItemSource $source = ItemSource::Auto;
 
+    /** Ride-heat layer filter facet ("summer"/"winter"/…); nullable — not every point carries one. */
+    #[ORM\Column(type: 'string', length: 8, nullable: true)]
+    private ?string $season = null;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $computedAt;
 
@@ -79,6 +83,18 @@ class HeatPoint
     public function setSource(ItemSource $source): static
     {
         $this->source = $source;
+
+        return $this;
+    }
+
+    public function getSeason(): ?string
+    {
+        return $this->season;
+    }
+
+    public function setSeason(?string $season): static
+    {
+        $this->season = $season;
 
         return $this;
     }

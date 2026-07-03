@@ -54,7 +54,11 @@ final class ImportRoutesHeatTest extends KernelTestCase
         self::assertNotNull($region);
         self::assertSame($region->getId(), $route->getRegionId());
 
-        self::assertCount(2, $this->em->getRepository(HeatPoint::class)->findAll());
+        $heatPoints = $this->em->getRepository(HeatPoint::class)->findAll();
+        self::assertCount(2, $heatPoints);
+        $seasons = array_map(static fn (HeatPoint $p): ?string => $p->getSeason(), $heatPoints);
+        sort($seasons);
+        self::assertSame(['summer', 'winter'], $seasons); // fixture heat.json carries a season per point
 
         // Re-import: routes stay 1 (upsert), heat stays 2 (delete+reload, not append).
         $this->em->clear();

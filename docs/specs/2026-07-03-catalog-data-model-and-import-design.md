@@ -71,7 +71,7 @@ Indexes: GiST(`geom`) — *the* map read path is viewport bbox + filter; btree(`
 
 ### 4.3 `heat_point` — layer L (seeded from today's `CC_ROUTES.heat`)
 
-`id` bigint identity · `geom geometry(Point, 4326)` + GiST · `weight` real · `source` (`auto` for now) · `computed_at`. **Not** an item: no name, no lifecycle, no attributes, never editable, never in the moderation queue. This is the table most likely to explode when real rides feed it — first candidate for partitioning and tile/aggregation serving.
+`id` bigint identity · `geom geometry(Point, 4326)` + GiST · `weight` real · `source` (`auto` for now) · `season` (`varchar(8)`, nullable — the ride-heat layer's filter facet, e.g. `summer`/`winter`; round-tripped from the harvest's `[lat, lng, season]` fixture points) · `computed_at`. **Not** an item: no name, no lifecycle, no attributes, never editable, never in the moderation queue. This is the table most likely to explode when real rides feed it — first candidate for partitioning and tile/aggregation serving.
 
 ### 4.4 `region` — the operational unit (day-one seed: Wallonia)
 
