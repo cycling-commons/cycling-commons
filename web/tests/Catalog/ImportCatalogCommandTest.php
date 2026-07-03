@@ -96,6 +96,46 @@ final class ImportCatalogCommandTest extends KernelTestCase
         $countAfterFirst = \count($this->em->getRepository(Item::class)->findAll());
         $this->runImport($dir)->assertCommandIsSuccessful();
         self::assertSame($countAfterFirst, \count($this->em->getRepository(Item::class)->findAll()));
+
+        // Backdate, then re-import: updated_at must NOT bump (content unchanged),
+        // imported_at MUST (last harvest touch). NOW() is transaction-constant
+        // under DAMA, so wall-clock comparisons cannot work here.
+        $epoch = new \DateTimeImmutable('2000-01-01 00:00:00');
+        $this->em->getConnection()->executeStatement(
+            "UPDATE item SET updated_at = '2000-01-01 00:00:00', imported_at = '2000-01-01 00:00:00' WHERE source_ref = 'node/1001'",
+        );
+        $this->em->clear();
+        $this->runImport($dir)->assertCommandIsSuccessful();
+        $shop = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1001']);
+        self::assertNotNull($shop);
+        self::assertEquals($epoch, $shop->getUpdatedAt());              // content unchanged -> no bump
+        self::assertGreaterThan($epoch, $shop->getImportedAt());        // harvest touch ALWAYS bumps
+    }
+
+    public function testMalformedJsonFailsCleanly(): void
+    {
+        $dir = sys_get_temp_dir().'/catalog-import-broken-'.getmypid();
+        @mkdir($dir, 0777, true);
+        file_put_contents($dir.'/broken.json', '{"layer": "services", "letter": "D", "features": [');
+        $tester = $this->runImport($dir);
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('Syntax error', $tester->getDisplay());
+    }
+
+    public function testFailureRollsBackAllWork(): void
+    {
+        // services.json imports fine; zz-bad-key.json (sorts last in the glob)
+        // then fails validation — the transaction must leave NOTHING behind.
+        $src = __DIR__.'/../fixtures/catalog';
+        $dir = sys_get_temp_dir().'/catalog-import-rollback-'.getmypid();
+        @mkdir($dir, 0777, true);
+        copy($src.'/region-square.geojson', $dir.'/region-square.geojson');
+        copy($src.'/services.json', $dir.'/services.json');
+        copy($src.'/bad-key.json', $dir.'/zz-bad-key.json');
+        $tester = $this->runImport($dir);
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertCount(0, $this->em->getRepository(Item::class)->findAll());
+        self::assertNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'test-square']));
     }
 
     public function testUpdatePreservesState(): void

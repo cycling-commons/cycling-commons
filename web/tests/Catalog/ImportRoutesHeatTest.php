@@ -66,4 +66,19 @@ final class ImportRoutesHeatTest extends KernelTestCase
         self::assertCount(1, $this->em->getRepository(RecommendedRoute::class)->findAll());
         self::assertCount(2, $this->em->getRepository(HeatPoint::class)->findAll());
     }
+
+    public function testUpdatePreservesRouteState(): void
+    {
+        $this->runImport();
+        $route = $this->em->getRepository(RecommendedRoute::class)->findOneBy(['sourceRef' => 'fx:route:test-loop']);
+        self::assertNotNull($route);
+        $route->setState(ItemState::Verified);
+        $this->em->flush();
+        $this->em->clear();
+
+        $this->runImport();
+        $route = $this->em->getRepository(RecommendedRoute::class)->findOneBy(['sourceRef' => 'fx:route:test-loop']);
+        self::assertNotNull($route);
+        self::assertSame(ItemState::Verified, $route->getState()); // upsert never touches state
+    }
 }

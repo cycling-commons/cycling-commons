@@ -154,9 +154,11 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertStringContainsString('Côte de Test', $json);              // JSON_UNESCAPED_UNICODE
         self::assertStringContainsString('http://example.test', $json);      // JSON_UNESCAPED_SLASHES
         // JSON_PRESERVE_ZERO_FRACTION: whole-number floats (services "r" rating
-        // here; route "km" is covered by testRouteShapeAndHeat) must keep their
-        // ".0" so the served bytes match the legacy fixture — PHP's json_encode
-        // renders a whole-number float as a bare integer unless this flag is set.
+        // here) must keep their ".0" so the served bytes match the legacy
+        // fixture — PHP's json_encode renders a whole-number float as a bare
+        // integer unless this flag is set. This "r":4.0 assertion covers the
+        // shared json() flag site (route km transitively; testRouteShapeAndHeat
+        // asserts payload(), not json(), so 12.3 can't distinguish the flag).
         self::assertStringContainsString('"r":4.0', $json);
     }
 }

@@ -11,6 +11,7 @@ use App\Catalog\Import\ProvinceMap;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception as DBALException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -64,12 +65,17 @@ final class ImportCatalogCommand extends Command
         }
 
         try {
+            $this->db->beginTransaction();
             $regions = $this->importRegions($dir, $io);
             $items = $this->importItemLayers($dir, $io);
             $routes = $this->importRoutes($dir, $io);
             $heat = $this->importHeat($dir, $io);
             $assigned = $this->recomputeMembership();
-        } catch (\InvalidArgumentException $e) {
+            $this->db->commit();
+        } catch (\InvalidArgumentException|\JsonException|DBALException $e) {
+            if ($this->db->isTransactionActive()) {
+                $this->db->rollBack();
+            }
             $io->error($e->getMessage());
 
             return Command::FAILURE;
@@ -90,7 +96,10 @@ final class ImportCatalogCommand extends Command
                 'INSERT INTO region (slug, name, geom, area_km2, created_at, updated_at)
                  VALUES (:slug, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :area, NOW(), NOW())
                  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, geom = EXCLUDED.geom,
-                   area_km2 = EXCLUDED.area_km2, updated_at = NOW()',
+                   area_km2 = EXCLUDED.area_km2,
+                   updated_at = CASE WHEN (region.name, ST_AsEWKB(region.geom), region.area_km2)
+                                     IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.area_km2)
+                                THEN NOW() ELSE region.updated_at END',
                 [
                     'slug' => $feature['properties']['slug'],
                     'name' => $feature['properties']['name'],
@@ -139,7 +148,11 @@ final class ImportCatalogCommand extends Command
                      ON CONFLICT (source, source_ref, letter) DO UPDATE SET
                        name = EXCLUDED.name, geom = EXCLUDED.geom,
                        country_code = EXCLUDED.country_code, subdivision_id = EXCLUDED.subdivision_id,
-                       attributes = EXCLUDED.attributes, updated_at = NOW(), imported_at = NOW()',
+                       attributes = EXCLUDED.attributes,
+                       updated_at = CASE WHEN (item.name, ST_AsEWKB(item.geom), item.country_code, item.subdivision_id, item.attributes)
+                                         IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.country_code, EXCLUDED.subdivision_id, EXCLUDED.attributes)
+                                    THEN NOW() ELSE item.updated_at END,
+                       imported_at = NOW()',
                     [
                         'letter' => $letter,
                         'name' => (string) ($props['n'] ?? $props['name'] ?? ''),
@@ -176,7 +189,10 @@ final class ImportCatalogCommand extends Command
                  ON CONFLICT (source, source_ref) DO UPDATE SET
                    name = EXCLUDED.name, geom = EXCLUDED.geom, distance_m = EXCLUDED.distance_m,
                    ascent_m = EXCLUDED.ascent_m, attributes = EXCLUDED.attributes,
-                   updated_at = NOW(), imported_at = NOW()',
+                   updated_at = CASE WHEN (recommended_route.name, ST_AsEWKB(recommended_route.geom), recommended_route.distance_m, recommended_route.ascent_m, recommended_route.attributes)
+                                     IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.distance_m, EXCLUDED.ascent_m, EXCLUDED.attributes)
+                                THEN NOW() ELSE recommended_route.updated_at END,
+                   imported_at = NOW()',
                 [
                     'name' => $route['name'],
                     'geom' => json_encode($route['geometry'], \JSON_THROW_ON_ERROR),
