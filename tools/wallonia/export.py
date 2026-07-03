@@ -167,7 +167,7 @@ def routes_payload():
             "name": r["name"], "source": "auto", "ref": f"fx:route:{slug(r['name'])}",
             "distance_m": round(r["km"] * 1000), "ascent_m": round(r.get("gain", 0)),
             "geometry": {"type": "LineString", "coordinates": coords},
-            "attributes": {k: r[k] for k in ("season", "start", "elev", "difficulty") if k in r},
+            "attributes": {k: r[k] for k in ("season", "start", "elev", "difficulty", "uploader", "photo") if k in r},
         })
     return {"layer": "routes", "routes": routes}
 

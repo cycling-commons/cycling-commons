@@ -137,6 +137,26 @@ def test_write_reports_one_for_region_feature_file(monkeypatch, tmp_path, capsys
     assert "region-wallonia.geojson: 1" in capsys.readouterr().out
 
 
+def test_routes_payload_preserves_uploader_and_photo(monkeypatch):
+    fixture = {"routes": [
+        {"name": "With extras", "km": 10.0, "gain": 100, "season": "summer",
+         "start": [50.5, 4.5], "loop": [[50.5, 4.5], [50.6, 4.6]], "elev": [10, 20],
+         "difficulty": {"score": 2, "label": "easy"},
+         "uploader": {"name": "Hanne V.", "public": True},
+         "photo": {"sm": "https://example.test/s.jpg", "lg": "https://example.test/l.jpg",
+                   "credit": "X", "license": "CC0", "source": "https://example.test"}},
+        {"name": "Bare", "km": 5.0, "gain": 50, "season": "winter",
+         "start": [50.1, 4.1], "loop": [[50.1, 4.1], [50.2, 4.2]], "elev": [5],
+         "difficulty": {"score": 1, "label": "easy"}},
+    ], "heat": []}
+    monkeypatch.setattr(export, "load_fixture", lambda *_: fixture)
+    routes = export.routes_payload()["routes"]
+    assert routes[0]["attributes"]["uploader"] == {"name": "Hanne V.", "public": True}
+    assert routes[0]["attributes"]["photo"]["credit"] == "X"
+    assert "uploader" not in routes[1]["attributes"]
+    assert "photo" not in routes[1]["attributes"]
+
+
 def test_climb_features_preserves_fixture_source_as_attribution(monkeypatch):
     """Deviation (approved): fixture climb 'source' citation preserved as 'attribution'
     instead of being overwritten by the provenance key."""
