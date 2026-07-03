@@ -111,6 +111,38 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertSame(ItemState::Verified, $shop->getState()); // upsert never touches state
     }
 
+    public function testSameSourceRefWithDifferentLettersPersistsBothRows(): void
+    {
+        // One OSM entity may legitimately carry two classifications (e.g. a
+        // heritage site that is also scenic): item identity is
+        // (source, source_ref, letter), so both rows persist independently.
+        $dir = sys_get_temp_dir().'/catalog-import-dual-'.getmypid();
+        @mkdir($dir, 0777, true);
+        $feature = static fn (string $t): array => [
+            'type' => 'Feature',
+            'properties' => ['t' => $t, 'n' => 'Villers Abbey', 'source' => 'osm', 'ref' => 'node/9001'],
+            'geometry' => ['type' => 'Point', 'coordinates' => [4.5, 50.6]],
+        ];
+        file_put_contents($dir.'/history.json', json_encode(
+            ['layer' => 'history', 'letter' => 'J', 'features' => [$feature('Abbey')]],
+            \JSON_THROW_ON_ERROR,
+        ));
+        file_put_contents($dir.'/scenic.json', json_encode(
+            ['layer' => 'scenic', 'letter' => 'I', 'features' => [$feature('Viewpoint')]],
+            \JSON_THROW_ON_ERROR,
+        ));
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+        $rows = $this->em->getRepository(Item::class)->findBy(['sourceRef' => 'node/9001']);
+        $letters = array_map(static fn (Item $i): string => $i->getLetter(), $rows);
+        sort($letters);
+        self::assertSame(['I', 'J'], $letters);
+
+        // Still two rows (updated, not multiplied) after a second run.
+        $this->runImport($dir)->assertCommandIsSuccessful();
+        self::assertCount(2, $this->em->getRepository(Item::class)->findBy(['sourceRef' => 'node/9001']));
+    }
+
     public function testUnknownAttributeKeyFails(): void
     {
         $tester = $this->runImport($this->fixturesDir('bad-key'));

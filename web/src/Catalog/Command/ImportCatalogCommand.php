@@ -19,8 +19,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Imports catalog export artifacts (tools/wallonia/out) into the database:
- * regions first, then item layers; upsert by (source, source_ref); region
- * membership recomputed every run. Updates never touch lifecycle state.
+ * regions first, then item layers; items upsert by (source, source_ref, letter)
+ * — one entity may carry two classifications — routes by (source, source_ref);
+ * region membership recomputed every run. Updates never touch lifecycle state.
  *
  * @api Console entry point, invoked by the router of humans (make/CLI).
  */
@@ -132,8 +133,8 @@ final class ImportCatalogCommand extends Command
                 $this->db->executeStatement(
                     'INSERT INTO item (letter, name, geom, country_code, subdivision_id, state, source, source_ref, attributes, created_at, updated_at, imported_at)
                      VALUES (:letter, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :cc, :sub, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())
-                     ON CONFLICT (source, source_ref) DO UPDATE SET
-                       letter = EXCLUDED.letter, name = EXCLUDED.name, geom = EXCLUDED.geom,
+                     ON CONFLICT (source, source_ref, letter) DO UPDATE SET
+                       name = EXCLUDED.name, geom = EXCLUDED.geom,
                        country_code = EXCLUDED.country_code, subdivision_id = EXCLUDED.subdivision_id,
                        attributes = EXCLUDED.attributes, updated_at = NOW(), imported_at = NOW()',
                     [
