@@ -23,13 +23,37 @@ def test_surface_feature_converts_path_and_ref():
     seg = {"name": "Test seg", "surface": "Asphalt", "smoothness": "Good", "width": "3.0 m",
            "traffic": "Quiet", "cls": "paved", "path": [[50.1, 4.2], [50.2, 4.3]], "wayId": 123}
     f = export.surface_feature(seg)
-    assert f["properties"]["ref"] == "way/123"
+    assert f["properties"]["ref"] == "way/123"  # unique OSM way ref stays clean
     assert f["properties"]["source"] == "osm"
     assert f["geometry"]["type"] == "LineString"
     assert f["geometry"]["coordinates"][0] == [4.2, 50.1]  # [lat,lng] -> [lng,lat]
-    seg2 = dict(seg); del seg2["wayId"]
-    assert export.surface_feature(seg2)["properties"]["ref"] == "fx:surface:test-seg"
-    assert export.surface_feature(seg2)["properties"]["source"] == "auto"
+
+
+def test_surface_feature_synthetic_ref_has_coordinate_discriminator():
+    """No wayId -> synthetic ref carries the first path vertex so segments of
+    the same route/surface class don't collapse onto one (source, ref) key."""
+    seg = {"name": "Test seg", "surface": "Asphalt", "cls": "paved",
+           "path": [[50.1, 4.2], [50.2, 4.3]]}
+    f = export.surface_feature(seg)
+    assert f["properties"]["ref"] == "fx:surface:test-seg:50.1,4.2"
+    assert f["properties"]["source"] == "auto"
+    seg2 = dict(seg, path=[[50.9, 4.8], [50.2, 4.3]])
+    assert export.surface_feature(seg2)["properties"]["ref"] == "fx:surface:test-seg:50.9,4.8"
+
+
+def test_water_features_dedupes_exact_duplicate_refs(monkeypatch, capsys):
+    """Exact-duplicate harvest points (same coordinates) export once — keep first."""
+    pt = {"type": "Point", "coordinates": [4.85758, 50.46576]}
+    fc = {"features": [
+        {"properties": {"t": "Drinking water"}, "geometry": pt},
+        {"properties": {"t": "Drinking water"}, "geometry": pt},
+        {"properties": {"t": "Spring"}, "geometry": {"type": "Point", "coordinates": [5.0, 50.5]}},
+    ]}
+    monkeypatch.setattr(export, "load_fixture", lambda filename, js_var: fc)
+    feats = export.water_features()
+    assert [f["properties"]["ref"] for f in feats] == [
+        "fx:water:50.46576,4.85758", "fx:water:50.5,5.0"]
+    assert "dropped 1 exact-duplicate ref(s)" in capsys.readouterr().out
 
 
 def test_parse_surface_fixture_handles_hybrid_js():

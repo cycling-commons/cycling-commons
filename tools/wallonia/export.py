@@ -55,11 +55,18 @@ def water_ref(feature):
 
 def water_features():
     fc = load_fixture("water-osm.js", "CC_WATER_OSM")
-    out = []
+    out, seen, dropped = [], set(), 0
     for f in fc["features"]:
+        ref = water_ref(f)
+        if ref in seen:  # exact duplicate harvest point — keep first occurrence
+            dropped += 1
+            continue
+        seen.add(ref)
         props = dict(f["properties"])
-        props["source"], props["ref"] = "osm", water_ref(f)
+        props["source"], props["ref"] = "osm", ref
         out.append({"type": "Feature", "properties": props, "geometry": f["geometry"]})
+    if dropped:
+        print(f"  water.json: dropped {dropped} exact-duplicate ref(s)")
     return out
 
 
@@ -98,7 +105,16 @@ def surface_feature(seg):
     props = {k: v for k, v in seg.items() if k not in ("path", "wayId", "edit")}
     way = seg.get("wayId")
     props["source"] = "osm" if way else "auto"
-    props["ref"] = f"way/{way}" if way else f"fx:surface:{slug(seg['name'])}"
+    if way:
+        props["ref"] = f"way/{way}"
+    else:
+        # Synthetic refs need a per-segment discriminator: one named route is
+        # exported as many segments per surface class, and slug(name) alone
+        # collapses them onto one upsert key. First path vertex ([lat,lng]
+        # fixture order, raw values — same style as water_ref) is stable
+        # across runs and unique per segment.
+        lat, lng = seg["path"][0]
+        props["ref"] = f"fx:surface:{slug(seg['name'])}:{lat},{lng}"
     coords = [[lng, lat] for lat, lng in seg["path"]]
     return {"type": "Feature", "properties": props,
             "geometry": {"type": "LineString", "coordinates": coords}}
