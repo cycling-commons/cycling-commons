@@ -58,11 +58,46 @@ final class ModerateDecideAjaxTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'application/json');
-        /** @var array{persisted:bool,reference:string,decision:string} $data */
+        /** @var array{persisted:bool,reference:string,kind:string,decision:string,submission_id:string} $data */
         $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertFalse($data['persisted']);
         self::assertStringStartsWith('CC-', $data['reference']);
+        self::assertSame('moderation_decision', $data['kind']);
         self::assertSame('approve', $data['decision']);
+        self::assertSame('1', $data['submission_id']);
+    }
+
+    /**
+     * An invalid decision must return JSON 422 {"error":"invalid_decision"}.
+     *
+     * Failure mode exercised: form VALIDATION (not CSRF) — a real extracted
+     * _token and same-origin Referer are supplied, but 'destroy' is not in the
+     * ChoiceType's choice list (approve/reject/needs_info), so the form is
+     * submitted-but-invalid. Only Accept: application/json is sent (no
+     * X-Requested-With), covering the Accept-header trigger of $wantsJson.
+     */
+    public function testAjaxInvalidDecisionReturnsJsonError(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'ajax-curator-invalid@example.com', ['ROLE_CURATOR'], true);
+
+        $crawler = $client->request('GET', '/moderate');
+        $token = (string) $crawler->filter('form.q-act-form input[name="moderation_decision[_token]"]')->first()->attr('value');
+        self::assertNotSame('', $token);
+
+        $client->request(
+            'POST',
+            '/moderate/decide',
+            ['moderation_decision' => ['submission_id' => '1', 'decision' => 'destroy', '_token' => $token]],
+            [],
+            ['HTTP_ACCEPT' => 'application/json', 'HTTP_REFERER' => 'http://localhost/moderate'],
+        );
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertResponseHeaderSame('Content-Type', 'application/json');
+        /** @var array{error:string} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame(['error' => 'invalid_decision'], $data);
     }
 
     public function testAjaxDecisionForbiddenForPlainRider(): void
