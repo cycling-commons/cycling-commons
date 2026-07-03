@@ -353,6 +353,8 @@
     // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from a profile page)
     const fp = new URLSearchParams(location.search).get('feature');
     if(fp) openFeatureByName(fp);
+    const pp = new URLSearchParams(location.search).get('pending');
+    if(pp) openPendingById(pp);
   });
 
   // right-click anywhere → show + copy the coordinates (for defining start/end points, add-a-climb, etc.)
@@ -771,6 +773,25 @@
       ]
     }));
   }
+  // Curator-only pending submissions (injected by MapController for ROLE_CURATOR only).
+  // Off the public map by design — riders never receive window.CC_PENDING.
+  if(window.CC_IS_CURATOR && Array.isArray(window.CC_PENDING)){
+    const pf = window.CC_PENDING.map(s=>({
+      name:s.title, headline:`${s.type} · ${s.who} · ${s.when}`,
+      geom:{ll:[s.lat, s.lng]},
+      record:[
+        {label:'Submitted by', value:s.who},
+        {label:'Age', value:s.when},
+        {label:'Where', value:`${s.region||''} · ${s.country||''}`}
+      ],
+      source:'Pending submission · preview',
+      pending:s
+    }));
+    const pendingLayer = { key:'pending', letter:'⚑', label:'Pending review', color:'#D92D20', icon:'⏳', kind:'point', exp:false, pendingLayer:true, features:pf };
+    CATALOG.push(pendingLayer);
+    layerByKey['pending'] = pendingLayer;
+    active.add('pending');
+  }
   let mode = 'curated';
   let markers = [];
   const dynamicIds=[];
@@ -882,7 +903,7 @@
 
   function pinEl(layer,cur){
     const d=document.createElement('div');
-    d.className='cc-pin'+(cur?' cur':''); d.style.setProperty('--c',layer.color);
+    d.className='cc-pin'+(cur?' cur':'')+(layer.pendingLayer?' pending':''); d.style.setProperty('--c',layer.color);
     const white = txtOn(layer.color)==='#fff';   // dark pins (e.g. purple climbs) → white icon
     d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${layer.icon}</span>`; return d;
   }
@@ -1127,6 +1148,20 @@
     if(!active.has(layer.key)){
       active.add(layer.key);
       const t=document.querySelector(`#layers .layer[data-key="${layer.key}"]`); if(t) t.classList.remove('off');
+      render();
+    }
+    openDrawer(layer,f);
+    const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
+    return true;
+  }
+  // open a pending submission by id (deep-link from the /moderate queue's "View on map")
+  function openPendingById(id){
+    const layer = layerByKey.pending; if(!layer) return false;
+    const f = layer.features.find(x=>x.pending && String(x.pending.id)===String(id));
+    if(!f) return false;
+    if(!active.has('pending')){
+      active.add('pending');
+      const t=document.querySelector('#layers .layer[data-key="pending"]'); if(t) t.classList.remove('off');
       render();
     }
     openDrawer(layer,f);
