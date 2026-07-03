@@ -365,6 +365,14 @@
       .setHTML(`<div class="pop"><div class="pop-co">Coordinates · copied</div>${c}</div>`).addTo(map);
   });
 
+  // curator keyboard: A approve / R reject when a pending drawer is open (not while typing a note)
+  document.addEventListener('keydown', e=>{
+    if(e.target && e.target.classList && e.target.classList.contains('cc-mod-note')) return;
+    const box=document.querySelector('#drawer.open .cc-mod'); if(!box) return;
+    if(e.key==='a'||e.key==='A'){ const b=box.querySelector('.cc-mod-btn.approve'); if(b){ e.preventDefault(); b.click(); } }
+    if(e.key==='r'||e.key==='R'){ const b=box.querySelector('.cc-mod-btn.reject'); if(b){ e.preventDefault(); b.click(); } }
+  });
+
   // Wikimedia Commons photo helper — builds sm/lg via Special:FilePath (stable, no hash needed)
   // from a verified File name (without the "File:" prefix). user = Commons username for the profile link.
   const wc = (file, credit, user, license) => {
@@ -1075,14 +1083,78 @@
     const editQ = `item=${editId}&name=${encodeURIComponent(f.name)}`
       + `&type=${layer.letter}`
       + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
-    const edit = `<a class="cc-d-act edit" href="/improve?${editQ}">${editLbl}</a>`;
+    let edit = `<a class="cc-d-act edit" href="/improve?${editQ}">${editLbl}</a>`;
+    let moderate = '';
+    if(layer.pendingLayer && f.pending){
+      const s=f.pending;
+      // Pending items carry their own catalog letter (A–K) + coords → a faithful edit link.
+      edit = `<a class="cc-d-act edit" href="/improve?type=${s.letter}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${s.lat}&lng=${s.lng}">✎ Edit this item</a>`;
+      const body = s.body ? `<p class="cc-mod-body">${s.body}</p>` : '';
+      const diff = (s.was && s.now) ? `<div class="cc-mod-diff"><div class="cc-mod-was">${s.was}</div><div class="cc-mod-now">${s.now}</div></div>` : '';
+      moderate = `<div class="cc-mod" data-id="${s.id}">
+        <div class="cc-mod-badge">⚑ Pending review</div>${body}${diff}
+        <textarea class="cc-mod-note" placeholder="Optional note — a reason, or context…"></textarea>
+        <div class="cc-mod-acts">
+          <button class="cc-mod-btn approve" data-decision="approve">✓ Approve</button>
+          <button class="cc-mod-btn info" data-decision="needs_info">? Needs info</button>
+          <button class="cc-mod-btn reject" data-decision="reject">✕ Reject</button>
+        </div>
+        <div class="cc-mod-preview">A · approve · R · reject — recorded, not yet persisted.</div>
+      </div>`;
+    }
     const vote = f.cur ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
     const act = edit + vote;
     const desc = f.desc ? `<p class="cc-d-desc">${f.desc}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${f.name}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}`;
+      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}${moderate}`;
+  }
+  function mapToast(msg){
+    let t=document.getElementById('cc-toast');
+    if(!t){ t=document.createElement('div'); t.id='cc-toast'; t.className='cc-toast'; document.body.appendChild(t); }
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(mapToast._t); mapToast._t=setTimeout(()=>t.classList.remove('show'),3200);
+  }
+  function hidePendingPin(id){
+    const layer=layerByKey.pending; if(!layer) return;
+    layer.features=layer.features.filter(f=>!(f.pending && String(f.pending.id)===String(id)));
+    render();
+  }
+  // Stateless same-origin CSRF: the decision form carries a _token placeholder tied
+  // to the csrf-token cookie (HttpOnly → unreadable from JS). The map page renders no
+  // such form, so fetch one token from /moderate and reuse it (stable for the session);
+  // a failed decision clears it so the next attempt re-fetches a fresh one.
+  let _modToken;
+  function moderationToken(){
+    if(_modToken) return _modToken;
+    _modToken = fetch('/moderate', { credentials:'same-origin', headers:{'Accept':'text/html'} })
+      .then(r=>r.text())
+      .then(html=>{
+        const el=new DOMParser().parseFromString(html,'text/html').querySelector('input[name="moderation_decision[_token]"]');
+        return el ? el.value : '';
+      })
+      .catch(()=>{ _modToken=undefined; return ''; });
+    return _modToken;
+  }
+  function submitModeration(btn){
+    const box=btn.closest('.cc-mod'); if(!box) return;
+    const id=box.dataset.id, decision=btn.dataset.decision;
+    const note=(box.querySelector('.cc-mod-note')||{}).value||'';
+    box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=true);
+    moderationToken().then(token=>{
+      const body=new URLSearchParams();
+      body.set('moderation_decision[submission_id]', id);
+      body.set('moderation_decision[decision]', decision);
+      body.set('moderation_decision[note]', note);
+      body.set('moderation_decision[_token]', token);
+      return fetch('/moderate/decide', { method:'POST', credentials:'same-origin',
+        headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'},
+        body:body.toString() });
+    })
+      .then(r=>{ if(!r.ok) throw new Error('decide'); return r.json(); })
+      .then(res=>{ hidePendingPin(id); closeDrawer(); mapToast(`Decision recorded (${decision.replace('_',' ')}) — preview, not yet persisted · ${res.reference}`); })
+      .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast('Could not record the decision — please try again.'); });
   }
   function gradStrip(grad){
     const max=Math.max(...grad), avg=Math.round(grad.reduce((a,b)=>a+b,0)/grad.length);
@@ -1112,6 +1184,9 @@
       a.addEventListener('click', e=>{ e.preventDefault(); openCity(a.dataset.city); });
       a.addEventListener('mouseenter', ()=>{ const c=CITIES[a.dataset.city]; if(c) highlightAt(c.ll); });
       a.addEventListener('mouseleave', clearHighlight);
+    });
+    document.querySelectorAll('#drawerBody .cc-mod-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>submitModeration(btn));
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
