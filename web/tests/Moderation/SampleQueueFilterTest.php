@@ -53,5 +53,15 @@ final class SampleQueueFilterTest extends TestCase
         $sorted = $countries;
         sort($sorted);
         self::assertSame($sorted, $countries);
+
+        $regions = SampleQueue::regions();
+        self::assertSame(array_values(array_unique($regions)), $regions);
+        // Locale-aware ordering regression: a byte-wise sort puts "Liège" after
+        // "Limburg" (è = 0xC3 > m = 0x6D); the Collator must not.
+        $liege = array_search('Liège', $regions, true);
+        $limburg = array_search('Limburg', $regions, true);
+        self::assertNotFalse($liege);
+        self::assertNotFalse($limburg);
+        self::assertLessThan($limburg, $liege);
     }
 }

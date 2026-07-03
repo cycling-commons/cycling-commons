@@ -200,7 +200,7 @@ final class SampleQueue
             static fn (array $i): string => (string) $i[$key],
             self::items(),
         )));
-        sort($values);
+        (new \Collator('en'))->sort($values);
 
         return $values;
     }
