@@ -1,4 +1,4 @@
 {"layer":"services","letter":"D","features":[
- {"type":"Feature","properties":{"t":"Bike shop","n":"Ecocyclo","town":"Waterloo","web":"http://ecocyclo.be/","prov":"Brabant wallon","c":"Confirmed","sim":1,"r":4.8,"source":"osm","ref":"node/1001"},"geometry":{"type":"Point","coordinates":[4.4,50.7]}},
+ {"type":"Feature","properties":{"t":"Bike shop","n":"Ecocyclo","town":"Waterloo","web":"http://ecocyclo.be/","prov":"Brabant wallon","c":"Confirmed","sim":1,"r":4.0,"source":"osm","ref":"node/1001"},"geometry":{"type":"Point","coordinates":[4.4,50.7]}},
  {"type":"Feature","properties":{"t":"Repair station","prov":"Namur","source":"osm","ref":"node/1002"},"geometry":{"type":"Point","coordinates":[4.9,50.3]}},
  {"type":"Feature","properties":{"t":"Pump","prov":"Liège","source":"osm","ref":"node/1003"},"geometry":{"type":"Point","coordinates":[6.5,49.0]}}]}

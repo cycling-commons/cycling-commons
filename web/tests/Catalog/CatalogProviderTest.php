@@ -153,5 +153,10 @@ final class CatalogProviderTest extends KernelTestCase
         $json = static::getContainer()->get(CatalogProvider::class)->json();
         self::assertStringContainsString('Côte de Test', $json);              // JSON_UNESCAPED_UNICODE
         self::assertStringContainsString('http://example.test', $json);      // JSON_UNESCAPED_SLASHES
+        // JSON_PRESERVE_ZERO_FRACTION: whole-number floats (services "r" rating
+        // here; route "km" is covered by testRouteShapeAndHeat) must keep their
+        // ".0" so the served bytes match the legacy fixture — PHP's json_encode
+        // renders a whole-number float as a bare integer unless this flag is set.
+        self::assertStringContainsString('"r":4.0', $json);
     }
 }

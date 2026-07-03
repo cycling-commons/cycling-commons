@@ -149,7 +149,7 @@ final class ImportCatalogCommand extends Command
                         'state' => 'unverified',
                         'source' => $source,
                         'ref' => $ref,
-                        'attrs' => json_encode($attributes, \JSON_THROW_ON_ERROR),
+                        'attrs' => json_encode($attributes, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION),
                     ],
                 );
                 ++$total;
@@ -185,7 +185,7 @@ final class ImportCatalogCommand extends Command
                     'state' => 'unverified',
                     'source' => $source,
                     'ref' => $ref,
-                    'attrs' => json_encode($route['attributes'], \JSON_THROW_ON_ERROR),
+                    'attrs' => json_encode($route['attributes'], \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION),
                 ],
             );
         }

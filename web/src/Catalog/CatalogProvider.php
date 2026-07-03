@@ -54,7 +54,7 @@ final class CatalogProvider
     /** Encoded once so the controller can ETag the exact bytes. */
     public function json(): string
     {
-        return json_encode($this->payload(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE);
+        return json_encode($this->payload(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
     }
 
     /**
