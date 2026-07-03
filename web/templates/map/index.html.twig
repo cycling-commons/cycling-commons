@@ -203,6 +203,12 @@
 <script src="{{ asset('map/stays-merge.js') }}"></script>
 <script src="{{ asset('data/shelter-osm.js') }}"></script>
 <script src="{{ asset('data/transit-osm.js') }}"></script>
+{% if is_granted('ROLE_CURATOR') and pending is defined %}
+<script>
+  window.CC_IS_CURATOR = true;
+  window.CC_PENDING = {{ pending|json_encode|raw }};
+</script>
+{% endif %}
 <script src="{{ asset('map/map.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/version.js') }}"></script>
