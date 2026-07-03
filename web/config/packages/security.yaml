@@ -35,6 +35,13 @@ security:
         # scheb's `/2fa` interstitial, `/api`, and `/admin` stay unprefixed (see i18n design).
         - { path: '^(/(fr|nl|de))?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
         - { path: ^/verify, roles: PUBLIC_ACCESS }
+        # Explicit PUBLIC_ACCESS (not just "no rule matches") so scheb's lazy-firewall
+        # TwoFactorAccessListener treats the path as publicly accessible and skips
+        # tokenStorage->getToken() — otherwise it forces a session read on every
+        # request, which downgrades this cacheable endpoint's Cache-Control to
+        # "private, must-revalidate" (AbstractSessionListener). See
+        # TwoFactorAccessDecider::isPubliclyAccessible().
+        - { path: ^/map/catalog\.json$, roles: PUBLIC_ACCESS }
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.
         # Must precede the ^/2fa rule below, which guards scheb's interstitial (/2fa, /2fa_check)
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.

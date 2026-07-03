@@ -4,8 +4,11 @@
 
 namespace App\Controller;
 
+use App\Catalog\CatalogProvider;
 use App\Moderation\SampleQueue;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -30,5 +33,23 @@ final class MapController extends AbstractController
         }
 
         return $this->render('map/index.html.twig', $params);
+    }
+
+    /**
+     * The whole catalog as one cacheable JSON payload — spec §7's named interim
+     * until vector tiles. Letters key the layers; values are the fixture shapes
+     * map.js has always consumed. Public data only (unverified/verified rows).
+     */
+    #[Route('/map/catalog.json', name: 'map_catalog', methods: ['GET'])]
+    public function catalog(Request $request, CatalogProvider $catalog): Response
+    {
+        $json = $catalog->json();
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        $response->setMaxAge(3600);
+        $response->isNotModified($request);
+
+        return $response;
     }
 }
