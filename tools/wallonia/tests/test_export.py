@@ -32,6 +32,60 @@ def test_surface_feature_converts_path_and_ref():
     assert export.surface_feature(seg2)["properties"]["source"] == "auto"
 
 
+def test_parse_surface_fixture_handles_hybrid_js():
+    """Regression: surface-data.js is hand-authored JS (bare keys, single quotes,
+    comments, escaped apostrophes) plus an RS_START/RS_END machine-injected JSON
+    block — parse_surface_fixture must round-trip both halves exactly."""
+    js = (
+        "// SPDX-License-Identifier: ODbL-1.0\n"
+        "/* A · Road surface — hand-picked demo segments.\n"
+        " * cls drives colour + pattern\n"
+        " */\n"
+        "window.CC_SURFACE = {\n"
+        "  segments: [\n"
+        "    {\n"
+        "      name: 'Rue de l\\'Église · Stavelot',\n"
+        "      surface: 'Sett (pavé)', smoothness: 'Bad', width: '—',\n"
+        "      traffic: 'Local street', cls: 'pave', wayId: 77930062,\n"
+        "      // real geometry from OSM way/77930062\n"
+        "      path: [\n"
+        "        [50.39501, 5.93173], [50.39496, 5.93198]\n"
+        "      ]\n"
+        "    }\n"
+        '  ,/*RS_START*/{"name": "Spa · Sankt Vith · Asphalt", "surface": "Asphalt",'
+        ' "smoothness": "Good", "width": "—", "traffic": "Open road", "cls": "paved",'
+        ' "edit": "road-surface", "path": [[50.48939, 5.87922], [50.48939, 5.87912]]}'
+        "/*RS_END*/]\n"
+        "};\n"
+    )
+    segs = export.parse_surface_fixture(js)
+    assert len(segs) == 2
+    hand, injected = segs
+    # hand-authored half: bare keys quoted, '...' strings converted, \' unescaped,
+    # comments stripped without eating data
+    assert hand["name"] == "Rue de l'Église · Stavelot"
+    assert hand["surface"] == "Sett (pavé)"
+    assert hand["cls"] == "pave"
+    assert hand["wayId"] == 77930062
+    assert hand["path"] == [[50.39501, 5.93173], [50.39496, 5.93198]]
+    # machine-injected half: passed through json.loads untouched
+    assert injected["name"] == "Spa · Sankt Vith · Asphalt"
+    assert injected["edit"] == "road-surface"
+    assert injected["path"] == [[50.48939, 5.87922], [50.48939, 5.87912]]
+
+
+def test_parse_surface_fixture_without_injected_block():
+    """A fixture with no RS_START/RS_END marker (pre-injection state) still parses."""
+    js = ("window.CC_SURFACE = {\n"
+          "  segments: [\n"
+          "    { name: 'Plain seg', cls: 'gravel', path: [[50.1, 4.2], [50.2, 4.3]] }\n"
+          "  ]\n"
+          "};\n")
+    segs = export.parse_surface_fixture(js)
+    assert [s["name"] for s in segs] == ["Plain seg"]
+    assert segs[0]["path"] == [[50.1, 4.2], [50.2, 4.3]]
+
+
 def test_climb_features_preserves_fixture_source_as_attribution(monkeypatch):
     """Deviation (approved): fixture climb 'source' citation preserved as 'attribution'
     instead of being overwritten by the provenance key."""

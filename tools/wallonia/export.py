@@ -109,9 +109,10 @@ def _unescape_js_single_quoted(match):
     return json.dumps(raw)
 
 
-def _load_surface_segments():
-    """surface-data.js is a hybrid fixture, not plain JSON like the others:
+def parse_surface_fixture(js_text):
+    """Parse surface-data.js text into its segments list.
 
+    surface-data.js is a hybrid fixture, not plain JSON like the others:
     ~35 hand-authored segments as a genuine JS object literal (unquoted keys,
     single-quoted strings, `//`/`/* */` comments), followed by route_surfaces.py's
     machine-injected segments (valid JSON, produced by json.dumps) wrapped in a
@@ -119,8 +120,7 @@ def _load_surface_segments():
     them without touching the hand-authored part. Parse each half on its own
     terms instead of forcing the whole blob through json.loads.
     """
-    text = (DEMO / "surface-data.js").read_text(encoding="utf-8")
-    body = text.split("window.CC_SURFACE", 1)[1].split("=", 1)[1].rsplit(";", 1)[0]
+    body = js_text.split("window.CC_SURFACE", 1)[1].split("=", 1)[1].rsplit(";", 1)[0]
     m = re.search(r",/\*RS_START\*/(.*)/\*RS_END\*/", body, flags=re.S)
     injected = json.loads("[" + m.group(1) + "]") if m else []
     hand = body[:m.start()] + body[m.end():] if m else body
@@ -129,6 +129,10 @@ def _load_surface_segments():
     hand = re.sub(r"([{,]\s*)([A-Za-z_]\w*)(\s*:)", r'\1"\2"\3', hand)  # bare keys -> quoted
     hand = re.sub(r"'((?:\\.|[^'\\])*)'", _unescape_js_single_quoted, hand)  # '...' -> "..."
     return json.loads(hand)["segments"] + injected
+
+
+def _load_surface_segments():
+    return parse_surface_fixture((DEMO / "surface-data.js").read_text(encoding="utf-8"))
 
 
 def surface_features():
