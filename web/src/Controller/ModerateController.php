@@ -31,6 +31,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_CURATOR')]
 final class ModerateController extends AbstractController
 {
+    private const TYPES = ['new', 'edit', 'hazard', 'photo'];
+
     public function __construct(
         private readonly ContributionStubInterface $contributionStub,
     ) {
@@ -65,7 +67,7 @@ final class ModerateController extends AbstractController
             'filters' => ['country' => $country, 'region' => $region, 'type' => $type],
             'countries' => SampleQueue::countries(),
             'regions' => SampleQueue::regions(),
-            'types' => ['new', 'edit', 'hazard', 'photo'],
+            'types' => self::TYPES,
             'receipt' => null,
         ]);
     }
@@ -106,7 +108,7 @@ final class ModerateController extends AbstractController
                 'filters' => ['country' => '', 'region' => '', 'type' => ''],
                 'countries' => SampleQueue::countries(),
                 'regions' => SampleQueue::regions(),
-                'types' => ['new', 'edit', 'hazard', 'photo'],
+                'types' => self::TYPES,
                 'receipt' => $receipt,
             ]);
         }
@@ -133,7 +135,7 @@ final class ModerateController extends AbstractController
             'filters' => ['country' => '', 'region' => '', 'type' => ''],
             'countries' => SampleQueue::countries(),
             'regions' => SampleQueue::regions(),
-            'types' => ['new', 'edit', 'hazard', 'photo'],
+            'types' => self::TYPES,
             'receipt' => null,
         ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
     }
