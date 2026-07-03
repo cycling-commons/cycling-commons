@@ -1,6 +1,6 @@
 # Spec — Catalog data model, Wallonia import, DB-served map (data-API phase A)
 
-- **Status:** Approved — implementing (plan 1 landed)
+- **Status:** Landed — phase A complete (plans 1 + 2)
 - **Date:** 2026-07-03
 - **Scope:** The first data-API phase: a durable domain model for the map catalog (`region` + `item` + `recommended_route` + `heat_point`), an idempotent Wallonia import with source provenance and day-one region membership, and `/map` served from the database with the static catalog fixtures retired. **One spec → two implementation plans** (§12).
 - **Surfaces:**
@@ -22,7 +22,7 @@ The catalog exists only as static JavaScript fixtures, three times over: `tools/
 
 - A **durable catalog model** with per-row provenance (`source` + `source_ref`), lifecycle state, geometry, and day-one region membership — designed for tens of millions of rows even though it starts with ~1,600 (~1,560 items + 11 routes + the heat set + 1 seed region).
 - An **idempotent import** from a new harvest export that preserves source ids (run twice → identical rows).
-- `/map` **reads the database** (cacheable catalog endpoint); all eleven catalog fixture files retire. Acceptance is byte-level parity, not vibes.
+- `/map` **reads the database** (cacheable catalog endpoint); all eleven catalog fixture files retire. Acceptance is byte-level parity, not vibes. *(landed as semantic parity — deep equality modulo JSON key order, which jsonb does not preserve; two approved content deltas: water 289 dedupe, transit re-harvest — see §7 implementation notes)*
 - The model is **forward-compatible** with phases B (submissions/moderation on real data) and C (edit application + field-level change history + re-harvest conflict queue) without schema rework.
 
 **Non-goals (deferred, deliberately)**
@@ -115,6 +115,18 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 - **Retired:** all 11 catalog fixture files in `web/assets/data/` + their `<script>` tags (POI layers, climbs, stays-pivot, routes/heat, surface). **Stay static:** `regions-data.js`, `races.js`, `profiles-data.js` (navigation/content fixtures, not catalog). `atlas/demo/*` untouched.
 - Curator pending-layer injection (`CC_PENDING`) is unaffected — separate, role-gated path.
 
+*Implemented (plan 2):* §7's "map.js wraps init in a fetch" landed as an equivalent fetch-then-inject
+loader — a small `catalog-load.js` fetches the letter-keyed payload (`{A…L}`, `E` split `{osm, pivot}`),
+assigns the historical `window.CC_*` globals, and injects `map.js` untouched (apart from the K label).
+`stays-merge.js` was absorbed into the loader and retired with the fixtures (client-side merge behavior
+unchanged, per the §2 non-goal). The fixture shapes are reproduced semantically — jsonb does not
+preserve JSON key order, so byte-identity is impossible by construction; acceptance ran as deep
+equality modulo key order. Route `uploader`/`photo` were added to the export attributes to make
+serving lossless. Two accepted content deltas vs the retired fixtures: water 289 (exact-duplicate
+dedupe) and transit's 25 re-harvested descriptions. The endpoint required an explicit PUBLIC_ACCESS
+access-control entry (exact-path) so the 2FA bundle's lazy firewall does not trigger the session
+listener's cache-control downgrade.
+
 ## 8. Lifecycle & provenance semantics
 
 - `unverified` — on the map, pre-verification-gate (all imported rows start here). `verified` — passed the tiered verification gate (phase C+ mechanics). `submitted` — awaiting moderation (phase B; never set by import). `rejected` — moderation outcome (phase B). `retired` — removed from serving; curator-decided.
@@ -123,7 +135,7 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 
 ## 9. Acceptance & testing
 
-- **Parity is the end-to-end test of the import**: per-layer feature counts from `/map/catalog.json` equal the retired fixtures' counts exactly; sampled features byte-match after shape serialization; Playwright pass as anonymous rider shows identical rendering, 0 console errors.
+- **Parity is the end-to-end test of the import**: per-layer feature counts from `/map/catalog.json` equal the retired fixtures' counts exactly; sampled features byte-match after shape serialization; Playwright pass as anonymous rider shows identical rendering, 0 console errors. *(landed as semantic parity — deep equality modulo JSON key order, which jsonb does not preserve; two approved content deltas: water 289 dedupe, transit re-harvest — see §7 implementation notes)*
 - Import idempotency test (run twice, diff row set); registry-validation tests (unknown key, wrong geometry kind); geometry round-trip unit test for the DBAL type; endpoint tests (shape, cache headers, state filtering).
 - Region membership test: after import, every item/route has `region_id` = Wallonia (the seed region covers the whole harvest area — 100% assignment is the expected outcome, and a NULL is a data smell worth failing on).
 - Standard gates: phpunit, phpstan, psalm, cs-fixer, SPDX, translations (K-rename keys ×4 locales), `node --check`.
@@ -153,9 +165,9 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 
 Deferred from the final review of plan 1 (model + import):
 
-- Widen the import catch beyond `\InvalidArgumentException` — clean errors for malformed JSON/DBAL failures.
-- Wrap import in a transaction.
-- `--strict-cache` mode for export enrichment (live-HTTP fallback caused the transit drift).
-- Run `tools/wallonia` tests in CI.
-- E2e assert for route state preservation on upsert.
-- Only bump `updated_at` when content actually changed (matters for change-history).
+- Widen the import catch beyond `\InvalidArgumentException` — clean errors for malformed JSON/DBAL failures. — DONE (plan 2)
+- Wrap import in a transaction. — DONE (plan 2)
+- `--strict-cache` mode for export enrichment (live-HTTP fallback caused the transit drift). — DONE (plan 2)
+- Run `tools/wallonia` tests in CI. — DONE (plan 2)
+- E2e assert for route state preservation on upsert. — DONE (plan 2)
+- Only bump `updated_at` when content actually changed (matters for change-history). — DONE (plan 2)
