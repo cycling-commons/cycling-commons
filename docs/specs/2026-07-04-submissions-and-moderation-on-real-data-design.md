@@ -100,6 +100,13 @@ Indexes: `(status)`, `(country_code)`, `(region_id)`, `(item_id)`, GiST `(geom)`
 - **i18n**: new keys (statuses, receipt copy, improve explainer, dashboard list) in EN/FR/NL/DE, messages domain, path-prefix routing as everywhere.
 - **Rate limiting**: sliding-window limiter on `submit` — 20 submissions/hour per user — via the already-installed `symfony/rate-limiter`; 429 with a translated message.
 
+## 6.1 Form boundary: DTO + validation
+
+- **One envelope DTO, not eleven.** `SubmissionDraft` types the stable envelope (`ItemType $type`, `?int $itemId`, `string $name`, coords, `array<string, scalar> $attributes`, `?string $note`); the per-letter field shape stays in the registry (data, not classes — a DTO per item type would duplicate `CatalogFormRegistry`). Forms map `getData()` into the DTO; `CatalogContributionService::submit(SubmissionDraft, User)` replaces the stringly `submit(kind, array, user)`. The future `/api/*` JSON intake maps onto the same DTO (`#[MapRequestPayload]`) and inherits identical validation.
+- **Registry-declared constraints.** `CatalogField` gains `required` + `maxLength`; `Select` choices imply a `Choice` constraint; `ImproveType` maps descriptors → constraints mechanically (today only ad-hoc `Length`s exist and dynamic fields are unvalidated). `AttributeVocabulary::assertValid` backs a custom `#[ValidAttributes]` constraint so intake and import enforce one vocabulary.
+- **Validate twice, define once.** Forms validate on submit (UX); the service re-validates the DTO via `ValidatorInterface` (defense in depth — and the only validation on the future API path).
+- **`NoSuspiciousCharacters` by default** on all text/textarea registry fields + the envelope `name`/`title`, applied centrally in the field→form mapping: blocks invisible/zero-width and mixed-script confusables in the first user-authored strings other users will see. `locales` tuned to EN/FR/NL/DE (accented Latin passes); requires `ext-intl` — present in the Docker image, added explicitly to `composer.json` `require`. Anti-spoofing only: complements, never replaces, §13 escaping and length caps.
+
 ## 7. Security
 
 - Intake `ROLE_USER`, decisions `ROLE_CURATOR` (unchanged); CSRF as-is (`_token` fetch pattern).
