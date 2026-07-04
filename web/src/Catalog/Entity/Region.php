@@ -38,6 +38,10 @@ class Region
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $areaKm2 = null;
 
+    /** ISO 3166-1 alpha-2 of the country this region belongs to ('' = unset). */
+    #[ORM\Column(type: 'string', length: 2, options: ['default' => ''])]
+    private string $countryCode = '';
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
@@ -100,6 +104,18 @@ class Region
     public function setAreaKm2(?float $areaKm2): static
     {
         $this->areaKm2 = $areaKm2;
+
+        return $this;
+    }
+
+    public function getCountryCode(): string
+    {
+        return $this->countryCode;
+    }
+
+    public function setCountryCode(string $countryCode): static
+    {
+        $this->countryCode = strtoupper($countryCode);
 
         return $this;
     }
