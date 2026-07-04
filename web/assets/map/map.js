@@ -220,6 +220,7 @@
     // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
     const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+(pivot?'Tourisme Wallonie':'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
       source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie':src};
+    if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
     if(p.desc) d.desc=p.desc;
     if(p.descTr) d.descTr=1;
     let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
@@ -231,10 +232,12 @@
     const potable = p.c
       ? {label:'Potable', value:p.c+' · simulated demo flag (not utility-verified)', method:'demo'}
       : {label:'Potable', value:'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
-    return {name:p.n||p.t||'Drinking water', headline:'drinking water · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
+    const d={name:p.n||p.t||'Drinking water', headline:'drinking water · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
       record:[{label:'Type', value:p.t||'Drinking water', method:'OSM'}, potable,
         {label:'Verify', value:'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}],
       source:'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
+    if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
+    return d;
   }
   // small recognisable marker for UNVERIFIED items: paper disc + category-colour ring + the category glyph
   function miniIcon(key){
@@ -1077,16 +1080,19 @@
           ? `<div class="cc-up">Shared by <b>${f.uploader.name}</b> · <a href="/profile?u=${slug(f.uploader.name)}">view profile</a></div>`
           : `<div class="cc-up">Shared anonymously</div>`)
       : '';
-    // every feature is editable — curated items resolve to their entry in the shared
-    // edit registry (edit-items.js); for the rest we also pass the feature's own name,
-    // type and location so /improve opens a faithful editor, not a default item.
-    const editId = f.edit || slug(f.name);
+    // The edit-bridge opens /improve bound to the item's real DB id, which
+    // loads that exact item and prefills the form with its current values
+    // (spec §6/§8) — no id, no edit link (a name-slug guess is never a
+    // faithful target).
     const editLbl = layer.key==='experience' ? '✎ Edit this ride' : '✎ Edit this item';
     const ell = f.geom && f.geom.ll;                    // [lat,lng] for point features
-    const editQ = `item=${editId}&name=${encodeURIComponent(f.name)}`
-      + `&type=${layer.letter}`
-      + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
-    let edit = `<a class="cc-d-act edit" href="/improve?${editQ}">${editLbl}</a>`;
+    let edit = '';
+    if(f.id!=null){
+      const editQ = `item=${f.id}&name=${encodeURIComponent(f.name)}`
+        + `&type=${layer.letter}`
+        + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
+      edit = `<a class="cc-d-act edit" href="/improve?${editQ}">${editLbl}</a>`;
+    }
     let moderate = '';
     if(layer.pendingLayer && f.pending){
       // TODO(data-api): s.title/s.body/s.was/s.now are trusted fixtures today — HTML-escape before interpolating once real submissions flow here (stored-XSS-in-curator-session risk).

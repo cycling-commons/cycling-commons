@@ -78,10 +78,14 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame([4.4, 50.7], $shop['geometry']['coordinates']);      // GeoJSON [lng, lat]
         self::assertArrayNotHasKey('source', $shop['properties']);            // provenance never leaks
         self::assertArrayNotHasKey('ref', $shop['properties']);
+        // The map edit-bridge's `?item=` target — the real DB id, an integer.
+        self::assertIsInt($shop['properties']['id']);
+        self::assertGreaterThan(0, $shop['properties']['id']);
 
         $station = $byRef['Repair station'];                                  // fixture had no n; prov Namur seeded
         self::assertArrayNotHasKey('n', $station['properties']);              // '' name -> key omitted
         self::assertSame('Namur', $station['properties']['prov']);
+        self::assertNotSame($shop['properties']['id'], $station['properties']['id']); // distinct items, distinct ids
 
         // Deterministic NULL-subdivision case: the shared test DB may hold real
         // world data (BE-WLG would resolve 'Liège'), so force the NULL instead
@@ -101,6 +105,8 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertCount(1, $e['pivot']['features']);
         self::assertSame('Camping Test', $e['osm']['features'][0]['properties']['n']);
         self::assertSame('http://example.test', $e['pivot']['features'][0]['properties']['web']);
+        self::assertIsInt($e['osm']['features'][0]['properties']['id']);
+        self::assertIsInt($e['pivot']['features'][0]['properties']['id']);
     }
 
     public function testClimbShapeRestoresCitationAndLatLng(): void

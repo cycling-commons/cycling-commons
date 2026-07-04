@@ -813,6 +813,9 @@ improve:
   eyebrow: 'Contribuer · nouvelle entrée'
   title: 'Améliorer ou ajouter un lieu.'
   lead: 'Corrigez des détails, signalez des conditions, ajoutez des photos ou ajoutez un nouveau lieu à l''atlas cycliste ouvert.'
+  unbound_title: 'Choisissez un lieu à améliorer'
+  unbound_body: 'Chaque amélioration part d''un lieu réel sur la carte. Ouvrez la carte, trouvez l''élément et choisissez « Modifier cet élément ».'
+  unbound_cta: 'Ouvrir la carte'
   step1:
     label: 'Localiser'
     heading: 'Où est-il ?'

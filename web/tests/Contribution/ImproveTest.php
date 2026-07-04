@@ -6,6 +6,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Contribution;
 
+use App\Catalog\Entity\Item;
+use App\Catalog\ItemSource;
+use App\Catalog\ItemState;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -13,12 +16,18 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Improve page: auth-gate, type-aware rendering (A–K), and CSRF-protected POST
- * to the contribution stub.
+ * Improve page: auth-gate, type-aware rendering (A–K), and the real edit
+ * submission (Task 4 — see ImproveBindingTest for the prefill/was-now-snapshot
+ * scenarios this file doesn't duplicate).
  *
  * The wizard's Details step is driven by the catalog registry — each type
  * renders its own Fix-details (`improve[details][*]`) and Add-missing
- * (`improve[extras][*]`) fields. Persistence is still stubbed.
+ * (`improve[extras][*]`) fields. Since Task 4, `/improve` is bound to a real
+ * item (`?item=<dbId>`, the map edit-bridge's target) and its letter — not a
+ * `?type=` query param — drives which type's fields render; every scenario
+ * below therefore seeds a real `Item` of the letter under test. Bare
+ * `/improve` (no valid item) shows the unbound explainer, not a form —
+ * covered by ImproveBindingTest::testUnboundImproveShowsExplainerNotForm.
  *
  * All tests use a plain ROLE_USER to avoid triggering TwoFactorSetupEnforcer
  * (which redirects elevated roles without a TOTP secret to /2fa/setup).
@@ -74,6 +83,28 @@ final class ImproveTest extends WebTestCase
         $this->loginAs($client, $email, $plain);
     }
 
+    /**
+     * A real seeded Item to bind `/improve?item=` to — the edit flow only
+     * ever renders its type-aware form for a real target (spec §6/§8).
+     *
+     * @param array<string, mixed> $attributes
+     */
+    private function createItem(string $letter, array $attributes = [], string $name = 'Test place'): Item
+    {
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter($letter)->setName($name)
+            ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
+            ->setSourceRef('node/improve-test-'.$letter.'-'.bin2hex(random_bytes(4)))
+            ->setAttributes($attributes);
+        $em->persist($item);
+        $em->flush();
+
+        return $item;
+    }
+
     // ── Auth-gate ────────────────────────────────────────────────────────────
 
     public function testAnonGetImproveRedirectsToLogin(): void
@@ -84,32 +115,34 @@ final class ImproveTest extends WebTestCase
         self::assertResponseRedirects('/login', 302);
     }
 
-    // ── Authenticated GET — default type (D · bike services) ─────────────────
+    // ── Authenticated GET — a bound item drives its own type's fields ────────
 
     public function testDefaultTypeRendersItsOwnFields(): void
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'get');
+        $item = $this->createItem('D');
 
-        $client->request('GET', '/improve');
+        $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1.disp', 'Improve or add a place');
         self::assertSelectorExists('.stepper li.on');
-        // No-param fallback is D · bike services — its typed fields, not a
-        // generic "what changed" textarea.
+        // D · bike services renders its typed fields, not a generic
+        // "what changed" textarea.
         self::assertSelectorExists('[name="improve[details][pumpValve]"]');
         self::assertSelectorNotExists('[name="improve[whatChanged]"]');
     }
 
-    // ── Type-aware rendering ─────────────────────────────────────────────────
+    // ── Type-aware rendering (driven by the bound item's own letter) ─────────
 
-    public function testTypeQueryRendersThatTypesFields(): void
+    public function testItemLetterRendersThatTypesFields(): void
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'water');
+        $item = $this->createItem('C');
 
-        $client->request('GET', '/improve?type=water-food');
+        $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
         // Water & food keeps the "Unsigned — use judgement" potable option.
@@ -121,8 +154,9 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'surface');
+        $item = $this->createItem('A');
 
-        $client->request('GET', '/improve?type=road-surface&mode=add');
+        $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('[name="improve[details][surface]"]');
@@ -134,8 +168,9 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'ride');
+        $item = $this->createItem('K');
 
-        $client->request('GET', '/improve?type=quality-rides&mode=add');
+        $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('[name="improve[details][rideName]"]');
@@ -149,8 +184,9 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'votable');
+        $item = $this->createItem('B');
 
-        $client->request('GET', '/improve?type=climbs');
+        $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
         // Climbs (B) are a votable type — the wizard says so, tying into the
@@ -162,58 +198,56 @@ final class ImproveTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'utility');
+        $item = $this->createItem('C');
 
-        $client->request('GET', '/improve?type=water-food');
+        $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
         // Water & food (C) is a utility type — verified for coverage, never ranked.
         self::assertSelectorTextContains('.lc-verdict', 'utility');
     }
 
-    public function testLetterQueryResolvesType(): void
+    public function testBoundItemLetterResolvesType(): void
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'letter');
 
         // Map deep-links carry the catalog letter (layer.letter) — E is sleep.
-        $client->request('GET', '/improve?type=E&mode=add');
+        $item = $this->createItem('E');
+        $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('[name="improve[details][bikeStorage]"]');
     }
 
-    // ── Deep-link with an opaque feature id still resolves ────────────────────
+    // ── A stale/garbage deep-link degrades to the unbound explainer, not a 400 ─
 
     public function testDeepLinkWithItemAndModeReturns200(): void
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'deep');
 
+        // A non-numeric `item` (a stale slug-based deep link, pre-Task-4) is
+        // not a valid binding — it must degrade to the unbound explainer,
+        // never a 400/500.
         $client->request('GET', '/improve?type=water-food&item=water-fountain&mode=add');
 
         self::assertResponseIsSuccessful();
     }
 
-    // ── Authenticated POST — valid submission ────────────────────────────────
+    // ── Authenticated POST — real edit submission ────────────────────────────
 
-    public function testValidPostShowsHonestStubReceipt(): void
+    public function testValidPostPersistsARealEditSubmission(): void
     {
-        // Task 3 (plan 2026-07-04, §"Real intake") makes 'climb' real and turns
-        // 'improve' into a `\LogicException('improve lands in Task 4')`
-        // placeholder — the honest-stub CC- receipt this test asserts no longer
-        // renders for improve. Task 4 ("Edit flow") implements improve for real
-        // and replaces this scenario with tests/Contribution/ImproveBindingTest.php.
-        self::markTestSkipped('improve is a LogicException placeholder until Task 4 (real edit-submission binding) lands.');
-
         $client = static::createClient();
         $this->loginFreshUser($client, 'post');
+        $item = $this->createItem('D', ['correction' => 'Nothing to report yet.']);
 
-        $crawler = $client->request('GET', '/improve');
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
         self::assertResponseIsSuccessful();
 
         // Select the "Next →" button to get the right form (not nav logout form).
         $form = $crawler->selectButton('Next →')->form([
-            'improve[details][name]' => 'Malmedy repair point',
             'improve[details][correction]' => 'A work stand was added this spring.',
             'improve[lat]' => '50.426',
             'improve[lng]' => '6.027',
@@ -222,9 +256,10 @@ final class ImproveTest extends WebTestCase
         $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        // Honest stub state: queued for review / not yet persisted.
+        // Real receipt: an Edit submission was persisted (SUB-<id>), still
+        // pending curator review — never live instantly.
         self::assertSelectorTextContains('.receipt h2', 'Suggestion submitted.');
         self::assertSelectorTextContains('.receipt .stub-note', 'not yet persisted');
-        self::assertSelectorTextContains('.receipt .ref', 'CC-');
+        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
     }
 }

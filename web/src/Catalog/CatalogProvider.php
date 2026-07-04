@@ -61,11 +61,11 @@ final class CatalogProvider
     }
 
     /**
-     * @return list<array{name: string, geom: string, attributes: string, source_ref: string, prov: string|null}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, prov: string|null}>
      */
     private function itemRows(string $letter, ?string $source = null): array
     {
-        $sql = 'SELECT i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, s.name AS prov
+        $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, s.name AS prov
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
                 WHERE i.letter = :letter AND i.state IN '.self::SERVED_STATES;
@@ -75,12 +75,13 @@ final class CatalogProvider
             $params['source'] = $source;
         }
 
-        /* @var list<array{name: string, geom: string, attributes: string, source_ref: string, prov: string|null}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, prov: string|null}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
     /**
-     * POI fixture shape: properties = attributes + n (when named) + prov (when resolved).
+     * POI fixture shape: properties = attributes + n (when named) + prov (when
+     * resolved) + id (the DB item id — the map edit-bridge's `?item=` target).
      *
      * @return array{type: string, features: list<array<string, mixed>>}
      */
@@ -95,10 +96,13 @@ final class CatalogProvider
             if (null !== $row['prov']) {
                 $props['prov'] = $row['prov'];
             }
+            // The DB item id always makes $props non-empty, so it always
+            // encodes as a JSON object — no more `[] === $props` empty-array
+            // case (GeoJSON requires an object; [] would encode as an array).
+            $props['id'] = (int) $row['id'];
             $features[] = [
                 'type' => 'Feature',
-                // GeoJSON requires an object; [] would encode as a JSON array.
-                'properties' => [] === $props ? new \stdClass() : $props,
+                'properties' => $props,
                 'geometry' => $this->decode($row['geom']),
             ];
         }

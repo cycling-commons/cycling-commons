@@ -25,9 +25,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 /**
  * The real contribution intake (replaces the deleted honest-stub service,
  * keeps the interface). 'climb' → NewItem: item row (state=submitted, source=user,
- * source_ref sub:<id>) + submission, one transaction. 'improve' → Edit
- * (Task 4). 'vote' passes through unpersisted — voting is verification-gate
- * machinery (spec non-goal), the receipt stays honest about it.
+ * source_ref sub:<id>) + submission, one transaction. 'improve' → Edit: bound
+ * to a real Item (`_item_id`), snapshots only the fields whose proposed value
+ * differs from the item's current attribute value ({field: {was, now}}) —
+ * unchanged fields are never recorded. 'vote' passes through unpersisted —
+ * voting is verification-gate machinery (spec non-goal), the receipt stays
+ * honest about it.
  *
  * @api Autowired via ContributionStubInterface.
  */
@@ -72,7 +75,7 @@ final class CatalogContributionService implements ContributionStubInterface
 
         return match ($kind) {
             'climb' => $this->submitClimb($payload, $by),
-            'improve' => throw new \LogicException('improve lands in Task 4'),
+            'improve' => $this->submitImprove($payload, $by),
             default => new ContributionReceipt(
                 'CC-'.strtoupper(bin2hex(random_bytes(6))), $kind, false, new \DateTimeImmutable(),
             ),
@@ -102,6 +105,56 @@ final class CatalogContributionService implements ContributionStubInterface
 
         return new ContributionReceipt(
             'SUB-'.(string) $submission->getId(), 'climb', true, $submission->getCreatedAt(), $submission->getId(),
+        );
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function submitImprove(array $payload, User $by): ContributionReceipt
+    {
+        $item = $this->em->find(Item::class, (int) ($payload['_item_id'] ?? 0));
+        if (null === $item) {
+            throw new \InvalidArgumentException('improve requires a valid _item_id');
+        }
+
+        /** @var array<string, mixed> $details */
+        $details = (array) ($payload['details'] ?? []);
+        /** @var array<string, mixed> $extras */
+        $extras = (array) ($payload['extras'] ?? []);
+        $proposed = array_filter(
+            $details + $extras,
+            static fn (mixed $v): bool => null !== $v && '' !== $v,
+        );
+
+        $currentAttrs = $item->getAttributes();
+        $changes = [];
+        $attributes = [];
+        foreach ($proposed as $field => $now) {
+            $was = $currentAttrs[$field] ?? null;
+            if ($was !== $now) {
+                $changes[$field] = ['was' => $was, 'now' => $now];
+            }
+            $attributes[$field] = $now;
+        }
+
+        [$lng, $lat] = json_decode((string) $item->getGeom(), true, 512, \JSON_THROW_ON_ERROR)['coordinates'];
+
+        $draft = new SubmissionDraft(
+            type: ItemType::fromParam($item->getLetter()),
+            title: $item->getName(),
+            lat: (float) $lat,
+            lng: (float) $lng,
+            attributes: $attributes,
+            itemId: $item->getId(),
+        );
+
+        // submitDraft stores $draft->attributes as `changes` for Edit — pass
+        // the computed was/now map through the dedicated path instead:
+        $submission = $this->submitDraft($draft, SubmissionType::Edit, $by, $payload);
+        $submission->setChanges($changes);
+        $this->em->flush();
+
+        return new ContributionReceipt(
+            'SUB-'.(string) $submission->getId(), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
         );
     }
 

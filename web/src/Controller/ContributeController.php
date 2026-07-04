@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\Entity\Item;
 use App\Catalog\ItemType;
 use App\Entity\User;
 use App\Form\AddClimbType;
@@ -13,6 +14,7 @@ use App\Form\ImproveType;
 use App\Form\VoteType;
 use App\Routing\LocalePrefix;
 use App\Service\ContributionStubInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
@@ -138,13 +140,39 @@ final class ContributeController extends AbstractController
 
     #[Route('/improve', name: 'improve')]
     #[IsGranted('ROLE_USER')]
-    public function improve(Request $request): Response
+    public function improve(Request $request, EntityManagerInterface $em): Response
     {
-        // ?type=<A–K slug or letter> picks the type-aware form; unknown/absent →
-        // the default (D · bike services), mirroring the demo's fallback item.
-        $type = ItemType::fromParam($request->query->getString('type'));
+        // The edit flow is bound to a real item — the map edit-bridge always
+        // sends `?item=<dbId>` (spec §6/§8). No valid item id: no more fake
+        // default editor, just an explainer pointing to the map.
+        //
+        // Deliberately not `$request->query->getInt('item')`: InputBag::filter()
+        // throws BadRequestHttpException on a non-numeric value (e.g. a stale
+        // slug-based link) instead of coercing it — a non-numeric `item` is
+        // exactly the "no valid item" case, not a 400.
+        $item = null;
+        $itemParam = (string) $request->query->get('item', '');
+        // ctype_digit('') is false, so this also rejects a missing/blank param.
+        if (ctype_digit($itemParam)) {
+            $item = $em->find(Item::class, (int) $itemParam);
+        }
 
-        $form = $this->createForm(ImproveType::class, null, ['catalog_type' => $type]);
+        if (null === $item) {
+            return $this->render('contribute/improve.html.twig', [
+                'page_title' => 'meta.improve_title',
+                'page_description' => 'meta.improve_description',
+                'nav_active' => 'improve',
+                'item_type' => ItemType::default(),
+                'unbound' => true,
+                'receipt' => null,
+                'form' => null,
+            ]);
+        }
+
+        $type = ItemType::fromParam($item->getLetter());
+        $current = ['name' => $item->getName()] + $item->getAttributes();
+
+        $form = $this->createForm(ImproveType::class, null, ['catalog_type' => $type, 'current' => $current]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -153,17 +181,29 @@ final class ContributeController extends AbstractController
             /** @var User $user */
             $user = $this->getUser();
 
-            // TODO(data-api): persist the catalog edit via the data API (later spec).
-            $receipt = $this->contributionStub->submit('improve', ['type' => $type->value] + $data, $user);
+            try {
+                $receipt = $this->contributionStub->submit('improve', ['type' => $type->value, '_item_id' => $item->getId()] + $data, $user);
+            } catch (TooManyRequestsHttpException) {
+                $this->addFlash('error', 'contribute.error.rate_limited');
+                $receipt = null;
+            } catch (ValidationFailedException $e) {
+                foreach ($e->getViolations() as $violation) {
+                    $form->addError(new FormError((string) $violation->getMessage()));
+                }
+                $receipt = null;
+            }
 
-            return $this->render('contribute/improve.html.twig', [
-                'page_title' => 'meta.improve_title',
-                'page_description' => 'meta.improve_description',
-                'nav_active' => 'improve',
-                'item_type' => $type,
-                'receipt' => $receipt,
-                'form' => null,
-            ]);
+            if (null !== $receipt) {
+                return $this->render('contribute/improve.html.twig', [
+                    'page_title' => 'meta.improve_title',
+                    'page_description' => 'meta.improve_description',
+                    'nav_active' => 'improve',
+                    'item_type' => $type,
+                    'unbound' => false,
+                    'receipt' => $receipt,
+                    'form' => null,
+                ]);
+            }
         }
 
         return $this->render('contribute/improve.html.twig', [
@@ -171,6 +211,7 @@ final class ContributeController extends AbstractController
             'page_description' => 'meta.improve_description',
             'nav_active' => 'improve',
             'item_type' => $type,
+            'unbound' => false,
             'receipt' => null,
             'form' => $form,
         ]);

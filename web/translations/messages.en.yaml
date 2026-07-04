@@ -813,6 +813,9 @@ improve:
   eyebrow: 'Contribute · new entry'
   title: 'Improve or add a place.'
   lead: 'Fix details, flag conditions, add photos, or add a new place to the open cycling atlas.'
+  unbound_title: 'Pick a place to improve'
+  unbound_body: 'Every improvement starts from a real place on the map. Open the map, find the item, and choose “Edit this item”.'
+  unbound_cta: 'Open the map'
   step1:
     label: 'Locate'
     heading: 'Where is it?'

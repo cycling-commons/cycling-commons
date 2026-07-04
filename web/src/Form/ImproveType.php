@@ -31,8 +31,14 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * Location (lat/lng/place) and media queue are filled by client-side JS and
  * carried as hidden fields. The controller hands the submitted array to
  * {@see \App\Service\ContributionStubInterface} (implemented by
- * {@see \App\Contribution\CatalogContributionService}); the 'improve' kind
- * is not yet persisted (lands in a later task).
+ * {@see \App\Contribution\CatalogContributionService}), which persists the
+ * 'improve' kind as an Edit submission (was/now snapshot against the bound
+ * item's current attributes).
+ *
+ * The `current` option (`array<string, scalar|null>`, keyed by registry field
+ * name) prefills Text/Textarea/Select fields with the bound item's current
+ * name + attribute values — the edit-bridge acceptance criterion (spec §8):
+ * `/improve?item=<id>` opens pre-filled, never blank/default.
  *
  * @api Instantiated by Symfony's form factory — `@api` tells Psalm the
  *      constructor is a live entry point, not dead code.
@@ -51,17 +57,19 @@ final class ImproveType extends AbstractType
         $type = $options['catalog_type'];
         \assert($type instanceof ItemType);
         $fieldSet = $this->registry->for($type);
+        /** @var array<string, scalar|null> $current */
+        $current = $options['current'];
 
         // ── Type-specific Details step: two panes as nested sub-forms ────────
         $details = $builder->create('details', FormType::class, ['label' => false, 'required' => false]);
         foreach ($fieldSet->fields as $field) {
-            $this->addCatalogField($details, $field);
+            $this->addCatalogField($details, $field, $current);
         }
         $builder->add($details);
 
         $extras = $builder->create('extras', FormType::class, ['label' => false, 'required' => false]);
         foreach ($fieldSet->addFields as $field) {
-            $this->addCatalogField($extras, $field);
+            $this->addCatalogField($extras, $field, $current);
         }
         $builder->add($extras);
 
@@ -89,12 +97,15 @@ final class ImproveType extends AbstractType
         ;
     }
 
-    private function addCatalogField(FormBuilderInterface $builder, CatalogField $field): void
+    /** @param array<string, scalar|null> $current */
+    private function addCatalogField(FormBuilderInterface $builder, CatalogField $field, array $current): void
     {
         $attr = [];
         if ('' !== $field->placeholder) {
             $attr['placeholder'] = $field->placeholder;
         }
+
+        $data = $current[$field->name] ?? ('' !== $field->default ? $field->default : null);
 
         match ($field->kind) {
             FieldKind::Select => $builder->add($field->name, ChoiceType::class, [
@@ -102,17 +113,19 @@ final class ImproveType extends AbstractType
                 'required' => false,
                 'placeholder' => '—',
                 'choices' => array_combine($field->choices, $field->choices),
+                'data' => $data,
             ]),
             FieldKind::Textarea => $builder->add($field->name, TextareaType::class, [
                 'label' => $field->label,
                 'required' => false,
+                'data' => $data,
                 'attr' => $attr,
                 'constraints' => CatalogFieldConstraints::for($field),
             ]),
             FieldKind::Text => $builder->add($field->name, TextType::class, [
                 'label' => $field->label,
                 'required' => false,
-                'data' => '' !== $field->default ? $field->default : null,
+                'data' => $data,
                 'attr' => $attr,
                 'constraints' => CatalogFieldConstraints::for($field),
             ]),
@@ -125,7 +138,9 @@ final class ImproveType extends AbstractType
         $resolver->setDefaults([
             'data_class' => null,
             'catalog_type' => ItemType::default(),
+            'current' => [],
         ]);
         $resolver->setAllowedTypes('catalog_type', ItemType::class);
+        $resolver->setAllowedTypes('current', 'array');
     }
 }

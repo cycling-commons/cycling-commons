@@ -813,6 +813,9 @@ improve:
   eyebrow: 'Bijdragen · nieuwe invoer'
   title: 'Verbeter of voeg een plek toe.'
   lead: 'Gegevens corrigeren, omstandigheden melden, foto''s toevoegen, of een nieuwe plek toevoegen aan de open fietsatlas.'
+  unbound_title: 'Kies een plek om te verbeteren'
+  unbound_body: 'Elke verbetering begint bij een echte plek op de kaart. Open de kaart, zoek het item en kies “Dit item bewerken”.'
+  unbound_cta: 'Open de kaart'
   step1:
     label: 'Locatie'
     heading: 'Waar is het?'

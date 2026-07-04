@@ -813,6 +813,9 @@ improve:
   eyebrow: 'Beitragen · neuer Eintrag'
   title: 'Einen Ort verbessern oder hinzufügen.'
   lead: 'Details korrigieren, Bedingungen melden, Fotos hinzufügen oder einen neuen Ort zum offenen Radatlas hinzufügen.'
+  unbound_title: 'Wähle einen Ort zum Verbessern'
+  unbound_body: 'Jede Verbesserung beginnt bei einem echten Ort auf der Karte. Öffne die Karte, finde den Eintrag und wähle „Diesen Eintrag bearbeiten“.'
+  unbound_cta: 'Karte öffnen'
   step1:
     label: 'Ort bestimmen'
     heading: 'Wo ist es?'
