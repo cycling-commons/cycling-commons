@@ -12,6 +12,7 @@ use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NoSuspiciousCharacters;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Regex;
 
 /**
  * Registry descriptor → validator constraints, in ONE place (spec §6.1):
@@ -34,6 +35,11 @@ final class CatalogFieldConstraints
         if (FieldKind::Select !== $field->kind) {
             $constraints[] = new Length(max: $field->maxLength);
             $constraints[] = new NoSuspiciousCharacters(locales: self::LOCALES);
+            // NoSuspiciousCharacters' CHECK_INVISIBLE (ICU Spoofchecker) only fires on
+            // *repeated identical* nonspacing combining marks, not a lone Cf format
+            // character (e.g. U+200B ZERO WIDTH SPACE); soft hyphen U+00AD is also Cf
+            // and thus rejected too — acceptable for the en/fr/nl/de locale set.
+            $constraints[] = new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters');
         }
 
         return $constraints;

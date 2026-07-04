@@ -32,6 +32,9 @@ final readonly class SubmissionDraft
         // which would also reject legitimate accented titles. Verified
         // empirically against ICU 74.2 (see task-2-report.md). This Regex
         // closes that specific gap without touching the accented-text case.
+        // The same guard is centralized in CatalogFieldConstraints for every
+        // registry-driven text field; title is validated directly here
+        // because SubmissionDraft is a DTO, not built via that helper.
         #[Assert\Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters')]
         public string $title,
         #[Assert\Range(min: -90, max: 90)]

@@ -922,6 +922,10 @@ contribute_hub:
   notice_mid: ', les médias sous'
   notice_ccbysa: 'CC BY-SA 4.0'
   notice_post: '. La provenance est conservée ; l''identité ne l''est pas.'
+contribute:
+  error:
+    unknown_attribute: 'Un des champs soumis n''est pas reconnu pour ce type d''élément.'
+    invisible_characters: 'Ce texte contient des caractères invisibles ou de formatage qui ne sont pas autorisés.'
 moderate:
   kicker: 'File de modération'
   title: 'Examinez les soumissions en attente.'

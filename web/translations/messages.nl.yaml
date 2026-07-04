@@ -922,6 +922,10 @@ contribute_hub:
   notice_mid: ', media onder'
   notice_ccbysa: 'CC BY-SA 4.0'
   notice_post: '. Herkomst wordt bijgehouden; identiteit niet.'
+contribute:
+  error:
+    unknown_attribute: 'Een van de ingezonden velden wordt niet herkend voor dit itemtype.'
+    invisible_characters: 'Deze tekst bevat onzichtbare of opmaaktekens die niet zijn toegestaan.'
 moderate:
   kicker: 'Moderatiewachtrij'
   title: 'Beoordeel ingediende bijdragen.'
