@@ -111,6 +111,7 @@ Indexes: `(status)`, `(country_code)`, `(region_id)`, `(item_id)`, GiST `(geom)`
 KernelTestCase + DAMA transactions, mirroring phase A:
 
 - **Intake**: `new` creates item+submission atomically with resolved country/region; `edit` snapshots was/now against the live item; unbound improve is refused; rate limiter fires.
+- **Edit-bridge acceptance (explicit)**: clicking *✎ Edit this item* on a DB-served map item opens `/improve` **prefilled with that item's current `name` and attribute values** — no blank/default form. A functional test asserts the prefill against a seeded item; the browser pass re-checks it end-to-end.
 - **Decisions**: approve-new flips state + history row; approve-edit mutates attributes + one history row per field + stale-`was` correction; reject/needs-info mutate nothing; decision columns filled; ROLE gates enforced.
 - **Queue**: filter semantics ported from `SampleQueueFilterTest` (which retires with `SampleQueue`); filter context survives the decide POST.
 - **Serving**: `submitted`/`rejected` excluded from `/map/catalog.json`; pending payload present for curator, absent for rider.
