@@ -35,6 +35,9 @@ services:
       # cache/logs to a container-writable path so the bind-mounted source has no perms issues
       APP_CACHE_DIR: /tmp/cc-cache
       APP_LOG_DIR: /tmp/cc-log
+      # NB: as a real env var this beats every .env* file — including .env.test.
+      # tests/bootstrap.php therefore refuses to run against a non-*_test database;
+      # to run phpunit inside this container, pass -e DATABASE_URL=…/cyclingcommons_test.
       DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=18&charset=utf8"
       # Email is caught by the bundled Mailpit over the internal network (see below).
       # To use a shared host instance instead, override MAILER_DSN, e.g.
