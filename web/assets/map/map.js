@@ -1043,17 +1043,21 @@
   function buildRecord(layer, f){
     const cur = f.cur ? `<div class="cc-d-cur">▲ Curated best-of</div>` : '';
     const pl = photoList(f);
-    const photo = pl.length ? `<figure class="cc-d-photo">
-      <img src="${pl[0].sm}" alt="${f.name}" data-i="0" />
-      <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
-      ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${p.sm}" data-i="${i}" alt="${f.name} — photo ${i+1}" />`).join('')}</div>` : ''}
-    </figure>` : `<a class="cc-d-addphoto" href="/improve?item=${f.edit||slug(f.name)}&name=${encodeURIComponent(f.name)}&type=${layer.letter}&add=photo" aria-label="Add a photo of ${f.name}">
+    // Same edit-bridge rule as the "Edit this item" link below (spec §6/§8):
+    // the add-photo CTA only ever binds to the item's real DB id — no id, no
+    // link (a name-slug guess is never a faithful target).
+    const addPhoto = f.id!=null ? `<a class="cc-d-addphoto" href="/improve?item=${f.id}&name=${encodeURIComponent(f.name)}&type=${layer.letter}&add=photo" aria-label="Add a photo of ${f.name}">
       <svg class="cc-ap-cam" viewBox="0 0 48 36" width="42" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="1.5" y="7.5" width="45" height="27" rx="4"/><path d="M16 7.5l3-4h10l3 4" stroke-linejoin="round"/><circle cx="24" cy="21.5" r="8"/><path d="M40.5 13h.01" stroke-width="3" stroke-linecap="round"/>
       </svg>
       <span class="cc-ap-t">No photo yet</span>
       <span class="cc-ap-b">＋ Add the first photo</span>
-    </a>`;
+    </a>` : '';
+    const photo = pl.length ? `<figure class="cc-d-photo">
+      <img src="${pl[0].sm}" alt="${f.name}" data-i="0" />
+      <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
+      ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${p.sm}" data-i="${i}" alt="${f.name} — photo ${i+1}" />`).join('')}</div>` : ''}
+    </figure>` : addPhoto;
     let recs = f.record;
     if(layer.key==='climbs'){                          // climbs share suitability rows
       recs = recs.concat([

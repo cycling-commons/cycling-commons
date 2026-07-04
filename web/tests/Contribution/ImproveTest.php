@@ -233,6 +233,10 @@ final class ImproveTest extends WebTestCase
         $client->request('GET', '/improve?type=water-food&item=water-fountain&mode=add');
 
         self::assertResponseIsSuccessful();
+        // Confirm it's specifically the unbound explainer that rendered, not
+        // some other 200 (e.g. a form that silently ignored the bad item).
+        self::assertSelectorExists('[data-improve-unbound]');
+        self::assertSelectorNotExists('form[name="improve"]');
     }
 
     // ── Authenticated POST — real edit submission ────────────────────────────
