@@ -30,7 +30,7 @@
       maxzoom:19, attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
     map.addLayer({id:'satellite',type:'raster',source:'satellite',layout:{visibility:'none'}});
   }
-  // seasonal ride-heatmap (illustrative — built from sample GPX rides in routes-data.js)
+  // seasonal ride-heatmap (illustrative — built from sample GPX rides, served as catalog.json's L layer)
   function addHeatmap(){
     if(!window.CC_ROUTES || map.getSource('rideheat')) return;
     const feats=CC_ROUTES.heat.map(h=>({type:'Feature',properties:{season:h[2]},

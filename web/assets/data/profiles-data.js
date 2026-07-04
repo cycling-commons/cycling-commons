@@ -25,7 +25,7 @@ window.CC_PROFILES = {
     privacy:{ public:true, showStats:true },
     stats:[ ['7','routes shared'], ['23','places improved'], ['2','climbs added'], ['58','confirmations'] ],
     contribs:[
-      {ic:'★', type:'RIDE',  t:'Spa · Sankt Vith', m:'128 km roundtrip GPX · shared with elevation', tag:'K · Quality rides', item:'ride', status:'approved'},
+      {ic:'★', type:'RIDE',  t:'Spa · Sankt Vith', m:'128 km roundtrip GPX · shared with elevation', tag:'K · Recommended routes', item:'ride', status:'approved'},
       {ic:'💧', type:'WATER', t:'Public fountain · Stavelot', m:'Confirmed potable, year-round', tag:'C · Water & food', item:'water-fountain', status:'approved'},
       {ic:'⚠', type:'HAZARD',t:'Exposed crosswind · Hautes Fagnes', m:'Reported plateau wind & fog', tag:'F · Hazards', item:'exposed-crosswind-hautes-fagnes', status:'pending'},
       {ic:'⛰', type:'CLIMB', t:'Côte de Stockeu', m:'Corrected gradient & surface to "worn asphalt"', tag:'B · Climbs', item:'cote-de-stockeu', status:'pending'}
@@ -38,7 +38,7 @@ window.CC_PROFILES = {
     privacy:{ public:true, showStats:true },
     stats:[ ['4','routes shared'], ['9','places improved'], ['1','climbs added'], ['21','confirmations'] ],
     contribs:[
-      {ic:'★', type:'RIDE',    t:'Spa · Côte des Hézalles', m:'Roundtrip GPX from Spa', tag:'K · Quality rides', item:'ride', status:'approved'},
+      {ic:'★', type:'RIDE',    t:'Spa · Côte des Hézalles', m:'Roundtrip GPX from Spa', tag:'K · Recommended routes', item:'ride', status:'approved'},
       {ic:'⚙', type:'SERVICE', t:'Repair station · Malmedy', m:'Added tool list and 24/7 hours', tag:'D · Services', item:'repair-station-malmedy', status:'pending'}
     ]
   },
@@ -49,7 +49,7 @@ window.CC_PROFILES = {
     privacy:{ public:true, showStats:true },
     stats:[ ['11','routes shared'], ['31','places improved'], ['3','climbs added'], ['90','confirmations'] ],
     contribs:[
-      {ic:'★', type:'RIDE',    t:'Rondje Super Stockeu', m:'Local loop over the Stockeu', tag:'K · Quality rides', item:'ride', status:'approved'},
+      {ic:'★', type:'RIDE',    t:'Rondje Super Stockeu', m:'Local loop over the Stockeu', tag:'K · Recommended routes', item:'ride', status:'approved'},
       {ic:'🏛', type:'HISTORY', t:'Stavelot Abbey', m:'Added cycling link at the foot of the Stockeu', tag:'J · History & culture', item:'stavelot-abbey', status:'approved'}
     ]
   }

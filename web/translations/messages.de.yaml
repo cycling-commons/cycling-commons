@@ -916,7 +916,7 @@ contribute_hub:
   cat_derived_sub: 'automatisch erstellt — nichts hinzuzufügen'
   card_heatmap_h: 'Tour-Heatmap'
   card_heatmap_p: 'Automatisch aus beigetragenen Touren erstellt (anonymisiert).'
-  card_heatmap_go: 'Tour bei Empfohlene Routen hinzufügen ↑'
+  card_heatmap_go: 'Tour bei den empfohlenen Routen hinzufügen ↑'
   notice_pre: 'Beiträge werden nur bei opt-in zugeordnet; Daten treten The Commons unter'
   notice_odbl: 'ODbL 1.0'
   notice_mid: 'bei, Medien unter'

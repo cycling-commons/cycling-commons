@@ -38,6 +38,9 @@ final class CatalogProvider
             'B' => $this->climbs(),
             'C' => $this->featureCollection('C'),
             'D' => $this->featureCollection('D'),
+            // Phase-B note: E is the only letter filtered by source — a row with
+            // any other source (e.g. a user submission) lands in NEITHER bucket.
+            // Revisit the split when submissions can create stays.
             'E' => [
                 'osm' => $this->featureCollection('E', 'osm'),
                 'pivot' => $this->featureCollection('E', 'pivot'),
@@ -201,6 +204,9 @@ final class CatalogProvider
      */
     private function heat(): array
     {
+        // Phase-B note: only 'auto' heat is served (spec §2 non-goal); rows from
+        // any future source (e.g. user-contributed traces) are deliberately absent
+        // until that phase decides how they surface.
         /** @var list<array{geom: string, season: string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
             "SELECT ST_AsGeoJSON(geom) AS geom, season FROM heat_point WHERE source = 'auto' ORDER BY id",
