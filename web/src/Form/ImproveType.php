@@ -19,7 +19,6 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Length;
 
 /**
  * The type-aware improve / add-location wizard.
@@ -106,14 +105,14 @@ final class ImproveType extends AbstractType
                 'label' => $field->label,
                 'required' => false,
                 'attr' => $attr,
-                'constraints' => [new Length(max: 2000)],
+                'constraints' => CatalogFieldConstraints::for($field),
             ]),
             FieldKind::Text => $builder->add($field->name, TextType::class, [
                 'label' => $field->label,
                 'required' => false,
                 'data' => '' !== $field->default ? $field->default : null,
                 'attr' => $attr,
-                'constraints' => [new Length(max: 500)],
+                'constraints' => CatalogFieldConstraints::for($field),
             ]),
         };
     }

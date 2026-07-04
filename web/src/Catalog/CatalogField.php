@@ -22,6 +22,8 @@ final readonly class CatalogField
         public array $choices = [],
         public string $placeholder = '',
         public string $default = '',
+        public bool $required = false,
+        public int $maxLength = 500,
     ) {
     }
 
@@ -32,7 +34,7 @@ final readonly class CatalogField
 
     public static function textarea(string $name, string $label, string $placeholder = ''): self
     {
-        return new self($name, $label, FieldKind::Textarea, placeholder: $placeholder);
+        return new self($name, $label, FieldKind::Textarea, placeholder: $placeholder, maxLength: 2000);
     }
 
     /** @param list<string> $choices */

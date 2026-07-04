@@ -15,6 +15,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NoSuspiciousCharacters;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\PositiveOrZero;
 use Symfony\Component\Validator\Constraints\Range;
@@ -38,6 +39,7 @@ final class AddClimbType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'add_climb.error.name_required'),
                     new Length(max: 200, maxMessage: 'add_climb.error.name_too_long'),
+                    new NoSuspiciousCharacters(locales: CatalogFieldConstraints::LOCALES),
                 ],
             ])
             ->add('fOsm', ChoiceType::class, [
@@ -115,6 +117,7 @@ final class AddClimbType extends AbstractType
                 'required' => false,
                 'constraints' => [
                     new Length(max: 2000, maxMessage: 'add_climb.error.note_too_long'),
+                    new NoSuspiciousCharacters(locales: CatalogFieldConstraints::LOCALES),
                 ],
             ])
             // Geocoded location carried as hidden fields (filled by client JS)
