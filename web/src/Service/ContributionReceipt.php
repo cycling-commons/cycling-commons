@@ -16,6 +16,7 @@ final readonly class ContributionReceipt
         public string $kind,
         public bool $persisted,
         public \DateTimeImmutable $submittedAt,
+        public ?int $submissionId = null,
     ) {
     }
 }

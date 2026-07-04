@@ -926,6 +926,7 @@ contribute:
   error:
     unknown_attribute: 'One of the submitted fields is not recognised for this item type.'
     invisible_characters: 'This text contains invisible or formatting characters that aren’t allowed.'
+    rate_limited: 'You have reached the contribution limit for now — please try again in a little while.'
 moderate:
   kicker: 'Moderation queue'
   title: 'Review pending submissions.'

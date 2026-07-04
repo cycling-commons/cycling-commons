@@ -1,0 +1,6 @@
+framework:
+    rate_limiter:
+        contribution_submit:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'

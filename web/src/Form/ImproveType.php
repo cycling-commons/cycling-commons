@@ -29,8 +29,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * so a gîte shows gîte fields and a road segment shows surface fields.
  *
  * Location (lat/lng/place) and media queue are filled by client-side JS and
- * carried as hidden fields. Nothing is persisted — the controller hands the
- * submitted array to {@see \App\Service\ContributionStubService}.
+ * carried as hidden fields. The controller hands the submitted array to
+ * {@see \App\Service\ContributionStubInterface} (implemented by
+ * {@see \App\Contribution\CatalogContributionService}); the 'improve' kind
+ * is not yet persisted (lands in a later task).
  *
  * @api Instantiated by Symfony's form factory — `@api` tells Psalm the
  *      constructor is a live entry point, not dead code.

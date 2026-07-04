@@ -201,8 +201,9 @@ final class ModerateTest extends WebTestCase
 
     /**
      * The contribution stub must be called with kind='moderation_decision'.
-     * Verified indirectly: the receipt reference starts with CC- (only returned
-     * by ContributionStubService when submit() succeeds).
+     * Verified indirectly: the receipt reference starts with CC- (the
+     * unpersisted-default shape returned by ContributionStubInterface's
+     * implementation for any kind outside climb/improve/vote).
      */
     public function testDecisionSubmitKindIsModeration(): void
     {
@@ -226,7 +227,7 @@ final class ModerateTest extends WebTestCase
 
         $client->submit($form);
 
-        // CC- reference confirms ContributionStubService::submit() was called.
+        // CC- reference confirms ContributionStubInterface::submit() was called.
         self::assertSelectorTextContains('.receipt-box .ref', 'CC-');
     }
 }

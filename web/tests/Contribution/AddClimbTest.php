@@ -127,10 +127,11 @@ final class AddClimbTest extends WebTestCase
         $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        // Honest stub state: queued for review / not yet persisted
+        // Real intake (Task 3): a Submission row (state=submitted item, pending
+        // review) now backs the receipt — reference is SUB-<submissionId>, not
+        // the old unpersisted-stub CC- prefix.
         self::assertSelectorTextContains('.receipt h2', 'Climb submitted.');
         self::assertSelectorTextContains('.receipt .stub-note', 'not yet persisted');
-        // Reference is present (CC- prefix)
-        self::assertSelectorTextContains('.receipt .ref', 'CC-');
+        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
     }
 }

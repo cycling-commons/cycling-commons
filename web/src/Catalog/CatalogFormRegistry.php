@@ -14,8 +14,10 @@ namespace App\Catalog;
  * collapse to one Climbs schema, etc.). Design source of truth:
  * docs/specs/edit-items/<LETTER>-*.md and 2026-06-18-catalog-v2-and-per-type-forms.md §4.
  *
- * Fixture data, NOT a domain schema — there is no catalog-item persistence yet
- * (every submission still goes through {@see \App\Service\ContributionStubService}).
+ * Form/attribute schema, not a domain schema — it declares the per-type field
+ * shape and vocabulary (consumed by {@see Import\AttributeVocabulary}
+ * and {@see \App\Contribution\CatalogContributionService}), independent of
+ * whether a given kind ('climb', 'improve', …) is wired to real persistence yet.
  *
  * @api Injected into the improve form/controller to build type-aware fields.
  */

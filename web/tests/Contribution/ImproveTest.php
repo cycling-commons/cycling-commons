@@ -198,6 +198,13 @@ final class ImproveTest extends WebTestCase
 
     public function testValidPostShowsHonestStubReceipt(): void
     {
+        // Task 3 (plan 2026-07-04, §"Real intake") makes 'climb' real and turns
+        // 'improve' into a `\LogicException('improve lands in Task 4')`
+        // placeholder — the honest-stub CC- receipt this test asserts no longer
+        // renders for improve. Task 4 ("Edit flow") implements improve for real
+        // and replaces this scenario with tests/Contribution/ImproveBindingTest.php.
+        self::markTestSkipped('improve is a LogicException placeholder until Task 4 (real edit-submission binding) lands.');
+
         $client = static::createClient();
         $this->loginFreshUser($client, 'post');
 

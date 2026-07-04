@@ -926,6 +926,7 @@ contribute:
   error:
     unknown_attribute: 'Eines der übermittelten Felder ist für diesen Elementtyp nicht bekannt.'
     invisible_characters: 'Dieser Text enthält unsichtbare oder Formatierungszeichen, die nicht erlaubt sind.'
+    rate_limited: 'Du hast das Beitragslimit vorerst erreicht — bitte versuche es später erneut.'
 moderate:
   kicker: 'Moderationswarteschlange'
   title: 'Ausstehende Einreichungen prüfen.'

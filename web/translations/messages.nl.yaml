@@ -926,6 +926,7 @@ contribute:
   error:
     unknown_attribute: 'Een van de ingezonden velden wordt niet herkend voor dit itemtype.'
     invisible_characters: 'Deze tekst bevat onzichtbare of opmaaktekens die niet zijn toegestaan.'
+    rate_limited: 'Je hebt de bijdragelimiet voorlopig bereikt — probeer het straks opnieuw.'
 moderate:
   kicker: 'Moderatiewachtrij'
   title: 'Beoordeel ingediende bijdragen.'
