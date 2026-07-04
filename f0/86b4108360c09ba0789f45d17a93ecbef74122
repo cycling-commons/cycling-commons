@@ -1,0 +1,34 @@
+web/src/Catalog/SubmissionType.php
+  s_38d02ca6d8ff2e::t_f5c1e05f544f40 1-28
+web/src/Catalog/Entity/Submission.php
+  s_38d02ca6d8ff2e::t_334dd2562f8359 65-69,73-77
+  s_38d02ca6d8ff2e::t_8326d5ac6d4c3c 1-64,70-72,78-279
+web/src/Catalog/Entity/Region.php
+  s_38d02ca6d8ff2e::t_c07404f9abed93 41-44
+  s_38d02ca6d8ff2e::t_c54bfb706aceeb 111-122
+web/migrations/Version20260704222148.php
+  s_38d02ca6d8ff2e::t_d124238139fcc7 1-10,14-18,20-23,35-38,42-43
+  s_38d02ca6d8ff2e::t_1a71307a307601 11-13,19,24-34,39-41
+web/src/Catalog/SubmissionStatus.php
+  s_38d02ca6d8ff2e::t_d62d648f7411d5 1-21
+web/tests/Catalog/SubmissionEntitiesTest.php
+  s_38d02ca6d8ff2e::t_33c3fc8dae3c46 1-77
+web/src/Catalog/Entity/ChangeHistory.php
+  s_38d02ca6d8ff2e::t_930a9ca96b5eaf 1-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f086b4108360c09ba0789f45d17a93ecbef74122",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
