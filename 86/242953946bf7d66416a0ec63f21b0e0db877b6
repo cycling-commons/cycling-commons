@@ -1,0 +1,24 @@
+web/tests/Catalog/Import/AttributeVocabularyTest.php
+  s_38d02ca6d8ff2e::t_6e7ba35477d618 1-85
+web/tests/Catalog/CatalogFormRegistryTest.php
+  s_38d02ca6d8ff2e::t_5dcd4e3cbced2e 106-143
+web/src/Catalog/CatalogFormRegistry.php
+  s_38d02ca6d8ff2e::t_28288d36fca9eb 52,59-60
+  s_38d02ca6d8ff2e::t_c430f19478383f 106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "86242953946bf7d66416a0ec63f21b0e0db877b6",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
