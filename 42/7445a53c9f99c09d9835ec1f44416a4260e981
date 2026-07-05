@@ -1,0 +1,40 @@
+web/src/Controller/ModerateController.php
+  s_38d02ca6d8ff2e::t_f67157252700f3 103
+web/translations/messages.nl.yaml
+  s_38d02ca6d8ff2e::t_06d01acc8c3ef2 937-938
+  s_38d02ca6d8ff2e::t_56d93f47a26fa1 784
+web/src/Form/AddClimbType.php
+  s_38d02ca6d8ff2e::t_32288b69593bbf 123
+  s_38d02ca6d8ff2e::t_df3c20c1fa836c 22
+  s_38d02ca6d8ff2e::t_804fc6acf0f5d6 44
+web/translations/messages.de.yaml
+  s_38d02ca6d8ff2e::t_10e75eb141edde 784
+  s_38d02ca6d8ff2e::t_c1eaaab9d999c3 937-938
+web/translations/messages.fr.yaml
+  s_38d02ca6d8ff2e::t_1e1691a1897a00 937-938
+  s_38d02ca6d8ff2e::t_978a6a02a7b025 784
+web/assets/map/map.js
+  s_38d02ca6d8ff2e::t_8967c9e7fcbcbc 1309
+  s_38d02ca6d8ff2e::t_09b4ecc066a170 1074
+web/translations/messages.en.yaml
+  s_38d02ca6d8ff2e::t_ed5b696c1ca1e9 784
+  s_38d02ca6d8ff2e::t_c07207fd5873c7 937-938
+web/tests/Contribution/AddClimbTest.php
+  s_38d02ca6d8ff2e::t_4e75d3ac62051d 134
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "427445a53c9f99c09d9835ec1f44416a4260e981",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
