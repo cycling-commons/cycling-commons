@@ -61,11 +61,11 @@ final class CatalogProvider
     }
 
     /**
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, prov: string|null}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null}>
      */
     private function itemRows(string $letter, ?string $source = null): array
     {
-        $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, s.name AS prov
+        $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
                 WHERE i.letter = :letter AND i.state IN '.self::SERVED_STATES;
@@ -75,7 +75,7 @@ final class CatalogProvider
             $params['source'] = $source;
         }
 
-        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, prov: string|null}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
@@ -96,6 +96,11 @@ final class CatalogProvider
             if (null !== $row['prov']) {
                 $props['prov'] = $row['prov'];
             }
+            // W6: display-safe provenance — the raw ItemSource value (osm/pivot/
+            // wikidata/auto/user/manual), never the internal provenance detail.
+            // Lets the drawer show "Rider-contributed" for user/manual items
+            // instead of a hardcoded per-layer OSM string (map.js sourceLabel()).
+            $props['srcType'] = $row['source'];
             // The DB item id always makes $props non-empty, so it always
             // encodes as a JSON object — no more `[] === $props` empty-array
             // case (GeoJSON requires an object; [] would encode as an array).
@@ -129,7 +134,10 @@ final class CatalogProvider
             }
             /** @var array{coordinates: array{0: float, 1: float}} $geo */
             $geo = $this->decode($row['geom']);
-            $climbs[] = ['id' => (int) $row['id'], 'name' => $row['name'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
+            // W6: 'source' above is the free-text citation (attribution); 'srcType'
+            // is the raw ItemSource enum value, kept separate so map.js can tell a
+            // rider-added/edited climb apart from an OSM/Wikidata one.
+            $climbs[] = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
         }
 
         return $climbs;
@@ -144,7 +152,8 @@ final class CatalogProvider
     {
         $segments = [];
         foreach ($this->itemRows('A') as $row) {
-            $seg = ['id' => (int) $row['id'], 'name' => $row['name']] + $this->decode($row['attributes']);
+            // W6: srcType is the raw ItemSource enum value (see featureCollection()).
+            $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $this->decode($row['attributes']);
             if (str_starts_with($row['source_ref'], 'way/')) {
                 $seg['wayId'] = (int) substr($row['source_ref'], 4);
             }
@@ -164,16 +173,17 @@ final class CatalogProvider
      */
     private function routes(): array
     {
-        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string}> $rows */
+        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes
+            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source
              FROM recommended_route WHERE state IN '.self::SERVED_STATES.' ORDER BY id',
         );
 
         $routes = [];
         foreach ($rows as $row) {
             $attrs = $this->decode($row['attributes']);
-            $route = ['id' => (int) $row['id'], 'name' => $row['name']];
+            // W6: srcType is the raw ItemSource enum value (see featureCollection()).
+            $route = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']];
             if (isset($attrs['season'])) {
                 $route['season'] = $attrs['season'];
             }

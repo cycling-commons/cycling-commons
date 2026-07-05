@@ -2,6 +2,16 @@
   // §13: shared HTML-escaper for real (user-authored) pending-submission text —
   // stored-XSS-in-curator-session risk now that submissions come from real users.
   const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // C1-T4 (spec W6): every served feature now carries `srcType` — the item's
+  // real ItemSource enum value (osm/pivot/wikidata/auto/user/manual), from
+  // CatalogProvider. This maps it to the plain-English label shown on the
+  // drawer's "Source ·" line, so a rider-added/edited item never reads as
+  // OpenStreetMap just because it happens to live in a bulk-OSM layer.
+  const SOURCE_LABELS = {
+    osm:'OpenStreetMap', pivot:'Tourisme Wallonie (CC-BY)', wikidata:'Wikidata',
+    auto:'Derived by the pipeline', user:'Rider-contributed', manual:'Rider-contributed'
+  };
+  const sourceLabel = raw => SOURCE_LABELS[raw] || null;
   // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
   // bumped on every openDrawer() call so a slow response from a since-replaced
   // drawer never paints stale history over whatever is open now.
@@ -217,6 +227,13 @@
   function osmDrawer(layer, p, ll, src){
     const lbl=(layer||{}).label||'Place';
     const pivot=p.src==='pivot';   // official Tourisme Wallonie accommodation (CC-BY), not OSM
+    // C1-T4 (W6): p.srcType is the item's real ItemSource value from CatalogProvider.
+    // A rider-added/edited item (user/manual) must read as rider-contributed even
+    // when served through a bulk-OSM layer — the per-fact "Type"/"Listed" method
+    // tags below are unchanged (Phase C2 scope), only the headline + source line
+    // are corrected here.
+    const community = p.srcType==='user' || p.srcType==='manual';
+    const originLbl = pivot?'Tourisme Wallonie':(community?sourceLabel(p.srcType):'OSM');
     const rec=[{label:'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'}];
     if(p.town) rec.push({label:'Town', value:p.town});
     rec.push({label:'Province', value:p.prov||'Wallonia'});
@@ -225,8 +242,9 @@
       if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
     if(p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
     // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
-    const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+(pivot?'Tourisme Wallonie':'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
-      source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie':src};
+    const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+originLbl, cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
+      source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie'
+        :(community?sourceLabel(p.srcType):(src||sourceLabel(p.srcType)||'OpenStreetMap'))};
     if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
     if(p.desc) d.desc=p.desc;
     if(p.descTr) d.descTr=1;
@@ -239,10 +257,12 @@
     const potable = p.c
       ? {label:'Potable', value:p.c+' · simulated demo flag (not utility-verified)', method:'demo'}
       : {label:'Potable', value:'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
-    const d={name:p.n||p.t||'Drinking water', headline:'drinking water · OSM', cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
+    // C1-T4 (W6): see osmDrawer — a rider-added/edited water point isn't OSM.
+    const community = p.srcType==='user' || p.srcType==='manual';
+    const d={name:p.n||p.t||'Drinking water', headline:'drinking water · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
       record:[{label:'Type', value:p.t||'Drinking water', method:'OSM'}, potable,
         {label:'Verify', value:'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}],
-      source:'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
+      source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
     if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
     return d;
   }
@@ -743,7 +763,15 @@
     return loop.slice(i, j+1);
   }
   // populate K · Recommended routes with every uploaded sample route + its cyclist-experience attributes
-  if(window.CC_CLIMBS){ layerByKey['climbs'].features = layerByKey['climbs'].features.concat(CC_CLIMBS); }
+  // C1-T4 (W6): CC_CLIMBS' 'source' field is the free-text citation ('OSM roads ·
+  // geometry handmade', etc.); srcType is the real ItemSource value. A rider-
+  // added/edited climb (user/manual) must not keep an OSM-flavoured citation —
+  // swap the cc-d-src line to the plain rider-contributed label for those only.
+  if(window.CC_CLIMBS){
+    const climbSrc = CC_CLIMBS.map(c => (c.srcType==='user'||c.srcType==='manual')
+      ? Object.assign({}, c, {source: sourceLabel(c.srcType)}) : c);
+    layerByKey['climbs'].features = layerByKey['climbs'].features.concat(climbSrc);
+  }
   if(window.CC_ROUTES){
     const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
     // towns each ride starts at / passes — lets riders search routes by start location (demo lookup)
@@ -763,7 +791,9 @@
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities,                                              // searchable start/through towns
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
-      source:'Contributed GPX (GPS track only)',
+      // C1-T4 (W6): 'Contributed GPX' is an accurate detail for the pipeline's
+      // usual auto-derived routes; a rider-added/edited one gets the plain label.
+      source:(r.srcType==='user'||r.srcType==='manual') ? sourceLabel(r.srcType) : 'Contributed GPX (GPS track only)',
       record:[
         {label:'Distance', value:r.km+' km'},
         {label:'Starts at', value:cityLink(cities[0])},
@@ -785,7 +815,8 @@
       id:s.id, name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
       geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
       photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
-      source:'OSM (surface=*)',
+      // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
+      source:(s.srcType==='user'||s.srcType==='manual') ? sourceLabel(s.srcType) : 'OSM (surface=*)',
       record:[
         {label:'Surface', value:s.surface, method:'OSM'},
         {label:'Smoothness', value:s.smoothness, method:'OSM'},
@@ -1150,7 +1181,7 @@
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}${moderate}${histSlot}`;
+      <div class="cc-d-src">Source · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}${moderate}${histSlot}`;
   }
   // C1-T3: renders one change_history row. Every interpolated value is
   // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`

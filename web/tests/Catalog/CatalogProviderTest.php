@@ -76,7 +76,11 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame('Ecocyclo', $shop['properties']['n']);
         self::assertSame('Brabant wallon', $shop['properties']['prov']);      // via world_subdivision join
         self::assertSame([4.4, 50.7], $shop['geometry']['coordinates']);      // GeoJSON [lng, lat]
-        self::assertArrayNotHasKey('source', $shop['properties']);            // provenance never leaks
+        // W6: the raw ItemSource value IS meant to reach the client (map.js maps
+        // it to a display label) — but under 'srcType', never the free-text
+        // 'source'/'ref' import columns that would leak internal detail.
+        self::assertSame('osm', $shop['properties']['srcType']);
+        self::assertArrayNotHasKey('source', $shop['properties']);
         self::assertArrayNotHasKey('ref', $shop['properties']);
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
         self::assertIsInt($shop['properties']['id']);
@@ -107,6 +111,9 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame('http://example.test', $e['pivot']['features'][0]['properties']['web']);
         self::assertIsInt($e['osm']['features'][0]['properties']['id']);
         self::assertIsInt($e['pivot']['features'][0]['properties']['id']);
+        // W6: each bucket's srcType matches the split it was fetched by.
+        self::assertSame('osm', $e['osm']['features'][0]['properties']['srcType']);
+        self::assertSame('pivot', $e['pivot']['features'][0]['properties']['srcType']);
     }
 
     public function testClimbShapeRestoresCitationAndLatLng(): void
@@ -116,6 +123,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame([50.61, 4.41], $climb['geom']['ll']);                // [lat, lng]
         self::assertSame('Wikidata (P625) · OpenStreetMap', $climb['source']); // attribution -> source
         self::assertArrayNotHasKey('attribution', $climb);
+        self::assertSame('wikidata', $climb['srcType']);                      // W6: raw enum, separate from the citation text above
         self::assertSame([[50.61, 4.41], [50.62, 4.42]], $climb['route']);    // raw [lat,lng] pass-through
         self::assertSame(1, $climb['descTr']);
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
@@ -130,6 +138,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame(2001, $seg['wayId']);                                // from source_ref 'way/2001'
         self::assertSame([[50.1, 4.2], [50.2, 4.3]], $seg['path']);           // flipped to [lat,lng]
         self::assertSame('Asphalt', $seg['surface']);
+        self::assertSame('osm', $seg['srcType']);                             // W6
         self::assertArrayNotHasKey('edit', $seg);                             // accepted loss (map.js hardcodes it)
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
         self::assertIsInt($seg['id']);
@@ -146,6 +155,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame([[50.6, 4.4], [50.7, 4.5], [50.6, 4.4]], $route['loop']);
         self::assertSame(['name' => 'Test U.', 'public' => true], $route['uploader']);
         self::assertSame('Tester', $route['photo']['credit']);
+        self::assertSame('auto', $route['srcType']);                          // W6
         self::assertSame([[50.5, 4.5, 'summer'], [50.6, 4.6, 'winter']], $p['L']);
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
         self::assertIsInt($route['id']);
