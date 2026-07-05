@@ -19,6 +19,7 @@ use Symfony\Component\Validator\Constraints\NoSuspiciousCharacters;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\PositiveOrZero;
 use Symfony\Component\Validator\Constraints\Range;
+use Symfony\Component\Validator\Constraints\Regex;
 
 /**
  * Server-side form for the add-climb wizard.
@@ -40,6 +41,7 @@ final class AddClimbType extends AbstractType
                     new NotBlank(message: 'add_climb.error.name_required'),
                     new Length(max: 200, maxMessage: 'add_climb.error.name_too_long'),
                     new NoSuspiciousCharacters(locales: CatalogFieldConstraints::LOCALES),
+                    new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
                 ],
             ])
             ->add('fOsm', ChoiceType::class, [
@@ -118,6 +120,7 @@ final class AddClimbType extends AbstractType
                 'constraints' => [
                     new Length(max: 2000, maxMessage: 'add_climb.error.note_too_long'),
                     new NoSuspiciousCharacters(locales: CatalogFieldConstraints::LOCALES),
+                    new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
                 ],
             ])
             // Geocoded location carried as hidden fields (filled by client JS)

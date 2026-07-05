@@ -131,7 +131,7 @@ final class AddClimbTest extends WebTestCase
         // review) now backs the receipt — reference is SUB-<submissionId>, not
         // the old unpersisted-stub CC- prefix.
         self::assertSelectorTextContains('.receipt h2', 'Climb submitted.');
-        self::assertSelectorTextContains('.receipt .stub-note', 'not yet persisted');
+        self::assertSelectorTextContains('.receipt .stub-note', 'awaiting curator review');
         self::assertSelectorTextContains('.receipt .ref', 'SUB-');
     }
 }

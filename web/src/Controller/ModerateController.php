@@ -100,7 +100,7 @@ final class ModerateController extends AbstractController
 
             try {
                 $submission = $this->moderation->decide((int) $data['submission_id'], (string) $data['decision'], $user, $data['note'] ?? null);
-            } catch (AlreadyDecidedException|\InvalidArgumentException) {
+            } catch (AlreadyDecidedException|\InvalidArgumentException|\LogicException) {
                 if ($wantsJson) {
                     return $this->json(['error' => 'undecidable_submission'], Response::HTTP_CONFLICT);
                 }

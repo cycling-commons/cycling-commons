@@ -781,7 +781,7 @@ add_climb:
     heading: 'Col soumis.'
     body: 'Votre col a été mis en file d''attente pour la révision du curateur. Rien n''est en ligne pour l''instant — le Commons est encore en aperçu.'
     reference: 'Référence :'
-    stub_note: 'Note : il s''agit d''un aperçu — les soumissions de cols sont mises en file d''attente pour révision et ne sont pas encore persistées. Lancement en 2026.'
+    stub_note: 'Note : votre col a bien été reçu et est en attente de révision par un curateur — en attente de modération avant de rejoindre l''atlas. Lancement en 2026.'
     cta: '← Retour à la carte'
   journey:
     eyebrow: 'Comment les contributions deviennent l''atlas'
@@ -934,8 +934,8 @@ moderate:
   kicker: 'File de modération'
   title: 'Examinez les soumissions en attente.'
   role_label: 'Curateur'
-  stub_banner_bold: 'Aperçu uniquement.'
-  stub_banner_body: 'Il s''agit d''un aperçu du flux de révision du curateur. Les décisions sont enregistrées mais ne sont pas encore persistées dans l''atlas en direct — en attente de l''API de données. Lancement en 2026.'
+  stub_banner_bold: 'Décisions en direct.'
+  stub_banner_body: 'Approuver une soumission la publie immédiatement dans l''atlas en direct — la rejeter l''en écarte. Examinez chaque élément avec attention avant de décider.'
   type:
     new: 'Nouveau lieu'
     edit: 'Modification'
@@ -951,11 +951,6 @@ moderate:
   error:
     submission_id_required: 'L''identifiant de soumission est requis.'
     decision_required: 'Une décision est requise.'
-  receipt:
-    heading: 'Décision enregistrée.'
-    body: 'Votre décision de modération a été mise en file d''attente. Elle n''est pas encore persistée — en attente de l''API de données.'
-    reference: 'Référence :'
-    stub_note: 'Note : il s''agit d''un aperçu — les décisions sont enregistrées mais ne sont pas encore persistées dans l''atlas en direct. Lancement en 2026.'
   empty:
     heading: 'File vide'
     body: 'Plus rien à examiner. Parfait.'

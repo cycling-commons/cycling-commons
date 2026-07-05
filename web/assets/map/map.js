@@ -1071,7 +1071,7 @@
     }
     const rows = recs.map(r => {
       const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`).join('') : '';
-      return `<li><span class="k">${r.label}</span><span class="v${r.warn?' warn':''}">${r.value}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
+      return `<li><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
     }).join('');
     const fresh = f.freshness
       ? `<div class="cc-d-fresh ${f.freshness.state}">${f.freshness.state} · last confirmed ${f.freshness.lastConfirmed}</div>` : '';
@@ -1306,7 +1306,7 @@
     const lb=document.getElementById('lightbox'), p=_lb.photos[_lb.i], multi=_lb.photos.length>1;
     lb.querySelector('img').src=p.lg;
     lb.querySelector('.cc-lb-cap').innerHTML =
-      (_lb.name?`<b>${_lb.name}</b> · `:'') + (p.source?photoCap(p):'') + (multi?` · ${_lb.i+1} / ${_lb.photos.length}`:'');
+      (_lb.name?`<b>${escPend(_lb.name)}</b> · `:'') + (p.source?photoCap(p):'') + (multi?` · ${_lb.i+1} / ${_lb.photos.length}`:'');
     lb.querySelector('.cc-lb-prev').hidden=!multi; lb.querySelector('.cc-lb-next').hidden=!multi;
   }
   function lbStep(d){ const n=_lb.photos.length; if(!n) return; _lb.i=(_lb.i+d+n)%n; renderLightbox(); }

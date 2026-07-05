@@ -781,7 +781,7 @@ add_climb:
     heading: 'Climb submitted.'
     body: 'Your climb has been queued for curator review. Nothing is live yet — the Commons is still in preview.'
     reference: 'Reference:'
-    stub_note: 'Note: this is a preview — climb submissions are queued for review and not yet persisted. Launching 2026.'
+    stub_note: 'Note: your climb has been received and is now awaiting curator review — pending moderation before it joins the atlas. Launching 2026.'
     cta: '← Back to the map'
   journey:
     eyebrow: 'How contributions become the atlas'
@@ -934,8 +934,8 @@ moderate:
   kicker: 'Moderation queue'
   title: 'Review pending submissions.'
   role_label: 'Curator'
-  stub_banner_bold: 'Preview only.'
-  stub_banner_body: 'This is a preview of the curator review flow. Decisions are recorded but not yet persisted to the live atlas — pending the data API. Launching 2026.'
+  stub_banner_bold: 'Decisions are live.'
+  stub_banner_body: 'Approving a submission publishes it to the live atlas immediately — rejecting keeps it out. Review each item carefully before deciding.'
   type:
     new: 'New place'
     edit: 'Edit'
@@ -951,11 +951,6 @@ moderate:
   error:
     submission_id_required: 'Submission ID is required.'
     decision_required: 'A decision is required.'
-  receipt:
-    heading: 'Decision recorded.'
-    body: 'Your moderation decision has been queued. It is not yet persisted — pending the data API.'
-    reference: 'Reference:'
-    stub_note: 'Note: this is a preview — decisions are recorded but not yet persisted to the live atlas. Launching 2026.'
   empty:
     heading: 'Queue clear'
     body: 'Nothing left to review. Nice.'

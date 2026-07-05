@@ -781,7 +781,7 @@ add_climb:
     heading: 'Anstieg eingereicht.'
     body: 'Dein Anstieg wurde zur Kuratorenprüfung eingereiht. Noch ist nichts live — The Commons befindet sich noch in der Vorschau.'
     reference: 'Referenz:'
-    stub_note: 'Hinweis: Dies ist eine Vorschau — Anstiege werden zur Prüfung eingereiht und noch nicht dauerhaft gespeichert. Start 2026.'
+    stub_note: 'Hinweis: Dein Anstieg wurde empfangen und wartet nun auf die Prüfung durch einen Kurator — ausstehende Moderation, bevor er dem Atlas beitritt. Start 2026.'
     cta: '← Zurück zur Karte'
   journey:
     eyebrow: 'Wie Beiträge zum Atlas werden'
@@ -934,8 +934,8 @@ moderate:
   kicker: 'Moderationswarteschlange'
   title: 'Ausstehende Einreichungen prüfen.'
   role_label: 'Kurator'
-  stub_banner_bold: 'Nur Vorschau.'
-  stub_banner_body: 'Dies ist eine Vorschau des Kuratorenprüfablaufs. Entscheidungen werden erfasst, aber noch nicht dauerhaft im Live-Atlas gespeichert — ausstehend bis zur Daten-API. Start 2026.'
+  stub_banner_bold: 'Entscheidungen wirken sofort.'
+  stub_banner_body: 'Das Genehmigen einer Einreichung veröffentlicht sie sofort im Live-Atlas — das Ablehnen hält sie fern. Prüfe jeden Eintrag sorgfältig, bevor du entscheidest.'
   type:
     new: 'Neuer Ort'
     edit: 'Bearbeitung'
@@ -951,11 +951,6 @@ moderate:
   error:
     submission_id_required: 'Einreichungs-ID ist erforderlich.'
     decision_required: 'Eine Entscheidung ist erforderlich.'
-  receipt:
-    heading: 'Entscheidung erfasst.'
-    body: 'Deine Moderationsentscheidung wurde eingereiht. Sie ist noch nicht dauerhaft gespeichert — ausstehend bis zur Daten-API.'
-    reference: 'Referenz:'
-    stub_note: 'Hinweis: Dies ist eine Vorschau — Entscheidungen werden erfasst, aber noch nicht dauerhaft im Live-Atlas gespeichert. Start 2026.'
   empty:
     heading: 'Warteschlange leer'
     body: 'Nichts mehr zu prüfen. Super.'

@@ -781,7 +781,7 @@ add_climb:
     heading: 'Klim ingediend.'
     body: 'Jouw klim is in de wachtrij gezet voor curatorsbeoordeling. Nog niets staat live — de Commons is nog in de voorbeeldfase.'
     reference: 'Referentie:'
-    stub_note: 'Let op: dit is een voorbeeld — klimingaven worden in de wachtrij gezet en nog niet opgeslagen. Lancering 2026.'
+    stub_note: 'Let op: je klim is ontvangen en wacht nu op beoordeling door een curator — in afwachting van moderatie voordat hij de atlas in gaat. Lancering 2026.'
     cta: '← Terug naar de kaart'
   journey:
     eyebrow: 'Hoe bijdragen de atlas worden'
@@ -934,8 +934,8 @@ moderate:
   kicker: 'Moderatiewachtrij'
   title: 'Beoordeel ingediende bijdragen.'
   role_label: 'Curator'
-  stub_banner_bold: 'Alleen voorbeeld.'
-  stub_banner_body: 'Dit is een voorbeeld van de curatorbeoordelingsstroom. Beslissingen worden geregistreerd maar nog niet opgeslagen in de live atlas — in afwachting van de data-API. Lancering 2026.'
+  stub_banner_bold: 'Beslissingen zijn direct actief.'
+  stub_banner_body: 'Een inzending goedkeuren publiceert deze meteen in de live atlas — afwijzen houdt hem eruit. Beoordeel elk item zorgvuldig voordat je beslist.'
   type:
     new: 'Nieuwe plek'
     edit: 'Bewerking'
@@ -951,11 +951,6 @@ moderate:
   error:
     submission_id_required: 'Inzending-ID is verplicht.'
     decision_required: 'Een beslissing is verplicht.'
-  receipt:
-    heading: 'Beslissing geregistreerd.'
-    body: 'Jouw moderatiebeslissing is in de wachtrij gezet. Hij is nog niet opgeslagen — in afwachting van de data-API.'
-    reference: 'Referentie:'
-    stub_note: 'Let op: dit is een voorbeeld — beslissingen worden geregistreerd maar nog niet opgeslagen in de live atlas. Lancering 2026.'
   empty:
     heading: 'Wachtrij leeg'
     body: 'Niets meer te beoordelen. Goed gedaan.'

@@ -42,12 +42,6 @@
   .btn-reject{background:transparent;color:var(--clay);border:1.5px solid var(--clay)}
   .btn-needs-info{background:transparent;color:#555;border:1.5px solid rgba(20,22,14,.3)}
 
-  .receipt-box{background:var(--paper-deep);border:1px solid rgba(20,22,14,.15);border-radius:9px;padding:1.8rem 1.6rem;margin:1.8rem 0;text-align:center}
-  .receipt-box .ic{font-size:2.2rem;margin-bottom:.4rem}
-  .receipt-box h2{font-family:var(--serif);font-size:1.5rem;margin-bottom:.4rem}
-  .receipt-box .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin-top:.4rem}
-  .receipt-box .stub-note{display:inline-block;margin-top:1rem;font-size:.82rem;color:#6b5320;background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:6px;padding:.5rem 1rem;max-width:520px;line-height:1.5}
-
   .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
   .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
   .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
@@ -94,16 +88,6 @@
     </label>
     <noscript><button type="submit" class="btn-act btn-needs-info">{{ 'moderate.filter.apply'|trans }}</button></noscript>
   </form>
-
-  {% if receipt is not null %}
-  <div class="receipt-box">
-    <div class="ic">&#9650;</div>
-    <h2>{{ 'moderate.receipt.heading'|trans }}</h2>
-    <p>{{ 'moderate.receipt.body'|trans }}</p>
-    <p class="ref">{{ 'moderate.receipt.reference'|trans }} {{ receipt.reference }}</p>
-    <p class="stub-note">{{ 'moderate.receipt.stub_note'|trans }}</p>
-  </div>
-  {% endif %}
 
   {% if items is empty %}
   <div class="empty-queue">
