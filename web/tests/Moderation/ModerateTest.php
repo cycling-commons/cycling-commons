@@ -189,6 +189,7 @@ final class ModerateTest extends WebTestCase
     {
         $client = static::createClient();
         $sub = $this->seedSubmission('Fountain · Spa centre');
+        $other = $this->seedSubmission('Vaalserberg');
 
         $curator = $this->createUser(
             'moderate-decide@example.com',
@@ -203,7 +204,7 @@ final class ModerateTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
 
-        // Submit the queue item's decision form.
+        // Submit the first queue item's decision form.
         $form = $crawler->selectButton('Record decision')->form();
         $form['moderation_decision[submission_id]'] = (string) $sub->getId();
         $form['moderation_decision[decision]'] = 'approve';
@@ -212,12 +213,14 @@ final class ModerateTest extends WebTestCase
 
         self::assertResponseRedirects('/moderate');
 
-        // Following the redirect lands back on the (unfiltered) queue, which
-        // still shows the seeded item — the contribution stub does not
-        // mutate the submission row.
+        // Following the redirect lands back on the (unfiltered) queue. The
+        // decided submission is now Approved (ModerationService applied the
+        // decision for real) so it has left the pending/needs-info queue;
+        // the other, still-undecided submission remains visible.
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.q-title', $sub->getTitle());
+        self::assertSelectorTextNotContains('.q-title', $sub->getTitle());
+        self::assertSelectorTextContains('.q-title', $other->getTitle());
     }
 
     /**

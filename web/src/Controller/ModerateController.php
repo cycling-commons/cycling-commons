@@ -9,9 +9,10 @@ namespace App\Controller;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
+use App\Moderation\AlreadyDecidedException;
+use App\Moderation\ModerationService;
 use App\Moderation\SubmissionQueue;
 use App\Routing\LocalePrefix;
-use App\Service\ContributionStubInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,9 +22,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * Curator moderation queue — review pending submissions and record decisions.
  *
- * Decisions are forwarded to the contribution stub (no real state change
- * until the data API is ready). The queue is populated from SubmissionQueue,
- * which reads real pending/needs-info rows from the submission table.
+ * Decisions are applied by ModerationService, the only write-path for
+ * moderation (approve applies the change to the catalog + appends
+ * change_history; reject/needs_info never mutate the item). The queue is
+ * populated from SubmissionQueue, which reads real pending/needs-info rows
+ * from the submission table.
  *
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.
@@ -33,7 +36,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class ModerateController extends AbstractController
 {
     public function __construct(
-        private readonly ContributionStubInterface $contributionStub,
+        private readonly ModerationService $moderation,
         private readonly SubmissionQueue $queue,
     ) {
     }
@@ -90,20 +93,28 @@ final class ModerateController extends AbstractController
             || \in_array('application/json', $request->getAcceptableContentTypes(), true);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array<string, mixed> $data */
+            /** @var array{submission_id: string|int, decision: string, note: ?string} $data */
             $data = $form->getData();
             /** @var User $user */
             $user = $this->getUser();
 
-            $receipt = $this->contributionStub->submit('moderation_decision', $data, $user);
+            try {
+                $submission = $this->moderation->decide((int) $data['submission_id'], (string) $data['decision'], $user, $data['note'] ?? null);
+            } catch (AlreadyDecidedException|\InvalidArgumentException) {
+                if ($wantsJson) {
+                    return $this->json(['error' => 'undecidable_submission'], Response::HTTP_CONFLICT);
+                }
+
+                return $this->redirectToRoute('moderate');
+            }
 
             if ($wantsJson) {
                 return $this->json([
-                    'reference' => $receipt->reference,
-                    'kind' => $receipt->kind,
-                    'persisted' => $receipt->persisted,
+                    'reference' => 'SUB-'.(string) $submission->getId(),
+                    'kind' => 'moderation_decision',
+                    'persisted' => true,
                     'decision' => $data['decision'],
-                    'submission_id' => $data['submission_id'],
+                    'submission_id' => $submission->getId(),
                 ]);
             }
 

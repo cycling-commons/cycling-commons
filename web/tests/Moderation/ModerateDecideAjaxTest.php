@@ -42,7 +42,7 @@ final class ModerateDecideAjaxTest extends WebTestCase
     }
 
     /** Seed a real pending submission row so the queue renders a decision form. */
-    private function seedSubmission(): void
+    private function seedSubmission(): Submission
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -56,13 +56,15 @@ final class ModerateDecideAjaxTest extends WebTestCase
             ->setPayload([]);
         $em->persist($sub);
         $em->flush();
+
+        return $sub;
     }
 
     public function testAjaxDecisionReturnsJsonStubReceipt(): void
     {
         $client = static::createClient();
         $this->login($client, 'ajax-curator@example.com', ['ROLE_CURATOR'], true);
-        $this->seedSubmission();
+        $sub = $this->seedSubmission();
 
         // Grab the CSRF token from a rendered decision form (stateless, id "submit").
         $crawler = $client->request('GET', '/moderate');
@@ -71,20 +73,20 @@ final class ModerateDecideAjaxTest extends WebTestCase
         $client->request(
             'POST',
             '/moderate/decide',
-            ['moderation_decision' => ['submission_id' => '1', 'decision' => 'approve', '_token' => $token]],
+            ['moderation_decision' => ['submission_id' => (string) $sub->getId(), 'decision' => 'approve', '_token' => $token]],
             [],
             ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_ACCEPT' => 'application/json', 'HTTP_REFERER' => 'http://localhost/moderate'],
         );
 
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'application/json');
-        /** @var array{persisted:bool,reference:string,kind:string,decision:string,submission_id:string} $data */
+        /** @var array{persisted:bool,reference:string,kind:string,decision:string,submission_id:int} $data */
         $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
-        self::assertFalse($data['persisted']);
-        self::assertStringStartsWith('CC-', $data['reference']);
+        self::assertTrue($data['persisted']);
+        self::assertSame('SUB-'.$sub->getId(), $data['reference']);
         self::assertSame('moderation_decision', $data['kind']);
         self::assertSame('approve', $data['decision']);
-        self::assertSame('1', $data['submission_id']);
+        self::assertSame($sub->getId(), $data['submission_id']);
     }
 
     /**
