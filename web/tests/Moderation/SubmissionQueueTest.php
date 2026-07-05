@@ -67,13 +67,42 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->seed('edit', 'BE');
         $item = $this->queue->filtered(null, null, null)[0];
 
-        foreach (['id', 'type', 'letter', 'country', 'region', 'title', 'lat', 'lng', 'who', 'when', 'body', 'was', 'now'] as $key) {
+        foreach (['id', 'itemId', 'type', 'letter', 'country', 'region', 'title', 'lat', 'lng', 'who', 'when', 'body', 'was', 'now'] as $key) {
             self::assertArrayHasKey($key, $item);
         }
         self::assertSame('hours: 24/7', $item['was']);
         self::assertSame('hours: closed Sundays', $item['now']);
         self::assertMatchesRegularExpression('/^rider#[0-9a-f]{4}$/', $item['who']);
         self::assertIsFloat($item['lat']);
+    }
+
+    /**
+     * The pending drawer needs the target item's id to fetch its applied
+     * change history (moderation-UX: "always see the history of an item").
+     * `seed()` never sets item_id, so it must come back null — not omitted.
+     */
+    public function testRowsCarryTargetItemId(): void
+    {
+        $this->seed('edit', 'BE');
+        $item = $this->queue->filtered(null, null, null)[0];
+        self::assertArrayHasKey('itemId', $item);
+        self::assertNull($item['itemId']);
+
+        $sub = (new Submission())
+            ->setType(SubmissionType::from('edit'))->setLetter('D')->setUserId(7)
+            ->setStatus(SubmissionStatus::Pending)->setTitle('Bound edit')
+            ->setGeom('{"type":"Point","coordinates":[5.5,50.5]}')
+            ->setCountryCode('BE')->setItemId(4242)
+            ->setChanges(['hours' => ['was' => '24/7', 'now' => 'closed Sundays']])
+            ->setPayload([]);
+        $this->em->persist($sub);
+        $this->em->flush();
+
+        $bound = array_values(array_filter(
+            $this->queue->filtered(null, null, null),
+            static fn (array $row): bool => 'Bound edit' === $row['title'],
+        ))[0];
+        self::assertSame(4242, $bound['itemId']);
     }
 
     public function testCountriesAreSortedDistinct(): void

@@ -1013,7 +1013,21 @@
       // HTML-interpolated here, so it's left alone — see edit-bridge note above.)
       edit = `<a class="cc-d-act edit" href="/improve?type=${s.letter}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${s.lat}&lng=${s.lng}">✎ Edit this item</a>`;
       const body = s.body ? `<p class="cc-mod-body">${escPend(s.body)}</p>` : '';
-      const diff = (s.was && s.now) ? `<div class="cc-mod-diff"><div class="cc-mod-was">${escPend(s.was)}</div><div class="cc-mod-now">${escPend(s.now)}</div></div>` : '';
+      // "Proposed change" — what THIS submission wants to change, not the
+      // item's history. Kept visually distinct from the history section below.
+      const diff = (s.was && s.now)
+        ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">Proposed change</div><div class="cc-mod-was">${escPend(s.was)}</div><div class="cc-mod-now">${escPend(s.now)}</div></div>`
+        : '';
+      // Moderation-UX (user request): "Everybody should always be able to see
+      // the history of an item." A brand-new submission (type 'new') has no
+      // prior item to have a history — say so plainly, no fetch needed. An
+      // edit of an existing item (itemId set) fetches the same applied
+      // change_history the normal item drawer shows (C1-T3), via openDrawer
+      // below — reusing loadItemHistory/renderHistoryList so both views stay
+      // in sync. escPend covers every interpolated value (see historyRow).
+      const modHist = 'new' === s.type
+        ? `<div class="cc-d-hist cc-d-hist-initial"><h4 class="cc-d-hist-h">History</h4><p class="cc-mod-initial">Initial entry — new item</p></div>`
+        : (s.itemId != null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${s.itemId}"></div>` : '');
       moderate = `<div class="cc-mod" data-id="${s.id}">
         <div class="cc-mod-badge">⚑ Pending review</div>${body}${diff}
         <textarea class="cc-mod-note" placeholder="Optional note — a reason, or context…"></textarea>
@@ -1023,6 +1037,7 @@
           <button class="cc-mod-btn reject" data-decision="reject">✕ Reject</button>
         </div>
         <div class="cc-mod-preview">A · approve · R · reject — recorded, not yet persisted.</div>
+        ${modHist}
       </div>`;
     }
     const vote = f.cur ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
@@ -1152,7 +1167,17 @@
   }
   function openDrawer(layer, f){
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
-    if(f.id!=null) loadItemHistory(f.id);   // C1-T3: async "Recent changes" — see loadItemHistory for the race guard
+    // C1-T3: async "Recent changes" — see loadItemHistory for the race guard.
+    // Pending (moderation) features carry no f.id; when they target a real
+    // item (f.pending.itemId, i.e. an edit — never a brand-new submission,
+    // which renders "Initial entry" synchronously above with no fetch) fetch
+    // that item's history instead, into the same #cc-d-hist-slot rendered by
+    // buildRecord's pending branch.
+    if(f.pending){
+      if('new' !== f.pending.type && f.pending.itemId!=null) loadItemHistory(f.pending.itemId);
+    } else if(f.id!=null){
+      loadItemHistory(f.id);
+    }
     const pl = photoList(f);
     const mainImg = document.querySelector('#drawerBody .cc-d-photo > img');
     const cap = document.getElementById('cc-d-cap');

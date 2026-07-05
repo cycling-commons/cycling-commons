@@ -239,4 +239,55 @@ final class ImproveBindingTest extends WebTestCase
         self::assertArrayNotHasKey('tools', $sub->getChanges(), 'unchanged fields are not snapshotted');
         self::assertSame(['was' => '24/7', 'now' => 'closed Sundays'], $sub->getChanges()['openingHours']);
     }
+
+    /**
+     * 'name' is a pseudo-field (lives on Item::name, never in attributes —
+     * see ModerationService::applyEdit). Before this fix, submitImprove
+     * compared the proposed name against $item->getAttributes()['name']
+     * (always null), so an unchanged name was wrongly snapshotted as
+     * {was: null, now: <name>}. It must be compared against
+     * $item->getName() instead, and a genuinely changed field must still
+     * record the correct `was`.
+     */
+    public function testEditSubmissionSnapshotsNameOnlyWhenActuallyChanged(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · Malmedy')
+            ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999006')
+            ->setAttributes(['tools' => 'Repair station']);
+        $user = (new User())->setEmail('improver4@test.test');
+        $user->setPassword('x');
+        $em->persist($item);
+        $em->persist($user);
+        $em->flush();
+
+        // Name resubmitted unchanged alongside a genuinely changed field.
+        $receipt = $service->submit('improve', [
+            '_item_id' => $item->getId(), 'type' => 'bike-services',
+            'details' => ['name' => 'Repair station · Malmedy', 'tools' => 'Repair station + Allen keys'],
+            'extras' => [], 'lat' => '50.426', 'lng' => '6.027',
+        ], $user);
+
+        $sub = $em->find(Submission::class, $receipt->submissionId);
+        self::assertArrayNotHasKey('name', $sub->getChanges(), 'unchanged name is not snapshotted');
+        self::assertSame(['was' => 'Repair station', 'now' => 'Repair station + Allen keys'], $sub->getChanges()['tools']);
+
+        // A second submission with a genuinely changed name records the
+        // correct `was` (the item's actual name, not null).
+        $receipt2 = $service->submit('improve', [
+            '_item_id' => $item->getId(), 'type' => 'bike-services',
+            'details' => ['name' => 'Repair station · Malmedy (renamed)'],
+            'extras' => [], 'lat' => '50.426', 'lng' => '6.027',
+        ], $user);
+
+        $sub2 = $em->find(Submission::class, $receipt2->submissionId);
+        self::assertSame(
+            ['was' => 'Repair station · Malmedy', 'now' => 'Repair station · Malmedy (renamed)'],
+            $sub2->getChanges()['name'],
+        );
+    }
 }

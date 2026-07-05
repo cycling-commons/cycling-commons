@@ -129,7 +129,11 @@ final class CatalogContributionService implements ContributionStubInterface
         $changes = [];
         $attributes = [];
         foreach ($proposed as $field => $now) {
-            $was = $currentAttrs[$field] ?? null;
+            // 'name' is a pseudo-field: it lives on Item::name, never in
+            // attributes (ModerationService::applyEdit treats it the same
+            // way) — comparing it against $currentAttrs would always see
+            // null and wrongly record an unchanged name as a "change".
+            $was = 'name' === $field ? $item->getName() : ($currentAttrs[$field] ?? null);
             if ($was !== $now) {
                 $changes[$field] = ['was' => $was, 'now' => $now];
             }

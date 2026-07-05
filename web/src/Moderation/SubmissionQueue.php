@@ -26,7 +26,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}> */
     public function filtered(?string $country, ?string $region, ?string $type): array
     {
         $where = ["s.status IN ('pending', 'needs_info')"];
@@ -50,7 +50,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: strictly pending (needs-info pins are hidden until answered).
      *
-     * @return list<array{id:int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}>
      */
     public function pendingForMap(): array
     {
@@ -77,12 +77,12 @@ final class SubmissionQueue
     /**
      * @param array<string, string> $params
      *
-     * @return list<array{id:int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}>
      */
     private function rows(string $where, array $params): array
     {
         $rows = $this->db->fetchAllAssociative(
-            'SELECT s.id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title,
+            'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
                     COALESCE(s.payload->>\'body\', s.payload->\'details\'->>\'note\', \'\') AS body
              FROM submission s LEFT JOIN region r ON r.id = s.region_id
@@ -106,6 +106,7 @@ final class SubmissionQueue
 
             return [
                 'id' => (int) $r['id'],
+                'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
                 'type' => (string) $r['type'],
                 'letter' => (string) $r['letter'],
                 'country' => (string) $r['country_code'],
