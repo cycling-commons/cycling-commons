@@ -6,9 +6,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
-use App\Moderation\SampleQueue;
+use App\Moderation\SubmissionQueue;
 use App\Routing\LocalePrefix;
 use App\Service\ContributionStubInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,8 +22,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * Curator moderation queue — review pending submissions and record decisions.
  *
  * Decisions are forwarded to the contribution stub (no real state change
- * until the data API is ready). The queue is populated from SampleQueue
- * while no domain entities exist.
+ * until the data API is ready). The queue is populated from SubmissionQueue,
+ * which reads real pending/needs-info rows from the submission table.
  *
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.
@@ -31,10 +32,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_CURATOR')]
 final class ModerateController extends AbstractController
 {
-    private const TYPES = ['new', 'edit', 'hazard', 'photo'];
-
     public function __construct(
         private readonly ContributionStubInterface $contributionStub,
+        private readonly SubmissionQueue $queue,
     ) {
     }
 
@@ -45,13 +45,21 @@ final class ModerateController extends AbstractController
         $region = $request->query->getString('region');
         $type = $request->query->getString('type');
 
-        $items = SampleQueue::filtered($country ?: null, $region ?: null, $type ?: null);
+        $items = $this->queue->filtered($country ?: null, $region ?: null, $type ?: null);
 
-        // Build one decision form per shown queue item.
+        // Build one decision form per shown queue item. The action carries the
+        // live filters (§13) so a decision made from a filtered view redirects
+        // back to that same filtered view rather than resetting it.
+        $formAction = $this->generateUrl('moderate_decide', array_filter([
+            'country' => $country,
+            'region' => $region,
+            'type' => $type,
+        ], static fn (string $v): bool => '' !== $v));
+
         $forms = [];
         foreach ($items as $item) {
             $form = $this->createForm(ModerationDecisionType::class, null, [
-                'action' => $this->generateUrl('moderate'),
+                'action' => $formAction,
                 'method' => 'POST',
             ]);
             $forms[$item['id']] = $form->createView();
@@ -63,11 +71,11 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'items' => $items,
             'forms' => $forms,
-            'total' => \count(SampleQueue::items()),
+            'total' => $this->queue->total(),
             'filters' => ['country' => $country, 'region' => $region, 'type' => $type],
-            'countries' => SampleQueue::countries(),
-            'regions' => SampleQueue::regions(),
-            'types' => self::TYPES,
+            'countries' => $this->queue->countries(),
+            'regions' => $this->queue->regions(),
+            'types' => SubmissionType::values(),
             'receipt' => null,
         ]);
     }
@@ -99,40 +107,22 @@ final class ModerateController extends AbstractController
                 ]);
             }
 
-            $items = SampleQueue::items();
-
-            // Build one decision form per queue item (for the rendered queue after decision).
-            $forms = [];
-            foreach ($items as $item) {
-                $newForm = $this->createForm(ModerationDecisionType::class, null, [
-                    'action' => $this->generateUrl('moderate'),
-                    'method' => 'POST',
-                ]);
-                $forms[$item['id']] = $newForm->createView();
-            }
-
-            return $this->render('moderate/index.html.twig', [
-                'page_title' => 'Cycling Commons — Moderate',
-                'page_description' => 'Curator surface for the Commons — review submissions, resolve flags, and keep the open cycling atlas trustworthy.',
-                'nav_active' => 'moderate',
-                'items' => $items,
-                'forms' => $forms,
-                'total' => \count($items),
-                'filters' => ['country' => '', 'region' => '', 'type' => ''],
-                'countries' => SampleQueue::countries(),
-                'regions' => SampleQueue::regions(),
-                'types' => self::TYPES,
-                'receipt' => $receipt,
-            ]);
+            // §13 redirect-after-POST: preserve the curator's active filters
+            // instead of resetting to an unfiltered queue.
+            return $this->redirectToRoute('moderate', array_filter([
+                'country' => $request->query->getString('country'),
+                'region' => $request->query->getString('region'),
+                'type' => $request->query->getString('type'),
+            ], static fn (string $v): bool => '' !== $v));
         }
 
-        // Invalid form — re-render the queue.
-        $items = SampleQueue::items();
+        // Invalid form — re-render the queue (unfiltered).
+        $items = $this->queue->filtered(null, null, null);
 
         $forms = [];
         foreach ($items as $item) {
             $newForm = $this->createForm(ModerationDecisionType::class, null, [
-                'action' => $this->generateUrl('moderate'),
+                'action' => $this->generateUrl('moderate_decide'),
                 'method' => 'POST',
             ]);
             $forms[$item['id']] = $newForm->createView();
@@ -148,11 +138,11 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'items' => $items,
             'forms' => $forms,
-            'total' => \count($items),
+            'total' => $this->queue->total(),
             'filters' => ['country' => '', 'region' => '', 'type' => ''],
-            'countries' => SampleQueue::countries(),
-            'regions' => SampleQueue::regions(),
-            'types' => self::TYPES,
+            'countries' => $this->queue->countries(),
+            'regions' => $this->queue->regions(),
+            'types' => SubmissionType::values(),
             'receipt' => null,
         ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
     }

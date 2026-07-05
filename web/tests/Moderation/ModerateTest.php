@@ -6,8 +6,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Submission;
+use App\Catalog\SubmissionType;
 use App\Entity\User;
-use App\Moderation\SampleQueue;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -64,6 +65,25 @@ final class ModerateTest extends WebTestCase
         return $user;
     }
 
+    /** Seed a real pending submission row (queue is DB-backed — SubmissionQueue). */
+    private function seedSubmission(string $title, string $country = 'BE'): Submission
+    {
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $sub = (new Submission())
+            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(3)
+            ->setTitle($title)
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
+            ->setCountryCode($country)
+            ->setChanges([])
+            ->setPayload([]);
+        $em->persist($sub);
+        $em->flush();
+
+        return $sub;
+    }
+
     // ── Auth gate ────────────────────────────────────────────────────────────
 
     /** Anonymous GET /moderate must redirect to the login page. */
@@ -92,12 +112,13 @@ final class ModerateTest extends WebTestCase
 
     /**
      * A ROLE_CURATOR with a preset totpSecret must reach /moderate and see the
-     * sample queue rendered. loginUser() bypasses form-login; the TOTP secret
-     * satisfies TwoFactorSetupEnforcer without needing real 2FA enrolment.
+     * real submission queue rendered. loginUser() bypasses form-login; the TOTP
+     * secret satisfies TwoFactorSetupEnforcer without needing real 2FA enrolment.
      */
     public function testRoleCuratorWithTotpCanAccessAndSeesQueue(): void
     {
         $client = static::createClient();
+        $sub = $this->seedSubmission('Côte de la Vecquée');
 
         $curator = $this->createUser(
             'moderate-curator@example.com',
@@ -112,13 +133,11 @@ final class ModerateTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
 
-        // The sample queue heading must be visible.
+        // The queue heading must be visible.
         self::assertSelectorTextContains('h1', 'Review pending submissions');
 
-        // The first sample queue item title must appear.
-        $items = SampleQueue::items();
-        self::assertGreaterThan(0, count($items));
-        self::assertSelectorTextContains('.q-title', $items[0]['title']);
+        // The seeded item's title must appear.
+        self::assertSelectorTextContains('.q-title', $sub->getTitle());
 
         // Queue items must have a decision form.
         self::assertSelectorExists('.q-act-form');
@@ -133,6 +152,7 @@ final class ModerateTest extends WebTestCase
     public function testQueueItemsLinkToViewSubmissionAtItsLocation(): void
     {
         $client = static::createClient();
+        $sub = $this->seedSubmission('Repair station · Malmedy');
 
         $curator = $this->createUser(
             'moderate-view@example.com',
@@ -146,26 +166,29 @@ final class ModerateTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
 
-        // One view link per sample item, opening in a new tab.
+        // One view link per queued item, opening in a new tab.
         $viewLinks = $crawler->filter('.q-item a.q-view[target="_blank"]');
-        self::assertSame(count(SampleQueue::items()), $viewLinks->count());
+        self::assertSame(1, $viewLinks->count());
 
-        // The first item links to the real map, deep-linked to its pending id.
+        // The item links to the real map, deep-linked to its pending id.
         $href = (string) $viewLinks->first()->attr('href');
-        self::assertStringContainsString('/map?pending=1', $href);
+        self::assertStringContainsString('/map?pending='.$sub->getId(), $href);
         self::assertStringContainsString('noopener', (string) $viewLinks->first()->attr('rel'));
     }
 
     // ── Decision POST ────────────────────────────────────────────────────────
 
     /**
-     * A valid CSRF-protected decision POST (approve) must show the honest stub
-     * receipt: "Decision recorded" / "not yet persisted". The sample queue is
-     * NOT actually mutated — the same items are still present.
+     * §13 hardening: a valid CSRF-protected decision POST via the classic
+     * (non-AJAX) form must redirect-after-POST back to the queue instead of
+     * re-rendering inline (this replaced the old "receipt rendered on the
+     * same page" behaviour — see ModerateDecideAjaxTest for the JSON receipt
+     * contract, which is unaffected).
      */
-    public function testValidDecisionPostShowsHonestStubReceipt(): void
+    public function testValidDecisionPostRedirectsToQueue(): void
     {
         $client = static::createClient();
+        $sub = $this->seedSubmission('Fountain · Spa centre');
 
         $curator = $this->createUser(
             'moderate-decide@example.com',
@@ -180,37 +203,35 @@ final class ModerateTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
 
-        // Submit the first queue item's decision form.
+        // Submit the queue item's decision form.
         $form = $crawler->selectButton('Record decision')->form();
-        $form['moderation_decision[submission_id]'] = '1';
+        $form['moderation_decision[submission_id]'] = (string) $sub->getId();
         $form['moderation_decision[decision]'] = 'approve';
 
         $client->submit($form);
 
+        self::assertResponseRedirects('/moderate');
+
+        // Following the redirect lands back on the (unfiltered) queue, which
+        // still shows the seeded item — the contribution stub does not
+        // mutate the submission row.
+        $client->followRedirect();
         self::assertResponseIsSuccessful();
-
-        // Honest stub receipt — decision recorded, NOT persisted.
-        self::assertSelectorTextContains('.receipt-box h2', 'Decision recorded');
-        self::assertSelectorTextContains('.receipt-box .stub-note', 'not yet persisted');
-        self::assertSelectorTextContains('.receipt-box .ref', 'CC-');
-
-        // Sample queue is unchanged — same items still render.
-        $items = SampleQueue::items();
-        self::assertSelectorTextContains('.q-title', $items[0]['title']);
+        self::assertSelectorTextContains('.q-title', $sub->getTitle());
     }
 
     /**
-     * The contribution stub must be called with kind='moderation_decision'.
-     * Verified indirectly: the receipt reference starts with CC- (the
-     * unpersisted-default shape returned by ContributionStubInterface's
-     * implementation for any kind outside climb/improve/vote).
+     * §13 hardening: the redirect target must preserve the curator's active
+     * country/region/type filters, so a decision made from a filtered view
+     * returns to that same filtered view rather than resetting it.
      */
-    public function testDecisionSubmitKindIsModeration(): void
+    public function testDecisionRedirectPreservesActiveFilters(): void
     {
         $client = static::createClient();
+        $sub = $this->seedSubmission('Vaalserberg', 'NL');
 
         $curator = $this->createUser(
-            'moderate-kind@example.com',
+            'moderate-filter-redirect@example.com',
             'hunter2secure!',
             roles: ['ROLE_CURATOR'],
             totpSecret: 'JBSWY3DPEHPK3PXP',
@@ -218,16 +239,15 @@ final class ModerateTest extends WebTestCase
         );
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate?country=NL');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Record decision')->form();
-        $form['moderation_decision[submission_id]'] = '2';
+        $form['moderation_decision[submission_id]'] = (string) $sub->getId();
         $form['moderation_decision[decision]'] = 'reject';
 
         $client->submit($form);
 
-        // CC- reference confirms ContributionStubInterface::submit() was called.
-        self::assertSelectorTextContains('.receipt-box .ref', 'CC-');
+        self::assertResponseRedirects('/moderate?country=NL');
     }
 }

@@ -5,7 +5,7 @@
 namespace App\Controller;
 
 use App\Catalog\CatalogProvider;
-use App\Moderation\SampleQueue;
+use App\Moderation\SubmissionQueue;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class MapController extends AbstractController
 {
     #[Route('/map', name: 'map')]
-    public function map(): Response
+    public function map(SubmissionQueue $queue): Response
     {
         $params = [];
 
@@ -29,7 +29,7 @@ final class MapController extends AbstractController
         // layer can render. Riders never receive this — it is emitted only inside
         // the template's is_granted('ROLE_CURATOR') block (no leak of un-vetted data).
         if ($this->isGranted('ROLE_CURATOR')) {
-            $params['pending'] = SampleQueue::items();
+            $params['pending'] = $queue->pendingForMap();
         }
 
         return $this->render('map/index.html.twig', $params);

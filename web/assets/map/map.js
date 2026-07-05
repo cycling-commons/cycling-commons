@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+  // §13: shared HTML-escaper for real (user-authored) pending-submission text —
+  // stored-XSS-in-curator-session risk now that submissions come from real users.
+  const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const map = new maplibregl.Map({
     container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
     bounds:[[2.84,49.45],[6.41,50.85]], fitBoundsOptions:{padding:24}, attributionControl:false  // all of Wallonia visible on load
@@ -1099,12 +1102,17 @@
     }
     let moderate = '';
     if(layer.pendingLayer && f.pending){
-      // TODO(data-api): s.title/s.body/s.was/s.now are trusted fixtures today — HTML-escape before interpolating once real submissions flow here (stored-XSS-in-curator-session risk).
+      // §13: real submissions now flow here (not trusted fixtures) — HTML-escape
+      // every interpolated submission field before it hits innerHTML (stored-XSS-
+      // in-curator-session risk). s.title/s.who/s.when render via the shared
+      // f.name/f.record path above (untouched — see MapController/Task 4).
       const s=f.pending;
       // Pending items carry their own catalog letter (A–K) + coords → a faithful edit link.
+      // (encodeURIComponent already makes this URL-safe; s.title isn't otherwise
+      // HTML-interpolated here, so it's left alone — see edit-bridge note above.)
       edit = `<a class="cc-d-act edit" href="/improve?type=${s.letter}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${s.lat}&lng=${s.lng}">✎ Edit this item</a>`;
-      const body = s.body ? `<p class="cc-mod-body">${s.body}</p>` : '';
-      const diff = (s.was && s.now) ? `<div class="cc-mod-diff"><div class="cc-mod-was">${s.was}</div><div class="cc-mod-now">${s.now}</div></div>` : '';
+      const body = s.body ? `<p class="cc-mod-body">${escPend(s.body)}</p>` : '';
+      const diff = (s.was && s.now) ? `<div class="cc-mod-diff"><div class="cc-mod-was">${escPend(s.was)}</div><div class="cc-mod-now">${escPend(s.now)}</div></div>` : '';
       moderate = `<div class="cc-mod" data-id="${s.id}">
         <div class="cc-mod-badge">⚑ Pending review</div>${body}${diff}
         <textarea class="cc-mod-note" placeholder="Optional note — a reason, or context…"></textarea>
@@ -1146,9 +1154,12 @@
       .then(r=>r.text())
       .then(html=>{
         const el=new DOMParser().parseFromString(html,'text/html').querySelector('input[name="moderation_decision[_token]"]');
-        return el ? el.value : '';
+        // §13: a selector miss must not silently cache an empty token (which
+        // would just fail CSRF later) — reject so the caller's error state fires.
+        if(!el) return Promise.reject(new Error('moderation form not found'));
+        return el.value;
       })
-      .catch(()=>{ _modToken=undefined; return ''; });
+      .catch(err=>{ _modToken=undefined; throw err; });
     return _modToken;
   }
   function submitModeration(btn){

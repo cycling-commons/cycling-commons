@@ -6,6 +6,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Submission;
+use App\Catalog\SubmissionStatus;
+use App\Catalog\SubmissionType;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -39,10 +42,30 @@ final class MapCuratorInjectionTest extends WebTestCase
         $client->loginUser($user);
     }
 
+    private function seedSubmission(string $title, SubmissionStatus $status = SubmissionStatus::Pending): Submission
+    {
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $sub = (new Submission())
+            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(3)
+            ->setStatus($status)
+            ->setTitle($title)
+            ->setGeom('{"type":"Point","coordinates":[6.0208,50.7549]}')
+            ->setCountryCode('NL')
+            ->setChanges([])
+            ->setPayload([]);
+        $em->persist($sub);
+        $em->flush();
+
+        return $sub;
+    }
+
     public function testCuratorMapCarriesPendingData(): void
     {
         $client = static::createClient();
         $this->login($client, 'map-curator@example.com', ['ROLE_CURATOR'], true);
+        $this->seedSubmission('Vaalserberg');
 
         $client->request('GET', '/map');
 
@@ -50,7 +73,21 @@ final class MapCuratorInjectionTest extends WebTestCase
         $body = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('CC_IS_CURATOR', $body);
         self::assertStringContainsString('CC_PENDING', $body);
-        self::assertStringContainsString('Vaalserberg', $body); // a sample submission title
+        self::assertStringContainsString('Vaalserberg', $body); // the seeded submission title
+    }
+
+    /** pendingForMap() is strictly-pending: needs-info pins stay hidden from the map until answered. */
+    public function testCuratorMapExcludesNeedsInfoSubmissions(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'map-curator-needsinfo@example.com', ['ROLE_CURATOR'], true);
+        $this->seedSubmission('Awaiting clarification', SubmissionStatus::NeedsInfo);
+
+        $client->request('GET', '/map');
+
+        self::assertResponseIsSuccessful();
+        $body = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('Awaiting clarification', $body);
     }
 
     public function testPlainRiderMapHasNoPendingData(): void

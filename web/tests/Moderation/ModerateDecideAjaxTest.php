@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Submission;
+use App\Catalog\SubmissionType;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -39,10 +41,28 @@ final class ModerateDecideAjaxTest extends WebTestCase
         $client->loginUser($user);
     }
 
+    /** Seed a real pending submission row so the queue renders a decision form. */
+    private function seedSubmission(): void
+    {
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $sub = (new Submission())
+            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(3)
+            ->setTitle('Ajax queue item')
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
+            ->setCountryCode('BE')
+            ->setChanges([])
+            ->setPayload([]);
+        $em->persist($sub);
+        $em->flush();
+    }
+
     public function testAjaxDecisionReturnsJsonStubReceipt(): void
     {
         $client = static::createClient();
         $this->login($client, 'ajax-curator@example.com', ['ROLE_CURATOR'], true);
+        $this->seedSubmission();
 
         // Grab the CSRF token from a rendered decision form (stateless, id "submit").
         $crawler = $client->request('GET', '/moderate');
@@ -80,6 +100,7 @@ final class ModerateDecideAjaxTest extends WebTestCase
     {
         $client = static::createClient();
         $this->login($client, 'ajax-curator-invalid@example.com', ['ROLE_CURATOR'], true);
+        $this->seedSubmission();
 
         $crawler = $client->request('GET', '/moderate');
         $token = (string) $crawler->filter('form.q-act-form input[name="moderation_decision[_token]"]')->first()->attr('value');

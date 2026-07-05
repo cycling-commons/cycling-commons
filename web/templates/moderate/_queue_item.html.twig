@@ -3,7 +3,7 @@
   Partial: one pending submission row in the moderation queue.
 
   Parameters:
-    item   array  — queue item from SampleQueue::items()
+    item   array  — queue item from SubmissionQueue::filtered()
     form   FormView — ModerationDecisionType for this item
 #}
 <div class="q-item" data-item-id="{{ item.id }}">
@@ -30,7 +30,10 @@
   {% endif %}
 
   <div class="q-actions">
-    {{ form_start(form, {action: path('moderate_decide'), method: 'POST', attr: {class: 'q-act-form'}}) }}
+    {# §13: no hardcoded action — the form carries its own action (set in
+       ModerateController with the curator's live country/region/type filters
+       so a decision made from a filtered view redirects back to it). #}
+    {{ form_start(form, {method: 'POST', attr: {class: 'q-act-form'}}) }}
       {{ form_widget(form.submission_id, {value: item.id}) }}
       <div class="q-decision-row">
         {{ form_label(form.decision, 'moderate.action.decision_label'|trans) }}

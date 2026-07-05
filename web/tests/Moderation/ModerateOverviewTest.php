@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Submission;
+use App\Catalog\SubmissionType;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -37,10 +39,30 @@ final class ModerateOverviewTest extends WebTestCase
         $client->loginUser($user);
     }
 
+    private function seedSubmission(string $title, string $country): Submission
+    {
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $sub = (new Submission())
+            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(3)
+            ->setTitle($title)
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
+            ->setCountryCode($country)
+            ->setChanges([])
+            ->setPayload([]);
+        $em->persist($sub);
+        $em->flush();
+
+        return $sub;
+    }
+
     public function testFilterByCountryNarrowsTheQueue(): void
     {
         $client = static::createClient();
         $this->loginCurator($client);
+        $this->seedSubmission('Vaalserberg', 'NL');
+        $this->seedSubmission('Repair station · Malmedy', 'BE');
 
         $client->request('GET', '/moderate?country=NL');
 
@@ -54,6 +76,7 @@ final class ModerateOverviewTest extends WebTestCase
     {
         $client = static::createClient();
         $this->loginCurator($client);
+        $this->seedSubmission('Côte de la Vecquée', 'BE');
 
         $crawler = $client->request('GET', '/moderate');
 
