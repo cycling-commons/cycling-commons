@@ -158,7 +158,8 @@
      data-icon="{{ item_type.icon }}"
      data-track="{{ item_type.hasTrackUpload ? '1' : '0' }}">
   <div class="ey">{{ item_type.eyebrow }} · {{ item_type.letter }} · {{ item_type.label }}</div>
-  <h1 class="disp">{{ 'improve.title'|trans }}</h1>
+  {# Show the exact item being edited, persistently above every step, so it's always clear what you're editing. #}
+  <h1 class="disp">{% if edit_name is defined and edit_name %}{{ edit_name }}{% else %}{{ 'improve.title'|trans }}{% endif %}</h1>
   <p class="sub">{{ 'improve.lead'|trans }}</p>
 
   {{ form_start(form, {attr: {id: 'improve-form', novalidate: 'novalidate'}}) }}

@@ -200,6 +200,7 @@ final class ContributeController extends AbstractController
                     'nav_active' => 'improve',
                     'item_type' => $type,
                     'unbound' => false,
+                    'edit_name' => $item->getName(),
                     'receipt' => $receipt,
                     'form' => null,
                 ]);
@@ -212,6 +213,7 @@ final class ContributeController extends AbstractController
             'nav_active' => 'improve',
             'item_type' => $type,
             'unbound' => false,
+            'edit_name' => $item->getName(),
             'receipt' => null,
             'form' => $form,
         ]);

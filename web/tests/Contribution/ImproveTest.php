@@ -126,7 +126,8 @@ final class ImproveTest extends WebTestCase
         $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1.disp', 'Improve or add a place');
+        // The wizard header names the exact item being edited (persistent across every step).
+        self::assertSelectorTextContains('h1.disp', 'Test place');
         self::assertSelectorExists('.stepper li.on');
         // D · bike services renders its typed fields, not a generic
         // "what changed" textarea.
