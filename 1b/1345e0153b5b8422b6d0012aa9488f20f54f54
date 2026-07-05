@@ -1,0 +1,28 @@
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_38d02ca6d8ff2e::t_04a3ae474429b7 101-127
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_38d02ca6d8ff2e::t_3a86f021574910 349-355,361-377
+  s_38d02ca6d8ff2e::t_35f269bcf43e46 299,304-307
+  s_38d02ca6d8ff2e::t_827661f67840d2 40-44
+  s_38d02ca6d8ff2e::t_b5de2dc9e77cb3 308
+  s_38d02ca6d8ff2e::t_27131cd1b70ac5 378-379
+docs/specs/2026-07-05-contribution-frontend-reconciliation-design.md
+  s_38d02ca6d8ff2e::t_7ea64e6df52e65 3
+  s_38d02ca6d8ff2e::t_66343c9d83990b 85-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1b1345e0153b5b8422b6d0012aa9488f20f54f54",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
