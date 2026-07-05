@@ -48,7 +48,9 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $tester->assertCommandIsSuccessful();
 
         $items = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]);
-        self::assertCount(24, $items, 'expected exactly the ~24 hand-authored demo pins');
+        // C3-T10: letter F is deliberately skipped (no serving path for hazards yet),
+        // so 24 -> 23; its one demo pin stays hardcoded in map.js.
+        self::assertCount(23, $items, 'expected exactly the ~23 hand-authored demo pins (F excluded)');
 
         $byLetter = [];
         foreach ($items as $item) {
@@ -58,7 +60,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         }
         ksort($byLetter);
         self::assertSame(
-            ['B' => 5, 'C' => 5, 'D' => 4, 'E' => 1, 'F' => 1, 'G' => 1, 'H' => 4, 'I' => 2, 'J' => 1],
+            ['B' => 5, 'C' => 5, 'D' => 4, 'E' => 1, 'G' => 1, 'H' => 4, 'I' => 2, 'J' => 1],
             $byLetter,
         );
 
@@ -92,7 +94,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $this->runSeed()->assertCommandIsSuccessful();
         $countAfterSecond = \count($this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]));
 
-        self::assertSame(24, $countAfterFirst);
+        self::assertSame(23, $countAfterFirst);
         self::assertSame($countAfterFirst, $countAfterSecond, 're-running must not duplicate rows');
     }
 

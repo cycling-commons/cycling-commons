@@ -17,7 +17,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Seeds the ~24 hand-authored "hero" pins that have always lived baked into
+ * Seeds the ~23 hand-authored "hero" pins that used to live baked into
  * `web/assets/map/map.js`'s CATALOG array (famous climbs, a showcase gîte, …)
  * as real `source = manual` item rows (spec §W3, plan C3-T9).
  *
@@ -25,10 +25,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * Edit button or moderate them. This command transcribes their data —
  * geometry + the subset of their demo prose that maps onto a real
  * {@see \App\Catalog\CatalogFormRegistry} field for the letter — into `item`
- * rows, so they become editable/moderatable like every other row. It does
- * NOT touch map.js: the hardcoded CATALOG entries are removed separately
- * (C3-T10), so the map temporarily shows both the fixture pin and this DB
- * row at (near-)identical coordinates.
+ * rows, so they become editable/moderatable like every other row. The
+ * hardcoded CATALOG entries in map.js were removed in C3-T10 (except the
+ * single letter-F hazard pin, deliberately skipped here — see the F comment
+ * in {@see self::pins()}).
  *
  * Every row lands as `state = unverified` (never `verified`) — a seeded pin
  * is treated exactly like a fresh rider contribution; "verified" is only
@@ -198,18 +198,13 @@ final class SeedManualCatalogCommand extends Command
                     'photo' => self::wc('Gîte rural de Puyolle.JPG', 'Darreenvt', 'Darreenvt', 'CC BY-SA 4.0'),
                 ],
             ],
-            // F · Hazards & conditions (note: CatalogProvider/map.js do not yet serve
-            // letter F at all — pre-existing gap, out of scope here; see report)
-            [
-                'letter' => 'F', 'name' => 'Exposed crosswind · Hautes Fagnes', 'lat' => 50.5160, 'lng' => 6.0700,
-                'ref' => 'manual:exposed-crosswind-hautes-fagnes',
-                'attributes' => [
-                    't' => 'Notorious crosswind / fog', 'hazardType' => 'Crosswind / fog', 'severity' => 'Moderate',
-                    'worstWhen' => 'Autumn / winter', 'stillPresent' => 'Yes — confirmed today',
-                    'whatYouSaw' => 'Exposed open moorland on the Hautes Fagnes plateau (Baraque Michel) — notorious for crosswind and fog; worst in autumn/winter with possible ice.',
-                    'photo' => self::wc('Hohes Venn Winter 4.jpg', 'Geolina163', 'Geolina163', 'CC BY-SA 3.0'),
-                ],
-            ],
+            // F · Hazards & conditions — deliberately SKIPPED (C3-T10, spec §W3
+            // decision D3). Hazards have no serving path in CatalogProvider or
+            // map.js, so a seeded manual F row could never render — it would
+            // just be a permanent orphan. Letter F's single demo pin ("Exposed
+            // crosswind · Hautes Fagnes") stays hardcoded in map.js's CATALOG
+            // until hazards get a real serving path; don't re-add an F pin
+            // here without wiring that up first.
             // G · Getting there
             [
                 'letter' => 'G', 'name' => 'Aywaille station', 'lat' => 50.4730, 'lng' => 5.6770,
