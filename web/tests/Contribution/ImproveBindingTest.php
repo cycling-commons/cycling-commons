@@ -15,7 +15,9 @@ use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Moderation\ModerationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Console\Tester\CommandTester;
 
 /**
  * The edit flow: `/improve?item=<dbId>` binds a real Item, prefills the
@@ -97,6 +99,63 @@ final class ImproveBindingTest extends WebTestCase
         self::assertGreaterThan(0, $crawler->filter('option[selected][value="Quiet"]')->count(), 'tr (traffic) prefilled');
         self::assertGreaterThan(0, $crawler->filter('input[value="La Flèche Wallonne summit finish"]')->count(), 'famousFor prefilled');
         self::assertGreaterThan(0, $crawler->filter('input[value="From Sougné-Remouchamps (Aywaille)"]')->count(), 'approach prefilled');
+    }
+
+    /**
+     * The reported bug: an imported climb (Wallonia harvest, source=wikidata)
+     * bakes its displayed Average/Max gradient, Surface and Famous-for values
+     * as pre-formatted strings inside a `record` array — the drawer renders
+     * `record` directly so it shows them fine, but before
+     * {@see \App\Catalog\Command\BackfillAttributesCommand} ran, the improve
+     * FORM (which prefills from discrete `attributes.<key>`) rendered those
+     * four fields blank. This is the exact baked shape confirmed on the real
+     * dev-DB item ("Côte de Bohissau", id 3132): no discrete avgGradient/
+     * maxGradient/surface/famousFor keys, only `record`. Running the backfill
+     * command (as `make`/ops would against a real DB) must make
+     * `/improve?item=<id>` prefill all four — the real acceptance criterion,
+     * not just "the command wrote some attributes".
+     */
+    public function testImproveFormPrefillsGradientSurfaceAndFamousForBackfilledFromABakedRecord(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter('B')->setName('Côte de Bohissau')
+            ->setGeom('{"type":"Point","coordinates":[5.11182,50.49479]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Wikidata)->setSourceRef('wikidata:Q3430429-test')
+            ->setAttributes([
+                'sq' => 'Good', 'tr' => 'Quiet', 'cur' => true,
+                'record' => [
+                    ['label' => 'Length', 'value' => '1.1 km'],
+                    ['label' => 'Average gradient', 'value' => '5.7%'],
+                    ['label' => 'Max gradient', 'value' => '~13% (steepest ramp)'],
+                    ['label' => 'Famous for', 'value' => 'La Flèche Wallonne'],
+                    ['label' => 'Surface', 'value' => 'Asphalt', 'method' => 'OSM'],
+                ],
+            ]);
+        $em->persist($item);
+
+        $user = (new User())->setEmail('improver-backfill@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        // Run the backfill against the TEST DB, exactly as ops would run it
+        // against the real one — the acceptance criterion is the form after
+        // the backfill, not a hand-seeded discrete attribute.
+        $tester = new CommandTester((new Application(self::$kernel))->find('app:catalog:backfill-attributes'));
+        $tester->execute([]);
+        $tester->assertCommandIsSuccessful();
+        $em->clear();
+
+        $client->loginUser($em->find(User::class, $user->getId()));
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertGreaterThan(0, $crawler->filter('input[value="5.7"]')->count(), 'avgGradient prefilled from the baked record');
+        self::assertGreaterThan(0, $crawler->filter('input[value="13"]')->count(), 'maxGradient prefilled from the baked record');
+        self::assertGreaterThan(0, $crawler->filter('option[selected][value="Asphalt"]')->count(), 'surface prefilled from the baked record');
+        self::assertGreaterThan(0, $crawler->filter('input[value="La Flèche Wallonne"]')->count(), 'famousFor prefilled from the baked record');
     }
 
     /**
