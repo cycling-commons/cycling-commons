@@ -42,6 +42,7 @@ security:
         # "private, must-revalidate" (AbstractSessionListener). See
         # TwoFactorAccessDecider::isPubliclyAccessible().
         - { path: ^/map/catalog\.json$, roles: PUBLIC_ACCESS }
+        - { path: '^/map/item/\d+/history$', roles: PUBLIC_ACCESS }
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.
         # Must precede the ^/2fa rule below, which guards scheb's interstitial (/2fa, /2fa_check)
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.

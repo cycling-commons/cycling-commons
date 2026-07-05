@@ -5,6 +5,7 @@
 namespace App\Controller;
 
 use App\Catalog\CatalogProvider;
+use App\Catalog\ChangeHistoryView;
 use App\Moderation\SubmissionQueue;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -48,6 +49,25 @@ final class MapController extends AbstractController
         $response->setEtag(md5($json));
         $response->setPublic();
         $response->setMaxAge(3600);
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    /**
+     * Per-item change log (design spec W5): who changed what, when — newest
+     * first. Public, read-only; feeds the map drawer's "Recent changes"
+     * (C1-T3). Unknown/never-edited items simply have no rows — 200 with an
+     * empty list, not 404, so the drawer never has to special-case it.
+     */
+    #[Route('/map/item/{id}/history', name: 'map_item_history', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function history(int $id, Request $request, ChangeHistoryView $history): Response
+    {
+        $json = json_encode(['history' => $history->forItem($id)], \JSON_THROW_ON_ERROR);
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        $response->setMaxAge(60);
         $response->isNotModified($request);
 
         return $response;
