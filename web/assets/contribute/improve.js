@@ -309,17 +309,33 @@
       : WZ.loc.type === 'segment' ? WZ.loc.a[1].toFixed(4) + '°N ' + WZ.loc.a[0].toFixed(4) + '°E → ' + WZ.loc.b[1].toFixed(4) + '°N ' + WZ.loc.b[0].toFixed(4) + '°E'
       : 'Track · ' + WZ.loc.name;
 
-    var whatChangedEl = fld('whatChanged');
-    var noteEl = fld('note');
-    var whatChanged = whatChangedEl ? whatChangedEl.value.trim() : '';
-    var note = noteEl ? noteEl.value.trim() : '';
+    // Echo every detail/extra field the rider actually filled in (step 2), so the
+    // review faithfully mirrors what will be submitted — not just Type/Location/Media.
+    var fieldRows = '';
+    document.querySelectorAll('#w-details .field').forEach(function (fieldEl) {
+      var ctrl = fieldEl.querySelector('input:not([type="hidden"]), select, textarea');
+      if (!ctrl) return;
+      var val;
+      if (ctrl.tagName === 'SELECT') {
+        var opt = ctrl.options[ctrl.selectedIndex];
+        val = opt ? opt.text : ctrl.value;
+      } else {
+        val = ctrl.value;
+      }
+      val = (val || '').trim();
+      if (!val) return;
+      var labelEl = fieldEl.querySelector('label');
+      var label = labelEl ? labelEl.textContent.trim() : ctrl.name;
+      fieldRows += '<div class="kv"><span>' + escHtml(label) + '</span><span>'
+        + escHtml(val.length > 120 ? val.slice(0, 120) + '…' : val) + '</span></div>';
+    });
+
     var media = WZ.media.length ? WZ.media.join(' · ') : 'none added';
 
     rb.innerHTML =
       '<div class="kv"><span>Type</span><span>' + escHtml(typeName) + '</span></div>' +
       '<div class="kv"><span>Location</span><span>' + escHtml(locTxt) + '</span></div>' +
-      (whatChanged ? '<div class="kv"><span>What changed</span><span>' + escHtml(whatChanged.slice(0, 120)) + (whatChanged.length > 120 ? '…' : '') + '</span></div>' : '') +
-      (note ? '<div class="kv"><span>Note</span><span>' + escHtml(note.slice(0, 120)) + (note.length > 120 ? '…' : '') + '</span></div>' : '') +
+      fieldRows +
       '<div class="kv"><span>Media</span><span>' + escHtml(media) + '</span></div>';
   }
 
