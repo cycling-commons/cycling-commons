@@ -38,11 +38,13 @@ final class CatalogProvider
             'B' => $this->climbs(),
             'C' => $this->featureCollection('C'),
             'D' => $this->featureCollection('D'),
-            // Phase-B note: E is the only letter filtered by source — a row with
-            // any other source (e.g. a user submission) lands in NEITHER bucket.
-            // Revisit the split when submissions can create stays.
+            // C3-T9: E is the only letter split by source. 'pivot' (official
+            // Tourisme Wallonie accommodation) is its own bucket; every other
+            // source — osm, user, manual, wikidata, auto — lands in the 'osm'
+            // bucket, matching catalog-load.js's merge (window.CC_STAYS_OSM is
+            // the generic stays collection; only PIVOT rows get tagged apart).
             'E' => [
-                'osm' => $this->featureCollection('E', 'osm'),
+                'osm' => $this->featureCollection('E', excludeSource: 'pivot'),
                 'pivot' => $this->featureCollection('E', 'pivot'),
             ],
             'G' => $this->featureCollection('G'),
@@ -63,7 +65,7 @@ final class CatalogProvider
     /**
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null}>
      */
-    private function itemRows(string $letter, ?string $source = null): array
+    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
         $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov
                 FROM item i
@@ -73,6 +75,10 @@ final class CatalogProvider
         if (null !== $source) {
             $sql .= ' AND i.source = :source';
             $params['source'] = $source;
+        }
+        if (null !== $excludeSource) {
+            $sql .= ' AND i.source != :excludeSource';
+            $params['excludeSource'] = $excludeSource;
         }
 
         /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null}> */
@@ -85,10 +91,10 @@ final class CatalogProvider
      *
      * @return array{type: string, features: list<array<string, mixed>>}
      */
-    private function featureCollection(string $letter, ?string $source = null): array
+    private function featureCollection(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
         $features = [];
-        foreach ($this->itemRows($letter, $source) as $row) {
+        foreach ($this->itemRows($letter, $source, $excludeSource) as $row) {
             $props = $this->decode($row['attributes']);
             if ('' !== $row['name']) {
                 $props['n'] = $row['name'];
