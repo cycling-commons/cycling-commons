@@ -349,4 +349,90 @@ final class ImproveBindingTest extends WebTestCase
             $sub2->getChanges()['name'],
         );
     }
+
+    /**
+     * C5 data-loss follow-up: the improve wizard's "Photos & video" step used
+     * to only offer to ADD media — it never showed what the item already
+     * had. `/improve?item=<id>` must now render the item's EXISTING photo(s)
+     * (from its `photo`/`photos` attribute) in a read-only strip, so a rider
+     * editing an item sees what's already there. Plural `photos` wins over
+     * singular `photo` (mirrors map.js's photoList()).
+     */
+    public function testImproveFormShowsExistingPluralPhotosGallery(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter('B')->setName('Mur de Test')
+            ->setGeom('{"type":"Point","coordinates":[5.24874,50.51426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setSourceRef('manual:mur-de-test')
+            ->setAttributes([
+                'photos' => [
+                    ['sm' => 'https://example.test/a-sm.jpg', 'lg' => 'https://example.test/a.jpg', 'credit' => 'Alice', 'license' => 'CC BY-SA 4.0'],
+                    ['sm' => 'https://example.test/b-sm.jpg', 'lg' => 'https://example.test/b.jpg', 'credit' => 'Bob', 'license' => 'CC0'],
+                ],
+            ]);
+        $user = (new User())->setEmail('improver-photos@test.test');
+        $user->setPassword('x');
+        $em->persist($item);
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(2, $crawler->filter('#cur-photos .cur-photo')->count(), 'both existing photos are shown');
+        self::assertGreaterThan(0, $crawler->filter('#cur-photos img[src="https://example.test/a-sm.jpg"]')->count());
+        self::assertGreaterThan(0, $crawler->filter('#cur-photos img[src="https://example.test/b-sm.jpg"]')->count());
+        self::assertStringContainsString('Alice', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('Bob', (string) $client->getResponse()->getContent());
+    }
+
+    /** Singular `photo` (still the common case for most items) also renders. */
+    public function testImproveFormShowsExistingSinglePhoto(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · Photo Test')
+            ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999007')
+            ->setAttributes(['photo' => ['sm' => 'https://example.test/solo-sm.jpg', 'lg' => 'https://example.test/solo.jpg', 'credit' => 'Solo Photographer']]);
+        $user = (new User())->setEmail('improver-photo@test.test');
+        $user->setPassword('x');
+        $em->persist($item);
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('#cur-photos .cur-photo')->count());
+        self::assertGreaterThan(0, $crawler->filter('#cur-photos img[src="https://example.test/solo-sm.jpg"]')->count());
+    }
+
+    /** An item with no photo attribute at all: no current-photos block rendered. */
+    public function testImproveFormHidesCurrentPhotosBlockWhenNoneExist(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · No Photo')
+            ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999008')
+            ->setAttributes(['tools' => 'Repair station']);
+        $user = (new User())->setEmail('improver-nophoto@test.test');
+        $user->setPassword('x');
+        $em->persist($item);
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('#cur-photos')->count());
+    }
 }

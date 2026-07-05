@@ -42,13 +42,24 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * seeds a manual duplicate of a place the OSM/pivot/… harvest already
  * imported. Skipped pins are reported on stdout.
  *
- * Deliberately NOT persisted (documented in the C3-T9 report, not stored as
- * attributes): the demo's derived/display-only values (the literal "Length"
- * record row, the `route`/`grad`/`steep` elevation-profile arrays, the
- * pre-baked `record`/`attribution` blobs, free-text "links" and the
- * form-only "anything to correct?" intake field) and any additional entries
- * in a `photos` (plural) array beyond the first — {@see AttributeVocabulary}
- * only has a singular `photo` slot.
+ * C5 data-loss fix: the original C3-T9 cut also DROPPED `route`/`grad`/
+ * `steep` (the climb line + gradient profile + steepest-ramp marker) and
+ * collapsed every demo pin's `photos` (plural) gallery down to a single
+ * `photo` — losing real map/drawer content, not just derived prose. These
+ * are now restored verbatim from the pre-migration map.js CATALOG (git
+ * `8bae43d^`) as attributes: `route`/`grad`/`steep` are already valid
+ * letter-B vocab keys (imported climbs carry them — see
+ * {@see \App\Catalog\CatalogProvider::climbs()}), and `photos` (plural) is
+ * now a {@see AttributeVocabulary} COMMON key so any letter can carry a
+ * gallery (map.js's `photoList(f)` already prefers `f.photos` over
+ * `f.photo`).
+ *
+ * Still deliberately NOT persisted (documented in the C3-T9 report): the
+ * demo's derived/display-only values — the literal "Length" record row, the
+ * pre-baked `record`/`attribution` blobs (already decomposed into discrete
+ * registry fields: `avgGradient`, `maxGradient`, `famousFor`, `approach`,
+ * `waterOnClimb`, `surface`), free-text "links", and the form-only "anything
+ * to correct?" intake field.
  *
  * @api Console entry point (dev/ops seeding tool, run once per environment).
  */
@@ -81,6 +92,9 @@ final class SeedManualCatalogCommand extends Command
                     'approach' => 'From Sougné-Remouchamps (Aywaille)',
                     'waterOnClimb' => 'No',
                     'photo' => ['sm' => '/media/redoute-sm.jpg', 'lg' => '/media/redoute.jpg', 'credit' => 'DimiTalen', 'creditUrl' => 'https://commons.wikimedia.org/wiki/User:DimiTalen', 'license' => 'CC0', 'source' => 'https://commons.wikimedia.org/wiki/File:Phil_Phil_Phil_on_C%C3%B4te_de_la_Redoute,_Aywaille,_2011.jpg'],
+                    'route' => [[50.48321, 5.70391], [50.48327, 5.70383], [50.4837, 5.70348], [50.48396, 5.70319], [50.48421, 5.70315], [50.48453, 5.70322], [50.48522, 5.70341], [50.48535, 5.70344], [50.48554, 5.7034], [50.48585, 5.70317], [50.48603, 5.70308], [50.48613, 5.70317], [50.48626, 5.70361], [50.48636, 5.70418], [50.48655, 5.70479], [50.48708, 5.70577], [50.48807, 5.70728], [50.48833, 5.70767], [50.48853, 5.70774], [50.48887, 5.70757], [50.48912, 5.70742], [50.48971, 5.70703], [50.4903, 5.70637], [50.49063, 5.70593], [50.49077, 5.70583], [50.49094, 5.70564], [50.49101, 5.70534], [50.49097, 5.70485], [50.49091, 5.70383], [50.49097, 5.70337], [50.49118, 5.7022], [50.4913, 5.7019], [50.49149, 5.70163], [50.49181, 5.70131], [50.49206, 5.70094], [50.49219, 5.70057], [50.49226, 5.69965], [50.49217, 5.6991], [50.49203, 5.69881], [50.49167, 5.6984], [50.49126, 5.6978], [50.49098, 5.69734], [50.49045, 5.69635], [50.48999, 5.69579], [50.48989, 5.69571]],
+                    'grad' => [4, 6, 8, 11, 14, 18, 20, 16, 12, 9, 7, 8],
+                    'steep' => ['at' => [50.49077, 5.70583], 'pct' => '~20%'],
                 ],
             ],
             [
@@ -91,6 +105,13 @@ final class SeedManualCatalogCommand extends Command
                     'surface' => 'Asphalt', 'sq' => 'Good', 'tr' => 'Busy',
                     'avgGradient' => '9.3%', 'maxGradient' => '~26% (Chapelle hairpin)', 'effort' => 'Very steep',
                     'famousFor' => 'La Flèche Wallonne summit finish',
+                    'photos' => [
+                        self::wc('2019 Mur de Huy 3.jpg', 'Hoebele', 'Hoebele', 'CC BY-SA 4.0'),
+                        ['sm' => '/media/mur-de-huy-sm.jpg', 'lg' => '/media/mur-de-huy.jpg', 'credit' => 'Rz98', 'creditUrl' => 'https://commons.wikimedia.org/wiki/User:Rz98', 'license' => 'CC BY-SA 4.0', 'source' => 'https://commons.wikimedia.org/wiki/File:Mur_de_Huy_001.jpg'],
+                    ],
+                    'route' => [[50.51656, 5.24049], [50.51655, 5.24056], [50.51653, 5.24097], [50.51654, 5.2414], [50.51665, 5.24191], [50.51686, 5.2423], [50.51707, 5.24266], [50.51729, 5.243], [50.51749, 5.24333], [50.51793, 5.24398], [50.51836, 5.2446], [50.51865, 5.24501], [50.51877, 5.24521], [50.51886, 5.24586], [50.51887, 5.24652], [50.51879, 5.24692], [50.51867, 5.2471], [50.51765, 5.24788], [50.51751, 5.24792], [50.51692, 5.24757], [50.51687, 5.24722], [50.51684, 5.24707], [50.51623, 5.24608], [50.51611, 5.24609], [50.516, 5.2465], [50.51547, 5.24665], [50.51519, 5.24678], [50.51461, 5.24726], [50.51442, 5.24753], [50.51433, 5.24777], [50.51426, 5.24831], [50.51425, 5.24875], [50.5142, 5.24926], [50.51411, 5.24997], [50.51403, 5.25064]],
+                    'grad' => [6, 9, 13, 17, 21, 26, 23, 16, 11, 9, 8],
+                    'steep' => ['at' => [50.51765, 5.24788], 'pct' => '26%'],
                 ],
             ],
             [
@@ -102,6 +123,13 @@ final class SeedManualCatalogCommand extends Command
                     'avgGradient' => '9%+', 'maxGradient' => '~20%', 'effort' => 'Tough',
                     'famousFor' => 'Liège–Bastogne–Liège — Eddy Merckx stele',
                     'approach' => 'From Stavelot',
+                    'photos' => [
+                        ['sm' => '/media/stockeu-sm.jpg', 'lg' => '/media/stockeu.jpg', 'credit' => 'Hoebele', 'creditUrl' => 'https://commons.wikimedia.org/wiki/User:Hoebele', 'license' => 'CC BY-SA 4.0', 'source' => 'https://commons.wikimedia.org/wiki/File:Stavelot_Stockeu_Eddy_Merckx_monument.jpg'],
+                        self::wc('Monument Eddy Merckx Stockeu.jpg', 'Les Meloures', 'Les Meloures', 'CC BY-SA 4.0'),
+                    ],
+                    'route' => [[50.39147, 5.93248], [50.39142, 5.93255], [50.39137, 5.93262], [50.39126, 5.93276], [50.39102, 5.93308], [50.39083, 5.9333], [50.39073, 5.9334], [50.39062, 5.93349], [50.39038, 5.93363], [50.38988, 5.93391], [50.38955, 5.93408], [50.38949, 5.93408], [50.38918, 5.93395], [50.389, 5.93386], [50.38886, 5.93382], [50.38868, 5.93378], [50.38839, 5.93377], [50.38773, 5.93402], [50.38737, 5.93415], [50.38716, 5.9342], [50.38698, 5.93426], [50.3869, 5.93432], [50.38682, 5.93439], [50.3866, 5.93464], [50.38638, 5.93488], [50.38626, 5.93499], [50.38601, 5.93513], [50.38553, 5.93545], [50.38445, 5.93607], [50.38419, 5.9362], [50.38409, 5.93626], [50.38404, 5.9363], [50.38395, 5.93638], [50.38386, 5.93649], [50.38369, 5.93674], [50.38345, 5.93706], [50.3833, 5.93726], [50.38327, 5.93732]],
+                    'grad' => [7, 10, 14, 18, 20, 17, 13, 10, 8, 9],
+                    'steep' => ['at' => [50.38773, 5.93402], 'pct' => '~20%'],
                 ],
             ],
             [
@@ -112,6 +140,13 @@ final class SeedManualCatalogCommand extends Command
                     'surface' => 'Asphalt', 'sq' => 'Rough', 'tr' => 'Moderate',
                     'avgGradient' => '9%', 'maxGradient' => '~11%', 'effort' => 'Challenging',
                     'famousFor' => 'Late selective climb in Liège–Bastogne–Liège',
+                    'photos' => [
+                        self::wc('Philippe Gilbert LBL 2009 Roche aux faucons.jpg', 'Les Meloures', 'Les Meloures', 'CC BY-SA 2.5'),
+                        self::wc('Cote de la Roche-aux-faucons01.jpg', 'Bel Adone', null, 'Public domain'),
+                    ],
+                    'route' => [[50.55573, 5.54831], [50.5541, 5.54805], [50.55337, 5.54818], [50.55306, 5.54839], [50.55279, 5.54894], [50.55244, 5.54986], [50.55245, 5.55005], [50.55264, 5.55053], [50.55279, 5.55157], [50.55294, 5.55284], [50.55319, 5.55429], [50.55336, 5.55532], [50.55357, 5.55657], [50.55373, 5.55748], [50.55372, 5.55812], [50.55358, 5.55866], [50.55364, 5.55949], [50.55354, 5.56097], [50.55329, 5.56186], [50.55323, 5.56241], [50.55348, 5.56466], [50.55345, 5.56557], [50.55323, 5.56668], [50.55318, 5.56787], [50.55316, 5.56809]],
+                    'grad' => [6, 8, 9, 10, 11, 10, 9, 8, 9, 7],
+                    'steep' => ['at' => [50.55358, 5.55866], 'pct' => '~11%'],
                 ],
             ],
             [
@@ -123,6 +158,8 @@ final class SeedManualCatalogCommand extends Command
                     'avgGradient' => '~1.7%', 'effort' => 'Steady',
                     'famousFor' => "Wallonia's longest climb — RAVeL greenway drag",
                     'approach' => 'Coo / Trois-Ponts up the RAVeL greenway to the Hockai plateau',
+                    'route' => [[50.37607, 5.87635], [50.37562, 5.87507], [50.37581, 5.87496], [50.37649, 5.87599], [50.37772, 5.88222], [50.37909, 5.889], [50.37956, 5.89538], [50.38177, 5.89828], [50.38377, 5.89968], [50.38502, 5.90168], [50.38572, 5.90459], [50.38555, 5.91477], [50.38594, 5.91773], [50.38679, 5.91984], [50.38873, 5.92195], [50.39616, 5.92631], [50.39779, 5.92894], [50.39929, 5.93248], [50.39966, 5.93345], [50.40096, 5.93566], [50.40342, 5.93773], [50.40489, 5.93981], [50.40639, 5.9435], [50.40778, 5.94564], [50.40987, 5.94666], [50.41622, 5.94621], [50.42327, 5.94568], [50.42495, 5.94602], [50.42748, 5.94905], [50.43026, 5.95383], [50.43335, 5.95802], [50.43566, 5.96229], [50.43621, 5.96331], [50.43772, 5.96491], [50.43955, 5.96542], [50.44138, 5.96473], [50.44558, 5.96159], [50.44863, 5.95825], [50.45217, 5.95711], [50.45307, 5.95661], [50.4533, 5.9569], [50.45397, 5.95693], [50.45705, 5.95663], [50.4593, 5.95658], [50.46281, 5.95834], [50.46482, 5.96077], [50.46627, 5.96352], [50.46856, 5.96804], [50.46879, 5.96843], [50.47117, 5.97136], [50.47425, 5.97323], [50.47445, 5.97327], [50.47476, 5.97508], [50.47542, 5.97394], [50.47745, 5.97543], [50.47883, 5.97707], [50.48107, 5.98187], [50.48237, 5.98524], [50.48307, 5.98707]],
+                    'grad' => [2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 3],
                 ],
             ],
             // C · Water & food
@@ -254,6 +291,11 @@ final class SeedManualCatalogCommand extends Command
                     'whatYouSee' => "Hautes Fagnes moorland — Belgium's largest nature reserve",
                     'note' => "Belgium's highest point (694 m) with the Baltia stone tower (1934) and a 1923 stone step up to exactly 700 m. Hautes Fagnes nature reserve, Waimes — the coldest, wettest spot in Belgium. For cyclists: a long, gentle plateau drag, but bleak, exposed, and often cold, windy or foggy even in summer.",
                     'c' => true,
+                    'photos' => [
+                        ['sm' => '/media/botrange-sm.jpg', 'lg' => '/media/botrange.jpg', 'credit' => 'Trougnouf (Benoit Brummer)', 'creditUrl' => 'https://commons.wikimedia.org/wiki/User:Trougnouf', 'license' => 'CC BY 4.0', 'source' => 'https://commons.wikimedia.org/wiki/File:Signal_de_Botrange_(DSCF6640).jpg'],
+                        self::wc('1031346 Botrange 700m.jpg', 'Wikoli', 'Wikoli', 'CC BY-SA 3.0'),
+                        self::wc('SignalDeBotrange6mTower.jpg', 'David Edgar', 'David Edgar', 'CC BY-SA 3.0'),
+                    ],
                 ],
             ],
             [
@@ -275,6 +317,10 @@ final class SeedManualCatalogCommand extends Command
                     'type' => 'Heritage site', 'note' => 'Benedictine abbey founded 651; town museums today.',
                     'cyclingStory' => 'At the foot of the Côte de Stockeu (Liège–Bastogne–Liège).',
                     'c' => true,
+                    'photos' => [
+                        ['sm' => '/media/stavelot-abbey-sm.jpg', 'lg' => '/media/stavelot-abbey.jpg', 'credit' => 'Nenea hartia', 'creditUrl' => 'https://commons.wikimedia.org/wiki/User:Nenea_hartia', 'license' => 'CC BY-SA 4.0', 'source' => 'https://commons.wikimedia.org/wiki/File:Abbaye_de_Stavelot.01.jpg'],
+                        self::wc('Abbaye de Stavelot 03.jpg', 'FrDr', 'FrDr', 'CC BY-SA 4.0'),
+                    ],
                 ],
             ],
         ];

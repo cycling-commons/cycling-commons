@@ -839,6 +839,8 @@ improve:
     label: 'Photos & video'
     heading: 'Photos & video'
     help: 'Optional, but a photo helps riders trust the spot. Your own media only — it joins the Commons under CC BY-SA 4.0.'
+    current_label: 'Current photo(s)'
+    current_alt: 'Photo of %name%'
     photo_label: 'Add a photo — optional'
     photo_drop: 'Drop photos here, or click to choose'
     photo_types: 'JPG · PNG · WebP · HEIC · your own photos only'

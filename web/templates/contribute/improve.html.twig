@@ -51,6 +51,12 @@
   .csearch-results .res small{display:block;color:#595c4d;font-size:.74rem;font-family:var(--mono)}
   .csearch-results .res.empty{color:#595c4d;cursor:default}
 
+  /* C5: read-only strip of the item's existing photo(s), step 3 */
+  .cur-photos{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.6rem}
+  .cur-photo{margin:0;width:110px}
+  .cur-photo img{display:block;width:110px;height:82px;object-fit:cover;border-radius:6px;border:1px solid rgba(20,22,14,.18);background:var(--paper-deep)}
+  .cur-photo figcaption{font-family:var(--mono);font-size:.6rem;color:#9a9d8c;margin-top:.3rem;line-height:1.35}
+
   /* upload queue + consent */
   .ulq{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
   .ulq .chip{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;padding:.3rem .5rem;border-radius:5px;background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);display:flex;align-items:center;gap:.35rem}
@@ -222,6 +228,34 @@
   <section class="pane" data-s="3" id="w-media">
     <h2>{{ 'improve.step3.heading'|trans }}</h2>
     <p class="help">{{ 'improve.step3.help'|trans }}</p>
+
+    {# C5: show the item's EXISTING photo(s) — a rider editing an item should
+       see what's already there, not just an empty "add a photo" prompt.
+       `current.photos` (plural gallery) wins over the singular `current.photo`,
+       mirroring map.js's own photoList(f) = f.photos || [f.photo]. Read-only:
+       no delete/replace here, this is display only (see improve.js for the add flow). #}
+    {% set currentPhotos = [] %}
+    {% if current is defined and current.photos is defined and current.photos is iterable %}
+      {% set currentPhotos = current.photos %}
+    {% elseif current is defined and current.photo is defined and current.photo %}
+      {% set currentPhotos = [current.photo] %}
+    {% endif %}
+    {% if currentPhotos|length > 0 %}
+      <div class="field">
+        <label>{{ 'improve.step3.current_label'|trans }}</label>
+        <div class="cur-photos" id="cur-photos">
+          {% for p in currentPhotos %}
+            <figure class="cur-photo">
+              <img src="{{ p.sm|default(p.lg|default('')) }}" alt="{{ 'improve.step3.current_alt'|trans({'%name%': current.name|default('')}) }}" loading="lazy" />
+              {% if p.credit is defined and p.credit %}
+                <figcaption>© {{ p.credit }}{% if p.license is defined and p.license %} · {{ p.license }}{% endif %}</figcaption>
+              {% endif %}
+            </figure>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
     <div class="field">
       <label>{{ 'improve.step3.photo_label'|trans }}</label>
       <div class="drop" id="drop-photo">

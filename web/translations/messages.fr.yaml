@@ -839,6 +839,8 @@ improve:
     label: 'Photos & vidéo'
     heading: 'Photos & vidéo'
     help: 'Optionnel, mais une photo aide les cyclistes à faire confiance au lieu. Vos propres médias uniquement — ils rejoignent le Commons sous CC BY-SA 4.0.'
+    current_label: 'Photo(s) actuelle(s)'
+    current_alt: 'Photo de %name%'
     photo_label: 'Ajouter une photo — optionnel'
     photo_drop: 'Déposez des photos ici, ou cliquez pour choisir'
     photo_types: 'JPG · PNG · WebP · HEIC · uniquement vos propres photos'

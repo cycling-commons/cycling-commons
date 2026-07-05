@@ -50,6 +50,24 @@ final class AttributeVocabularyTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    /**
+     * C5 data-loss fix: `photos` (plural gallery) sits alongside the
+     * pre-existing singular `photo` in COMMON, so any letter can carry a
+     * multi-image gallery — needed to restore the demo climbs' (and scenic/
+     * history pins') dropped photo galleries.
+     */
+    public function testPhotosPluralIsAcceptedOnAnyLetterAlongsideSingularPhoto(): void
+    {
+        $this->vocabulary->assertValid(ItemType::Climbs, [
+            'photos' => [['sm' => 'a.jpg'], ['sm' => 'b.jpg']],
+        ]);
+        $this->vocabulary->assertValid(ItemType::ScenicViews, [
+            'photos' => [['sm' => 'a.jpg'], ['sm' => 'b.jpg'], ['sm' => 'c.jpg']],
+        ]);
+        $this->vocabulary->assertValid(ItemType::Climbs, ['photo' => ['sm' => 'solo.jpg']]);
+        $this->addToAssertionCount(3);
+    }
+
     public function testUnknownKeyStillThrows(): void
     {
         $this->expectException(\InvalidArgumentException::class);

@@ -839,6 +839,8 @@ improve:
     label: 'Foto''s &amp; video'
     heading: 'Foto''s &amp; video'
     help: 'Optioneel, maar een foto helpt fietsers de plek te vertrouwen. Alleen eigen media — het komt in de Commons terecht onder CC BY-SA 4.0.'
+    current_label: 'Huidige foto(''s)'
+    current_alt: 'Foto van %name%'
     photo_label: 'Foto toevoegen — optioneel'
     photo_drop: 'Sleep foto''s hierheen, of klik om te kiezen'
     photo_types: 'JPG · PNG · WebP · HEIC · alleen jouw eigen foto''s'

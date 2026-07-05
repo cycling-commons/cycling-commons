@@ -19,7 +19,10 @@ use App\Catalog\ItemType;
  */
 final class AttributeVocabulary
 {
-    private const array COMMON = ['t', 'town', 'web', 'c', 'sim', 'r', 'desc', 'descTr', 'photo'];
+    // 'photos' (plural) sits alongside singular 'photo': a gallery of 2+ images for
+    // a pin (e.g. the demo climbs/scenic/history pins recovered in the C5 data-loss
+    // fix) — map.js's photoList(f) already prefers f.photos over f.photo.
+    private const array COMMON = ['t', 'town', 'web', 'c', 'sim', 'r', 'desc', 'descTr', 'photo', 'photos'];
 
     private const array EXTRAS = [
         'A' => ['cls', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense'],

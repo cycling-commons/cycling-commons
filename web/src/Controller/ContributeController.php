@@ -216,6 +216,10 @@ final class ContributeController extends AbstractController
             'edit_name' => $item->getName(),
             'receipt' => null,
             'form' => $form,
+            // C5: lets step 3 ("Photos & video") show the item's EXISTING photo(s)
+            // above the add-media controls — a rider editing an item should see
+            // what's already there, not just an empty upload prompt.
+            'current' => $current,
         ]);
     }
 }
