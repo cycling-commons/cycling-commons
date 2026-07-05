@@ -1010,6 +1010,16 @@ account:
   privacy_note: 'Vos contributions rejoignent le Commons ouvert comme des faits sur des lieux (avec provenance), séparés de qui vous êtes. Le compte contient des données personnelles — votre email et un hachage de mot de passe salé — qui restent privées et ne sont jamais publiées. Pas de suivi de parcours. Consultez la <a href="/privacy">politique de confidentialité</a>.'
   delete_account: 'Supprimer le compte'
   delete_note: 'Supprime votre identité ; les faits contribués restent dans le Commons, dissociés.'
+  contributions_title: 'Mes contributions'
+  contributions_empty: 'Rien d''envoyé pour l''instant — la carte attend.'
+  sub_type_new: 'Nouvel élément'
+  sub_type_edit: 'Modification'
+  sub_type_hazard: 'Danger'
+  sub_type_photo: 'Photo'
+  sub_status_pending: 'En attente de relecture'
+  sub_status_approved: 'Approuvée'
+  sub_status_rejected: 'Rejetée'
+  sub_status_needs_info: 'Infos demandées'
 
 meta:
   home_title: 'Cycling Commons'

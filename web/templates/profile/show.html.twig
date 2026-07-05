@@ -58,6 +58,26 @@
     <div class="item"><span class="tag" style="background:var(--ochre)">hazard</span><h4>Road closure · N66</h4><span class="co">50.42°N 5.80°E</span><span class="pill conf">{{ 'account.status_confirmed'|trans }} ×3</span></div>
     <div class="item"><span class="tag" style="background:var(--clay);color:#fff">stay</span><h4>B&amp;B Vallée de l'Amblève</h4><span class="co">50.45°N 5.62°E</span><span class="pill ok">{{ 'account.status_approved'|trans }}</span></div>
 
+    {# ── Real contributions (this plan's data-API) ── #}
+    <section class="acct-contributions">
+      <h2>{{ 'account.contributions_title'|trans }}</h2>
+      {% if contributions is empty %}
+        <p class="acct-empty">{{ 'account.contributions_empty'|trans }}</p>
+      {% else %}
+        <ul class="acct-sub-list">
+          {% for sub in contributions %}
+            <li>
+              <span class="acct-sub-title">{{ sub.title }}</span>
+              <span class="acct-sub-type">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
+              <span class="acct-sub-status acct-sub-status--{{ sub.status.value }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
+              <time datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|date('Y-m-d') }}</time>
+              {% if sub.decisionNote %}<p class="acct-sub-note">{{ sub.decisionNote }}</p>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+
     <div class="actions">
       <a class="lnk p" href="{{ path('map') }}">{{ 'account.explore_map'|trans }} →</a>
       {% if is_granted('ROLE_CURATOR') %}

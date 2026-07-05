@@ -4,8 +4,10 @@
 
 namespace App\Controller;
 
+use App\Catalog\Entity\Submission;
 use App\Entity\User;
 use App\Routing\LocalePrefix;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,7 +24,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class ProfileController extends AbstractController
 {
     #[Route('/profile', name: 'profile')]
-    public function show(): Response
+    public function show(EntityManagerInterface $em): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -32,6 +34,11 @@ final class ProfileController extends AbstractController
             'page_description' => 'meta.profile_description',
             'nav_active' => '',
             'cc_user' => $user,
+            'contributions' => $em->getRepository(Submission::class)->findBy(
+                ['userId' => (int) $user->getId()],
+                ['createdAt' => 'DESC', 'id' => 'DESC'],
+                50,
+            ),
         ]);
     }
 }

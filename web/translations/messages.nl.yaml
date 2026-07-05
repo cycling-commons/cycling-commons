@@ -1010,6 +1010,16 @@ account:
   privacy_note: 'Jouw bijdragen komen in de open Commons terecht als feiten over plaatsen (met herkomst), los van wie je bent. Het account bevat persoonsgegevens — je e-mailadres en een gezouten wachtwoord-hash — die privé blijven en nooit worden gepubliceerd. Geen routeregistratie. Zie het <a href="/privacy">privacybeleid</a>.'
   delete_account: 'Account verwijderen'
   delete_note: 'Verwijdert je identiteit; bijgedragen feiten blijven in de Commons, ontkoppeld.'
+  contributions_title: 'Mijn bijdragen'
+  contributions_empty: 'Nog niets ingezonden — de kaart wacht.'
+  sub_type_new: 'Nieuw item'
+  sub_type_edit: 'Bewerking'
+  sub_type_hazard: 'Gevaar'
+  sub_type_photo: 'Foto'
+  sub_status_pending: 'Wacht op beoordeling'
+  sub_status_approved: 'Goedgekeurd'
+  sub_status_rejected: 'Afgewezen'
+  sub_status_needs_info: 'Info nodig'
 
 meta:
   home_title: 'Cycling Commons'

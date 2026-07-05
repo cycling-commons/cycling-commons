@@ -1010,6 +1010,16 @@ account:
   privacy_note: 'Deine Beiträge treten dem offenen Commons als Fakten über Orte bei (mit Provenienz), getrennt davon, wer du bist. Das Konto enthält personenbezogene Daten — deine E-Mail und einen gesalzenen Passwort-Hash — die privat bleiben und nie veröffentlicht werden. Kein Tourentracking. Siehe die <a href="/privacy">Datenschutzerklärung</a>.'
   delete_account: 'Konto löschen'
   delete_note: 'Entfernt deine Identität; beigetragene Fakten bleiben im Commons, aber ohne Zuordnung.'
+  contributions_title: 'Meine Beiträge'
+  contributions_empty: 'Noch nichts eingereicht — die Karte wartet.'
+  sub_type_new: 'Neuer Eintrag'
+  sub_type_edit: 'Bearbeitung'
+  sub_type_hazard: 'Gefahrenstelle'
+  sub_type_photo: 'Foto'
+  sub_status_pending: 'Wartet auf Prüfung'
+  sub_status_approved: 'Angenommen'
+  sub_status_rejected: 'Abgelehnt'
+  sub_status_needs_info: 'Info benötigt'
 
 meta:
   home_title: 'Cycling Commons'
