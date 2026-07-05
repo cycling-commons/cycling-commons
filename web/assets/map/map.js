@@ -392,6 +392,10 @@
         const co=f.geometry.coordinates, p=f.properties;
         const key = p.cluster ? 'c'+p.cluster_id : 'l'+co[0].toFixed(5)+','+co[1].toFixed(5);
         if(next[key]) continue;
+        // C2-T8: confirmed (clustered) stays pins respect the accessibility filter too —
+        // only individual leaf pins are checked (a clustered bubble isn't re-aggregated;
+        // the dataset is small enough that this is a non-issue in practice).
+        if(!p.cluster && st.key==='stays' && !attrMatch(p.accessibility, activeAccess, ALL_ACCESS)) continue;
         let m=on[key];
         if(!m){
           if(p.cluster){
@@ -1021,6 +1025,30 @@
   }
   const chipSet=id=>{const s=new Set();document.querySelectorAll('#'+id+' .chip.on').forEach(c=>s.add(c.dataset.v));return s;};
   let activeSurface=chipSet('sqf'), activeTraffic=chipSet('trf');
+  // C2-T8 (spec §W2, D2): filters for the new difficulty/suitability attributes —
+  // climbs' 'effort' (CatalogFormRegistry Climbs.effort) and stays' 'accessibility'
+  // (CatalogFormRegistry WhereToSleep.accessibility). Vocab lists mirror the registry.
+  const ALL_EFFORT=new Set(['Steady','Challenging','Tough','Very steep']);
+  const ALL_ACCESS=new Set(['Step-free access','Handbike-friendly','Wheelchair-accessible']);
+  // "Narrowing" semantics, deliberately different from the pre-existing sq/tr chips above
+  // (which always require a matching value, hiding any climb missing sq/tr regardless of
+  // chip state): most existing items predate effort/accessibility, so with every chip on
+  // (the default) nothing is filtered — including items with no value for the attribute.
+  // As soon as a rider deselects at least one option, items with no value are hidden too,
+  // since they can't be confirmed to match the narrowed selection.
+  function attrMatch(value, activeSet, allSet){
+    if(activeSet.size===allSet.size) return true;
+    return value ? activeSet.has(value) : false;
+  }
+  let activeEffort=chipSet('effortf'), activeAccess=chipSet('accessf');
+  // stays' bulk-OSM dot layer filter combines the base "unconfirmed only" clause with the
+  // accessibility narrowing above; confirmed/clustered stays are filtered in updateConfMarkers().
+  function applyStaysAccessFilter(){
+    if(!map.getLayer('stays-osm')) return;
+    const base=['!',['has','c']];
+    map.setFilter('stays-osm', activeAccess.size===ALL_ACCESS.size ? base
+      : ['all', base, ['in', ['get','accessibility'], ['literal', Array.from(activeAccess)]]]);
+  }
 
   function pinEl(layer,cur){
     const d=document.createElement('div');
@@ -1030,16 +1058,25 @@
   }
   function featureVisible(layer, f){
     let show = (mode==='all') || !layer.exp || f.cur;       // experiential layers filter to curated
-    if(show && layer.key==='climbs') show = activeSurface.has(f.sq) && activeTraffic.has(f.tr);
+    if(show && layer.key==='climbs'){
+      show = activeSurface.has(f.sq) && activeTraffic.has(f.tr);
+      if(show) show = attrMatch(f.effort, activeEffort, ALL_EFFORT);
+    }
     return show;
   }
   // legend count = shown/total: in Curated only confirmed/curated count; in Everything everything does
   function layerCounts(layer){
     const osmFx=window['CC_'+layer.key.toUpperCase()+'_OSM'];
-    const osmTotal=osmFx?osmFx.features.length:0;
-    const osmConf=osmFx?osmFx.features.filter(f=>f.properties&&f.properties.c).length:0;
+    const rawOsm=osmFx?osmFx.features:[];
+    // C2-T8: stays' shown/total narrows with the accessibility filter, same as climbs above
+    // ('total' stays the true unfiltered count, matching how sq/tr never shrink climbs' total).
+    const osmVisible = layer.key==='stays'
+      ? rawOsm.filter(f=>attrMatch((f.properties||{}).accessibility, activeAccess, ALL_ACCESS))
+      : rawOsm;
+    const osmTotal=osmVisible.length;
+    const osmConf=osmVisible.filter(f=>f.properties&&f.properties.c).length;
     const shown=layer.features.filter(f=>featureVisible(layer,f)).length + (mode==='all'?osmTotal:osmConf);
-    return {shown, total:layer.features.length+osmTotal};
+    return {shown, total:layer.features.length+rawOsm.length};
   }
   function updateCounts(){
     CATALOG.forEach(layer=>{
@@ -1715,10 +1752,14 @@
   });
   // discipline + freshness chips (visual)
   document.querySelectorAll('#disc .chip, .grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
-  // climb surface + traffic chips actually filter the climbs layer
-  document.querySelectorAll('#sqf .chip, #trf .chip').forEach(c=>c.onclick=()=>{
+  // climb surface + traffic chips actually filter the climbs layer; C2-T8 adds
+  // climb effort + stay accessibility to the same wiring (this assignment runs
+  // after the generic '.grp .chips .chip' toggle-only handler above, so it wins).
+  document.querySelectorAll('#sqf .chip, #trf .chip, #effortf .chip, #accessf .chip').forEach(c=>c.onclick=()=>{
     c.classList.toggle('on');
     activeSurface=chipSet('sqf'); activeTraffic=chipSet('trf');
+    activeEffort=chipSet('effortf'); activeAccess=chipSet('accessf');
+    applyStaysAccessFilter();
     render();
   });
 
