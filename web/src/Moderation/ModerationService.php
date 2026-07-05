@@ -50,9 +50,11 @@ final class ModerationService
                 case 'approve':
                     $submission->setStatus(SubmissionStatus::Approved);
                     if (null !== $item) {
-                        SubmissionType::NewItem === $submission->getType()
-                            ? $this->approveNew($item, $submission, $curator)
-                            : $this->applyEdit($item, $submission, $curator);
+                        match ($submission->getType()) {
+                            SubmissionType::NewItem => $this->approveNew($item, $submission, $curator),
+                            SubmissionType::Edit => $this->applyEdit($item, $submission, $curator),
+                            SubmissionType::Hazard, SubmissionType::Photo => throw new \LogicException(sprintf('Approval of %s submissions is not supported yet', $submission->getType()->value)),
+                        };
                     }
                     break;
                 case 'reject':
@@ -69,7 +71,6 @@ final class ModerationService
             $submission->setDecisionNote($note)
                 ->setDecidedBy((int) $curator->getId())
                 ->setDecidedAt(new \DateTimeImmutable());
-            $this->em->flush();
 
             return $submission;
         });
@@ -84,6 +85,7 @@ final class ModerationService
     private function applyEdit(Item $item, Submission $submission, User $curator): void
     {
         $attributes = $item->getAttributes();
+        $changed = false;
         foreach ($submission->getChanges() as $field => $pair) {
             $now = $pair['now'] ?? null;
             $actualOld = 'name' === $field ? $item->getName() : ($attributes[$field] ?? null);
@@ -95,9 +97,12 @@ final class ModerationService
             } else {
                 $attributes[$field] = $now;
             }
+            $changed = true;
             $this->history($item, $submission, $curator, $field, $actualOld, $now);
         }
-        $item->setAttributes($attributes); // also bumps updated_at
+        if ($changed) {
+            $item->setAttributes($attributes); // also bumps updated_at
+        }
     }
 
     private function history(Item $item, Submission $submission, User $curator, string $field, mixed $old, mixed $new): void

@@ -60,7 +60,7 @@ final class ModerateDecideAjaxTest extends WebTestCase
         return $sub;
     }
 
-    public function testAjaxDecisionReturnsJsonStubReceipt(): void
+    public function testAjaxDecisionReturnsJsonReceipt(): void
     {
         $client = static::createClient();
         $this->login($client, 'ajax-curator@example.com', ['ROLE_CURATOR'], true);
