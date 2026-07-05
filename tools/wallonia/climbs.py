@@ -128,6 +128,48 @@ def _search_qid(name):
     return hits[0]["id"] if hits else None
 
 
+def _assemble_climb(m, p, traced):
+    """Build one climb dict from resolved seed metadata + enrichment + an optional
+    BRouter trace. No network calls — pure, so it's unit-testable in isolation.
+
+    Emits DISCRETE editable attributes (avgGradient/maxGradient/surface/famousFor —
+    matching CatalogFormRegistry's Climbs field keys) instead of baking them into
+    display strings, so the improve edit form can prefill them from item.attributes.
+    `record` keeps only the derived "Length" row: Length is computed, not an editable
+    attribute, and the drawer's C2-T6 climb branch renders the editable rows straight
+    from the discrete attributes (and dedups by label) — leaving them in `record` too
+    would just duplicate.
+    """
+    if traced:                                       # BRouter geometry is authoritative
+        km, avg = traced["km"], traced["avg"]
+    else:
+        dkm, davg = _stats_from_desc(p.get("desc"))  # else Wikipedia stats (over my seed estimate)
+        km, avg = (dkm or m["km"]), (davg or m["avg"])
+    headline = f"{km} km · {avg}% avg" if km and avg else "Legendary Ardennes climb"
+    record = []
+    if km:
+        record.append({"label": "Length", "value": f"{km} km"})
+    climb = {"name": m["name"], "headline": headline, "cur": True, "sq": "Good", "tr": "Quiet",
+             "geom": {"ll": m["ll"]}, "record": record,
+             "source": "Wikidata (P625) · OpenStreetMap" + (" · BRouter" if traced else "")}
+    if traced:
+        climb["route"], climb["grad"], climb["steep"] = traced["route"], traced["grad"], traced["steep"]
+    if avg:
+        climb["avgGradient"] = str(avg)
+    if traced:
+        climb["maxGradient"] = str(traced["max"])
+    climb["surface"] = "Asphalt"
+    climb["famousFor"] = m["race"]
+    if p.get("desc"):
+        # "côte" mistranslates to "coast"; in a climb context it's always a climb/hill
+        climb["desc"] = p["desc"].replace("Coast", "Climb").replace("coast", "climb")
+    if p.get("descTr"):
+        climb["descTr"] = 1
+    if p.get("photo"):
+        climb["photo"] = p["photo"]
+    return climb
+
+
 def build():
     # 1. resolve each seed name to a Wikidata id + coordinates
     feats, meta = [], {}
@@ -163,34 +205,7 @@ def build():
         traced = _trace_climb(FEET[m["name"]], m["ll"]) if m["name"] in FEET else None
         if m["name"] in FEET and not traced:
             print(f"  ! {m['name']}: foot given but trace invalid — the TOP coord looks wrong (Wikidata point bad?)")
-        if traced:                                       # BRouter geometry is authoritative
-            km, avg = traced["km"], traced["avg"]
-        else:
-            dkm, davg = _stats_from_desc(p.get("desc"))  # else Wikipedia stats (over my seed estimate)
-            km, avg = (dkm or m["km"]), (davg or m["avg"])
-        headline = f"{km} km · {avg}% avg" if km and avg else "Legendary Ardennes climb"
-        record = []
-        if km:
-            record.append({"label": "Length", "value": f"{km} km"})
-        if avg:
-            record.append({"label": "Average gradient", "value": f"{avg}%"})
-        if traced:
-            record.append({"label": "Max gradient", "value": f"~{traced['max']}% (steepest ramp)"})
-        record.append({"label": "Famous for", "value": m["race"]})
-        record.append({"label": "Surface", "value": "Asphalt", "method": "OSM"})
-        climb = {"name": m["name"], "headline": headline, "cur": True, "sq": "Good", "tr": "Quiet",
-                 "geom": {"ll": m["ll"]}, "record": record,
-                 "source": "Wikidata (P625) · OpenStreetMap" + (" · BRouter" if traced else "")}
-        if traced:
-            climb["route"], climb["grad"], climb["steep"] = traced["route"], traced["grad"], traced["steep"]
-        if p.get("desc"):
-            # "côte" mistranslates to "coast"; in a climb context it's always a climb/hill
-            climb["desc"] = p["desc"].replace("Coast", "Climb").replace("coast", "climb")
-        if p.get("descTr"):
-            climb["descTr"] = 1
-        if p.get("photo"):
-            climb["photo"] = p["photo"]
-        climbs.append(climb)
+        climbs.append(_assemble_climb(m, p, traced))
 
     hdr = ("// SPDX-License-Identifier: ODbL-1.0\n"
            "// Legendary Wallonia climbs. Coordinates © Wikidata (CC0); descriptions © Wikipedia (CC BY-SA 4.0);\n"
