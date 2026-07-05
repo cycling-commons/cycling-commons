@@ -1,6 +1,6 @@
 # Contribution Front-End Reconciliation — Design (Phase C)
 
-> **Status:** Approved 2026-07-05 (decisions D1–D4 recorded in §5). W1 shipping first; W2/W3 to be planned next. W4 + ratings/reviews deferred.
+> **Status:** Approved 2026-07-05 (decisions D1–D4 recorded in §5). W1/W2/W3/W5/W6 shipped 2026-07-05 (see §8). W4 + ratings/reviews deferred.
 > **Date:** 2026-07-05
 > **Branch target:** `symfony-base`
 > **Predecessors:** Phase A (catalog data model + Wallonia import), Phase B (submissions & moderation on real data — the intake→queue→moderate→apply-with-history *engine*).
@@ -82,12 +82,20 @@ So: keep Phase C focused on making the existing create/edit/curated system faith
 - Changing the import pipeline for OSM/PIVOT data.
 
 ## 8. Acceptance criteria
-- **W1 (shipped):** the wizard's Review step lists every non-empty detail/extra field with its entered value; the wizard header names the exact item being edited on every step.
-- **W2:** for each item type, the edit form can edit every attribute the drawer presents as data; no drawer row is a per-item literal; a round-trip edit (submit → approve) updates every such field with history.
-- **W3:** `/map/catalog.json` and the map contain zero hardcoded `CATALOG` demo features; every visible pin has a DB `item` (tagged `source='manual'`) and an edit button; the seeder is repeatable and idempotent.
-- **W4:** resolved per D3 (deferred).
-- **W5:** after an approved edit, the item's change log is visible in the UI (field, old→new, who, when), newest first, and is easy to spot.
-- **W6:** every layer/item type renders provenance consistently; user/manual contributions and approved edits are legibly attributed.
+- **W1 — DONE:** the wizard's Review step lists every non-empty detail/extra field with its entered value; the wizard header names the exact item being edited on every step.
+- **W2 — DONE (C2-T5..T8):** for each item type, the edit form can edit every attribute the drawer presents as data; no drawer row is a per-item literal; a round-trip edit (submit → approve) updates every such field with history. Vocabulary (effort/roadQuality/traffic/famousFor/approach/accessibility) and the matching map filters shipped alongside the form↔drawer reconciliation.
+- **W3 — DONE (C3-T9/T10), EXCEPT hazards (F):** `/map/catalog.json` and the map contain zero hardcoded `CATALOG` demo features for every letter *except* F; every other visible pin has a DB `item` (tagged `source='manual'`) and an edit button; the seeder is repeatable and idempotent (and, as of C4-T11, collision-safe — see the follow-up note below). Letter F (hazards) has no serving path in `CatalogProvider`/map.js, so its one demo pin ("Exposed crosswind · Hautes Fagnes") deliberately stays hardcoded — tracked as a W4 follow-up, not a W3 gap.
+- **W4 — DEFERRED (D3):** hazards intake (letter F) is out of scope for this phase; no serving path exists yet for `source='manual'` hazard rows.
+- **W5 — DONE (C1-T2/T3):** after an approved edit, the item's change log is visible in the UI (field, old→new, who, when), newest first, and is easy to spot.
+- **W6 — DONE (C1-T4):** every layer/item type renders provenance consistently; user/manual contributions and approved edits are legibly attributed.
+
+### Shipped 2026-07-05
+All of the above (W1–W3, W5, W6; W4 deferred) landed on `symfony-base` in commit range `fa4d197..8bae43d`, plus the C4-T11 dedup fix/gate/closeout commit that follows this note. Phase C is functionally complete except the explicitly deferred hazards workstream (W4).
+
+### Known follow-ups (not blocking Phase C closeout)
+- **Hazards (F) have no serving path.** The single hardcoded hazard pin ("Exposed crosswind · Hautes Fagnes") and any future hazard intake both remain deferred (W4/D3) until `CatalogProvider`/map.js gain a real hazard layer.
+- **Curator moderation drawer doesn't yet show target-item history.** `SubmissionQueue` isn't threaded with an `item_id`, so a curator reviewing a pending edit can't see the target item's prior change log inline — only the diff being proposed. Needs `item_id` threading on the queue row before it can link out to the W5 history view.
+- **Pre-existing OSM-vs-OSM "Signal de Botrange" duplicate.** Two `osm`-sourced rows (ids 3353 and 3338) both represent Signal de Botrange — a harvest-side data issue predating and outside Phase C (the manual-seeding dedup fixed in C4-T11 only addressed `manual` vs non-`manual` collisions, not duplicate rows within the same source).
 
 ## 9. Next step
 On approval (and D1–D4 answered), a task-by-task implementation plan follows in `docs/plans/`, executed with the same subagent-driven review rigor as Phase B. W1 can be split out and shipped immediately as a standalone correctness fix if you want a fast win before the larger reconciliation.

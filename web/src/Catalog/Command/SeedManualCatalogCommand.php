@@ -37,6 +37,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * Idempotent: upserts by the same (source, source_ref, letter) key the
  * importer uses, with source_ref = `manual:<stable-slug>` — safe to re-run.
  *
+ * Collision-safe (C4-T11): before inserting/upserting a pin, skips it if a
+ * NON-manual item already exists with the same (name, letter) — i.e. never
+ * seeds a manual duplicate of a place the OSM/pivot/… harvest already
+ * imported. Skipped pins are reported on stdout.
+ *
  * Deliberately NOT persisted (documented in the C3-T9 report, not stored as
  * attributes): the demo's derived/display-only values (the literal "Length"
  * record row, the `route`/`grad`/`steep` elevation-profile arrays, the
@@ -291,9 +296,15 @@ final class SeedManualCatalogCommand extends Command
             $this->db->beginTransaction();
             $subdivisionId = $this->resolveSubdivisionId();
             $counts = [];
+            $skipped = [];
             foreach (self::pins() as $pin) {
                 $type = ItemType::fromParam($pin['letter']);
                 $this->vocabulary->assertValid($type, $pin['attributes']);
+
+                if ($this->duplicatesNonManualItem($pin['name'], $pin['letter'])) {
+                    $skipped[] = $pin['name'];
+                    continue;
+                }
 
                 $this->db->executeStatement(
                     'INSERT INTO item (letter, name, geom, country_code, subdivision_id, state, source, source_ref, attributes, created_at, updated_at, imported_at)
@@ -335,9 +346,35 @@ final class SeedManualCatalogCommand extends Command
         foreach ($counts as $letter => $count) {
             $io->writeln(sprintf('  %s: %d pin(s)', $letter, $count));
         }
+        if ([] !== $skipped) {
+            $io->note(sprintf(
+                'Skipped %d pin(s) that duplicate an existing non-manual item (same name + letter): %s',
+                \count($skipped),
+                implode(', ', $skipped),
+            ));
+        }
         $io->success(sprintf('Seeded %d manual demo pin(s) across %d letter(s).', array_sum($counts), \count($counts)));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Guards against re-seeding a manual duplicate of a place the OSM/pivot/…
+     * harvest already imported under a different source (C4-T11 dedup fix —
+     * items 11018/11019/11021 duplicated osm rows 3597/3602/3353 before this
+     * guard existed). Matches on (name, letter): the same real-world place,
+     * re-seeded under `source = manual`, would otherwise double/triple-render
+     * on the map. Only non-manual rows count as a collision — re-running the
+     * seeder must still upsert its own previously-seeded manual rows.
+     */
+    private function duplicatesNonManualItem(string $name, string $letter): bool
+    {
+        $match = $this->db->fetchOne(
+            "SELECT 1 FROM item WHERE name = :name AND letter = :letter AND source != 'manual' LIMIT 1",
+            ['name' => $name, 'letter' => $letter],
+        );
+
+        return false !== $match;
     }
 
     /** @return int|null world_subdivision.id for Liège, or null when world data isn't seeded yet */

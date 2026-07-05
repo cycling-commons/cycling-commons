@@ -98,6 +98,33 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         self::assertSame($countAfterFirst, $countAfterSecond, 're-running must not duplicate rows');
     }
 
+    /**
+     * C4-T11 dedup fix: items 11018/11019/11021 ("Abri Jean Poumay",
+     * "Belvédère de la Hoëgne", "Signal de Botrange") duplicated existing OSM
+     * rows and double/triple-rendered on the map. The seeder must skip any
+     * manual pin whose (name, letter) matches an existing non-manual item.
+     */
+    public function testSkipsAManualPinThatDuplicatesAnExistingNonManualItem(): void
+    {
+        $connection = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $connection->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
+             VALUES ('H', 'Abri Jean Poumay', ST_SetSRID(ST_MakePoint(5.8521, 50.5074), 4326), 'BE', 'verified', 'osm', 'osm:node:1', '{}', NOW(), NOW(), NOW())",
+        );
+
+        $tester = $this->runSeed();
+        $tester->assertCommandIsSuccessful();
+
+        $manualAbri = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:abri-jean-poumay']);
+        self::assertNull($manualAbri, 'a manual pin duplicating an existing non-manual (name, letter) item must not be seeded');
+
+        // Every other manual pin still seeds normally (22, not 23 — Abri Jean Poumay skipped).
+        $items = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]);
+        self::assertCount(22, $items);
+
+        self::assertStringContainsString('Abri Jean Poumay', $tester->getDisplay());
+    }
+
     public function testSeededManualLetterEStayIsServedByCatalogProvider(): void
     {
         $this->runSeed()->assertCommandIsSuccessful();
