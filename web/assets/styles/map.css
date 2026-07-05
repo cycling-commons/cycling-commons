@@ -226,6 +226,15 @@
   .cc-d-fresh{margin-top:1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase}
   .cc-d-fresh.fresh{color:#7fcf9a}.cc-d-fresh.ageing{color:var(--ochre)}.cc-d-fresh.stale{color:var(--clay)}
   .cc-d-src{margin-top:1rem;font-size:.72rem;color:rgba(239,230,212,.55);line-height:1.5}
+  /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's
+     loadItemHistory() into #cc-d-hist-slot; empty until the fetch resolves
+     (and stays empty/no heading if the item has no history). */
+  .cc-d-hist-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem}
+  .cc-d-hist-list{list-style:none;margin:0;padding:0}
+  .cc-h-row{display:flex;flex-wrap:wrap;gap:.1rem .5rem;padding:.5rem 0;border-bottom:1px solid rgba(239,230,212,.1);font-size:.85rem}
+  .cc-h-field{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.55)}
+  .cc-h-diff{flex:1 0 100%;color:rgba(239,230,212,.82)}
+  .cc-h-meta{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.45)}
   .cc-d-act{display:inline-block;margin-top:1.2rem;margin-right:.5rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;
     text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.5rem .8rem;border-radius:5px}
   .cc-d-act.edit{background:transparent;color:var(--paper);border:1px solid rgba(239,230,212,.45)}

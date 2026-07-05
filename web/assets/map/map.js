@@ -2,6 +2,10 @@
   // §13: shared HTML-escaper for real (user-authored) pending-submission text —
   // stored-XSS-in-curator-session risk now that submissions come from real users.
   const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
+  // bumped on every openDrawer() call so a slow response from a since-replaced
+  // drawer never paints stale history over whatever is open now.
+  let _historyReq = 0;
   const map = new maplibregl.Map({
     container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
     bounds:[[2.84,49.45],[6.41,50.85]], fitBoundsOptions:{padding:24}, attributionControl:false  // all of Wallonia visible on load
@@ -1127,10 +1131,58 @@
     const vote = f.cur ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
     const act = edit + vote;
     const desc = f.desc ? `<p class="cc-d-desc">${f.desc}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
+    // C1-T3 (spec W5): an empty placeholder for the async "Recent changes"
+    // section — openDrawer() fetches GET /map/item/{id}/history after this
+    // HTML lands and fills #cc-d-hist-slot (buildRecord itself stays sync/pure,
+    // no network calls here). Same edit-bridge id contract as `edit`/`addPhoto`
+    // above: only real DB items (f.id!=null) get one. The curator's pending-
+    // submission records (below) never carry f.id, so they never render this —
+    // see the note on the pending branch for why that view doesn't get one either.
+    const histSlot = f.id!=null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${f.id}"></div>` : '';
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}${moderate}`;
+      <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}${moderate}${histSlot}`;
+  }
+  // C1-T3: renders one change_history row. Every interpolated value is
+  // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`
+  // are server-derived but still passed through escPend for defense in depth)
+  // — same stored-XSS concern the §13 pending-submission fix addressed, so
+  // ALL FIVE fields go through escPend before hitting innerHTML.
+  function historyRow(h){
+    const isEmpty = v => v===null || v===undefined || v==='';
+    const ov = isEmpty(h.oldValue) ? '—' : escPend(h.oldValue);
+    const nv = isEmpty(h.newValue) ? '—' : escPend(h.newValue);
+    return `<li class="cc-h-row">
+      <span class="cc-h-field">${escPend(h.field)}</span>
+      <span class="cc-h-diff">${ov} → ${nv}</span>
+      <span class="cc-h-meta">${escPend(h.who)} · <time datetime="${escPend(h.changedAt)}">${escPend(h.when)}</time></span>
+    </li>`;
+  }
+  // Empty history (never-edited item) renders nothing — spec W5/C1-T3
+  // acceptance: "no changes yet" is silence, not a section.
+  function renderHistoryList(history){
+    if(!Array.isArray(history) || !history.length) return '';
+    return `<h4 class="cc-d-hist-h">Recent changes</h4><ul class="cc-d-hist-list">${history.map(historyRow).join('')}</ul>`;
+  }
+  // Fetches an item's change log (C1-T2's GET /map/item/{id}/history) and
+  // fills the drawer's history slot. Lazy/async on purpose — never blocks
+  // the drawer opening. Race-guarded: `myReq` is snapshotted from the shared
+  // `_historyReq` counter, which openDrawer() bumps on every call; if a newer
+  // drawer opened (or this one closed and another opened) before the response
+  // lands, `myReq` no longer matches and the stale response is dropped. Fetch
+  // failure is silent — history is an enhancement, not core drawer content.
+  function loadItemHistory(itemId){
+    const myReq = ++_historyReq;
+    fetch('/map/item/' + itemId + '/history')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if(myReq !== _historyReq || !data) return;   // stale response — a newer drawer has since opened
+        const slot = document.getElementById('cc-d-hist-slot');
+        if(!slot) return;                              // drawer content changed/closed under us
+        slot.innerHTML = renderHistoryList(data.history);
+      })
+      .catch(()=>{});   // enhancement only — silent on failure
   }
   function mapToast(msg){
     let t=document.getElementById('cc-toast');
@@ -1197,6 +1249,7 @@
   }
   function openDrawer(layer, f){
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
+    if(f.id!=null) loadItemHistory(f.id);   // C1-T3: async "Recent changes" — see loadItemHistory for the race guard
     const pl = photoList(f);
     const mainImg = document.querySelector('#drawerBody .cc-d-photo > img');
     const cap = document.getElementById('cc-d-cap');
