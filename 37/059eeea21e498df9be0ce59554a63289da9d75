@@ -1,0 +1,31 @@
+web/src/Moderation/ModerationService.php
+  s_38d02ca6d8ff2e::t_bc2d1df0cb0315 1-113
+web/tests/Moderation/ModerateTest.php
+  s_38d02ca6d8ff2e::t_d06cb32a36636f 192,207,216-219,222-223
+web/src/Moderation/AlreadyDecidedException.php
+  s_38d02ca6d8ff2e::t_1667aebed4ce77 1-18
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_38d02ca6d8ff2e::t_0a8c70478a8607 45,59-60,67,76,83,85-86,89
+web/src/Controller/ModerateController.php
+  s_38d02ca6d8ff2e::t_5665f28d3114c0 12-13,25-29,39
+  s_38d02ca6d8ff2e::t_25f61144ac615e 113
+  s_38d02ca6d8ff2e::t_4736247113ee58 96,101-109,114-115,117
+web/tests/Moderation/ModerationServiceTest.php
+  s_38d02ca6d8ff2e::t_21a8d34910b90c 1-176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "37059eeea21e498df9be0ce59554a63289da9d75",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
