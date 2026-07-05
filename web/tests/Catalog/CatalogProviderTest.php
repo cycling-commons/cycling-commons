@@ -118,6 +118,9 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertArrayNotHasKey('attribution', $climb);
         self::assertSame([[50.61, 4.41], [50.62, 4.42]], $climb['route']);    // raw [lat,lng] pass-through
         self::assertSame(1, $climb['descTr']);
+        // The map edit-bridge's `?item=` target — the real DB id, an integer.
+        self::assertIsInt($climb['id']);
+        self::assertGreaterThan(0, $climb['id']);
     }
 
     public function testSurfaceSegmentDecodesWayIdAndFlipsPath(): void
@@ -128,6 +131,9 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame([[50.1, 4.2], [50.2, 4.3]], $seg['path']);           // flipped to [lat,lng]
         self::assertSame('Asphalt', $seg['surface']);
         self::assertArrayNotHasKey('edit', $seg);                             // accepted loss (map.js hardcodes it)
+        // The map edit-bridge's `?item=` target — the real DB id, an integer.
+        self::assertIsInt($seg['id']);
+        self::assertGreaterThan(0, $seg['id']);
     }
 
     public function testRouteShapeAndHeat(): void
@@ -141,6 +147,9 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame(['name' => 'Test U.', 'public' => true], $route['uploader']);
         self::assertSame('Tester', $route['photo']['credit']);
         self::assertSame([[50.5, 4.5, 'summer'], [50.6, 4.6, 'winter']], $p['L']);
+        // The map edit-bridge's `?item=` target — the real DB id, an integer.
+        self::assertIsInt($route['id']);
+        self::assertGreaterThan(0, $route['id']);
     }
 
     public function testExcludedStatesAreNotServed(): void

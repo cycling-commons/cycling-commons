@@ -129,7 +129,7 @@ final class CatalogProvider
             }
             /** @var array{coordinates: array{0: float, 1: float}} $geo */
             $geo = $this->decode($row['geom']);
-            $climbs[] = ['name' => $row['name'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
+            $climbs[] = ['id' => (int) $row['id'], 'name' => $row['name'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
         }
 
         return $climbs;
@@ -144,7 +144,7 @@ final class CatalogProvider
     {
         $segments = [];
         foreach ($this->itemRows('A') as $row) {
-            $seg = ['name' => $row['name']] + $this->decode($row['attributes']);
+            $seg = ['id' => (int) $row['id'], 'name' => $row['name']] + $this->decode($row['attributes']);
             if (str_starts_with($row['source_ref'], 'way/')) {
                 $seg['wayId'] = (int) substr($row['source_ref'], 4);
             }
@@ -164,16 +164,16 @@ final class CatalogProvider
      */
     private function routes(): array
     {
-        /** @var list<array{name: string, geom: string, distance_m: int, ascent_m: int, attributes: string}> $rows */
+        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes
+            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes
              FROM recommended_route WHERE state IN '.self::SERVED_STATES.' ORDER BY id',
         );
 
         $routes = [];
         foreach ($rows as $row) {
             $attrs = $this->decode($row['attributes']);
-            $route = ['name' => $row['name']];
+            $route = ['id' => (int) $row['id'], 'name' => $row['name']];
             if (isset($attrs['season'])) {
                 $route['season'] = $attrs['season'];
             }

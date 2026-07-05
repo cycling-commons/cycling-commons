@@ -755,7 +755,7 @@
       const cities = RIDE_CITIES[r.name] || ['Spa'];
       const startM = 350 + (i*137)%401, endM = 350 + (i*211+90)%401;   // 350–750 m, varied but stable per ride
       return {
-      name:r.name, headline:`${r.km} km · ${r.difficulty.label}`, cur:false, edit:'ride',
+      id:r.id, name:r.name, headline:`${r.km} km · ${r.difficulty.label}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities,                                              // searchable start/through towns
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
@@ -778,7 +778,7 @@
   // populate A · Road surface from the hand-picked OSM segments
   if(window.CC_SURFACE){
     layerByKey['surface'].features = CC_SURFACE.segments.map(s=>({
-      name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
+      id:s.id, name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
       geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
       photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
       source:'OSM (surface=*)',
