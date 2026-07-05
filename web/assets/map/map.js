@@ -1049,7 +1049,7 @@
     // Same edit-bridge rule as the "Edit this item" link below (spec §6/§8):
     // the add-photo CTA only ever binds to the item's real DB id — no id, no
     // link (a name-slug guess is never a faithful target).
-    const addPhoto = f.id!=null ? `<a class="cc-d-addphoto" href="/improve?item=${f.id}&name=${encodeURIComponent(f.name)}&type=${layer.letter}&add=photo" aria-label="Add a photo of ${f.name}">
+    const addPhoto = f.id!=null ? `<a class="cc-d-addphoto" href="/improve?item=${f.id}&name=${encodeURIComponent(f.name)}&type=${layer.letter}&add=photo" aria-label="Add a photo of ${escPend(f.name)}">
       <svg class="cc-ap-cam" viewBox="0 0 48 36" width="42" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="1.5" y="7.5" width="45" height="27" rx="4"/><path d="M16 7.5l3-4h10l3 4" stroke-linejoin="round"/><circle cx="24" cy="21.5" r="8"/><path d="M40.5 13h.01" stroke-width="3" stroke-linecap="round"/>
       </svg>
@@ -1057,9 +1057,9 @@
       <span class="cc-ap-b">＋ Add the first photo</span>
     </a>` : '';
     const photo = pl.length ? `<figure class="cc-d-photo">
-      <img src="${pl[0].sm}" alt="${f.name}" data-i="0" />
+      <img src="${pl[0].sm}" alt="${escPend(f.name)}" data-i="0" />
       <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
-      ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${p.sm}" data-i="${i}" alt="${f.name} — photo ${i+1}" />`).join('')}</div>` : ''}
+      ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${p.sm}" data-i="${i}" alt="${escPend(f.name)} — photo ${i+1}" />`).join('')}</div>` : ''}
     </figure>` : addPhoto;
     let recs = f.record;
     if(layer.key==='climbs'){                          // climbs share suitability rows
@@ -1128,7 +1128,7 @@
     const act = edit + vote;
     const desc = f.desc ? `<p class="cc-d-desc">${f.desc}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
-      <div class="cc-d-name">${f.name}</div>${cur}${photo}${desc}${diff}${elev}${grad}
+      <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
       <div class="cc-d-src">Source · ${String(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}${moderate}`;
   }
@@ -1221,7 +1221,7 @@
     const c = CITIES[name]; if(!c) return;
     const near = nearbyItems(c.ll, 5);
     const list = near.length
-      ? near.map((n,i)=>`<li><button class="cc-near" data-i="${i}"><span class="cc-near-k" style="background:${n.layer.color};color:${txtOn(n.layer.color)}">${n.layer.letter}</span><span class="cc-near-nm">${n.f.name}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('')
+      ? near.map((n,i)=>`<li><button class="cc-near" data-i="${i}"><span class="cc-near-k" style="background:${n.layer.color};color:${txtOn(n.layer.color)}">${n.layer.letter}</span><span class="cc-near-nm">${escPend(n.f.name)}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('')
       : '<li class="cc-near-empty">Nothing mapped here yet — be the first to add something.</li>';
     document.getElementById('drawerBody').innerHTML =
       `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ City</span>
