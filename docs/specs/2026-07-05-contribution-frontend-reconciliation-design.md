@@ -52,6 +52,12 @@ Move the ~24 hand-authored pins into the database as real `item` rows via a repe
 ### W4 — Hazards intake (decision-gated)
 Either wire an intake form + flow for `ItemType::Hazards` so hazards become collectable/editable like other types, or keep them explicitly display-only. Gated on **D3**.
 
+### W5 — Change history is visible (NEW, requested 2026-07-05)
+Phase B records every applied change in `change_history` (append-only, per-field old→new, who, when), but **nothing surfaces it** — a rider/curator can't see what changed. Add a per-item change log to the UI: for a given item, show its history (field, old value → new value, who [anonymised rider hash], when), newest first. Placement: at minimum in the item drawer (a "Recent changes" section) and/or a dedicated item-history view; also visible to the contributor for their own edits. Read-only; sourced from `change_history` via a small read model/endpoint. Acceptance: after an approved edit, the item's change log shows that field's old→new with attribution and timestamp, and it is easy to spot at a glance.
+
+### W6 — Source/provenance is always clear (NEW, requested 2026-07-05)
+Every item and, where meaningful, every displayed fact must clearly show **where it came from** — OSM, Tourisme Wallonie/PIVOT, pipeline-derived (`auto`), a one-tap confirmation, or a rider edit/manual add. Provenance already exists in the data (per-attribute `method` tags + a source line) but is applied inconsistently and is absent for user/manual sources. Make it uniform across all layers and item types, and make user/manual contributions (incl. the W3-migrated pins and any approved edit) legibly attributed. This pairs naturally with W5 (history = *who changed what*; provenance = *where a fact came from*).
+
 ## 5. Decisions (resolved 2026-07-05)
 
 - **D1 — Demo pin migration → SEED as `source='manual'`.** Migrate the ~24 pins with their exact hand-authored values, tagged `source='manual'` — i.e. exactly as if a rider had added them by hand (real items, in the normal `submitted`→moderated→served lifecycle or seeded straight to `unverified`/`verified` as appropriate). Requires an `ItemSource::Manual` case (or equivalent). None dropped.
@@ -76,10 +82,12 @@ So: keep Phase C focused on making the existing create/edit/curated system faith
 - Changing the import pipeline for OSM/PIVOT data.
 
 ## 8. Acceptance criteria
-- **W1:** the wizard's Review step lists every non-empty detail/extra field with its entered value; verified for at least climbs and bike-services.
+- **W1 (shipped):** the wizard's Review step lists every non-empty detail/extra field with its entered value; the wizard header names the exact item being edited on every step.
 - **W2:** for each item type, the edit form can edit every attribute the drawer presents as data; no drawer row is a per-item literal; a round-trip edit (submit → approve) updates every such field with history.
-- **W3:** `/map/catalog.json` and the map contain zero hardcoded `CATALOG` demo features; every visible pin has a DB `item` and an edit button; the seeder is repeatable and idempotent.
-- **W4:** resolved per D3.
+- **W3:** `/map/catalog.json` and the map contain zero hardcoded `CATALOG` demo features; every visible pin has a DB `item` (tagged `source='manual'`) and an edit button; the seeder is repeatable and idempotent.
+- **W4:** resolved per D3 (deferred).
+- **W5:** after an approved edit, the item's change log is visible in the UI (field, old→new, who, when), newest first, and is easy to spot.
+- **W6:** every layer/item type renders provenance consistently; user/manual contributions and approved edits are legibly attributed.
 
 ## 9. Next step
 On approval (and D1–D4 answered), a task-by-task implementation plan follows in `docs/plans/`, executed with the same subagent-driven review rigor as Phase B. W1 can be split out and shipped immediately as a standalone correctness fix if you want a fast win before the larger reconciliation.
