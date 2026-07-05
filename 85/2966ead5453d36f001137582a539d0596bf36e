@@ -1,0 +1,36 @@
+web/src/Controller/ProfileController.php
+  s_38d02ca6d8ff2e::t_1d98cc9c7e0a40 7,10
+  s_38d02ca6d8ff2e::t_2ba5a3c00dd5cf 27,37-41
+web/templates/profile/show.html.twig
+  s_38d02ca6d8ff2e::t_c062c587ec0ff2 61-80
+docs/specs/2026-07-02-map-based-moderation-design.md
+  s_38d02ca6d8ff2e::t_696c74f290f458 121-125
+web/translations/messages.en.yaml
+  s_38d02ca6d8ff2e::t_d4aecaa475bbc0 1013-1022
+web/translations/messages.de.yaml
+  s_38d02ca6d8ff2e::t_f0e59da9f2c920 1013-1022
+web/translations/messages.fr.yaml
+  s_38d02ca6d8ff2e::t_61f4e97be3e031 1013-1022
+docs/specs/2026-07-03-catalog-data-model-and-import-design.md
+  s_38d02ca6d8ff2e::t_fc6790861624de 153
+web/translations/messages.nl.yaml
+  s_38d02ca6d8ff2e::t_20d595370d00ca 1013-1022
+web/tests/Profile/MyContributionsTest.php
+  s_38d02ca6d8ff2e::t_99fcb9549ed232 1-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "852966ead5453d36f001137582a539d0596bf36e",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
