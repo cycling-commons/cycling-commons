@@ -970,7 +970,13 @@
               const sEl=document.createElement('div');
               sEl.className='cc-steep'; sEl.textContent=f.steep.pct;
               sEl.title=`Steepest pitch · ${f.steep.pct}`;
-              sEl.addEventListener('click',()=>{ openDrawer(layer,f); flyToPin([f.steep.at[1],f.steep.at[0]]); });
+              // stopPropagation: without it this click bubbles to the map container and
+              // ALSO fires the underlying route/line layer's own map.on('click', id, …)
+              // handler (MapLibre hit-tests canvas-rendered layers under DOM markers
+              // regardless of what DOM element the click actually landed on) — which can
+              // open a second, unrelated feature's drawer right behind this one and win
+              // the C1-T3 history race with an empty (wrong-item) response. See loadItemHistory.
+              sEl.addEventListener('click',e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin([f.steep.at[1],f.steep.at[0]]); });
               const sm=new maplibregl.Marker({element:sEl,anchor:'center'})
                 .setLngLat([f.steep.at[1],f.steep.at[0]]).addTo(map);
               markers.push(sm);
@@ -982,7 +988,9 @@
           el.setAttribute('aria-label', `${f.name} — ${f.headline}`);
           const start = f.route ? f.route[0] : f.geom.ll;   // climbs: pin sits at the start (foot)
           const lngLat=[start[1],start[0]];
-          el.addEventListener('click', ()=>{ openDrawer(layer,f); flyToPin(lngLat); });
+          // stopPropagation: see the note above the steep-marker's click handler —
+          // same click-bleed-through-to-the-map-canvas issue, same fix.
+          el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin(lngLat); });
           el.addEventListener('mouseenter', ()=>showTip(`${f.name} · ${f.headline}`, lngLat));
           el.addEventListener('mouseleave', hideTip);
           el.addEventListener('focus', ()=>showTip(`${f.name} · ${f.headline}`, lngLat));
@@ -1176,13 +1184,19 @@
     const myReq = ++_historyReq;
     fetch('/map/item/' + itemId + '/history')
       .then(r => r.ok ? r.json() : null)
+      .catch(()=>null)   // network/HTTP failure — enhancement only, stays silent (no exception to report)
       .then(data => {
         if(myReq !== _historyReq || !data) return;   // stale response — a newer drawer has since opened
         const slot = document.getElementById('cc-d-hist-slot');
         if(!slot) return;                              // drawer content changed/closed under us
-        slot.innerHTML = renderHistoryList(data.history);
-      })
-      .catch(()=>{});   // enhancement only — silent on failure
+        // A render bug here must not be indistinguishable from "no history yet" —
+        // only the fetch/network stage above is allowed to fail silently.
+        try {
+          slot.innerHTML = renderHistoryList(data.history);
+        } catch(e){
+          console.error('Recent-changes history failed to render', e);
+        }
+      });
   }
   function mapToast(msg){
     let t=document.getElementById('cc-toast');
