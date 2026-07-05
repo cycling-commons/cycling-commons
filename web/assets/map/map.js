@@ -1104,13 +1104,29 @@
       <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
       ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${p.sm}" data-i="${i}" alt="${escPend(f.name)} — photo ${i+1}" />`).join('')}</div>` : ''}
     </figure>` : addPhoto;
-    let recs = f.record;
-    if(layer.key==='climbs'){                          // climbs share suitability rows
-      recs = recs.concat([
-        {label:'Road quality', value:f.sq||'—'},
-        {label:'Bike type', value:'Every type'},
-        {label:'Handbike', value:'⚠ Steep — challenging for handbikes', warn:true}
-      ]);
+    let recs = f.record || [];
+    if(layer.key==='climbs'){
+      // C2-T6 (spec §W2): every climb row an editable attribute, no per-item
+      // literals ('Bike type'/'Handbike' were hardcoded filler, identical for
+      // every climb — deleted, D2). Attributes flow via CatalogProvider::climbs()
+      // (CC_CLIMBS spreads item.attributes onto the bare feature) -> window.CC_CLIMBS
+      // -> layerByKey['climbs'].features -> here, so f.<attr> is always the
+      // live, editable value. Some older/imported climbs still carry a
+      // pre-baked f.record with stale Surface/gradient/Famous-for strings
+      // (wallonia harvest + hand-authored CATALOG fixtures) — where an
+      // attribute-sourced row exists, it REPLACES the baked one by label so an
+      // approved edit is never shadowed by a stale duplicate.
+      const attrRows = [];
+      if(f.surface) attrRows.push({label:'Surface', value:f.surface});
+      if(f.avgGradient) attrRows.push({label:'Average gradient', value:f.avgGradient});
+      if(f.maxGradient) attrRows.push({label:'Max gradient', value:f.maxGradient});
+      if(f.sq) attrRows.push({label:'Road quality', value:f.sq});
+      if(f.tr) attrRows.push({label:'Traffic', value:f.tr});
+      if(f.effort) attrRows.push({label:'Effort', value:f.effort});
+      if(f.famousFor) attrRows.push({label:'Famous for', value:f.famousFor});
+      if(f.approach) attrRows.push({label:'Approach', value:f.approach});
+      const attrLabels = new Set(attrRows.map(r=>r.label));
+      recs = recs.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
     }
     const rows = recs.map(r => {
       const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`).join('') : '';

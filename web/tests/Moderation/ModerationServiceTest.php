@@ -110,6 +110,37 @@ final class ModerationServiceTest extends KernelTestCase
         self::assertSame(['hours', 'pump'], [$history[0]->getField(), $history[1]->getField()]);
     }
 
+    /**
+     * C2-T6 (spec §W2): the climb form↔drawer reconciliation round-trips —
+     * an approved 'effort' edit updates the item's attribute and leaves a
+     * change_history row (shows up in the C1-T3 drawer history view).
+     */
+    public function testApproveEditUpdatesClimbEffortWithHistory(): void
+    {
+        $item = (new Item())->setLetter('B')->setName('Côte du Test Effort')
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::User)->setSourceRef('sub:effort')
+            ->setAttributes(['effort' => 'Steady', 'famousFor' => 'Nothing yet']);
+        $this->em->persist($item);
+        $this->em->flush();
+        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('B')->setUserId(5)
+            ->setItemId($item->getId())->setTitle('Côte du Test Effort')
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setChanges(['effort' => ['was' => 'Steady', 'now' => 'Very steep']])->setPayload([]);
+        $this->em->persist($sub);
+        $this->em->flush();
+
+        $this->service->decide($sub->getId(), 'approve', $this->curator, null);
+
+        $this->em->refresh($item);
+        self::assertSame('Very steep', $item->getAttributes()['effort']);
+
+        $history = $this->em->getRepository(ChangeHistory::class)->findOneBy(['itemId' => $item->getId(), 'field' => 'effort']);
+        self::assertNotNull($history);
+        self::assertSame('Steady', $history->getOldValue());
+        self::assertSame('Very steep', $history->getNewValue());
+    }
+
     public function testStaleWasIsCorrectedFromLiveItem(): void
     {
         // Item moved on since the snapshot: current hours is 'weekends only'.

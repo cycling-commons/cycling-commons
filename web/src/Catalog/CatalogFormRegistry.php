@@ -47,6 +47,12 @@ final class CatalogFormRegistry
                 fields: [
                     CatalogField::text('name', 'Name'),
                     CatalogField::select('surface', 'Surface', ['Smooth asphalt', 'Asphalt', 'Worn asphalt', 'Cobbles', 'Gravel']),
+                    // sq/tr: same vocab as AddClimbType's fSurfaceQ/fTraffic
+                    // (App\Contribution\CatalogContributionService::CLIMB_FIELDS)
+                    // — the drawer already shows these per-climb (map.js's
+                    // 'Road quality'/'Traffic' rows), C2-T6 makes them editable.
+                    CatalogField::select('sq', 'Road quality', ['Smooth', 'Good', 'Worn', 'Rough', 'Broken / loose']),
+                    CatalogField::select('tr', 'Traffic', ['Traffic-free', 'Quiet', 'Moderate', 'Busy']),
                     CatalogField::text('avgGradient', 'Average gradient (%)'),
                     CatalogField::text('maxGradient', 'Max gradient (%)'),
                     CatalogField::select('effort', 'Effort', ['Steady', 'Challenging', 'Tough', 'Very steep']),
