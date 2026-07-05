@@ -156,6 +156,11 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame(['name' => 'Test U.', 'public' => true], $route['uploader']);
         self::assertSame('Tester', $route['photo']['credit']);
         self::assertSame('auto', $route['srcType']);                          // W6
+        // C2-T7 (spec §W2): QualityRides registry attributes (dominantSurface,
+        // quietness, etc.) forward the same way difficulty/uploader/photo
+        // always have — an approved improve-form edit must reach the client.
+        self::assertSame('Mixed', $route['dominantSurface']);
+        self::assertSame('4', $route['quietness']);
         self::assertSame([[50.5, 4.5, 'summer'], [50.6, 4.6, 'winter']], $p['L']);
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
         self::assertIsInt($route['id']);

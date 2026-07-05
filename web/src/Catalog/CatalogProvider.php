@@ -200,7 +200,15 @@ final class CatalogProvider
                 $route['elev'] = $attrs['elev'];
             }
             $route['gain'] = $row['ascent_m'];
-            foreach (['difficulty', 'uploader', 'photo'] as $key) {
+            // C2-T7 (spec §W2): the QualityRides registry's suitability/rating
+            // fields (CatalogFormRegistry::for(QualityRides)) — forwarded the same
+            // way as difficulty/uploader/photo so an approved improve-form edit
+            // reaches map.js's route drawer instead of being silently dropped.
+            foreach ([
+                'difficulty', 'uploader', 'photo',
+                'dominantSurface', 'note', 'quietness', 'scenic', 'friendliness',
+                'bikeTypes', 'handbike', 'gradientLimited', 'bestDirection',
+            ] as $key) {
                 if (isset($attrs[$key])) {
                     $route[$key] = $attrs[$key];
                 }

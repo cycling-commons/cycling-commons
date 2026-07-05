@@ -99,7 +99,12 @@ final class CatalogFormRegistry
                 fields: [
                     CatalogField::text('name', 'Name'),
                     CatalogField::text('town', 'Town / commune'),
-                    CatalogField::text('website', 'Website', placeholder: 'https://… (the place’s own site)'),
+                    // C2-T7 (spec §W2): keyed 'web', not 'website' — 'web' is the
+                    // shared vocabulary key every OSM-harvested stay already carries
+                    // (AttributeVocabulary::COMMON) and the one osmDrawer already
+                    // renders as the "Website" row in map.js — an edited value must
+                    // land in the same key the drawer reads, or the edit is invisible.
+                    CatalogField::text('web', 'Website', placeholder: 'https://… (the place’s own site)'),
                     CatalogField::select('bikeStorage', 'Secure bike storage', ['Yes — locked room', 'Yes — garage/shed', 'On request', 'No']),
                     CatalogField::select('dryingWashing', 'Drying / washing for kit', self::UNKNOWN_YES_NO),
                     CatalogField::text('bookingLink', 'Booking link', placeholder: 'https://… (booking platform, if any)'),
@@ -185,7 +190,12 @@ final class CatalogFormRegistry
                 fields: [
                     CatalogField::text('rideName', 'Ride name', placeholder: 'e.g. Spa · Sankt Vith'),
                     CatalogField::select('difficulty', 'Difficulty', ['Gentle', 'Moderate', 'Hard', 'Very hard']),
-                    CatalogField::select('bestSeason', 'Best season', ['Spring', 'Summer', 'Autumn', 'Winter', 'Any']),
+                    // C2-T7 (spec §W2): keyed 'season', not 'bestSeason' — 'season' is
+                    // the key CatalogProvider::routes() already reads/serves as
+                    // route.season and every imported/harvested route already carries;
+                    // an edited value must land there or map.js's Season row (and the
+                    // provider's forwarding) never sees it.
+                    CatalogField::select('season', 'Best season', ['Spring', 'Summer', 'Autumn', 'Winter', 'Any']),
                     CatalogField::select('dominantSurface', 'Dominant surface', ['Asphalt', 'Mixed', 'Gravel']),
                     CatalogField::textarea('note', 'Note for riders', 'What is this loop like?'),
                 ],

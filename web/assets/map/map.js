@@ -223,6 +223,30 @@
 
   // registry of bulk-OSM dot layers so render() can promote confirmed (simulated) points to icon pins
   const osmLayers = {};
+  // C2-T7 (spec §W2): per-letter registry attributes (CatalogFormRegistry::for())
+  // worth surfacing as real drawer rows for the bulk-OSM point layers, so an
+  // approved improve-form edit is visible in the drawer itself, not only in the
+  // "Recent changes" history feed. [attrKey, label] — label matches the form
+  // field's own label text. Free-text "anything to correct?" intake fields
+  // (climbs' 'correction') are intentionally excluded, same as C2-T6; genuine
+  // note/description fields ARE included, since they read as display content.
+  // 'type' entries dedup against the generic Type row below (by label) when a
+  // rider has set the curated categorical value.
+  const POI_ATTR_FIELDS = {
+    services:[['pumpValve','Pump valve'],['openingHours','Opening hours'],['tools','Tools available'],
+      ['workStand','Work stand?'],['chainTool','Chain tool?'],['ebikeCharging','E-bike charging?']],
+    stays:[['bikeStorage','Secure bike storage'],['dryingWashing','Drying / washing for kit'],
+      ['bookingLink','Booking link'],['note','Note for riders'],['pets','Pets allowed?'],
+      ['meals','Meals / breakfast?'],['toolsToBorrow','Tools to borrow?'],['accessibility','Accessibility']],
+    transit:[['bikesOnBoard','Bikes on board'],['stepFree','Step-free access'],['bikeParking','Bike parking at station'],
+      ['note','Note for riders'],['liftRamp','Lift / ramp?'],['bikeTicket','Bike ticket needed?']],
+    shelter:[['shelterType','Shelter type'],['alwaysAccessible','Always accessible?'],['waterNearby','Water nearby?'],
+      ['note','Note for riders'],['seating','Bench / seating?'],['phoneSignal','Phone signal?']],
+    scenic:[['type','Type'],['bikeAccess','Access for bikes'],['whatYouSee','What can you see?'],
+      ['note','Anything to add?'],['bestLight','Best light / time'],['bench','Bench?']],
+    history:[['type','Type'],['bikeParking','Bike parking'],['note','Anything to add?'],
+      ['openingHours','Opening hours'],['entryFee','Entry fee?'],['cyclingStory','Cycling story / link']]
+  };
   // drawer card for a generic bulk-OSM point — shared by the dot click handler and the confirmed pin
   function osmDrawer(layer, p, ll, src){
     const lbl=(layer||{}).label||'Place';
@@ -234,13 +258,22 @@
     // are corrected here.
     const community = p.srcType==='user' || p.srcType==='manual';
     const originLbl = pivot?'Tourisme Wallonie':(community?sourceLabel(p.srcType):'OSM');
-    const rec=[{label:'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'}];
+    let rec=[{label:'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'}];
     if(p.town) rec.push({label:'Town', value:p.town});
     rec.push({label:'Province', value:p.prov||'Wallonia'});
     if(pivot) rec.push({label:'Listed', value:'Official Tourisme Wallonie registry', method:'official'});
     if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
       if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
     if(p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
+    // C2-T7: registry-attribute rows for this layer, replacing any baked/generic
+    // row of the same label (e.g. a curated 'type' overriding the raw OSM 'Type').
+    const attrFields = POI_ATTR_FIELDS[(layer||{}).key];
+    if(attrFields){
+      const attrRows=[];
+      attrFields.forEach(([k,label])=>{ if(p[k]) attrRows.push({label, value:p[k]}); });
+      const attrLabels=new Set(attrRows.map(r=>r.label));
+      rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
+    }
     // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
     const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+originLbl, cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
       source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie'
@@ -254,14 +287,25 @@
   }
   // drawer card for a water point — shared by the droplet click handler and the confirmed pin
   function waterDrawer(p, ll){
-    const potable = p.c
-      ? {label:'Potable', value:p.c+' · simulated demo flag (not utility-verified)', method:'demo'}
-      : {label:'Potable', value:'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
+    // C2-T7 (spec §W2): 'potable'/'type' are WaterFood registry fields
+    // (CatalogFormRegistry::for(WaterFood)) — when a rider has set them, they
+    // take priority over the generic OSM-derived guess below (same
+    // dedup-by-label rule as the other POI drawers/climbs).
+    const potable = p.potable
+      ? {label:'Potable', value:p.potable}
+      : p.c
+        ? {label:'Potable', value:p.c+' · simulated demo flag (not utility-verified)', method:'demo'}
+        : {label:'Potable', value:'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
     // C1-T4 (W6): see osmDrawer — a rider-added/edited water point isn't OSM.
     const community = p.srcType==='user' || p.srcType==='manual';
+    const rec=[{label:'Type', value:p.type||p.t||'Drinking water', method: p.type?undefined:'OSM'}, potable,
+      {label:'Verify', value:'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}];
+    if(p.seasonal) rec.push({label:'Seasonal availability', value:p.seasonal});
+    if(p.note) rec.push({label:'Note for riders', value:p.note});
+    if(p.bottleFill) rec.push({label:'Bottle-fill friendly?', value:p.bottleFill});
+    if(p.cost) rec.push({label:'Cost', value:p.cost});
     const d={name:p.n||p.t||'Drinking water', headline:'drinking water · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
-      record:[{label:'Type', value:p.t||'Drinking water', method:'OSM'}, potable,
-        {label:'Verify', value:'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}],
+      record:rec,
       source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
     if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
     return d;
@@ -794,36 +838,61 @@
       // C1-T4 (W6): 'Contributed GPX' is an accurate detail for the pipeline's
       // usual auto-derived routes; a rider-added/edited one gets the plain label.
       source:(r.srcType==='user'||r.srcType==='manual') ? sourceLabel(r.srcType) : 'Contributed GPX (GPS track only)',
-      record:[
-        {label:'Distance', value:r.km+' km'},
-        {label:'Starts at', value:cityLink(cities[0])},
-        {label:'Towns on route', value:cities.map(cityLink).join(' · ')},
-        {label:'Season', value:r.season},
-        {label:'Quietness', value:i%2?'Mixed — some main road':'Quiet — low traffic', method:'auto · tap'},
-        {label:'Scenic rating', value:stars(4+(i%2)), method:'community tap'},
-        {label:'Cycling-friendliness', value:stars(3+(i%3?1:0)), method:'community tap'},
-        {label:'Suitable bikes', value:r.km>90?'Road · e-bike':'Road · gravel · e-bike', method:'community edit'},
-        {label:'Accessibility', value:'Handbike-friendly on the valley sections', method:'community edit'},
-        {label:'Best direction', value:'Clockwise — climbs early', method:'community edit'}
-      ]
+      // C2-T7 (spec §W2): every row below is a real QualityRides registry
+      // attribute (CatalogFormRegistry::for(QualityRides), forwarded by
+      // CatalogProvider::routes()) — the previous Quietness/Scenic
+      // rating/Cycling-friendliness/Suitable bikes/Accessibility/Best direction
+      // rows were index-derived formulas or literals identical for every ride
+      // (the same class of bug C2-T6 fixed for climbs' "Bike type"/"Handbike"
+      // filler) — deleted; only present when a rider (or import) actually set
+      // the attribute.
+      record:(()=>{
+        const rec=[
+          {label:'Distance', value:r.km+' km'},
+          {label:'Starts at', value:cityLink(cities[0])},
+          {label:'Towns on route', value:cities.map(cityLink).join(' · ')}
+        ];
+        if(r.season) rec.push({label:'Season', value:r.season});
+        if(r.dominantSurface) rec.push({label:'Dominant surface', value:r.dominantSurface});
+        if(r.quietness) rec.push({label:'Quietness', value:/^[1-5]$/.test(r.quietness)?stars(Number(r.quietness)):r.quietness});
+        if(r.scenic) rec.push({label:'Scenic rating', value:/^[1-5]$/.test(r.scenic)?stars(Number(r.scenic)):r.scenic});
+        if(r.friendliness) rec.push({label:'Cycling-friendliness', value:/^[1-5]$/.test(r.friendliness)?stars(Number(r.friendliness)):r.friendliness});
+        if(r.bikeTypes) rec.push({label:'Suitable bikes', value:r.bikeTypes});
+        if(r.handbike) rec.push({label:'Handbike-friendly?', value:r.handbike});
+        if(r.gradientLimited) rec.push({label:'Gradient-limited?', value:r.gradientLimited});
+        if(r.bestDirection) rec.push({label:'Best direction', value:r.bestDirection});
+        if(r.note) rec.push({label:'Note', value:r.note});
+        return rec;
+      })()
     };
     });
   }
   // populate A · Road surface from the hand-picked OSM segments
   if(window.CC_SURFACE){
-    layerByKey['surface'].features = CC_SURFACE.segments.map(s=>({
-      id:s.id, name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
-      geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
-      photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
-      // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
-      source:(s.srcType==='user'||s.srcType==='manual') ? sourceLabel(s.srcType) : 'OSM (surface=*)',
-      record:[
+    layerByKey['surface'].features = CC_SURFACE.segments.map(s=>{
+      const rec=[
         {label:'Surface', value:s.surface, method:'OSM'},
         {label:'Smoothness', value:s.smoothness, method:'OSM'},
         {label:'Width', value:s.width},
         {label:'Traffic', value:s.traffic}
-      ]
-    }));
+      ];
+      // C2-T7 (spec §W2): RoadSurface registry fields (CatalogFormRegistry::
+      // for(RoadSurface)) already served via item.attributes (CatalogProvider::
+      // surfaceSegments() spreads them onto s.<attr>) — rendered when a rider
+      // has set them, so an approved improve-form edit is visible here too.
+      if(s.note) rec.push({label:'Note', value:s.note});
+      if(s.lit) rec.push({label:'Lit at night?', value:s.lit});
+      if(s.segregated) rec.push({label:'Segregated from cars?', value:s.segregated});
+      if(s.seasonalClosure) rec.push({label:'Seasonal closure?', value:s.seasonalClosure});
+      return {
+        id:s.id, name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
+        geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
+        photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
+        // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
+        source:(s.srcType==='user'||s.srcType==='manual') ? sourceLabel(s.srcType) : 'OSM (surface=*)',
+        record:rec
+      };
+    });
   }
   // Curator-only pending submissions (injected by MapController for ROLE_CURATOR only).
   // Off the public map by design — riders never receive window.CC_PENDING.
