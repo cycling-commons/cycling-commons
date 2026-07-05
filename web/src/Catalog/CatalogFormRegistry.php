@@ -49,12 +49,15 @@ final class CatalogFormRegistry
                     CatalogField::select('surface', 'Surface', ['Smooth asphalt', 'Asphalt', 'Worn asphalt', 'Cobbles', 'Gravel']),
                     CatalogField::text('avgGradient', 'Average gradient (%)'),
                     CatalogField::text('maxGradient', 'Max gradient (%)'),
+                    CatalogField::select('effort', 'Effort', ['Steady', 'Challenging', 'Tough', 'Very steep']),
                     CatalogField::textarea('correction', 'Anything to correct?', 'e.g. the foot starts at the bridge, not the square'),
                 ],
                 addFields: [
                     CatalogField::select('waterOnClimb', 'Water on climb?', self::UNKNOWN_YES_NO),
                     CatalogField::text('hairpins', 'Hairpins (count)', placeholder: 'e.g. 3'),
                     CatalogField::select('shade', 'Shade / exposure', ['Unknown', 'Wooded', 'Exposed']),
+                    CatalogField::text('famousFor', 'Famous for', placeholder: 'e.g. La Flèche Wallonne summit finish'),
+                    CatalogField::text('approach', 'Approach', placeholder: 'e.g. From Sougné-Remouchamps (Aywaille)'),
                 ],
             ),
 
@@ -100,6 +103,7 @@ final class CatalogFormRegistry
                     CatalogField::select('pets', 'Pets allowed?', self::UNKNOWN_YES_NO),
                     CatalogField::select('meals', 'Meals / breakfast?', self::UNKNOWN_YES_NO),
                     CatalogField::select('toolsToBorrow', 'Tools to borrow?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('accessibility', 'Accessibility', ['Step-free access', 'Handbike-friendly', 'Wheelchair-accessible', 'Unknown']),
                 ],
             ),
 

@@ -103,6 +103,44 @@ final class CatalogFormRegistryTest extends TestCase
         self::assertContains('Unsigned — use judgement', $potable->choices);
     }
 
+    public function testClimbsCarriesEffortFamousForAndApproach(): void
+    {
+        // C2-T5: real, filterable difficulty/suitability attributes, framed as
+        // "what the climb is like" — replaces the hardcoded drawer decoration.
+        $set = $this->registry->for(ItemType::Climbs);
+        $byName = [];
+        foreach ($set->all() as $f) {
+            $byName[$f->name] = $f;
+        }
+
+        self::assertArrayHasKey('effort', $byName);
+        self::assertSame(FieldKind::Select, $byName['effort']->kind);
+        self::assertSame(['Steady', 'Challenging', 'Tough', 'Very steep'], $byName['effort']->choices);
+
+        self::assertArrayHasKey('famousFor', $byName);
+        self::assertSame(FieldKind::Text, $byName['famousFor']->kind);
+
+        self::assertArrayHasKey('approach', $byName);
+        self::assertSame(FieldKind::Text, $byName['approach']->kind);
+    }
+
+    public function testWhereToSleepCarriesAccessibility(): void
+    {
+        // C2-T5: "disability-friendly stay" rendered as a real, filterable attribute.
+        $set = $this->registry->for(ItemType::WhereToSleep);
+        $byName = [];
+        foreach ($set->all() as $f) {
+            $byName[$f->name] = $f;
+        }
+
+        self::assertArrayHasKey('accessibility', $byName);
+        self::assertSame(FieldKind::Select, $byName['accessibility']->kind);
+        self::assertSame(
+            ['Step-free access', 'Handbike-friendly', 'Wheelchair-accessible', 'Unknown'],
+            $byName['accessibility']->choices,
+        );
+    }
+
     public function testQualityRidesCarriesExperienceRatings(): void
     {
         $set = $this->registry->for(ItemType::QualityRides);
