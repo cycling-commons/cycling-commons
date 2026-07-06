@@ -91,6 +91,10 @@ final class AddClimbTest extends WebTestCase
         self::assertSelectorExists('[name="add_climb[fName]"]');
         // Wizard heading present
         self::assertSelectorTextContains('h1.disp', 'Add a climb');
+        // Shared three-point editor's hidden geometry fields (route/grad/steep) are present
+        self::assertSelectorExists('[name="add_climb[route]"]');
+        self::assertSelectorExists('[name="add_climb[grad]"]');
+        self::assertSelectorExists('[name="add_climb[steep]"]');
     }
 
     // ── Authenticated POST — valid submission ────────────────────────────────

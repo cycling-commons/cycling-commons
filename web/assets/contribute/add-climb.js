@@ -60,7 +60,7 @@
   if (backBtn) backBtn.addEventListener('click', function () { step(cur - 1); });
   if (nextBtn) nextBtn.addEventListener('click', onNext);
 
-  /* ---------- step 1: draw the segment ---------- */
+  /* ---------- step 1: draw the segment (shared three-point editor) ---------- */
   var cmap = new maplibregl.Map({
     container: 'cmap',
     style: 'https://tiles.openfreemap.org/styles/liberty',
@@ -69,13 +69,15 @@
   cmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
   cmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
 
-  var footM = null, topM = null;
+  var editor = null;
   cmap.on('load', function () {
-    cmap.addSource('climb', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-    cmap.addLayer({
-      id: 'climb', type: 'line', source: 'climb',
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#FF5A1F', 'line-width': 4 }
+    editor = window.Cc.mountClimbEditor({
+      map: cmap,
+      hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep') },
+      onChange: function (st) {
+        S.start = st.start; S.summit = st.summit; S.lengthKm = st.lengthKm;
+        setReadout(); refreshGate();
+      }
     });
     addRegionBoundary('Wallonia');
   });
@@ -90,41 +92,14 @@
         var mask = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [world].concat(polys.map(function (p) { return p[0]; })) } };
         cmap.addSource('region-mask', { type: 'geojson', data: mask });
         cmap.addSource('region', { type: 'geojson', data: { type: 'Feature', geometry: g } });
-        cmap.addLayer({ id: 'region-mask', type: 'fill', source: 'region-mask', paint: { 'fill-color': '#101E16', 'fill-opacity': 0.2 } }, 'climb');
-        cmap.addLayer({ id: 'region-line', type: 'line', source: 'region', paint: { 'line-color': '#C8923A', 'line-width': 2.5, 'line-dasharray': [2, 1.4], 'line-opacity': 0.9 } }, 'climb');
+        // Insert below the editor's drawn-route layer so the climb line stays on top.
+        var beforeId = cmap.getLayer('cc-climb-editor-route') ? 'cc-climb-editor-route' : undefined;
+        cmap.addLayer({ id: 'region-mask', type: 'fill', source: 'region-mask', paint: { 'fill-color': '#101E16', 'fill-opacity': 0.2 } }, beforeId);
+        cmap.addLayer({ id: 'region-line', type: 'line', source: 'region', paint: { 'line-color': '#C8923A', 'line-width': 2.5, 'line-dasharray': [2, 1.4], 'line-opacity': 0.9 } }, beforeId);
       }).catch(function () {});
   }
 
-  cmap.on('click', function (e) {
-    var ll = [e.lngLat.lng, e.lngLat.lat];
-    if (!S.start) { S.start = ll; footM = mkMarker(ll, 'foot'); }
-    else if (!S.summit) { S.summit = ll; topM = mkMarker(ll, 'summit'); }
-    else return;
-    drawClimb();
-  });
-
-  function mkMarker(ll, cls) {
-    var fill = cls === 'summit' ? '#FF5A1F' : '#1C3A2A';
-    var wrap = document.createElement('div'); wrap.className = 'cc-marker';
-    wrap.innerHTML =
-      '<svg width="24" height="32" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">' +
-      '<path d="M12 1 C6 1 1 5.6 1 11.4 C1 19 12 31 12 31 C12 31 23 19 23 11.4 C23 5.6 18 1 12 1 Z" ' +
-      'fill="' + fill + '" stroke="#EFE6D4" stroke-width="2"/>' +
-      '<circle cx="12" cy="11" r="3.4" fill="#EFE6D4"/></svg>';
-    return new maplibregl.Marker({ element: wrap, anchor: 'bottom' }).setLngLat(ll).addTo(cmap);
-  }
-
-  function haversineKm(a, b) {
-    var R = 6371;
-    function toR(x) { return x * Math.PI / 180; }
-    var dLat = toR(b[1] - a[1]), dLng = toR(b[0] - a[0]);
-    var s = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(toR(a[1])) * Math.cos(toR(b[1])) * Math.pow(Math.sin(dLng / 2), 2);
-    return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
-  }
-
   function fmt(ll) { return ll ? ll[1].toFixed(3) + '°N ' + ll[0].toFixed(3) + '°E' : '…'; }
-
-  var routeSeq = 0;
 
   function setReadout() {
     var el = document.getElementById('readout');
@@ -134,47 +109,11 @@
     else el.textContent = 'Climb set · ' + (S.lengthKm ? S.lengthKm.toFixed(1) + ' km' : 'measuring…');
   }
 
-  function drawClimb() {
-    if (S.start && S.summit) {
-      var src = cmap.getSource('climb');
-      if (src) src.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [S.start, S.summit] } });
-      S.lengthKm = haversineKm(S.start, S.summit);
-      setReadout(); refreshGate();
-      routeClimb();
-    } else {
-      setReadout(); refreshGate();
-    }
-  }
-
-  function routeClimb() {
-    var seq = ++routeSeq;
-    var a = S.start, b = S.summit;
-    var url = 'https://router.project-osrm.org/route/v1/driving/' + a[0] + ',' + a[1] + ';' + b[0] + ',' + b[1] + '?overview=full&geometries=geojson';
-    fetch(url).then(function (r) { return r.json(); }).then(function (d) {
-      if (seq !== routeSeq || !S.start || !S.summit) return;
-      if (d.code !== 'Ok' || !d.routes || !d.routes[0]) return;
-      var route = d.routes[0];
-      var src = cmap.getSource('climb');
-      if (src) src.setData({ type: 'Feature', geometry: route.geometry });
-      S.lengthKm = route.distance / 1000;
-      setReadout();
-    }).catch(function () {});
-  }
-
-  function resetClimb() {
-    S.start = S.summit = null; S.lengthKm = 0;
-    if (footM) { footM.remove(); footM = null; }
-    if (topM) { topM.remove(); topM = null; }
-    var src = cmap.getSource('climb');
-    if (src) src.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
-    drawClimb();
-  }
-
   var resetBtn = document.getElementById('reset');
   if (resetBtn) {
-    resetBtn.addEventListener('click', resetClimb);
+    resetBtn.addEventListener('click', function () { if (editor) editor.reset(); });
     resetBtn.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); resetClimb(); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (editor) editor.reset(); }
     });
   }
 
