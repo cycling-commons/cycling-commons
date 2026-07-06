@@ -1,0 +1,48 @@
+web/assets/contribute/climb-editor.js
+  s_38d02ca6d8ff2e::t_d8896dccd8d2ad 98
+  s_38d02ca6d8ff2e::t_e3903e6f362dd7 93
+  s_38d02ca6d8ff2e::t_f35afe0cec254a 82-84
+  s_38d02ca6d8ff2e::t_d535a40e9faf14 17-23
+  s_38d02ca6d8ff2e::t_8de4e2d9097dbf 169
+web/assets/contribute/improve.js
+  s_38d02ca6d8ff2e::t_87fceb86a3fdc5 348
+  s_38d02ca6d8ff2e::t_1d3827011a97de 152-159,161-181,183-215,217-229,231-240,242,244-248,253-275
+web/translations/messages.en.yaml
+  s_38d02ca6d8ff2e::t_975159fd75ea58 1128-1130
+web/translations/messages.de.yaml
+  s_38d02ca6d8ff2e::t_03dc2048b38338 1128-1130
+web/templates/contribute/improve.html.twig
+  s_38d02ca6d8ff2e::t_935324b52e30c2 41,43
+  s_38d02ca6d8ff2e::t_c8561d2ddaac16 42,44
+  s_38d02ca6d8ff2e::t_8fa128af62ad90 175-182,191-196
+  s_38d02ca6d8ff2e::t_e9a0bdd9a50a4d 339-343
+web/tests/Contribution/ImproveBindingTest.php
+  s_38d02ca6d8ff2e::t_d50f3451edf7b2 256-369
+web/translations/messages.fr.yaml
+  s_38d02ca6d8ff2e::t_8c4606b80beccb 1128-1130
+web/src/Contribution/CatalogContributionService.php
+  s_38d02ca6d8ff2e::t_59051f61b0ff28 136-149
+web/src/Form/ImproveType.php
+  s_38d02ca6d8ff2e::t_cf9bd49a4a41b9 98-110
+web/translations/messages.nl.yaml
+  s_38d02ca6d8ff2e::t_ba425a9f4cbc5d 1128-1130
+web/templates/contribute/add_climb.html.twig
+  s_38d02ca6d8ff2e::t_52f7289168324c 144-146
+  s_38d02ca6d8ff2e::t_39795f534698c1 40-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e14ebe2b9a47683480c7584141b7b899e831b1b7",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
