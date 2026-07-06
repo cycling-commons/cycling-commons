@@ -11,27 +11,84 @@
     return out;
   }
 
-  // Bucket the per-point gradients into ~11 bars (like the demo `grad`).
-  function toBars(elevs, pts, bars) {
-    var seg = [];
-    for (var i = 1; i < elevs.length; i++) {
-      var d = haversineM(pts[i - 1], pts[i]);
-      seg.push(d > 0 ? ((elevs[i] - elevs[i - 1]) / d) * 100 : 0);
-    }
-    var out = [], per = Math.max(1, Math.floor(seg.length / bars));
-    for (var b = 0; b < seg.length; b += per) {
-      var slice = seg.slice(b, b + per);
-      out.push(Math.round(slice.reduce(function (a, x) { return a + x; }, 0) / slice.length));
-    }
-    return out;
-  }
-
   function haversineM(a, b) {
     var R = 6371000, tR = function (x) { return x * Math.PI / 180; };
     var dLat = tR(b[1] - a[1]), dLng = tR(b[0] - a[0]);
     var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(tR(a[1])) * Math.cos(tR(b[1])) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
     return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+  }
+
+  // Cumulative along-route distance for each sampled point (meters), dist[0] === 0.
+  function cumulativeDistances(pts) {
+    var d = [0];
+    for (var i = 1; i < pts.length; i++) d.push(d[i - 1] + haversineM(pts[i - 1], pts[i]));
+    return d;
+  }
+
+  // Interpolate elevation + coordinate at a given along-route distance.
+  function atDistance(pts, elevs, cum, target) {
+    var n = cum.length;
+    if (target <= cum[0]) return { elev: elevs[0], coord: pts[0] };
+    if (target >= cum[n - 1]) return { elev: elevs[n - 1], coord: pts[n - 1] };
+    for (var i = 1; i < n; i++) {
+      if (cum[i] >= target) {
+        var d0 = cum[i - 1], d1 = cum[i];
+        var t = d1 > d0 ? (target - d0) / (d1 - d0) : 0;
+        return {
+          elev: elevs[i - 1] + t * (elevs[i] - elevs[i - 1]),
+          coord: [
+            pts[i - 1][0] + t * (pts[i][0] - pts[i - 1][0]),
+            pts[i - 1][1] + t * (pts[i][1] - pts[i - 1][1])
+          ]
+        };
+      }
+    }
+    return { elev: elevs[n - 1], coord: pts[n - 1] };
+  }
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  // ~11 equal-distance bins over the whole route; each bar averages out point
+  // noise by spanning a real chunk of distance instead of two adjacent samples.
+  function toBars(pts, elevs, cum, bars) {
+    var total = cum[cum.length - 1];
+    var out = [];
+    if (!(total > 0)) {
+      for (var b0 = 0; b0 < bars; b0++) out.push(0);
+      return out;
+    }
+    var binDist = total / bars;
+    for (var b = 0; b < bars; b++) {
+      var s = atDistance(pts, elevs, cum, b * binDist);
+      var e = atDistance(pts, elevs, cum, (b + 1) * binDist);
+      var g = ((e.elev - s.elev) / binDist) * 100;
+      out.push(clamp(Math.round(g), -35, 35));
+    }
+    return out;
+  }
+
+  // Slide a ~150m window along the route and take the steepest sustained
+  // gradient, instead of a single (noise-prone) adjacent-point delta.
+  function steepestWindow(pts, elevs, cum) {
+    var total = cum[cum.length - 1];
+    if (!(total > 0)) return { g: 0, coord: pts[0] };
+    var win = Math.min(150, total);
+    var maxG = 0, maxCoord = pts[0];
+    for (var i = 0; i < pts.length; i++) {
+      var startD = cum[i], endD = startD + win;
+      if (endD > total) { endD = total; startD = Math.max(0, total - win); }
+      var dist = endD - startD;
+      if (dist <= 0) continue;
+      var s = atDistance(pts, elevs, cum, startD);
+      var e = atDistance(pts, elevs, cum, endD);
+      var g = ((e.elev - s.elev) / dist) * 100;
+      if (g > maxG) {
+        maxG = g;
+        maxCoord = atDistance(pts, elevs, cum, (startD + endD) / 2).coord;
+      }
+    }
+    return { g: maxG, coord: maxCoord };
   }
 
   window.Cc.profileFromRoute = function (coords) {
@@ -45,15 +102,12 @@
       if (!d || !Array.isArray(d.elevation) || d.elevation.length !== pts.length) return null;
       var elevs = d.elevation;
       if (elevs.some(function (e) { return e == null; })) return null;
-      var grad = toBars(elevs, pts, 11);
-      // steepest = max per-point gradient
-      var maxG = 0, maxI = 1;
-      for (var i = 1; i < elevs.length; i++) {
-        var dd = haversineM(pts[i - 1], pts[i]);
-        var g = dd > 0 ? ((elevs[i] - elevs[i - 1]) / dd) * 100 : 0;
-        if (g > maxG) { maxG = g; maxI = i; }
-      }
-      return { grad: grad, steep: { at: pts[maxI], pct: '~' + Math.round(maxG) + '%' } };
+      var cum = cumulativeDistances(pts);
+      var grad = toBars(pts, elevs, cum, 11);
+      var steep = steepestWindow(pts, elevs, cum);
+      // Sanity clamp: real cycling ramps rarely exceed ~35%; anything higher is DEM noise.
+      var pct = clamp(Math.round(steep.g), 0, 35);
+      return { grad: grad, steep: { at: steep.coord, pct: '~' + pct + '%' } };
     }).catch(function () { return null; });
   };
 })();
