@@ -63,6 +63,9 @@ final class ClimbGeometry
             if (!\is_array($pair) || 2 !== \count($pair) || !\is_numeric($pair[0] ?? null) || !\is_numeric($pair[1] ?? null)) {
                 throw new \InvalidArgumentException('each route point must be [lat,lng]');
             }
+            if (!is_finite((float) $pair[0]) || !is_finite((float) $pair[1])) {
+                throw new \InvalidArgumentException('each route point must be [lat,lng]');
+            }
             $out[] = [(float) $pair[0], (float) $pair[1]];
         }
 
@@ -80,6 +83,9 @@ final class ClimbGeometry
             if (!\is_int($n) && !\is_float($n)) {
                 throw new \InvalidArgumentException('grad values must be numeric');
             }
+            if (!is_finite((float) $n)) {
+                throw new \InvalidArgumentException('grad values must be numeric');
+            }
             $out[] = $n;
         }
 
@@ -91,6 +97,9 @@ final class ClimbGeometry
     {
         $at = \is_array($v) ? ($v['at'] ?? null) : null;
         if (!\is_array($at) || 2 !== \count($at) || !\is_numeric($at[0] ?? null) || !\is_numeric($at[1] ?? null)) {
+            throw new \InvalidArgumentException('steep.at must be [lat,lng]');
+        }
+        if (!is_finite((float) $at[0]) || !is_finite((float) $at[1])) {
             throw new \InvalidArgumentException('steep.at must be [lat,lng]');
         }
 

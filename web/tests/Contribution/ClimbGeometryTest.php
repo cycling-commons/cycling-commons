@@ -46,4 +46,22 @@ final class ClimbGeometryTest extends TestCase
         $out = ClimbGeometry::fromPayload(['steep' => '{"at":[50.5,5.2],"pct":"12%"}']);
         self::assertFalse($out['steep']['manual']);
     }
+
+    public function testRejectsNonFiniteRoute(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['route' => '[[1e400,5.24],[50.52,5.25]]']);
+    }
+
+    public function testRejectsNonFiniteGrad(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['grad' => '[1e400]']);
+    }
+
+    public function testRejectsNonFiniteSteepAt(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['steep' => '{"at":[1e400,5.2],"pct":"12%"}']);
+    }
 }
