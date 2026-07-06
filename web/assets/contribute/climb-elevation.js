@@ -37,11 +37,13 @@
   window.Cc.profileFromRoute = function (coords) {
     if (!coords || coords.length < 2) return Promise.resolve(null);
     var pts = sample(coords, 100);
-    var locs = pts.map(function (c) { return c[1] + ',' + c[0]; }).join('|'); // lat,lng
-    var url = 'https://api.opentopodata.org/v1/aster30m?locations=' + encodeURIComponent(locs);
+    var lats = pts.map(function (c) { return c[1]; }).join(',');
+    var lngs = pts.map(function (c) { return c[0]; }).join(',');
+    var url = 'https://api.open-meteo.com/v1/elevation?latitude=' + encodeURIComponent(lats) +
+      '&longitude=' + encodeURIComponent(lngs);
     return fetch(url).then(function (r) { return r.json(); }).then(function (d) {
-      if (!d || d.status !== 'OK' || !d.results) return null;
-      var elevs = d.results.map(function (x) { return x.elevation; });
+      if (!d || !Array.isArray(d.elevation) || d.elevation.length !== pts.length) return null;
+      var elevs = d.elevation;
       if (elevs.some(function (e) { return e == null; })) return null;
       var grad = toBars(elevs, pts, 11);
       // steepest = max per-point gradient
