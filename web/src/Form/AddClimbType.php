@@ -136,6 +136,11 @@ final class AddClimbType extends AbstractType
                 'label' => false,
                 'required' => false,
             ])
+            // Climb shape drawn by the three-point editor (client JS), carried
+            // as JSON. Validated + decoded server-side by ClimbGeometry.
+            ->add('route', HiddenType::class, ['label' => false, 'required' => false])
+            ->add('grad', HiddenType::class, ['label' => false, 'required' => false])
+            ->add('steep', HiddenType::class, ['label' => false, 'required' => false])
         ;
     }
 

@@ -19,7 +19,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ValidAttributes]
 final readonly class SubmissionDraft
 {
-    /** @param array<string, scalar|null> $attributes registry-keyed field values */
+    /**
+     * @param array<string, mixed> $attributes registry-keyed field values;
+     *                                         mostly scalars, but a few
+     *                                         keys (e.g. climb `route`/
+     *                                         `grad`/`steep`, `photos`,
+     *                                         `record`) are structured
+     *                                         arrays — see AttributeVocabulary.
+     */
     public function __construct(
         public ItemType $type,
         #[Assert\NotBlank]

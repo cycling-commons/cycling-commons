@@ -93,6 +93,14 @@ final class CatalogContributionService implements ContributionStubInterface
             }
         }
 
+        try {
+            $attributes += ClimbGeometry::fromPayload($payload);
+        } catch (\InvalidArgumentException) {
+            // Malformed editor output — drop the shape, keep the rest of the
+            // submission. A climb with no route still lands as a point; the
+            // rider can re-draw via the edit flow. (Do not 500 on bad JSON.)
+        }
+
         $draft = new SubmissionDraft(
             type: ItemType::Climbs,
             title: (string) ($payload['fName'] ?? ''),

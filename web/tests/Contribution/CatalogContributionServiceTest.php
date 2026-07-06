@@ -80,6 +80,30 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertSame('Côte du Test', $item->getName());
     }
 
+    public function testClimbSubmissionStoresRouteGradSteep(): void
+    {
+        $receipt = $this->service->submit('climb', [
+            'fName' => 'Test Col', 'lat' => 50.51, 'lng' => 5.24,
+            'route' => '[[50.51,5.24],[50.52,5.25]]', // [lat,lng]
+            'grad' => '[6,9,13]',
+            'steep' => '{"at":[50.517,5.247],"pct":"26%","manual":false}',
+        ], $this->user());
+
+        self::assertTrue($receipt->persisted);
+        self::assertNotNull($receipt->submissionId);
+
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertNotNull($sub->getItemId());
+
+        $item = $this->em->find(Item::class, $sub->getItemId());
+        self::assertNotNull($item);
+        self::assertSame([[50.51, 5.24], [50.52, 5.25]], $item->getAttributes()['route']);
+        self::assertSame([6, 9, 13], $item->getAttributes()['grad']);
+        self::assertSame('26%', $item->getAttributes()['steep']['pct']);
+        self::assertFalse($item->getAttributes()['steep']['manual']);
+    }
+
     public function testVoteStaysUnpersisted(): void
     {
         $receipt = $this->service->submit('vote', ['choice' => 'x'], $this->user());
