@@ -1125,6 +1125,9 @@ js:
   err_mismatch: 'Les mots de passe ne correspondent pas.'
   err_checkbox: 'Veuillez cocher cette case pour continuer.'
   err_terms: 'Vous devez accepter les conditions d''utilisation.'
+  climb_marker_foot: 'DÉBUT · pied'
+  climb_marker_summit: 'FIN · sommet'
+  climb_marker_steepest: 'PLUS RAIDE'
 admin:
   menu:
     dashboard: 'Tableau de bord'

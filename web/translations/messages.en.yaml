@@ -1125,6 +1125,9 @@ js:
   err_mismatch: 'The password fields must match.'
   err_checkbox: 'Please check this box to continue.'
   err_terms: 'You must agree to the terms of service.'
+  climb_marker_foot: 'START · foot'
+  climb_marker_summit: 'END · summit'
+  climb_marker_steepest: 'STEEPEST'
 admin:
   menu:
     dashboard: 'Dashboard'

@@ -253,6 +253,120 @@ final class ImproveBindingTest extends WebTestCase
         self::assertSame(['bikeStorage', 'web'], [$history[0]->getField(), $history[1]->getField()]);
     }
 
+    /**
+     * Task 5: the edit flow wires the shared three-point climb editor
+     * (window.Cc.mountClimbEditor) into `/improve?item=<id>` for a climb
+     * (letter B). ImproveType adds hidden `route`/`grad`/`steep` fields
+     * top-level (not nested under details/extras) so the form renders them
+     * and the template emits `window.CC_ITEM` (letter + the item's current
+     * shape) for improve.js to hydrate the editor from.
+     */
+    public function testImproveFormForClimbRendersThreePointEditorFieldsAndCcItem(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter('B')->setName('Mur de Test Editor')
+            ->setGeom('{"type":"Point","coordinates":[5.24874,50.51426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setSourceRef('manual:mur-de-test-editor')
+            ->setAttributes([
+                'route' => [[50.51426, 5.24874], [50.516, 5.250]],
+                'grad' => [4, 8, 12],
+                'steep' => ['at' => [50.516, 5.250], 'pct' => '12%', 'manual' => false],
+            ]);
+        $em->persist($item);
+
+        $user = (new User())->setEmail('improver-climb-editor@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        $html = (string) $client->getResponse()->getContent();
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('input[name="improve[route]"]')->count(), 'hidden route field renders');
+        self::assertSame(1, $crawler->filter('input[name="improve[grad]"]')->count(), 'hidden grad field renders');
+        self::assertSame(1, $crawler->filter('input[name="improve[steep]"]')->count(), 'hidden steep field renders');
+        self::assertStringContainsString('window.CC_ITEM', $html);
+        self::assertStringContainsString('"letter":"B"', $html);
+        self::assertStringContainsString('50.51426', $html, 'the climb\'s current route is emitted for the editor to hydrate from');
+    }
+
+    /**
+     * Non-climb items must keep the current single-pin Locate untouched —
+     * ImproveType only adds route/grad/steep for letter B, so no hidden
+     * shape fields should render for them.
+     */
+    public function testImproveFormForNonClimbHasNoClimbEditorFields(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · No Editor')
+            ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999009')
+            ->setAttributes(['tools' => 'Repair station']);
+        $em->persist($item);
+
+        $user = (new User())->setEmail('improver-no-editor@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('input[name="improve[route]"]')->count());
+        self::assertSame(0, $crawler->filter('input[name="improve[grad]"]')->count());
+        self::assertSame(0, $crawler->filter('input[name="improve[steep]"]')->count());
+    }
+
+    /**
+     * Task 5: submitImprove decodes route/grad/steep from the top-level
+     * payload (App\Contribution\ClimbGeometry, same shape the shared editor
+     * writes) and merges them into $proposed, so a route edit is both
+     * recorded in the submission's was/now `changes` and applied to
+     * `attributes` on approve — exactly like every other edited field.
+     */
+    public function testImproveRouteChangeIsRecordedInSubmissionChanges(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $oldRoute = [[50.51426, 5.24874], [50.516, 5.250]];
+        $newRoute = [[50.51426, 5.24874], [50.52, 5.26]];
+
+        $item = (new Item())->setLetter('B')->setName('Mur de Test Route Change')
+            ->setGeom('{"type":"Point","coordinates":[5.24874,50.51426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setSourceRef('manual:mur-de-test-route-change')
+            ->setAttributes(['route' => $oldRoute, 'grad' => [4, 8]]);
+        $user = (new User())->setEmail('improver-route-change@test.test');
+        $user->setPassword('x');
+        $em->persist($item);
+        $em->persist($user);
+        $em->flush();
+
+        $receipt = $service->submit('improve', [
+            '_item_id' => $item->getId(), 'type' => 'climbs',
+            'details' => [], 'extras' => [], 'lat' => '50.51426', 'lng' => '5.24874',
+            // Top-level, mirroring what ImproveType's hidden route/grad/steep
+            // fields land as in $data — NOT nested under details/extras.
+            'route' => json_encode($newRoute, \JSON_THROW_ON_ERROR),
+            'grad' => json_encode([4, 8], \JSON_THROW_ON_ERROR),
+        ], $user);
+
+        $sub = $em->find(Submission::class, $receipt->submissionId);
+        self::assertSame(SubmissionType::Edit, $sub->getType());
+        self::assertArrayHasKey('route', $sub->getChanges(), 'the route change is recorded');
+        self::assertSame($oldRoute, $sub->getChanges()['route']['was']);
+        self::assertSame($newRoute, $sub->getChanges()['route']['now']);
+        self::assertArrayNotHasKey('grad', $sub->getChanges(), 'unchanged grad is not snapshotted');
+    }
+
     public function testUnboundImproveShowsExplainerNotForm(): void
     {
         $client = static::createClient();

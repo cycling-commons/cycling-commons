@@ -14,6 +14,13 @@
     var map = opts.map;
     var hidden = opts.hidden || {};
     var onChange = opts.onChange;
+    // Marker labels (foot/summit/steepest) — translatable (i18n Task 5).
+    // Precedence: explicit opts.labels > a template-set global (both the
+    // add-climb and improve templates emit window.CC_EDITOR_LABELS from the
+    // 'js.climb_marker_*' catalog keys) > this English default.
+    var labels = opts.labels || (typeof window !== 'undefined' && window.CC_EDITOR_LABELS) || {
+      foot: 'START · foot', summit: 'END · summit', steepest: 'STEEPEST'
+    };
 
     var state = { start: null, summit: null, steep: null, route: [], grad: [], lengthKm: 0 };
     var footM = null, summitM = null, steepM = null;
@@ -72,9 +79,9 @@
           manual: !!initial.steep.manual
         };
       }
-      if (state.start) { footM = mkMarker(state.start, 'foot', true, 'START · foot'); bindDrag(footM, onFootMoved); }
-      if (state.summit) { summitM = mkMarker(state.summit, 'summit', true, 'END · summit'); bindDrag(summitM, onSummitMoved); }
-      if (state.steep) { steepM = mkMarker(state.steep.at, 'steep', true, 'STEEPEST · ' + state.steep.pct); bindDrag(steepM, onSteepDragged); }
+      if (state.start) { footM = mkMarker(state.start, 'foot', true, labels.foot); bindDrag(footM, onFootMoved); }
+      if (state.summit) { summitM = mkMarker(state.summit, 'summit', true, labels.summit); bindDrag(summitM, onSummitMoved); }
+      if (state.steep) { steepM = mkMarker(state.steep.at, 'steep', true, labels.steepest + ' · ' + state.steep.pct); bindDrag(steepM, onSteepDragged); }
       drawLine();
     }
 
@@ -83,12 +90,12 @@
       var ll = [e.lngLat.lng, e.lngLat.lat];
       if (!state.start) {
         state.start = ll;
-        footM = mkMarker(ll, 'foot', true, 'START · foot');
+        footM = mkMarker(ll, 'foot', true, labels.foot);
         bindDrag(footM, onFootMoved);
         onPointsChanged();
       } else if (!state.summit) {
         state.summit = ll;
-        summitM = mkMarker(ll, 'summit', true, 'END · summit');
+        summitM = mkMarker(ll, 'summit', true, labels.summit);
         bindDrag(summitM, onSummitMoved);
         onPointsChanged();
       } else {
@@ -159,7 +166,7 @@
         if (steepM) { steepM.remove(); steepM = null; }
         return;
       }
-      var label = 'STEEPEST · ' + state.steep.pct;
+      var label = labels.steepest + ' · ' + state.steep.pct;
       if (steepM) {
         steepM.setLngLat(state.steep.at);
         setLabel(steepM, label);

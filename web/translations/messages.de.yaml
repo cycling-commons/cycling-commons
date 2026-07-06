@@ -1125,6 +1125,9 @@ js:
   err_mismatch: 'Die Passwörter stimmen nicht überein.'
   err_checkbox: 'Bitte aktiviere dieses Kästchen, um fortzufahren.'
   err_terms: 'Du musst den Nutzungsbedingungen zustimmen.'
+  climb_marker_foot: 'START · Fuß'
+  climb_marker_summit: 'ENDE · Gipfel'
+  climb_marker_steepest: 'STEILSTE'
 admin:
   menu:
     dashboard: 'Dashboard'

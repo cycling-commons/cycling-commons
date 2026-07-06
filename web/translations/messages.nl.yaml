@@ -1125,6 +1125,9 @@ js:
   err_mismatch: 'De wachtwoorden komen niet overeen.'
   err_checkbox: 'Vink dit vakje aan om door te gaan.'
   err_terms: 'Je moet akkoord gaan met de servicevoorwaarden.'
+  climb_marker_foot: 'START · voet'
+  climb_marker_summit: 'EINDE · top'
+  climb_marker_steepest: 'STEILSTE'
 admin:
   menu:
     dashboard: 'Dashboard'

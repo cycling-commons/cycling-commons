@@ -95,6 +95,19 @@ final class ImproveType extends AbstractType
             ->add('place', HiddenType::class, ['required' => false])
             ->add('mode', HiddenType::class, ['required' => false])
         ;
+
+        // Climb shape drawn by the three-point editor (client JS), carried as
+        // JSON — top-level (not nested under details/extras) so it lands at
+        // $payload['route'|'grad'|'steep'] for App\Contribution\ClimbGeometry
+        // to decode, exactly like AddClimbType (Task 4). Only climbs get
+        // these — other catalog types have no geometry to edit.
+        if (ItemType::Climbs === $type) {
+            $builder
+                ->add('route', HiddenType::class, ['label' => false, 'required' => false])
+                ->add('grad', HiddenType::class, ['label' => false, 'required' => false])
+                ->add('steep', HiddenType::class, ['label' => false, 'required' => false])
+            ;
+        }
     }
 
     /** @param array<string, scalar|null> $current */

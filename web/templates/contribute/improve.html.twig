@@ -38,6 +38,10 @@
   .readout #wzReset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
   .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
   .cc-pin span{font-size:.8rem}
+  /* three-point climb editor markers (foot/summit/steepest), Task 5 */
+  .cc-marker{position:relative;line-height:0;filter:drop-shadow(0 3px 6px rgba(20,22,14,.4))}
+  .cc-mk-label{font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--paper);border:1px solid rgba(20,22,14,.3);border-radius:3px;padding:.12rem .4rem;white-space:nowrap;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:.3rem;box-shadow:0 2px 6px rgba(20,22,14,.3)}
+  .cc-mk-label:empty{display:none}
 
   /* place search */
   .csearch{position:relative}
@@ -168,6 +172,14 @@
   <h1 class="disp">{% if edit_name is defined and edit_name %}{{ edit_name }}{% else %}{{ 'improve.title'|trans }}{% endif %}</h1>
   <p class="sub">{{ 'improve.lead'|trans }}</p>
 
+  {# The bound item's letter + current climb shape (route/grad/steep), for
+     improve.js step 1: a climb (letter B) mounts the shared three-point
+     editor instead of the single-pin Locate (Task 5). Only emitted here —
+     the unbound branch above never reaches this template region. #}
+  <script>window.CC_ITEM = {{ {letter: item_type.letter, route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null)}|json_encode|raw }};</script>
+  {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
+  <script>window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode|raw }};</script>
+
   {{ form_start(form, {attr: {id: 'improve-form', novalidate: 'novalidate'}}) }}
 
   {# Hidden fields filled by client JS #}
@@ -176,6 +188,12 @@
   {{ form_widget(form.place) }}
   {{ form_widget(form.mode) }}
   {{ form_widget(form.subject) }}
+  {% if form.route is defined %}
+    {# Climb shape drawn by the three-point editor (client JS), carried as JSON. #}
+    {{ form_widget(form.route) }}
+    {{ form_widget(form.grad) }}
+    {{ form_widget(form.steep) }}
+  {% endif %}
 
   <ol class="stepper" id="stepper">
     <li class="on" data-s="1" id="step-label-1">{{ 'improve.step1.label'|trans }}</li>
@@ -318,5 +336,10 @@
 {% endblock %}
 {% block body_scripts %}
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{# climb-elevation.js + climb-editor.js must load before improve.js (Task 5: the
+   climb edit path calls window.Cc.mountClimbEditor / window.Cc.profileFromRoute).
+   Harmless no-op include for non-climb items — the scripts only attach to window.Cc. #}
+<script src="{{ asset('contribute/climb-elevation.js') }}"></script>
+<script src="{{ asset('contribute/climb-editor.js') }}"></script>
 <script src="{{ asset('contribute/improve.js') }}"></script>
 {% endblock %}

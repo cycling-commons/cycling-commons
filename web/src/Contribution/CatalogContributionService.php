@@ -133,6 +133,20 @@ final class CatalogContributionService implements ContributionStubInterface
             static fn (mixed $v): bool => null !== $v && '' !== $v,
         );
 
+        // Climb shape (route/grad/steep) is carried as TOP-LEVEL hidden fields
+        // by ImproveType (not nested under details/extras — see ClimbGeometry),
+        // written by the shared three-point editor (Task 5). Decode + merge it
+        // into $proposed so a shape edit shows in $changes (was/now, array
+        // `!==` comparison below) and is applied to $attributes on approve,
+        // the same as the add-climb path (submitClimb).
+        try {
+            foreach (ClimbGeometry::fromPayload($payload) as $k => $v) {
+                $proposed[$k] = $v;
+            }
+        } catch (\InvalidArgumentException) {
+            // Malformed/absent editor output — keep the rest of the edit.
+        }
+
         $currentAttrs = $item->getAttributes();
         $changes = [];
         $attributes = [];

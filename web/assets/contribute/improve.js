@@ -149,92 +149,130 @@
       wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
       wmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
 
-      var placed = [];
+      // Editing a climb (letter B): the map hosts the shared three-point
+      // editor (foot/summit/steepest) instead of the generic single-pin
+      // Locate — route/grad/steep flow through moderation + change history
+      // just like every other edited field (Task 5). Every other catalog
+      // type keeps the single-pin/segment Locate exactly as before.
+      var isClimb = !!(window.CC_ITEM && 'B' === window.CC_ITEM.letter);
+      var climbEditor = null;
+      var wzReset = document.getElementById('wzReset');
 
-      function fmt(ll) {
-        return ll.lat.toFixed(4) + '°N ' + ll.lng.toFixed(4) + '°E';
-      }
+      if (isClimb) {
+        var initial = (window.CC_ITEM.route || window.CC_ITEM.grad || window.CC_ITEM.steep)
+          ? { route: window.CC_ITEM.route, grad: window.CC_ITEM.grad, steep: window.CC_ITEM.steep }
+          : undefined;
 
-      function drawSeg() {
-        if (!wmap.isStyleLoaded()) { wmap.once('idle', drawSeg); return; }
-        var id = 'seg';
-        if (wmap.getLayer(id)) wmap.removeLayer(id);
-        if (wmap.getSource(id)) wmap.removeSource(id);
-        if (placed.length < 2) return;
-        wmap.addSource(id, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: placed.map(function (m) { return m.getLngLat().toArray(); }) } } });
-        wmap.addLayer({ id: id, type: 'line', source: id, paint: { 'line-color': '#FF5A1F', 'line-width': 4 } });
-      }
-
-      function syncLoc() {
-        var ro = document.getElementById('wz-readout');
-        if (LOCATE === 'segment') {
-          if (placed.length < 2) {
-            WZ.loc = null;
-            if (ro) ro.textContent = placed.length === 1 ? '◎ Now tap the end of the segment' : '◎ Tap the start of the segment';
-          } else {
-            WZ.loc = { type: 'segment', a: placed[0].getLngLat().toArray(), b: placed[1].getLngLat().toArray() };
-            if (ro) ro.textContent = '✓ ' + fmt(placed[0].getLngLat()) + ' → ' + fmt(placed[1].getLngLat());
+        climbEditor = window.Cc.mountClimbEditor({
+          map: wmap,
+          hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep') },
+          initial: initial,
+          onChange: function (st) {
+            var ro = document.getElementById('wz-readout');
+            if (st.start && st.summit) {
+              WZ.loc = { type: 'climb', start: st.start, summit: st.summit };
+              if (ro) ro.textContent = '✓ Climb set' + (st.lengthKm ? ' · ' + st.lengthKm.toFixed(1) + ' km' : '') + ' — drag a marker to correct it';
+            } else {
+              WZ.loc = null;
+              if (ro) ro.textContent = st.start ? '◎ Foot set — now tap the summit' : '◎ Tap the map to set the foot of the climb';
+            }
+            refreshGate();
           }
-        } else {
-          if (!placed.length) {
-            WZ.loc = null;
-            if (ro) ro.textContent = '◎ Tap the map to set the location';
+        });
+
+        if (wzReset) {
+          wzReset.addEventListener('click', function () { if (climbEditor) climbEditor.reset(); });
+          wzReset.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wzReset.click(); }
+          });
+        }
+      } else {
+        var placed = [];
+
+        var fmt = function (ll) {
+          return ll.lat.toFixed(4) + '°N ' + ll.lng.toFixed(4) + '°E';
+        };
+
+        var drawSeg = function () {
+          if (!wmap.isStyleLoaded()) { wmap.once('idle', drawSeg); return; }
+          var id = 'seg';
+          if (wmap.getLayer(id)) wmap.removeLayer(id);
+          if (wmap.getSource(id)) wmap.removeSource(id);
+          if (placed.length < 2) return;
+          wmap.addSource(id, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: placed.map(function (m) { return m.getLngLat().toArray(); }) } } });
+          wmap.addLayer({ id: id, type: 'line', source: id, paint: { 'line-color': '#FF5A1F', 'line-width': 4 } });
+        };
+
+        var syncLoc = function () {
+          var ro = document.getElementById('wz-readout');
+          if (LOCATE === 'segment') {
+            if (placed.length < 2) {
+              WZ.loc = null;
+              if (ro) ro.textContent = placed.length === 1 ? '◎ Now tap the end of the segment' : '◎ Tap the start of the segment';
+            } else {
+              WZ.loc = { type: 'segment', a: placed[0].getLngLat().toArray(), b: placed[1].getLngLat().toArray() };
+              if (ro) ro.textContent = '✓ ' + fmt(placed[0].getLngLat()) + ' → ' + fmt(placed[1].getLngLat());
+            }
           } else {
-            var ll = placed[0].getLngLat();
-            WZ.loc = { type: 'point', lng: ll.lng, lat: ll.lat };
-            // update hidden lat/lng fields
-            var fLat = fld('lat');
-            var fLng = fld('lng');
-            if (fLat) fLat.value = ll.lat;
-            if (fLng) fLng.value = ll.lng;
-            if (ro) ro.textContent = '✓ ◎ ' + fmt(ll) + ' — drag the pin or tap again to move it';
+            if (!placed.length) {
+              WZ.loc = null;
+              if (ro) ro.textContent = '◎ Tap the map to set the location';
+            } else {
+              var ll = placed[0].getLngLat();
+              WZ.loc = { type: 'point', lng: ll.lng, lat: ll.lat };
+              // update hidden lat/lng fields
+              var fLat = fld('lat');
+              var fLng = fld('lng');
+              if (fLat) fLat.value = ll.lat;
+              if (fLng) fLng.value = ll.lng;
+              if (ro) ro.textContent = '✓ ◎ ' + fmt(ll) + ' — drag the pin or tap again to move it';
+            }
           }
-        }
-        refreshGate();
-      }
+          refreshGate();
+        };
 
-      // Confirm on release that the corrected location was captured — syncLoc()
-      // has already written it to the hidden lat/lng fields the form submits.
-      function announceMove() {
-        if (WZ.loc && WZ.loc.type === 'point') {
-          toast('Pin moved to ' + WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E — submit to record it');
-        } else if (WZ.loc && WZ.loc.type === 'segment') {
-          toast('Segment updated — submit to record it');
-        }
-      }
+        // Confirm on release that the corrected location was captured — syncLoc()
+        // has already written it to the hidden lat/lng fields the form submits.
+        var announceMove = function () {
+          if (WZ.loc && WZ.loc.type === 'point') {
+            toast('Pin moved to ' + WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E — submit to record it');
+          } else if (WZ.loc && WZ.loc.type === 'segment') {
+            toast('Segment updated — submit to record it');
+          }
+        };
 
-      wmap.on('click', function (e) {
-        var need = LOCATE === 'segment' ? 2 : 1;
-        if (placed.length >= need) { placed.forEach(function (m) { m.remove(); }); placed.length = 0; }
-        var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(e.lngLat).addTo(wmap);
-        m.on('dragend', function () { syncLoc(); drawSeg(); announceMove(); });
-        placed.push(m);
-        syncLoc();
-        drawSeg();
-      });
-
-      // Editing a located point: pre-place the pin at the item's coordinates so
-      // the map opens on it and the contributor can drag to correct it.
-      if (hasCoords && LOCATE === 'point') {
-        wmap.on('load', function () {
-          var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat([initLng, initLat]).addTo(wmap);
-          m.on('dragend', function () { syncLoc(); announceMove(); });
+        wmap.on('click', function (e) {
+          var need = LOCATE === 'segment' ? 2 : 1;
+          if (placed.length >= need) { placed.forEach(function (m) { m.remove(); }); placed.length = 0; }
+          var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(e.lngLat).addTo(wmap);
+          m.on('dragend', function () { syncLoc(); drawSeg(); announceMove(); });
           placed.push(m);
           syncLoc();
-        });
-      }
-
-      var wzReset = document.getElementById('wzReset');
-      if (wzReset) {
-        wzReset.addEventListener('click', function () {
-          placed.forEach(function (m) { m.remove(); });
-          placed.length = 0;
           drawSeg();
-          syncLoc();
         });
-        wzReset.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wzReset.click(); }
-        });
+
+        // Editing a located point: pre-place the pin at the item's coordinates so
+        // the map opens on it and the contributor can drag to correct it.
+        if (hasCoords && LOCATE === 'point') {
+          wmap.on('load', function () {
+            var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat([initLng, initLat]).addTo(wmap);
+            m.on('dragend', function () { syncLoc(); announceMove(); });
+            placed.push(m);
+            syncLoc();
+          });
+        }
+
+        if (wzReset) {
+          wzReset.addEventListener('click', function () {
+            placed.forEach(function (m) { m.remove(); });
+            placed.length = 0;
+            drawSeg();
+            syncLoc();
+          });
+          wzReset.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wzReset.click(); }
+          });
+        }
       }
 
       // Photon geocode
@@ -307,6 +345,7 @@
     var locTxt = !WZ.loc ? '—'
       : WZ.loc.type === 'point' ? '◎ ' + WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E'
       : WZ.loc.type === 'segment' ? WZ.loc.a[1].toFixed(4) + '°N ' + WZ.loc.a[0].toFixed(4) + '°E → ' + WZ.loc.b[1].toFixed(4) + '°N ' + WZ.loc.b[0].toFixed(4) + '°E'
+      : WZ.loc.type === 'climb' ? '◎ foot ' + WZ.loc.start[1].toFixed(4) + '°N ' + WZ.loc.start[0].toFixed(4) + '°E → summit ' + WZ.loc.summit[1].toFixed(4) + '°N ' + WZ.loc.summit[0].toFixed(4) + '°E'
       : 'Track · ' + WZ.loc.name;
 
     // Echo every detail/extra field the rider actually filled in (step 2), so the
