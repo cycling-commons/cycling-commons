@@ -1,0 +1,19 @@
+pipeline/requirements.txt
+  s_e37ee4799d07fe::t_18d141aa8a6ea9 2-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "439960fab10a6dfebb0b143a41a7160ba0b142d5",
+  "prompts": {},
+  "sessions": {
+    "s_e37ee4799d07fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "355c3239-64a3-4d80-8326-f729fa5e390f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
