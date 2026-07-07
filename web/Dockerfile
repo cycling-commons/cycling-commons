@@ -23,5 +23,9 @@ RUN composer install --no-interaction --no-progress --prefer-dist --no-scripts \
 
 # App source is bind-mounted at runtime (see compose). vendor/ is preserved via a
 # named volume so the mount doesn't hide it.
+#
+# Deliberately no USER directive: the php-fpm master must start as root so it can
+# drop each pool worker to www-data (pool config) — app code never runs as root.
+# A USER line would disable that setuid drop and silence the pool user directives.
 EXPOSE 9000
 CMD ["php-fpm"]
