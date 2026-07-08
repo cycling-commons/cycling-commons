@@ -8,7 +8,9 @@ namespace App\Moderation;
 
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteChangeHistory;
+use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\ItemState;
+use App\Catalog\RouteSuggestionStatus;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -98,6 +100,26 @@ final class RouteModerationService
             $route->setAttributes($attributes);
 
             return $route;
+        });
+    }
+
+    public function resolveSuggestion(int $suggestionId, RouteSuggestionStatus $status, User $curator): RouteSuggestion
+    {
+        if (RouteSuggestionStatus::Pending === $status) {
+            throw new \LogicException('Resolution must be done or dismissed.');
+        }
+
+        return $this->em->wrapInTransaction(function () use ($suggestionId, $status, $curator): RouteSuggestion {
+            $s = $this->em->find(RouteSuggestion::class, $suggestionId);
+            if (null === $s) {
+                throw new \InvalidArgumentException(sprintf('Suggestion %d not found.', $suggestionId));
+            }
+            if (RouteSuggestionStatus::Pending !== $s->getStatus()) {
+                throw new \LogicException('Suggestion already resolved.');
+            }
+            $s->resolve($status, $curator->getId());
+
+            return $s;
         });
     }
 

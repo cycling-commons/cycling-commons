@@ -122,4 +122,20 @@ final class RouteModerationServiceTest extends KernelTestCase
         self::assertSame('Old note', $rows[0]->getOldValue());
         self::assertSame('A resurfaced descent now', $rows[0]->getNewValue());
     }
+
+    public function testResolveSuggestionMarksItDone(): void
+    {
+        $route = $this->route(ItemState::Unverified);
+        $s = new \App\Catalog\Entity\RouteSuggestion((int) $route->getId(), 99, \App\Catalog\RouteSuggestionReason::Duplicate, 'Same as #12');
+        $this->em->persist($s);
+        $this->em->flush();
+        $curator = $this->curator();
+
+        $this->svc->resolveSuggestion((int) $s->getId(), \App\Catalog\RouteSuggestionStatus::Dismissed, $curator);
+
+        $this->em->clear();
+        $reloaded = $this->em->find(\App\Catalog\Entity\RouteSuggestion::class, $s->getId());
+        self::assertSame(\App\Catalog\RouteSuggestionStatus::Dismissed, $reloaded->getStatus());
+        self::assertSame($curator->getId(), $reloaded->getResolvedBy());
+    }
 }
