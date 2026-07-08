@@ -1,0 +1,28 @@
+web/src/Contribution/Gpx/GpxWriter.php
+  s_162e830c17ed4c::t_4d74e2d8effde9 1-58
+web/src/Controller/RouteGpxController.php
+  s_162e830c17ed4c::t_72b3aef126f23f 1-51
+web/assets/map/map.js
+  s_162e830c17ed4c::t_7e872984a1ff1c 937
+  s_162e830c17ed4c::t_f9d836b57e00f2 998-1008
+web/config/packages/security.yaml
+  s_162e830c17ed4c::t_b9660fd120e5e8 46-49
+web/tests/Contribution/RouteGpxDownloadTest.php
+  s_162e830c17ed4c::t_e38b3979ecb86d 1-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f73a67926e0bd837a692e09437f4e1c566ee78dd",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
