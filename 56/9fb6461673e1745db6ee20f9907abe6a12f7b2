@@ -1,0 +1,32 @@
+web/tests/Admin/UserAdminActionsTest.php
+  s_a341f734e0719d::t_192b2963c7f91b 16,18,21-29,69-92,94,115-117,121-128,130-136,143-144,146-147,150,163-166,170-171,173-188,210
+  s_a341f734e0719d::t_0ebd9e3e263c17 93,95-114
+  s_a341f734e0719d::t_85780dc59d04ab 189-198
+web/src/Controller/Admin/UserCrudController.php
+  s_a341f734e0719d::t_28a749261a15a1 154,161,168,175,182,189,196,203,210,217
+  s_a341f734e0719d::t_8b436a18c344c2 51-53
+  s_a341f734e0719d::t_771f299e147273 98-102,106-108,110
+  s_a341f734e0719d::t_ba425195d0c63d 231-237
+  s_a341f734e0719d::t_a1e41c99b3a23d 118-122,126,129-132
+  s_a341f734e0719d::t_09e59550afb80f 133
+web/assets/admin_confirm.js
+  s_a341f734e0719d::t_895c1a854cb1ad 2-5,7-8
+web/templates/admin/user_support_action.html.twig
+  s_a341f734e0719d::t_c268680d13e662 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "569fb6461673e1745db6ee20f9907abe6a12f7b2",
+  "prompts": {},
+  "sessions": {
+    "s_a341f734e0719d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d2ef3591-66f6-4935-a0eb-20e38718a462",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
