@@ -1,0 +1,26 @@
+web/src/Controller/RouteModerateController.php
+  s_0f648c977bdc75::t_05cff19dbae1d6 153
+web/templates/moderate_routes/detail.html.twig
+  s_0f648c977bdc75::t_7633b362571ded 44
+web/tests/Moderation/RouteModerateTest.php
+  s_0f648c977bdc75::t_58f20fca70514d 98
+  s_0f648c977bdc75::t_299e689e52a72b 95-96
+web/src/Moderation/RouteModerationService.php
+  s_0f648c977bdc75::t_89be1e37e47540 126-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "db222c8cf39592419c9e69a462af0b4344885d59",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
