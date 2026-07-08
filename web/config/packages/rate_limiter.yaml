@@ -1,6 +1,28 @@
 framework:
+    cache:
+        pools:
+            # Dedicated pool so the test env can swap it for the (per-kernel)
+            # array adapter below — the default filesystem pool persists across
+            # phpunit runs while DAMA reuses user ids, which would leak limiter
+            # counters between runs and flake the tests.
+            cache.route_propose_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
             limit: 20
             interval: '1 hour'
+        # Route-domain spec §5.5: proposals are heavier than pin edits — the
+        # supply gate starts at intake.
+        route_propose:
+            policy: sliding_window
+            limit: 3
+            interval: '1 day'
+            cache_pool: cache.route_propose_limiter
+
+when@test:
+    framework:
+        cache:
+            pools:
+                cache.route_propose_limiter:
+                    adapter: cache.adapter.array

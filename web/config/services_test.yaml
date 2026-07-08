@@ -4,10 +4,12 @@
 # MicroKernelTrait::configureContainer), so definitions here win over the
 # `App\` autowiring prototype.
 services:
-    # RegionResolver has no src consumer yet (Task 5 injects it), so the unused
-    # private definition is pruned from the compiled container and cannot be
-    # fetched from the test container. Re-declare it public (still autowired) in
-    # the test env only, so KernelTestCase can resolve it directly.
-    App\Contribution\RegionResolver:
+    # RouteProposalService has no src consumer yet (Task 6 wires the controller),
+    # so RemoveUnusedDefinitionsPass — a mark-and-sweep reachable only from public
+    # roots — prunes it, and with it RegionResolver (whose sole consumer is this
+    # service). Re-declare the intake service public (still autowired) in the test
+    # env only, so KernelTestCase can fetch it directly; that public root also
+    # keeps RegionResolver reachable, so RegionResolverTest resolves it too.
+    App\Contribution\RouteProposalService:
         autowire: true
         public: true
