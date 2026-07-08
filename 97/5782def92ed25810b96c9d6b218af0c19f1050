@@ -1,0 +1,23 @@
+web/tests/Catalog/RouteChangeHistoryTest.php
+  s_a341f734e0719d::t_8d7e88164b9eb7 1-38
+web/migrations/Version20260708130000.php
+  s_a341f734e0719d::t_aba11fba9245bb 1-40
+web/src/Catalog/Entity/RouteChangeHistory.php
+  s_a341f734e0719d::t_1a4ff242af6c68 1-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "975782def92ed25810b96c9d6b218af0c19f1050",
+  "prompts": {},
+  "sessions": {
+    "s_a341f734e0719d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d2ef3591-66f6-4935-a0eb-20e38718a462",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
