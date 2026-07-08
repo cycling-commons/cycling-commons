@@ -54,6 +54,8 @@ never reveals where its proposer started or finished. The drawer states this
 - Distance · Season · **Suitability by bike type** — Road / Gravel / MTB /
   E-bike / **Handbike** (handbike is a first-class type in votes and
   rankings) · Accessibility (gradient-limited) · Best direction.
+- **Surfaces** — estimated from the A-layer mapped roads (`[auto]`, coverage
+  disclosed) · declared **Dominant surface** when set.
 - **State badge** — "proposed · ride it to verify" on `unverified`; verified
   routes render normally and are vote-eligible.
 - Vote and ride counts.

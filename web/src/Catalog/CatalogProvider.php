@@ -209,7 +209,7 @@ final class CatalogProvider
             // reaches map.js's route drawer instead of being silently dropped.
             foreach ([
                 'difficulty', 'uploader', 'photo',
-                'dominantSurface', 'note', 'quietness', 'scenic', 'friendliness',
+                'dominantSurface', 'surfaces', 'note', 'quietness', 'scenic', 'friendliness',
                 'bikeTypes', 'handbike', 'gradientLimited', 'bestDirection',
             ] as $key) {
                 if (isset($attrs[$key])) {

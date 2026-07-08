@@ -607,10 +607,17 @@
           rec.push({label:'Towns on route', value:cities.map(cityLink).join(' · '), html:true});
         }
         if(r.season) rec.push({label:'Season', value:r.season});
-        // Surface is named on every route — 'Unknown' beats silently hiding
-        // the row (a real per-segment surface breakdown is a recorded
-        // route-domain phase-2 carry-in; this shows the declared value).
-        rec.push({label:'Dominant surface', value:r.dominantSurface || 'Unknown'});
+        // Derived, not declared: measured against the A-layer mapped-road
+        // segments at import/intake (SurfaceProfiler). The method note
+        // discloses estimate + coverage — never present this as ground truth.
+        if(r.surfaces && Array.isArray(r.surfaces.parts) && r.surfaces.parts.length){
+          rec.push({label:'Surfaces', value:r.surfaces.parts.map(p=>`${p.surface} ${p.pct}%`).join(' · '),
+                    method:`estimate · ${Number(r.surfaces.covered)||0}% of route mapped`});
+        }
+        // Declared value only when the curator/import actually set it — no more
+        // always-'Unknown' filler (the derived Surfaces row above is the honest
+        // per-segment breakdown this used to stand in for).
+        if(r.dominantSurface) rec.push({label:'Dominant surface', value:r.dominantSurface});
         if(r.quietness) rec.push({label:'Quietness', value:/^[1-5]$/.test(r.quietness)?stars(Number(r.quietness)):r.quietness});
         if(r.scenic) rec.push({label:'Scenic rating', value:/^[1-5]$/.test(r.scenic)?stars(Number(r.scenic)):r.scenic});
         if(r.friendliness) rec.push({label:'Cycling-friendliness', value:/^[1-5]$/.test(r.friendliness)?stars(Number(r.friendliness)):r.friendliness});

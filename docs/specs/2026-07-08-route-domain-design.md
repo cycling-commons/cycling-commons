@@ -311,7 +311,12 @@ execution, binding on later phases:
    add a hard iteration budget with clean reject.
 2. Difficulty vocabulary harmonization (registry 4-label select vs drawer 1–5
    scale vs import `{score,label}`) belongs to the phase-2 curator/registry
-   work, together with the D6 `bikeTypes` multi-select normalization.
+   work, together with the D6 `bikeTypes` multi-select normalization. The
+   per-segment surface breakdown itself shipped 2026-07-08 as `SurfaceProfiler`
+   (A-layer intersect, served as an estimate with disclosed coverage — replaces
+   the always-"Unknown" filler row); only harmonizing the declared
+   `dominantSurface` vocabulary (Asphalt/Mixed/Gravel) with the A-layer's richer
+   surface set remains phase-2.
 3. Marginal untranslated edges: File-constraint php.ini-level upload errors,
    CSRF-failure copy, and pre-existing hardcoded-English auth/settings form
    messages (pre-date this work, all locales).

@@ -9,6 +9,7 @@ namespace App\Contribution;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\SurfaceProfiler;
 use App\Contribution\Gpx\GpxParser;
 use App\Contribution\Gpx\TrackProcessor;
 use App\Entity\User;
@@ -41,6 +42,7 @@ final class RouteProposalService
         private readonly GpxParser $parser,
         private readonly TrackProcessor $processor,
         private readonly RegionResolver $regions,
+        private readonly SurfaceProfiler $profiler,
         private readonly RateLimiterFactoryInterface $routeProposeLimiter,
     ) {
     }
@@ -90,6 +92,14 @@ final class RouteProposalService
             if (null !== $value && '' !== $value && [] !== $value) {
                 $attributes[$key] = $value;
             }
+        }
+
+        // Derived, never user-supplied: the surfaces the trimmed track actually
+        // crosses, measured against the served A-layer segments (honest estimate
+        // with disclosed coverage). Absent when nothing mapped is near the route.
+        $surfaces = $this->profiler->profile($geoJson);
+        if (null !== $surfaces) {
+            $attributes['surfaces'] = $surfaces;
         }
 
         $route = (new RecommendedRoute())

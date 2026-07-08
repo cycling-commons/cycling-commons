@@ -10,6 +10,7 @@ use App\Catalog\Import\AttributeVocabulary;
 use App\Catalog\Import\ProvinceMap;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Catalog\SurfaceProfiler;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -43,6 +44,7 @@ final class ImportCatalogCommand extends Command
     public function __construct(
         private readonly Connection $db,
         private readonly AttributeVocabulary $vocabulary,
+        private readonly SurfaceProfiler $surfaces,
     ) {
         parent::__construct();
     }
@@ -71,6 +73,9 @@ final class ImportCatalogCommand extends Command
             $routes = $this->importRoutes($dir, $io);
             $heat = $this->importHeat($dir, $io);
             $assigned = $this->recomputeMembership();
+            // Derived surfaces depend on the freshly-upserted A-layer + routes,
+            // so recompute after membership, inside the same transaction.
+            $surfaced = $this->surfaces->recomputeAll();
             $this->db->commit();
         } catch (\InvalidArgumentException|\JsonException|DBALException $e) {
             if ($this->db->isTransactionActive()) {
@@ -81,7 +86,7 @@ final class ImportCatalogCommand extends Command
             return Command::FAILURE;
         }
 
-        $io->success(sprintf('Catalog import: %d region(s), %d item(s) upserted, %d route(s), %d heat point(s), %d region-assigned.', $regions, $items, $routes, $heat, $assigned));
+        $io->success(sprintf('Catalog import: %d region(s), %d item(s) upserted, %d route(s), %d heat point(s), %d region-assigned, %d route surface profile(s).', $regions, $items, $routes, $heat, $assigned, $surfaced));
 
         return Command::SUCCESS;
     }

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Contribution;
 
+use App\Catalog\Entity\Item;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Contribution\RouteProposalService;
@@ -77,6 +78,46 @@ final class RouteProposalServiceTest extends KernelTestCase
         self::assertLessThan(10_500, $route->getDistanceM());
         self::assertNotNull($route->getAscentM());
         self::assertGreaterThan(80, $route->getAscentM());
+    }
+
+    /** Persist a served letter-A road-surface segment along the meridian the gpx() track follows. */
+    private function seedAsphaltSegment(array $coords, string $ref): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter('A')->setName('Asphalt '.$ref)
+            ->setGeom(json_encode(['type' => 'LineString', 'coordinates' => $coords], \JSON_THROW_ON_ERROR))
+            ->setCountryCode('BE')->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
+            ->setSourceRef('way/'.$ref)->setAttributes(['surface' => 'Asphalt']);
+        $em->persist($item);
+        $em->flush();
+    }
+
+    public function testProposalAlongAMappedAsphaltSegmentStoresADerivedSurfaceProfile(): void
+    {
+        self::bootKernel();
+        $service = static::getContainer()->get(RouteProposalService::class);
+        $user = $this->makeUser('proposer-surface@test.test');
+
+        // The gpx() track runs the lon 5.3 meridian; seed Asphalt along the stored stretch.
+        $this->seedAsphaltSegment([[5.3, 50.02], [5.3, 50.08]], 'proposal-asphalt');
+
+        $route = $service->propose(self::gpx(), ['rName' => 'Surface-derived route'], $user);
+
+        $attributes = $route->getAttributes();
+        self::assertArrayHasKey('surfaces', $attributes, 'a route along a mapped segment gets a derived surface profile');
+        self::assertSame('Asphalt', $attributes['surfaces']['parts'][0]['surface']);
+        self::assertGreaterThan(0, $attributes['surfaces']['covered']);
+    }
+
+    public function testProposalFarFromAnyMappedSegmentStoresNoSurfaces(): void
+    {
+        self::bootKernel();
+        $service = static::getContainer()->get(RouteProposalService::class);
+        $user = $this->makeUser('proposer-nosurface@test.test');
+
+        $route = $service->propose(self::gpx(), ['rName' => 'Unmapped route'], $user);
+
+        self::assertArrayNotHasKey('surfaces', $route->getAttributes(), 'no nearby mapped segment → no surfaces key');
     }
 
     public function testRejectsTracksShorterThanTwoKm(): void
