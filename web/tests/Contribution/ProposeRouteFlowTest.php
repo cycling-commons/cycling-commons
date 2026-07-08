@@ -116,6 +116,11 @@ final class ProposeRouteFlowTest extends WebTestCase
         // malformed GPX is surfaced as a FormError; the key guarantee below is
         // that nothing was persisted.
         self::assertResponseStatusCodeSame(422);
+        // The FormError message must render translated, not as the raw key: the
+        // controller runs $e->getMessage() through the translator before display.
+        $content = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('The file could not be read as a GPX track.', $content);
+        self::assertStringNotContainsString('propose_route.error.', $content);
         self::assertSame(0, $em->getRepository(RecommendedRoute::class)->count(['name' => 'Broken upload']));
     }
 

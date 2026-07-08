@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Rider route-proposal intake (route-domain spec §5): the K contribute-hub
@@ -32,6 +33,7 @@ final class ProposeRouteController extends AbstractController
 {
     public function __construct(
         private readonly RouteProposalService $proposals,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -62,7 +64,7 @@ final class ProposeRouteController extends AbstractController
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('error', 'contribute.error.rate_limited');
             } catch (\InvalidArgumentException $e) {
-                $form->addError(new FormError($e->getMessage()));
+                $form->addError(new FormError($this->translator->trans($e->getMessage())));
             }
         }
 

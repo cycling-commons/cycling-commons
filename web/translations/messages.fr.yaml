@@ -1102,7 +1102,7 @@ meta:
   vote_description: 'Classez le meilleur de cette région à vélo. La communauté choisit le best-of saisonnier, tenu à jour par les cyclistes qui la connaissent.'
   improve_title: 'Cycling Commons — Améliorer / ajouter un lieu'
   improve_description: 'Améliorez un lieu dans le Commons — corrigez les détails, signalez les conditions et gardez l''atlas cycliste ouvert exact pour chaque cycliste.'
-  propose_route_title: 'Cycling Commons · Proposer un itinéraire'
+  propose_route_title: 'Cycling Commons — Proposer un itinéraire'
   propose_route_description: 'Partagez une sortie recommandée : téléversez votre GPX, un curateur l''examine, la communauté vérifie et vote.'
 flash:
   email_verified: 'Votre adresse e-mail a été vérifiée. Vous pouvez maintenant vous connecter.'

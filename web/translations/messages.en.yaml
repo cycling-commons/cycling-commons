@@ -1102,7 +1102,7 @@ meta:
   vote_description: 'Rank this region''s best riding. The community decides the seasonal best-of, kept fresh by the riders who ride it.'
   improve_title: 'Cycling Commons — Improve / add a place'
   improve_description: 'Improve a place in the Commons — fix details, flag conditions, and keep the open cycling atlas accurate for every rider.'
-  propose_route_title: 'Cycling Commons · Propose a route'
+  propose_route_title: 'Cycling Commons — Propose a route'
   propose_route_description: 'Share a recommended ride: upload your GPX, a curator reviews it, the community verifies and votes.'
 flash:
   email_verified: 'Your email has been verified. You can now sign in.'

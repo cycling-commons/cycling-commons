@@ -1102,7 +1102,7 @@ meta:
   vote_description: 'Bewerte das beste Radfahren dieser Region. Die Community bestimmt die Saison-Highlights, aktuell gehalten von den Radfahrenden vor Ort.'
   improve_title: 'Cycling Commons — Ort verbessern / hinzufügen'
   improve_description: 'Verbessere einen Ort im Commons — korrigiere Details, melde Zustände und halte den offenen Cycling Atlas für alle Radfahrenden aktuell.'
-  propose_route_title: 'Cycling Commons · Route vorschlagen'
+  propose_route_title: 'Cycling Commons — Route vorschlagen'
   propose_route_description: 'Teile eine empfohlene Fahrt: Lade dein GPX hoch, ein Kurator prüft es, die Community verifiziert und stimmt ab.'
 flash:
   email_verified: 'Deine E-Mail-Adresse wurde bestätigt. Du kannst dich jetzt anmelden.'

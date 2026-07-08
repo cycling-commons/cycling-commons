@@ -1102,7 +1102,7 @@ meta:
   vote_description: 'Rangschik het mooiste fietsen van deze regio. De community bepaalt de seizoensfavorieten, actueel gehouden door de fietsers die er rijden.'
   improve_title: 'Cycling Commons — Locatie verbeteren of toevoegen'
   improve_description: 'Verbeter een locatie in de Commons — corrigeer details, meld omstandigheden en houd de open fietsatlas accuraat voor elke fietser.'
-  propose_route_title: 'Cycling Commons · Stel een route voor'
+  propose_route_title: 'Cycling Commons — Stel een route voor'
   propose_route_description: 'Deel een aanbevolen rit: upload je GPX, een curator beoordeelt hem, de community verifieert en stemt.'
 flash:
   email_verified: 'Je e-mailadres is bevestigd. Je kunt nu inloggen.'
