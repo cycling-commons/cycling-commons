@@ -76,13 +76,54 @@ final class SurfaceProfiler
             return null;
         }
 
-        // Top 4 by length; share = metres / total mapped metres; drop sub-0.5 % noise.
+        // Top 4 by length, apportioned by largest remainder over their share of
+        // the mapped total. Independent round-half-up could push near-equal parts
+        // past 100 % (37.5 + 37.5 + 12.5 + 12.5 → 38 + 38 + 13 + 13 = 102): floor
+        // each exact share, then hand the leftover integer points to the largest
+        // fractional remainders (ties: longer segment first, then the stable
+        // length-descending order). Kept parts sum to round(100 · kept_metres /
+        // total) ≤ 100 — dropped small parts honestly leave the rest below 100,
+        // but the row can never exceed it.
         usort($byMetres, static fn (array $a, array $b): int => $b['metres'] <=> $a['metres']);
+        $kept = \array_slice($byMetres, 0, 4);
+
+        $floors = [];
+        $remainders = [];
+        $floorSum = 0;
+        $shareSum = 0.0;
+        foreach ($kept as $i => $part) {
+            $share = 100.0 * $part['metres'] / $total;
+            $shareSum += $share;
+            $floor = (int) floor($share);
+            $floors[$i] = $floor;
+            $remainders[$i] = $share - (float) $floor;
+            $floorSum += $floor;
+        }
+
+        // Rank kept indices by descending remainder; ties go to the longer
+        // segment, then keep the length-descending order (stable, deterministic).
+        $order = array_keys($kept);
+        usort($order, static function (int $a, int $b) use ($remainders, $kept): int {
+            if ($remainders[$a] !== $remainders[$b]) {
+                return $remainders[$b] <=> $remainders[$a];
+            }
+            if ($kept[$a]['metres'] !== $kept[$b]['metres']) {
+                return $kept[$b]['metres'] <=> $kept[$a]['metres'];
+            }
+
+            return $a <=> $b;
+        });
+
+        $pcts = $floors;
+        $leftover = (int) round($shareSum) - $floorSum;
+        for ($n = 0; $n < $leftover; ++$n) {
+            ++$pcts[$order[$n]];
+        }
+
         $parts = [];
-        foreach (\array_slice($byMetres, 0, 4) as $part) {
-            $pct = (int) round(100.0 * $part['metres'] / $total);
-            if ($pct > 0) {
-                $parts[] = ['surface' => $part['surface'], 'pct' => $pct];
+        foreach ($kept as $i => $part) {
+            if ($pcts[$i] > 0) {
+                $parts[] = ['surface' => $part['surface'], 'pct' => $pcts[$i]];
             }
         }
         if ([] === $parts) {
