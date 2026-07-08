@@ -1,0 +1,53 @@
+web/translations/messages.en.yaml
+  s_162e830c17ed4c::t_403501a7039c59 918
+web/translations/messages.nl.yaml
+  s_162e830c17ed4c::t_b536284fd2d1ea 918
+web/translations/messages.fr.yaml
+  s_162e830c17ed4c::t_1944ac6441a4e8 918
+web/assets/map/map.js
+  s_162e830c17ed4c::t_995ed9496aef0e 981-984,986-987
+  s_162e830c17ed4c::t_9fa50c7bf5b545 602
+  s_162e830c17ed4c::t_7b5c637f6d3268 573-574,576
+web/config/packages/validator.yaml
+  s_162e830c17ed4c::t_393f506f5896b7 3-6
+web/tests/Contribution/ProposeRouteFlowTest.php
+  s_162e830c17ed4c::t_a88cfec1c5172a 22-52,60-61
+  s_162e830c17ed4c::t_f4c11fb4155334 130
+  s_162e830c17ed4c::t_175b5c809b0216 103,208
+  s_162e830c17ed4c::t_1feaf21eadaa36 155-182
+web/src/Contribution/RouteProposalService.php
+  s_162e830c17ed4c::t_03015df02605a0 37
+web/translations/messages.de.yaml
+  s_162e830c17ed4c::t_d754139e44cc99 918
+web/src/Contribution/Gpx/TrackProcessor.php
+  s_162e830c17ed4c::t_010484d95ece95 190-199,201-226,229-233
+  s_162e830c17ed4c::t_dc9d9f086568e6 93-101,109-135
+  s_162e830c17ed4c::t_23e6e10d15cdcc 136-137
+web/templates/contribute/propose_route.html.twig
+  s_162e830c17ed4c::t_114481e5853254 36,38-40,48,50
+web/tests/Contribution/RouteProposalServiceTest.php
+  s_162e830c17ed4c::t_369805b0642dfd 53
+web/assets/contribute/improve.js
+  s_162e830c17ed4c::t_3126b1bdb12b26 324
+web/tests/Contribution/Gpx/TrackProcessorTest.php
+  s_162e830c17ed4c::t_9afb3f635d9789 114-135
+web/src/Form/ProposeRouteType.php
+  s_162e830c17ed4c::t_4cc8c95e96cfaf 37
+  s_162e830c17ed4c::t_ae660901daf543 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "670d8a5cadd47a7ff3fa079bba9d3b599cb3f088",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
