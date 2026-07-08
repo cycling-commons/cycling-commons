@@ -1,0 +1,31 @@
+web/src/Contribution/Gpx/TrackProcessor.php
+  s_0f648c977bdc75::t_c6d6dbc6bd06c3 193
+web/tests/Catalog/CatalogProviderTest.php
+  s_0f648c977bdc75::t_c6d6dbc6bd06c3 199,209
+web/src/Form/ImproveType.php
+  s_0f648c977bdc75::t_6141fb99eddc2e 38
+  s_0f648c977bdc75::t_7ea4985a63470d 60
+  s_0f648c977bdc75::t_2d17ecf8dbc8b7 113
+web/src/Moderation/RouteQueue.php
+  s_0f648c977bdc75::t_c6d6dbc6bd06c3 37,40
+web/tests/Contribution/Gpx/TrackProcessorTest.php
+  s_0f648c977bdc75::t_c6d6dbc6bd06c3 143,150,160
+web/src/Moderation/RouteModerationService.php
+  s_0f648c977bdc75::t_c6d6dbc6bd06c3 80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2d1ad53b6c6e86229fb410219335b7a686cc1ca8",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
