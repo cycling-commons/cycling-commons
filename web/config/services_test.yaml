@@ -14,3 +14,11 @@ services:
         public: true
         arguments:
             $regionActiveCap: '%route.region_active_cap%'
+
+    # RouteQueue has no src consumer yet either (same phase-2 wiring gap);
+    # re-declare it public in the test env only, same rationale as above.
+    App\Moderation\RouteQueue:
+        autowire: true
+        public: true
+        arguments:
+            $regionActiveCap: '%route.region_active_cap%'
