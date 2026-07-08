@@ -1,0 +1,29 @@
+web/src/Catalog/Entity/RouteSuggestion.php
+  s_a341f734e0719d::t_c884b347e67d46 1-116
+web/src/Catalog/RouteSuggestionReason.php
+  s_a341f734e0719d::t_d09be5dd576153 1-23
+  s_a341f734e0719d::t_7243d576e02eb8 24-26
+  s_a341f734e0719d::t_bb8a5a5467d37e 27
+web/src/Catalog/RouteSuggestionStatus.php
+  s_a341f734e0719d::t_85a48634e2d57b 1-15
+web/migrations/Version20260708131000.php
+  s_a341f734e0719d::t_a1b92b885d0bf1 1-42
+web/tests/Catalog/RouteSuggestionTest.php
+  s_a341f734e0719d::t_62ce9762d3282e 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f3cbdfea90c07992bcfc25e39b8b89412ea31942",
+  "prompts": {},
+  "sessions": {
+    "s_a341f734e0719d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d2ef3591-66f6-4935-a0eb-20e38718a462",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
