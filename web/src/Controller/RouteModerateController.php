@@ -8,6 +8,7 @@ namespace App\Controller;
 
 use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionStatus;
+use App\Catalog\SurfaceVocabulary;
 use App\Entity\User;
 use App\Form\RouteDecisionType;
 use App\Moderation\RegionFullException;
@@ -142,6 +143,8 @@ final class RouteModerateController extends AbstractController
             ->add('note', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, ['required' => false, 'data' => $attrs['note'] ?? null])
             ->setMethod('POST')->getForm();
 
+        $suggested = SurfaceVocabulary::suggestFromProfile($attrs['surfaces'] ?? null);
+
         return $this->render('moderate_routes/detail.html.twig', [
             'nav_active' => 'moderate_routes',
             'route' => [
@@ -151,6 +154,7 @@ final class RouteModerateController extends AbstractController
             ],
             'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),
             'region_cap' => $this->moderation->regionCap(),
+            'suggested_surface' => $suggested,
             'suggestions' => array_values(array_filter($this->queue->pendingSuggestions(null), static fn (array $s): bool => $s['routeId'] === $id)),
             'edit_form' => $editForm->createView(),
             'page_title' => 'moderate_routes.meta_title',

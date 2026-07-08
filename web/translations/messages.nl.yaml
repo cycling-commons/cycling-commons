@@ -1020,6 +1020,8 @@ moderate_routes:
     ascent: 'Hoogtemeters'
     region: 'Regio'
     note: 'Curatornotitie'
+    dominant_surface: 'Dominante ondergrond'
+  surface_hint: 'Gemeten oppervlak suggereert: %surface%'
   action:
     decide: 'Beslissing registreren'
     save: 'Wijzigingen opslaan'

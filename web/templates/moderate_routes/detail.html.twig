@@ -55,6 +55,15 @@
       <tr><td>{{ 'moderate_routes.meta.distance'|trans }}</td><td>{{ route.km }} km</td></tr>
       <tr><td>{{ 'moderate_routes.meta.ascent'|trans }}</td><td>{{ route.ascent ?? '—' }}</td></tr>
       <tr><td>{{ 'moderate_routes.meta.region'|trans }}</td><td>{{ route.regionId ?? '—' }}</td></tr>
+      <tr>
+        <td>{{ 'moderate_routes.meta.dominant_surface'|trans }}</td>
+        <td>
+          {{ route.attributes.dominantSurface ?? '—' }}
+          {% if suggested_surface is not null and suggested_surface != route.attributes.dominantSurface %}
+            <div class="surface-hint">{{ 'moderate_routes.surface_hint'|trans({'%surface%': suggested_surface}) }}</div>
+          {% endif %}
+        </td>
+      </tr>
     </table>
   </div>
 

@@ -1020,6 +1020,8 @@ moderate_routes:
     ascent: 'Dénivelé'
     region: 'Région'
     note: 'Note du curateur'
+    dominant_surface: 'Surface dominante'
+  surface_hint: 'La surface mesurée suggère : %surface%'
   action:
     decide: 'Enregistrer la décision'
     save: 'Enregistrer les modifications'

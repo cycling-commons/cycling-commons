@@ -1020,6 +1020,8 @@ moderate_routes:
     ascent: 'Ascent'
     region: 'Region'
     note: 'Curator note'
+    dominant_surface: 'Dominant surface'
+  surface_hint: 'Measured surface suggests: %surface%'
   action:
     decide: 'Record decision'
     save: 'Save changes'

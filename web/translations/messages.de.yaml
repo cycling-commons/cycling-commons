@@ -1020,6 +1020,8 @@ moderate_routes:
     ascent: 'Höhenmeter'
     region: 'Region'
     note: 'Kuratorenhinweis'
+    dominant_surface: 'Vorherrschender Belag'
+  surface_hint: 'Gemessener Belag legt nahe: %surface%'
   action:
     decide: 'Entscheidung erfassen'
     save: 'Änderungen speichern'
