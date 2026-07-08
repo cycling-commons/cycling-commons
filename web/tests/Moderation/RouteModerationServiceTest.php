@@ -97,4 +97,29 @@ final class RouteModerationServiceTest extends KernelTestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->svc->retire((int) $active->getId(), $this->curator(), '   ');
     }
+
+    public function testEditMetadataAppliesOnlyChangedFieldsWithHistory(): void
+    {
+        $route = $this->route(ItemState::Unverified);
+        $route->setName('Old name')->setAttributes(['note' => 'Old note', 'season' => 'Spring']);
+        $this->em->flush();
+        $curator = $this->curator();
+
+        $this->svc->editMetadata((int) $route->getId(), [
+            'name' => 'Old name',                 // unchanged — must NOT snapshot
+            'note' => 'A resurfaced descent now', // changed
+            'season' => 'Spring',                 // unchanged
+        ], $curator);
+
+        $this->em->clear();
+        $reloaded = $this->em->find(RecommendedRoute::class, $route->getId());
+        self::assertSame('A resurfaced descent now', $reloaded->getAttributes()['note']);
+        self::assertSame('Old name', $reloaded->getName());
+
+        $rows = $this->em->getRepository(RouteChangeHistory::class)->findBy(['routeId' => $route->getId()]);
+        $fields = array_map(static fn (RouteChangeHistory $h): string => $h->getField(), $rows);
+        self::assertSame(['note'], $fields, 'only the changed field is snapshotted');
+        self::assertSame('Old note', $rows[0]->getOldValue());
+        self::assertSame('A resurfaced descent now', $rows[0]->getNewValue());
+    }
 }

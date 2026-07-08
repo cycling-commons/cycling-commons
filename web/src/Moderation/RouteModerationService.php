@@ -73,6 +73,34 @@ final class RouteModerationService
         });
     }
 
+    /**
+     * @param array<string, mixed> $changes field => proposed value; `name` is a
+     *                                       pseudo-field (Route::name), all others attributes
+     */
+    public function editMetadata(int $routeId, array $changes, User $curator): RecommendedRoute
+    {
+        return $this->em->wrapInTransaction(function () use ($routeId, $changes, $curator): RecommendedRoute {
+            $route = $this->load($routeId);
+            $attributes = $route->getAttributes();
+
+            foreach ($changes as $field => $new) {
+                $current = 'name' === $field ? $route->getName() : ($attributes[$field] ?? null);
+                if ($current === $new || (null === $new && null === ($current ?? null))) {
+                    continue; // no-op — never snapshot an unchanged field
+                }
+                if ('name' === $field) {
+                    $route->setName((string) $new);
+                } else {
+                    $attributes[$field] = $new;
+                }
+                $this->em->persist(new RouteChangeHistory((int) $route->getId(), (string) $field, $current, $new, $curator->getId()));
+            }
+            $route->setAttributes($attributes);
+
+            return $route;
+        });
+    }
+
     /** Active routes (SERVED) in a region; NULL region counted as its own bucket. */
     public function activeCountForRegion(?int $regionId): int
     {
