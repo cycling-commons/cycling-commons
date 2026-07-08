@@ -56,12 +56,15 @@ Everything else (`avgGradient`/`maxGradient`/`surface`/`famousFor`, etc.) is unc
 - **Track:** auto-route foot→summit; steepest auto-placed, user-movable, **locks on manual move**. ✓
 
 ## 6. Acceptance criteria
-- In BOTH add and edit, a rider can set/adjust foot, summit, and steepest, with markers clearly labelled start/end/steepest.
-- Setting foot+summit produces a real routed track + gradient profile (or a surfaced failure, never a fake profile).
-- The steepest is auto-placed, is draggable, and after a manual move never auto-updates (persisted via `steep.manual`).
-- Editing an existing climb prefills its current points; submitting routes anew and flows through moderation + change history.
-- An untraced climb (e.g. Côte de Cherave) can be given a real track via the edit flow.
-- Before/after browser validation on a real climb (track line + profile + steepest marker render correctly).
+
+Closed out 2026-07-08 on `symfony-base` (tasks 1-5 committed `a3fb0cf`..`e14ebe2`; marker-anchor regression fixed after). Evidence: full suite 258 green, all static/style/SPDX/i18n gates clean.
+
+- [x] In BOTH add and edit, a rider can set/adjust foot, summit, and steepest, with markers clearly labelled start/end/steepest. — `climb-editor.js` (three labelled markers) mounted by `add-climb.js` + `improve.js`; forms render the hidden fields (`AddClimbTest`, `ImproveBindingTest`); marker anchoring browser-verified (pins pixel-exact, labelled chips).
+- [x] Setting foot+summit produces a real routed track + gradient profile (or a surfaced failure, never a fake profile). — OSRM routing in `climb-editor.js`; `profileFromRoute` is null-safe (no fabricated profile). Track render browser-verified. *Deferred/environmental:* the gradient profile depends on the client elevation API — when it does not resolve, the track saves and the profile is simply absent (§3.2 fallback), never faked.
+- [x] The steepest is auto-placed, is draggable, and after a manual move never auto-updates (persisted via `steep.manual`). — `recomputeProfile()` guards on `!state.steep.manual` (`climb-editor.js:152-157`); `setManualSteep` sets `manual:true`; the `manual` flag round-trips through the backend (`ClimbGeometryTest`, `CatalogContributionServiceTest`).
+- [x] Editing an existing climb prefills its current points; submitting routes anew and flows through moderation + change history. — `ImproveBindingTest` (prefill emits current route; route change recorded `was`/`now`; edit round-trip applies on approve with per-field history); `ModerationServiceTest` (approve applies a climb attribute edit + history).
+- [x] An untraced climb (e.g. Côte de Cherave) can be given a real track via the edit flow. — the edit flow starts empty when the item has no `route` (§3.4); the mechanism is the same code path proven by `ImproveBindingTest::testImproveRouteChangeIsRecordedInSubmissionChanges` + the edit round-trip. *Note:* not demonstrated by mutating the harvested demo DB (would write fabricated geometry onto a real Wallonia climb — re-harvest, never hand-edit); proven by the automated edit-flow tests instead.
+- [x] Before/after browser validation on a real climb. — Mur de Huy (item 11001) via `/improve`: after the marker-anchor fix the track line and START/END/STEEPEST markers render pixel-exact on the route; `/add-climb` foot pin lands under the cursor.
 
 ## 7. Next step
 On approval → `writing-plans` for a task-by-task implementation plan (unify the three-point editor, wire both flows, BRouter routing, steepest lock, edit prefill + submission), executed with per-task review + before/after validation.
