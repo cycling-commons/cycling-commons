@@ -1,0 +1,19 @@
+.gitignore
+  s_599f9611eea0b3::t_8bfbf0c8605a12 56-58,60-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c0ab28329c00fc2d9fa9b52c79e9e6436acf88f5",
+  "prompts": {},
+  "sessions": {
+    "s_599f9611eea0b3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2416e25d-628b-4a3a-bf5e-340674fbe5de",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
