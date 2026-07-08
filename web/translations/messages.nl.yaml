@@ -931,6 +931,9 @@ contribute:
   error:
     unknown_attribute: 'Een van de ingezonden velden wordt niet herkend voor dit itemtype.'
     invisible_characters: 'Deze tekst bevat onzichtbare of opmaaktekens die niet zijn toegestaan.'
+    field_required: 'Dit veld is verplicht.'
+    field_too_long: 'Deze waarde is te lang.'
+    suspicious_characters: 'Deze tekst bevat niet-ondersteunde tekens of gemengde schriften.'
     rate_limited: 'Je hebt de bijdragelimiet voorlopig bereikt — probeer het straks opnieuw.'
 propose_route:
   eyebrow: 'K · Aanbevolen routes'

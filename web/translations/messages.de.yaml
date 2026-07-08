@@ -931,6 +931,9 @@ contribute:
   error:
     unknown_attribute: 'Eines der übermittelten Felder ist für diesen Elementtyp nicht bekannt.'
     invisible_characters: 'Dieser Text enthält unsichtbare oder Formatierungszeichen, die nicht erlaubt sind.'
+    field_required: 'Dieses Feld ist erforderlich.'
+    field_too_long: 'Dieser Wert ist zu lang.'
+    suspicious_characters: 'Dieser Text enthält nicht unterstützte Zeichen oder gemischte Schriftsysteme.'
     rate_limited: 'Du hast das Beitragslimit vorerst erreicht — bitte versuche es später erneut.'
 propose_route:
   eyebrow: 'K · Empfohlene Routen'

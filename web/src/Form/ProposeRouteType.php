@@ -16,7 +16,6 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\Length;
-use Symfony\Component\Validator\Constraints\NoSuspiciousCharacters;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
@@ -50,7 +49,7 @@ final class ProposeRouteType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'propose_route.error.name_required'),
                     new Length(max: 200, maxMessage: 'propose_route.error.name_too_long'),
-                    new NoSuspiciousCharacters(locales: CatalogFieldConstraints::LOCALES),
+                    CatalogFieldConstraints::noSuspiciousCharacters(),
                     new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
                 ],
             ])
@@ -71,7 +70,7 @@ final class ProposeRouteType extends AbstractType
                 'required' => false,
                 'constraints' => [
                     new Length(max: 2000, maxMessage: 'propose_route.error.note_too_long'),
-                    new NoSuspiciousCharacters(locales: CatalogFieldConstraints::LOCALES),
+                    CatalogFieldConstraints::noSuspiciousCharacters(),
                     new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
                 ],
             ])

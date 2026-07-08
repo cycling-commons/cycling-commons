@@ -931,6 +931,9 @@ contribute:
   error:
     unknown_attribute: 'One of the submitted fields is not recognised for this item type.'
     invisible_characters: 'This text contains invisible or formatting characters that aren’t allowed.'
+    field_required: 'This field is required.'
+    field_too_long: 'This value is too long.'
+    suspicious_characters: 'This text contains unsupported or mixed-script characters.'
     rate_limited: 'You have reached the contribution limit for now — please try again in a little while.'
 propose_route:
   eyebrow: 'K · Recommended routes'

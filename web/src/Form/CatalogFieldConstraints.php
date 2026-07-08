@@ -30,11 +30,11 @@ final class CatalogFieldConstraints
     {
         $constraints = [];
         if ($field->required) {
-            $constraints[] = new NotBlank();
+            $constraints[] = new NotBlank(message: 'contribute.error.field_required');
         }
         if (FieldKind::Select !== $field->kind) {
-            $constraints[] = new Length(max: $field->maxLength);
-            $constraints[] = new NoSuspiciousCharacters(locales: self::LOCALES);
+            $constraints[] = new Length(max: $field->maxLength, maxMessage: 'contribute.error.field_too_long');
+            $constraints[] = self::noSuspiciousCharacters();
             // NoSuspiciousCharacters' CHECK_INVISIBLE (ICU Spoofchecker) only fires on
             // *repeated identical* nonspacing combining marks, not a lone Cf format
             // character (e.g. U+200B ZERO WIDTH SPACE); soft hyphen U+00AD is also Cf
@@ -43,5 +43,27 @@ final class CatalogFieldConstraints
         }
 
         return $constraints;
+    }
+
+    /**
+     * NoSuspiciousCharacters over {@see LOCALES} with EVERY built-in message
+     * repointed at our own catalogue key. The constraint has four distinct default
+     * messages (restriction-level / invisible / mixed-numbers / hidden-overlay),
+     * all English; since framework.validation.translation_domain is `messages`
+     * (not `validators`), leaving any on its default would render English to
+     * fr/nl/de users. One key covers them all — the exact sub-check is an
+     * implementation detail the rider doesn't need spelled out.
+     *
+     * @api Shared by ProposeRouteType and AddClimbType.
+     */
+    public static function noSuspiciousCharacters(): NoSuspiciousCharacters
+    {
+        return new NoSuspiciousCharacters(
+            locales: self::LOCALES,
+            restrictionLevelMessage: 'contribute.error.suspicious_characters',
+            invisibleMessage: 'contribute.error.suspicious_characters',
+            mixedNumbersMessage: 'contribute.error.suspicious_characters',
+            hiddenOverlayMessage: 'contribute.error.suspicious_characters',
+        );
     }
 }

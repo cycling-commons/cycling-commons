@@ -180,6 +180,49 @@ final class ProposeRouteFlowTest extends WebTestCase
         self::assertStringNotContainsString('propose_route.error.', $content);
     }
 
+    /**
+     * Regression guard for the framework.validation.translation_domain: messages
+     * switch (commit 670d8a5): constraint messages now resolve against the
+     * `messages` catalogue instead of Symfony's built-in `validators` one, so every
+     * user-facing constraint must carry an explicit message KEY or fr/nl/de users
+     * fall back to the English default. On the French locale a blank required field
+     * must render the French copy, not the English built-in default.
+     */
+    public function testFrenchLocaleRendersTranslatedConstraintMessage(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = (new User())->setEmail('route-fr-blank@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/fr/propose-route');
+        self::assertResponseIsSuccessful();
+
+        // Everything valid EXCEPT the required name, so only the rName NotBlank
+        // fires. Its key (propose_route.error.name_required) must resolve to the
+        // French copy via the messages domain.
+        $form = $crawler->filter('form[name="propose_route"]')->form();
+        $form['propose_route[rName]'] = '';
+        $form['propose_route[difficulty]'] = 'Moderate';
+        $form['propose_route[season]'] = 'Summer';
+        $form['propose_route[dominantSurface]'] = 'Asphalt';
+        // See testValidProposalPersistsAndShowsReceipt: attach via the $files array.
+        $client->request('POST', $form->getUri(), $form->getPhpValues(), [
+            'propose_route' => ['gpx' => new UploadedFile(self::gpxFixture(), 'condroz.gpx', 'application/gpx+xml', null, true)],
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        $content = (string) $client->getResponse()->getContent();
+        // French name_required copy is 'Veuillez nommer l'itinéraire.'; Twig
+        // HTML-escapes the apostrophe (&#039;), so match the apostrophe-free prefix.
+        self::assertStringContainsString('Veuillez nommer', $content);
+        self::assertStringNotContainsString('This value should not be blank.', $content);
+        self::assertStringNotContainsString('propose_route.error.', $content);
+    }
+
     public function testContributeHubCardPointsToProposeRoute(): void
     {
         $client = static::createClient();

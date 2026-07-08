@@ -33,7 +33,7 @@ final class RegistrationFormType extends AbstractType
                 'attr' => ['autocomplete' => 'nickname', 'placeholder' => 'form.ph_display_name_register'],
                 'constraints' => [
                     new NotBlank(message: 'Please enter a display name.'),
-                    new Length(min: 2, max: 100, minMessage: 'Display name must be at least {{ limit }} characters.'),
+                    new Length(min: 2, max: 100, minMessage: 'Display name must be at least {{ limit }} characters.', maxMessage: 'contribute.error.field_too_long'),
                 ],
             ])
             ->add('plainPassword', RepeatedType::class, [
