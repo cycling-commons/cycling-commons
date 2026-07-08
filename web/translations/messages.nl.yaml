@@ -1046,6 +1046,12 @@ account:
   sub_status_approved: 'Goedgekeurd'
   sub_status_rejected: 'Afgewezen'
   sub_status_needs_info: 'Info nodig'
+  route_proposals_title: 'Jouw routevoorstellen'
+  route_state_submitted: 'wacht op beoordeling'
+  route_state_unverified: 'voorgesteld · op de kaart'
+  route_state_verified: 'geverifieerd'
+  route_state_rejected: 'niet aanvaard'
+  route_state_retired: 'teruggetrokken'
 
 meta:
   home_title: 'Cycling Commons'

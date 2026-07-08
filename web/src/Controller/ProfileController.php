@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
 use App\Entity\User;
 use App\Routing\LocalePrefix;
@@ -36,6 +37,11 @@ final class ProfileController extends AbstractController
             'cc_user' => $user,
             'contributions' => $em->getRepository(Submission::class)->findBy(
                 ['userId' => (int) $user->getId()],
+                ['createdAt' => 'DESC', 'id' => 'DESC'],
+                50,
+            ),
+            'route_proposals' => $em->getRepository(RecommendedRoute::class)->findBy(
+                ['proposedBy' => (int) $user->getId()],
                 ['createdAt' => 'DESC', 'id' => 'DESC'],
                 50,
             ),

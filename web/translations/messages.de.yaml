@@ -1046,6 +1046,12 @@ account:
   sub_status_approved: 'Angenommen'
   sub_status_rejected: 'Abgelehnt'
   sub_status_needs_info: 'Info benötigt'
+  route_proposals_title: 'Deine Routenvorschläge'
+  route_state_submitted: 'wartet auf Prüfung'
+  route_state_unverified: 'vorgeschlagen · auf der Karte'
+  route_state_verified: 'verifiziert'
+  route_state_rejected: 'nicht angenommen'
+  route_state_retired: 'zurückgezogen'
 
 meta:
   home_title: 'Cycling Commons'

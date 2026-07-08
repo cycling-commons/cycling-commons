@@ -78,6 +78,22 @@
       {% endif %}
     </section>
 
+    {# ── Route proposals (route-domain v1 phase 1) ── #}
+    {% if route_proposals is not empty %}
+    <section class="acct-contributions">
+      <h2>{{ 'account.route_proposals_title'|trans }}</h2>
+      <ul class="acct-sub-list acct-route-list">
+        {% for p in route_proposals %}
+          <li>
+            <span class="acct-sub-title">{{ p.name }}</span>
+            <span class="acct-sub-status acct-sub-status--{{ p.state.value }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
+            <time datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|date('Y-m-d') }}</time>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
     <div class="actions">
       <a class="lnk p" href="{{ path('map') }}">{{ 'account.explore_map'|trans }} →</a>
       {% if is_granted('ROLE_CURATOR') %}

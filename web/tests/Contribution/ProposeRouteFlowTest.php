@@ -133,4 +133,31 @@ final class ProposeRouteFlowTest extends WebTestCase
         self::assertSame(0, $crawler->filter('a[href*="type=quality-rides"]')->count(), 'old improve deep-link is gone');
         self::assertGreaterThan(0, $crawler->filter('a[href$="/propose-route"]')->count(), 'hub card targets the propose flow');
     }
+
+    public function testProfileListsMyRouteProposals(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = (new User())->setEmail('route-profile@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/propose-route');
+        $form = $crawler->filter('form[name="propose_route"]')->form();
+        $form['propose_route[rName]'] = 'Condroz · profile test';
+        $form['propose_route[difficulty]'] = 'Moderate';
+        $form['propose_route[season]'] = 'Summer';
+        $form['propose_route[surface]'] = 'Asphalt';
+        // See testValidProposalPersistsAndShowsReceipt: attach via the $files array.
+        $client->request('POST', $form->getUri(), $form->getPhpValues(), [
+            'propose_route' => ['gpx' => new UploadedFile(self::gpxFixture(), 'condroz.gpx', 'application/gpx+xml', null, true)],
+        ]);
+
+        $crawler = $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Condroz · profile test', (string) $client->getResponse()->getContent());
+        self::assertGreaterThan(0, $crawler->filter('.acct-route-list li')->count());
+    }
 }
