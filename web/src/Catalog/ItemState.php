@@ -17,4 +17,13 @@ enum ItemState: string
     case Verified = 'verified';
     case Rejected = 'rejected';
     case Retired = 'retired';
+
+    /** Spec §8: the only lifecycle states ever served publicly. */
+    public const array SERVED = [self::Unverified, self::Verified];
+
+    /** SQL tuple literal for interpolation into raw DBAL queries. */
+    public static function servedSqlTuple(): string
+    {
+        return "('".implode("', '", array_map(static fn (self $s): string => $s->value, self::SERVED))."')";
+    }
 }

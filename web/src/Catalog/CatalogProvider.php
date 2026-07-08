@@ -19,9 +19,6 @@ use Doctrine\DBAL\Connection;
  */
 final class CatalogProvider
 {
-    /** Spec §8: only these lifecycle states are ever served. */
-    private const string SERVED_STATES = "('unverified', 'verified')";
-
     public function __construct(private readonly Connection $db)
     {
     }
@@ -70,7 +67,7 @@ final class CatalogProvider
         $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
-                WHERE i.letter = :letter AND i.state IN '.self::SERVED_STATES;
+                WHERE i.letter = :letter AND i.state IN '.ItemState::servedSqlTuple();
         $params = ['letter' => $letter];
         if (null !== $source) {
             $sql .= ' AND i.source = :source';
@@ -182,7 +179,7 @@ final class CatalogProvider
         /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source
-             FROM recommended_route WHERE state IN '.self::SERVED_STATES.' ORDER BY id',
+             FROM recommended_route WHERE state IN '.ItemState::servedSqlTuple().' ORDER BY id',
         );
 
         $routes = [];
