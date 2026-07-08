@@ -915,7 +915,7 @@ contribute_hub:
   card_history_p: 'Ajoutez un monument ou un site patrimonial.'
   card_history_go: 'Ajouter un point →'
   card_rides_h: 'Itinéraires recommandés'
-  card_rides_p: 'Téléchargez une boucle GPX/FIT et notez-la.'
+  card_rides_p: 'Partagez une boucle GPX que vous recommandez — un curateur la vérifie, la communauté la roule et la confirme.'
   card_rides_go: 'Télécharger une sortie →'
   cat_derived_h: 'Dérivé'
   cat_derived_sub: 'généré automatiquement — rien à ajouter'

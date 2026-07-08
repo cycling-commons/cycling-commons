@@ -90,11 +90,49 @@ final class TrackProcessor
             return $points;
         }
 
+        // Radial pre-decimation (spec §5.4): drop points within tolerance/2 of
+        // their kept predecessor. Dense loggers (1 Hz) produce huge clusters of
+        // near-identical points that make Douglas-Peucker pathologically slow;
+        // collapsing them first bounds the DP input. First/last always kept.
+        $points = $this->radialDecimate($points, $toleranceM / 2.0);
+        if (\count($points) < 3) {
+            return $points;
+        }
+
         $keep = array_fill(0, \count($points), false);
         $keep[0] = $keep[\count($points) - 1] = true;
         $this->dpMark($points, 0, \count($points) - 1, $toleranceM, $keep);
 
         return array_values(array_intersect_key($points, array_filter($keep)));
+    }
+
+    /**
+     * Cheap O(n) radial-distance decimation: keep a point only when it is at
+     * least $minGapM from the last kept point. First and last are always kept
+     * so endpoints and overall shape survive.
+     *
+     * @param list<array{0: float, 1: float, 2: float|null}> $points
+     *
+     * @return list<array{0: float, 1: float, 2: float|null}>
+     */
+    private function radialDecimate(array $points, float $minGapM): array
+    {
+        $n = \count($points);
+        if ($n < 3) {
+            return $points;
+        }
+
+        $out = [$points[0]];
+        $last = $points[0];
+        for ($i = 1; $i < $n - 1; ++$i) {
+            if ($this->haversineM($last, $points[$i]) >= $minGapM) {
+                $out[] = $points[$i];
+                $last = $points[$i];
+            }
+        }
+        $out[] = $points[$n - 1];
+
+        return $out;
     }
 
     /**
@@ -149,41 +187,50 @@ final class TrackProcessor
      */
     private function dpMark(array $points, int $first, int $last, float $tolM, array &$keep): void
     {
-        if ($last <= $first + 1) {
-            return;
-        }
+        // Explicit worklist instead of recursion: a near-collinear megatrack
+        // would recurse ~O(n) deep and overflow PHP's call stack. Same
+        // keep-marking semantics as the classic recursive Douglas-Peucker.
+        /** @var list<array{0: int, 1: int}> $stack */
+        $stack = [[$first, $last]];
 
-        // Local equirectangular projection: metres east/north of $first.
-        $lat0 = deg2rad($points[$first][0]);
-        $cos0 = cos($lat0);
-        $proj = static fn (array $p): array => [
-            deg2rad($p[1]) * $cos0 * self::EARTH_RADIUS_M,
-            deg2rad($p[0]) * self::EARTH_RADIUS_M,
-        ];
-        [$ax, $ay] = $proj($points[$first]);
-        [$bx, $by] = $proj($points[$last]);
-        $abLen2 = ($bx - $ax) ** 2.0 + ($by - $ay) ** 2.0;
-
-        $maxDist = -1.0;
-        $maxIdx = $first;
-        for ($i = $first + 1; $i < $last; ++$i) {
-            [$px, $py] = $proj($points[$i]);
-            if ($abLen2 <= 0.0) {
-                $d = hypot($px - $ax, $py - $ay);
-            } else {
-                $t = max(0.0, min(1.0, (($px - $ax) * ($bx - $ax) + ($py - $ay) * ($by - $ay)) / $abLen2));
-                $d = hypot($px - ($ax + $t * ($bx - $ax)), $py - ($ay + $t * ($by - $ay)));
+        while ([] !== $stack) {
+            [$lo, $hi] = array_pop($stack);
+            if ($hi <= $lo + 1) {
+                continue;
             }
-            if ($d > $maxDist) {
-                $maxDist = $d;
-                $maxIdx = $i;
-            }
-        }
 
-        if ($maxDist > $tolM) {
-            $keep[$maxIdx] = true;
-            $this->dpMark($points, $first, $maxIdx, $tolM, $keep);
-            $this->dpMark($points, $maxIdx, $last, $tolM, $keep);
+            // Local equirectangular projection: metres east/north of $lo.
+            $lat0 = deg2rad($points[$lo][0]);
+            $cos0 = cos($lat0);
+            $proj = static fn (array $p): array => [
+                deg2rad($p[1]) * $cos0 * self::EARTH_RADIUS_M,
+                deg2rad($p[0]) * self::EARTH_RADIUS_M,
+            ];
+            [$ax, $ay] = $proj($points[$lo]);
+            [$bx, $by] = $proj($points[$hi]);
+            $abLen2 = ($bx - $ax) ** 2.0 + ($by - $ay) ** 2.0;
+
+            $maxDist = -1.0;
+            $maxIdx = $lo;
+            for ($i = $lo + 1; $i < $hi; ++$i) {
+                [$px, $py] = $proj($points[$i]);
+                if ($abLen2 <= 0.0) {
+                    $d = hypot($px - $ax, $py - $ay);
+                } else {
+                    $t = max(0.0, min(1.0, (($px - $ax) * ($bx - $ax) + ($py - $ay) * ($by - $ay)) / $abLen2));
+                    $d = hypot($px - ($ax + $t * ($bx - $ax)), $py - ($ay + $t * ($by - $ay)));
+                }
+                if ($d > $maxDist) {
+                    $maxDist = $d;
+                    $maxIdx = $i;
+                }
+            }
+
+            if ($maxDist > $tolM) {
+                $keep[$maxIdx] = true;
+                $stack[] = [$lo, $maxIdx];
+                $stack[] = [$maxIdx, $hi];
+            }
         }
     }
 }

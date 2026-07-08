@@ -33,8 +33,11 @@
         <label>{{ 'propose_route.name_label'|trans }}{{ form_widget(form.rName) }}</label>
         {{ form_errors(form.rName) }}
         <label>{{ 'propose_route.difficulty_label'|trans }}{{ form_widget(form.difficulty) }}</label>
+        {{ form_errors(form.difficulty) }}
         <label>{{ 'propose_route.season_label'|trans }}{{ form_widget(form.season) }}</label>
-        <label>{{ 'propose_route.surface_label'|trans }}{{ form_widget(form.surface) }}</label>
+        {{ form_errors(form.season) }}
+        <label>{{ 'propose_route.surface_label'|trans }}{{ form_widget(form.dominantSurface) }}</label>
+        {{ form_errors(form.dominantSurface) }}
         <label>{{ 'propose_route.note_label'|trans }}{{ form_widget(form.note) }}</label>
         {{ form_errors(form.note) }}
       </fieldset>
@@ -42,7 +45,9 @@
       <fieldset>
         <legend>{{ 'propose_route.bike_types_label'|trans }}</legend>
         {{ form_widget(form.bikeTypes) }}
+        {{ form_errors(form.bikeTypes) }}
         <label>{{ 'propose_route.gradient_label'|trans }}{{ form_widget(form.gradientLimited) }}</label>
+        {{ form_errors(form.gradientLimited) }}
       </fieldset>
 
       <button type="submit" class="btn primary">{{ 'propose_route.submit'|trans }}</button>

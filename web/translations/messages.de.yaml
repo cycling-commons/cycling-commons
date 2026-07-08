@@ -915,7 +915,7 @@ contribute_hub:
   card_history_p: 'Eine Sehenswürdigkeit oder Kulturstätte hinzufügen.'
   card_history_go: 'Punkt hinzufügen →'
   card_rides_h: 'Empfohlene Routen'
-  card_rides_p: 'Eine GPX/FIT-Runde hochladen und bewerten.'
+  card_rides_p: 'Lade eine GPX-Runde hoch, die du empfiehlst — ein Kurator prüft sie, die Community fährt und bestätigt sie.'
   card_rides_go: 'Tour hochladen →'
   cat_derived_h: 'Abgeleitet'
   cat_derived_sub: 'automatisch erstellt — nichts hinzuzufügen'

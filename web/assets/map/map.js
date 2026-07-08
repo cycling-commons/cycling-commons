@@ -570,8 +570,10 @@
     layerByKey['experience'].features = CC_ROUTES.routes.map((r,i)=>{
       const cities = RIDE_CITIES[r.name] || ['Spa'];
       const startM = 350 + (i*137)%401, endM = 350 + (i*211+90)%401;   // 350–750 m, varied but stable per ride
+      // difficulty is {score,label} from imports but a plain rider-vocabulary string from proposals — tolerate both; omit the headline segment when absent.
+      const diffLabel = r.difficulty && (typeof r.difficulty === 'string' ? r.difficulty : r.difficulty.label);
       return {
-      id:r.id, name:r.name, headline:`${r.km} km · ${r.difficulty.label}`, cur:false, edit:'ride',
+      id:r.id, name:r.name, headline:`${r.km} km${diffLabel ? ' · ' + diffLabel : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities,                                              // searchable start/through towns
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
@@ -597,7 +599,7 @@
         if(r.quietness) rec.push({label:'Quietness', value:/^[1-5]$/.test(r.quietness)?stars(Number(r.quietness)):r.quietness});
         if(r.scenic) rec.push({label:'Scenic rating', value:/^[1-5]$/.test(r.scenic)?stars(Number(r.scenic)):r.scenic});
         if(r.friendliness) rec.push({label:'Cycling-friendliness', value:/^[1-5]$/.test(r.friendliness)?stars(Number(r.friendliness)):r.friendliness});
-        if(r.bikeTypes) rec.push({label:'Suitable bikes', value:r.bikeTypes});
+        if(r.bikeTypes) rec.push({label:'Suitable bikes', value:Array.isArray(r.bikeTypes)?r.bikeTypes.join(', '):r.bikeTypes});
         if(r.handbike) rec.push({label:'Handbike-friendly?', value:r.handbike});
         if(r.gradientLimited) rec.push({label:'Gradient-limited?', value:r.gradientLimited});
         if(r.bestDirection) rec.push({label:'Best direction', value:r.bestDirection});
@@ -976,10 +978,13 @@
     }).join('');
     const fresh = f.freshness
       ? `<div class="cc-d-fresh ${f.freshness.state}">${f.freshness.state} · last confirmed ${f.freshness.lastConfirmed}</div>` : '';
-    const diff = f.difficulty
+    // difficulty is {score,label} from imports but a plain string from rider proposals — render the label for both, light the 1–5 scale only when a score is known.
+    const diffLabel = f.difficulty && (typeof f.difficulty === 'string' ? f.difficulty : f.difficulty.label);
+    const diffScore = f.difficulty && typeof f.difficulty === 'object' ? f.difficulty.score : null;
+    const diff = diffLabel
       ? `<div class="cc-diff" title="Difficulty 1–5: Easy · Moderate · Challenging · Hard · Very hard">Difficulty
-          <div class="cc-diff-scale">${[1,2,3,4,5].map(n=>`<span class="cc-diff-dot${n===f.difficulty.score?' on':''}" style="--p:${DIFF_PURPLE[n]}" title="${n} · ${DIFF_LABELS[n]}">${n}</span>`).join('')}</div>
-          <b class="cc-diff-lbl">${f.difficulty.label}</b></div>` : '';
+          <div class="cc-diff-scale">${[1,2,3,4,5].map(n=>`<span class="cc-diff-dot${n===diffScore?' on':''}" style="--p:${DIFF_PURPLE[n]}" title="${n} · ${DIFF_LABELS[n]}">${n}</span>`).join('')}</div>
+          <b class="cc-diff-lbl">${diffLabel}</b></div>` : '';
     const elev = f.elev ? `<div class="cc-elev-cap">Elevation · ${Math.min(...f.elev)}–${Math.max(...f.elev)} m`
       + (f.gain?` · ${f.gain} m climbing`:'') + ` <em>(from GPX)</em></div>` + elevSvg(f.elev) : '';
     const grad = f.grad ? gradStrip(f.grad) : '';

@@ -321,8 +321,7 @@
     var locTxt = !WZ.loc ? '—'
       : WZ.loc.type === 'point' ? '◎ ' + WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E'
       : WZ.loc.type === 'segment' ? WZ.loc.a[1].toFixed(4) + '°N ' + WZ.loc.a[0].toFixed(4) + '°E → ' + WZ.loc.b[1].toFixed(4) + '°N ' + WZ.loc.b[0].toFixed(4) + '°E'
-      : WZ.loc.type === 'climb' ? '◎ foot ' + WZ.loc.start[1].toFixed(4) + '°N ' + WZ.loc.start[0].toFixed(4) + '°E → summit ' + WZ.loc.summit[1].toFixed(4) + '°N ' + WZ.loc.summit[0].toFixed(4) + '°E'
-      : 'Track · ' + WZ.loc.name;
+      : '◎ foot ' + WZ.loc.start[1].toFixed(4) + '°N ' + WZ.loc.start[0].toFixed(4) + '°E → summit ' + WZ.loc.summit[1].toFixed(4) + '°N ' + WZ.loc.summit[0].toFixed(4) + '°E';
 
     // Echo every detail/extra field the rider actually filled in (step 2), so the
     // review faithfully mirrors what will be submitted — not just Type/Location/Media.

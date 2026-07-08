@@ -50,7 +50,7 @@ final class RouteProposalServiceTest extends KernelTestCase
             'rName' => 'Condroz rollers test',
             'difficulty' => 'Moderate',
             'season' => 'Summer',
-            'surface' => 'Asphalt',
+            'dominantSurface' => 'Asphalt',
             'note' => 'Rolling hills, quiet lanes.',
             'bikeTypes' => ['Road', 'Gravel'],
             'gradientLimited' => '',

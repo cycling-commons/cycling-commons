@@ -1,5 +1,9 @@
 framework:
     validation:
+        # Constraint violation messages (e.g. propose_route.error.*) are keys in
+        # the `messages` domain, not the default `validators` domain — translate
+        # them there so form errors render as text, never raw keys.
+        translation_domain: messages
         # Enables validator auto-mapping support.
         # For instance, basic validation constraints will be inferred from Doctrine's metadata.
         #auto_mapping:

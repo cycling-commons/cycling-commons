@@ -34,6 +34,7 @@ final class ProposeRouteType extends AbstractType
         $builder
             ->add('gpx', FileType::class, [
                 'label' => false,
+                'attr' => ['accept' => '.gpx'],
                 'constraints' => [
                     new NotBlank(message: 'propose_route.error.gpx_required'),
                     new File(
@@ -61,7 +62,7 @@ final class ProposeRouteType extends AbstractType
                 'label' => false,
                 'choices' => ['Spring' => 'Spring', 'Summer' => 'Summer', 'Autumn' => 'Autumn', 'Winter' => 'Winter', 'Any' => 'Any'],
             ])
-            ->add('surface', ChoiceType::class, [
+            ->add('dominantSurface', ChoiceType::class, [
                 'label' => false,
                 'choices' => ['Asphalt' => 'Asphalt', 'Mixed' => 'Mixed', 'Gravel' => 'Gravel'],
             ])

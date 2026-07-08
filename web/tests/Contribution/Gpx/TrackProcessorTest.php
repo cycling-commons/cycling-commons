@@ -111,4 +111,26 @@ final class TrackProcessorTest extends TestCase
         self::assertLessThan(4, \count($simplified), 'collinear midpoints dropped');
         self::assertContains([50.002, 5.0, null], $simplified, 'the corner survives');
     }
+
+    public function testSimplifyHandlesLargeZigzagWithoutStackOverflow(): void
+    {
+        // ~8k-point ±11 m zigzag. The amplitude exceeds the 10 m tolerance, so
+        // Douglas-Peucker keeps most points — precisely the input that recurses
+        // ~O(n) deep and overflows the call stack in the classic recursive form.
+        // The explicit-stack DP plus the radial pre-decimation must finish and
+        // return both endpoints unchanged. No timing assertion (CI variance):
+        // completion + endpoint integrity is the structural guarantee.
+        $points = [];
+        for ($i = 0; $i < 8_000; ++$i) {
+            $lat = 50.0 + (0 === $i % 2 ? 0.0001 : -0.0001); // ±~11 m in latitude
+            $lng = 5.0 + $i * 0.0002;                        // advance ~14 m east per step
+            $points[] = [$lat, $lng, 100.0];
+        }
+
+        $simplified = $this->processor->simplify($points, 10.0);
+
+        self::assertGreaterThan(2, \count($simplified), 'a zigzag above tolerance keeps interior points');
+        self::assertSame($points[0], $simplified[0], 'first endpoint intact');
+        self::assertSame($points[7_999], end($simplified), 'last endpoint intact');
+    }
 }

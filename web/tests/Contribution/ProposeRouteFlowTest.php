@@ -19,17 +19,46 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  */
 final class ProposeRouteFlowTest extends WebTestCase
 {
+    /** @var list<string> temp upload files to unlink after each test */
+    private static array $tmpFiles = [];
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        foreach (self::$tmpFiles as $f) {
+            if (is_file($f)) {
+                @unlink($f);
+            }
+        }
+        self::$tmpFiles = [];
+        parent::tearDown();
+    }
+
+    /**
+     * Build a temp upload with the given extension/content. `tempnam()` creates
+     * an extension-less file we don't use, so drop it immediately and keep only
+     * the suffixed sibling — registered for cleanup in tearDown().
+     */
+    private static function tmpUpload(string $suffix, string $content): string
+    {
+        $base = (string) tempnam(sys_get_temp_dir(), 'cc-');
+        $path = $base.$suffix;
+        @unlink($base);
+        file_put_contents($path, $content);
+        self::$tmpFiles[] = $path;
+
+        return $path;
+    }
+
     private static function gpxFixture(): string
     {
         $pts = '';
         for ($i = 0; $i <= 100; ++$i) {
             $pts .= sprintf('<trkpt lat="%.4f" lon="5.3000"><ele>%d</ele></trkpt>', 50.0 + $i * 0.001, 100 + $i);
         }
-        $path = tempnam(sys_get_temp_dir(), 'cc-gpx-').'.gpx';
-        file_put_contents($path, '<?xml version="1.0"?><gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1">'
-            .'<trk><trkseg>'.$pts.'</trkseg></trk></gpx>');
 
-        return $path;
+        return self::tmpUpload('.gpx', '<?xml version="1.0"?><gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1">'
+            .'<trk><trkseg>'.$pts.'</trkseg></trk></gpx>');
     }
 
     public function testAnonymousIsRedirectedToLogin(): void
@@ -71,7 +100,7 @@ final class ProposeRouteFlowTest extends WebTestCase
         $form['propose_route[rName]'] = 'Condroz · flow test';
         $form['propose_route[difficulty]'] = 'Moderate';
         $form['propose_route[season]'] = 'Summer';
-        $form['propose_route[surface]'] = 'Asphalt';
+        $form['propose_route[dominantSurface]'] = 'Asphalt';
         // This DomCrawler's FileFormField::upload() takes a path (?string), not
         // an UploadedFile, so attach the file via the documented $files-array
         // request recipe: the UploadedFile (original name + mime) reaches the
@@ -98,8 +127,7 @@ final class ProposeRouteFlowTest extends WebTestCase
         $em->persist($user);
         $em->flush();
 
-        $path = tempnam(sys_get_temp_dir(), 'cc-bad-').'.gpx';
-        file_put_contents($path, '<gpx><trk><trkseg>'); // malformed
+        $path = self::tmpUpload('.gpx', '<gpx><trk><trkseg>'); // malformed
 
         $client->loginUser($user);
         $crawler = $client->request('GET', '/propose-route');
@@ -122,6 +150,34 @@ final class ProposeRouteFlowTest extends WebTestCase
         self::assertStringContainsString('The file could not be read as a GPX track.', $content);
         self::assertStringNotContainsString('propose_route.error.', $content);
         self::assertSame(0, $em->getRepository(RecommendedRoute::class)->count(['name' => 'Broken upload']));
+    }
+
+    public function testWrongExtensionRendersTranslatedConstraintMessage(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = (new User())->setEmail('route-badext@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/propose-route');
+        $form = $crawler->filter('form[name="propose_route"]')->form();
+        $form['propose_route[rName]'] = 'Wrong extension';
+        // A .txt upload trips the File(extensions: ['gpx' => …]) constraint. Its
+        // message key (propose_route.error.gpx_type) lives in the `messages`
+        // domain; with framework.validation.translation_domain: messages the
+        // rendered form error must be the English sentence, never the raw key.
+        $txt = self::tmpUpload('.txt', 'this is plainly not a gpx track');
+        $client->request('POST', $form->getUri(), $form->getPhpValues(), [
+            'propose_route' => ['gpx' => new UploadedFile($txt, 'notes.txt', 'text/plain', null, true)],
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        $content = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('That does not look like a GPX file (.gpx).', $content);
+        self::assertStringNotContainsString('propose_route.error.', $content);
     }
 
     public function testContributeHubCardPointsToProposeRoute(): void
@@ -149,7 +205,7 @@ final class ProposeRouteFlowTest extends WebTestCase
         $form['propose_route[rName]'] = 'Condroz · profile test';
         $form['propose_route[difficulty]'] = 'Moderate';
         $form['propose_route[season]'] = 'Summer';
-        $form['propose_route[surface]'] = 'Asphalt';
+        $form['propose_route[dominantSurface]'] = 'Asphalt';
         // See testValidProposalPersistsAndShowsReceipt: attach via the $files array.
         $client->request('POST', $form->getUri(), $form->getPhpValues(), [
             'propose_route' => ['gpx' => new UploadedFile(self::gpxFixture(), 'condroz.gpx', 'application/gpx+xml', null, true)],

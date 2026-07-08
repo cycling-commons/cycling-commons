@@ -34,7 +34,7 @@ final class RouteProposalService
     private const int MAX_RAW_M = 400_000;  // spec §5.3
 
     /** Attribute keys copied from the metadata form when non-empty. */
-    private const array META_KEYS = ['difficulty', 'season', 'surface', 'note', 'bikeTypes', 'gradientLimited'];
+    private const array META_KEYS = ['difficulty', 'season', 'dominantSurface', 'note', 'bikeTypes', 'gradientLimited'];
 
     public function __construct(
         private readonly EntityManagerInterface $em,

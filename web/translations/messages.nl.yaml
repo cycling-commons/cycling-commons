@@ -915,7 +915,7 @@ contribute_hub:
   card_history_p: 'Voeg een bezienswaardigheid of erfgoedplek toe.'
   card_history_go: 'Punt toevoegen →'
   card_rides_h: 'Aanbevolen routes'
-  card_rides_p: 'Upload een GPX/FIT-rondje en beoordeel het.'
+  card_rides_p: 'Upload een GPX-rondje dat je aanraadt — een curator beoordeelt het, de community rijdt en bevestigt het.'
   card_rides_go: 'Rit uploaden →'
   cat_derived_h: 'Afgeleid'
   cat_derived_sub: 'automatisch opgebouwd — niets toe te voegen'

@@ -915,7 +915,7 @@ contribute_hub:
   card_history_p: 'Add a landmark or heritage site.'
   card_history_go: 'Add a point →'
   card_rides_h: 'Recommended routes'
-  card_rides_p: 'Upload a GPX/FIT loop and rate it.'
+  card_rides_p: 'Upload a GPX loop you recommend — a curator reviews it, the community rides and verifies it.'
   card_rides_go: 'Upload a ride →'
   cat_derived_h: 'Derived'
   cat_derived_sub: 'built automatically — nothing to add'
