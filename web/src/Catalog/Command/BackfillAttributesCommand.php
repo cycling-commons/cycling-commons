@@ -264,7 +264,7 @@ final class BackfillAttributesCommand extends Command
             return preg_match('/(\d+(?:\.\d+)?)/', $value, $m) ? $m[1] : null;
         }
 
-        if (FieldKind::Select === $field->kind) {
+        if (\in_array($field->kind, [FieldKind::Select, FieldKind::MultiSelect], true)) {
             foreach ($field->choices as $choice) {
                 if (0 === strcasecmp($choice, $value)) {
                     return $choice; // canonical casing from the registry, not the harvested string

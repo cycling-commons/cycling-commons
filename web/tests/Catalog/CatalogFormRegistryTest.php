@@ -60,7 +60,7 @@ final class CatalogFormRegistryTest extends TestCase
         foreach (ItemType::cases() as $type) {
             $set = $this->registry->for($type);
             foreach ([...$set->fields, ...$set->addFields] as $field) {
-                if (FieldKind::Select === $field->kind) {
+                if (\in_array($field->kind, [FieldKind::Select, FieldKind::MultiSelect], true)) {
                     self::assertNotEmpty($field->choices, "{$type->value}.{$field->name} select needs choices");
                 } else {
                     self::assertSame([], $field->choices, "{$type->value}.{$field->name} non-select must not carry choices");
@@ -172,5 +172,22 @@ final class CatalogFormRegistryTest extends TestCase
         // The six cyclist-experience attributes live in the Add-missing pane.
         self::assertContains('quietness', $names);
         self::assertContains('bestDirection', $names);
+    }
+
+    /** P2-D2: bikeTypes is a single multi-select over BikeType::values() —
+     *  the old single-select field plus a separate 'handbike' field are gone;
+     *  Handbike is now just one of the bikeTypes choices. */
+    public function testQualityRidesBikeTypesIsMultiSelectAndHandbikeFolded(): void
+    {
+        $set = $this->registry->for(ItemType::QualityRides);
+        $byName = [];
+        foreach ([...$set->fields, ...$set->addFields] as $f) {
+            $byName[$f->name] = $f;
+        }
+
+        self::assertArrayHasKey('bikeTypes', $byName);
+        self::assertSame(FieldKind::MultiSelect, $byName['bikeTypes']->kind);
+        self::assertSame(\App\Catalog\BikeType::values(), $byName['bikeTypes']->choices);
+        self::assertArrayNotHasKey('handbike', $byName, 'handbike is folded into bikeTypes, not a separate field');
     }
 }

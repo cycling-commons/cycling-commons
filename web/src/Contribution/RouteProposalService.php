@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Contribution;
 
+use App\Catalog\BikeTypeVocabulary;
 use App\Catalog\DifficultyVocabulary;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemSource;
@@ -101,6 +102,15 @@ final class RouteProposalService
             $attributes['difficulty'] = $canonicalDifficulty;
         } else {
             unset($attributes['difficulty']);
+        }
+        // Canonicalize bikeTypes to a list<string> over BikeType::values(),
+        // folding the legacy separate 'handbike' field in (route-domain spec
+        // §12 P2-D2) — never persist the pre-canonical shapes.
+        $bikeTypes = BikeTypeVocabulary::normalize($meta['bikeTypes'] ?? null, $meta['handbike'] ?? null);
+        if ([] !== $bikeTypes) {
+            $attributes['bikeTypes'] = $bikeTypes;
+        } else {
+            unset($attributes['bikeTypes']);
         }
 
         // Derived, never user-supplied: the surfaces the trimmed track actually

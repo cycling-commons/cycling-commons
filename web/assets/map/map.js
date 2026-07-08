@@ -632,13 +632,15 @@
         if(r.scenic) rec.push({label:'Scenic rating', value:/^[1-5]$/.test(r.scenic)?stars(Number(r.scenic)):r.scenic});
         if(r.friendliness) rec.push({label:'Cycling-friendliness', value:/^[1-5]$/.test(r.friendliness)?stars(Number(r.friendliness)):r.friendliness});
         if(r.bikeTypes){
-          // One chip per suitable type — scannable whether a route declares
-          // one bike type or five. Values are rider/import data: every
-          // interpolation is escPend-escaped before the html:true channel.
+          // bikeTypes is always a list now (P2-D2, folds the retired 'Any' and
+          // the legacy separate 'handbike' field into one canonical shape);
+          // Array.isArray fallback is defensive only. One chip per suitable
+          // type — scannable whether a route declares one bike type or five.
+          // Values are rider/import data: every interpolation is
+          // escPend-escaped before the html:true channel.
           const types=Array.isArray(r.bikeTypes)?r.bikeTypes:[r.bikeTypes];
           rec.push({label:'Suitable bikes', html:true, value:types.map(t=>`<span class="cc-chip">${escPend(t)}</span>`).join('')});
         }
-        if(r.handbike) rec.push({label:'Handbike-friendly?', value:r.handbike});
         if(r.gradientLimited) rec.push({label:'Gradient-limited?', value:r.gradientLimited});
         if(r.bestDirection) rec.push({label:'Best direction', value:r.bestDirection});
         if(r.note) rec.push({label:'Note', value:r.note});

@@ -203,8 +203,11 @@ final class CatalogFormRegistry
                     CatalogField::select('quietness', 'Quietness rating (1–5)', ['1', '2', '3', '4', '5']),
                     CatalogField::select('scenic', 'Scenic rating (1–5)', ['1', '2', '3', '4', '5']),
                     CatalogField::select('friendliness', 'Cycling-friendliness (1–5)', ['1', '2', '3', '4', '5']),
-                    CatalogField::select('bikeTypes', 'Suitable bike types', ['Road', 'Gravel', 'MTB', 'E-bike', 'Any']),
-                    CatalogField::select('handbike', 'Handbike-friendly?', self::UNKNOWN_YES_NO),
+                    // P2-D2: a route's suitable bike types is one canonical list<string>
+                    // over BikeType::values() (BikeTypeVocabulary) — the retired 'Any'
+                    // and the separate 'handbike' Yes/No field both fold into this list
+                    // rather than staying independent attributes.
+                    CatalogField::multiselect('bikeTypes', 'Suitable bike types', BikeType::values()),
                     CatalogField::select('gradientLimited', 'Gradient-limited?', ['No', '≤6%', '≤9%']),
                     CatalogField::select('bestDirection', 'Best direction', ['Clockwise', 'Counter-clockwise', 'Either']),
                 ],

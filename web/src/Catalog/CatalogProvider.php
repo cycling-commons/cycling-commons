@@ -228,6 +228,17 @@ final class CatalogProvider
             } else {
                 unset($route['difficulty']);
             }
+            // Canonicalize bikeTypes to a list<string>, folding the legacy
+            // separate 'handbike' attribute in (route-domain spec §12 P2-D2)
+            // regardless of how it was stored (single string, 'Any', or
+            // already a list) so every serving path emits one shape.
+            $canonicalBikeTypes = BikeTypeVocabulary::normalize($attrs['bikeTypes'] ?? null, $attrs['handbike'] ?? null);
+            if ([] !== $canonicalBikeTypes) {
+                $route['bikeTypes'] = $canonicalBikeTypes;
+            } else {
+                unset($route['bikeTypes']);
+            }
+            unset($route['handbike']);
             $routes[] = $route;
         }
 

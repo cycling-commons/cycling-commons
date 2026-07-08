@@ -128,6 +128,16 @@ final class ImproveType extends AbstractType
                 'choices' => array_combine($field->choices, $field->choices),
                 'data' => $data,
             ]),
+            // P2-D2: same choice universe as Select, but multiple/expanded so the
+            // submitted value is a list<string> (BikeTypeVocabulary consumes it).
+            FieldKind::MultiSelect => $builder->add($field->name, ChoiceType::class, [
+                'label' => $field->label,
+                'required' => false,
+                'multiple' => true,
+                'expanded' => true,
+                'choices' => array_combine($field->choices, $field->choices),
+                'data' => \is_array($current[$field->name] ?? null) ? $current[$field->name] : [],
+            ]),
             FieldKind::Textarea => $builder->add($field->name, TextareaType::class, [
                 'label' => $field->label,
                 'required' => false,

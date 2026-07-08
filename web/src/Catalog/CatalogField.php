@@ -53,4 +53,16 @@ final readonly class CatalogField
     {
         return new self($name, $label, FieldKind::Select, choices: $choices, default: $default);
     }
+
+    /**
+     * A select field whose stored value is a list<string> over $choices
+     * (P2-D2) — e.g. a route's suitable bike types — rather than a single
+     * scalar.
+     *
+     * @param list<string> $choices
+     */
+    public static function multiselect(string $name, string $label, array $choices): self
+    {
+        return new self($name, $label, FieldKind::MultiSelect, choices: $choices);
+    }
 }

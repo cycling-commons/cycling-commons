@@ -17,4 +17,6 @@ enum FieldKind: string
     case Select = 'select';
     case Textarea = 'textarea';
     case Url = 'url';
+    /** Same choice universe as {@see Select}, but the value is a list<string> (P2-D2). */
+    case MultiSelect = 'multiselect';
 }

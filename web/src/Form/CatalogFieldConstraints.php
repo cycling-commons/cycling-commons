@@ -33,7 +33,11 @@ final class CatalogFieldConstraints
         if ($field->required) {
             $constraints[] = new NotBlank(message: 'contribute.error.field_required');
         }
-        if (FieldKind::Select !== $field->kind) {
+        // Select and MultiSelect values are constrained by ChoiceType itself
+        // (and MultiSelect's value is a list<string>, not a scalar — the
+        // string-shaped Length/NoSuspiciousCharacters/Cf-regex checks below
+        // don't apply to either).
+        if (!\in_array($field->kind, [FieldKind::Select, FieldKind::MultiSelect], true)) {
             $constraints[] = new Length(max: $field->maxLength, maxMessage: 'contribute.error.field_too_long');
             $constraints[] = self::noSuspiciousCharacters();
             // NoSuspiciousCharacters' CHECK_INVISIBLE (ICU Spoofchecker) only fires on
