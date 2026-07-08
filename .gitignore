@@ -53,7 +53,14 @@ Thumbs.db
 
 # Local browser-test artifacts
 .playwright-mcp/
+# Catch-all for stray screenshots dropped at the repo root (any raster format) —
+# they belong in .playwright-mcp/ or the scratchpad, never here. Legit images
+# (brand/og/media) all live in subdirs, so root-only rules don't touch them.
 /*.png
+/*.jpg
+/*.jpeg
+/*.webp
+/*.gif
 atlas/demo/media/*.gpx
 
 # Maintainer-only data-prep — couples to a private upstream DB, not shareable.
