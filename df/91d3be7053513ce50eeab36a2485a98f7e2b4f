@@ -1,0 +1,46 @@
+web/src/Catalog/FieldKind.php
+  s_a341f734e0719d::t_b215b3e2c70236 19
+web/tests/Catalog/CatalogFormRegistryTest.php
+  s_a341f734e0719d::t_7ddbc5bb7e92cc 144-161
+web/src/Form/CatalogFieldConstraints.php
+  s_a341f734e0719d::t_14894b0dcef850 46-59
+  s_a341f734e0719d::t_b6fa8d0ff122e9 16
+web/src/Catalog/CatalogField.php
+  s_a341f734e0719d::t_3703b5f1ee8866 40-50
+web/translations/messages.de.yaml
+  s_a341f734e0719d::t_af8727f1c5bd88 937
+web/translations/messages.nl.yaml
+  s_a341f734e0719d::t_657ea5d09121f5 937
+web/src/Form/ImproveType.php
+  s_a341f734e0719d::t_77b840270455b2 145-155
+web/tests/Contribution/ImproveTest.php
+  s_a341f734e0719d::t_b64f8c56409574 270-294,298-327
+  s_a341f734e0719d::t_4e14f2141c7f8d 295-297
+web/translations/messages.en.yaml
+  s_a341f734e0719d::t_691d3b3aacad48 937
+web/translations/messages.fr.yaml
+  s_a341f734e0719d::t_53ff029400f3d7 937
+web/src/Catalog/CatalogFormRegistry.php
+  s_a341f734e0719d::t_7b2e05c9c7e50c 107,110
+web/assets/map/map.js
+  s_a341f734e0719d::t_08013e1950c069 5-11
+  s_a341f734e0719d::t_f691eaf6d3e557 1055
+web/tests/Form/CatalogFieldConstraintsTest.php
+  s_a341f734e0719d::t_d513b84a56ec7e 1-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "df91d3be7053513ce50eeab36a2485a98f7e2b4f",
+  "prompts": {},
+  "sessions": {
+    "s_a341f734e0719d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d2ef3591-66f6-4935-a0eb-20e38718a462",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
