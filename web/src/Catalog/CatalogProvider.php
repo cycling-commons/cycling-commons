@@ -176,9 +176,9 @@ final class CatalogProvider
      */
     private function routes(): array
     {
-        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string}> $rows */
+        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source
+            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state
              FROM recommended_route WHERE state IN '.ItemState::servedSqlTuple().' ORDER BY id',
         );
 
@@ -187,6 +187,9 @@ final class CatalogProvider
             $attrs = $this->decode($row['attributes']);
             // W6: srcType is the raw ItemSource enum value (see featureCollection()).
             $route = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']];
+            // Phase 2 (§4.2): raw ItemState value so the map can badge
+            // unverified ("proposed") routes distinct from verified ones.
+            $route['state'] = (string) $row['state'];
             if (isset($attrs['season'])) {
                 $route['season'] = $attrs['season'];
             }

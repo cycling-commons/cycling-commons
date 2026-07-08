@@ -191,4 +191,27 @@ final class CatalogProviderTest extends KernelTestCase
         // asserts payload(), not json(), so 12.3 can't distinguish the flag).
         self::assertStringContainsString('"r":4.0', $json);
     }
+
+    public function testServedRoutesCarryStateForBadging(): void
+    {
+        // A verified and an unverified route both serve; each carries its state
+        // so the map can badge "proposed" (unverified) vs a normal (verified) pin.
+        $em = static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class);
+        foreach ([['verified', \App\Catalog\ItemState::Verified], ['proposed', \App\Catalog\ItemState::Unverified]] as [$tag, $state]) {
+            $em->persist((new \App\Catalog\Entity\RecommendedRoute())
+                ->setName('State route '.$tag)
+                ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+                ->setDistanceM(9000)->setState($state)
+                ->setSource(\App\Catalog\ItemSource::User)->setSourceRef('user:state-'.$tag));
+        }
+        $em->flush();
+
+        $routes = static::getContainer()->get(\App\Catalog\CatalogProvider::class)->payload()['K'];
+        $byName = [];
+        foreach ($routes as $r) {
+            $byName[$r['name']] = $r;
+        }
+        self::assertSame('verified', $byName['State route verified']['state'] ?? null);
+        self::assertSame('unverified', $byName['State route proposed']['state'] ?? null);
+    }
 }

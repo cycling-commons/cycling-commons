@@ -606,6 +606,9 @@
         const rec=[
           {label:'Distance', value:r.km+' km'}
         ];
+        // Phase-2 badge: a proposed route (unverified) rides "ride it to verify";
+        // a verified route renders normally. state is served by CatalogProvider.
+        if(r.state === 'unverified') rec.unshift({label:'Status', value:'Proposed · ride it to verify', warn:true});
         if(cities){
           // html:true — builder-constructed markup from the constant
           // RIDE_CITIES table (cityLink escapes the name); NEVER set this
