@@ -937,6 +937,7 @@ contribute:
     suspicious_characters: 'Ce texte contient des caractères non pris en charge ou d''écritures mélangées.'
     invalid_url: 'Saisissez une adresse web complète commençant par http:// ou https://'
     rate_limited: 'Vous avez atteint la limite de contributions pour le moment — réessayez un peu plus tard.'
+    route_too_complex: 'Cette trace comporte trop de virages serrés pour être traitée — simplifiez-la dans votre application GPS et réessayez.'
 propose_route:
   eyebrow: 'K · Itinéraires recommandés'
   title: 'Proposer un itinéraire'

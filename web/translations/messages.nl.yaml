@@ -937,6 +937,7 @@ contribute:
     suspicious_characters: 'Deze tekst bevat niet-ondersteunde tekens of gemengde schriften.'
     invalid_url: 'Voer een volledig webadres in dat begint met http:// of https://'
     rate_limited: 'Je hebt de bijdragelimiet voorlopig bereikt — probeer het straks opnieuw.'
+    route_too_complex: 'Deze track heeft te veel scherpe bochten om te verwerken — vereenvoudig hem in je GPS-app en probeer het opnieuw.'
 propose_route:
   eyebrow: 'K · Aanbevolen routes'
   title: 'Stel een route voor'

@@ -19,6 +19,10 @@ final class TrackProcessor
     private const float EARTH_RADIUS_M = 6_371_000.0;
     private const int TRIM_MIN_M = 350;   // spec D4
     private const int TRIM_SPAN_M = 401;  // 350 + [0..400] → 350..750
+    // Bound Douglas-Peucker inner-scan work: legitimate routes are O(n log n);
+    // an adversarial saw-tooth is O(n^2). 200n gives smooth tracks ample
+    // head-room while a zigzag trips a clean reject (carry-in §12.1).
+    private const int MAX_DP_WORK_FACTOR = 200;
 
     /** @param list<array{0: float, 1: float, 2: float|null}> $points */
     public function distanceM(array $points): float
@@ -101,7 +105,7 @@ final class TrackProcessor
 
         $keep = array_fill(0, \count($points), false);
         $keep[0] = $keep[\count($points) - 1] = true;
-        $this->dpMark($points, 0, \count($points) - 1, $toleranceM, $keep);
+        $this->dpMark($points, 0, \count($points) - 1, $toleranceM, $keep, self::MAX_DP_WORK_FACTOR * \count($points));
 
         return array_values(array_intersect_key($points, array_filter($keep)));
     }
@@ -184,19 +188,32 @@ final class TrackProcessor
     /**
      * @param list<array{0: float, 1: float, 2: float|null}> $points
      * @param array<int, bool>                               $keep
+     *
+     * @throws \InvalidArgumentException when the inner-scan work exceeds $budget
+     *                                    (adversarial zigzag input, carry-in §12.1)
      */
-    private function dpMark(array $points, int $first, int $last, float $tolM, array &$keep): void
+    private function dpMark(array $points, int $first, int $last, float $tolM, array &$keep, int $budget): void
     {
         // Explicit worklist instead of recursion: a near-collinear megatrack
         // would recurse ~O(n) deep and overflow PHP's call stack. Same
         // keep-marking semantics as the classic recursive Douglas-Peucker.
         /** @var list<array{0: int, 1: int}> $stack */
         $stack = [[$first, $last]];
+        $work = 0;
 
         while ([] !== $stack) {
             [$lo, $hi] = array_pop($stack);
             if ($hi <= $lo + 1) {
                 continue;
+            }
+
+            // Each iteration scans ~($hi - $lo) points below; an adversarial
+            // saw-tooth keeps nearly every point, splitting into near-equal
+            // halves at every level and re-scanning most of the range each
+            // time — O(n^2) total. Track that scan cost against the budget.
+            $work += $hi - $lo;
+            if ($work > $budget) {
+                throw new \InvalidArgumentException('contribute.error.route_too_complex');
             }
 
             // Local equirectangular projection: metres east/north of $lo.

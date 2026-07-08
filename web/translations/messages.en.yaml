@@ -937,6 +937,7 @@ contribute:
     suspicious_characters: 'This text contains unsupported or mixed-script characters.'
     invalid_url: 'Enter a full web address starting with http:// or https://'
     rate_limited: 'You have reached the contribution limit for now — please try again in a little while.'
+    route_too_complex: 'This track has too many sharp turns to process — simplify it in your GPS app and try again.'
 propose_route:
   eyebrow: 'K · Recommended routes'
   title: 'Propose a route'

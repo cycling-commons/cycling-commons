@@ -146,6 +146,35 @@ final class RouteProposalServiceTest extends KernelTestCase
         $service->propose(self::gpx(), ['rName' => '   '], $user);
     }
 
+    public function testRejectsAnAdversarialZigzagGpxAsATranslatedException(): void
+    {
+        self::bootKernel();
+        $service = static::getContainer()->get(RouteProposalService::class);
+        $user = $this->makeUser('proposer-zigzag@test.test');
+
+        // Saw-tooth zigzag: every point is > the 10 m default simplify()
+        // tolerance from its neighbours, so Douglas-Peucker's inner-scan work
+        // exceeds the budget (carry-in §12.1). Amplitude/step sizes keep the
+        // ~84 km raw distance inside the 2..400 km guard so the zigzag budget
+        // is what trips, not the length check.
+        $pts = '';
+        for ($i = 0; $i < 6_000; ++$i) {
+            $lat = 50.0 + (0 === $i % 2 ? 0.0001 : -0.0001); // ±~11 m in latitude
+            $lng = 5.0 + $i * 0.0002;                        // advance ~14 m east per step
+            $pts .= sprintf('<trkpt lat="%.6f" lon="%.6f"><ele>100</ele></trkpt>', $lat, $lng);
+        }
+        $zigzag = '<?xml version="1.0"?><gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1">'
+            .'<trk><trkseg>'.$pts.'</trkseg></trk></gpx>';
+
+        // The service surfaces this as a plain \InvalidArgumentException with
+        // the translation key as its message — exactly like length_range and
+        // name_required above — so the controller's existing catch turns it
+        // into a translated form error (not a 500).
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('contribute.error.route_too_complex');
+        $service->propose($zigzag, ['rName' => 'Zigzag'], $user);
+    }
+
     public function testFourthProposalInADayIsRateLimited(): void
     {
         self::bootKernel();

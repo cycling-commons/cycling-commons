@@ -115,11 +115,12 @@ final class TrackProcessorTest extends TestCase
     public function testSimplifyHandlesLargeZigzagWithoutStackOverflow(): void
     {
         // ~8k-point ±11 m zigzag. The amplitude exceeds the 10 m tolerance, so
-        // Douglas-Peucker keeps most points — precisely the input that recurses
-        // ~O(n) deep and overflows the call stack in the classic recursive form.
-        // The explicit-stack DP plus the radial pre-decimation must finish and
-        // return both endpoints unchanged. No timing assertion (CI variance):
-        // completion + endpoint integrity is the structural guarantee.
+        // Douglas-Peucker keeps nearly every point — precisely the input that
+        // recurses ~O(n) deep (stack overflow risk in the classic recursive
+        // form) *and* does O(n^2) inner-scan work. The explicit-stack loop
+        // means it no longer overflows the call stack, but it still exceeds
+        // the DP work budget (carry-in §12.1) — so it now fails cleanly and
+        // quickly instead of either overflowing or silently burning CPU.
         $points = [];
         for ($i = 0; $i < 8_000; ++$i) {
             $lat = 50.0 + (0 === $i % 2 ? 0.0001 : -0.0001); // ±~11 m in latitude
@@ -127,10 +128,36 @@ final class TrackProcessorTest extends TestCase
             $points[] = [$lat, $lng, 100.0];
         }
 
-        $simplified = $this->processor->simplify($points, 10.0);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('contribute.error.route_too_complex');
+        $this->processor->simplify($points, 10.0);
+    }
 
-        self::assertGreaterThan(2, \count($simplified), 'a zigzag above tolerance keeps interior points');
-        self::assertSame($points[0], $simplified[0], 'first endpoint intact');
-        self::assertSame($points[7_999], end($simplified), 'last endpoint intact');
+    public function testSimplifyRejectsAnAdversarialZigzagInsteadOfBurningCpu(): void
+    {
+        // A saw-tooth where every point is > tolerance from its neighbours: DP
+        // keeps them all, so naive recursion is O(n^2). With ~6000 points the
+        // budget (200n) trips and we reject cleanly rather than hang.
+        $points = [];
+        for ($i = 0; $i < 6000; ++$i) {
+            $lat = 50.0 + ($i % 2 === 0 ? 0.0 : 0.001); // ~110 m vertical saw-tooth
+            $lng = 5.0 + $i * 0.001;                     // ~70 m horizontal step
+            $points[] = [$lat, $lng, null];
+        }
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('contribute.error.route_too_complex');
+        (new \App\Contribution\Gpx\TrackProcessor())->simplify($points, 10.0);
+    }
+
+    public function testSimplifyStillReturnsForANormalDenseTrack(): void
+    {
+        // A smooth arc of 6000 points collapses fine — well under budget.
+        $points = [];
+        for ($i = 0; $i < 6000; ++$i) {
+            $points[] = [50.0 + sin($i / 500) * 0.05, 5.0 + $i * 0.0005, null];
+        }
+        $out = (new \App\Contribution\Gpx\TrackProcessor())->simplify($points, 10.0);
+        self::assertLessThan(\count($points), \count($out));
     }
 }

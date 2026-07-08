@@ -937,6 +937,7 @@ contribute:
     suspicious_characters: 'Dieser Text enthält nicht unterstützte Zeichen oder gemischte Schriftsysteme.'
     invalid_url: 'Gib eine vollständige Webadresse ein, die mit http:// oder https:// beginnt.'
     rate_limited: 'Du hast das Beitragslimit vorerst erreicht — bitte versuche es später erneut.'
+    route_too_complex: 'Dieser Track hat zu viele scharfe Kurven zum Verarbeiten — vereinfache ihn in deiner GPS-App und versuche es erneut.'
 propose_route:
   eyebrow: 'K · Empfohlene Routen'
   title: 'Route vorschlagen'
