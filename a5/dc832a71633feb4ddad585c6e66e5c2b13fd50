@@ -1,0 +1,19 @@
+web/tests/Contribution/RegionResolverTest.php
+  s_162e830c17ed4c::t_5a380a25c01bf8 26-30,32-33,37-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a5dc832a71633feb4ddad585c6e66e5c2b13fd50",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
