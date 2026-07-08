@@ -62,6 +62,14 @@ class RecommendedRoute
     #[ORM\Column(type: 'json', options: ['jsonb' => true])]
     private array $attributes = [];
 
+    /**
+     * users.id of the proposing rider (route-domain spec §4.1); NULL for
+     * imported routes. Plain column, no relation — provenance only, confers
+     * no edit rights (spec D3).
+     */
+    #[ORM\Column(name: 'proposed_by', type: 'integer', nullable: true)]
+    private ?int $proposedBy = null;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
@@ -191,6 +199,18 @@ class RecommendedRoute
     {
         $this->attributes = $attributes;
         $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function getProposedBy(): ?int
+    {
+        return $this->proposedBy;
+    }
+
+    public function setProposedBy(?int $proposedBy): static
+    {
+        $this->proposedBy = $proposedBy;
 
         return $this;
     }
