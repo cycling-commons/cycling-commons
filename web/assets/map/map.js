@@ -527,7 +527,10 @@
     'Nivelles':{t:'City', ll:[50.5977,4.3270], wiki:'https://en.wikipedia.org/wiki/Nivelles', info:'Brabant town around its Romanesque collegiate church.'},
     'Malmedy':{t:'City', ll:[50.4259,6.0283], wiki:'https://en.wikipedia.org/wiki/Malmedy', info:'East-cantons town below the Hautes Fagnes, near the Stavelot roads.'}
   };
-  const cityLink = name => `<a class="cc-city" data-city="${name}">${name}</a>`;
+  // Defense in depth: the name is escaped even though today's callers only
+  // pass RIDE_CITIES constants — if a payload value ever reaches this, it
+  // must not break out of the attribute or element context.
+  const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;
   // distance (km) between [lat,lng] points; a feature's representative point for radius search
   function haversine(a,b){ const R=6371,d=Math.PI/180;
     const x=Math.sin((b[0]-a[0])*d/2)**2 + Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin((b[1]-a[1])*d/2)**2;
@@ -568,14 +571,18 @@
       'Afternoon Ride':['Spa','Sart','Tiège']
     };
     layerByKey['experience'].features = CC_ROUTES.routes.map((r,i)=>{
-      const cities = RIDE_CITIES[r.name] || ['Spa'];
+      // Demo-era lookup keyed by ride name. NO fallback: fabricating
+      // 'Starts at: Spa' for unknown routes (e.g. rider proposals) is wrong
+      // data — reverse-geocoding real towns is a recorded route-domain
+      // non-goal, so unknown routes simply omit the town rows.
+      const cities = RIDE_CITIES[r.name];
       const startM = 350 + (i*137)%401, endM = 350 + (i*211+90)%401;   // 350–750 m, varied but stable per ride
       // difficulty is {score,label} from imports but a plain rider-vocabulary string from proposals — tolerate both; omit the headline segment when absent.
       const diffLabel = r.difficulty && (typeof r.difficulty === 'string' ? r.difficulty : r.difficulty.label);
       return {
       id:r.id, name:r.name, headline:`${r.km} km${diffLabel ? ' · ' + diffLabel : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
-      cities,                                              // searchable start/through towns
+      cities: cities || [],                                // searchable start/through towns (empty when unknown)
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
       // C1-T4 (W6): 'Contributed GPX' is an accurate detail for the pipeline's
       // usual auto-derived routes; a rider-added/edited one gets the plain label.
@@ -590,10 +597,15 @@
       // the attribute.
       record:(()=>{
         const rec=[
-          {label:'Distance', value:r.km+' km'},
-          {label:'Starts at', value:cityLink(cities[0])},
-          {label:'Towns on route', value:cities.map(cityLink).join(' · ')}
+          {label:'Distance', value:r.km+' km'}
         ];
+        if(cities){
+          // html:true — builder-constructed markup from the constant
+          // RIDE_CITIES table (cityLink escapes the name); NEVER set this
+          // flag on payload-derived values.
+          rec.push({label:'Starts at', value:cityLink(cities[0]), html:true});
+          rec.push({label:'Towns on route', value:cities.map(cityLink).join(' · '), html:true});
+        }
         if(r.season) rec.push({label:'Season', value:r.season});
         if(r.dominantSurface) rec.push({label:'Dominant surface', value:r.dominantSurface});
         if(r.quietness) rec.push({label:'Quietness', value:/^[1-5]$/.test(r.quietness)?stars(Number(r.quietness)):r.quietness});
@@ -974,7 +986,11 @@
     }
     const rows = recs.map(r => {
       const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`).join('') : '';
-      return `<li><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
+      // r.html is the explicit trusted-markup channel (like r.links): honored
+      // only for rows the builder constructs from constant data with escaped
+      // interpolations (see the RIDE_CITIES rows). Everything else — any value
+      // that can carry payload/user data — stays escPend-escaped (spec §13).
+      return `<li><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
     }).join('');
     const fresh = f.freshness
       ? `<div class="cc-d-fresh ${f.freshness.state}">${f.freshness.state} · last confirmed ${f.freshness.lastConfirmed}</div>` : '';
