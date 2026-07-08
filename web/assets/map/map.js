@@ -934,7 +934,7 @@
     // Same edit-bridge rule as the "Edit this item" link below (spec §6/§8):
     // the add-photo CTA only ever binds to the item's real DB id — no id, no
     // link (a name-slug guess is never a faithful target).
-    const addPhoto = f.id!=null ? `<a class="cc-d-addphoto" href="/improve?item=${f.id}&name=${encodeURIComponent(f.name)}&type=${layer.letter}&add=photo" aria-label="Add a photo of ${escPend(f.name)}">
+    const addPhoto = (f.id!=null && layer.key!=='experience') ? `<a class="cc-d-addphoto" href="/improve?item=${f.id}&name=${encodeURIComponent(f.name)}&type=${layer.letter}&add=photo" aria-label="Add a photo of ${escPend(f.name)}">
       <svg class="cc-ap-cam" viewBox="0 0 48 36" width="42" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="1.5" y="7.5" width="45" height="27" rx="4"/><path d="M16 7.5l3-4h10l3 4" stroke-linejoin="round"/><circle cx="24" cy="21.5" r="8"/><path d="M40.5 13h.01" stroke-width="3" stroke-linecap="round"/>
       </svg>
@@ -992,14 +992,20 @@
     // loads that exact item and prefills the form with its current values
     // (spec §6/§8) — no id, no edit link (a name-slug guess is never a
     // faithful target).
-    const editLbl = layer.key==='experience' ? '✎ Edit this ride' : '✎ Edit this item';
     const ell = f.geom && f.geom.ll;                    // [lat,lng] for point features
     let edit = '';
     if(f.id!=null){
-      const editQ = `item=${f.id}&name=${encodeURIComponent(f.name)}`
-        + `&type=${layer.letter}`
-        + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
-      edit = `<a class="cc-d-act edit" href="/improve?${editQ}">${editLbl}</a>`;
+      if(layer.key==='experience'){
+        // Route domain v1 (spec 2026-07-08): riders never edit routes — the
+        // old /improve?type=K link is refused server-side (route/item id
+        // collision fix). Phase-1 rider action: download the track to ride it.
+        edit = `<a class="cc-d-act edit" href="/routes/${f.id}.gpx">⤓ Download GPX</a>`;
+      } else {
+        const editQ = `item=${f.id}&name=${encodeURIComponent(f.name)}`
+          + `&type=${layer.letter}`
+          + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
+        edit = `<a class="cc-d-act edit" href="/improve?${editQ}">✎ Edit this item</a>`;
+      }
     }
     let moderate = '';
     if(layer.pendingLayer && f.pending){
