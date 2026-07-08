@@ -189,7 +189,7 @@ final class CatalogFormRegistry
             ItemType::QualityRides => new ItemFieldSet(
                 fields: [
                     CatalogField::text('rideName', 'Ride name', placeholder: 'e.g. Spa · Sankt Vith'),
-                    CatalogField::select('difficulty', 'Difficulty', ['Gentle', 'Moderate', 'Hard', 'Very hard']),
+                    CatalogField::select('difficulty', 'Difficulty', array_values(DifficultyVocabulary::LABELS)),
                     // C2-T7 (spec §W2): keyed 'season', not 'bestSeason' — 'season' is
                     // the key CatalogProvider::routes() already reads/serves as
                     // route.season and every imported/harvested route already carries;

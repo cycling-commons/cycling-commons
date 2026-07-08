@@ -214,4 +214,38 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame('verified', $byName['State route verified']['state'] ?? null);
         self::assertSame('unverified', $byName['State route proposed']['state'] ?? null);
     }
+
+    /** P2-D1: a proposal's rider-vocabulary difficulty string is canonicalized on
+     *  intake (RouteProposalService) and served as {score,label} (CatalogProvider),
+     *  the same shape imports use — never the raw legacy string. */
+    public function testProposedRouteServesCanonicalDifficulty(): void
+    {
+        $user = (new \App\Entity\User())->setEmail('difficulty-proposer@test.test');
+        $user->setPassword('x');
+        $this->em->persist($user);
+        $this->em->flush();
+
+        $pts = '';
+        for ($i = 0; $i <= 100; ++$i) {
+            $pts .= sprintf('<trkpt lat="%.4f" lon="5.3000"><ele>%d</ele></trkpt>', 50.0 + $i * 0.001, 100 + $i);
+        }
+        $gpx = '<?xml version="1.0"?><gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1">'
+            .'<trk><trkseg>'.$pts.'</trkseg></trk></gpx>';
+
+        $service = static::getContainer()->get(\App\Contribution\RouteProposalService::class);
+        $route = $service->propose($gpx, ['rName' => 'Difficulty canon test', 'difficulty' => 'Hard'], $user);
+        self::assertSame(['score' => 4, 'label' => 'Hard'], $route->getAttributes()['difficulty']);
+
+        // Approve it (a real proposal never serves while `submitted`) and confirm
+        // CatalogProvider hands the map the same canonical shape.
+        $route->setState(\App\Catalog\ItemState::Unverified);
+        $this->em->flush();
+
+        $routes = static::getContainer()->get(CatalogProvider::class)->payload()['K'];
+        $byName = [];
+        foreach ($routes as $r) {
+            $byName[$r['name']] = $r;
+        }
+        self::assertSame(['score' => 4, 'label' => 'Hard'], $byName['Difficulty canon test']['difficulty'] ?? null);
+    }
 }

@@ -219,6 +219,15 @@ final class CatalogProvider
                     $route[$key] = $attrs[$key];
                 }
             }
+            // Canonicalize difficulty to {score,label} regardless of how it was
+            // stored (legacy import string, rider vocab string, or already
+            // canonical) so every serving path emits one shape (P2-D1).
+            $canonicalDifficulty = DifficultyVocabulary::canonical($attrs['difficulty'] ?? null);
+            if (null !== $canonicalDifficulty) {
+                $route['difficulty'] = $canonicalDifficulty;
+            } else {
+                unset($route['difficulty']);
+            }
             $routes[] = $route;
         }
 

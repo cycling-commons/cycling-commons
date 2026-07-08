@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Contribution;
 
+use App\Catalog\DifficultyVocabulary;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
@@ -92,6 +93,14 @@ final class RouteProposalService
             if (null !== $value && '' !== $value && [] !== $value) {
                 $attributes[$key] = $value;
             }
+        }
+        // Canonicalize difficulty to {score,label} (route-domain spec §12 P2-D1)
+        // so the form's rider-facing string is never persisted verbatim.
+        $canonicalDifficulty = DifficultyVocabulary::canonical($meta['difficulty'] ?? null);
+        if (null !== $canonicalDifficulty) {
+            $attributes['difficulty'] = $canonicalDifficulty;
+        } else {
+            unset($attributes['difficulty']);
         }
 
         // Derived, never user-supplied: the surfaces the trimmed track actually

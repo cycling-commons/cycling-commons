@@ -584,8 +584,8 @@
       // non-goal, so unknown routes simply omit the town rows.
       const cities = RIDE_CITIES[r.name];
       const startM = 350 + (i*137)%401, endM = 350 + (i*211+90)%401;   // 350–750 m, varied but stable per ride
-      // difficulty is {score,label} from imports but a plain rider-vocabulary string from proposals — tolerate both; omit the headline segment when absent.
-      const diffLabel = r.difficulty && (typeof r.difficulty === 'string' ? r.difficulty : r.difficulty.label);
+      // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
+      const diffLabel = r.difficulty?.label ?? (typeof r.difficulty === 'string' ? r.difficulty : undefined);
       return {
       id:r.id, name:r.name, headline:`${r.km} km${diffLabel ? ' · ' + diffLabel : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
@@ -1065,9 +1065,9 @@
     }).join('');
     const fresh = f.freshness
       ? `<div class="cc-d-fresh ${f.freshness.state}">${f.freshness.state} · last confirmed ${f.freshness.lastConfirmed}</div>` : '';
-    // difficulty is {score,label} from imports but a plain string from rider proposals — render the label for both, light the 1–5 scale only when a score is known.
-    const diffLabel = f.difficulty && (typeof f.difficulty === 'string' ? f.difficulty : f.difficulty.label);
-    const diffScore = f.difficulty && typeof f.difficulty === 'object' ? f.difficulty.score : null;
+    // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
+    const diffLabel = f.difficulty?.label ?? (typeof f.difficulty === 'string' ? f.difficulty : undefined);
+    const diffScore = f.difficulty?.score ?? null;
     const diff = diffLabel
       ? `<div class="cc-diff" title="Difficulty 1–5: Easy · Moderate · Challenging · Hard · Very hard">Difficulty
           <div class="cc-diff-scale">${[1,2,3,4,5].map(n=>`<span class="cc-diff-dot${n===diffScore?' on':''}" style="--p:${DIFF_PURPLE[n]}" title="${n} · ${DIFF_LABELS[n]}">${n}</span>`).join('')}</div>

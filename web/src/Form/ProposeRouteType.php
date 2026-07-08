@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Catalog\BikeType;
+use App\Catalog\DifficultyVocabulary;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -55,7 +56,7 @@ final class ProposeRouteType extends AbstractType
             ])
             ->add('difficulty', ChoiceType::class, [
                 'label' => false,
-                'choices' => ['Gentle' => 'Gentle', 'Moderate' => 'Moderate', 'Hard' => 'Hard', 'Very hard' => 'Very hard'],
+                'choices' => DifficultyVocabulary::choices(),
             ])
             ->add('season', ChoiceType::class, [
                 'label' => false,
