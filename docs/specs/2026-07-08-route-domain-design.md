@@ -284,3 +284,34 @@ Four phases, each its own implementation plan (writing-plans), sequenced:
 
 Spec reconciliation (this doc + `K-quality-rides.md` rewrite + README
 carve-out + nine annotation passes) lands with this design, ahead of phase 1.
+
+## 12. Phase-1 execution notes (2026-07-08)
+
+Phase 1 (§11.1) shipped on `symfony-base` (17 commits, 298 tests, all gates
+green; final whole-branch review: ready to merge). Decisions made during
+execution, binding on later phases:
+
+- **Attribute contract**: proposals store `dominantSurface` (not `surface` —
+  the plan's original key contradicted the served-route/registry vocabulary);
+  `difficulty` is stored as the rider-vocabulary string with shape-tolerant
+  map rendering (imports keep `{score, label}`) — vocabulary harmonization is
+  phase-2 registry work; `bikeTypes` is stored as a **list** per D6, with the
+  drawer tolerant of both list and legacy string until phase-2 normalization.
+- **Limiter semantics (deliberate)**: the 3/day limiter consumes before any
+  validation (bounds parse/simplify cost per rider); rate-limited responses
+  are flash + 200 (house pattern, matches add-climb) — not 429.
+- **Validator i18n**: `framework.validation.translation_domain: messages`
+  app-wide; every user-facing constraint carries an explicit message key
+  (built-in default messages are no longer relied on anywhere in `src/Form`).
+
+**Phase-2 carry-ins** (recorded residuals, non-blocking):
+
+1. `TrackProcessor::simplify` worst case is still quadratic CPU for
+   adversarial >5 m-spaced zigzags (crash-free, authenticated, rate-limited);
+   add a hard iteration budget with clean reject.
+2. Difficulty vocabulary harmonization (registry 4-label select vs drawer 1–5
+   scale vs import `{score,label}`) belongs to the phase-2 curator/registry
+   work, together with the D6 `bikeTypes` multi-select normalization.
+3. Marginal untranslated edges: File-constraint php.ini-level upload errors,
+   CSRF-failure copy, and pre-existing hardcoded-English auth/settings form
+   messages (pre-date this work, all locales).
