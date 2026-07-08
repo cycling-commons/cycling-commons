@@ -39,5 +39,9 @@ final class RegionResolverTest extends KernelTestCase
 
         self::assertSame((int) $region->getId(), $resolver->resolve($inside));
         self::assertNull($resolver->resolve($outside));
+
+        // Explicit teardown so the fixture is dropped even without DAMA rollback.
+        $em->remove($region);
+        $em->flush();
     }
 }

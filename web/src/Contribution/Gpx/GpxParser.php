@@ -45,10 +45,6 @@ final class GpxParser
 
         $points = [];
         foreach ($doc->getElementsByTagNameNS('*', 'trkpt') as $trkpt) {
-            if (\count($points) >= self::MAX_POINTS + 1) {
-                break; // already over the cap — no need to keep collecting
-            }
-
             $lat = $trkpt->getAttribute('lat');
             $lng = $trkpt->getAttribute('lon');
             if (!is_numeric($lat) || !is_numeric($lng)) {
@@ -67,10 +63,15 @@ final class GpxParser
             }
 
             $points[] = [$lat, $lng, $ele];
+            if (\count($points) > self::MAX_POINTS) {
+                // Reject the moment we cross the cap — no point buffering the
+                // rest of a track we are going to refuse.
+                throw new \InvalidArgumentException('propose_route.error.gpx_points');
+            }
         }
 
         $n = \count($points);
-        if ($n < self::MIN_POINTS || $n > self::MAX_POINTS) {
+        if ($n < self::MIN_POINTS) {
             // Zero trkpt elements means "not a GPX track" rather than a size
             // problem — report it as invalid, not out-of-range.
             throw new \InvalidArgumentException(0 === $n ? 'propose_route.error.gpx_invalid' : 'propose_route.error.gpx_points');

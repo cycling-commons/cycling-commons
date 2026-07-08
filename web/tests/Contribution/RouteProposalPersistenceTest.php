@@ -40,4 +40,27 @@ final class RouteProposalPersistenceTest extends KernelTestCase
         self::assertSame(4242, $reloaded->getProposedBy());
         self::assertSame(ItemState::Submitted, $reloaded->getState());
     }
+
+    public function testImportedRouteRoundTripsWithNullProposedBy(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        // Imported route: never carries a proposing rider (spec §4.1). Persisted
+        // WITHOUT setProposedBy() — the nullable column must round-trip as null.
+        $route = (new RecommendedRoute())
+            ->setName('Imported · Ardenne')
+            ->setGeom('{"type":"LineString","coordinates":[[5.6,50.2],[5.7,50.3]]}')
+            ->setDistanceM(20000)->setAscentM(300)
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Auto)
+            ->setSourceRef('fx:test-imported-null-0001')
+            ->setAttributes(['difficulty' => 'Hard']);
+        $em->persist($route);
+        $em->flush();
+        $em->clear();
+
+        $reloaded = $em->find(RecommendedRoute::class, $route->getId());
+        self::assertNull($reloaded->getProposedBy());
+        self::assertSame(ItemState::Unverified, $reloaded->getState());
+    }
 }

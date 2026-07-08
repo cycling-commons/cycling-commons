@@ -36,6 +36,19 @@ final class TrackProcessorTest extends TestCase
         self::assertNull($this->processor->ascentM([[50.0, 5.0, 100.0], [50.01, 5.0, null]]));
     }
 
+    public function testAscentIsNullForEmptyTrack(): void
+    {
+        // <2 points → no meaningful ascent → null (not 0).
+        self::assertNull($this->processor->ascentM([]));
+    }
+
+    public function testAscentRoundsFractionalGains(): void
+    {
+        // Gains of +1.3 then +1.4 → 2.7 m total → round() → 3.
+        $points = [[50.0, 5.0, 10.0], [50.01, 5.0, 11.3], [50.02, 5.0, 12.7]];
+        self::assertSame(3, $this->processor->ascentM($points));
+    }
+
     /** Spec D4: same content hash → identical trim; endpoints move ≥350 m and ≤750 m. */
     public function testTrimIsDeterministicAndMovesEndpointsWithinSpecRange(): void
     {
@@ -71,6 +84,18 @@ final class TrackProcessorTest extends TestCase
         self::assertCount(2, $trimmed);
         self::assertGreaterThan(50.0, $trimmed[0][0], 'start endpoint moved inward');
         self::assertLessThan(50.018, $trimmed[1][0], 'end endpoint moved inward');
+    }
+
+    public function testTrimPropagatesNullElevationThroughInterpolatedEndpoint(): void
+    {
+        // Long (~2.2 km) endpoint-adjacent segments guarantee both the start and
+        // end cuts (350–750 m) land on the first/last segment. The inner point
+        // lacks ele, so the interpolated endpoint must inherit ele = null
+        // (the null-propagation branch in cutFromStart).
+        $points = [[50.0, 5.0, 100.0], [50.02, 5.0, null], [50.04, 5.0, 120.0]];
+        $trimmed = $this->processor->trim($points, hash('sha256', 'null-ele'));
+
+        self::assertNull($trimmed[0][2], 'interpolated start endpoint inherits null ele');
     }
 
     public function testSimplifyDropsCollinearPointsButKeepsCorners(): void

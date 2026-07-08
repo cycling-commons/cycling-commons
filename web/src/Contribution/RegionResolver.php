@@ -21,6 +21,12 @@ final class RegionResolver
     {
     }
 
+    /**
+     * Callers pass parser-produced GeoJSON (valid by construction), so the
+     * PostGIS parse-failure path below is not expected in normal operation.
+     *
+     * @throws \Doctrine\DBAL\Exception when the GeoJSON cannot be parsed by PostGIS
+     */
     public function resolve(string $lineStringGeoJson): ?int
     {
         $id = $this->db->fetchOne(

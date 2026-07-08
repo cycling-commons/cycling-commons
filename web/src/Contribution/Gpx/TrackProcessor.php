@@ -39,6 +39,11 @@ final class TrackProcessor
      */
     public function ascentM(array $points): ?int
     {
+        // No meaningful ascent on <2 points; unreachable behind upstream length guards.
+        if (\count($points) < 2) {
+            return null;
+        }
+
         $gain = 0.0;
         for ($i = 0, $n = \count($points); $i < $n; ++$i) {
             if (null === $points[$i][2]) {
