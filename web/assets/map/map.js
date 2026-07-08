@@ -740,18 +740,30 @@
   const ROUTE_BASE_COLOR='#FD986E';   // 60% #FF5A1F pre-blended over #FBF4E4
   let selectedRouteLayerId=null;
   const routeLineIds=()=>map.getStyle().layers.map(l=>l.id).filter(id=>/^experience-\d+$/.test(id));
+  // Climb lines, road-surface indications and Mapillary always render ABOVE
+  // route lines (the draw-time stacking rule) — re-applied after any
+  // selection moveLayer so highlighting a route never buries the A-layer
+  // surface colours under an opaque ride line.
+  function liftInfoLayersAboveRoutes(){
+    const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
+    dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
+    dynamicIds.filter(id=>id.startsWith('surface-')).forEach(liftGroup);
+    ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
+  }
   function highlightRoute(selId){
     selectedRouteLayerId=selId;
     routeLineIds().forEach(id=>{
       const on=id===selId;
       map.setPaintProperty(id,'line-color',on?'#FF5A1F':ROUTE_BASE_COLOR);
-      map.setPaintProperty(id,'line-opacity',on?1:0.15);
+      map.setPaintProperty(id,'line-opacity',on?1:0.4);
       map.setPaintProperty(id,'line-width',on?6:5);
-      if(map.getLayer(id+'-case')) map.setPaintProperty(id+'-case','line-opacity',on?0.95:0.1);
+      if(map.getLayer(id+'-case')) map.setPaintProperty(id+'-case','line-opacity',on?0.95:0.35);
     });
-    // lift the selection above its dimmed siblings
+    // lift the selection above its dimmed siblings, then put the info layers
+    // (climbs / surface / Mapillary) back on top of it
     if(map.getLayer(selId+'-case')) map.moveLayer(selId+'-case');
     if(map.getLayer(selId)) map.moveLayer(selId);
+    liftInfoLayersAboveRoutes();
   }
   function clearRouteHighlight(){
     if(selectedRouteLayerId===null) return;
@@ -973,9 +985,7 @@
     // stacking, bottom → top: ride lines, climb lines, road-surface lines, then Mapillary on top
     const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
     dynamicIds.filter(id=>id.startsWith('experience-')).forEach(liftGroup);    // ride lines (bottom of the three)
-    dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);  // climb lines, above ride
-    dynamicIds.filter(id=>id.startsWith('surface-')).forEach(liftGroup);       // road-surface lines, above routes
-    ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); }); // Mapillary line + dots on the very top
+    liftInfoLayersAboveRoutes();                                               // climbs, surface, Mapillary above them
     document.getElementById('count').textContent=n;
     updateCounts();   // legend shows shown/total, refreshed on mode + layer changes
   }
