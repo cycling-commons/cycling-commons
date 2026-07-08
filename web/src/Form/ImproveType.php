@@ -35,7 +35,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * 'improve' kind as an Edit submission (was/now snapshot against the bound
  * item's current attributes).
  *
- * The `current` option (`array<string, scalar|null>`, keyed by registry field
+ * The `current` option (`array<string, scalar|list<string>|null>`, keyed by registry field
  * name) prefills Text/Textarea/Select fields with the bound item's current
  * name + attribute values — the edit-bridge acceptance criterion (spec §8):
  * `/improve?item=<id>` opens pre-filled, never blank/default.
@@ -57,7 +57,7 @@ final class ImproveType extends AbstractType
         $type = $options['catalog_type'];
         \assert($type instanceof ItemType);
         $fieldSet = $this->registry->for($type);
-        /** @var array<string, scalar|null> $current */
+        /** @var array<string, scalar|list<string>|null> $current */
         $current = $options['current'];
 
         // ── Type-specific Details step: two panes as nested sub-forms ────────
@@ -110,7 +110,7 @@ final class ImproveType extends AbstractType
         }
     }
 
-    /** @param array<string, scalar|null> $current */
+    /** @param array<string, scalar|list<string>|null> $current */
     private function addCatalogField(FormBuilderInterface $builder, CatalogField $field, array $current): void
     {
         $attr = [];

@@ -140,14 +140,14 @@ final class TrackProcessorTest extends TestCase
         // budget (200n) trips and we reject cleanly rather than hang.
         $points = [];
         for ($i = 0; $i < 6000; ++$i) {
-            $lat = 50.0 + ($i % 2 === 0 ? 0.0 : 0.001); // ~110 m vertical saw-tooth
+            $lat = 50.0 + (0 === $i % 2 ? 0.0 : 0.001); // ~110 m vertical saw-tooth
             $lng = 5.0 + $i * 0.001;                     // ~70 m horizontal step
             $points[] = [$lat, $lng, null];
         }
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('contribute.error.route_too_complex');
-        (new \App\Contribution\Gpx\TrackProcessor())->simplify($points, 10.0);
+        (new TrackProcessor())->simplify($points, 10.0);
     }
 
     public function testSimplifyStillReturnsForANormalDenseTrack(): void
@@ -157,7 +157,7 @@ final class TrackProcessorTest extends TestCase
         for ($i = 0; $i < 6000; ++$i) {
             $points[] = [50.0 + sin($i / 500) * 0.05, 5.0 + $i * 0.0005, null];
         }
-        $out = (new \App\Contribution\Gpx\TrackProcessor())->simplify($points, 10.0);
+        $out = (new TrackProcessor())->simplify($points, 10.0);
         self::assertLessThan(\count($points), \count($out));
     }
 }

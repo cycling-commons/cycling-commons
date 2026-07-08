@@ -196,7 +196,7 @@ final class CatalogProviderTest extends KernelTestCase
     {
         // A verified and an unverified route both serve; each carries its state
         // so the map can badge "proposed" (unverified) vs a normal (verified) pin.
-        $em = static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
         foreach ([['verified', \App\Catalog\ItemState::Verified], ['proposed', \App\Catalog\ItemState::Unverified]] as [$tag, $state]) {
             $em->persist((new \App\Catalog\Entity\RecommendedRoute())
                 ->setName('State route '.$tag)
@@ -206,7 +206,7 @@ final class CatalogProviderTest extends KernelTestCase
         }
         $em->flush();
 
-        $routes = static::getContainer()->get(\App\Catalog\CatalogProvider::class)->payload()['K'];
+        $routes = static::getContainer()->get(CatalogProvider::class)->payload()['K'];
         $byName = [];
         foreach ($routes as $r) {
             $byName[$r['name']] = $r;

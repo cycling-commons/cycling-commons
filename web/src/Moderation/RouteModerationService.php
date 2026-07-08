@@ -77,7 +77,7 @@ final class RouteModerationService
 
     /**
      * @param array<string, mixed> $changes field => proposed value; `name` is a
-     *                                       pseudo-field (Route::name), all others attributes
+     *                                      pseudo-field (Route::name), all others attributes
      */
     public function editMetadata(int $routeId, array $changes, User $curator): RecommendedRoute
     {

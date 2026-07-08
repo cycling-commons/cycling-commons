@@ -34,10 +34,10 @@ final class RouteQueue
             $params['region'] = $regionId;
         }
 
-        $sql = "SELECT r.id, r.name, r.region_id, reg.name AS region_name, r.distance_m, r.ascent_m,
+        $sql = 'SELECT r.id, r.name, r.region_id, reg.name AS region_name, r.distance_m, r.ascent_m,
                        r.proposed_by, r.created_at,
                        (SELECT COUNT(*) FROM recommended_route a
-                         WHERE a.state IN ".ItemState::servedSqlTuple()."
+                         WHERE a.state IN '.ItemState::servedSqlTuple()."
                            AND a.region_id IS NOT DISTINCT FROM r.region_id) AS active_in_region
                 FROM recommended_route r
                 LEFT JOIN region reg ON reg.id = r.region_id

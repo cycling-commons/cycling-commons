@@ -190,7 +190,7 @@ final class TrackProcessor
      * @param array<int, bool>                               $keep
      *
      * @throws \InvalidArgumentException when the inner-scan work exceeds $budget
-     *                                    (adversarial zigzag input, carry-in §12.1)
+     *                                   (adversarial zigzag input, carry-in §12.1)
      */
     private function dpMark(array $points, int $first, int $last, float $tolM, array &$keep, int $budget): void
     {
