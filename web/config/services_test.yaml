@@ -4,21 +4,4 @@
 # MicroKernelTrait::configureContainer), so definitions here win over the
 # `App\` autowiring prototype.
 services:
-    # RouteModerationService has no src consumer yet (a later phase-2 task
-    # wires it into a controller), so the unused private definition is pruned
-    # from the compiled container and cannot be fetched from the test
-    # container. Re-declare it public (still autowired) in the test env only,
-    # so KernelTestCase can resolve it directly.
-    App\Moderation\RouteModerationService:
-        autowire: true
-        public: true
-        arguments:
-            $regionActiveCap: '%route.region_active_cap%'
 
-    # RouteQueue has no src consumer yet either (same phase-2 wiring gap);
-    # re-declare it public in the test env only, same rationale as above.
-    App\Moderation\RouteQueue:
-        autowire: true
-        public: true
-        arguments:
-            $regionActiveCap: '%route.region_active_cap%'

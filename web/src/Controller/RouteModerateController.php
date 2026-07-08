@@ -109,7 +109,12 @@ final class RouteModerateController extends AbstractController
         $this->validateCsrf($request, 'route-suggestion');
         /** @var User $curator */
         $curator = $this->getUser();
-        $status = RouteSuggestionStatus::from((string) $request->request->get('status'));
+        $status = RouteSuggestionStatus::tryFrom((string) $request->request->get('status'));
+        if (null === $status) {
+            $this->addFlash('danger', 'moderate_routes.error.undecidable');
+
+            return $this->redirectToRoute('moderate_routes');
+        }
         try {
             $this->moderation->resolveSuggestion((int) $request->request->get('suggestion_id'), $status, $curator);
             $this->addFlash('success', 'moderate_routes.flash.suggestion_resolved');
@@ -145,6 +150,19 @@ final class RouteModerateController extends AbstractController
 
         $suggested = SurfaceVocabulary::suggestFromProfile($attrs['surfaces'] ?? null);
 
+        // Retire only applies to an already-active (unverified/verified) route —
+        // a submitted proposal is retired via decide()'s three-way form instead.
+        $retireForm = \in_array($row['state'], $servedValues, true)
+            ? $this->container->get('form.factory')->createNamedBuilder('route_decision', \Symfony\Component\Form\Extension\Core\Type\FormType::class, null, [
+                'action' => $this->generateUrl('moderate_routes_decide'),
+                'method' => 'POST',
+            ])
+                ->add('route_id', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, ['data' => (string) $id])
+                ->add('decision', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, ['data' => 'retire'])
+                ->add('note', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, ['required' => false])
+                ->getForm()
+            : null;
+
         return $this->render('moderate_routes/detail.html.twig', [
             'nav_active' => 'moderate_routes',
             'route' => [
@@ -157,6 +175,7 @@ final class RouteModerateController extends AbstractController
             'suggested_surface' => $suggested,
             'suggestions' => array_values(array_filter($this->queue->pendingSuggestions(null), static fn (array $s): bool => $s['routeId'] === $id)),
             'edit_form' => $editForm->createView(),
+            'retire_form' => $retireForm?->createView(),
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
         ]);

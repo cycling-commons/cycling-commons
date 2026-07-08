@@ -36,6 +36,10 @@ final class RouteModerationService
             if (ItemState::Submitted !== $route->getState()) {
                 throw new \LogicException('Only a submitted route can be approved.');
             }
+            // Known TOCTOU: this COUNT(*) isn't locked, so two concurrent approve()
+            // calls at cap-1 could both pass and both commit, briefly exceeding the
+            // cap. Accepted tradeoff, not a bug — few curators, soft editorial cap,
+            // recoverable via retire(); not worth locking for this workflow.
             if ($this->activeCountForRegion($route->getRegionId()) >= $this->regionActiveCap) {
                 throw new RegionFullException(sprintf('Region %s is at the active-route cap.', $route->getRegionId() ?? 'none'));
             }

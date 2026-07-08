@@ -65,6 +65,26 @@ final class RouteModerationServiceTest extends KernelTestCase
         self::assertSame('unverified', $log->getNewValue());
     }
 
+    public function testRejectMovesSubmittedToRejectedAndLogsHistory(): void
+    {
+        $route = $this->route(ItemState::Submitted);
+        $curator = $this->curator();
+
+        $this->svc->reject((int) $route->getId(), $curator, 'Some rejection note');
+
+        $this->em->clear();
+        self::assertSame(ItemState::Rejected, $this->em->find(RecommendedRoute::class, $route->getId())->getState());
+
+        $stateLog = $this->em->getRepository(RouteChangeHistory::class)->findOneBy(['routeId' => $route->getId(), 'field' => 'state']);
+        self::assertNotNull($stateLog);
+        self::assertSame('submitted', $stateLog->getOldValue());
+        self::assertSame('rejected', $stateLog->getNewValue());
+
+        $noteLog = $this->em->getRepository(RouteChangeHistory::class)->findOneBy(['routeId' => $route->getId(), 'field' => 'decision_note']);
+        self::assertNotNull($noteLog);
+        self::assertSame('Some rejection note', $noteLog->getNewValue());
+    }
+
     public function testApproveIntoAFullRegionIsBlocked(): void
     {
         // Fill region 7 to the cap with active routes, then a submitted one can't approve.

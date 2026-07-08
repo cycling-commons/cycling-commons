@@ -1028,6 +1028,7 @@ moderate_routes:
     view: 'Voorstel bekijken ↗'
     done: 'Markeer als afgehandeld'
     dismiss: 'Afwijzen'
+    retire_route: 'Deze route intrekken'
   decision:
     approve: 'Goedkeuren'
     reject: 'Afwijzen'

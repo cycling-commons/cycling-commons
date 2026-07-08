@@ -80,6 +80,38 @@ final class RouteModerateTest extends WebTestCase
         self::assertSame(ItemState::Unverified, $em->find(RecommendedRoute::class, $route->getId())->getState());
     }
 
+    private function activeRoute(EntityManagerInterface $em): RecommendedRoute
+    {
+        $r = (new RecommendedRoute())->setName('Active loop · Condroz')
+            ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+            ->setDistanceM(18000)->setState(ItemState::Verified)
+            ->setSource(ItemSource::User)->setSourceRef('user:desk-active')->setRegionId(1)->setProposedBy(9);
+        $em->persist($r);
+        $em->flush();
+
+        return $r;
+    }
+
+    public function testCuratorRetiresAnActiveRouteFromTheDetailPage(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->activeRoute($em);
+
+        $client->loginUser($this->curator());
+        $crawler = $client->request('GET', '/moderate/routes/'.$route->getId());
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Retire this route')->form([
+            'route_decision[note]' => 'Superseded by a better loop.',
+        ]);
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        $em->clear();
+        self::assertSame(ItemState::Retired, $em->find(RecommendedRoute::class, $route->getId())->getState());
+    }
+
     public function testDetailShowsTrackMetadataAndRegionCapContext(): void
     {
         $client = static::createClient();

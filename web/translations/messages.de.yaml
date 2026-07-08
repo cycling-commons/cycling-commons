@@ -1028,6 +1028,7 @@ moderate_routes:
     view: 'Vorschlag ansehen ↗'
     done: 'Als erledigt markieren'
     dismiss: 'Verwerfen'
+    retire_route: 'Diese Route zurückziehen'
   decision:
     approve: 'Genehmigen'
     reject: 'Ablehnen'

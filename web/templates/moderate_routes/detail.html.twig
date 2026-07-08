@@ -77,6 +77,19 @@
     {{ form_end(edit_form) }}
   </div>
 
+  {% if retire_form is not null %}
+  <div class="rd-edit rd-retire">
+    <h2>{{ 'moderate_routes.action.retire_route'|trans }}</h2>
+    {{ form_start(retire_form) }}
+      {{ form_widget(retire_form.route_id) }}
+      {{ form_widget(retire_form.decision) }}
+      <label for="{{ retire_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>
+      {{ form_widget(retire_form.note) }}
+      <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.retire_route'|trans }}</button>
+    {{ form_end(retire_form) }}
+  </div>
+  {% endif %}
+
   <h2>{{ 'moderate_routes.suggestions.title'|trans }}</h2>
   {% if suggestions is empty %}
     <p>{{ 'moderate_routes.suggestions.empty'|trans }}</p>
