@@ -37,6 +37,17 @@ final readonly class CatalogField
         return new self($name, $label, FieldKind::Textarea, placeholder: $placeholder, maxLength: 2000);
     }
 
+    /**
+     * A text-like field whose value must be a real http(s) URL. Constrained by
+     * {@see \App\Form\CatalogFieldConstraints} to http/https so a non-http
+     * scheme (javascript:, data:, …) can never persist and reach the map's
+     * `<a href>` — security review 2026-07-07 (critical #3).
+     */
+    public static function url(string $name, string $label, string $placeholder = ''): self
+    {
+        return new self($name, $label, FieldKind::Url, placeholder: $placeholder);
+    }
+
     /** @param list<string> $choices */
     public static function select(string $name, string $label, array $choices, string $default = ''): self
     {

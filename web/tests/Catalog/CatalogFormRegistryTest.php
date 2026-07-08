@@ -141,6 +141,24 @@ final class CatalogFormRegistryTest extends TestCase
         );
     }
 
+    public function testWhereToSleepWebAndBookingLinkAreUrlFields(): void
+    {
+        // Security review 2026-07-07 (critical #3): both user-editable link
+        // fields must be url-kind so CatalogFieldConstraints restricts them to
+        // http/https — a plain-text `javascript:` value used to reach the map's
+        // <a href> (stored XSS).
+        $set = $this->registry->for(ItemType::WhereToSleep);
+        $byName = [];
+        foreach ($set->all() as $f) {
+            $byName[$f->name] = $f;
+        }
+
+        self::assertArrayHasKey('web', $byName);
+        self::assertSame(FieldKind::Url, $byName['web']->kind, 'web must be a URL field');
+        self::assertArrayHasKey('bookingLink', $byName);
+        self::assertSame(FieldKind::Url, $byName['bookingLink']->kind, 'bookingLink must be a URL field');
+    }
+
     public function testQualityRidesCarriesExperienceRatings(): void
     {
         $set = $this->registry->for(ItemType::QualityRides);

@@ -142,6 +142,17 @@ final class ImproveType extends AbstractType
                 'attr' => $attr,
                 'constraints' => CatalogFieldConstraints::for($field),
             ]),
+            // A real http(s) URL field: rendered as <input type="url"> (no
+            // protocol auto-prefixing) and validated by the Url constraint the
+            // registry emits — see CatalogFieldConstraints (critical #3).
+            FieldKind::Url => $builder->add($field->name, UrlType::class, [
+                'label' => $field->label,
+                'required' => false,
+                'default_protocol' => null,
+                'data' => $data,
+                'attr' => $attr,
+                'constraints' => CatalogFieldConstraints::for($field),
+            ]),
         };
     }
 

@@ -934,6 +934,7 @@ contribute:
     field_required: 'Ce champ est obligatoire.'
     field_too_long: 'Cette valeur est trop longue.'
     suspicious_characters: 'Ce texte contient des caractères non pris en charge ou d''écritures mélangées.'
+    invalid_url: 'Saisissez une adresse web complète commençant par http:// ou https://'
     rate_limited: 'Vous avez atteint la limite de contributions pour le moment — réessayez un peu plus tard.'
 propose_route:
   eyebrow: 'K · Itinéraires recommandés'

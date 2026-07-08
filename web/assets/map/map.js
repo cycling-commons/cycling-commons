@@ -2,6 +2,13 @@
   // §13: shared HTML-escaper for real (user-authored) pending-submission text —
   // stored-XSS-in-curator-session risk now that submissions come from real users.
   const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // Defense-in-depth for interpolated hrefs. A stay's user-editable `web`
+  // attribute reaches r.links[].href and is interpolated into <a href="…">;
+  // the server-side Url constraint (App\Form\CatalogFieldConstraints) is the
+  // primary guard, but this also neutralises any pre-fix `javascript:`/`data:`
+  // value already persisted. Allow only http(s) and site-relative URLs, then
+  // attribute-escape; anything else collapses to '#' (review 2026-07-07, #3).
+  const safeHref = u => { const s = String(u ?? '').trim(); return (/^https?:\/\//i.test(s) || (s.startsWith('/') && !s.startsWith('//'))) ? escPend(s) : '#'; };
   // C1-T4 (spec W6): every served feature now carries `srcType` — the item's
   // real ItemSource enum value (osm/pivot/wikidata/auto/user/manual), from
   // CatalogProvider. This maps it to the plain-English label shown on the
@@ -1045,7 +1052,7 @@
       recs = recs.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
     }
     const rows = recs.map(r => {
-      const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`).join('') : '';
+      const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${safeHref(l.href)}" target="_blank" rel="noopener">${escPend(l.label)} ↗</a>`).join('') : '';
       // r.html is the explicit trusted-markup channel (like r.links): honored
       // only for rows whose markup the builder constructs itself with EVERY
       // interpolation escPend-escaped (RIDE_CITIES city links, bike-type

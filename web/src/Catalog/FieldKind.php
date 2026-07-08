@@ -16,4 +16,5 @@ enum FieldKind: string
     case Text = 'text';
     case Select = 'select';
     case Textarea = 'textarea';
+    case Url = 'url';
 }

@@ -13,6 +13,7 @@ use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NoSuspiciousCharacters;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
+use Symfony\Component\Validator\Constraints\Url;
 
 /**
  * Registry descriptor → validator constraints, in ONE place (spec §6.1):
@@ -40,6 +41,20 @@ final class CatalogFieldConstraints
             // character (e.g. U+200B ZERO WIDTH SPACE); soft hyphen U+00AD is also Cf
             // and thus rejected too — acceptable for the en/fr/nl/de locale set.
             $constraints[] = new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters');
+        }
+
+        // A url-kind field (a stay's `web` / `bookingLink`) is text-like — it
+        // keeps Length + suspicious-character guards above — but its value is
+        // interpolated into an `<a href>` on the public map, so it must ALSO be
+        // a real http(s) URL. Restricting protocols to http/https is what stops
+        // a `javascript:`/`data:` payload from ever persisting (critical #3).
+        if (FieldKind::Url === $field->kind) {
+            $constraints[] = new Url(
+                message: 'contribute.error.invalid_url',
+                protocols: ['http', 'https'],
+                requireTld: true,
+                tldMessage: 'contribute.error.invalid_url',
+            );
         }
 
         return $constraints;

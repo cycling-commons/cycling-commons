@@ -104,10 +104,10 @@ final class CatalogFormRegistry
                     // (AttributeVocabulary::COMMON) and the one osmDrawer already
                     // renders as the "Website" row in map.js — an edited value must
                     // land in the same key the drawer reads, or the edit is invisible.
-                    CatalogField::text('web', 'Website', placeholder: 'https://… (the place’s own site)'),
+                    CatalogField::url('web', 'Website', placeholder: 'https://… (the place’s own site)'),
                     CatalogField::select('bikeStorage', 'Secure bike storage', ['Yes — locked room', 'Yes — garage/shed', 'On request', 'No']),
                     CatalogField::select('dryingWashing', 'Drying / washing for kit', self::UNKNOWN_YES_NO),
-                    CatalogField::text('bookingLink', 'Booking link', placeholder: 'https://… (booking platform, if any)'),
+                    CatalogField::url('bookingLink', 'Booking link', placeholder: 'https://… (booking platform, if any)'),
                     CatalogField::textarea('note', 'Note for riders', 'What makes it good for cyclists?'),
                 ],
                 addFields: [

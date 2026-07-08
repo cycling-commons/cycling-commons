@@ -934,6 +934,7 @@ contribute:
     field_required: 'This field is required.'
     field_too_long: 'This value is too long.'
     suspicious_characters: 'This text contains unsupported or mixed-script characters.'
+    invalid_url: 'Enter a full web address starting with http:// or https://'
     rate_limited: 'You have reached the contribution limit for now — please try again in a little while.'
 propose_route:
   eyebrow: 'K · Recommended routes'

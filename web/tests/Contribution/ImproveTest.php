@@ -267,4 +267,62 @@ final class ImproveTest extends WebTestCase
         self::assertSelectorTextContains('.receipt .stub-note', 'not yet persisted');
         self::assertSelectorTextContains('.receipt .ref', 'SUB-');
     }
+
+    /**
+     * Security review 2026-07-07 (critical #3): a stay's `web` field is
+     * user-editable and its value is interpolated into an `<a href>` on the
+     * public map. A `javascript:` (or any non-http) scheme must be rejected by
+     * validation — the submission never persists, so the payload can never
+     * reach the map. End-to-end reproduction of the closed XSS path.
+     */
+    public function testJavascriptSchemeInWebFieldIsRejectedAndNeverPersisted(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'xss');
+        $item = $this->createItem('E', ['web' => 'https://old.example.test'], name: 'Gîte XSS');
+
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Next →')->form([
+            'improve[details][web]' => 'javascript:alert(document.cookie)',
+            'improve[lat]' => '50.45',
+            'improve[lng]' => '5.62',
+            'improve[place]' => 'Spa, Wallonia',
+        ]);
+        $client->submit($form);
+
+        // Symfony re-renders an invalid form as 422 — the point is that NOTHING
+        // is persisted: no receipt, no Submission row.
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorNotExists('.receipt', 'a rejected malicious URL must never produce a receipt');
+
+        $submissions = static::getContainer()
+            ->get(EntityManagerInterface::class)
+            ->getRepository(\App\Catalog\Entity\Submission::class)
+            ->count([]);
+        self::assertSame(0, $submissions, 'a javascript: URL must be blocked before any Submission is created');
+    }
+
+    /** The counterpart: a well-formed https URL passes and persists. */
+    public function testHttpsUrlInWebFieldIsAcceptedAndPersisted(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'xss-ok');
+        $item = $this->createItem('E', ['web' => 'https://old.example.test'], name: 'Gîte OK');
+
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Next →')->form([
+            'improve[details][web]' => 'https://new.example.test',
+            'improve[lat]' => '50.45',
+            'improve[lng]' => '5.62',
+            'improve[place]' => 'Spa, Wallonia',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+    }
 }
