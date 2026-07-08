@@ -1,0 +1,23 @@
+web/src/Catalog/SurfaceProfiler.php
+  s_162e830c17ed4c::t_98e5469679a2b1 79-86,88-98,100-122,124-126
+  s_162e830c17ed4c::t_bec56fe7fec7e8 99
+web/tests/Catalog/SurfaceProfilerTest.php
+  s_162e830c17ed4c::t_8eedd8dedeceff 94-114,119-120
+  s_162e830c17ed4c::t_44681278ce6c8b 115-118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "eec701efc78a560be188aa4d4ee51ea74c17fb08",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
