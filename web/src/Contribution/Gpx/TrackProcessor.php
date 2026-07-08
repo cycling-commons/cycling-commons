@@ -11,6 +11,8 @@ namespace App\Contribution\Gpx;
  * All light tabular math — deliberately PHP, not the Python pipeline (D5).
  *
  * Every method takes/returns [lat, lng, ele|null] triples.
+ *
+ * @api Public geometry post-processing API (route-domain spec §5.4); covered by TrackProcessorTest.
  */
 final class TrackProcessor
 {
@@ -91,8 +93,8 @@ final class TrackProcessor
     }
 
     /**
-     * @param array{0: float, 1: float} $a
-     * @param array{0: float, 1: float} $b
+     * @param array{0: float, 1: float, 2: float|null} $a
+     * @param array{0: float, 1: float, 2: float|null} $b
      */
     private function haversineM(array $a, array $b): float
     {
@@ -100,9 +102,9 @@ final class TrackProcessor
         $latB = deg2rad($b[0]);
         $dLat = $latB - $latA;
         $dLng = deg2rad($b[1] - $a[1]);
-        $h = sin($dLat / 2) ** 2 + cos($latA) * cos($latB) * sin($dLng / 2) ** 2;
+        $h = sin($dLat / 2.0) ** 2.0 + cos($latA) * cos($latB) * sin($dLng / 2.0) ** 2.0;
 
-        return 2 * self::EARTH_RADIUS_M * asin(min(1.0, sqrt($h)));
+        return 2.0 * self::EARTH_RADIUS_M * asin(min(1.0, sqrt($h)));
     }
 
     /**
@@ -155,7 +157,7 @@ final class TrackProcessor
         ];
         [$ax, $ay] = $proj($points[$first]);
         [$bx, $by] = $proj($points[$last]);
-        $abLen2 = ($bx - $ax) ** 2 + ($by - $ay) ** 2;
+        $abLen2 = ($bx - $ax) ** 2.0 + ($by - $ay) ** 2.0;
 
         $maxDist = -1.0;
         $maxIdx = $first;

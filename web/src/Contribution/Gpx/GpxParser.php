@@ -17,6 +17,8 @@ namespace App\Contribution\Gpx;
  * Every failure throws InvalidArgumentException whose message is a
  * translation key (propose_route.error.*) — the controller surfaces it as a
  * form error, mirroring the ClimbGeometry/ContributeController pattern.
+ *
+ * @api Public entry point for GPX intake (route-domain spec §5.3); covered by GpxParserTest.
  */
 final class GpxParser
 {
