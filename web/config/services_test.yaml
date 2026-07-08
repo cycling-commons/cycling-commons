@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+#
+# Test-env service overrides. Imported after config/services.yaml (see
+# MicroKernelTrait::configureContainer), so definitions here win over the
+# `App\` autowiring prototype.
+services:
+    # RegionResolver has no src consumer yet (Task 5 injects it), so the unused
+    # private definition is pruned from the compiled container and cannot be
+    # fetched from the test container. Re-declare it public (still autowired) in
+    # the test env only, so KernelTestCase can resolve it directly.
+    App\Contribution\RegionResolver:
+        autowire: true
+        public: true
