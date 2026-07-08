@@ -94,6 +94,17 @@ final class RouteProposalServiceTest extends KernelTestCase
         $service->propose($short, ['rName' => 'Too short'], $user);
     }
 
+    public function testRejectsAProposalWithABlankName(): void
+    {
+        self::bootKernel();
+        $service = static::getContainer()->get(RouteProposalService::class);
+        $user = $this->makeUser('proposer-noname@test.test');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('propose_route.error.name_required');
+        $service->propose(self::gpx(), ['rName' => '   '], $user);
+    }
+
     public function testFourthProposalInADayIsRateLimited(): void
     {
         self::bootKernel();

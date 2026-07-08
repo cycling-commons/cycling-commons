@@ -54,6 +54,12 @@ final class RouteProposalService
             throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
         }
 
+        $rName = $meta['rName'] ?? null;
+        $name = \is_string($rName) ? trim($rName) : '';
+        if ('' === $name) {
+            throw new \InvalidArgumentException('propose_route.error.name_required');
+        }
+
         $track = $this->parser->parse($gpxContent);
 
         $rawM = $this->processor->distanceM($track->points);
@@ -84,7 +90,7 @@ final class RouteProposalService
         }
 
         $route = (new RecommendedRoute())
-            ->setName((string) $meta['rName'])
+            ->setName($name)
             ->setGeom($geoJson)
             ->setDistanceM($distanceM)
             ->setAscentM($ascentM)
