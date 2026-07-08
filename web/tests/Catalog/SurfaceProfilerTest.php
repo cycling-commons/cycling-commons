@@ -95,9 +95,10 @@ final class SurfaceProfilerTest extends KernelTestCase
     {
         self::bootKernel();
         // Four surfaces whose mapped lengths run 3 : 3 : 1 : 1, i.e. exact shares
-        // 37.5 / 37.5 / 12.5 / 12.5. Independent round-half-up rendered these as
-        // 38 + 38 + 13 + 13 = 102 %; largest-remainder apportionment must keep the
-        // rendered sum at 100. Deltas 0.006 / 0.006 / 0.002 / 0.002 tile the route.
+        // ≈37.5 / 37.5 / 12.5 / 12.5 (geodesic lengths land a hair off exact .5,
+        // so independent round-half-up rendered 37 + 38 + 13 + 13 = 101 % — the
+        // observed RED); largest-remainder apportionment must keep the rendered
+        // sum at 100. Deltas 0.006 / 0.006 / 0.002 / 0.002 tile the route.
         $this->seedSegment('Asphalt', [[5.3, 50.000], [5.3, 50.006]], 'q1');
         $this->seedSegment('Gravel', [[5.3, 50.006], [5.3, 50.012]], 'q2');
         $this->seedSegment('Concrete', [[5.3, 50.012], [5.3, 50.014]], 'q3');
