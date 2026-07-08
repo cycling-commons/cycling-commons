@@ -18,3 +18,12 @@ services:
     App\Service\UserDeletionService:
         arguments:
             $hooks: !tagged_iterator app.user_deletion_hook
+
+    # `public: true` because no controller consumes this yet (that lands in a
+    # later phase-2 task) — without a consumer, the compiler would otherwise
+    # remove this unused private service, and tests fetch it from the
+    # container directly.
+    App\Moderation\RouteModerationService:
+        public: true
+        arguments:
+            $regionActiveCap: '%route.region_active_cap%'

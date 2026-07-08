@@ -1,0 +1,5 @@
+# Route-domain editorial config (spec §6) — thresholds are config, not
+# constants (README threshold principle).
+parameters:
+    route.region_active_cap: 30
+    route.ride_verify_threshold: 3

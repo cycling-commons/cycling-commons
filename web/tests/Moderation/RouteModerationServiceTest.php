@@ -1,0 +1,100 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Tests\Moderation;
+
+use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\Entity\RouteChangeHistory;
+use App\Catalog\ItemSource;
+use App\Catalog\ItemState;
+use App\Entity\User;
+use App\Moderation\RegionFullException;
+use App\Moderation\RouteModerationService;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+
+final class RouteModerationServiceTest extends KernelTestCase
+{
+    private EntityManagerInterface $em;
+    private RouteModerationService $svc;
+
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->svc = static::getContainer()->get(RouteModerationService::class);
+    }
+
+    private function curator(): User
+    {
+        $u = (new User())->setEmail('rc-'.bin2hex(random_bytes(4)).'@test.test');
+        $u->setPassword('x');
+        $this->em->persist($u);
+        $this->em->flush();
+
+        return $u;
+    }
+
+    private function route(ItemState $state, ?int $regionId = 1): RecommendedRoute
+    {
+        $r = (new RecommendedRoute())->setName('R '.bin2hex(random_bytes(3)))
+            ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+            ->setState($state)->setSource(ItemSource::User)
+            ->setSourceRef('user:'.bin2hex(random_bytes(8)))->setRegionId($regionId);
+        $this->em->persist($r);
+        $this->em->flush();
+
+        return $r;
+    }
+
+    public function testApproveMovesSubmittedToUnverifiedAndLogsHistory(): void
+    {
+        $route = $this->route(ItemState::Submitted);
+        $curator = $this->curator();
+
+        $this->svc->approve((int) $route->getId(), $curator);
+
+        $this->em->clear();
+        self::assertSame(ItemState::Unverified, $this->em->find(RecommendedRoute::class, $route->getId())->getState());
+        $log = $this->em->getRepository(RouteChangeHistory::class)->findOneBy(['routeId' => $route->getId(), 'field' => 'state']);
+        self::assertNotNull($log);
+        self::assertSame('submitted', $log->getOldValue());
+        self::assertSame('unverified', $log->getNewValue());
+    }
+
+    public function testApproveIntoAFullRegionIsBlocked(): void
+    {
+        // Fill region 7 to the cap with active routes, then a submitted one can't approve.
+        $cap = (int) static::getContainer()->getParameter('route.region_active_cap');
+        for ($i = 0; $i < $cap; ++$i) {
+            $this->route(ItemState::Verified, regionId: 7);
+        }
+        $pending = $this->route(ItemState::Submitted, regionId: 7);
+        $curator = $this->curator();
+
+        $this->expectException(RegionFullException::class);
+        $this->svc->approve((int) $pending->getId(), $curator);
+    }
+
+    public function testRetireFreesASlotAndRequiresANote(): void
+    {
+        $active = $this->route(ItemState::Verified, regionId: 3);
+        $curator = $this->curator();
+
+        $this->svc->retire((int) $active->getId(), $curator, 'Superseded by a better loop.');
+
+        $this->em->clear();
+        self::assertSame(ItemState::Retired, $this->em->find(RecommendedRoute::class, $active->getId())->getState());
+        self::assertSame(0, $this->svc->activeCountForRegion(3));
+    }
+
+    public function testRetireWithoutANoteIsRejected(): void
+    {
+        $active = $this->route(ItemState::Verified, regionId: 3);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->svc->retire((int) $active->getId(), $this->curator(), '   ');
+    }
+}
