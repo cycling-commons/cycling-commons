@@ -997,6 +997,19 @@ moderate:
     apply: 'Toepassen'
   overview:
     showing: '%shown% van %total% in behandeling'
+moderate_routes:
+  title: 'Routes moderatiewachtrij'
+  meta_title: 'Routes modereren'
+  meta_description: 'Beoordeel ingediende routevoorstellen en suggesties vóór publicatie.'
+  action:
+    decide: 'Beslissing registreren'
+  error:
+    invalid_decision: 'Die beslissing kon niet worden geregistreerd — probeer het opnieuw.'
+    region_full: 'Deze regio heeft het maximum aantal actieve routes al bereikt.'
+    undecidable: 'Over deze route kan in de huidige status niet worden beslist.'
+  flash:
+    decided: 'Beslissing geregistreerd.'
+    suggestion_resolved: 'Suggestie opgelost.'
 registration:
   email:
     title: 'Bevestig je Cycling Commons-account'

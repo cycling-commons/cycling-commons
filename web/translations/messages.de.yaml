@@ -997,6 +997,19 @@ moderate:
     apply: 'Anwenden'
   overview:
     showing: '%shown% von %total% ausstehend'
+moderate_routes:
+  title: 'Routen-Moderationswarteschlange'
+  meta_title: 'Routen moderieren'
+  meta_description: 'Ausstehende Routenvorschläge und Hinweise vor der Veröffentlichung prüfen.'
+  action:
+    decide: 'Entscheidung erfassen'
+  error:
+    invalid_decision: 'Diese Entscheidung konnte nicht gespeichert werden — bitte erneut versuchen.'
+    region_full: 'Diese Region hat ihr Limit an aktiven Routen bereits erreicht.'
+    undecidable: 'Über diese Route kann im aktuellen Zustand nicht entschieden werden.'
+  flash:
+    decided: 'Entscheidung erfasst.'
+    suggestion_resolved: 'Hinweis bearbeitet.'
 registration:
   email:
     title: 'Dein Cycling-Commons-Konto bestätigen'

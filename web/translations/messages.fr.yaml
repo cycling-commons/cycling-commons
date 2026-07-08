@@ -997,6 +997,19 @@ moderate:
     apply: 'Appliquer'
   overview:
     showing: '%shown% sur %total% en attente'
+moderate_routes:
+  title: 'File de modération des itinéraires'
+  meta_title: 'Modérer les itinéraires'
+  meta_description: 'Examinez les propositions et suggestions d''itinéraires en attente avant leur publication.'
+  action:
+    decide: 'Enregistrer la décision'
+  error:
+    invalid_decision: 'Cette décision n''a pas pu être enregistrée — veuillez réessayer.'
+    region_full: 'Cette région a déjà atteint son plafond d''itinéraires actifs.'
+    undecidable: 'Cet itinéraire ne peut pas être décidé dans son état actuel.'
+  flash:
+    decided: 'Décision enregistrée.'
+    suggestion_resolved: 'Suggestion résolue.'
 registration:
   email:
     title: 'Confirmez votre compte Cycling Commons'

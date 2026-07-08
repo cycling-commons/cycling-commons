@@ -1,0 +1,17 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block body %}
+  <h1>{{ 'moderate_routes.title'|trans }}</h1>
+  {% for r in routes %}
+    <article class="rq-item">
+      <h2 class="rq-title">{{ r.name }}</h2>
+      <p>{{ r.km }} km · region {{ r.region ?? '—' }} · {{ r.activeInRegion }}/{{ r.cap }} active</p>
+      {{ form_start(forms[r.id]) }}
+        <input type="hidden" name="route_decision[route_id]" value="{{ r.id }}">
+        {{ form_widget(forms[r.id].decision) }}
+        {{ form_widget(forms[r.id].note) }}
+        <button type="submit">{{ 'moderate_routes.action.decide'|trans }}</button>
+      {{ form_end(forms[r.id]) }}
+    </article>
+  {% endfor %}
+{% endblock %}

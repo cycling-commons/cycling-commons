@@ -997,6 +997,19 @@ moderate:
     apply: 'Apply'
   overview:
     showing: 'showing %shown% of %total% pending'
+moderate_routes:
+  title: 'Routes moderation desk'
+  meta_title: 'Moderate routes'
+  meta_description: 'Review pending route proposals and suggestions before they publish.'
+  action:
+    decide: 'Record decision'
+  error:
+    invalid_decision: 'That decision could not be recorded — please try again.'
+    region_full: 'This region is already at its active-route cap.'
+    undecidable: 'That route cannot be decided in its current state.'
+  flash:
+    decided: 'Decision recorded.'
+    suggestion_resolved: 'Suggestion resolved.'
 registration:
   email:
     title: 'Confirm your Cycling Commons account'
