@@ -1,0 +1,23 @@
+web/config/services_test.yaml
+  s_162e830c17ed4c::t_888d3f40e82df4 1-13
+web/tests/Contribution/RegionResolverTest.php
+  s_162e830c17ed4c::t_dcd4540e21172a 1-38
+web/src/Contribution/RegionResolver.php
+  s_162e830c17ed4c::t_f7559a11388cea 1-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7a088d83110c6e96009e54d739c583af9cee1bb7",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
