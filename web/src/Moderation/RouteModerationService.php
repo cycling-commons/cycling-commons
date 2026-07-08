@@ -123,6 +123,12 @@ final class RouteModerationService
         });
     }
 
+    /** The configured region active-route cap (D8; %route.region_active_cap%). */
+    public function regionCap(): int
+    {
+        return $this->regionActiveCap;
+    }
+
     /** Active routes (SERVED) in a region; NULL region counted as its own bucket. */
     public function activeCountForRegion(?int $regionId): int
     {

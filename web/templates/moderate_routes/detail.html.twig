@@ -41,7 +41,7 @@
     <div class="stat-line">
       {{ route.km }} km
       {% if route.ascent is not null %}&middot; {{ route.ascent }} m ascent{% endif %}
-      &middot; <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': active_in_region, '%cap%': route.attributes.cap ?? active_in_region}) }}</span>
+      &middot; <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': active_in_region, '%cap%': region_cap}) }}</span>
     </div>
   </div>
 </div>

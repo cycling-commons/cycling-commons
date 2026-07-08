@@ -150,6 +150,7 @@ final class RouteModerateController extends AbstractController
                 'regionId' => $row['region_id'], 'state' => $row['state'], 'attributes' => $attrs,
             ],
             'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),
+            'region_cap' => $this->moderation->regionCap(),
             'suggestions' => array_values(array_filter($this->queue->pendingSuggestions(null), static fn (array $s): bool => $s['routeId'] === $id)),
             'edit_form' => $editForm->createView(),
             'page_title' => 'moderate_routes.meta_title',

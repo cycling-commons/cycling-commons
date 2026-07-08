@@ -92,8 +92,10 @@ final class RouteModerateTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Desk proposal · Condroz');
         self::assertSelectorTextContains('body', '24 km');
-        // The region's active-vs-cap context is shown so the curator sees head-room.
+        // The region's active-vs-cap context is shown so the curator sees head-room:
+        // the real configured cap (30, route.region_active_cap), not the active count itself.
         self::assertSelectorExists('[data-region-cap]');
+        self::assertSelectorTextContains('[data-region-cap]', '0 / 30');
     }
 
     public function testCuratorEditsRouteNoteViaTheDetailForm(): void
