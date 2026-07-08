@@ -4,6 +4,8 @@
 **Status:** Approved — writing the implementation plan next
 **Scope of this spec:** Move the static `atlas/demo/` prototype into the Symfony app as server-rendered pages, and stand up a real authentication foundation (accounts, login, registration, email verification, password reset, 2FA, roles). The query/contribution data API and domain entities (climbs, votes, hazards…) are **explicitly out of scope** here.
 
+> **Route-domain carve-out (2026-07-08):** This spec's "votes and contribution persistence are deferred to a later spec" framing is now superseded on the route (K / Quality rides) side: the [route-domain design](2026-07-08-route-domain-design.md) defines a purpose-built pipeline — rider proposals persisted as `RecommendedRoute` rows (state `submitted`), typed seasonal votes in `route_vote`, ride-confirmations in `route_ride`, moderated corrections in `route_suggestion`, and a dedicated Routes queue in the moderation shell. The generic verify → votable → best-of funnel (§12) is replaced for routes by the `submitted → unverified → verified` (+ `retired`) state machine, with voting opening at `verified` and best-of computed per (region, season, bike type). Inline notes below mark the affected passages; the migration/auth content itself is unaffected.
+
 ---
 
 ## 1. Decisions locked in
@@ -18,6 +20,8 @@
 | Asset pipeline | **AssetMapper** (no Node/Vite build) | Keeps the stack boring and self-hostable; no build step for a future foundation to operate. |
 | App location | Keep the Symfony app in **`api/`** for now | Avoids churning the docker/nginx wiring. A rename to `app/`/`web/` is a later, orthogonal cleanup. |
 | i18n | **Wire `symfony/translation` from the start** | Pan-European project (Wallonia FR/NL, future regions; wiki already EN+FR). Extract user-facing strings to `\|trans` *during* the Twig port; ship EN first, add FR/NL later. Retrofitting i18n after the port is the expensive path. |
+
+> **Superseded for K (2026-07-08):** The Scope row's "later spec" for contribution persistence now exists on the route side — route proposals persist as `RecommendedRoute` rows in state `submitted`, and votes/rides/suggestions land in the purpose-built `route_vote` / `route_ride` / `route_suggestion` tables.
 
 ---
 
@@ -99,6 +103,8 @@ Today the nav is built client-side by `nav.js`. Migrating, **render nav + footer
 | Auth/profile (4) | login, profile, settings (+ register, reset, 2fa pages are new) | Twig + **functionally wired** to the `User` table. |
 | Contribution/moderation (~6) | add-climb, improve, vote, contribute, moderate, pages | Templated + **auth-gated**. POST handlers that persist domain data (a climb, a vote) are **stubbed/deferred** — that needs the data API (later spec). Boundary marked explicitly in code. |
 
+> **Superseded for K (2026-07-08):** Vote persistence is no longer stubbed on the route side — typed seasonal route votes persist as `route_vote` rows (one per user/route/season, timestamped, carrying bike type), per the route-domain design.
+
 ---
 
 ## 7. Auth foundation (fresh build, patterns lifted from `bikecoderslife/bundle`)
@@ -145,6 +151,8 @@ Implements `UserInterface`, `PasswordAuthenticatedUserInterface`, `TwoFactorInte
 
 **EasyAdmin 4** (consistent with the reference bundle) provides the `/admin` backend (gated `ROLE_ADMIN`) for user/account administration. The curator review queue (`moderate.html`) becomes a **custom Twig page at `/moderate`**, built in the site's own branded UI (same `base.html.twig`, with map / photo / item context) rather than a generic admin panel — curators are community riders and review *within the product*, not in a back-office tool. Gated `ROLE_CURATOR`, with approve / reject / needs-info actions. EasyAdmin's generic CRUD is poorly suited to "review this proposed climb with its route on a map", so it's reserved for dry record/user admin. **In this phase the page and queue UI are built; the approve/reject persistence is stubbed until the data API exists.**
 
+> **Superseded for K (2026-07-08):** The stubbed-persistence caveat is past — item moderation landed with real persistence (Phase B), and the `/moderate` shell now gains a dedicated Routes queue whose approve/reject/retire decisions persist real `RecommendedRoute` state transitions.
+
 ### 7.6 Mail
 
 `symfony/mailer`: **Mailpit** in the docker dev stack; prod SMTP via env (`MAILER_DSN`). Required by email verification + password reset.
@@ -175,6 +183,7 @@ Implements `UserInterface`, `PasswordAuthenticatedUserInterface`, `TwoFactorInte
 3. **Map shell** — extract `map.html` → Twig shell + `assets/map/*.js`; visual parity check (isolated).
 4. **Auth foundation** — `User` entity + migration; `security.yaml`; login/register/verify/reset; 2FA setup/login + backup codes; profile/settings wired; lockout; deletion service. **Auth + email strings translatable; SPDX headers on all new files.**
 5. **Contribution/moderation pages** — templated + auth-gated; EasyAdmin admin + moderation queue; domain persistence stubbed. **DataFixtures + `make create-curator` command + updated README/CONTRIBUTING/Makefile.**
+   > **Superseded for K (2026-07-08):** This stubbed phase is complete; the route-domain design's dedicated Routes queue — real `RecommendedRoute` state transitions plus purpose-built route tables — now builds on the shell this phase created.
 6. **Cutover** — smoke + auth tests green; **`/security-review` on the auth code**; **`privacy.html` updated for account data**; **font/brand redistribution licences verified**; nginx switched to Symfony; `atlas/demo/` retired (history preserved) once parity verified.
 
 ---
@@ -207,6 +216,7 @@ CyclingCommons is **source-available (PolyForm Shield) + open data (ODbL), in a 
 - No query/contribution **data API** or domain entities (climbs, votes, hazards, surfaces).
 - No **real contribution persistence** (add-climb/vote/improve POST handlers are stubs).
 - The map **view-mode toggle** stays a presentation-only **Best-of / Everything** switch until the data API exists. When votes + verification land, it must be **driven by votability** (verify → votable → best-of), *not* by a static `cur` flag, and utility/coverage types must never be "best-of" — see [edit-items lifecycle & votability](edit-items/README.md#item-lifecycle-and-votability). (Demo labels already corrected — no longer "Curated".)
+  > **Superseded for K (2026-07-08):** Route domain v1 supersedes this bullet and the two data-API/persistence bullets above on the route side: route entities now exist (`route_vote` / `route_ride` / `route_suggestion`), proposals persist as `RecommendedRoute` state `submitted` (and `/improve` actively refuses `type=K` rather than stubbing it), and the verify → votable → best-of funnel becomes the `submitted → unverified → verified` (+ `retired`) state machine — voting opens only at `verified`, with best-of computed per (region, season, bike type), so the Best-of view can be data-driven for K.
 - No per-region curator **Voter** (coarse `ROLE_CURATOR` now).
 - No genericization of `bikecoderslife/bundle`; no shared dependency; Upstream Platform untouched.
 - No email-at-rest encryption (the reference bundle's disabled, infra-specific feature).

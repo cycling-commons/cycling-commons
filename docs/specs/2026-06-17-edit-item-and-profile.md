@@ -7,6 +7,13 @@
 - **Author:** Cycling Commons / prototype team
 - **Related:** [`2026-06-17-add-climb-flow.md`](2026-06-17-add-climb-flow.md), [`atlas/demo/improve.html`](../../atlas/demo/improve.html), [`atlas/demo/vote.html`](../../atlas/demo/vote.html)
 
+> **Route-domain carve-out (2026-07-08):** The "edit link on every feature" premise no longer applies to
+> rides (J below; K in the current registry): the [route-domain design](2026-07-08-route-domain-design.md)
+> makes recommended routes curator-only compositions — riders never edit route data, `/improve` refuses
+> `type=K`, and the shared `'ride'` edit entry is dead. Route drawers instead offer vote / "I rode this" /
+> GPX download / suggest-a-correction, with the untyped "Vote in this round" link replaced by typed
+> seasonal votes (season + bike type). Everything below stays accurate for the other catalog types.
+
 ---
 
 ## 1. Problem
@@ -20,6 +27,9 @@ Two gaps in the prototype, both about *contributing back*:
    *"We need an edit-this-item for every item, not just the service station. In the demo this guarantees that
    we have thought about the design and implementation options."*
 
+   > **Superseded for K (2026-07-08):** "every item" no longer includes rides — recommended routes (now
+   > type K) are curator-only compositions with no rider edit surface.
+
 2. **"View profile" is dead.** The drawer's opt-in uploader line links `view profile → login.html`
    (a placeholder), and route uploaders have no profile at all. There is no example of what a public
    contributor's profile looks like.
@@ -29,6 +39,9 @@ Two gaps in the prototype, both about *contributing back*:
 **Goals**
 - Every feature drawer on the map exposes an explicit **✎ Edit this item** action pointing at the edit
   surface for *that* feature (distinct from voting).
+
+  > **No longer true for K (2026-07-08):** route drawers expose vote / "I rode this" / GPX download /
+  > suggest-a-correction — no Edit-this-item action.
 - [`improve.html`](../../atlas/demo/improve.html) becomes **data-driven**: it renders the context (name, coords,
   pin icon, tags, current details) and a type-appropriate "Fix details" pane for whichever item was opened,
   via a `?item=<id>` query param.
@@ -93,6 +106,11 @@ In `buildRecord(layer, f)`, replace the current either/or `act`:
 resolve. Rides (J) get the edit link too, pointing at a shared `'ride'` edit entry (editing a contributed
 GPX is one flow, not six).
 
+> **Superseded for K (2026-07-08):** the shared `'ride'` edit entry is dead — riders never edit routes or
+> their GPX (`/improve` refuses `type=K`; corrections go through moderated `route_suggestion`s), and the
+> generic "Vote in this round → vote.html" link is replaced by typed seasonal votes on the route drawer
+> (season + bike type, one per user/route/season).
+
 ### 3.4 Shared-edit demonstration — second water point
 
 Add one more `water` feature (e.g. *Public fountain · Coo*) to the catalog, with `edit:'water-fountain'` —
@@ -110,6 +128,9 @@ Sections:
 - **Stats row:** routes shared · places improved · climbs added · confirmations (static demo numbers).
 - **Contributions list:** a few cards (a shared route, an improved place, a confirmed hazard) linking back to
   `map.html` / `improve.html`.
+
+  > **Superseded for K (2026-07-08):** a shared-route card can no longer target `improve.html` (K bindings
+  > are refused); route cards link to the route's map drawer instead.
 - **Provenance note:** licence/governance line consistent with the rest of the site (ODbL data / CC BY-SA
   media; profiles are opt-in).
 
@@ -122,6 +143,10 @@ Wire-up:
 
 - Opening the drawer for **any** catalog feature shows **✎ Edit this item**; curated ones also show
   **▲ Vote in this round**.
+
+  > **No longer true for K (2026-07-08):** route drawers show vote / "I rode this" / GPX download /
+  > suggest-a-correction, never an edit link, and the vote is a typed seasonal one (season + bike type),
+  > not a generic round link.
 - Clicking **✎ Edit this item** opens `improve.html` showing **that feature's** name, coords, pin glyph,
   tags, current details and a type-appropriate Fix pane — verified for at least a climb, a water point, a
   stay and a scenic site (not just the service station).
@@ -134,3 +159,6 @@ Wire-up:
 - `improve.html` becoming data-driven must not regress the no-param default (still the Malmedy demo).
 - Keep the registry small and flat; it is demo fixture data, not a schema. Real edit schemas per type are a
   later, backend-era concern.
+
+  > **Superseded for K (2026-07-08):** the backend era answered this for routes with *no* rider edit schema
+  > at all — curator-only edits plus moderated corrections.

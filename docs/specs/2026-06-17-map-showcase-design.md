@@ -8,6 +8,13 @@
 > cyclist-experience attributes) · **L Ride heatmap** (derived). Read this file for the showcase intent,
 > not the letters.
 
+> ⚠️ **Route-domain carve-out (2026-07-08):** today's **K (Quality rides)** is now a full route
+> domain — see the [route-domain design](2026-07-08-route-domain-design.md). Routes are
+> rider-proposed (GPX + metadata), desk-moderated by curators, ride-verified ("I rode this"),
+> and voted with typed seasonal votes per (region, season, bike type); riders never edit route
+> data (`/improve` refuses `type=K`). Every "K" *below* is the old Derived & aggregate overlay
+> (today's **L Ride heatmap**) — the inline K notes re-point those passages.
+
 **Date:** 2026-06-17
 **Status:** Superseded (catalog rows) — see catalog-v2
 **Surface:** `atlas/demo/map.html` (primary). `atlas/demo/region.html` deferred to a later pass.
@@ -46,6 +53,10 @@ sourcing only verifiable facts and citing provenance per record.
    researched; **omit** unverifiable fields rather than invent them.
 6. **K (derived/aggregate):** implement fully as a computed map overlay.
 
+   > **Superseded for K (2026-07-08):** old-letter K — the computed overlay is today's
+   > **L (Ride heatmap)**; the current K is the rider-facing recommended-route domain
+   > (line features, not a derived layer).
+
 ## Content types → map representation
 
 One real, verified Ardennes example per type (more where natural). `[OSM]`/`[edit]`/
@@ -72,10 +83,19 @@ One real, verified Ardennes example per type (more where natural). `[OSM]`/`[edi
 - **J · Cyclist-experience** — 1–5 ratings (quietness, scenery, surface, suitability,
   accessibility) on a real route (e.g. the quiet Amblève valley road), as a rated segment.
 
+  > **Superseded for K (2026-07-08):** the cyclist-experience attributes moved to K, where
+  > suitability is a curator-declared multi-select of bike types (Road/Gravel/MTB/E-bike/
+  > Handbike) with typed votes and ride confirmations — not a 1–5 rating on a rated segment.
+
 **Computed overlay:**
 - **K · Derived & aggregate** — a shaded area layer over the region showing a computed
   metric (coverage % / road popularity), labelled **"computed · auto"**. Selecting it opens
   a drawer card explaining it is an *output* of the Commons, never hand-entered.
+
+  > **Superseded for K (2026-07-08):** this is old-letter K, today's **L (Ride heatmap)** —
+  > "never hand-entered" now belongs to L, while the current K *is* hand-entered
+  > (rider-proposed GPX, desk-moderated, curator-edited only) and renders as route lines
+  > with a proposed/verified badge.
 
 **Deliberate geographic cluster (storytelling beat):** Stockeu (B) + Stavelot Abbey (I) +
 Stavelot fountain (C) sit adjacent. Place them so a single area zoom reveals climb +
@@ -103,6 +123,11 @@ Extend each feature beyond the current thin shape to carry the full record. Per 
 }
 ```
 
+> **Superseded for K (2026-07-08):** routes left the item pipeline — the
+> item-lifecycle-and-votability reference no longer applies to K, whose verification is the
+> ride-confirmation threshold (`route_ride`) and whose best-of is computed per
+> (region, season, bike type) from typed `route_vote` rows.
+
 Only attributes with a real value appear in `record`; unknowns are omitted (no blank rows).
 
 ## The rail = the catalog index
@@ -114,6 +139,12 @@ Only attributes with a real value appear in `record`; unknowns are omitted (no b
 - Line and area types (A, J, K) render as MapLibre sources/layers (not markers); their rail
   toggles control layer visibility the same way.
 
+  > **Superseded for K (2026-07-08):** old letters — the area type meant by K here is
+  > today's L; the current K (recommended routes) renders as line features, so the
+  > non-marker approach stands. See also the
+  > [route-domain design](2026-07-08-route-domain-design.md): Best-of mode gets concrete
+  > route backing (rankings per region · season · bike type from typed votes).
+
 ## Interaction (hybrid)
 
 - **Hover / keyboard-focus** a feature → lightweight tooltip: `name · headline`.
@@ -124,6 +155,13 @@ Only attributes with a real value appear in `record`; unknowns are omitted (no b
   - Source/provenance line.
   - Footer action: contextual link (vote in round / improve this place) reusing existing
     `improve.html` / vote affordances.
+
+  > **No longer true for K (2026-07-08):** riders never edit route data (`/improve` refuses
+  > `type=K`), so the improve link is dead for routes; the route drawer footer is instead
+  > vote (typed: season + bike type, replacing round-based voting) · "I rode this" ·
+  > GPX download · suggest a correction, and the header adds a "proposed" badge on
+  > unverified routes.
+
 - Drawer is dismissible (close button, Esc, click-away). Map stays visible and interactive.
 - Accessibility: drawer is focus-managed; tooltip is non-essential (drawer is the source of
   truth); honors the existing skip-link/landmark conventions.
@@ -157,6 +195,11 @@ amenities) rather than invent. Note source per record.
 - Selecting one feature per type opens the drawer with its real record; tooltip shows on
   hover/focus.
 - The K overlay renders as a shaded area and is clearly labelled computed.
+
+  > **Superseded for K (2026-07-08):** the shaded computed overlay is today's L; new-K
+  > checks (route lines, drawer vote/rode-it/GPX/suggestion actions, proposed badge) live
+  > in the route-domain design's test plan.
+
 - Region mask + base map still load (no regression to existing behaviour).
 - SRI on the MapLibre tags remains intact (no version change here).
 
@@ -168,3 +211,8 @@ amenities) rather than invent. Note source per record.
   omit-unknowns rule; that is acceptable and honest.
 - **Drawer vs existing popup:** the current popup is replaced by tooltip+drawer; ensure the
   vote/improve links survive the move.
+
+> **Superseded for K (2026-07-08):** the overlay-realism risk now attaches to L (Ride
+> heatmap); and for routes the improve link must *not* survive the move — riders get
+> vote / "I rode this" / suggest-a-correction instead (only the vote link survives, in
+> typed seasonal form).

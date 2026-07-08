@@ -10,6 +10,8 @@
 - **Depends on:** Plan 3 (auth, `ROLE_CURATOR`, `is_granted`) and Plan 4 (the `/moderate` queue, `SampleQueue`, `ModerationDecisionType`, `ContributionStubService`).
 - **Related:** [`edit-items/README.md`](edit-items/README.md) (votability funnel + **change history**), [`2026-06-26-html-to-symfony-migration-design.md` §7.5](2026-06-26-html-to-symfony-migration-design.md) (moderation *within the product*), [`2026-06-26-map-enhancements-design.md`](2026-06-26-map-enhancements-design.md) (`?feature=` deep-link), the World reference bundle (`web/src/World`, used for the region filters).
 
+> **Route-domain carve-out (2026-07-08):** The [route-domain design](2026-07-08-route-domain-design.md) removes K (Quality rides) from the generic pipeline this spec assumes: route proposals are `RecommendedRoute` rows reviewed in a dedicated **Routes** queue in the moderation shell (a sibling of this item queue — they never enter `SampleQueue`/`CC_PENDING`), riders never edit route data (`/improve` now refuses `type=K`), and the votability funnel referenced above governs item letters A–J only — routes get their own state machine, typed `route_vote` voting, and moderated `route_suggestion`s. Everything below stays accurate for item submissions; inline notes mark the K-specific drift.
+
 ---
 
 ## 1. Problem
@@ -33,6 +35,8 @@ Two gaps:
 - **Per-region curator subsidiarity** — coarse `ROLE_CURATOR` for now; a per-region Security Voter is later work (migration design §7.5). The world-overview *filters* are presentational, not an authorization boundary.
 - Turning an approved submission into a live map feature (that is the funnel's job, post-data-API).
 - Bulk actions, escalation-to-admin, real submissions (the layer/queue are fed by `SampleQueue` fixtures).
+
+> **Superseded for K (2026-07-08):** For routes the funnel handoff no longer applies — curator approval in the Routes queue itself makes the `RecommendedRoute` active (`unverified`, "proposed" badge on the map), and ride-verification, not the item funnel, upgrades it to `verified`; this non-goal stays true for the item pipeline only.
 
 ## 3. Curator-only data + gating
 
@@ -61,6 +65,8 @@ Selecting a pending pin opens the standard drawer (`buildRecord`) with a curator
 2. **Edit this item** — the drawer keeps its existing action, linking to the **full item form** (`/improve?type=<letter>&item=<id>&lat=&lng=`). A curator who wants to *correct* rather than merely accept/reject goes here; their save is itself a recorded edit (§9).
 3. **Moderate block** (curator-only) — one **optional note** textarea + **[Approve] [Needs-info] [Reject]** buttons. Approve with an empty note is the one-click fast path; **any** decision may carry a note (including approve). Keyboard **A** = approve, **R** = reject on the focused pin.
 
+> **Superseded for K (2026-07-08):** Items 1–2 no longer apply to routes — K edit submissions cease to exist (riders file moderated `route_suggestion`s instead of field edits, so there is no *was → now* diff), and the **Edit this item** bridge is a dead link for K since `/improve` refuses `type=K`; curators edit route metadata from the Routes queue detail view.
+
 ## 6. Decision flow (AJAX, stubbed, honest)
 
 - Buttons **`fetch`-POST** `{submission_id, decision, note, _token}` to a **content-negotiated `moderate_decide`**: it returns **JSON** for an `XMLHttpRequest` / `Accept: application/json` request (map drawer) and keeps the existing **HTML receipt** for the queue-page form POST. Both paths call `ContributionStubService::submit('moderation_decision', …)`.
@@ -82,7 +88,11 @@ The queue page is reframed from a Wallonia list into the **global review dashboa
 - `SampleQueue` items gain **`country` + `region`** fields so the filters have something to bind to in the stub era; the controller applies the active filters before rendering.
 - A small **count summary** ("N pending · showing M") makes the overview legible.
 
+> See also: the [route-domain design](2026-07-08-route-domain-design.md) §6 adds a dedicated **Routes** queue to the moderation shell as a sibling of this overview — route proposals never appear here as another type filter.
+
 ## 9. Change history & field-level diffs (item-spec principle)
+
+> **Superseded for K (2026-07-08):** The "every accepted edit" rule carves out routes — rider edits to routes no longer exist (moderated `route_suggestion`s replace them), and curator route edits log to the route-scoped `route_change_history` table (route-domain design D9), outside the item change history.
 
 This spec **requires** — and adds to the general item specs — that **every accepted edit records a field-level diff**: for each changed field, the *old value → new value*, **who** changed it, and **when**. That history is:
 - what the moderation **was → now** diff renders from (§5.1);
@@ -92,6 +102,8 @@ This spec **requires** — and adds to the general item specs — that **every a
 The design principle is documented in [`edit-items/README.md` → *Change history & field-level diffs*](edit-items/README.md#change-history--field-level-diffs). **Persistence is deferred to the data-API** (no history table yet); in the stub era the diff is the `was`/`now` fixture fields on `SampleQueue`. When the data-API lands, `ContributionStubService`'s replacement writes a history entry per accepted change.
 
 ## 10. Acceptance
+
+> **No longer true for K (2026-07-08):** Route proposals never appear as pending pins (they live in the dedicated Routes queue), and the **Edit this item** bridge cannot target K — `/improve` refuses `type=K` — so the drawer criterion below holds for item letters only.
 
 - As a **curator**, `/map` shows red-bordered pending pins (legend-toggleable); clicking one opens the drawer with the submission's info, its *was → now* diff (for edits), an **Edit this item** link to the form, and **Approve / Needs-info / Reject** with an optional note.
 - A decision posts via AJAX, the pin fades, and an honest "recorded — preview, not persisted" toast shows; no data is persisted.

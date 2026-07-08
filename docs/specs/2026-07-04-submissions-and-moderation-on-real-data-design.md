@@ -4,6 +4,8 @@
 - **Date:** 2026-07-04
 - **Related:** [`2026-07-03-catalog-data-model-and-import-design.md`](2026-07-03-catalog-data-model-and-import-design.md) §11 (phase B forward design), [`2026-07-02-map-based-moderation-design.md`](2026-07-02-map-based-moderation-design.md) §9 (field-level history requirement) + §13 (hardening bundle — this spec fires it), [`edit-items/README.md`](edit-items/README.md) (lifecycle funnel, provenance tags, change-history principle).
 
+> **Route-domain carve-out (2026-07-08):** The [route-domain design](2026-07-08-route-domain-design.md) removes K (recommended routes) from this pipeline: route proposals enter as `RecommendedRoute` rows (state `submitted`) via a dedicated GPX-upload flow, are desk-moderated in their own Routes queue, and are never rider-editable — `/improve` now refuses `type=K`. Route voting/verification are no longer deferred phase-C stubs: persisted `route_vote` / `route_ride` tables drive seasonal rankings and the ride-confirmation verification gate. Everything this spec says about the item pipeline (A–J) remains accurate and untouched.
+
 ## 1. Problem
 
 Phase A made the DB the source of truth for the *catalog* — but contributions still evaporate: `ContributionStubService` returns an honest receipt and persists nothing, and curators moderate the hard-coded `SampleQueue`. Every approve/reject is theatre. Phase B makes both real: submissions persist against the imported Wallonia catalog, the moderation queue reads from the DB, and curator decisions have observable effect on the map.
@@ -14,6 +16,7 @@ Phase A made the DB the source of truth for the *catalog* — but contributions 
 
 1. Real intake for the two flows that have UI today: **new** (add-climb → letter B) and **edit** (improve, bound to a real item via the map edit-bridge).
 2. `submission` persistence replaces `SampleQueue` everywhere it's read: `/moderate`, the curator map pending layer (`CC_PENDING`), the drawer.
+   > See also: route proposals are desk-moderated in a dedicated Routes queue not fed by `submission` or `CC_PENDING` ([route-domain design](2026-07-08-route-domain-design.md) §6).
 3. Decisions (**approve / reject / needs-info**) persist with an audit trail.
 4. **Apply-on-approve with per-field change history** (the moderation-spec §9 requirement): approving an edit mutates `item.attributes` and writes one `change_history` row per field; approving a new item flips `submitted → unverified`.
 5. The moderation spec **§13 hardening bundle**: drawer HTML-escape, redirect-after-POST filter preservation, `TYPES` relocation, `moderationToken()` reject-on-miss, Collator caching.
@@ -23,6 +26,7 @@ Phase A made the DB the source of truth for the *catalog* — but contributions 
 
 - Hazard/photo **intake UI** (the schema supports the types; no upload/report flow yet — photo needs file storage).
 - **Vote persistence** — voting is verification-gate machinery (phase C+); the vote flow keeps its honest stub.
+  > **Superseded for K (2026-07-08):** route votes persist now (`route_vote`, unique per user/route/season) and drive seasonal best-of rankings, while verification is gated by "I rode this" confirmations (`route_ride` threshold) — the honest stub is retired for routes.
 - Importer **conflict filter / `osm_sync`** submissions (phase C, per catalog spec §11).
 - Per-region curator Security Voter, notifications/messaging on needs-info, email digests.
 
@@ -36,11 +40,15 @@ The catalog spec §11 deferred edit-application and the history table to phase C
 
 Phase C retains: importer conflict filter, `osm_sync` queue entries, vote/verification mechanics.
 
+> **Superseded for K (2026-07-08):** vote/verification mechanics are no longer deferred wholesale — route domain v1 builds them now on purpose-built tables (`route_vote` / `route_ride`); phase C retains only the item-side conflict filter and `osm_sync` work.
+
 ## 4. Data model
 
 Two tables, one migration, same conventions as phase A (bigint identity, `TIMESTAMP(0)`, jsonb, GiST where geometric, no SPDX header in migrations).
 
 ### 4.1 `submission`
+
+> **No longer true for K (2026-07-08):** K rows never legitimately reach this table — route proposals bypass it entirely, and `item_id` FKs to `item.id`, which cannot represent `recommended_route` ids (the id-collision the 2026-07-07 fix addresses) — so the effective `letter` range is A–J.
 
 | column | type | notes |
 |---|---|---|
@@ -87,22 +95,27 @@ Indexes: `(status)`, `(country_code)`, `(region_id)`, `(item_id)`, GiST `(geom)`
 ## 5. Services
 
 - **`CatalogContributionService`** — implements the existing `ContributionStubInterface` (interface kept; stub implementation retired). `submit('new'|'improve', …)` persists per §4.3 and returns a real receipt (submission id, status URL). `submit('vote', …)` keeps the un-persisted receipt with an explicit comment (non-goal).
+  > **Superseded for K (2026-07-08):** route votes are persisted `route_vote` writes in the route pipeline — the un-persisted receipt no longer holds for routes.
 - **`SubmissionQueue`** — replaces `SampleQueue`: `filtered(country, region, type)`, `countries()`, `regions()` from the DB (pending + needs-info rows), Collator hoisted to a cached property (§13).
 - **`ModerationService::decide(Submission, decision, User $curator, ?string $note)`** — transactional: status + decision columns, item mutation, history rows. The only write-path for decisions; `ModerateController::decide()` delegates to it.
+  > See also: route decisions (approve/reject/retire under the region cap) get a separate write-path in the Routes queue — `Submission`/`ModerationService` stay item-only ([route-domain design](2026-07-08-route-domain-design.md) §6).
 
 ## 6. Controllers & UI
 
 - **`ContributeController`**: `add-climb` submits `new`; `improve` requires `?item=<id>` (the edit-bridge already sends `item`, `type`, `lat`, `lng`) — loads the item, prefills the registry-driven form with current attribute values, computes was/now server-side on submit. Bare `/improve` (no valid item): no more fake default editor — an explainer panel linking to the map ("pick a place to improve"). Receipt pages link the new dashboard list.
+  > **Superseded for K (2026-07-08):** the improve binding survives for A–J only — `/improve` now refuses `type=K` and type/letter mismatches (the 2026-07-07 id-collision fix) via the same explainer refusal path; route corrections go through `route_suggestion`, never the edit-bridge.
 - **`ModerateController`**: queue from `SubmissionQueue`; non-AJAX decide branch becomes **redirect-after-POST preserving `country`/`region`/`type`** (§13); `TYPES` const deleted in favour of `SubmissionType` (§13).
 - **`MapController`**: `CC_PENDING` built from pending submissions (shape stays `{id, type, letter, country, region, title, lat, lng, who, when, body, was, now}` — the SampleQueue shape is the de-facto contract with `map.js`).
 - **`map.js`**: `buildRecord` pending branch HTML-escapes `title`/`body`/`was`/`now` (§13 — real stored-XSS surface now); `moderationToken()` rejects on selector miss (§13).
 - **Account dashboard**: "My contributions" — title, type, status chip, date, decision note when present. Read-only list, newest first, no pagination until it hurts.
 - **i18n**: new keys (statuses, receipt copy, improve explainer, dashboard list) in EN/FR/NL/DE, messages domain, path-prefix routing as everywhere.
 - **Rate limiting**: sliding-window limiter on `submit` — 20 submissions/hour per user — via the already-installed `symfony/rate-limiter`; 429 with a translated message.
+  > See also: route proposals enter via a separate GPX-upload path with its own dedicated limiter (default 3 proposals/day — [route-domain design](2026-07-08-route-domain-design.md) §5); this limiter covers item submit only.
 
 ## 6.1 Form boundary: DTO + validation
 
 - **One envelope DTO, not eleven.** `SubmissionDraft` types the stable envelope (`ItemType $type`, `?int $itemId`, `string $name`, coords, `array<string, scalar> $attributes`, `?string $note`); the per-letter field shape stays in the registry (data, not classes — a DTO per item type would duplicate `CatalogFormRegistry`). Forms map `getData()` into the DTO; `CatalogContributionService::submit(SubmissionDraft, User)` replaces the stringly `submit(kind, array, user)`. The future `/api/*` JSON intake maps onto the same DTO (`#[MapRequestPayload]`) and inherits identical validation.
+  > **Superseded for K (2026-07-08):** the QualityRides registry field set no longer backs a rider improve form (it backs the propose-route and curator forms instead), and route proposals use their own GPX+metadata intake rather than `SubmissionDraft` — the DTO boundary (and the API path inheriting its validation) must refuse K.
 - **Registry-declared constraints.** `CatalogField` gains `required` + `maxLength`; `Select` choices imply a `Choice` constraint; `ImproveType` maps descriptors → constraints mechanically (today only ad-hoc `Length`s exist and dynamic fields are unvalidated). `AttributeVocabulary::assertValid` backs a custom `#[ValidAttributes]` constraint so intake and import enforce one vocabulary.
 - **Validate twice, define once.** Forms validate on submit (UX); the service re-validates the DTO via `ValidatorInterface` (defense in depth — and the only validation on the future API path).
 - **`NoSuspiciousCharacters` by default** on all text/textarea registry fields + the envelope `name`/`title`, applied centrally in the field→form mapping: blocks invisible/zero-width and mixed-script confusables in the first user-authored strings other users will see. `locales` tuned to EN/FR/NL/DE (accented Latin passes); requires `ext-intl` — present in the Docker image, added explicitly to `composer.json` `require`. Anti-spoofing only: complements, never replaces, §13 escaping and length caps.
@@ -119,6 +132,7 @@ KernelTestCase + DAMA transactions, mirroring phase A:
 
 - **Intake**: `new` creates item+submission atomically with resolved country/region; `edit` snapshots was/now against the live item; unbound improve is refused; rate limiter fires.
 - **Edit-bridge acceptance (explicit)**: clicking *✎ Edit this item* on a DB-served map item opens `/improve` **prefilled with that item's current `name` and attribute values** — no blank/default form. A functional test asserts the prefill against a seeded item; the browser pass re-checks it end-to-end.
+  > **No longer true for K (2026-07-08):** the route drawer has no edit link — it offers vote, "I rode this", GPX download, and suggest-a-correction instead — so this acceptance criterion applies to A–J only.
 - **Decisions**: approve-new flips state + history row; approve-edit mutates attributes + one history row per field + stale-`was` correction; reject/needs-info mutate nothing; decision columns filled; ROLE gates enforced.
 - **Queue**: filter semantics ported from `SampleQueueFilterTest` (which retires with `SampleQueue`); filter context survives the decide POST.
 - **Serving**: `submitted`/`rejected` excluded from `/map/catalog.json`; pending payload present for curator, absent for rider.

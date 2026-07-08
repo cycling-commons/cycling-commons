@@ -10,11 +10,15 @@
 - **Depends on:** PostGIS (enabled in the dev stack, unused until now), the World reference bundle (`web/src/World` — subdivision FK), the catalog field registry (`CatalogField`/`FieldKind`, already driving the improve wizard).
 - **Related:** [`edit-items/README.md`](edit-items/README.md) (lifecycle/votability funnel, provenance tags, change-history principle), [`2026-07-02-map-based-moderation-design.md`](2026-07-02-map-based-moderation-design.md) §13 (hardening bundle that fires when real submissions arrive), [`2026-06-26-html-to-symfony-migration-design.md`](2026-06-26-html-to-symfony-migration-design.md) (explicitly deferred the data API — this spec begins it).
 
+> **Route-domain carve-out (2026-07-08):** The [route-domain design](2026-07-08-route-domain-design.md) supersedes this spec's K/route story wherever it leaned on the generic item funnel. `recommended_route` and its shared state enum stay (proposals are new rows in `state=submitted`), but K gets a purpose-built pipeline: a dedicated Routes moderation queue instead of the phase-B `Submission` path, ride-verification ("I rode this" ×X) instead of the tiered gate, typed seasonal votes (`route_vote`), a per-region active-route cap (~30), and curator-only edits with rider suggest-a-correction. The `edit-items/README.md` lifecycle/votability funnel referenced above no longer applies to K.
+
 ---
 
 ## 1. Problem
 
 The catalog exists only as static JavaScript fixtures, three times over: `tools/wallonia` harvests into `atlas/demo/*.js`, which are manually copied (undocumented, drift-prone) to `web/assets/data/*.js`, which `/map` loads as `<script>` globals. The fixtures **strip source ids** (`to_fixture_js` drops `_id` and all `_`-prefixed keys), so nothing can be traced back to OSM/Wikidata/PIVOT, re-harvests can only wholesale-replace, and nothing can ever be edited, moderated, or voted on durably. Every contribution surface built so far (improve wizard, moderation queue, votes) dead-ends in `ContributionStubService` because there is nothing to persist against.
+
+> **No longer true for K (2026-07-08):** routes are now durably moderated and voted, but never rider-edited — `/improve` refuses `type=K`, curators own route edits, and rider signal arrives as votes, "I rode this" confirmations, and moderated suggestions ([route-domain design](2026-07-08-route-domain-design.md)).
 
 ## 2. Goals / Non-goals
 
@@ -69,6 +73,8 @@ Indexes: GiST(`geom`) — *the* map read path is viewport bbox + filter; btree(`
 
 `id` bigint identity · `name` · `geom geometry(LineString, 4326)` + GiST · `distance_m` / `ascent_m` (real columns — they are display/sort fields, not jsonb) · `region_id` (as in `item` — routes are votable, and voting is region-scoped) · `state`, `source`, `source_ref`, `attributes`, timestamps as in `item`.
 
+> See also: the [route-domain design](2026-07-08-route-domain-design.md) extends this schema — bike-type `suitability` and `proposed_by` on `recommended_route` (`distance_m`/`ascent_m` now also computed in Symfony from the proposal GPX), plus new `route_vote` / `route_ride` / `route_suggestion` / `route_change_history` tables.
+
 ### 4.3 `heat_point` — layer L (seeded from today's `CC_ROUTES.heat`)
 
 `id` bigint identity · `geom geometry(Point, 4326)` + GiST · `weight` real · `source` (`auto` for now) · `season` (`varchar(8)`, nullable — the ride-heat layer's filter facet, e.g. `summer`/`winter`; round-tripped from the harvest's `[lat, lng, season]` fixture points) · `computed_at`. **Not** an item: no name, no lifecycle, no attributes, never editable, never in the moderation queue. This is the table most likely to explode when real rides feed it — first candidate for partitioning and tile/aggregation serving.
@@ -85,6 +91,8 @@ Indexes: GiST(`geom`) — *the* map read path is viewport bbox + filter; btree(`
 | `created_at` / `updated_at` | `timestamptz` | |
 
 **Membership:** `item.region_id` and `recommended_route.region_id` — nullable `bigint`, plain indexed column (no FK constraint) + btree index, assigned at import by a deterministic rule: the region whose polygon contains `ST_PointOnSurface(geom)` (guaranteed on-geometry for points *and* lines, so border-crossing segments get exactly one home region; the map still finds them from neighboring viewports via GiST). `heat_point` carries no region — it is never moderated or voted. Membership is recomputed on every import run, so regions can be split/merged later without touching items' schema.
+
+> See also: rider-proposed routes never pass the importer — the [route-domain design](2026-07-08-route-domain-design.md) resolves `region_id` at proposal intake with the same containment rule (it gates the per-region cap and vote/ranking scoping).
 
 ### 4.5 Geometry in Doctrine
 
@@ -106,6 +114,8 @@ One small custom DBAL type for `geometry` (write `ST_GeomFromGeoJSON`/WKT, read 
 - **Batched DBAL writes**, not ORM-per-entity — the pattern that survives world scale; Doctrine is the application's path, never the import loop.
 - **No auto-retire on absence**: the harvest is capped/ranked (`rank_and_cap`), so absence from a re-harvest can mean "fell below cap", not "deleted upstream". `imported_at` records staleness; retirement is a curator decision until per-feature deletion signals exist.
 - **No conflict machinery in phase A**: local edits don't exist until phase C, so the importer is a plain upsert. Forward design (§11) is documented so the phase-C importer slot-in is a filter + queue-write, not a redesign.
+
+> See also: rider route proposals insert outside this importer (`source=user`, `state=submitted`, unique `user:<uuid>` refs the upsert can never clobber) per the [route-domain design](2026-07-08-route-domain-design.md); route retirement gains a concrete trigger — freeing a slot when a region's active-route cap is full.
 
 ## 7. Serving flip (`/map` reads the DB)
 
@@ -129,6 +139,8 @@ listener's cache-control downgrade.
 
 ## 8. Lifecycle & provenance semantics
 
+> **Superseded for K (2026-07-08):** for routes, `verified` now comes from the ride-verification threshold (X independent `route_ride` confirmations), not the item-tiered gate, and `submitted` routes are reviewed in the dedicated Routes queue, not the phase-B `Submission` pipeline — see the [route-domain design](2026-07-08-route-domain-design.md).
+
 - `unverified` — on the map, pre-verification-gate (all imported rows start here). `verified` — passed the tiered verification gate (phase C+ mechanics). `submitted` — awaiting moderation (phase B; never set by import). `rejected` — moderation outcome (phase B). `retired` — removed from serving; curator-decided.
 - `source` answers "where did this row come from"; per-field edit provenance (`[edit]`/`[tap]`) arrives with change history in phase C.
 - The serving endpoint emits `unverified` + `verified` items (parity with today: everything imported renders), never `submitted/rejected/retired`.
@@ -151,6 +163,9 @@ listener's cache-control downgrade.
 ## 11. Forward design (phases B/C — documented, not built)
 
 - **Phase B (EXECUTED 2026-07-04, this plan):** `Submission` entity replaces `SampleQueue` (its shape is the de-facto schema: `{id, type: new|edit|hazard|photo, letter, country, region, title, lat, lng, who, when, body, was, now}` + the four stub payload kinds); decisions persist with an audit trail; moderation spec §13 hardening fires (drawer HTML-escape, filter-context redirect, TYPES relocation, `moderationToken` reject-on-miss).
+
+> **Superseded for K (2026-07-08):** `Submission`/`ModerationService` stay item-only — K supply flows as `RecommendedRoute` rows in `state=submitted` through the dedicated Routes queue ([route-domain design](2026-07-08-route-domain-design.md)).
+
 - **Phase C:** append-only per-field change history (time-partitionable from its first migration); approved edits mutate `item.attributes`/columns; the importer gains the conflict filter — skip locally-edited fields, and where OSM's value *also* changed, write an **`osm_sync`** submission to the queue (*was* = our value, *now* = OSM's; decisions mean **load OSM / keep ours**).
 - **Later:** ride ingestion → heat aggregation (Python); vector tiles; upstreaming to OSM (dissolves forks when it lands).
 - **Region consumers** (the entity + membership are day-one, §4.4; the systems that hang off it are not): **per-region moderator groups** (the per-region curator Security Voter the moderation spec defers), a user's **preferred/active region** (`User.region_id`), and **region-scoped voting**. Ad-hoc spatial queries ("all items in `<arbitrary polygon>`") work day one via GiST + `ST_Intersects` — no region row required.
@@ -159,6 +174,9 @@ listener's cache-control downgrade.
 ## 12. Plan split
 
 - **Plan 1 — model + import:** migrations (4 tables — `region`, `item`, `recommended_route`, `heat_point` — + enums + indexes), geometry DBAL type, entities, harvest `--export` (incl. the Wallonia region polygon), `app:catalog:import` (regions first, then membership-assigning item/route import), idempotency + validation + membership tests. DB is a (temporarily) shadow source of truth.
+
+> See also: the [route-domain design](2026-07-08-route-domain-design.md) adds purpose-built route tables (`route_vote`, `route_ride`, `route_suggestion`, `route_change_history`) beyond these phase-A four.
+
 - **Plan 2 — serving flip:** `CatalogProvider` + `/map/catalog.json`, `map.js` fetch-init refactor, K-rename, fixture retirement, parity acceptance (counts + Playwright), i18n keys.
 
 ## Follow-ups (Plan 2 era)

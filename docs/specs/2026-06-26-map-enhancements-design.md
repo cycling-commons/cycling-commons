@@ -11,6 +11,13 @@
   Liberty base, 11 catalog layers A–K, item drawer, accent-aware local search, Mapillary). The only
   state persisted today is `?feature=<name>`.
 
+> **Route-domain carve-out (2026-07-08):** The [route-domain design](2026-07-08-route-domain-design.md)
+> supersedes the client-side story for K: recommended routes are now curated `RecommendedRoute` DB rows
+> with lifecycle states, and route GPX is generated server-side by Symfony (`GET /routes/{id}.gpx`) —
+> the "no backend" scope no longer covers the route download path. The rider-facing requirement itself
+> (one-click GPX that opens on a head unit, ODbL attribution embedded, per-item only) is confirmed and
+> stays. Everything below remains accurate for the demo-era map and the non-route layers.
+
 ---
 
 ## 1. Goal & success criteria
@@ -30,6 +37,9 @@ When this lands:
 **Guiding constraints:**
 - No backend, no dependencies, no build. New logic is small functions/IIFEs inside `map.html`, styled
   like the surrounding code.
+
+  > **Superseded for K (2026-07-08):** the route domain replaces this constraint — route GPX is served
+  > by a Symfony endpoint and GPX parse/compute happens in PHP, not in client JS.
 - Nothing existing breaks — especially the `?feature=` deep-link and the drawer/search behaviour.
 - `version.js` is bumped (Demo v0.1.1 → **v0.2.0**) in the same change. Brand/logo assets are **not**
   touched.
@@ -41,6 +51,12 @@ deferred (per-item only).
 ---
 
 ## 2. Current-state facts the design relies on
+
+> **Superseded for K (2026-07-08):** the `CC_ROUTES` facts and the votability framing below no longer
+> describe K — routes are now curated `RecommendedRoute` DB rows with lifecycle states
+> (submitted/unverified/verified/retired/rejected), bike-type suitability, and Symfony-computed
+> distance/ascent from GPX, and K gains a real verification axis ("I rode this" threshold, "proposed"
+> badge) alongside voting, outside the edit-items item lifecycle.
 
 Verified against the code and data before writing:
 
@@ -106,6 +122,12 @@ button onclick (1924), and `openDrawer` / drawer-close.
 
 ## 4. Feature 2 — GPX export (per-item drawer button)
 
+> **Superseded for K (2026-07-08):** route GPX now comes from the Symfony endpoint
+> (`GET /routes/{id}.gpx`, generated from the stored trimmed track) rather than client-side
+> `buildGpx`/`downloadGpx` with 51-sample elevation interpolation, and the route drawer has no Edit
+> action — its rider row is vote / "I rode this" / GPX download / suggest-a-correction. The track
+> format, ODbL attribution, and per-item download behaviour below carry over unchanged.
+
 ### Behaviour
 - A `⬇ GPX` action button (`cc-d-act` styling, next to Edit/Vote) appears in the drawer **only** when the
   feature has geometry.
@@ -152,6 +174,9 @@ click handler (or inline) calls `downloadGpx`.
 - **Shared helper `pathCumDist(loop)`** → array of cumulative haversine distances along `loop` (also used
   by GPX elev interpolation in §4). `coordAt(loop, cum, t)` → the `[lat,lng]` at fraction `t∈[0,1]` of
   total distance, linearly interpolated between the two bounding vertices.
+
+  > **Superseded for K (2026-07-08):** the §4 GPX-interpolation use is gone — route distance/ascent and
+  > track generation moved to Symfony PHP; the helper remains for chart scrubbing only.
 - `elevSvgInteractive(f)` → renders the same SVG plus a hidden crosshair group + readout, wires
   `pointermove`/`pointerdown`/`touchmove`/`pointerleave`/`keydown`, and on each move computes
   `t = clientX→fraction`, `i = round(t*50)`, elevation `f.elev[i]`, distance `t*f.km`, coordinate
@@ -179,6 +204,10 @@ Light by preference — no Playwright unless something looks off.
   (a) `buildGpx` emits well-formed GPX (root `<gpx>`, balanced `<trk>`/`<trkpt>`, valid lat/lon ranges,
   no unescaped `&`), and (b) `coordAt(loop, cum, t)` for `t ∈ {0, .25, .5, .75, 1}` returns coords inside
   the route's bbox and `t=0`→first point, `t=1`→last point.
+
+  > **Superseded for K (2026-07-08):** routes are DB-served `RecommendedRoute` rows and GPX comes from
+  > the Symfony endpoint, so well-formedness checks target `GET /routes/{id}.gpx` (WebTestCase), not
+  > demo JS data.
 - **Manual pass:**
   1. Pan/zoom, toggle a couple of layers, switch to Everything, open a feature → reload → identical view.
   2. Copy the hash into a fresh tab → same camera + layers + mode + open feature.

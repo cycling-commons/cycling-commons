@@ -5,6 +5,12 @@ service station): each editable type gets its own spec here, documenting what a 
 change, the field-level provenance, and how it's built in the demo vs. production. Having one per
 type is the guarantee that we've thought through the design and implementation options for each.
 
+**K is the deliberate exception** (since 2026-07-08): recommended routes are *curated
+compositions* — riders propose (GPX + metadata), vote, confirm rides, and suggest corrections,
+but never edit route data; curators own all edits. See
+[`../2026-07-08-route-domain-design.md`](../2026-07-08-route-domain-design.md) and the rewritten
+[K-quality-rides.md](K-quality-rides.md).
+
 These specs are the **design source of truth** for [`atlas/demo/edit-items.js`](../../../atlas/demo/edit-items.js)
 (the registry rendered by [`atlas/demo/improve.html`](../../../atlas/demo/improve.html)) and for the catalog
 [`2026-06-18-catalog-v2-and-per-type-forms.md`](../2026-06-18-catalog-v2-and-per-type-forms.md).
@@ -17,14 +23,19 @@ The real, server-rendered port of this registry lives in the Symfony app:
   carrying letter/label/icon/eyebrow, `locationMode` point/segment/none, and `isVotable()` per the funnel
   table below) and `CatalogFormRegistry` (each type's *Fix-details* + *Add-missing* fields, lifted from
   `edit-items.js` to per-type schemas). `LocationMode`, `FieldKind`, `CatalogField`, `ItemFieldSet` support them.
+  For **K** the registry field set backs the *propose-route* and *curator* forms, not a rider improve form —
+  `/improve` refuses `type=K` (route-id/item-id collision fix, 2026-07-07 security review).
 - **Type-aware form** — [`web/src/Form/ImproveType.php`](../../../web/src/Form/ImproveType.php) builds the
   Details step from the registry; [`web/templates/contribute/improve.html.twig`](../../../web/templates/contribute/improve.html.twig)
   renders it and surfaces this **votability/lifecycle context** in the review step.
 - **Reachability** — the contribute hub deep-links each card with `?type=<slug>`; the map drawer's Edit/Add-photo
-  links use `?type=<letter>` (`ItemType::fromParam()` resolves either).
+  links use `?type=<letter>` (`ItemType::fromParam()` resolves either) — **except K**: the route drawer offers
+  vote / "I rode this" / GPX download / suggest-a-correction instead of an edit link.
 
-**Persistence is still stubbed** — every submission flows through `ContributionStubService`
-(`// TODO(data-api)`); there are no catalog-item domain entities yet. That's a later data-API spec.
+**Persistence** — item submissions persist for real since data-API phase B
+([`../2026-07-04-submissions-and-moderation-on-real-data-design.md`](../2026-07-04-submissions-and-moderation-on-real-data-design.md));
+route proposals bypass that pipeline entirely and land as `RecommendedRoute` rows (state `submitted`)
+with purpose-built `route_vote` / `route_ride` / `route_suggestion` tables (route-domain spec).
 
 ## Common to every type
 These panes behave the same across all edit items, so the per-type specs don't repeat them:
@@ -34,7 +45,9 @@ it varies by type:
 - **point** types (water, services, stays, hazards, getting-there, shelter, scenic, history) — tap the map
   to drop a single pin; the eyebrow coordinates update to the dropped point.
 - **segment** (road surface) — tap the **start**, then the **end**; the segment line is drawn between them.
-- **none** (quality rides) — no pin; the **GPX/FIT** track sets the whole route.
+- **none** (quality rides) — no pin; the **GPX** track sets the whole route. Upload happens in the
+  dedicated rate-limited **propose-route flow** (not `/improve` add-mode), with server-side validation,
+  privacy trim, and distance/ascent computation (route-domain spec §5).
 - **climbs** use the dedicated `add-climb.html` flow (draw the **foot**, then the **summit**).
 
 **Report a problem** always includes an **Other** option (free-text) alongside the type-specific reasons.
@@ -77,7 +90,10 @@ Every catalog item keeps a **per-field change history** — the durable record b
 - **when** — a timestamp.
 
 The history is **append-only** and per item: a submission is one entry, a later correction (by a
-rider or a curator) is another. It is the source of truth for:
+rider or a curator) is another. **For K (routes)** riders never author changes — curator edits and
+state transitions write to a route-scoped `route_change_history` table instead (route-domain spec
+D9); rider input arrives as moderated `route_suggestion` records. The history is the source of
+truth for:
 
 - the **moderation "was → now" diff** a curator reviews before deciding
   (see [`2026-07-02-map-based-moderation-design.md`](../2026-07-02-map-based-moderation-design.md));
@@ -126,6 +142,16 @@ Per-pin state carries the trust/vote signal (unverified dot → verified pin →
 the toggle no longer stands in for "trusted". Each per-type spec below tags its **Lifecycle** row
 accordingly.
 
+**Route carve-out (K).** Recommended routes follow the same *shape* but a route-specific machine
+([route-domain spec](../2026-07-08-route-domain-design.md) §4.3): `submitted` proposals are
+reviewed in a dedicated **Routes queue** (an editorial desk with a per-region active cap and
+retire-to-admit, not the item spam/abuse gate); curator-approved routes render a **"proposed"
+badge** (not the help-confirm dot); the confirmation is **"I rode this"** (`route_ride`, X
+independent riders) rather than a generic tap; votes are **typed** (season + bike type) and open
+only at `verified`; and the state set adds `retired`. For routes, supply *is* editorially
+hand-picked — the community ranks within the curated set; the "votes, not hand-picking" principle
+above governs the item types A–J.
+
 ### Verification threshold (X)
 
 X is **not one global number** and **not eleven per-type knobs** — it's a small set of **tiers**
@@ -136,7 +162,8 @@ low-traffic regions.
 | Tier | Types | Base X | Behaviour |
 |---|---|---|---|
 | **Objective utility** | water *existence*, bike services, getting there, road surface | ~2 | existence is binary → cheap to confirm |
-| **Experiential / votable** | climbs, where to sleep, scenic views, history, quality rides | ~2–3 | verification only confirms it *exists*; the **voting** layer does the quality filtering, so no punishing bar |
+| **Experiential / votable** | climbs, where to sleep, scenic views, history | ~2–3 | verification only confirms it *exists*; the **voting** layer does the quality filtering, so no punishing bar |
+| **Routes (K)** | quality rides | X = ~3 "I rode this" | route-specific: confirmation asserts *I rode it*, not *it exists* — `route_ride` rows from independent riders (route-domain spec §7); config, not constant |
 | **Safety / time-sensitive** | hazards, shelter & emergency, the water *potable* flag | ~1 to publish | publish fast, then rely on **freshness decay** (the `freshness` field) — auto-stale after N days unless re-confirmed |
 
 **Modifiers** adjust the base (floor 1): `[OSM]` provenance −1 (imports arrive source-vetted, and may
@@ -163,7 +190,7 @@ or low-density region −1 (seed coverage early, tighten as the community grows)
 | **H** | Shelter & emergency | [H-shelter.md](H-shelter.md) | pin | utility | yes |
 | **I** | Scenic views | [I-scenic-views.md](I-scenic-views.md) | pin | **votable** | yes |
 | **J** | History & culture | [J-history-culture.md](J-history-culture.md) | pin | **votable** | yes |
-| **K** | Quality rides | [K-quality-rides.md](K-quality-rides.md) | line + GPX/FIT | **votable** | yes (1 shared ride edit item) |
+| **K** | Quality rides | [K-quality-rides.md](K-quality-rides.md) | line + GPX | **votable** (typed: season + bike type) | **no — curator-only**; riders propose / vote / rode-it / suggest |
 | **L** | Ride heatmap | — | derived overlay | — | **no** (auto/aggregate, never per-rider) |
 
 L is intentionally not editable: it is a derived, anonymized aggregate.

@@ -10,6 +10,14 @@
   A1, A2, A3, A4, B2; and the catalog rows in
   [`2026-06-17-map-showcase-design.md`](specs/2026-06-17-map-showcase-design.md).
 
+> **Route-domain carve-out (2026-07-08):** what this spec says about K · Quality rides is superseded
+> by the [route-domain design](2026-07-08-route-domain-design.md). Routes are now DB-backed
+> `RecommendedRoute` rows (submitted → unverified → verified, retired) supplied by rate-limited rider
+> GPX proposals through a dedicated routes moderation queue with a per-region active cap (~30) — so
+> the "frontend demo only" scope no longer bounds the K material here. Riders never edit route data:
+> the `/improve` binding for K is dead, and rider input is typed seasonal votes, "I rode this"
+> confirmations and moderated suggestions. K-specific passages in §§3, 4, 7 and 9 are annotated below.
+
 ---
 
 ## 1. Canonical catalog — A–L (12 layers)
@@ -65,6 +73,12 @@ Drawer rows: surface · smoothness · width · traffic, `source: 'OSM (surface=*
 
 ## 3. K · Quality rides — cyclist-experience attributes
 
+> **Superseded for K (2026-07-08):** the fixed 6 fixture loops are replaced by rider-proposed
+> `RecommendedRoute` rows under a per-region cap, and the `[tap]`/`[edit]` provenance below is dead —
+> riders never rate or edit route attributes; suitability (now a curator-owned multi-select with
+> Handbike as a first-class bike type), direction and the rest are curator-owned real DB data, fed by
+> typed seasonal votes, "I rode this" confirmations and moderated suggestions.
+
 Keep the 6 GPX loops under K, relabel "Quality rides", and show the experience attributes in the
 drawer (with provenance tags in the spec's `[ ]` convention):
 - Quietness / traffic level `[auto][tap]`
@@ -77,6 +91,11 @@ drawer (with provenance tags in the spec's `[ ]` convention):
 These are demo values per route; they make K the carrier of the wiki's "cyclist-experience" concept.
 
 ## 4. Per-type edit forms (improve.html)
+
+> **No longer true for K (2026-07-08):** `/improve` now refuses `type=K` entirely (the id-collision
+> fix), so rides get no edit form here — no photo tab, no GPX/FIT tab, and the shared `ride` registry
+> entry no longer backs any improve-form binding; GPX upload lives only in the dedicated rate-limited
+> propose-route flow, which creates a new `submitted` route.
 
 The generic "Add missing" pane is useless for, e.g., a gîte. Make **every pane type-aware**:
 - **Fix details** and **Add missing** fields both come from the registry per item type
@@ -108,6 +127,11 @@ renaming to match before launch; links resolve once renamed.
 - Landing sampler has no duplicate letters; shows distinct Scenic (I) and History (J) cards.
 - Editing a gîte shows gîte-relevant Add fields (not "work stand?"); every type can add a photo;
   a ride can upload a GPX/FIT track.
+
+> **No longer true for K (2026-07-08):** the ride GPX/FIT-upload criterion is dead as an
+> improve-form behaviour — track upload happens only in the propose-route flow (GPX only in v1),
+> creating a new `submitted` route for the routes moderation queue.
+
 - No "via OSRM" on curated climbs; repo links read `cycling-commons`.
 - Wiki `data-catalog.md` matches the A–L scheme.
 
@@ -130,3 +154,8 @@ Built on top of catalog v2:
 
 - No live Overpass fetch (surface data is a hand-picked fixture, like the climbs/routes).
 - No backend, auth, or persistence. No renaming of the GitHub remote (ops task, noted not done).
+
+> **Superseded for K (2026-07-08):** routes are no longer hand-picked fixtures, and the
+> no-backend/auth/persistence framing no longer holds for them — route domain v1 is backend work
+> (`RecommendedRoute` states, `route_vote`/`route_ride`/`route_suggestion` tables, auth-gated rider
+> actions, Symfony GPX processing).
