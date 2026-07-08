@@ -607,11 +607,20 @@
           rec.push({label:'Towns on route', value:cities.map(cityLink).join(' · '), html:true});
         }
         if(r.season) rec.push({label:'Season', value:r.season});
-        if(r.dominantSurface) rec.push({label:'Dominant surface', value:r.dominantSurface});
+        // Surface is named on every route — 'Unknown' beats silently hiding
+        // the row (a real per-segment surface breakdown is a recorded
+        // route-domain phase-2 carry-in; this shows the declared value).
+        rec.push({label:'Dominant surface', value:r.dominantSurface || 'Unknown'});
         if(r.quietness) rec.push({label:'Quietness', value:/^[1-5]$/.test(r.quietness)?stars(Number(r.quietness)):r.quietness});
         if(r.scenic) rec.push({label:'Scenic rating', value:/^[1-5]$/.test(r.scenic)?stars(Number(r.scenic)):r.scenic});
         if(r.friendliness) rec.push({label:'Cycling-friendliness', value:/^[1-5]$/.test(r.friendliness)?stars(Number(r.friendliness)):r.friendliness});
-        if(r.bikeTypes) rec.push({label:'Suitable bikes', value:Array.isArray(r.bikeTypes)?r.bikeTypes.join(', '):r.bikeTypes});
+        if(r.bikeTypes){
+          // One chip per suitable type — scannable whether a route declares
+          // one bike type or five. Values are rider/import data: every
+          // interpolation is escPend-escaped before the html:true channel.
+          const types=Array.isArray(r.bikeTypes)?r.bikeTypes:[r.bikeTypes];
+          rec.push({label:'Suitable bikes', html:true, value:types.map(t=>`<span class="cc-chip">${escPend(t)}</span>`).join('')});
+        }
         if(r.handbike) rec.push({label:'Handbike-friendly?', value:r.handbike});
         if(r.gradientLimited) rec.push({label:'Gradient-limited?', value:r.gradientLimited});
         if(r.bestDirection) rec.push({label:'Best direction', value:r.bestDirection});
@@ -725,6 +734,35 @@
       boundLayerIds.add(id);
     }
   }
+  // K route selection styling: the selected route gets the full brand orange
+  // and a slightly wider line; every sibling route dims so the selection is
+  // unmistakable. Cleared when the drawer closes or a non-route feature opens.
+  const ROUTE_BASE_COLOR='#FD986E';   // 60% #FF5A1F pre-blended over #FBF4E4
+  let selectedRouteLayerId=null;
+  const routeLineIds=()=>map.getStyle().layers.map(l=>l.id).filter(id=>/^experience-\d+$/.test(id));
+  function highlightRoute(selId){
+    selectedRouteLayerId=selId;
+    routeLineIds().forEach(id=>{
+      const on=id===selId;
+      map.setPaintProperty(id,'line-color',on?'#FF5A1F':ROUTE_BASE_COLOR);
+      map.setPaintProperty(id,'line-opacity',on?1:0.15);
+      map.setPaintProperty(id,'line-width',on?6:5);
+      if(map.getLayer(id+'-case')) map.setPaintProperty(id+'-case','line-opacity',on?0.95:0.1);
+    });
+    // lift the selection above its dimmed siblings
+    if(map.getLayer(selId+'-case')) map.moveLayer(selId+'-case');
+    if(map.getLayer(selId)) map.moveLayer(selId);
+  }
+  function clearRouteHighlight(){
+    if(selectedRouteLayerId===null) return;
+    selectedRouteLayerId=null;
+    routeLineIds().forEach(id=>{
+      map.setPaintProperty(id,'line-color',ROUTE_BASE_COLOR);
+      map.setPaintProperty(id,'line-opacity',1);
+      map.setPaintProperty(id,'line-width',5);
+      if(map.getLayer(id+'-case')) map.setPaintProperty(id+'-case','line-opacity',0.95);
+    });
+  }
   function drawLine(id, latlngs, color, layer, f){
     if(!map.getSource(id)) map.addSource(id,{type:'geojson',data:{type:'Feature',properties:{},
       geometry:{type:'LineString',coordinates:latlngs.map(p=>[p[1],p[0]])}}});
@@ -733,7 +771,12 @@
       paint:{'line-color':'#FBF4E4','line-width':9,'line-opacity':.95}});
     if(!map.getLayer(id)) map.addLayer({id,type:'line',source:id,
       layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color':color,'line-width':5,'line-opacity':layer.key==='experience'?0.6:1}});
+      // Routes render in a PRE-BLENDED lighter orange at full opacity (60%
+      // brand #FF5A1F over the cream basemap) instead of a translucent line:
+      // translucent lines stacked wherever routes share a road, making some
+      // segments read darker orange than others. Selection styling (full
+      // brand color + dimmed siblings) lives in highlightRoute().
+      paint:{'line-color':layer.key==='experience'?ROUTE_BASE_COLOR:color,'line-width':5,'line-opacity':1}});
     dynamicIds.push(id);
     if(!boundLayerIds.has(id)){
       map.on('click',id,()=>openDrawer(layer,f));
@@ -987,9 +1030,10 @@
     const rows = recs.map(r => {
       const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`).join('') : '';
       // r.html is the explicit trusted-markup channel (like r.links): honored
-      // only for rows the builder constructs from constant data with escaped
-      // interpolations (see the RIDE_CITIES rows). Everything else — any value
-      // that can carry payload/user data — stays escPend-escaped (spec §13).
+      // only for rows whose markup the builder constructs itself with EVERY
+      // interpolation escPend-escaped (RIDE_CITIES city links, bike-type
+      // chips). Raw payload values never take this path — they stay
+      // escPend-escaped below (spec §13).
       return `<li><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
     }).join('');
     const fresh = f.freshness
@@ -1193,6 +1237,15 @@
       <polyline points="${line}" fill="none" stroke="#FF5A1F" stroke-width="1.6"/></svg>`;
   }
   function openDrawer(layer, f){
+    // Route selection emphasis: covers both the click path and the ?feature=
+    // deep-link (both funnel through here). Layer id convention: the K line
+    // layers are `experience-<feature index>` (see the drawLine call site).
+    if(layer.key==='experience'){
+      const i=layer.features.indexOf(f);
+      if(i>=0 && map.getLayer('experience-'+i)) highlightRoute('experience-'+i);
+    } else {
+      clearRouteHighlight();
+    }
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
     // C1-T3: async "Recent changes" — see loadItemHistory for the race guard.
     // Pending (moderation) features carry no f.id; when they target a real
@@ -1301,6 +1354,7 @@
   function closeDrawer(){
     const d=document.getElementById('drawer'); d.classList.remove('open'); d.setAttribute('aria-hidden','true');
     clearHighlight();
+    clearRouteHighlight();
   }
   // lightbox doubles as a slideshow over a feature's photo gallery
   let _lb={photos:[],i:0,name:''};
