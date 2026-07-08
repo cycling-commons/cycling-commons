@@ -1,0 +1,24 @@
+web/src/Catalog/Entity/RecommendedRoute.php
+  s_162e830c17ed4c::t_3bae417ef91009 206-217
+  s_162e830c17ed4c::t_3928e1abb4b2ee 65-72
+web/tests/Contribution/RouteProposalPersistenceTest.php
+  s_162e830c17ed4c::t_51220ebab00203 1-43
+web/migrations/Version20260708120000.php
+  s_162e830c17ed4c::t_5cfd3c58bd781d 1-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c83730efb65f6c4ea547ad205d54c1d701d5e7dd",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
