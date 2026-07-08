@@ -37,8 +37,13 @@
   .maplibregl-canvas{filter:grayscale(.38) sepia(.24) saturate(.82) contrast(.95) brightness(1.03)}
   .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
   .readout #reset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
-  .cc-marker{position:relative;line-height:0;filter:drop-shadow(0 3px 6px rgba(20,22,14,.4))}
-  .cc-mk-label{font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--paper);border:1px solid rgba(20,22,14,.3);border-radius:3px;padding:.12rem .4rem;white-space:nowrap;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:.3rem;box-shadow:0 2px 6px rgba(20,22,14,.3)}
+  /* No `position` on .cc-marker: MapLibre's .maplibregl-marker{position:absolute}
+     must win — a relative marker stays in-flow, stretches to the map's width and
+     breaks the anchor translate(-50%,-100%); absolute is still the label's
+     containing block. line-height only kills the inline-SVG baseline gap, so the
+     label restores its own. */
+  .cc-marker{line-height:0;filter:drop-shadow(0 3px 6px rgba(20,22,14,.4))}
+  .cc-mk-label{font-family:var(--mono);font-size:.56rem;line-height:1.35;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--paper);border:1px solid rgba(20,22,14,.3);border-radius:3px;padding:.12rem .4rem;white-space:nowrap;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:.3rem;box-shadow:0 2px 6px rgba(20,22,14,.3)}
   .cc-mk-label:empty{display:none}
 
   /* place search */
