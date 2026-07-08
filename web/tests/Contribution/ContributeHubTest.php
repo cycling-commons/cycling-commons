@@ -65,7 +65,10 @@ final class ContributeHubTest extends WebTestCase
 
         // Each category card carries its canonical ?type= slug so the wizard
         // opens the right per-type form (not the default bike-services one).
-        foreach (['water-food', 'where-to-sleep', 'quality-rides', 'road-surface'] as $slug) {
+        // `quality-rides` (K) is intentionally excluded: it now has its own
+        // rider intake at /propose-route (route-domain spec §5), asserted by
+        // ProposeRouteFlowTest::testContributeHubCardPointsToProposeRoute.
+        foreach (['water-food', 'where-to-sleep', 'road-surface'] as $slug) {
             self::assertGreaterThan(
                 0,
                 $crawler->filter('a[href*="type='.$slug.'"]')->count(),

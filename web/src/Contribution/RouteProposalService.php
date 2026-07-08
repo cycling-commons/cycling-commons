@@ -24,6 +24,9 @@ use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
  * Processing order (spec §5.4): parse → raw-length guard → privacy trim
  * (content-hash seeded, ONLY the trimmed track is ever persisted, D4) →
  * distance/ascent on the trimmed track → simplify for serving → region.
+ *
+ * @api Route-proposal intake entry point (route-domain spec §5); consumed by
+ *      ProposeRouteController, covered by RouteProposalServiceTest.
  */
 final class RouteProposalService
 {

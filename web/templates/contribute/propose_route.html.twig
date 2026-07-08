@@ -1,0 +1,52 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<main class="wrap propose-route">
+  <p class="eyebrow">{{ 'propose_route.eyebrow'|trans }}</p>
+  <h1>{{ 'propose_route.title'|trans }}</h1>
+  <p class="lead">{{ 'propose_route.lead'|trans }}</p>
+
+  {% for message in app.flashes('error') %}
+    <p class="flash flash-error" role="alert">{{ message|trans }}</p>
+  {% endfor %}
+
+  {% if receipt is not null %}
+    <section class="receipt" data-receipt>
+      <h2>{{ 'propose_route.receipt_h'|trans }}</h2>
+      <p>{{ 'propose_route.receipt_p'|trans }}</p>
+      <p class="ref">{{ receipt.reference }}</p>
+      <a href="{{ path('contribute') }}">{{ 'propose_route.receipt_back'|trans }} →</a>
+    </section>
+  {% else %}
+    {{ form_start(form) }}
+      {{ form_errors(form) }}
+
+      <fieldset>
+        <legend>{{ 'propose_route.gpx_label'|trans }}</legend>
+        <p class="help">{{ 'propose_route.gpx_help'|trans }}</p>
+        {{ form_row(form.gpx) }}
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ 'propose_route.details_label'|trans }}</legend>
+        <label>{{ 'propose_route.name_label'|trans }}{{ form_widget(form.rName) }}</label>
+        {{ form_errors(form.rName) }}
+        <label>{{ 'propose_route.difficulty_label'|trans }}{{ form_widget(form.difficulty) }}</label>
+        <label>{{ 'propose_route.season_label'|trans }}{{ form_widget(form.season) }}</label>
+        <label>{{ 'propose_route.surface_label'|trans }}{{ form_widget(form.surface) }}</label>
+        <label>{{ 'propose_route.note_label'|trans }}{{ form_widget(form.note) }}</label>
+        {{ form_errors(form.note) }}
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ 'propose_route.bike_types_label'|trans }}</legend>
+        {{ form_widget(form.bikeTypes) }}
+        <label>{{ 'propose_route.gradient_label'|trans }}{{ form_widget(form.gradientLimited) }}</label>
+      </fieldset>
+
+      <button type="submit" class="btn primary">{{ 'propose_route.submit'|trans }}</button>
+    {{ form_end(form) }}
+  {% endif %}
+</main>
+{% endblock %}

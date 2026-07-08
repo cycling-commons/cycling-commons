@@ -14,6 +14,9 @@ use Doctrine\DBAL\Connection;
  * (ImportCatalogCommand::recomputeMembership): the region polygon that
  * contains the route's point-on-surface. NULL when no region matches —
  * a proposal outside every region is still reviewable.
+ *
+ * @api Region assignment at route intake (route-domain spec §5.4); consumed by
+ *      RouteProposalService, covered by RegionResolverTest.
  */
 final class RegionResolver
 {
