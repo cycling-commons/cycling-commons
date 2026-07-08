@@ -14,6 +14,7 @@ nav:
   settings: 'Settings'
   logout: 'Log out'
   moderate: 'Moderate'
+  routes: 'Routes'
   admin: 'Admin'
   language: 'Language'
 footer:
@@ -999,16 +1000,50 @@ moderate:
     showing: 'showing %shown% of %total% pending'
 moderate_routes:
   title: 'Routes moderation desk'
+  kicker: 'Routes queue'
   meta_title: 'Moderate routes'
   meta_description: 'Review pending route proposals and suggestions before they publish.'
+  role_label: 'Curator'
+  map_placeholder: 'Track preview'
+  region_none: 'No region'
+  region_cap: '%active% / %cap% active'
+  overview:
+    showing: 'showing %shown% of %total% pending'
+    empty: 'No route proposals waiting right now.'
+  filter:
+    region: 'Region'
+    all_regions: 'All regions'
+  meta:
+    state: 'State'
+    distance: 'Distance'
+    ascent: 'Ascent'
+    region: 'Region'
+    note: 'Curator note'
   action:
     decide: 'Record decision'
+    save: 'Save changes'
+    view: 'View proposal ↗'
+    done: 'Mark done'
+    dismiss: 'Dismiss'
+  decision:
+    approve: 'Approve'
+    reject: 'Reject'
+    retire: 'Retire'
+  suggestions:
+    title: 'Pending corrections'
+    empty: 'No pending corrections for this queue.'
+    reason_broken_track: 'Broken track'
+    reason_trim_privacy: 'Trim for privacy'
+    reason_duplicate: 'Duplicate route'
+    reason_not_rideable: 'Not rideable'
+    reason_other: 'Other'
   error:
     invalid_decision: 'That decision could not be recorded — please try again.'
     region_full: 'This region is already at its active-route cap.'
     undecidable: 'That route cannot be decided in its current state.'
   flash:
     decided: 'Decision recorded.'
+    edited: 'Route details saved.'
     suggestion_resolved: 'Suggestion resolved.'
 registration:
   email:
@@ -1042,6 +1077,7 @@ account:
   status_voting: 'voting'
   explore_map: 'Explore the map'
   open_moderation: 'Open moderation'
+  open_route_moderation: 'Open routes desk'
   vote_round: 'Summer 2026 round closes in 47 days'
   votes_note: 'Your votes are private. The Commons records <b>that</b> you voted and <b>when</b> — never a public record of <b>what</b> you voted for.'
   set_display_name: 'Display name'

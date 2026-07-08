@@ -79,4 +79,39 @@ final class RouteModerateTest extends WebTestCase
         $em->clear();
         self::assertSame(ItemState::Unverified, $em->find(RecommendedRoute::class, $route->getId())->getState());
     }
+
+    public function testDetailShowsTrackMetadataAndRegionCapContext(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+
+        $client->loginUser($this->curator());
+        $client->request('GET', '/moderate/routes/'.$route->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Desk proposal · Condroz');
+        self::assertSelectorTextContains('body', '24 km');
+        // The region's active-vs-cap context is shown so the curator sees head-room.
+        self::assertSelectorExists('[data-region-cap]');
+    }
+
+    public function testCuratorEditsRouteNoteViaTheDetailForm(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $route->setAttributes(['note' => 'Old note']);
+        $em->flush();
+
+        $client->loginUser($this->curator());
+        $crawler = $client->request('GET', '/moderate/routes/'.$route->getId());
+        $form = $crawler->selectButton('Save changes')->form();
+        $form['route_edit[note]'] = 'A quiet Condroz loop, resurfaced 2025.';
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        $em->clear();
+        self::assertSame('A quiet Condroz loop, resurfaced 2025.', $em->find(RecommendedRoute::class, $route->getId())->getAttributes()['note']);
+    }
 }

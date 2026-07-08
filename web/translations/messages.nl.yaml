@@ -14,6 +14,7 @@ nav:
   settings: 'Instellingen'
   logout: 'Uitloggen'
   moderate: 'Modereren'
+  routes: 'Routes'
   admin: 'Admin'
   language: 'Taal'
 footer:
@@ -999,16 +1000,50 @@ moderate:
     showing: '%shown% van %total% in behandeling'
 moderate_routes:
   title: 'Routes moderatiewachtrij'
+  kicker: 'Routeswachtrij'
   meta_title: 'Routes modereren'
   meta_description: 'Beoordeel ingediende routevoorstellen en suggesties vóór publicatie.'
+  role_label: 'Curator'
+  map_placeholder: 'Trackvoorbeeld'
+  region_none: 'Geen regio'
+  region_cap: '%active% / %cap% actief'
+  overview:
+    showing: '%shown% van %total% in behandeling'
+    empty: 'Op dit moment geen routevoorstellen in behandeling.'
+  filter:
+    region: 'Regio'
+    all_regions: 'Alle regio''s'
+  meta:
+    state: 'Status'
+    distance: 'Afstand'
+    ascent: 'Hoogtemeters'
+    region: 'Regio'
+    note: 'Curatornotitie'
   action:
     decide: 'Beslissing registreren'
+    save: 'Wijzigingen opslaan'
+    view: 'Voorstel bekijken ↗'
+    done: 'Markeer als afgehandeld'
+    dismiss: 'Afwijzen'
+  decision:
+    approve: 'Goedkeuren'
+    reject: 'Afwijzen'
+    retire: 'Intrekken'
+  suggestions:
+    title: 'Openstaande correcties'
+    empty: 'Geen openstaande correcties voor deze wachtrij.'
+    reason_broken_track: 'Kapotte track'
+    reason_trim_privacy: 'Inkorten voor privacy'
+    reason_duplicate: 'Dubbele route'
+    reason_not_rideable: 'Niet berijdbaar'
+    reason_other: 'Overig'
   error:
     invalid_decision: 'Die beslissing kon niet worden geregistreerd — probeer het opnieuw.'
     region_full: 'Deze regio heeft het maximum aantal actieve routes al bereikt.'
     undecidable: 'Over deze route kan in de huidige status niet worden beslist.'
   flash:
     decided: 'Beslissing geregistreerd.'
+    edited: 'Routegegevens opgeslagen.'
     suggestion_resolved: 'Suggestie opgelost.'
 registration:
   email:
@@ -1042,6 +1077,7 @@ account:
   status_voting: 'stemmen'
   explore_map: 'Verken de kaart'
   open_moderation: 'Open moderatie'
+  open_route_moderation: 'Open routesdesk'
   vote_round: 'Ronde Zomer 2026 sluit over 47 dagen'
   votes_note: 'Jouw stemmen zijn privé. De Commons registreert <b>dat</b> je hebt gestemd en <b>wanneer</b> — nooit een openbaar overzicht van <b>wat</b> je hebt gestemd.'
   set_display_name: 'Weergavenaam'

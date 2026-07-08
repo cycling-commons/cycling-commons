@@ -14,6 +14,7 @@ nav:
   settings: 'Paramètres'
   logout: 'Se déconnecter'
   moderate: 'Modérer'
+  routes: 'Itinéraires'
   admin: 'Admin'
   language: 'Langue'
 footer:
@@ -999,16 +1000,50 @@ moderate:
     showing: '%shown% sur %total% en attente'
 moderate_routes:
   title: 'File de modération des itinéraires'
+  kicker: 'File des itinéraires'
   meta_title: 'Modérer les itinéraires'
   meta_description: 'Examinez les propositions et suggestions d''itinéraires en attente avant leur publication.'
+  role_label: 'Curateur'
+  map_placeholder: 'Aperçu de la trace'
+  region_none: 'Aucune région'
+  region_cap: '%active% / %cap% actifs'
+  overview:
+    showing: '%shown% sur %total% en attente'
+    empty: 'Aucune proposition d''itinéraire en attente pour le moment.'
+  filter:
+    region: 'Région'
+    all_regions: 'Toutes les régions'
+  meta:
+    state: 'État'
+    distance: 'Distance'
+    ascent: 'Dénivelé'
+    region: 'Région'
+    note: 'Note du curateur'
   action:
     decide: 'Enregistrer la décision'
+    save: 'Enregistrer les modifications'
+    view: 'Voir la proposition ↗'
+    done: 'Marquer comme traité'
+    dismiss: 'Rejeter'
+  decision:
+    approve: 'Approuver'
+    reject: 'Rejeter'
+    retire: 'Retirer'
+  suggestions:
+    title: 'Corrections en attente'
+    empty: 'Aucune correction en attente pour cette file.'
+    reason_broken_track: 'Trace cassée'
+    reason_trim_privacy: 'À tronquer pour la vie privée'
+    reason_duplicate: 'Itinéraire en double'
+    reason_not_rideable: 'Non praticable'
+    reason_other: 'Autre'
   error:
     invalid_decision: 'Cette décision n''a pas pu être enregistrée — veuillez réessayer.'
     region_full: 'Cette région a déjà atteint son plafond d''itinéraires actifs.'
     undecidable: 'Cet itinéraire ne peut pas être décidé dans son état actuel.'
   flash:
     decided: 'Décision enregistrée.'
+    edited: 'Détails de l''itinéraire enregistrés.'
     suggestion_resolved: 'Suggestion résolue.'
 registration:
   email:
@@ -1042,6 +1077,7 @@ account:
   status_voting: 'en vote'
   explore_map: 'Explorer la carte'
   open_moderation: 'Ouvrir la modération'
+  open_route_moderation: 'Ouvrir le bureau des itinéraires'
   vote_round: 'Le tour Été 2026 ferme dans 47 jours'
   votes_note: 'Vos votes sont privés. Le Commons enregistre <b>que</b> vous avez voté et <b>quand</b> — jamais un relevé public de <b>ce</b> pour quoi vous avez voté.'
   set_display_name: 'Nom d''affichage'

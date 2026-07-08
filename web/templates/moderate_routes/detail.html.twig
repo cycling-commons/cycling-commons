@@ -1,0 +1,101 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .mh{padding:2rem 0 1.4rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.2rem);line-height:1.1;margin-bottom:.4rem;color:var(--ink)}
+  .mh .stat-line{font-family:var(--mono);font-size:.72rem;color:#595c4d}
+
+  .rd-map{height:280px;border-radius:8px;background:rgba(20,22,14,.06);margin:1.4rem 0;display:flex;align-items:center;justify-content:center;color:#8a8d7d;font-family:var(--mono);font-size:.7rem}
+
+  .rd-meta{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.2rem 1.4rem;margin:1.4rem 0;background:var(--paper)}
+  .rd-meta table{width:100%;border-collapse:collapse;font-size:.88rem}
+  .rd-meta td{padding:.4rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  .rd-meta td:first-child{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;width:35%}
+
+  .rd-edit{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.2rem 1.4rem;margin:1.4rem 0;background:var(--paper)}
+  .rd-edit label{display:block;font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
+  .rd-edit textarea{width:100%;min-height:110px;font-family:var(--sans);font-size:.9rem;padding:.6rem;border:1px solid rgba(20,22,14,.25);border-radius:6px}
+  .btn-act{font-family:var(--sans);font-weight:700;font-size:.82rem;padding:.6rem 1.1rem;border-radius:5px;border:none;cursor:pointer;margin-top:.8rem}
+  .btn-save{background:#3e7d4f;color:#fff}
+  .btn-done{background:#3e7d4f;color:#fff}
+  .btn-dismiss{background:transparent;color:var(--clay);border:1.5px solid var(--clay)}
+
+  .rd-suggestions{margin:1.4rem 0 2.4rem}
+  .sugg-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin-bottom:.8rem;background:var(--paper);display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+  .sugg-body{flex:1 1 260px}
+  .sugg-reason{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
+  .sugg-actions{display:flex;gap:.5rem}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_routes'} %}{% endblock %}
+
+{% block body %}
+<div class="mh">
+  <div class="wrap">
+    <div class="kicker">{{ 'moderate_routes.kicker'|trans }}</div>
+    <h1>{{ route.name }}</h1>
+    <div class="stat-line">
+      {{ route.km }} km
+      {% if route.ascent is not null %}&middot; {{ route.ascent }} m ascent{% endif %}
+      &middot; <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': active_in_region, '%cap%': route.attributes.cap ?? active_in_region}) }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="main">
+  <div class="rd-map" data-geom="{{ route.geom }}">{{ 'moderate_routes.map_placeholder'|trans }}</div>
+
+  <div class="rd-meta">
+    <table>
+      <tr><td>{{ 'moderate_routes.meta.state'|trans }}</td><td>{{ route.state }}</td></tr>
+      <tr><td>{{ 'moderate_routes.meta.distance'|trans }}</td><td>{{ route.km }} km</td></tr>
+      <tr><td>{{ 'moderate_routes.meta.ascent'|trans }}</td><td>{{ route.ascent ?? '—' }}</td></tr>
+      <tr><td>{{ 'moderate_routes.meta.region'|trans }}</td><td>{{ route.regionId ?? '—' }}</td></tr>
+    </table>
+  </div>
+
+  <div class="rd-edit">
+    {{ form_start(edit_form, {attr: {novalidate: 'novalidate'}}) }}
+      <input type="hidden" name="_token" value="{{ csrf_token('route_edit') }}">
+      {{ form_widget(edit_form.route_id) }}
+      <label for="{{ edit_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>
+      {{ form_widget(edit_form.note) }}
+      <button type="submit" class="btn-act btn-save">{{ 'moderate_routes.action.save'|trans }}</button>
+    {{ form_end(edit_form) }}
+  </div>
+
+  <h2>{{ 'moderate_routes.suggestions.title'|trans }}</h2>
+  {% if suggestions is empty %}
+    <p>{{ 'moderate_routes.suggestions.empty'|trans }}</p>
+  {% else %}
+  <div class="rd-suggestions">
+    {% for s in suggestions %}
+      <div class="sugg-item" data-suggestion-id="{{ s.id }}">
+        <div class="sugg-body">
+          <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</div>
+          {% if s.note %}<p>{{ s.note }}</p>{% endif %}
+        </div>
+        <div class="sugg-actions">
+          <form method="post" action="{{ path('moderate_routes_suggestion') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
+            <input type="hidden" name="suggestion_id" value="{{ s.id }}">
+            <input type="hidden" name="status" value="done">
+            <button type="submit" class="btn-act btn-done">{{ 'moderate_routes.action.done'|trans }}</button>
+          </form>
+          <form method="post" action="{{ path('moderate_routes_suggestion') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
+            <input type="hidden" name="suggestion_id" value="{{ s.id }}">
+            <input type="hidden" name="status" value="dismissed">
+            <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.dismiss'|trans }}</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

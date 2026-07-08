@@ -3,7 +3,7 @@
    Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = contrib | votes | saved | settings | moderate. #}
+   Param: `active` = contrib | votes | saved | settings | moderate | moderate_routes. #}
 {% set active = active|default('contrib') %}
 <div class="demo-banner"><b>Demo</b> — {{ 'account.demo_banner'|trans }}</div>
 <header class="dtop">
@@ -19,5 +19,6 @@
   <a href="{{ path('profile') }}?tab=saved" data-pane="saved" class="{{ active == 'saved' ? 'on' : '' }}">{{ 'account.tab_saved'|trans }}</a>
   {% if is_granted('ROLE_CURATOR') %}
     <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}</a>
+    <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}</a>
   {% endif %}
 </nav>

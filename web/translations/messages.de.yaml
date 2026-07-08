@@ -14,6 +14,7 @@ nav:
   settings: 'Einstellungen'
   logout: 'Abmelden'
   moderate: 'Moderieren'
+  routes: 'Routen'
   admin: 'Admin'
   language: 'Sprache'
 footer:
@@ -999,16 +1000,50 @@ moderate:
     showing: '%shown% von %total% ausstehend'
 moderate_routes:
   title: 'Routen-Moderationswarteschlange'
+  kicker: 'Routenwarteschlange'
   meta_title: 'Routen moderieren'
   meta_description: 'Ausstehende Routenvorschläge und Hinweise vor der Veröffentlichung prüfen.'
+  role_label: 'Kurator'
+  map_placeholder: 'Track-Vorschau'
+  region_none: 'Keine Region'
+  region_cap: '%active% / %cap% aktiv'
+  overview:
+    showing: '%shown% von %total% ausstehend'
+    empty: 'Momentan keine ausstehenden Routenvorschläge.'
+  filter:
+    region: 'Region'
+    all_regions: 'Alle Regionen'
+  meta:
+    state: 'Status'
+    distance: 'Distanz'
+    ascent: 'Höhenmeter'
+    region: 'Region'
+    note: 'Kuratorenhinweis'
   action:
     decide: 'Entscheidung erfassen'
+    save: 'Änderungen speichern'
+    view: 'Vorschlag ansehen ↗'
+    done: 'Als erledigt markieren'
+    dismiss: 'Verwerfen'
+  decision:
+    approve: 'Genehmigen'
+    reject: 'Ablehnen'
+    retire: 'Zurückziehen'
+  suggestions:
+    title: 'Ausstehende Korrekturen'
+    empty: 'Keine ausstehenden Korrekturen für diese Warteschlange.'
+    reason_broken_track: 'Defekter Track'
+    reason_trim_privacy: 'Zum Datenschutz kürzen'
+    reason_duplicate: 'Doppelte Route'
+    reason_not_rideable: 'Nicht befahrbar'
+    reason_other: 'Sonstiges'
   error:
     invalid_decision: 'Diese Entscheidung konnte nicht gespeichert werden — bitte erneut versuchen.'
     region_full: 'Diese Region hat ihr Limit an aktiven Routen bereits erreicht.'
     undecidable: 'Über diese Route kann im aktuellen Zustand nicht entschieden werden.'
   flash:
     decided: 'Entscheidung erfasst.'
+    edited: 'Routendetails gespeichert.'
     suggestion_resolved: 'Hinweis bearbeitet.'
 registration:
   email:
@@ -1042,6 +1077,7 @@ account:
   status_voting: 'Abstimmung'
   explore_map: 'Karte erkunden'
   open_moderation: 'Moderation öffnen'
+  open_route_moderation: 'Routen-Schreibtisch öffnen'
   vote_round: 'Sommer-2026-Runde endet in 47 Tagen'
   votes_note: 'Deine Stimmen sind privat. The Commons speichert <b>dass</b> du abgestimmt hast und <b>wann</b> — niemals ein öffentliches Protokoll darüber, <b>wofür</b> du gestimmt hast.'
   set_display_name: 'Anzeigename'

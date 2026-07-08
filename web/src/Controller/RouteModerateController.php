@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionStatus;
 use App\Entity\User;
 use App\Form\RouteDecisionType;
@@ -116,6 +117,64 @@ final class RouteModerateController extends AbstractController
         }
 
         return $this->redirectToRoute('moderate_routes');
+    }
+
+    #[Route('/moderate/routes/{id}', name: 'moderate_routes_detail', requirements: ['id' => '\d+'])]
+    public function detail(int $id, \Doctrine\DBAL\Connection $db): Response
+    {
+        $row = $db->fetchAssociative(
+            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, region_id, attributes, state
+             FROM recommended_route WHERE id = :id',
+            ['id' => $id],
+        );
+        $servedValues = array_map(static fn (ItemState $s): string => $s->value, ItemState::SERVED);
+        if (false === $row || ('submitted' !== $row['state'] && !\in_array($row['state'], $servedValues, true))) {
+            throw $this->createNotFoundException();
+        }
+        /** @var array<string,mixed> $attrs */
+        $attrs = json_decode((string) $row['attributes'], true) ?: [];
+
+        $editForm = $this->container->get('form.factory')->createNamedBuilder('route_edit', \Symfony\Component\Form\Extension\Core\Type\FormType::class, null, [
+            'action' => $this->generateUrl('moderate_routes_edit'),
+            'csrf_protection' => false, // manual validateCsrf() below handles the token
+        ])
+            ->add('route_id', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, ['data' => (string) $id])
+            ->add('note', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, ['required' => false, 'data' => $attrs['note'] ?? null])
+            ->setMethod('POST')->getForm();
+
+        return $this->render('moderate_routes/detail.html.twig', [
+            'nav_active' => 'moderate_routes',
+            'route' => [
+                'id' => $id, 'name' => (string) $row['name'], 'geom' => $row['geom'],
+                'km' => round(((int) $row['distance_m']) / 1000, 1), 'ascent' => $row['ascent_m'],
+                'regionId' => $row['region_id'], 'state' => $row['state'], 'attributes' => $attrs,
+            ],
+            'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),
+            'suggestions' => array_values(array_filter($this->queue->pendingSuggestions(null), static fn (array $s): bool => $s['routeId'] === $id)),
+            'edit_form' => $editForm->createView(),
+            'page_title' => 'moderate_routes.meta_title',
+            'page_description' => 'moderate_routes.meta_description',
+        ]);
+    }
+
+    #[Route('/moderate/routes/edit', name: 'moderate_routes_edit', methods: ['POST'])]
+    public function edit(Request $request): Response
+    {
+        $this->validateCsrf($request, 'route_edit'); // form name → default token id
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $payload = (array) $request->request->all('route_edit');
+        $id = (int) ($payload['route_id'] ?? 0);
+        unset($payload['route_id'], $payload['_token']);
+
+        try {
+            $this->moderation->editMetadata($id, $payload, $curator);
+            $this->addFlash('success', 'moderate_routes.flash.edited');
+        } catch (\InvalidArgumentException|\LogicException) {
+            $this->addFlash('danger', 'moderate_routes.error.undecidable');
+        }
+
+        return $this->redirectToRoute('moderate_routes_detail', ['id' => $id]);
     }
 
     private function validateCsrf(Request $request, string $id): void

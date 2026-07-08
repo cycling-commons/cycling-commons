@@ -14,6 +14,7 @@
     <a role="menuitem" href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
     <a role="menuitem" href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
     {% if is_granted('ROLE_CURATOR') %}<a role="menuitem" href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}</a>{% endif %}
+    {% if is_granted('ROLE_CURATOR') %}<a role="menuitem" href="{{ path('moderate_routes') }}">{{ 'nav.routes'|trans }}</a>{% endif %}
     {% if is_granted('ROLE_ADMIN') %}<a role="menuitem" href="{{ path('admin') }}">{{ 'nav.admin'|trans }}</a>{% endif %}
     <form method="post" action="{{ path('logout') }}" role="none">
       <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">

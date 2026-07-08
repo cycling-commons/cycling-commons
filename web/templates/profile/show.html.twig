@@ -98,6 +98,7 @@
       <a class="lnk p" href="{{ path('map') }}">{{ 'account.explore_map'|trans }} →</a>
       {% if is_granted('ROLE_CURATOR') %}
         <a class="lnk g" href="{{ path('moderate') }}">{{ 'account.open_moderation'|trans }} →</a>
+        <a class="lnk g" href="{{ path('moderate_routes') }}">{{ 'account.open_route_moderation'|trans }} →</a>
       {% endif %}
     </div>
   </section>

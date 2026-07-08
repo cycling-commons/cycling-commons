@@ -1,17 +1,121 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .mh{padding:2rem 0 1.4rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
+  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
+  .mh .pend-count{font-family:var(--mono);font-size:.68rem;color:var(--clay);margin-left:.8rem}
+
+  .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0 0 1.4rem}
+  .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
+  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.35rem .5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
+
+  .q-list{margin:1.8rem 0}
+  .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.3rem 1.4rem;margin-bottom:1.1rem;background:var(--paper)}
+  .q-meta{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
+  .q-tag{font-family:var(--mono);font-size:.57rem;letter-spacing:.07em;text-transform:uppercase;padding:.2rem .45rem;border-radius:3px;color:var(--ink)}
+  .q-tag--new{background:#FF5A1F}.q-tag--hazard{background:#C8923A}
+  .q-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:auto}
+  .q-title{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin-bottom:.25rem}
+  .q-submitter{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin-bottom:.5rem}
+  .q-view{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35);white-space:nowrap}
+  .q-view:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .q-view:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:2px}
+  .q-actions{margin-top:.9rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.9rem}
+  .q-act-form textarea{display:none}
+  .q-decision-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}
+  .q-decision-row label{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:0}
+  .q-decision-row select{max-width:220px}
+  .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+  .btn-act{font-family:var(--sans);font-weight:700;font-size:.82rem;padding:.6rem 1rem;border-radius:5px;border:none;cursor:pointer}
+  .btn-decide{background:#3e7d4f;color:#fff}
+
+  .sugg-list{margin:1.4rem 0 2.4rem}
+  .sugg-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin-bottom:.8rem;background:var(--paper);display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+  .sugg-body{flex:1 1 260px}
+  .sugg-route{font-family:var(--serif);font-weight:600}
+  .sugg-reason{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
+  .sugg-actions{display:flex;gap:.5rem}
+  .btn-done{background:#3e7d4f;color:#fff}
+  .btn-dismiss{background:transparent;color:var(--clay);border:1.5px solid var(--clay)}
+
+  .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
+  .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
+  .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_routes'} %}{% endblock %}
+
 {% block body %}
-  <h1>{{ 'moderate_routes.title'|trans }}</h1>
-  {% for r in routes %}
-    <article class="rq-item">
-      <h2 class="rq-title">{{ r.name }}</h2>
-      <p>{{ r.km }} km · region {{ r.region ?? '—' }} · {{ r.activeInRegion }}/{{ r.cap }} active</p>
-      {{ form_start(forms[r.id]) }}
-        <input type="hidden" name="route_decision[route_id]" value="{{ r.id }}">
-        {{ form_widget(forms[r.id].decision) }}
-        {{ form_widget(forms[r.id].note) }}
-        <button type="submit">{{ 'moderate_routes.action.decide'|trans }}</button>
-      {{ form_end(forms[r.id]) }}
-    </article>
-  {% endfor %}
+<div class="mh">
+  <div class="wrap">
+    <div class="kicker">{{ 'moderate_routes.kicker'|trans }}</div>
+    <h1>{{ 'moderate_routes.title'|trans }}</h1>
+    <div>
+      <span class="role-badge">&#9876; {{ 'moderate_routes.role_label'|trans }}</span>
+      <span class="pend-count">{{ 'moderate_routes.overview.showing'|trans({'%shown%': routes|length, '%total%': total}) }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="main">
+  <form class="mod-filters" method="get" action="{{ path('moderate_routes') }}">
+    <label>{{ 'moderate_routes.filter.region'|trans }}
+      <select name="region" onchange="this.form.submit()">
+        <option value="">{{ 'moderate_routes.filter.all_regions'|trans }}</option>
+        {% for r in regions %}<option value="{{ r.id }}"{{ filter_region == r.id ? ' selected' }}>{{ r.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <noscript><button type="submit" class="btn-act btn-decide">{{ 'moderate.filter.apply'|trans }}</button></noscript>
+  </form>
+
+  {% if routes is empty %}
+  <div class="empty-queue">
+    <div class="ic">&#9650;</div>
+    <h3>{{ 'moderate.empty.heading'|trans }}</h3>
+    <p>{{ 'moderate_routes.overview.empty'|trans }}</p>
+  </div>
+  {% else %}
+  <div class="q-list">
+    {% for item in routes %}
+      {% include 'moderate_routes/_queue_item.html.twig' with {item: item, form: forms[item.id]} %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <h2>{{ 'moderate_routes.suggestions.title'|trans }}</h2>
+  {% if suggestions is empty %}
+    <p>{{ 'moderate_routes.suggestions.empty'|trans }}</p>
+  {% else %}
+  <div class="sugg-list">
+    {% for s in suggestions %}
+      <div class="sugg-item" data-suggestion-id="{{ s.id }}">
+        <div class="sugg-body">
+          <div class="sugg-route">{{ s.routeName }}</div>
+          <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</div>
+          {% if s.note %}<p>{{ s.note }}</p>{% endif %}
+        </div>
+        <div class="sugg-actions">
+          <form method="post" action="{{ path('moderate_routes_suggestion') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
+            <input type="hidden" name="suggestion_id" value="{{ s.id }}">
+            <input type="hidden" name="status" value="done">
+            <button type="submit" class="btn-act btn-done">{{ 'moderate_routes.action.done'|trans }}</button>
+          </form>
+          <form method="post" action="{{ path('moderate_routes_suggestion') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
+            <input type="hidden" name="suggestion_id" value="{{ s.id }}">
+            <input type="hidden" name="status" value="dismissed">
+            <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.dismiss'|trans }}</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
 {% endblock %}
