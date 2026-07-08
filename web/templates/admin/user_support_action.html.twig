@@ -1,0 +1,16 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# @var action \EasyCorp\Bundle\EasyAdminBundle\Dto\ActionDto #}
+{#
+   User support-desk action: a CSRF-protected POST form instead of EasyAdmin's
+   default GET <a href>. Combined with the POST-only route on each handler and
+   the token check in UserCrudController::run(), this closes the cross-site
+   request-forgery hole on privilege / account operations (security review
+   2026-07-07, critical #2).
+#}
+<form action="{{ action.linkUrl }}" method="post" class="user-support-action">
+    <input type="hidden" name="token" value="{{ csrf_token(constant('App\\Controller\\Admin\\UserCrudController::CSRF_TOKEN_ID')) }}">
+    <button type="submit" class="btn btn-secondary {{ action.cssClass }}">
+        {% if action.icon %}<i class="{{ action.icon }}"></i> {% endif %}
+        <span class="action-label">{{ action.label|trans }}</span>
+    </button>
+</form>

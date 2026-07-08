@@ -48,6 +48,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[IsGranted('ROLE_ADMIN')]
 final class UserCrudController extends AbstractCrudController
 {
+    /** CSRF token id shared by the action form template and {@see run()}. */
+    public const string CSRF_TOKEN_ID = 'ea-user-support';
+
     public function __construct(
         private readonly UserAdminService $svc,
         private readonly AdminUrlGenerator $urls,
@@ -92,13 +95,19 @@ final class UserCrudController extends AbstractCrudController
     {
         yield EmailField::new('email');
         yield TextField::new('displayName', 'Display Name');
+        // roles / emailVerified / lockedUntil are shown but NOT form-editable:
+        // changing them must go through the audited UserAdminService support
+        // actions (grant/revoke, verify, unlock), never the generic EA form —
+        // which is why the built-in EDIT/DELETE are disabled below too
+        // (security review 2026-07-07, #2 + related warning).
         yield ChoiceField::new('roles')
             ->setChoices(['Curator' => 'ROLE_CURATOR', 'Admin' => 'ROLE_ADMIN'])
             ->allowMultipleChoices()
-            ->renderExpanded(false);
-        yield BooleanField::new('emailVerified', 'Email Verified');
+            ->renderExpanded(false)
+            ->hideOnForm();
+        yield BooleanField::new('emailVerified', 'Email Verified')->hideOnForm();
         yield BooleanField::new('twoFaEnabled', '2FA Enabled')->hideOnForm();
-        yield DateTimeField::new('lockedUntil', 'Locked Until')->setRequired(false);
+        yield DateTimeField::new('lockedUntil', 'Locked Until')->setRequired(false)->hideOnForm();
         yield BooleanField::new('publicProfile', 'Public Profile');
         yield DateTimeField::new('createdAt', 'Registered')->hideOnForm();
     }
@@ -106,10 +115,21 @@ final class UserCrudController extends AbstractCrudController
     #[\Override]
     public function configureActions(Actions $actions): Actions
     {
+        // Every support action renders through a custom template that POSTs a
+        // CSRF-tokened form (see admin/user_support_action.html.twig) instead of
+        // EasyAdmin's default GET <a href>. Paired with the POST-only route on
+        // each handler + the token check in run(), this closes the CSRF hole
+        // (security review 2026-07-07, #2).
         $mk = fn (string $name, string $label, string $icon, bool $confirm, callable $when): Action => Action::new($name, $this->t($label), $icon)
             ->linkToCrudAction($name)
             ->displayIf($when)
+            ->setTemplatePath('admin/user_support_action.html.twig')
             ->addCssClass($confirm ? 'action-confirm' : '');
+
+        // Kill the generic EA create/edit/delete: they would let an admin change
+        // roles / emailVerified / lockedUntil or delete an account WITHOUT the
+        // UserAdminService guardrails (last-admin protection, …) and audit log.
+        $actions->disable(Action::NEW, Action::EDIT, Action::DELETE, Action::BATCH_DELETE);
 
         $actions
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::UNLOCK, 'admin.action.unlock', 'fa fa-unlock', false, static fn (User $u) => $u->isLocked()))
@@ -131,70 +151,70 @@ final class UserCrudController extends AbstractCrudController
     // ── Action handlers (one per support operation) ────────────────────────────
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function unlock(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->unlock($t, $a), 'admin.flash.unlocked');
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function disarm_2fa(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->disarmTwoFa($t, $a), 'admin.flash.2fa_disarmed');
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function verify_email(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->verifyEmail($t, $a), 'admin.flash.email_verified');
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function unverify_email(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->unverifyEmail($t, $a), 'admin.flash.email_unverified');
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function grant_curator(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->grantCurator($t, $a), 'admin.flash.role_changed');
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function revoke_curator(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->revokeCurator($t, $a), 'admin.flash.role_changed');
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function grant_admin(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->grantAdmin($t, $a), 'admin.flash.role_changed');
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function revoke_admin(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->revokeAdmin($t, $a), 'admin.flash.role_changed');
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function remove_account(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->removeAccount($t, $a), 'admin.flash.account_removed', backToIndex: true);
     }
 
     /** @param AdminContext<User> $context */
-    #[AdminRoute]
+    #[AdminRoute(options: ['methods' => ['POST']])]
     public function cancel_removal(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->cancelPendingRemoval($t, $a), 'admin.flash.removal_cancelled');
@@ -208,6 +228,13 @@ final class UserCrudController extends AbstractCrudController
      */
     private function run(AdminContext $context, callable $op, string $successKey, bool $backToIndex = false): RedirectResponse
     {
+        // Defence-in-depth alongside the POST-only route: a forged/tokenless
+        // request (or any GET that slipped through) is refused before the
+        // account is touched. The token is minted by the action form template.
+        if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $context->getRequest()->request->get('token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token for a user support action.');
+        }
+
         /** @var User $target */
         $target = $context->getEntity()->getInstance();
         /** @var User $actor */
