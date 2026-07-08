@@ -1,0 +1,19 @@
+docs/specs/2026-07-06-climb-three-point-definition-design.md
+  s_599f9611eea0b3::t_1b125c296d174d 59-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d0e24f808c8948ffea5ca38c275a6ecbf6aca1fc",
+  "prompts": {},
+  "sessions": {
+    "s_599f9611eea0b3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2416e25d-628b-4a3a-bf5e-340674fbe5de",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
