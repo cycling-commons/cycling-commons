@@ -1,0 +1,26 @@
+web/templates/contribute/add_climb.html.twig
+  s_2b96503dad6068::t_0671f51d2d41db 40-46
+web/templates/contribute/improve.html.twig
+  s_2b96503dad6068::t_c4170ba5b484f5 41-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0b98b4d2d82ae266b7c2515b1ed41a56f6b0dfc1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_2b96503dad6068": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fe84c270-0546-431c-b516-d9f5d7ddb6b3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
