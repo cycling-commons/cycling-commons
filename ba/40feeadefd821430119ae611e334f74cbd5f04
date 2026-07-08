@@ -1,0 +1,20 @@
+web/config/services_test.yaml
+  s_0f648c977bdc75::t_d8bf3807ad1a0c 15-16
+  s_0f648c977bdc75::t_34698f7d367e83 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ba40feeadefd821430119ae611e334f74cbd5f04",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
