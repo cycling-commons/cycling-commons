@@ -152,9 +152,31 @@ final class ContributeController extends AbstractController
         // exactly the "no valid item" case, not a 400.
         $item = null;
         $itemParam = (string) $request->query->get('item', '');
+        // The edit-bridge also tells us which catalog type it opened. `type` is
+        // the letter A–K (or the canonical slug) the map layer carried; an empty
+        // param means a legacy/bare link with no declared type.
+        $typeParam = (string) $request->query->get('type', '');
+        $requestedType = '' === $typeParam ? null : ItemType::fromParam($typeParam);
+
+        // Security review 2026-07-07 (critical): K (Recommended routes) live in
+        // `recommended_route` — a separate table and id sequence from `item`.
+        // The map renders the K "Edit this ride" link as
+        // `/improve?item=<recommended_route.id>&type=K`, so resolving that id
+        // against the item table would bind the edit to an unrelated item that
+        // merely shares the numeric id (cross-sequence collision). Route editing
+        // has no item binding yet, so K always falls through to the unbound
+        // explainer.
+        //
         // ctype_digit('') is false, so this also rejects a missing/blank param.
-        if (ctype_digit($itemParam)) {
+        if (ItemType::QualityRides !== $requestedType && ctype_digit($itemParam)) {
             $item = $em->find(Item::class, (int) $itemParam);
+            // Guard the shared client-side id contract for A–J: the resolved row
+            // must be the type the client opened. A mismatch means the id
+            // collided across sequences (or the link was hand-crafted) — treat
+            // it as unbound rather than editing the wrong item.
+            if (null !== $item && null !== $requestedType && $item->getLetter() !== $requestedType->letter()) {
+                $item = null;
+            }
         }
 
         if (null === $item) {

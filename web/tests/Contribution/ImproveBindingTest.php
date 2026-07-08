@@ -384,6 +384,103 @@ final class ImproveBindingTest extends WebTestCase
         self::assertGreaterThan(0, $crawler->filter('[data-improve-unbound]')->count());
     }
 
+    /**
+     * Security review 2026-07-07 (critical): the K (Recommended routes) layer
+     * lives in `recommended_route` — a separate table and id sequence from
+     * `item`. The map edit-bridge renders its "Edit this ride" link as
+     * `/improve?item=<recommended_route.id>&type=K` (map.js), so resolving that
+     * id against the item table binds the edit to an UNRELATED item that merely
+     * shares the numeric id (cross-sequence collision). A K request must never
+     * bind an Item — it falls through to the unbound explainer (route editing
+     * has no item binding yet).
+     */
+    public function testImproveRefusesToBindAKRouteIdToACollidingItem(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        // A real item whose id collides with a recommended_route id of the same
+        // number — exactly what the "Edit this ride" link sends as ?item=.
+        $item = (new Item())->setLetter('D')->setName('Repair station · Collision')
+            ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999010')
+            ->setAttributes(['tools' => 'Repair station']);
+        $em->persist($item);
+
+        $user = (new User())->setEmail('improver-k-collision@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=K&name=Some+Ride');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('form[name="improve"]')->count(), 'a K route id must not bind the colliding item to an edit form');
+        self::assertGreaterThan(0, $crawler->filter('[data-improve-unbound]')->count(), 'a K route id renders the unbound explainer');
+        self::assertStringNotContainsString('Repair station · Collision', (string) $client->getResponse()->getContent(), 'the colliding item is not leaked into the page');
+    }
+
+    /**
+     * Same defense generalised: the client tells the controller which type it
+     * opened via `type`. If the resolved item's real letter disagrees, the id
+     * collided across sequences (or the link was hand-crafted) — refuse to bind
+     * rather than edit the wrong item.
+     */
+    public function testImproveRefusesToBindWhenDeclaredTypeMismatchesItemLetter(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · Mismatch')
+            ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999011')
+            ->setAttributes(['tools' => 'Repair station']);
+        $em->persist($item);
+
+        $user = (new User())->setEmail('improver-mismatch@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        // Claims to be a climb (B) but the id resolves to a bike-service (D).
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=B');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('form[name="improve"]')->count(), 'a type/letter mismatch must not bind the edit form');
+        self::assertGreaterThan(0, $crawler->filter('[data-improve-unbound]')->count(), 'a type/letter mismatch renders the unbound explainer');
+    }
+
+    /**
+     * The guard must not over-reach: when the declared `type` agrees with the
+     * resolved item's real letter (the normal edit-bridge case for A–J), the
+     * item still binds and prefills as before.
+     */
+    public function testImproveStillBindsWhenDeclaredTypeMatchesItemLetter(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · Matched')
+            ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999012')
+            ->setAttributes(['tools' => 'Repair station']);
+        $em->persist($item);
+
+        $user = (new User())->setEmail('improver-matched@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/improve?item='.$item->getId().'&type=D');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('form[name="improve"]')->count(), 'a matching type still binds the edit form');
+        self::assertStringContainsString('Repair station · Matched', (string) $client->getResponse()->getContent());
+    }
+
     public function testEditSubmissionSnapshotsOnlyChangedFields(): void
     {
         self::bootKernel();
