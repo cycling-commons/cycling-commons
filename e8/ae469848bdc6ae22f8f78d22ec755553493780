@@ -1,0 +1,21 @@
+docs/specs/edit-items/A-road-surface.md
+  s_0f648c977bdc75::t_9ef67716619d94 29
+docs/specs/2026-07-08-route-domain-design.md
+  s_0f648c977bdc75::t_c51e2b2da88208 323-348
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e8ae469848bdc6ae22f8f78d22ec755553493780",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
