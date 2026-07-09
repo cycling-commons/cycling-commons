@@ -1,0 +1,21 @@
+web/src/Catalog/SurfaceVocabulary.php
+  s_0f648c977bdc75::t_c1b8e261f9101c 19-22,26
+web/tests/Catalog/SurfaceVocabularyTest.php
+  s_0f648c977bdc75::t_99b21af03d2e4e 29-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "eaf55cff5a4fc29f5685a7c8d7754b8d79b1ba30",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
