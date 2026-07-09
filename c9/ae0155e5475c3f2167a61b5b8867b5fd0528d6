@@ -1,0 +1,19 @@
+web/templates/contribute/propose_route.html.twig
+  s_0f648c977bdc75::t_14d0a21f6ba027 3-42,45-48,55,59,68-71,76-102,107-114,116-120,123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c9ae0155e5475c3f2167a61b5b8867b5fd0528d6",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
