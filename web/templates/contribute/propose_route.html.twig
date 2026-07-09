@@ -1,22 +1,62 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .pr-lead{margin-bottom:2rem}
+
+  fieldset{border:none;padding:0;margin:0 0 2rem}
+  fieldset legend{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:.3rem;padding:0}
+  .help{color:#595c4d;font-size:.9rem;margin-bottom:1.1rem}
+
+  .field{margin-bottom:1.3rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input[type=text],.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
+  .field select{width:100%}
+  .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:90px;resize:vertical}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--trail)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+  @media(max-width:520px){.two{grid-template-columns:1fr}}
+
+  /* GPX file drop */
+  .gpx-drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:1.6rem;text-align:center}
+  .gpx-drop input[type=file]{display:block;margin:0 auto;font-family:var(--sans);font-size:.9rem}
+
+  /* bike-type checkbox chips: reuse the global .chip look, driven by :has() on the checked input */
+  .chip-list{display:flex;flex-wrap:wrap;gap:.5rem}
+  .chip-check{display:inline-flex}
+  .chip-check input{position:absolute;opacity:0;width:1px;height:1px}
+  .chip-check span{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none;display:inline-block}
+  .chip-check:hover span{border-color:var(--ink)}
+  .chip-check:has(input:checked) span{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  .chip-check input:focus-visible + span{outline:2px solid var(--trail);outline-offset:2px}
+
+  .flash{border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
+  .flash-error{background:rgba(181,83,46,.12);border:1px solid rgba(181,83,46,.4);color:#6b3016}
+
+  /* receipt */
+  .receipt{text-align:center;padding:3.5rem 1rem}
+  .receipt h2{font-family:var(--serif);font-weight:600;font-size:1.8rem;margin:.5rem 0}
+  .receipt p{color:#4a4d40;max-width:46ch;margin:0 auto}
+  .receipt .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin:1rem 0}
+</style>
+{% endblock %}
 
 {% block body %}
-<main class="wrap propose-route">
-  <p class="eyebrow">{{ 'propose_route.eyebrow'|trans }}</p>
-  <h1>{{ 'propose_route.title'|trans }}</h1>
-  <p class="lead">{{ 'propose_route.lead'|trans }}</p>
+<main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem">
+  <div class="kicker">{{ 'propose_route.eyebrow'|trans }}</div>
+  <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem);margin-bottom:.5rem">{{ 'propose_route.title'|trans }}</h1>
+  <p class="lead pr-lead">{{ 'propose_route.lead'|trans }}</p>
 
   {% for message in app.flashes('error') %}
     <p class="flash flash-error" role="alert">{{ message|trans }}</p>
   {% endfor %}
 
   {% if receipt is not null %}
-    <section class="receipt" data-receipt>
+    <section class="card receipt" data-receipt>
       <h2>{{ 'propose_route.receipt_h'|trans }}</h2>
       <p>{{ 'propose_route.receipt_p'|trans }}</p>
       <p class="ref">{{ receipt.reference }}</p>
-      <a href="{{ path('contribute') }}">{{ 'propose_route.receipt_back'|trans }} →</a>
+      <a class="btn btn-g" href="{{ path('contribute') }}">{{ 'propose_route.receipt_back'|trans }} →</a>
     </section>
   {% else %}
     {{ form_start(form) }}
@@ -25,32 +65,62 @@
       <fieldset>
         <legend>{{ 'propose_route.gpx_label'|trans }}</legend>
         <p class="help">{{ 'propose_route.gpx_help'|trans }}</p>
-        {{ form_row(form.gpx) }}
+        <div class="gpx-drop">
+          {{ form_widget(form.gpx) }}
+        </div>
+        {{ form_errors(form.gpx) }}
       </fieldset>
 
       <fieldset>
         <legend>{{ 'propose_route.details_label'|trans }}</legend>
-        <label>{{ 'propose_route.name_label'|trans }}{{ form_widget(form.rName) }}</label>
-        {{ form_errors(form.rName) }}
-        <label>{{ 'propose_route.difficulty_label'|trans }}{{ form_widget(form.difficulty) }}</label>
-        {{ form_errors(form.difficulty) }}
-        <label>{{ 'propose_route.season_label'|trans }}{{ form_widget(form.season) }}</label>
-        {{ form_errors(form.season) }}
-        <label>{{ 'propose_route.surface_label'|trans }}{{ form_widget(form.dominantSurface) }}</label>
-        {{ form_errors(form.dominantSurface) }}
-        <label>{{ 'propose_route.note_label'|trans }}{{ form_widget(form.note) }}</label>
-        {{ form_errors(form.note) }}
+        <div class="field">
+          <label for="{{ form.rName.vars.id }}">{{ 'propose_route.name_label'|trans }}</label>
+          {{ form_widget(form.rName) }}
+          {{ form_errors(form.rName) }}
+        </div>
+        <div class="two">
+          <div class="field">
+            <label for="{{ form.difficulty.vars.id }}">{{ 'propose_route.difficulty_label'|trans }}</label>
+            {{ form_widget(form.difficulty) }}
+            {{ form_errors(form.difficulty) }}
+          </div>
+          <div class="field">
+            <label for="{{ form.season.vars.id }}">{{ 'propose_route.season_label'|trans }}</label>
+            {{ form_widget(form.season) }}
+            {{ form_errors(form.season) }}
+          </div>
+        </div>
+        <div class="field">
+          <label for="{{ form.dominantSurface.vars.id }}">{{ 'propose_route.surface_label'|trans }}</label>
+          {{ form_widget(form.dominantSurface) }}
+          {{ form_errors(form.dominantSurface) }}
+        </div>
+        <div class="field">
+          <label for="{{ form.note.vars.id }}">{{ 'propose_route.note_label'|trans }}</label>
+          {{ form_widget(form.note) }}
+          {{ form_errors(form.note) }}
+        </div>
       </fieldset>
 
       <fieldset>
         <legend>{{ 'propose_route.bike_types_label'|trans }}</legend>
-        {{ form_widget(form.bikeTypes) }}
+        <div class="chip-list">
+          {% for child in form.bikeTypes %}
+            <label class="chip-check">
+              {{ form_widget(child) }}
+              <span>{{ child.vars.label ?? child.vars.value }}</span>
+            </label>
+          {% endfor %}
+        </div>
         {{ form_errors(form.bikeTypes) }}
-        <label>{{ 'propose_route.gradient_label'|trans }}{{ form_widget(form.gradientLimited) }}</label>
-        {{ form_errors(form.gradientLimited) }}
+        <div class="field" style="margin-top:1.3rem">
+          <label for="{{ form.gradientLimited.vars.id }}">{{ 'propose_route.gradient_label'|trans }}</label>
+          {{ form_widget(form.gradientLimited) }}
+          {{ form_errors(form.gradientLimited) }}
+        </div>
       </fieldset>
 
-      <button type="submit" class="btn primary">{{ 'propose_route.submit'|trans }}</button>
+      <button type="submit" class="btn btn-p">{{ 'propose_route.submit'|trans }}</button>
     {{ form_end(form) }}
   {% endif %}
 </main>
