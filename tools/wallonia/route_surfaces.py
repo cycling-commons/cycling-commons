@@ -22,7 +22,8 @@ SURF = {
     "paved": ("Asphalt", "Good", "Open road"),
     "gravel": ("Gravel", "Variable", "Open road"),
     "pave": ("Sett (pavé)", "Rough", "Open road"),
-    "ground": ("Unpaved", "Variable", "Open road"),
+    "dirt": ("Dirt", "Variable", "Open road"),
+    "rock": ("Rock", "Bad", "Open road"),
     "unverified": ("Surface unverified", "—", "—"),   # OSM has no surface tag here — invite a rider to tag it
 }
 
@@ -40,8 +41,10 @@ def _cls(waytags):
     # The actual `surface=` tag wins over the highway type — check it first.
     if s in ("sett", "cobblestone", "paving_stones", "unhewn_cobblestone"):
         return "pave"
+    if s in ("rock", "stone"):
+        return "rock"
     if s in ("ground", "dirt", "earth", "grass", "sand", "mud"):
-        return "ground"
+        return "dirt"
     if s in ("gravel", "fine_gravel", "compacted", "unpaved", "pebblestone"):
         return "gravel"
     if hw == "cycleway" or "route_bicycle" in waytags:
@@ -53,7 +56,7 @@ def _cls(waytags):
     if hw == "track":
         return "gravel"
     if hw in ("path", "footway", "bridleway"):
-        return "ground"
+        return "dirt"
     return "paved"
 
 
