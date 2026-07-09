@@ -320,3 +320,29 @@ execution, binding on later phases:
 3. Marginal untranslated edges: File-constraint php.ini-level upload errors,
    CSRF-failure copy, and pre-existing hardcoded-English auth/settings form
    messages (pre-date this work, all locales).
+
+**Phase-2 carry-in extension (2026-07-09):** two of the phase-2 carry-ins above
+were extended past their original scope, on request, after phase 2 shipped:
+
+4. **P2-D2 (bikeTypes) extended:** `BikeType` gained three more first-class
+   hardware types — `Recumbent`, `Trike`, `Tandem` — alongside the original
+   Road/Gravel/MTB/E-bike/Handbike five. The shape stays a `list<BikeType>`
+   per D6; `'Any'`'s hardcoded expansion (`Road`/`Gravel`/`MTB`/`E-bike`)
+   still excludes all four specialty types, unchanged.
+5. **P2-D3 (dominantSurface) extended:** the A-layer's curator-facing
+   `surface` choices gained real `Dirt` and `Rock` categories, replacing the
+   single vague `Ground` bucket the harvester had also been mislabeling
+   `"Unpaved"` (a pre-existing label mismatch between the harvester and
+   `SurfaceVocabulary::BUCKETS`, fixed as part of this rename). The
+   **declared, rider-facing `dominantSurface` vocabulary stays exactly
+   3-way** (Asphalt/Mixed/Gravel, still no migration) — `Dirt`/`Rock` fold
+   into the coarse `Gravel` bucket for `SurfaceVocabulary::suggestFromProfile()`,
+   same as `Fine gravel` already did. No stored data needed migrating for
+   either change: the importer validates attribute *keys*, never *values*
+   (confirmed by reading `AttributeVocabulary::assertValid()`), so a renamed
+   or added vocabulary string requires no backfill. (Note: because the
+   importer's `source_ref` upsert key embeds the surface-label slug, the
+   `Unpaved`→`Dirt` rename orphaned the 9 prior `Unpaved` A-layer rows in the
+   dev DB rather than overwriting them; they were removed by hand after
+   re-import — a pre-existing importer-idempotency gap on label renames, not a
+   data-model change.)

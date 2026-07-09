@@ -26,7 +26,7 @@ Vith loop** near its end, so a ride's real road type can be recorded.
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
-| Surface | select(Asphalt / Concrete / Paving stones / Sett — pavé / Compacted / Fine gravel / Gravel / Ground) | `[OSM]` |
+| Surface | select(Asphalt / Concrete / Paving stones / Sett — pavé / Compacted / Fine gravel / Gravel / Dirt / Rock) | `[OSM]` |
 | Smoothness | select(Excellent / Good / Intermediate / Bad / Very bad) | `[OSM]` |
 | Width (m) | input | `[OSM]` |
 | Traffic | select(Quiet / Moderate / Busy / Car-free (RAVeL)) | `[edit]` |
