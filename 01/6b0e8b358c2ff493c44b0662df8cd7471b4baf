@@ -1,0 +1,25 @@
+tools/wallonia/tests/test_export.py
+  s_0f648c977bdc75::t_244cfaaedb1b68 44-57
+tools/wallonia/route_surfaces.py
+  s_0f648c977bdc75::t_eb27f113099758 127-130
+tools/wallonia/export.py
+  s_0f648c977bdc75::t_83d5e3bfbe9f50 105,112,116-120,122
+atlas/demo/surface-data.js
+  s_0f648c977bdc75::t_ffe580abfc9a1f 305
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "016b0e8b358c2ff493c44b0662df8cd7471b4baf",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
