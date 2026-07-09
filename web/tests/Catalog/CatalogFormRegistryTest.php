@@ -81,6 +81,9 @@ final class CatalogFormRegistryTest extends TestCase
         self::assertSame(FieldKind::Select, $byName['surface']->kind);
         self::assertContains('Asphalt', $byName['surface']->choices);
         self::assertContains('Gravel', $byName['surface']->choices);
+        self::assertContains('Dirt', $byName['surface']->choices);
+        self::assertContains('Rock', $byName['surface']->choices);
+        self::assertNotContains('Ground', $byName['surface']->choices, 'Ground was renamed to Dirt — the label now matches the harvester (MTB terrain carry-in)');
 
         self::assertArrayHasKey('note', $byName);
         self::assertSame(FieldKind::Textarea, $byName['note']->kind);

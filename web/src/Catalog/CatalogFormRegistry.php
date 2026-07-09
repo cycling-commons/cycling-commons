@@ -30,7 +30,7 @@ final class CatalogFormRegistry
         return match ($type) {
             ItemType::RoadSurface => new ItemFieldSet(
                 fields: [
-                    CatalogField::select('surface', 'Surface', ['Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Ground']),
+                    CatalogField::select('surface', 'Surface', ['Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Dirt', 'Rock']),
                     CatalogField::select('smoothness', 'Smoothness', ['Excellent', 'Good', 'Intermediate', 'Bad', 'Very bad']),
                     CatalogField::text('width', 'Width (m)', default: '3.0'),
                     CatalogField::select('traffic', 'Traffic', ['Quiet', 'Moderate', 'Busy', 'Car-free (RAVeL)']),
