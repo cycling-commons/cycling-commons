@@ -82,3 +82,6 @@ docs/superpowers/
 # Understand-Anything knowledge graph — generated analysis artifacts, regenerated
 # on demand (auto-update on commit); never committed.
 .understand-anything/
+
+# Local dev-DB backups (pg_dump snapshots) — never committed, machine-local safety net.
+developers/docker/backups/
