@@ -124,7 +124,10 @@ def _segments(gj, ride):
         if len(r["path"]) < 2:
             continue
         surf, smooth, traf = SURF[r["cls"]]
-        segs.append({"name": f"{ride} · {surf}", "surface": surf, "smoothness": smooth,
+        # refBase is the label-free upsert identity (export.py): the ride name
+        # without the surface suffix, so relabeling a surface (e.g. Unpaved ->
+        # Dirt) keeps the ref stable and re-imports UPDATE instead of orphaning.
+        segs.append({"name": f"{ride} · {surf}", "refBase": ride, "surface": surf, "smoothness": smooth,
                      "width": "—", "traffic": traf, "cls": r["cls"], "edit": "road-surface", "path": r["path"]})
     return segs
 

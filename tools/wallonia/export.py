@@ -102,19 +102,24 @@ def climb_features():
 
 
 def surface_feature(seg):
-    props = {k: v for k, v in seg.items() if k not in ("path", "wayId", "edit")}
+    props = {k: v for k, v in seg.items() if k not in ("path", "wayId", "edit", "refBase")}
     way = seg.get("wayId")
     props["source"] = "osm" if way else "auto"
     if way:
         props["ref"] = f"way/{way}"
     else:
         # Synthetic refs need a per-segment discriminator: one named route is
-        # exported as many segments per surface class, and slug(name) alone
+        # exported as many segments per surface class, and the slug alone
         # collapses them onto one upsert key. First path vertex ([lat,lng]
         # fixture order, raw values — same style as water_ref) is stable
         # across runs and unique per segment.
+        # Identity must NOT embed the mutable surface label, or a re-label
+        # (e.g. Unpaved -> Dirt) changes the ref and orphans the old row on
+        # re-import (2026-07-09 incident). Route-surface segments carry a
+        # label-free `refBase` (the ride name); hand-authored segments have no
+        # surface label in their `name`, so they fall back to it safely.
         lat, lng = seg["path"][0]
-        props["ref"] = f"fx:surface:{slug(seg['name'])}:{lat},{lng}"
+        props["ref"] = f"fx:surface:{slug(seg.get('refBase') or seg['name'])}:{lat},{lng}"
     coords = [[lng, lat] for lat, lng in seg["path"]]
     return {"type": "Feature", "properties": props,
             "geometry": {"type": "LineString", "coordinates": coords}}

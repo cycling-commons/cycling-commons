@@ -41,6 +41,20 @@ def test_surface_feature_synthetic_ref_has_coordinate_discriminator():
     assert export.surface_feature(seg2)["properties"]["ref"] == "fx:surface:test-seg:50.9,4.8"
 
 
+def test_surface_feature_ref_is_stable_under_surface_relabel():
+    """Regression (2026-07-09 orphan incident): the synthetic ref must NOT embed
+    the mutable surface label. Route-surface segments carry a stable `refBase`
+    (the ride name, label-free); renaming the surface (e.g. Unpaved -> Dirt) must
+    not change the upsert ref, or a re-import orphans the old rows instead of
+    updating them. `refBase` is identity-only and must not leak into properties."""
+    base = {"refBase": "Spa · Sankt Vith", "cls": "dirt", "path": [[50.1, 4.2], [50.2, 4.3]]}
+    unpaved = export.surface_feature(dict(base, name="Spa · Sankt Vith · Unpaved", surface="Unpaved"))
+    dirt = export.surface_feature(dict(base, name="Spa · Sankt Vith · Dirt", surface="Dirt"))
+    assert unpaved["properties"]["ref"] == "fx:surface:spa-sankt-vith:50.1,4.2"
+    assert dirt["properties"]["ref"] == unpaved["properties"]["ref"]  # label change => identical ref
+    assert "refBase" not in dirt["properties"]  # identity key, not a served attribute
+
+
 def test_water_features_dedupes_exact_duplicate_refs(monkeypatch, capsys):
     """Exact-duplicate harvest points (same coordinates) export once — keep first."""
     pt = {"type": "Point", "coordinates": [4.85758, 50.46576]}
