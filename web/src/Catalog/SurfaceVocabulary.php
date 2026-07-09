@@ -16,11 +16,14 @@ namespace App\Catalog;
  */
 final class SurfaceVocabulary
 {
-    /** @var array<string, string> A-layer surface → coarse bucket */
+    /** @var array<string, string> A-layer surface → coarse bucket. Dirt/Rock
+     *  (MTB terrain carry-in) fold into the same coarse Gravel bucket as
+     *  Fine gravel — P2-D3's declared rider-facing vocabulary stays 3-way;
+     *  the precise Dirt/Rock split is curator/A-layer detail only. */
     public const array BUCKETS = [
         'Asphalt' => 'Asphalt', 'Concrete' => 'Asphalt',
         'Paving stones' => 'Mixed', 'Sett — pavé' => 'Mixed', 'Compacted' => 'Mixed',
-        'Fine gravel' => 'Gravel', 'Gravel' => 'Gravel', 'Ground' => 'Gravel',
+        'Fine gravel' => 'Gravel', 'Gravel' => 'Gravel', 'Dirt' => 'Gravel', 'Rock' => 'Gravel',
     ];
 
     /** @param array{covered:int, parts:list<array{surface:string, pct:int|float}>}|null $profile */

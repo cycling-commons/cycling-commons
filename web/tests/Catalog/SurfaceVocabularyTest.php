@@ -26,4 +26,15 @@ final class SurfaceVocabularyTest extends TestCase
     {
         self::assertNull(SurfaceVocabulary::suggestFromProfile(null));
     }
+
+    public function testDirtAndRockBucketIntoTheCoarseGravelCategory(): void
+    {
+        $profile = ['covered' => 60, 'parts' => [
+            ['surface' => 'Asphalt', 'pct' => 20],
+            ['surface' => 'Rock', 'pct' => 50],
+            ['surface' => 'Dirt', 'pct' => 30],
+        ]];
+        // 20 Asphalt vs 80 Gravel (Rock+Dirt combined) → Gravel.
+        self::assertSame('Gravel', SurfaceVocabulary::suggestFromProfile($profile));
+    }
 }
