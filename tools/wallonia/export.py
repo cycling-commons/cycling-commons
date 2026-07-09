@@ -118,6 +118,12 @@ def surface_feature(seg):
         # re-import (2026-07-09 incident). Route-surface segments carry a
         # label-free `refBase` (the ride name); hand-authored segments have no
         # surface label in their `name`, so they fall back to it safely.
+        # Uniqueness assumption: the (refBase, first-vertex) pair is distinct
+        # per segment because a ride's contiguous surface runs each start at a
+        # different point. The one untested edge case is a same-ride spur
+        # revisited at the identical rounded coordinate with a different class
+        # (0 occurrences in the current corpus); the label never discriminated
+        # that either, so this is a pre-existing bound, not a regression.
         lat, lng = seg["path"][0]
         props["ref"] = f"fx:surface:{slug(seg.get('refBase') or seg['name'])}:{lat},{lng}"
     coords = [[lng, lat] for lat, lng in seg["path"]]
