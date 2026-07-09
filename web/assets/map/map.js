@@ -822,7 +822,8 @@
     paved:{color:'#4E6E66'},                           // asphalt/concrete — solid slate
     gravel:{color:'#C8923A',dash:[2,1.5],cap:'butt'},  // gravel/compacted — dashed ochre
     pave:{color:'#6E7B96',dash:[1,1.5],cap:'butt'},    // sett/cobbles (pavé) — square slate-grey dashes (matches the legend; distinct from brown ground)
-    ground:{color:'#6E5849',dash:[2,1.5],cap:'butt'},  // ground/dirt — dashed brown
+    dirt:{color:'#6E5849',dash:[2,1.5],cap:'butt'},    // dirt — dashed brown
+    rock:{color:'#5F5A54',dash:[1,2],cap:'butt'},      // rock — rough technical, dark grey dots
     unverified:{color:'#D92D20',dash:[2.5,2.5],cap:'butt'} // OSM has no surface tag — red dashes over the white casing ("needs a tag")
   };
   const surfaceStyle=cls=>SURFACE_STYLE[cls]||{color:'#4E8C84'};

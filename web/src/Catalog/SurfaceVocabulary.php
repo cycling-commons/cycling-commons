@@ -16,13 +16,18 @@ namespace App\Catalog;
  */
 final class SurfaceVocabulary
 {
-    /** @var array<string, string> A-layer surface → coarse bucket. Dirt/Rock
-     *  (MTB terrain carry-in) fold into the same coarse Gravel bucket as
-     *  Fine gravel — P2-D3's declared rider-facing vocabulary stays 3-way;
-     *  the precise Dirt/Rock split is curator/A-layer detail only. */
+    /** @var array<string, string> A-layer surface → coarse bucket. Covers both
+     *  the curator-dropdown labels (e.g. 'Sett — pavé', em-dash spelling) and the
+     *  harvester's emitted labels (route_surfaces.py's SURF, e.g. 'Sett (pavé)',
+     *  parens spelling, and 'Cycleway · RAVeL') — the two label sets aren't
+     *  identical, so both spellings/entries are kept. Dirt/Rock (MTB terrain
+     *  carry-in) fold into the same coarse Gravel bucket as Fine gravel —
+     *  P2-D3's declared rider-facing vocabulary stays 3-way; the precise
+     *  Dirt/Rock split is curator/A-layer detail only. */
     public const array BUCKETS = [
-        'Asphalt' => 'Asphalt', 'Concrete' => 'Asphalt',
-        'Paving stones' => 'Mixed', 'Sett — pavé' => 'Mixed', 'Compacted' => 'Mixed',
+        'Asphalt' => 'Asphalt', 'Concrete' => 'Asphalt', 'Cycleway · RAVeL' => 'Asphalt',
+        'Paving stones' => 'Mixed', 'Sett — pavé' => 'Mixed', 'Sett (pavé)' => 'Mixed', 'Compacted' => 'Mixed',
+        'Unhewn cobblestone' => 'Mixed', 'Cobblestone' => 'Mixed',
         'Fine gravel' => 'Gravel', 'Gravel' => 'Gravel', 'Dirt' => 'Gravel', 'Rock' => 'Gravel',
     ];
 

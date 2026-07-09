@@ -37,4 +37,16 @@ final class SurfaceVocabularyTest extends TestCase
         // 20 Asphalt vs 80 Gravel (Rock+Dirt combined) → Gravel.
         self::assertSame('Gravel', SurfaceVocabulary::suggestFromProfile($profile));
     }
+
+    public function testCyclewayRavelBucketsToAsphaltNotMixed(): void
+    {
+        // 'Cycleway · RAVeL' is the harvester's largest served surface label (route_surfaces.py's
+        // SURF['cycleway']) — smooth car-free asphalt. Before BUCKETS covered it, this fell through
+        // to the '?? Mixed' default; it must bucket to Asphalt.
+        $profile = ['covered' => 90, 'parts' => [
+            ['surface' => 'Cycleway · RAVeL', 'pct' => 70],
+            ['surface' => 'Gravel', 'pct' => 30],
+        ]];
+        self::assertSame('Asphalt', SurfaceVocabulary::suggestFromProfile($profile));
+    }
 }
