@@ -30,4 +30,14 @@ final class BikeTypeVocabularyTest extends TestCase
     {
         self::assertSame(['Gravel', 'Handbike'], BikeTypeVocabulary::normalize(['Gravel'], 'Yes'));
     }
+
+    public function testNewHardwareTypesPassThroughButAnyStaysGeneralBikesOnly(): void
+    {
+        self::assertSame(['Trike', 'Tandem'], BikeTypeVocabulary::normalize(['Trike', 'Tandem']));
+        self::assertSame(
+            ['Road', 'Gravel', 'MTB', 'E-bike'],
+            BikeTypeVocabulary::normalize('Any'),
+            'Any still excludes Handbike/Recumbent/Trike/Tandem — general bikes only',
+        );
+    }
 }
