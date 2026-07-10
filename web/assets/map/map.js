@@ -882,7 +882,7 @@
     d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${layer.icon}</span>`; return d;
   }
   function featureVisible(layer, f){
-    let show = (mode==='all') || !layer.exp || f.cur;       // experiential layers filter to curated
+    let show = layer.key==='experience' ? (mode==='all'||f.cur) : ((mode==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K uses the render loop's own carve-out
     if(show && layer.key==='climbs'){
       show = activeSurface.has(f.sq) && activeTraffic.has(f.tr);
       if(show) show = attrMatch(f.effort, activeEffort, ALL_EFFORT);
@@ -1714,7 +1714,7 @@
   function applyBestOf(ids){
     const set=new Set((ids||[]).map(Number));
     const feats=(layerByKey['experience']||{}).features||[];
-    feats.forEach(f=>{ f.cur = set.has(Number(f.id)); f.bestRank = set.has(Number(f.id)) ? ids.indexOf(Number(f.id))+1 : null; });
+    feats.forEach(f=>{ f.cur = set.has(Number(f.id)); });
     const box=document.getElementById('bestEmpty');
     if(box) box.hidden = !(mode==='curated' && set.size===0);
     render();
