@@ -24,16 +24,11 @@
       ['Stavelot Abbey', 'Benedictine · museums', 69],
       ['Eddy Merckx stele · Stockeu', 'LBL heritage', 55],
       ['Coo waterfall', 'cascade · café', 47]
-    ],
-    routes: [
-      ['Spa · Sankt Vith', '126 km · classics', 83],
-      ['Spa · Coo · Francorchamps', '51 km · circuit', 66],
-      ['Spa · Côte des Hézalles', '51 km · mixed', 45]
     ]
   };
 
   var curCat = 'climbs';
-  var ballot = { climbs: [], stays: [], views: [], heritage: [], routes: [] };
+  var ballot = { climbs: [], stays: [], views: [], heritage: [] };
 
   function renderCands() {
     var el = document.getElementById('cands');
