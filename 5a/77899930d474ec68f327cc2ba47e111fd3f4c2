@@ -1,0 +1,25 @@
+web/tests/Community/RouteVoteItTest.php
+  s_51df195d1c7750::t_ffa8aa728c1305 94
+  s_51df195d1c7750::t_187c6bd23077ca 1-93,95-104
+web/src/Controller/RouteCommunityController.php
+  s_51df195d1c7750::t_d2dc41d1ef1782 98-118
+web/src/Community/RouteCommunityService.php
+  s_51df195d1c7750::t_3727fa28f90868 121-135
+  s_51df195d1c7750::t_afe91e04f6de30 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5a77899930d474ec68f327cc2ba47e111fd3f4c2",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
