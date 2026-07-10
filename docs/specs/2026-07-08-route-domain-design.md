@@ -524,3 +524,48 @@ the `/vote`-page + wiki + translation reconciliation sweep.
   Vote-nav decision untouched (out of scope). Update the wiki
   (`curation-and-voting.md`, `data-catalog.md`) and the ~20 affected translation
   keys × 4 locales to the propose / vote / rode-it vocabulary (strict parity gate).
+
+### Phase-4 execution note (2026-07-10)
+
+Phase 4 (§8 rankings + reconciliation sweep) shipped on `symfony-base` (base
+`7576819`; 8 implementation commits + this note). **No migrations** — pure serving
++ UI + copy over the existing `route_vote`/`recommended_route` tables. Full gate
+green: **391 tests / 1704 assertions**, phpstan + psalm + php-cs-fixer + SPDX +
+licenses + translation parity (1174 keys) all clean. Delivered per P4-D1…D6:
+`RouteRankingService` (facet-ranking SQL) + `BikeType::isSpecialty()`; public
+`GET /map/best-of`; the map's Curated season/bike pickers + `cur` filtering +
+dynamic subtitle + empty state; the `/vote` routes-tab retirement; the wiki +
+translation sweep.
+
+Confirmed as specified: `catalog.json`/`CatalogProvider` **byte-unchanged**
+(P4-D1 — best-of is a separate endpoint); the ranking SQL excludes zero-vote
+routes and gates the four specialty types by declared `bikeTypes` (P4-D3/D4,
+verified in `RouteRankingServiceTest`).
+
+Decisions/fixes during execution:
+
+1. **The K line layer had to start honouring `cur`.** K (`experience`) is
+   `exp:false`, so before phase 4 `cur` was inert for routes and every route drew
+   in both modes. Curated filtering required a K-specific branch
+   (`layer.key==='experience' ? (mode==='all'||f.cur) : …`) in **both** the render
+   loop **and** `featureVisible()` — the latter feeds the per-layer legend count,
+   which would otherwise report the wrong "shown" total (caught in review; the
+   count now reads 0/N in an empty Curated, N/N in Everything).
+2. **The stray `/vote` "Vote in this round" CTA** (`map.js`, gated on `f.cur`) was
+   dead for routes only because routes were always `cur:false`; once best-of flags
+   them `cur:true` it would surface next to the drawer's real community panel, so
+   it is suppressed for the `experience` layer.
+3. **No region-id state exists in the map JS** (single hardcoded Wallonia), so the
+   map omits `region` from the best-of call; the endpoint still accepts it for a
+   future multi-region UI.
+4. **Rail is dark** (`--ink`) — the facet pickers use the dark-surface field
+   tokens (cream field / ink text), matching the drawer's `.cc-rc select`.
+5. A **test-only DI override** was briefly needed for `RouteRankingService`
+   (unconsumed private services are container-pruned in the test env); removed once
+   `MapController::bestOf` gave it a real consumer.
+
+**Data note:** no served route declares `bikeTypes` and there are no verified/voted
+routes in the harvested set yet, so best-of lists (especially specialty) are
+legitimately empty until rider proposals + votes accumulate — the empty state
+(P4-D3) is the expected view meanwhile; the ranking itself is proven by the
+integration tests against seeded data.
