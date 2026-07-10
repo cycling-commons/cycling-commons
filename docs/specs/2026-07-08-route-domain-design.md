@@ -419,3 +419,53 @@ present; `route_vote`/`route_ride` and every rider-facing POST still unbuilt).
 aggregate-only by design (P3-D3). Phase 4's best-of ranking needs the
 per-`(season, bike_type)` vote breakdown; it will extend this endpoint (or add a
 ranking query) rather than change phase-3's contract.
+
+### Phase-3 execution note (2026-07-10)
+
+Phase 3 (§7 community loop) shipped on `symfony-base` (10 commits,
+`869d257..<spec-note>`; base `2c75431`). Full gate green: **382 tests / 1683
+assertions**, phpstan + psalm + php-cs-fixer + SPDX + licenses + translation
+parity all clean. Dev DB migrated (`route_ride`, `route_vote`). Delivered per
+P3-D1…D7: `Season` enum; `route_ride`/`route_vote` tables; `RouteCommunityService`
+(`snapshot` + `recordRide`/`recordVote`/`recordSuggestion`);
+`RouteCommunityController` (`GET /routes/{id}/community` + `POST .../rode-it|vote|
+suggest`); the `route_suggest` limiter; the drawer community panel.
+
+Confirmed as specified: the verification flip counts distinct riders **excluding
+the proposer** and fires exactly at the threshold (traced at all boundaries in
+review); `catalog.json`/`CatalogProvider` is **byte-unchanged** (P3-D3 — all
+dynamic/per-user data comes from the new authenticated endpoint); anonymous API
+hits return a clean **401** (in-controller `requireUser()`, not a login redirect).
+
+Decisions/fixes during execution (binding on later phases):
+
+1. **Auth = in-controller 401, not `#[IsGranted]`.** The community endpoints are
+   a JSON API, so `requireUser()` throws a 401 (`isGranted('ROLE_USER')` also
+   excludes 2FA-in-progress) rather than letting the form-login firewall
+   302-redirect a fetch client. No `access_control` entry (lazy firewall).
+2. **CSRF via one stateless token.** `route-community` added to
+   `stateless_token_ids`; the `GET /community` response carries the token the
+   three POSTs reuse (`_token`) — same cookie-tied mechanism the map moderation
+   flow uses.
+3. **HTTP enum values are backing values.** Ride/vote `bike_type` must be the
+   `BikeType` backing strings (`MTB`, `E-bike`, …), not case names; season the
+   `Season` backing strings.
+4. **Rate-limiter tests can't loop HTTP.** The `route_suggest`/`route_propose`
+   test cache pools are `ArrayAdapter` tagged `kernel.reset` and are wiped on
+   each top-level request boot, so a limiter counter cannot accumulate across
+   separate `WebTestCase` HTTP calls. Exhaust the limit via direct service
+   calls, then one HTTP request for the over-limit case (the
+   `RouteProposalServiceTest` pattern). Production uses the filesystem pool —
+   unaffected.
+5. **Drawer `state` plumbing.** The served route feature object had to carry
+   `state` (`state: r.state` from `catalog.json`, which `CatalogProvider`
+   already serves) for the panel's vote-block/progress gating; it was previously
+   only used transiently.
+
+**Phase-3 fast-follows (recorded, non-blocking):** (a) the anonymous drawer mute
+is CSS-only (`pointer-events:none`), not the DOM `disabled` attribute — a
+keyboard/AT polish gap (the POST no-ops without a token, so non-exploitable);
+(b) a rode-it flip to `verified` toasts + updates `dataset.state` but doesn't
+inject the vote block into the live DOM (needs a drawer reopen); (c) the flip's
+`route_change_history` attribution to the tipping rider is exercised but not
+asserted on `changed_by` in the test.
