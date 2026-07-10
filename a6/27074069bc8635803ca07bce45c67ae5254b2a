@@ -1,0 +1,21 @@
+docs/specs/2026-07-08-route-domain-design.md
+  s_51df195d1c7750::t_a3b2b5693afa89 572-582
+web/assets/map/map.js
+  s_51df195d1c7750::t_de69b7fa9bea3f 1715-1718
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "a627074069bc8635803ca07bce45c67ae5254b2a",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
