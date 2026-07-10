@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemState;
+use App\Catalog\RouteSuggestionReason;
 use App\Catalog\Season;
 use App\Community\RouteCommunityService;
 use App\Entity\User;
@@ -18,6 +19,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
@@ -114,6 +116,28 @@ final class RouteCommunityController extends AbstractController
         $this->community->recordVote($route, $user, $season, $bike);
 
         return $this->freshSnapshot($route, $user);
+    }
+
+    #[Route('/routes/{id}/suggest', name: 'route_suggest', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function suggest(int $id, Request $request): JsonResponse
+    {
+        $user = $this->requireUser();
+        $this->validateCsrf($request);
+        $route = $this->activeRoute($id);
+
+        $reason = RouteSuggestionReason::tryFrom((string) $request->request->get('reason'));
+        if (null === $reason) {
+            return $this->json(['error' => 'invalid_reason'], 422);
+        }
+        $note = $request->request->get('note');
+
+        try {
+            $this->community->recordSuggestion($route, $user, $reason, \is_string($note) ? $note : null);
+        } catch (TooManyRequestsHttpException) {
+            return $this->json(['error' => 'rate_limited'], 429);
+        }
+
+        return $this->json(['ok' => true]);
     }
 
     private function validateCsrf(Request $request): void

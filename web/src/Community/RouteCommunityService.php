@@ -10,12 +10,16 @@ use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteChangeHistory;
 use App\Catalog\Entity\RouteRide;
+use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\Entity\RouteVote;
 use App\Catalog\ItemState;
+use App\Catalog\RouteSuggestionReason;
 use App\Catalog\Season;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * The route community loop (route-domain spec §7): reads a per-route snapshot
@@ -31,6 +35,7 @@ final class RouteCommunityService
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
         private readonly int $rideVerifyThreshold,
+        private readonly RateLimiterFactoryInterface $routeSuggestLimiter,
     ) {
     }
 
@@ -131,6 +136,24 @@ final class RouteCommunityService
         }
 
         $this->em->persist(new RouteVote((int) $route->getId(), $user->getId(), $season, $bike));
+        $this->em->flush();
+    }
+
+    /**
+     * Records a moderated correction (route-domain spec §4.2). Rate-limited
+     * (P3-D4) — the only self-unbounded community write; each pending row is a
+     * curator task. `note` is stored raw and HTML-escaped on the desk render.
+     *
+     * @throws TooManyRequestsHttpException over the daily suggestion limit
+     */
+    public function recordSuggestion(RecommendedRoute $route, User $user, RouteSuggestionReason $reason, ?string $note): void
+    {
+        if (!$this->routeSuggestLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
+            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        }
+
+        $trimmed = null !== $note ? trim($note) : null;
+        $this->em->persist(new RouteSuggestion((int) $route->getId(), $user->getId(), $reason, '' !== $trimmed ? $trimmed : null));
         $this->em->flush();
     }
 }

@@ -7,6 +7,8 @@ framework:
             # counters between runs and flake the tests.
             cache.route_propose_limiter:
                 adapter: cache.adapter.filesystem
+            cache.route_suggest_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -19,10 +21,19 @@ framework:
             limit: 3
             interval: '1 day'
             cache_pool: cache.route_propose_limiter
+        # Route-domain spec §13 P3-D4: the suggest channel is the flood vector
+        # (each pending row is a curator task); vote/rode-it self-bound by UNIQUE.
+        route_suggest:
+            policy: sliding_window
+            limit: 5
+            interval: '1 day'
+            cache_pool: cache.route_suggest_limiter
 
 when@test:
     framework:
         cache:
             pools:
                 cache.route_propose_limiter:
+                    adapter: cache.adapter.array
+                cache.route_suggest_limiter:
                     adapter: cache.adapter.array
