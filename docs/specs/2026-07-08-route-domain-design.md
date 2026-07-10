@@ -473,3 +473,54 @@ simultaneous threshold-crossing rode-it POSTs can each log a `route_change_histo
 `state` row (the flip has no lock/guard) — audit-log noise only, the state stays
 correctly `verified` (idempotent `setState`); add a transition guard if the
 history desk ever surfaces duplicates.
+
+## 14. Phase-4 (rankings / best-of) design decisions (2026-07-10)
+
+Pre-execution decisions pinning §8, resolved in a brainstorm against the shipped
+phase-3 state (route_vote table + typed votes live; the map's Curated mode serves
+K routes with `cur:false` hardcoded — i.e. Curated shows *no* routes today, so §8
+is what makes best-of real). One combined plan covers the ranking feature **and**
+the `/vote`-page + wiki + translation reconciliation sweep.
+
+- **P4-D1 — full faceting via a dedicated endpoint.** `GET /map/best-of?season=<s>&bike=<b>[&region=<id>]`
+  (public, same access tier as `catalog.json`; `season` defaults to the current
+  Northern-hemisphere season, `bike` defaults to `all`). Returns the ranked list
+  of route ids (+ rank) for that facet. `catalog.json`/`CatalogProvider` stays
+  **unchanged** (it already serves every active K route with `state`); the map's
+  Curated mode calls this endpoint and flags the returned routes `cur:true`
+  (ordered), hiding the rest. Same "don't inflate the cached bulk payload"
+  principle as P3-D3.
+
+- **P4-D2 — ranking SQL (serve-time, no materialization — regions hold ≤ cap
+  routes).** Candidates = `verified` routes (region-scoped when `region` given).
+  Match count = `route_vote` rows for the facet: a specific bike counts votes
+  `WHERE season=:s AND bike_type=:b`; `bike=all` counts all votes `WHERE season=:s`
+  regardless of bike_type. `ORDER BY match_count DESC, MAX(route_vote.created_at)
+  DESC` (ties broken by most-recent matching vote).
+
+- **P4-D3 — best-of lists only *voted* routes (≥1 matching vote).** A verified
+  route with zero matching votes for the facet does NOT appear in Curated (it
+  still shows in "Everything"). Curated renders a friendly empty state when a
+  facet has no picks yet ("No <Season> · <Bike> picks yet — vote to surface
+  one"). Keeps "best-of" meaningful.
+
+- **P4-D4 — the declared-suitability gate covers the four specialty types.**
+  Best-of for `Handbike`, `Recumbent`, `Trike`, or `Tandem` additionally requires
+  the route's `attributes.bikeTypes` to contain that type (a physical-fit safety
+  gate — extends goal 9's handbike rule to the physically-similar hardware,
+  consistent with `'Any'` already excluding these). The general types
+  (`Road/Gravel/MTB/E-bike`) and `all` rank by matching votes alone — a vote is
+  itself the signal, declared suitability does not filter them.
+
+- **P4-D5 — map Curated mode gains season + bike pickers** (default current
+  season / All bikes). Changing a facet re-fetches and re-flags `cur`; the
+  hardcoded "Curated best-of · Summer 2026" subtitle becomes dynamic
+  (`<Season> · <Bike>`). "Everything" mode is unchanged (all active routes with
+  badges).
+
+- **P4-D6 — reconciliation sweep (same plan).** Retire the `/vote` page's stubbed
+  **routes** ballot tab (routes now vote via the map drawer, phase 3) — replace
+  it with a pointer to the map; leave the other category tabs and the broader
+  Vote-nav decision untouched (out of scope). Update the wiki
+  (`curation-and-voting.md`, `data-catalog.md`) and the ~20 affected translation
+  keys × 4 locales to the propose / vote / rode-it vocabulary (strict parity gate).
