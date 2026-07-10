@@ -1,0 +1,22 @@
+web/src/Catalog/Season.php
+  s_51df195d1c7750::t_b389bcd2b071ea 1-38
+web/tests/Catalog/SeasonTest.php
+  s_51df195d1c7750::t_8faae48e997021 1-27,29-38
+  s_51df195d1c7750::t_a19aecfebdb703 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "869d25746dae88118e012f4616dab56ff9982df7",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
