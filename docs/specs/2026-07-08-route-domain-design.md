@@ -467,5 +467,9 @@ is CSS-only (`pointer-events:none`), not the DOM `disabled` attribute — a
 keyboard/AT polish gap (the POST no-ops without a token, so non-exploitable);
 (b) a rode-it flip to `verified` toasts + updates `dataset.state` but doesn't
 inject the vote block into the live DOM (needs a drawer reopen); (c) the flip's
-`route_change_history` attribution to the tipping rider is exercised but not
-asserted on `changed_by` in the test.
+`route_change_history` attribution to the tipping rider — now asserted on
+`changed_by` in the flip test (closed in the final-review pass); (d) two
+simultaneous threshold-crossing rode-it POSTs can each log a `route_change_history`
+`state` row (the flip has no lock/guard) — audit-log noise only, the state stays
+correctly `verified` (idempotent `setState`); add a transition guard if the
+history desk ever surfaces duplicates.

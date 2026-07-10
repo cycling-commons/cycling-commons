@@ -61,6 +61,7 @@ final class RouteRideItTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         // Three independent riders → flip on the third.
+        $tippingRiderId = null;
         foreach (['a@test.test', 'b@test.test', 'c@test.test'] as $i => $email) {
             $u = $this->rider($em, $email);
             $client->loginUser($u);
@@ -69,6 +70,9 @@ final class RouteRideItTest extends WebTestCase
             $data = json_decode((string) $client->getResponse()->getContent(), true);
             $expected = $i < 2 ? 'unverified' : 'verified';   // flips exactly at the 3rd
             self::assertSame($expected, $data['state'], 'after rider #'.($i + 1));
+            if (2 === $i) {
+                $tippingRiderId = $u->getId();   // the rider whose ride crossed the threshold
+            }
         }
 
         $em->clear();
@@ -80,6 +84,7 @@ final class RouteRideItTest extends WebTestCase
         );
         self::assertCount(1, $rows);
         self::assertSame('"verified"', $rows[0]['new_value']);   // JSONB-encoded
+        self::assertSame($tippingRiderId, (int) $rows[0]['changed_by']);   // attributed to the 3rd rider (P3-D2)
     }
 
     public function testResubmitIsIdempotent(): void
