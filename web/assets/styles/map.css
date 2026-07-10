@@ -390,3 +390,13 @@
     /* street-level dock takes the bottom -> hide the sheet peek */
     .app.dock-open .rail-foot,.app.dock-open .rail-scroll{display:none}
   }
+
+  /* Route domain phase 4 (spec §8): Curated best-of season/bike pickers, in the
+     "View mode" .grp on the dark rail — light cream fields, matching .cc-rc select. */
+  .best-facets{display:flex;gap:.6rem;margin-top:.6rem}
+  .best-facets[hidden]{display:none}
+  .best-facets label{flex:1;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.5);display:flex;flex-direction:column;gap:.25rem}
+  .best-facets select{font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--paper);border:1px solid rgba(239,230,212,.25);border-radius:5px;padding:.35rem .45rem}
+  .best-facets select:focus{outline:none;border-color:var(--trail)}
+  .best-empty{position:absolute;top:5.5rem;left:50%;transform:translateX(-50%);z-index:1100;background:var(--ink);color:var(--paper);font-size:.8rem;padding:.5rem .9rem;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:min(90vw,420px);text-align:center}
+  .best-empty[hidden]{display:none}

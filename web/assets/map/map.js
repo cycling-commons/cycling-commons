@@ -967,7 +967,9 @@
       }
       if(layer.kind==='line'){
         layer.features.forEach((f,i)=>{
-          if(!((mode==='all')||!layer.exp||f.cur)) return;
+          // Route domain phase 4: K routes honour cur in Curated (best-of), all in Everything.
+          if(layer.key==='experience'){ if(!(mode==='all'||f.cur)) return; }
+          else if(!((mode==='all')||!layer.exp||f.cur)) return;
           drawLine(`${layer.key}-${i}`, f.geom.path, layer.color, layer, f);
           n++;
         });
@@ -1141,7 +1143,7 @@
         ${modHist}
       </div>`;
     }
-    const vote = f.cur ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
+    const vote = (f.cur && layer.key!=='experience') ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
     const act = edit + vote;
     const desc = f.desc ? `<p class="cc-d-desc">${f.desc}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
     // C1-T3 (spec W5): an empty placeholder for the async "Recent changes"
@@ -1695,13 +1697,59 @@
   const _onBP=()=>requestAnimationFrame(()=>map.resize());
   _mq.addEventListener ? _mq.addEventListener('change',_onBP) : _mq.addListener(_onBP);
 
+  // Route domain phase 4 (spec §8): Curated mode = best-of for a (season, bike)
+  // facet, fetched from /map/best-of; the returned ids get cur:true and Curated
+  // filters K routes to them. Region is single (Wallonia) — omitted for v1.
+  const CC_SEASON_LABEL={spring:'Spring',summer:'Summer',autumn:'Autumn',winter:'Winter'};
+  function currentSeason(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter'; }
+  let boSeason=currentSeason(), boBike='all';
+
+  function updateSubtitle(){
+    const sub=document.querySelector('.map-top .sub'); if(!sub) return;
+    if(mode==='all'){ sub.textContent='Everything · full backlog'; return; }
+    const bike=boBike==='all'?'All bikes':boBike;
+    sub.textContent=`Curated best-of · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
+  }
+
+  function applyBestOf(ids){
+    const set=new Set((ids||[]).map(Number));
+    const feats=(layerByKey['experience']||{}).features||[];
+    feats.forEach(f=>{ f.cur = set.has(Number(f.id)); f.bestRank = set.has(Number(f.id)) ? ids.indexOf(Number(f.id))+1 : null; });
+    const box=document.getElementById('bestEmpty');
+    if(box) box.hidden = !(mode==='curated' && set.size===0);
+    render();
+  }
+
+  function refreshBestOf(){
+    if(mode!=='curated'){
+      const box=document.getElementById('bestEmpty'); if(box) box.hidden=true;   // Everything never shows the Curated empty-state
+      render(); return;
+    }
+    fetch(`/map/best-of?season=${encodeURIComponent(boSeason)}&bike=${encodeURIComponent(boBike)}`,
+      {credentials:'same-origin', headers:{'Accept':'application/json'}})
+      .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(d=>applyBestOf(d.ids))
+      .catch(()=>{ applyBestOf([]); });   // on failure, Curated shows the empty state, not a stale set
+  }
+
+  // Facet pickers (Curated only).
+  const boSeasonEl=document.getElementById('boSeason'), boBikeEl=document.getElementById('boBike');
+  if(boSeasonEl){ boSeasonEl.value=boSeason; boSeasonEl.onchange=()=>{ boSeason=boSeasonEl.value; updateSubtitle(); refreshBestOf(); }; }
+  if(boBikeEl){ boBikeEl.onchange=()=>{ boBike=boBikeEl.value; updateSubtitle(); refreshBestOf(); }; }
+
   // mode toggle
   document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on'); mode=b.dataset.m;
-    document.querySelector('.map-top .sub').textContent = (mode==='curated'?'Curated best-of · Summer 2026':'Everything · full backlog');
-    render();
+    const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode!=='curated');
+    updateSubtitle();
+    refreshBestOf();          // Curated → fetch + filter; Everything → plain render()
   });
+
+  // Initial best-of for the default facet so Curated isn't empty on load.
+  updateSubtitle();
+  { const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode!=='curated'); }
+  refreshBestOf();
   // discipline + freshness chips (visual)
   document.querySelectorAll('#disc .chip, .grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
   // climb surface + traffic chips actually filter the climbs layer; C2-T8 adds

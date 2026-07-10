@@ -61,6 +61,23 @@
           <button class="on" data-m="curated">Curated best-of</button>
           <button data-m="all">Everything</button>
         </div>
+        <div class="best-facets" id="bestFacets">
+          <label>Season
+            <select id="boSeason">
+              <option value="spring">Spring</option><option value="summer">Summer</option>
+              <option value="autumn">Autumn</option><option value="winter">Winter</option>
+            </select>
+          </label>
+          <label>Bike
+            <select id="boBike">
+              <option value="all">All bikes</option>
+              <option value="Road">Road</option><option value="Gravel">Gravel</option>
+              <option value="MTB">MTB</option><option value="E-bike">E-bike</option>
+              <option value="Handbike">Handbike</option><option value="Recumbent">Recumbent</option>
+              <option value="Trike">Trike</option><option value="Tandem">Tandem</option>
+            </select>
+          </label>
+        </div>
         <div class="hint">Curated shows riders' best climbs, stays &amp; views. Utility data (water, hazards, services) aims for full coverage.</div>
       </div>
 
@@ -154,6 +171,7 @@
       <div class="sub">Curated best-of · Summer 2026</div>
       <a class="add-climb" href="{{ path('contribute') }}">+ Contribute</a>
     </div>
+    <div class="best-empty" id="bestEmpty" hidden>No best-of picks for this season &amp; bike yet — open a route and vote to surface one.</div>
     <div class="legend">
       <button class="lg-toggle" id="lgToggle" type="button" aria-label="Surface legend" aria-expanded="false">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
