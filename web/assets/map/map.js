@@ -587,7 +587,7 @@
       // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
       const diffLabel = r.difficulty?.label ?? (typeof r.difficulty === 'string' ? r.difficulty : undefined);
       return {
-      id:r.id, name:r.name, headline:`${r.km} km${diffLabel ? ' · ' + diffLabel : ''}`, cur:false, edit:'ride',
+      id:r.id, name:r.name, state:r.state, headline:`${r.km} km${diffLabel ? ' · ' + diffLabel : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
@@ -1091,10 +1091,10 @@
     let edit = '';
     if(f.id!=null){
       if(layer.key==='experience'){
-        // Route domain v1 (spec 2026-07-08): riders never edit routes — the
-        // old /improve?type=K link is refused server-side (route/item id
-        // collision fix). Phase-1 rider action: download the track to ride it.
-        edit = `<a class="cc-d-act edit" href="/routes/${f.id}.gpx">⤓ Download GPX</a>`;
+        // Route domain v1 phase 3 (spec §7): the community panel. GPX download
+        // stays; rode-it/vote/suggest render as a container filled async by
+        // openDrawer's GET /routes/{id}/community (P3-D3) — riders never edit.
+        edit = routeCommunityPanel(f.id, f.state);
       } else {
         const editQ = `item=${f.id}&name=${encodeURIComponent(f.name)}`
           + `&type=${layer.letter}`
@@ -1203,6 +1203,85 @@
         }
       });
   }
+  // Route community loop (spec §7). One authenticated fetch on drawer-open
+  // carries counts + my-state + a stateless CSRF token; the three POSTs reuse it.
+  const CC_BIKES=['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
+  const CC_SEASONS=['spring','summer','autumn','winter'];
+  const CC_REASONS=[['broken-track','Wrong / broken track'],['trim-privacy','Trim a private start/end'],['duplicate','Duplicate of another route'],['not-rideable','Not actually rideable'],['other','Something else']];
+  const _rcTokens={};   // route id → CSRF token from the last snapshot
+
+  function routeCommunityPanel(id, state){
+    const bikeOpts=CC_BIKES.map(b=>`<option value="${b}">${b}</option>`).join('');
+    const seasonOpts=CC_SEASONS.map(s=>`<option value="${s}">${s[0].toUpperCase()+s.slice(1)}</option>`).join('');
+    const reasonOpts=CC_REASONS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+    // Vote block only for verified routes (spec D7); rode-it for both.
+    const voteBlock = state==='verified' ? `
+      <div class="cc-rc-vote">
+        <label class="cc-rc-l">Recommend it <span class="cc-rc-count" data-rc="votes"></span></label>
+        <div class="cc-rc-row"><select class="cc-rc-season">${seasonOpts}</select><select class="cc-rc-vbike">${bikeOpts}</select>
+          <button class="cc-rc-btn" data-rc-act="vote">▲ Vote</button></div>
+      </div>` : '';
+    const rideProgress = state==='unverified' ? `<span class="cc-rc-count" data-rc="rides">…</span>` : '';
+    return `<div class="cc-rc" data-route="${id}" data-state="${state||''}">
+      <div class="cc-rc-ride">
+        <label class="cc-rc-l">I rode this ${rideProgress}</label>
+        <div class="cc-rc-row"><select class="cc-rc-rbike">${bikeOpts}</select>
+          <button class="cc-rc-btn" data-rc-act="rode-it">✓ I rode this</button></div>
+      </div>
+      ${voteBlock}
+      <details class="cc-rc-suggest"><summary>Suggest a correction</summary>
+        <select class="cc-rc-reason">${reasonOpts}</select>
+        <textarea class="cc-rc-note" placeholder="Optional detail…"></textarea>
+        <button class="cc-rc-btn" data-rc-act="suggest">Send</button>
+      </details>
+      <a class="cc-d-act edit" href="/routes/${id}.gpx">⤓ Download GPX</a>
+      <div class="cc-rc-login" hidden>Log in to rate this route · <a href="/login">Log in</a></div>
+    </div>`;
+  }
+
+  // Called from openDrawer after the route drawer HTML lands.
+  function hydrateRouteCommunity(id){
+    const box=document.querySelector(`.cc-rc[data-route="${id}"]`); if(!box) return;
+    fetch(`/routes/${id}/community`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
+      .then(r=>{ if(r.status===401||r.status===403){ box.querySelector('.cc-rc-login').hidden=false; box.classList.add('cc-rc-anon'); throw new Error('anon'); } if(!r.ok) throw new Error('community'); return r.json(); })
+      .then(s=>{ _rcTokens[id]=s.token; paintRouteCommunity(box, s); })
+      .catch(()=>{});
+  }
+
+  function paintRouteCommunity(box, s){
+    const rides=box.querySelector('[data-rc="rides"]'); if(rides) rides.textContent=`· ${s.rideCount} of ${s.threshold} to verify`;
+    const votes=box.querySelector('[data-rc="votes"]'); if(votes) votes.textContent=s.voteCount?`· ${s.voteCount} vote${s.voteCount>1?'s':''}`:'';
+    if(s.iRode){ const b=box.querySelector('[data-rc-act="rode-it"]'); if(b){ b.textContent='✓ You rode this'; b.disabled=true; } }
+    if(s.iVotedThisSeason){ const b=box.querySelector('[data-rc-act="vote"]'); if(b){ b.textContent='✓ Voted this season'; b.disabled=true; } }
+  }
+
+  function rcPost(box, act){
+    const id=box.dataset.route, token=_rcTokens[id];
+    if(!token){ mapToast('Please log in to rate routes.'); return; }
+    const body=new URLSearchParams(); body.set('_token', token);
+    if(act==='rode-it') body.set('bike_type', box.querySelector('.cc-rc-rbike').value);
+    if(act==='vote'){ body.set('season', box.querySelector('.cc-rc-season').value); body.set('bike_type', box.querySelector('.cc-rc-vbike').value); }
+    if(act==='suggest'){ body.set('reason', box.querySelector('.cc-rc-reason').value); body.set('note', box.querySelector('.cc-rc-note').value); }
+    box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=true);
+    fetch(`/routes/${id}/${act}`, {method:'POST', credentials:'same-origin',
+      headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:body.toString()})
+      .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(s=>{
+        box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=false);
+        if(act==='suggest'){ mapToast('Thanks — a curator will review it.'); box.querySelector('.cc-rc-suggest').open=false; box.querySelector('.cc-rc-note').value=''; return; }
+        paintRouteCommunity(box, s);
+        if(act==='rode-it' && s.state==='verified' && box.dataset.state==='unverified'){ mapToast('Verified — thanks for confirming this route!'); box.dataset.state='verified'; }
+        else mapToast('Recorded — thanks!');
+      })
+      .catch(err=>{ box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=false); mapToast(err.message==='429'?'Daily limit reached — try again tomorrow.':'Could not record that — please try again.'); });
+  }
+
+  // Delegated click handler for every community button (drawer is re-rendered often).
+  document.addEventListener('click', e=>{
+    const btn=e.target.closest('[data-rc-act]'); if(!btn) return;
+    const box=btn.closest('.cc-rc'); if(!box) return;
+    rcPost(box, btn.dataset.rcAct);
+  });
   function mapToast(msg){
     let t=document.getElementById('cc-toast');
     if(!t){ t=document.createElement('div'); t.id='cc-toast'; t.className='cc-toast'; document.body.appendChild(t); }
@@ -1277,6 +1356,7 @@
       clearRouteHighlight();
     }
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
+    if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
     // C1-T3: async "Recent changes" — see loadItemHistory for the race guard.
     // Pending (moderation) features carry no f.id; when they target a real
     // item (f.pending.itemId, i.e. an edit — never a brand-new submission,

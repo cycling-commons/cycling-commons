@@ -241,6 +241,17 @@
     text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.5rem .8rem;border-radius:5px}
   .cc-d-act.edit{background:transparent;color:var(--paper);border:1px solid rgba(239,230,212,.45)}
   .cc-d-act.edit:hover{border-color:var(--trail);color:var(--trail)}
+  /* Route domain phase 3 (spec §7): rode-it/vote/suggest community panel. */
+  .cc-rc{display:flex;flex-direction:column;gap:.55rem;margin-top:.4rem}
+  .cc-rc-l{font-size:.82rem;font-weight:600;display:block;margin-bottom:.25rem}
+  .cc-rc-count{font-weight:400;opacity:.7}
+  .cc-rc-row{display:flex;gap:.4rem;flex-wrap:wrap}
+  .cc-rc-row select{flex:1 1 auto;min-width:6rem}
+  .cc-rc-btn{padding:.35rem .7rem;border-radius:.4rem;border:1px solid currentColor;background:transparent;cursor:pointer;font-weight:600}
+  .cc-rc-btn:disabled{opacity:.55;cursor:default}
+  .cc-rc-suggest textarea{width:100%;min-height:3rem;margin:.35rem 0}
+  .cc-rc-login{font-size:.82rem;opacity:.8}
+  .cc-rc-anon .cc-rc-ride,.cc-rc-anon .cc-rc-vote,.cc-rc-anon .cc-rc-suggest{opacity:.5;pointer-events:none}
   .cc-diff{margin-top:1rem;display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.62rem;
     letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
   .cc-diff-scale{display:flex;align-items:center;gap:.34rem}
