@@ -6,7 +6,11 @@ declare(strict_types=1);
 
 namespace App\Community;
 
+use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\Entity\RouteChangeHistory;
+use App\Catalog\Entity\RouteRide;
+use App\Catalog\ItemState;
 use App\Catalog\Season;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
@@ -64,5 +68,53 @@ final class RouteCommunityService
             'voteCount' => $voteCount,
             'iVotedThisSeason' => $iVoted,
         ];
+    }
+
+    /**
+     * Records "I rode this" (idempotent per user/route) and, when a currently
+     * `unverified` route reaches the independent-rider threshold (excluding the
+     * proposer, P3-D1), flips it to `verified` — logging one history row
+     * attributed to the tipping rider (P3-D2). All in one flush.
+     */
+    public function recordRide(RecommendedRoute $route, User $user, BikeType $bike): void
+    {
+        $routeId = (int) $route->getId();
+
+        // Idempotent: a repeat click is a no-op (the UNIQUE index is the hard
+        // guard; this pre-check keeps the EM open on the common repeat path).
+        $already = (bool) $this->db->fetchOne(
+            'SELECT 1 FROM route_ride WHERE route_id = :r AND user_id = :u',
+            ['r' => $routeId, 'u' => $user->getId()],
+        );
+        if ($already) {
+            return;
+        }
+
+        $this->em->persist(new RouteRide($routeId, $user->getId(), $bike));
+
+        if (ItemState::Unverified === $route->getState()) {
+            // Count includes the not-yet-flushed row via +1: the new rider is
+            // independent (they have no prior ride and are not the proposer path
+            // below), so add them to the persisted independent distinct count.
+            $independent = (int) $this->db->fetchOne(
+                'SELECT COUNT(DISTINCT user_id) FROM route_ride WHERE route_id = :r AND user_id <> :p',
+                ['r' => $routeId, 'p' => $route->getProposedBy() ?? -1],
+            );
+            $isProposer = null !== $route->getProposedBy() && $route->getProposedBy() === $user->getId();
+            $independentAfter = $independent + ($isProposer ? 0 : 1);
+
+            if ($independentAfter >= $this->rideVerifyThreshold) {
+                $route->setState(ItemState::Verified);
+                $this->em->persist(new RouteChangeHistory(
+                    $routeId,
+                    'state',
+                    ItemState::Unverified->value,
+                    ItemState::Verified->value,
+                    $user->getId(),
+                ));
+            }
+        }
+
+        $this->em->flush();
     }
 }
