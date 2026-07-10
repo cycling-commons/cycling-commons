@@ -221,7 +221,7 @@
   .cc-d-rec{list-style:none;margin:1.1rem 0 0;padding:0}
   .cc-d-rec li{display:flex;gap:.8rem;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(239,230,212,.12);font-size:.9rem}
   .cc-d-rec .k{color:rgba(239,230,212,.6);font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;flex:none;max-width:46%}
-  .cc-d-rec .v{text-align:right;font-weight:400;color:rgba(239,230,212,.78)}
+  .cc-d-rec .v{text-align:right;font-weight:400;color:rgba(239,230,212,.78);line-height:1.5}
   .cc-d-rec .v.warn{color:#E8A33D;font-weight:600}
   .cc-d-rec .m{display:inline-block;margin-left:.4rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.06em;
     text-transform:uppercase;color:var(--glacier);border:1px solid rgba(143,182,168,.5);border-radius:3px;padding:0 .25rem}
@@ -242,15 +242,28 @@
   .cc-d-act.edit{background:transparent;color:var(--paper);border:1px solid rgba(239,230,212,.45)}
   .cc-d-act.edit:hover{border-color:var(--trail);color:var(--trail)}
   /* Route domain phase 3 (spec §7): rode-it/vote/suggest community panel. */
-  .cc-rc{display:flex;flex-direction:column;gap:.55rem;margin-top:.4rem}
-  .cc-rc-l{font-size:.82rem;font-weight:600;display:block;margin-bottom:.25rem}
-  .cc-rc-count{font-weight:400;opacity:.7}
-  .cc-rc-row{display:flex;gap:.4rem;flex-wrap:wrap}
+  .cc-rc{display:flex;flex-direction:column;gap:.75rem;margin-top:.6rem}
+  .cc-rc-l{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.6);font-weight:600;display:block;margin-bottom:.45rem}
+  .cc-rc-count{font-family:var(--sans);text-transform:none;letter-spacing:0;font-weight:400;color:rgba(239,230,212,.5)}
+  .cc-rc-row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+  /* Form fields: light cream field on the dark drawer, matching the app inputs. */
+  .cc-rc select,.cc-rc textarea{font-family:var(--sans);font-size:.85rem;color:var(--ink);background:var(--paper);
+    border:1px solid rgba(239,230,212,.25);border-radius:5px;padding:.45rem .55rem;line-height:1.3}
+  .cc-rc select:focus,.cc-rc textarea:focus{outline:none;border-color:var(--trail)}
   .cc-rc-row select{flex:1 1 auto;min-width:6rem}
-  .cc-rc-btn{padding:.35rem .7rem;border-radius:.4rem;border:1px solid currentColor;background:transparent;cursor:pointer;font-weight:600}
-  .cc-rc-btn:disabled{opacity:.55;cursor:default}
-  .cc-rc-suggest textarea{width:100%;min-height:3rem;margin:.35rem 0}
-  .cc-rc-login{font-size:.82rem;opacity:.8}
+  .cc-rc-reason{width:100%;margin:.5rem 0}
+  .cc-rc-note{width:100%;min-height:3rem;margin:0 0 .5rem;resize:vertical}
+  /* Action buttons: orange text/border on transparent (visible on the dark drawer),
+     fill on hover; confirmed/disabled state in glacier so "You rode this" stays legible. */
+  .cc-rc-btn{flex:none;padding:.45rem .85rem;border-radius:5px;border:1px solid var(--trail);background:transparent;
+    color:var(--trail);font-family:var(--sans);font-weight:700;font-size:.8rem;line-height:1;cursor:pointer}
+  .cc-rc-btn:hover:not(:disabled){background:var(--trail);color:var(--ink)}
+  .cc-rc-btn:disabled{cursor:default;color:var(--glacier);border-color:rgba(143,182,168,.5)}
+  .cc-rc-suggest{margin-top:.1rem}
+  .cc-rc-suggest summary{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:var(--paper);cursor:pointer;padding:.2rem 0}
+  .cc-rc-suggest summary:hover{color:var(--trail)}
+  .cc-rc-login{font-size:.82rem;color:rgba(239,230,212,.8)}
+  .cc-rc-login a{color:var(--trail)}
   .cc-rc-anon .cc-rc-ride,.cc-rc-anon .cc-rc-vote,.cc-rc-anon .cc-rc-suggest{opacity:.5;pointer-events:none}
   .cc-diff{margin-top:1rem;display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.62rem;
     letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
