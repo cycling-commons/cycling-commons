@@ -1,0 +1,32 @@
+web/src/Controller/RouteCommunityController.php
+  s_51df195d1c7750::t_9d4c895bd75651 12,22
+  s_51df195d1c7750::t_675d455ede70e5 121-142
+web/tests/Community/RouteSuggestFlowTest.php
+  s_51df195d1c7750::t_ab0869cba11bcb 1-11,13,15-19,21-86,101,103,127-147
+  s_51df195d1c7750::t_2380ef2cca7c20 87-100,102,104-109,118-119
+  s_51df195d1c7750::t_89e45b7cec5950 12,14,20
+  s_51df195d1c7750::t_58ad4d46bb456e 110-117,120-126
+web/config/packages/rate_limiter.yaml
+  s_51df195d1c7750::t_cc5605e563fc5f 10-11,24-30,38
+  s_51df195d1c7750::t_793b738ff01d6d 39
+web/src/Community/RouteCommunityService.php
+  s_51df195d1c7750::t_08d76b6980b65b 141-158
+  s_51df195d1c7750::t_e478d906cd55a1 13,16,21-22
+  s_51df195d1c7750::t_db09312eda7f2f 38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4f4b62907cbb1fadc2692b726e884714e68ba6a0",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
