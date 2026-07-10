@@ -569,3 +569,14 @@ routes in the harvested set yet, so best-of lists (especially specialty) are
 legitimately empty until rider proposals + votes accumulate — the empty state
 (P4-D3) is the expected view meanwhile; the ranking itself is proven by the
 integration tests against seeded data.
+
+**Phase-4 fast-follows (recorded, non-blocking):** (a) the best-of response is
+consumed membership-only by the map (`applyBestOf`) — the SQL `ORDER BY` rank is
+latent until a ranked-list UI honours it (and the response encodes rank by array
+position, no explicit `rank` field yet); (b) the "no materialization — regions
+hold ≤ cap" guarantee (P4-D2) only holds *with* a `region` filter; the map omits
+`region` (single Wallonia region), so today's query aggregates across all regions
+with no `LIMIT` — when the multi-region UI lands, either require `region` or add a
+top-N cap; (c) the map-shell chrome (season/bike labels, the dynamic subtitle) is
+hardcoded English, consistent with the pre-existing untranslated map shell — map
+i18n stays on the backlog.

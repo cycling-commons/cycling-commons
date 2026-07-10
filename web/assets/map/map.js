@@ -1712,6 +1712,10 @@
   }
 
   function applyBestOf(ids){
+    // Membership only: the endpoint returns ids in rank order (vote count, then
+    // recency), but the map surfaces best-of routes as unordered lines — Curated
+    // shows the set, Everything shows all. The server ORDER BY is latent until a
+    // ranked-list UI consumes it; don't assume order is honoured client-side.
     const set=new Set((ids||[]).map(Number));
     const feats=(layerByKey['experience']||{}).features||[];
     feats.forEach(f=>{ f.cur = set.has(Number(f.id)); });
