@@ -42,6 +42,7 @@ security:
         # "private, must-revalidate" (AbstractSessionListener). See
         # TwoFactorAccessDecider::isPubliclyAccessible().
         - { path: ^/map/catalog\.json$, roles: PUBLIC_ACCESS }
+        - { path: ^/map/best-of$, roles: PUBLIC_ACCESS }
         - { path: '^/map/item/\d+/history$', roles: PUBLIC_ACCESS }
         # Same cacheability rationale as /map/catalog.json above: explicit
         # PUBLIC_ACCESS so scheb's TwoFactorAccessListener skips the session

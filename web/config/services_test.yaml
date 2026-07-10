@@ -4,12 +4,3 @@
 # MicroKernelTrait::configureContainer), so definitions here win over the
 # `App\` autowiring prototype.
 services:
-    # Not yet consumed by a controller (route-domain spec §14 phase 4 wiring
-    # lands in a later task) — the compiler prunes unreferenced private
-    # services even under framework.test:true, so RouteRankingServiceTest
-    # can't fetch it from the test container without this. Drop once
-    # MapController::bestOf() (or another consumer) references it directly.
-    App\Catalog\RouteRankingService:
-        autowire: true
-        public: true
-

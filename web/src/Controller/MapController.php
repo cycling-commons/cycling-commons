@@ -4,8 +4,11 @@
 
 namespace App\Controller;
 
+use App\Catalog\BikeType;
 use App\Catalog\CatalogProvider;
 use App\Catalog\ChangeHistoryView;
+use App\Catalog\RouteRankingService;
+use App\Catalog\Season;
 use App\Moderation\SubmissionQueue;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -68,6 +71,35 @@ final class MapController extends AbstractController
         $response->setEtag(md5($json));
         $response->setPublic();
         $response->setMaxAge(60);
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    /**
+     * Best-of ranking for the map's Curated mode (spec §8): ranked verified-route
+     * ids for a (season, bike, region?) facet. Public + cacheable like
+     * catalog.json; the map flags these ids `cur` and filters Curated to them.
+     */
+    #[Route('/map/best-of', name: 'map_best_of', methods: ['GET'])]
+    public function bestOf(Request $request, RouteRankingService $ranking): Response
+    {
+        $season = Season::tryFrom((string) $request->query->get('season')) ?? Season::current(new \DateTimeImmutable());
+        $bikeParam = (string) $request->query->get('bike', 'all');
+        $bike = 'all' === $bikeParam ? null : BikeType::tryFrom($bikeParam);   // invalid → null (all)
+        $region = $request->query->has('region') ? $request->query->getInt('region') : null;
+
+        $ids = $ranking->bestOf($season, $bike, $region);
+        $json = json_encode([
+            'season' => $season->value,
+            'bike' => null === $bike ? 'all' : $bike->value,
+            'ids' => $ids,
+        ], \JSON_THROW_ON_ERROR);
+
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        $response->setMaxAge(300);
         $response->isNotModified($request);
 
         return $response;
