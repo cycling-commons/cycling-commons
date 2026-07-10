@@ -32,4 +32,21 @@ enum BikeType: string
     {
         return array_map(static fn (self $t): string => $t->value, self::cases());
     }
+
+    /**
+     * The specialty/accessibility hardware types whose best-of lists are gated
+     * by a route's declared suitability (route-domain spec §14 P4-D4) — their
+     * physical constraints (width, turning radius, clearance) make an
+     * undeclared route a real mismatch, unlike the general Road/Gravel/MTB/E-bike
+     * group where a vote is signal enough.
+     *
+     * @api Consumed by RouteRankingService's SQL builder.
+     */
+    public function isSpecialty(): bool
+    {
+        return match ($this) {
+            self::Handbike, self::Recumbent, self::Trike, self::Tandem => true,
+            default => false,
+        };
+    }
 }
