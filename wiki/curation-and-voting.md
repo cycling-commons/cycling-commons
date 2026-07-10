@@ -13,7 +13,7 @@ The single organising principle of the Commons:
 |---|---|---|
 | **Examples** | best climbs, bike-friendly stays, finest views, history & culture, top quality rides | road surface, water points, toilets, repair stations, hazards, bike shops |
 | **Goal** | **curated** — the best, ranked | **complete** — as exhaustive as possible |
-| **How** | riders vote; refreshed in rounds | one-tap reports; confirm & decay |
+| **How** | riders vote on climbs, stays, views & heritage; refreshed in rounds — **routes** verify instead, via rode-it counts plus continuous seasonal recommend-votes on the map drawer | one-tap reports; confirm & decay |
 | **The value is** | the *ranking* | the *coverage* |
 
 Voting makes no sense for a water tap — it's either there or it isn't, and you want them all. Ranking
@@ -32,7 +32,7 @@ For each region the Commons surfaces a curated **best-of**:
 - the best **bike-friendly stays**
 - the most scenic **views**
 - the best **history & culture** to ride past
-- the best **quality rides / routes**
+- the best **quality rides / routes** (routes' best-of is the map's season/bike Curated ranking, not the seasonal ballot)
 - (extensible: best café stops, best gravel, etc.)
 
 So when you arrive somewhere new, you get a clear, opinionated picture of the best there is — instead
@@ -45,6 +45,9 @@ of drowning in data.
   riding — a reason to come back as the season turns, and room for new entries to rise.
 - **Rounds re-rank, they don't reset.** The standing list carries forward and votes shift it. A
   legendary climb is never wiped out by one low-turnout season; it just has to keep earning its place.
+- **These rounds cover climbs, stays, views, and heritage.** Routes sit outside the seasonal ballot:
+  they follow their own **propose → curator moderate → rode-it-verify → seasonal recommend-vote** flow
+  on the map drawer, feeding the same season/bike Curated ranking rather than a ballot round.
 
 ## Solving the cold start: seed from popularity, refine by vote
 

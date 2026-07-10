@@ -10,7 +10,7 @@ contributions, the way OpenStreetMap was built.
 |--------|-----------|
 | **[tap]** | a one-tap report in the moment — "water here", "road closed", "great view" |
 | **[edit]** | a structured attribute edit — climb metrics, a café's opening hours |
-| **[vote]** | ranking a region's best climbs, stays, views, heritage, and routes (see [Curation & voting](curation-and-voting.md)) |
+| **[vote]** | ranking a region's best climbs, stays, views, and heritage (see [Curation & voting](curation-and-voting.md)) — routes earn their ranking separately, through propose → rode-it-verify → seasonal recommend-vote on the map |
 | **[auto]** | derived automatically and anonymously from aggregate signals — nothing personal |
 
 Every field is **optional and additive**. Required fields kill contribution; optional fields let the

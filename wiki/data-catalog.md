@@ -131,7 +131,8 @@ anonymization happens at ingest, not in storage**:
   start from those before any first-party uploads exist.
 
 Result: a purely aggregate layer, publishable openly (ODbL), holding **the map, not the rider**
-(Manifesto §IV). This is the *measured* side of routes; the rider-rated/voted side is **K**.
+(Manifesto §IV). This is the *measured* side of routes; the rider-verified side is **K** — rode-it
+counts plus seasonal recommend-votes cast on the map drawer.
 
 ---
 

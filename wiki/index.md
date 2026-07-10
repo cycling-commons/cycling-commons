@@ -24,5 +24,7 @@ The reference documentation for the open cycling-data Commons. The public site
 The Commons is an open atlas of the world's best riding — climbs, water, stays, hazards, viewpoints —
 that anyone can query, export, and build on under the ODbL. Objective utility data (water, toilets, repair
 stations) aims to be **complete**. Subjective, experiential data (best climbs, bike-friendly stays,
-finest views, history & culture, top quality rides) is **curated**: riders vote, a fresh round opens each season, and you see the *best* of a
+finest views, history & culture, top quality rides) is **curated**: for climbs, stays, views, and heritage,
+riders vote and a fresh round opens each season; routes earn their place separately, through rode-it
+verification and continuous seasonal recommend-votes on the map. Either way you see the *best* of a
 region rather than an undifferentiated pile. It maps the world, not the rider — the Commons data is non-personal by design.
