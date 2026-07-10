@@ -1,0 +1,27 @@
+wiki/contributing.md
+  s_51df195d1c7750::t_a8c44e5db209af 13
+wiki/curation-and-voting.md
+  s_51df195d1c7750::t_1ff63f6c97fb59 48-50
+  s_51df195d1c7750::t_b6dea4700ee02b 35
+  s_51df195d1c7750::t_8ebeaa73d8caed 16
+wiki/index.md
+  s_51df195d1c7750::t_e8e7286b6f2550 27-29
+wiki/data-catalog.md
+  s_51df195d1c7750::t_35efae67105b45 134-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "f5a339707f3c1afc86be22354e287b3d3624d77a",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
