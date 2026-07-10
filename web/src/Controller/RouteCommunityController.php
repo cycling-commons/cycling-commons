@@ -95,6 +95,27 @@ final class RouteCommunityController extends AbstractController
         return $this->freshSnapshot($route, $user);
     }
 
+    #[Route('/routes/{id}/vote', name: 'route_vote', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function vote(int $id, Request $request): JsonResponse
+    {
+        $user = $this->requireUser();
+        $this->validateCsrf($request);
+        $route = $this->activeRoute($id);
+        if (ItemState::Verified !== $route->getState()) {
+            throw $this->createNotFoundException('Route is not open for voting.');   // spec D7
+        }
+
+        $season = Season::tryFrom((string) $request->request->get('season'));
+        $bike = BikeType::tryFrom((string) $request->request->get('bike_type'));
+        if (null === $season || null === $bike) {
+            return $this->json(['error' => 'invalid_vote'], 422);
+        }
+
+        $this->community->recordVote($route, $user, $season, $bike);
+
+        return $this->freshSnapshot($route, $user);
+    }
+
     private function validateCsrf(Request $request): void
     {
         if (!$this->isCsrfTokenValid('route-community', (string) $request->request->get('_token'))) {

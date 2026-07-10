@@ -10,6 +10,7 @@ use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteChangeHistory;
 use App\Catalog\Entity\RouteRide;
+use App\Catalog\Entity\RouteVote;
 use App\Catalog\ItemState;
 use App\Catalog\Season;
 use App\Entity\User;
@@ -115,6 +116,21 @@ final class RouteCommunityService
             }
         }
 
+        $this->em->flush();
+    }
+
+    /** Records a typed seasonal vote; idempotent per (route, user, season). */
+    public function recordVote(RecommendedRoute $route, User $user, Season $season, BikeType $bike): void
+    {
+        $already = (bool) $this->db->fetchOne(
+            'SELECT 1 FROM route_vote WHERE route_id = :r AND user_id = :u AND season = :s',
+            ['r' => (int) $route->getId(), 'u' => $user->getId(), 's' => $season->value],
+        );
+        if ($already) {
+            return;
+        }
+
+        $this->em->persist(new RouteVote((int) $route->getId(), $user->getId(), $season, $bike));
         $this->em->flush();
     }
 }
