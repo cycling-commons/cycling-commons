@@ -331,7 +331,7 @@ pages:
   card_addclimb_h: 'Klim toevoegen'
   card_addclimb_p: 'Teken een nieuwe klim van voet tot top en stuur hem naar de wachtrij van de curators.'
   card_vote_h: 'Stemmen'
-  card_vote_p: 'Rangschik de beste klimmen, overnachtingen, uitzichten en erfgoed van een regio — elk seizoen opnieuw gerangschikt. (Routes hebben hun eigen voorstel- en gereden-flow op de kaart.)'
+  card_vote_p: 'Rangschik de beste klimmen, overnachtingen, uitzichten en erfgoed van een regio — elk seizoen opnieuw gerangschikt. (Routes hebben hun eigen voorstel- en bevestigingsflow op de kaart.)'
   card_improve_h: 'Een plek verbeteren'
   card_improve_p: 'Gegevens corrigeren, informatie toevoegen, een probleem melden, of een foto toevoegen.'
   card_login_h: 'Inloggen & account'
