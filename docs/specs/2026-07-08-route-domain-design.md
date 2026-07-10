@@ -346,3 +346,76 @@ were extended past their original scope, on request, after phase 2 shipped:
    dev DB rather than overwriting them; they were removed by hand after
    re-import — a pre-existing importer-idempotency gap on label renames, not a
    data-model change.)
+
+## 13. Phase-3 (community loop) design decisions (2026-07-10)
+
+Pre-execution decisions pinning the residuals §7 left open, binding on the
+phase-3 implementation plan. Resolved in a brainstorm against the built phase-1/2
+state (intake, moderation, GPX download, `RouteSuggestion`/`RouteChangeHistory`
+entities, and the `route.ride_verify_threshold`/`region_active_cap` config all
+present; `route_vote`/`route_ride` and every rider-facing POST still unbuilt).
+
+- **P3-D1 — verification flip excludes the proposer.** The `unverified →
+  verified` flip fires when
+  `COUNT(DISTINCT route_ride.user_id WHERE user_id <> recommended_route.proposed_by) >= route.ride_verify_threshold`
+  (default 3). The proposer may still log their own "I rode this" — it is stored
+  and shown — but it never counts toward their own route's threshold. This is
+  the operative reading of §7's "X *independent* riders". `proposed_by` NULL
+  (imported routes) degenerates to plain distinct-user counting, but imports
+  never enter `unverified` via this machine (§4.3), so the exclusion is a no-op
+  there.
+
+- **P3-D2 — the flip is recomputed synchronously in the rode-it handler** and,
+  on crossing the threshold, calls the same `RouteModerationService` state
+  transition path curators use, writing one `route_change_history` row
+  (`field = 'state'`, `unverified → verified`). Because `RouteChangeHistory.changed_by`
+  is non-null (`private int`), the community flip attributes `changed_by` to the
+  **tipping rider's user id** — the rider whose ride crossed the threshold —
+  rather than widening the column to nullable. Factual (their ride caused the
+  transition) and schema-neutral.
+
+- **P3-D3 — dynamic community numbers come from a single on-drawer-open fetch,
+  not `catalog.json`.** The cacheable bulk payload (phase-A `PUBLIC_ACCESS`
+  endpoint) stays unchanged — no ride/vote counts, no per-user state, no
+  per-write cache invalidation. Opening a route drawer fires one authenticated,
+  uncached `GET /routes/{id}/community` returning
+  `{ rideCount, threshold, iRode, voteCount, iVotedThisSeason }`. Per-user state
+  (`iRode`, `iVotedThisSeason`) is inherently uncacheable, so the aggregates ride
+  along in the same call rather than splitting the fetch. **Aggregate-only in
+  phase 3** — the per-`(season, bike_type)` breakdown stays deferred to phase-4
+  rankings (§8, §9).
+
+- **P3-D4 — suggest-a-correction gets a dedicated rate limiter; vote and rode-it
+  do not.** `vote` (UNIQUE `route_id, user_id, season`) and `rode-it` (UNIQUE
+  `route_id, user_id`) are self-bounding per route, so a resubmit is an
+  idempotent no-op (flash + 200, house pattern). `route_suggestion` has no
+  uniqueness and each pending row is a curator task, so it is the flood vector:
+  a `route_suggest` limiter (default **5/day/user**, `sliding_window`, dedicated
+  filesystem cache pool swapped to `array` under `when@test` — mirroring the
+  `route_propose` limiter in `config/packages/rate_limiter.yaml`). Rate-limited
+  suggests are flash + 200, matching intake.
+
+- **P3-D5 — endpoint guards.** All three writes are `ROLE_USER` + same-origin
+  CSRF; anonymous users get the existing login-gated CTA. `rode-it` is accepted
+  on `unverified` + `verified`; `vote` on `verified` only (D7); `suggest` on any
+  active (`unverified` + `verified`) route. Any other state → 404 (routes not in
+  `ItemState::SERVED` aren't served, so the drawer never opens for them; the
+  guard is defence-in-depth). `GET /routes/{id}/community` requires auth (it
+  carries per-user state).
+
+- **P3-D6 — current-season default** is computed server-side from the request
+  month on a Northern-hemisphere calendar (the harvested data is Wallonia):
+  Spring Mar–May, Summer Jun–Aug, Autumn Sep–Nov, Winter Dec–Feb. The voter may
+  override the season in the vote picker; the default only pre-selects it.
+
+- **P3-D7 — drawer becomes a community panel.** The current lone "⤓ Download
+  GPX" action block (`map.js`) is replaced by: rode-it button (→ "✓ You rode
+  this" when `iRode`) with progress copy ("2 of 3 rides to verify") on
+  `unverified`; season+bike vote picker (→ "✓ Voted this season") on `verified`;
+  suggest-a-correction reason+note form; and the retained GPX download. The
+  existing `unverified` badge (§7, `map.js:609`) stays.
+
+**Phase-4 carry-in (recorded):** the `/routes/{id}/community` response is
+aggregate-only by design (P3-D3). Phase 4's best-of ranking needs the
+per-`(season, bike_type)` vote breakdown; it will extend this endpoint (or add a
+ranking query) rather than change phase-3's contract.

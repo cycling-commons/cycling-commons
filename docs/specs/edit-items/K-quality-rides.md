@@ -27,9 +27,12 @@ a region drowns in 1000+ unvetted routes).
    computation, region resolution → `RecommendedRoute` state `submitted`.
 2. **Desk review** (Routes queue in the moderation shell, ROLE_CURATOR):
    approve (cap permitting) / reject / retire-to-make-room.
-3. **Ride-verification**: X riders (config, default 3) click "I rode this" →
-   `verified`. v2 (future): optional GPX-proof — an uploaded ride is matched
-   against sample points and **deleted immediately** after the check.
+3. **Ride-verification**: X *independent* riders (config, default 3) click "I
+   rode this" → `verified`. Independent means distinct users **other than the
+   proposer** — a proposer's own "I rode this" is recorded and shown but never
+   counts toward their own route's threshold. v2 (future): optional GPX-proof —
+   an uploaded ride is matched against sample points and **deleted immediately**
+   after the check.
 4. **Votes** (only on `verified` routes): "I recommend this as a
    [season] ride on [bike type]" — one per user per route per season.
    Best-of lists rank per (region, season, bike type).
