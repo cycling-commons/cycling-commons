@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Tests\Community;
 
 use App\Catalog\Entity\RecommendedRoute;
-use App\Catalog\Entity\RouteChangeHistory;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
@@ -69,7 +68,7 @@ final class RouteRideItTest extends WebTestCase
             self::assertResponseIsSuccessful();
             $data = json_decode((string) $client->getResponse()->getContent(), true);
             $expected = $i < 2 ? 'unverified' : 'verified';   // flips exactly at the 3rd
-            self::assertSame($expected, $data['state'], "after rider #".($i + 1));
+            self::assertSame($expected, $data['state'], 'after rider #'.($i + 1));
         }
 
         $em->clear();
