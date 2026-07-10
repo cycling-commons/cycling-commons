@@ -26,3 +26,7 @@ services:
     App\Moderation\RouteQueue:
         arguments:
             $regionActiveCap: '%route.region_active_cap%'
+
+    App\Community\RouteCommunityService:
+        arguments:
+            $rideVerifyThreshold: '%route.ride_verify_threshold%'
