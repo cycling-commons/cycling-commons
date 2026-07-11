@@ -1235,20 +1235,23 @@
 
   function routeCommunityPanel(id, state){
     const bikeOpts=CC_BIKES.map(b=>`<option value="${b}">${b}</option>`).join('');
+    // Bike type has no safe default (it changes what a ride/vote means), so the
+    // picker opens on a disabled placeholder — the rider must choose actively.
+    const bikePickOpts=`<option value="" selected disabled>Bike type…</option>`+bikeOpts;
     const seasonOpts=CC_SEASONS.map(s=>`<option value="${s}">${s[0].toUpperCase()+s.slice(1)}</option>`).join('');
     const reasonOpts=CC_REASONS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
     // Vote block only for verified routes (spec D7); rode-it for both.
     const voteBlock = state==='verified' ? `
       <div class="cc-rc-vote">
         <label class="cc-rc-l">Recommend it <span class="cc-rc-count" data-rc="votes"></span></label>
-        <div class="cc-rc-row"><select class="cc-rc-season">${seasonOpts}</select><select class="cc-rc-vbike">${bikeOpts}</select>
+        <div class="cc-rc-row"><select class="cc-rc-season">${seasonOpts}</select><select class="cc-rc-vbike">${bikePickOpts}</select>
           <button class="cc-rc-btn" data-rc-act="vote">▲ Vote</button></div>
       </div>` : '';
     const rideProgress = state==='unverified' ? `<span class="cc-rc-count" data-rc="rides">…</span>` : '';
     return `<div class="cc-rc" data-route="${id}" data-state="${state||''}">
       <div class="cc-rc-ride">
         <label class="cc-rc-l">I rode this ${rideProgress}</label>
-        <div class="cc-rc-row"><select class="cc-rc-rbike">${bikeOpts}</select>
+        <div class="cc-rc-row"><select class="cc-rc-rbike">${bikePickOpts}</select>
           <button class="cc-rc-btn" data-rc-act="rode-it">✓ I rode this</button></div>
       </div>
       ${voteBlock}
@@ -1278,12 +1281,23 @@
     if(s.iVotedThisSeason){ const b=box.querySelector('[data-rc-act="vote"]'); if(b){ b.textContent='✓ Voted this season'; b.disabled=true; } }
   }
 
+  // Flag a picker the rider left on its placeholder: red border + focus + toast.
+  function warnPick(sel, msg){ if(sel){ sel.classList.add('cc-rc-invalid'); sel.focus(); } mapToast(msg); }
   function rcPost(box, act){
     const id=box.dataset.route, token=_rcTokens[id];
     if(!token){ mapToast('Please log in to rate routes.'); return; }
     const body=new URLSearchParams(); body.set('_token', token);
-    if(act==='rode-it') body.set('bike_type', box.querySelector('.cc-rc-rbike').value);
-    if(act==='vote'){ body.set('season', box.querySelector('.cc-rc-season').value); body.set('bike_type', box.querySelector('.cc-rc-vbike').value); }
+    // Bike type must be actively chosen (no default) — block + warn if empty.
+    if(act==='rode-it'){
+      const sel=box.querySelector('.cc-rc-rbike');
+      if(!sel.value){ warnPick(sel, 'Pick the bike type you rode it on first.'); return; }
+      body.set('bike_type', sel.value);
+    }
+    if(act==='vote'){
+      const sel=box.querySelector('.cc-rc-vbike');
+      if(!sel.value){ warnPick(sel, 'Pick a bike type to recommend it for first.'); return; }
+      body.set('season', box.querySelector('.cc-rc-season').value); body.set('bike_type', sel.value);
+    }
     if(act==='suggest'){ body.set('reason', box.querySelector('.cc-rc-reason').value); body.set('note', box.querySelector('.cc-rc-note').value); }
     box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=true);
     fetch(`/routes/${id}/${act}`, {method:'POST', credentials:'same-origin',
@@ -1305,6 +1319,8 @@
     const box=btn.closest('.cc-rc'); if(!box) return;
     rcPost(box, btn.dataset.rcAct);
   });
+  // Clear the "must pick a bike type" warning as soon as the rider chooses one.
+  document.addEventListener('change', e=>{ const s=e.target.closest('.cc-rc-invalid'); if(s) s.classList.remove('cc-rc-invalid'); });
   function mapToast(msg){
     let t=document.getElementById('cc-toast');
     if(!t){ t=document.createElement('div'); t.id='cc-toast'; t.className='cc-toast'; document.body.appendChild(t); }
