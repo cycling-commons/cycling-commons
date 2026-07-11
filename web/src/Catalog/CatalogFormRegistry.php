@@ -30,7 +30,7 @@ final class CatalogFormRegistry
         return match ($type) {
             ItemType::RoadSurface => new ItemFieldSet(
                 fields: [
-                    CatalogField::select('surface', 'Surface', ['Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Dirt', 'Rock']),
+                    CatalogField::select('surface', 'Surface', SurfaceVocabulary::DECLARABLE),
                     CatalogField::select('smoothness', 'Smoothness', ['Excellent', 'Good', 'Intermediate', 'Bad', 'Very bad']),
                     CatalogField::text('width', 'Width (m)', default: '3.0'),
                     CatalogField::select('traffic', 'Traffic', ['Quiet', 'Moderate', 'Busy', 'Car-free (RAVeL)']),
@@ -197,7 +197,8 @@ final class CatalogFormRegistry
                     // provider's forwarding) never sees it.
                     // Multi-select (spec §15): pick any of the four; all = the retired 'Any'.
                     CatalogField::multiselect('season', 'Best season', ['Spring', 'Summer', 'Autumn', 'Winter']),
-                    CatalogField::select('dominantSurface', 'Dominant surface', ['Asphalt', 'Mixed', 'Gravel']),
+                    // All surface types (spec §15) — shared with the A-layer field.
+                    CatalogField::select('dominantSurface', 'Dominant surface', SurfaceVocabulary::DECLARABLE),
                     CatalogField::textarea('note', 'Note for riders', 'What is this loop like?'),
                 ],
                 addFields: [

@@ -606,3 +606,15 @@ feedback). Not a phase — small, ongoing UI/vocabulary fixes recorded here.
 - **Form dropdowns no longer stretch full-width** (`.field select` capped at
   `max-width: 22rem` across the proposal, curator-edit-adjacent, improve,
   add-climb, and settings forms).
+- **`dominantSurface` now offers the full surface vocabulary** (Asphalt,
+  Concrete, Paving stones, Sett — pavé, Compacted, Fine gravel, Gravel, Dirt,
+  Rock) instead of the coarse Asphalt/Mixed/Gravel — **superseding P2-D3's
+  "rider-facing vocabulary stays 3-way."** The list is now the shared
+  `SurfaceVocabulary::DECLARABLE` constant (one source for the A-layer curator
+  `surface` field and the route `dominantSurface` field). `SurfaceVocabulary::BUCKETS`
+  still folds these to the coarse buckets for the measured-vs-declared
+  reconciliation hint, so that hint now compares a coarse suggestion against a
+  specific declaration (a known minor mismatch — aligning the hint to the
+  specific vocabulary is a recorded follow-up). Legacy `Mixed` values from the
+  old vocabulary display as-is; no backfill (the importer validates attribute
+  keys, not values).

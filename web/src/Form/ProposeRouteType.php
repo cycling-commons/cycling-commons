@@ -8,6 +8,7 @@ namespace App\Form;
 
 use App\Catalog\BikeType;
 use App\Catalog\DifficultyVocabulary;
+use App\Catalog\SurfaceVocabulary;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -68,9 +69,11 @@ final class ProposeRouteType extends AbstractType
                 'expanded' => true,
                 'choices' => ['Spring' => 'Spring', 'Summer' => 'Summer', 'Autumn' => 'Autumn', 'Winter' => 'Winter'],
             ])
+            // All surface types (spec §15), shared with the A-layer vocabulary —
+            // was the coarse Asphalt/Mixed/Gravel. Legacy 'Mixed' values still display.
             ->add('dominantSurface', ChoiceType::class, [
                 'label' => false,
-                'choices' => ['Asphalt' => 'Asphalt', 'Mixed' => 'Mixed', 'Gravel' => 'Gravel'],
+                'choices' => array_combine(SurfaceVocabulary::DECLARABLE, SurfaceVocabulary::DECLARABLE),
             ])
             ->add('note', TextareaType::class, [
                 'label' => false,

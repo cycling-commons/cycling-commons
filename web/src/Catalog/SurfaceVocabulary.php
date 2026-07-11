@@ -16,6 +16,16 @@ namespace App\Catalog;
  */
 final class SurfaceVocabulary
 {
+    /** @var list<string> The full declarable surface vocabulary (spec §15) — the
+     *  A-layer set, now shared by the A-layer curator `surface` field AND the
+     *  route `dominantSurface` field (was the coarse Asphalt/Mixed/Gravel;
+     *  supersedes P2-D3's rider-facing 3-way). BUCKETS still folds these to the
+     *  coarse measured-vs-declared reconciliation. Legacy 'Mixed' values (from
+     *  the old vocabulary) simply display as-is — no backfill. */
+    public const array DECLARABLE = [
+        'Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Dirt', 'Rock',
+    ];
+
     /** @var array<string, string> A-layer surface → coarse bucket. Covers both
      *  the curator-dropdown labels (e.g. 'Sett — pavé', em-dash spelling) and the
      *  harvester's emitted labels (route_surfaces.py's SURF, e.g. 'Sett (pavé)',
