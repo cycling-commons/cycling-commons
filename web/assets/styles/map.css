@@ -402,3 +402,14 @@
   .best-facets select:focus{outline:none;border-color:var(--trail)}
   .best-empty{position:absolute;top:5.5rem;left:50%;transform:translateX(-50%);z-index:1100;background:var(--ink);color:var(--paper);font-size:.8rem;padding:.5rem .9rem;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:min(90vw,420px);text-align:center}
   .best-empty[hidden]{display:none}
+
+  /* Located-correction picking (spec §16). */
+  .cc-drawer.cc-drawer-min{transform:translateX(calc(100% - 3.2rem))}   /* slide mostly off so the map is clickable */
+  .cc-rc-mark{margin:.4rem 0;padding:.4rem .7rem;border-radius:5px;border:1px solid var(--trail);background:transparent;color:var(--trail);font-family:var(--sans);font-weight:600;font-size:.8rem;cursor:pointer}
+  .cc-rc-mark:hover{background:var(--trail);color:var(--ink)}
+  .cc-rc-marks{display:block;font-size:.78rem;color:rgba(239,230,212,.7);margin:.15rem 0 .3rem}
+  .cc-pick-pin{width:22px;height:22px;border-radius:50%;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.72rem;display:flex;align-items:center;justify-content:center;border:2px solid #FBF4E4;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .cc-pickbar{position:absolute;left:50%;bottom:1.4rem;transform:translateX(-50%);z-index:1300;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:.6rem;padding:.55rem .8rem;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.4);font-size:.82rem}
+  .cc-pickbar[hidden]{display:none}
+  .cc-pickbar button{font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.35rem .7rem;border-radius:5px;border:1px solid var(--trail);background:transparent;color:var(--trail);cursor:pointer}
+  .cc-pickbar button.on{background:var(--trail);color:var(--ink)}

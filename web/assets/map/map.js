@@ -814,6 +814,35 @@
       }
     });
   }
+  // --- Located-correction geometry (spec §16 S4). Path is [lat,lng] points. ---
+  function _cumLen(path){ // cumulative planar length per vertex + total (deg is fine at this scale)
+    const cum=[0]; for(let i=1;i<path.length;i++){ const dx=path[i][1]-path[i-1][1], dy=path[i][0]-path[i-1][0]; cum.push(cum[i-1]+Math.hypot(dx,dy)); } return cum;
+  }
+  // nearest point on the polyline to click [lat,lng] → {frac, at:[lat,lng]}
+  function nearestOnPath(path, click){
+    const cum=_cumLen(path), total=cum[cum.length-1]||1; let best=null;
+    for(let i=1;i<path.length;i++){
+      const ax=path[i-1][1], ay=path[i-1][0], bx=path[i][1], by=path[i][0];
+      const dx=bx-ax, dy=by-ay, len2=dx*dx+dy*dy||1e-12;
+      let t=((click[1]-ax)*dx+(click[0]-ay)*dy)/len2; t=Math.max(0,Math.min(1,t));
+      const px=ax+t*dx, py=ay+t*dy, d2=(click[1]-px)**2+(click[0]-py)**2;
+      if(!best||d2<best.d2){ best={d2, at:[py,px], frac:(cum[i-1]+t*Math.hypot(dx,dy))/total}; }
+    }
+    return best;
+  }
+  function fracToLatLng(path, frac){
+    const cum=_cumLen(path), total=cum[cum.length-1]||1, target=frac*total;
+    for(let i=1;i<path.length;i++){ if(cum[i]>=target){ const seg=cum[i]-cum[i-1]||1e-12, t=(target-cum[i-1])/seg;
+      return [path[i-1][0]+t*(path[i][0]-path[i-1][0]), path[i-1][1]+t*(path[i][1]-path[i-1][1])]; } }
+    return path[path.length-1];
+  }
+  // slice the path between two fractions → [lat,lng] sub-path (for the highlighted stretch)
+  function sliceByFrac(path, a, b){
+    if(a>b){ const t=a; a=b; b=t; }
+    const out=[fracToLatLng(path,a)]; const cum=_cumLen(path), total=cum[cum.length-1]||1;
+    for(let i=0;i<path.length;i++){ const f=cum[i]/total; if(f>a && f<b) out.push(path[i]); }
+    out.push(fracToLatLng(path,b)); return out;
+  }
   function drawLine(id, latlngs, color, layer, f){
     if(!map.getSource(id)) map.addSource(id,{type:'geojson',data:{type:'Feature',properties:{},
       geometry:{type:'LineString',coordinates:latlngs.map(p=>[p[1],p[0]])}}});
@@ -1263,6 +1292,8 @@
       <details class="cc-rc-suggest"><summary>Suggest a correction</summary>
         <select class="cc-rc-reason">${reasonOpts}</select>
         <textarea class="cc-rc-note" placeholder="Optional detail…"></textarea>
+        <button type="button" class="cc-rc-mark" data-rc-mark="${id}">✎ Mark the part(s) on the map</button>
+        <span class="cc-rc-marks" data-rc-marks></span>
         <button class="cc-rc-btn" data-rc-act="suggest">Send</button>
       </details>
       <a class="cc-d-act edit" href="/routes/${id}.gpx">⤓ Download GPX</a>
@@ -1303,19 +1334,115 @@
       if(!sel.value){ warnPick(sel, 'Pick a bike type to recommend it for first.'); return; }
       body.set('season', box.querySelector('.cc-rc-season').value); body.set('bike_type', sel.value);
     }
-    if(act==='suggest'){ body.set('reason', box.querySelector('.cc-rc-reason').value); body.set('note', box.querySelector('.cc-rc-note').value); }
+    if(act==='suggest'){
+      body.set('reason', box.querySelector('.cc-rc-reason').value);
+      body.set('note', box.querySelector('.cc-rc-note').value);
+      const segs=_pickSegs[id]; if(segs && segs.length) body.set('segments', JSON.stringify(segs));
+    }
     box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=true);
     fetch(`/routes/${id}/${act}`, {method:'POST', credentials:'same-origin',
       headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:body.toString()})
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then(s=>{
         box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=false);
-        if(act==='suggest'){ mapToast('Thanks — a curator will review it.'); box.querySelector('.cc-rc-suggest').open=false; box.querySelector('.cc-rc-note').value=''; return; }
+        if(act==='suggest'){ delete _pickSegs[id]; const m=box.querySelector('[data-rc-marks]'); if(m) m.textContent=''; mapToast('Thanks — a curator will review it.'); box.querySelector('.cc-rc-suggest').open=false; box.querySelector('.cc-rc-note').value=''; return; }
         paintRouteCommunity(box, s);
         if(act==='rode-it' && s.state==='verified' && box.dataset.state==='unverified'){ mapToast('Verified — thanks for confirming this route!'); box.dataset.state='verified'; }
         else mapToast('Recorded — thanks!');
       })
       .catch(err=>{ box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=false); mapToast(err.message==='429'?'Daily limit reached — try again tomorrow.':'Could not record that — please try again.'); });
+  }
+
+  // --- Located-correction picking mode (spec §16 S1). Segments captured per
+  // route id, kept until a successful "suggest" POST consumes and clears them. ---
+  const _pickSegs={};   // route id → list<{start,end}> captured for the open suggest form
+  let _pick=null;       // active picking session or null
+
+  // Delegated: the "Mark on map" button starts picking for the drawer's route.
+  document.addEventListener('click', e=>{
+    const mb=e.target.closest('[data-rc-mark]'); if(!mb) return;
+    startPicking(mb.getAttribute('data-rc-mark'));
+  });
+
+  function routePathById(id){
+    const layer=layerByKey['experience']; if(!layer) return null;
+    const f=layer.features.find(x=>String(x.id)===String(id));
+    return f && f.geom && f.geom.path ? f.geom.path : null;
+  }
+
+  function startPicking(routeId){
+    const path=routePathById(routeId); if(!path){ mapToast('Open the route first.'); return; }
+    _pick={ routeId, path, points:[], markers:[], segLayers:[] };
+    document.querySelector('.cc-drawer')?.classList.add('cc-drawer-min');   // minimise so the map is clickable
+    map.getCanvas().style.cursor='crosshair';
+    showPickBar();
+    // click on the route line drops a snapped point
+    map.on('click', pickClick);
+  }
+  function pickClick(e){
+    if(!_pick) return;
+    const snap=nearestOnPath(_pick.path, [e.lngLat.lat, e.lngLat.lng]); if(!snap) return;
+    // ignore clicks far from the line (>~30 m in deg ≈ 3e-4)
+    if(Math.sqrt(snap.d2) > 3e-4) return;
+    _pick.points.push(snap.frac);
+    const n=_pick.points.length;
+    const el=document.createElement('div'); el.className='cc-pick-pin'; el.textContent=String(n);
+    _pick.markers.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([snap.at[1],snap.at[0]]).addTo(map));
+    redrawPickSegments();
+    updatePickBar();
+  }
+  function redrawPickSegments(){
+    _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
+    _pick.segLayers=[];
+    const pts=_pick.points;
+    for(let i=0;i+1<pts.length;i+=2){
+      const id=`pickseg-${i}`, coords=sliceByFrac(_pick.path, pts[i], pts[i+1]).map(p=>[p[1],p[0]]);
+      map.addSource(id,{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
+      map.addLayer({id,type:'line',source:id,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#FF5A1F','line-width':8,'line-opacity':.9}});
+      _pick.segLayers.push(id);
+    }
+  }
+  function pickSegments(){ // fold the ordered points into {start,end} pairs (drop a lone trailing point)
+    const p=_pick.points, out=[]; for(let i=0;i+1<p.length;i+=2) out.push({start:p[i], end:p[i+1]}); return out;
+  }
+  function showPickBar(){
+    let bar=document.getElementById('cc-pickbar');
+    if(!bar){ bar=document.createElement('div'); bar.id='cc-pickbar'; bar.className='cc-pickbar'; document.body.appendChild(bar); }
+    bar.innerHTML=`<span class="cc-pickbar-t"></span>
+      <button data-pick="undo">↶ Undo</button><button data-pick="clear">Clear</button><button data-pick="done" class="on">Done</button>`;
+    bar.hidden=false; updatePickBar();
+    bar.onclick=e=>{ const b=e.target.closest('[data-pick]'); if(!b) return; pickAction(b.dataset.pick); };
+  }
+  function updatePickBar(){
+    const t=document.querySelector('#cc-pickbar .cc-pickbar-t'); if(!t) return;
+    const done=Math.floor(_pick.points.length/2), pending=_pick.points.length%2;
+    t.textContent = pending ? `Point ${_pick.points.length} set — click the end of this stretch` : `${done} stretch${done===1?'':'es'} marked — click to start another, or Done`;
+  }
+  function pickAction(a){
+    if(a==='undo'){ _pick.points.pop(); const m=_pick.markers.pop(); if(m) m.remove(); redrawPickSegments(); updatePickBar(); return; }
+    if(a==='clear'){ _pick.points=[]; _pick.markers.forEach(m=>m.remove()); _pick.markers=[]; redrawPickSegments(); updatePickBar(); return; }
+    if(a==='done'){ finishPicking(); }
+  }
+  function finishPicking(){
+    if(!_pick) return;
+    _pickSegs[_pick.routeId]=pickSegments();
+    map.off('click', pickClick); map.getCanvas().style.cursor='';
+    _pick.markers.forEach(m=>m.remove()); _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
+    const rid=_pick.routeId; _pick=null;
+    document.getElementById('cc-pickbar').hidden=true;
+    document.querySelector('.cc-drawer')?.classList.remove('cc-drawer-min');
+    const marks=document.querySelector(`.cc-rc[data-route="${rid}"] [data-rc-marks]`);
+    const n=(_pickSegs[rid]||[]).length; if(marks) marks.textContent = n ? `· ${n} stretch${n===1?'':'es'} marked` : '';
+  }
+  // Tear down an in-progress picking session without committing it to
+  // _pickSegs (used when the drawer itself closes mid-pick — see closeDrawer).
+  function cancelPicking(){
+    if(!_pick) return;
+    map.off('click', pickClick); map.getCanvas().style.cursor='';
+    _pick.markers.forEach(m=>m.remove()); _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
+    _pick=null;
+    const bar=document.getElementById('cc-pickbar'); if(bar) bar.hidden=true;
+    document.querySelector('.cc-drawer')?.classList.remove('cc-drawer-min');
   }
 
   // Delegated click handler for every community button (drawer is re-rendered often).
@@ -1390,6 +1517,14 @@
       <polyline points="${line}" fill="none" stroke="#FF5A1F" stroke-width="1.6"/></svg>`;
   }
   function openDrawer(layer, f){
+    // Guard (spec §16 S1): while picking correction stretches, the route line
+    // still carries its normal layer click handler (drawLine's map.on('click',
+    // 'experience-'+i, ()=>openDrawer(...))) — a click meant to drop a picking
+    // point would ALSO fire that handler and open/switch the drawer under the
+    // rider's feet. Bail out here so picking clicks never re-open a drawer;
+    // pickClick (bound separately) still gets the same click event and drops
+    // the point normally.
+    if(_pick) return;
     // Route selection emphasis: covers both the click path and the ?feature=
     // deep-link (both funnel through here). Layer id convention: the K line
     // layers are `experience-<feature index>` (see the drawLine call site).
@@ -1519,6 +1654,12 @@
   }
   function clearHighlight(){ if(hlMarker) hlMarker.remove(); }
   function closeDrawer(){
+    // If the rider closes the drawer (X / scrim / Escape) mid-pick, tear the
+    // picking session down too — an orphaned map click handler + toolbar with
+    // no drawer to return to would be a dead-end. Uncommitted points (this
+    // session hasn't hit Done) are simply dropped; any previously-Done
+    // stretches already live in _pickSegs and are untouched.
+    if(_pick) cancelPicking();
     const d=document.getElementById('drawer'); d.classList.remove('open'); d.setAttribute('aria-hidden','true');
     clearHighlight();
     clearRouteHighlight();
