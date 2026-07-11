@@ -778,11 +778,14 @@
       map.setPaintProperty(id,'line-width',on?6:5);
       if(map.getLayer(id+'-case')) map.setPaintProperty(id+'-case','line-opacity',on?0.95:0.35);
     });
-    // lift the selection above its dimmed siblings, then put the info layers
-    // (climbs / surface / Mapillary) back on top of it
+    // Put the info layers (climbs / surface / Mapillary) above the dimmed
+    // sibling routes FIRST, then lift the SELECTED route above even them — a
+    // route you've selected is the focus and must read clearly, not sit buried
+    // under the road-surface overlay (which is a separate layer, not always on
+    // the route). Non-selected areas keep surface-over-route.
+    liftInfoLayersAboveRoutes();
     if(map.getLayer(selId+'-case')) map.moveLayer(selId+'-case');
     if(map.getLayer(selId)) map.moveLayer(selId);
-    liftInfoLayersAboveRoutes();
   }
   function clearRouteHighlight(){
     if(selectedRouteLayerId===null) return;
@@ -1008,6 +1011,12 @@
     const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
     dynamicIds.filter(id=>id.startsWith('experience-')).forEach(liftGroup);    // ride lines (bottom of the three)
     liftInfoLayersAboveRoutes();                                               // climbs, surface, Mapillary above them
+    // render() rebuilds every dynamic layer from scratch, which drops the
+    // selection styling + z-order — re-apply it so toggling a layer (surface),
+    // switching best-of facets, or changing mode never loses the highlighted
+    // route. Guarded: if the selection was filtered out (e.g. not in the current
+    // best-of), highlightRoute's moveLayer/setPaint calls simply no-op.
+    if(selectedRouteLayerId && map.getLayer(selectedRouteLayerId)) highlightRoute(selectedRouteLayerId);
     document.getElementById('count').textContent=n;
     updateCounts();   // legend shows shown/total, refreshed on mode + layer changes
   }
