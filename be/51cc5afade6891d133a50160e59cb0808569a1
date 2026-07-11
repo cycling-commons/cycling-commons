@@ -1,0 +1,27 @@
+web/src/Form/ProposeRouteType.php
+  s_51df195d1c7750::t_ff27329cab067c 72-73,76
+  s_51df195d1c7750::t_1700faa0007ea9 11
+web/src/Catalog/CatalogFormRegistry.php
+  s_51df195d1c7750::t_19ef86f3a1892c 200-201
+  s_51df195d1c7750::t_e9312ee17a0a0b 33
+docs/specs/2026-07-08-route-domain-design.md
+  s_51df195d1c7750::t_e23f8c37e3e870 609-620
+web/src/Catalog/SurfaceVocabulary.php
+  s_51df195d1c7750::t_aaac11bf5a82a9 19-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "be51cc5afade6891d133a50160e59cb0808569a1",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
