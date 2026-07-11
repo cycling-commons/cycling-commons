@@ -144,16 +144,18 @@ final class RouteCommunityService
      * (P3-D4) — the only self-unbounded community write; each pending row is a
      * curator task. `note` is stored raw and HTML-escaped on the desk render.
      *
+     * @param list<array{start: float, end: float}>|null $segments located stretches (spec §16 S4)
+     *
      * @throws TooManyRequestsHttpException over the daily suggestion limit
      */
-    public function recordSuggestion(RecommendedRoute $route, User $user, RouteSuggestionReason $reason, ?string $note): void
+    public function recordSuggestion(RecommendedRoute $route, User $user, RouteSuggestionReason $reason, ?string $note, ?array $segments = null): void
     {
         if (!$this->routeSuggestLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
             throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
         }
 
         $trimmed = null !== $note ? trim($note) : null;
-        $this->em->persist(new RouteSuggestion((int) $route->getId(), $user->getId(), $reason, '' !== $trimmed ? $trimmed : null));
+        $this->em->persist(new RouteSuggestion((int) $route->getId(), $user->getId(), $reason, '' !== $trimmed ? $trimmed : null, $segments));
         $this->em->flush();
     }
 }

@@ -13,6 +13,7 @@ use App\Catalog\RouteSuggestionReason;
 use App\Catalog\Season;
 use App\Community\RouteCommunityService;
 use App\Entity\User;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -130,14 +131,82 @@ final class RouteCommunityController extends AbstractController
             return $this->json(['error' => 'invalid_reason'], 422);
         }
         $note = $request->request->get('note');
+        $segments = $this->parseSegments($request->request->get('segments'));
+        if (false === $segments) {
+            return $this->json(['error' => 'invalid_segments'], 422);
+        }
 
         try {
-            $this->community->recordSuggestion($route, $user, $reason, \is_string($note) ? $note : null);
+            $this->community->recordSuggestion($route, $user, $reason, \is_string($note) ? $note : null, $segments);
         } catch (TooManyRequestsHttpException) {
             return $this->json(['error' => 'rate_limited'], 429);
         }
 
         return $this->json(['ok' => true]);
+    }
+
+    /**
+     * Parse the optional `segments` field (JSON list of {start,end} fractions).
+     * Returns null (none), a validated list, or false (malformed → 422).
+     *
+     * @return list<array{start: float, end: float}>|null|false
+     */
+    private function parseSegments(mixed $raw): array|null|false
+    {
+        if (!\is_string($raw) || '' === $raw) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+        if (!\is_array($decoded)) {
+            return false;
+        }
+        $out = [];
+        foreach ($decoded as $seg) {
+            if (!\is_array($seg) || !isset($seg['start'], $seg['end']) || !is_numeric($seg['start']) || !is_numeric($seg['end'])) {
+                return false;
+            }
+            $a = (float) $seg['start'];
+            $b = (float) $seg['end'];
+            if ($a < 0 || $b > 1 || $a > $b) {
+                return false;   // out of range or inverted
+            }
+            $out[] = ['start' => $a, 'end' => $b];
+        }
+        if (\count($out) > 50) {   // sane cap
+            return false;
+        }
+
+        return [] === $out ? null : $out;
+    }
+
+    /**
+     * Curator-only: a route's PENDING corrections + their located segments, for the
+     * moderator map (spec §16 S3/S5). Colours are assigned client-side.
+     */
+    #[Route('/routes/{id}/corrections', name: 'route_corrections', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function corrections(int $id, Connection $db): JsonResponse
+    {
+        $this->requireUser();
+        if (!$this->isGranted('ROLE_CURATOR')) {
+            throw new HttpException(Response::HTTP_FORBIDDEN, 'curator_only');
+        }
+        $this->activeRoute($id);   // 404 if not served
+
+        /** @var list<array{id:int|string, reason:string, note:?string, segments:?string}> $rows */
+        $rows = $db->fetchAllAssociative(
+            "SELECT id, reason, note, segments FROM route_suggestion
+             WHERE route_id = :r AND status = 'pending' ORDER BY created_at ASC, id ASC",
+            ['r' => $id],
+        );
+
+        $corrections = array_map(static fn (array $row): array => [
+            'id' => (int) $row['id'],
+            'reason' => (string) $row['reason'],
+            'note' => $row['note'],
+            'segments' => null !== $row['segments'] ? json_decode((string) $row['segments'], true) : [],
+        ], $rows);
+
+        return $this->json(['corrections' => $corrections]);
     }
 
     private function validateCsrf(Request $request): void
