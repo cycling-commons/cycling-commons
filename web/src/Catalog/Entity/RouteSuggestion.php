@@ -40,6 +40,10 @@ class RouteSuggestion
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $note;
 
+    /** @var list<array{start: float, end: float}>|null Located stretches (spec §16 S4). */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $segments;
+
     #[ORM\Column(type: Types::STRING, length: 12, enumType: RouteSuggestionStatus::class)]
     private RouteSuggestionStatus $status;
 
@@ -52,12 +56,14 @@ class RouteSuggestion
     #[ORM\Column(name: 'resolved_by', type: Types::BIGINT, nullable: true)]
     private ?int $resolvedBy = null;
 
-    public function __construct(int $routeId, int $userId, RouteSuggestionReason $reason, ?string $note)
+    /** @param list<array{start: float, end: float}>|null $segments */
+    public function __construct(int $routeId, int $userId, RouteSuggestionReason $reason, ?string $note, ?array $segments = null)
     {
         $this->routeId = $routeId;
         $this->userId = $userId;
         $this->reason = $reason;
         $this->note = $note;
+        $this->segments = $segments;
         $this->status = RouteSuggestionStatus::Pending;
         $this->createdAt = new \DateTimeImmutable();
     }
@@ -92,6 +98,12 @@ class RouteSuggestion
     public function getNote(): ?string
     {
         return $this->note;
+    }
+
+    /** @return list<array{start: float, end: float}>|null */
+    public function getSegments(): ?array
+    {
+        return $this->segments;
     }
 
     public function getStatus(): RouteSuggestionStatus
