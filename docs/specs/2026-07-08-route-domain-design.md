@@ -618,3 +618,52 @@ feedback). Not a phase — small, ongoing UI/vocabulary fixes recorded here.
   specific vocabulary is a recorded follow-up). Legacy `Mixed` values from the
   old vocabulary display as-is; no backfill (the importer validates attribute
   keys, not values).
+
+## 16. Located corrections — segments on a route_suggestion (design, 2026-07-11, approved)
+
+Extends §7's "suggest a correction": a rider can mark **which stretch(es)** of
+the route their correction is about, and the curator sees those stretches on the
+map. Brainstormed + **user-approved**; V1 scope below. Builds on the phase-3
+`route_suggestion` table + the phase-4 `?route=<id>` map deep-link.
+
+### Decisions (S1–S5)
+
+- **S1 — pick by clicking the route line.** The drawer's "Suggest a correction"
+  gains a **"Mark the part(s) on the map"** button: it minimises the drawer,
+  highlights the route, and enters a picking mode where each click on the route
+  line drops a numbered marker **snapped to the nearest point on the line**.
+  Consecutive points pair into stretches (1→2, 3→4, …). A small toolbar: **Undo**
+  (drop last point) · **Clear** · **Done**. Done returns to the form; **Send**
+  posts `reason` + `note` + the marked stretches. Reason stays required; **marking
+  is optional** (0 stretches = a general comment, still valid).
+
+- **S2 — moderator sees ALL pending corrections on the route.** Not just the one
+  clicked — the map shows every unresolved correction's stretches at once.
+
+- **S3 — colour per correction + a side list.** Each pending correction renders in
+  its own colour, stretches drawn in that colour with numbered endpoints; a side
+  panel lists the corrections (colour swatch · reason · note) and clicking one
+  zooms/focuses its stretches. **Curator-gated**, **pending** corrections only.
+
+- **S4 — stored as along-route fractions.** `route_suggestion.segments` (jsonb,
+  nullable) = `list<{start: float, end: float}>`, each value a position **0–1
+  along the served (trimmed, simplified) route geometry**. Fractions (not raw
+  lat/lng) so the map can both place the numbered markers (interpolate along the
+  geometry) and highlight the stretch between them (slice the geometry between the
+  two fractions). Assumes the stored geometry is stable — true in v1 (no curator
+  track replacement).
+
+- **S5 — the moderator view rides the existing `?route=<id>` deep-link.** When the
+  viewer is a curator, the map fetches the route's pending corrections + segments
+  from a **curator-only endpoint** and renders S3; non-curators get nothing extra.
+  (The moderation desk's "Open on the map" link already points at `?route=<id>`.)
+
+### V1 scope / additions
+
+- **In:** rider marking (snapped click-to-pick, multiple stretches, undo/clear);
+  optional segments on `route_suggestion`; curator-only pending-corrections
+  endpoint; colour-per-correction map render + side list + click-to-focus; a
+  "N stretches" indicator on the pending-corrections desk row.
+- **Out (recorded future work):** curator editing/drawing segments; showing
+  **resolved** corrections' segments (history); GPX-proof; segment robustness
+  across a future curator track replacement (fractions would need re-projection).
