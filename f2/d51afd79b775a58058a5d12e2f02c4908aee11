@@ -1,0 +1,26 @@
+web/migrations/Version20260712120000.php
+  s_51df195d1c7750::t_75e84916fd971d 1-28
+web/tests/Catalog/RouteSuggestionSegmentsTest.php
+  s_51df195d1c7750::t_019e55d854319b 1-28,47-60
+  s_51df195d1c7750::t_5b109ae2c54f3d 29-46
+web/src/Catalog/Entity/RouteSuggestion.php
+  s_51df195d1c7750::t_f85f957c5b45c6 43-46
+  s_51df195d1c7750::t_fcf0e297333f57 103-108
+  s_51df195d1c7750::t_43a022056f75a4 59-60,66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "f2d51afd79b775a58058a5d12e2f02c4908aee11",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
