@@ -1,0 +1,49 @@
+web/templates/contribute/add_climb.html.twig
+  s_51df195d1c7750::t_ca649fb96ad9f0 27
+web/templates/contribute/propose_route.html.twig
+  s_51df195d1c7750::t_0276212188a18e 14-16
+  s_51df195d1c7750::t_54c3a9fec467bf 124,129
+  s_51df195d1c7750::t_e02585ec0ffd86 90-92,96-105
+docs/specs/2026-07-08-route-domain-design.md
+  s_51df195d1c7750::t_36230b1382cd32 583-608
+web/translations/messages.fr.yaml
+  s_51df195d1c7750::t_d066e0d539a9d3 953
+  s_51df195d1c7750::t_3b9779fe0e1baa 954-955
+web/assets/map/map.js
+  s_51df195d1c7750::t_03869eac23070c 622-624
+web/tests/Contribution/ProposeRouteFlowTest.php
+  s_51df195d1c7750::t_b82061536f82d1 102,210,250
+web/translations/messages.de.yaml
+  s_51df195d1c7750::t_65a1aa054d7f1a 954-955
+  s_51df195d1c7750::t_8459bbf5427cb4 953
+web/src/Catalog/CatalogFormRegistry.php
+  s_51df195d1c7750::t_7f569bdd309be5 198-199
+web/translations/messages.nl.yaml
+  s_51df195d1c7750::t_41d563e131847a 954-955
+  s_51df195d1c7750::t_eb2274951a4c83 953
+web/templates/settings/index.html.twig
+  s_51df195d1c7750::t_ca649fb96ad9f0 31
+web/src/Form/ProposeRouteType.php
+  s_51df195d1c7750::t_bb9daea5e29d4c 94-97
+  s_51df195d1c7750::t_8f62a65c91e5be 61-63,66-69
+web/translations/messages.en.yaml
+  s_51df195d1c7750::t_c9d20d966c435e 953-955
+web/templates/contribute/improve.html.twig
+  s_51df195d1c7750::t_ca649fb96ad9f0 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "0412335d43cfea52648051aee95494e44b9c02d4",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
