@@ -1304,6 +1304,14 @@
   // Called from openDrawer after the route drawer HTML lands.
   function hydrateRouteCommunity(id){
     const box=document.querySelector(`.cc-rc[data-route="${id}"]`); if(!box) return;
+    // Restore the "N stretches marked" indicator if a picking session was already
+    // committed for this route (e.g. drawer closed without Send, then reopened) —
+    // otherwise the marks silently ride along on the next Send with no visible cue.
+    const segs=_pickSegs[id];
+    if(segs && segs.length){
+      const m=box.querySelector('[data-rc-marks]');
+      if(m) m.textContent = `· ${segs.length} stretch${segs.length===1?'':'es'} marked`;
+    }
     fetch(`/routes/${id}/community`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
       .then(r=>{ if(r.status===401||r.status===403){ box.querySelector('.cc-rc-login').hidden=false; box.classList.add('cc-rc-anon'); throw new Error('anon'); } if(!r.ok) throw new Error('community'); return r.json(); })
       .then(s=>{ _rcTokens[id]=s.token; paintRouteCommunity(box, s); })
@@ -1371,6 +1379,7 @@
   }
 
   function startPicking(routeId){
+    if(_pick) return;   // re-entrancy guard: don't orphan an in-progress session
     const path=routePathById(routeId); if(!path){ mapToast('Open the route first.'); return; }
     _pick={ routeId, path, points:[], markers:[], segLayers:[] };
     document.querySelector('.cc-drawer')?.classList.add('cc-drawer-min');   // minimise so the map is clickable
@@ -1403,7 +1412,9 @@
     }
   }
   function pickSegments(){ // fold the ordered points into {start,end} pairs (drop a lone trailing point)
-    const p=_pick.points, out=[]; for(let i=0;i+1<p.length;i+=2) out.push({start:p[i], end:p[i+1]}); return out;
+    // Normalize start ≤ end regardless of click order (mirrors sliceByFrac's swap) —
+    // the server rejects start > end with 422 invalid_segments.
+    const p=_pick.points, out=[]; for(let i=0;i+1<p.length;i+=2){ const a=p[i], b=p[i+1]; out.push({start:Math.min(a,b), end:Math.max(a,b)}); } return out;
   }
   function showPickBar(){
     let bar=document.getElementById('cc-pickbar');

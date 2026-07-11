@@ -404,7 +404,7 @@
   .best-empty[hidden]{display:none}
 
   /* Located-correction picking (spec §16). */
-  .cc-drawer.cc-drawer-min{transform:translateX(calc(100% - 3.2rem))}   /* slide mostly off so the map is clickable */
+  .cc-drawer.cc-drawer-min{transform:translateX(calc(100% - 3.2rem));pointer-events:none}   /* slide mostly off so the map is clickable; can't be re-clicked during picking */
   .cc-rc-mark{margin:.4rem 0;padding:.4rem .7rem;border-radius:5px;border:1px solid var(--trail);background:transparent;color:var(--trail);font-family:var(--sans);font-weight:600;font-size:.8rem;cursor:pointer}
   .cc-rc-mark:hover{background:var(--trail);color:var(--ink)}
   .cc-rc-marks{display:block;font-size:.78rem;color:rgba(239,230,212,.7);margin:.15rem 0 .3rem}
