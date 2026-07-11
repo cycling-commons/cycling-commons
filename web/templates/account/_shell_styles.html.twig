@@ -16,4 +16,13 @@
   /* moderation is a "work" area — set apart from the personal tabs by a divider
      and a slightly darker background that fills the rest of the bar. */
   .dtabs a.dtab-mod{flex:1;padding-left:1.6rem;background:#D8CBB1;border-left:1px solid rgba(20,22,14,.15)}
+  /* ONE button system for the account/moderation desks — the site's brand orange
+     (--trail), matching .export/.cc-d-act. Primary actions = orange fill; the
+     less-prominent / destructive ones (reject, dismiss, retire, needs-info) keep
+     the same shape but read as orange-text-on-transparent. No more green/clay mix. */
+  .btn-act{font-family:var(--sans);font-weight:700;font-size:.82rem;padding:.6rem 1rem;border-radius:5px;border:1.5px solid var(--trail);background:var(--trail);color:var(--ink);cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
+  .btn-act:hover{background:#ff703d;border-color:#ff703d}
+  .btn-act:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,90,31,.35)}
+  .btn-act.btn-secondary,.btn-reject,.btn-dismiss,.btn-needs-info{background:transparent;color:var(--trail)}
+  .btn-act.btn-secondary:hover,.btn-reject:hover,.btn-dismiss:hover,.btn-needs-info:hover{background:var(--trail);color:var(--ink)}
 </style>
