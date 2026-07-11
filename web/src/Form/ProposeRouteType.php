@@ -39,7 +39,7 @@ final class ProposeRouteType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'propose_route.error.gpx_required'),
                     new File(
-                        maxSize: '2M',
+                        maxSize: '15M',
                         maxSizeMessage: 'propose_route.error.gpx_too_large',
                         extensions: ['gpx' => ['application/gpx+xml', 'application/xml', 'text/xml', 'application/octet-stream', 'text/plain']],
                         extensionsMessage: 'propose_route.error.gpx_type',

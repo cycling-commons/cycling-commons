@@ -22,7 +22,7 @@ namespace App\Contribution\Gpx;
  */
 final class GpxParser
 {
-    private const int MAX_BYTES = 2_097_152;   // 2 MB (spec §5.3)
+    private const int MAX_BYTES = 15_728_640;   // 15 MiB (spec §5.3 / §15) — GPX XML is verbose; we still store only the simplified lat/lng track
     private const int MIN_POINTS = 2;
     private const int MAX_POINTS = 50_000;
 

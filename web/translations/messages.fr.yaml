@@ -942,7 +942,7 @@ propose_route:
   title: 'Proposer un itinéraire'
   lead: 'Partagez une boucle qui vaut le détour. Chaque proposition est relue par un curateur ; une fois approuvée, elle apparaît sur la carte comme itinéraire proposé, puis devient vérifiée quand d''autres cyclistes confirment l''avoir roulée.'
   gpx_label: 'Votre sortie (GPX)'
-  gpx_help: 'Téléversez la trace enregistrée (.gpx, 2 Mo max). Pour votre vie privée, les premières et dernières centaines de mètres sont retirées automatiquement avant tout enregistrement.'
+  gpx_help: 'Téléversez la trace enregistrée (.gpx, 15 Mo max). Pour votre vie privée, les premières et dernières centaines de mètres sont retirées automatiquement avant tout enregistrement.'
   details_label: 'À propos de cet itinéraire'
   name_label: 'Nom de l''itinéraire'
   difficulty_label: 'Difficulté'
@@ -959,7 +959,7 @@ propose_route:
   receipt_back: 'Retour aux contributions'
   error:
     gpx_required: 'Veuillez choisir un fichier GPX.'
-    gpx_too_large: 'Le fichier GPX dépasse 2 Mo.'
+    gpx_too_large: 'Le fichier GPX dépasse 15 Mo.'
     gpx_type: 'Ceci ne ressemble pas à un fichier GPX (.gpx).'
     gpx_invalid: 'Le fichier n''a pas pu être lu comme une trace GPX.'
     gpx_points: 'La trace doit compter entre 2 et 50 000 points.'

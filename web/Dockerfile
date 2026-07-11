@@ -10,6 +10,14 @@ RUN apt-get update \
     && docker-php-ext-install pdo_pgsql gettext intl \
     && rm -rf /var/lib/apt/lists/*
 
+# Route GPX proposals can be up to 15 MB (spec §5.3/§15) — the php defaults
+# (upload_max_filesize=2M, post_max_size=8M) would reject them before Symfony's
+# File constraint. post_max_size stays comfortably above upload + form fields.
+RUN { \
+      echo 'upload_max_filesize = 16M'; \
+      echo 'post_max_size = 20M'; \
+    } > "$PHP_INI_DIR/conf.d/cc-uploads.ini"
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app

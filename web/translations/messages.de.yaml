@@ -942,7 +942,7 @@ propose_route:
   title: 'Route vorschlagen'
   lead: 'Teile eine Runde, die sich lohnt. Jeder Vorschlag wird von einer Kuratorin oder einem Kurator geprüft; nach Freigabe erscheint er als vorgeschlagene Route auf der Karte und gilt als verifiziert, sobald andere Fahrer bestätigen, dass sie die Runde gefahren sind.'
   gpx_label: 'Deine Fahrt (GPX)'
-  gpx_help: 'Lade den aufgezeichneten Track hoch (.gpx, max. 2 MB). Zum Schutz deiner Privatsphäre werden die ersten und letzten paar hundert Meter automatisch entfernt, bevor etwas gespeichert wird.'
+  gpx_help: 'Lade den aufgezeichneten Track hoch (.gpx, max. 15 MB). Zum Schutz deiner Privatsphäre werden die ersten und letzten paar hundert Meter automatisch entfernt, bevor etwas gespeichert wird.'
   details_label: 'Über diese Route'
   name_label: 'Routenname'
   difficulty_label: 'Schwierigkeit'
@@ -959,7 +959,7 @@ propose_route:
   receipt_back: 'Zurück zum Mitmachen'
   error:
     gpx_required: 'Bitte wähle eine GPX-Datei.'
-    gpx_too_large: 'Die GPX-Datei ist größer als 2 MB.'
+    gpx_too_large: 'Die GPX-Datei ist größer als 15 MB.'
     gpx_type: 'Das sieht nicht nach einer GPX-Datei aus (.gpx).'
     gpx_invalid: 'Die Datei konnte nicht als GPX-Track gelesen werden.'
     gpx_points: 'Der Track muss zwischen 2 und 50.000 Punkte enthalten.'

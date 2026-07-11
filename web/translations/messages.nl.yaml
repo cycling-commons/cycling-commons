@@ -942,7 +942,7 @@ propose_route:
   title: 'Stel een route voor'
   lead: 'Deel een lus die de moeite waard is. Elke inzending wordt door een curator beoordeeld; na goedkeuring verschijnt ze op de kaart als voorgestelde route en wordt ze geverifieerd zodra andere fietsers bevestigen dat ze de rit reden.'
   gpx_label: 'Jouw rit (GPX)'
-  gpx_help: 'Upload de opgenomen track (.gpx, max. 2 MB). Voor je privacy worden de eerste en laatste honderden meters automatisch verwijderd voordat iets wordt opgeslagen.'
+  gpx_help: 'Upload de opgenomen track (.gpx, max. 15 MB). Voor je privacy worden de eerste en laatste honderden meters automatisch verwijderd voordat iets wordt opgeslagen.'
   details_label: 'Over deze route'
   name_label: 'Routenaam'
   difficulty_label: 'Moeilijkheid'
@@ -959,7 +959,7 @@ propose_route:
   receipt_back: 'Terug naar bijdragen'
   error:
     gpx_required: 'Kies een GPX-bestand.'
-    gpx_too_large: 'Het GPX-bestand is groter dan 2 MB.'
+    gpx_too_large: 'Het GPX-bestand is groter dan 15 MB.'
     gpx_type: 'Dit lijkt geen GPX-bestand (.gpx).'
     gpx_invalid: 'Het bestand kon niet als GPX-track worden gelezen.'
     gpx_points: 'De track moet tussen 2 en 50.000 punten bevatten.'

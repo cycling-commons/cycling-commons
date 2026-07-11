@@ -167,7 +167,7 @@ field edit; state transitions log `field = 'state'`.
    one of its values, absorbing the old separate handbike field), and the
    gradient-limited accessibility field).
 3. **GPX validation** (server-side, lessons from the 2026-07-07 review's
-   ClimbGeometry findings): file ≤ 2 MB; ≥ 2 track points, ≤ 50 000 points
+   ClimbGeometry findings): file ≤ 15 MB (raised from 2 MB, §15); ≥ 2 track points, ≤ 50 000 points
    pre-simplification; every coordinate range-checked (lat −90..90,
    lng −180..180, finite); track length ≥ 2 km and ≤ 400 km. Reject, never
    coerce.
@@ -606,6 +606,15 @@ feedback). Not a phase — small, ongoing UI/vocabulary fixes recorded here.
 - **Form dropdowns no longer stretch full-width** (`.field select` capped at
   `max-width: 22rem` across the proposal, curator-edit-adjacent, improve,
   add-climb, and settings forms).
+- **GPX upload limit raised 2 MB → 15 MB.** `GpxParser::MAX_BYTES`, the
+  `ProposeRouteType` `File` maxSize, and the copy all move to 15 MB, and the app
+  container's php `upload_max_filesize`/`post_max_size` are lifted above the
+  defaults (16M/20M in `web/Dockerfile` — **needs a container rebuild to take
+  effect in dev**). GPX XML is verbose (extensions, metadata), so a larger byte
+  ceiling mostly admits richer files; **only the simplified lat/lng track is ever
+  stored** (trim → simplify before persist), so DB size is unaffected. The
+  `≤ 50 000` pre-simplification point cap is **unchanged** — very dense tracks are
+  still rejected by density, not size.
 - **`dominantSurface` now offers the full surface vocabulary** (Asphalt,
   Concrete, Paving stones, Sett — pavé, Compacted, Fine gravel, Gravel, Dirt,
   Rock) instead of the coarse Asphalt/Mixed/Gravel — **superseding P2-D3's
