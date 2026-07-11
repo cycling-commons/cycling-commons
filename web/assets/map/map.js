@@ -757,6 +757,13 @@
   // and a slightly wider line; every sibling route dims so the selection is
   // unmistakable. Cleared when the drawer closes or a non-route feature opens.
   const ROUTE_BASE_COLOR='#FD986E';   // 60% #FF5A1F pre-blended over #FBF4E4
+  const ROUTE_BASE_W=5, ROUTE_BASE_CASE_W=9;
+  // A SELECTED route reads as a wide orange halo that the road-surface line
+  // (3→8 px by zoom, over an 8 px cream case) sits ON TOP of — so you see the
+  // highlight AND the surface on it. Kept comfortably wider than the surface's
+  // 8 px case at every zoom so the orange shows on both sides of the surface line.
+  const ROUTE_SEL_W=['interpolate',['linear'],['zoom'],9,8,13,13,16,17];
+  const ROUTE_SEL_CASE_W=['interpolate',['linear'],['zoom'],9,12,13,18,16,23];
   let selectedRouteLayerId=null;
   const routeLineIds=()=>map.getStyle().layers.map(l=>l.id).filter(id=>/^experience-\d+$/.test(id));
   // Climb lines, road-surface indications and Mapillary always render ABOVE
@@ -775,17 +782,19 @@
       const on=id===selId;
       map.setPaintProperty(id,'line-color',on?'#FF5A1F':ROUTE_BASE_COLOR);
       map.setPaintProperty(id,'line-opacity',on?1:0.4);
-      map.setPaintProperty(id,'line-width',on?6:5);
-      if(map.getLayer(id+'-case')) map.setPaintProperty(id+'-case','line-opacity',on?0.95:0.35);
+      map.setPaintProperty(id,'line-width',on?ROUTE_SEL_W:ROUTE_BASE_W);
+      if(map.getLayer(id+'-case')){
+        map.setPaintProperty(id+'-case','line-opacity',on?0.95:0.35);
+        map.setPaintProperty(id+'-case','line-width',on?ROUTE_SEL_CASE_W:ROUTE_BASE_CASE_W);
+      }
     });
-    // Put the info layers (climbs / surface / Mapillary) above the dimmed
-    // sibling routes FIRST, then lift the SELECTED route above even them — a
-    // route you've selected is the focus and must read clearly, not sit buried
-    // under the road-surface overlay (which is a separate layer, not always on
-    // the route). Non-selected areas keep surface-over-route.
-    liftInfoLayersAboveRoutes();
+    // Lift the SELECTED route (a wide orange halo) above its dimmed siblings,
+    // then put the info layers (climbs / surface / Mapillary) back on top — the
+    // surface line is narrower than the halo, so it sits ON the selected route
+    // and you see the highlight AND the surfaces together.
     if(map.getLayer(selId+'-case')) map.moveLayer(selId+'-case');
     if(map.getLayer(selId)) map.moveLayer(selId);
+    liftInfoLayersAboveRoutes();
   }
   function clearRouteHighlight(){
     if(selectedRouteLayerId===null) return;
@@ -793,8 +802,11 @@
     routeLineIds().forEach(id=>{
       map.setPaintProperty(id,'line-color',ROUTE_BASE_COLOR);
       map.setPaintProperty(id,'line-opacity',1);
-      map.setPaintProperty(id,'line-width',5);
-      if(map.getLayer(id+'-case')) map.setPaintProperty(id+'-case','line-opacity',0.95);
+      map.setPaintProperty(id,'line-width',ROUTE_BASE_W);
+      if(map.getLayer(id+'-case')){
+        map.setPaintProperty(id+'-case','line-opacity',0.95);
+        map.setPaintProperty(id+'-case','line-width',ROUTE_BASE_CASE_W);
+      }
     });
   }
   function drawLine(id, latlngs, color, layer, f){
