@@ -440,6 +440,9 @@
     if(fp) openFeatureByName(fp);
     const pp = new URLSearchParams(location.search).get('pending');
     if(pp) openPendingById(pp);
+    // ?route=<id> opens a specific route selected (e.g. from the curator Routes desk)
+    const rp = new URLSearchParams(location.search).get('route');
+    if(rp) openRouteById(rp);
   });
 
   // right-click anywhere → show + copy the coordinates (for defining start/end points, add-a-climb, etc.)
@@ -1460,6 +1463,19 @@
       const t=document.querySelector(`#layers .layer[data-key="${layer.key}"]`); if(t) t.classList.remove('off');
       render();
     }
+    openDrawer(layer,f);
+    const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
+    return true;
+  }
+  // open a specific route by id, SELECTED (deep-link from the curator Routes desk).
+  // Curated mode only draws best-of routes, so switch to Everything first — else
+  // an un-voted route wouldn't render and couldn't be highlighted.
+  function openRouteById(id){
+    const layer=layerByKey['experience']; if(!layer) return false;
+    const f=layer.features.find(x=>String(x.id)===String(id));
+    if(!f) return false;
+    const allBtn=document.querySelector('#mode button[data-m="all"]');
+    if(mode!=='all' && allBtn) allBtn.click();   // draw every route so this one is visible/selectable
     openDrawer(layer,f);
     const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
     return true;

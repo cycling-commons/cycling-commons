@@ -1040,6 +1040,7 @@ moderate_routes:
     reason_duplicate: 'Doppelte Route'
     reason_not_rideable: 'Nicht befahrbar'
     reason_other: 'Sonstiges'
+    open_on_map: 'Auf der Karte öffnen (neuer Tab)'
   error:
     invalid_decision: 'Diese Entscheidung konnte nicht gespeichert werden — bitte erneut versuchen.'
     region_full: 'Diese Region hat ihr Limit an aktiven Routen bereits erreicht.'

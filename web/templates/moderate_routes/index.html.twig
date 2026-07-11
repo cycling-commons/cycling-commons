@@ -36,7 +36,8 @@
   .sugg-list{margin:1.4rem 0 2.4rem}
   .sugg-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin-bottom:.8rem;background:var(--paper);display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
   .sugg-body{flex:1 1 260px}
-  .sugg-route{font-family:var(--serif);font-weight:600}
+  .sugg-route{font-family:var(--serif);font-weight:600;color:inherit;text-decoration:none;display:inline-block}
+  a.sugg-route:hover,a.sugg-route:focus-visible{color:var(--trail);text-decoration:underline;text-underline-offset:3px}
   .sugg-reason{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
   .sugg-actions{display:flex;gap:.5rem}
   .btn-done{background:#3e7d4f;color:#fff}
@@ -95,7 +96,7 @@
     {% for s in suggestions %}
       <div class="sugg-item" data-suggestion-id="{{ s.id }}">
         <div class="sugg-body">
-          <div class="sugg-route">{{ s.routeName }}</div>
+          <a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a>
           <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</div>
           {% if s.note %}<p>{{ s.note }}</p>{% endif %}
         </div>

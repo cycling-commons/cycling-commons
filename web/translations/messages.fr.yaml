@@ -1040,6 +1040,7 @@ moderate_routes:
     reason_duplicate: 'Itinéraire en double'
     reason_not_rideable: 'Non praticable'
     reason_other: 'Autre'
+    open_on_map: 'Ouvrir sur la carte (nouvel onglet)'
   error:
     invalid_decision: 'Cette décision n''a pas pu être enregistrée — veuillez réessayer.'
     region_full: 'Cette région a déjà atteint son plafond d''itinéraires actifs.'

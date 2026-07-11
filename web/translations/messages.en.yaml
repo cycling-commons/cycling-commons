@@ -1040,6 +1040,7 @@ moderate_routes:
     reason_duplicate: 'Duplicate route'
     reason_not_rideable: 'Not rideable'
     reason_other: 'Other'
+    open_on_map: 'Open on the map (new tab)'
   error:
     invalid_decision: 'That decision could not be recorded — please try again.'
     region_full: 'This region is already at its active-route cap.'

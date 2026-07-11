@@ -1040,6 +1040,7 @@ moderate_routes:
     reason_duplicate: 'Dubbele route'
     reason_not_rideable: 'Niet berijdbaar'
     reason_other: 'Overig'
+    open_on_map: 'Openen op de kaart (nieuw tabblad)'
   error:
     invalid_decision: 'Die beslissing kon niet worden geregistreerd — probeer het opnieuw.'
     region_full: 'Deze regio heeft het maximum aantal actieve routes al bereikt.'
