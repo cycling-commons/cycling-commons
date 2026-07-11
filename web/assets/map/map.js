@@ -619,7 +619,9 @@
           rec.push({label:'Starts at', value:cityLink(cities[0]), html:true});
           rec.push({label:'Towns on route', value:cities.map(cityLink).join(' · '), html:true});
         }
-        if(r.season) rec.push({label:'Season', value:r.season});
+        // season is a list now (spec §15, multi-select) but imports still carry a
+        // scalar string — tolerate both, like bikeTypes.
+        if(r.season && (!Array.isArray(r.season) || r.season.length)) rec.push({label:'Season', value:Array.isArray(r.season)?r.season.join(' · '):r.season});
         // Derived, not declared: measured against the A-layer mapped-road
         // segments at import/intake (SurfaceProfiler). The method note
         // discloses estimate + coverage — never present this as ground truth.

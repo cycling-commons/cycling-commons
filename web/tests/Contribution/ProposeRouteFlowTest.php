@@ -99,7 +99,7 @@ final class ProposeRouteFlowTest extends WebTestCase
         $form = $crawler->filter('form[name="propose_route"]')->form();
         $form['propose_route[rName]'] = 'Condroz · flow test';
         $form['propose_route[difficulty]'] = 'Moderate';
-        $form['propose_route[season]'] = 'Summer';
+        $form['propose_route[season][1]']->tick();   // Summer — season is a multi-select now
         $form['propose_route[dominantSurface]'] = 'Asphalt';
         // This DomCrawler's FileFormField::upload() takes a path (?string), not
         // an UploadedFile, so attach the file via the documented $files-array
@@ -207,7 +207,7 @@ final class ProposeRouteFlowTest extends WebTestCase
         $form = $crawler->filter('form[name="propose_route"]')->form();
         $form['propose_route[rName]'] = '';
         $form['propose_route[difficulty]'] = 'Moderate';
-        $form['propose_route[season]'] = 'Summer';
+        $form['propose_route[season][1]']->tick();   // Summer — season is a multi-select now
         $form['propose_route[dominantSurface]'] = 'Asphalt';
         // See testValidProposalPersistsAndShowsReceipt: attach via the $files array.
         $client->request('POST', $form->getUri(), $form->getPhpValues(), [
@@ -247,7 +247,7 @@ final class ProposeRouteFlowTest extends WebTestCase
         $form = $crawler->filter('form[name="propose_route"]')->form();
         $form['propose_route[rName]'] = 'Condroz · profile test';
         $form['propose_route[difficulty]'] = 'Moderate';
-        $form['propose_route[season]'] = 'Summer';
+        $form['propose_route[season][1]']->tick();   // Summer — season is a multi-select now
         $form['propose_route[dominantSurface]'] = 'Asphalt';
         // See testValidProposalPersistsAndShowsReceipt: attach via the $files array.
         $client->request('POST', $form->getUri(), $form->getPhpValues(), [

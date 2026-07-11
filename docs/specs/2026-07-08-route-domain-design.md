@@ -580,3 +580,29 @@ with no `LIMIT` — when the multi-region UI lands, either require `region` or a
 top-N cap; (c) the map-shell chrome (season/bike labels, the dynamic subtitle) is
 hardcoded English, consistent with the pre-existing untranslated map shell — map
 i18n stays on the backlog.
+
+## 15. Proposal / edit form UX refinements (2026-07-11)
+
+Post-phase-4 clarity passes on the route proposal + curator edit forms (rider
+feedback). Not a phase — small, ongoing UI/vocabulary fixes recorded here.
+
+- **`gradientLimited` reworded, values unchanged.** The field read "Gradient-
+  limited?" with options `No / ≤6% / ≤9%`, which was ambiguous about direction.
+  Now labelled **"Gradient cap (accessibility)"** with display options **"No cap /
+  Whole route ≤ 6% / Whole route ≤ 9%"** + a hint ("only set a cap if the whole
+  route stays under it — for riders who need gentle gradients, e.g. handbikes").
+  The **stored values stay `No`/`≤6%`/`≤9%`** — display-only change, no migration.
+- **"Suitable bike types" is *designed-for*, not *doable*.** Confirmed semantic:
+  a route rideable on MTB but built for road excludes MTB. A hint now states it
+  ("the bike types this route is designed for — not just what can physically ride
+  it"), consistent with best-of's specialty-type suitability gate (P4-D4).
+- **`season` becomes a multi-select; "Any" retired.** "Best season" was a single
+  select including "Any"; it is now a **multi-select** (Spring/Summer/Autumn/
+  Winter, no "Any" — selecting all four is the new "any"), mirroring the
+  `bikeTypes` multi-select shape (phase-2 P2-D2). Stored as a `list<string>` in
+  `attributes.season`; the drawer + curator edit tolerate the legacy scalar
+  string that imported/harvested routes still carry (no backfill), exactly as
+  `bikeTypes` does.
+- **Form dropdowns no longer stretch full-width** (`.field select` capped at
+  `max-width: 22rem` across the proposal, curator-edit-adjacent, improve,
+  add-climb, and settings forms).

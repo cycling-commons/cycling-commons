@@ -195,7 +195,8 @@ final class CatalogFormRegistry
                     // route.season and every imported/harvested route already carries;
                     // an edited value must land there or map.js's Season row (and the
                     // provider's forwarding) never sees it.
-                    CatalogField::select('season', 'Best season', ['Spring', 'Summer', 'Autumn', 'Winter', 'Any']),
+                    // Multi-select (spec §15): pick any of the four; all = the retired 'Any'.
+                    CatalogField::multiselect('season', 'Best season', ['Spring', 'Summer', 'Autumn', 'Winter']),
                     CatalogField::select('dominantSurface', 'Dominant surface', ['Asphalt', 'Mixed', 'Gravel']),
                     CatalogField::textarea('note', 'Note for riders', 'What is this loop like?'),
                 ],

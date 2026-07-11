@@ -58,9 +58,15 @@ final class ProposeRouteType extends AbstractType
                 'label' => false,
                 'choices' => DifficultyVocabulary::choices(),
             ])
+            // Best season is now MULTI-select (spec §15): pick any of the four —
+            // selecting all is the retired "Any". Stored as a list<string> in
+            // attributes.season; the drawer tolerates the legacy scalar string.
             ->add('season', ChoiceType::class, [
                 'label' => false,
-                'choices' => ['Spring' => 'Spring', 'Summer' => 'Summer', 'Autumn' => 'Autumn', 'Winter' => 'Winter', 'Any' => 'Any'],
+                'required' => false,
+                'multiple' => true,
+                'expanded' => true,
+                'choices' => ['Spring' => 'Spring', 'Summer' => 'Summer', 'Autumn' => 'Autumn', 'Winter' => 'Winter'],
             ])
             ->add('dominantSurface', ChoiceType::class, [
                 'label' => false,
@@ -85,7 +91,10 @@ final class ProposeRouteType extends AbstractType
             ->add('gradientLimited', ChoiceType::class, [
                 'label' => false,
                 'required' => false,
-                'choices' => ['No' => 'No', '≤6%' => '≤6%', '≤9%' => '≤9%'],
+                // Display wording clarified (2026-07-11) but the STORED values stay
+                // 'No'/'≤6%'/'≤9%' — no data migration. "Whole route ≤ X%" reads as
+                // an accessibility guarantee (suitable for riders who need that cap).
+                'choices' => ['No cap' => 'No', 'Whole route ≤ 6%' => '≤6%', 'Whole route ≤ 9%' => '≤9%'],
             ])
         ;
     }

@@ -11,7 +11,9 @@
   .field{margin-bottom:1.3rem}
   .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
   .field input[type=text],.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
-  .field select{width:100%}
+  .field select{width:100%;max-width:22rem}
+  .field .hint{font-family:var(--sans);font-size:.8rem;color:#6b6e5c;margin-top:.35rem;line-height:1.4;text-transform:none;letter-spacing:0}
+  .chip-list + .hint{font-family:var(--sans);font-size:.8rem;color:#6b6e5c;margin-top:.5rem;line-height:1.4}
   .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:90px;resize:vertical}
   .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--trail)}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
@@ -85,15 +87,22 @@
             {{ form_errors(form.difficulty) }}
           </div>
           <div class="field">
-            <label for="{{ form.season.vars.id }}">{{ 'propose_route.season_label'|trans }}</label>
-            {{ form_widget(form.season) }}
-            {{ form_errors(form.season) }}
+            <label for="{{ form.dominantSurface.vars.id }}">{{ 'propose_route.surface_label'|trans }}</label>
+            {{ form_widget(form.dominantSurface) }}
+            {{ form_errors(form.dominantSurface) }}
           </div>
         </div>
         <div class="field">
-          <label for="{{ form.dominantSurface.vars.id }}">{{ 'propose_route.surface_label'|trans }}</label>
-          {{ form_widget(form.dominantSurface) }}
-          {{ form_errors(form.dominantSurface) }}
+          <label>{{ 'propose_route.season_label'|trans }}</label>
+          <div class="chip-list">
+            {% for child in form.season %}
+              <label class="chip-check">
+                {{ form_widget(child) }}
+                <span>{{ child.vars.label ?? child.vars.value }}</span>
+              </label>
+            {% endfor %}
+          </div>
+          {{ form_errors(form.season) }}
         </div>
         <div class="field">
           <label for="{{ form.note.vars.id }}">{{ 'propose_route.note_label'|trans }}</label>
@@ -112,10 +121,12 @@
             </label>
           {% endfor %}
         </div>
+        <p class="hint">{{ 'propose_route.bike_types_hint'|trans }}</p>
         {{ form_errors(form.bikeTypes) }}
         <div class="field" style="margin-top:1.3rem">
           <label for="{{ form.gradientLimited.vars.id }}">{{ 'propose_route.gradient_label'|trans }}</label>
           {{ form_widget(form.gradientLimited) }}
+          <p class="hint">{{ 'propose_route.gradient_hint'|trans }}</p>
           {{ form_errors(form.gradientLimited) }}
         </div>
       </fieldset>
