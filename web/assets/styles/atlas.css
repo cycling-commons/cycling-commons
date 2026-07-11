@@ -39,6 +39,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .acct-dropdown[hidden]{display:none}
 .acct-dropdown a,.acct-dropdown button{display:block;width:100%;box-sizing:border-box;text-align:left;background:none;border:0;font-family:var(--sans);font-size:.9rem;color:var(--ink)!important;opacity:1!important;padding:.55rem .7rem;border-radius:5px;cursor:pointer;text-decoration:none;white-space:nowrap}
 .acct-dropdown a:hover,.acct-dropdown button:hover{background:rgba(20,22,14,.06)}
+/* section labels group the menu — makes clear what's personal vs. moderation/admin work */
+.acct-sec{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8674;padding:.5rem .7rem .25rem;pointer-events:none}
+.acct-sec:first-child{padding-top:.25rem}
+/* a hairline above a standalone item (Admin) sets it apart from the group above */
+.acct-dropdown a.acct-sep{margin-top:.25rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
 .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}
 .acct-dropdown form button{color:var(--clay)!important}
 @media(max-width:560px){.acct-chip .acct-name,.acct-chip .acct-caret{display:none}.acct-chip{padding:.26rem;border-radius:50%}}
