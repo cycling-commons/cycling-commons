@@ -1,0 +1,25 @@
+web/templates/moderate_routes/index.html.twig
+  s_51df195d1c7750::t_72eef2ad814310 33
+web/templates/moderate_routes/detail.html.twig
+  s_51df195d1c7750::t_50ebd2a71009c5 21-23
+web/templates/account/_shell_styles.html.twig
+  s_51df195d1c7750::t_220064e1a0fb6a 19-27
+web/templates/moderate/index.html.twig
+  s_51df195d1c7750::t_55acd66fb69e36 40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "b477c9212a748da77ffa87a28f7f16c5b8c183ba",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
