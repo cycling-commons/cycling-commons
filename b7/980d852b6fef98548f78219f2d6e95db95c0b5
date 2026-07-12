@@ -1,0 +1,37 @@
+web/tests/Security/CspTest.php
+  s_e4da53db38e0bd::t_801f14b480e580 39
+  s_e4da53db38e0bd::t_87adba6b92eae6 1-8,10-38,40-75
+  s_e4da53db38e0bd::t_a1e779258385e8 9
+web/templates/contribute/improve.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 326,328,330,333
+  s_e4da53db38e0bd::t_0b9ab515874491 186,188
+web/src/Twig/CspExtension.php
+  s_e4da53db38e0bd::t_83451180763903 1-33
+web/templates/map/index.html.twig
+  s_e4da53db38e0bd::t_4f834658d6ce99 230
+  s_e4da53db38e0bd::t_0b9ab515874491 232,237
+web/src/EventSubscriber/CspSubscriber.php
+  s_e4da53db38e0bd::t_0d818ed01f8e5d 1-73,76-87
+  s_e4da53db38e0bd::t_70c39ffbb655c1 74-75
+web/src/Security/Csp/CspNonce.php
+  s_e4da53db38e0bd::t_1cda2812d3d7ac 1-30
+web/templates/contribute/add_climb.html.twig
+  s_e4da53db38e0bd::t_0b9ab515874491 152
+  s_e4da53db38e0bd::t_7bd17a09475782 274
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "b7980d852b6fef98548f78219f2d6e95db95c0b5",
+  "prompts": {},
+  "sessions": {
+    "s_e4da53db38e0bd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1aa91764-9ba6-4f8b-9c7c-9027d41580c4",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
