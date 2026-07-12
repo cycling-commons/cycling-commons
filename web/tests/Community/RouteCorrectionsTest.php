@@ -24,7 +24,9 @@ final class RouteCorrectionsTest extends WebTestCase
     {
         $u = (new User())->setEmail($email)->setDisplayName('U');
         $u->setEmailVerified(true)->setEmailVerifiedAt(new \DateTimeImmutable())->setRoles($roles);
-        if ($roles !== []) { $u->setTotpSecret('JBSWY3DPEHPK3PXP')->setTwoFaEnabled(true); }
+        if ([] !== $roles) {
+            $u->setTotpSecret('JBSWY3DPEHPK3PXP')->setTwoFaEnabled(true);
+        }
         $u->setPassword(static::getContainer()->get(UserPasswordHasherInterface::class)->hashPassword($u, 'password1234'));
         $em->persist($u);
         $em->flush();

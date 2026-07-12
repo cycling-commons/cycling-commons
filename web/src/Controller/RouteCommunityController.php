@@ -149,9 +149,9 @@ final class RouteCommunityController extends AbstractController
      * Parse the optional `segments` field (JSON list of {start,end} fractions).
      * Returns null (none), a validated list, or false (malformed → 422).
      *
-     * @return list<array{start: float, end: float}>|null|false
+     * @return list<array{start: float, end: float}>|false|null
      */
-    private function parseSegments(mixed $raw): array|null|false
+    private function parseSegments(mixed $raw): array|false|null
     {
         if (!\is_string($raw) || '' === $raw) {
             return null;
