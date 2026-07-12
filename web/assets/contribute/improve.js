@@ -148,7 +148,14 @@
           var ro = document.getElementById('wz-readout');
           if (st.start && st.summit) {
             WZ.loc = { type: 'climb', start: st.start, summit: st.summit };
-            if (ro) ro.textContent = '✓ Climb set' + (st.lengthKm ? ' · ' + st.lengthKm.toFixed(1) + ' km' : '') + ' — drag a marker to correct it';
+            if (ro) {
+              var txt = '✓ Climb set' + (st.lengthKm ? ' · ' + st.lengthKm.toFixed(1) + ' km' : '');
+              if (st.routing || st.profiling) txt += ' · measuring…';
+              else if (st.routeError) txt += ' — could not snap to the road network, showing a straight line';
+              else if (st.profileError) txt += ' — gradient profile unavailable';
+              else txt += ' — drag a marker to correct it';
+              ro.textContent = txt;
+            }
           } else {
             WZ.loc = null;
             if (ro) ro.textContent = st.start ? '◎ Foot set — now tap the summit' : '◎ Tap the map to set the foot of the climb';
@@ -197,15 +204,21 @@
             if (ro) ro.textContent = '✓ ' + fmt(placed[0].getLngLat()) + ' → ' + fmt(placed[1].getLngLat());
           }
         } else {
+          var fLat = fld('lat');
+          var fLng = fld('lng');
           if (!placed.length) {
             WZ.loc = null;
+            // Mirror the segment branch: a reset must clear the hidden fields
+            // too, or the POST would still carry the previously placed pin.
+            if (fLat) fLat.value = '';
+            if (fLng) fLng.value = '';
+            var fPlace = fld('place');
+            if (fPlace) fPlace.value = '';
             if (ro) ro.textContent = '◎ Tap the map to set the location';
           } else {
             var ll = placed[0].getLngLat();
             WZ.loc = { type: 'point', lng: ll.lng, lat: ll.lat };
             // update hidden lat/lng fields
-            var fLat = fld('lat');
-            var fLng = fld('lng');
             if (fLat) fLat.value = ll.lat;
             if (fLng) fLng.value = ll.lng;
             if (ro) ro.textContent = '✓ ◎ ' + fmt(ll) + ' — drag the pin or tap again to move it';
@@ -269,9 +282,12 @@
       if (!list.length) { resultsEl.innerHTML = '<div class="res empty">No matches</div>'; resultsEl.hidden = false; return; }
       resultsEl.innerHTML = list.map(function (f) {
         var p = f.properties || {}, c = f.geometry.coordinates;
+        // Coerce before interpolating into the attribute — API strings never reach the markup raw.
+        var lng = +c[0], lat = +c[1];
+        if (!isFinite(lng) || !isFinite(lat)) return '';
         var main = p.name || p.street || p.city || 'Result';
         var sub = [p.name ? p.street : '', p.city, p.county, p.state, p.country].filter(Boolean).join(', ');
-        return '<div class="res" data-lng="' + c[0] + '" data-lat="' + c[1] + '"><b>' + escHtml(main) + '</b><small>' + escHtml(sub) + '</small></div>';
+        return '<div class="res" data-lng="' + lng + '" data-lat="' + lat + '"><b>' + escHtml(main) + '</b><small>' + escHtml(sub) + '</small></div>';
       }).join('');
       resultsEl.hidden = false;
       resultsEl.querySelectorAll('.res[data-lat]').forEach(function (el) {
@@ -286,10 +302,19 @@
       });
     }
 
+    var searchSeq = 0;
+
     function geocode(q) {
+      // Drop out-of-order responses (Enter bypasses the debounce, so a slow
+      // earlier request can otherwise overwrite a fresher result list).
+      var seq = ++searchSeq;
       fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=6')
-        .then(function (r) { return r.json(); }).then(function (d) { renderResults(d.features || []); })
+        .then(function (r) { return r.json(); }).then(function (d) {
+          if (seq !== searchSeq) return;
+          renderResults(d.features || []);
+        })
         .catch(function () {
+          if (seq !== searchSeq) return;
           if (resultsEl) {
             resultsEl.innerHTML = '<div class="res empty">Search unavailable — tap the map instead</div>';
             resultsEl.hidden = false;
@@ -461,7 +486,8 @@
       var note = document.getElementById('srcn-' + kind);
       var host = '';
       try { host = new URL(url).hostname.replace(/^www\./, ''); } catch (e) { host = ''; }
-      var key = Object.keys(KNOWN_SOURCES).find(function (k) { return host.endsWith(k); });
+      // Exact host or a true subdomain — a bare endsWith would match e.g. "notflickr.com".
+      var key = Object.keys(KNOWN_SOURCES).find(function (k) { return host === k || host.endsWith('.' + k); });
       if (key) {
         var s = KNOWN_SOURCES[key];
         if (note) { note.className = 'src-note ok'; note.innerHTML = '✓ <b>' + s.name + '</b> recognised — ' + s.note + '.'; }

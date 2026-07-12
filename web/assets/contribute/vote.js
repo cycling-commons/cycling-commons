@@ -123,8 +123,16 @@
       .replace(/"/g, '&quot;');
   }
 
+  // Full escape (not just quotes): attribute values round-trip through the HTML
+  // parser, so unescaped & would decode entity-like sequences on getAttribute
+  // and break toggle() matching.
   function escAttr(str) {
-    return String(str).replace(/"/g, '&quot;');
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   // Expose cat() for inline onclick in Twig template

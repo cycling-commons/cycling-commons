@@ -14,7 +14,10 @@
   var S = {
     start: null, summit: null, lengthKm: 0, name: '', gain: 0,
     maxGrad: '', surface: 'Asphalt', surfaceQ: 'Smooth',
-    traffic: 'Traffic-free', disciplines: ['Road'], note: '', osm: 'Unknown'
+    traffic: 'Traffic-free', disciplines: ['Road'], note: '', osm: 'Unknown',
+    // Editor in-flight/failure signals (climb-editor.js onChange): the wizard
+    // must not advance/submit a 2-point placeholder while OSRM/elevation is pending.
+    routing: false, profiling: false, routeError: false, profileError: false
   };
   var cur = 1;
 
@@ -50,8 +53,10 @@
   function refreshGate() {
     var next = document.getElementById('nextBtn');
     if (!next) return;
-    if (cur === 1) next.disabled = !(S.start && S.summit);
+    var pending = S.routing || S.profiling;
+    if (cur === 1) next.disabled = !(S.start && S.summit) || pending;
     else if (cur === 2) next.disabled = !(S.name && S.gain > 0);
+    else if (cur === 4) next.disabled = pending; // never submit a mid-flight placeholder
     else next.disabled = false;
   }
 
@@ -76,6 +81,9 @@
       hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep') },
       onChange: function (st) {
         S.start = st.start; S.summit = st.summit; S.lengthKm = st.lengthKm;
+        S.routing = st.routing; S.profiling = st.profiling;
+        S.routeError = st.routeError; S.profileError = st.profileError;
+        maybeRefreshLen();
         setReadout(); refreshGate();
       }
     });
@@ -104,9 +112,13 @@
   function setReadout() {
     var el = document.getElementById('readout');
     if (!el) return;
-    if (!S.start) el.textContent = 'Tap the map to set the foot of the climb.';
-    else if (!S.summit) el.textContent = 'Foot set — now tap the summit.';
-    else el.textContent = 'Climb set · ' + (S.lengthKm ? S.lengthKm.toFixed(1) + ' km' : 'measuring…');
+    if (!S.start) { el.textContent = 'Tap the map to set the foot of the climb.'; return; }
+    if (!S.summit) { el.textContent = 'Foot set — now tap the summit.'; return; }
+    var txt = 'Climb set' + (S.lengthKm ? ' · ' + S.lengthKm.toFixed(1) + ' km' : '');
+    if (S.routing || S.profiling || !S.lengthKm) txt += ' · measuring…';
+    else if (S.routeError) txt += ' — could not snap to the road network, showing a straight line';
+    else if (S.profileError) txt += ' — gradient profile unavailable';
+    el.textContent = txt;
   }
 
   var resetBtn = document.getElementById('reset');
@@ -128,24 +140,39 @@
     if (!list.length) { resultsEl.innerHTML = '<div class="res empty">No matches</div>'; resultsEl.hidden = false; return; }
     resultsEl.innerHTML = list.map(function (f) {
       var p = f.properties || {}, c = f.geometry.coordinates;
+      // Coerce before interpolating into the attribute — API strings never reach the markup raw.
+      var lng = +c[0], lat = +c[1];
+      if (!isFinite(lng) || !isFinite(lat)) return '';
       var main = p.name || p.street || p.city || 'Result';
       var sub = [p.name ? p.street : '', p.city, p.county, p.state, p.country].filter(Boolean).join(', ');
-      return '<div class="res" data-lng="' + c[0] + '" data-lat="' + c[1] + '"><b>' + escHtml(main) + '</b><small>' + escHtml(sub) + '</small></div>';
+      return '<div class="res" data-lng="' + lng + '" data-lat="' + lat + '"><b>' + escHtml(main) + '</b><small>' + escHtml(sub) + '</small></div>';
     }).join('');
     resultsEl.hidden = false;
     resultsEl.querySelectorAll('.res[data-lat]').forEach(function (el) {
       el.addEventListener('click', function () {
         cmap.flyTo({ center: [+el.dataset.lng, +el.dataset.lat], zoom: 14 });
         if (searchEl) searchEl.value = el.querySelector('b').textContent;
+        // update place hidden field
+        var fPlace = fld('place');
+        if (fPlace) fPlace.value = el.querySelector('b').textContent;
         resultsEl.hidden = true;
       });
     });
   }
 
+  var searchSeq = 0;
+
   function geocode(q) {
+    // Drop out-of-order responses (Enter bypasses the debounce, so a slow
+    // earlier request can otherwise overwrite a fresher result list).
+    var seq = ++searchSeq;
     fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=6')
-      .then(function (r) { return r.json(); }).then(function (d) { renderResults(d.features || []); })
+      .then(function (r) { return r.json(); }).then(function (d) {
+        if (seq !== searchSeq) return;
+        renderResults(d.features || []);
+      })
       .catch(function () {
+        if (seq !== searchSeq) return;
         if (resultsEl) {
           resultsEl.innerHTML = '<div class="res empty">Search unavailable — click the map instead</div>';
           resultsEl.hidden = false;
@@ -177,9 +204,22 @@
     return len > 0 ? (S.gain / (len * 1000)) * 100 : 0;
   }
 
+  // Last length value WE wrote into fLen — a user-typed value always wins, but
+  // our own stale autofill may be replaced when OSRM returns the snapped length.
+  var lenAutofill = null;
+
+  function maybeRefreshLen() {
+    var fLen = fld('fLen');
+    if (!fLen || !S.lengthKm || S.routing) return;
+    if (!fLen.value || fLen.value === lenAutofill) {
+      lenAutofill = fLen.value = S.lengthKm.toFixed(1);
+      syncProfile();
+    }
+  }
+
   function onEnterProfile() {
     var fLen = fld('fLen');
-    if (fLen && !fLen.value && S.lengthKm) fLen.value = S.lengthKm.toFixed(1);
+    if (fLen && !fLen.value && S.lengthKm) lenAutofill = fLen.value = S.lengthKm.toFixed(1);
     syncProfile();
   }
 
@@ -277,7 +317,7 @@
       '<div class="kv"><span>Length</span><span>' + len + ' km</span></div>' +
       '<div class="kv"><span>Elevation gain</span><span>△ ' + S.gain + ' m</span></div>' +
       '<div class="kv"><span>Avg gradient</span><span>' + avgGrad().toFixed(1) + ' %</span></div>' +
-      '<div class="kv"><span>Max gradient</span><span>' + (S.maxGrad ? S.maxGrad + ' %' : '—') + '</span></div>' +
+      '<div class="kv"><span>Max gradient</span><span>' + (S.maxGrad ? escHtml(S.maxGrad) + ' %' : '—') + '</span></div>' +
       '<div class="kv"><span>Surface</span><span>' + escHtml(S.surface) + ' · ' + escHtml(S.surfaceQ) + '</span></div>' +
       '<div class="kv"><span>Traffic</span><span>' + escHtml(S.traffic) + '</span></div>' +
       '<div class="kv"><span>Already in OSM?</span><span>' + escHtml(S.osm) + '</span></div>' +

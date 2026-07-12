@@ -26,6 +26,13 @@
     var footM = null, summitM = null, steepM = null;
     var routeSeq = 0;
     var profileSeq = 0;
+    var routeCtl = null;      // AbortController for the in-flight OSRM request
+    var profileCtl = null;    // AbortController for the in-flight elevation request
+    var routing = false;      // OSRM route request in flight
+    var profiling = false;    // elevation profile request in flight
+    var routeError = false;   // last OSRM attempt failed — the straight line stayed
+    var profileError = false; // last elevation attempt failed — no gradient profile
+    var FETCH_TIMEOUT_MS = 10000;
     var ready = false;
 
     initSource();
@@ -107,14 +114,22 @@
     function onSummitMoved(ll) { state.summit = ll; onPointsChanged(); }
 
     function onPointsChanged() {
+      // Any endpoint change invalidates whatever profile is still in flight —
+      // a late resolve must not apply the OLD route's grad/steep to the new one.
+      profileSeq++;
+      abortProfile();
       if (state.start && state.summit) {
         // Immediate straight-line feedback; replaced by the OSRM route on success.
         state.route = [state.start, state.summit];
         state.lengthKm = haversineKm(state.start, state.summit);
         drawLine();
+        routeClimb(); // before writeHidden so onChange already sees `routing`
         writeHidden();
-        routeClimb();
       } else {
+        routeSeq++;
+        abortRoute();
+        routeError = false;
+        profileError = false;
         state.route = [];
         state.lengthKm = 0;
         drawLine();
@@ -122,27 +137,68 @@
       }
     }
 
+    function abortRoute() {
+      routing = false;
+      if (routeCtl) { routeCtl.abort(); routeCtl = null; }
+    }
+
+    function abortProfile() {
+      profiling = false;
+      if (profileCtl) { profileCtl.abort(); profileCtl = null; }
+    }
+
     /* ---------- routing (OSRM, copied from add-climb.js's routeClimb) ---------- */
     function routeClimb() {
       var seq = ++routeSeq;
+      abortRoute();
+      var ctl = routeCtl = new AbortController();
+      var timer = setTimeout(function () { ctl.abort(); }, FETCH_TIMEOUT_MS);
+      routing = true;
+      routeError = false;
       var a = state.start, b = state.summit;
       var url = 'https://router.project-osrm.org/route/v1/driving/' + a[0] + ',' + a[1] + ';' + b[0] + ',' + b[1] + '?overview=full&geometries=geojson';
-      fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+      fetch(url, { signal: ctl.signal }).then(function (r) {
+        if (!r.ok) throw new Error('OSRM HTTP ' + r.status);
+        return r.json();
+      }).then(function (d) {
+        clearTimeout(timer);
         if (seq !== routeSeq || !state.start || !state.summit) return;
-        if (d.code !== 'Ok' || !d.routes || !d.routes[0]) return;
+        routing = false;
+        if (d.code !== 'Ok' || !d.routes || !d.routes[0]) {
+          // No route between the points — keep the straight line, but say so.
+          routeError = true;
+          writeHidden();
+          return;
+        }
         var route = d.routes[0];
         state.route = route.geometry.coordinates;
         state.lengthKm = route.distance / 1000;
         drawLine();
-        recomputeProfile();
-      }).catch(function () {});
+        recomputeProfile(); // before writeHidden so onChange already sees `profiling`
+        writeHidden();
+      }).catch(function () {
+        clearTimeout(timer);
+        if (seq !== routeSeq) return; // superseded (aborted by a newer request/reset)
+        // Network failure or timeout — the straight line stays; surface it via onChange.
+        routing = false;
+        routeError = true;
+        writeHidden();
+      });
     }
 
     /* ---------- elevation-driven gradient profile + steepest placement ---------- */
     function recomputeProfile() {
       var seq = ++profileSeq;
-      window.Cc.profileFromRoute(state.route).then(function (res) {
+      abortProfile();
+      if (state.route.length < 2) return; // nothing to profile (reset raced the route)
+      var ctl = profileCtl = new AbortController();
+      var timer = setTimeout(function () { ctl.abort(); }, FETCH_TIMEOUT_MS);
+      profiling = true;
+      profileError = false;
+      window.Cc.profileFromRoute(state.route, ctl.signal).then(function (res) {
+        clearTimeout(timer);
         if (seq !== profileSeq) return; // a newer route/profile superseded this one
+        profiling = false;
         if (!res) {
           state.grad = [];
           if (!state.steep || !state.steep.manual) state.steep = null;
@@ -156,6 +212,16 @@
             state.steep.pct = nearestGradPct(state.steep.at) || state.steep.pct;
           }
         }
+        placeSteepMarker();
+        writeHidden();
+      }).catch(function () {
+        clearTimeout(timer);
+        if (seq !== profileSeq) return; // superseded (aborted by a newer request/reset)
+        // Elevation API failed/timed out — no profile for this route; surface it via onChange.
+        profiling = false;
+        profileError = true;
+        state.grad = [];
+        if (!state.steep || !state.steep.manual) state.steep = null;
         placeSteepMarker();
         writeHidden();
       });
@@ -218,11 +284,23 @@
     }
 
     function publicState() {
-      return { start: state.start, summit: state.summit, steep: state.steep, lengthKm: state.lengthKm };
+      return {
+        start: state.start, summit: state.summit, steep: state.steep, lengthKm: state.lengthKm,
+        // In-flight/failure signals so the host wizard can gate Next/Submit and
+        // tell the contributor when snapping or the gradient profile failed.
+        routing: routing, profiling: profiling,
+        routeError: routeError, profileError: profileError
+      };
     }
 
     /* ---------- reset / destroy ---------- */
     function reset() {
+      // Invalidate + abort anything in flight: a late OSRM/elevation resolve
+      // must not repopulate grad/steep on the now-empty map.
+      routeSeq++; profileSeq++;
+      abortRoute();
+      abortProfile();
+      routeError = false; profileError = false;
       state.start = null; state.summit = null; state.steep = null;
       state.route = []; state.grad = []; state.lengthKm = 0;
       if (footM) { footM.remove(); footM = null; }
@@ -233,6 +311,9 @@
     }
 
     function destroy() {
+      routeSeq++; profileSeq++;
+      abortRoute();
+      abortProfile();
       map.off('click', onMapClick);
       if (footM) footM.remove();
       if (summitM) summitM.remove();

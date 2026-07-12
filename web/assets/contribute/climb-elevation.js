@@ -91,14 +91,20 @@
     return { g: maxG, coord: maxCoord };
   }
 
-  window.Cc.profileFromRoute = function (coords) {
+  // Resolves null for "no usable data", REJECTS on API failure (HTTP error,
+  // network, abort) so the caller can tell the two apart and warn the user.
+  // `signal` (optional AbortSignal) lets the caller cancel a superseded request.
+  window.Cc.profileFromRoute = function (coords, signal) {
     if (!coords || coords.length < 2) return Promise.resolve(null);
     var pts = sample(coords, 100);
     var lats = pts.map(function (c) { return c[1]; }).join(',');
     var lngs = pts.map(function (c) { return c[0]; }).join(',');
     var url = 'https://api.open-meteo.com/v1/elevation?latitude=' + encodeURIComponent(lats) +
       '&longitude=' + encodeURIComponent(lngs);
-    return fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+    return fetch(url, { signal: signal }).then(function (r) {
+      if (!r.ok) throw new Error('elevation API HTTP ' + r.status);
+      return r.json();
+    }).then(function (d) {
       if (!d || !Array.isArray(d.elevation) || d.elevation.length !== pts.length) return null;
       var elevs = d.elevation;
       if (elevs.some(function (e) { return e == null; })) return null;
@@ -108,6 +114,6 @@
       // Sanity clamp: real cycling ramps rarely exceed ~35%; anything higher is DEM noise.
       var pct = clamp(Math.round(steep.g), 0, 35);
       return { grad: grad, steep: { at: steep.coord, pct: '~' + pct + '%' } };
-    }).catch(function () { return null; });
+    });
   };
 })();
