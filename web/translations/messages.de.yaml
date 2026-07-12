@@ -1281,3 +1281,6 @@ admin:
     role_changed: 'Rollen aktualisiert.'
     account_removed: 'Konto entfernt.'
     removal_cancelled: 'Ausstehende Entfernung abgebrochen.'
+route:
+  error:
+    note_too_long: 'Die Notiz ist länger als 2.000 Zeichen.'

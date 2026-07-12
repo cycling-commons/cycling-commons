@@ -1281,3 +1281,6 @@ admin:
     role_changed: 'Rôles mis à jour.'
     account_removed: 'Compte supprimé.'
     removal_cancelled: 'Suppression en attente annulée.'
+route:
+  error:
+    note_too_long: 'La note dépasse 2 000 caractères.'

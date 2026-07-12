@@ -32,12 +32,25 @@ final class RouteModerateTest extends WebTestCase
         return $u;
     }
 
+    // Task 4: decisions now write the proposer a message, and user_message.user_id
+    // has a real FK to users(id) — proposedBy must be a persisted user, not a
+    // fabricated id.
+    private function proposer(EntityManagerInterface $em): User
+    {
+        $u = (new User())->setEmail('proposer-'.uniqid('', true).'@test.test');
+        $u->setPassword('x');
+        $em->persist($u);
+        $em->flush();
+
+        return $u;
+    }
+
     private function submittedRoute(EntityManagerInterface $em): RecommendedRoute
     {
         $r = (new RecommendedRoute())->setName('Desk proposal · Condroz')
             ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
             ->setDistanceM(24000)->setState(ItemState::Submitted)
-            ->setSource(ItemSource::User)->setSourceRef('user:desk-1')->setRegionId(1)->setProposedBy(9);
+            ->setSource(ItemSource::User)->setSourceRef('user:desk-1')->setRegionId(1)->setProposedBy((int) $this->proposer($em)->getId());
         $em->persist($r);
         $em->flush();
 
@@ -85,7 +98,7 @@ final class RouteModerateTest extends WebTestCase
         $r = (new RecommendedRoute())->setName('Active loop · Condroz')
             ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
             ->setDistanceM(18000)->setState(ItemState::Verified)
-            ->setSource(ItemSource::User)->setSourceRef('user:desk-active')->setRegionId(1)->setProposedBy(9);
+            ->setSource(ItemSource::User)->setSourceRef('user:desk-active')->setRegionId(1)->setProposedBy((int) $this->proposer($em)->getId());
         $em->persist($r);
         $em->flush();
 

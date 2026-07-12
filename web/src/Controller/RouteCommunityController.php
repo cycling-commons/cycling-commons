@@ -140,6 +140,9 @@ final class RouteCommunityController extends AbstractController
             $this->community->recordSuggestion($route, $user, $reason, \is_string($note) ? $note : null, $segments);
         } catch (TooManyRequestsHttpException) {
             return $this->json(['error' => 'rate_limited'], 429);
+        } catch (\InvalidArgumentException) {
+            // M11: recordSuggestion's only throw path today is the note-length cap.
+            return $this->json(['error' => 'note_too_long'], 422);
         }
 
         return $this->json(['ok' => true]);

@@ -31,6 +31,8 @@ use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
  */
 final class RouteCommunityService
 {
+    private const int NOTE_MAX_LENGTH = 2000;
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
@@ -147,6 +149,7 @@ final class RouteCommunityService
      * @param list<array{start: float, end: float}>|null $segments located stretches (spec §16 S4)
      *
      * @throws TooManyRequestsHttpException over the daily suggestion limit
+     * @throws \InvalidArgumentException    if the trimmed note exceeds 2000 characters (M11, route.error.note_too_long)
      */
     public function recordSuggestion(RecommendedRoute $route, User $user, RouteSuggestionReason $reason, ?string $note, ?array $segments = null): void
     {
@@ -155,6 +158,9 @@ final class RouteCommunityService
         }
 
         $trimmed = null !== $note ? trim($note) : null;
+        if (null !== $trimmed && mb_strlen($trimmed) > self::NOTE_MAX_LENGTH) {
+            throw new \InvalidArgumentException('route.error.note_too_long');
+        }
         $this->em->persist(new RouteSuggestion((int) $route->getId(), $user->getId(), $reason, '' !== $trimmed ? $trimmed : null, $segments));
         $this->em->flush();
     }

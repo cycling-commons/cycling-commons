@@ -12,12 +12,16 @@ use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionStatus;
 use App\Entity\User;
+use App\Messaging\MessageService;
+use App\Messaging\UserMessageKind;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * The ONLY write-path for route moderation (spec §6, D1 — purpose-built, no
  * reuse of ModerationService). Every transition is transactional and appends
  * route_change_history (D9). The region cap (D8) is enforced on approve.
+ * Decision outcomes message the proposer (moderation-feedback spec M2) —
+ * skipped for imported routes (`proposedBy === null`).
  *
  * @api Called by RouteModerateController.
  */
@@ -26,6 +30,7 @@ final class RouteModerationService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly int $regionActiveCap,
+        private readonly MessageService $messages,
     ) {
     }
 
@@ -44,6 +49,7 @@ final class RouteModerationService
                 throw new RegionFullException(sprintf('Region %s is at the active-route cap.', $route->getRegionId() ?? 'none'));
             }
             $this->transition($route, ItemState::Unverified, $curator);
+            $this->notifyProposer($route, UserMessageKind::RouteApproved, null);
 
             return $route;
         });
@@ -57,6 +63,7 @@ final class RouteModerationService
                 throw new \LogicException('Only a submitted route can be rejected.');
             }
             $this->transition($route, ItemState::Rejected, $curator, $note);
+            $this->notifyProposer($route, UserMessageKind::RouteRejected, $note);
 
             return $route;
         });
@@ -74,6 +81,7 @@ final class RouteModerationService
                 throw new \LogicException('Only an active (unverified/verified) route can be retired.');
             }
             $this->transition($route, ItemState::Retired, $curator, $note);
+            $this->notifyProposer($route, UserMessageKind::RouteRetired, $note);
 
             return $route;
         });
@@ -123,6 +131,14 @@ final class RouteModerationService
             }
             $s->resolve($status, $curator->getId());
 
+            $routeName = $this->em->find(RecommendedRoute::class, $s->getRouteId())?->getName() ?? sprintf('route-%d', $s->getRouteId());
+            $kind = RouteSuggestionStatus::Done === $status ? UserMessageKind::CorrectionDone : UserMessageKind::CorrectionDismissed;
+            $this->messages->sendSystem(
+                $s->getUserId(), $kind,
+                'correction', (int) $s->getId(), $routeName,
+                'messages.body.'.$kind->value, ['%name%' => $routeName],
+            );
+
             return $s;
         });
     }
@@ -157,6 +173,23 @@ final class RouteModerationService
         if (null !== $note && '' !== trim($note)) {
             $this->em->persist(new RouteChangeHistory((int) $route->getId(), 'decision_note', null, $note, $curator->getId()));
         }
+    }
+
+    /**
+     * M2: rides the same transaction as the decision — atomic, and skipped
+     * entirely for imported routes (`proposedBy === null`, no rider to tell).
+     */
+    private function notifyProposer(RecommendedRoute $route, UserMessageKind $kind, ?string $note): void
+    {
+        if (null === $route->getProposedBy()) {
+            return;
+        }
+        $this->messages->sendSystem(
+            $route->getProposedBy(), $kind,
+            'route', (int) $route->getId(), $route->getName(),
+            'messages.body.'.$kind->value, ['%name%' => $route->getName()],
+            $note,
+        );
     }
 
     private function load(int $routeId): RecommendedRoute

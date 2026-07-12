@@ -1281,3 +1281,6 @@ admin:
     role_changed: 'Rollen bijgewerkt.'
     account_removed: 'Account verwijderd.'
     removal_cancelled: 'Openstaande verwijdering geannuleerd.'
+route:
+  error:
+    note_too_long: 'De notitie is langer dan 2.000 tekens.'
