@@ -715,3 +715,62 @@ Decisions/fixes during execution:
    list index `i`)**, so `f.geom.path` stays deterministic per route for the
    life of the geometry and stored correction fractions stay stable when the
    served route set changes (e.g. another route rejected shifting indices).
+
+## 17. Correction outcomes — rider notifications, moderator messaging, retention (design, 2026-07-12)
+
+User-approved direction, recorded ahead of implementation. **NOT built — no plan
+yet; specs only.** Extends §16: what happens *after* a curator resolves a
+correction, and how the platform talks back to the rider who filed it.
+
+### Decisions (N1–N7)
+
+- **N1 — outcome notifications on the rider's dashboard.** Resolving a
+  correction notifies the rider who submitted it, by appending a message to
+  their dashboard: **Dismiss** → a message informing them of the dismissal;
+  **Done** (approved/actioned) → a **thank-you** message. Same mechanism for
+  both outcomes.
+- **N2 — a new message class/entity** carries these (nothing like it exists in
+  the app yet — this is new infrastructure, not an extension of an existing
+  table). Shape (to be finalised in the plan): recipient user id, kind
+  (`correction_dismissed` / `correction_done` / `curator_message` / …), body,
+  sender (system vs a curator id), related refs (route id, suggestion id),
+  `created_at`, `read_at`. The account dashboard gains a **Messages** surface
+  listing them.
+- **N3 — notification bulb in the header.** An unread-messages indicator near
+  the account chip (every logged-in surface); clicking it goes to the user's
+  Messages.
+- **N4 — moderator → rider messaging.** The Routes desk gains a way for a
+  curator to send the rider a **personal message**: to request more
+  information about a correction, or to add a personal note accompanying a
+  dismissal/approval. Lands in the same Messages channel (kind
+  `curator_message`, sender = the curator).
+- **N5 — email is a later delivery channel (v2).** The same outcomes will
+  additionally send an email; the dashboard message records stay the source of
+  truth — email is added on top, not instead.
+- **N6 — dismissed corrections are retained 3 months, then garbage-collected.**
+  A dismissed `route_suggestion` remains in the system for 3 months (context
+  for appeals/patterns), after which an **automatic garbage collector** (a
+  scheduled command) removes it.
+- **N7 — a dedicated Trash action for spam/abuse.** Distinct from Dismiss: for
+  spam or worse, the curator can **Trash** a correction — the record (its text
+  and any future attachments/images) is **deleted immediately and
+  permanently**; no 3-month retention, because we do not want to keep such
+  content on the system at all. Trash sends no thank-you/dismissal message.
+
+### Open points (deliberately left to the implementation plan)
+
+- Retention for **Done** rows (N6 specifies dismissed only; done rows currently
+  live forever — decide whether they join the GC).
+- Whether the message content is i18n'd (per-recipient locale) or plain text as
+  written by the curator/system.
+- Bulb-count semantics (unread only vs total) and read-marking UX.
+- Message retention/expiry (do old read messages ever get GC'd?).
+- Whether Trash notifies the submitter at all (likely not — don't feed spam).
+
+### Relation to the item pipeline
+
+The item (A–J) moderation pipeline has adjacent machinery (decision notes, a
+`needs_info` decision, receipts under "my contributions") but **no user-facing
+notification/messaging system**. A reconciliation analysis of what the item
+side already covers, what it lacks, and what it does better precedes any item-
+spec update (user decides the item-side direction after reviewing it).
