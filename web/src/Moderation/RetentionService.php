@@ -1,0 +1,92 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Moderation;
+
+use Doctrine\DBAL\Connection;
+use Symfony\Component\Clock\ClockInterface;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+
+/**
+ * Retention phase 1 (spec M8 §6 open point, resolved for the two decided-row
+ * kinds that are safe to purge): decided rows older than
+ * `moderation.retention_months` are garbage — the moderation decision is
+ * already recorded (audit trail lives in change_history / the decision
+ * itself), the rider-facing value of keeping the row fades, and unbounded
+ * growth of dismissed/rejected rows is pure liability.
+ *
+ * Deliberately NOT swept here (spec §6 open point, still pending a decision):
+ * rejected `recommended_route` rows, and `needs_info` submissions (still
+ * awaiting the rider, never terminal on a timer).
+ *
+ * @api Read by ProfileController for its lazy cutoff filter; run by
+ *      ModerateController/RouteModerateController's opportunistic hook and by
+ *      `app:moderation:gc`.
+ */
+final class RetentionService
+{
+    private const CACHE_KEY = 'moderation_gc_last';
+    private const CACHE_TTL_SECONDS = 3600;
+
+    public function __construct(
+        private readonly Connection $db,
+        private readonly ClockInterface $clock,
+        private readonly CacheInterface $cache,
+        private readonly int $retentionMonths,
+    ) {
+    }
+
+    public function cutoff(): \DateTimeImmutable
+    {
+        return $this->clock->now()->modify(sprintf('-%d months', $this->retentionMonths));
+    }
+
+    /**
+     * Deletes decided rows past the cutoff. Idempotent — safe to re-run any
+     * number of times; a row already deleted simply isn't matched again.
+     *
+     * @return array{corrections: int, submissions: int}
+     */
+    public function sweep(): array
+    {
+        $cutoff = $this->cutoff()->format('Y-m-d H:i:s');
+
+        $corrections = (int) $this->db->executeStatement(
+            "DELETE FROM route_suggestion WHERE status = 'dismissed' AND resolved_at < :cutoff",
+            ['cutoff' => $cutoff],
+        );
+        $submissions = (int) $this->db->executeStatement(
+            "DELETE FROM submission WHERE status = 'rejected' AND decided_at < :cutoff",
+            ['cutoff' => $cutoff],
+        );
+
+        return ['corrections' => $corrections, 'submissions' => $submissions];
+    }
+
+    /**
+     * Fire-and-forget sweep, throttled to at most once per TTL via the
+     * default cache pool — safe to call on every desk render. Never throws:
+     * a failed sweep must not break the curator's page.
+     */
+    public function sweepOpportunistically(): void
+    {
+        try {
+            $this->cache->get(self::CACHE_KEY, function (ItemInterface $item): true {
+                $item->expiresAfter(self::CACHE_TTL_SECONDS);
+                $this->sweep();
+
+                return true;
+            });
+        } catch (\Throwable) {
+            // Opportunistic housekeeping only — no logger is wired anywhere
+            // in this codebase (checked), and a failed sweep here must never
+            // surface as a broken moderation desk. The next opportunistic
+            // call (or an operator running `app:moderation:gc` by hand) will
+            // simply try again.
+        }
+    }
+}

@@ -12,6 +12,7 @@ use App\Catalog\SurfaceVocabulary;
 use App\Entity\User;
 use App\Form\RouteDecisionType;
 use App\Moderation\RegionFullException;
+use App\Moderation\RetentionService;
 use App\Moderation\RouteModerationService;
 use App\Moderation\RouteQueue;
 use App\Routing\LocalePrefix;
@@ -36,12 +37,17 @@ final class RouteModerateController extends AbstractController
     public function __construct(
         private readonly RouteQueue $queue,
         private readonly RouteModerationService $moderation,
+        private readonly RetentionService $retention,
     ) {
     }
 
     #[Route('/moderate/routes', name: 'moderate_routes')]
     public function index(Request $request): Response
     {
+        // Fire-and-forget housekeeping (throttled internally, never throws) —
+        // must never delay or break the desk render.
+        $this->retention->sweepOpportunistically();
+
         $region = $request->query->get('region');
         $regionId = null !== $region && ctype_digit((string) $region) ? (int) $region : null;
 

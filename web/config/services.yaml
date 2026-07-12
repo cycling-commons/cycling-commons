@@ -30,3 +30,7 @@ services:
     App\Community\RouteCommunityService:
         arguments:
             $rideVerifyThreshold: '%route.ride_verify_threshold%'
+
+    App\Moderation\RetentionService:
+        arguments:
+            $retentionMonths: '%moderation.retention_months%'

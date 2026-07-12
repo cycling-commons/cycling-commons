@@ -11,6 +11,7 @@ use App\Entity\User;
 use App\Form\ModerationDecisionType;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\ModerationService;
+use App\Moderation\RetentionService;
 use App\Moderation\SubmissionQueue;
 use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -38,12 +39,17 @@ final class ModerateController extends AbstractController
     public function __construct(
         private readonly ModerationService $moderation,
         private readonly SubmissionQueue $queue,
+        private readonly RetentionService $retention,
     ) {
     }
 
     #[Route('/moderate', name: 'moderate')]
     public function index(Request $request): Response
     {
+        // Fire-and-forget housekeeping (throttled internally, never throws) —
+        // must never delay or break the desk render.
+        $this->retention->sweepOpportunistically();
+
         $country = $request->query->getString('country');
         $region = $request->query->getString('region');
         $type = $request->query->getString('type');

@@ -1,0 +1,4 @@
+# Moderation retention config (M8 phase 1) — thresholds are config, not
+# constants (README threshold principle).
+parameters:
+    moderation.retention_months: 3
