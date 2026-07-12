@@ -676,3 +676,38 @@ map. Brainstormed + **user-approved**; V1 scope below. Builds on the phase-3
 - **Out (recorded future work):** curator editing/drawing segments; showing
   **resolved** corrections' segments (history); GPX-proof; segment robustness
   across a future curator track replacement (fractions would need re-projection).
+
+### Execution note (2026-07-12)
+
+Shipped on `symfony-base` (6 tasks + review fixes, `e8007c4..<spec-note>`). Full
+gate green: **397 tests / 1721 assertions**, phpstan + psalm + php-cs-fixer +
+SPDX + licenses + translation parity (1179 keys) all clean. Dev DB migrated
+(`route_suggestion.segments`). Delivered S1–S5 + the "N stretches" desk indicator;
+`catalog.json`/`CatalogProvider` byte-unchanged (corrections are a separate
+curator-only endpoint). Live-verified: rider marks stretches on the route line
+(snapped, numbered, pairs, undo/clear/done) and Send persists them; curator
+opening `/map?route=<id>` sees all pending corrections colour-per-correction with
+numbered endpoints + a side list (click-to-focus); non-curators see nothing.
+
+Decisions/fixes during execution:
+
+1. **Segments stored as JSONB objects `{start,end}`; Postgres reorders the keys.**
+   `{start,end}` round-trips as `{end,start}` (values correct, key order not
+   preserved) — consumers access by key so it's transparent, but **tests must
+   assert values order-agnostically** (extract `[start,end]` or ksort), not
+   `assertSame` on the raw structure.
+2. **Segment order is normalized client-side (S1 fix).** A rider can click a
+   stretch's two endpoints in either order; `pickSegments()` now emits
+   `start = min, end = max` (matching `sliceByFrac`'s swap), so the server's
+   `0 ≤ start ≤ end ≤ 1` validation never 422s on a reverse-order pick.
+3. **The picking mode guards the drawer-open.** Clicking the route line while
+   `_pick` is active must NOT open/switch the drawer (the layer click handler
+   would otherwise fire alongside the point-drop) — guarded via an early return
+   in `openDrawer` when `_pick` is set; `startPicking` has a re-entrancy guard and
+   the minimised drawer is `pointer-events:none`; `closeDrawer` cancels an
+   in-progress pick and calls `clearCorrections()`.
+4. **The moderator overlay rides the phase-4 `?route=<id>` deep-link** and a new
+   curator-only `GET /routes/{id}/corrections` (pending only). A non-403 fetch
+   error would not clear a prior overlay (cleanup only runs on success) — a
+   non-issue today since `openRouteById` fires once per page load; harden if
+   route-switching-without-reload is ever added.
