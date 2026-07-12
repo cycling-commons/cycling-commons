@@ -9,7 +9,7 @@
 #}
 <form action="{{ action.linkUrl }}" method="post" class="user-support-action">
     <input type="hidden" name="token" value="{{ csrf_token(constant('App\\Controller\\Admin\\UserCrudController::CSRF_TOKEN_ID')) }}">
-    <button type="submit" class="btn btn-secondary {{ action.cssClass }}">
+    <button type="submit" class="btn btn-secondary {{ action.cssClass }}" data-confirm="{{ 'admin.confirm_irreversible'|trans }}">
         {% if action.icon %}<i class="{{ action.icon }}"></i> {% endif %}
         <span class="action-label">{{ action.label|trans }}</span>
     </button>

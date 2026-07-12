@@ -1,0 +1,18 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Shared decorative left panel for the auth pages (contour lines + pitch).
+   Param: prefix — translation key prefix supplying .panel_h1 / .panel_p /
+   .panel_bot (e.g. 'security.login', 'twofactor.login'). #}
+<div class="panel" aria-hidden="true">
+  <svg viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice">
+    <path d="M-20,640 C160,580 260,680 420,620 C560,570 640,640 820,600"/>
+    <path d="M-20,540 C150,490 280,580 440,520 C600,470 660,540 820,500"/>
+    <path d="M-20,440 C160,400 260,470 420,420 C560,380 660,440 820,400"/>
+    <path d="M-20,330 C150,300 280,370 440,320 C600,280 660,330 820,300"/>
+    <path d="M-20,220 C160,190 260,250 420,210 C560,180 660,220 820,190"/>
+  </svg>
+  <div class="mid">
+    <h1>{{ (prefix ~ '.panel_h1')|trans }}</h1>
+    <p>{{ (prefix ~ '.panel_p')|trans }}</p>
+  </div>
+  <div class="bot">{{ (prefix ~ '.panel_bot')|trans }}</div>
+</div>

@@ -24,7 +24,7 @@
 <div class="lhero"><div class="wrap">
   <div class="kicker" style="color:var(--trail)">{% trans %}privacy.kicker{% endtrans %}</div>
   <h1 class="disp">{% trans %}privacy.title{% endtrans %}</h1>
-  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'privacy.lead'|trans|raw }}</p>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'privacy.lead'|trans|rich }}</p>
 </div></div>
 
 <section class="pad"><div class="wrap">
@@ -33,48 +33,48 @@
     <p class="upd">{% trans %}privacy.last_updated{% endtrans %}</p>
 
     <h2>{% trans %}privacy.h_responsible{% endtrans %}</h2>
-    <p>{% trans %}privacy.responsible_p1_pre{% endtrans %} <b>{% trans %}privacy.responsible_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}privacy.responsible_p1_mid{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}privacy.responsible_p1_governance{% endtrans %}</a>{{ 'privacy.responsible_p1_post'|trans|raw }}</p>
+    <p>{% trans %}privacy.responsible_p1_pre{% endtrans %} <b>{% trans %}privacy.responsible_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}privacy.responsible_p1_mid{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}privacy.responsible_p1_governance{% endtrans %}</a>{{ 'privacy.responsible_p1_post'|trans|rich }}</p>
     <p>{% trans %}privacy.responsible_p2_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a>{% trans %}privacy.responsible_p2_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.responsible_p2_ap{% endtrans %}</a>{% trans %}privacy.responsible_p2_post{% endtrans %}</p>
 
     <h2>{% trans %}privacy.h_collect{% endtrans %}</h2>
     <p>{% trans %}privacy.collect_intro{% endtrans %}</p>
     <h3>{% trans %}privacy.h3_account{% endtrans %}</h3>
     <ul>
-      <li>{{ 'privacy.collect_account_email'|trans|raw }}</li>
-      <li>{{ 'privacy.collect_account_password'|trans|raw }}</li>
-      <li>{{ 'privacy.collect_account_displayname'|trans|raw }}</li>
-      <li>{{ 'privacy.collect_account_2fa'|trans|raw }}</li>
+      <li>{{ 'privacy.collect_account_email'|trans|rich }}</li>
+      <li>{{ 'privacy.collect_account_password'|trans|rich }}</li>
+      <li>{{ 'privacy.collect_account_displayname'|trans|rich }}</li>
+      <li>{{ 'privacy.collect_account_2fa'|trans|rich }}</li>
     </ul>
     <h3>{% trans %}privacy.h3_contribute{% endtrans %}</h3>
     <ul>
-      <li>{{ 'privacy.collect_contribute_items'|trans|raw }}</li>
-      <li>{{ 'privacy.collect_contribute_media'|trans|raw }}</li>
+      <li>{{ 'privacy.collect_contribute_items'|trans|rich }}</li>
+      <li>{{ 'privacy.collect_contribute_media'|trans|rich }}</li>
       {# TODO: point at path('settings') once that route exists (Plan 3) #}
       <li>{% trans %}privacy.collect_contribute_profile{% endtrans %} <a href="{{ path('login') }}">{% trans %}privacy.collect_contribute_profile_link{% endtrans %}</a>{% trans %}privacy.collect_contribute_profile_post{% endtrans %}</li>
     </ul>
     <h3>{% trans %}privacy.h3_auto{% endtrans %}</h3>
     <ul>
-      <li>{{ 'privacy.collect_auto_technical'|trans|raw }}</li>
+      <li>{{ 'privacy.collect_auto_technical'|trans|rich }}</li>
     </ul>
-    <div class="banner"><b>{% trans %}privacy.banner_bold{% endtrans %}</b> {{ 'privacy.banner_body'|trans|raw }}</div>
+    <div class="banner"><b>{% trans %}privacy.banner_bold{% endtrans %}</b> {{ 'privacy.banner_body'|trans|rich }}</div>
 
     <h2>{% trans %}privacy.h_why{% endtrans %}</h2>
     <ul>
-      <li>{{ 'privacy.why_contract'|trans|raw }}</li>
+      <li>{{ 'privacy.why_contract'|trans|rich }}</li>
       {# TODO: point at path('settings') once that route exists (Plan 3) #}
-      <li>{{ 'privacy.why_consent'|trans|raw }} <a href="{{ path('login') }}">{% trans %}privacy.why_consent_link{% endtrans %}</a>{% trans %}privacy.why_consent_post{% endtrans %}</li>
-      <li>{{ 'privacy.why_legitimate'|trans|raw }}</li>
-      <li>{{ 'privacy.why_legal'|trans|raw }}</li>
+      <li>{{ 'privacy.why_consent'|trans|rich }} <a href="{{ path('login') }}">{% trans %}privacy.why_consent_link{% endtrans %}</a>{% trans %}privacy.why_consent_post{% endtrans %}</li>
+      <li>{{ 'privacy.why_legitimate'|trans|rich }}</li>
+      <li>{{ 'privacy.why_legal'|trans|rich }}</li>
     </ul>
 
     <h2>{% trans %}privacy.h_cookies{% endtrans %}</h2>
-    <p>{{ 'privacy.cookies_body'|trans|raw }}</p>
+    <p>{{ 'privacy.cookies_body'|trans|rich }}</p>
 
     <h2>{% trans %}privacy.h_share{% endtrans %}</h2>
     <ul>
-      <li>{{ 'privacy.share_infra'|trans|raw }}</li>
+      <li>{{ 'privacy.share_infra'|trans|rich }}</li>
       <li>{% trans %}privacy.share_osm_pre{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}privacy.share_osm_link{% endtrans %}</a>{% trans %}privacy.share_osm_post{% endtrans %}</li>
-      <li>{{ 'privacy.share_noone'|trans|raw }}</li>
+      <li>{{ 'privacy.share_noone'|trans|rich }}</li>
     </ul>
 
     <h2>{% trans %}privacy.h_transfers{% endtrans %}</h2>
@@ -82,25 +82,25 @@
 
     <h2>{% trans %}privacy.h_retention{% endtrans %}</h2>
     <ul>
-      <li>{{ 'privacy.retention_account'|trans|raw }}</li>
-      <li>{{ 'privacy.retention_logs'|trans|raw }}</li>
-      <li>{{ 'privacy.retention_contributions'|trans|raw }}</li>
+      <li>{{ 'privacy.retention_account'|trans|rich }}</li>
+      <li>{{ 'privacy.retention_logs'|trans|rich }}</li>
+      <li>{{ 'privacy.retention_contributions'|trans|rich }}</li>
     </ul>
 
     <h2>{% trans %}privacy.h_rights{% endtrans %}</h2>
     <p>{% trans %}privacy.rights_intro{% endtrans %}</p>
     <ul>
-      <li>{{ 'privacy.rights_access'|trans|raw }}</li>
-      <li>{{ 'privacy.rights_correct'|trans|raw }}</li>
-      <li>{{ 'privacy.rights_erase'|trans|raw }}</li>
-      <li>{{ 'privacy.rights_portability'|trans|raw }}</li>
-      <li>{{ 'privacy.rights_restrict'|trans|raw }}</li>
-      <li>{{ 'privacy.rights_withdraw'|trans|raw }}</li>
+      <li>{{ 'privacy.rights_access'|trans|rich }}</li>
+      <li>{{ 'privacy.rights_correct'|trans|rich }}</li>
+      <li>{{ 'privacy.rights_erase'|trans|rich }}</li>
+      <li>{{ 'privacy.rights_portability'|trans|rich }}</li>
+      <li>{{ 'privacy.rights_restrict'|trans|rich }}</li>
+      <li>{{ 'privacy.rights_withdraw'|trans|rich }}</li>
     </ul>
     <p>{% trans %}privacy.rights_contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a>{% trans %}privacy.rights_contact_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.rights_contact_ap{% endtrans %}</a>{% trans %}privacy.rights_contact_post{% endtrans %}</p>
 
     <h2>{% trans %}privacy.h_children{% endtrans %}</h2>
-    <p>{{ 'privacy.children_body'|trans|raw }}</p>
+    <p>{{ 'privacy.children_body'|trans|rich }}</p>
 
     <h2>{% trans %}privacy.h_automated{% endtrans %}</h2>
     <p>{% trans %}privacy.automated_body{% endtrans %}</p>

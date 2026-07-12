@@ -46,7 +46,7 @@
 <div class="dbody">
 
   {# ── Contributions (PREVIEW data — data-API/Plan 5 replaces the figures) ── #}
-  <section class="dpane on" id="p-contrib" role="tabpanel">
+  <section class="dpane on" id="p-contrib">
     <div class="stats">
       <div class="stat"><div class="n">142</div><div class="l">{{ 'account.stat_facts'|trans }}</div></div>
       <div class="stat"><div class="n t">38</div><div class="l">{{ 'account.stat_confirmed'|trans }}</div></div>
@@ -104,15 +104,15 @@
   </section>
 
   {# ── Votes (PREVIEW) ── #}
-  <section class="dpane" id="p-votes" role="tabpanel">
+  <section class="dpane" id="p-votes">
     <div class="rounding">◷ {{ 'account.vote_round'|trans }}</div>
     <div class="item"><span class="tag" style="background:var(--spruce);color:#fff">region</span><h4>Wallonia — best climbs</h4><span class="co">4 / 10 ranked</span><span class="pill conf">{{ 'account.status_voting'|trans }}</span></div>
     <div class="item"><span class="tag" style="background:var(--spruce);color:#fff">region</span><h4>Dolomites — best views</h4><span class="co">7 / 10 ranked</span><span class="pill conf">{{ 'account.status_voting'|trans }}</span></div>
-    <div class="note">{{ 'account.votes_note'|trans|raw }}</div>
+    <div class="note">{{ 'account.votes_note'|trans|rich }}</div>
   </section>
 
   {# ── Saved regions (PREVIEW) ── #}
-  <section class="dpane" id="p-saved" role="tabpanel">
+  <section class="dpane" id="p-saved">
     <div class="cards">
       <a class="rc" href="{{ path('regions') }}"><h4>Wallonia</h4><div class="co">BE · 18 climbs · 42 water</div></a>
       <a class="rc" href="{{ path('regions') }}"><h4>Dolomites</h4><div class="co">IT · 31 climbs · 12 views</div></a>

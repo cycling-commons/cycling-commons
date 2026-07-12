@@ -21,10 +21,12 @@
 </style>
 {% endblock %}
 {% block body %}
+<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">{% trans %}contributors.demo_label{% endtrans %}</b> {{ 'contributors.demo_body'|trans|rich }}</div>
+
 <div class="chero"><div class="wrap" style="max-width:820px">
   <div class="kicker" style="color:var(--trail)">{% trans %}contributors.kicker{% endtrans %}</div>
   <h1 class="disp">{% trans %}contributors.title{% endtrans %}</h1>
-  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'contributors.lead'|trans|raw }}</p>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'contributors.lead'|trans|rich }}</p>
 </div></div>
 
 <section class="pad"><div class="wrap" style="max-width:820px">
@@ -46,7 +48,7 @@
 </div></section>
 {% endblock %}
 {% block body_scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 /* Contributor acknowledgment wall — non-ranked, alphabetical, filterable by
    name or region. Sample (non-personal) handles; identity is never stored. */
 (function(){
@@ -61,12 +63,17 @@
     {h:'rider#d4aa',r:'Wallonia',f:2210,o:44},        {h:'rider#e6f3',r:'Flanders',f:970,o:16}
   ].sort((a,b)=>a.h.localeCompare(b.h));
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  // Row stats: translated format string + page locale for number formatting
+  // (toLocaleString would otherwise follow the browser, not the page).
+  const LOC="{{ app.request.locale|e('js') }}";
+  const STATS="{{ 'contributors.row_stats'|trans|e('js') }}";
+  const stats=c=>STATS.replace('%facts%',`<b>${c.f.toLocaleString(LOC)}</b>`).replace('%osm%',c.o);
   const wall=document.getElementById('ack');
   const q=document.querySelector('.ack-q');
   const rg=document.querySelector('.ack-rg');
   const empty=document.getElementById('ack-empty');
   [...new Set(C.map(c=>c.r))].sort().forEach(r=>{const o=document.createElement('option');o.textContent=r;rg.appendChild(o);});
-  wall.innerHTML=C.map(c=>`<div class="row" data-name="${esc(c.h)}" data-region="${esc(c.r)}"><span class="av">${esc(c.h.slice(6,8).toUpperCase())}</span><span class="nm">${esc(c.h)}</span><span class="rg">${esc(c.r)}</span><span class="st"><b>${c.f.toLocaleString()}</b>facts · ${c.o} to OSM</span></div>`).join('');
+  wall.innerHTML=C.map(c=>`<div class="row" data-name="${esc(c.h)}" data-region="${esc(c.r)}"><span class="av">${esc(c.h.slice(6,8).toUpperCase())}</span><span class="nm">${esc(c.h)}</span><span class="rg">${esc(c.r)}</span><span class="st">${stats(c)}</span></div>`).join('');
   const chips=[...wall.children];
   function apply(){
     const t=q.value.trim().toLowerCase(), reg=rg.value; let n=0;

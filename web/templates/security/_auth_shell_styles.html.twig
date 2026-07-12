@@ -1,0 +1,45 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Shared two-panel auth shell styles (login / register / 2FA / password reset /
+   check-email). One source of truth so the field-error and validation looks
+   can't drift between the auth pages again (the 2FA page had lost them).
+   Page-specific rules (e.g. the 2FA code input's mono styling, login's
+   .row-between) live in each template's own <style>, placed AFTER this include
+   so they win the cascade. #}
+<style>
+  .auth{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100svh - var(--nav-h,64px))}
+  .panel{position:relative;overflow:hidden;border-radius:0;color:var(--paper);display:flex;flex-direction:column;justify-content:flex-start;padding:2.4rem;
+    background:radial-gradient(120% 90% at 70% 20%,#27513a,var(--spruce) 45%,#0f1f16 85%,var(--ink))}
+  .panel svg{position:absolute;inset:0;width:100%;height:100%;opacity:.4}
+  .panel svg path{fill:none;stroke:var(--ochre);stroke-width:1.1;opacity:.5}
+  .panel svg path:nth-child(even){stroke:var(--glacier);opacity:.3}
+  .panel .top,.panel .mid,.panel .bot{position:relative;z-index:2}
+  .panel .mid{margin:auto 0}   /* vertically center the heading block; .bot stays pinned bottom */
+  .panel .mid h1{font-family:var(--serif);font-weight:500;font-size:clamp(2rem,3.6vw,3rem);line-height:1.05;letter-spacing:-.02em;max-width:14ch}
+  .panel .mid p{margin-top:1rem;max-width:32ch;color:rgba(239,230,212,.85)}
+  .panel .bot{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;color:rgba(239,230,212,.6);text-transform:uppercase}
+  .formwrap{display:flex;align-items:center;justify-content:center;padding:2.4rem}
+  .card{width:100%;max-width:380px;border-radius:0}
+  .auth-heading{font-family:var(--mono);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2rem;color:var(--ink)}
+  .check-icon{font-size:2.5rem;margin-bottom:1.2rem}
+  .field{margin-bottom:1.3rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input[type=email],
+  .field input[type=text],
+  .field input[type=password]{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none}
+  .field input:focus{border-color:var(--trail)}
+  .btn-submit{width:100%;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.88rem;padding:.6rem;border:none;border-radius:5px;cursor:pointer;transition:background .2s}
+  .btn-submit:hover{background:#ff703d}
+  .reassure{margin-top:1.6rem;font-size:.82rem;color:#5a5d4d;line-height:1.5;border-left:2px solid var(--glacier);padding-left:.8rem}
+  .auth-alt-link{display:block;margin-top:1.4rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;text-align:center}
+  .auth-alt-link a{color:var(--clay)}
+  .alert-error{background:rgba(181,83,46,.1);border-left:3px solid var(--clay);color:var(--clay);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  .alert-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  /* Error lists: style both the JS-injected (.field-errors) and the default
+     Symfony server-rendered errors (a bare <ul> inside the form) the same. */
+  .field-errors,.card form ul{list-style:none;padding:0;margin:.5rem 0 .2rem}
+  .field-errors li,.card form ul li{display:flex;gap:.45rem;align-items:flex-start;font-size:.8rem;color:var(--clay);line-height:1.4;padding:.45rem .65rem;margin-top:.35rem;background:rgba(181,83,46,.09);border:1px solid rgba(181,83,46,.28);border-radius:5px}
+  .field-errors li::before,.card form ul li::before{content:"\26A0";flex:none;font-size:.9em;line-height:1.4}
+  input.is-invalid{border-bottom-color:var(--clay)}
+  input[type=checkbox].is-invalid{outline:2px solid var(--clay);outline-offset:2px}
+  @media(max-width:780px){.auth{grid-template-columns:1fr;min-height:auto}.panel{min-height:auto;padding:1.6rem}.formwrap{align-items:flex-start;padding:2rem 1.6rem}}
+</style>

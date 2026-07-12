@@ -806,3 +806,21 @@ remains the route-side origin record. Route-side scope changes it brings:
 - The **map page must gain the account chip (or a minimal authenticated
   indicator wired to the same partial)** so the N3 bulb reaches the map (today
   `/map` renders no chip and links Account → login even when signed in).
+
+## 18. Moderation-desk review fixes (2026-07-12 frontend-review warnings)
+
+Small correctness/i18n/a11y fixes to the Routes desk from the 2026-07-12
+frontend review's warning batch (the criticals live in
+[`2026-07-12-frontend-review-criticals-fixes.md`](2026-07-12-frontend-review-criticals-fixes.md)):
+
+- **W55 — edit form CSRF unified.** The detail page's `route_edit` form used
+  `csrf_protection: false` plus a hand-rendered top-level `_token` input that
+  `edit()` validated manually. The form now uses its own CSRF (default token id
+  = form name, rendered by `form_end()` as `route_edit[_token]`); `edit()`
+  validates that scoped token and the manual hidden input is gone.
+- **W56 — no auto-submit filter (WCAG 3.2.2).** The region `<select>` lost its
+  `onchange="this.form.submit()"`; the previously noscript-only Apply button is
+  now always shown.
+- **W29/W54 — i18n.** `… m ascent` became `moderate_routes.stat_ascent`
+  (`%m%` param), and the raw `route.state` enum on detail now renders through
+  the existing `account.route_state_*` keys.

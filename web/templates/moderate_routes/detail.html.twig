@@ -39,7 +39,7 @@
     <h1>{{ route.name }}</h1>
     <div class="stat-line">
       {{ route.km }} km
-      {% if route.ascent is not null %}&middot; {{ route.ascent }} m ascent{% endif %}
+      {% if route.ascent is not null %}&middot; {{ 'moderate_routes.stat_ascent'|trans({'%m%': route.ascent}) }}{% endif %}
       &middot; <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': active_in_region, '%cap%': region_cap}) }}</span>
     </div>
   </div>
@@ -50,7 +50,7 @@
 
   <div class="rd-meta">
     <table>
-      <tr><td>{{ 'moderate_routes.meta.state'|trans }}</td><td>{{ route.state }}</td></tr>
+      <tr><td>{{ 'moderate_routes.meta.state'|trans }}</td><td>{{ ('account.route_state_' ~ route.state)|trans }}</td></tr>
       <tr><td>{{ 'moderate_routes.meta.distance'|trans }}</td><td>{{ route.km }} km</td></tr>
       <tr><td>{{ 'moderate_routes.meta.ascent'|trans }}</td><td>{{ route.ascent ?? '—' }}</td></tr>
       <tr><td>{{ 'moderate_routes.meta.region'|trans }}</td><td>{{ route.regionId ?? '—' }}</td></tr>
@@ -68,7 +68,6 @@
 
   <div class="rd-edit">
     {{ form_start(edit_form, {attr: {novalidate: 'novalidate'}}) }}
-      <input type="hidden" name="_token" value="{{ csrf_token('route_edit') }}">
       {{ form_widget(edit_form.route_id) }}
       <label for="{{ edit_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>
       {{ form_widget(edit_form.note) }}

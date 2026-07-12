@@ -36,8 +36,12 @@
         'background:radial-gradient(70% 120% at 90% 0,rgba(250,190,80,.18),transparent 60%),',
         'linear-gradient(160deg,#15301f 0%,#27513a 100%);',
         'box-shadow:-18px 0 40px -20px rgba(0,0,0,.6);',
-        'transform:translateX(100%);transition:transform .28s ease}',
-      '.cc-drawer.cc-open{transform:translateX(0)}',
+      // visibility:hidden takes the closed drawer's links out of the keyboard
+      // tab order (translateX alone only hides them visually); the 0s/.28s
+      // visibility delay keeps the slide-out animation visible on close.
+        'transform:translateX(100%);visibility:hidden;',
+        'transition:transform .28s ease,visibility 0s linear .28s}',
+      '.cc-drawer.cc-open{transform:translateX(0);visibility:visible;transition:transform .28s ease}',
       '.cc-drawer-head{display:flex;justify-content:flex-end;margin-bottom:.4rem}',
       '.cc-close{background:none;border:0;color:var(--paper,#EFE6D4);font-size:1.7rem;',
         'line-height:1;cursor:pointer;padding:.2rem .5rem;opacity:.85}',
@@ -202,17 +206,18 @@
       if (opened) return;
       opened = true;
       scrim.hidden = false;
-      // next frame so the transition runs from the hidden state
+      // next frame so the transition runs from the hidden state; focus must
+      // wait for cc-open too — a visibility:hidden drawer refuses focus
       requestAnimationFrame(function () {
         scrim.classList.add('cc-open');
         drawer.classList.add('cc-open');
+        var f = focusables();
+        if (f.length) f[0].focus();
       });
       drawer.setAttribute('aria-hidden', 'false');
       burger.setAttribute('aria-expanded', 'true');
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      var f = focusables();
-      if (f.length) f[0].focus();
     }
 
     function close() {

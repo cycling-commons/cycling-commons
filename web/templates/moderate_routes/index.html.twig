@@ -62,13 +62,15 @@
 
 <div class="wrap" id="main">
   <form class="mod-filters" method="get" action="{{ path('moderate_routes') }}">
+    {# Explicit Apply button, no onchange auto-submit (WCAG 3.2.2: changing a
+       setting must not automatically change context). #}
     <label>{{ 'moderate_routes.filter.region'|trans }}
-      <select name="region" onchange="this.form.submit()">
+      <select name="region">
         <option value="">{{ 'moderate_routes.filter.all_regions'|trans }}</option>
         {% for r in regions %}<option value="{{ r.id }}"{{ filter_region == r.id ? ' selected' }}>{{ r.name }}</option>{% endfor %}
       </select>
     </label>
-    <noscript><button type="submit" class="btn-act btn-decide">{{ 'moderate.filter.apply'|trans }}</button></noscript>
+    <button type="submit" class="btn-act btn-decide">{{ 'moderate.filter.apply'|trans }}</button>
   </form>
 
   {% if routes is empty %}
@@ -94,7 +96,7 @@
       <div class="sugg-item" data-suggestion-id="{{ s.id }}">
         <div class="sugg-body">
           <a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a>
-          <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}{% if s.segmentCount > 0 %} · {{ s.segmentCount }} {{ s.segmentCount == 1 ? 'stretch' : 'stretches' }}{% endif %}</div>
+          <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}{% if s.segmentCount > 0 %} · {{ (s.segmentCount == 1 ? 'moderate_routes.suggestions.count_stretch' : 'moderate_routes.suggestions.count_stretches')|trans({'%n%': s.segmentCount}) }}{% endif %}</div>
           {% if s.note %}<p>{{ s.note }}</p>{% endif %}
         </div>
         <div class="sugg-actions">

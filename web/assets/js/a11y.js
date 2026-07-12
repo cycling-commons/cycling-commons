@@ -6,6 +6,7 @@
 //   <script src="a11y.js"></script>
 // before </body> wires it up everywhere. The link is offscreen until focused.
 (function a11y(){
+  const T=window.ccT||function(k,fb){return fb;};
   const css=document.createElement('style');
   css.textContent=`
   .skip-link{position:fixed;left:.6rem;top:-4rem;z-index:10000;
@@ -18,9 +19,11 @@
   [data-skip-target]:focus{outline:none}`;
   document.head.appendChild(css);
 
-  // Locate the main content: an existing <main>/[role=main], else the first
-  // sibling after the nav, else the first <section>, else <body>.
-  let target=document.querySelector('main, [role="main"]');
+  // Locate the main content: an existing <main>/[role=main], else whatever
+  // element already carries id="main" (some pages put it on a plain wrapper),
+  // else the first sibling after the nav, else the first <section>, else
+  // <body>. Preferring an existing #main keeps us from stamping a duplicate id.
+  let target=document.querySelector('main, [role="main"]')||document.getElementById('main');
   if(!target){
     const nav=document.querySelector('nav, .topnav, .top');
     target=(nav&&nav.nextElementSibling)||document.querySelector('section')||document.body;
@@ -32,7 +35,7 @@
   const link=document.createElement('a');
   link.className='skip-link';
   link.href='#'+target.id;
-  link.textContent='Skip to content';
+  link.textContent=T('skip','Skip to content');
   link.addEventListener('click',()=>{ const t=document.getElementById(target.id); if(t) t.focus(); });
   document.body.insertBefore(link,document.body.firstChild);
 

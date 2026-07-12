@@ -9,22 +9,24 @@
 {% block chrome %}{% include 'partials/_nav.html.twig' %}{% endblock %}
 {% block body %}{% endblock %}
 {% block footer %}{% include 'partials/_footer.html.twig' %}{% endblock %}
-<script>
+<script nonce="{{ csp_nonce() }}">
+{# Only truly site-wide strings ship here (a11y.js, nav.js, version.js). Pages
+   that need more merge their own via Object.assign(window.CC_I18N, {...}) in
+   body_scripts — see partials/_auth_i18n.html.twig for the auth-form set. #}
 window.CC_I18N = {{ {
-  pw_show: 'js.pw_show'|trans, pw_hide: 'js.pw_hide'|trans,
+  skip: 'js.skip'|trans,
   nav_open: 'js.nav_open'|trans, nav_menu: 'js.nav_menu'|trans, nav_close: 'js.nav_close'|trans,
-  err_field: 'js.err_field'|trans, err_required: 'js.err_required'|trans,
-  err_email_required: 'js.err_email_required'|trans, err_email_invalid: 'js.err_email_invalid'|trans,
-  err_password_required: 'js.err_password_required'|trans, err_password_min: 'js.err_password_min'|trans,
-  err_name_required: 'js.err_name_required'|trans, err_name_min: 'js.err_name_min'|trans,
-  err_mismatch: 'js.err_mismatch'|trans, err_checkbox: 'js.err_checkbox'|trans, err_terms: 'js.err_terms'|trans
-}|json_encode|raw }};
+  build: 'js.build'|trans
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 window.ccT = function (k, fb, vars) { var s = (window.CC_I18N && window.CC_I18N[k]) || fb; if (vars) { for (var p in vars) { s = s.replace('%' + p + '%', vars[p]); } } return s; };
 </script>
+{# races.js paints the live event coordinate into every .cc-coord brandsub
+   (topnav + account shell); not deferred — the homepage hero reads window.CC
+   from an inline script. Idempotent, no-ops when .cc-coord is absent. #}
+<script src="{{ asset('data/races.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/nav.js') }}" defer></script>
 <script src="{{ asset('js/nav-menus.js') }}" defer></script>
-<script src="{{ asset('js/password-toggle.js') }}" defer></script>
 <script src="{{ asset('js/version.js') }}"></script>
 {% block body_scripts %}{% endblock %}
 </body>

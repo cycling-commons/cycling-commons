@@ -142,7 +142,6 @@ final class RouteModerateController extends AbstractController
 
         $editForm = $this->container->get('form.factory')->createNamedBuilder('route_edit', \Symfony\Component\Form\Extension\Core\Type\FormType::class, null, [
             'action' => $this->generateUrl('moderate_routes_edit'),
-            'csrf_protection' => false, // manual validateCsrf() below handles the token
         ])
             ->add('route_id', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, ['data' => (string) $id])
             ->add('note', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, ['required' => false, 'data' => $attrs['note'] ?? null])
@@ -184,10 +183,14 @@ final class RouteModerateController extends AbstractController
     #[Route('/moderate/routes/edit', name: 'moderate_routes_edit', methods: ['POST'])]
     public function edit(Request $request): Response
     {
-        $this->validateCsrf($request, 'route_edit'); // form name → default token id
+        // The form's own CSRF token (form name → default token id), rendered by
+        // form_end() inside the route_edit[] namespace — not a top-level _token.
+        $payload = (array) $request->request->all('route_edit');
+        if (!$this->isCsrfTokenValid('route_edit', (string) ($payload['_token'] ?? ''))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
         /** @var User $curator */
         $curator = $this->getUser();
-        $payload = (array) $request->request->all('route_edit');
         $id = (int) ($payload['route_id'] ?? 0);
         unset($payload['route_id'], $payload['_token']);
 

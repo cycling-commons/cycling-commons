@@ -14,7 +14,7 @@
 </style>
 {% endblock %}
 {% block body %}
-<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">{% trans %}developers.demo_label{% endtrans %}</b> {{ 'developers.demo_body'|trans|raw }}</div>
+<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">{% trans %}developers.demo_label{% endtrans %}</b> {{ 'developers.demo_body'|trans|rich }}</div>
 
 <div class="dhero"><div class="wrap">
   <div class="kicker" style="color:var(--trail)">{% trans %}developers.kicker{% endtrans %}</div>
@@ -24,7 +24,7 @@
 
 <section class="pad"><div class="wrap">
   <div class="kicker">{% trans %}developers.ep_kicker{% endtrans %}</div>
-  <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep1_path'|trans }}</span><span class="desc">{{ 'developers.ep1_desc'|trans|raw }}</span></div>
+  <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep1_path'|trans }}</span><span class="desc">{{ 'developers.ep1_desc'|trans|rich }}</span></div>
   <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep2_path'|trans }}</span><span class="desc">{% trans %}developers.ep2_desc{% endtrans %}</span></div>
   <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep3_path'|trans }}</span><span class="desc">{% trans %}developers.ep3_desc{% endtrans %}</span></div>
   <div class="ep"><span class="verb">POST</span><span class="path">{{ 'developers.ep4_path'|trans }}</span><span class="desc">{% trans %}developers.ep4_desc{% endtrans %}</span></div>
@@ -49,7 +49,7 @@
     </div>
     <div>
       <div class="kicker">{% trans %}developers.rules_kicker{% endtrans %}</div>
-      <div class="note">{{ 'developers.rules_body'|trans|raw }} <a href="{{ path('licenses') }}">{% trans %}licenses.kicker{% endtrans %}</a>.</div>
+      <div class="note">{{ 'developers.rules_body'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}licenses.kicker{% endtrans %}</a>.</div>
     </div>
   </div>
 </div></section>

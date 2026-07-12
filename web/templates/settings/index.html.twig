@@ -95,8 +95,8 @@
       <span>{% for role in cc_user.roles %}<span class="pill role">{{ role }}</span>{% endfor %}</span>
     </div>
     <div class="status-row">
-      <span class="label">Country</span>
-      <span>{% if cc_user.country %}<img src="{{ asset(cc_user.country.flagAsset) }}" alt="" width="20" height="15" style="vertical-align:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)"> {{ cc_user.country.name }}{% else %}<span class="pill no">Not set</span>{% endif %}</span>
+      <span class="label">{{ 'profile.status_country'|trans }}</span>
+      <span>{% if cc_user.country %}<img src="{{ asset(cc_user.country.flagAsset) }}" alt="" width="20" height="15" style="vertical-align:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)"> {{ cc_user.country.name }}{% else %}<span class="pill no">{{ 'profile.pill_not_set'|trans }}</span>{% endif %}</span>
     </div>
   </div>
 
@@ -110,9 +110,9 @@
         {{ form_errors(profileForm.displayName) }}
       </div>
       <div class="field">
-        <label>{{ 'settings.label_email'|trans }}</label>
-        <input type="email" value="{{ cc_user.email }}" readonly aria-label="Email address (read-only)" />
-        <div class="hint">{{ 'settings.email_hint'|trans|raw }}</div>
+        <label for="settings-email">{{ 'settings.label_email'|trans }}</label>
+        <input type="email" id="settings-email" value="{{ cc_user.email }}" readonly />
+        <div class="hint">{{ 'settings.email_hint'|trans|rich }}</div>
       </div>
       <div class="field">
         {{ form_label(profileForm.country) }}
@@ -183,7 +183,7 @@
     </div>
   </div>
 
-  <div class="notice">{{ 'settings.notice'|trans|raw }}</div>
+  <div class="notice">{{ 'settings.notice'|trans|rich }}</div>
 
   {# ── Danger zone ── #}
   <div class="danger-zone" id="delete">
@@ -219,5 +219,7 @@
 {% endblock %}
 
 {% block body_scripts %}
+{% include 'partials/_auth_i18n.html.twig' %}
+<script src="{{ asset('js/password-toggle.js') }}" defer></script>
 <script src="{{ asset('js/auth-validate.js') }}" defer></script>
 {% endblock %}

@@ -38,12 +38,12 @@
 </style>
 {% endblock %}
 {% block body %}
-<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">{% trans %}regions.demo_label{% endtrans %}</b> {{ 'regions.demo_body'|trans|raw }}</div>
+<div style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">{% trans %}regions.demo_label{% endtrans %}</b> {{ 'regions.demo_body'|trans|rich }}</div>
 
 <div class="rhero"><div class="wrap">
   <div class="kicker" style="color:var(--trail)">{% trans %}regions.kicker{% endtrans %}</div>
   <h1>{% trans %}regions.title{% endtrans %}</h1>
-  <p>{{ 'regions.lead'|trans|raw }}</p>
+  <p>{{ 'regions.lead'|trans|rich }}</p>
 </div></div>
 
 <div class="rwrap">
@@ -55,35 +55,46 @@
 </div>
 {% endblock %}
 {% block body_scripts %}
-<script src="{{ asset('data/regions-data.js') }}"></script>
-<script>
+<script src="{{ asset('data/regions-data.js') }}" defer></script>
+<script nonce="{{ csp_nonce() }}">
   /* Render Continent → country → regions from the baked CC_REGIONS snapshot.
      Regions are admin divisions merged to ~Wallonia size (see the spec).
-     Wallonia links to its live atlas; the rest are indicative. */
+     Wallonia links to its live atlas; the rest are indicative.
+     regions-data.js is deferred, so rendering waits for DOMContentLoaded. */
+  document.addEventListener('DOMContentLoaded', () => {
+  const T = {
+    region: "{{ 'regions.count_region'|trans|e('js') }}",
+    regions: "{{ 'regions.count_regions'|trans|e('js') }}",
+    country: "{{ 'regions.count_country'|trans|e('js') }}",
+    countries: "{{ 'regions.count_countries'|trans|e('js') }}",
+    live: "{{ 'regions.badge_live'|trans|e('js') }}"
+  };
+  const plural = (n, one, many) => (n === 1 ? one : many).replace('%n%', n);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const root = document.getElementById('regions-root');
   const DATA = window.CC_REGIONS || [];
 
   if (!DATA.length) {
-    root.innerHTML = '<div class="empty">{{ 'regions.no_regions'|trans }}</div>';
+    root.innerHTML = '<div class="empty">{{ 'regions.no_regions'|trans|e('js') }}</div>';
   } else {
     root.innerHTML = DATA.map(cont => {
       const countries = cont.countries.map(co => {
         const regs = co.regions.map(r => {
           const km = r.km2 ? `<span class="km">${Number(r.km2).toLocaleString()} km²</span>` : '';
           if (r.live) {
-            return `<a class="reg live" href="{{ path('region') }}"><span>${esc(r.name)}</span><span class="tag">Live</span>${km}</a>`;
+            return `<a class="reg live" href="{{ path('region') }}"><span>${esc(r.name)}</span><span class="tag">${T.live}</span>${km}</a>`;
           }
           return `<span class="reg"><span>${esc(r.name)}</span>${km}</span>`;
         }).join('');
         return `<div class="country">
-            <div class="ch"><h3>${esc(co.name)}</h3><span class="cc">${esc(co.code)}</span><span class="n">${co.regions.length} region${co.regions.length===1?'':'s'}</span></div>
+            <div class="ch"><h3>${esc(co.name)}</h3><span class="cc">${esc(co.code)}</span><span class="n">${plural(co.regions.length, T.region, T.regions)}</span></div>
             <div class="regions">${regs}</div>
           </div>`;
       }).join('');
       const nC = cont.countries.length;
-      return `<h2 class="cont">${esc(cont.continent)}<span>${nC} countr${nC===1?'y':'ies'}</span></h2>${countries}`;
+      return `<h2 class="cont">${esc(cont.continent)}<span>${plural(nC, T.country, T.countries)}</span></h2>${countries}`;
     }).join('');
   }
+  });
 </script>
 {% endblock %}

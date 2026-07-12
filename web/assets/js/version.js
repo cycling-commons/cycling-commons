@@ -12,8 +12,9 @@
 window.CC_VERSION = { number: 'Demo v0.1.2', date: '2026-06-26' };
 
 (function () {
+  var T = window.ccT || function (k, fb) { return fb; };   // ccT is absent on chrome-less pages
   var V = window.CC_VERSION;
-  var label = 'Build ' + V.number + (V.date ? ' · ' + V.date : '');
+  var label = T('build', 'Build') + ' ' + V.number + (V.date ? ' · ' + V.date : '');
 
   function stamp() {
     // 1) content pages: append to the footer license line
@@ -30,7 +31,7 @@ window.CC_VERSION = { number: 'Demo v0.1.2', date: '2026-06-26' };
     if (rail) {
       var r = document.createElement('span');
       r.className = 'cc-ver';
-      r.innerHTML = ('Build ' + V.number).toUpperCase() + (V.date ? '<br>' + V.date : '');   // date on its own line
+      r.innerHTML = (T('build', 'Build') + ' ' + V.number).toUpperCase() + (V.date ? '<br>' + V.date : '');   // date on its own line
       r.style.cssText = 'font-family:var(--mono,monospace);font-size:.58rem;letter-spacing:.08em;opacity:.7;line-height:1.35;text-align:right';
       rail.appendChild(r);
       return;
