@@ -38,7 +38,7 @@ One shared system fixes all channels at once instead of three divergent ones.
 
 | # | Decision |
 |---|---|
-| M1 | **One `UserMessage` entity** (new — nothing like it exists) carries all moderation feedback: recipient user id, `kind`, body, sender (`system` or a curator id — never exposed as a name in either direction), related refs (channel + row id + the human receipt ref e.g. `SUB-42` / `CC-R00023`), `created_at`, `read_at`. **Append-only** — messages are the durable record (this also retires the item side's decision-note-overwrite flaw as the notes' new home). |
+| M1 | **One `UserMessage` entity** (new — nothing like it exists) carries all moderation feedback: recipient user id, `kind`, body, sender (`system` or a curator id — never exposed as a name in either direction), related refs (channel + row id + the human receipt ref e.g. `SUB-42` / `CC-R00023`), `created_at`, `read_at`. **Append-only, and it is the recipient's inbox copy — NOT the institutional audit trail** (it cascades away with the account, M10). The curator-side durable record of who decided what and why stays where it survives account deletion: `Submission.decisionNote`/`decidedBy`/`decidedAt` and `route_change_history`. What M1 fixes for the rider is delivery: each decision's note reaches them as its own message, so the item side's mutable-`decisionNote` overwrite no longer loses the *rider-facing* copy of an earlier needs-info note. |
 | M2 | **Every decision on every channel writes a message, inside the decision's transaction** (atomic + duplicate-proof, riding the existing `wrapInTransaction` + already-decided guards). Outcomes: approve/done → **thank-you**; reject/dismiss → informing message; needs-info → request message. Kinds: `submission_approved/rejected/needs_info`, `route_approved/rejected/retired`, `correction_done/dismissed`, `curator_message`. |
 | M3 | **Messages surface on the account dashboard** — a Messages tab in the account shell (deep-linkable as `/profile?tab=messages` via the existing `?tab=` mechanism), listing messages newest-first with read-marking. |
 | M4 | **Unread bulb on the account chip.** Rendered **inside** the shared `_account_chip.html.twig` partial (one insertion point → every base-extending surface), server-rendered per page load via a small Twig extension (one COUNT query; **no polling** — consistent with the app's no-fetch header architecture). Visual language: the existing `.cc-cluster` count-bubble treatment. Clicking goes to Messages. |
@@ -47,7 +47,7 @@ One shared system fixes all channels at once instead of three divergent ones.
 | M7 | **Email is a later delivery channel (v2)** on top of messages (which stay the record). Requires `symfony/messenger` (async sends + retry) and recipient-locale rendering (`User.locale` exists, unused today; only 1 of 3 current email templates is translated). Deferred together with M8's scheduler. |
 | M8 | **Retention: dismissed/rejected contributions are kept 3 months, then garbage-collected.** Applies to: dismissed route corrections, rejected item submissions, rejected route proposals *(see Open points for the proposal-row caveat)*. **Runner, phase 1: no new infrastructure** — (a) *lazy filtering*: every read excludes rows past retention regardless of whether a sweep ran (the house point-of-use-expiry pattern), plus (b) an *opportunistic sweep* piggybacked on desk visits (the reset-password bundle precedent). A real scheduled runner (`symfony/scheduler` + messenger worker) is **phase 2, added together with M7's email queue** — one infra investment for both. The GC command itself follows the thin-command/fat-service house pattern, idempotent and safe to re-run. |
 | M9 | **Trash — immediate, permanent hard delete for spam/abuse — on every channel** (corrections and item submissions; route proposals via the same action on the desk). No 3-month retention: we do not keep such texts/images at all. **No message is sent** (don't feed spam). Hardening copied from the admin desk: `displayIf`-gated button, POST-only + CSRF, guardrail-exception → flash, and an **audit-before-delete** content-free log row (action/who/when + channel/ref snapshot, never the content) so the deletion itself is provable. |
-| M10 | **GDPR cleanup via DB `ON DELETE CASCADE`** on `user_message.user_id` — chosen over a `UserDeletionHookInterface` implementation because the admin-side `removeAccount` **bypasses** the deletion hooks (verified asymmetry); a DB-level cascade covers both deletion paths identically. (The hook pattern remains right for anonymise-don't-delete cases; messages are personal data and simply go.) |
+| M10 | **GDPR cleanup via DB `ON DELETE CASCADE`** on `user_message.user_id` — chosen over a `UserDeletionHookInterface` implementation because the admin-side `removeAccount` **bypasses** the deletion hooks (verified asymmetry); a DB-level cascade covers both deletion paths identically. (The hook pattern remains right for anonymise-don't-delete cases; messages are personal correspondence and simply go.) Note this would be the schema's **first real `user_id` foreign key** — today `submission`/`route_vote`/`route_ride`/`route_suggestion.user_id` are plain bigints with no FK (house convention), so those rows survive account deletion as anonymous data by decoupling, not cascade; they are outside M10's scope (see §6). This is a documented exception to the admin-panel spec's "contributed data is anonymised, never cascade-deleted" rule: messages are correspondence *to* the person, not contributed catalog content. |
 | M11 | **Hygiene fixes folded in:** curator note/message bodies get an explicit length constraint (the current moderation-note textarea has none, and unbounded text reaches the rider's dashboard); message bodies are HTML-escaped on render everywhere (drawer XSS rule). |
 | M12 | **Account lock/ban for spammer accounts is OUT of this design** — recorded as separate admin-desk work (today: unlock-only; `remove_account` is gated to self-requested deletions; no proactive lock/ban exists). Trash handles the *content*; the *account* is the admin desk's job. |
 
@@ -75,7 +75,9 @@ receipt-ref conventions (M1/M6), and the later email channel (M7).
 - **Trash hardening**: `UserAdminService::removeAccount`'s audit-before-delete with
   snapshot (AdminActionLog, SET-NULL FK) + `UserCrudController`'s POST/CSRF/guardrail
   trio + EasyAdmin generic delete stays disabled.
-- **Bulb**: `.cc-cluster` visuals; count via an auto-registered Twig extension (the
+- **Bulb**: `.cc-cluster` visuals (note: that class lives in the map-scoped
+  `map.css` today — the bulb needs its own shared rule borrowing the treatment,
+  not the class as-is); count via an auto-registered Twig extension (the
   `LocaleExtension` structural template); `nav-menus.js` data-attribute contract if
   the bulb ever opens a mini-dropdown; the chip partial's responsive behaviour is
   already solved (avatar-only collapse ≤560px — attach the bulb to the avatar circle).
@@ -103,7 +105,19 @@ receipt-ref conventions (M1/M6), and the later email channel (M7).
   the 3-month GC means physically deleting catalog rows whose `source_ref`
   uniqueness/provenance story assumed permanence — confirm no importer/upsert
   interaction before including them; corrections + item submissions carry no such
-  coupling.
+  coupling. Additionally, GC-ing a route row orphans its `route_change_history`
+  rows (no FK, so no error — but the D9 append-only audit becomes unresolvable
+  for that route): resolve via an M9-style content-free audit snapshot at GC
+  time, or a route tombstone.
+- **Retention for never-answered `needs_info` rows** — §1 notes they live forever
+  today, but M8 covers only rejected/dismissed; decide whether unanswered
+  needs-info submissions expire (e.g. auto-reject after N months → then M8 applies).
+- **Other user-keyed rows on account deletion**: `submission`, `route_vote`,
+  `route_ride`, `route_suggestion` carry plain no-FK `user_id`s and survive
+  account deletion as anonymous rows (decoupling, not cascade) — deliberate for
+  contributed data, but outside M10's scope; the plan should confirm this is the
+  intended GDPR story for correction *bodies* specifically (free text a user
+  wrote), or add them to a deletion hook.
 - Retention for **Done/approved** rows (unaffected by M8 as specified — decide
   whether they ever expire).
 - Message retention (do old *read* messages expire?), bulb semantics beyond

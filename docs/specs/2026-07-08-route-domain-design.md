@@ -142,6 +142,15 @@ membership rule the importer uses).
 `old_value`, `new_value`, `changed_by`, `created_at`. One row per curator
 field edit; state transitions log `field = 'state'`.
 
+> **Shipped-schema correction (2026-07-12):** the "FK → … on delete cascade"
+> cells above record the original design intent, **not the shipped schema**.
+> The executed migrations create `route_id`/`user_id` as **plain indexed
+> bigints with no DB foreign keys** (house convention — matches
+> `submission.user_id`), so these rows survive account deletion as anonymous
+> data by decoupling, not cascade. The schema's first real `user_id` FK is
+> planned for `user_message` only
+> ([messages design](2026-07-12-moderation-feedback-and-messages-design.md) M10).
+
 ### 4.3 State machine (reuses `ItemState`, route semantics)
 
 ```
@@ -794,5 +803,6 @@ remains the route-side origin record. Route-side scope changes it brings:
 - N7 Trash adopts the admin desk's audit-before-delete + POST/CSRF/guardrail
   hardening; GDPR message cleanup is DB `ON DELETE CASCADE` (the deletion-hook
   path is bypassed by admin account removal — verified asymmetry).
-- The **map page must gain the account chip** so the N3 bulb reaches the map
-  (today `/map` renders no chip and links Account → login even when signed in).
+- The **map page must gain the account chip (or a minimal authenticated
+  indicator wired to the same partial)** so the N3 bulb reaches the map (today
+  `/map` renders no chip and links Account → login even when signed in).

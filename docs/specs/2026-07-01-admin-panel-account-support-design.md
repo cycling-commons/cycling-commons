@@ -98,6 +98,12 @@ CyclingCommons is a **commons**: contributed data is community-owned and does **
 - **Today (no content entities):** "execute account removal" hard-deletes the `User` row; `ResetPasswordRequest` rows cascade away (transient personal data). Nothing else references `User` except `World\Country` (`onDelete SET NULL`, irrelevant).
 - **Once contributions are persisted (future):** removal becomes **anonymize-in-place** — personal fields (`email`, `password`, `totpSecret`, `backupCodes`, IP/login metadata) are scrubbed and the account is dissociated from its contributions, which are **retained under an anonymous "former contributor" identity**. No contributed record is deleted. This is the deliberate difference from Upstream Platform, which *does* delete a user's ride data on the same 24-month clock.
 - Either path is **logged first** (§5), then executed.
+- **Exception (2026-07-12):** `UserMessage` rows (planned — the moderation-feedback
+  inbox, [`2026-07-12-moderation-feedback-and-messages-design.md`](2026-07-12-moderation-feedback-and-messages-design.md)
+  M10) are curator/system correspondence **to** the recipient, not contributed
+  catalog content, and DB-cascade-delete with the account. This is the schema's
+  only intended cascade on `user_id`; the commons rule above continues to govern
+  contributed data.
 
 ## 8. Dashboard landing
 
