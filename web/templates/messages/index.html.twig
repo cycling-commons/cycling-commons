@@ -22,6 +22,11 @@
   .msg-from-curator{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
   .msg-empty{color:#595c4d;font-size:.95rem}
 
+  .msg-reply{margin-top:.8rem;padding-top:.7rem;border-top:1px solid rgba(20,22,14,.1);display:flex;flex-direction:column;gap:.45rem}
+  .msg-reply label{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d}
+  .msg-reply textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
+  .msg-reply button{align-self:flex-start}
+
   .acct-id{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
 {% endblock %}
@@ -31,6 +36,9 @@
 {% block body %}
 <h1 class="acct-id">{{ 'messages.title'|trans }} — {{ cc_user.displayName }}</h1>
 <div class="wrap">
+
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
   {% if messages is empty %}
     <p class="msg-empty">{{ 'messages.empty'|trans }}</p>
@@ -49,6 +57,14 @@
           </div>
           {% if m.sender == 'curator' %}
             <div class="msg-from-curator">{{ 'messages.from_curator'|trans }}</div>
+          {% endif %}
+          {% if m.kind.value == 'submission_needs_info' and m.refId in replyable_submission_ids %}
+            <form class="msg-reply" method="post" action="{{ path('messages_reply', {id: m.id}) }}">
+              <input type="hidden" name="_token" value="{{ csrf_token('message-reply') }}">
+              <label for="msg-reply-{{ m.id }}">{{ 'messages.reply_label'|trans }}</label>
+              <textarea id="msg-reply-{{ m.id }}" name="body" maxlength="2000" required></textarea>
+              <button type="submit" class="btn-act">{{ 'messages.reply_send'|trans }}</button>
+            </form>
           {% endif %}
         </li>
       {% endfor %}

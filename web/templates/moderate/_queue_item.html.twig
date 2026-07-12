@@ -28,6 +28,9 @@
       <div class="q-now">{{ item.now }}</div>
     </div>
   {% endif %}
+  {% if item.riderReply %}
+    <p class="q-rider-reply"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ item.riderReply }}</p>
+  {% endif %}
 
   <div class="q-actions">
     {# §13: no hardcoded action — the form carries its own action (set in

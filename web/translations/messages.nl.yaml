@@ -1019,6 +1019,7 @@ moderate:
     send: 'Bericht versturen'
     sent: 'Bericht verstuurd naar de fietser.'
     error: 'Het bericht kon niet worden verstuurd.'
+  rider_reply: 'De fietser heeft geantwoord'
 moderate_routes:
   title: 'Routes moderatiewachtrij'
   kicker: 'Routeswachtrij'
@@ -1163,6 +1164,7 @@ messages:
   reply_label: 'Jouw antwoord'
   reply_send: 'Antwoord versturen'
   reply_sent: 'Antwoord verstuurd — jouw bijdrage staat weer in de beoordelingswachtrij.'
+  reply_too_late: 'Deze bijdrage wacht niet meer op je antwoord.'
 
 meta:
   home_title: 'Cycling Commons'

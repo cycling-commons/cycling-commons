@@ -26,7 +26,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}> */
     public function filtered(?string $country, ?string $region, ?string $type): array
     {
         $where = ["s.status IN ('pending', 'needs_info')"];
@@ -50,7 +50,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: strictly pending (needs-info pins are hidden until answered).
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}>
      */
     public function pendingForMap(): array
     {
@@ -77,15 +77,23 @@ final class SubmissionQueue
     /**
      * @param array<string, string> $params
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}>
      */
     private function rows(string $where, array $params): array
     {
         $rows = $this->db->fetchAllAssociative(
             'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
-                    COALESCE(s.payload->>\'body\', s.payload->\'details\'->>\'note\', \'\') AS body
+                    COALESCE(s.payload->>\'body\', s.payload->\'details\'->>\'note\', \'\') AS body,
+                    rr.body_text AS rider_reply
              FROM submission s LEFT JOIN region r ON r.id = s.region_id
+                  LEFT JOIN LATERAL (
+                      SELECT um.body_text
+                      FROM user_message um
+                      WHERE um.channel = \'submission\' AND um.ref_id = s.id AND um.sender = \'rider\'
+                      ORDER BY um.id DESC
+                      LIMIT 1
+                  ) rr ON TRUE
              WHERE '.$where.'
              ORDER BY s.created_at DESC, s.id DESC',
             $params,
@@ -119,6 +127,7 @@ final class SubmissionQueue
                 'body' => (string) $r['body'],
                 'was' => implode(' · ', $was),
                 'now' => implode(' · ', $new),
+                'riderReply' => null !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
             ];
         }, $rows);
     }

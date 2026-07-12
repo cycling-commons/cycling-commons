@@ -1019,6 +1019,7 @@ moderate:
     send: 'Nachricht senden'
     sent: 'Nachricht an den Fahrer gesendet.'
     error: 'Die Nachricht konnte nicht gesendet werden.'
+  rider_reply: 'Der Fahrer hat geantwortet'
 moderate_routes:
   title: 'Routen-Moderationswarteschlange'
   kicker: 'Routenwarteschlange'
@@ -1163,6 +1164,7 @@ messages:
   reply_label: 'Deine Antwort'
   reply_send: 'Antwort senden'
   reply_sent: 'Antwort gesendet — dein Beitrag ist wieder in der Prüfwarteschlange.'
+  reply_too_late: 'Dieser Beitrag wartet nicht mehr auf deine Antwort.'
 
 meta:
   home_title: 'Cycling Commons'

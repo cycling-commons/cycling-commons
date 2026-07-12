@@ -1019,6 +1019,7 @@ moderate:
     send: 'Envoyer le message'
     sent: 'Message envoyé au cycliste.'
     error: 'Impossible d''envoyer le message.'
+  rider_reply: 'Le cycliste a répondu'
 moderate_routes:
   title: 'File de modération des itinéraires'
   kicker: 'File des itinéraires'
@@ -1163,6 +1164,7 @@ messages:
   reply_label: 'Votre réponse'
   reply_send: 'Envoyer la réponse'
   reply_sent: 'Réponse envoyée — votre contribution est de retour dans la file de relecture.'
+  reply_too_late: 'Cette contribution n''attend plus votre réponse.'
 
 meta:
   home_title: 'Cycling Commons'

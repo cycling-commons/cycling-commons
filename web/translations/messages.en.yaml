@@ -1019,6 +1019,7 @@ moderate:
     send: 'Send message'
     sent: 'Message sent to the rider.'
     error: 'Could not send the message.'
+  rider_reply: 'Rider replied'
 moderate_routes:
   title: 'Routes moderation desk'
   kicker: 'Routes queue'
@@ -1163,6 +1164,7 @@ messages:
   reply_label: 'Your reply'
   reply_send: 'Send reply'
   reply_sent: 'Reply sent — your contribution is back in the review queue.'
+  reply_too_late: 'This contribution is no longer waiting for your reply.'
 
 meta:
   home_title: 'Cycling Commons'
