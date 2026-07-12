@@ -1,0 +1,27 @@
+docs/specs/2026-07-04-submissions-and-moderation-on-real-data-design.md
+  s_51df195d1c7750::t_476a294b188f26 151-173
+docs/specs/2026-07-12-moderation-feedback-and-messages-design.md
+  s_51df195d1c7750::t_66c5b2a4ea793c 1-117
+docs/specs/edit-items/README.md
+  s_51df195d1c7750::t_2cd400eb4f87fb 43-52
+docs/specs/edit-items/K-quality-rides.md
+  s_51df195d1c7750::t_d3d8999725e14c 75-81
+docs/specs/2026-07-08-route-domain-design.md
+  s_51df195d1c7750::t_9518049094bc0e 777-798
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "4e4cf431d9a2cc3bd1484ca6e7a24840eaa5b155",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
