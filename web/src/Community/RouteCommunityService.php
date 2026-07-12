@@ -153,13 +153,17 @@ final class RouteCommunityService
      */
     public function recordSuggestion(RecommendedRoute $route, User $user, RouteSuggestionReason $reason, ?string $note, ?array $segments = null): void
     {
-        if (!$this->routeSuggestLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
-        }
-
+        // Cheap validation BEFORE the limiter: a 422 must not cost the rider a
+        // daily-quota token (segment validation in the controller already
+        // behaves that way; unlike GPX proposals, there is no expensive work
+        // here for the limiter to bound).
         $trimmed = null !== $note ? trim($note) : null;
         if (null !== $trimmed && mb_strlen($trimmed) > self::NOTE_MAX_LENGTH) {
             throw new \InvalidArgumentException('route.error.note_too_long');
+        }
+
+        if (!$this->routeSuggestLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
+            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
         }
         $this->em->persist(new RouteSuggestion((int) $route->getId(), $user->getId(), $reason, '' !== $trimmed ? $trimmed : null, $segments));
         $this->em->flush();
