@@ -1,0 +1,29 @@
+docs/specs/edit-items/README.md
+  s_51df195d1c7750::t_ed6dc65fc2019d 43-45,47-54
+docs/specs/2026-07-12-moderation-feedback-and-messages-design.md
+  s_51df195d1c7750::t_6830ec2fc934b2 50
+  s_51df195d1c7750::t_2158247df55197 78-80
+  s_51df195d1c7750::t_8d9414d6b11ac0 41
+  s_51df195d1c7750::t_71dda94bdc5824 108-120
+docs/specs/2026-07-08-route-domain-design.md
+  s_51df195d1c7750::t_54760e1f90516f 806-808
+  s_51df195d1c7750::t_96d146703c27ac 145-153
+docs/specs/2026-07-01-admin-panel-account-support-design.md
+  s_51df195d1c7750::t_0a9c784557052e 101-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "67e9ef0ff5728ef2a25f2690b2e29d17471e7f81",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
