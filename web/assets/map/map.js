@@ -34,7 +34,7 @@
   // dashed outline, so the region you're filtering inside reads at a glance.
   function addRegionBoundary(name){
     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=jsonv2&polygon_geojson=1&limit=1`)
-      .then(r=>r.json()).then(d=>{
+      .then(r=>{ if(!r.ok) throw new Error('nominatim HTTP '+r.status); return r.json(); }).then(d=>{
         if(!d[0]||!d[0].geojson||!map.getStyle()||map.getSource('region')) return;
         const g=d[0].geojson;
         const polys = g.type==='MultiPolygon' ? g.coordinates : [g.coordinates];
@@ -44,7 +44,8 @@
         map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
         map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
         map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
-      }).catch(()=>{});
+      // decorative only — the map works without the boundary, but log why it's missing (W34)
+      }).catch(e=>console.warn('Region boundary unavailable:', e));
   }
   // optional satellite base — Esri World Imagery (added below the data layers, hidden by default)
   function addSatellite(){
@@ -54,7 +55,10 @@
       maxzoom:19, attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
     map.addLayer({id:'satellite',type:'raster',source:'satellite',layout:{visibility:'none'}});
   }
-  // seasonal ride-heatmap (illustrative — built from sample GPX rides, served as catalog.json's L layer)
+  // seasonal ride-heatmap (illustrative — built from sample GPX rides, served as catalog.json's L layer).
+  // Built LAZILY on the first heatmap-On click (review W43): ~6,600 features
+  // allocated + tiled at load for a layer that defaults Off was pure startup
+  // cost; the toggle handler below calls this before flipping visibility.
   function addHeatmap(){
     if(!window.CC_ROUTES || map.getSource('rideheat')) return;
     const feats=CC_ROUTES.heat.map(h=>({type:'Feature',properties:{season:h[2]},
@@ -150,8 +154,11 @@
       openMapillaryImage(img.id);
     }catch(_){ mlyDockMessage('No street-level imagery here.'); }
   }
+  // one reusable popup — same accumulation concern as the contextmenu popup (W11)
+  let _mlyPopupInst=null;
   function mlyPopup(lngLat,msg){
-    new maplibregl.Popup({closeButton:false,className:'pop'}).setLngLat(lngLat)
+    if(!_mlyPopupInst) _mlyPopupInst=new maplibregl.Popup({closeButton:false,className:'pop'});
+    _mlyPopupInst.setLngLat(lngLat)
       .setHTML(`<div class="pop"><div class="pop-co">Mapillary</div>${msg}</div>`).addTo(map);
   }
 
@@ -159,11 +166,18 @@
   function loadMapillaryJs(){
     if(window.mapillary) return Promise.resolve();
     if(mlyLoading) return mlyLoading;
+    // SRI-pinned like maplibre-gl in the template (review W2): a MITM-ed or
+    // compromised unpkg response must not run in the origin that holds the
+    // curator session + moderation CSRF token.
     mlyLoading=new Promise((res,rej)=>{
       const css=document.createElement('link'); css.rel='stylesheet';
-      css.href='https://unpkg.com/mapillary-js@4.1.2/dist/mapillary.css'; document.head.appendChild(css);
+      css.href='https://unpkg.com/mapillary-js@4.1.2/dist/mapillary.css';
+      css.integrity='sha384-IamMZxz60pSNzUk3cW2nl3uYUdpiDoQpLJrBoAAezEE+QaOYCVA9rfi/8Cx0x15T';
+      css.crossOrigin='anonymous'; document.head.appendChild(css);
       const js=document.createElement('script');
       js.src='https://unpkg.com/mapillary-js@4.1.2/dist/mapillary.js';
+      js.integrity='sha384-1AlAxcgdzKreJ5f2K+t7SW3pEE0ek9u3lUwlZXX+v+FtEk1tWSg6DBVLb3ZKhpB+';
+      js.crossOrigin='anonymous';
       js.onload=()=>res(); js.onerror=()=>rej(new Error('mapillary-js failed to load'));
       document.head.appendChild(js);
     });
@@ -422,7 +436,7 @@
     });
   }
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
-  map.on('load',()=>{ _styleReady=true; addSatellite(); addHeatmap(); addMapillary(); addWaterOsm();
+  map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm();   // heatmap is lazy (W43)
     addOsmDots('services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)');
     addOsmDots('scenic', window.CC_SCENIC_OSM, 'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)');
     addOsmDots('history', window.CC_HISTORY_OSM, 'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)');
@@ -449,11 +463,17 @@
   });
 
   // right-click anywhere → show + copy the coordinates (for defining start/end points, add-a-climb, etc.)
+  // ONE reusable popup (review W11: a new Popup per contextmenu accumulated in
+  // the DOM and repositioned on every map move for the whole session), and the
+  // label only claims "copied" when the clipboard write actually resolved
+  // (review W37: insecure context / denied permission / unfocused doc all fail).
+  let _coordPopup=null;
   map.on('contextmenu', e=>{
     const c = `${e.lngLat.lat.toFixed(6)}, ${e.lngLat.lng.toFixed(6)}`;
-    if(navigator.clipboard) navigator.clipboard.writeText(c).catch(()=>{});
-    new maplibregl.Popup({closeButton:true,className:'pop'}).setLngLat(e.lngLat)
-      .setHTML(`<div class="pop"><div class="pop-co">Coordinates · copied</div>${c}</div>`).addTo(map);
+    if(!_coordPopup) _coordPopup=new maplibregl.Popup({closeButton:true,className:'pop'});
+    const label=ok=>_coordPopup.setHTML(`<div class="pop"><div class="pop-co">Coordinates${ok?' · copied':' — select to copy'}</div>${c}</div>`);
+    label(false); _coordPopup.setLngLat(e.lngLat).addTo(map);
+    if(navigator.clipboard) navigator.clipboard.writeText(c).then(()=>label(true)).catch(()=>{});
   });
 
   // curator keyboard: A approve / R reject when a pending drawer is open — plain keys only
@@ -666,12 +686,14 @@
   // populate A · Road surface from the hand-picked OSM segments
   if(window.CC_SURFACE){
     layerByKey['surface'].features = CC_SURFACE.segments.map(s=>{
-      const rec=[
-        {label:'Surface', value:s.surface, method:'OSM'},
-        {label:'Smoothness', value:s.smoothness, method:'OSM'},
-        {label:'Width', value:s.width},
-        {label:'Traffic', value:s.traffic}
-      ];
+      // Each row only when the attribute is set (review W38) — attributes are
+      // spread from the DB, and a missing one otherwise rendered a labeled
+      // blank row; matches the conditional registry fields just below.
+      const rec=[];
+      if(s.surface) rec.push({label:'Surface', value:s.surface, method:'OSM'});
+      if(s.smoothness) rec.push({label:'Smoothness', value:s.smoothness, method:'OSM'});
+      if(s.width) rec.push({label:'Width', value:s.width});
+      if(s.traffic) rec.push({label:'Traffic', value:s.traffic});
       // C2-T7 (spec §W2): RoadSurface registry fields (CatalogFormRegistry::
       // for(RoadSurface)) already served via item.attributes (CatalogProvider::
       // surfaceSegments() spreads them onto s.<attr>) — rendered when a rider
@@ -1064,24 +1086,8 @@
         });
         return;
       }
-      if(layer.kind==='area'){
-        layer.features.forEach((f,i)=>{
-          const id=`${layer.key}-${i}`;
-          map.addSource(id,{type:'geojson',data:{type:'Feature',properties:{},
-            geometry:{type:'Polygon',coordinates:[f.geom.polygon.map(p=>[p[1],p[0]])]}}});
-          map.addLayer({id,type:'fill',source:id,
-            paint:{'fill-color':layer.color,'fill-opacity':.16,'fill-outline-color':layer.color}});
-          dynamicIds.push(id);
-          if(!boundLayerIds.has(id)){
-            map.on('click',id,()=>openDrawer(layer,f));
-            map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-            map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
-            boundLayerIds.add(id);
-          }
-          n++;
-        });
-        return;
-      }
+      // (the old 'area' render branch was dead — no CATALOG entry has that kind,
+      // and it lacked the getSource guard its siblings have; removed, review W35)
     });
     // confirmed/validated points are clustered (count bubble → category icon pins); unverified stay as dots
     updateConfMarkers();
@@ -1100,9 +1106,12 @@
   }
 
   function photoList(f){ return f.photos || (f.photo ? [f.photo] : []); }
+  // p.photo is parsed straight from the importable photo attribute (review W1):
+  // credit/license/source text goes through escPend, and creditUrl/source
+  // through safeHref — same hardening r.links[].href already has.
   function photoCap(p){
-    const credit = p.creditUrl ? `<a href="${p.creditUrl}" target="_blank" rel="noopener">${p.credit}</a>` : p.credit;
-    return `© ${credit} · <a href="${ccUrl(p.license)}" target="_blank" rel="noopener">${p.license}</a> · <a href="${p.source}" target="_blank" rel="noopener">Wikimedia Commons ↗</a>`;
+    const credit = p.creditUrl ? `<a href="${safeHref(p.creditUrl)}" target="_blank" rel="noopener">${escPend(p.credit)}</a>` : escPend(p.credit);
+    return `© ${credit} · <a href="${ccUrl(p.license)}" target="_blank" rel="noopener">${escPend(p.license)}</a> · <a href="${safeHref(p.source)}" target="_blank" rel="noopener">Wikimedia Commons ↗</a>`;
   }
   function buildRecord(layer, f){
     const cur = f.cur ? `<div class="cc-d-cur">▲ Curated best-of</div>` : '';
@@ -1169,7 +1178,7 @@
     const grad = f.grad ? gradStrip(f.grad) : '';
     const up = f.uploader
       ? (f.uploader.public
-          ? `<div class="cc-up">Shared by <b>${f.uploader.name}</b> · <a href="/profile?u=${slug(f.uploader.name)}">view profile</a></div>`
+          ? `<div class="cc-up">Shared by <b>${escPend(f.uploader.name)}</b> · <a href="/profile?u=${slug(f.uploader.name)}">view profile</a></div>`
           : `<div class="cc-up">Shared anonymously</div>`)
       : '';
     // The edit-bridge opens /improve bound to the item's real DB id, which
@@ -1199,9 +1208,10 @@
       // f.name/f.record path above (untouched — see MapController/Task 4).
       const s=f.pending;
       // Pending items carry their own catalog letter (A–K) + coords → a faithful edit link.
-      // (encodeURIComponent already makes this URL-safe; s.title isn't otherwise
-      // HTML-interpolated here, so it's left alone — see edit-bridge note above.)
-      edit = `<a class="cc-d-act edit" href="/improve?type=${s.letter}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${s.lat}&lng=${s.lng}">✎ Edit this item</a>`;
+      // Every interpolation is encoded (review W33): the server serves lat/lng
+      // numeric and letter as an enum, but this attribute context shouldn't
+      // depend on that guarantee holding forever.
+      edit = `<a class="cc-d-act edit" href="/improve?type=${encodeURIComponent(s.letter)}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${encodeURIComponent(s.lat)}&lng=${encodeURIComponent(s.lng)}">✎ Edit this item</a>`;
       const body = s.body ? `<p class="cc-mod-body">${escPend(s.body)}</p>` : '';
       // "Proposed change" — what THIS submission wants to change, not the
       // item's history. Kept visually distinct from the history section below.
@@ -1218,7 +1228,7 @@
       const modHist = 'new' === s.type
         ? `<div class="cc-d-hist cc-d-hist-initial"><h4 class="cc-d-hist-h">History</h4><p class="cc-mod-initial">Initial entry — new item</p></div>`
         : (s.itemId != null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${s.itemId}"></div>` : '');
-      moderate = `<div class="cc-mod" data-id="${s.id}">
+      moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
         <div class="cc-mod-badge">⚑ Pending review</div>${body}${diff}
         <textarea class="cc-mod-note" placeholder="Optional note — a reason, or context…"></textarea>
         <div class="cc-mod-acts">
@@ -1505,8 +1515,11 @@
   function hidePendingPin(id){
     const layer=layerByKey.pending; if(!layer) return;
     layer.features=layer.features.filter(f=>!(f.pending && String(f.pending.id)===String(id)));
+    if(_searchDropPending) _searchDropPending(id);   // keep the search index in step (W36)
     render();
   }
+  // set by the sidebar-search block below (it owns SEARCH_IDX); null until then
+  let _searchDropPending=null;
   // Stateless same-origin CSRF: the decision form carries a _token placeholder tied
   // to the csrf-token cookie (HttpOnly → unreadable from JS). The map page renders no
   // such form, so fetch one token from /moderate and reuse it (stable for the session);
@@ -1915,7 +1928,12 @@
     Object.keys(CITIES).forEach(name=>{ const big=CITIES[name].t==='City';   // big cities stand apart from hamlets: ochre ◉ "City" vs teal ◎ "Town"
       SEARCH_IDX.push({name, key:slug(name), kind: big?'City':'Town', badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', go:()=>openCity(name)}); });
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
-      SEARCH_IDX.push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openFeatureByName(f.name)}); }));
+      // pending entries carry their submission id so hidePendingPin can drop
+      // them from the index after a moderation decision (review W36) — the
+      // feature disappears from the map, and a search hit that "does nothing"
+      // must disappear with it.
+      SEARCH_IDX.push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', pend:f.pending?String(f.pending.id):undefined, go:()=>openFeatureByName(f.name)}); }));
+    _searchDropPending=id=>{ for(let i=SEARCH_IDX.length-1;i>=0;i--){ if(SEARCH_IDX[i].pend===String(id)) SEARCH_IDX.splice(i,1); } };
     // PIVOT accommodation (Tourisme Wallonie, CC-BY) — bulk stays, not CATALOG features → index explicitly
     (window.CC_STAYS_PIVOT && window.CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties; if(!p || !p.n) return;
       const layer=layerByKey.stays; if(!layer) return;
@@ -1936,9 +1954,13 @@
       sRes.innerHTML = sMatches.length
         ? sMatches.map((m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`).join('')
         : '<li class="search-empty">No match in the Wallonia demo yet.</li>';
-      sRes.querySelectorAll('button').forEach(b=>b.onclick=()=>pickS(+b.dataset.i));
     }
-    sBox.addEventListener('input', runS);
+    // one delegated listener + a short debounce (review W41): the per-keystroke
+    // cost was a full index scan, an innerHTML rebuild AND fresh per-result
+    // listeners — the pattern that degrades linearly as the catalog grows.
+    sRes.addEventListener('click', e=>{ const b=e.target.closest('button[data-i]'); if(b) pickS(+b.dataset.i); });
+    let _sDeb=null;
+    sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150); });
     sBox.addEventListener('keydown', e=>{
       if(sRes.hidden){ if(e.key==='ArrowDown') runS(); return; }
       if(e.key==='ArrowDown'){ e.preventDefault(); sHL=Math.min(sHL+1, sMatches.length-1); hlS(); }
@@ -2020,7 +2042,12 @@
     render();
   }
 
+  // Race-guard token, same pattern as the drawer's _historyReq (review W5):
+  // switching Season/Bike quickly must never let a slower earlier response
+  // overwrite the newer facet's membership under a subtitle that says otherwise.
+  let _bestOfReq=0;
   function refreshBestOf(){
+    const req=++_bestOfReq;
     if(mode!=='curated'){
       const box=document.getElementById('bestEmpty'); if(box) box.hidden=true;   // Everything never shows the Curated empty-state
       render(); return;
@@ -2028,8 +2055,8 @@
     fetch(`/map/best-of?season=${encodeURIComponent(boSeason)}&bike=${encodeURIComponent(boBike)}`,
       {credentials:'same-origin', headers:{'Accept':'application/json'}})
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
-      .then(d=>applyBestOf(d.ids))
-      .catch(()=>{ applyBestOf([]); });   // on failure, Curated shows the empty state, not a stale set
+      .then(d=>{ if(req===_bestOfReq) applyBestOf(d.ids); })
+      .catch(()=>{ if(req===_bestOfReq) applyBestOf([]); });   // on failure, Curated shows the empty state, not a stale set
   }
 
   // Facet pickers (Curated only).
@@ -2063,9 +2090,15 @@
     render();
   });
 
-  // ride-heatmap toggle + season filter
+  // ride-heatmap toggle + season filter (source built on first On — W43)
   document.querySelectorAll('#heattoggle button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#heattoggle button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    if(b.dataset.h==='on' && !map.getLayer('rideheat')){
+      addHeatmap();
+      // honour a season chip selected before the layer existed
+      const sc=document.querySelector('#season .chip.on');
+      if(sc && sc.dataset.s!=='all' && map.getLayer('rideheat')) map.setFilter('rideheat',['==',['get','season'],sc.dataset.s]);
+    }
     if(map.getLayer('rideheat')) map.setLayoutProperty('rideheat','visibility', b.dataset.h==='on'?'visible':'none');
   });
   document.querySelectorAll('#season .chip').forEach(c=>c.onclick=()=>{
@@ -2086,14 +2119,18 @@
     if(planMarker){ planMarker.remove(); planMarker=null; }
   }
   function planFromSpa(km){
-    if(!window.CC_ROUTES) return;
+    // Empty-catalog + optional-attribute guards (review W6): reduce() with no
+    // initial value throws on [], and CatalogProvider only emits `start` when
+    // the attribute exists — fall back to the loop's first vertex.
+    if(!window.CC_ROUTES || !CC_ROUTES.routes.length) return;
     const r=CC_ROUTES.routes.reduce((b,x)=>Math.abs(x.km-km)<Math.abs(b.km-km)?x:b);
+    const start=r.start||r.loop[0];
     clearPlan();
     map.addSource('planroute',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:r.loop.map(p=>[p[1],p[0]])}}});
     map.addLayer({id:'planroute-case',type:'line',source:'planroute',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#FBF4E4','line-width':9,'line-opacity':.95}});
     map.addLayer({id:'planroute',type:'line',source:'planroute',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#FF5A1F','line-width':5,'line-opacity':1}});
     const el=document.createElement('div'); el.className='cc-pin cur'; el.style.setProperty('--c','#FF5A1F'); el.innerHTML='<span>◎</span>';
-    planMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([r.start[1],r.start[0]]).addTo(map);
+    planMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([start[1],start[0]]).addTo(map);
     let mnx=180,mny=90,mxx=-180,mxy=-90;
     r.loop.forEach(p=>{mny=Math.min(mny,p[0]);mxy=Math.max(mxy,p[0]);mnx=Math.min(mnx,p[1]);mxx=Math.max(mxx,p[1]);});
     map.fitBounds([[mnx,mny],[mxx,mxy]],{padding:60,duration:600});

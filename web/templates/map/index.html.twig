@@ -26,6 +26,8 @@
 <meta name="twitter:description" content="Explore the Commons on one open map — climbs, water, viewpoints, bike-friendly stays and road conditions. Filter by surface, traffic and what matters to your ride." />
 <meta name="twitter:image" content="https://cyclingcommons.org/brand/og/map.jpg" />
 
+{# unpkg serves maplibre css+js: open the connection before the render-blocking stylesheet request (review W9) #}
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
