@@ -72,7 +72,13 @@ never reveals where its proposer started or finished. The drawer states this
 | **Vote** (season + bike type) | ROLE_USER, `verified` routes only | `route_vote` row; unique per user/route/season |
 | **"I rode this"** (bike type) | ROLE_USER, active routes | `route_ride` row; at threshold X → `verified` |
 | **Download GPX** | public, active routes | `GET /routes/{id}.gpx` from the stored trimmed track |
-| **Suggest a correction** | ROLE_USER | preset reason (wrong/broken track · trim a private start/end · duplicate · not actually rideable · other) + note → moderated `route_suggestion` |
+| **Suggest a correction** | ROLE_USER | preset reason (wrong/broken track · trim a private start/end · duplicate · not actually rideable · other) + note, optionally locating the affected stretch(es) on the map (route-domain spec §16) → moderated `route_suggestion` |
+
+Proposal decisions and correction resolutions feed the shared moderation-feedback
+system ([`../2026-07-12-moderation-feedback-and-messages-design.md`](../2026-07-12-moderation-feedback-and-messages-design.md)):
+the rider gets a dashboard message on approve/reject/retire and on done/dismissed,
+dismissed corrections are retained 3 months then GC'd, and spam can be Trashed
+(immediate hard delete). Not yet built.
 
 ## Curator form (proposal review + metadata edit)
 

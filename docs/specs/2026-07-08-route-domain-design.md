@@ -774,3 +774,25 @@ The item (A–J) moderation pipeline has adjacent machinery (decision notes, a
 notification/messaging system**. A reconciliation analysis of what the item
 side already covers, what it lacks, and what it does better precedes any item-
 spec update (user decides the item-side direction after reviewing it).
+
+### Reconciliation outcome (2026-07-12, user-approved)
+
+The sweep ran; the user approved generalising N1–N7 into **one shared system for
+all contribution channels**, now owned by
+[`2026-07-12-moderation-feedback-and-messages-design.md`](2026-07-12-moderation-feedback-and-messages-design.md)
+(M1–M12). That document supersedes this section as the system design; §17
+remains the route-side origin record. Route-side scope changes it brings:
+
+- **Route-proposal decisions are now in scope too** (approve/reject/retire write
+  the proposer a message — today the curator's note never reaches them at all),
+  not just corrections.
+- N4's curator messaging gains a **rider reply path** (via the item side's
+  needs-info loop, generalised).
+- N6's GC runner: phase 1 is lazy filtering + an opportunistic sweep (no new
+  infra); a real scheduler arrives with N5's email queue (one messenger/scheduler
+  investment for both).
+- N7 Trash adopts the admin desk's audit-before-delete + POST/CSRF/guardrail
+  hardening; GDPR message cleanup is DB `ON DELETE CASCADE` (the deletion-hook
+  path is bypassed by admin account removal — verified asymmetry).
+- The **map page must gain the account chip** so the N3 bulb reaches the map
+  (today `/map` renders no chip and links Account → login even when signed in).

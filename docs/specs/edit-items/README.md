@@ -40,6 +40,16 @@ with purpose-built `route_vote` / `route_ride` / `route_suggestion` tables (rout
 ## Common to every type
 These panes behave the same across all edit items, so the per-type specs don't repeat them:
 
+**Moderation feedback, messages, retention & trash** — every contribution channel
+(item submissions A–J, route proposals, route corrections) inherits the shared
+feedback system defined in
+[`../2026-07-12-moderation-feedback-and-messages-design.md`](../2026-07-12-moderation-feedback-and-messages-design.md):
+every decision writes the submitter a dashboard message (thank-you on approve/done,
+informing on reject/dismiss, request on needs-info — with a reply path that re-queues
+the submission), an unread bulb on the account chip, curator↔rider pseudonymous
+messaging, 3-month retention + GC for rejected/dismissed rows, and an immediate
+hard-delete **Trash** for spam. Per-type specs only note deviations.
+
 **Setting the location (add mode, `?mode=add`).** The *first* action is always to set the location, and
 it varies by type:
 - **point** types (water, services, stays, hazards, getting-there, shelter, scenic, history) — tap the map

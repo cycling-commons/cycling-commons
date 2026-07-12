@@ -148,3 +148,26 @@ KernelTestCase + DAMA transactions, mirroring phase A:
 ## 10. Execution note (agentic experiment)
 
 This is the first plan executed **with** the knowledge graph (`.understand-anything/`, auto-update on): every task dispatch carries a one-line pointer instructing the subagent to orient via the graph (query or read relevant nodes — never load the whole file). Plans 1+2 transcripts are the no-graph baseline; compare exploration tool-calls before first edit, read precision, re-reads, and net tokens per task.
+
+## 11. Addendum (2026-07-12): shared moderation feedback & messages
+
+The pipeline this spec built now inherits the platform-wide feedback system in
+[`2026-07-12-moderation-feedback-and-messages-design.md`](2026-07-12-moderation-feedback-and-messages-design.md)
+(user-approved, not yet built). For THIS pipeline that means, when implemented:
+
+- Every `decide()` outcome also writes the submitter a `UserMessage` **inside the
+  same transaction** (M2): approved → thank-you, rejected → informing, needs_info
+  → request. The message becomes the durable note record — fixing the known flaw
+  that `Submission.decisionNote` is a single mutable field a later decision
+  overwrites (§4.1's audit intent, now append-only).
+- **`needs_info` finally closes its loop** (M6): the rider is notified, can reply
+  (length-constrained), and the reply flips the submission NeedsInfo → Pending so
+  it re-enters the queue — replacing today's dead-end where "hidden until
+  answered" (SubmissionQueue) had no answering mechanism.
+- The moderation-note textarea gains a length constraint (M11 — currently
+  unbounded text reaches the rider's dashboard).
+- **Retention**: rejected submissions are kept 3 months, then GC'd (M8; lazy
+  filtering + opportunistic sweep first, scheduler later). Today they are
+  retained forever.
+- **Trash** (M9): an immediate permanent hard-delete for spam submissions, with a
+  content-free audit row — today spam can only be "rejected" and lingers.
