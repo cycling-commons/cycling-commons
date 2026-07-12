@@ -711,3 +711,7 @@ Decisions/fixes during execution:
    error would not clear a prior overlay (cleanup only runs on success) — a
    non-issue today since `openRouteById` fires once per page load; harden if
    route-switching-without-reload is ever added.
+5. **Final-review fix: the route-path trim is now seeded from `r.id` (not the
+   list index `i`)**, so `f.geom.path` stays deterministic per route for the
+   life of the geometry and stored correction fractions stay stable when the
+   served route set changes (e.g. another route rejected shifting indices).

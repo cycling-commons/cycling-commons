@@ -586,7 +586,13 @@
       // data — reverse-geocoding real towns is a recorded route-domain
       // non-goal, so unknown routes simply omit the town rows.
       const cities = RIDE_CITIES[r.name];
-      const startM = 350 + (i*137)%401, endM = 350 + (i*211+90)%401;   // 350–750 m, varied but stable per ride
+      // Seeded from r.id (not the array index i): located corrections store
+      // fractions relative to this trimmed path, so the trim must stay
+      // deterministic per route even when the served route set changes
+      // (e.g. another route rejected shifts indices) — an index-seeded trim
+      // would re-trim the same route differently and drift stored fractions.
+      const seed = Number(r.id)||0;
+      const startM = 350 + (seed*137)%401, endM = 350 + (seed*211+90)%401;   // 350–750 m, varied but stable per ride
       // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
       const diffLabel = r.difficulty?.label ?? (typeof r.difficulty === 'string' ? r.difficulty : undefined);
       return {
@@ -1645,7 +1651,7 @@
     fetch(`/routes/${routeId}/corrections`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then(d=>renderCorrections(path, d.corrections||[]))
-      .catch(()=>{});   // 403 (not curator) / error → nothing extra
+      .catch(()=>clearCorrections());   // 403 (not curator) / error → clear any stale overlay
   }
   function renderCorrections(path, corrections){
     clearCorrections();

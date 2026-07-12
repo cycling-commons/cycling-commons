@@ -157,7 +157,7 @@ final class RouteCommunityController extends AbstractController
             return null;
         }
         $decoded = json_decode($raw, true);
-        if (!\is_array($decoded)) {
+        if (!\is_array($decoded) || !array_is_list($decoded)) {
             return false;
         }
         $out = [];

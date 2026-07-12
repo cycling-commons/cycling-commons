@@ -103,6 +103,15 @@ final class RouteCorrectionsTest extends WebTestCase
         ]);
         self::assertResponseStatusCodeSame(422);
         self::assertSame(0, (int) $em->getConnection()->fetchOne('SELECT COUNT(*) FROM route_suggestion WHERE route_id = :r', ['r' => $rid]));
+
+        // a JSON object (non-list, e.g. {"foo":{...}}) → 422, not silently accepted as a list
+        $client->request('POST', '/routes/'.$rid.'/suggest', [
+            'reason' => 'other',
+            'segments' => json_encode(['foo' => ['start' => 0.1, 'end' => 0.3]]),
+            '_token' => $this->token($client, $rid),
+        ]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame(0, (int) $em->getConnection()->fetchOne('SELECT COUNT(*) FROM route_suggestion WHERE route_id = :r', ['r' => $rid]));
     }
 
     public function testCorrectionsEndpointCuratorOnlyPending(): void
