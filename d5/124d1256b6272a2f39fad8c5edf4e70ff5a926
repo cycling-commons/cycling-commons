@@ -1,0 +1,23 @@
+web/src/Moderation/RouteQueue.php
+  s_51df195d1c7750::t_335806395b7d05 71-72,86
+web/templates/moderate_routes/index.html.twig
+  s_51df195d1c7750::t_c962b01d6fbb98 97
+web/tests/Moderation/RouteQueueTest.php
+  s_51df195d1c7750::t_be037df33d41a3 10,13,42-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "d5124d1256b6272a2f39fad8c5edf4e70ff5a926",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
