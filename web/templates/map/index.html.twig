@@ -236,6 +236,12 @@
   window.CC_CATALOG_URL = {{ path('map_catalog')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
 </script>
+{# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
+   globals (catalog-load.js injects it after the fetch resolves), but its
+   DOWNLOAD must not sit serialized behind the ~1 MB catalog transfer — the
+   preload puts both requests in flight together, so boot() executes map.js
+   straight from cache. #}
+<link rel="preload" href="{{ asset('map/map.js') }}" as="script">
 <script src="{{ asset('map/catalog-load.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/version.js') }}"></script>

@@ -5,7 +5,10 @@
    merge (absorbed from the retired stays-merge.js), then injects map.js
    (AssetMapper-digested URL in window.CC_MAP_SRC). On fetch failure the map
    still boots — layer guards degrade to an empty catalog, and the curator
-   pending layer (inline-injected) keeps working. */
+   pending layer (inline-injected) keeps working.
+   map.js EXECUTION is gated on the catalog fetch (its globals must exist),
+   but its DOWNLOAD is not: the template preloads CC_MAP_SRC in parallel
+   (frontend review 2026-07-12 C5), so boot() runs it from cache. */
 (function () {
   function boot() {
     var s = document.createElement('script');
