@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
@@ -48,6 +49,9 @@ final class ModerationDecisionType extends AbstractType
             ->add('note', TextareaType::class, [
                 'label' => false,
                 'required' => false,
+                'constraints' => [
+                    new Length(max: 2000, maxMessage: 'moderate.error.note_too_long'),
+                ],
             ])
         ;
     }

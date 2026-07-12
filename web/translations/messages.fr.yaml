@@ -999,6 +999,7 @@ moderate:
   error:
     submission_id_required: 'L''identifiant de soumission est requis.'
     decision_required: 'Une décision est requise.'
+    note_too_long: 'La note dépasse 2000 caractères.'
   empty:
     heading: 'File vide'
     body: 'Plus rien à examiner. Parfait.'

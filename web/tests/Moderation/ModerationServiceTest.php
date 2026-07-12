@@ -24,6 +24,7 @@ final class ModerationServiceTest extends KernelTestCase
     private EntityManagerInterface $em;
     private ModerationService $service;
     private User $curator;
+    private int $submitterId;
 
     #[\Override]
     protected function setUp(): void
@@ -34,7 +35,16 @@ final class ModerationServiceTest extends KernelTestCase
         $this->curator = (new User())->setEmail('curator@decide.test');
         $this->curator->setPassword('x');
         $this->em->persist($this->curator);
+
+        // decide() now also writes the submitter a message (M2), and
+        // user_message.user_id carries a real DB FK to users(id) — every
+        // seeded submission below needs a genuinely persisted submitter.
+        $submitter = (new User())->setEmail('submitter@decide.test');
+        $submitter->setPassword('x');
+        $this->em->persist($submitter);
+
         $this->em->flush();
+        $this->submitterId = (int) $submitter->getId();
     }
 
     /** @return array{Item, Submission} */
@@ -46,7 +56,7 @@ final class ModerationServiceTest extends KernelTestCase
             ->setAttributes(['len' => 3.1]);
         $this->em->persist($item);
         $this->em->flush();
-        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(5)
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId($this->submitterId)
             ->setItemId($item->getId())->setTitle('Côte du Test')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges(['len' => ['was' => null, 'now' => 3.1]])->setPayload([]);
@@ -65,7 +75,7 @@ final class ModerationServiceTest extends KernelTestCase
             ->setAttributes($itemAttrs);
         $this->em->persist($item);
         $this->em->flush();
-        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('D')->setUserId(5)
+        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('D')->setUserId($this->submitterId)
             ->setItemId($item->getId())->setTitle('Repair station')
             ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
             ->setChanges($changes)->setPayload([]);
@@ -123,7 +133,7 @@ final class ModerationServiceTest extends KernelTestCase
             ->setAttributes(['effort' => 'Steady', 'famousFor' => 'Nothing yet']);
         $this->em->persist($item);
         $this->em->flush();
-        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('B')->setUserId(5)
+        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('B')->setUserId($this->submitterId)
             ->setItemId($item->getId())->setTitle('Côte du Test Effort')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges(['effort' => ['was' => 'Steady', 'now' => 'Very steep']])->setPayload([]);
@@ -190,7 +200,7 @@ final class ModerationServiceTest extends KernelTestCase
         [$item, $sub1] = $this->seedEdit(['hours' => '24/7'], ['hours' => ['was' => '24/7', 'now' => 'closed Sundays']]);
         $this->service->decide($sub1->getId(), 'approve', $this->curator, null);
 
-        $sub2 = (new Submission())->setType(SubmissionType::Edit)->setLetter('D')->setUserId(5)
+        $sub2 = (new Submission())->setType(SubmissionType::Edit)->setLetter('D')->setUserId($this->submitterId)
             ->setItemId($item->getId())->setTitle('Repair station')
             ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
             ->setChanges(['hours' => ['was' => 'closed Sundays', 'now' => 'weekdays only']])->setPayload([]);

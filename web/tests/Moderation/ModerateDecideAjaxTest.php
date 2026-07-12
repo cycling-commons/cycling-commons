@@ -41,14 +41,26 @@ final class ModerateDecideAjaxTest extends WebTestCase
         $client->loginUser($user);
     }
 
-    /** Seed a real pending submission row so the queue renders a decision form. */
+    /**
+     * Seed a real pending submission row so the queue renders a decision
+     * form. The submitter is a genuinely persisted user: a successful
+     * decide() now also writes it a message, and user_message.user_id
+     * carries a real DB FK to users(id).
+     */
     private function seedSubmission(): Submission
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
+        $submitter = new User();
+        $submitter->setEmail('ajax-submitter-'.uniqid('', true).'@example.com');
+        $submitter->setDisplayName('Ajax Submitter');
+        $submitter->setPassword('x');
+        $em->persist($submitter);
+        $em->flush();
+
         $sub = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(3)
+            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId((int) $submitter->getId())
             ->setTitle('Ajax queue item')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
             ->setCountryCode('BE')

@@ -999,6 +999,7 @@ moderate:
   error:
     submission_id_required: 'Inzending-ID is verplicht.'
     decision_required: 'Een beslissing is verplicht.'
+    note_too_long: 'De notitie is langer dan 2000 tekens.'
   empty:
     heading: 'Wachtrij leeg'
     body: 'Niets meer te beoordelen. Goed gedaan.'

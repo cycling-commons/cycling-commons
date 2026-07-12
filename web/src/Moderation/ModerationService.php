@@ -13,6 +13,8 @@ use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Messaging\MessageService;
+use App\Messaging\UserMessageKind;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -25,8 +27,10 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class ModerationService
 {
-    public function __construct(private readonly EntityManagerInterface $em)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly MessageService $messages,
+    ) {
     }
 
     public function decide(int $submissionId, string $decision, User $curator, ?string $note): Submission
@@ -71,6 +75,21 @@ final class ModerationService
             $submission->setDecisionNote($note)
                 ->setDecidedBy((int) $curator->getId())
                 ->setDecidedAt(new \DateTimeImmutable());
+
+            $kind = match ($decision) {
+                'approve' => UserMessageKind::SubmissionApproved,
+                'reject' => UserMessageKind::SubmissionRejected,
+                'needs_info' => UserMessageKind::SubmissionNeedsInfo,
+            };
+            // M2: the outcome message rides the decision transaction — atomic,
+            // duplicate-proof (the AlreadyDecidedException guard above means
+            // at most one message per outcome).
+            $this->messages->sendSystem(
+                $submission->getUserId(), $kind,
+                'submission', $submissionId, 'SUB-'.$submissionId,
+                'messages.body.'.$kind->value, ['%title%' => $submission->getTitle()],
+                $note,
+            );
 
             return $submission;
         });

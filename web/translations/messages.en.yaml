@@ -999,6 +999,7 @@ moderate:
   error:
     submission_id_required: 'Submission ID is required.'
     decision_required: 'A decision is required.'
+    note_too_long: 'The note is longer than 2000 characters.'
   empty:
     heading: 'Queue clear'
     body: 'Nothing left to review. Nice.'

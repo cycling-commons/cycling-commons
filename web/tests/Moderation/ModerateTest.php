@@ -65,14 +65,26 @@ final class ModerateTest extends WebTestCase
         return $user;
     }
 
-    /** Seed a real pending submission row (queue is DB-backed — SubmissionQueue). */
+    /**
+     * Seed a real pending submission row (queue is DB-backed —
+     * SubmissionQueue). The submitter is a genuinely persisted user: a
+     * successful decide() now also writes it a message, and
+     * user_message.user_id carries a real DB FK to users(id).
+     */
     private function seedSubmission(string $title, string $country = 'BE'): Submission
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
+        $submitter = new User();
+        $submitter->setEmail('submitter-'.uniqid('', true).'@example.com');
+        $submitter->setDisplayName('Submitter');
+        $submitter->setPassword('x');
+        $em->persist($submitter);
+        $em->flush();
+
         $sub = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId(3)
+            ->setType(SubmissionType::NewItem)->setLetter('B')->setUserId((int) $submitter->getId())
             ->setTitle($title)
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
             ->setCountryCode($country)

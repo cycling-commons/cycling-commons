@@ -999,6 +999,7 @@ moderate:
   error:
     submission_id_required: 'Einreichungs-ID ist erforderlich.'
     decision_required: 'Eine Entscheidung ist erforderlich.'
+    note_too_long: 'Die Notiz ist länger als 2000 Zeichen.'
   empty:
     heading: 'Warteschlange leer'
     body: 'Nichts mehr zu prüfen. Super.'
