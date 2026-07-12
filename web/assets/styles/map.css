@@ -413,3 +413,15 @@
   .cc-pickbar[hidden]{display:none}
   .cc-pickbar button{font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.35rem .7rem;border-radius:5px;border:1px solid var(--trail);background:transparent;color:var(--trail);cursor:pointer}
   .cc-pickbar button.on{background:var(--trail);color:var(--ink)}
+
+  /* Moderator pending-corrections overlay (spec §16 S3/S5): colour-per-correction
+     stretches + numbered endpoint pins + bottom-left side list. */
+  .cc-corr-pin{width:20px;height:20px;border-radius:50%;color:#fff;font-family:var(--sans);font-weight:700;font-size:.68rem;display:flex;align-items:center;justify-content:center;border:2px solid #FBF4E4;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .cc-corrpanel{position:absolute;left:1rem;bottom:1rem;z-index:1250;width:min(300px,80vw);max-height:44vh;overflow-y:auto;background:var(--ink);color:var(--paper);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.45);padding:.7rem .8rem}
+  .cc-corrpanel h4{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.6);margin-bottom:.5rem}
+  .cc-corr-item{display:flex;gap:.55rem;width:100%;text-align:left;background:none;border:0;border-radius:6px;color:var(--paper);padding:.45rem .4rem;cursor:pointer;align-items:flex-start}
+  .cc-corr-item:hover{background:rgba(239,230,212,.08)}
+  .cc-corr-sw{flex:none;width:14px;height:14px;border-radius:3px;margin-top:.15rem}
+  .cc-corr-body{font-size:.82rem;line-height:1.35}
+  .cc-corr-body b{text-transform:capitalize}
+  .cc-corr-body em{display:block;font-style:normal;font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgba(239,230,212,.55);margin-top:.15rem}
