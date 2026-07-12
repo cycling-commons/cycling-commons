@@ -28,6 +28,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Catalog/Entity'
                 prefix: 'App\Catalog\Entity'
                 alias: Catalog
+            Messaging:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Messaging/Entity'
+                prefix: 'App\Messaging\Entity'
+                alias: Messaging
 
 when@prod:
     doctrine:
