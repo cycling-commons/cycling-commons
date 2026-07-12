@@ -1,0 +1,53 @@
+web/assets/contribute/climb-editor.js
+  s_e4da53db38e0bd::t_49dcb50c68ab0e 314-316
+  s_e4da53db38e0bd::t_47eaead8db2334 117-120,126,129-132,140-149,153-157,160-164,166-172,177-186,192-199,201,217-224,226
+  s_e4da53db38e0bd::t_d91d2f553aab00 29-35
+  s_e4da53db38e0bd::t_e99061abea327b 287-293,298-303
+  s_e4da53db38e0bd::t_46252019ae7b64 225
+web/assets/contribute/vote.js
+  s_e4da53db38e0bd::t_618d2f8d7617d9 126-128,130-135
+web/assets/contribute/climb-elevation.js
+  s_e4da53db38e0bd::t_7ed24ef1da01c3 96
+  s_e4da53db38e0bd::t_26986013917641 94-95,97,104-107,117
+web/assets/contribute/improve.js
+  s_e4da53db38e0bd::t_b0aa18ab004eee 151-158
+  s_e4da53db38e0bd::t_2830c65c2e7e6b 207-208,211-216
+  s_e4da53db38e0bd::t_8ba69dd6629057 285-287,290
+  s_e4da53db38e0bd::t_37c57f86bb8b85 489-490
+  s_e4da53db38e0bd::t_2a0fb194d9c868 305-306,308-310,312-315,317
+web/templates/contribute/improve.html.twig
+  s_e4da53db38e0bd::t_34d6e953a1f0e0 188
+  s_e4da53db38e0bd::t_9d8b442dcab8e6 186
+  s_e4da53db38e0bd::t_ac2a95769fa70e 38
+  s_e4da53db38e0bd::t_62b2cdc337b2a7 4-5
+web/assets/contribute/add-climb.js
+  s_e4da53db38e0bd::t_3bc5c1e023a08d 17-20
+  s_e4da53db38e0bd::t_a11987fe0169e5 163-164,166-168,170-173,175
+  s_e4da53db38e0bd::t_1ab0e31066f6e5 143-145,148,155-157
+  s_e4da53db38e0bd::t_606166919a6d0c 84-86
+  s_e4da53db38e0bd::t_a6ec5f1b0b7588 320
+  s_e4da53db38e0bd::t_52503fc9598ce1 117-118
+  s_e4da53db38e0bd::t_6aac528ddef13a 56-57,59
+  s_e4da53db38e0bd::t_6e6543d3aabd9f 207-219,222
+  s_e4da53db38e0bd::t_9b1643e95e3f41 115-116,119-121
+web/templates/contribute/add_climb.html.twig
+  s_e4da53db38e0bd::t_62b2cdc337b2a7 4-5
+  s_e4da53db38e0bd::t_0830548471f030 39
+  s_e4da53db38e0bd::t_ee57af5505dfd0 152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "c96850857f6919c3e4b49d00f1f6eadb945fc4e6",
+  "prompts": {},
+  "sessions": {
+    "s_e4da53db38e0bd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1aa91764-9ba6-4f8b-9c7c-9027d41580c4",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
