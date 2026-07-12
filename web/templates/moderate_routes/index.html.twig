@@ -94,7 +94,7 @@
       <div class="sugg-item" data-suggestion-id="{{ s.id }}">
         <div class="sugg-body">
           <a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a>
-          <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</div>
+          <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}{% if s.segmentCount > 0 %} · {{ s.segmentCount }} {{ s.segmentCount == 1 ? 'stretch' : 'stretches' }}{% endif %}</div>
           {% if s.note %}<p>{{ s.note }}</p>{% endif %}
         </div>
         <div class="sugg-actions">

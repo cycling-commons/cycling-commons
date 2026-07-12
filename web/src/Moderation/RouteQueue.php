@@ -68,7 +68,8 @@ final class RouteQueue
             $params['region'] = $regionId;
         }
 
-        $sql = "SELECT s.id, s.route_id, r.name AS route_name, s.reason, s.note, s.user_id, s.created_at
+        $sql = "SELECT s.id, s.route_id, r.name AS route_name, s.reason, s.note, s.user_id, s.created_at,
+                       COALESCE(jsonb_array_length(s.segments), 0) AS seg_count
                 FROM route_suggestion s
                 JOIN recommended_route r ON r.id = s.route_id
                 WHERE {$where}
@@ -82,6 +83,7 @@ final class RouteQueue
             'note' => $row['note'],
             'who' => 'rider#'.substr(hash('crc32b', 'cc-sub-'.$row['user_id']), 0, 4),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
+            'segmentCount' => (int) $row['seg_count'],
         ], $this->db->fetchAllAssociative($sql, $params));
     }
 
