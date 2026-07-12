@@ -9,6 +9,8 @@
 <div class="acct-menu" data-nav-menu>
   <button type="button" class="acct-chip" data-nav-toggle aria-expanded="false" aria-controls="cc-acct-dd">
     <span class="av" aria-hidden="true">{{ _initials }}</span>
+    {% set _unread = unread_message_count() %}
+    {% if _unread > 0 %}<span class="acct-bulb" aria-label="{{ _unread }} unread">{{ _unread > 9 ? '9+' : _unread }}</span>{% endif %}
     <span class="acct-name">{{ app.user.displayName }}</span>
     <svg class="acct-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
   </button>

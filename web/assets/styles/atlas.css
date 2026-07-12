@@ -32,6 +32,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .acct-chip{display:inline-flex;align-items:center;gap:.5rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.26rem .7rem .26rem .28rem;color:var(--paper);cursor:pointer;font-family:var(--sans);font-size:.9rem;line-height:1;transition:border-color .2s}
 .acct-chip:hover,.acct-chip[aria-expanded=true]{border-color:var(--trail)}
 .acct-chip .av{width:30px;height:30px;border-radius:50%;background:var(--trail);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:.82rem;flex:none}
+.acct-bulb{position:absolute;top:-4px;left:22px;z-index:2;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--trail);color:var(--ink);border:2px solid var(--ink);font-family:var(--mono);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .acct-chip .acct-name{max-width:14ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .acct-chip .acct-caret{opacity:.65;transition:transform .18s}
 .acct-chip[aria-expanded=true] .acct-caret{transform:rotate(180deg)}
