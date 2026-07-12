@@ -67,6 +67,9 @@
 </div>
 
 <div class="wrap" id="main">
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
   <form class="mod-filters" method="get" action="{{ path('moderate_routes') }}">
     {# Explicit Apply button, no onchange auto-submit (WCAG 3.2.2: changing a
        setting must not automatically change context). #}
