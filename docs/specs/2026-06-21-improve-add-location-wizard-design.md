@@ -157,6 +157,16 @@ Manual, in the dev stack (served page):
 5. Non-add: `improve.html?item=repair-station-malmedy` (no `mode`) still shows the
    original tabbed two-column layout.
 
+## Execution note — segment carrier (2026-07-12)
+
+Frontend review critical C6: the segment branch of `syncLoc` held the two
+drawn endpoints only in memory (`WZ.loc`) — the form POSTed without them. The
+Symfony form (`ImproveType`) now adds a hidden `segment` field for
+segment-located types (`LocationMode::Segment`, road surface); the wizard
+writes `{"a":[lng,lat],"b":[lng,lat]}` JSON on completion and clears it on
+reset/incomplete. The value is recorded in `Submission::payload`. See
+`2026-07-12-frontend-review-criticals-fixes.md` §C6.
+
 ## Files
 
 - `atlas/demo/improve.html` — add-mode wizard markup, stepper/search/map CSS, and the
