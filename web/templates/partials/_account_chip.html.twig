@@ -18,6 +18,7 @@
     {% set _hasWork = is_granted('ROLE_CURATOR') or is_granted('ROLE_ADMIN') %}
     {% if _hasWork %}<div class="acct-sec">{{ 'account.menu_personal'|trans }}</div>{% endif %}
     <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
+    <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}</a>
     <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
     {% if is_granted('ROLE_CURATOR') %}
       {# Two moderation queues: submissions (everything except routes) + routes. #}
