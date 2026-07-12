@@ -1,0 +1,22 @@
+# Frontend review 2026-07-12 W61: translation catalogs are contributor-editable
+# (public repo), so rich copy rendered from them goes through this sanitizer —
+# the |rich Twig filter — instead of a blanket |raw. The allowlist mirrors the
+# markup the catalogs actually use (grep '<' translations/messages.en.yaml).
+framework:
+    html_sanitizer:
+        sanitizers:
+            app.rich_translations:
+                allow_elements:
+                    b: []
+                    strong: []
+                    i: []
+                    em: []
+                    code: []
+                    br: []
+                    span: ['class']
+                    a: ['href', 'style', 'class', 'target', 'rel']
+                allowed_link_schemes: ['http', 'https', 'mailto']
+                allow_relative_links: true
+                # a few catalog links carry a colour override
+                allow_attributes:
+                    style: ['a', 'span']
