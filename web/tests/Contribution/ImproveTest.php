@@ -165,6 +165,68 @@ final class ImproveTest extends WebTestCase
         self::assertSelectorExists('#wiz[data-location-mode="segment"]');
     }
 
+    /**
+     * Frontend review 2026-07-12 (critical C6): the segment branch of the
+     * wizard's syncLoc stored the two drawn endpoints only in memory — the
+     * form POSTed with no segment data while the UI toasted "submit to
+     * record it". The form must expose a hidden `segment` field for
+     * segment-located types so the drawn endpoints reach the submission
+     * payload (same parity the point branch has via lat/lng).
+     */
+    public function testRoadSurfaceFormExposesSegmentHiddenField(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'seg-field');
+        $item = $this->createItem('A');
+
+        $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[name="improve[segment]"]');
+    }
+
+    /** Point-located types never render the segment carrier. */
+    public function testPointTypeHasNoSegmentField(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'seg-none');
+        $item = $this->createItem('D');
+
+        $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('[name="improve[segment]"]');
+    }
+
+    /** The drawn segment endpoints round-trip into the persisted submission payload. */
+    public function testSegmentPostLandsInSubmissionPayload(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'seg-post');
+        $item = $this->createItem('A', ['surface' => 'asphalt'], name: 'Rue de Test');
+
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        self::assertResponseIsSuccessful();
+
+        $segment = '{"a":[5.8601,50.4901],"b":[5.8702,50.4952]}';
+        $form = $crawler->selectButton('Next →')->form([
+            'improve[details][surface]' => 'Gravel',
+            'improve[segment]' => $segment,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+
+        /** @var \App\Catalog\Entity\Submission $submission */
+        $submission = static::getContainer()
+            ->get(EntityManagerInterface::class)
+            ->getRepository(\App\Catalog\Entity\Submission::class)
+            ->findOneBy([], ['id' => 'DESC']);
+        self::assertNotNull($submission);
+        self::assertSame($segment, $submission->getPayload()['segment'] ?? null, 'the drawn segment must be recorded in the submission payload');
+    }
+
     public function testRideExposesTrackUploadMode(): void
     {
         $client = static::createClient();

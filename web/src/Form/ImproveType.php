@@ -10,6 +10,7 @@ use App\Catalog\CatalogField;
 use App\Catalog\CatalogFormRegistry;
 use App\Catalog\FieldKind;
 use App\Catalog\ItemType;
+use App\Catalog\LocationMode;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -107,6 +108,17 @@ final class ImproveType extends AbstractType
                 ->add('grad', HiddenType::class, ['label' => false, 'required' => false])
                 ->add('steep', HiddenType::class, ['label' => false, 'required' => false])
             ;
+        }
+
+        // Segment-located types (road surface): the wizard's two drawn
+        // endpoints, carried as JSON {"a":[lng,lat],"b":[lng,lat]} — frontend
+        // review 2026-07-12 critical C6: without this carrier the drawn
+        // segment was held only in client memory and silently dropped on
+        // submit. Recorded in the submission payload (parity with the point
+        // branch's lat/lng); applying geometry edits on approve is a separate
+        // moderation feature for points and segments alike.
+        if (LocationMode::Segment === $type->locationMode()) {
+            $builder->add('segment', HiddenType::class, ['label' => false, 'required' => false]);
         }
     }
 

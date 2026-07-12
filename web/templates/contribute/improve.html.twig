@@ -199,6 +199,10 @@
     {{ form_widget(form.grad) }}
     {{ form_widget(form.steep) }}
   {% endif %}
+  {% if form.segment is defined %}
+    {# Segment endpoints drawn on the Locate map (client JS), carried as JSON. #}
+    {{ form_widget(form.segment) }}
+  {% endif %}
 
   <ol class="stepper" id="stepper">
     <li class="on" data-s="1" id="step-label-1">{{ 'improve.step1.label'|trans }}</li>

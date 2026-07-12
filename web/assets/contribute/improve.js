@@ -183,11 +183,17 @@
       var syncLoc = function () {
         var ro = document.getElementById('wz-readout');
         if (LOCATE === 'segment') {
+          // Frontend review 2026-07-12 C6: the endpoints must reach the form,
+          // not just WZ.loc — otherwise the POST silently drops the segment
+          // while announceMove() claims it will be recorded.
+          var fSeg = fld('segment');
           if (placed.length < 2) {
             WZ.loc = null;
+            if (fSeg) fSeg.value = '';
             if (ro) ro.textContent = placed.length === 1 ? '◎ Now tap the end of the segment' : '◎ Tap the start of the segment';
           } else {
             WZ.loc = { type: 'segment', a: placed[0].getLngLat().toArray(), b: placed[1].getLngLat().toArray() };
+            if (fSeg) fSeg.value = JSON.stringify({ a: WZ.loc.a, b: WZ.loc.b });
             if (ro) ro.textContent = '✓ ' + fmt(placed[0].getLngLat()) + ' → ' + fmt(placed[1].getLngLat());
           }
         } else {
