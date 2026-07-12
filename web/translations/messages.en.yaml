@@ -1001,6 +1001,7 @@ moderate:
     submission_id_required: 'Submission ID is required.'
     decision_required: 'A decision is required.'
     note_too_long: 'The note is longer than 2000 characters.'
+    no_recipient: 'Could not identify who to message.'
   empty:
     heading: 'Queue clear'
     body: 'Nothing left to review. Nice.'
@@ -1012,6 +1013,12 @@ moderate:
     apply: 'Apply'
   overview:
     showing: 'showing %shown% of %total% pending'
+  msg:
+    summary: 'Message the rider'
+    placeholder: 'Your message — request more information, or add a personal note…'
+    send: 'Send message'
+    sent: 'Message sent to the rider.'
+    error: 'Could not send the message.'
 moderate_routes:
   title: 'Routes moderation desk'
   kicker: 'Routes queue'

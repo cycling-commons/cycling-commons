@@ -40,6 +40,12 @@
   .sugg-reason{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
   .sugg-actions{display:flex;gap:.5rem}
 
+  .msg-rider{flex-basis:100%;margin-top:.4rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
+  .msg-rider summary{cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
+  .msg-rider summary:hover{color:var(--ink)}
+  .msg-rider form{margin-top:.6rem;display:flex;flex-direction:column;gap:.5rem}
+  .msg-rider textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
+
   .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
   .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
   .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
@@ -113,6 +119,16 @@
             <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.dismiss'|trans }}</button>
           </form>
         </div>
+        <details class="msg-rider">
+          <summary>{{ 'moderate.msg.summary'|trans }}</summary>
+          <form method="post" action="{{ path('moderate_message') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
+            <input type="hidden" name="channel" value="correction">
+            <input type="hidden" name="id" value="{{ s.id }}">
+            <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
+          </form>
+        </details>
       </div>
     {% endfor %}
   </div>

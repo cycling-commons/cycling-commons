@@ -1001,6 +1001,7 @@ moderate:
     submission_id_required: 'Einreichungs-ID ist erforderlich.'
     decision_required: 'Eine Entscheidung ist erforderlich.'
     note_too_long: 'Die Notiz ist länger als 2000 Zeichen.'
+    no_recipient: 'Der Empfänger der Nachricht konnte nicht ermittelt werden.'
   empty:
     heading: 'Warteschlange leer'
     body: 'Nichts mehr zu prüfen. Super.'
@@ -1012,6 +1013,12 @@ moderate:
     apply: 'Anwenden'
   overview:
     showing: '%shown% von %total% ausstehend'
+  msg:
+    summary: 'Nachricht an den Fahrer'
+    placeholder: 'Deine Nachricht — frage nach weiteren Informationen oder füge eine persönliche Notiz hinzu…'
+    send: 'Nachricht senden'
+    sent: 'Nachricht an den Fahrer gesendet.'
+    error: 'Die Nachricht konnte nicht gesendet werden.'
 moderate_routes:
   title: 'Routen-Moderationswarteschlange'
   kicker: 'Routenwarteschlange'

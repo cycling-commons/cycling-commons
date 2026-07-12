@@ -1001,6 +1001,7 @@ moderate:
     submission_id_required: 'L''identifiant de soumission est requis.'
     decision_required: 'Une décision est requise.'
     note_too_long: 'La note dépasse 2000 caractères.'
+    no_recipient: 'Impossible d''identifier le destinataire du message.'
   empty:
     heading: 'File vide'
     body: 'Plus rien à examiner. Parfait.'
@@ -1012,6 +1013,12 @@ moderate:
     apply: 'Appliquer'
   overview:
     showing: '%shown% sur %total% en attente'
+  msg:
+    summary: 'Envoyer un message au cycliste'
+    placeholder: 'Votre message — demandez plus d''informations ou ajoutez une note personnelle…'
+    send: 'Envoyer le message'
+    sent: 'Message envoyé au cycliste.'
+    error: 'Impossible d''envoyer le message.'
 moderate_routes:
   title: 'File de modération des itinéraires'
   kicker: 'File des itinéraires'

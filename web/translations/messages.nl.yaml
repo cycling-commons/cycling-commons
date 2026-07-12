@@ -1001,6 +1001,7 @@ moderate:
     submission_id_required: 'Inzending-ID is verplicht.'
     decision_required: 'Een beslissing is verplicht.'
     note_too_long: 'De notitie is langer dan 2000 tekens.'
+    no_recipient: 'Kon niet bepalen aan wie het bericht moet worden gestuurd.'
   empty:
     heading: 'Wachtrij leeg'
     body: 'Niets meer te beoordelen. Goed gedaan.'
@@ -1012,6 +1013,12 @@ moderate:
     apply: 'Toepassen'
   overview:
     showing: '%shown% van %total% in behandeling'
+  msg:
+    summary: 'Stuur de fietser een bericht'
+    placeholder: 'Je bericht — vraag om meer informatie of voeg een persoonlijke notitie toe…'
+    send: 'Bericht versturen'
+    sent: 'Bericht verstuurd naar de fietser.'
+    error: 'Het bericht kon niet worden verstuurd.'
 moderate_routes:
   title: 'Routes moderatiewachtrij'
   kicker: 'Routeswachtrij'
