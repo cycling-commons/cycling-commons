@@ -407,7 +407,9 @@
         if(!m){
           if(p.cluster){
             const el=clusterEl(st.layer, p.point_count_abbreviated); el.style.cursor='pointer';
-            el.addEventListener('click', ()=>{ map.getSource(srcId).getClusterExpansionZoom(p.cluster_id,(err,z)=>{ if(!err) map.easeTo({center:co, zoom:z+0.2}); }); });
+            // MapLibre ≥3: getClusterExpansionZoom returns a Promise (the old
+            // callback form is silently ignored — the click did nothing).
+            el.addEventListener('click', ()=>{ map.getSource(srcId).getClusterExpansionZoom(p.cluster_id).then(z=>map.easeTo({center:co, zoom:z+0.2})).catch(()=>{}); });
             m=new maplibregl.Marker({element:el, anchor:'center'}).setLngLat(co).addTo(map);
           } else {
             m=new maplibregl.Marker({element:confLeafPin(st, p, co), anchor:'bottom'}).setLngLat(co).addTo(map);
@@ -419,7 +421,8 @@
       st.onScreen=next;
     });
   }
-  map.on('load',()=>{ addSatellite(); addHeatmap(); addMapillary(); addWaterOsm();
+  let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
+  map.on('load',()=>{ _styleReady=true; addSatellite(); addHeatmap(); addMapillary(); addWaterOsm();
     addOsmDots('services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)');
     addOsmDots('scenic', window.CC_SCENIC_OSM, 'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)');
     addOsmDots('history', window.CC_HISTORY_OSM, 'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)');
@@ -784,7 +787,9 @@
   function liftInfoLayersAboveRoutes(){
     const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
     dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
-    dynamicIds.filter(id=>id.startsWith('surface-')).forEach(liftGroup);
+    // consolidated A-layer (C3): one shared casing + one layer per surface class
+    if(map.getLayer('surface-case')) map.moveLayer('surface-case');
+    surfaceClsLayerIds().forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
     ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
   }
   function highlightRoute(selId){
@@ -882,26 +887,44 @@
     unverified:{color:'#D92D20',dash:[2.5,2.5],cap:'butt'} // OSM has no surface tag — red dashes over the white casing ("needs a tag")
   };
   const surfaceStyle=cls=>SURFACE_STYLE[cls]||{color:'#4E8C84'};
-  function drawSurfaceLine(id, latlngs, cls, layer, f){
-    const st=surfaceStyle(cls), cap=st.cap||'round';
-    if(!map.getSource(id)) map.addSource(id,{type:'geojson',data:{type:'Feature',properties:{},
-      geometry:{type:'LineString',coordinates:latlngs.map(p=>[p[1],p[0]])}}});
-    if(!map.getLayer(id+'-case')) map.addLayer({id:id+'-case',type:'line',source:id,
+  // Consolidated A-layer rendering (frontend review 2026-07-12 C3+C4): ONE
+  // GeoJSON source for ALL segments + one shared casing layer + one line layer
+  // per surface class (dash/cap can't vary per feature within a layer), instead
+  // of a source and two layers PER SEGMENT (~350 sources / ~700 layers, each an
+  // individual draw call) with four listeners each (~1400 hit-tests per pointer
+  // move). Re-renders are a single setData; listeners bind once per class layer
+  // and resolve the clicked feature via properties.idx.
+  const SURFACE_CLS=Object.keys(SURFACE_STYLE).concat('other');   // 'other' = unknown class → default solid teal
+  const surfaceClsLayerIds=()=>SURFACE_CLS.map(c=>'surface-cls-'+c);
+  function renderSurfaceLayer(layer, visible){
+    const feats=[];
+    if(visible) layer.features.forEach((f,i)=>{
+      if(!((mode==='all')||!layer.exp||f.cur)) return;   // same visibility rule as featureVisible()
+      feats.push({type:'Feature',
+        properties:{idx:i, cls:SURFACE_STYLE[f.surfaceClass]?f.surfaceClass:'other'},
+        geometry:{type:'LineString',coordinates:f.geom.path.map(p=>[p[1],p[0]])}});
+    });
+    const data={type:'FeatureCollection',features:feats};
+    if(map.getSource('surface-src')){ map.getSource('surface-src').setData(data); return feats.length; }
+    map.addSource('surface-src',{type:'geojson',data});
+    map.addLayer({id:'surface-case',type:'line',source:'surface-src',
       layout:{'line-cap':'round','line-join':'round'},
       paint:{'line-color':'#FBF4E4','line-width':8,'line-opacity':.9}});
     const w=['interpolate',['linear'],['zoom'],9,3,13,5,16,8];
-    const paint={'line-color':st.color,'line-width':w,'line-opacity':1};
-    if(st.dash) paint['line-dasharray']=st.dash;
-    if(!map.getLayer(id)) map.addLayer({id,type:'line',source:id,
-      layout:{'line-cap':cap,'line-join':'round'},paint});
-    dynamicIds.push(id);
-    if(!boundLayerIds.has(id)){
-      map.on('click',id,()=>openDrawer(layer,f));
+    const featAt=e=>layer.features[e.features[0].properties.idx];
+    SURFACE_CLS.forEach(cls=>{
+      const st=surfaceStyle(cls), id='surface-cls-'+cls;
+      const paint={'line-color':st.color,'line-width':w,'line-opacity':1};
+      if(st.dash) paint['line-dasharray']=st.dash;
+      map.addLayer({id,type:'line',source:'surface-src',
+        filter:['==',['get','cls'],cls],
+        layout:{'line-cap':st.cap||'round','line-join':'round'},paint});
+      map.on('click',id,e=>{ const f=featAt(e); if(f) openDrawer(layer,f); });
       map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-      map.on('mousemove',id,e=>showTip(f.headline||f.name, e.lngLat));   // surface type (e.g. "Asphalt · Excellent") on hover
+      map.on('mousemove',id,e=>{ const f=featAt(e); if(f) showTip(f.headline||f.name, e.lngLat); });   // surface type (e.g. "Asphalt · Excellent") on hover
       map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
-      boundLayerIds.add(id);
-    }
+    });
+    return feats.length;
   }
   const chipSet=id=>{const s=new Set();document.querySelectorAll('#'+id+' .chip.on').forEach(c=>s.add(c.dataset.v));return s;};
   let activeSurface=chipSet('sqf'), activeTraffic=chipSet('trf');
@@ -968,6 +991,11 @@
     map.flyTo({center:lngLat, zoom:Math.max(map.getZoom(),14), offset:[-150,0], duration:1700, essential:true});
   }
   function render(){
+    // Style-load race (surfaced by the consolidated A-source, C3): the initial
+    // best-of fetch can resolve BEFORE map 'load', and addSource/addLayer throw
+    // on a not-yet-loaded style. Skip early calls — the 'load' handler runs
+    // render() itself, and it sees all state mutated so far (f.cur, mode, …).
+    if(!_styleReady) return;
     markers.forEach(m=>m.remove()); markers=[];
     clearDynamic();
     ['water','services','scenic','history','stays','shelter','transit'].forEach(k=>{
@@ -976,6 +1004,12 @@
     });
     let n=0;
     CATALOG.forEach(layer=>{
+      // The consolidated surface source is persistent (never torn down by
+      // clearDynamic), so an inactive A layer must explicitly render empty.
+      if(layer.kind==='surface'){
+        n+=renderSurfaceLayer(layer, active.has(layer.key));
+        return;
+      }
       if(!active.has(layer.key)) return;
       if(layer.kind==='point'){
         layer.features.forEach((f,i)=>{
@@ -1026,14 +1060,6 @@
           if(layer.key==='experience'){ if(!(mode==='all'||f.cur)) return; }
           else if(!((mode==='all')||!layer.exp||f.cur)) return;
           drawLine(`${layer.key}-${i}`, f.geom.path, layer.color, layer, f);
-          n++;
-        });
-        return;
-      }
-      if(layer.kind==='surface'){
-        layer.features.forEach((f,i)=>{
-          if(!((mode==='all')||!layer.exp||f.cur)) return;
-          drawSurfaceLine(`${layer.key}-${i}`, f.geom.path, f.surfaceClass, layer, f);
           n++;
         });
         return;
@@ -1206,7 +1232,7 @@
     }
     const vote = (f.cur && layer.key!=='experience') ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
     const act = edit + vote;
-    const desc = f.desc ? `<p class="cc-d-desc">${f.desc}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
+    const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
     // C1-T3 (spec W5): an empty placeholder for the async "Recent changes"
     // section — openDrawer() fetches GET /map/item/{id}/history after this
     // HTML lands and fills #cc-d-hist-slot (buildRecord itself stays sync/pure,
