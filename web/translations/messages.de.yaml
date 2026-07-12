@@ -1141,7 +1141,7 @@ messages:
   kind_route_rejected: 'Routenvorschlag nicht angenommen'
   kind_route_retired: 'Route zurückgezogen'
   kind_correction_done: 'Korrektur bearbeitet — danke!'
-  kind_correction_dismissed: 'Korrektur abgelehnt'
+  kind_correction_dismissed: 'Korrektur verworfen'
   kind_curator_message: 'Nachricht von einem Kurator'
   kind_rider_reply: 'Antwort des Fahrers'
   body:
@@ -1152,7 +1152,7 @@ messages:
     route_rejected: 'Deine Route %name% wurde nicht angenommen.'
     route_retired: 'Deine Route %name% wurde von der Karte zurückgezogen.'
     correction_done: 'Deine Korrektur an %name% wurde bearbeitet. Danke, dass du die Karte ehrlich hältst!'
-    correction_dismissed: 'Deine Korrektur an %name% wurde abgelehnt.'
+    correction_dismissed: 'Deine Korrektur an %name% wurde verworfen.'
   reply_label: 'Deine Antwort'
   reply_send: 'Antwort senden'
   reply_sent: 'Antwort gesendet — dein Beitrag ist wieder in der Prüfwarteschlange.'
