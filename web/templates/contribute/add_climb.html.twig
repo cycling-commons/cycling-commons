@@ -149,7 +149,7 @@
   <p class="sub">{{ 'add_climb.lead'|trans }}</p>
 
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
-  <script>window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 
   {{ form_start(form, {attr: {id: 'add-climb-form', novalidate: 'novalidate'}}) }}
 
@@ -271,7 +271,7 @@
     <h2>{{ 'add_climb.step4.heading'|trans }}</h2>
     <p class="help">{{ 'add_climb.step4.help'|trans }}</p>
     <div class="card" id="reviewBody"></div>
-    <div class="prov">{{ 'add_climb.step4.prov'|trans|raw }}</div>
+    <div class="prov">{{ 'add_climb.step4.prov'|trans|rich }}</div>
   </section>
 
   {# STEP 5 — SUBMITTED (client-side wizard only; real POST uses receipt above) #}

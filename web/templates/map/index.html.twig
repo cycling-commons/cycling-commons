@@ -227,14 +227,14 @@
   </div>
 </div>
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script>window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode|raw }};</script>
+<script nonce="{{ csp_nonce() }}">window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 {% if is_granted('ROLE_CURATOR') and pending is defined %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   window.CC_IS_CURATOR = true;
   window.CC_PENDING = {{ pending|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {% endif %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   window.CC_CATALOG_URL = {{ path('map_catalog')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
 </script>

@@ -183,9 +183,9 @@
      improve.js step 1: a climb (letter B) mounts the shared three-point
      editor instead of the single-pin Locate (Task 5). Only emitted here —
      the unbound branch above never reaches this template region. #}
-  <script>window.CC_ITEM = {{ {letter: item_type.letter, route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
-  <script>window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 
   {{ form_start(form, {attr: {id: 'improve-form', novalidate: 'novalidate'}}) }}
 
@@ -323,14 +323,14 @@
     {# Votability / lifecycle context — where this suggestion goes next #}
     <div class="lifecycle">
       <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
-      <p class="lc-funnel">{{ 'improve.lifecycle.funnel'|trans|raw }}</p>
+      <p class="lc-funnel">{{ 'improve.lifecycle.funnel'|trans|rich }}</p>
       <p class="lc-verdict {{ item_type.isVotable ? 'is-votable' : 'is-utility' }}">
-        {{ (item_type.isVotable ? 'improve.lifecycle.votable_note' : 'improve.lifecycle.utility_note')|trans({'%type%': item_type.label})|raw }}
+        {{ (item_type.isVotable ? 'improve.lifecycle.votable_note' : 'improve.lifecycle.utility_note')|trans({'%type%': item_type.label})|rich }}
       </p>
-      <p class="lc-prov">{{ 'improve.lifecycle.provenance'|trans|raw }}</p>
+      <p class="lc-prov">{{ 'improve.lifecycle.provenance'|trans|rich }}</p>
     </div>
 
-    <p class="prov">{{ 'improve.step4.prov'|trans|raw }}</p>
+    <p class="prov">{{ 'improve.step4.prov'|trans|rich }}</p>
   </section>
 
   {# NAV ROW #}
