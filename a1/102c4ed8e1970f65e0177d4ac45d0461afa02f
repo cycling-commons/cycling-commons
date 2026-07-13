@@ -1,0 +1,27 @@
+web/tests/Auth/SpyDeletionHook.php
+  s_50ae7f4c1fd9e4::t_88b2e3b9ee1261 19-27,31-33
+web/src/Service/UserDeletionService.php
+  s_50ae7f4c1fd9e4::t_04ce14a5d3bb0e 60-75
+web/tests/Admin/UserAdminServiceTest.php
+  s_50ae7f4c1fd9e4::t_4842cff436d536 154-199
+web/src/Service/UserAdminService.php
+  s_50ae7f4c1fd9e4::t_4ef27f0cd49fcd 106-120
+  s_50ae7f4c1fd9e4::t_b2f97f945a6ef4 37
+  s_50ae7f4c1fd9e4::t_c5169b9ed9ae5a 151-153,157,162-167
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "a1102c4ed8e1970f65e0177d4ac45d0461afa02f",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
