@@ -1,0 +1,19 @@
+docs/specs/2026-07-12-moderation-feedback-and-messages-design.md
+  s_51df195d1c7750::t_063046a5c98d09 132-185
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "17432099d04135dd691d671bafe4133c0f363a2c",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
