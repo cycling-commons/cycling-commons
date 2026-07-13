@@ -718,19 +718,10 @@
       // Each row only when the attribute is set (review W38) — attributes are
       // spread from the DB, and a missing one otherwise rendered a labeled
       // blank row; matches the conditional registry fields just below.
-      const rec=[];
-      if(s.surface) rec.push({label:'Surface', value:s.surface, method:'OSM'});
-      if(s.smoothness) rec.push({label:'Smoothness', value:s.smoothness, method:'OSM'});
-      if(s.width) rec.push({label:'Width', value:s.width});
-      if(s.traffic) rec.push({label:'Traffic', value:s.traffic});
-      // C2-T7 (spec §W2): RoadSurface registry fields (CatalogFormRegistry::
-      // for(RoadSurface)) already served via item.attributes (CatalogProvider::
-      // surfaceSegments() spreads them onto s.<attr>) — rendered when a rider
-      // has set them, so an approved improve-form edit is visible here too.
-      if(s.note) rec.push({label:'Note', value:s.note});
-      if(s.lit) rec.push({label:'Lit at night?', value:s.lit});
-      if(s.segregated) rec.push({label:'Segregated from cars?', value:s.segregated});
-      if(s.seasonalClosure) rec.push({label:'Seasonal closure?', value:s.seasonalClosure});
+      // Registry-driven (CC_FIELD_SCHEMA[A]): surface / smoothness / width /
+      // traffic / note / lit / segregated / seasonalClosure — value or "add"
+      // prompt. Per-row OSM provenance now lives only on the Source line.
+      const rec = schemaRows('A', s, s.id);
       return {
         id:s.id, name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
