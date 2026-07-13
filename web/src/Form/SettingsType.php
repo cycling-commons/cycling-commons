@@ -16,6 +16,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Regex;
 
 /**
  * Settings form for display name and public-profile toggle.
@@ -39,6 +40,10 @@ final class SettingsType extends AbstractType
                         max: 100,
                         maxMessage: 'Display name may not exceed {{ limit }} characters.',
                     ),
+                    // Same invisible-character guard applied to every user text
+                    // field (a lone U+200B etc. passes NoSuspiciousCharacters).
+                    CatalogFieldConstraints::noSuspiciousCharacters(),
+                    new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
                 ],
             ])
             ->add('country', EntityType::class, [

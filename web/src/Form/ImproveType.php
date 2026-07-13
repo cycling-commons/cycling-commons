@@ -85,11 +85,16 @@ final class ImproveType extends AbstractType
                 // Don't let FixUrlProtocolListener turn an empty optional field
                 // into the bare string "http://".
                 'default_protocol' => null,
+                // UrlType is only a widget — validate server-side so a
+                // javascript:/data:/file: scheme or an unbounded string can
+                // never reach the submission payload (#12).
+                'constraints' => self::mediaUrlConstraints(),
             ])
             ->add('videoUrl', UrlType::class, [
                 'label' => false,
                 'required' => false,
                 'default_protocol' => null,
+                'constraints' => self::mediaUrlConstraints(),
             ])
             ->add('lat', HiddenType::class, ['required' => false])
             ->add('lng', HiddenType::class, ['required' => false])
@@ -176,6 +181,20 @@ final class ImproveType extends AbstractType
                 'constraints' => CatalogFieldConstraints::for($field),
             ]),
         };
+    }
+
+    /** @return list<\Symfony\Component\Validator\Constraint> */
+    private static function mediaUrlConstraints(): array
+    {
+        return [
+            new \Symfony\Component\Validator\Constraints\Url(
+                message: 'contribute.error.invalid_url',
+                protocols: ['http', 'https'],
+                requireTld: true,
+                tldMessage: 'contribute.error.invalid_url',
+            ),
+            new \Symfony\Component\Validator\Constraints\Length(max: 500, maxMessage: 'contribute.error.field_too_long'),
+        ];
     }
 
     #[\Override]

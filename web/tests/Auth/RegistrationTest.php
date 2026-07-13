@@ -222,6 +222,71 @@ final class RegistrationTest extends WebTestCase
         self::assertSelectorExists('input[name="registration_form[email]"]');
     }
 
+    public function testMalformedEmailIsRejectedWithoutCreatingUser(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/register');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Create account')->form([
+            'registration_form[email]' => 'not-an-email',
+            'registration_form[displayName]' => 'Bad Email',
+            'registration_form[plainPassword][first]' => 'securepass12345!',
+            'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[agreeTerms]' => true,
+        ]);
+        $client->submit($form);
+
+        // Server-side Email constraint rejects it (no 500 from RfcCompliance at
+        // Address(), no committed orphan row).
+        self::assertResponseStatusCodeSame(422);
+        /** @var UserRepository $userRepo */
+        $userRepo = static::getContainer()->get(UserRepository::class);
+        self::assertNull($userRepo->findOneBy(['email' => 'not-an-email']));
+    }
+
+    public function testOverlongEmailIsRejectedWithoutDatabaseError(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/register');
+        self::assertResponseIsSuccessful();
+
+        $long = str_repeat('a', 180).'@example.com'; // > column length 180
+
+        $form = $crawler->selectButton('Create account')->form([
+            'registration_form[email]' => $long,
+            'registration_form[displayName]' => 'Long Email',
+            'registration_form[plainPassword][first]' => 'securepass12345!',
+            'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[agreeTerms]' => true,
+        ]);
+        $client->submit($form);
+
+        // Length constraint stops it at validation, not at flush (no DBAL 500).
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    public function testInvisibleCharacterInDisplayNameIsRejected(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/register');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Create account')->form([
+            'registration_form[email]' => 'zwsp@example.com',
+            'registration_form[displayName]' => "Bad\u{200B}Name", // zero-width space
+            'registration_form[plainPassword][first]' => 'securepass12345!',
+            'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[agreeTerms]' => true,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        /** @var UserRepository $userRepo */
+        $userRepo = static::getContainer()->get(UserRepository::class);
+        self::assertNull($userRepo->findOneBy(['email' => 'zwsp@example.com']));
+    }
+
     public function testPasswordTooShortShowsError(): void
     {
         $client = static::createClient();

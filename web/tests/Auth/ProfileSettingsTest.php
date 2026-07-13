@@ -206,6 +206,28 @@ final class ProfileSettingsTest extends WebTestCase
         self::assertFalse($updatedUser->isPublicProfile());
     }
 
+    public function testInvisibleCharacterInDisplayNameIsRejected(): void
+    {
+        $client = static::createClient();
+
+        $email = 'settings-zwsp@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Good Name');
+        $this->loginAs($client, $email, $plain);
+
+        $crawler = $client->request('GET', '/settings');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Save profile')->form([
+            'settings[displayName]' => "Bad\u{200B}Name", // zero-width space
+        ]);
+        $client->submit($form);
+
+        // Same invisible-character guard as every other user text field.
+        self::assertResponseStatusCodeSame(422);
+        $user = $this->fetchUser($email);
+        self::assertSame('Good Name', $user->getDisplayName(), 'display name must be unchanged');
+    }
+
     // ── Password change tests ────────────────────────────────────────────────
 
     public function testWrongCurrentPasswordIsRejected(): void

@@ -16,6 +16,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Regex;
 
 final class RegistrationFormType extends AbstractType
 {
@@ -34,6 +35,10 @@ final class RegistrationFormType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Please enter a display name.'),
                     new Length(min: 2, max: 100, minMessage: 'Display name must be at least {{ limit }} characters.', maxMessage: 'contribute.error.field_too_long'),
+                    // Same invisible-character guard applied to every user text
+                    // field (a lone U+200B etc. passes NoSuspiciousCharacters).
+                    CatalogFieldConstraints::noSuspiciousCharacters(),
+                    new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
                 ],
             ])
             ->add('plainPassword', RepeatedType::class, [

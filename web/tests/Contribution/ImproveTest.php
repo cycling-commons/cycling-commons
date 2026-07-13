@@ -387,4 +387,36 @@ final class ImproveTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.receipt .ref', 'SUB-');
     }
+
+    /**
+     * #12: photoUrl/videoUrl are shared media fields whose value is persisted
+     * into the submission payload for later review/render. A non-http(s)
+     * scheme (javascript:) must be rejected by validation — never persisted.
+     */
+    public function testJavascriptSchemeInPhotoUrlIsRejectedAndNeverPersisted(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'photo-xss');
+        $item = $this->createItem('D', ['correction' => 'Nothing yet.'], name: 'Repair point');
+
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Next →')->form([
+            'improve[details][correction]' => 'Added a pump.',
+            'improve[photoUrl]' => 'javascript:alert(document.cookie)',
+            'improve[lat]' => '50.45',
+            'improve[lng]' => '5.62',
+            'improve[place]' => 'Spa, Wallonia',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorNotExists('.receipt');
+        $submissions = static::getContainer()
+            ->get(EntityManagerInterface::class)
+            ->getRepository(\App\Catalog\Entity\Submission::class)
+            ->count([]);
+        self::assertSame(0, $submissions);
+    }
 }

@@ -15,6 +15,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @api Consumed by Symfony Security, Doctrine lifecycle events, and future auth controllers.
@@ -35,7 +36,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'uuid', unique: false)]
     private ?Uuid $uuid = null;
 
+    // Validate on the entity so EVERY write path is covered (registration form,
+    // future JSON API, console commands) — not just the one form. Length is
+    // capped at the column width so an over-long value fails validation instead
+    // of blowing up at flush; Email keeps a malformed address out before
+    // Address() would throw RfcComplianceException on send.
     #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Assert\NotBlank(message: 'Please enter an email address.')]
+    #[Assert\Email(message: 'Please enter a valid email address.')]
+    #[Assert\Length(max: 180, maxMessage: 'Email address may not exceed {{ limit }} characters.')]
     private string $email = '';
 
     #[ORM\Column(type: 'string')]
