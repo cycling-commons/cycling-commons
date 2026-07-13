@@ -1333,3 +1333,37 @@ admin:
 route:
   error:
     note_too_long: 'De notitie is langer dan 2.000 tekens.'
+item_type:
+  road-surface:
+    label: 'Wegdek'
+    eyebrow: 'Dit segment verbeteren'
+  climbs:
+    label: 'Beklimmingen'
+    eyebrow: 'Deze beklimming verbeteren'
+  water-food:
+    label: 'Water & eten'
+    eyebrow: 'Dit waterpunt verbeteren'
+  bike-services:
+    label: 'Fietsdiensten'
+    eyebrow: 'Deze plek verbeteren'
+  where-to-sleep:
+    label: 'Waar te slapen'
+    eyebrow: 'Dit verblijf verbeteren'
+  hazards:
+    label: 'Gevaren & omstandigheden'
+    eyebrow: 'Dit gevaar bijwerken'
+  getting-there:
+    label: 'Bereikbaarheid'
+    eyebrow: 'Deze plek verbeteren'
+  shelter:
+    label: 'Schuilplaats & nood'
+    eyebrow: 'Deze plek verbeteren'
+  scenic-views:
+    label: 'Uitzichten'
+    eyebrow: 'Dit uitzichtpunt verbeteren'
+  history-culture:
+    label: 'Geschiedenis & cultuur'
+    eyebrow: 'Deze plek verbeteren'
+  quality-rides:
+    label: 'Aanbevolen routes'
+    eyebrow: 'Deze rit bewerken'

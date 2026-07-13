@@ -1333,3 +1333,37 @@ admin:
 route:
   error:
     note_too_long: 'The note must be 2,000 characters or fewer.'
+item_type:
+  road-surface:
+    label: 'Road surface'
+    eyebrow: 'Improve this segment'
+  climbs:
+    label: 'Climbs'
+    eyebrow: 'Improve this climb'
+  water-food:
+    label: 'Water & food'
+    eyebrow: 'Improve this water point'
+  bike-services:
+    label: 'Bike services'
+    eyebrow: 'Improve this place'
+  where-to-sleep:
+    label: 'Where to sleep'
+    eyebrow: 'Improve this stay'
+  hazards:
+    label: 'Hazards & conditions'
+    eyebrow: 'Update this hazard'
+  getting-there:
+    label: 'Getting there'
+    eyebrow: 'Improve this place'
+  shelter:
+    label: 'Shelter & emergency'
+    eyebrow: 'Improve this place'
+  scenic-views:
+    label: 'Scenic views'
+    eyebrow: 'Improve this viewpoint'
+  history-culture:
+    label: 'History & culture'
+    eyebrow: 'Improve this place'
+  quality-rides:
+    label: 'Recommended routes'
+    eyebrow: 'Edit this ride'

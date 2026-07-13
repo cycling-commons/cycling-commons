@@ -1333,3 +1333,37 @@ admin:
 route:
   error:
     note_too_long: 'Die Notiz ist länger als 2.000 Zeichen.'
+item_type:
+  road-surface:
+    label: 'Straßenbelag'
+    eyebrow: 'Diesen Abschnitt verbessern'
+  climbs:
+    label: 'Anstiege'
+    eyebrow: 'Diesen Anstieg verbessern'
+  water-food:
+    label: 'Wasser & Essen'
+    eyebrow: 'Diesen Wasserpunkt verbessern'
+  bike-services:
+    label: 'Fahrraddienste'
+    eyebrow: 'Diesen Ort verbessern'
+  where-to-sleep:
+    label: 'Übernachten'
+    eyebrow: 'Diese Unterkunft verbessern'
+  hazards:
+    label: 'Gefahren & Bedingungen'
+    eyebrow: 'Diese Gefahr aktualisieren'
+  getting-there:
+    label: 'Anreise'
+    eyebrow: 'Diesen Ort verbessern'
+  shelter:
+    label: 'Unterstand & Notfall'
+    eyebrow: 'Diesen Ort verbessern'
+  scenic-views:
+    label: 'Aussichtspunkte'
+    eyebrow: 'Diesen Aussichtspunkt verbessern'
+  history-culture:
+    label: 'Geschichte & Kultur'
+    eyebrow: 'Diesen Ort verbessern'
+  quality-rides:
+    label: 'Empfohlene Routen'
+    eyebrow: 'Diese Tour bearbeiten'

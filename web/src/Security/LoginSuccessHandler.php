@@ -44,6 +44,7 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
     public function __construct(
         private readonly HttpUtils $httpUtils,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly TwoFactorPolicy $twoFactorPolicy,
     ) {
     }
 
@@ -62,13 +63,14 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 
         $user = $token->getUser();
 
-        // Apply the user's saved language preference for the rest of the session.
-        if ($user instanceof User && null !== $user->getLocale()) {
-            $request->getSession()->set('_locale', $user->getLocale());
+        // The user's saved language preference for the rest of the session.
+        $locale = $user instanceof User ? $user->getLocale() : null;
+        if (null !== $locale) {
+            $request->getSession()->set('_locale', $locale);
         }
 
-        if ($user instanceof User && $this->requiresTwoFactorSetup($user)) {
-            return new RedirectResponse($this->urlGenerator->generate('2fa_setup'));
+        if ($user instanceof User && $this->twoFactorPolicy->requiresSetup($user)) {
+            return new RedirectResponse($this->localizedUrl('2fa_setup', $locale));
         }
 
         $targetPath = $this->getTargetPath($request->getSession(), self::FIREWALL_NAME);
@@ -78,21 +80,17 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
             return $this->httpUtils->createRedirectResponse($request, $targetPath);
         }
 
-        return new RedirectResponse($this->urlGenerator->generate(self::DEFAULT_TARGET_ROUTE));
+        // Generate the default target in the user's own locale, otherwise the
+        // path-prefix router serves the un-prefixed (English) URL and the
+        // LocaleListener re-reads English from the path — clobbering the
+        // session locale we just set (review #32).
+        return new RedirectResponse($this->localizedUrl(self::DEFAULT_TARGET_ROUTE, $locale));
     }
 
-    /**
-     * An elevated-role user (curator/admin) who has no TOTP secret yet must provision 2FA.
-     * Users who already have a secret have, by this point, already passed scheb's interstitial.
-     */
-    private function requiresTwoFactorSetup(User $user): bool
+    private function localizedUrl(string $route, ?string $locale): string
     {
-        if (null !== $user->getTotpSecret()) {
-            return false;
-        }
+        $params = null !== $locale ? ['_locale' => $locale] : [];
 
-        $roles = $user->getRoles();
-
-        return \in_array('ROLE_CURATOR', $roles, true) || \in_array('ROLE_ADMIN', $roles, true);
+        return $this->urlGenerator->generate($route, $params);
     }
 }

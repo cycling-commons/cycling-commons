@@ -116,6 +116,27 @@ final class ImproveTest extends WebTestCase
     }
 
     /**
+     * #38: the wizard eyebrow/label are translated on a localized improve page,
+     * not rendered as hardcoded English.
+     */
+    public function testTypeLabelIsLocalizedOnFrenchImprovePage(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'fr-label');
+        $item = $this->createItem('D', name: 'Un endroit');
+
+        $client->request('GET', '/fr/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        $body = (string) $client->getResponse()->getContent();
+        // FR eyebrow ("Améliorer ce lieu") + FR label ("Services vélo") — never
+        // the English "Improve this place" / "Bike services".
+        self::assertStringContainsString('Améliorer ce lieu', $body);
+        self::assertStringContainsString('Services vélo', $body);
+        self::assertStringNotContainsString('Improve this place', $body);
+    }
+
+    /**
      * #11: /improve?item= must only bind items in a publicly-served state
      * (unverified/verified). A 'submitted' item (another rider's un-moderated
      * contribution) or a rejected/retired one must be treated as unbound —

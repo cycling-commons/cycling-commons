@@ -14,7 +14,6 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
  * Kernel request listener that enforces mandatory 2FA enrolment for elevated roles.
@@ -60,7 +59,7 @@ final class TwoFactorSetupEnforcer
 
     public function __construct(
         private readonly TokenStorageInterface $tokenStorage,
-        private readonly AuthorizationCheckerInterface $authorizationChecker,
+        private readonly TwoFactorPolicy $twoFactorPolicy,
         private readonly UrlGeneratorInterface $urlGenerator,
     ) {
     }
@@ -111,16 +110,10 @@ final class TwoFactorSetupEnforcer
             return;
         }
 
-        // Only enforce for elevated roles (ROLE_CURATOR covers ROLE_ADMIN via role_hierarchy).
-        if (!$this->authorizationChecker->isGranted('ROLE_CURATOR')) {
-            return;
-        }
-
-        // Nothing to enforce only once 2FA is ACTUALLY active. Match the exact
-        // predicate scheb challenges on (twoFaEnabled && secret) rather than the
-        // weaker "has a secret": a user with a secret but twoFaEnabled=false is
-        // never challenged at login, so they must still be sent to setup (#31).
-        if ($user->isTotpAuthenticationEnabled()) {
+        // One shared, role-hierarchy-aware policy decides who must enrol and
+        // whether 2FA is actually active (twoFaEnabled && secret) — the same
+        // check the login handler uses (reviews #31 + #39).
+        if (!$this->twoFactorPolicy->requiresSetup($user)) {
             return;
         }
 

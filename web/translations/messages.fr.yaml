@@ -1333,3 +1333,37 @@ admin:
 route:
   error:
     note_too_long: 'La note dépasse 2 000 caractères.'
+item_type:
+  road-surface:
+    label: 'Revêtement'
+    eyebrow: 'Améliorer ce tronçon'
+  climbs:
+    label: 'Cols'
+    eyebrow: 'Améliorer ce col'
+  water-food:
+    label: 'Eau & ravitaillement'
+    eyebrow: 'Améliorer ce point d’eau'
+  bike-services:
+    label: 'Services vélo'
+    eyebrow: 'Améliorer ce lieu'
+  where-to-sleep:
+    label: 'Où dormir'
+    eyebrow: 'Améliorer cet hébergement'
+  hazards:
+    label: 'Dangers & conditions'
+    eyebrow: 'Mettre à jour ce danger'
+  getting-there:
+    label: 'Accès'
+    eyebrow: 'Améliorer ce lieu'
+  shelter:
+    label: 'Abri & urgence'
+    eyebrow: 'Améliorer ce lieu'
+  scenic-views:
+    label: 'Points de vue'
+    eyebrow: 'Améliorer ce point de vue'
+  history-culture:
+    label: 'Histoire & culture'
+    eyebrow: 'Améliorer ce lieu'
+  quality-rides:
+    label: 'Itinéraires recommandés'
+    eyebrow: 'Modifier cet itinéraire'

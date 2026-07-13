@@ -105,6 +105,21 @@ enum ItemType: string
         };
     }
 
+    /**
+     * Translation key for {@see label()} — use with `|trans` so localized
+     * improve pages don't render the hardcoded English (review #38).
+     */
+    public function labelKey(): string
+    {
+        return 'item_type.'.$this->value.'.label';
+    }
+
+    /** Translation key for {@see eyebrow()}. */
+    public function eyebrowKey(): string
+    {
+        return 'item_type.'.$this->value.'.eyebrow';
+    }
+
     /** The locator pin glyph shown in the wizard (from edit-items.js). */
     public function icon(): string
     {

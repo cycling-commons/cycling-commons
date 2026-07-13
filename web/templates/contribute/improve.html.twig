@@ -174,7 +174,7 @@
      data-location-mode="{{ item_type.locationMode.value }}"
      data-icon="{{ item_type.icon }}"
      data-track="{{ item_type.hasTrackUpload ? '1' : '0' }}">
-  <div class="ey">{{ item_type.eyebrow }} · {{ item_type.letter }} · {{ item_type.label }}</div>
+  <div class="ey">{{ item_type.eyebrowKey|trans }} · {{ item_type.letter }} · {{ item_type.labelKey|trans }}</div>
   {# Show the exact item being edited, persistently above every step, so it's always clear what you're editing. #}
   <h1 class="disp">{% if edit_name is defined and edit_name %}{{ edit_name }}{% else %}{{ 'improve.title'|trans }}{% endif %}</h1>
   <p class="sub">{{ 'improve.lead'|trans }}</p>
@@ -325,7 +325,7 @@
       <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
       <p class="lc-funnel">{{ 'improve.lifecycle.funnel'|trans|rich }}</p>
       <p class="lc-verdict {{ item_type.isVotable ? 'is-votable' : 'is-utility' }}">
-        {{ (item_type.isVotable ? 'improve.lifecycle.votable_note' : 'improve.lifecycle.utility_note')|trans({'%type%': item_type.label})|rich }}
+        {{ (item_type.isVotable ? 'improve.lifecycle.votable_note' : 'improve.lifecycle.utility_note')|trans({'%type%': item_type.labelKey|trans})|rich }}
       </p>
       <p class="lc-prov">{{ 'improve.lifecycle.provenance'|trans|rich }}</p>
     </div>
