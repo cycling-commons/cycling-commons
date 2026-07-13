@@ -112,6 +112,7 @@ class Item
     public function setName(string $name): static
     {
         $this->name = $name;
+        $this->touch();
 
         return $this;
     }
@@ -124,6 +125,7 @@ class Item
     public function setGeom(?string $geoJson): static
     {
         $this->geom = $geoJson;
+        $this->touch();
 
         return $this;
     }
@@ -172,6 +174,7 @@ class Item
     public function setState(ItemState $state): static
     {
         $this->state = $state;
+        $this->touch();
 
         return $this;
     }
@@ -210,7 +213,7 @@ class Item
     public function setAttributes(array $attributes): static
     {
         $this->attributes = $attributes;
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->touch();
 
         return $this;
     }
@@ -235,5 +238,15 @@ class Item
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    /**
+     * Mark the row as freshly changed. Called by every content setter
+     * (name/geom/state/attributes) so updatedAt tracks any edit, not only an
+     * attribute change (#30).
+     */
+    private function touch(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
     }
 }

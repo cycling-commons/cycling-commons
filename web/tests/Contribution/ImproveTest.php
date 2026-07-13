@@ -89,14 +89,14 @@ final class ImproveTest extends WebTestCase
      *
      * @param array<string, mixed> $attributes
      */
-    private function createItem(string $letter, array $attributes = [], string $name = 'Test place'): Item
+    private function createItem(string $letter, array $attributes = [], string $name = 'Test place', ItemState $state = ItemState::Unverified): Item
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
         $item = (new Item())->setLetter($letter)->setName($name)
             ->setGeom('{"type":"Point","coordinates":[6.027,50.426]}')->setCountryCode('BE')
-            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
+            ->setState($state)->setSource(ItemSource::Osm)
             ->setSourceRef('node/improve-test-'.$letter.'-'.bin2hex(random_bytes(4)))
             ->setAttributes($attributes);
         $em->persist($item);
@@ -113,6 +113,40 @@ final class ImproveTest extends WebTestCase
         $client->request('GET', '/improve');
 
         self::assertResponseRedirects('/login', 302);
+    }
+
+    /**
+     * #11: /improve?item= must only bind items in a publicly-served state
+     * (unverified/verified). A 'submitted' item (another rider's un-moderated
+     * contribution) or a rejected/retired one must be treated as unbound —
+     * never prefilling the form with un-vetted data.
+     */
+    public function testSubmittedItemIsTreatedAsUnbound(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'state-leak');
+        $item = $this->createItem('D', ['correction' => 'secret pending note'], name: 'Unvetted place', state: ItemState::Submitted);
+
+        $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-improve-unbound]');
+        self::assertSelectorNotExists('form[name="improve"]');
+        self::assertStringNotContainsString('Unvetted place', (string) $client->getResponse()->getContent());
+        self::assertStringNotContainsString('secret pending note', (string) $client->getResponse()->getContent());
+    }
+
+    public function testRejectedItemIsTreatedAsUnbound(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'state-rej');
+        $item = $this->createItem('D', name: 'Rejected place', state: ItemState::Rejected);
+
+        $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-improve-unbound]');
+        self::assertStringNotContainsString('Rejected place', (string) $client->getResponse()->getContent());
     }
 
     // ── Authenticated GET — a bound item drives its own type's fields ────────

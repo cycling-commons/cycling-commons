@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Entity\User;
 use App\Form\AddClimbType;
@@ -169,7 +170,16 @@ final class ContributeController extends AbstractController
         //
         // ctype_digit('') is false, so this also rejects a missing/blank param.
         if (ItemType::QualityRides !== $requestedType && ctype_digit($itemParam)) {
-            $item = $em->find(Item::class, (int) $itemParam);
+            // Only bind items in a publicly-served state (spec §8: /map serves
+            // only unverified/verified). A 'submitted' item is another rider's
+            // un-moderated contribution; 'rejected'/'retired' are withdrawn.
+            // Binding any of them would prefill the form with — and leak — data
+            // that no public read path exposes (#11). Everything else falls
+            // through to the unbound explainer.
+            $item = $em->getRepository(Item::class)->findOneBy([
+                'id' => (int) $itemParam,
+                'state' => [ItemState::Unverified, ItemState::Verified],
+            ]);
             // Guard the shared client-side id contract for A–J: the resolved row
             // must be the type the client opened. A mismatch means the id
             // collided across sequences (or the link was hand-crafted) — treat
