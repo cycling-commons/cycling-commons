@@ -1167,6 +1167,11 @@
           + `&type=${layer.letter}`
           + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
         edit = `<a class="cc-d-act edit" href="/improve?${editQ}">✎ Edit this item</a>`;
+        // Direct "this pin is wrong" path — only when we know where it is.
+        // editQ already carries lat/lng; fix=location opens the editor expanded.
+        if(ell){
+          edit += `<a class="cc-d-act fixloc" href="/improve?${editQ}&fix=location">◎ Fix location</a>`;
+        }
       }
     }
     let moderate = '';

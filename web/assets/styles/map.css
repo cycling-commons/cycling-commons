@@ -282,6 +282,8 @@
     text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.5rem .8rem;border-radius:5px}
   .cc-d-act.edit{background:transparent;color:var(--paper);border:1px solid rgba(239,230,212,.45)}
   .cc-d-act.edit:hover{border-color:var(--trail);color:var(--trail)}
+  .cc-d-act.fixloc{background:transparent;color:rgba(239,230,212,.85);border:1px solid rgba(239,230,212,.3)}
+  .cc-d-act.fixloc:hover{border-color:var(--trail);color:var(--trail)}
   /* Route domain phase 3 (spec §7): rode-it/vote/suggest community panel. */
   .cc-rc{display:flex;flex-direction:column;gap:.75rem;margin-top:.6rem}
   .cc-rc-l{font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.6);font-weight:600;display:block;margin-bottom:.45rem}
