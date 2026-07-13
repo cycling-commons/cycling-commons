@@ -399,10 +399,13 @@
   .cc-steep::before{content:"▲";font-size:.55rem;color:#C79BE8}
   /* Pulse via a compositable pseudo-element transform/opacity, not a box-shadow
      spread repaint every frame over the map canvas (review W10). */
-  .cc-highlight{position:relative;width:18px;height:18px;border-radius:50%;background:rgba(255,90,31,.85);border:2px solid var(--paper);pointer-events:none}
-  .cc-highlight::after{content:"";position:absolute;inset:-2px;border-radius:50%;background:rgba(255,90,31,.55);
+  /* Selection halo: a transparent-centre glowing ring + expanding pulse, so the
+     selected marker (WebGL icon, painted beneath all DOM overlays) shows THROUGH
+     the middle and reads as sitting on top of the pulse. */
+  .cc-highlight{position:relative;width:24px;height:24px;border-radius:50%;background:transparent;pointer-events:none;box-shadow:0 0 10px 3px rgba(255,90,31,.5),inset 0 0 0 2px rgba(255,90,31,.55)}
+  .cc-highlight::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,90,31,.6);
     animation:cc-pulse 1.25s infinite;z-index:-1}
-  @keyframes cc-pulse{0%{transform:scale(1);opacity:1}70%{transform:scale(3);opacity:0}100%{transform:scale(1);opacity:0}}
+  @keyframes cc-pulse{0%{transform:scale(1);opacity:.9}70%{transform:scale(2.6);opacity:0}100%{transform:scale(1);opacity:0}}
   .cc-tooltip{position:absolute;z-index:1300;pointer-events:none;background:var(--ink);color:var(--paper);
     font-family:var(--mono);font-size:.66rem;letter-spacing:.03em;padding:.3rem .55rem;border-radius:4px;
     white-space:nowrap;transform:translate(-50%,-130%);box-shadow:0 4px 12px rgba(0,0,0,.4)}
