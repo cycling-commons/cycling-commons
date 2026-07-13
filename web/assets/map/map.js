@@ -1642,7 +1642,10 @@
       // Pulsing selection halo on the clicked point — curated AND OSM — so the
       // selected place stands out; persists while the drawer is open and is
       // cleared by closeDrawer()/the next open. highlightAt(null) no-ops.
-      highlightAt(f.geom && f.geom.ll);
+      // Confirmed items render as bottom-anchored teardrop pins whose icon sits
+      // ~16px above the ground point, so raise the halo to ring the icon; flat
+      // WebGL dots (unverified OSM) are centred on the point → no offset.
+      highlightAt(f.geom && f.geom.ll, f.cur ? [0,-16] : [0,0]);
     }
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
     if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
@@ -1814,10 +1817,10 @@
   }
   // pulsing highlight marker — show where a hovered list item / town sits on the map
   let hlMarker=null;
-  function highlightAt(ll){
+  function highlightAt(ll, offset){
     if(!ll){ return clearHighlight(); }
     if(!hlMarker){ const el=document.createElement('div'); el.className='cc-highlight'; hlMarker=new maplibregl.Marker({element:el,anchor:'center'}); }
-    hlMarker.setLngLat([ll[1],ll[0]]).addTo(map);
+    hlMarker.setOffset(offset||[0,0]).setLngLat([ll[1],ll[0]]).addTo(map);
   }
   function clearHighlight(){ if(hlMarker) hlMarker.remove(); }
   function closeDrawer(){
