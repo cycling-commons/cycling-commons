@@ -1,0 +1,19 @@
+docs/specs/2026-07-13-registry-driven-drawer-fields-design.md
+  s_c50d64f7fec2b1::t_e4154cb4827975 1-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "4551d5ad3eddff215f35d24f4f671a05521f2f51",
+  "prompts": {},
+  "sessions": {
+    "s_c50d64f7fec2b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "822a7642-0b8b-4088-a14e-d46df4e41717",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
