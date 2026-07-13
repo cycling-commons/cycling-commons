@@ -187,4 +187,28 @@ enum ItemType: string
     {
         return self::QualityRides === $this;
     }
+
+    /**
+     * The community-confirmation stances a rider may take on this type
+     * (spec: utilities are confirmed, not voted). Drinking water carries a
+     * potability judgement; other point utilities carry a plain existence
+     * confirmation. Votable types (see {@see isVotable()}) and the measured
+     * road-surface segment carry none — they are empty here.
+     *
+     * @return list<ConfirmationStance>
+     */
+    public function confirmationStances(): array
+    {
+        return match ($this) {
+            self::WaterFood => [ConfirmationStance::Potable, ConfirmationStance::NotPotable],
+            self::BikeServices, self::Hazards, self::GettingThere, self::Shelter => [ConfirmationStance::Exists],
+            default => [],
+        };
+    }
+
+    /** True when riders confirm (rather than vote on) this type. */
+    public function isConfirmable(): bool
+    {
+        return [] !== $this->confirmationStances();
+    }
 }

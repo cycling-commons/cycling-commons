@@ -48,6 +48,11 @@ security:
         # PUBLIC_ACCESS so scheb's TwoFactorAccessListener skips the session
         # read that would downgrade Cache-Control to private.
         - { path: '^/routes/\d+\.gpx$', roles: PUBLIC_ACCESS }
+        # Water/utility confirmation tallies are PUBLIC (anyone sees the counts;
+        # only the confirm POST — enforced in-controller as a 401 — needs a
+        # login). Explicit PUBLIC_ACCESS for the same lazy-firewall reason as the
+        # map endpoints above.
+        - { path: '^/items/\d+/confirmations$', roles: PUBLIC_ACCESS }
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.
         # Must precede the ^/2fa rule below, which guards scheb's interstitial (/2fa, /2fa_check)
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.

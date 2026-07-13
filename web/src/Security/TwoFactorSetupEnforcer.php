@@ -55,6 +55,7 @@ final class TwoFactorSetupEnforcer
         // boots the lazy firewall + a session and defeats their cacheability (#16).
         '/map',      // /map page + /map/catalog.json, /map/best-of, /map/item/*/history
         '/routes/',  // /routes/{id}.gpx
+        '/items/',   // /items/{id}/confirmations (public tallies), /items/{id}/confirm
     ];
 
     public function __construct(
