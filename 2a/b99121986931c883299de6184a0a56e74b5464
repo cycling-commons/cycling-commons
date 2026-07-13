@@ -1,0 +1,25 @@
+web/tests/Contribution/AddClimbTest.php
+  s_50ae7f4c1fd9e4::t_1dfc28013c6a55 100-135
+web/src/Form/AddClimbType.php
+  s_50ae7f4c1fd9e4::t_9567de09596af7 115-119,122,126,130
+  s_50ae7f4c1fd9e4::t_98986f4ba8bf0e 38-40,45-46,48-52
+  s_50ae7f4c1fd9e4::t_8649eee8fb298e 9-10
+  s_50ae7f4c1fd9e4::t_151e3346d97945 31-33
+  s_50ae7f4c1fd9e4::t_b7959b2330eb03 37,47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "2ab99121986931c883299de6184a0a56e74b5464",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
