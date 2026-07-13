@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Form;
 
+use App\Catalog\CatalogFormRegistry;
+use App\Catalog\ItemType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -26,13 +28,28 @@ use Symfony\Component\Validator\Constraints\Regex;
  * Maps the eleven input ids from atlas/demo/add-climb.html onto Symfony form
  * types. The geocoded location (lat/lng/place) is filled by client-side JS and
  * carried as hidden/text fields. CSRF protection is provided automatically.
+ *
+ * @api Instantiated by Symfony's form factory — `@api` tells Psalm the
+ *      constructor is a live entry point, not dead code.
  */
 final class AddClimbType extends AbstractType
 {
+    public function __construct(private readonly CatalogFormRegistry $registry)
+    {
+    }
+
     /** @param array<array-key,mixed> $options */
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        // Surface/quality/traffic choices from the shared Climbs registry (#49).
+        $climbFields = [];
+        foreach ($this->registry->for(ItemType::Climbs)->all() as $field) {
+            $climbFields[$field->name] = array_combine($field->choices, $field->choices);
+        }
+        /** @var array{surface: array<string,string>, sq: array<string,string>, tr: array<string,string>} $climbChoices */
+        $climbChoices = $climbFields;
+
         $builder
             ->add('fName', TextType::class, [
                 'label' => false,
@@ -95,34 +112,22 @@ final class AddClimbType extends AbstractType
                     ),
                 ],
             ])
+            // Climb surface/quality/traffic vocabularies come from the ONE
+            // registry (Climbs surface/sq/tr fields) so add-climb and the
+            // improve form can never store divergent values for the same
+            // attribute (#49) — add-climb previously offered Concrete/Mixed,
+            // which the registry-driven improve select does not recognise.
             ->add('fSurface', ChoiceType::class, [
                 'label' => false,
-                'choices' => [
-                    'Asphalt' => 'Asphalt',
-                    'Concrete' => 'Concrete',
-                    'Gravel' => 'Gravel',
-                    'Cobbles' => 'Cobbles',
-                    'Mixed' => 'Mixed',
-                ],
+                'choices' => $climbChoices['surface'],
             ])
             ->add('fSurfaceQ', ChoiceType::class, [
                 'label' => false,
-                'choices' => [
-                    'Smooth' => 'Smooth',
-                    'Good' => 'Good',
-                    'Worn' => 'Worn',
-                    'Rough' => 'Rough',
-                    'Broken / loose' => 'Broken / loose',
-                ],
+                'choices' => $climbChoices['sq'],
             ])
             ->add('fTraffic', ChoiceType::class, [
                 'label' => false,
-                'choices' => [
-                    'Traffic-free' => 'Traffic-free',
-                    'Quiet' => 'Quiet',
-                    'Moderate' => 'Moderate',
-                    'Busy' => 'Busy',
-                ],
+                'choices' => $climbChoices['tr'],
             ])
             ->add('fNote', TextareaType::class, [
                 'label' => false,

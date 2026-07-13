@@ -97,6 +97,42 @@ final class AddClimbTest extends WebTestCase
         self::assertSelectorExists('[name="add_climb[steep]"]');
     }
 
+    /**
+     * #49: add-climb's surface vocabulary must match the Climbs registry (the
+     * same `surface` attribute the improve form edits), so a value stored here
+     * is always recognised there. Previously add-climb offered Concrete/Mixed,
+     * which the registry-driven improve select does not know.
+     */
+    public function testSurfaceChoicesMatchTheRegistry(): void
+    {
+        $client = static::createClient();
+        $email = 'addclimb-surf@example.com';
+        $plain = 'securepass12345!';
+        $this->createUser($email, $plain);
+        $this->loginAs($client, $email, $plain);
+
+        $crawler = $client->request('GET', '/add-climb');
+        self::assertResponseIsSuccessful();
+
+        $options = $crawler->filter('[name="add_climb[fSurface]"] option')->each(
+            static fn ($n) => $n->attr('value'),
+        );
+        $options = array_values(array_filter($options, static fn (?string $v): bool => null !== $v && '' !== $v));
+
+        /** @var \App\Catalog\CatalogFormRegistry $registry */
+        $registry = static::getContainer()->get(\App\Catalog\CatalogFormRegistry::class);
+        $registrySurface = [];
+        foreach ($registry->for(\App\Catalog\ItemType::Climbs)->all() as $f) {
+            if ('surface' === $f->name) {
+                $registrySurface = $f->choices;
+            }
+        }
+
+        self::assertSame($registrySurface, $options, 'add-climb surface options must equal the registry vocabulary');
+        self::assertContains('Worn asphalt', $options);
+        self::assertNotContains('Mixed', $options, 'the divergent add-climb-only value must be gone');
+    }
+
     // ── Authenticated POST — valid submission ────────────────────────────────
 
     public function testValidPostShowsHonestStubReceipt(): void
