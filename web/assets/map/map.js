@@ -1629,8 +1629,13 @@
     if(layer.key==='experience'){
       const i=layer.features.indexOf(f);
       if(i>=0 && map.getLayer('experience-'+i)) highlightRoute('experience-'+i);
+      clearHighlight();                    // routes read as the wide line halo, not a point halo
     } else {
       clearRouteHighlight();
+      // Pulsing selection halo on the clicked point — curated AND OSM — so the
+      // selected place stands out; persists while the drawer is open and is
+      // cleared by closeDrawer()/the next open. highlightAt(null) no-ops.
+      highlightAt(f.geom && f.geom.ll);
     }
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
     if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
@@ -1990,7 +1995,7 @@
         const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
         const lng=+c[0], lat=+c[1]; if(!isFinite(lng)||!isFinite(lat)) return;
         SEARCH_IDX.push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e',
-          go:()=>{ map.flyTo({center:[lng,lat], zoom:15}); openDrawer(layer, osmDrawer(layer, p, {lng:lng, lat:lat}, src)); }}); }); });
+          go:()=>{ openDrawer(layer, osmDrawer(layer, p, {lng:lng, lat:lat}, src)); flyToPin([lng,lat]); }}); }); });
     let sMatches=[], sHL=-1;
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
