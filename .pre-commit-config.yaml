@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+#
+# Local pre-commit hooks — the FRONT LINE that stops a secret before the commit
+# is even created (the .github/workflows/secret-scan.yml CI run is only a
+# post-push backstop). Install once per clone:
+#
+#     pip install pre-commit    # or pipx / brew
+#     pre-commit install
+#
+# gitleaks is used here (fast, fully offline) so it never slows a commit; it
+# scans the STAGED changes and honours the repo's .gitleaks.toml allowlist.
+# TruffleHog's value is live-credential *verification* (network calls), which is
+# too heavy per-commit — it runs in CI (--only-verified) instead.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks

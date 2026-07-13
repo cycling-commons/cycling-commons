@@ -38,6 +38,20 @@ Requires PHP 8.4 and Composer. From the repo root:
 Config: copy any `web/.env` values you need into `web/.env.local` (gitignored).
 Never commit real secrets — `web/.env` holds placeholders only.
 
+**Secret-scanning hook (please install):** so a secret can't be committed by
+accident, install the pre-commit hook — it blocks the commit *before* it is
+created:
+
+    pip install pre-commit    # or: pipx install pre-commit / brew install pre-commit
+    pre-commit install
+
+It runs [gitleaks](https://github.com/gitleaks/gitleaks) on your staged changes
+(fast, fully offline; honours `.gitleaks.toml`). CI (`.github/workflows/secret-scan.yml`)
+re-scans the full history with gitleaks + TruffleHog on every push/PR as a
+backstop — but the local hook is the front line. You don't need to install
+gitleaks or TruffleHog yourself: `pre-commit` fetches gitleaks, and TruffleHog
+runs only in CI.
+
 **Dev mail (Mailpit):** outbound email (registration confirmation, password-reset links, etc.)
 is sent to a [Mailpit](https://mailpit.axllent.org/) on the host at `:1025` — no real mail is
 sent in local development; read it at <http://localhost:8025>. The stack does **not** bundle its
