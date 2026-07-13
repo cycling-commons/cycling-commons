@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+title = "Cycling Commons — gitleaks config"
+
+# Use gitleaks' full default ruleset, plus a narrow allowlist for the one known
+# false positive so the full-history scan (and CI) stays at zero findings.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "PENDING_SECRET_KEY is a session-storage key NAME (App\\Controller\\TwoFactorController), not a credential — flagged only because the const name contains 'SECRET'."
+regexes = ['''2fa_pending_secret''']
