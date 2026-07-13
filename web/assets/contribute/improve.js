@@ -294,6 +294,12 @@
           if (changeBtn) { changeBtn.hidden = false; changeBtn.addEventListener('click', expandEditor); }
         }
         wmap.on('load', function () {
+          // CONFIRM shrinks #wmap to 190px AFTER the map was built at its full
+          // height, so MapLibre's canvas is stale (tall) and the centred pin
+          // renders below the visible 190px window — invisible. Resize to the
+          // compact height and re-centre on the item so the glowing pin sits
+          // dead-centre. (Non-CONFIRM opens are already full-height at build.)
+          if (CONFIRM) { wmap.resize(); wmap.setCenter([initLng, initLat]); }
           var m = new maplibregl.Marker({ element: mkPin(), draggable: !CONFIRM, anchor: 'bottom' }).setLngLat([initLng, initLat]).addTo(wmap);
           if (CONFIRM) m.getElement().classList.add('glow');
           m.on('dragend', function () { syncLoc(); announceMove(); });
