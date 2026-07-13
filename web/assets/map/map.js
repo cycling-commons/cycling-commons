@@ -585,10 +585,60 @@
     const x=Math.sin((b[0]-a[0])*d/2)**2 + Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin((b[1]-a[1])*d/2)**2;
     return 2*R*Math.asin(Math.sqrt(x)); }
   function featurePoint(f){ return (f.geom&&f.geom.ll) || (f.route&&f.route[0]) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
+  // ---- Unified searchable-item index (spec 2026-07-14 §3.1) ----
+  // Every catalog item exactly once, across ALL pools: CATALOG features
+  // (curated: climbs, hazards, routes, curator-pending) first, then PIVOT
+  // stays, then the bulk-OSM dot pools (incl. water, which loads its dot layer
+  // separately from OSM_BULK). Search and nearbyItems() both consume this —
+  // previously the town card scanned only CATALOG[].features (7 of 10 item
+  // types silently missing) and the search index pushed PIVOT stays twice
+  // (explicitly AND via the deliberate pivot→OSM concat in catalog-load.js).
+  // Dedup: DB-backed entries on letter+id; cross-source physical doubles
+  // (same letter + normalized name within 100 m) keep the earlier entry —
+  // build order makes that curated/pivot over a raw OSM import.
+  let ITEM_INDEX = [];
+  function buildItemIndex(){
+    const out=[], byId=new Set(), byName=new Map();   // byName: 'letter:slug' -> [ll,…]
+    function push(e){
+      if(e.id!=null){ const k=e.letter+':'+e.id; if(byId.has(k)) return; byId.add(k); }
+      if(e.name && e.ll){
+        const nk=e.letter+':'+slug(e.name), seen=byName.get(nk)||[];
+        if(seen.some(p=>haversine(p, e.ll)<=0.1)) return;   // same place, another source
+        seen.push(e.ll); byName.set(nk, seen);
+      }
+      out.push(e);
+    }
+    CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
+      push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
+        color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
+        pend:f.pending?String(f.pending.id):undefined,
+        go:()=>openFeatureByName(f.name)});
+    }));
+    (window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties;
+      if(!p || !p.n) return; const layer=layerByKey.stays; if(!layer) return;
+      const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
+      push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
+        color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id,
+        go:()=>openStayPivot(f)});
+    });
+    // Bulk OSM pools: the shared OSM_BULK table + water (its droplet layer is
+    // registered separately in addWaterOsm(), so it never appears in OSM_BULK —
+    // indexed here or every drinking-water point stays unsearchable/unlisted).
+    const pools=OSM_BULK.concat([['water', window.CC_WATER_OSM, 'OpenStreetMap (amenity=drinking_water / drinking_water=yes)']]);
+    pools.forEach(([key, data, src])=>{ const layer=layerByKey[key]; if(!layer || !data || !data.features) return;
+      data.features.forEach(f=>{ const p=f.properties||{}; if(!p.n) return;
+        const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
+        const lng=+c[0], lat=+c[1]; if(!isFinite(lng)||!isFinite(lat)) return;
+        push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
+          color:layer.color, letter:layer.letter, ll:[lat,lng], id:p.id,
+          go:()=>{ openDrawer(layer, key==='water' ? waterDrawer(p, {lng, lat}) : osmDrawer(layer, p, {lng, lat}, src)); flyToPin([lng,lat]); }});
+      });
+    });
+    return out;
+  }
   function nearbyItems(ll, km){
     const out=[];
-    CATALOG.forEach(layer=>layer.features.forEach(f=>{ const p=featurePoint(f); if(!p) return;
-      const dist=haversine(ll,p); if(dist<=km) out.push({layer,f,dist}); }));
+    ITEM_INDEX.forEach(e=>{ if(!e.ll) return; const dist=haversine(ll, e.ll); if(dist<=km) out.push({e, dist}); });
     return out.sort((a,b)=>a.dist-b.dist);
   }
   // privacy: drop the first & last 350–750 m of a contributed ride (kills home/start fingerprints).
@@ -1680,28 +1730,42 @@
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
   }
-  // city info card: fly to the town, show its info + everything in the Commons within 5 km
-  function openCity(name){
-    const c = CITIES[name]; if(!c) return;
-    const near = nearbyItems(c.ll, 5);
+  // place info card: fly to the town/village, show its info (when known) +
+  // everything in the Commons within 5 km, grouped by layer. Works for any
+  // geocoded place (spec 2026-07-14 §3.3): CITIES entries keep their wiki/info
+  // blurbs; Photon hits pass just {ll}.
+  function openPlace(name, meta){
+    const near = nearbyItems(meta.ll, 5);
+    // group rows by letter, keeping the global nearest-first order inside each group
+    const byLetter={};
+    near.forEach((n,i)=>{ n._i=i; (byLetter[n.e.letter]=byLetter[n.e.letter]||[]).push(n); });
+    const letters=Object.keys(byLetter).sort();
     const list = near.length
-      ? near.map((n,i)=>`<li><button class="cc-near" data-i="${i}"><span class="cc-near-k" style="background:${n.layer.color};color:${txtOn(n.layer.color)}">${n.layer.letter}</span><span class="cc-near-nm">${escPend(n.f.name)}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('')
+      ? letters.map(L=>{ const rows=byLetter[L], e0=rows[0].e;
+          return `<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${e0.badge}</span>${escPend(e0.kind)} · ${rows.length}</li>`
+            + rows.map(n=>`<li><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('');
+        }).join('')
       : '<li class="cc-near-empty">Nothing mapped here yet — be the first to add something.</li>';
     document.getElementById('drawerBody').innerHTML =
-      `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ City</span>
-       <div class="cc-d-name">${name}</div>
-       <div class="cc-city-info">${c.info}</div>
-       <div class="cc-city-links"><a href="${c.wiki}" target="_blank" rel="noopener">Wikipedia ↗</a> · <span class="cc-city-ua">community notes — none yet</span></div>
+      `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?'City':'Town'}</span>
+       <div class="cc-d-name">${escPend(name)}</div>
+       ${meta.info?`<div class="cc-city-info">${meta.info}</div>`:''}
+       <div class="cc-city-links">${meta.wiki?`<a href="${meta.wiki}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">community notes — none yet</span></div>
        <h4 class="cc-near-h">In the Commons nearby · ≤ 5 km</h4>
        <ul class="cc-near-list">${list}</ul>`;
     document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
-      const n=near[+b.dataset.i], p=featurePoint(n.f);
-      b.onclick=()=>{ openDrawer(n.layer,n.f); if(p) flyToPin([p[1],p[0]]); };
-      b.onmouseenter=()=>highlightAt(p); b.onmouseleave=clearHighlight;
+      const n=near[+b.dataset.i];
+      b.onclick=()=>n.e.go();
+      b.onmouseenter=()=>highlightAt(n.e.ll); b.onmouseleave=clearHighlight;
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
-    flyToPin([c.ll[1],c.ll[0]]);
+    flyToPin([meta.ll[1],meta.ll[0]]);
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
+  }
+  // city info card — thin CITIES-lookup wrapper kept for existing callers (drawer .cc-city links, search)
+  function openCity(name){
+    const c = CITIES[name]; if(!c) return;
+    openPlace(name, c);
   }
   // open a specific feature by name (deep-link from e.g. a profile page): activate its layer, draw, zoom in
   function openFeatureByName(name){
@@ -1981,31 +2045,24 @@
   const sBox=document.getElementById('search'), sRes=document.getElementById('searchRes');
   if(sBox && sRes){
     const escH = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    // built once — CATALOG is fully populated (climbs + rides folded in) by this point
+    // built once — CATALOG is fully populated (climbs + rides folded in) by this point.
+    // Towns first, then the unified deduplicated item index (spec 2026-07-14 §3.1):
+    // ITEM_INDEX covers CATALOG features + PIVOT stays + every bulk-OSM pool
+    // exactly once, so the old per-pool push loops (which double-indexed every
+    // PIVOT stay via the catalog-load concat, and missed water) are gone.
     const SEARCH_IDX=[];
     Object.keys(CITIES).forEach(name=>{ const big=CITIES[name].t==='City';   // big cities stand apart from hamlets: ochre ◉ "City" vs teal ◎ "Town"
-      SEARCH_IDX.push({name, key:slug(name), kind: big?'City':'Town', badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', go:()=>openCity(name)}); });
-    CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
-      // pending entries carry their submission id so hidePendingPin can drop
-      // them from the index after a moderation decision (review W36) — the
-      // feature disappears from the map, and a search hit that "does nothing"
-      // must disappear with it.
-      SEARCH_IDX.push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', pend:f.pending?String(f.pending.id):undefined, go:()=>openFeatureByName(f.name)}); }));
-    _searchDropPending=id=>{ for(let i=SEARCH_IDX.length-1;i>=0;i--){ if(SEARCH_IDX[i].pend===String(id)) SEARCH_IDX.splice(i,1); } };
-    // PIVOT accommodation (Tourisme Wallonie, CC-BY) — bulk stays, not CATALOG features → index explicitly
-    (window.CC_STAYS_PIVOT && window.CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties; if(!p || !p.n) return;
-      const layer=layerByKey.stays; if(!layer) return;
-      SEARCH_IDX.push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openStayPivot(f)}); });
-    // Bulk OSM POIs (CC_*_OSM) — rendered as map dots, not folded into CATALOG,
-    // so index them here too (shared OSM_BULK table) or every OSM stay/shop/
-    // viewpoint/station stays unsearchable. Named features only; a hit flies to
-    // the point and opens its drawer, exactly like clicking the dot.
-    OSM_BULK.forEach(([key, data, src])=>{ const layer=layerByKey[key]; if(!layer || !data || !data.features) return;
-      data.features.forEach(f=>{ const p=f.properties||{}; if(!p.n) return;
-        const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
-        const lng=+c[0], lat=+c[1]; if(!isFinite(lng)||!isFinite(lat)) return;
-        SEARCH_IDX.push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e',
-          go:()=>{ openDrawer(layer, osmDrawer(layer, p, {lng:lng, lat:lat}, src)); flyToPin([lng,lat]); }}); }); });
+      SEARCH_IDX.push({name, key:slug(name), kind: big?'City':'Town', badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}); });
+    ITEM_INDEX = buildItemIndex();
+    ITEM_INDEX.forEach(e=>SEARCH_IDX.push(e));
+    // pending entries carry their submission id so hidePendingPin can drop
+    // them from the index after a moderation decision (review W36) — the
+    // feature disappears from the map, and a search hit that "does nothing"
+    // must disappear with it. Both lists share the entry objects.
+    _searchDropPending=id=>{
+      for(let i=SEARCH_IDX.length-1;i>=0;i--){ if(SEARCH_IDX[i].pend===String(id)) SEARCH_IDX.splice(i,1); }
+      for(let i=ITEM_INDEX.length-1;i>=0;i--){ if(ITEM_INDEX[i].pend===String(id)) ITEM_INDEX.splice(i,1); }
+    };
     let sMatches=[], sHL=-1;
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
