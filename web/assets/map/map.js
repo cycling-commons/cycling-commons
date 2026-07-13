@@ -312,21 +312,19 @@
     const community = p.srcType==='user' || p.srcType==='manual';
     const originLbl = pivot?'Tourisme Wallonie':(community?sourceLabel(p.srcType):'OSM');
     let rec=[{label:'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'}];
-    if(p.town) rec.push({label:'Town', value:p.town});
+    if(p.town && layer.letter!=='E') rec.push({label:'Town', value:p.town});  // stays' 'town' comes from the schema (labelled "Town / commune")
     rec.push({label:'Province', value:p.prov||'Wallonia'});
     if(pivot) rec.push({label:'Listed', value:'Official Tourisme Wallonie registry', method:'official'});
     if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
       if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
     if(p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
-    // C2-T7: registry-attribute rows for this layer, replacing any baked/generic
-    // row of the same label (e.g. a curated 'type' overriding the raw OSM 'Type').
-    const attrFields = POI_ATTR_FIELDS[(layer||{}).key];
-    if(attrFields){
-      const attrRows=[];
-      attrFields.forEach(([k,label])=>{ if(p[k]) attrRows.push({label, value:p[k]}); });
-      const attrLabels=new Set(attrRows.map(r=>r.label));
-      rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
-    }
+    // Registry-driven attribute rows (single source of truth = CatalogFormRegistry,
+    // served as CC_FIELD_SCHEMA). Filled rows replace any structural row of the
+    // same label (e.g. a curated 'Type' overriding the raw OSM one); unset fields
+    // become "add" prompts. 'web' dedupes by the shared "Website" label below.
+    const attrRows = schemaRows((layer||{}).letter, p, p.id);
+    const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
+    rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
     // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
     const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+originLbl, cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
       source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie'
