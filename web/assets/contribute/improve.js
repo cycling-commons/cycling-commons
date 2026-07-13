@@ -18,6 +18,10 @@
   var initLng = parseFloat(_q.get('lng'));
   var hasCoords = !isNaN(initLat) && !isNaN(initLng);
 
+  // "◎ Fix location" bridge from the drawer: open the LOCATE editor directly
+  // in expanded (change) mode, because the intent is explicitly to move the pin.
+  var RELOCATE = _q.get('fix') === 'location';
+
   // The catalog type + how to set its location come from the server (the
   // controller resolves ?type= into ItemType and renders these on #wiz).
   var _type = wiz.dataset.type || '';
@@ -33,7 +37,7 @@
   // Locate mode: point (most), segment (road surface), none/track (ride).
   // Show the map when adding a place, OR when editing one that has coordinates
   // (so its location is visible and correctable); otherwise skip step 1.
-  var LOCATE = (ADD || hasCoords) ? _locMode : 'off';
+  var LOCATE = (ADD || hasCoords || RELOCATE) ? _locMode : 'off';
 
   // Wizard state
   var WZ = { cur: 1, last: 4, loc: null, media: [] };
@@ -173,6 +177,35 @@
     } else {
       var placed = [];
 
+      // Part C: an "Edit this item" bridge (known coords, not add, not fix=location)
+      // opens a COMPACT, view-only confirm-map. confirmView gates click-to-reposition
+      // until the contributor expands the editor.
+      var CONFIRM = hasCoords && !ADD && !RELOCATE;
+      var confirmView = CONFIRM;
+      var mapEl = document.getElementById('wmap');
+      var searchWrap = document.querySelector('#w-locate .csearch');
+      var changeBtn = document.getElementById('wzChange');
+      var locHelp = document.querySelector('#w-locate .help');
+      var locSection = document.getElementById('w-locate');
+      var origHelp = locHelp ? locHelp.textContent : '';
+      // Note: unlike `wzReset` (declared with `var` at this same outer function
+      // scope above), `ro` only ever exists as a *local* inside nested callbacks
+      // (syncLoc, the climb editor's onChange) — it does not hoist out to here.
+      // Declare our own outer-scope handle so expandEditor()/the pre-place block
+      // below can safely read the readout without a ReferenceError.
+      var ro = document.getElementById('wz-readout');
+      function expandEditor() {
+        confirmView = false;
+        if (mapEl) mapEl.classList.remove('confirm');
+        if (searchWrap) searchWrap.hidden = false;
+        if (changeBtn) changeBtn.hidden = true;
+        if (wzReset) wzReset.style.display = '';
+        placed.forEach(function (m) { m.getElement().classList.remove('glow'); });
+        if (locHelp) locHelp.textContent = origHelp;
+        if (ro) ro.textContent = '✓ ◎ location set — tap the map or drag the pin to move it';
+        if (wmap) wmap.resize();
+      }
+
       var fmt = function (ll) {
         return ll.lat.toFixed(4) + '°N ' + ll.lng.toFixed(4) + '°E';
       };
@@ -238,6 +271,7 @@
       };
 
       wmap.on('click', function (e) {
+        if (confirmView) return;   // compact confirm-map is view-only until expanded
         var need = LOCATE === 'segment' ? 2 : 1;
         if (placed.length >= need) { placed.forEach(function (m) { m.remove(); }); placed.length = 0; }
         var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(e.lngLat).addTo(wmap);
@@ -248,13 +282,23 @@
       });
 
       // Editing a located point: pre-place the pin at the item's coordinates so
-      // the map opens on it and the contributor can drag to correct it.
+      // the map opens on it. In CONFIRM mode it is a compact, glowing, view-only
+      // reassurance; "Change location" expands to the full editor.
       if (hasCoords && LOCATE === 'point') {
+        if (CONFIRM) {
+          if (mapEl) mapEl.classList.add('confirm');
+          if (searchWrap) searchWrap.hidden = true;
+          if (wzReset) wzReset.style.display = 'none';
+          if (locSection && locSection.dataset.confirmHelp && locHelp) locHelp.textContent = locSection.dataset.confirmHelp;
+          if (changeBtn) { changeBtn.hidden = false; changeBtn.addEventListener('click', expandEditor); }
+        }
         wmap.on('load', function () {
           var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat([initLng, initLat]).addTo(wmap);
+          if (CONFIRM) m.getElement().classList.add('glow');
           m.on('dragend', function () { syncLoc(); announceMove(); });
           placed.push(m);
           syncLoc();
+          if (CONFIRM && ro) ro.textContent = '✓ ◎ location set — check it looks right';
         });
       }
 
