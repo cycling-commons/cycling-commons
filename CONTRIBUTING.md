@@ -45,12 +45,15 @@ created:
     pip install pre-commit    # or: pipx install pre-commit / brew install pre-commit
     pre-commit install
 
-It runs [gitleaks](https://github.com/gitleaks/gitleaks) on your staged changes
-(fast, fully offline; honours `.gitleaks.toml`). CI (`.github/workflows/secret-scan.yml`)
-re-scans the full history with gitleaks + TruffleHog on every push/PR as a
-backstop — but the local hook is the front line. You don't need to install
-gitleaks or TruffleHog yourself: `pre-commit` fetches gitleaks, and TruffleHog
-runs only in CI.
+It runs [gitleaks](https://github.com/gitleaks/gitleaks) locally at two points —
+on **commit** (your staged changes) and on **push** (the outgoing commits, so a
+secret committed with `--no-verify` is still caught before it leaves the machine).
+Both are fast, fully offline, and honour `.gitleaks.toml`. CI
+(`.github/workflows/secret-scan.yml`) re-scans the full history with gitleaks +
+TruffleHog on every push/PR as a backstop, and GitHub Push Protection blocks a
+leaking push server-side — but the local hooks are the front line. You don't need
+to install gitleaks or TruffleHog yourself: `pre-commit` fetches gitleaks
+(the pre-push hook fetches a pinned copy on first use), and TruffleHog runs only in CI.
 
 **Dev mail (Mailpit):** outbound email (registration confirmation, password-reset links, etc.)
 is sent to a [Mailpit](https://mailpit.axllent.org/) on the host at `:1025` — no real mail is
