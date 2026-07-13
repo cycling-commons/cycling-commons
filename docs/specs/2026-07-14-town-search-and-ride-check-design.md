@@ -131,3 +131,35 @@ no migration, no filesystem write.
 - 2026-07-14 — User request: UI must carry an explicit "GPX not stored" notice.
 - 2026-07-14 — Client-side-only matching rejected (weaker point-to-segment maths,
   stops scaling beyond one region); storing uploads rejected (indication only).
+
+## 7. Execution note (2026-07-14, symfony-base, NOT pushed)
+
+Executed same-day, commits `750de2c..b914f8b` (7 commits). Suite 560 green,
+phpstan/psalm/cs-fixer/SPDX/licenses/translation-parity clean; browser-verified
+on the dev stack as `rider@map.test` (grouped search, PIVOT dedup = exactly one
+row, Photon "Waimes" place card, ride-check with route 27's own GPX:
+Côte de Stockeu at "km 6.9 · 3 m off", 4 followed routes, radius re-post, clear).
+
+Deviations from §3–§4 as designed, all deliberate:
+
+- **§3.1 concat kept.** The pivot→OSM stays concat in `catalog-load.js` is a
+  deliberate merge (attribution branch + single dot-render path), not the bug;
+  the double-indexing was. `ITEM_INDEX` dedups on letter+id instead (the
+  concat'd features share ids), plus the name+100m cross-source pass. CSP
+  needed no change — Photon was already in connect-src.
+- **§3.1 water pool.** `CC_WATER_OSM` is not in `OSM_BULK` (its droplet layer
+  registers separately in `addWaterOsm()`); the index builder appends it
+  explicitly or drinking water would have stayed missing from search/nearby.
+- **§4.2 corridor predicate.** `ST_DWithin(::geography)` cannot use the GIST
+  index and the inlined `track` CTE re-parsed the GeoJSON per row per ST_*
+  call — 62 s live. Shipped shape: `WITH track AS MATERIALIZED (…), corridor
+  AS MATERIALIZED (ST_Buffer(track::geography, r)::geometry)` probed with
+  `ST_Intersects(i.geom, corridor)` (also for routes) — sub-second, ~1.9 s
+  upload→panel live.
+- **§4.2 route-overlap floor.** Fixed 300 m fails at larger radii (a mere
+  crossing yields ~2×radius of overlap inside the buffer). Shipped:
+  `max(300, 2·radius + 100)` m.
+- **§4.1 CSRF.** Stateless `ride-check` token id (csrf.yaml) with the token
+  injected by the template inside the ROLE_USER block — no extra
+  token-fetch endpoint; auth is in-controller (clean 401), matching the
+  RouteCommunityController API convention rather than `#[IsGranted]`.
