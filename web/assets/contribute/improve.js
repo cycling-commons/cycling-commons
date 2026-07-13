@@ -75,7 +75,7 @@
       li.classList.toggle('done', +li.dataset.s < n);
     });
     var backBtn = document.getElementById('backBtn');
-    if (backBtn) backBtn.style.visibility = n > 1 ? 'visible' : 'hidden';
+    if (backBtn) backBtn.style.visibility = n > (LOCATE === 'off' ? 2 : 1) ? 'visible' : 'hidden';
     var nextBtn = document.getElementById('nextBtn');
     if (nextBtn) {
       nextBtn.textContent = n === WZ.last ? 'Submit for review →' : 'Next →';
@@ -105,7 +105,7 @@
 
   var backBtn = document.getElementById('backBtn');
   var nextBtn = document.getElementById('nextBtn');
-  if (backBtn) backBtn.addEventListener('click', function () { step(WZ.cur - 1); });
+  if (backBtn) backBtn.addEventListener('click', function () { step(Math.max(WZ.cur - 1, LOCATE === 'off' ? 2 : 1)); });
   if (nextBtn) nextBtn.addEventListener('click', onNext);
 
   /* ---------- step 1: locate ---------- */
@@ -181,7 +181,7 @@
       // opens a COMPACT, view-only confirm-map. confirmView gates click-to-reposition
       // until the contributor expands the editor.
       var CONFIRM = hasCoords && !ADD && !RELOCATE;
-      var confirmView = CONFIRM;
+      var confirmView = CONFIRM && _locMode === 'point';
       var mapEl = document.getElementById('wmap');
       var searchWrap = document.querySelector('#w-locate .csearch');
       var changeBtn = document.getElementById('wzChange');
@@ -201,6 +201,7 @@
         if (changeBtn) changeBtn.hidden = true;
         if (wzReset) wzReset.style.display = '';
         placed.forEach(function (m) { m.getElement().classList.remove('glow'); });
+        placed.forEach(function (m) { if (m.setDraggable) m.setDraggable(true); });
         if (locHelp) locHelp.textContent = origHelp;
         if (ro) ro.textContent = '✓ ◎ location set — tap the map or drag the pin to move it';
         if (wmap) wmap.resize();
@@ -293,7 +294,7 @@
           if (changeBtn) { changeBtn.hidden = false; changeBtn.addEventListener('click', expandEditor); }
         }
         wmap.on('load', function () {
-          var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat([initLng, initLat]).addTo(wmap);
+          var m = new maplibregl.Marker({ element: mkPin(), draggable: !CONFIRM, anchor: 'bottom' }).setLngLat([initLng, initLat]).addTo(wmap);
           if (CONFIRM) m.getElement().classList.add('glow');
           m.on('dragend', function () { syncLoc(); announceMove(); });
           placed.push(m);
