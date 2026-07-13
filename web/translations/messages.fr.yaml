@@ -869,6 +869,10 @@ improve:
     heading: 'Réviser & soumettre'
     help: 'Vérifiez. Votre suggestion est envoyée dans la file de révision d''un curateur avant de rejoindre le Commons.'
     prov: 'Les faits approuvés rejoignent le Commons ouvert sous <b>ODbL</b> (données) / <b>CC BY-SA 4.0</b> (médias). La provenance est conservée ; l''identité ne l''est pas.'
+  locate:
+    change: 'Modifier l''emplacement'
+    confirm:
+      help: 'Cet emplacement est déjà défini — vérifiez qu''il est correct, ou modifiez-le.'
   lifecycle:
     heading: 'Ce qu''il advient de votre suggestion'
     funnel: 'Rien n''est publié instantanément. Chaque suggestion suit le même entonnoir : <b>contrôle du curateur</b> → <b>non vérifié</b> (un point « à confirmer » sur la carte) → <b>vérifié</b> (une épingle complète, une fois confirmée par quelques cyclistes).'

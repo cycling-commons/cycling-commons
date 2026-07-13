@@ -35,6 +35,13 @@
 
   /* step 1 map */
   #wmap{height:clamp(360px,68vh,640px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:.8rem;background:var(--paper-deep)}
+  #wmap.confirm{height:190px}
+  #wzChange{margin-bottom:.8rem}
+  .cc-pin.glow{animation:pinpulse 1.8s ease-in-out infinite}
+  @keyframes pinpulse{
+    0%,100%{box-shadow:0 3px 8px rgba(20,22,14,.4),0 0 0 5px rgba(255,90,31,.22),0 0 12px 3px rgba(255,90,31,.40)}
+    50%{box-shadow:0 3px 8px rgba(20,22,14,.4),0 0 0 8px rgba(255,90,31,.30),0 0 18px 6px rgba(255,90,31,.55)}
+  }
   .maplibregl-canvas{filter:none}  /* no per-frame filter chain on the WebGL canvas (same call as map.css) */
   .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
   .readout #wzReset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
@@ -214,7 +221,7 @@
   </ol>
 
   {# STEP 1 — LOCATE #}
-  <section class="pane on" data-s="1" id="w-locate">
+  <section class="pane on" data-s="1" id="w-locate" data-confirm-help="{{ 'improve.locate.confirm.help'|trans }}">
     <h2>{{ 'improve.step1.heading'|trans }}</h2>
     <p class="help">{{ 'improve.step1.help'|trans }}</p>
     <div class="field csearch">
@@ -223,6 +230,7 @@
       <div class="csearch-results" id="wz-results" hidden></div>
     </div>
     <div id="wmap" role="application" aria-label="{{ 'improve.step1.map_aria'|trans }}"></div>
+    <button type="button" id="wzChange" class="btn btn-g" hidden>◎ {{ 'improve.locate.change'|trans }}</button>
     <div class="readout">
       <span id="wz-readout">{{ 'improve.step1.readout_initial'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>

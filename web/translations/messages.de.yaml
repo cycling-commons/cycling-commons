@@ -869,6 +869,10 @@ improve:
     heading: 'Prüfen &amp; einreichen'
     help: 'Überprüfe es noch einmal. Dein Vorschlag kommt in die Prüfwarteschlange eines Kurators, bevor er The Commons beitritt.'
     prov: 'Genehmigte Fakten treten dem offenen Commons unter <b>ODbL</b> (Daten) / <b>CC BY-SA 4.0</b> (Medien) bei. Provenienz wird festgehalten; Identität nicht.'
+  locate:
+    change: 'Standort ändern'
+    confirm:
+      help: 'Dieser Standort ist bereits gesetzt — prüfe, ob er stimmt, oder ändere ihn.'
   lifecycle:
     heading: 'Was mit deinem Vorschlag geschieht'
     funnel: 'Nichts geht sofort live. Jeder Vorschlag durchläuft denselben Trichter: <b>Kuratoren-Prüfung</b> → <b>unbestätigt</b> (ein „Bitte bestätigen“-Punkt auf der Karte) → <b>bestätigt</b> (eine vollständige Markierung, sobald einige Fahrer sie bestätigen).'

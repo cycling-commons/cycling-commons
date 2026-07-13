@@ -869,6 +869,10 @@ improve:
     heading: 'Review & submit'
     help: 'Check it over. Your suggestion goes to a curator''s review queue before it joins the Commons.'
     prov: 'Approved facts join the open Commons under <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Provenance is kept; identity is not.'
+  locate:
+    change: 'Change location'
+    confirm:
+      help: 'This location is already set — check it looks right, or change it.'
   lifecycle:
     heading: 'What happens to your suggestion'
     funnel: 'Nothing goes live instantly. Every suggestion moves through the same funnel: <b>curator check</b> → <b>unverified</b> (a help-confirm dot on the map) → <b>verified</b> (a full pin, once a few riders confirm it).'

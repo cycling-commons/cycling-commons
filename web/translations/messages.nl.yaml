@@ -869,6 +869,10 @@ improve:
     heading: 'Controleren &amp; indienen'
     help: 'Controleer het even. Jouw suggestie gaat naar de beoordelingswachtrij van een curator voordat hij in de Commons komt.'
     prov: 'Goedgekeurde feiten komen in de open Commons terecht onder <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Herkomst wordt bijgehouden; identiteit niet.'
+  locate:
+    change: 'Locatie wijzigen'
+    confirm:
+      help: 'Deze locatie is al ingesteld — controleer of ze klopt, of wijzig ze.'
   lifecycle:
     heading: 'Wat er met je suggestie gebeurt'
     funnel: 'Niets gaat meteen live. Elke suggestie doorloopt dezelfde trechter: <b>curatorcontrole</b> → <b>niet-geverifieerd</b> (een « help bevestigen »-stip op de kaart) → <b>geverifieerd</b> (een volledige speld, zodra een paar fietsers het bevestigen).'
