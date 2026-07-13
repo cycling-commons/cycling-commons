@@ -986,6 +986,16 @@ propose_route:
     name_required: 'Please name the route.'
     name_too_long: 'The name must be 200 characters or fewer.'
     note_too_long: 'The note must be 2,000 characters or fewer.'
+ride_check:
+  title: 'Check my ride'
+  hint: 'Upload a GPX to see what the Commons knows along your route.'
+  notice: 'Your GPX is processed in memory and never stored.'
+  radius: 'Search distance'
+  button: 'Choose GPX'
+  error:
+    file_required: 'Choose a GPX file first.'
+    length_range: 'A ride must be between 500 m and 400 km.'
+    radius: 'Invalid search distance.'
 moderate:
   kicker: 'Moderation queue'
   title: 'Review pending submissions.'

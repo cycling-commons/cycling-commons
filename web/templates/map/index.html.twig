@@ -235,6 +235,16 @@
   window.CC_PENDING = {{ pending|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {% endif %}
+{% if is_granted('ROLE_USER') %}
+<script nonce="{{ csp_nonce() }}">
+  {# Ride-check (spec 2026-07-14 §4.3): endpoint + stateless CSRF token for the
+     logged-in GPX upload. Riders-only block — anonymous visitors get no control. #}
+  window.CC_RIDECHECK = {
+    url: {{ path('map_ride_check')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
+    token: {{ csrf_token('ride-check')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
+  };
+</script>
+{% endif %}
 <script nonce="{{ csp_nonce() }}">
   window.CC_CATALOG_URL = {{ path('map_catalog')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};

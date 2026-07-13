@@ -821,6 +821,16 @@ add_climb:
     max_gradient_range: 'La pente maximale doit être comprise entre 0 et 100.'
     avg_gradient_invalid: 'La pente moyenne doit être un nombre comme 6,4 ou 8%.'
     note_too_long: 'La note doit comporter 2000 caractères ou moins.'
+ride_check:
+  title: 'Vérifier mon parcours'
+  hint: 'Téléversez un GPX pour voir ce que les Commons connaissent le long de votre itinéraire.'
+  notice: 'Votre GPX est traité en mémoire et n''est jamais conservé.'
+  radius: 'Distance de recherche'
+  button: 'Choisir un GPX'
+  error:
+    file_required: 'Choisissez d''abord un fichier GPX.'
+    length_range: 'Un parcours doit faire entre 500 m et 400 km.'
+    radius: 'Distance de recherche non valide.'
 improve:
   eyebrow: 'Contribuer · nouvelle entrée'
   title: 'Améliorer ou ajouter un lieu.'

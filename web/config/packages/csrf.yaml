@@ -10,3 +10,4 @@ framework:
             - authenticate
             - logout
             - route-community
+            - ride-check

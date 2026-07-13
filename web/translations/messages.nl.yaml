@@ -821,6 +821,16 @@ add_climb:
     max_gradient_range: 'Het maximale stijgingspercentage moet tussen 0 en 100 liggen.'
     avg_gradient_invalid: 'Gemiddeld stijgingspercentage moet een getal zijn zoals 6,4 of 8%.'
     note_too_long: 'De notitie mag maximaal 2000 tekens bevatten.'
+ride_check:
+  title: 'Controleer mijn rit'
+  hint: 'Upload een GPX om te zien wat de Commons langs je route kent.'
+  notice: 'Je GPX wordt in het geheugen verwerkt en nooit opgeslagen.'
+  radius: 'Zoekafstand'
+  button: 'Kies GPX'
+  error:
+    file_required: 'Kies eerst een GPX-bestand.'
+    length_range: 'Een rit moet tussen 500 m en 400 km lang zijn.'
+    radius: 'Ongeldige zoekafstand.'
 improve:
   eyebrow: 'Bijdragen · nieuwe invoer'
   title: 'Verbeter of voeg een plek toe.'

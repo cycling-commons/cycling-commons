@@ -9,6 +9,8 @@ framework:
                 adapter: cache.adapter.filesystem
             cache.route_suggest_limiter:
                 adapter: cache.adapter.filesystem
+            cache.ride_check_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -28,6 +30,14 @@ framework:
             limit: 5
             interval: '1 day'
             cache_pool: cache.route_suggest_limiter
+        # Ride-check (spec 2026-07-14 §4.1): read-only compute (parse + two
+        # PostGIS corridor queries, nothing persisted) — more generous than
+        # intake, still bounded per rider per day.
+        ride_check:
+            policy: sliding_window
+            limit: 20
+            interval: '1 day'
+            cache_pool: cache.ride_check_limiter
 
 when@test:
     framework:
@@ -36,4 +46,6 @@ when@test:
                 cache.route_propose_limiter:
                     adapter: cache.adapter.array
                 cache.route_suggest_limiter:
+                    adapter: cache.adapter.array
+                cache.ride_check_limiter:
                     adapter: cache.adapter.array

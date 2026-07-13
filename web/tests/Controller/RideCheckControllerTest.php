@@ -1,0 +1,174 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Tests\Controller;
+
+use App\Catalog\Entity\Item;
+use App\Catalog\ItemSource;
+use App\Catalog\ItemState;
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+
+/**
+ * POST /map/ride-check (spec 2026-07-14 §4.1): the stateless JSON intake for
+ * the ride-check — in-controller auth (clean 401), stateless CSRF, per-user
+ * daily limiter, translated validation errors, nothing persisted.
+ */
+final class RideCheckControllerTest extends WebTestCase
+{
+    /** @var list<string> temp upload files to unlink after each test */
+    private static array $tmpFiles = [];
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        foreach (self::$tmpFiles as $f) {
+            if (is_file($f)) {
+                @unlink($f);
+            }
+        }
+        self::$tmpFiles = [];
+        parent::tearDown();
+    }
+
+    private static function tmpUpload(string $suffix, string $content): string
+    {
+        $base = (string) tempnam(sys_get_temp_dir(), 'cc-');
+        $path = $base.$suffix;
+        @unlink($base);
+        file_put_contents($path, $content);
+        self::$tmpFiles[] = $path;
+
+        return $path;
+    }
+
+    /** A ~2.1 km straight test ride at lat 50.4 (see RideCheckServiceTest). */
+    private static function gpxFixture(): UploadedFile
+    {
+        $pts = '';
+        foreach (range(0, 6) as $i) {
+            $pts .= sprintf('<trkpt lat="50.400000" lon="%.6F"><ele>%d</ele></trkpt>', 5.8 + 0.005 * $i, 100 + 5 * $i);
+        }
+        $path = self::tmpUpload('.gpx', '<?xml version="1.0"?><gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"><trk><trkseg>'.$pts.'</trkseg></trk></gpx>');
+
+        return new UploadedFile($path, 'ride.gpx', 'application/gpx+xml', null, true);
+    }
+
+    private static function user(string $email): User
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = (new User())->setEmail($email);
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+
+        return $user;
+    }
+
+    private static function token(): string
+    {
+        return static::getContainer()->get(CsrfTokenManagerInterface::class)->getToken('ride-check')->getValue();
+    }
+
+    /** @return array{0: array<string, string>, 1: array<string, UploadedFile>, 2: array<string, string>} params/files/server for a valid POST */
+    private static function post(?int $radius = null): array
+    {
+        $params = ['_token' => self::token()];
+        if (null !== $radius) {
+            $params['radius'] = (string) $radius;
+        }
+
+        return [$params, ['gpx' => self::gpxFixture()], ['HTTP_SEC_FETCH_SITE' => 'same-origin']];
+    }
+
+    public function testAnonymousGetsClean401(): void
+    {
+        $client = static::createClient();
+        [$params, $files, $server] = self::post();
+        $client->request('POST', '/map/ride-check', $params, $files, $server);
+        self::assertResponseStatusCodeSame(401);
+    }
+
+    public function testBadCsrfIs403(): void
+    {
+        $client = static::createClient();
+        $client->loginUser(self::user('ride-check-csrf@test.test'));
+        $client->request('POST', '/map/ride-check', ['_token' => 'nope'], ['gpx' => self::gpxFixture()], ['HTTP_SEC_FETCH_SITE' => 'cross-site']);
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testMissingFileIs422(): void
+    {
+        $client = static::createClient();
+        $client->loginUser(self::user('ride-check-nofile@test.test'));
+        $client->request('POST', '/map/ride-check', ['_token' => self::token()], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{error: string} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertNotSame('', $body['error']);
+    }
+
+    public function testInvalidRadiusIs422(): void
+    {
+        $client = static::createClient();
+        $client->loginUser(self::user('ride-check-radius@test.test'));
+        [$params, $files, $server] = self::post(999);
+        $client->request('POST', '/map/ride-check', $params, $files, $server);
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    public function testHappyPathReturnsCorridorPayload(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter('C')->setName('Fontaine du test')
+            ->setGeom(json_encode(['type' => 'Point', 'coordinates' => [5.815, 50.40045]], \JSON_THROW_ON_ERROR))
+            ->setCountryCode('BE')->setState(ItemState::Verified)->setSource(ItemSource::Osm)
+            ->setSourceRef('node/rc-web')->setAttributes([]);
+        $em->persist($item);
+        $em->flush();
+
+        $client->loginUser(self::user('ride-check-happy@test.test'));
+        [$params, $files, $server] = self::post();
+        $client->request('POST', '/map/ride-check', $params, $files, $server);
+
+        self::assertResponseIsSuccessful();
+        /** @var array{track: list<array{0: float, 1: float}>, distanceKm: float, radiusM: int, groups: list<array{letter: string, items: list<array{name: string}>}>, routes: list<mixed>} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertSame(250, $body['radiusM']);
+        self::assertGreaterThan(1.5, $body['distanceKm']);
+        self::assertNotEmpty($body['track']);
+        $letters = array_column($body['groups'], 'letter');
+        self::assertContains('C', $letters);
+        self::assertSame('Fontaine du test', $body['groups'][array_search('C', $letters, true)]['items'][0]['name']);
+        // Read-only: the upload must not create any DB row.
+        self::assertSame(0, (int) $em->getConnection()->fetchOne("SELECT COUNT(*) FROM recommended_route WHERE source_ref LIKE 'user:%'"));
+    }
+
+    public function testOverDailyLimitIs429(): void
+    {
+        $client = static::createClient();
+        $user = self::user('ride-check-limit@test.test');
+
+        // Drain the limiter directly (RouteSuggestFlowTest convention: the
+        // array cache pool resets on every kernel reboot between HTTP
+        // requests, so 21 real requests would never trip it — consume 20 via
+        // the factory, then let the single HTTP request be the 21st).
+        $factory = static::getContainer()->get('limiter.ride_check');
+        $limiter = $factory->create('user-'.(string) $user->getId());
+        for ($i = 0; $i < 20; ++$i) {
+            self::assertTrue($limiter->consume()->isAccepted());
+        }
+
+        $client->loginUser($user);
+        [$params, $files, $server] = self::post();
+        $client->request('POST', '/map/ride-check', $params, $files, $server);
+        self::assertResponseStatusCodeSame(429);
+    }
+}

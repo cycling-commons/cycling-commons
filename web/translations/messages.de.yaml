@@ -821,6 +821,16 @@ add_climb:
     max_gradient_range: 'Die maximale Steigung muss zwischen 0 und 100 liegen.'
     avg_gradient_invalid: 'Die durchschnittliche Steigung muss eine Zahl wie 6,4 oder 8% sein.'
     note_too_long: 'Der Hinweis darf höchstens 2000 Zeichen lang sein.'
+ride_check:
+  title: 'Meine Tour prüfen'
+  hint: 'Lade eine GPX-Datei hoch, um zu sehen, was die Commons entlang deiner Route kennen.'
+  notice: 'Deine GPX-Datei wird im Speicher verarbeitet und niemals gespeichert.'
+  radius: 'Suchdistanz'
+  button: 'GPX wählen'
+  error:
+    file_required: 'Wähle zuerst eine GPX-Datei.'
+    length_range: 'Eine Tour muss zwischen 500 m und 400 km lang sein.'
+    radius: 'Ungültige Suchdistanz.'
 improve:
   eyebrow: 'Beitragen · neuer Eintrag'
   title: 'Einen Ort verbessern oder hinzufügen.'
