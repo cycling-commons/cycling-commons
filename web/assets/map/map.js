@@ -244,30 +244,6 @@
 
   // registry of bulk-OSM dot layers so render() can promote confirmed (simulated) points to icon pins
   const osmLayers = {};
-  // C2-T7 (spec §W2): per-letter registry attributes (CatalogFormRegistry::for())
-  // worth surfacing as real drawer rows for the bulk-OSM point layers, so an
-  // approved improve-form edit is visible in the drawer itself, not only in the
-  // "Recent changes" history feed. [attrKey, label] — label matches the form
-  // field's own label text. Free-text "anything to correct?" intake fields
-  // (climbs' 'correction') are intentionally excluded, same as C2-T6; genuine
-  // note/description fields ARE included, since they read as display content.
-  // 'type' entries dedup against the generic Type row below (by label) when a
-  // rider has set the curated categorical value.
-  const POI_ATTR_FIELDS = {
-    services:[['pumpValve','Pump valve'],['openingHours','Opening hours'],['tools','Tools available'],
-      ['workStand','Work stand?'],['chainTool','Chain tool?'],['ebikeCharging','E-bike charging?']],
-    stays:[['bikeStorage','Secure bike storage'],['dryingWashing','Drying / washing for kit'],
-      ['bookingLink','Booking link'],['note','Note for riders'],['pets','Pets allowed?'],
-      ['meals','Meals / breakfast?'],['toolsToBorrow','Tools to borrow?'],['accessibility','Accessibility']],
-    transit:[['bikesOnBoard','Bikes on board'],['stepFree','Step-free access'],['bikeParking','Bike parking at station'],
-      ['note','Note for riders'],['liftRamp','Lift / ramp?'],['bikeTicket','Bike ticket needed?']],
-    shelter:[['shelterType','Shelter type'],['alwaysAccessible','Always accessible?'],['waterNearby','Water nearby?'],
-      ['note','Note for riders'],['seating','Bench / seating?'],['phoneSignal','Phone signal?']],
-    scenic:[['type','Type'],['bikeAccess','Access for bikes'],['whatYouSee','What can you see?'],
-      ['note','Anything to add?'],['bestLight','Best light / time'],['bench','Bench?']],
-    history:[['type','Type'],['bikeParking','Bike parking'],['note','Anything to add?'],
-      ['openingHours','Opening hours'],['entryFee','Entry fee?'],['cyclingStory','Cycling story / link']]
-  };
   // Star glyphs for 1-5 ratings, shared by schemaRows' 'rating' kind.
   const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
   // Registry-driven attribute rows (spec: 2026-07-13-registry-driven-drawer-fields).
