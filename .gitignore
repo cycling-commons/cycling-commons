@@ -83,5 +83,8 @@ docs/superpowers/
 # on demand (auto-update on commit); never committed.
 .understand-anything/
 
+# Lavish review artifacts (lavish-axi) — generated HTML review surfaces, local only.
+.lavish/
+
 # Local dev-DB backups (pg_dump snapshots) — never committed, machine-local safety net.
 developers/docker/backups/
