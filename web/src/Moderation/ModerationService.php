@@ -134,6 +134,10 @@ final class ModerationService
             }
             if ('name' === $field) {
                 $item->setName((string) $now);
+            } elseif (null === $now) {
+                // A cleared field: remove the attribute rather than storing a
+                // null (the rider emptied a prefilled value on the improve form).
+                unset($attributes[$field]);
             } else {
                 $attributes[$field] = $now;
             }

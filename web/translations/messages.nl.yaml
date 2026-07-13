@@ -819,6 +819,7 @@ add_climb:
     length_negative: 'De lengte moet nul of positief zijn.'
     gain_negative: 'Het hoogteverschil moet nul of positief zijn.'
     max_gradient_range: 'Het maximale stijgingspercentage moet tussen 0 en 100 liggen.'
+    avg_gradient_invalid: 'Gemiddeld stijgingspercentage moet een getal zijn zoals 6,4 of 8%.'
     note_too_long: 'De notitie mag maximaal 2000 tekens bevatten.'
 improve:
   eyebrow: 'Bijdragen · nieuwe invoer'
@@ -948,6 +949,8 @@ contribute:
     invalid_url: 'Voer een volledig webadres in dat begint met http:// of https://'
     rate_limited: 'Je hebt de bijdragelimiet voorlopig bereikt — probeer het straks opnieuw.'
     route_too_complex: 'Deze track heeft te veel scherpe bochten om te verwerken — vereenvoudig hem in je GPS-app en probeer het opnieuw.'
+    invalid_location: 'Stel de locatie op de kaart in voordat je verzendt.'
+    invalid_geometry: 'De getekende vorm kon niet worden gelezen — teken hem opnieuw en probeer het nogmaals.'
 propose_route:
   eyebrow: 'K · Aanbevolen routes'
   title: 'Stel een route voor'

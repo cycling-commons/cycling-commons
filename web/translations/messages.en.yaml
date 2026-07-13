@@ -819,6 +819,7 @@ add_climb:
     length_negative: 'Length must be zero or positive.'
     gain_negative: 'Elevation gain must be zero or positive.'
     max_gradient_range: 'Max gradient must be between 0 and 100.'
+    avg_gradient_invalid: 'Average gradient must be a number like 6.4 or 8%.'
     note_too_long: 'Note must be 2000 characters or fewer.'
 improve:
   eyebrow: 'Contribute · new entry'
@@ -948,6 +949,8 @@ contribute:
     invalid_url: 'Enter a full web address starting with http:// or https://'
     rate_limited: 'You have reached the contribution limit for now — please try again in a little while.'
     route_too_complex: 'This track has too many sharp turns to process — simplify it in your GPS app and try again.'
+    invalid_location: 'Set the location on the map before submitting.'
+    invalid_geometry: 'The drawn shape could not be read — redraw it and try again.'
 propose_route:
   eyebrow: 'K · Recommended routes'
   title: 'Propose a route'

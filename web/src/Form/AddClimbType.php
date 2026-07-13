@@ -71,6 +71,17 @@ final class AddClimbType extends AbstractType
             ->add('fAvg', TextType::class, [
                 'label' => false,
                 'required' => false,
+                // Average gradient: a bare number, optionally with a decimal
+                // and/or trailing '%' (e.g. "6.4" or "8%"). Kept as text (not
+                // NumberType) so the editor's "%" affordance round-trips, but
+                // no longer an unbounded free string into published attributes.
+                'constraints' => [
+                    new Length(max: 8, maxMessage: 'add_climb.error.avg_gradient_invalid'),
+                    new Regex(
+                        pattern: '/^\d{1,2}([.,]\d{1,2})?\s*%?$/',
+                        message: 'add_climb.error.avg_gradient_invalid',
+                    ),
+                ],
             ])
             ->add('fMax', NumberType::class, [
                 'label' => false,

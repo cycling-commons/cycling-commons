@@ -19,6 +19,8 @@ use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -85,6 +87,13 @@ final class CatalogContributionService implements ContributionStubInterface
     /** @param array<string, mixed> $payload */
     private function submitClimb(array $payload, User $by): ContributionReceipt
     {
+        // Reject rather than coerce: an absent/blank/non-numeric coordinate must
+        // not silently cast to 0.0 and land the climb on Null Island. The
+        // geocoder always fills these; a violation surfaces to the form.
+        if (!is_numeric($payload['lat'] ?? null) || !is_numeric($payload['lng'] ?? null)) {
+            $this->reject('contribute.error.invalid_location', 'lat');
+        }
+
         $attributes = [];
         foreach (self::CLIMB_FIELDS as $formKey => $attrKey) {
             $v = $payload[$formKey] ?? null;
@@ -93,19 +102,20 @@ final class CatalogContributionService implements ContributionStubInterface
             }
         }
 
+        // Surface malformed editor output as a form error instead of silently
+        // discarding the drawn shape (every other field error surfaces too).
         try {
             $attributes += ClimbGeometry::fromPayload($payload);
         } catch (\InvalidArgumentException) {
-            // Malformed editor output — drop the shape, keep the rest of the
-            // submission. A climb with no route still lands as a point; the
-            // rider can re-draw via the edit flow. (Do not 500 on bad JSON.)
+            $this->reject('contribute.error.invalid_geometry', 'route');
         }
 
         $draft = new SubmissionDraft(
             type: ItemType::Climbs,
             title: (string) ($payload['fName'] ?? ''),
-            lat: (float) ($payload['lat'] ?? 0.0),
-            lng: (float) ($payload['lng'] ?? 0.0),
+            // Guaranteed numeric by the guard above.
+            lat: (float) $payload['lat'],
+            lng: (float) $payload['lng'],
             attributes: $attributes,
         );
 
@@ -128,10 +138,10 @@ final class CatalogContributionService implements ContributionStubInterface
         $details = (array) ($payload['details'] ?? []);
         /** @var array<string, mixed> $extras */
         $extras = (array) ($payload['extras'] ?? []);
-        $proposed = array_filter(
-            $details + $extras,
-            static fn (mixed $v): bool => null !== $v && '' !== $v,
-        );
+        // Keep empty values here (do not array_filter): an emptied prefilled
+        // field must survive as a removal — the change loop below normalises
+        // '' / null / [] to null and records was → null.
+        $proposed = $details + $extras;
 
         // Climb shape (route/grad/steep) is carried as TOP-LEVEL hidden fields
         // by ImproveType (not nested under details/extras — see ClimbGeometry),
@@ -144,25 +154,35 @@ final class CatalogContributionService implements ContributionStubInterface
                 $proposed[$k] = $v;
             }
         } catch (\InvalidArgumentException) {
-            // Malformed/absent editor output — keep the rest of the edit.
+            $this->reject('contribute.error.invalid_geometry', 'route');
         }
 
         $currentAttrs = $item->getAttributes();
         $changes = [];
         $attributes = [];
-        foreach ($proposed as $field => $now) {
+        foreach ($proposed as $field => $rawNow) {
+            // Normalise empties ('' / null / []) to null so clearing a
+            // prefilled field is recorded as a removal (was → null) rather
+            // than silently discarded, while an always-empty field records no
+            // phantom change.
+            $now = self::normalizeEmpty($rawNow);
             // 'name' is a pseudo-field: it lives on Item::name, never in
             // attributes (ModerationService::applyEdit treats it the same
             // way) — comparing it against $currentAttrs would always see
             // null and wrongly record an unchanged name as a "change".
             $was = 'name' === $field ? $item->getName() : ($currentAttrs[$field] ?? null);
-            if ($was !== $now) {
+            if (self::normalizeEmpty($was) !== $now) {
                 $changes[$field] = ['was' => $was, 'now' => $now];
             }
-            $attributes[$field] = $now;
+            if (null !== $now) {
+                $attributes[$field] = $now;
+            }
         }
 
-        [$lng, $lat] = json_decode((string) $item->getGeom(), true, 512, \JSON_THROW_ON_ERROR)['coordinates'];
+        // Items may be Points, LineStrings (road surfaces) or Polygons — never
+        // assume a flat [lng,lat] pair. Derive a representative point (first
+        // vertex) so a segment edit is not stranded at Point(1 1).
+        [$lng, $lat] = self::representativePoint((string) $item->getGeom());
 
         $draft = new SubmissionDraft(
             type: ItemType::fromParam($item->getLetter()),
@@ -173,19 +193,27 @@ final class CatalogContributionService implements ContributionStubInterface
             itemId: $item->getId(),
         );
 
-        // submitDraft stores $draft->attributes as `changes` for Edit — pass
-        // the computed was/now map through the dedicated path instead:
-        $submission = $this->submitDraft($draft, SubmissionType::Edit, $by, $payload);
-        $submission->setChanges($changes);
-        $this->em->flush();
+        // Pass the computed was/now map into submitDraft so it is set inside
+        // the same transaction — no second flush outside wrapInTransaction.
+        $submission = $this->submitDraft($draft, SubmissionType::Edit, $by, $payload, $changes);
 
         return new ContributionReceipt(
             'SUB-'.(string) $submission->getId(), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
         );
     }
 
-    /** @param array<string, mixed> $rawPayload */
-    public function submitDraft(SubmissionDraft $draft, SubmissionType $type, User $by, array $rawPayload = []): Submission
+    /**
+     * @param array<string, mixed>                         $rawPayload
+     * @param array<string, array{was: mixed, now: mixed}> $changes    ready was/now
+     *                                                                 map for Edit
+     *                                                                 submissions
+     *                                                                 (ignored for
+     *                                                                 NewItem, which
+     *                                                                 derives it from
+     *                                                                 the draft
+     *                                                                 attributes)
+     */
+    public function submitDraft(SubmissionDraft $draft, SubmissionType $type, User $by, array $rawPayload = [], array $changes = []): Submission
     {
         $limiter = $this->contributionSubmitLimiter->create('user-'.(string) $by->getId());
         if (!$limiter->consume()->isAccepted()) {
@@ -200,7 +228,7 @@ final class CatalogContributionService implements ContributionStubInterface
         $geo = $this->resolver->resolve($draft->lat, $draft->lng);
         $point = json_encode(['type' => 'Point', 'coordinates' => [$draft->lng, $draft->lat]], \JSON_THROW_ON_ERROR);
 
-        return $this->em->wrapInTransaction(function () use ($draft, $type, $by, $rawPayload, $geo, $point): Submission {
+        return $this->em->wrapInTransaction(function () use ($draft, $type, $by, $rawPayload, $geo, $point, $changes): Submission {
             $submission = (new Submission())
                 ->setType($type)
                 ->setLetter($draft->type->letter())
@@ -213,7 +241,7 @@ final class CatalogContributionService implements ContributionStubInterface
                 ->setRegionId($geo['regionId'])
                 ->setChanges(SubmissionType::NewItem === $type
                     ? array_map(static fn (mixed $v): array => ['was' => null, 'now' => $v], $draft->attributes)
-                    : $draft->attributes /* Task 4 passes a ready was/now map here */)
+                    : $changes /* Edit passes a ready was/now map */)
                 ->setPayload($rawPayload);
             $this->em->persist($submission);
             $this->em->flush();
@@ -237,5 +265,49 @@ final class CatalogContributionService implements ContributionStubInterface
 
             return $submission;
         });
+    }
+
+    /**
+     * Throw a form-surfaceable validation error. The controller renders each
+     * violation message as a FormError, so intake rejections read like every
+     * other field error rather than a 500.
+     */
+    private function reject(string $message, string $field): never
+    {
+        throw new ValidationFailedException($message, new ConstraintViolationList([new ConstraintViolation($message, $message, [], $message, $field, null)]));
+    }
+
+    /** Collapse '' / null / [] to null; leave every other value untouched. */
+    private static function normalizeEmpty(mixed $v): mixed
+    {
+        return (null === $v || '' === $v || [] === $v) ? null : $v;
+    }
+
+    /**
+     * First coordinate of any GeoJSON geometry, as [lng, lat]. Points,
+     * LineStrings and Polygons alike — descend to the first numeric pair.
+     *
+     * @return array{0: float, 1: float}
+     */
+    private static function representativePoint(string $geomJson): array
+    {
+        /** @var array{coordinates?: mixed} $decoded */
+        $decoded = json_decode($geomJson, true, 512, \JSON_THROW_ON_ERROR);
+
+        return self::firstPair($decoded['coordinates'] ?? null);
+    }
+
+    /** @return array{0: float, 1: float} */
+    private static function firstPair(mixed $coords): array
+    {
+        if (\is_array($coords) && \array_key_exists(0, $coords) && \array_key_exists(1, $coords)
+            && !\is_array($coords[0]) && is_numeric($coords[0]) && is_numeric($coords[1])) {
+            return [(float) $coords[0], (float) $coords[1]];
+        }
+        if (\is_array($coords) && isset($coords[0])) {
+            return self::firstPair($coords[0]);
+        }
+
+        throw new \InvalidArgumentException('item geometry has no usable coordinate');
     }
 }

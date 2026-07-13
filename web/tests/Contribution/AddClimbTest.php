@@ -138,4 +138,44 @@ final class AddClimbTest extends WebTestCase
         self::assertSelectorTextContains('.receipt .stub-note', 'awaiting curator review');
         self::assertSelectorTextContains('.receipt .ref', 'SUB-');
     }
+
+    // ── Authenticated POST — invalid average gradient (#19) ──────────────────
+
+    public function testInvalidAverageGradientIsRejected(): void
+    {
+        $client = static::createClient();
+
+        $email = 'addclimb-avg@example.com';
+        $plain = 'securepass12345!';
+        $this->createUser($email, $plain);
+        $this->loginAs($client, $email, $plain);
+
+        $crawler = $client->request('GET', '/add-climb');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Next →')->form([
+            'add_climb[fName]' => 'Bad gradient climb',
+            'add_climb[fAvg]' => 'not-a-gradient <x>',
+            'add_climb[fSurface]' => 'Asphalt',
+            'add_climb[fSurfaceQ]' => 'Good',
+            'add_climb[fTraffic]' => 'Quiet',
+            'add_climb[lat]' => '50.499',
+            'add_climb[lng]' => '5.739',
+        ]);
+        $client->submit($form);
+
+        // Form redisplays with a validation error (Symfony returns 422 for an
+        // invalid submitted form); no receipt is produced, nothing persisted.
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorNotExists('.receipt .ref');
+        self::assertSame(0, $this->submissionCount());
+    }
+
+    private function submissionCount(): int
+    {
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        return $em->getRepository(\App\Catalog\Entity\Submission::class)->count([]);
+    }
 }

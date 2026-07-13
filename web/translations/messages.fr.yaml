@@ -819,6 +819,7 @@ add_climb:
     length_negative: 'La longueur doit être nulle ou positive.'
     gain_negative: 'Le dénivelé positif doit être nul ou positif.'
     max_gradient_range: 'La pente maximale doit être comprise entre 0 et 100.'
+    avg_gradient_invalid: 'La pente moyenne doit être un nombre comme 6,4 ou 8%.'
     note_too_long: 'La note doit comporter 2000 caractères ou moins.'
 improve:
   eyebrow: 'Contribuer · nouvelle entrée'
@@ -948,6 +949,8 @@ contribute:
     invalid_url: 'Saisissez une adresse web complète commençant par http:// ou https://'
     rate_limited: 'Vous avez atteint la limite de contributions pour le moment — réessayez un peu plus tard.'
     route_too_complex: 'Cette trace comporte trop de virages serrés pour être traitée — simplifiez-la dans votre application GPS et réessayez.'
+    invalid_location: 'Indiquez l’emplacement sur la carte avant d’envoyer.'
+    invalid_geometry: 'La forme dessinée n’a pas pu être lue — redessinez-la et réessayez.'
 propose_route:
   eyebrow: 'K · Itinéraires recommandés'
   title: 'Proposer un itinéraire'

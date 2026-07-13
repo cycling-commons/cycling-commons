@@ -64,4 +64,49 @@ final class ClimbGeometryTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         ClimbGeometry::fromPayload(['steep' => '{"at":[1e400,5.2],"pct":"12%"}']);
     }
+
+    public function testRejectsOverlongRoute(): void
+    {
+        $pairs = array_fill(0, 2001, [50.5, 5.2]);
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['route' => (string) json_encode($pairs)]);
+    }
+
+    public function testRejectsOverlongGrad(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['grad' => (string) json_encode(array_fill(0, 2001, 5))]);
+    }
+
+    public function testRejectsOutOfRangeRouteLatitude(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['route' => '[[99999,5.24],[50.52,5.25]]']);
+    }
+
+    public function testRejectsOutOfRangeRouteLongitude(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['route' => '[[50.5,999],[50.52,5.25]]']);
+    }
+
+    public function testRejectsNonScalarPct(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['steep' => '{"at":[50.5,5.2],"pct":["x"]}']);
+    }
+
+    public function testRejectsGarbagePct(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        ClimbGeometry::fromPayload(['steep' => '{"at":[50.5,5.2],"pct":"<script>"}']);
+    }
+
+    public function testAcceptsPlainNumericAndPercentPct(): void
+    {
+        $a = ClimbGeometry::fromPayload(['steep' => '{"at":[50.5,5.2],"pct":"12"}']);
+        $b = ClimbGeometry::fromPayload(['steep' => '{"at":[50.5,5.2],"pct":"12.5%"}']);
+        self::assertSame('12', $a['steep']['pct']);
+        self::assertSame('12.5%', $b['steep']['pct']);
+    }
 }

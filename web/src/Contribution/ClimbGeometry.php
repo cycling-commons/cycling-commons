@@ -18,6 +18,14 @@ namespace App\Contribution;
 final class ClimbGeometry
 {
     /**
+     * Upper bound on route/grad list lengths. A drawn climb is a handful of
+     * points; thousands means a hand-crafted or runaway payload. Capping here
+     * (before the value reaches the submission/item tables and, on approve,
+     * every visitor's /map/catalog.json) bounds storage and response size.
+     */
+    private const int MAX_POINTS = 2000;
+
+    /**
      * @param array<string, mixed> $payload
      *
      * @return array{route?: list<array{0:float,1:float}>, grad?: list<int|float>, steep?: array{at:array{0:float,1:float}, pct:string, manual:bool}}
@@ -58,6 +66,9 @@ final class ClimbGeometry
         if (!\is_array($v) || [] === $v || !array_is_list($v)) {
             throw new \InvalidArgumentException('route must be a non-empty list of [lat,lng] pairs');
         }
+        if (\count($v) > self::MAX_POINTS) {
+            throw new \InvalidArgumentException(sprintf('route exceeds %d points', self::MAX_POINTS));
+        }
         $out = [];
         foreach ($v as $pair) {
             if (!\is_array($pair) || 2 !== \count($pair) || !\is_numeric($pair[0] ?? null) || !\is_numeric($pair[1] ?? null)) {
@@ -65,6 +76,10 @@ final class ClimbGeometry
             }
             if (!is_finite((float) $pair[0]) || !is_finite((float) $pair[1])) {
                 throw new \InvalidArgumentException('each route point must be [lat,lng]');
+            }
+            // Coordinates are stored [lat, lng] (see class docblock).
+            if ((float) $pair[0] < -90 || (float) $pair[0] > 90 || (float) $pair[1] < -180 || (float) $pair[1] > 180) {
+                throw new \InvalidArgumentException('route point out of range (lat -90..90, lng -180..180)');
             }
             $out[] = [(float) $pair[0], (float) $pair[1]];
         }
@@ -77,6 +92,9 @@ final class ClimbGeometry
     {
         if (!\is_array($v) || !array_is_list($v)) {
             throw new \InvalidArgumentException('grad must be a list of numbers');
+        }
+        if (\count($v) > self::MAX_POINTS) {
+            throw new \InvalidArgumentException(sprintf('grad exceeds %d values', self::MAX_POINTS));
         }
         $out = [];
         foreach ($v as $n) {
@@ -103,9 +121,22 @@ final class ClimbGeometry
             throw new \InvalidArgumentException('steep.at must be [lat,lng]');
         }
 
+        // $v is known to be an array here (we just read $v['at'] from it).
+        $pctRaw = $v['pct'] ?? '';
+        if (\is_array($pctRaw)) {
+            throw new \InvalidArgumentException('steep.pct must be a scalar gradient value');
+        }
+        $pct = (string) $pctRaw;
+        // A gradient percentage: up to two digits, optional decimal, optional
+        // trailing '%'. Rejects arbitrary strings ("<script>", "Array", …) that
+        // would otherwise flow verbatim into published attributes.
+        if ('' !== $pct && 1 !== preg_match('/^\d{1,2}(\.\d{1,2})?%?$/', $pct)) {
+            throw new \InvalidArgumentException('steep.pct must look like a gradient, e.g. "12" or "12.5%"');
+        }
+
         return [
             'at' => [(float) $at[0], (float) $at[1]],
-            'pct' => (string) ($v['pct'] ?? ''),
+            'pct' => $pct,
             'manual' => (bool) ($v['manual'] ?? false),
         ];
     }
