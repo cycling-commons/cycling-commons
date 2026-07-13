@@ -351,10 +351,9 @@
     const community = p.srcType==='user' || p.srcType==='manual';
     const rec=[{label:'Type', value:p.type||p.t||'Drinking water', method: p.type?undefined:'OSM'}, potable,
       {label:'Verify', value:'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}];
-    if(p.seasonal) rec.push({label:'Seasonal availability', value:p.seasonal});
-    if(p.note) rec.push({label:'Note for riders', value:p.note});
-    if(p.bottleFill) rec.push({label:'Bottle-fill friendly?', value:p.bottleFill});
-    if(p.cost) rec.push({label:'Cost', value:p.cost});
+    // Registry-driven rows for the remaining WaterFood fields (seasonal/note/
+    // bottleFill/cost). 'type' and 'potable' are rendered structurally above.
+    rec.push(...schemaRows('C', p, p.id, {skip:['type','potable']}));
     const d={name:p.n||p.t||'Drinking water', headline:'drinking water · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
       record:rec,
       source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
