@@ -514,9 +514,24 @@
   var btnLinkVideo = document.getElementById('btn-link-video');
   if (btnLinkVideo) btnLinkVideo.addEventListener('click', function () { linkMedia('video'); });
 
-  // If not in add mode, step 1 has no map gate — allow immediate Next
+  // If not in add mode, step 1 has no map gate — allow immediate Next.
   if (LOCATE === 'off') {
     WZ.loc = { type: 'none' };
+    // Add-a-field bridge (a drawer "+ add" prompt): there is no location to
+    // set, so SKIP the LOCATE step entirely rather than showing a dead, empty
+    // map pane. Start on step 2 and drop the step-1 chip from the stepper.
+    var _step1Label = document.getElementById('step-label-1');
+    if (_step1Label) _step1Label.style.display = 'none';
+    step(2);
+    // Deep-link straight to the field the "+ add" prompt targeted (?field=key).
+    var _field = _q.get('field');
+    if (_field) {
+      var _target = fld(_field);
+      if (_target) {
+        _target.scrollIntoView({ block: 'center' });
+        try { _target.focus({ preventScroll: true }); } catch (e) { _target.focus(); }
+      }
+    }
   }
 
   refreshGate();
