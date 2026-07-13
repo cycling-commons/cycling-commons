@@ -1,0 +1,19 @@
+web/src/EventSubscriber/CspSubscriber.php
+  s_51df195d1c7750::t_20c8e77ea30a80 83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "e7c3c8232a39aa82a80234ccb1e6e0daaf381f47",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
