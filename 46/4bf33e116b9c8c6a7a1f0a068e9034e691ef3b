@@ -1,0 +1,27 @@
+web/src/Controller/ResetPasswordController.php
+  s_50ae7f4c1fd9e4::t_1928b5d36168ee 123-127
+web/tests/Auth/LockoutTest.php
+  s_50ae7f4c1fd9e4::t_bff5d051c3b8ce 155-195
+  s_50ae7f4c1fd9e4::t_a38651417286ec 154
+web/src/Security/LoginThrottleListener.php
+  s_50ae7f4c1fd9e4::t_ee71bf3ffac769 111-127
+  s_50ae7f4c1fd9e4::t_69d2e7662e49cb 35-44
+web/tests/Auth/ResetPasswordTest.php
+  s_50ae7f4c1fd9e4::t_1fc11a91ae44f8 181-232
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "464bf33e116b9c8c6a7a1f0a068e9034e691ef3b",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
