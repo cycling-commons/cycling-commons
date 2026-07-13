@@ -524,9 +524,14 @@
     if (_step1Label) _step1Label.style.display = 'none';
     step(2);
     // Deep-link straight to the field the "+ add" prompt targeted (?field=key).
+    // Catalog attribute fields are nested under the `details`/`extras` sub-forms
+    // (ImproveType), not flat improve[<key>] — so query both. Guard the key to
+    // an alphabetic token so it can't break the selector.
     var _field = _q.get('field');
-    if (_field) {
-      var _target = fld(_field);
+    if (_field && /^[a-zA-Z]+$/.test(_field)) {
+      var _target = document.querySelector(
+        '[name="improve[details][' + _field + ']"], [name="improve[extras][' + _field + ']"]'
+      );
       if (_target) {
         _target.scrollIntoView({ block: 'center' });
         try { _target.focus({ preventScroll: true }); } catch (e) { _target.focus(); }
