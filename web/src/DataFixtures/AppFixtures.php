@@ -72,12 +72,16 @@ final class AppFixtures extends Fixture
         $user->setCountry($country);
         $user->setPassword($this->hasher->hashPassword($user, self::DEV_PASSWORD));
 
-        // Preset the TOTP secret but leave 2FA *not enabled*: this satisfies the
-        // TwoFactorSetupEnforcer (so elevated roles reach /admin and /moderate)
-        // while keeping login password-only — no 2FA interstitial, no forced
-        // enrolment. Demo convenience; a real elevated account would enrol 2FA.
+        // Preset an ENROLLED 2FA state: both the TOTP secret and the enabled flag.
+        // TwoFactorPolicy::requiresSetup() checks isTotpAuthenticationEnabled()
+        // (twoFaEnabled && secret), so setting only the secret would leave elevated
+        // accounts perpetually redirected to /2fa/setup by TwoFactorSetupEnforcer.
+        // Enrolling them fully matches the mandatory-2FA policy: login shows the TOTP
+        // interstitial, and the well-known seed below lets any authenticator (or
+        // `oathtool --totp -b JBSWY3DPEHPK3PXP`) generate valid codes for dev/demo.
         if ($presetTotp) {
             $user->setTotpSecret('JBSWY3DPEHPK3PXP');
+            $user->setTwoFaEnabled(true);
         }
 
         $manager->persist($user);

@@ -138,10 +138,12 @@ Implements `UserInterface`, `PasswordAuthenticatedUserInterface`, `TwoFactorInte
 
 ### 7.3 2FA flow (pattern from `docs/auth/2FA_SETUP.md`)
 
-- TOTP via scheb; **optional for `ROLE_USER`, enforced for `ROLE_CURATOR`/`ROLE_ADMIN`**.
+- TOTP via scheb; **optional for `ROLE_USER`, mandatory for `ROLE_CURATOR`/`ROLE_ADMIN`** (moderators are `ROLE_CURATOR`, so 2FA is mandatory for them too).
 - `LoginSuccessHandler`: if an elevated-role user has no `totpSecret`, redirect to `/2fa/setup` (QR + manual code) before granting access.
 - Setup page shows QR + manual entry; verify a 6-digit code to confirm; on confirm, generate **backup/recovery codes** (`scheb/2fa-backup-code`) and show once.
 - Future logins prompt for the TOTP code (or a backup code) at the `2fa_login` interstitial.
+
+> **Hardening + enforcer (2026-07-13):** the "who must enrol" rule is centralised in `TwoFactorPolicy` (`isMandatoryFor` = `ROLE_CURATOR` reachable; `requiresSetup` also checks `isTotpAuthenticationEnabled()` = `twoFaEnabled && totpSecret`, i.e. *fully enrolled*, not merely a secret present — reviews #31/#39). A per-request `TwoFactorSetupEnforcer` (kernel.request) closes the remember-me / direct-navigation gap the login handler alone left open: any elevated user who is not fully enrolled is redirected to `/2fa/setup` on **every** request (public/cacheable paths bypassed before any token read). Consequence for fixtures: seeded elevated accounts must set **both** `totpSecret` *and* `setTwoFaEnabled(true)` (well-known dev seed `JBSWY3DPEHPK3PXP`) — presetting the secret alone leaves them looping to `/2fa/setup`.
 
 ### 7.4 Roles
 
