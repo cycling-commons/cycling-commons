@@ -1,0 +1,23 @@
+.pre-commit-config.yaml
+  s_13ad1b1238a7e6::t_5213150528c7a2 3-6,11-20,25-35
+CONTRIBUTING.md
+  s_13ad1b1238a7e6::t_cb56e5bc923da0 48-56
+tools/gitleaks-prepush.sh
+  s_13ad1b1238a7e6::t_8b8b4f1056928a 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "1bca0c02c41eb632bd4d2938eb43f6454c608c44",
+  "prompts": {},
+  "sessions": {
+    "s_13ad1b1238a7e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed2e8d61-4e83-4569-b8f3-a2ac8bdc16c8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
