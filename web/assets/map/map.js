@@ -1851,6 +1851,92 @@
       map.fitBounds([[Math.min(a[1],b2[1]),Math.min(a[0],b2[0])],[Math.max(a[1],b2[1]),Math.max(a[0],b2[0])]],{padding:120,maxZoom:15,duration:600});
     };
   }
+  // ---- Ride-check (spec 2026-07-14 §4.3): riders-only "what's along my GPX?" ----
+  // Mirrors the corrections overlay: own source/layer ids + panel, torn down
+  // only by clearRideCheck (render()'s clearDynamic never touches them).
+  // Read-only indication — the server parses the GPX in memory and stores
+  // nothing; the rail control carries the "never stored" notice.
+  (function initRideCheck(){
+    if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
+    const pick=document.getElementById('rcPick'), fileIn=document.getElementById('rcFile'),
+          radiusSel=document.getElementById('rcRadius'), status=document.getElementById('rcStatus');
+    if(!pick || !fileIn || !radiusSel || !status) return;
+    let _file=null, _busy=false;
+    const say=msg=>{ status.hidden=!msg; status.textContent=msg||''; };
+    function clearRideCheck(){
+      ['ridecheck','ridecheck-case'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+      if(map.getSource('ridecheck')) map.removeSource('ridecheck');
+      document.getElementById('cc-ridepanel')?.remove();
+      clearHighlight();
+    }
+    function post(){
+      if(!_file || _busy) return;
+      _busy=true; pick.disabled=true; say('Checking…');
+      const body=new FormData();
+      body.append('gpx', _file); body.append('radius', radiusSel.value); body.append('_token', CC_RIDECHECK.token);
+      fetch(CC_RIDECHECK.url, {method:'POST', credentials:'same-origin', headers:{'Accept':'application/json'}, body})
+        .then(r=>r.json().then(d=>({ok:r.ok, d})))
+        .then(({ok, d})=>{ if(!ok) throw new Error(d.error||'ride-check failed'); say(''); renderRideCheck(d); })
+        .catch(err=>{ clearRideCheck(); say(err.message||'Could not check this ride — please try again.'); })
+        .finally(()=>{ _busy=false; pick.disabled=false; });
+    }
+    function renderRideCheck(d){
+      clearRideCheck();
+      const coords=d.track.map(p=>[p[1],p[0]]);            // [lat,lng] → [lng,lat]
+      map.addSource('ridecheck',{type:'geojson',data:{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:coords}}});
+      map.addLayer({id:'ridecheck-case',type:'line',source:'ridecheck',
+        layout:{'line-cap':'round','line-join':'round'},
+        paint:{'line-color':'#FBF4E4','line-width':8,'line-opacity':.95}});
+      map.addLayer({id:'ridecheck',type:'line',source:'ridecheck',
+        layout:{'line-cap':'butt','line-join':'round'},
+        paint:{'line-color':'#3A3A33','line-width':4,'line-opacity':1,'line-dasharray':[2,1.6]}});
+      let minLat=90,maxLat=-90,minLng=180,maxLng=-180;
+      d.track.forEach(p=>{ if(p[0]<minLat)minLat=p[0]; if(p[0]>maxLat)maxLat=p[0]; if(p[1]<minLng)minLng=p[1]; if(p[1]>maxLng)maxLng=p[1]; });
+      map.fitBounds([[minLng,minLat],[maxLng,maxLat]],{padding:90,duration:900});
+      buildRidePanel(d);
+    }
+    function buildRidePanel(d){
+      const p=document.createElement('div'); p.id='cc-ridepanel'; p.className='cc-corrpanel cc-ridepanel';
+      const asc=d.ascentM!=null?` · ↑ ${d.ascentM} m`:'';
+      const radius=d.radiusM<1000?`${d.radiusM} m`:'1 km';
+      let html=`<h4>Along your ride · ${d.distanceKm} km${asc} <button class="cc-rc-clear" type="button">✕ clear</button></h4>
+        <div class="cc-rc-sub">within ${radius} of the track — indication only, nothing stored</div>`;
+      if(d.routes.length){
+        html+=`<div class="cc-rc-grp">★ Your ride follows</div>`+d.routes.map(r=>
+          `<button class="cc-corr-item" data-route="${r.id}"><span class="cc-corr-sw" style="background:${(layerByKey.experience||{}).color||'#FF5A1F'}"></span>
+           <span class="cc-corr-body"><b>${escPend(r.name)}</b><em>${r.sharedKm} km shared</em></span></button>`).join('');
+      }
+      d.groups.forEach(g=>{
+        const meta=CATALOG.find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
+        html+=`<div class="cc-rc-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${g.letter}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?' <em>(list capped)</em>':''}</div>`;
+        html+=g.items.map((it,i)=>
+          `<button class="cc-corr-item" data-g="${g.letter}" data-i="${i}"><span class="cc-corr-sw" style="background:${meta.color}"></span>
+           <span class="cc-corr-body"><b>${escPend(it.name)}</b><em>km ${it.alongKm} · ${it.distM} m off</em></span></button>`).join('');
+      });
+      if(!d.routes.length && !d.groups.length) html+=`<div class="cc-rc-empty">Nothing in the Commons within ${radius} of this ride yet.</div>`;
+      p.innerHTML=html;
+      document.querySelector('.mapwrap, .app, body').appendChild(p);
+      const groupsByLetter=Object.fromEntries(d.groups.map(g=>[g.letter,g]));
+      p.addEventListener('click',e=>{
+        if(e.target.closest('.cc-rc-clear')){ clearRideCheck(); return; }
+        const rb=e.target.closest('[data-route]');
+        if(rb){ openRouteById(rb.dataset.route); return; }
+        const b=e.target.closest('[data-g]'); if(!b) return;
+        const it=(groupsByLetter[b.dataset.g]||{items:[]}).items[+b.dataset.i]; if(!it) return;
+        const entry=ITEM_INDEX.find(x=>x.letter===b.dataset.g && x.id===it.id);
+        if(entry){ entry.go(); } else { flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); }
+      });
+      p.addEventListener('mouseover',e=>{ const b=e.target.closest('[data-g]'); if(!b) return;
+        const it=(groupsByLetter[b.dataset.g]||{items:[]}).items[+b.dataset.i]; if(it) highlightAt(it.ll); });
+      p.addEventListener('mouseout',e=>{ if(e.target.closest('[data-g]')) clearHighlight(); });
+    }
+    pick.onclick=()=>fileIn.click();
+    fileIn.addEventListener('change',()=>{ const f=fileIn.files && fileIn.files[0]; if(!f) return;
+      _file=f; post(); fileIn.value='';                     // allow re-picking the same file
+    });
+    radiusSel.addEventListener('change',()=>{ if(_file) post(); });
+  })();
+
   // open a pending submission by id (deep-link from the /moderate queue's "View on map")
   function openPendingById(id){
     const layer = layerByKey.pending; if(!layer) return false;

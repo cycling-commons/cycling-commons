@@ -492,6 +492,26 @@
   .cc-corr-body b{text-transform:capitalize}
   .cc-corr-body em{display:block;font-style:normal;font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgba(239,230,212,.55);margin-top:.15rem}
 
+  /* ---- Ride-check (spec 2026-07-14 §4.3) ---- */
+  /* rail control: upload + radius + the "never stored" notice */
+  .cc-ridecheck .cc-rc-row{display:flex;align-items:center;gap:.6rem;margin-top:.55rem;flex-wrap:wrap}
+  .cc-rc-btn{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.42rem .75rem;border:1px solid rgba(239,230,212,.35);border-radius:30px;background:none;color:var(--paper);cursor:pointer;transition:all .18s}
+  .cc-rc-btn:hover{border-color:var(--trail);color:var(--trail)}
+  .cc-rc-btn:disabled{opacity:.5;cursor:wait}
+  .cc-rc-radius{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+  .cc-rc-radius select{background:var(--ink);color:var(--paper);border:1px solid rgba(239,230,212,.25);border-radius:6px;font-size:.78rem;padding:.25rem .35rem}
+  .cc-rc-status{margin-top:.5rem;font-size:.8rem;color:var(--ochre)}
+  .cc-rc-note{margin:.55rem 0 0;font-size:.72rem;line-height:1.4;color:rgba(239,230,212,.5)}
+  /* along-the-ride panel: corrections-panel skin + its own group headers */
+  .cc-ridepanel{width:min(340px,84vw)}
+  .cc-ridepanel h4{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+  .cc-rc-clear{background:none;border:0;color:rgba(239,230,212,.6);font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;padding:.1rem .2rem}
+  .cc-rc-clear:hover{color:var(--trail)}
+  .cc-rc-sub{font-size:.68rem;color:rgba(239,230,212,.5);margin:-.2rem 0 .45rem}
+  .cc-rc-grp{display:flex;align-items:center;gap:.5rem;margin-top:.6rem;padding:.2rem 0;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+  .cc-rc-grp em{font-style:normal;color:var(--ochre);text-transform:none;letter-spacing:.02em}
+  .cc-rc-empty{font-size:.82rem;color:rgba(239,230,212,.55);padding:.4rem 0}
+
 /* vestibular safety: the sibling contribute templates already carry this
    kill-switch; the map page was the one surface without it (review W10) */
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
