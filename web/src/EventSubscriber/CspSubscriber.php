@@ -53,9 +53,21 @@ final class CspSubscriber implements EventSubscriberInterface
         }
 
         $nonce = $this->nonce->value();
+
+        // The Mapillary street-level viewer (mapillary-js) compiles MapLibre-style
+        // filter expressions with new Function() (its FilterCreator) when opened,
+        // which requires 'unsafe-eval'. Scope that relaxation to the /map page only
+        // — every other response keeps the strict, eval-free policy. (MapLibre GL
+        // itself is CSP-safe; only mapillary-js needs this.)
+        $request = $event->getRequest();
+        $isMap = 'map' === $request->attributes->get('_route')
+            || str_ends_with($request->getPathInfo(), '/map');
+        $scriptSrc = "script-src 'self' 'nonce-{$nonce}' https://unpkg.com"
+            .($isMap ? " 'unsafe-eval'" : '');
+
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}' https://unpkg.com",
+            $scriptSrc,
             "style-src 'self' 'unsafe-inline' https://unpkg.com",
             "img-src 'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net",
             "font-src 'self'",

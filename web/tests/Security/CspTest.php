@@ -33,6 +33,32 @@ final class CspTest extends WebTestCase
     }
 
     /**
+     * The Mapillary street-level viewer (mapillary-js) compiles filter
+     * expressions with new Function(), so /map — and ONLY /map — relaxes
+     * script-src with 'unsafe-eval'; every other page keeps the strict policy.
+     */
+    public function testUnsafeEvalIsScopedToTheMapPage(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString(
+            "'unsafe-eval'",
+            (string) $client->getResponse()->headers->get('Content-Security-Policy'),
+            "the /map street-level viewer (mapillary-js new Function()) needs 'unsafe-eval'",
+        );
+
+        $client->request('GET', '/');
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString(
+            "'unsafe-eval'",
+            (string) $client->getResponse()->headers->get('Content-Security-Policy'),
+            "'unsafe-eval' must stay scoped to /map, not leak to other pages",
+        );
+    }
+
+    /**
      * Every inline script block on a page must carry the SAME nonce the
      * header advertises — a missed block is a page break under enforcement.
      */
