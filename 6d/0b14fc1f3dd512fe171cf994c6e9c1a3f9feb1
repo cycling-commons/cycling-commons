@@ -1,0 +1,47 @@
+web/tests/Contribution/ImproveTest.php
+  s_50ae7f4c1fd9e4::t_3f45ec74aa28f7 119-138
+  s_50ae7f4c1fd9e4::t_f52293e96af4e3 118
+web/src/Security/LoginSuccessHandler.php
+  s_50ae7f4c1fd9e4::t_9c8dfcd8e70e41 66-69,72-73,83-87,90,92,94
+  s_50ae7f4c1fd9e4::t_cfbecbef545472 47
+web/translations/messages.en.yaml
+  s_50ae7f4c1fd9e4::t_a0c6ee8e31f1ca 1336-1369
+web/tests/Security/TwoFactorPolicyTest.php
+  s_50ae7f4c1fd9e4::t_9c8eccd49c8784 1-63
+web/translations/messages.fr.yaml
+  s_50ae7f4c1fd9e4::t_a0c6ee8e31f1ca 1336-1369
+web/translations/messages.nl.yaml
+  s_50ae7f4c1fd9e4::t_a0c6ee8e31f1ca 1336-1369
+web/src/Security/TwoFactorPolicy.php
+  s_50ae7f4c1fd9e4::t_b4787c9b371c61 1-41
+web/src/Catalog/ItemType.php
+  s_50ae7f4c1fd9e4::t_faede320655214 108-122
+web/src/Security/TwoFactorSetupEnforcer.php
+  s_50ae7f4c1fd9e4::t_bd315c16242a7c 62
+  s_50ae7f4c1fd9e4::t_4354f53fde2faa 113-116
+web/src/Controller/LocaleController.php
+  s_50ae7f4c1fd9e4::t_b6a439d2d94e76 16-22
+web/templates/contribute/improve.html.twig
+  s_50ae7f4c1fd9e4::t_e50cda2dbbc833 328
+  s_50ae7f4c1fd9e4::t_c00beb095bd92f 177
+web/translations/messages.de.yaml
+  s_50ae7f4c1fd9e4::t_a0c6ee8e31f1ca 1336-1369
+web/tests/Auth/LocalePreferenceTest.php
+  s_50ae7f4c1fd9e4::t_d277fa02c21df5 1-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "6d0b14fc1f3dd512fe171cf994c6e9c1a3f9feb1",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
