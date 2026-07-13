@@ -442,14 +442,23 @@
       st.onScreen=next;
     });
   }
+  // The bulk OSM POI layers (layer key, data collection, OSM source note),
+  // declared once so the map-load renderer AND the sidebar-search index below
+  // stay in lockstep — previously the search skipped all of these, so every OSM
+  // stay/shop/viewpoint/station was unfindable ("Les Louveteaux and other things
+  // not searchable"). Read straight from the inlined CC_*_OSM globals (available
+  // synchronously), since osmLayers is only populated later on map 'load'.
+  const OSM_BULK = [
+    ['services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)'],
+    ['scenic',   window.CC_SCENIC_OSM,   'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)'],
+    ['history',  window.CC_HISTORY_OSM,  'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)'],
+    ['stays',    window.CC_STAYS_OSM,    'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)'],
+    ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)'],
+    ['transit',  window.CC_TRANSIT_OSM,  'OpenStreetMap (railway=station / railway=halt)']
+  ];
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
   map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm();   // heatmap is lazy (W43)
-    addOsmDots('services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)');
-    addOsmDots('scenic', window.CC_SCENIC_OSM, 'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)');
-    addOsmDots('history', window.CC_HISTORY_OSM, 'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)');
-    addOsmDots('stays', window.CC_STAYS_OSM, 'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)');
-    addOsmDots('shelter', window.CC_SHELTER_OSM, 'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)');
-    addOsmDots('transit', window.CC_TRANSIT_OSM, 'OpenStreetMap (railway=station / railway=halt)');
+    OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     addRegionBoundary('Wallonia'); setupConfClusters();
     // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
     // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a
@@ -1972,6 +1981,16 @@
     (window.CC_STAYS_PIVOT && window.CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties; if(!p || !p.n) return;
       const layer=layerByKey.stays; if(!layer) return;
       SEARCH_IDX.push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openStayPivot(f)}); });
+    // Bulk OSM POIs (CC_*_OSM) — rendered as map dots, not folded into CATALOG,
+    // so index them here too (shared OSM_BULK table) or every OSM stay/shop/
+    // viewpoint/station stays unsearchable. Named features only; a hit flies to
+    // the point and opens its drawer, exactly like clicking the dot.
+    OSM_BULK.forEach(([key, data, src])=>{ const layer=layerByKey[key]; if(!layer || !data || !data.features) return;
+      data.features.forEach(f=>{ const p=f.properties||{}; if(!p.n) return;
+        const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
+        const lng=+c[0], lat=+c[1]; if(!isFinite(lng)||!isFinite(lat)) return;
+        SEARCH_IDX.push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e',
+          go:()=>{ map.flyTo({center:[lng,lat], zoom:15}); openDrawer(layer, osmDrawer(layer, p, {lng:lng, lat:lat}, src)); }}); }); });
     let sMatches=[], sHL=-1;
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
