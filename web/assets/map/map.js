@@ -1241,10 +1241,17 @@
     // submission records (below) never carry f.id, so they never render this —
     // see the note on the pending branch for why that view doesn't get one either.
     const histSlot = f.id!=null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${f.id}"></div>` : '';
+    // Point the "OpenStreetMap" source link at the object's location on OSM (its
+    // feature-query view) rather than the OSM homepage. The served OSM features
+    // carry no element (node/way) id, so a coordinate query is the closest we can
+    // deep-link to the exact object the rider is looking at.
+    const osmHref = (f.geom && f.geom.ll)
+      ? `https://www.openstreetmap.org/query?lat=${f.geom.ll[0]}&lon=${f.geom.ll[1]}#map=18/${f.geom.ll[0]}/${f.geom.ll[1]}`
+      : 'https://www.openstreetmap.org';
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${confirmPanel}${act}${moderate}${histSlot}`;
+      <div class="cc-d-src">Source · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, `<a href="${osmHref}" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>`).replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${confirmPanel}${act}${moderate}${histSlot}`;
   }
   // C1-T3: renders one change_history row. Every interpolated value is
   // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`
