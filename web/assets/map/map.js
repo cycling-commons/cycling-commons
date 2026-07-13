@@ -268,6 +268,38 @@
     history:[['type','Type'],['bikeParking','Bike parking'],['note','Anything to add?'],
       ['openingHours','Opening hours'],['entryFee','Entry fee?'],['cyclingStory','Cycling story / link']]
   };
+  // Star glyphs for 1-5 ratings, shared by schemaRows' 'rating' kind.
+  const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
+  // Registry-driven attribute rows (spec: 2026-07-13-registry-driven-drawer-fields).
+  // CC_FIELD_SCHEMA[letter] is the server's per-type display-field list
+  // [{key,label,kind}] with labels already localised. For each field: a value
+  // row when set, otherwise a muted "add" prompt to the /improve edit-bridge.
+  // opts.skip = field keys a builder renders structurally (e.g. routes' difficulty
+  // badge) so they are not double-rendered here.
+  function schemaRows(letter, src, id, opts){
+    const schema = (window.CC_FIELD_SCHEMA || {})[letter] || [];
+    const skip = (opts && opts.skip) || [];
+    const rows = [];
+    schema.forEach(f=>{
+      if(skip.indexOf(f.key) >= 0) return;
+      const v = src[f.key];
+      const has = Array.isArray(v) ? v.length > 0 : (v != null && v !== '');
+      if(has){
+        if(f.kind === 'multiselect'){
+          const list = Array.isArray(v) ? v : [v];
+          rows.push({label:f.label, html:true, value:list.map(t=>`<span class="cc-chip">${escPend(t)}</span>`).join('')});
+        } else if(f.kind === 'rating'){
+          rows.push({label:f.label, value: /^[1-5]$/.test(String(v)) ? stars(Number(v)) : v});
+        } else {
+          rows.push({label:f.label, value:v});
+        }
+      } else if(id != null){
+        const href = `/improve?item=${encodeURIComponent(id)}&type=${encodeURIComponent(letter)}&field=${encodeURIComponent(f.key)}`;
+        rows.push({label:f.label, html:true, empty:true, value:`<a class="cc-d-add" href="${href}">＋ add</a>`});
+      }
+    });
+    return rows;
+  }
   // drawer card for a generic bulk-OSM point — shared by the dot click handler and the confirmed pin
   function osmDrawer(layer, p, ll, src){
     const lbl=(layer||{}).label||'Place';
@@ -1162,7 +1194,7 @@
       // interpolation escPend-escaped (RIDE_CITIES city links, bike-type
       // chips). Raw payload values never take this path — they stay
       // escPend-escaped below (spec §13).
-      return `<li><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
+      return `<li class="${r.empty?'empty':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
     }).join('');
     const fresh = f.freshness
       ? `<div class="cc-d-fresh ${f.freshness.state}">${f.freshness.state} · last confirmed ${f.freshness.lastConfirmed}</div>` : '';
