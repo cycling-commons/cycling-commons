@@ -129,3 +129,57 @@ receipt-ref conventions (M1/M6), and the later email channel (M7).
 - Phasing: M1–M4 + M6 + M11 are the core; M5 (map chip) can ride any map-touching
   phase; M8 phase-1 (lazy+opportunistic) with the core; M7 + M8 phase-2
   (messenger/scheduler) as their own infra phase.
+
+## 7. Execution note — core phase shipped (2026-07-13)
+
+The core (M1–M6, M8 phase‑1, M9–M11) shipped on `symfony-base`
+(`abbc1d9..<spec-note>`, subagent-driven, ~17 commits incl. review fixes). Full
+gate green: **473 tests / 2081 assertions**, phpstan + psalm + php-cs-fixer +
+SPDX + licenses + translation parity (1238 keys ×4) clean. Dev DB migrated
+(`user_message`). Still deferred as designed: **M7 email + M8 phase‑2
+scheduler** (own infra plan), **M12 lock/ban**, rejected-route-proposal GC.
+
+Delivered: `UserMessage` (+kind enum, the schema's **first real `user_id` FK**,
+`ON DELETE CASCADE`, cascade-tested at the DB level) · `MessageService`
+(system sends persist-without-flush and ride the decision transactions) ·
+outcome messages on all three channels (items approve/reject/needs-info; route
+proposals approve/reject/retire — the note finally reaches the proposer;
+corrections done/dismissed) · `/messages` shell page (mark-read-on-view) ·
+unread bulb in the shared chip (server-rendered count, Twig extension) · the
+map rail gains the chip · curator→rider desk messages (one endpoint, recipient
+resolved server-side) · needs-info reply loop (re-queues NeedsInfo→Pending;
+reply surfaces on the queue row for every curator) · retention phase‑1
+(`moderation.retention_months: 3`; lazy profile filter with NULL-safe
+predicate + hourly-throttled opportunistic sweep on desk visits +
+`app:moderation:gc`) · Trash (kind-pinned deletes, server-side proposal
+guardrail submitted/rejected-only, audit-first content-free, no message).
+
+Decisions/fixes during execution (binding):
+
+1. **The new FK ripples into tests**: any decision-path test seeding a
+   fabricated `user_id`/`proposed_by` now FK-violates when the decision writes
+   a message — fixtures must persist real users (done across 5 test files).
+2. **Plan gap fixed**: a new entity namespace needs a `doctrine.yaml` mapping
+   block (`Messaging` mirrors World/Catalog).
+3. **Validation before the limiter** on suggest notes (a 422 must not cost a
+   daily-quota token — cheap checks only; GPX-style expensive work still
+   consumes first).
+4. **Desks now render flashes** — pre-existing gap: desk controllers set
+   success/danger flashes no template displayed; fixed shell-wide (this was
+   the new features' only feedback channel).
+5. **Trash audit is uniformly content-free** — the proposal note logs
+   `route <id> state=<x>` only (a submitted proposal's *name* is unvetted
+   rider text and must not enter the immutable log).
+6. i18n reviews caught and fixed: DE "dismissed" is `verworfen` (matches the
+   desk's `Verwerfen`), FR stays plain-form (no mid-dot inclusive forms).
+
+**Recorded lows (non-blocking, from reviews):** double-reply/guardrail
+check-then-act races match the existing house pattern (harmless duplicates at
+worst; site-wide hardening candidate) · no index on
+`user_message(channel,ref_id,sender)` for the queue's reply join (fine at
+current volume) · trashing a *rejected* proposal orphans its
+`route_change_history` rows (no FK; rejected proposals are also unreachable in
+the detail UI today due to its pre-existing 404 rule) · desk-message tests
+don't cover nonexistent-id on two channels (code-inspected safe) · a live
+visual pass of the map-rail chip/bulb is still owed (browser was locked by a
+parallel session; all behaviour is WebTest-covered through the real kernel).
