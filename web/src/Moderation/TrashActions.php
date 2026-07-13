@@ -20,9 +20,4 @@ final class TrashActions
     public const string TrashSubmission = 'trash_submission';
     public const string TrashCorrection = 'trash_correction';
     public const string TrashRouteProposal = 'trash_route_proposal';
-
-    private function __construct()
-    {
-        // Static holder only.
-    }
 }

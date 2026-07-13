@@ -113,7 +113,6 @@ final class MessageService
     /** @return list<UserMessage> */
     public function listFor(int $userId, int $limit = 100): array
     {
-        /** @var list<UserMessage> $messages */
         $messages = $this->em->getRepository(UserMessage::class)->findBy(
             ['userId' => $userId],
             ['createdAt' => 'DESC', 'id' => 'DESC'],

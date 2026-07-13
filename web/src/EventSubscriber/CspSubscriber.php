@@ -80,6 +80,7 @@ final class CspSubscriber implements EventSubscriberInterface
         ]));
     }
 
+    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [KernelEvents::RESPONSE => 'onKernelResponse'];
