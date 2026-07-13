@@ -28,7 +28,10 @@ final class ContributionsRetentionTest extends WebTestCase
 
         $me = (new User())->setEmail('retention@subs.test');
         $me->setPassword('x');
+        $other = (new User())->setEmail('retention-other@subs.test');
+        $other->setPassword('x');
         $em->persist($me);
+        $em->persist($other);
         $em->flush();
 
         $expired = (new Submission())->setType(SubmissionType::Edit)->setLetter('D')->setUserId((int) $me->getId())
@@ -41,8 +44,16 @@ final class ContributionsRetentionTest extends WebTestCase
             ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
             ->setDecidedAt(new \DateTimeImmutable('-1 day'))
             ->setChanges([])->setPayload([]);
+        // Owned by a different user entirely — must never appear in $me's
+        // list regardless of status/retention, locking the ownership scoping
+        // (`s.userId = :uid`) as distinct from the retention OR-group.
+        $othersSubmission = (new Submission())->setType(SubmissionType::Edit)->setLetter('D')->setUserId((int) $other->getId())
+            ->setStatus(SubmissionStatus::Pending)->setTitle('Someone elses submission')
+            ->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')
+            ->setChanges([])->setPayload([]);
         $em->persist($expired);
         $em->persist($young);
+        $em->persist($othersSubmission);
         $em->flush();
 
         // No sweep has run — this is purely the lazy read-filter.
@@ -53,5 +64,6 @@ final class ContributionsRetentionTest extends WebTestCase
         $html = (string) $client->getResponse()->getContent();
         self::assertStringNotContainsString('Expired rejected edit', $html);
         self::assertStringContainsString('Young rejected edit', $html);
+        self::assertStringNotContainsString('Someone elses submission', $html);
     }
 }

@@ -78,7 +78,7 @@ final class MessagesController extends AbstractController
      * rows, so this alone re-queues it.
      */
     #[Route('/messages/{id}/reply', name: 'messages_reply', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function reply(int $id, Request $request, EntityManagerInterface $em, MessageService $messages): Response
+    public function reply(int $id, Request $request, EntityManagerInterface $em, MessageService $messages, Connection $db): Response
     {
         if (!$this->isCsrfTokenValid('message-reply', (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
@@ -102,7 +102,18 @@ final class MessagesController extends AbstractController
         // unlikely case a NeedsInfo submission somehow carries no decider,
         // there is no curator to deliver the reply to either way. Both are
         // the same "too late" outcome for the rider.
-        if (null === $submission || SubmissionStatus::NeedsInfo !== $submission->getStatus() || null === $decidingCuratorId) {
+        //
+        // `submission.decided_by` is also a no-FK column (same family as
+        // submission.user_id / route_suggestion.user_id /
+        // recommended_route.proposed_by — see MessageService::sendSystem):
+        // the curator who asked for more info may have deleted their own
+        // account since. There is no other curator to reroute the reply to
+        // automatically, and surfacing it nowhere would silently discard the
+        // rider's answer, so this is treated as the same "too late" outcome
+        // rather than re-queuing with an undeliverable message. Another
+        // curator can re-request info if the submission still needs it.
+        if (null === $submission || SubmissionStatus::NeedsInfo !== $submission->getStatus() || null === $decidingCuratorId
+            || false === $db->fetchOne('SELECT 1 FROM users WHERE id = :id', ['id' => $decidingCuratorId])) {
             $this->addFlash('danger', 'messages.reply_too_late');
 
             return $this->redirectToRoute('messages');

@@ -74,8 +74,17 @@ final class ModerateMessageController extends AbstractController
         $curator = $this->getUser();
 
         try {
-            $this->messages->sendCurator($recipientId, (int) $curator->getId(), $channel, $id, $refLabel, $body);
-            $this->addFlash('success', 'moderate.msg.sent');
+            $sent = $this->messages->sendCurator($recipientId, (int) $curator->getId(), $channel, $id, $refLabel, $body);
+            if (null === $sent) {
+                // The referenced row's author/proposer id is a no-FK column
+                // (submission.user_id / route_suggestion.user_id /
+                // recommended_route.proposed_by) that can dangle after
+                // account deletion — same "nobody to message" outcome as an
+                // imported route's null proposer, above.
+                $this->addFlash('danger', 'moderate.error.no_recipient');
+            } else {
+                $this->addFlash('success', 'moderate.msg.sent');
+            }
         } catch (\InvalidArgumentException) {
             $this->addFlash('danger', 'moderate.msg.error');
         }

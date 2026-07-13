@@ -42,6 +42,16 @@ final class MessageService
      * `body_text` next to the translated `body_key` headline so the rider
      * sees the curator's note under it.
      *
+     * `user_message.user_id` carries a real FK (`ON DELETE CASCADE`) to
+     * `users`, but every referenced entity's author/proposer column
+     * (`submission.user_id`, `route_suggestion.user_id`,
+     * `recommended_route.proposed_by`) is a plain no-FK int that survives
+     * account deletion. If the recipient's account is already gone, the
+     * message is the recipient's cascade-away inbox copy (M1/M10) — no
+     * recipient, no message; the durable audit lives on the row/change-
+     * history, so returning null here (instead of letting the INSERT
+     * violate the FK) never loses the decision itself.
+     *
      * @param array<string, mixed> $bodyParams
      *
      * @throws \InvalidArgumentException if the trimmed note exceeds 2000 characters (moderate.error.note_too_long)
@@ -55,7 +65,11 @@ final class MessageService
         string $bodyKey,
         array $bodyParams = [],
         ?string $curatorNote = null,
-    ): UserMessage {
+    ): ?UserMessage {
+        if (!$this->recipientExists($userId)) {
+            return null;
+        }
+
         $note = $this->normalizeBody($curatorNote, true);
 
         $message = new UserMessage(
@@ -79,11 +93,22 @@ final class MessageService
      * Records a free-form curator note to a rider. Standalone action (not
      * inside a decision transaction) — persists and flushes immediately.
      *
+     * `$userId` is resolved by the caller from the same no-FK author/
+     * proposer columns `sendSystem()` guards against (submission.user_id,
+     * route_suggestion.user_id, recommended_route.proposed_by) — a deleted
+     * account isn't merely a same-request race here, it's the same
+     * already-dangling-id case, so this gets the identical existence guard
+     * for correctness, not just uniformity.
+     *
      * @throws \InvalidArgumentException if the trimmed body is empty or exceeds 2000 characters
      */
-    public function sendCurator(int $userId, int $curatorId, string $channel, int $refId, string $refLabel, string $bodyText): UserMessage
+    public function sendCurator(int $userId, int $curatorId, string $channel, int $refId, string $refLabel, string $bodyText): ?UserMessage
     {
         $body = $this->normalizeBody($bodyText, false);
+
+        if (!$this->recipientExists($userId)) {
+            return null;
+        }
 
         $message = new UserMessage($userId, UserMessageKind::CuratorMessage, 'curator', $curatorId, $channel, $refId, $refLabel, null, null, $body);
         $this->em->persist($message);
@@ -97,11 +122,24 @@ final class MessageService
      * message recipient is the curator, not the rider). Standalone action —
      * persists and flushes immediately.
      *
+     * `submission.decided_by` (the source of `$recipientCuratorId`) is
+     * another no-FK column, so the deciding curator's account can be gone
+     * by the time the rider replies. `MessagesController::reply` already
+     * checks this before opening the transaction and flashes the same
+     * `messages.reply_too_late` outcome as an already-resolved submission;
+     * this guard is the defense-in-depth backstop for that same race (and
+     * for any future direct caller) — negligible window, documented rather
+     * than specially handled by the caller's transaction.
+     *
      * @throws \InvalidArgumentException if the trimmed body is empty or exceeds 2000 characters
      */
-    public function sendRiderReply(int $recipientCuratorId, int $riderId, string $channel, int $refId, string $refLabel, string $bodyText): UserMessage
+    public function sendRiderReply(int $recipientCuratorId, int $riderId, string $channel, int $refId, string $refLabel, string $bodyText): ?UserMessage
     {
         $body = $this->normalizeBody($bodyText, false);
+
+        if (!$this->recipientExists($recipientCuratorId)) {
+            return null;
+        }
 
         $message = new UserMessage($recipientCuratorId, UserMessageKind::RiderReply, 'rider', $riderId, $channel, $refId, $refLabel, null, null, $body);
         $this->em->persist($message);
@@ -136,6 +174,15 @@ final class MessageService
             'UPDATE user_message SET read_at = now() WHERE user_id = :u AND read_at IS NULL',
             ['u' => $userId],
         );
+    }
+
+    /**
+     * True when `$userId` still has a row in `users` — the deleted-recipient
+     * guard shared by every send* method (see their docblocks).
+     */
+    private function recipientExists(int $userId): bool
+    {
+        return false !== $this->db->fetchOne('SELECT 1 FROM users WHERE id = :id', ['id' => $userId]);
     }
 
     /**

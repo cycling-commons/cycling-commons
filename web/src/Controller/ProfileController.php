@@ -40,7 +40,7 @@ final class ProfileController extends AbstractController
             ->select('s')
             ->from(Submission::class, 's')
             ->where('s.userId = :uid')
-            ->andWhere('s.status != :rejected OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff')
+            ->andWhere('(s.status != :rejected OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff)')
             ->setParameter('uid', (int) $user->getId())
             ->setParameter('rejected', SubmissionStatus::Rejected)
             ->setParameter('cutoff', $retention->cutoff())
