@@ -1019,6 +1019,12 @@ moderate:
     send: 'Envoyer le message'
     sent: 'Message envoyé au cycliste.'
     error: 'Impossible d''envoyer le message.'
+  trash:
+    button: 'Supprimer'
+    confirm: 'Supprimer définitivement ceci comme spam ? Action irréversible, aucun message n''est envoyé.'
+    done: 'Supprimé définitivement.'
+    blocked: 'Seules les propositions soumises ou rejetées peuvent être supprimées.'
+    error: 'Impossible de supprimer cet élément — il a peut-être déjà disparu.'
   rider_reply: 'Le cycliste a répondu'
 moderate_routes:
   title: 'File de modération des itinéraires'

@@ -163,4 +163,41 @@ final class ModerateController extends AbstractController
             'receipt' => null,
         ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
     }
+
+    /**
+     * Trash (moderation-feedback spec M9): an immediate, permanent hard
+     * delete of a spam/abusive submission — any status is legal (unlike a
+     * route proposal, there's no state guardrail here). Audited content-free
+     * by ModerationService; never sends the rider a message.
+     */
+    #[Route('/moderate/trash', name: 'moderate_trash', methods: ['POST'])]
+    public function trash(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('moderate-trash', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        $kind = (string) $request->request->get('kind');
+        $id = (int) $request->request->get('id');
+        /** @var User $curator */
+        $curator = $this->getUser();
+
+        try {
+            if ('submission' !== $kind) {
+                throw new \InvalidArgumentException('Unknown trash kind.');
+            }
+            $this->moderation->trashSubmission($id, $curator);
+            $this->addFlash('success', 'moderate.trash.done');
+        } catch (\InvalidArgumentException) {
+            $this->addFlash('danger', 'moderate.trash.error');
+        }
+
+        // §13 redirect-after-POST: preserve the curator's active filters
+        // instead of resetting to an unfiltered queue.
+        return $this->redirectToRoute('moderate', array_filter([
+            'country' => $request->query->getString('country'),
+            'region' => $request->query->getString('region'),
+            'type' => $request->query->getString('type'),
+        ], static fn (string $v): bool => '' !== $v));
+    }
 }

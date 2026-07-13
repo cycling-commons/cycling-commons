@@ -132,6 +132,16 @@
             <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
           </form>
         </details>
+        <details class="msg-rider trash-confirm">
+          <summary>{{ 'moderate.trash.button'|trans }}</summary>
+          <form method="post" action="{{ path('moderate_routes_trash') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
+            <input type="hidden" name="kind" value="correction">
+            <input type="hidden" name="id" value="{{ s.id }}">
+            <p>{{ 'moderate.trash.confirm'|trans }}</p>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+          </form>
+        </details>
       </div>
     {% endfor %}
   </div>

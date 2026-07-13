@@ -14,6 +14,7 @@ use App\Catalog\RouteSuggestionStatus;
 use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Service\AdminActionLogger;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -31,6 +32,7 @@ final class RouteModerationService
         private readonly EntityManagerInterface $em,
         private readonly int $regionActiveCap,
         private readonly MessageService $messages,
+        private readonly AdminActionLogger $adminLog,
     ) {
     }
 
@@ -140,6 +142,45 @@ final class RouteModerationService
             );
 
             return $s;
+        });
+    }
+
+    /**
+     * Trash (M9): a hard, permanent delete of a route correction (any
+     * status). Its `segments` are a JSON column on the row itself, so the
+     * delete leaves no orphan segment data. Audited content-free FIRST
+     * (AdminActionLogger::log() flushes its own row inside this transaction),
+     * never a UserMessage — trashing never feeds spam.
+     */
+    public function trashSuggestion(int $id, User $curator): void
+    {
+        $this->em->wrapInTransaction(function () use ($id, $curator): void {
+            $s = $this->em->find(RouteSuggestion::class, $id);
+            if (null === $s) {
+                throw new \InvalidArgumentException(sprintf('Suggestion %d not found.', $id));
+            }
+
+            $this->adminLog->log($curator, TrashActions::TrashCorrection, null, sprintf('suggestion %d on route %d', $id, $s->getRouteId()));
+            $this->em->remove($s);
+        });
+    }
+
+    /**
+     * Trash (M9): a hard, permanent delete of a route proposal — ONLY while
+     * it is `submitted` or `rejected`. Never an active/served (unverified,
+     * verified) or retired route (TrashBlockedException guardrail). Audited
+     * content-free FIRST, never a UserMessage — trashing never feeds spam.
+     */
+    public function trashProposal(int $routeId, User $curator): void
+    {
+        $this->em->wrapInTransaction(function () use ($routeId, $curator): void {
+            $route = $this->load($routeId);
+            if (!\in_array($route->getState(), [ItemState::Submitted, ItemState::Rejected], true)) {
+                throw new TrashBlockedException(sprintf('Route %d is %s and cannot be trashed.', $routeId, $route->getState()->value));
+            }
+
+            $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf("route %d '%s' state=%s", $routeId, $route->getName(), $route->getState()->value));
+            $this->em->remove($route);
         });
     }
 

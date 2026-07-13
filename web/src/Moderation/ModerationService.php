@@ -15,6 +15,7 @@ use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Service\AdminActionLogger;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -23,13 +24,14 @@ use Doctrine\ORM\EntityManagerInterface;
  * (moderation spec §9: history records the item's ACTUAL value at apply
  * time — never the submitter's possibly-stale snapshot).
  *
- * @api Called by ModerateController::decide().
+ * @api Called by ModerateController::decide()/trash().
  */
 final class ModerationService
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MessageService $messages,
+        private readonly AdminActionLogger $adminLog,
     ) {
     }
 
@@ -92,6 +94,25 @@ final class ModerationService
             );
 
             return $submission;
+        });
+    }
+
+    /**
+     * Trash (M9): a hard, permanent delete of a submission row in ANY status
+     * — spam/abuse needs no state check, unlike a route proposal. Audited
+     * content-free FIRST (AdminActionLogger::log() flushes its own row inside
+     * this transaction), never a UserMessage — trashing never feeds spam.
+     */
+    public function trashSubmission(int $id, User $curator): void
+    {
+        $this->em->wrapInTransaction(function () use ($id, $curator): void {
+            $submission = $this->em->find(Submission::class, $id);
+            if (null === $submission) {
+                throw new \InvalidArgumentException(sprintf('Unknown submission %d', $id));
+            }
+
+            $this->adminLog->log($curator, TrashActions::TrashSubmission, null, sprintf('SUB-%d · type=%s', $id, $submission->getType()->value));
+            $this->em->remove($submission);
         });
     }
 

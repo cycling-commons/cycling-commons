@@ -1019,6 +1019,12 @@ moderate:
     send: 'Nachricht senden'
     sent: 'Nachricht an den Fahrer gesendet.'
     error: 'Die Nachricht konnte nicht gesendet werden.'
+  trash:
+    button: 'Löschen'
+    confirm: 'Das dauerhaft als Spam löschen? Das kann nicht rückgängig gemacht werden und es wird keine Nachricht gesendet.'
+    done: 'Gelöscht — dauerhaft entfernt.'
+    blocked: 'Nur eingereichte oder abgelehnte Vorschläge können gelöscht werden.'
+    error: 'Konnte das nicht löschen — es ist möglicherweise bereits weg.'
   rider_reply: 'Der Fahrer hat geantwortet'
 moderate_routes:
   title: 'Routen-Moderationswarteschlange'

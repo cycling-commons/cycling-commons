@@ -33,6 +33,9 @@
   .sugg-body{flex:1 1 260px}
   .sugg-reason{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
   .sugg-actions{display:flex;gap:.5rem}
+  /* Nested in .sugg-item's flex row — full-width, borderless (the card border
+     already frames it), unlike the standalone .msg-rider box above. */
+  .sugg-item .msg-rider{flex-basis:100%;border:none;border-top:1px solid rgba(20,22,14,.1);border-radius:0;padding:.6rem 0 0;margin:.4rem 0 0;background:transparent}
 </style>
 {% endblock %}
 
@@ -108,6 +111,19 @@
     </form>
   </details>
 
+  {% if route.state in ['submitted', 'rejected'] %}
+  <details class="msg-rider trash-confirm-proposal">
+    <summary>{{ 'moderate.trash.button'|trans }}</summary>
+    <form method="post" action="{{ path('moderate_routes_trash') }}">
+      <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
+      <input type="hidden" name="kind" value="proposal">
+      <input type="hidden" name="id" value="{{ route.id }}">
+      <p>{{ 'moderate.trash.confirm'|trans }}</p>
+      <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+    </form>
+  </details>
+  {% endif %}
+
   <h2>{{ 'moderate_routes.suggestions.title'|trans }}</h2>
   {% if suggestions is empty %}
     <p>{{ 'moderate_routes.suggestions.empty'|trans }}</p>
@@ -133,6 +149,16 @@
             <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.dismiss'|trans }}</button>
           </form>
         </div>
+        <details class="msg-rider trash-confirm-correction">
+          <summary>{{ 'moderate.trash.button'|trans }}</summary>
+          <form method="post" action="{{ path('moderate_routes_trash') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
+            <input type="hidden" name="kind" value="correction">
+            <input type="hidden" name="id" value="{{ s.id }}">
+            <p>{{ 'moderate.trash.confirm'|trans }}</p>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+          </form>
+        </details>
       </div>
     {% endfor %}
   </div>

@@ -59,4 +59,15 @@
       <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
     </form>
   </details>
+
+  <details class="msg-rider trash-confirm">
+    <summary>{{ 'moderate.trash.button'|trans }}</summary>
+    <form method="post" action="{{ path('moderate_trash') }}">
+      <input type="hidden" name="_token" value="{{ csrf_token('moderate-trash') }}">
+      <input type="hidden" name="kind" value="submission">
+      <input type="hidden" name="id" value="{{ item.id }}">
+      <p>{{ 'moderate.trash.confirm'|trans }}</p>
+      <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+    </form>
+  </details>
 </div>

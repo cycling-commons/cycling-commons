@@ -15,6 +15,7 @@ use App\Moderation\RegionFullException;
 use App\Moderation\RetentionService;
 use App\Moderation\RouteModerationService;
 use App\Moderation\RouteQueue;
+use App\Moderation\TrashBlockedException;
 use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -208,6 +209,40 @@ final class RouteModerateController extends AbstractController
         }
 
         return $this->redirectToRoute('moderate_routes_detail', ['id' => $id]);
+    }
+
+    /**
+     * Trash (moderation-feedback spec M9): an immediate, permanent hard
+     * delete of a route correction (any status) or a route proposal (ONLY
+     * while `submitted` or `rejected` — RouteModerationService enforces the
+     * guardrail). Audited content-free; never sends the rider a message.
+     * Always returns to the index — a trashed route has no detail page left
+     * to redirect back to.
+     */
+    #[Route('/moderate/routes/trash', name: 'moderate_routes_trash', methods: ['POST'])]
+    public function trash(Request $request): Response
+    {
+        $this->validateCsrf($request, 'route-trash');
+
+        $kind = (string) $request->request->get('kind');
+        $id = (int) $request->request->get('id');
+        /** @var User $curator */
+        $curator = $this->getUser();
+
+        try {
+            match ($kind) {
+                'correction' => $this->moderation->trashSuggestion($id, $curator),
+                'proposal' => $this->moderation->trashProposal($id, $curator),
+                default => throw new \InvalidArgumentException('Unknown trash kind.'),
+            };
+            $this->addFlash('success', 'moderate.trash.done');
+        } catch (TrashBlockedException) {
+            $this->addFlash('danger', 'moderate.trash.blocked');
+        } catch (\InvalidArgumentException) {
+            $this->addFlash('danger', 'moderate_routes.error.undecidable');
+        }
+
+        return $this->redirectToRoute('moderate_routes');
     }
 
     private function validateCsrf(Request $request, string $id): void

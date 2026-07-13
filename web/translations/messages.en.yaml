@@ -1019,6 +1019,12 @@ moderate:
     send: 'Send message'
     sent: 'Message sent to the rider.'
     error: 'Could not send the message.'
+  trash:
+    button: 'Trash'
+    confirm: 'Permanently delete this as spam? This cannot be undone and sends no message.'
+    done: 'Trashed — permanently deleted.'
+    blocked: 'Only submitted or rejected proposals can be trashed.'
+    error: 'Could not trash that — it may already be gone.'
   rider_reply: 'Rider replied'
 moderate_routes:
   title: 'Routes moderation desk'
