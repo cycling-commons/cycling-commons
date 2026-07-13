@@ -2070,6 +2070,35 @@
       if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
       m.go(); }
     const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
+    // Any-town live place search via Photon (spec 2026-07-14 §3.2) — Photon,
+    // not Nominatim: Nominatim's usage policy forbids type-ahead. Wallonia
+    // bbox, place types only, ≥3 chars, 350 ms debounce, one in-flight request
+    // (stale ones aborted). On error/timeout search silently degrades to the
+    // local index + hardcoded quick-picks — no toast. Host already in CSP.
+    let _phAbort=null, _phHits=[], _phQ='';
+    const PH_URL='https://photon.komoot.io/api/?limit=6&bbox=2.75,49.45,6.55,50.90'
+      +'&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village&osm_tag=place:hamlet&osm_tag=place:municipality';
+    function runPhoton(qRaw){
+      const q=qRaw.trim();
+      if(q.length<3){ _phHits=[]; _phQ=''; return; }
+      if(_phAbort) _phAbort.abort();
+      const ctl=new AbortController(); _phAbort=ctl;
+      fetch(PH_URL+'&q='+encodeURIComponent(q), {signal:ctl.signal})
+        .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
+        .then(d=>{
+          if(ctl.signal.aborted) return;
+          const seen=new Set(Object.keys(CITIES).map(n=>slug(n)));   // quick-picks win over their Photon twin
+          _phHits=(d.features||[])
+            .filter(f=>f && f.properties && f.properties.name && f.geometry && Array.isArray(f.geometry.coordinates))
+            .filter(f=>{ const k=slug(f.properties.name); if(!k || seen.has(k)) return false; seen.add(k); return true; })
+            .map(f=>{ const c=f.geometry.coordinates, name=f.properties.name;
+              return {name, key:slug(name), kind:'Town', badge:'◎', color:'#3E7D8C', town:true, ph:1,
+                go:()=>openPlace(name, {ll:[+c[1],+c[0]]})}; });
+          _phQ=slug(q);
+          if(!sRes.hidden) runS();   // merge into the open dropdown
+        })
+        .catch(()=>{});   // abort / network / quota — degrade silently
+    }
     function runS(){
       const q=slug(sBox.value.trim());
       if(!q){ closeS(); return; }
@@ -2081,6 +2110,7 @@
       // around a populous town). sMatches stays flat in display order so the
       // existing keyboard navigation is untouched; group headers aren't options.
       const towns=ranked.filter(m=>m.town), items=ranked.filter(m=>!m.town);
+      if(_phQ===q) towns.push(..._phHits.slice(0, Math.max(0, 6-towns.length)));   // geocoded towns behind local ones
       const byLetter={};
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       const groups=towns.length?[{label:'Places', rows:towns}]:[];
@@ -2101,8 +2131,9 @@
     // cost was a full index scan, an innerHTML rebuild AND fresh per-result
     // listeners — the pattern that degrades linearly as the catalog grows.
     sRes.addEventListener('click', e=>{ const b=e.target.closest('button[data-i]'); if(b) pickS(+b.dataset.i); });
-    let _sDeb=null;
-    sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150); });
+    let _sDeb=null, _phDeb=null;
+    sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150);
+      clearTimeout(_phDeb); _phDeb=setTimeout(()=>runPhoton(sBox.value),350); });
     sBox.addEventListener('keydown', e=>{
       if(sRes.hidden){ if(e.key==='ArrowDown') runS(); return; }
       if(e.key==='ArrowDown'){ e.preventDefault(); sHL=Math.min(sHL+1, sMatches.length-1); hlS(); }
