@@ -1,0 +1,27 @@
+web/tests/Security/CspTest.php
+  s_13ad1b1238a7e6::t_2bc9b86563c7e4 36-60
+  s_13ad1b1238a7e6::t_44addedf5733e6 35
+web/src/EventSubscriber/CspSubscriber.php
+  s_13ad1b1238a7e6::t_b2dca6c72deeb5 56-67,70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "6ae4974ed1cb596ce26a00b26a0896fcf2c3ea15",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_13ad1b1238a7e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed2e8d61-4e83-4569-b8f3-a2ac8bdc16c8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
