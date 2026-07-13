@@ -290,6 +290,19 @@
   .cc-rc-login{font-size:.82rem;color:rgba(239,230,212,.8)}
   .cc-rc-login a{color:var(--trail)}
   .cc-rc-anon .cc-rc-ride,.cc-rc-anon .cc-rc-vote,.cc-rc-anon .cc-rc-suggest{opacity:.5;pointer-events:none}
+  /* Community confirmation panel (water potability / "still here?"). */
+  .cc-cf{margin-top:.7rem}
+  .cc-cf-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.8);margin-bottom:.45rem}
+  .cc-cf-total{color:var(--glacier);text-transform:none;letter-spacing:0}
+  .cc-cf-row{display:flex;flex-wrap:wrap;gap:.5rem}
+  .cc-cf-btn{flex:none;padding:.45rem .8rem;border-radius:5px;border:1px solid var(--trail);background:transparent;
+    color:var(--trail);font-family:var(--sans);font-weight:700;font-size:.8rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem}
+  .cc-cf-btn:hover:not(:disabled){background:var(--trail);color:var(--ink)}
+  .cc-cf-btn:disabled{cursor:default;color:var(--glacier);border-color:rgba(143,182,168,.5)}
+  .cc-cf-btn.is-mine{background:var(--trail);color:var(--ink)}
+  .cc-cf-n{font-family:var(--mono);font-size:.74rem;font-weight:600;opacity:.85}
+  .cc-cf-login{font-size:.82rem;color:rgba(239,230,212,.8);margin-top:.4rem}
+  .cc-cf-login a{color:var(--trail)}
   .cc-diff{margin-top:1rem;display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.62rem;
     letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
   .cc-diff-scale{display:flex;align-items:center;gap:.34rem}

@@ -1240,7 +1240,14 @@
         ${modHist}
       </div>`;
     }
-    const vote = (f.cur && layer.key!=='experience') ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
+    // Only votable point types get the vote CTA. Utilities are confirmed, not
+    // voted — the erroneous vote link used to show on water/services/etc.
+    const vote = (f.cur && CC_VOTABLE.has(layer.key)) ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
+    // Non-votable utilities carry a community confirmation panel (water:
+    // potable/not-potable, others: "still here?"), hydrated async on open.
+    const confirmPanel = (CC_CONFIRMABLE.has(layer.key) && f.id!=null)
+      ? `<div class="cc-cf" data-item="${f.id}"><div class="cc-cf-body" data-cf-body></div><div class="cc-cf-login" hidden>Log in to confirm · <a href="/login">Log in</a></div></div>`
+      : '';
     const act = edit + vote;
     const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
     // C1-T3 (spec W5): an empty placeholder for the async "Recent changes"
@@ -1254,7 +1261,7 @@
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}${moderate}${histSlot}`;
+      <div class="cc-d-src">Source · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, '<a href="https://www.openstreetmap.org" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>').replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${act}${confirmPanel}${moderate}${histSlot}`;
   }
   // C1-T3: renders one change_history row. Every interpolated value is
   // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`
@@ -1308,6 +1315,14 @@
   const CC_SEASONS=['spring','summer','autumn','winter'];
   const CC_REASONS=[['broken-track','Wrong / broken track'],['trim-privacy','Trim a private start/end'],['duplicate','Duplicate of another route'],['not-rideable','Not actually rideable'],['other','Something else']];
   const _rcTokens={};   // route id → CSRF token from the last snapshot
+
+  // Votable point types (climbs/stays/scenic/history) carry the vote CTA;
+  // routes (experience) have their own vote block. Non-votable UTILITIES are
+  // confirmed, not voted: water carries a potable/not-potable judgement, the
+  // rest a plain "still here?" confirmation. Keys match the CATALOG layer keys.
+  const CC_VOTABLE=new Set(['climbs','stays','scenic','history']);
+  const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter']);
+  const _cfTokens={};   // item id → CSRF token from the last confirmations snapshot
 
   function routeCommunityPanel(id, state){
     const bikeOpts=CC_BIKES.map(b=>`<option value="${b}">${b}</option>`).join('');
@@ -1366,6 +1381,50 @@
     if(s.iRode){ const b=box.querySelector('[data-rc-act="rode-it"]'); if(b){ b.textContent='✓ You rode this'; b.disabled=true; } }
     if(s.iVotedThisSeason){ const b=box.querySelector('[data-rc-act="vote"]'); if(b){ b.textContent='✓ Voted this season'; b.disabled=true; } }
   }
+
+  // --- Community confirmations for non-votable utilities (water potability /
+  // "still here?"). Public counts, login to confirm — mirrors the route
+  // community loop but simpler (one toggle-able stance per rider). ---
+  const CC_CF_STANCES={
+    potability:[['potable','✓ Potable'],['not_potable','✗ Not potable']],
+    existence:[['exists','✓ Confirm it’s here']],
+  };
+  function hydrateItemConfirm(id){
+    const box=document.querySelector(`.cc-cf[data-item="${id}"]`); if(!box) return;
+    fetch(`/items/${id}/confirmations`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
+      .then(r=>{ if(!r.ok) throw new Error('confirm'); return r.json(); })
+      .then(s=>{ if(s.token) _cfTokens[id]=s.token; paintItemConfirm(box, s); })
+      .catch(()=>{});   // enhancement only — never blocks the drawer
+  }
+  function paintItemConfirm(box, s){
+    const authed=!!s.token;
+    const defs=CC_CF_STANCES[s.stanceKind]||CC_CF_STANCES.existence;
+    const heading = s.stanceKind==='potability'
+      ? `Is the water drinkable?` : `Is this still here?`;
+    const btns=defs.map(([v,l])=>{
+      const n=(s.stances&&s.stances[v])||0;
+      const mine=s.mine===v?' is-mine':'';
+      return `<button class="cc-cf-btn${mine}" data-cf-act="${v}"${authed?'':' disabled'}>${l} <span class="cc-cf-n">${n}</span></button>`;
+    }).join('');
+    const total = s.total ? `<span class="cc-cf-total">· ${s.total} rider${s.total===1?'':'s'} confirmed</span>` : '';
+    box.querySelector('[data-cf-body]').innerHTML =
+      `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>`;
+    box.querySelector('.cc-cf-login').hidden = authed;
+  }
+  // Delegated: clicking a stance button records/switches it, then repaints.
+  document.addEventListener('click', e=>{
+    const btn=e.target.closest('[data-cf-act]'); if(!btn) return;
+    const box=btn.closest('.cc-cf'); if(!box) return;
+    const id=box.getAttribute('data-item'), token=_cfTokens[id];
+    if(!token){ mapToast('Please log in to confirm.'); return; }
+    const body=new URLSearchParams(); body.set('_token', token); body.set('stance', btn.getAttribute('data-cf-act'));
+    box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=true);
+    fetch(`/items/${id}/confirm`, {method:'POST', credentials:'same-origin',
+      headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:body.toString()})
+      .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(s=>{ paintItemConfirm(box, s); mapToast('Thanks — recorded.'); })
+      .catch(()=>{ box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false); mapToast('Could not record that — please try again.'); });
+  });
 
   // Flag a picker the rider left on its placeholder: red border + focus + toast.
   function warnPick(sel, msg){ if(sel){ sel.classList.add('cc-rc-invalid'); sel.focus(); } mapToast(msg); }
@@ -1592,6 +1651,7 @@
     }
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
     if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
+    if(CC_CONFIRMABLE.has(layer.key) && f.id!=null) hydrateItemConfirm(f.id);
     // C1-T3: async "Recent changes" — see loadItemHistory for the race guard.
     // Pending (moderation) features carry no f.id; when they target a real
     // item (f.pending.itemId, i.e. an edit — never a brand-new submission,
