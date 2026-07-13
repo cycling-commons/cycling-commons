@@ -1,0 +1,22 @@
+docs/specs/2026-06-26-html-to-symfony-migration-design.md
+  s_c50d64f7fec2b1::t_7c88cb61eaa421 141,146
+  s_c50d64f7fec2b1::t_94499261590ecc 147
+web/src/DataFixtures/AppFixtures.php
+  s_c50d64f7fec2b1::t_6e985df0c89470 75-81,84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "55a7291d1f03f84c1a2a32ea3b939af5fa18edb1",
+  "prompts": {},
+  "sessions": {
+    "s_c50d64f7fec2b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "822a7642-0b8b-4088-a14e-d46df4e41717",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
