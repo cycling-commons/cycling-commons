@@ -85,20 +85,28 @@ final class ImportWorldDataCommand extends Command
         /** @var array<string, string> $parentOf */
         $parentOf = [];
         $total = 0;
-        foreach ($countries as $iso2 => $country) {
-            foreach ($subDb->getAllByCountryCode($iso2) as $s) {
-                $code = strtoupper($s->getCode());
-                $sd = $subRepo->findOneBy(['code' => $code]) ?? new Subdivision();
-                $sd->setCode($code)->setName($s->getName())->setType($s->getType() ?: null)->setCountry($country);
-                $this->em->persist($sd);
-                $byCode[$code] = $sd;
-                $parent = $s->getParent();
-                if (\is_string($parent) && '' !== $parent) {
-                    $parentOf[$code] = strtoupper($parent);
-                }
-                if (0 === ++$total % 500) {
-                    $this->em->flush();
-                }
+        // Iterate the whole subdivision database rather than getAllByCountryCode()
+        // per country: sokil's index-based lookups (find()/getAllByCountryCode)
+        // return entries with a NULL parent, whereas plain iteration hydrates the
+        // full entry including `parent`. Using the country lookup left every
+        // parent link (and therefore every level) unset (review #29). The country
+        // is the alpha-2 prefix of the ISO 3166-2 code ("BE-VAN" → "BE").
+        foreach ($subDb as $s) {
+            $code = strtoupper($s->getCode());
+            $country = $countries[substr($code, 0, 2)] ?? null;
+            if (null === $country) {
+                continue; // a subdivision for a country outside our set
+            }
+            $sd = $subRepo->findOneBy(['code' => $code]) ?? new Subdivision();
+            $sd->setCode($code)->setName($s->getName())->setType($s->getType() ?: null)->setCountry($country);
+            $this->em->persist($sd);
+            $byCode[$code] = $sd;
+            $parent = $s->getParent();
+            if (\is_string($parent) && '' !== $parent) {
+                $parentOf[$code] = strtoupper($parent);
+            }
+            if (0 === ++$total % 500) {
+                $this->em->flush();
             }
         }
         $this->em->flush();

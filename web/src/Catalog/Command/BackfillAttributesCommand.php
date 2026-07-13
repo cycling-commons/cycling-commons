@@ -93,10 +93,13 @@ final class BackfillAttributesCommand extends Command
 
         try {
             $this->db->beginTransaction();
-            [$itemCounts, $itemAttrs] = $this->backfillItemTable($io);
-            $routeCounts = $this->backfillRouteTable($io);
+            [$itemCounts, $itemAttrs] = $this->backfillTable('item', $io);
+            $routeCounts = $this->backfillTable('recommended_route', $io);
             $this->db->commit();
-        } catch (\JsonException|DBALException $e) {
+        } catch (\JsonException|DBALException|\InvalidArgumentException $e) {
+            // Include \InvalidArgumentException: AttributeVocabulary::assertValid()
+            // throws it on a vocabulary violation, which previously escaped this
+            // handler and left the transaction open (#36).
             if ($this->db->isTransactionActive()) {
                 $this->db->rollBack();
             }
@@ -124,26 +127,41 @@ final class BackfillAttributesCommand extends Command
         return Command::SUCCESS;
     }
 
-    /** @return array{0: array<string, int>, 1: int} [letter => items-backfilled, total attrs written] */
-    private function backfillItemTable(SymfonyStyle $io): array
+    /**
+     * The item and recommended_route (letter K) tables carry the same baked
+     * `record` shape and are backfilled identically — one loop, parameterised
+     * by table (#58). K lives in its own table with no `letter` column, so its
+     * type is fixed to QualityRides; item rows resolve their type per `letter`.
+     *
+     * @return array{0: array<string, int>, 1: int, items: int, attrs: int}
+     *                                                                      [letter => items-backfilled, total
+     *                                                                      attrs written] plus items/attrs
+     *                                                                      aliases for the route caller
+     */
+    private function backfillTable(string $table, SymfonyStyle $io): array
     {
-        /** @var list<array{id: int|string, letter: string, attributes: string}> $rows */
+        // $table is a class-internal constant, never user input.
+        $letterColumn = 'recommended_route' === $table ? '' : 'letter, ';
+        $noun = 'recommended_route' === $table ? 'route' : 'item';
+
+        /** @var list<array{id: int|string, letter?: string, attributes: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             // jsonb_exists(), not the `?` operator: DBAL/PDO would otherwise try to
             // parse `?` as a positional bind placeholder in this parameterless query.
-            "SELECT id, letter, attributes::text AS attributes FROM item WHERE jsonb_exists(attributes, 'record') ORDER BY id",
+            sprintf("SELECT id, %sattributes::text AS attributes FROM %s WHERE jsonb_exists(attributes, 'record') ORDER BY id", $letterColumn, $table),
         );
 
         $counts = [];
         $totalAttrs = 0;
         foreach ($rows as $row) {
-            $type = ItemType::fromParam($row['letter']);
+            $type = isset($row['letter']) ? ItemType::fromParam($row['letter']) : ItemType::QualityRides;
+            $letter = $type->letter();
             /** @var array<string, mixed> $attributes */
             $attributes = json_decode($row['attributes'], true, 512, \JSON_THROW_ON_ERROR);
 
             [$updated, $written, $skipped] = $this->backfillOne($type, $attributes);
             foreach ($skipped as $reason) {
-                $io->note(sprintf('item %s (%s): %s', $row['id'], $row['letter'], $reason));
+                $io->note(sprintf('%s %s (%s): %s', $noun, $row['id'], $letter, $reason));
             }
             if (null === $updated) {
                 continue;
@@ -151,48 +169,14 @@ final class BackfillAttributesCommand extends Command
 
             $this->vocabulary->assertValid($type, $updated);
             $this->db->executeStatement(
-                'UPDATE item SET attributes = :attrs, updated_at = NOW() WHERE id = :id',
+                sprintf('UPDATE %s SET attributes = :attrs, updated_at = NOW() WHERE id = :id', $table),
                 ['attrs' => json_encode($updated, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION), 'id' => $row['id']],
             );
-            $counts[$row['letter']] = ($counts[$row['letter']] ?? 0) + 1;
+            $counts[$letter] = ($counts[$letter] ?? 0) + 1;
             $totalAttrs += $written;
         }
 
-        return [$counts, $totalAttrs];
-    }
-
-    /** @return array{items: int, attrs: int} */
-    private function backfillRouteTable(SymfonyStyle $io): array
-    {
-        /** @var list<array{id: int|string, attributes: string}> $rows */
-        $rows = $this->db->fetchAllAssociative(
-            "SELECT id, attributes::text AS attributes FROM recommended_route WHERE jsonb_exists(attributes, 'record') ORDER BY id",
-        );
-
-        $items = 0;
-        $attrs = 0;
-        foreach ($rows as $row) {
-            /** @var array<string, mixed> $attributes */
-            $attributes = json_decode($row['attributes'], true, 512, \JSON_THROW_ON_ERROR);
-
-            [$updated, $written, $skipped] = $this->backfillOne(ItemType::QualityRides, $attributes);
-            foreach ($skipped as $reason) {
-                $io->note(sprintf('route %s: %s', $row['id'], $reason));
-            }
-            if (null === $updated) {
-                continue;
-            }
-
-            $this->vocabulary->assertValid(ItemType::QualityRides, $updated);
-            $this->db->executeStatement(
-                'UPDATE recommended_route SET attributes = :attrs, updated_at = NOW() WHERE id = :id',
-                ['attrs' => json_encode($updated, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION), 'id' => $row['id']],
-            );
-            ++$items;
-            $attrs += $written;
-        }
-
-        return ['items' => $items, 'attrs' => $attrs];
+        return [$counts, $totalAttrs, 'items' => array_sum($counts), 'attrs' => $totalAttrs];
     }
 
     /**

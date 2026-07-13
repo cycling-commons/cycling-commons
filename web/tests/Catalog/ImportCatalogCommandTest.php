@@ -112,6 +112,45 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertGreaterThan($epoch, $shop->getImportedAt());        // harvest touch ALWAYS bumps
     }
 
+    /**
+     * #26: a re-harvest must not clobber a curator-approved rider edit. An
+     * approved edit leaves change_history rows for the item; the upsert keeps
+     * the DB content for such items and only refreshes imported_at.
+     */
+    public function testReimportPreservesCuratorApprovedEdits(): void
+    {
+        $dir = $this->fixturesDir();
+        $this->runImport($dir)->assertCommandIsSuccessful();
+
+        $shop = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1001']);
+        self::assertNotNull($shop);
+        self::assertSame('Ecocyclo', $shop->getName());
+        self::assertSame('Bike shop', $shop->getAttributes()['t']);
+        $itemId = $shop->getId();
+
+        // Simulate an approved rider edit: change content AND leave the
+        // change_history trail moderation would (ModerationService::applyEdit).
+        $conn = $this->em->getConnection();
+        $conn->executeStatement(
+            "UPDATE item SET name = 'Curated Bike Hub', attributes = jsonb_set(attributes, '{t}', '\"Curated shop\"') WHERE id = :id",
+            ['id' => $itemId],
+        );
+        $conn->executeStatement(
+            "INSERT INTO change_history (item_id, submission_id, field, old_value, new_value, changed_by, changed_at)
+             VALUES (:id, 1, 'name', '\"Ecocyclo\"', '\"Curated Bike Hub\"', 1, NOW())",
+            ['id' => $itemId],
+        );
+        $this->em->clear();
+
+        // Re-import the SAME harvest (which still says 'Ecocyclo' / 'Bike shop').
+        $this->runImport($dir)->assertCommandIsSuccessful();
+
+        $shop = $this->em->getRepository(Item::class)->findOneBy(['id' => $itemId]);
+        self::assertNotNull($shop);
+        self::assertSame('Curated Bike Hub', $shop->getName(), 'curated name must survive re-import');
+        self::assertSame('Curated shop', $shop->getAttributes()['t'], 'curated attribute must survive re-import');
+    }
+
     public function testMalformedJsonFailsCleanly(): void
     {
         $dir = sys_get_temp_dir().'/catalog-import-broken-'.getmypid();

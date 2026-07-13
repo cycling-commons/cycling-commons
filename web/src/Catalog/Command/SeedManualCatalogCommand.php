@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Catalog\Command;
 
 use App\Catalog\Import\AttributeVocabulary;
+use App\Catalog\Import\ItemUpsert;
 use App\Catalog\ItemType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
@@ -353,16 +354,7 @@ final class SeedManualCatalogCommand extends Command
                 }
 
                 $this->db->executeStatement(
-                    'INSERT INTO item (letter, name, geom, country_code, subdivision_id, state, source, source_ref, attributes, created_at, updated_at, imported_at)
-                     VALUES (:letter, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :cc, :sub, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())
-                     ON CONFLICT (source, source_ref, letter) DO UPDATE SET
-                       name = EXCLUDED.name, geom = EXCLUDED.geom,
-                       country_code = EXCLUDED.country_code, subdivision_id = EXCLUDED.subdivision_id,
-                       attributes = EXCLUDED.attributes,
-                       updated_at = CASE WHEN (item.name, ST_AsEWKB(item.geom), item.country_code, item.subdivision_id, item.attributes)
-                                         IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.country_code, EXCLUDED.subdivision_id, EXCLUDED.attributes)
-                                    THEN NOW() ELSE item.updated_at END,
-                       imported_at = NOW()',
+                    ItemUpsert::SQL,
                     [
                         'letter' => $pin['letter'],
                         'name' => $pin['name'],
