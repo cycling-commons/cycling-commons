@@ -14,10 +14,12 @@ use App\Form\AddClimbType;
 use App\Form\ImproveType;
 use App\Form\VoteType;
 use App\Routing\LocalePrefix;
+use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -67,41 +69,28 @@ final class ContributeController extends AbstractController
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('error', 'contribute.error.rate_limited');
 
-                return $this->render('contribute/add_climb.html.twig', [
-                    'page_title' => 'meta.add_climb_title',
-                    'page_description' => 'meta.add_climb_description',
-                    'nav_active' => 'add_climb',
-                    'receipt' => null,
-                    'form' => $form,
-                ]);
+                return $this->renderAddClimb(form: $form);
             } catch (ValidationFailedException $e) {
                 foreach ($e->getViolations() as $violation) {
                     $form->addError(new FormError((string) $violation->getMessage()));
                 }
 
-                return $this->render('contribute/add_climb.html.twig', [
-                    'page_title' => 'meta.add_climb_title',
-                    'page_description' => 'meta.add_climb_description',
-                    'nav_active' => 'add_climb',
-                    'receipt' => null,
-                    'form' => $form,
-                ]);
+                return $this->renderAddClimb(form: $form);
             }
 
-            return $this->render('contribute/add_climb.html.twig', [
-                'page_title' => 'meta.add_climb_title',
-                'page_description' => 'meta.add_climb_description',
-                'nav_active' => 'add_climb',
-                'receipt' => $receipt,
-                'form' => null,
-            ]);
+            return $this->renderAddClimb(receipt: $receipt);
         }
 
+        return $this->renderAddClimb(form: $form);
+    }
+
+    private function renderAddClimb(?ContributionReceipt $receipt = null, ?FormInterface $form = null): Response
+    {
         return $this->render('contribute/add_climb.html.twig', [
             'page_title' => 'meta.add_climb_title',
             'page_description' => 'meta.add_climb_description',
             'nav_active' => 'add_climb',
-            'receipt' => null,
+            'receipt' => $receipt,
             'form' => $form,
         ]);
     }

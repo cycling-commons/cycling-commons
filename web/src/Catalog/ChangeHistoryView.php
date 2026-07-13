@@ -49,7 +49,7 @@ final class ChangeHistoryView
                 'field' => (string) $r['field'],
                 'oldValue' => $this->decode($r['old_value']),
                 'newValue' => $this->decode($r['new_value']),
-                'who' => 'rider#'.substr(hash('crc32b', 'cc-sub-'.$r['changed_by']), 0, 4),
+                'who' => RiderPseudonym::for($r['changed_by']),
                 'when' => RelativeTime::ago($changedAt, $now),
                 'changedAt' => $changedAt->format(\DateTimeInterface::ATOM),
             ];

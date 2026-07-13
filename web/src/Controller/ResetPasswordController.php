@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Form\ChangePasswordFormType;
 use App\Form\ResetPasswordRequestFormType;
 use App\Repository\UserRepository;
+use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,12 +26,7 @@ use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
 /**
  * @api Instantiated by Symfony's router; never referenced from code.
  */
-#[Route([
-    'en' => '/reset-password',
-    'fr' => '/fr/reset-password',
-    'nl' => '/nl/reset-password',
-    'de' => '/de/reset-password',
-])]
+#[Route(LocalePrefix::PATHS)]
 final class ResetPasswordController extends AbstractController
 {
     use ResetPasswordControllerTrait;
@@ -41,7 +37,7 @@ final class ResetPasswordController extends AbstractController
     ) {
     }
 
-    #[Route('', name: 'reset_password_request', methods: ['GET', 'POST'])]
+    #[Route('/reset-password', name: 'reset_password_request', methods: ['GET', 'POST'])]
     public function request(Request $request, MailerInterface $mailer, UserRepository $userRepository): Response
     {
         $form = $this->createForm(ResetPasswordRequestFormType::class);
@@ -61,7 +57,7 @@ final class ResetPasswordController extends AbstractController
         ]);
     }
 
-    #[Route('/check-email', name: 'check_email', methods: ['GET'])]
+    #[Route('/reset-password/check-email', name: 'check_email', methods: ['GET'])]
     public function checkEmail(): Response
     {
         // If the user arrives here without a token object in the session, they came directly.
@@ -77,7 +73,7 @@ final class ResetPasswordController extends AbstractController
         ]);
     }
 
-    #[Route('/reset/{token}', name: 'reset_password', methods: ['GET', 'POST'])]
+    #[Route('/reset-password/reset/{token}', name: 'reset_password', methods: ['GET', 'POST'])]
     public function reset(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,

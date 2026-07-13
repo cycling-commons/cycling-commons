@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Moderation;
 
+use App\Catalog\RiderPseudonym;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Clock\ClockInterface;
 
@@ -138,7 +139,7 @@ final class SubmissionQueue
                 'title' => (string) $r['title'],
                 'lat' => (float) $r['lat'],
                 'lng' => (float) $r['lng'],
-                'who' => 'rider#'.substr(hash('crc32b', 'cc-sub-'.$r['user_id']), 0, 4),
+                'who' => RiderPseudonym::for($r['user_id']),
                 'when' => RelativeTime::ago(new \DateTimeImmutable((string) $r['created_at']), $now),
                 'body' => (string) $r['body'],
                 'was' => implode(' · ', $was),

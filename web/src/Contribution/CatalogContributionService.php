@@ -166,11 +166,10 @@ final class CatalogContributionService implements ContributionStubInterface
             // than silently discarded, while an always-empty field records no
             // phantom change.
             $now = self::normalizeEmpty($rawNow);
-            // 'name' is a pseudo-field: it lives on Item::name, never in
-            // attributes (ModerationService::applyEdit treats it the same
-            // way) — comparing it against $currentAttrs would always see
-            // null and wrongly record an unchanged name as a "change".
-            $was = 'name' === $field ? $item->getName() : ($currentAttrs[$field] ?? null);
+            // The name pseudo-field lives on Item::name, never in attributes
+            // (see Item::NAME_FIELD) — comparing it against $currentAttrs would
+            // always see null and wrongly record an unchanged name as a "change".
+            $was = Item::NAME_FIELD === $field ? $item->getName() : ($currentAttrs[$field] ?? null);
             if (self::normalizeEmpty($was) !== $now) {
                 $changes[$field] = ['was' => $was, 'now' => $now];
             }

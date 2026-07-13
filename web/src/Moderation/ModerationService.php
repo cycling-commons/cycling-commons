@@ -140,11 +140,11 @@ final class ModerationService
         $changed = false;
         foreach ($submission->getChanges() as $field => $pair) {
             $now = $pair['now'] ?? null;
-            $actualOld = 'name' === $field ? $item->getName() : ($attributes[$field] ?? null);
+            $actualOld = Item::NAME_FIELD === $field ? $item->getName() : ($attributes[$field] ?? null);
             if ($actualOld === $now) {
                 continue; // nothing left to apply for this field
             }
-            if ('name' === $field) {
+            if (Item::NAME_FIELD === $field) {
                 $item->setName((string) $now);
             } elseif (null === $now) {
                 // A cleared field: remove the attribute rather than storing a

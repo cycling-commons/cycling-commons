@@ -25,6 +25,14 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_item_source_ref_letter', columns: ['source', 'source_ref', 'letter'])]
 class Item
 {
+    /**
+     * The one pseudo-field name that lives on Item::name, never in the jsonb
+     * `attributes` map. Change-detection (CatalogContributionService) and
+     * apply-on-approve (ModerationService) both special-case it; referencing
+     * this constant keeps that rule in one place (review #42).
+     */
+    public const string NAME_FIELD = 'name';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'bigint')]
