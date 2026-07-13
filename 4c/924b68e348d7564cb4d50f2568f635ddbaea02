@@ -1,0 +1,37 @@
+web/src/Catalog/Import/ItemUpsert.php
+  s_50ae7f4c1fd9e4::t_e088dfb6e598c7 1-42
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_50ae7f4c1fd9e4::t_8c3e6fc0697174 154
+  s_50ae7f4c1fd9e4::t_218e336652bca0 10
+  s_50ae7f4c1fd9e4::t_667b90953848cc 151-152
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_50ae7f4c1fd9e4::t_e6c19e3c3f7500 115-153
+web/tests/World/SubdivisionParentDataTest.php
+  s_50ae7f4c1fd9e4::t_62b34b97358831 1-12,19-21,23-25,28,31-32,34,45-46
+  s_50ae7f4c1fd9e4::t_27f1508a52a733 13-18,22,26-27,29-30,33,35-44
+web/src/World/Command/ImportWorldDataCommand.php
+  s_50ae7f4c1fd9e4::t_6fcaab06c24b0b 88-109
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_50ae7f4c1fd9e4::t_a730a418fb55d6 10
+  s_50ae7f4c1fd9e4::t_16fd4aac82b08d 357
+web/src/Catalog/Command/BackfillAttributesCommand.php
+  s_50ae7f4c1fd9e4::t_c6096b901d3145 96-97,99-102
+  s_50ae7f4c1fd9e4::t_59e54a3f629d03 130-136,140-141,143-147,151,157-158,164,172,175,179
+  s_50ae7f4c1fd9e4::t_5bb080621f3f2f 137-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "4c924b68e348d7564cb4d50f2568f635ddbaea02",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
