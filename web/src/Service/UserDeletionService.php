@@ -57,13 +57,26 @@ final class UserDeletionService
             return false;
         }
 
+        $this->purge($user);
+        $this->em->flush();
+
+        return true;
+    }
+
+    /**
+     * Run every UserDeletionHookInterface pre-delete hook, then remove the user.
+     * The caller controls the surrounding flush/transaction — this is the shared
+     * seam both self-service confirmation and admin removal must go through so
+     * contributed data is anonymised (never cascade-deleted) on either path.
+     *
+     * @api Called by self-service confirmDeletion and admin UserAdminService.
+     */
+    public function purge(User $user): void
+    {
         foreach ($this->hooks as $hook) {
             $hook->preDelete($user);
         }
 
         $this->em->remove($user);
-        $this->em->flush();
-
-        return true;
     }
 }

@@ -16,8 +16,20 @@ final class SpyDeletionHook implements UserDeletionHookInterface
 {
     public static int $callCount = 0;
 
+    /** When true, preDelete throws — lets tests assert deletion rolls back atomically. */
+    public static bool $throwOnPreDelete = false;
+
+    public static function reset(): void
+    {
+        self::$callCount = 0;
+        self::$throwOnPreDelete = false;
+    }
+
     public function preDelete(User $user): void
     {
         ++self::$callCount;
+        if (self::$throwOnPreDelete) {
+            throw new \RuntimeException('spy hook failure');
+        }
     }
 }

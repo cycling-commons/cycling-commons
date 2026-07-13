@@ -34,6 +34,7 @@ final class UserAdminService
         private readonly EntityManagerInterface $em,
         private readonly UserRepository $users,
         private readonly AdminActionLogger $logger,
+        private readonly UserDeletionService $deletion,
     ) {
     }
 
@@ -102,14 +103,21 @@ final class UserAdminService
         $this->assertNotSelf($target, $actor);
         $this->assertNotLastAdmin($target);
 
-        // Log first (target still exists); the target FK becomes NULL when the
-        // row is deleted (ON DELETE SET NULL), so snapshot the email into the note.
-        // Commons rule: personal data goes; contributed data (none yet) is anonymised,
-        // never cascade-deleted — see docs/specs/2026-07-01-admin-panel-account-support-design.md §7.
-        $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account: '.$target->getEmail());
-
-        $this->em->remove($target);
-        $this->em->flush();
+        $email = $target->getEmail();
+        // Audit + deletion are one transaction: a failure in either (e.g. a
+        // deletion hook) rolls BOTH back, so the audit trail can never claim a
+        // removal that did not happen (#15).
+        $this->em->wrapInTransaction(function () use ($actor, $target, $email): void {
+            // Log first (target still exists); the target FK becomes NULL when the
+            // row is deleted (ON DELETE SET NULL), so snapshot the email into the note.
+            // Commons rule: personal data goes; contributed data is anonymised,
+            // never cascade-deleted — see docs/specs/2026-07-01-admin-panel-account-support-design.md §7.
+            $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account: '.$email);
+            // Route through the shared deletion seam so admin removal runs the
+            // same UserDeletionHookInterface anonymisation as self-service (#41).
+            $this->deletion->purge($target);
+            $this->em->flush();
+        });
     }
 
     public function cancelPendingRemoval(User $target, User $actor): void
@@ -140,20 +148,22 @@ final class UserAdminService
     /** Add or remove an elevated role, never storing the implicit ROLE_USER. */
     private function setRole(User $user, string $role, bool $enabled): void
     {
-        $roles = array_values(array_filter(
-            $user->getRoles(),
-            static fn (string $r): bool => 'ROLE_USER' !== $r,
-        ));
-        $roles = array_values(array_filter($roles, static fn (string $r): bool => $r !== $role));
+        // Drop ROLE_USER (implicit) and the target role in one pass, then append
+        // it back iff enabling — no residual duplicate to unique away.
+        $roles = array_values(array_diff($user->getRoles(), ['ROLE_USER', $role]));
         if ($enabled) {
             $roles[] = $role;
         }
-        $user->setRoles(array_values(array_unique($roles)));
+        $user->setRoles($roles);
     }
 
     private function commit(User $actor, string $action, User $target, ?string $note = null): void
     {
-        $this->em->flush();
-        $this->logger->log($actor, $action, $target, $note);
+        // The mutation and its audit row are one transaction so they can never
+        // diverge (#15) — both commit or both roll back.
+        $this->em->wrapInTransaction(function () use ($actor, $action, $target, $note): void {
+            $this->em->flush();
+            $this->logger->log($actor, $action, $target, $note);
+        });
     }
 }

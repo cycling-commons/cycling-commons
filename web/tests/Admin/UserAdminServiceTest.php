@@ -151,6 +151,52 @@ final class UserAdminServiceTest extends KernelTestCase
         self::assertNull($logs[0]->getTargetUser(), 'FK is SET NULL after the target row is removed.');
     }
 
+    public function testRemoveAccountRunsDeletionHooks(): void
+    {
+        \App\Tests\Auth\SpyDeletionHook::reset();
+
+        $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
+        $this->user('keep@example.com', ['ROLE_ADMIN']);
+        $t = $this->user('hooked@example.com');
+        $t->setDeletionRequestedAt(new \DateTimeImmutable());
+        $this->em->flush();
+
+        $before = \App\Tests\Auth\SpyDeletionHook::$callCount;
+        $this->svc->removeAccount($t, $admin);
+
+        // #41: admin removal must run the same UserDeletionHookInterface seam as
+        // self-service deletion — not a bare $em->remove().
+        self::assertSame($before + 1, \App\Tests\Auth\SpyDeletionHook::$callCount);
+    }
+
+    public function testRemoveAccountRollsBackMutationAndAuditWhenHookFails(): void
+    {
+        \App\Tests\Auth\SpyDeletionHook::reset();
+        \App\Tests\Auth\SpyDeletionHook::$throwOnPreDelete = true;
+
+        $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
+        $this->user('keep@example.com', ['ROLE_ADMIN']);
+        $t = $this->user('survivor@example.com');
+        $t->setDeletionRequestedAt(new \DateTimeImmutable());
+        $this->em->flush();
+        $id = $t->getId();
+
+        try {
+            $this->svc->removeAccount($t, $admin);
+            self::fail('expected the hook failure to propagate');
+        } catch (\RuntimeException) {
+            // expected
+        }
+        \App\Tests\Auth\SpyDeletionHook::reset();
+        $this->em->clear();
+
+        // #15: mutation + audit are one transaction — a failure rolls BOTH back.
+        self::assertNotNull($this->em->getRepository(User::class)->find($id), 'the user row must survive a rolled-back removal');
+        $logs = static::getContainer()->get(\App\Repository\AdminActionLogRepository::class)
+            ->findBy(['action' => UserAdminService::REMOVE_ACCOUNT]);
+        self::assertCount(0, $logs, 'no audit row may persist when the removal rolled back');
+    }
+
     public function testCannotRemoveOwnAccount(): void
     {
         $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
