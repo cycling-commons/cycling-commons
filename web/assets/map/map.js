@@ -2069,16 +2069,33 @@
     function pickS(i){ const m=sMatches[i]; if(!m) return; sBox.value=m.name; closeS();
       if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
       m.go(); }
+    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
     function runS(){
       const q=slug(sBox.value.trim());
       if(!q){ closeS(); return; }
       const starts=[], has=[];                                  // prefix matches rank above substring matches
       for(const it of SEARCH_IDX){ const i=it.key.indexOf(q); if(i===0) starts.push(it); else if(i>0) has.push(it); }
-      sMatches=starts.concat(has).slice(0,8); sHL=-1;
+      const ranked=starts.concat(has);
+      // Grouped display (spec 2026-07-14 §3.3): places first, then items by
+      // letter A–K, 30 rows total (the old flat slice(0,8) hid most matches
+      // around a populous town). sMatches stays flat in display order so the
+      // existing keyboard navigation is untouched; group headers aren't options.
+      const towns=ranked.filter(m=>m.town), items=ranked.filter(m=>!m.town);
+      const byLetter={};
+      items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
+      const groups=towns.length?[{label:'Places', rows:towns}]:[];
+      Object.keys(byLetter).sort().forEach(L=>groups.push({label:`${L} · ${byLetter[L][0].kind}`, rows:byLetter[L]}));
+      const CAP=30;
+      sMatches=[]; sHL=-1;
+      let html='';
+      for(const g of groups){
+        if(sMatches.length>=CAP) break;
+        const rows=g.rows.slice(0, CAP-sMatches.length);
+        html+=`<li class="sgrp" role="presentation">${escH(g.label)}</li>`;
+        rows.forEach(m=>{ html+=sRow(m, sMatches.length); sMatches.push(m); });
+      }
       sRes.hidden=false; sBox.setAttribute('aria-expanded','true');
-      sRes.innerHTML = sMatches.length
-        ? sMatches.map((m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`).join('')
-        : '<li class="search-empty">No match in the Wallonia demo yet.</li>';
+      sRes.innerHTML = sMatches.length ? html : '<li class="search-empty">No match in the Wallonia demo yet.</li>';
     }
     // one delegated listener + a short debounce (review W41): the per-keystroke
     // cost was a full index scan, an innerHTML rebuild AND fresh per-result
