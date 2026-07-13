@@ -1,0 +1,43 @@
+web/src/Doctrine/EncryptedStringType.php
+  s_50ae7f4c1fd9e4::t_46f853bde8c954 63-71,74,83
+web/tests/Admin/AdminReadOnlyCrudsTest.php
+  s_50ae7f4c1fd9e4::t_9a69d405d0e223 34
+web/src/Security/TwoFactorSetupEnforcer.php
+  s_50ae7f4c1fd9e4::t_ce16ecab8e3861 74-97,119-123
+  s_50ae7f4c1fd9e4::t_b31f59fa6a9971 48,54-58
+web/tests/Auth/TwoFactorTest.php
+  s_50ae7f4c1fd9e4::t_62a22bd4f72449 67,173-174,209
+  s_50ae7f4c1fd9e4::t_9a80eb6911c115 360-417
+web/tests/Moderation/RouteModerateShellTest.php
+  s_50ae7f4c1fd9e4::t_576fbbc5c5e07c 22
+web/src/Controller/TwoFactorController.php
+  s_50ae7f4c1fd9e4::t_d629551474b54c 21
+  s_50ae7f4c1fd9e4::t_88f6cdd2549ab4 83-84
+  s_50ae7f4c1fd9e4::t_7714d89a58dd71 44,50-52,54-56
+  s_50ae7f4c1fd9e4::t_5c6114c89c1035 140-143
+web/tests/Doctrine/EncryptedStringTypeTest.php
+  s_50ae7f4c1fd9e4::t_438d48ec42137e 11
+  s_50ae7f4c1fd9e4::t_d968cb11af783e 1-10,12-29,33-60
+  s_50ae7f4c1fd9e4::t_9c70924d158774 30-32
+web/src/Entity/User.php
+  s_50ae7f4c1fd9e4::t_50c3be00d114ce 183,189,196-215
+  s_50ae7f4c1fd9e4::t_b6a6b347909bda 216-217
+web/tests/Admin/UserAdminActionsTest.php
+  s_50ae7f4c1fd9e4::t_b3747bf96b63f0 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "370028c6eba792ab39a5a02b191a596bcebe9e9c",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
