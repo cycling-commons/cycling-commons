@@ -50,15 +50,25 @@ final class ModerateController extends AbstractController
         // must never delay or break the desk render.
         $this->retention->sweepOpportunistically();
 
-        $country = $request->query->getString('country');
-        $region = $request->query->getString('region');
-        $type = $request->query->getString('type');
+        return $this->renderQueue(
+            $request->query->getString('country'),
+            $request->query->getString('region'),
+            $request->query->getString('type'),
+        );
+    }
 
+    /**
+     * Render the moderation desk for the given filters. Shared by index() and
+     * the invalid-decision branch of decide() so the queue-rendering block is
+     * not duplicated and the curator's active filters are preserved on an
+     * invalid submit rather than reset to unfiltered (review #48).
+     */
+    private function renderQueue(string $country, string $region, string $type, int $status = Response::HTTP_OK): Response
+    {
         $items = $this->queue->filtered($country ?: null, $region ?: null, $type ?: null);
 
-        // Build one decision form per shown queue item. The action carries the
-        // live filters (§13) so a decision made from a filtered view redirects
-        // back to that same filtered view rather than resetting it.
+        // The form action carries the live filters (§13) so a decision made from
+        // a filtered view redirects back to that same filtered view.
         $formAction = $this->generateUrl('moderate_decide', array_filter([
             'country' => $country,
             'region' => $region,
@@ -86,7 +96,7 @@ final class ModerateController extends AbstractController
             'regions' => $this->queue->regions(),
             'types' => SubmissionType::values(),
             'receipt' => null,
-        ]);
+        ], Response::HTTP_OK === $status ? null : new Response('', $status));
     }
 
     #[Route('/moderate/decide', name: 'moderate_decide', methods: ['POST'])]
@@ -133,35 +143,18 @@ final class ModerateController extends AbstractController
             ], static fn (string $v): bool => '' !== $v));
         }
 
-        // Invalid form — re-render the queue (unfiltered).
-        $items = $this->queue->filtered(null, null, null);
-
-        $forms = [];
-        foreach ($items as $item) {
-            $newForm = $this->createForm(ModerationDecisionType::class, null, [
-                'action' => $this->generateUrl('moderate_decide'),
-                'method' => 'POST',
-            ]);
-            $forms[$item['id']] = $newForm->createView();
-        }
-
         if ($wantsJson) {
             return $this->json(['error' => 'invalid_decision'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        return $this->render('moderate/index.html.twig', [
-            'page_title' => 'meta.moderate_title',
-            'page_description' => 'meta.moderate_description',
-            'nav_active' => 'moderate',
-            'items' => $items,
-            'forms' => $forms,
-            'total' => $this->queue->total(),
-            'filters' => ['country' => '', 'region' => '', 'type' => ''],
-            'countries' => $this->queue->countries(),
-            'regions' => $this->queue->regions(),
-            'types' => SubmissionType::values(),
-            'receipt' => null,
-        ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
+        // Invalid form — re-render the queue preserving the curator's active
+        // filters (from the action query string), not reset to unfiltered.
+        return $this->renderQueue(
+            $request->query->getString('country'),
+            $request->query->getString('region'),
+            $request->query->getString('type'),
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+        );
     }
 
     /**

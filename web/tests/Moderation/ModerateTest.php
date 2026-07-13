@@ -265,4 +265,42 @@ final class ModerateTest extends WebTestCase
 
         self::assertResponseRedirects('/moderate?country=NL');
     }
+
+    /**
+     * #48: an INVALID decision submitted from a filtered view must re-render the
+     * queue with the SAME filters (422), not reset to the unfiltered queue.
+     */
+    public function testInvalidDecisionReRenderPreservesFilters(): void
+    {
+        $client = static::createClient();
+        $nl = $this->seedSubmission('Vaalserberg', 'NL');
+        $this->seedSubmission('Mur de Huy', 'BE');
+
+        $curator = $this->createUser(
+            'moderate-invalid-filter@example.com',
+            'hunter2secure!',
+            roles: ['ROLE_CURATOR'],
+            totpSecret: 'JBSWY3DPEHPK3PXP',
+            twoFaEnabled: true,
+        );
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/moderate?country=NL');
+        self::assertResponseIsSuccessful();
+        $token = $crawler->filter('input[name="moderation_decision[_token]"]')->first()->attr('value');
+
+        // Post an out-of-range decision → the form is invalid.
+        $client->request('POST', '/moderate/decide?country=NL', [
+            'moderation_decision' => [
+                'submission_id' => (string) $nl->getId(),
+                'decision' => 'bogus-decision',
+                '_token' => $token,
+            ],
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        $body = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('Vaalserberg', $body, 'the NL-filtered queue is preserved');
+        self::assertStringNotContainsString('Mur de Huy', $body, 'the BE item must not appear — filters were NOT reset');
+    }
 }

@@ -65,19 +65,35 @@ final class SubmissionQueue
     /** @return list<string> */
     public function countries(): array
     {
-        return $this->distinct("SELECT DISTINCT country_code FROM submission WHERE status IN ('pending', 'needs_info') AND country_code <> ''");
+        return $this->sortLocalized($this->db->fetchFirstColumn(
+            "SELECT DISTINCT country_code FROM submission WHERE status IN ('pending', 'needs_info') AND country_code <> ''",
+        ));
     }
 
     /** @return list<string> */
     public function regions(): array
     {
-        return $this->distinct("SELECT DISTINCT r.name FROM submission s JOIN region r ON r.id = s.region_id WHERE s.status IN ('pending', 'needs_info')");
+        return $this->sortLocalized($this->db->fetchFirstColumn(
+            "SELECT DISTINCT r.name FROM submission s JOIN region r ON r.id = s.region_id WHERE s.status IN ('pending', 'needs_info')",
+        ));
     }
 
     /**
-     * @param array<string, string> $params
+     * @param string                $where  a WHERE body assembled ONLY from
+     *                                      class-internal constant fragments
+     *                                      (see filtered()/pendingForMap());
+     *                                      every user-supplied value is bound
+     *                                      via $params, never interpolated
+     *                                      (review #21)
+     * @param array<string, string> $params bound query parameters
      *
      * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}>
+     *
+     * The returned row is a deliberate shared view-model: the SAME shape is
+     * consumed by both moderate/index.html.twig AND map.js (as JSON). The
+     * server-side formatting below (anonymised who, relative when, ' · '-joined
+     * diffs) is therefore the single source of truth for both consumers; moving
+     * it into one template would fork the logic into client JS (review #44).
      */
     private function rows(string $where, array $params): array
     {
@@ -137,13 +153,21 @@ final class SubmissionQueue
         return \is_scalar($v) ? (string) $v : (json_encode($v, \JSON_UNESCAPED_UNICODE) ?: '');
     }
 
-    /** @return list<string> */
-    private function distinct(string $sql): array
+    /**
+     * Locale-aware sort of a column of strings. Takes already-fetched values
+     * (not a SQL string) so no method here accepts raw SQL text as an argument
+     * (review #21).
+     *
+     * @param list<mixed> $values
+     *
+     * @return list<string>
+     */
+    private function sortLocalized(array $values): array
     {
-        $values = array_map(strval(...), $this->db->fetchFirstColumn($sql));
+        $strings = array_map(strval(...), $values);
         $this->collator ??= new \Collator('en');
-        $this->collator->sort($values);
+        $this->collator->sort($strings);
 
-        return array_values($values);
+        return array_values($strings);
     }
 }

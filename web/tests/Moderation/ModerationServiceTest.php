@@ -102,6 +102,28 @@ final class ModerationServiceTest extends KernelTestCase
         self::assertSame('unverified', $history[0]->getNewValue());
     }
 
+    public function testApproveWithMissingItemThrowsAndLeavesSubmissionPending(): void
+    {
+        [$item, $sub] = $this->seedEdit(['t' => 'Repair station'], ['pump' => ['was' => null, 'now' => 'yes']]);
+        $subId = $sub->getId();
+
+        // The target item vanishes before the decision is applied.
+        $this->em->remove($item);
+        $this->em->flush();
+        $this->em->clear();
+
+        try {
+            $this->service->decide($subId, 'approve', $this->curator, null);
+            self::fail('approving a submission whose item is gone must throw, not silently succeed');
+        } catch (\InvalidArgumentException) {
+            // expected
+        }
+
+        $reloaded = $this->em->find(Submission::class, $subId);
+        self::assertNotNull($reloaded);
+        self::assertSame(SubmissionStatus::Pending, $reloaded->getStatus(), 'rolled back — not marked approved');
+    }
+
     public function testApproveEditAppliesChangesWithPerFieldHistory(): void
     {
         [$item, $sub] = $this->seedEdit(

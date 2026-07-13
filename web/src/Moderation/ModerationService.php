@@ -16,6 +16,7 @@ use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -42,7 +43,11 @@ final class ModerationService
         }
 
         return $this->em->wrapInTransaction(function () use ($submissionId, $decision, $curator, $note): Submission {
-            $submission = $this->em->find(Submission::class, $submissionId);
+            // Pessimistic row lock: two curators deciding the same submission
+            // concurrently would otherwise both read it as pending and both
+            // apply. The second now blocks until the first commits, then sees
+            // the decided status and is rejected below (#25).
+            $submission = $this->em->find(Submission::class, $submissionId, LockMode::PESSIMISTIC_WRITE);
             if (null === $submission) {
                 throw new \InvalidArgumentException(sprintf('Unknown submission %d', $submissionId));
             }
@@ -54,6 +59,13 @@ final class ModerationService
 
             switch ($decision) {
                 case 'approve':
+                    // A submission bound to an item (itemId set) whose target row
+                    // has since vanished cannot be applied — fail loudly (rolling
+                    // back the whole transaction) instead of silently marking it
+                    // approved with no effect (#33).
+                    if (null !== $submission->getItemId() && null === $item) {
+                        throw new \InvalidArgumentException(sprintf('Cannot approve submission %d: its target item %d no longer exists', $submissionId, $submission->getItemId()));
+                    }
                     $submission->setStatus(SubmissionStatus::Approved);
                     if (null !== $item) {
                         match ($submission->getType()) {
