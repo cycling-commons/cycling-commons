@@ -179,7 +179,10 @@ final class RouteModerationService
                 throw new TrashBlockedException(sprintf('Route %d is %s and cannot be trashed.', $routeId, $route->getState()->value));
             }
 
-            $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf("route %d '%s' state=%s", $routeId, $route->getName(), $route->getState()->value));
+            // Content-free audit (M9): NO rider-authored text — a submitted
+            // proposal's NAME is unvetted free text and must not land in the
+            // immutable log (same rule as the submission path's enum-only note).
+            $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf('route %d state=%s', $routeId, $route->getState()->value));
             $this->em->remove($route);
         });
     }
