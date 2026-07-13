@@ -152,6 +152,48 @@ final class LockoutTest extends WebTestCase
     }
 
     /**
+     * (#7) A failed login WHILE the account is already locked must neither
+     * increment the counter nor extend the cooldown window — otherwise an
+     * attacker (or the owner retrying) keeps re-arming the 15-minute lock and
+     * it never actually elapses (permanent DoS).
+     */
+    public function testFailedLoginWhileLockedDoesNotExtendTheWindow(): void
+    {
+        static::createClient();
+
+        $email = 'lockout-noextend@example.com';
+        $this->createVerifiedUser($email, 'correct-horse-battery!');
+
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get(EntityManagerInterface::class);
+        /** @var UserRepository $repo */
+        $repo = $container->get(UserRepository::class);
+
+        $user = $repo->findByEmail($email);
+        self::assertNotNull($user);
+        $lockedUntil = new \DateTimeImmutable('+15 minutes');
+        $user->setFailedLoginAttempts(5);
+        $user->setLockedUntil($lockedUntil);
+        $em->flush();
+
+        // Another bad login while locked.
+        $this->submitLogin($email, 'wrongpassword');
+
+        $em->clear();
+        $user = $repo->findByEmail($email);
+        self::assertNotNull($user);
+        self::assertSame(5, $user->getFailedLoginAttempts(), 'attempts must not increment while locked');
+        self::assertNotNull($user->getLockedUntil());
+        self::assertEqualsWithDelta(
+            $lockedUntil->getTimestamp(),
+            $user->getLockedUntil()->getTimestamp(),
+            1,
+            'the lockout window must not be extended by a failure that occurs while already locked',
+        );
+    }
+
+    /**
      * (c) A successful login resets the counters.
      *
      * We set counters to non-zero values, expire the lock, then log in

@@ -178,6 +178,58 @@ final class ResetPasswordTest extends WebTestCase
         self::assertStringNotContainsString('/login', (string) $client->getRequest()->getUri());
     }
 
+    /**
+     * (#20) Completing a password reset must also clear any account lockout —
+     * otherwise a locked-out owner who resets their password still cannot log
+     * in, and the reset (their recovery path) is a dead end.
+     */
+    public function testPasswordResetClearsAccountLockout(): void
+    {
+        $client = static::createClient();
+
+        $user = $this->createVerifiedUser('reset-lock@example.com', 'Locked Rider', 'initialpass12345!');
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user->setFailedLoginAttempts(5);
+        $user->setLockedUntil(new \DateTimeImmutable('+15 minutes'));
+        $em->flush();
+
+        // Request + follow the reset flow.
+        $crawler = $client->request('GET', '/reset-password');
+        $form = $crawler->selectButton('Send reset link')->form([
+            'reset_password_request_form[email]' => 'reset-lock@example.com',
+        ]);
+        $client->submit($form);
+
+        $email = $this->getMailerMessage();
+        self::assertNotNull($email);
+        $htmlBody = $email->getHtmlBody();
+        self::assertIsString($htmlBody);
+        $resetPath = $this->extractResetPath($htmlBody);
+
+        $client->followRedirect(); // → check-email
+        $client->request('GET', $resetPath);
+        $client->followRedirect(); // → /reset-password/reset
+
+        $crawler = $client->getCrawler();
+        $form = $crawler->selectButton('Set new password')->form([
+            'change_password_form[plainPassword][first]' => 'newSecurePass9999!',
+            'change_password_form[plainPassword][second]' => 'newSecurePass9999!',
+        ]);
+        $client->submit($form);
+        self::assertResponseRedirects('/login');
+
+        // Lockout must be cleared.
+        $em->clear();
+        $repo = static::getContainer()->get(\App\Repository\UserRepository::class);
+        $reloaded = $repo->findByEmail('reset-lock@example.com');
+        self::assertNotNull($reloaded);
+        self::assertNull($reloaded->getLockedUntil(), 'reset must clear the lockout');
+        self::assertSame(0, $reloaded->getFailedLoginAttempts(), 'reset must reset the failed-attempt counter');
+        self::assertFalse($reloaded->isLocked());
+    }
+
     public function testRequestResetForNonExistentEmailShowsSameResponse(): void
     {
         $client = static::createClient();

@@ -32,6 +32,16 @@ use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
  *             disable IP throttle and observe the account lock cleanly).
  * Cooldown  : 15 minutes from the last locking failure.
  *
+ * Residual DoS (review #9): because the hard lock rejects even the correct
+ * password, an unauthenticated party who knows a victim's email can trip a
+ * 15-minute lock by submitting 5 bad passwords. This is inherent to any
+ * account-scoped lock. It is bounded, not eliminated: the window now genuinely
+ * elapses (failures while locked no longer re-arm it — onLoginFailure below),
+ * and the owner's password-reset flow clears the lock (ResetPasswordController),
+ * so the lock can never permanently deny a legitimate holder. A stronger
+ * mitigation (IP-diversity gate or CAPTCHA step-up before hard-locking) is a
+ * deliberate product decision left to a dedicated change.
+ *
  * @api Wired via #[AsEventListener] attributes; autoconfigured by the container.
  *      Never referenced directly from application code — Psalm must not flag as unused.
  */
@@ -96,6 +106,23 @@ final class LoginThrottleListener
 
         if (null === $user) {
             return;
+        }
+
+        // A failure that occurs while the account is ALREADY locked is either
+        // the CheckPassportEvent lock-rejection itself (which dispatches a
+        // LoginFailureEvent) or a fresh attempt against a locked target. Never
+        // count it and never re-arm the window — doing so keeps resetting
+        // lockedUntil to now+15min on every attempt, so the advertised cooldown
+        // never elapses (permanent DoS). The 15-minute window must run down.
+        if ($user->isLocked()) {
+            return;
+        }
+
+        // A previously-set lock has since expired: start a fresh window rather
+        // than counting this failure on top of the stale threshold total.
+        if (null !== $user->getLockedUntil()) {
+            $user->setLockedUntil(null);
+            $user->setFailedLoginAttempts(0);
         }
 
         $attempts = $user->getFailedLoginAttempts() + 1;
