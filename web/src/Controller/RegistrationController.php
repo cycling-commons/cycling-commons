@@ -8,9 +8,11 @@ use App\Entity\User;
 use App\Form\RegistrationFormType;
 use App\Repository\UserRepository;
 use App\Security\EmailVerifier;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mime\Address;
@@ -57,8 +59,21 @@ final class RegistrationController extends AbstractController
             $user->setRoles(['ROLE_USER']);
             $user->setEmailVerified(false);
 
-            $entityManager->persist($user);
-            $entityManager->flush();
+            try {
+                $entityManager->persist($user);
+                $entityManager->flush();
+            } catch (UniqueConstraintViolationException) {
+                // TOCTOU: the UniqueEntity check passed, but a concurrent request
+                // committed the same email before this flush. Surface it as the
+                // same duplicate-email form error instead of a 500.
+                $form->get('email')->addError(new FormError('This email address is already registered.'));
+
+                return $this->render('security/register.html.twig', [
+                    'registrationForm' => $form,
+                    'page_title' => 'meta.register_title',
+                    'page_description' => 'meta.register_description',
+                ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
+            }
 
             // Send email confirmation
             $this->emailVerifier->sendEmailConfirmation(
