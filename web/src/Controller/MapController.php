@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Catalog\BikeType;
 use App\Catalog\CatalogProvider;
+use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
@@ -25,9 +26,9 @@ use Symfony\Component\Routing\Attribute\Route;
 final class MapController extends AbstractController
 {
     #[Route('/map', name: 'map')]
-    public function map(SubmissionQueue $queue): Response
+    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema): Response
     {
-        $params = [];
+        $params = ['field_schema' => $schema->all()];
 
         // Curator-only: hand the pending submissions to the map so the moderation
         // layer can render. Riders never receive this — it is emitted only inside

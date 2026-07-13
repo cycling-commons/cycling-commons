@@ -238,6 +238,7 @@
 <script nonce="{{ csp_nonce() }}">
   window.CC_CATALOG_URL = {{ path('map_catalog')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  window.CC_FIELD_SCHEMA = {{ field_schema|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
    globals (catalog-load.js injects it after the fetch resolves), but its
