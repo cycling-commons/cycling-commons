@@ -1,0 +1,19 @@
+docs/specs/2026-07-13-utility-confirmations-design.md
+  s_50ae7f4c1fd9e4::t_496c9d66fe8bf1 1-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "350b146458d78b91d0d87acb282ade656240c61c",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
