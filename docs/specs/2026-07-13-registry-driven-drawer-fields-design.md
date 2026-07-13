@@ -147,3 +147,35 @@ CatalogFormRegistry::for(type)  ──►  CatalogField[] (DTO, display flag, la
 - The `catalog` translation domain seeding (≈60 field labels × 4 languages) is
   mechanical but real work; it is part of this change, not a follow-up, since
   i18n correctness was an explicit requirement.
+
+## Execution notes (2026-07-13, symfony-base 04a1a3a..25588e7, NOT pushed)
+
+Implemented via subagent-driven-development (11 tasks + final whole-branch
+review). Deviations / decisions taken during execution:
+
+- **Ratings render as stars, not digits (product decision).** Rather than the
+  generic renderer showing route `quietness`/`scenic`/`friendliness` as bare
+  digits, `CatalogSchemaProvider` emits `kind: 'rating'` for any select whose
+  choices are exactly `['1','2','3','4','5']`, and `schemaRows()` renders those
+  via the shared `stars()` glyph helper (hoisted to outer scope; the dead inner
+  duplicate was removed). Star detection is registry-derived, no hard-coded keys
+  in map.js.
+- **i18n parity required editing all four locale files, not just fr/nl/de.**
+  `tools/check-translations.sh` compares fr/nl/de against **en** and fails on
+  *extra* keys, so the 72 display labels were added to `messages.en.yaml` too
+  (English identity values). All four files went 1263 → 1335 keys, in parity.
+- **`url`-kind fields linkify.** During final review a regression was caught:
+  once `web` (stays "Website") became a registry-driven display field, a *plain*
+  schema row was deduping away the structural *linkified* Website row. Fixed by
+  adding a `url` branch to `schemaRows()` that renders via the same safe
+  `links:[]`/`safeHref` path as the bespoke row — restoring the link and also
+  linkifying `bookingLink`. The structural Website row is retained for non-E
+  layers whose OSM payload carries a `website`.
+- **Accepted trade-offs:** per-row `method:'OSM'` provenance tags on the surface
+  drawer's Surface/Smoothness rows were dropped (provenance now shows only on the
+  Source line); route `season` renders as chips (multiselect) rather than a
+  dot-joined string.
+- **Deferred (recorded for a native-review follow-up):** minor FR/NL/DE wording
+  polish (e.g. NL `helling` reused for both "ramp" and "gradient"); the map page
+  is header/session-locale-driven, not `/{_locale}/map` path-prefixed — a
+  separate routing question if the app standardises on locale prefixes.
