@@ -18,6 +18,7 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Self-service TOTP enrolment. Reachable by any fully authenticated user (and forced on
@@ -40,13 +41,19 @@ final class TwoFactorController extends AbstractController
     private const int BACKUP_CODE_COUNT = 8;
 
     #[Route('/2fa/setup', name: '2fa_setup')]
+    #[IsGranted('ROLE_USER')]
     public function setup(
         Request $request,
         TotpAuthenticatorInterface $totpAuthenticator,
         EntityManagerInterface $entityManager,
     ): Response {
-        /** @var User $user */
+        // Defence-in-depth beyond the access_control regex: never dereference a
+        // null user (#18). IsGranted above already guarantees authentication;
+        // this keeps the invariant explicit at the code boundary.
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('2FA setup requires an authenticated user.');
+        }
         $session = $request->getSession();
 
         // Reuse a pending secret across GET/POST so the QR the user scanned stays valid.
@@ -73,8 +80,8 @@ final class TwoFactorController extends AbstractController
 
                 $user->setTotpSecret($pendingSecret);
                 $user->setTwoFaEnabled(true);
-                // Store only SHA-256 hashes; the plaintext codes are shown once below.
-                $user->setBackupCodes(array_map(static fn (string $c): string => hash('sha256', $c), $backupCodes));
+                // Store only keyed hashes; the plaintext codes are shown once below.
+                $user->setBackupCodes(array_map(User::hashBackupCode(...), $backupCodes));
                 $entityManager->flush();
 
                 $session->remove(self::PENDING_SECRET_KEY);
@@ -130,9 +137,10 @@ final class TwoFactorController extends AbstractController
     {
         $codes = [];
         for ($i = 0; $i < self::BACKUP_CODE_COUNT; ++$i) {
-            // 8 hex chars per code; grouped XXXX-XXXX for legibility.
-            $raw = bin2hex(random_bytes(4));
-            $codes[] = substr($raw, 0, 4).'-'.substr($raw, 4, 4);
+            // 80 bits of entropy per code (10 random bytes → 20 hex chars),
+            // grouped in 4s for legibility. 32 bits was offline-enumerable
+            // against the stored hashes (review #13).
+            $codes[] = implode('-', str_split(bin2hex(random_bytes(10)), 4));
         }
 
         return $codes;

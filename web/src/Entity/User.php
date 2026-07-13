@@ -180,17 +180,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[\Override]
     public function isBackupCode(string $code): bool
     {
-        return in_array(hash('sha256', $code), $this->backupCodes, true);
+        return in_array(self::hashBackupCode($code), $this->backupCodes, true);
     }
 
     #[\Override]
     public function invalidateBackupCode(string $code): void
     {
-        $i = array_search(hash('sha256', $code), $this->backupCodes, true);
+        $i = array_search(self::hashBackupCode($code), $this->backupCodes, true);
         if (false !== $i) {
             unset($this->backupCodes[$i]);
             $this->backupCodes = array_values($this->backupCodes);
         }
+    }
+
+    /**
+     * Keyed (peppered) hash for a single-use backup code.
+     *
+     * The codes carry ≥80 bits of entropy (see TwoFactorController), so a fast
+     * digest is not itself the risk — but keying it with a secret derived from
+     * APP_SECRET (never stored in the DB) means a database-only leak cannot even
+     * compute candidate hashes, closing the offline-enumeration path that an
+     * unsalted SHA-256 left open (review #13). Rotating APP_SECRET invalidates
+     * stored codes (same trade-off as the encrypted TOTP secret).
+     *
+     * @api Also used by the enrolment controller when first storing codes.
+     */
+    public static function hashBackupCode(string $code): string
+    {
+        $secret = $_SERVER['APP_SECRET'] ?? $_ENV['APP_SECRET'] ?? getenv('APP_SECRET');
+        if (!\is_string($secret) || '' === $secret) {
+            throw new \LogicException('APP_SECRET must be set to hash backup codes.');
+        }
+
+        return hash_hmac('sha256', $code, hash_hkdf('sha256', $secret, 32, 'cc-backup-code-v1'));
     }
 
     // ── Lockout helper ───────────────────────────────────────────────────────

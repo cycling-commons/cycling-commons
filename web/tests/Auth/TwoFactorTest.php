@@ -64,7 +64,7 @@ final class TwoFactorTest extends WebTestCase
             $user->setTotpSecret($secret);
             $user->setTwoFaEnabled(true);
             // Stored as hashes (matching real storage); plaintext codes are entered at login.
-            $user->setBackupCodes(array_map(static fn (string $c): string => hash('sha256', $c), $backupCodes));
+            $user->setBackupCodes(array_map(User::hashBackupCode(...), $backupCodes));
         }
 
         $em->persist($user);
@@ -170,8 +170,8 @@ final class TwoFactorTest extends WebTestCase
 
         // The used backup code is consumed (no longer stored on the user).
         $user = $this->fetchUser($email);
-        self::assertNotContains(hash('sha256', $backupCode), $user->getBackupCodes(), 'Used backup code must be invalidated.');
-        self::assertContains(hash('sha256', 'ffff-9999'), $user->getBackupCodes(), 'Unused backup codes remain.');
+        self::assertNotContains(User::hashBackupCode($backupCode), $user->getBackupCodes(), 'Used backup code must be invalidated.');
+        self::assertContains(User::hashBackupCode('ffff-9999'), $user->getBackupCodes(), 'Unused backup codes remain.');
 
         // Reuse must fail: a fresh browser session + the same code does not complete 2FA.
         $client->restart();
@@ -206,7 +206,7 @@ final class TwoFactorTest extends WebTestCase
         self::assertSame($secret, $user->getTotpSecret());
 
         // Backup codes are stored hashed, never in plaintext.
-        self::assertContains(hash('sha256', 'aaaa-1111'), $user->getBackupCodes());
+        self::assertContains(User::hashBackupCode('aaaa-1111'), $user->getBackupCodes());
         self::assertNotContains('aaaa-1111', $user->getBackupCodes());
     }
 
@@ -357,5 +357,63 @@ final class TwoFactorTest extends WebTestCase
         self::assertTrue($user->isTwoFaEnabled());
         self::assertSame($secret, $user->getTotpSecret());
         self::assertNotEmpty($user->getBackupCodes());
+
+        // #13: each shown backup code must carry ≥80 bits of entropy (20 hex
+        // digits, dashes aside) — not the old 32-bit (8 hex) codes.
+        foreach ($crawler->filter('ul.codes li') as $li) {
+            $hex = str_replace('-', '', trim($li->textContent));
+            self::assertMatchesRegularExpression('/^[0-9a-f]+$/', $hex);
+            self::assertGreaterThanOrEqual(20, \strlen($hex), 'backup code must have ≥80 bits of entropy');
+        }
+    }
+
+    /**
+     * #31: an elevated user who has a TOTP secret but has NOT enabled 2FA
+     * (twoFaEnabled=false) is never challenged at login, so the enforcer must
+     * still route them to /2fa/setup — matching scheb's actual challenge
+     * predicate, not the weaker "has a secret".
+     */
+    public function testElevatedRoleWithSecretButTwoFaDisabledIsStillSentToSetup(): void
+    {
+        $client = static::createClient();
+
+        $email = 'curator-halfsetup@example.com';
+        $this->createUser($email, 'hunter2secure!', role: 'ROLE_CURATOR', withTotp: true);
+
+        // Flip twoFaEnabled off while keeping the secret (the vulnerable state).
+        $user = $this->fetchUser($email);
+        $user->setTwoFaEnabled(false);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        // A twoFaEnabled=false user is NOT challenged, so log in completes fully.
+        $this->submitLogin($client, $email, 'hunter2secure!');
+        $client->request('GET', '/profile');
+        self::assertTrue($client->getResponse()->isRedirection());
+        self::assertStringContainsString('/2fa/setup', (string) $client->getResponse()->headers->get('Location'));
+    }
+
+    /**
+     * #16: an anonymous request to a public, cacheable data endpoint must not
+     * start a session — the enforcer must not read the token for it.
+     */
+    public function testPublicCatalogEndpointDoesNotStartASession(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/map/catalog.json');
+
+        self::assertResponseIsSuccessful();
+        foreach ($client->getResponse()->headers->getCookies() as $cookie) {
+            self::assertStringNotContainsStringIgnoringCase('SESS', $cookie->getName(), 'a cacheable public endpoint must not set a session cookie');
+        }
+    }
+
+    /** #18: /2fa/setup with no authenticated user redirects to login, never 500s. */
+    public function testAnonymousSetupRedirectsToLogin(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/2fa/setup');
+
+        self::assertResponseRedirects();
+        self::assertStringContainsString('/login', (string) $client->getResponse()->headers->get('Location'));
     }
 }

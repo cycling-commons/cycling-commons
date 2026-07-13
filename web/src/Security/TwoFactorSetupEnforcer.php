@@ -45,12 +45,17 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 #[AsEventListener(event: KernelEvents::REQUEST, priority: 7)]
 final class TwoFactorSetupEnforcer
 {
-    /** Path prefixes that must always pass through (no redirect). */
+    /** Path prefixes that must always pass through (no redirect, no token read). */
     private const array BYPASS_PREFIXES = [
         '/2fa',      // scheb interstitial (/2fa, /2fa_check) — covered by TwoFactorToken guard
         '/_wdt',
         '/_profiler',
         '/assets',
+        // Public, explicitly-cacheable data endpoints (security.yaml PUBLIC_ACCESS).
+        // Listed here so we never call getToken() for them — an eager token read
+        // boots the lazy firewall + a session and defeats their cacheability (#16).
+        '/map',      // /map page + /map/catalog.json, /map/best-of, /map/item/*/history
+        '/routes/',  // /routes/{id}.gpx
     ];
 
     public function __construct(
@@ -64,6 +69,30 @@ final class TwoFactorSetupEnforcer
     {
         if (!$event->isMainRequest()) {
             return;
+        }
+
+        // Path-based bypass FIRST, before touching the token: public/cacheable
+        // endpoints (and the bypass prefixes) must never trigger a token read,
+        // which would boot the lazy firewall + a session on their behalf (#16).
+        $path = $event->getRequest()->getPathInfo();
+        foreach (self::BYPASS_PREFIXES as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                return;
+            }
+        }
+
+        // Allow the setup route itself and logout (exact match to generated URLs)
+        // — also before the token read, for the same reason.
+        $setupPath = $this->urlGenerator->generate('2fa_setup');
+        if ($path === $setupPath) {
+            return;
+        }
+        try {
+            if ($path === $this->urlGenerator->generate('logout')) {
+                return;
+            }
+        } catch (\Exception) {
+            // Route may not exist in all environments — safe to ignore.
         }
 
         $token = $this->tokenStorage->getToken();
@@ -87,32 +116,12 @@ final class TwoFactorSetupEnforcer
             return;
         }
 
-        // User has already provisioned 2FA — nothing to enforce.
-        if (null !== $user->getTotpSecret()) {
+        // Nothing to enforce only once 2FA is ACTUALLY active. Match the exact
+        // predicate scheb challenges on (twoFaEnabled && secret) rather than the
+        // weaker "has a secret": a user with a secret but twoFaEnabled=false is
+        // never challenged at login, so they must still be sent to setup (#31).
+        if ($user->isTotpAuthenticationEnabled()) {
             return;
-        }
-
-        // Check the current request path against the bypass list.
-        $path = $event->getRequest()->getPathInfo();
-        foreach (self::BYPASS_PREFIXES as $prefix) {
-            if (str_starts_with($path, $prefix)) {
-                return;
-            }
-        }
-
-        // Also allow the setup route itself and logout by exact comparison to generated URLs.
-        $setupPath = $this->urlGenerator->generate('2fa_setup');
-        if ($path === $setupPath) {
-            return;
-        }
-
-        try {
-            $logoutPath = $this->urlGenerator->generate('logout');
-            if ($path === $logoutPath) {
-                return;
-            }
-        } catch (\Exception) {
-            // Route may not exist in all environments — safe to ignore.
         }
 
         $event->setResponse(new RedirectResponse($setupPath));

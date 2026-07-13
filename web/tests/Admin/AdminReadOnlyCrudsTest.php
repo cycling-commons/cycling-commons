@@ -31,6 +31,7 @@ final class AdminReadOnlyCrudsTest extends WebTestCase
         $u->setEmailVerifiedAt(new \DateTimeImmutable());
         $u->setRoles(['ROLE_ADMIN']);
         $u->setTotpSecret('JBSWY3DPEHPK3PXP');
+        $u->setTwoFaEnabled(true); // fully enrolled, else the enforcer redirects to /2fa/setup
         $u->setPassword($hasher->hashPassword($u, 'password1234'));
         $em->persist($u);
         $em->flush();

@@ -47,6 +47,7 @@ final class UserAdminActionsTest extends WebTestCase
         $u->setPassword($hasher->hashPassword($u, 'password1234'));
         if ($admin2fa) {
             $u->setTotpSecret('JBSWY3DPEHPK3PXP');
+            $u->setTwoFaEnabled(true); // fully enrolled (secret + enabled), else the enforcer sends them to /2fa/setup
         }
         $em->persist($u);
         $em->flush();

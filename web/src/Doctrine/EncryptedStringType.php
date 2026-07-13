@@ -60,9 +60,18 @@ final class EncryptedStringType extends Type
             return null;
         }
 
+        // Any unreadable stored value (structurally invalid, or key
+        // rotated / data corrupted so GCM auth fails) hydrates as NULL rather
+        // than throwing. This type is mapped on User::$totpSecret, so a throw
+        // here would 500 EVERY hydration of the affected row — the user could
+        // never log in and an admin could never open them to disarm 2FA.
+        // Returning null makes the seed read as absent, so the documented
+        // "affected users simply re-enrol" path (and the mandatory-2FA
+        // enforcer) actually works (#14). An affected account is observable:
+        // it simply shows 2FA disabled and is prompted to re-enrol.
         $raw = base64_decode((string) $value, true);
         if (false === $raw || \strlen($raw) <= self::IV_LEN + self::TAG_LEN) {
-            throw new \RuntimeException('Invalid encrypted value.');
+            return null;
         }
 
         $iv = substr($raw, 0, self::IV_LEN);
@@ -70,11 +79,8 @@ final class EncryptedStringType extends Type
         $ciphertext = substr($raw, self::IV_LEN + self::TAG_LEN);
 
         $plain = openssl_decrypt($ciphertext, self::CIPHER, self::key(), \OPENSSL_RAW_DATA, $iv, $tag);
-        if (false === $plain) {
-            throw new \RuntimeException('Failed to decrypt value (key rotated or data corrupted).');
-        }
 
-        return $plain;
+        return false === $plain ? null : $plain;
     }
 
     private static function key(): string

@@ -19,7 +19,7 @@ final class RouteModerateShellTest extends WebTestCase
         $c = static::getContainer();
         $u = (new User())->setEmail('curator2@test.test')->setDisplayName('C');
         $u->setEmailVerified(true)->setEmailVerifiedAt(new \DateTimeImmutable());
-        $u->setRoles(['ROLE_CURATOR'])->setTotpSecret('JBSWY3DPEHPK3PXP');
+        $u->setRoles(['ROLE_CURATOR'])->setTotpSecret('JBSWY3DPEHPK3PXP')->setTwoFaEnabled(true);
         $u->setPassword($c->get(UserPasswordHasherInterface::class)->hashPassword($u, 'password1234'));
         $c->get(EntityManagerInterface::class)->persist($u);
         $c->get(EntityManagerInterface::class)->flush();
