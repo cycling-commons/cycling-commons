@@ -236,7 +236,7 @@
       filter:['!',['has','c']],
       layout:{visibility:'none','icon-image':'water-drop','icon-allow-overlap':true,
         'icon-size':['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]}});
-    map.on('click','water-osm',e=>{ const p=e.features[0].properties; openDrawer(layerByKey['water'], waterDrawer(p, e.lngLat)); });
+    map.on('click','water-osm',e=>{ const p=e.features[0].properties; openDrawer(layerByKey['water'], waterDrawer(p, e.lngLat)); flyToPin(e.lngLat); });
     map.on('mouseenter','water-osm',()=>map.getCanvas().style.cursor='pointer');
     map.on('mousemove','water-osm',e=>{ const p=e.features[0].properties; showTip(p.t||'Drinking water', e.lngLat); });
     map.on('mouseleave','water-osm',()=>{ map.getCanvas().style.cursor=''; hideTip(); });
@@ -372,7 +372,7 @@
       filter:['!',['has','c']],
       layout:{visibility:'none','icon-image':miniIcon(key),'icon-allow-overlap':true,
         'icon-size':['interpolate',['linear'],['zoom'],8,0.42,13,0.7,18,0.95]}});
-    map.on('click',id,e=>{ const p=e.features[0].properties; openDrawer(layerByKey[key], osmDrawer(layerByKey[key], p, e.lngLat, srcDesc)); });
+    map.on('click',id,e=>{ const p=e.features[0].properties; openDrawer(layerByKey[key], osmDrawer(layerByKey[key], p, e.lngLat, srcDesc)); flyToPin(e.lngLat); });
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
     map.on('mousemove',id,e=>{ const p=e.features[0].properties; showTip(p.t||(layerByKey[key]||{}).label||'Item', e.lngLat); });
     map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
