@@ -43,6 +43,20 @@
   .acct-dropdown a.acct-sep{margin-top:.25rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
   .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}
   .acct-dropdown form button{color:var(--clay)!important}
+  /* Desktop rail tweaks (min-width:821px — above this the rail is the left column;
+     at/below it the rail-nav becomes a right-side panel and the shared defaults apply): */
+  @media(min-width:821px){
+    /* The rail sits on the LEFT, so the chip's menu must open rightward (left-anchored);
+       the shared right:0 anchoring is for right-side topnavs and runs off-screen here. */
+    .rail .acct-dropdown{left:0;right:auto}
+    /* Scale the chip down so it sits in proportion with the small mono rail-nav links
+       rather than towering over them. */
+    .rail .acct-chip{font-size:.8rem;padding:.18rem .5rem .18rem .2rem;gap:.4rem}
+    .rail .acct-chip .av{width:24px;height:24px;font-size:.7rem}
+    /* Breathing room between the nav-link row and the chip (they share the wrapping
+       rail-nav flex, whose .2rem row-gap alone reads as cramped). */
+    .rail .acct-menu{margin-top:.6rem}
+  }
   @media(max-width:560px){.acct-chip .acct-name,.acct-chip .acct-caret{display:none}.acct-chip{padding:.26rem;border-radius:50%}}
   .rail-burger{display:none;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--paper);cursor:pointer;-webkit-tap-highlight-color:transparent}
   .rail-scroll{flex:1;min-height:0;overflow-y:auto;padding:1.2rem 1.4rem;scrollbar-width:thin;scrollbar-color:rgba(239,230,212,.45) transparent}
