@@ -102,16 +102,23 @@ final class RideCheckService
      */
     private function corridorGroups(string $geoJson, int $radiusM, float $rawM): array
     {
+        // MATERIALIZED is load-bearing twice over: an inlined `track` CTE
+        // re-parses the whole GeoJSON per row per ST_* occurrence, and the
+        // one-off `corridor` buffer turns the containment test into a plain
+        // ST_Intersects the idx_item_geom GIST index can serve — the naive
+        // ST_DWithin(::geography) formulation seq-scanned with spheroid maths
+        // against the full track per item (62 s → sub-second, dev catalog).
         /** @var list<array{id: int|string, letter: string, name: string, geom: string, dist_m: string|float, frac: string|float}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'WITH track AS (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g)
+            'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
+                  corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
              SELECT i.id, i.letter, i.name, ST_AsGeoJSON(i.geom) AS geom,
                     ST_Distance(i.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
                     ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
              FROM item i
              WHERE i.letter <> \'A\'
                AND i.state IN '.ItemState::servedSqlTuple().'
-               AND ST_DWithin(i.geom::geography, (SELECT g FROM track)::geography, :radius)
+               AND ST_Intersects(i.geom, (SELECT b FROM corridor))
              ORDER BY frac, i.id',
             ['geom' => $geoJson, 'radius' => $radiusM],
         );
@@ -149,15 +156,18 @@ final class RideCheckService
      */
     private function followedRoutes(string $geoJson, int $radiusM): array
     {
+        // Same MATERIALIZED corridor as corridorGroups() (see the note there);
+        // ST_Intersects rides idx_route_geom, and the intersection length is
+        // measured only for the handful of candidate routes.
         /** @var list<array{id: int|string, name: string, overlap_m: string|float|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'WITH track AS (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g)
+            'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
+                  corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
              SELECT r.id, r.name,
-                    ST_Length(ST_Intersection(r.geom,
-                      ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry)::geography) AS overlap_m
+                    ST_Length(ST_Intersection(r.geom, (SELECT b FROM corridor))::geography) AS overlap_m
              FROM recommended_route r
              WHERE r.state IN '.ItemState::servedSqlTuple().'
-               AND ST_DWithin(r.geom::geography, (SELECT g FROM track)::geography, :radius)',
+               AND ST_Intersects(r.geom, (SELECT b FROM corridor))',
             ['geom' => $geoJson, 'radius' => $radiusM],
         );
 
