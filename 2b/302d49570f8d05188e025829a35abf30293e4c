@@ -1,0 +1,20 @@
+web/src/Controller/RegistrationController.php
+  s_50ae7f4c1fd9e4::t_d823b8b968f10b 11,15
+  s_50ae7f4c1fd9e4::t_b5e224d3c14cbf 62-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "2b302d49570f8d05188e025829a35abf30293e4c",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
