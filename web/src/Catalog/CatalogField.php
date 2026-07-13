@@ -24,17 +24,18 @@ final readonly class CatalogField
         public string $default = '',
         public bool $required = false,
         public int $maxLength = 500,
+        public bool $display = true,
     ) {
     }
 
-    public static function text(string $name, string $label, string $default = '', string $placeholder = ''): self
+    public static function text(string $name, string $label, string $default = '', string $placeholder = '', bool $display = true): self
     {
-        return new self($name, $label, FieldKind::Text, default: $default, placeholder: $placeholder);
+        return new self($name, $label, FieldKind::Text, default: $default, placeholder: $placeholder, display: $display);
     }
 
-    public static function textarea(string $name, string $label, string $placeholder = ''): self
+    public static function textarea(string $name, string $label, string $placeholder = '', bool $display = true): self
     {
-        return new self($name, $label, FieldKind::Textarea, placeholder: $placeholder, maxLength: 2000);
+        return new self($name, $label, FieldKind::Textarea, placeholder: $placeholder, maxLength: 2000, display: $display);
     }
 
     /**

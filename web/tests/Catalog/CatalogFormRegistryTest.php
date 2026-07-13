@@ -193,4 +193,20 @@ final class CatalogFormRegistryTest extends TestCase
         self::assertSame(\App\Catalog\BikeType::values(), $byName['bikeTypes']->choices);
         self::assertArrayNotHasKey('handbike', $byName, 'handbike is folded into bikeTypes, not a separate field');
     }
+
+    public function testIntakeFieldsAreMarkedNonDisplay(): void
+    {
+        // The item title ('name'/'rideName') and free-text 'correction' intake
+        // are form inputs, not display facts — they must never render as drawer rows.
+        $intake = ['name', 'correction', 'rideName'];
+        foreach (ItemType::cases() as $type) {
+            foreach ($this->registry->for($type)->all() as $field) {
+                if (\in_array($field->name, $intake, true)) {
+                    self::assertFalse($field->display, "{$type->value}.{$field->name} must be display:false");
+                } else {
+                    self::assertTrue($field->display, "{$type->value}.{$field->name} must be display:true");
+                }
+            }
+        }
+    }
 }

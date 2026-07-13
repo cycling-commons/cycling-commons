@@ -45,7 +45,7 @@ final class CatalogFormRegistry
 
             ItemType::Climbs => new ItemFieldSet(
                 fields: [
-                    CatalogField::text('name', 'Name'),
+                    CatalogField::text('name', 'Name', display: false),
                     CatalogField::select('surface', 'Surface', ['Smooth asphalt', 'Asphalt', 'Worn asphalt', 'Cobbles', 'Gravel']),
                     // sq/tr: same vocab as AddClimbType's fSurfaceQ/fTraffic
                     // (App\Contribution\CatalogContributionService::CLIMB_FIELDS)
@@ -56,7 +56,7 @@ final class CatalogFormRegistry
                     CatalogField::text('avgGradient', 'Average gradient (%)'),
                     CatalogField::text('maxGradient', 'Max gradient (%)'),
                     CatalogField::select('effort', 'Effort', ['Steady', 'Challenging', 'Tough', 'Very steep']),
-                    CatalogField::textarea('correction', 'Anything to correct?', 'e.g. the foot starts at the bridge, not the square'),
+                    CatalogField::textarea('correction', 'Anything to correct?', 'e.g. the foot starts at the bridge, not the square', display: false),
                 ],
                 addFields: [
                     CatalogField::select('waterOnClimb', 'Water on climb?', self::UNKNOWN_YES_NO),
@@ -82,11 +82,11 @@ final class CatalogFormRegistry
 
             ItemType::BikeServices => new ItemFieldSet(
                 fields: [
-                    CatalogField::text('name', 'Name'),
+                    CatalogField::text('name', 'Name', display: false),
                     CatalogField::select('pumpValve', 'Pump valve', ['Presta + Schrader', 'Presta only', 'Schrader only', 'No pump']),
                     CatalogField::text('openingHours', 'Opening hours', default: '24/7'),
                     CatalogField::text('tools', 'Tools available', placeholder: 'e.g. chain tool, work stand'),
-                    CatalogField::textarea('correction', 'Anything to correct?', "What's wrong or out of date?"),
+                    CatalogField::textarea('correction', 'Anything to correct?', "What's wrong or out of date?", display: false),
                 ],
                 addFields: [
                     CatalogField::select('workStand', 'Work stand?', self::UNKNOWN_YES_NO),
@@ -97,7 +97,7 @@ final class CatalogFormRegistry
 
             ItemType::WhereToSleep => new ItemFieldSet(
                 fields: [
-                    CatalogField::text('name', 'Name'),
+                    CatalogField::text('name', 'Name', display: false),
                     CatalogField::text('town', 'Town / commune'),
                     // C2-T7 (spec §W2): keyed 'web', not 'website' — 'web' is the
                     // shared vocabulary key every OSM-harvested stay already carries
@@ -160,7 +160,7 @@ final class CatalogFormRegistry
 
             ItemType::ScenicViews => new ItemFieldSet(
                 fields: [
-                    CatalogField::text('name', 'Name'),
+                    CatalogField::text('name', 'Name', display: false),
                     CatalogField::select('type', 'Type', ['Viewpoint / high point', 'Monument', 'Heritage site', 'Nature reserve']),
                     CatalogField::select('bikeAccess', 'Access for bikes', ['Roadside', 'Short walk', 'Path only']),
                     CatalogField::text('whatYouSee', 'What can you see?'),
@@ -174,7 +174,7 @@ final class CatalogFormRegistry
 
             ItemType::HistoryCulture => new ItemFieldSet(
                 fields: [
-                    CatalogField::text('name', 'Name'),
+                    CatalogField::text('name', 'Name', display: false),
                     CatalogField::select('type', 'Type', ['Heritage site', 'Museum', 'Monument', 'Religious site']),
                     CatalogField::select('bikeParking', 'Bike parking', self::UNKNOWN_YES_NO),
                     CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
@@ -188,7 +188,7 @@ final class CatalogFormRegistry
 
             ItemType::QualityRides => new ItemFieldSet(
                 fields: [
-                    CatalogField::text('rideName', 'Ride name', placeholder: 'e.g. Spa · Sankt Vith'),
+                    CatalogField::text('rideName', 'Ride name', placeholder: 'e.g. Spa · Sankt Vith', display: false),
                     CatalogField::select('difficulty', 'Difficulty', array_values(DifficultyVocabulary::LABELS)),
                     // C2-T7 (spec §W2): keyed 'season', not 'bestSeason' — 'season' is
                     // the key CatalogProvider::routes() already reads/serves as
