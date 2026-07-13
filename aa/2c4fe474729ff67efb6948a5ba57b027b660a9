@@ -1,0 +1,35 @@
+web/tests/Auth/RegistrationTest.php
+  s_50ae7f4c1fd9e4::t_b4a8f688d1f227 225-289
+web/src/Form/ImproveType.php
+  s_50ae7f4c1fd9e4::t_538f79bdef5c62 88-91,97
+  s_50ae7f4c1fd9e4::t_c69cd6401b4338 186-199
+web/tests/Auth/ProfileSettingsTest.php
+  s_50ae7f4c1fd9e4::t_33062dfd1b48df 209-230
+web/src/Entity/User.php
+  s_50ae7f4c1fd9e4::t_a8dcf2e981331d 39-43,45-47
+  s_50ae7f4c1fd9e4::t_cb31d848c74eed 18
+web/src/Form/RegistrationFormType.php
+  s_50ae7f4c1fd9e4::t_ef79cabd6c8223 19
+  s_50ae7f4c1fd9e4::t_258efab2e79d9e 38-41
+web/tests/Contribution/ImproveTest.php
+  s_50ae7f4c1fd9e4::t_1ef01d58b0ce08 390-421
+web/src/Form/SettingsType.php
+  s_50ae7f4c1fd9e4::t_339fcc21a7d6f6 19
+  s_50ae7f4c1fd9e4::t_c23e626f3bb25a 43-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "aa2c4fe474729ff67efb6948a5ba57b027b660a9",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
