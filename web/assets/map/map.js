@@ -266,6 +266,8 @@
           rows.push({label:f.label, html:true, value:list.map(t=>`<span class="cc-chip">${escPend(t)}</span>`).join('')});
         } else if(f.kind === 'rating'){
           rows.push({label:f.label, value: /^[1-5]$/.test(String(v)) ? stars(Number(v)) : v});
+        } else if(f.kind === 'url'){
+          rows.push({label:f.label, value:String(v).replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site', href:v}]});
         } else {
           rows.push({label:f.label, value:v});
         }
@@ -674,12 +676,10 @@
   // populate A · Road surface from the hand-picked OSM segments
   if(window.CC_SURFACE){
     layerByKey['surface'].features = CC_SURFACE.segments.map(s=>{
-      // Each row only when the attribute is set (review W38) — attributes are
-      // spread from the DB, and a missing one otherwise rendered a labeled
-      // blank row; matches the conditional registry fields just below.
-      // Registry-driven (CC_FIELD_SCHEMA[A]): surface / smoothness / width /
-      // traffic / note / lit / segregated / seasonalClosure — value or "add"
-      // prompt. Per-row OSM provenance now lives only on the Source line.
+      // Registry-driven rows (CC_FIELD_SCHEMA[A]) — value or "add" prompt per field.
+      // Fields: surface / smoothness / width / traffic / note / lit /
+      // segregated / seasonalClosure. Per-row OSM provenance now lives only
+      // on the Source line.
       const rec = schemaRows('A', s, s.id);
       return {
         id:s.id, name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
