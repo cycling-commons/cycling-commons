@@ -12,17 +12,19 @@
   .dbody{padding:2.2rem clamp(1.25rem,4vw,2rem);max-width:880px;width:100%;margin:0 auto}
   .dpane{display:none} .dpane.on{display:block}
 
-  .stats{display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:2rem;padding-bottom:1.6rem;border-bottom:1px solid rgba(20,22,14,.12)}
-  .stat .n{font-family:var(--serif);font-size:2rem;font-weight:600}
-  .stat .n.t{color:var(--trail)}
-  .stat .l{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+  .sec-h{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:2rem 0 .4rem}
+  .sec-h:first-child{margin-top:0}
+  .empty{font-size:.9rem;color:#595c4d;padding:.6rem 0}
 
-  .item{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
-  .item .tag{font-family:var(--mono);font-size:.58rem;padding:.25rem .45rem;border-radius:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}
-  .item h4{flex:1;font-size:1rem;font-weight:500}
+  .item{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid rgba(20,22,14,.1);flex-wrap:wrap}
+  .item .tag{font-family:var(--mono);font-size:.58rem;padding:.25rem .45rem;border-radius:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em;background:var(--spruce);color:var(--paper)}
+  .item .tag-route{background:var(--trail);color:var(--ink)}
+  .item h4{flex:1;font-size:1rem;font-weight:500;min-width:8rem}
   .item .co{font-family:var(--mono);font-size:.62rem;color:#595c4d}
-  .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px}
+  .item-note{flex-basis:100%;margin:.1rem 0 0;font-size:.85rem;color:#4a4d40;border-left:2px solid var(--glacier);padding-left:.7rem}
+  .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px;white-space:nowrap}
   .pill.ok{background:#3e7d4f;color:#fff} .pill.pend{background:var(--ochre);color:var(--ink)} .pill.conf{background:var(--spruce);color:var(--paper)}
+  .pill.rej{background:var(--clay);color:#fff} .pill.ret{background:rgba(20,22,14,.12);color:#595c4d}
 
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
   .rc{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.1rem;display:block}
@@ -45,53 +47,36 @@
 
 <div class="dbody">
 
-  {# ── Contributions (PREVIEW data — data-API/Plan 5 replaces the figures) ── #}
+  {# ── Contributions — real data only (submissions + route proposals). The old
+     preview stat tiles + sample rows were identical for every user; removed. #}
   <section class="dpane on" id="p-contrib">
-    <div class="stats">
-      <div class="stat"><div class="n">142</div><div class="l">{{ 'account.stat_facts'|trans }}</div></div>
-      <div class="stat"><div class="n t">38</div><div class="l">{{ 'account.stat_confirmed'|trans }}</div></div>
-      <div class="stat"><div class="n">9</div><div class="l">{{ 'account.stat_osm'|trans }}</div></div>
-    </div>
+    {% set sub_pill = {'approved': 'ok', 'pending': 'pend', 'needs_info': 'pend', 'rejected': 'rej'} %}
+    <h2 class="sec-h">{{ 'account.contributions_title'|trans }}</h2>
+    {% if contributions is empty %}
+      <p class="empty">{{ 'account.contributions_empty'|trans }}</p>
+    {% else %}
+      {% for sub in contributions %}
+        <div class="item">
+          <span class="tag">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
+          <h4>{{ sub.title }}</h4>
+          <time class="co" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|date('Y-m-d') }}</time>
+          <span class="pill {{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
+          {% if sub.decisionNote %}<p class="item-note">{{ sub.decisionNote }}</p>{% endif %}
+        </div>
+      {% endfor %}
+    {% endif %}
 
-    <div class="item"><span class="tag" style="background:var(--glacier)">water</span><h4>Fountain · Spa centre</h4><span class="co">50.49°N 5.86°E</span><span class="pill ok">{{ 'account.status_approved'|trans }}</span></div>
-    <div class="item"><span class="tag" style="background:var(--trail);color:#fff">climb</span><h4>Côte de Stockeu · gradient edit</h4><span class="co">50.39°N 5.77°E</span><span class="pill pend">{{ 'account.status_pending'|trans }}</span></div>
-    <div class="item"><span class="tag" style="background:var(--ochre)">hazard</span><h4>Road closure · N66</h4><span class="co">50.42°N 5.80°E</span><span class="pill conf">{{ 'account.status_confirmed'|trans }} ×3</span></div>
-    <div class="item"><span class="tag" style="background:var(--clay);color:#fff">stay</span><h4>B&amp;B Vallée de l'Amblève</h4><span class="co">50.45°N 5.62°E</span><span class="pill ok">{{ 'account.status_approved'|trans }}</span></div>
-
-    {# ── Real contributions (this plan's data-API) ── #}
-    <section class="acct-contributions">
-      <h2>{{ 'account.contributions_title'|trans }}</h2>
-      {% if contributions is empty %}
-        <p class="acct-empty">{{ 'account.contributions_empty'|trans }}</p>
-      {% else %}
-        <ul class="acct-sub-list">
-          {% for sub in contributions %}
-            <li>
-              <span class="acct-sub-title">{{ sub.title }}</span>
-              <span class="acct-sub-type">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
-              <span class="acct-sub-status acct-sub-status--{{ sub.status.value }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
-              <time datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|date('Y-m-d') }}</time>
-              {% if sub.decisionNote %}<p class="acct-sub-note">{{ sub.decisionNote }}</p>{% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    </section>
-
-    {# ── Route proposals (route-domain v1 phase 1) ── #}
     {% if route_proposals is not empty %}
-    <section class="acct-contributions">
-      <h2>{{ 'account.route_proposals_title'|trans }}</h2>
-      <ul class="acct-sub-list acct-route-list">
-        {% for p in route_proposals %}
-          <li>
-            <span class="acct-sub-title">{{ p.name }}</span>
-            <span class="acct-sub-status acct-sub-status--{{ p.state.value }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
-            <time datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|date('Y-m-d') }}</time>
-          </li>
-        {% endfor %}
-      </ul>
-    </section>
+    {% set route_pill = {'verified': 'ok', 'unverified': 'conf', 'submitted': 'pend', 'rejected': 'rej', 'retired': 'ret'} %}
+    <h2 class="sec-h">{{ 'account.route_proposals_title'|trans }}</h2>
+    {% for p in route_proposals %}
+      <div class="item">
+        <span class="tag tag-route">{{ 'nav.routes'|trans }}</span>
+        <h4>{{ p.name }}</h4>
+        <time class="co" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|date('Y-m-d') }}</time>
+        <span class="pill {{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
+      </div>
+    {% endfor %}
     {% endif %}
 
     <div class="actions">
