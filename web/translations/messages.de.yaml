@@ -1304,6 +1304,7 @@ moderate_routes:
   role_label: 'Kurator'
   section_proposals: 'Neue Routenvorschläge'
   map_placeholder: 'Track-Vorschau'
+  map_open: 'Diese Route auf der Karte öffnen'
   region_none: 'Keine Region'
   region_cap: '%active% / %cap% aktiv'
   stat_ascent: '%m% m Anstieg'

@@ -8,7 +8,9 @@
   .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.2rem);line-height:1.1;margin-bottom:.4rem;color:var(--ink)}
   .mh .stat-line{font-family:var(--mono);font-size:.72rem;color:#595c4d}
 
-  .rd-map{height:280px;border-radius:8px;background:rgba(20,22,14,.06);margin:1.4rem 0;display:flex;align-items:center;justify-content:center;color:#8a8d7d;font-family:var(--mono);font-size:.7rem}
+  .rd-map{height:180px;border-radius:8px;background:rgba(20,22,14,.06);margin:1.4rem 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;color:var(--clay);font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(184,89,58,.25);transition:background .15s,color .15s}
+  .rd-map:hover{background:rgba(184,89,58,.08);color:var(--ink)}
+  .rd-map .rd-map-ic{font-size:1.8rem}
 
   .rd-meta{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.2rem 1.4rem;margin:1.4rem 0;background:var(--paper)}
   .rd-meta table{width:100%;border-collapse:collapse;font-size:.88rem}
@@ -63,7 +65,13 @@
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
-  <div class="rd-map" data-geom="{{ route.geom }}">{{ 'moderate_routes.map_placeholder'|trans }}</div>
+  {# The full interactive map (with basemap + tiles + CSP) lives at /map; opening
+     the route there via the ?route= deep-link is the reliable preview — this box
+     was a dead placeholder that never rendered a map. #}
+  <a class="rd-map" href="{{ path('map') }}?route={{ route.id }}" target="_blank" rel="noopener">
+    <span class="rd-map-ic" aria-hidden="true">&#9906;</span>
+    {{ 'moderate_routes.map_open'|trans }} &#8599;
+  </a>
 
   <div class="rd-meta">
     <table>

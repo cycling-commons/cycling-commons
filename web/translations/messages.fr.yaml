@@ -1304,6 +1304,7 @@ moderate_routes:
   role_label: 'Curateur'
   section_proposals: 'Nouvelles propositions'
   map_placeholder: 'Aperçu de la trace'
+  map_open: 'Ouvrir cet itinéraire sur la carte'
   region_none: 'Aucune région'
   region_cap: '%active% / %cap% actifs'
   stat_ascent: '%m% m de dénivelé'

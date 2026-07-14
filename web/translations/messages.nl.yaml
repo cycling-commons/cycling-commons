@@ -1304,6 +1304,7 @@ moderate_routes:
   role_label: 'Curator'
   section_proposals: 'Nieuwe routevoorstellen'
   map_placeholder: 'Trackvoorbeeld'
+  map_open: 'Open deze route op de kaart'
   region_none: 'Geen regio'
   region_cap: '%active% / %cap% actief'
   stat_ascent: '%m% m stijging'
