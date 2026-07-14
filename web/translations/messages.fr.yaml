@@ -279,8 +279,6 @@ licenses:
   disc_terms: 'conditions'
   disc_post: '.'
 coverage:
-  demo_label: 'Démo'
-  demo_body: '— les chiffres affichés sont indicatifs jusqu''au lancement du Commons. Lancement en 2026.'
   kicker: 'État de l''Atlas'
   title: 'La carte est-elle complète ?'
   lead: 'La transparence fait partie de l''accord — tout le monde peut voir ce qui est couvert, ce qui est lacunaire, et où aider. Suivi ouvert, rendu public.'
@@ -504,8 +502,6 @@ join:
   start_cta_code: 'Contribuer du code →'
   start_cta_email: 'Écrire à l''équipe'
 contributors:
-  demo_label: 'Démo'
-  demo_body: '— pseudonymes d''exemple et chiffres indicatifs, pour donner un aperçu du mur de remerciements. Lancement en 2026.'
   kicker: 'Contributeurs'
   title: 'Construit par des cyclistes.'
   lead: 'Reconnaissance sans surveillance. Nous célébrons <b>ce que</b> les gens contribuent — faits, confirmations, reversements à OpenStreetMap — jamais qui ils sont ni où ils roulent. La provenance est conservée ; l''identité ne l''est pas.'
@@ -521,8 +517,6 @@ contributors:
   stat_contributors: 'Contributeurs actifs'
   stat_osm: 'Faits reversés à OSM'
 developers:
-  demo_label: 'Démo'
-  demo_body: '— un aperçu de l''API ouverte &amp; des exports en masse. Lancement en 2026.'
   kicker: 'Construisez sur le Commons'
   title: 'Une API ouverte. Gratuite. Pour que tous construisent dessus.'
   lead: 'Interrogez le Commons par type et zone, ou récupérez des exports complets par pays. Ouvert par défaut — c''est ce qui en fait un bien commun. Les lectures sont ouvertes et anonymes, dans les limites d''un usage équitable ; les écritures nécessitent un token de compte gratuit. Nous limitons le débit et surveillons les abus pour que ça reste rapide et gratuit pour tous.'
@@ -541,8 +535,6 @@ developers:
   rules_kicker: 'Les règles'
   rules_body: '<b>Limites de débit &amp; usage équitable.</b> Les lectures anonymes sont <b>limitées en débit</b> — un bien commun n''est pas un CDN et nous n''avons pas des serveurs infinis. Une clé API gratuite augmente votre limite ; pour un usage intensif ou répété, utilisez les <b>exports en masse par pays</b> plutôt que de solliciter l''API en direct. Les écritures nécessitent un token de compte gratuit et passent par une révision. Licences : données <b>ODbL 1.0</b>, médias <b>CC BY-SA 4.0</b> — voir le résumé en langage clair. Attribuez, partagez à l''identique, maintenez ouvert ; l''usage commercial est autorisé.'
 regions:
-  demo_label: 'Démo'
-  demo_body: '— un aperçu de ce que l''atlas ouvert contiendra. Lancement en 2026.'
   kicker: 'L''atlas, par région'
   title: 'Régions'
   lead: 'Une <b>région</b> est une zone de pratique d''environ la <b>taille de la Wallonie / des Flandres</b> (~17 000 km²). Là où un pays est divisé en districts plus petits, les voisins sont <b>regroupés</b> jusqu''à ce que chaque région ait à peu près la même taille — une région est donc toujours une zone significative pour rouler, voter et curer. Pour l''instant, il ne s''agit que d''un aperçu, avec la <b>Wallonie</b> comme région de démonstration.'
@@ -558,8 +550,6 @@ regions:
   count_countries: '%n% pays'
   badge_live: 'En ligne'
 region:
-  demo_label: 'Démo'
-  demo_body: '— un aperçu de ce que l''atlas d''une région contiendra. Lancement en 2026.'
   kicker: 'BE · Wallonie · atlas régional'
   title: 'Wallonie'
   lead: 'Les classiques ardennaises, en une seule couche ouverte — les meilleurs cols, panoramas et itinéraires, maintenus frais par les cyclistes qui les connaissent.'
@@ -1112,7 +1102,6 @@ registration:
 # Account dashboard (the logged-in user environment). Contribution/vote/saved
 # figures are preview sample data until the data-API lands.
 account:
-  demo_banner: 'un aperçu de l''expérience du compte. Lancement en 2026.'
   brandsub: 'ATLAS OUVERT — DEPUIS 2026'
   heading: 'Votre compte'
   sections: 'Sections du compte'

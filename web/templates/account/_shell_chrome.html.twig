@@ -1,11 +1,10 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
-{# Shared account-shell chrome: demo banner + dark identity bar + section tabs.
+{# Shared account-shell chrome: dark identity bar + section tabs.
    Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
    Param: `active` = contrib | votes | saved | messages | settings | moderate | moderate_routes. #}
 {% set active = active|default('contrib') %}
-<div class="demo-banner"><b>Demo</b> — {{ 'account.demo_banner'|trans }}</div>
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>

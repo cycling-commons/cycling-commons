@@ -279,8 +279,6 @@ licenses:
   disc_terms: 'terms'
   disc_post: '.'
 coverage:
-  demo_label: 'Demo'
-  demo_body: '— figures shown are illustrative until the Commons goes live. Launching 2026.'
   kicker: 'State of the Atlas'
   title: 'How complete is the map?'
   lead: 'Transparency is part of the deal — anyone can see what''s covered, what''s thin, and where to help. Open monitoring, made public.'
@@ -504,8 +502,6 @@ join:
   start_cta_code: 'Contribute code →'
   start_cta_email: 'Email the team'
 contributors:
-  demo_label: 'Demo'
-  demo_body: '— sample handles and illustrative figures, shown to preview the acknowledgment wall. Launching 2026.'
   kicker: 'Contributors'
   title: 'Built by riders.'
   lead: 'Recognition without surveillance. We celebrate <b>what</b> people contribute — facts, confirmations, give-backs to OpenStreetMap — never who they are or where they ride. Provenance is kept; identity is not.'
@@ -521,8 +517,6 @@ contributors:
   stat_contributors: 'Active contributors'
   stat_osm: 'Facts sent to OSM'
 developers:
-  demo_label: 'Demo'
-  demo_body: '— a preview of the open API &amp; bulk exports. Launching 2026.'
   kicker: 'Build on the Commons'
   title: 'An open API. Free. For anyone to build on.'
   lead: 'Query the Commons by type and area, or pull bulk dumps per country. Open by default — that''s what makes it a commons. Reads are open and anonymous, within fair-use rate limits; writes need a free account token. We rate-limit and monitor for abuse so it stays fast and free for everyone.'
@@ -541,8 +535,6 @@ developers:
   rules_kicker: 'The rules'
   rules_body: '<b>Rate limits &amp; fair use.</b> Anonymous reads are <b>rate-limited</b> — a commons isn''t a CDN and we don''t have infinite servers. A free API key raises your limit; for heavy or repeated use, pull the <b>per-country bulk exports</b> instead of hammering the live API. Writes need a free account token and pass through review. Licences: data <b>ODbL 1.0</b>, media <b>CC BY-SA 4.0</b> — see the plain-language summary. Attribute, share-alike, keep open; commercial use is fine.'
 regions:
-  demo_label: 'Demo'
-  demo_body: '— a glimpse of what the open atlas will hold. Launching 2026.'
   kicker: 'The atlas, by region'
   title: 'Regions'
   lead: 'A <b>region</b> is a riding area of roughly <b>Wallonia / Flanders size</b> (~17000 km²). Where a country is split into smaller districts, neighbouring ones are <b>grouped together</b> until each region is about the same size — so a region is always a meaningful area to ride, vote on, and curate. Right now it''s just a preview, with <b>Wallonia</b> as the demo region.'
@@ -558,8 +550,6 @@ regions:
   count_countries: '%n% countries'
   badge_live: 'Live'
 region:
-  demo_label: 'Demo'
-  demo_body: '— a glimpse of what a region''s atlas will hold. Launching 2026.'
   kicker: 'BE · Wallonia · region atlas'
   title: 'Wallonia'
   lead: 'The Ardennes classics, in one open layer — the best climbs, views and routes, kept fresh by the riders who know them.'
@@ -1112,7 +1102,6 @@ registration:
 # Account dashboard (the logged-in user environment). Contribution/vote/saved
 # figures are preview sample data until the data-API lands.
 account:
-  demo_banner: 'a preview of the account experience. Launching 2026.'
   brandsub: 'OPEN ATLAS — EST. 2026'
   heading: 'Your account'
   sections: 'Account sections'

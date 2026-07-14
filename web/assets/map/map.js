@@ -2347,8 +2347,6 @@
     const set=new Set((ids||[]).map(Number));
     const feats=(layerByKey['experience']||{}).features||[];
     feats.forEach(f=>{ f.cur = set.has(Number(f.id)); });
-    const box=document.getElementById('bestEmpty');
-    if(box) box.hidden = !(mode==='curated' && set.size===0);
     render();
   }
 
@@ -2358,15 +2356,12 @@
   let _bestOfReq=0;
   function refreshBestOf(){
     const req=++_bestOfReq;
-    if(mode!=='curated'){
-      const box=document.getElementById('bestEmpty'); if(box) box.hidden=true;   // Everything never shows the Curated empty-state
-      render(); return;
-    }
+    if(mode!=='curated'){ render(); return; }
     fetch(`/map/best-of?season=${encodeURIComponent(boSeason)}&bike=${encodeURIComponent(boBike)}`,
       {credentials:'same-origin', headers:{'Accept':'application/json'}})
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then(d=>{ if(req===_bestOfReq) applyBestOf(d.ids); })
-      .catch(()=>{ if(req===_bestOfReq) applyBestOf([]); });   // on failure, Curated shows the empty state, not a stale set
+      .catch(()=>{ if(req===_bestOfReq) applyBestOf([]); });   // on failure, Curated shows no picks rather than a stale set
   }
 
   // Facet pickers (Curated only).

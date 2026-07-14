@@ -279,8 +279,6 @@ licenses:
   disc_terms: 'voorwaarden'
   disc_post: '.'
 coverage:
-  demo_label: 'Demo'
-  demo_body: '— getoonde cijfers zijn illustratief totdat de Commons live gaat. Lancering 2026.'
   kicker: 'Stand van de Atlas'
   title: 'Hoe compleet is de kaart?'
   lead: 'Transparantie is onderdeel van de afspraak — iedereen kan zien wat gedekt is, wat dun is, en waar je kunt helpen. Open monitoring, openbaar gemaakt.'
@@ -504,8 +502,6 @@ join:
   start_cta_code: 'Draag code bij →'
   start_cta_email: 'Mail het team'
 contributors:
-  demo_label: 'Demo'
-  demo_body: '— voorbeeldnamen en illustratieve cijfers, als vooruitblik op de bedankmuur. Lancering 2026.'
   kicker: 'Bijdragers'
   title: 'Gebouwd door fietsers.'
   lead: 'Erkenning zonder bewaking. We vieren <b>wat</b> mensen bijdragen — feiten, bevestigingen, teruggaven aan OpenStreetMap — nooit wie ze zijn of waar ze rijden. Herkomst wordt bijgehouden; identiteit niet.'
@@ -521,8 +517,6 @@ contributors:
   stat_contributors: 'Actieve bijdragers'
   stat_osm: 'Feiten doorgestuurd naar OSM'
 developers:
-  demo_label: 'Demo'
-  demo_body: '— een vooruitblik op de open API &amp; bulkexports. Lancering 2026.'
   kicker: 'Bouw op de Commons'
   title: 'Een open API. Gratis. Voor iedereen om op te bouwen.'
   lead: 'Bevraag de Commons op type en gebied, of haal bulkdumps per land op. Standaard open — dat is wat het een commons maakt. Leesbewerkingen zijn open en anoniem, binnen eerlijk-gebruik-tarieflimieten; schrijfbewerkingen vereisen een gratis accounttoken. We passen tarieflimieten toe en monitoren op misbruik zodat het snel en gratis blijft voor iedereen.'
@@ -541,8 +535,6 @@ developers:
   rules_kicker: 'De regels'
   rules_body: '<b>Tarieflimieten &amp; eerlijk gebruik.</b> Anonieme leesbewerkingen zijn <b>tariefgelimiteerd</b> — een commons is geen CDN en we hebben geen oneindige servers. Een gratis API-sleutel verhoogt je limiet; gebruik voor zwaar of herhaald gebruik de <b>bulkexports per land</b> in plaats van de live API te overbelasten. Schrijfbewerkingen vereisen een gratis accounttoken en gaan ter beoordeling. Licenties: data <b>ODbL 1.0</b>, media <b>CC BY-SA 4.0</b> — zie de samenvatting in gewone taal. Naamsvermelding, gelijk delen, open houden; commercieel gebruik is toegestaan.'
 regions:
-  demo_label: 'Demo'
-  demo_body: '— een glimp van wat de open atlas zal bevatten. Lancering 2026.'
   kicker: 'De atlas, per regio'
   title: 'Regio''s'
   lead: 'Een <b>regio</b> is een fietsgebied van ruwweg <b>de omvang van Wallonië / Vlaanderen</b> (~17.000 km²). Waar een land is opgedeeld in kleinere districten, worden aangrenzende districten <b>samengevoegd</b> totdat elke regio ongeveer even groot is — zodat een regio altijd een zinvol gebied is om in te fietsen, op te stemmen en te cureren. Op dit moment is het slechts een voorbeeld, met <b>Wallonië</b> als demoregio.'
@@ -558,8 +550,6 @@ regions:
   count_countries: '%n% landen'
   badge_live: 'Live'
 region:
-  demo_label: 'Demo'
-  demo_body: '— een glimp van wat de atlas van een regio zal bevatten. Lancering 2026.'
   kicker: 'BE · Wallonië · regio-atlas'
   title: 'Wallonië'
   lead: 'De Ardense klassiekers, in één open laag — de beste klimmen, uitzichten en routes, actueel gehouden door de fietsers die ze kennen.'
@@ -1112,7 +1102,6 @@ registration:
 # Account dashboard (the logged-in user environment). Contribution/vote/saved
 # figures are preview sample data until the data-API lands.
 account:
-  demo_banner: 'een voorbeeld van de accountervaring. Lancering 2026.'
   brandsub: 'OPEN ATLAS — EST. 2026'
   heading: 'Jouw account'
   sections: 'Accountsecties'
