@@ -164,3 +164,23 @@ when `is_granted('ROLE_CURATOR')` AND `!TwoFactorPolicy::requiresSetup($user)`
 — the same policy the enforcer and login handler use. Reproduced end-to-end
 with a setup-pending curator, covered by
 `MapCuratorInjectionTest::testSetupPendingCuratorMapHasNoPendingData`.
+
+## Decisions moved off the queue lists (2026-07-15)
+
+Rider/curator feedback: a decision made straight from the list lets a curator
+approve without ever seeing the item in place. So approve/reject/retire were
+REMOVED from both queue list pages:
+- **Submissions** are decided ONLY in the **map drawer** (open `/map?pending=<id>`
+  from the list, review in place, edit via the item editor if needed, approve/
+  reject there). The map page emits `window.CC_MOD_TOKEN = csrf_token('submit')`
+  (the stateless form token id) so the drawer no longer scrapes the token from a
+  `/moderate` form. `POST /moderate/decide` is unchanged.
+- **Route proposals** are decided ONLY on the **detail page** `/moderate/routes/{id}`,
+  which now renders the three-way `RouteDecisionType` form for `submitted` routes.
+  The list card links there. `POST /moderate/routes/decide` is unchanged.
+
+The queue lists carry no decision form; both controllers stopped building per-item
+forms. 15 decision tests were migrated to the new surfaces. Verified end-to-end
+that the map-drawer CSRF token records a decision. Follow-up (not done): serve
+pending route proposals onto the curator map so routes could also be approved in
+the map like submissions.
