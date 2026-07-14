@@ -135,3 +135,18 @@ These share a common trigger — **real submissions replacing `SampleQueue`** �
 - **DONE (phase B).** **Relocate the type list.** `ModerateController::TYPES` duplicates knowledge that belongs next to the data source; once submissions come from the data API, move the type enumeration there.
 - **DONE (phase B).** **`moderationToken()` should reject on selector miss.** It currently caches `''` if the `moderation_decision[_token]` input isn't found on the fetched `/moderate` page, silently sending an empty token; it should reject the promise instead so a missing form fails loudly rather than as a confusing 4xx from the decision endpoint.
 - **DONE (phase B).** **Revisit per-call `Collator` if the dataset grows.** `SampleQueue::distinct()` constructs a new `\Collator('en')` on every call; fine for a handful of fixture items, worth caching or hoisting once the dataset is real and larger.
+
+## UI feedback pass (2026-07-14)
+
+- Pending card recoloured for the dark drawer (its palette was written for a
+  light background): badge + hint now readable; buttons join the site's
+  orange system (approve = filled `--trail`, needs-info = paper outline,
+  reject = readable-red outline).
+- Selection halo fixes: pending pins are bottom-anchored teardrops → halo
+  lifts [0,-16] like confirmed pins; climbs halo at the route START (where
+  the pin is), not `geom.ll`.
+- Keyboard flow: A/R now ARMS the decision (ring on the button) and focuses
+  the note; Enter in the note sends it — previously the key submitted
+  instantly and the drawer closed before a note could be typed. Mouse
+  clicks still submit immediately. `map.d_mod_keys` hint updated (4
+  locales).

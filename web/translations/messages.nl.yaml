@@ -1002,7 +1002,7 @@ map:
   d_approve: 'Goedkeuren'
   d_needs_info: 'Info nodig'
   d_reject: 'Afwijzen'
-  d_mod_keys: 'A · goedkeuren · R · afwijzen — geregistreerd, nog niet opgeslagen.'
+  d_mod_keys: 'Toetsen: A goedkeuren · R afwijzen — zet de keuze klaar; voeg een notitie toe, Enter verstuurt.'
   d_decision_err: 'Kon de beslissing niet vastleggen — probeer opnieuw.'
   d_decision_recorded: 'Beslissing vastgelegd ({d}) — preview, nog niet opgeslagen · {ref}'
   d_rode_this: 'Ik heb dit gereden'

@@ -1002,7 +1002,7 @@ map:
   d_approve: 'Genehmigen'
   d_needs_info: 'Info nötig'
   d_reject: 'Ablehnen'
-  d_mod_keys: 'A · genehmigen · R · ablehnen — erfasst, noch nicht gespeichert.'
+  d_mod_keys: 'Tasten: A genehmigen · R ablehnen — merkt die Entscheidung vor; Notiz hinzufügen, Enter sendet.'
   d_decision_err: 'Die Entscheidung konnte nicht erfasst werden — bitte erneut versuchen.'
   d_decision_recorded: 'Entscheidung erfasst ({d}) — Vorschau, noch nicht gespeichert · {ref}'
   d_rode_this: 'Bin ich gefahren'

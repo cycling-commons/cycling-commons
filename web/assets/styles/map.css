@@ -155,7 +155,7 @@
   .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
   .cc-pin.pending{border-color:#D92D20;border-width:3px}
   .cc-mod{margin-top:1rem;border:1px solid rgba(217,45,32,.4);border-left:3px solid #D92D20;border-radius:0 8px 8px 0;padding:.9rem 1rem;background:rgba(217,45,32,.05)}
-  .cc-mod-badge{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#D92D20;margin-bottom:.5rem}
+  .cc-mod-badge{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#F97066;margin-bottom:.5rem}   /* readable red on the dark drawer (was #D92D20) */
   .cc-mod-body{font-size:.85rem;line-height:1.5;margin-bottom:.6rem}
   .cc-mod-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.5rem .7rem;font-size:.82rem;margin-bottom:.6rem}
   .cc-mod-diff-h{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.3rem}
@@ -164,12 +164,20 @@
   .cc-mod-initial{font-size:.82rem;color:rgba(239,230,212,.7);font-style:italic;margin:0}
   .cc-mod-note{width:100%;min-height:52px;border:1px solid rgba(20,22,14,.2);border-radius:6px;padding:.5rem;font-family:var(--sans);font-size:.85rem;margin-bottom:.6rem;resize:vertical}
   .cc-mod-acts{display:flex;gap:.5rem;flex-wrap:wrap}
-  .cc-mod-btn{font-family:var(--sans);font-weight:700;font-size:.8rem;padding:.5rem .8rem;border-radius:5px;border:none;cursor:pointer}
-  .cc-mod-btn.approve{background:#3e7d4f;color:#fff}
-  .cc-mod-btn.info{background:transparent;color:#555;border:1.5px solid rgba(20,22,14,.3)}
-  .cc-mod-btn.reject{background:transparent;color:var(--clay);border:1.5px solid var(--clay)}
+  /* the site's ONE button system (orange primary / outlined secondary), on the
+     dark drawer: approve = filled --trail; needs-info = paper outline; reject =
+     readable-red outline. The old green/#555/clay set was written for a light
+     background and disappeared on this panel. */
+  .cc-mod-btn{font-family:var(--sans);font-weight:700;font-size:.8rem;padding:.5rem .8rem;border-radius:5px;border:none;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
+  .cc-mod-btn.approve{background:var(--trail);color:var(--ink)}
+  .cc-mod-btn.approve:hover{background:#ff703d}
+  .cc-mod-btn.info{background:transparent;color:rgba(239,230,212,.85);border:1.5px solid rgba(239,230,212,.45)}
+  .cc-mod-btn.info:hover{border-color:var(--paper);color:var(--paper)}
+  .cc-mod-btn.reject{background:transparent;color:#F97066;border:1.5px solid #F97066}
+  .cc-mod-btn.reject:hover{background:rgba(249,112,102,.14)}
+  .cc-mod-btn.armed{box-shadow:0 0 0 3px rgba(255,90,31,.45)}   /* keyboard-armed decision — Enter in the note sends it */
   .cc-mod-btn:disabled{opacity:.5;cursor:not-allowed}
-  .cc-mod-preview{font-family:var(--mono);font-size:.6rem;color:#6b5320;margin-top:.5rem}
+  .cc-mod-preview{font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.55);margin-top:.5rem}
   .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
   .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .cc-cluster{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:15px;background:var(--c);color:#fff;font:600 13px/1 'Spline Sans Mono',ui-monospace,monospace;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(20,22,14,.45);cursor:pointer}

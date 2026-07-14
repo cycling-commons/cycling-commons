@@ -510,15 +510,30 @@
     if(navigator.clipboard) navigator.clipboard.writeText(c).then(()=>label(true)).catch(()=>{});
   });
 
-  // curator keyboard: A approve / R reject when a pending drawer is open — plain keys only
-  // (never on Ctrl/Cmd/Alt combos, e.g. Ctrl+R reload; never while typing in any input)
+  // curator keyboard: A approve / R reject when a pending drawer is open — plain
+  // keys only (never on Ctrl/Cmd/Alt combos, e.g. Ctrl+R reload). Pressing a key
+  // ARMS the decision and focuses the note (it no longer submits instantly —
+  // the drawer used to close before a note could be typed); Enter inside the
+  // note sends the armed decision (Shift+Enter keeps inserting a newline).
+  // Mouse clicks on the buttons submit immediately, as before.
   document.addEventListener('keydown', e=>{
     if(e.ctrlKey||e.metaKey||e.altKey) return;
     const t=e.target;
-    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)) return;
     const box=document.querySelector('#drawer.open .cc-mod'); if(!box) return;
-    if(e.key==='a'||e.key==='A'){ const b=box.querySelector('.cc-mod-btn.approve'); if(b){ e.preventDefault(); b.click(); } }
-    if(e.key==='r'||e.key==='R'){ const b=box.querySelector('.cc-mod-btn.reject'); if(b){ e.preventDefault(); b.click(); } }
+    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)){
+      if(e.key==='Enter' && !e.shiftKey && t.classList && t.classList.contains('cc-mod-note')){
+        const armed=box.querySelector('.cc-mod-btn.armed');
+        if(armed){ e.preventDefault(); armed.click(); }
+      }
+      return;
+    }
+    const arm=cls=>{
+      const b=box.querySelector('.cc-mod-btn.'+cls); if(!b) return;
+      box.querySelectorAll('.cc-mod-btn').forEach(x=>x.classList.toggle('armed', x===b));
+      const n=box.querySelector('.cc-mod-note'); if(n) n.focus();
+    };
+    if(e.key==='a'||e.key==='A'){ e.preventDefault(); arm('approve'); }
+    if(e.key==='r'||e.key==='R'){ e.preventDefault(); arm('reject'); }
   });
 
   // Wikimedia Commons photo helper — builds sm/lg via Special:FilePath (stable, no hash needed)
@@ -1743,7 +1758,11 @@
       // Confirmed items render as bottom-anchored teardrop pins whose icon sits
       // ~16px above the ground point, so raise the halo to ring the icon; flat
       // WebGL dots (unverified OSM) are centred on the point → no offset.
-      highlightAt(f.geom && f.geom.ll, f.cur ? [0,-16] : [0,0]);
+      // PENDING (moderation) pins are bottom-anchored teardrops too → same lift.
+      // Climbs place their pin at the route START (foot), not geom.ll — the
+      // halo must ring the pin the rider actually sees, not the centroid.
+      const hlAt = f.route ? f.route[0] : (f.geom && f.geom.ll);   // [lat,lng] arrays both
+      highlightAt(hlAt, (f.cur || f.pending) ? [0,-16] : [0,0]);
     }
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
     if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);

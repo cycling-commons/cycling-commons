@@ -1002,7 +1002,7 @@ map:
   d_approve: 'Approuver'
   d_needs_info: 'Infos requises'
   d_reject: 'Rejeter'
-  d_mod_keys: 'A · approuver · R · rejeter — enregistré, pas encore persisté.'
+  d_mod_keys: 'Touches : A approuver · R rejeter — prépare la décision ; ajoutez une note, Entrée envoie.'
   d_decision_err: 'Impossible d''enregistrer la décision — veuillez réessayer.'
   d_decision_recorded: 'Décision enregistrée ({d}) — aperçu, pas encore persisté · {ref}'
   d_rode_this: 'Je l''ai roulé'

@@ -1167,7 +1167,7 @@ map:
   d_approve: 'Approve'
   d_needs_info: 'Needs info'
   d_reject: 'Reject'
-  d_mod_keys: 'A · approve · R · reject — recorded, not yet persisted.'
+  d_mod_keys: 'Keys: A approve · R reject — arms the decision; add a note, Enter sends it.'
   d_decision_err: 'Could not record the decision — please try again.'
   d_decision_recorded: 'Decision recorded ({d}) — preview, not yet persisted · {ref}'
   d_rode_this: 'I rode this'
