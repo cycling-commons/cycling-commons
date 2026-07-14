@@ -1,0 +1,32 @@
+web/src/Controller/ModerateController.php
+  s_c68dfc59dc9546::t_dc22a77c11001b 105
+web/src/Moderation/ModerationScopeProvider.php
+  s_c68dfc59dc9546::t_1afb9d162f0bc7 75-77,80,82
+web/src/Controller/RouteModerateController.php
+  s_c68dfc59dc9546::t_0b908b6c57ea57 161-162
+  s_c68dfc59dc9546::t_bcb4123971175b 200,205
+  s_c68dfc59dc9546::t_b26b15a7a96668 80
+web/tests/Moderation/ModerateScopeGuardTest.php
+  s_c68dfc59dc9546::t_ff9460f3c4e80b 149-170
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "8d39e6a49fdf454b51d5ada4abee2185bbf7c93a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
