@@ -1253,8 +1253,6 @@ moderate:
   kicker: 'File de modération'
   title: 'Examinez les soumissions en attente.'
   role_label: 'Curateur'
-  stub_banner_bold: 'Décisions en direct.'
-  stub_banner_body: 'Approuver une soumission la publie immédiatement dans l''atlas en direct — la rejeter l''en écarte. Examinez chaque élément avec attention avant de décider.'
   type:
     new: 'Nouveau lieu'
     edit: 'Modification'

@@ -9,8 +9,6 @@
   .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
   .mh .pend-count{font-family:var(--mono);font-size:.68rem;color:var(--clay);margin-left:.8rem}
 
-  .stub-banner{background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:7px;padding:.75rem 1.1rem;font-size:.83rem;color:#6b5320;margin:1.6rem 0;line-height:1.5}
-  .stub-banner b{color:#B5532E}
 
   .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0 0 1.4rem}
   .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
@@ -75,10 +73,6 @@
 <div class="wrap" id="main">
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
-
-  <div class="stub-banner">
-    <b>{{ 'moderate.stub_banner_bold'|trans }}</b> {{ 'moderate.stub_banner_body'|trans }}
-  </div>
 
   <form class="mod-filters" method="get" action="{{ path('moderate') }}">
     <label>{{ 'moderate.filter.country'|trans }}

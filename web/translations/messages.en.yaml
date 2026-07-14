@@ -1253,8 +1253,6 @@ moderate:
   kicker: 'Moderation queue'
   title: 'Review pending submissions.'
   role_label: 'Curator'
-  stub_banner_bold: 'Decisions are live.'
-  stub_banner_body: 'Approving a submission publishes it to the live atlas immediately — rejecting keeps it out. Review each item carefully before deciding.'
   type:
     new: 'New place'
     edit: 'Edit'

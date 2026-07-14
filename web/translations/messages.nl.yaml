@@ -1253,8 +1253,6 @@ moderate:
   kicker: 'Moderatiewachtrij'
   title: 'Beoordeel ingediende bijdragen.'
   role_label: 'Curator'
-  stub_banner_bold: 'Beslissingen zijn direct actief.'
-  stub_banner_body: 'Een inzending goedkeuren publiceert deze meteen in de live atlas — afwijzen houdt hem eruit. Beoordeel elk item zorgvuldig voordat je beslist.'
   type:
     new: 'Nieuwe plek'
     edit: 'Bewerking'

@@ -1253,8 +1253,6 @@ moderate:
   kicker: 'Moderationswarteschlange'
   title: 'Ausstehende Einreichungen prüfen.'
   role_label: 'Kurator'
-  stub_banner_bold: 'Entscheidungen wirken sofort.'
-  stub_banner_body: 'Das Genehmigen einer Einreichung veröffentlicht sie sofort im Live-Atlas — das Ablehnen hält sie fern. Prüfe jeden Eintrag sorgfältig, bevor du entscheidest.'
   type:
     new: 'Neuer Ort'
     edit: 'Bearbeitung'
