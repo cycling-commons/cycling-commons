@@ -180,3 +180,12 @@ Deviations from §3–§4 as designed, all deliberate:
   and exempt from the name-proximity dedup (two real taps 80 m apart share
   the fallback label). Ride-check panel rows fall back to the layer label
   when the served name is empty.
+- **§4.3 follow-up (user feedback, same day).** Results moved from the
+  bottom-left corrections-style panel into the standard right-hand drawer
+  (town-card styling: `.cc-near` lists, per-letter group headers, Clear
+  button). Closing the drawer keeps the track overlay; the rail status
+  shows "X km · results · clear" to re-open or tear down. The radius
+  select sits inline after Choose GPX ("within 250 m",
+  `ride_check.within`). Fixed in passing: the rail control had reused the
+  route-community drawer's `.cc-rc-*` CSS namespace, silently restyling
+  its buttons/note — ride-check owns `.cc-ride-*` now.
