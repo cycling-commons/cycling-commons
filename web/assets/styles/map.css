@@ -443,15 +443,19 @@
     .rail-nav a.on,.rail-nav a:hover{background:var(--spruce-lift);opacity:1}
     /* Burger panel roominess: the ≤560px circle-collapse of the account chip is
        for the cramped inline topnav — inside this full panel the rider's name
-       stays visible. Panel widens to fit it; the account/lang dropdowns cap
-       their height and scroll instead of running off small (e.g. Firefox
-       mobile) viewports. */
+       stays visible, and the panel widens to fit it. */
     .rail-nav{min-width:13.5rem;max-width:86vw}
     .rail-nav .acct-menu,.rail-nav .lang-menu{margin:.25rem .5rem}
     .rail-nav .acct-chip .acct-name,.rail-nav .acct-chip .acct-caret{display:inline-block}
     .rail-nav .acct-chip{padding:.26rem .7rem .26rem .28rem;border-radius:999px}
     .rail-nav .acct-chip .acct-name{max-width:18ch}
-    .rail-nav .acct-dropdown{max-height:48svh;overflow-y:auto}
+    /* The account/lang dropdowns re-anchor to the viewport (fixed under the
+       top bar) instead of hanging off a chip that already sits ~275px down
+       the panel — the admin menu is the longest and must get the full
+       remaining height on short (e.g. Firefox mobile) viewports, scrolling
+       internally only when it truly cannot fit. Fixed works here because the
+       open panel has transform:none. */
+    .rail-nav .acct-dropdown{position:fixed;top:3.2rem;right:.6rem;left:auto;min-width:230px;max-height:calc(100svh - 4.2rem);overflow-y:auto}
     /* bottom sheet body (peeks closed via max-height:0, no transform -> no map reflow) */
     .rail-scroll{position:fixed;left:0;right:0;bottom:0;z-index:1500;pointer-events:auto;background:var(--ink);max-height:0;padding-top:0;padding-bottom:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6)}
     /* always-visible peek handle */
