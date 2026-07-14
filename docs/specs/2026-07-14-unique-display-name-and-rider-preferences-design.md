@@ -116,3 +116,19 @@ TDD per repo practice:
 - Map prefiltering: preselect the map's Bike filter and (re-based)
   Discipline chips from the logged-in rider's stored preferences.
 - Re-base the map Discipline chips onto `RidingStyle` and make them filter.
+
+## Execution note (2026-07-14, symfony-base, NOT pushed)
+
+Landed in six commits: `RidingStyle` enum (824d1e7); canonical display-name +
+preference columns + migration `Version20260714150000` (c525aa0), fixed by
+f1d6f3d so empty display names canonicalize to NULL (unique index ignores
+unnamed rows); test-user display-name sweep for the new canonical unique
+index (49685e0); case-insensitive uniqueness surfaces + 4-locale error
+(9d624af); settings UI preference selectors (2b6bad6). Full suite green (581
+tests, 2544 assertions), phpstan clean (0 errors), php-cs-fixer reports no
+diff. Psalm found 5 pre-existing errors in `CatalogSchemaProvider.php` and
+`RideCheckService.php`, both untouched by this feature's commits (confirmed
+via `git blame`, predating this work by same-day hours) — left as-is, not in
+scope. SPDX, licence, and translation-parity checks all pass. The migration
+was applied to both the test and dev databases; **prod still needs it** on
+deploy. Map prefiltering remains deferred as specced.
