@@ -1291,7 +1291,8 @@ moderate:
     error: 'Die Nachricht konnte nicht gesendet werden.'
   trash:
     button: 'Löschen'
-    confirm: 'Das dauerhaft als Spam löschen? Das kann nicht rückgängig gemacht werden und es wird keine Nachricht gesendet.'
+    confirm_head: 'Das dauerhaft als Spam löschen?'
+    confirm_rest: 'Das kann nicht rückgängig gemacht werden und es wird keine Nachricht gesendet.'
     done: 'Gelöscht — dauerhaft entfernt.'
     blocked: 'Nur eingereichte oder abgelehnte Vorschläge können gelöscht werden.'
     error: 'Konnte das nicht löschen — es ist möglicherweise bereits weg.'

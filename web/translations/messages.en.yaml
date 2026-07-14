@@ -1291,7 +1291,8 @@ moderate:
     error: 'Could not send the message.'
   trash:
     button: 'Trash'
-    confirm: 'Permanently delete this as spam? This cannot be undone and sends no message.'
+    confirm_head: 'Permanently delete this as spam?'
+    confirm_rest: 'This cannot be undone and sends no message.'
     done: 'Trashed — permanently deleted.'
     blocked: 'Only submitted or rejected proposals can be trashed.'
     error: 'Could not trash that — it may already be gone.'

@@ -49,25 +49,28 @@
     {{ form_end(form) }}
   </div>
 
-  <details class="msg-rider">
-    <summary>{{ 'moderate.msg.summary'|trans }}</summary>
-    <form method="post" action="{{ path('moderate_message') }}">
-      <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
-      <input type="hidden" name="channel" value="submission">
-      <input type="hidden" name="id" value="{{ item.id }}">
-      <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
-      <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
-    </form>
-  </details>
+  {# message + trash side by side (rider feedback: no full-width stack) #}
+  <div class="mod-2col">
+    <details class="msg-rider">
+      <summary>{{ 'moderate.msg.summary'|trans }}</summary>
+      <form method="post" action="{{ path('moderate_message') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
+        <input type="hidden" name="channel" value="submission">
+        <input type="hidden" name="id" value="{{ item.id }}">
+        <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
+        <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
+      </form>
+    </details>
 
-  <details class="msg-rider trash-confirm">
-    <summary>{{ 'moderate.trash.button'|trans }}</summary>
-    <form method="post" action="{{ path('moderate_trash') }}">
-      <input type="hidden" name="_token" value="{{ csrf_token('moderate-trash') }}">
-      <input type="hidden" name="kind" value="submission">
-      <input type="hidden" name="id" value="{{ item.id }}">
-      <p>{{ 'moderate.trash.confirm'|trans }}</p>
-      <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
-    </form>
-  </details>
+    <details class="msg-rider trash-confirm">
+      <summary>{{ 'moderate.trash.button'|trans }}</summary>
+      <form method="post" action="{{ path('moderate_trash') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('moderate-trash') }}">
+        <input type="hidden" name="kind" value="submission">
+        <input type="hidden" name="id" value="{{ item.id }}">
+        <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong> {{ 'moderate.trash.confirm_rest'|trans }}</p>
+        <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+      </form>
+    </details>
+  </div>
 </div>

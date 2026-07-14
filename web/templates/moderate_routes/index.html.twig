@@ -44,6 +44,11 @@
   .msg-rider summary{cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
   .msg-rider summary:hover{color:var(--ink)}
   .msg-rider form{margin-top:.6rem;display:flex;flex-direction:column;gap:.5rem}
+  /* message + trash split over two columns; buttons back to natural size */
+  .mod-2col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+  @media(max-width:700px){.mod-2col{grid-template-columns:1fr}}
+  .msg-rider form .btn-act{align-self:flex-end}
+  .trash-warn{color:#8b1a1a}
   .msg-rider textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
 
   .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
@@ -138,7 +143,7 @@
             <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
             <input type="hidden" name="kind" value="correction">
             <input type="hidden" name="id" value="{{ s.id }}">
-            <p>{{ 'moderate.trash.confirm'|trans }}</p>
+            <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong> {{ 'moderate.trash.confirm_rest'|trans }}</p>
             <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
           </form>
         </details>

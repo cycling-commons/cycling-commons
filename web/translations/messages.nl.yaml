@@ -1291,7 +1291,8 @@ moderate:
     error: 'Het bericht kon niet worden verstuurd.'
   trash:
     button: 'Weggooien'
-    confirm: 'Dit permanent verwijderen als spam? Dit kan niet ongedaan worden gemaakt en er wordt geen bericht verstuurd.'
+    confirm_head: 'Dit permanent verwijderen als spam?'
+    confirm_rest: 'Dit kan niet ongedaan worden gemaakt en er wordt geen bericht verstuurd.'
     done: 'Weggegooid — permanent verwijderd.'
     blocked: 'Alleen ingediende of afgewezen voorstellen kunnen worden weggegooid.'
     error: 'Kon dit niet weggooien — het is mogelijk al verdwenen.'

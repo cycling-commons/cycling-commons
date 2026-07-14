@@ -183,3 +183,13 @@ the detail UI today due to its pre-existing 404 rule) · desk-message tests
 don't cover nonexistent-id on two channels (code-inspected safe) · a live
 visual pass of the map-rail chip/bulb is still owed (browser was locked by a
 parallel session; all behaviour is WebTest-covered through the real kernel).
+
+## UI feedback pass (2026-07-14)
+
+Message-rider + Trash blocks: split over two columns (`.mod-2col` grid,
+stacking again under 700px); buttons back to natural size (`align-self:
+flex-end`, no more full-width); the trash warning's lead sentence
+("Permanently delete this as spam?") renders dark red — the `moderate.
+trash.confirm` key split into `confirm_head`/`confirm_rest` in all four
+locales. Applies to the submissions queue card, the routes-desk list and
+the route detail page (the per-correction trash keeps its inline layout).
