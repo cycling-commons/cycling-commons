@@ -28,6 +28,10 @@
   /* the MODERATION label is a solid full-height block bleeding to the bar's
      left edge — you cannot miss whose bar this is. */
   .dtabs-modlabel{display:flex;align-items:center;align-self:stretch;background:var(--clay);color:var(--paper);font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;margin-left:calc(-1 * clamp(1.25rem,4vw,2rem));padding:0 1rem 0 clamp(1.25rem,4vw,2rem)}
+  /* the personal (default) area gets the same bleeding block, in the site's
+     spruce — a clear, calm counterpart to moderation's clay so you always
+     know which mode you are in. */
+  .dtabs-personallabel{background:var(--spruce)}
   .dtabs.dtabs-modmode a.on{background:rgba(255,90,31,.2)}
   /* ONE button system for the account/moderation desks — the site's brand orange
      (--trail), matching .export/.cc-d-act. Primary actions = orange fill; the

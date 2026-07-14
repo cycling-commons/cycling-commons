@@ -32,9 +32,6 @@
 
   .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.88rem;color:#4a4d40;margin:1.4rem 0;border-radius:0 6px 6px 0}
   .rounding{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem}
-  .actions{display:flex;gap:.8rem;margin-top:2rem;flex-wrap:wrap}
-  .lnk{font-family:var(--sans);font-weight:700;font-size:.9rem;padding:.7rem 1.2rem;border-radius:5px;cursor:pointer;display:inline-block}
-  .lnk.p{background:var(--trail);color:var(--ink)} .lnk.g{border:1.5px solid var(--ink)}
 
   .acct-id{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
@@ -78,14 +75,6 @@
       </div>
     {% endfor %}
     {% endif %}
-
-    <div class="actions">
-      <a class="lnk p" href="{{ path('map') }}">{{ 'account.explore_map'|trans }} →</a>
-      {% if is_granted('ROLE_CURATOR') %}
-        <a class="lnk g" href="{{ path('moderate') }}">{{ 'account.open_moderation'|trans }} →</a>
-        <a class="lnk g" href="{{ path('moderate_routes') }}">{{ 'account.open_route_moderation'|trans }} →</a>
-      {% endif %}
-    </div>
   </section>
 
   {# ── Votes (PREVIEW) ── #}

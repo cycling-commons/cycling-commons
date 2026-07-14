@@ -32,6 +32,7 @@
 </nav>
 {% else %}
 <nav class="dtabs" aria-label="{{ 'account.sections'|trans }}">
+  <span class="dtabs-modlabel dtabs-personallabel" aria-hidden="true">{{ 'account.menu_personal'|trans }}</span>
   <a href="{{ path('profile') }}" data-pane="contrib" class="{{ active == 'contrib' ? 'on' : '' }}">{{ 'account.tab_contributions'|trans }}</a>
   <a href="{{ path('profile') }}?tab=votes" data-pane="votes" class="{{ active == 'votes' ? 'on' : '' }}">{{ 'account.tab_votes'|trans }}</a>
   <a href="{{ path('profile') }}?tab=saved" data-pane="saved" class="{{ active == 'saved' ? 'on' : '' }}">{{ 'account.tab_saved'|trans }}</a>
