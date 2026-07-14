@@ -119,16 +119,20 @@ TDD per repo practice:
 
 ## Execution note (2026-07-14, symfony-base, NOT pushed)
 
-Landed in six commits: `RidingStyle` enum (824d1e7); canonical display-name +
-preference columns + migration `Version20260714150000` (c525aa0), fixed by
+Landed in eight commits: `RidingStyle` enum (824d1e7); canonical display-name
++ preference columns + migration `Version20260714150000` (c525aa0), fixed by
 f1d6f3d so empty display names canonicalize to NULL (unique index ignores
 unnamed rows); test-user display-name sweep for the new canonical unique
 index (49685e0); case-insensitive uniqueness surfaces + 4-locale error
-(9d624af); settings UI preference selectors (2b6bad6). Full suite green (581
-tests, 2544 assertions), phpstan clean (0 errors), php-cs-fixer reports no
-diff. Psalm found 5 pre-existing errors in `CatalogSchemaProvider.php` and
-`RideCheckService.php`, both untouched by this feature's commits (confirmed
-via `git blame`, predating this work by same-day hours) — left as-is, not in
-scope. SPDX, licence, and translation-parity checks all pass. The migration
-was applied to both the test and dev databases; **prod still needs it** on
-deploy. Map prefiltering remains deferred as specced.
+(9d624af); settings UI preference selectors (2b6bad6); psalm hygiene for 5
+pre-existing type errors in `CatalogSchemaProvider`/`RideCheckService`
+(2b8042a, behaviour-neutral); final-review fixes (3297e48: friendly
+`app:user:create` collision error + test, settings min-length parity with
+registration, explicit non-null enum filters, ridingStyles clear-coverage).
+Final whole-branch review (opus): ready to merge; migration dedup edge cases
+(suffix width at ≥1000 dupes, whitespace heal-on-next-edit) rationale-closed
+as dev-data-only for a run-once migration. Full gates green: 583 tests,
+phpstan 0, psalm 0, cs-fixer clean, SPDX/licences/translation-parity
+(1705×4) pass. The migration was applied to both the test and dev databases;
+**prod still needs it** on deploy. Map prefiltering remains deferred as
+specced.
