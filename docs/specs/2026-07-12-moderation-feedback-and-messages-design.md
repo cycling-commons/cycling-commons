@@ -193,3 +193,8 @@ flex-end`, no more full-width); the trash warning's lead sentence
 trash.confirm` key split into `confirm_head`/`confirm_rest` in all four
 locales. Applies to the submissions queue card, the routes-desk list and
 the route detail page (the per-correction trash keeps its inline layout).
+- Messages now link to their subject when it is publicly on the map
+  (2026-07-14, 50791d6): `submission_approved` → `?feature=<refLabel>`;
+  `route_approved` / `correction_done` → `?route=<refId>`. Rejected /
+  retired / needs-info kinds carry no link (subject not publicly visible).
+  Key `messages.view_on_map`, 4 locales.
