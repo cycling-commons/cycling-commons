@@ -653,7 +653,8 @@ twofactor:
     manual_label: 'Niet te scannen? Voer deze sleutel handmatig in:'
     step2_no: 'Stap 2'
     step2_h2: 'Voer de 6-cijferige code in'
-    submit: 'Verifiëren &amp; inschakelen'
+    submit: 'Verifiëren & inschakelen'
+    back: '← Terug naar beveiligingsinstellingen'
 profile:
   badge_public: 'Opt-in openbare bijdrager'
   badge_private: 'Privéprofiel'

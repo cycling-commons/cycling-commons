@@ -654,6 +654,7 @@ twofactor:
     step2_no: 'Étape 2'
     step2_h2: 'Entrez le code à 6 chiffres'
     submit: 'Vérifier & activer'
+    back: '← Retour aux paramètres de sécurité'
 profile:
   badge_public: 'Contributeur public (optionnel)'
   badge_private: 'Profil privé'

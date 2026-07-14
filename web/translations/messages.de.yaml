@@ -653,7 +653,8 @@ twofactor:
     manual_label: 'Scannen nicht möglich? Diesen Schlüssel manuell eingeben:'
     step2_no: 'Schritt 2'
     step2_h2: 'Den 6-stelligen Code eingeben'
-    submit: 'Bestätigen &amp; aktivieren'
+    submit: 'Bestätigen & aktivieren'
+    back: '← Zurück zu den Sicherheitseinstellungen'
 profile:
   badge_public: 'Öffentlicher Beitragender (opt-in)'
   badge_private: 'Privates Profil'

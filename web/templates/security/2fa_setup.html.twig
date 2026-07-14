@@ -24,6 +24,9 @@
   .codes li{font-family:var(--mono);font-size:1.1rem;letter-spacing:.12em;background:rgba(20,22,14,.05);padding:.55rem .7rem;border-radius:5px;text-align:center}
   .warn{margin-top:1.4rem;font-size:.86rem;color:var(--clay);line-height:1.5;border-left:3px solid var(--clay);padding-left:.8rem}
   .done-link{display:inline-block;margin-top:1.6rem;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.88rem;text-decoration:none;padding:.55rem 1.15rem;border-radius:5px}
+  /* breadcrumb back-link: says where you are (Settings · Security) AND is the way back */
+  .crumb{display:inline-block;margin-bottom:1rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);text-decoration:none}
+  .crumb:hover,.crumb:focus-visible{color:var(--trail)}
 </style>
 {% endblock %}
 
@@ -33,6 +36,7 @@
 <div class="setup-wrap">
 
   {% if setup_complete %}
+    <a class="crumb" href="{{ path('settings', {tab: 'security'}) }}">{{ 'settings.heading'|trans }} · {{ 'settings.tab_security'|trans }}</a>
     <p class="step-no">{{ 'twofactor.setup.complete_kicker'|trans }}</p>
     <h1>{{ 'twofactor.setup.complete_h1'|trans }}</h1>
     <p class="lead">
@@ -49,9 +53,10 @@
       {{ 'twofactor.setup.complete_warn'|trans }}
     </p>
 
-    <a class="done-link" href="{{ path('profile') }}">{{ 'twofactor.setup.done'|trans }}</a>
+    <a class="done-link" href="{{ path('settings', {tab: 'security'}) }}">{{ 'twofactor.setup.done'|trans }}</a>
 
   {% else %}
+    <a class="crumb" href="{{ path('settings', {tab: 'security'}) }}">{{ 'twofactor.setup.back'|trans }}</a>
     <h1>{{ 'twofactor.setup.h1'|trans }}</h1>
     <p class="lead">
       {{ 'twofactor.setup.lead'|trans }}

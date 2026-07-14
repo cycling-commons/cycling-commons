@@ -110,6 +110,13 @@
   'security']` so flashes land on the visible tab — the existing
   functional tests' redirect assertions update accordingly.
 - New keys `settings.tab_profile` / `settings.tab_security` in 4 locales.
+- The 2FA setup page (`/2fa/setup`) carries a breadcrumb back-link
+  ("Settings · Security" / "← Back to security settings") to
+  `/settings?tab=security` in both states, and its post-enrolment Done
+  button targets the Security tab instead of the profile dashboard —
+  added 2026-07-14 after rider feedback that the page gave no orientation
+  or way back. (Same fix removed literal `&amp;` entities baked into the
+  NL/DE submit strings.)
 
 ## Surfaces
 
