@@ -1,0 +1,62 @@
+web/translations/messages.de.yaml
+  s_6873a55317fe40::t_14202ad3cad40a 827-925
+  s_6873a55317fe40::t_0cb812332f8df7 4-5
+  s_6873a55317fe40::t_a9e61d7f9ca094 926-929
+web/tests/Smoke/MapPageTest.php
+  s_6873a55317fe40::t_c14f3059d91ac9 29-51,53,55-70
+  s_6873a55317fe40::t_5fc3555ac324c4 52,54
+web/translations/messages.fr.yaml
+  s_6873a55317fe40::t_5819bb4b564c2d 926-929
+  s_6873a55317fe40::t_9ba7e504c1c8a5 4-5
+  s_6873a55317fe40::t_e9e3a5873c4561 827-925
+web/translations/messages.nl.yaml
+  s_6873a55317fe40::t_3296eb284df650 827-925
+  s_6873a55317fe40::t_0dc89c63b95fac 4-5
+  s_6873a55317fe40::t_08ef8f6a515b29 926-929
+web/translations/messages.en.yaml
+  s_6873a55317fe40::t_91cf7e92067904 1091-1094
+  s_6873a55317fe40::t_7ac8d5db9ff063 4-5
+  s_6873a55317fe40::t_0ab15155e73fd6 992-1090
+web/assets/map/map.js
+  s_6873a55317fe40::t_5c3220a33b06f0 1902
+  s_6873a55317fe40::t_3f3369c30c113f 1921
+  s_6873a55317fe40::t_cd1fb9d9830fcc 540-544
+  s_6873a55317fe40::t_8488ea5b0cee48 525-527
+  s_6873a55317fe40::t_efee14108d3184 1172
+  s_6873a55317fe40::t_7fca1c81ccfc8a 1927
+  s_6873a55317fe40::t_62c2bbdfc43219 2141
+  s_6873a55317fe40::t_04855eb858faa0 2337-2338,2344-2346
+  s_6873a55317fe40::t_98973538354a82 784
+  s_6873a55317fe40::t_5c8f6eec7c5148 515-518,522-524
+  s_6873a55317fe40::t_30dcc70a03cb3d 1282
+web/templates/map/index.html.twig
+  s_6873a55317fe40::t_2a36544ee66624 117,119-121,126,131,133-134,137,139,143,147,151,153,158,160-161,166,168-169,174,176-177,182,184-185,190
+  s_6873a55317fe40::t_1ff8acb8c3cca3 225-226,228,230-232,238-239,241,243,245,247-249,252
+  s_6873a55317fe40::t_1377b907e6843b 279-296,301-323
+  s_6873a55317fe40::t_6c860b2dff842c 85-87
+  s_6873a55317fe40::t_cdc3091cceaf94 199-201,204
+  s_6873a55317fe40::t_03a163fb827ecb 48-50
+  s_6873a55317fe40::t_03fe88fc8c7849 207,209-215,218-219
+  s_6873a55317fe40::t_b160e5d33dbe5a 56-57
+  s_6873a55317fe40::t_ff00a8d9dedd50 89,91-92,95,97-98,101,103-107,111
+  s_6873a55317fe40::t_8b4c4c6e77c852 114-115
+  s_6873a55317fe40::t_9483d0f9b9f527 297-300
+docs/specs/2026-07-08-route-domain-design.md
+  s_6873a55317fe40::t_b915af3fd19525 841-865
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "e540fa9e68427fa8601bc2c0c1de2d01a567dfd3",
+  "prompts": {},
+  "sessions": {
+    "s_6873a55317fe40": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f3856f5f-1f1d-4747-9831-307d21ed3dcd",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
