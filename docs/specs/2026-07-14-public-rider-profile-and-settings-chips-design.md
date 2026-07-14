@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Public rider profile, "view as others", & settings chip checkboxes (2026-07-14)
+# Public rider profile, "view as others", settings chips & tabs (2026-07-14)
 
 ## Problem
 
@@ -11,6 +11,9 @@
 2. The new settings preference checkboxes (bike types / riding styles)
    render as loose input+label rows whose pairing is visually ambiguous
    and out of line with the site's established checkbox styling.
+3. Settings has grown into one long page (status, identity, preferences,
+   public profile, password, 2FA, danger zone) — the rider asked for two
+   tabs, with password and 2FA on the second.
 
 ## Decisions
 
@@ -87,6 +90,27 @@
   keep their translated strings; no form-type change needed
   (`choice_label` already supplies the keys).
 
+### Settings tabs (Profile / Security)
+
+- Two tabs under the settings heading:
+  - **Profile** (default): account status, identity & privacy (profile
+    form incl. preferences + public-profile toggle + view-as link), the
+    profiles-opt-in notice.
+  - **Security**: password change, the 2FA block, the danger zone
+    (account deletion).
+- Markup: an accessible tab bar (`role="tablist"`, buttons with
+  `role="tab"`/`aria-selected`/`aria-controls`) over two
+  `role="tabpanel"` panes; pane switching is client-side (tiny inline
+  JS, no reload), same show/hide pattern as the account shell's
+  `.dpane` panes.
+- **Server picks the initial tab**: `?tab=security` (or a submitted
+  password form re-render) activates Security; everything else defaults
+  to Profile. The password-change and account-deletion controller
+  redirects change from `settings` to `settings` + `['tab' =>
+  'security']` so flashes land on the visible tab — the existing
+  functional tests' redirect assertions update accordingly.
+- New keys `settings.tab_profile` / `settings.tab_security` in 4 locales.
+
 ## Surfaces
 
 - New: `RiderProfileController`, `templates/profile/public.html.twig`,
@@ -124,3 +148,28 @@
   future decision).
 - Avatars, bios, or any new profile fields.
 - Caching/ESI for the public page.
+
+## Execution note (2026-07-14, symfony-base, NOT pushed)
+
+Executed as six commits (a settings-tabs task was folded in mid-plan at
+the rider's request, growing the plan from four commits to six):
+
+- `0e183aa` uuid unique index (migration `Version20260714190000`, applied
+  to test+dev — prod needs it run on deploy).
+- `f6fb532` public rider profile page + access-control + 4-locale
+  strings, plus `75f6bbb` fix: the pending-route count spans
+  Submitted+Unverified — the plan's Unverified-only read was a
+  domain-semantics bug caught in review, not a late scope change.
+- `5b297fd` view-as links (settings + own profile).
+- `77f4ef9` chip-pattern preference checkboxes (bike types / riding
+  styles), field names unchanged.
+- `560f37e` two-tab settings layout (Profile / Security), including the
+  redirect changes to `?tab=security` for the password and both
+  deletion flows.
+
+Full gate run (`web/`): `php bin/phpunit` green — 596 tests, 2611
+assertions. `phpstan analyse` — no errors. `psalm --no-cache` — no
+errors (69 pre-existing info-level suggestions, none touching this
+plan's files). `php-cs-fixer fix --dry-run --diff` — 0 of 263 files
+need changes. `check-spdx.sh`, `check-licenses.sh` — clean.
+`check-translations.sh` — en/fr/nl/de all at 1720 keys, full parity.
