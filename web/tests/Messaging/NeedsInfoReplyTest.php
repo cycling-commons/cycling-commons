@@ -12,6 +12,7 @@ use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\UserMessageKind;
+use App\Moderation\ModerationScope;
 use App\Moderation\ModerationService;
 use App\Moderation\SubmissionQueue;
 use Doctrine\ORM\EntityManagerInterface;
@@ -125,7 +126,7 @@ final class NeedsInfoReplyTest extends WebTestCase
     /** @return array{id:int,riderReply:?string} */
     private function findQueueRow(int $submissionId): array
     {
-        foreach ($this->queue()->filtered(null, null, null) as $row) {
+        foreach ($this->queue()->filtered(ModerationScope::global(), null, null, null) as $row) {
             if ($submissionId === $row['id']) {
                 /* @var array{id:int,riderReply:?string} $row */
                 return $row;

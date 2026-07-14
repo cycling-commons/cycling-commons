@@ -10,6 +10,7 @@ use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
 use App\Moderation\AlreadyDecidedException;
+use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\RetentionService;
 use App\Moderation\SubmissionQueue;
@@ -40,6 +41,7 @@ final class ModerateController extends AbstractController
         private readonly ModerationService $moderation,
         private readonly SubmissionQueue $queue,
         private readonly RetentionService $retention,
+        private readonly ModerationScopeProvider $scopeProvider,
     ) {
     }
 
@@ -65,7 +67,10 @@ final class ModerateController extends AbstractController
      */
     private function renderQueue(string $country, string $region, string $type, int $status = Response::HTTP_OK): Response
     {
-        $items = $this->queue->filtered($country ?: null, $region ?: null, $type ?: null);
+        /** @var User $user */
+        $user = $this->getUser();
+        $scope = $this->scopeProvider->scopeFor($user);
+        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null);
 
         // The form action carries the live filters (§13) so a decision made from
         // a filtered view redirects back to that same filtered view.
@@ -90,10 +95,10 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'items' => $items,
             'forms' => $forms,
-            'total' => $this->queue->total(),
+            'total' => $this->queue->total($scope),
             'filters' => ['country' => $country, 'region' => $region, 'type' => $type],
-            'countries' => $this->queue->countries(),
-            'regions' => $this->queue->regions(),
+            'countries' => $this->queue->countries($scope),
+            'regions' => $this->queue->regions($scope),
             'types' => SubmissionType::values(),
             'receipt' => null,
         ], Response::HTTP_OK === $status ? null : new Response('', $status));

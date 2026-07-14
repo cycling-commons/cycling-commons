@@ -6,9 +6,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Moderation\ModerationScope;
 use App\Moderation\RelativeTime;
 use App\Moderation\SubmissionQueue;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,13 +29,13 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->queue = static::getContainer()->get(SubmissionQueue::class);
     }
 
-    private function seed(string $type, string $country, SubmissionStatus $status = SubmissionStatus::Pending, string $title = 'Seeded'): Submission
+    private function seed(string $type, string $country, SubmissionStatus $status = SubmissionStatus::Pending, string $title = 'Seeded', ?int $regionId = null): Submission
     {
         $sub = (new Submission())
             ->setType(SubmissionType::from($type))->setLetter('D')->setUserId(7)
             ->setStatus($status)->setTitle($title)
             ->setGeom('{"type":"Point","coordinates":[5.5,50.5]}')
-            ->setCountryCode($country)
+            ->setCountryCode($country)->setRegionId($regionId)
             ->setChanges(['hours' => ['was' => '24/7', 'now' => 'closed Sundays']])
             ->setPayload([]);
         $this->em->persist($sub);
@@ -42,13 +44,43 @@ final class SubmissionQueueTest extends KernelTestCase
         return $sub;
     }
 
+    private function seedRegion(string $slug, string $name, string $country): Region
+    {
+        $region = (new Region())->setSlug($slug)->setName($name)->setCountryCode($country)
+            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[4.0,49.5],[6.5,49.5],[6.5,51.0],[4.0,51.0],[4.0,49.5]]]]}');
+        $this->em->persist($region);
+        $this->em->flush();
+
+        return $region;
+    }
+
+    /**
+     * Region A (BE), region B (NL), region C (FR); one submission in each plus
+     * one with region_id NULL — the fixture shared by the scoping tests.
+     *
+     * @return array{a: Region, b: Region, c: Region}
+     */
+    private function seedScopeFixture(): array
+    {
+        $a = $this->seedRegion('scope-a', 'Scope Region A', 'BE');
+        $b = $this->seedRegion('scope-b', 'Scope Region B', 'NL');
+        $c = $this->seedRegion('scope-c', 'Scope Region C', 'FR');
+
+        $this->seed('new', 'BE', SubmissionStatus::Pending, 'In A', $a->getId());
+        $this->seed('new', 'NL', SubmissionStatus::Pending, 'In B', $b->getId());
+        $this->seed('new', 'FR', SubmissionStatus::Pending, 'In C', $c->getId());
+        $this->seed('new', 'DE', SubmissionStatus::Pending, 'No region', null);
+
+        return ['a' => $a, 'b' => $b, 'c' => $c];
+    }
+
     public function testEmptyFiltersReturnPendingAndNeedsInfo(): void
     {
         $this->seed('new', 'BE');
         $this->seed('edit', 'NL', SubmissionStatus::NeedsInfo);
         $this->seed('edit', 'FR', SubmissionStatus::Approved); // decided — never queued
 
-        $items = $this->queue->filtered(null, null, null);
+        $items = $this->queue->filtered(ModerationScope::global(), null, null, null);
         self::assertCount(2, $items);
     }
 
@@ -57,15 +89,15 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->seed('new', 'BE');
         $this->seed('edit', 'NL');
 
-        self::assertCount(1, $this->queue->filtered('BE', null, null));
-        self::assertCount(1, $this->queue->filtered(null, null, 'edit'));
-        self::assertCount(0, $this->queue->filtered('BE', null, 'edit'));
+        self::assertCount(1, $this->queue->filtered(ModerationScope::global(), 'BE', null, null));
+        self::assertCount(1, $this->queue->filtered(ModerationScope::global(), null, null, 'edit'));
+        self::assertCount(0, $this->queue->filtered(ModerationScope::global(), 'BE', null, 'edit'));
     }
 
     public function testShapeMatchesTheMapContract(): void
     {
         $this->seed('edit', 'BE');
-        $item = $this->queue->filtered(null, null, null)[0];
+        $item = $this->queue->filtered(ModerationScope::global(), null, null, null)[0];
 
         foreach (['id', 'itemId', 'type', 'letter', 'country', 'region', 'title', 'lat', 'lng', 'who', 'when', 'body', 'was', 'now'] as $key) {
             self::assertArrayHasKey($key, $item);
@@ -84,7 +116,7 @@ final class SubmissionQueueTest extends KernelTestCase
     public function testRowsCarryTargetItemId(): void
     {
         $this->seed('edit', 'BE');
-        $item = $this->queue->filtered(null, null, null)[0];
+        $item = $this->queue->filtered(ModerationScope::global(), null, null, null)[0];
         self::assertArrayHasKey('itemId', $item);
         self::assertNull($item['itemId']);
 
@@ -99,7 +131,7 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->em->flush();
 
         $bound = array_values(array_filter(
-            $this->queue->filtered(null, null, null),
+            $this->queue->filtered(ModerationScope::global(), null, null, null),
             static fn (array $row): bool => 'Bound edit' === $row['title'],
         ))[0];
         self::assertSame(4242, $bound['itemId']);
@@ -110,14 +142,14 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->seed('new', 'NL');
         $this->seed('new', 'BE');
         $this->seed('new', 'BE');
-        self::assertSame(['BE', 'NL'], $this->queue->countries());
+        self::assertSame(['BE', 'NL'], $this->queue->countries(ModerationScope::global()));
     }
 
     public function testPendingForMapExcludesNeedsInfo(): void
     {
         $this->seed('new', 'BE');
         $this->seed('new', 'BE', SubmissionStatus::NeedsInfo);
-        self::assertCount(1, $this->queue->pendingForMap());
+        self::assertCount(1, $this->queue->pendingForMap(ModerationScope::global()));
     }
 
     public function testRelativeTime(): void
@@ -133,7 +165,7 @@ final class SubmissionQueueTest extends KernelTestCase
     public function testItemsCarryCountryAndRegion(): void
     {
         $this->seed('new', 'BE');
-        foreach ($this->queue->filtered(null, null, null) as $item) {
+        foreach ($this->queue->filtered(ModerationScope::global(), null, null, null) as $item) {
             self::assertArrayHasKey('country', $item);
             self::assertArrayHasKey('region', $item);
             self::assertNotSame('', $item['country']);
@@ -145,12 +177,12 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->seed('new', 'NL');
         $this->seed('new', 'BE');
 
-        $nl = $this->queue->filtered('NL', null, null);
+        $nl = $this->queue->filtered(ModerationScope::global(), 'NL', null, null);
         self::assertNotEmpty($nl);
         foreach ($nl as $item) {
             self::assertSame('NL', $item['country']);
         }
-        self::assertLessThan(\count($this->queue->filtered(null, null, null)), \count($nl));
+        self::assertLessThan(\count($this->queue->filtered(ModerationScope::global(), null, null, null)), \count($nl));
     }
 
     public function testFilterByTypeReturnsOnlyThatType(): void
@@ -158,7 +190,7 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->seed('hazard', 'BE');
         $this->seed('new', 'BE');
 
-        $hazards = $this->queue->filtered(null, null, 'hazard');
+        $hazards = $this->queue->filtered(ModerationScope::global(), null, null, 'hazard');
         self::assertNotEmpty($hazards);
         foreach ($hazards as $item) {
             self::assertSame('hazard', $item['type']);
@@ -171,7 +203,7 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->seed('new', 'BE');
         $this->seed('new', 'BE');
 
-        $countries = $this->queue->countries();
+        $countries = $this->queue->countries(ModerationScope::global());
         self::assertContains('BE', $countries);
         self::assertContains('NL', $countries);
         self::assertSame(array_values(array_unique($countries)), $countries);
@@ -186,6 +218,42 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->seed('edit', 'NL', SubmissionStatus::NeedsInfo);
         $this->seed('edit', 'FR', SubmissionStatus::Approved);
 
-        self::assertSame(2, $this->queue->total());
+        self::assertSame(2, $this->queue->total(ModerationScope::global()));
+    }
+
+    // ── Moderator-areas scoping (task 2) ────────────────────────────────────
+
+    public function testLimitedScopeSeesOwnRegionCountryAndNullRegionOnly(): void
+    {
+        $fixture = $this->seedScopeFixture();
+        $scope = ModerationScope::limited([$fixture['a']->getId()], ['NL']);
+
+        $titles = array_column($this->queue->filtered($scope, null, null, null), 'title');
+        sort($titles);
+        self::assertSame(['In A', 'In B', 'No region'], $titles);
+        self::assertSame(3, $this->queue->total($scope));
+
+        self::assertSame(['BE', 'DE', 'NL'], $this->queue->countries($scope));
+        self::assertSame(['Scope Region A', 'Scope Region B'], $this->queue->regions($scope));
+    }
+
+    public function testGlobalScopeSeesEverything(): void
+    {
+        $this->seedScopeFixture();
+
+        $items = $this->queue->filtered(ModerationScope::global(), null, null, null);
+        self::assertCount(4, $items);
+        self::assertSame(4, $this->queue->total(ModerationScope::global()));
+    }
+
+    public function testPendingForMapIsScoped(): void
+    {
+        $fixture = $this->seedScopeFixture();
+        $scope = ModerationScope::limited([$fixture['a']->getId()], ['NL']);
+
+        $titles = array_column($this->queue->pendingForMap($scope), 'title');
+        self::assertNotContains('In C', $titles);
+        sort($titles);
+        self::assertSame(['In A', 'In B', 'No region'], $titles);
     }
 }

@@ -28,7 +28,7 @@ final class SubmissionQueue
     }
 
     /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}> */
-    public function filtered(?string $country, ?string $region, ?string $type): array
+    public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type): array
     {
         $where = ["s.status IN ('pending', 'needs_info')"];
         $params = [];
@@ -45,7 +45,7 @@ final class SubmissionQueue
             $params['type'] = $type;
         }
 
-        return $this->rows(implode(' AND ', $where), $params);
+        return $this->rows($scope, implode(' AND ', $where), $params);
     }
 
     /**
@@ -53,30 +53,39 @@ final class SubmissionQueue
      *
      * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}>
      */
-    public function pendingForMap(): array
+    public function pendingForMap(ModerationScope $scope): array
     {
-        return $this->rows("s.status = 'pending'", []);
+        return $this->rows($scope, "s.status = 'pending'", []);
     }
 
-    public function total(): int
+    public function total(ModerationScope $scope): int
     {
-        return (int) $this->db->fetchOne("SELECT COUNT(*) FROM submission WHERE status IN ('pending', 'needs_info')");
-    }
+        $frag = $scope->sqlFragment('s');
+        $sql = "SELECT COUNT(*) FROM submission s WHERE s.status IN ('pending', 'needs_info')"
+            .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
 
-    /** @return list<string> */
-    public function countries(): array
-    {
-        return $this->sortLocalized($this->db->fetchFirstColumn(
-            "SELECT DISTINCT country_code FROM submission WHERE status IN ('pending', 'needs_info') AND country_code <> ''",
-        ));
+        return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
     }
 
     /** @return list<string> */
-    public function regions(): array
+    public function countries(ModerationScope $scope): array
     {
-        return $this->sortLocalized($this->db->fetchFirstColumn(
-            "SELECT DISTINCT r.name FROM submission s JOIN region r ON r.id = s.region_id WHERE s.status IN ('pending', 'needs_info')",
-        ));
+        $frag = $scope->sqlFragment('s');
+        $sql = "SELECT DISTINCT s.country_code FROM submission s WHERE s.status IN ('pending', 'needs_info') AND s.country_code <> ''"
+            .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
+
+        return $this->sortLocalized($this->db->fetchFirstColumn($sql, $frag['params'], $frag['types']));
+    }
+
+    /** @return list<string> */
+    public function regions(ModerationScope $scope): array
+    {
+        $frag = $scope->sqlFragment('s');
+        $sql = 'SELECT DISTINCT r.name FROM submission s JOIN region r ON r.id = s.region_id '
+            ."WHERE s.status IN ('pending', 'needs_info')"
+            .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
+
+        return $this->sortLocalized($this->db->fetchFirstColumn($sql, $frag['params'], $frag['types']));
     }
 
     /**
@@ -86,7 +95,7 @@ final class SubmissionQueue
      *                                      every user-supplied value is bound
      *                                      via $params, never interpolated
      *                                      (review #21)
-     * @param array<string, string> $params bound query parameters
+     * @param array<string, mixed> $params bound query parameters
      *
      * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}>
      *
@@ -96,8 +105,13 @@ final class SubmissionQueue
      * diffs) is therefore the single source of truth for both consumers; moving
      * it into one template would fork the logic into client JS (review #44).
      */
-    private function rows(string $where, array $params): array
+    private function rows(ModerationScope $scope, string $where, array $params): array
     {
+        $frag = $scope->sqlFragment('s');
+        if ('' !== $frag['sql']) {
+            $where .= ' AND '.$frag['sql'];
+            $params += $frag['params'];
+        }
         $rows = $this->db->fetchAllAssociative(
             'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
@@ -114,6 +128,7 @@ final class SubmissionQueue
              WHERE '.$where.'
              ORDER BY s.created_at DESC, s.id DESC',
             $params,
+            $frag['types'],
         );
         $now = $this->clock->now();
 

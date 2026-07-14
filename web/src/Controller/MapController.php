@@ -12,6 +12,7 @@ use App\Catalog\RidingStyle;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
 use App\Entity\User;
+use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,7 +30,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class MapController extends AbstractController
 {
     #[Route('/map', name: 'map')]
-    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator): Response
+    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider): Response
     {
         $user = $this->getUser();
         $params = [
@@ -52,7 +53,9 @@ final class MapController extends AbstractController
         // layer can render. Riders never receive this — it is emitted only inside
         // the template's is_granted('ROLE_CURATOR') block (no leak of un-vetted data).
         if ($this->isGranted('ROLE_CURATOR')) {
-            $params['pending'] = $queue->pendingForMap();
+            /** @var User $u */
+            $u = $this->getUser();
+            $params['pending'] = $queue->pendingForMap($scopeProvider->scopeFor($u));
         }
 
         return $this->render('map/index.html.twig', $params);
