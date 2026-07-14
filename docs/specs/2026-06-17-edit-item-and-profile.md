@@ -162,3 +162,15 @@ Wire-up:
 
   > **Superseded for K (2026-07-08):** the backend era answered this for routes with *no* rider edit schema
   > at all — curator-only edits plus moderated corrections.
+
+## Contributions tab: mock data removed (2026-07-14)
+
+The account dashboard's Contributions pane showed preview data identical for
+every user — three stat tiles (142 facts / 38 confirmed / 9 OSM) and four
+sample rows (Fountain/Côte de Stockeu/Road closure/B&B) — with the user's
+REAL submissions + route proposals rendered below in a separate, unstyled
+list. Removed the mock stats + rows; the real contributions and route
+proposals now render in the same `.item` row style (type/route tag, date,
+coloured status pill, decision-note sub-line). Empty state shows
+`account.contributions_empty`. Votes/Saved-regions panes keep their preview
+data (separate tabs, no real source until the data-API).
