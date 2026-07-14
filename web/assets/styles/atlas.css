@@ -41,12 +41,22 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .acct-dropdown a,.acct-dropdown button{display:block;width:100%;box-sizing:border-box;text-align:left;background:none;border:0;font-family:var(--sans);font-size:.9rem;color:var(--ink)!important;opacity:1!important;padding:.55rem .7rem;border-radius:5px;cursor:pointer;text-decoration:none;white-space:nowrap}
 .acct-dropdown a:hover,.acct-dropdown button:hover{background:rgba(20,22,14,.06)}
 /* section labels group the menu — makes clear what's personal vs. moderation/admin work */
-.acct-sec{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;margin:.35rem -.4rem .3rem;pointer-events:none;color:var(--paper)}
-.acct-sec:first-child{margin-top:0}
-/* group headers match the account-shell tab-bar label blocks: spruce for the
-   personal group, clay for moderation — one visual language across both menus. */
+/* Personal / Moderation groups: a solid header block (spruce / clay, matching
+   the account-shell tab-bar labels) over a light tint of the same hue behind
+   the group's links — one visual language across both menus. The group rounds
+   the outer corners; header + links go flush inside it. */
+.acct-group{border-radius:6px;overflow:hidden;margin:.35rem 0 .3rem}
+.acct-group:first-child{margin-top:0}
+.acct-group-personal{background:rgba(28,58,42,.07)}
+.acct-group-mod{background:rgba(181,83,46,.08)}
+.acct-sec{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .7rem;pointer-events:none;color:var(--paper)}
 .acct-sec-personal{background:var(--spruce)}
 .acct-sec-mod{background:var(--clay)}
+/* links inside a group: transparent (so the group tint shows) + square (the
+   group already rounds the corners); hover deepens the tint. */
+.acct-group a{border-radius:0}
+.acct-group-personal a:hover{background:rgba(28,58,42,.13)}
+.acct-group-mod a:hover{background:rgba(181,83,46,.15)}
 /* a hairline above a standalone item (Admin) sets it apart from the group above */
 .acct-dropdown a.acct-sep{margin-top:.25rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
 .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}
