@@ -608,9 +608,14 @@
       }
       out.push(e);
     }
+    // hlOff = highlight-pulse offset for this entry (same rule as the
+    // drawer-open halo at openDrawer): bottom-anchored pins (CATALOG point
+    // markers, confirmed OSM/pivot icon pins) centre the pulse on the pin
+    // BODY with [0,-16]; canvas dots and line features pulse at the point.
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
       push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
         color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
+        hlOff: layer.kind==='point' ? [0,-16] : [0,0],
         pend:f.pending?String(f.pending.id):undefined,
         go:()=>openFeatureByName(f.name)});
     }));
@@ -619,6 +624,7 @@
       const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
       push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
         color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id,
+        hlOff: p.c ? [0,-16] : [0,0],
         go:()=>openStayPivot(f)});
     });
     // Bulk OSM pools: the shared OSM_BULK table + water (its droplet layer is
@@ -631,6 +637,7 @@
         const lng=+c[0], lat=+c[1]; if(!isFinite(lng)||!isFinite(lat)) return;
         push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
           color:layer.color, letter:layer.letter, ll:[lat,lng], id:p.id,
+          hlOff: p.c ? [0,-16] : [0,0],
           go:()=>{ openDrawer(layer, key==='water' ? waterDrawer(p, {lng, lat}) : osmDrawer(layer, p, {lng, lat}, src)); flyToPin([lng,lat]); }});
       });
     });
@@ -1756,10 +1763,23 @@
     document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
       const n=near[+b.dataset.i];
       b.onclick=()=>n.e.go();
-      b.onmouseenter=()=>highlightAt(n.e.ll); b.onmouseleave=clearHighlight;
+      b.onmouseenter=()=>highlightAt(n.e.ll, n.e.hlOff); b.onmouseleave=clearHighlight;
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
-    flyToPin([meta.ll[1],meta.ll[0]]);
+    // Frame the whole ≤5 km neighbourhood instead of flyToPin's zoom-14 dive —
+    // hovering the list must pulse items that are actually on screen. The
+    // drawer covers the right edge on desktop (bottom sheet on mobile), hence
+    // the asymmetric padding.
+    if(near.length){
+      let minLat=meta.ll[0],maxLat=meta.ll[0],minLng=meta.ll[1],maxLng=meta.ll[1];
+      near.forEach(n=>{ if(!n.e.ll) return; const [la,ln]=n.e.ll;
+        if(la<minLat)minLat=la; if(la>maxLat)maxLat=la; if(ln<minLng)minLng=ln; if(ln>maxLng)maxLng=ln; });
+      const mobile=window.innerWidth<=820;
+      map.fitBounds([[minLng,minLat],[maxLng,maxLat]],
+        {padding:{top:70, bottom:mobile?300:70, left:70, right:mobile?70:400}, maxZoom:13.5, duration:900, essential:true});
+    } else {
+      map.flyTo({center:[meta.ll[1],meta.ll[0]], zoom:12.5, offset:[window.innerWidth<=820?0:-150,0], duration:900, essential:true});
+    }
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
   }
   // city info card — thin CITIES-lookup wrapper kept for existing callers (drawer .cc-city links, search)
@@ -1927,7 +1947,9 @@
         if(entry){ entry.go(); } else { flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); }
       });
       p.addEventListener('mouseover',e=>{ const b=e.target.closest('[data-g]'); if(!b) return;
-        const it=(groupsByLetter[b.dataset.g]||{items:[]}).items[+b.dataset.i]; if(it) highlightAt(it.ll); });
+        const it=(groupsByLetter[b.dataset.g]||{items:[]}).items[+b.dataset.i]; if(!it) return;
+        const entry=ITEM_INDEX.find(x=>x.letter===b.dataset.g && x.id===it.id);
+        highlightAt(it.ll, entry && entry.hlOff); });
       p.addEventListener('mouseout',e=>{ if(e.target.closest('[data-g]')) clearHighlight(); });
     }
     pick.onclick=()=>fileIn.click();
