@@ -163,3 +163,12 @@ Deviations from §3–§4 as designed, all deliberate:
   injected by the template inside the ROLE_USER block — no extra
   token-fetch endpoint; auth is in-controller (clean 401), matching the
   RouteCommunityController API convention rather than `#[IsGranted]`.
+- **§3.3 follow-up (user feedback, same day).** Opening a place no longer
+  flyToPin-zooms to 14 (which pushed most of the ≤5 km list off-screen for
+  hover-highlighting) — the card fits bounds over the place + all nearby
+  items (drawer-aware padding, maxZoom 13.5). The hover pulse is
+  anchor-aware: `ITEM_INDEX` entries carry `hlOff` ([0,-16] for
+  bottom-anchored pins — CATALOG point markers and confirmed icon pins —
+  [0,0] for canvas dots/lines), used by the place card and ride-check
+  panel alike. A pulse over empty map in Curated mode is intentional: it
+  locates items whose dots are hidden by the mode filter.
