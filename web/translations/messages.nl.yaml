@@ -1518,6 +1518,7 @@ form:
   ph_language: 'Sitestandaard (browsertaal)'
   ph_code: '123456'
   help_public_profile: 'Als dit uit staat, is je profiel verborgen en blijven bijdragen anoniem.'
+  error_display_name_taken: 'Deze weergavenaam is al in gebruik.'
 js:
   pw_show: 'Wachtwoord tonen'
   pw_hide: 'Wachtwoord verbergen'

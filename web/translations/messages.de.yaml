@@ -1518,6 +1518,7 @@ form:
   ph_language: 'Seitenstandard (Browsersprache)'
   ph_code: '123456'
   help_public_profile: 'Wenn deaktiviert, ist dein Profil ausgeblendet und deine Beiträge bleiben anonym.'
+  error_display_name_taken: 'Dieser Anzeigename ist bereits vergeben.'
 js:
   pw_show: 'Passwort anzeigen'
   pw_hide: 'Passwort verbergen'

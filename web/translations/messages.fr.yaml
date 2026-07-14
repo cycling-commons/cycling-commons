@@ -1518,6 +1518,7 @@ form:
   ph_language: 'Défaut du site (langue du navigateur)'
   ph_code: '123456'
   help_public_profile: 'Désactivé, votre profil est masqué et vos contributions restent anonymes.'
+  error_display_name_taken: 'Ce nom d''affichage est déjà pris.'
 js:
   pw_show: 'Afficher le mot de passe'
   pw_hide: 'Masquer le mot de passe'

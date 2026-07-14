@@ -1518,6 +1518,7 @@ form:
   ph_language: 'Site default (browser language)'
   ph_code: '123456'
   help_public_profile: 'When off, your profile is hidden and contributions stay anonymous.'
+  error_display_name_taken: 'This display name is already taken.'
 js:
   pw_show: 'Show password'
   pw_hide: 'Hide password'
