@@ -16,7 +16,7 @@ final class AdminActionLoggerTest extends KernelTestCase
     {
         $user = new User();
         $user->setEmail($email);
-        $user->setDisplayName('T');
+        $user->setDisplayName(strstr($email, '@', true) ?: $email);
         $user->setPassword('x');
         $em->persist($user);
         $em->flush();

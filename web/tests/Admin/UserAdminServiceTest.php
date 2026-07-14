@@ -28,7 +28,7 @@ final class UserAdminServiceTest extends KernelTestCase
     {
         $u = new User();
         $u->setEmail($email);
-        $u->setDisplayName('T');
+        $u->setDisplayName(strstr($email, '@', true) ?: $email);
         $u->setPassword('x');
         $u->setRoles($roles);
         $this->em->persist($u);

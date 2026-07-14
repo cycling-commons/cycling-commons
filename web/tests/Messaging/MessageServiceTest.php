@@ -26,7 +26,7 @@ final class MessageServiceTest extends KernelTestCase
 
     private function user(EntityManagerInterface $em, string $email): User
     {
-        $u = (new User())->setEmail($email)->setDisplayName('U');
+        $u = (new User())->setEmail($email)->setDisplayName(strstr($email, '@', true) ?: $email);
         $u->setPassword('x');
         $em->persist($u);
         $em->flush();

@@ -22,7 +22,7 @@ final class RouteCommunityReadTest extends WebTestCase
 {
     private function rider(EntityManagerInterface $em, string $email): User
     {
-        $u = (new User())->setEmail($email)->setDisplayName('R');
+        $u = (new User())->setEmail($email)->setDisplayName(strstr($email, '@', true) ?: $email);
         $u->setEmailVerified(true)->setEmailVerifiedAt(new \DateTimeImmutable())->setRoles([]);
         $u->setPassword(static::getContainer()->get(UserPasswordHasherInterface::class)->hashPassword($u, 'password1234'));
         $em->persist($u);

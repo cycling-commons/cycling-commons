@@ -40,7 +40,7 @@ final class UserAdminActionsTest extends WebTestCase
 
         $u = new User();
         $u->setEmail($email);
-        $u->setDisplayName('T');
+        $u->setDisplayName(strstr($email, '@', true) ?: $email);
         $u->setEmailVerified(true);
         $u->setEmailVerifiedAt(new \DateTimeImmutable());
         $u->setRoles($roles);

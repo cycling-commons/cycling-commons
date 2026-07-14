@@ -48,7 +48,7 @@ final class ModerateTest extends WebTestCase
 
         $user = new User();
         $user->setEmail($email);
-        $user->setDisplayName('Test User');
+        $user->setDisplayName(strstr($email, '@', true) ?: $email);
         $user->setEmailVerified(true);
         $user->setEmailVerifiedAt(new \DateTimeImmutable());
         $user->setRoles($roles);
@@ -76,9 +76,10 @@ final class ModerateTest extends WebTestCase
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
+        $submitterEmail = 'submitter-'.uniqid('', true).'@example.com';
         $submitter = new User();
-        $submitter->setEmail('submitter-'.uniqid('', true).'@example.com');
-        $submitter->setDisplayName('Submitter');
+        $submitter->setEmail($submitterEmail);
+        $submitter->setDisplayName(strstr($submitterEmail, '@', true) ?: $submitterEmail);
         $submitter->setPassword('x');
         $em->persist($submitter);
         $em->flush();

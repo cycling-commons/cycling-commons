@@ -22,7 +22,7 @@ final class RouteCorrectionsTest extends WebTestCase
 {
     private function user(EntityManagerInterface $em, string $email, array $roles = []): User
     {
-        $u = (new User())->setEmail($email)->setDisplayName('U');
+        $u = (new User())->setEmail($email)->setDisplayName(strstr($email, '@', true) ?: $email);
         $u->setEmailVerified(true)->setEmailVerifiedAt(new \DateTimeImmutable())->setRoles($roles);
         if ([] !== $roles) {
             $u->setTotpSecret('JBSWY3DPEHPK3PXP')->setTwoFaEnabled(true);
