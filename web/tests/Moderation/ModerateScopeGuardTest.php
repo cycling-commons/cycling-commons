@@ -146,6 +146,28 @@ final class ModerateScopeGuardTest extends WebTestCase
         self::assertSelectorTextNotContains('.q-title', $subB->getTitle());
     }
 
+    public function testUnassignedCuratorSeesEverything(): void
+    {
+        $client = static::createClient();
+        $regionA = $this->seedRegion('guard-unassigned-a', 'Guard Unassigned A', 'BE');
+        $regionB = $this->seedRegion('guard-unassigned-b', 'Guard Unassigned B', 'NL');
+        $subA = $this->seedSubmission('In region A', $regionA->getId());
+        $subB = $this->seedSubmission('In region B', $regionB->getId(), 'NL');
+
+        $curator = $this->curator('guard-unassigned@example.com');
+        // No assignRegion() call — a curator with zero moderator_area rows is
+        // global (rollout safety: newly promoted curators aren't silently
+        // scoped to nothing).
+        $client->loginUser($curator);
+
+        $client->request('GET', '/moderate');
+        self::assertResponseIsSuccessful();
+
+        $body = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString($subA->getTitle(), $body);
+        self::assertStringContainsString($subB->getTitle(), $body);
+    }
+
     public function testDecideOutOfScopeIs403(): void
     {
         $client = static::createClient();

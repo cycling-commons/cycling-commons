@@ -72,11 +72,14 @@ final class ModerationScopeProvider
      * Display names of the user's assigned areas (region names, then country
      * names), for the shell label / audit note / admin form. [] = global.
      *
+     * Accepts an already-resolved $scope so callers that resolved it earlier
+     * in the same request don't pay for a second moderator_area lookup.
+     *
      * @return list<string>
      */
-    public function describe(User $user): array
+    public function describe(User $user, ?ModerationScope $scope = null): array
     {
-        $scope = $this->scopeFor($user);
+        $scope ??= $this->scopeFor($user);
         if ($scope->global) {
             return [];
         }

@@ -77,7 +77,7 @@ final class RouteModerateController extends AbstractController
             'filter_region' => $regionId,
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
-            'mod_scope_names' => $this->scopeProvider->describe($user),
+            'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
         ]);
     }
 
@@ -158,7 +158,8 @@ final class RouteModerateController extends AbstractController
         }
         /** @var User $user */
         $user = $this->getUser();
-        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($user), null !== $row['region_id'] ? (int) $row['region_id'] : null)) {
+        $scope = $this->scopeProvider->scopeFor($user);
+        if (!$this->scopeProvider->allowsRegion($scope, null !== $row['region_id'] ? (int) $row['region_id'] : null)) {
             throw $this->createAccessDeniedException('Out of moderation scope.');
         }
         /** @var array<string,mixed> $attrs */
@@ -196,12 +197,12 @@ final class RouteModerateController extends AbstractController
             'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),
             'region_cap' => $this->moderation->regionCap(),
             'suggested_surface' => $suggested,
-            'suggestions' => array_values(array_filter($this->queue->pendingSuggestions($this->scopeProvider->scopeFor($user), null), static fn (array $s): bool => $s['routeId'] === $id)),
+            'suggestions' => array_values(array_filter($this->queue->pendingSuggestions($scope, null), static fn (array $s): bool => $s['routeId'] === $id)),
             'edit_form' => $editForm->createView(),
             'retire_form' => $retireForm?->createView(),
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
-            'mod_scope_names' => $this->scopeProvider->describe($user),
+            'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
         ]);
     }
 
