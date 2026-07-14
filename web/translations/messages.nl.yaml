@@ -1419,6 +1419,7 @@ messages:
   empty: 'Nog geen berichten — beslissingen over je bijdragen verschijnen hier.'
   from_curator: 'Van een curator'
   kind_submission_approved: 'Bijdrage goedgekeurd — bedankt!'
+  view_on_map: 'Bekijk op de kaart'
   kind_submission_rejected: 'Bijdrage niet aanvaard'
   kind_submission_needs_info: 'Een curator heeft meer informatie nodig'
   kind_route_approved: 'Routevoorstel goedgekeurd — bedankt!'

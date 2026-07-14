@@ -18,6 +18,8 @@
   .msg-meta{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;white-space:nowrap}
   .msg-ref{font-family:var(--mono);font-size:.68rem;color:#595c4d;margin-bottom:.5rem}
   .msg-body{font-size:.9rem;line-height:1.55;color:var(--ink)}
+  .msg-map-link{display:inline-block;margin-top:.45rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+  .msg-map-link:hover{color:var(--trail)}
   .msg-note{font-size:.88rem;line-height:1.55;color:#4a4d40;background:var(--paper);border-left:2px solid var(--glacier);padding:.6rem .85rem;border-radius:0 5px 5px 0;margin-top:.55rem}
   .msg-from-curator{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
   .msg-empty{color:#595c4d;font-size:.95rem}
@@ -54,6 +56,13 @@
           <div class="msg-body">
             {% if m.bodyKey %}{{ m.bodyKey|trans(m.bodyParams ?? {}) }}{% endif %}
             {% if m.bodyText %}<p class="msg-note">{{ m.bodyText }}</p>{% endif %}
+            {# link to the item — only for kinds whose subject is publicly on the
+               map (approved submission by name; live route by id) #}
+            {% if m.kind.value == 'submission_approved' %}
+              <a class="msg-map-link" href="{{ path('map') }}?feature={{ m.refLabel|url_encode }}">{{ 'messages.view_on_map'|trans }} ↗</a>
+            {% elseif m.kind.value in ['route_approved', 'correction_done'] %}
+              <a class="msg-map-link" href="{{ path('map') }}?route={{ m.refId }}">{{ 'messages.view_on_map'|trans }} ↗</a>
+            {% endif %}
           </div>
           {% if m.sender == 'curator' %}
             <div class="msg-from-curator">{{ 'messages.from_curator'|trans }}</div>

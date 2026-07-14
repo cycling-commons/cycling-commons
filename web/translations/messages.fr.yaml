@@ -1419,6 +1419,7 @@ messages:
   empty: 'Pas encore de message — les décisions sur vos contributions apparaîtront ici.'
   from_curator: 'D''un curateur'
   kind_submission_approved: 'Contribution approuvée — merci !'
+  view_on_map: 'Voir sur la carte'
   kind_submission_rejected: 'Contribution non retenue'
   kind_submission_needs_info: 'Un curateur a besoin de précisions'
   kind_route_approved: 'Proposition d''itinéraire approuvée — merci !'
