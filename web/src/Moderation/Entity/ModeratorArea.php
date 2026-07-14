@@ -44,6 +44,12 @@ class ModeratorArea
 
     public function __construct(int $userId, ?int $regionId, ?string $countryCode)
     {
+        if (null !== $countryCode) {
+            $countryCode = trim($countryCode);
+            if (2 !== \strlen($countryCode)) {
+                throw new \InvalidArgumentException('A country code must be a 2-letter ISO code.');
+            }
+        }
         if ((null === $regionId) === (null === $countryCode)) {
             throw new \InvalidArgumentException('A moderator area is exactly one region OR one country.');
         }

@@ -54,10 +54,17 @@ final class ModerationScope
      * region_id column. Empty when global. Empty lists bind impossible
      * sentinels so the IN () clauses stay valid SQL.
      *
+     * $alias is interpolated into raw SQL: it MUST be a hardcoded literal
+     * identifier at the call site, never user/request-derived. A cheap
+     * allowlist guard enforces the identifier shape.
+     *
      * @return array{sql: string, params: array<string, mixed>, types: array<string, mixed>}
      */
     public function sqlFragment(string $alias): array
     {
+        if (1 !== preg_match('/^[a-z][a-z0-9_]*$/i', $alias)) {
+            throw new \InvalidArgumentException('Alias must be a literal SQL identifier.');
+        }
         if ($this->global) {
             return ['sql' => '', 'params' => [], 'types' => []];
         }
