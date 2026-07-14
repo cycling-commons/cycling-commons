@@ -1,0 +1,41 @@
+web/src/Moderation/ModerationService.php
+  s_c68dfc59dc9546::t_581087f8c01537 36
+  s_c68dfc59dc9546::t_b5057de2a741b0 55-57
+  s_c68dfc59dc9546::t_92bfb963cf28a8 129-131
+web/src/Controller/ModerateMessageController.php
+  s_c68dfc59dc9546::t_c45a4810984c59 101,109,112,121,124,132-133,135
+  s_c68dfc59dc9546::t_5f5cb0471df5a3 44
+  s_c68dfc59dc9546::t_c076d20fddab66 73,78-80
+  s_c68dfc59dc9546::t_ea8f0af992de9a 14
+  s_c68dfc59dc9546::t_aa488ac97f688f 81
+web/config/packages/doctrine.yaml
+  s_c68dfc59dc9546::t_acae8db604fcc5 36-40
+web/tests/Moderation/ModerateScopeGuardTest.php
+  s_c68dfc59dc9546::t_b87c5cf6703cd2 257-259
+  s_c68dfc59dc9546::t_03af6c893adf71 1-256,260-273
+web/src/Controller/ModerateController.php
+  s_c68dfc59dc9546::t_fa90c1c1bae779 125-126
+  s_c68dfc59dc9546::t_8da8ed58e4a72a 192-193
+  s_c68dfc59dc9546::t_0080d72882d074 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "32d54da86e56ec44d00266282612cc09bbd924a0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
