@@ -1,0 +1,30 @@
+web/src/Controller/MapController.php
+  s_c68dfc59dc9546::t_adbe5199c52444 34
+  s_c68dfc59dc9546::t_eb6eb2ece8b3e0 54-64
+  s_c68dfc59dc9546::t_3ed2b419227e95 17
+web/tests/Moderation/MapCuratorInjectionTest.php
+  s_c68dfc59dc9546::t_51542757116bed 93-115
+docs/specs/2026-07-02-map-based-moderation-design.md
+  s_c68dfc59dc9546::t_277a8775cc80a1 153-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "1ac0d98cd9e69e2d7905a677ea88a6f046e579f9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
