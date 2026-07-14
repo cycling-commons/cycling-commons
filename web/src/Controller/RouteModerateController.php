@@ -11,6 +11,8 @@ use App\Catalog\RouteSuggestionStatus;
 use App\Catalog\SurfaceVocabulary;
 use App\Entity\User;
 use App\Form\RouteDecisionType;
+use App\Moderation\ModerationScopeProvider;
+use App\Moderation\OutOfScopeException;
 use App\Moderation\RegionFullException;
 use App\Moderation\RetentionService;
 use App\Moderation\RouteModerationService;
@@ -39,6 +41,7 @@ final class RouteModerateController extends AbstractController
         private readonly RouteQueue $queue,
         private readonly RouteModerationService $moderation,
         private readonly RetentionService $retention,
+        private readonly ModerationScopeProvider $scopeProvider,
     ) {
     }
 
@@ -49,10 +52,14 @@ final class RouteModerateController extends AbstractController
         // must never delay or break the desk render.
         $this->retention->sweepOpportunistically();
 
+        /** @var User $user */
+        $user = $this->getUser();
+        $scope = $this->scopeProvider->scopeFor($user);
+
         $region = $request->query->get('region');
         $regionId = null !== $region && ctype_digit((string) $region) ? (int) $region : null;
 
-        $rows = $this->queue->pending($regionId);
+        $rows = $this->queue->pending($scope, $regionId);
         $forms = [];
         foreach ($rows as $row) {
             $forms[$row['id']] = $this->createForm(RouteDecisionType::class, null, [
@@ -64,9 +71,9 @@ final class RouteModerateController extends AbstractController
             'nav_active' => 'moderate_routes',
             'routes' => $rows,
             'forms' => $forms,
-            'suggestions' => $this->queue->pendingSuggestions($regionId),
-            'total' => $this->queue->total(),
-            'regions' => $this->queue->regions(),
+            'suggestions' => $this->queue->pendingSuggestions($scope, $regionId),
+            'total' => $this->queue->total($scope),
+            'regions' => $this->queue->regions($scope),
             'filter_region' => $regionId,
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
@@ -101,6 +108,8 @@ final class RouteModerateController extends AbstractController
                 default => throw new \InvalidArgumentException('bad decision'),
             };
             $this->addFlash('success', 'moderate_routes.flash.decided');
+        } catch (OutOfScopeException) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (RegionFullException) {
             $this->addFlash('danger', 'moderate_routes.error.region_full');
         } catch (\InvalidArgumentException|\LogicException) {
@@ -125,6 +134,8 @@ final class RouteModerateController extends AbstractController
         try {
             $this->moderation->resolveSuggestion((int) $request->request->get('suggestion_id'), $status, $curator);
             $this->addFlash('success', 'moderate_routes.flash.suggestion_resolved');
+        } catch (OutOfScopeException) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (\InvalidArgumentException|\LogicException) {
             $this->addFlash('danger', 'moderate_routes.error.undecidable');
         }
@@ -143,6 +154,11 @@ final class RouteModerateController extends AbstractController
         $servedValues = array_map(static fn (ItemState $s): string => $s->value, ItemState::SERVED);
         if (false === $row || ('submitted' !== $row['state'] && !\in_array($row['state'], $servedValues, true))) {
             throw $this->createNotFoundException();
+        }
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($user), null !== $row['region_id'] ? (int) $row['region_id'] : null)) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
         }
         /** @var array<string,mixed> $attrs */
         $attrs = json_decode((string) $row['attributes'], true) ?: [];
@@ -179,7 +195,7 @@ final class RouteModerateController extends AbstractController
             'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),
             'region_cap' => $this->moderation->regionCap(),
             'suggested_surface' => $suggested,
-            'suggestions' => array_values(array_filter($this->queue->pendingSuggestions(null), static fn (array $s): bool => $s['routeId'] === $id)),
+            'suggestions' => array_values(array_filter($this->queue->pendingSuggestions($this->scopeProvider->scopeFor($user), null), static fn (array $s): bool => $s['routeId'] === $id)),
             'edit_form' => $editForm->createView(),
             'retire_form' => $retireForm?->createView(),
             'page_title' => 'moderate_routes.meta_title',
@@ -204,6 +220,8 @@ final class RouteModerateController extends AbstractController
         try {
             $this->moderation->editMetadata($id, $payload, $curator);
             $this->addFlash('success', 'moderate_routes.flash.edited');
+        } catch (OutOfScopeException) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (\InvalidArgumentException|\LogicException) {
             $this->addFlash('danger', 'moderate_routes.error.undecidable');
         }
@@ -236,6 +254,8 @@ final class RouteModerateController extends AbstractController
                 default => throw new \InvalidArgumentException('Unknown trash kind.'),
             };
             $this->addFlash('success', 'moderate.trash.done');
+        } catch (OutOfScopeException) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (TrashBlockedException) {
             $this->addFlash('danger', 'moderate.trash.blocked');
         } catch (\InvalidArgumentException) {

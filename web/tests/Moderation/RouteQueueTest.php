@@ -7,10 +7,12 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\Entity\Region;
 use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionReason;
+use App\Moderation\ModerationScope;
 use App\Moderation\RouteQueue;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -32,7 +34,7 @@ final class RouteQueueTest extends KernelTestCase
         }
 
         $queue = static::getContainer()->get(RouteQueue::class);
-        $rows = $queue->pending(null);
+        $rows = $queue->pending(ModerationScope::global(), null);
 
         self::assertGreaterThanOrEqual(2, \count($rows));
         self::assertSame('Proposal A', $rows[0]['name'], 'oldest first');
@@ -65,7 +67,7 @@ final class RouteQueueTest extends KernelTestCase
         $em->flush();
 
         $queue = static::getContainer()->get(RouteQueue::class);
-        $rows = $queue->pendingSuggestions(null);
+        $rows = $queue->pendingSuggestions(ModerationScope::global(), null);
 
         $withSegmentsRow = self::findRowById($rows, $withSegments->getId());
         $withoutSegmentsRow = self::findRowById($rows, $withoutSegments->getId());
@@ -74,6 +76,58 @@ final class RouteQueueTest extends KernelTestCase
         self::assertNotNull($withoutSegmentsRow);
         self::assertSame(2, $withSegmentsRow['segmentCount']);
         self::assertSame(0, $withoutSegmentsRow['segmentCount']);
+    }
+
+    // ── Moderator-areas scoping (task 4) ────────────────────────────────────
+
+    private function seedRegion(EntityManagerInterface $em, string $slug, string $name, string $country): Region
+    {
+        $region = (new Region())->setSlug($slug)->setName($name)->setCountryCode($country)
+            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[4.0,49.5],[6.5,49.5],[6.5,51.0],[4.0,51.0],[4.0,49.5]]]]}');
+        $em->persist($region);
+        $em->flush();
+
+        return $region;
+    }
+
+    public function testLimitedScopeSeesOwnRegionAndNullRegionOnly(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $regionA = $this->seedRegion($em, 'rq-scope-a', 'RQ Scope A', 'BE');
+        $regionB = $this->seedRegion($em, 'rq-scope-b', 'RQ Scope B', 'NL');
+
+        $inA = (new RecommendedRoute())->setName('In region A')
+            ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+            ->setDistanceM(10000)->setState(ItemState::Submitted)
+            ->setSource(ItemSource::User)->setSourceRef('user:rq-a-'.uniqid())->setRegionId((int) $regionA->getId())->setProposedBy(7);
+        $inB = (new RecommendedRoute())->setName('In region B')
+            ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+            ->setDistanceM(10000)->setState(ItemState::Submitted)
+            ->setSource(ItemSource::User)->setSourceRef('user:rq-b-'.uniqid())->setRegionId((int) $regionB->getId())->setProposedBy(7);
+        $noRegion = (new RecommendedRoute())->setName('No region')
+            ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+            ->setDistanceM(10000)->setState(ItemState::Submitted)
+            ->setSource(ItemSource::User)->setSourceRef('user:rq-none-'.uniqid())->setRegionId(null)->setProposedBy(7);
+        $em->persist($inA);
+        $em->persist($inB);
+        $em->persist($noRegion);
+        $em->flush();
+
+        $scope = ModerationScope::limited([(int) $regionA->getId()], []);
+        $queue = static::getContainer()->get(RouteQueue::class);
+
+        $names = array_column($queue->pending($scope, null), 'name');
+        self::assertContains('In region A', $names);
+        self::assertContains('No region', $names);
+        self::assertNotContains('In region B', $names);
+
+        self::assertSame(\count($names), $queue->total($scope));
+
+        $regionNames = array_column($queue->regions($scope), 'name');
+        self::assertContains('RQ Scope A', $regionNames);
+        self::assertNotContains('RQ Scope B', $regionNames);
     }
 
     /**

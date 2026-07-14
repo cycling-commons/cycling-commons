@@ -33,13 +33,22 @@ final class RouteModerationService
         private readonly int $regionActiveCap,
         private readonly MessageService $messages,
         private readonly AdminActionLogger $adminLog,
+        private readonly ModerationScopeProvider $scopeProvider,
     ) {
+    }
+
+    private function assertInScope(User $curator, ?int $regionId): void
+    {
+        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $regionId)) {
+            throw new OutOfScopeException('Route outside the curator\'s assigned areas.');
+        }
     }
 
     public function approve(int $routeId, User $curator): RecommendedRoute
     {
         return $this->em->wrapInTransaction(function () use ($routeId, $curator): RecommendedRoute {
             $route = $this->load($routeId);
+            $this->assertInScope($curator, $route->getRegionId());
             if (ItemState::Submitted !== $route->getState()) {
                 throw new \LogicException('Only a submitted route can be approved.');
             }
@@ -61,6 +70,7 @@ final class RouteModerationService
     {
         return $this->em->wrapInTransaction(function () use ($routeId, $curator, $note): RecommendedRoute {
             $route = $this->load($routeId);
+            $this->assertInScope($curator, $route->getRegionId());
             if (ItemState::Submitted !== $route->getState()) {
                 throw new \LogicException('Only a submitted route can be rejected.');
             }
@@ -79,6 +89,7 @@ final class RouteModerationService
 
         return $this->em->wrapInTransaction(function () use ($routeId, $curator, $note): RecommendedRoute {
             $route = $this->load($routeId);
+            $this->assertInScope($curator, $route->getRegionId());
             if (!\in_array($route->getState(), ItemState::SERVED, true)) {
                 throw new \LogicException('Only an active (unverified/verified) route can be retired.');
             }
@@ -97,6 +108,7 @@ final class RouteModerationService
     {
         return $this->em->wrapInTransaction(function () use ($routeId, $changes, $curator): RecommendedRoute {
             $route = $this->load($routeId);
+            $this->assertInScope($curator, $route->getRegionId());
             $attributes = $route->getAttributes();
 
             foreach ($changes as $field => $new) {
@@ -128,12 +140,14 @@ final class RouteModerationService
             if (null === $s) {
                 throw new \InvalidArgumentException(sprintf('Suggestion %d not found.', $suggestionId));
             }
+            $route = $this->em->find(RecommendedRoute::class, $s->getRouteId());
+            $this->assertInScope($curator, $route?->getRegionId());
             if (RouteSuggestionStatus::Pending !== $s->getStatus()) {
                 throw new \LogicException('Suggestion already resolved.');
             }
             $s->resolve($status, $curator->getId());
 
-            $routeName = $this->em->find(RecommendedRoute::class, $s->getRouteId())?->getName() ?? sprintf('route-%d', $s->getRouteId());
+            $routeName = $route?->getName() ?? sprintf('route-%d', $s->getRouteId());
             $kind = RouteSuggestionStatus::Done === $status ? UserMessageKind::CorrectionDone : UserMessageKind::CorrectionDismissed;
             $this->messages->sendSystem(
                 $s->getUserId(), $kind,
@@ -159,6 +173,8 @@ final class RouteModerationService
             if (null === $s) {
                 throw new \InvalidArgumentException(sprintf('Suggestion %d not found.', $id));
             }
+            $route = $this->em->find(RecommendedRoute::class, $s->getRouteId());
+            $this->assertInScope($curator, $route?->getRegionId());
 
             $this->adminLog->log($curator, TrashActions::TrashCorrection, null, sprintf('suggestion %d on route %d', $id, $s->getRouteId()));
             $this->em->remove($s);
@@ -175,6 +191,7 @@ final class RouteModerationService
     {
         $this->em->wrapInTransaction(function () use ($routeId, $curator): void {
             $route = $this->load($routeId);
+            $this->assertInScope($curator, $route->getRegionId());
             if (!\in_array($route->getState(), [ItemState::Submitted, ItemState::Rejected], true)) {
                 throw new TrashBlockedException(sprintf('Route %d is %s and cannot be trashed.', $routeId, $route->getState()->value));
             }

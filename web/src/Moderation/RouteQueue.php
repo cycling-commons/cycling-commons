@@ -25,13 +25,20 @@ final class RouteQueue
     }
 
     /** @return list<array<string, mixed>> */
-    public function pending(?int $regionId): array
+    public function pending(ModerationScope $scope, ?int $regionId): array
     {
         $where = "r.state = 'submitted'";
         $params = [];
+        $types = [];
         if (null !== $regionId) {
             $where .= ' AND r.region_id = :region';
             $params['region'] = $regionId;
+        }
+        $frag = $scope->sqlFragment('r');
+        if ('' !== $frag['sql']) {
+            $where .= ' AND '.$frag['sql'];
+            $params += $frag['params'];
+            $types += $frag['types'];
         }
 
         $sql = 'SELECT r.id, r.name, r.region_id, reg.name AS region_name, r.distance_m, r.ascent_m,
@@ -55,17 +62,26 @@ final class RouteQueue
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'activeInRegion' => (int) $row['active_in_region'],
             'cap' => $this->regionActiveCap,
-        ], $this->db->fetchAllAssociative($sql, $params));
+        ], $this->db->fetchAllAssociative($sql, $params, $types));
     }
 
     /** @return list<array<string, mixed>> */
-    public function pendingSuggestions(?int $regionId): array
+    public function pendingSuggestions(ModerationScope $scope, ?int $regionId): array
     {
         $where = "s.status = 'pending'";
         $params = [];
+        $types = [];
         if (null !== $regionId) {
             $where .= ' AND r.region_id = :region';
             $params['region'] = $regionId;
+        }
+        // The fragment reads region_id off the JOINed recommended_route r —
+        // route_suggestion itself has no region_id column.
+        $frag = $scope->sqlFragment('r');
+        if ('' !== $frag['sql']) {
+            $where .= ' AND '.$frag['sql'];
+            $params += $frag['params'];
+            $types += $frag['types'];
         }
 
         $sql = "SELECT s.id, s.route_id, r.name AS route_name, s.reason, s.note, s.user_id, s.created_at,
@@ -84,21 +100,28 @@ final class RouteQueue
             'who' => 'rider#'.substr(hash('crc32b', 'cc-sub-'.$row['user_id']), 0, 4),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'segmentCount' => (int) $row['seg_count'],
-        ], $this->db->fetchAllAssociative($sql, $params));
+        ], $this->db->fetchAllAssociative($sql, $params, $types));
     }
 
-    public function total(): int
+    public function total(ModerationScope $scope): int
     {
-        return (int) $this->db->fetchOne("SELECT COUNT(*) FROM recommended_route WHERE state = 'submitted'");
+        $frag = $scope->sqlFragment('r');
+        $sql = "SELECT COUNT(*) FROM recommended_route r WHERE r.state = 'submitted'"
+            .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
+
+        return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
     }
 
     /** @return list<array{id:int,name:string}> */
-    public function regions(): array
+    public function regions(ModerationScope $scope): array
     {
+        $frag = $scope->sqlFragment('r');
         $sql = "SELECT DISTINCT reg.id, reg.name FROM recommended_route r
                 JOIN region reg ON reg.id = r.region_id
-                WHERE r.state = 'submitted' ORDER BY reg.name";
+                WHERE r.state = 'submitted'"
+            .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '')
+            .' ORDER BY reg.name';
 
-        return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'name' => (string) $row['name']], $this->db->fetchAllAssociative($sql));
+        return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'name' => (string) $row['name']], $this->db->fetchAllAssociative($sql, $frag['params'], $frag['types']));
     }
 }
