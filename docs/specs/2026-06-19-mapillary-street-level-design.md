@@ -111,3 +111,15 @@ click line ─> Graph API nearest-image ─> imageId
   toggle, click resolver, lazy loader, viewer wiring).
 
 No new committed dependencies (mapillary-js comes from CDN at runtime); no build step.
+
+## Change note (2026-07-14, symfony-base)
+
+User-resizable dock height: a top-edge grip (`#mlyGrip`, `role=separator`)
+straddles the dock border — pointer-drag (mouse + touch), ↑/↓ arrows when
+focused (24 px steps), double-click resets to the CSS default. Height clamps
+to [160 px, 85 vh] and persists per browser (`localStorage: cc-mly-dock-h`);
+every change calls `viewer.resize()` (the canvas measures itself only at
+mount). Fullscreen still relies on the class's `height:auto`, so the ⤢
+toggle stashes the inline height entering full and restores it on exit; the
+grip hides while full. Lives in `web/` (map.js / map.css / map template),
+not the retired atlas demo listed above.
