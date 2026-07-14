@@ -42,15 +42,22 @@ final class RiderProfileController extends AbstractController
             ->setParameter('st', SubmissionStatus::Approved)
             ->getQuery()->getSingleScalarResult();
 
-        $routeRepo = $em->getRepository(RecommendedRoute::class);
-        // Verified routes are shown by name; unverified proposals only as a
-        // count (spec: never leak un-vetted route names on a public surface).
-        $routes = $routeRepo->findBy(
+        // Verified routes are shown by name; anything not yet fully verified
+        // only as a count (spec: never leak un-vetted route names on a public
+        // surface). "Not yet fully verified" spans BOTH pre-Verified lifecycle
+        // states: Submitted (awaiting curator decision) AND Unverified
+        // (curator-approved, publicly served, awaiting ride-verification).
+        $routes = $em->getRepository(RecommendedRoute::class)->findBy(
             ['proposedBy' => (int) $rider->getId(), 'state' => ItemState::Verified],
             ['createdAt' => 'DESC', 'id' => 'DESC'],
             10,
         );
-        $pendingCount = $routeRepo->count(['proposedBy' => (int) $rider->getId(), 'state' => ItemState::Unverified]);
+        $pendingCount = (int) $em->createQueryBuilder()
+            ->select('COUNT(r.id)')->from(RecommendedRoute::class, 'r')
+            ->where('r.proposedBy = :uid')->andWhere('r.state IN (:pending)')
+            ->setParameter('uid', (int) $rider->getId())
+            ->setParameter('pending', [ItemState::Submitted, ItemState::Unverified])
+            ->getQuery()->getSingleScalarResult();
 
         return $this->render('profile/public.html.twig', [
             'page_title' => 'profile.public_meta_title',

@@ -55,10 +55,12 @@
   to public-appropriate states):
   - contributions: count of `Submission` rows by the user with status
     Approved;
-  - routes: `RecommendedRoute` by `proposedBy`, states verified or
-    pending-public equivalents (exactly: Verified; Unverified proposals
-    are shown as a count only, not named), newest first, 10 names
-    deep-linked via the existing `?route=` map deep-link.
+  - routes: `RecommendedRoute` by `proposedBy`. Named = **Verified
+    only**, newest first, 10 names deep-linked via the existing
+    `?route=` map deep-link. Count = **Submitted + Unverified** ("not
+    yet fully verified": Submitted awaits the curator's decision,
+    Unverified is curator-approved and awaiting ride-verification).
+    Submitted names never render — they are un-vetted.
 - Riding preferences render via the same translation keys the settings
   form uses (`map.bike_*`, `form.riding_*`).
 - Retention: rejected submissions never appear (they are not Approved).

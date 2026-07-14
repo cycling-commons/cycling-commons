@@ -5,6 +5,9 @@
 namespace App\Tests\Controller;
 
 use App\Catalog\BikeType;
+use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\ItemSource;
+use App\Catalog\ItemState;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -42,6 +45,22 @@ final class RiderProfileTest extends WebTestCase
         $em->flush();
 
         return $user;
+    }
+
+    private function makeRoute(string $name, int $proposerId, ItemState $state): RecommendedRoute
+    {
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $route = (new RecommendedRoute())->setName($name)
+            ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+            ->setDistanceM(20000)->setState($state)
+            ->setSource(ItemSource::User)->setSourceRef('user:profile-'.uniqid())
+            ->setRegionId(1)->setProposedBy($proposerId);
+        $em->persist($route);
+        $em->flush();
+
+        return $route;
     }
 
     public function testOptedInProfileRendersPublicly(): void
@@ -83,6 +102,30 @@ final class RiderProfileTest extends WebTestCase
         $client->request('GET', '/riders/not-a-uuid');
 
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testPendingCountCoversSubmittedAndUnverifiedButNeverNamesThem(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('routes-rider@example.com', 'Routes Rider', true);
+        $uid = (int) $user->getId();
+
+        // Submitted = awaiting curator decision; Unverified = curator-approved,
+        // awaiting ride-verification. BOTH are "not yet fully verified" and must
+        // be counted — but neither name may render on a public surface.
+        $this->makeRoute('Secret Submitted Loop', $uid, ItemState::Submitted);
+        $this->makeRoute('Secret Unverified Loop', $uid, ItemState::Unverified);
+        $verified = $this->makeRoute('Vetted Condroz Classic', $uid, ItemState::Verified);
+
+        $client->request('GET', '/riders/'.$user->getUuid());
+
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('2 proposed routes awaiting verification', $html, 'pending count must cover Submitted + Unverified');
+        self::assertStringNotContainsString('Secret Submitted Loop', $html, 'un-vetted (Submitted) route names must never render');
+        self::assertStringNotContainsString('Secret Unverified Loop', $html, 'not-yet-verified route names must never render');
+        self::assertStringContainsString('Vetted Condroz Classic', $html, 'verified routes render by name');
+        self::assertStringContainsString('?route='.$verified->getId(), $html, 'verified route links to the map');
     }
 
     public function testLocalizedPathWorks(): void
