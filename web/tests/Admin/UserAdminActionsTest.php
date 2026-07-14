@@ -274,6 +274,55 @@ final class UserAdminActionsTest extends WebTestCase
             ->findBy(['action' => UserAdminService::MODERATOR_AREAS], ['id' => 'ASC']);
         self::assertCount(2, $logs, 'each assignment call must write exactly one audit row');
         self::assertStringContainsString('BE', (string) $logs[1]->getNote());
+        // Regression guard on the empty-side fallback text: the country-only
+        // assignment must record its region side as the literal 'none'.
+        self::assertStringContainsString('regions: none', (string) $logs[1]->getNote());
+    }
+
+    public function testClearingAllAreasRemovesRowsAndAuditsNone(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $target = $this->createUser('curator@example.com', ['ROLE_CURATOR']);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $region = new Region();
+        $region->setSlug('wallonia')->setName('Wallonia')->setCountryCode('BE');
+        $em->persist($region);
+        $em->flush();
+        $regionId = (int) $region->getId();
+
+        $client->loginUser($admin);
+
+        $crawler = $client->request('GET', $this->actionUrl(UserAdminService::MODERATOR_AREAS, (int) $target->getId()));
+        self::assertResponseIsSuccessful();
+        $token = (string) $crawler->filter('form input[name="token"]')->attr('value');
+
+        // Seed an assignment first, so clearing genuinely removes rows.
+        $client->request('POST', $this->actionUrl(UserAdminService::MODERATOR_AREAS, (int) $target->getId()), [
+            'token' => $token,
+            'regions' => [$regionId],
+            'countries' => ['NL'],
+        ]);
+        self::assertResponseRedirects();
+        $em->clear();
+        self::assertCount(2, $em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $target->getId()]));
+
+        // Clear-all: POST with NEITHER regions[] nor countries[] → back to global.
+        $client->request('POST', $this->actionUrl(UserAdminService::MODERATOR_AREAS, (int) $target->getId()), [
+            'token' => $token,
+        ]);
+        self::assertResponseRedirects();
+
+        $em->clear();
+        $rows = $em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $target->getId()]);
+        self::assertCount(0, $rows, 'clearing the assignment must remove every moderator_area row');
+
+        $logs = static::getContainer()->get(AdminActionLogRepository::class)
+            ->findBy(['action' => UserAdminService::MODERATOR_AREAS], ['id' => 'ASC']);
+        self::assertCount(2, $logs, 'the clear-all call must write its own audit row');
+        self::assertSame('regions: none; countries: none', (string) $logs[1]->getNote());
     }
 
     public function testAssignAreasRejectsUnknownRegion(): void
