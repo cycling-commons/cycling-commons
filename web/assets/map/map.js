@@ -2120,7 +2120,14 @@
       if(!mobile() || e.touches.length!==1 || !d.classList.contains('open')) return;
       viaGrab=grab.contains(e.target);
       if(!viaGrab && snap==='full' && d.scrollTop>0) return;   // mid-scroll at full → content's gesture
-      active=true; dragging=false; startY=e.touches[0].clientY; startT=e.timeStamp; dy=0; baseOff=offsets()[snap];
+      active=true; dragging=false; startY=e.touches[0].clientY; startT=e.timeStamp; dy=0;
+      // baseOff from the sheet's ACTUAL rendered transform, not the offsets()
+      // table: the CSS half rule rests at 50svh while offsets() uses
+      // innerHeight — with a retracted URL bar those bases differ and a
+      // table-derived baseOff would jump the sheet on the first touchmove.
+      // offsets() is still fine for the release-snap targets below.
+      const tr=getComputedStyle(d).transform;
+      baseOff = (tr && tr!=='none') ? new DOMMatrixReadOnly(tr).m42 : 0;
     }, {passive:true});
     d.addEventListener('touchmove', e=>{
       if(!active) return;
@@ -2150,6 +2157,12 @@
       let best='full', bestD=Infinity;
       ['full','half','peek'].forEach(s=>{ const dd=Math.abs(pos-off[s]); if(dd<bestD){ bestD=dd; best=s; } });
       setSnap(best);
+    });
+    d.addEventListener('touchcancel', ()=>{
+      if(!active && !dragging) return;
+      active=false; dragging=false;
+      d.classList.remove('dragging');
+      setSnap(snap);                    // re-settle on the last resting state
     });
     function dismiss(){
       d.style.transform='translateY(102%)';
