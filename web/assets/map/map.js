@@ -1304,7 +1304,14 @@
       // Every interpolation is encoded (review W33): the server serves lat/lng
       // numeric and letter as an enum, but this attribute context shouldn't
       // depend on that guarantee holding forever.
-      edit = `<a class="cc-d-act edit" href="/improve?type=${encodeURIComponent(s.letter)}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${encodeURIComponent(s.lat)}&lng=${encodeURIComponent(s.lng)}">✎ ${D.editItem||'Edit this item'}</a>`;
+      // Edit-bridge binds to the TARGET catalog item (s.itemId), NOT the
+      // submission id (s.id) — using s.id sent /improve a non-existent item id
+      // and it fell through to the empty "pick a place" explainer. A brand-new
+      // submission (no itemId yet — the place isn't in the catalog until it's
+      // approved) has nothing to edit, so no link.
+      edit = (s.itemId != null)
+        ? `<a class="cc-d-act edit" href="/improve?type=${encodeURIComponent(s.letter)}&item=${encodeURIComponent(s.itemId)}&name=${encodeURIComponent(s.title)}&lat=${encodeURIComponent(s.lat)}&lng=${encodeURIComponent(s.lng)}">✎ ${D.editItem||'Edit this item'}</a>`
+        : '';
       const body = s.body ? `<p class="cc-mod-body">${escPend(s.body)}</p>` : '';
       // "Proposed change" — what THIS submission wants to change, not the
       // item's history. Kept visually distinct from the history section below.

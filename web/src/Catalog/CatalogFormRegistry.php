@@ -83,6 +83,9 @@ final class CatalogFormRegistry
             ItemType::BikeServices => new ItemFieldSet(
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
+                    // 'web' matches the Stays key so map.js renders the shared
+                    // "Website" row; a shop/repair place usually has its own site.
+                    CatalogField::url('web', 'Website', placeholder: 'https://… (the shop’s own site)'),
                     CatalogField::select('pumpValve', 'Pump valve', ['Presta + Schrader', 'Presta only', 'Schrader only', 'No pump']),
                     CatalogField::text('openingHours', 'Opening hours', default: '24/7'),
                     CatalogField::text('tools', 'Tools available', placeholder: 'e.g. chain tool, work stand'),

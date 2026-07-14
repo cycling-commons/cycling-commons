@@ -20,6 +20,7 @@ Shops, public repair stations, pumps and e-bike charging — the places riders r
 | Field | Control | Provenance |
 |---|---|---|
 | Name | input | `[edit]` |
+| Website | url | `[edit]` |
 | Pump valve | select(Presta + Schrader / Presta only / Schrader only / No pump) | `[OSM]` |
 | Opening hours | input (opening_hours) | `[OSM]` |
 | Tools available | input | `[edit]` |
@@ -42,3 +43,6 @@ Location metadata (EXIF GPS) is stripped from uploaded photos before storage —
 ## Implementation
 - **Demo:** registry entry `repair-station-malmedy` in `atlas/demo/edit-items.js` (hand-picked fixture data).
 - **Production:** OSM `amenity=bicycle_repair_station` / `shop=bicycle` mirrored + community edits.
+
+## Change note (2026-07-14)
+Added a **Website** field (`web`, url) to the Fix-details form — a shop/repair place usually has its own site. Keyed `web` to reuse the shared "Website" drawer row (same as Stays).
