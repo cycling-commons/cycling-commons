@@ -2428,6 +2428,10 @@
   refreshBestOf();
   // discipline + freshness chips (visual)
   document.querySelectorAll('#disc .chip, .grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
+  // Saved riding styles preselect the (visual-only) discipline chips.
+  if(PREFS.styles.length){
+    document.querySelectorAll('#disc .chip').forEach(c=>c.classList.toggle('on', PREFS.styles.includes(c.dataset.style)));
+  }
   // Preference prefilter chip: later onclick assignment overrides the generic
   // toggle-only binder above (same pattern as the climb-filter chips below).
   (function initPrefChip(){

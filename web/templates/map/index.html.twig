@@ -119,14 +119,18 @@
         <div class="chips"><span class="chip" id="prefFilter" role="button" tabindex="0" aria-pressed="false">{{ 'map.pref_filter'|trans }}</span></div>
       </div>
 
-      {# Discipline chips are a visual stub for now: they toggle but don't yet filter the map
-         (the dataset isn't discipline-tagged). Compact styling lives at #disc in the CSS. #}
+      {# Discipline chips: re-based onto the RidingStyle enum (spec 2026-07-14 —
+         this vocabulary is the contract for future style-filtering). Still a
+         visual stub: the dataset carries no style tags, so they toggle but do
+         not filter. Logged-in riders' saved styles preselect them (map.js).
+         Compact styling lives at #disc in the CSS. #}
       <div class="grp">
         <h3>{{ 'map.discipline'|trans }}</h3>
         <div class="chips" id="disc">
-          <span class="chip on">{{ 'map.disc_road'|trans }}</span><span class="chip on">{{ 'map.disc_gravel'|trans }}</span><span class="chip">{{ 'map.disc_mtb'|trans }}</span>
-          <span class="chip">{{ 'map.disc_touring'|trans }}</span><span class="chip">{{ 'map.disc_bikepacking'|trans }}</span><span class="chip">{{ 'map.disc_ebike'|trans }}</span>
-          <span class="chip">{{ 'map.disc_urban'|trans }}</span><span class="chip">{{ 'map.disc_recumbent'|trans }}</span><span class="chip">{{ 'map.disc_handbike'|trans }}</span>
+          <span class="chip on" data-style="Road">{{ 'map.disc_road'|trans }}</span><span class="chip on" data-style="Gravel">{{ 'map.disc_gravel'|trans }}</span>
+          <span class="chip" data-style="Touring">{{ 'map.disc_touring'|trans }}</span><span class="chip" data-style="Bikepacking">{{ 'map.disc_bikepacking'|trans }}</span>
+          <span class="chip" data-style="Trail">{{ 'map.disc_trail'|trans }}</span><span class="chip" data-style="Urban">{{ 'map.disc_urban'|trans }}</span>
+          <span class="chip" data-style="Leisure">{{ 'map.disc_leisure'|trans }}</span>
         </div>
       </div>
 
