@@ -128,3 +128,29 @@
 - Preference-driven POI (non-route) filtering — nothing else is
   bike-tagged.
 - Any change to the desktop drawer interaction.
+
+## Execution note (2026-07-14, symfony-base, NOT pushed)
+
+Executed as planned (CC_PREFS emission bf71fb0; route prefilter + chip +
+facet preselect e0fbec1; discipline re-base a73af9c; snap sheet bd63159,
+with two follow-up fixes 06143b6 landing every drawer-open path at half
+and bdded7d starting the drag from the computed position + re-settling on
+`touchcancel` — all three snap-sheet commits landed together). Browser-
+verified on the dev app as `user@example.test` (Gravel bike, Bikepacking
+style): desktop — pref chip on with `aria-pressed="true"`, toggling it
+confirmed live via `prefMatch()` (undeclared `bikeTypes` always pass;
+declared-but-non-overlapping routes excluded only while the chip is on;
+the demo route fixtures carry no `bikeTypes` at all, so the legend count
+itself doesn't move — verified the predicate directly instead), reload
+persistence via `cc-pref-filter` in both directions, exactly 7 Discipline
+chips with Bikepacking preselected, and the Bike facet preselecting
+"Gravel"; anonymous window showed no visible preferences group, Road+Gravel
+default-on, and an always-passing filter. Mobile (390×844) — tap-to-open
+lands at half (`.open` without `.s-full`, non-zero `translateY`); synthetic
+touch drags (`TouchEvent`s dispatched on the grab handle/`#drawer`)
+confirmed all four snap transitions (half→full, full→half, half→peek,
+peek→dismiss-on-flick) plus scrim opacity/pointer-events at full; content
+scrolls at full and is `overflow:hidden` below it; the grab button toggles
+half↔full and Escape closes. Full suite + statics green (585 tests, 2563
+assertions; phpstan 0; psalm 0; cs-fixer clean; SPDX + translation-parity
+pass, 1706×4).

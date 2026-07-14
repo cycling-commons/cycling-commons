@@ -113,9 +113,10 @@ TDD per repo practice:
 
 ## Future work (explicitly deferred)
 
-- Map prefiltering: preselect the map's Bike filter and (re-based)
-  Discipline chips from the logged-in rider's stored preferences.
-- Re-base the map Discipline chips onto `RidingStyle` and make them filter.
+- ~~Map prefiltering~~ / ~~Discipline chips re-base~~ — EXECUTED 2026-07-14,
+  see `2026-07-14-map-preferences-prefilter-and-mobile-drawer-design.md`
+  (routes filter by bike prefs; chips re-based onto RidingStyle and
+  preselected, still visual-only until the dataset carries style tags).
 
 ## Execution note (2026-07-14, symfony-base, NOT pushed)
 
@@ -134,5 +135,6 @@ Final whole-branch review (opus): ready to merge; migration dedup edge cases
 as dev-data-only for a run-once migration. Full gates green: 583 tests,
 phpstan 0, psalm 0, cs-fixer clean, SPDX/licences/translation-parity
 (1705×4) pass. The migration was applied to both the test and dev databases;
-**prod still needs it** on deploy. Map prefiltering remains deferred as
-specced.
+**prod still needs it** on deploy. Map prefiltering and the Discipline
+chips re-base, deferred at the time, were executed the same day — see
+the "Future work" section above.
