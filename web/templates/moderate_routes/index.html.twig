@@ -32,13 +32,12 @@
   .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
   /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system) */
 
-  /* section bands: an unmistakable divider between the desk's two work
-     streams — new proposals (trail orange) vs corrections on live routes
-     (spruce). */
-  .sec-band{display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);padding:.55rem .9rem;border-radius:6px;margin:2.4rem 0 1.1rem}
-  .sec-band--new{background:var(--trail);color:var(--ink)}
-  .sec-band--corr{background:var(--spruce)}
-  .sec-band .sec-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.3rem;height:1.3rem;padding:0 .35rem;border-radius:999px;background:rgba(20,22,14,.22);font-size:.66rem}
+  /* section headers: delicate — a coloured label + a thin accent rule marks
+     the two work streams (proposals / corrections) without a heavy fill. */
+  .sec-band{display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:0 0 .5rem;margin:2.6rem 0 1.1rem;border-bottom:1.5px solid}
+  .sec-band--new{color:var(--clay);border-color:rgba(184,89,58,.4)}
+  .sec-band--corr{color:var(--spruce);border-color:rgba(28,58,42,.35)}
+  .sec-band .sec-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;padding:0 .35rem;border-radius:999px;background:rgba(20,22,14,.08);color:#595c4d;font-size:.62rem}
   .sec-empty{color:#595c4d;font-size:.9rem;padding:.4rem 0 1.5rem}
 
   .sugg-list{margin:1.1rem 0 2.4rem}
