@@ -93,9 +93,11 @@
 
   <div class="tabs" role="tablist" aria-label="{{ 'settings.heading'|trans }}">
     <button type="button" role="tab" id="tabbtn-profile" aria-controls="tab-profile"
-            aria-selected="{{ active_tab == 'profile' ? 'true' : 'false' }}">{{ 'settings.tab_profile'|trans }}</button>
+            aria-selected="{{ active_tab == 'profile' ? 'true' : 'false' }}"
+            tabindex="{{ active_tab == 'profile' ? '0' : '-1' }}">{{ 'settings.tab_profile'|trans }}</button>
     <button type="button" role="tab" id="tabbtn-security" aria-controls="tab-security"
-            aria-selected="{{ active_tab == 'security' ? 'true' : 'false' }}">{{ 'settings.tab_security'|trans }}</button>
+            aria-selected="{{ active_tab == 'security' ? 'true' : 'false' }}"
+            tabindex="{{ active_tab == 'security' ? '0' : '-1' }}">{{ 'settings.tab_security'|trans }}</button>
   </div>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
@@ -291,11 +293,32 @@
 </div>
 
 <script nonce="{{ csp_nonce() }}">
-  document.querySelectorAll('.tabs [role=tab]').forEach(btn => btn.addEventListener('click', () => {
-    document.querySelectorAll('.tabs [role=tab]').forEach(b => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
-    document.querySelectorAll('.dpane[role=tabpanel]').forEach(p => p.classList.toggle('on', p.id === btn.getAttribute('aria-controls')));
-    history.replaceState(null, '', btn.id === 'tabbtn-security' ? '?tab=security' : location.pathname);
-  }));
+  (() => {
+    const tabs = Array.from(document.querySelectorAll('.tabs [role=tab]'));
+    const activate = (btn, focus) => {
+      tabs.forEach(b => {
+        const on = b === btn;
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+      });
+      document.querySelectorAll('.dpane[role=tabpanel]').forEach(p => p.classList.toggle('on', p.id === btn.getAttribute('aria-controls')));
+      history.replaceState(null, '', btn.id === 'tabbtn-security' ? '?tab=security' : location.pathname);
+      if (focus) btn.focus();
+    };
+    tabs.forEach((btn, i) => {
+      btn.addEventListener('click', () => activate(btn, false));
+      btn.addEventListener('keydown', e => {
+        let idx;
+        if (e.key === 'ArrowRight') idx = (i + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft') idx = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') idx = 0;
+        else if (e.key === 'End') idx = tabs.length - 1;
+        else return;
+        e.preventDefault();
+        activate(tabs[idx], true);
+      });
+    });
+  })();
 </script>
 {% endblock %}
 

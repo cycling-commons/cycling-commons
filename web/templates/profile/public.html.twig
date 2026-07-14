@@ -24,7 +24,7 @@
       <img src="{{ asset(rider.country.flagAsset) }}" alt="{{ rider.country.name }}" width="24" height="18">
     {% endif %}
   </div>
-  <p class="rp-since">{{ 'profile.public_member_since'|trans }} {{ rider.createdAt|date('F Y') }} · {{ (contrib_count == 1 ? 'profile.public_contributions_one' : 'profile.public_contributions_other')|trans({'%count%': contrib_count}) }}</p>
+  <p class="rp-since">{{ 'profile.public_member_since'|trans }} {{ rider.createdAt|date('F Y') }} · {{ (contrib_count == 1 ? 'profile.public_contributions_one' : 'profile.public_contributions_many')|trans({'%count%': contrib_count}) }}</p>
 
   {% if rider.bikeTypes is not empty or rider.ridingStyles is not empty %}
     <h2 class="rp-sec">{{ 'profile.public_preferences'|trans }}</h2>
@@ -45,7 +45,7 @@
     <p class="rp-empty">{{ 'profile.public_no_routes'|trans }}</p>
   {% endif %}
   {% if pending_count > 0 %}
-    <p class="rp-empty">{{ (pending_count == 1 ? 'profile.public_pending_one' : 'profile.public_pending_other')|trans({'%count%': pending_count}) }}</p>
+    <p class="rp-empty">{{ (pending_count == 1 ? 'profile.public_pending_one' : 'profile.public_pending_many')|trans({'%count%': pending_count}) }}</p>
   {% endif %}
 </div>
 {% endblock %}
