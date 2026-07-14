@@ -842,6 +842,8 @@ map:
   season_winter: 'Winter'
   season_all: 'Alle'
   curated_hint: 'Das Best-of zeigt die besten Anstiege, Unterkünfte und Aussichten der Fahrerinnen und Fahrer. Nutzdaten (Wasser, Gefahren, Services) zielen auf volle Abdeckung.'
+  pref_filter_head: 'Deine Vorlieben'
+  pref_filter: 'Routen für deine Räder'
   discipline: 'Disziplin'
   disc_road: 'Rennrad'
   disc_gravel: 'Gravel'

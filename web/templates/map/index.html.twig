@@ -111,6 +111,14 @@
         <div class="hint">{{ 'map.curated_hint'|trans }}</div>
       </div>
 
+      {# Preference prefilter chip (spec 2026-07-14): shown by map.js only when
+         the logged-in rider has saved bike types. Never silent — the chip is
+         the visible "your prefs are filtering routes" affordance + opt-out. #}
+      <div class="grp" id="prefGrp" hidden>
+        <h3>{{ 'map.pref_filter_head'|trans }}</h3>
+        <div class="chips"><span class="chip" id="prefFilter" role="button" tabindex="0" aria-pressed="false">{{ 'map.pref_filter'|trans }}</span></div>
+      </div>
+
       {# Discipline chips are a visual stub for now: they toggle but don't yet filter the map
          (the dataset isn't discipline-tagged). Compact styling lives at #disc in the CSS. #}
       <div class="grp">

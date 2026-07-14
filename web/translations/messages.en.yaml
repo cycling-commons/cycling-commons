@@ -1007,6 +1007,8 @@ map:
   season_winter: 'Winter'
   season_all: 'All'
   curated_hint: 'Curated shows riders'' best climbs, stays & views. Utility data (water, hazards, services) aims for full coverage.'
+  pref_filter_head: 'Your preferences'
+  pref_filter: 'Routes for your bikes'
   discipline: 'Discipline'
   disc_road: 'Road'
   disc_gravel: 'Gravel'

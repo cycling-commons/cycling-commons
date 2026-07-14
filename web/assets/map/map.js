@@ -18,6 +18,7 @@
   // window.CC_I18N); every lookup keeps its English fallback so map.js still
   // works standalone. `D` is the drawer namespace; tpl() fills {name} slots.
   const I18N = window.CC_I18N || {};
+  const PREFS = window.CC_PREFS || {bikes: [], styles: []};
   const LAYER_L10N = I18N.layers || {};
   const D = I18N.d || {};
   const tpl = (s, vars) => String(s).replace(/\{(\w+)\}/g, (m, k) => vars[k] != null ? vars[k] : m);
@@ -717,6 +718,7 @@
       id:r.id, name:r.name, state:r.state, headline:`${r.km} km${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
+      bikeTypes: Array.isArray(r.bikeTypes) ? r.bikeTypes : [],   // declared suitability (may be empty = undeclared)
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
       // C1-T4 (W6): 'Contributed GPX' is an accurate detail for the pipeline's
       // usual auto-derived routes; a rider-added/edited one gets the plain label.
@@ -1049,8 +1051,20 @@
     const white = txtOn(layer.color)==='#fff';   // dark pins (e.g. purple climbs) → white icon
     d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${layer.icon}</span>`; return d;
   }
+  // Preference prefilter (spec 2026-07-14): riders' saved bike types filter
+  // the routes layer. Unknown ≠ unsuitable — a route with NO declared
+  // bikeTypes stays visible; only a declared non-overlap hides it. Off for
+  // anonymous visitors (PREFS.bikes empty) and toggleable via the rail chip
+  // (#prefFilter), persisted in localStorage.
+  let prefFilterOn = PREFS.bikes.length>0 && (localStorage.getItem('cc-pref-filter')||'on')==='on';
+  function prefMatch(f){
+    if(!prefFilterOn || !PREFS.bikes.length) return true;
+    if(!f.bikeTypes || !f.bikeTypes.length) return true;          // undeclared → keep
+    return f.bikeTypes.some(t=>PREFS.bikes.includes(t));
+  }
   function featureVisible(layer, f){
     let show = layer.key==='experience' ? (mode==='all'||f.cur) : ((mode==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K uses the render loop's own carve-out
+    if(show && layer.key==='experience') show = prefMatch(f);
     if(show && layer.key==='climbs'){
       show = activeSurface.has(f.sq) && activeTraffic.has(f.tr);
       if(show) show = attrMatch(f.effort, activeEffort, ALL_EFFORT);
@@ -2402,12 +2416,30 @@
     refreshBestOf();          // Curated → fetch + filter; Everything → plain render()
   });
 
+  // Exactly one saved bike → preselect the Curated facet (single-valued
+  // select; multi-bike riders keep the neutral 'all').
+  if(PREFS.bikes.length===1 && boBikeEl && [...boBikeEl.options].some(o=>o.value===PREFS.bikes[0])){
+    boBikeEl.value=PREFS.bikes[0]; boBike=PREFS.bikes[0];
+  }
+
   // Initial best-of for the default facet so Curated isn't empty on load.
   updateSubtitle();
   { const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode!=='curated'); }
   refreshBestOf();
   // discipline + freshness chips (visual)
   document.querySelectorAll('#disc .chip, .grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
+  // Preference prefilter chip: later onclick assignment overrides the generic
+  // toggle-only binder above (same pattern as the climb-filter chips below).
+  (function initPrefChip(){
+    const chip=document.getElementById('prefFilter'), grp=document.getElementById('prefGrp');
+    if(!chip||!grp||!PREFS.bikes.length) return;      // anonymous / no prefs → group stays hidden
+    grp.hidden=false;
+    const sync=()=>{ chip.classList.toggle('on', prefFilterOn); chip.setAttribute('aria-pressed', prefFilterOn?'true':'false'); };
+    const flip=()=>{ prefFilterOn=!prefFilterOn; try{ localStorage.setItem('cc-pref-filter', prefFilterOn?'on':'off'); }catch(e){} sync(); render(); updateCounts(); };
+    chip.onclick=flip;
+    chip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
+    sync();
+  })();
   // climb surface + traffic chips actually filter the climbs layer; C2-T8 adds
   // climb effort + stay accessibility to the same wiring (this assignment runs
   // after the generic '.grp .chips .chip' toggle-only handler above, so it wins).

@@ -842,6 +842,8 @@ map:
   season_winter: 'Hiver'
   season_all: 'Toutes'
   curated_hint: 'Le best-of montre les meilleures côtes, hébergements et vues selon les cyclistes. Les données utilitaires (eau, dangers, services) visent une couverture complète.'
+  pref_filter_head: 'Vos préférences'
+  pref_filter: 'Itinéraires pour vos vélos'
   discipline: 'Discipline'
   disc_road: 'Route'
   disc_gravel: 'Gravel'

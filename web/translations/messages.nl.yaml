@@ -842,6 +842,8 @@ map:
   season_winter: 'Winter'
   season_all: 'Alle'
   curated_hint: 'Best-of toont de beste hellingen, overnachtingen en uitzichten volgens renners. Nutsdata (water, gevaren, diensten) mikt op volledige dekking.'
+  pref_filter_head: 'Jouw voorkeuren'
+  pref_filter: 'Routes voor jouw fietsen'
   discipline: 'Discipline'
   disc_road: 'Race'
   disc_gravel: 'Gravel'
