@@ -12,6 +12,7 @@ use App\Form\ModerationDecisionType;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
+use App\Moderation\OutOfScopeException;
 use App\Moderation\RetentionService;
 use App\Moderation\SubmissionQueue;
 use App\Routing\LocalePrefix;
@@ -121,6 +122,8 @@ final class ModerateController extends AbstractController
 
             try {
                 $submission = $this->moderation->decide((int) $data['submission_id'], (string) $data['decision'], $user, $data['note'] ?? null);
+            } catch (OutOfScopeException) {
+                throw $this->createAccessDeniedException('Out of moderation scope.');
             } catch (AlreadyDecidedException|\InvalidArgumentException|\LogicException) {
                 if ($wantsJson) {
                     return $this->json(['error' => 'undecidable_submission'], Response::HTTP_CONFLICT);
@@ -186,6 +189,8 @@ final class ModerateController extends AbstractController
             }
             $this->moderation->trashSubmission($id, $curator);
             $this->addFlash('success', 'moderate.trash.done');
+        } catch (OutOfScopeException) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (\InvalidArgumentException) {
             $this->addFlash('danger', 'moderate.trash.error');
         }

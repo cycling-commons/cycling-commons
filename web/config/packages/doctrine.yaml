@@ -33,6 +33,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Messaging/Entity'
                 prefix: 'App\Messaging\Entity'
                 alias: Messaging
+            Moderation:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Moderation/Entity'
+                prefix: 'App\Moderation\Entity'
+                alias: Moderation
 
 when@prod:
     doctrine:

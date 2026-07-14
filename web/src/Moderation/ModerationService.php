@@ -33,6 +33,7 @@ final class ModerationService
         private readonly EntityManagerInterface $em,
         private readonly MessageService $messages,
         private readonly AdminActionLogger $adminLog,
+        private readonly ModerationScopeProvider $scopeProvider,
     ) {
     }
 
@@ -50,6 +51,9 @@ final class ModerationService
             $submission = $this->em->find(Submission::class, $submissionId, LockMode::PESSIMISTIC_WRITE);
             if (null === $submission) {
                 throw new \InvalidArgumentException(sprintf('Unknown submission %d', $submissionId));
+            }
+            if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
+                throw new OutOfScopeException('Submission outside the curator\'s assigned areas.');
             }
             if (!\in_array($submission->getStatus(), [SubmissionStatus::Pending, SubmissionStatus::NeedsInfo], true)) {
                 throw new AlreadyDecidedException(sprintf('Submission %d is already %s', $submissionId, $submission->getStatus()->value));
@@ -121,6 +125,9 @@ final class ModerationService
             $submission = $this->em->find(Submission::class, $id);
             if (null === $submission) {
                 throw new \InvalidArgumentException(sprintf('Unknown submission %d', $id));
+            }
+            if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
+                throw new OutOfScopeException('Submission outside the curator\'s assigned areas.');
             }
 
             $this->adminLog->log($curator, TrashActions::TrashSubmission, null, sprintf('SUB-%d · type=%s', $id, $submission->getType()->value));

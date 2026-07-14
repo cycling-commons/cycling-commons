@@ -11,6 +11,7 @@ use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\Entity\Submission;
 use App\Entity\User;
 use App\Messaging\MessageService;
+use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -40,6 +41,7 @@ final class ModerateMessageController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MessageService $messages,
+        private readonly ModerationScopeProvider $scopeProvider,
     ) {
     }
 
@@ -68,10 +70,14 @@ final class ModerateMessageController extends AbstractController
             return $back;
         }
 
-        [$recipientId, $refLabel] = $recipient;
+        [$recipientId, $refLabel, $regionId] = $recipient;
 
         /** @var User $curator */
         $curator = $this->getUser();
+
+        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $regionId)) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
+        }
 
         try {
             $sent = $this->messages->sendCurator($recipientId, (int) $curator->getId(), $channel, $id, $refLabel, $body);
@@ -92,7 +98,7 @@ final class ModerateMessageController extends AbstractController
         return $back;
     }
 
-    /** @return array{0: int, 1: string}|null */
+    /** @return array{0: int, 1: string, 2: ?int}|null */
     private function resolveSubmission(int $id): ?array
     {
         $submission = $this->em->find(Submission::class, $id);
@@ -100,10 +106,10 @@ final class ModerateMessageController extends AbstractController
             return null;
         }
 
-        return [$submission->getUserId(), 'SUB-'.$id];
+        return [$submission->getUserId(), 'SUB-'.$id, $submission->getRegionId()];
     }
 
-    /** @return array{0: int, 1: string}|null */
+    /** @return array{0: int, 1: string, 2: ?int}|null */
     private function resolveRoute(int $id): ?array
     {
         $route = $this->em->find(RecommendedRoute::class, $id);
@@ -112,10 +118,10 @@ final class ModerateMessageController extends AbstractController
             return null;
         }
 
-        return [$route->getProposedBy(), $route->getName()];
+        return [$route->getProposedBy(), $route->getName(), $route->getRegionId()];
     }
 
-    /** @return array{0: int, 1: string}|null */
+    /** @return array{0: int, 1: string, 2: ?int}|null */
     private function resolveCorrection(int $id): ?array
     {
         $suggestion = $this->em->find(RouteSuggestion::class, $id);
@@ -123,10 +129,10 @@ final class ModerateMessageController extends AbstractController
             return null;
         }
 
-        $routeName = $this->em->find(RecommendedRoute::class, $suggestion->getRouteId())?->getName()
-            ?? sprintf('route-%d', $suggestion->getRouteId());
+        $route = $this->em->find(RecommendedRoute::class, $suggestion->getRouteId());
+        $routeName = $route?->getName() ?? sprintf('route-%d', $suggestion->getRouteId());
 
-        return [$suggestion->getUserId(), $routeName];
+        return [$suggestion->getUserId(), $routeName, $route?->getRegionId()];
     }
 
     /**
