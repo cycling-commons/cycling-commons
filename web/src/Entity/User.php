@@ -4,6 +4,8 @@
 
 namespace App\Entity;
 
+use App\Catalog\BikeType;
+use App\Catalog\RidingStyle;
 use App\Repository\UserRepository;
 use App\World\Entity\Country;
 use Doctrine\ORM\Mapping as ORM;
@@ -24,8 +26,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
+#[ORM\UniqueConstraint(name: 'uniq_users_display_name_canonical', columns: ['display_name_canonical'])]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['email'], message: 'This email address is already registered.')]
+#[UniqueEntity(fields: ['displayNameCanonical'], errorPath: 'displayName', message: 'form.error_display_name_taken')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface, BackupCodeInterface
 {
     #[ORM\Id]
@@ -56,6 +60,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     #[ORM\Column(type: 'string', length: 100)]
     private string $displayName = '';
+
+    // Lowercased+trimmed shadow copy of displayName, maintained by
+    // setDisplayName() so EVERY write path (registration, settings, console,
+    // admin CRUD, fixtures) keeps it in sync. A plain unique constraint on
+    // this column gives case-insensitive display-name uniqueness without a
+    // functional index Doctrine can't model.
+    #[ORM\Column(type: 'string', length: 100)]
+    private string $displayNameCanonical = '';
+
+    // Rider preferences (spec 2026-07-14): which bikes they ride and what
+    // kind of riding they do. Stored as enum value strings; read via the
+    // enum-typed accessors, which drop unknown values so a vocabulary change
+    // can never fatal a render. The map will later prefilter on these.
+    /** @var list<string> */
+    #[ORM\Column(type: 'json')]
+    private array $bikeTypes = [];
+
+    /** @var list<string> */
+    #[ORM\Column(type: 'json')]
+    private array $ridingStyles = [];
 
     // Optional home country (World bundle reference data).
     #[ORM\ManyToOne(targetEntity: Country::class)]
@@ -269,6 +293,52 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDisplayName(string $displayName): static
     {
         $this->displayName = $displayName;
+        $this->displayNameCanonical = mb_strtolower(trim($displayName));
+
+        return $this;
+    }
+
+    public function getDisplayNameCanonical(): string
+    {
+        return $this->displayNameCanonical;
+    }
+
+    /** @return list<BikeType> */
+    public function getBikeTypes(): array
+    {
+        return array_values(array_filter(array_map(
+            static fn (string $v): ?BikeType => BikeType::tryFrom($v),
+            $this->bikeTypes,
+        )));
+    }
+
+    /** @param list<BikeType> $bikeTypes */
+    public function setBikeTypes(array $bikeTypes): static
+    {
+        $this->bikeTypes = array_values(array_unique(array_map(
+            static fn (BikeType $t): string => $t->value,
+            $bikeTypes,
+        )));
+
+        return $this;
+    }
+
+    /** @return list<RidingStyle> */
+    public function getRidingStyles(): array
+    {
+        return array_values(array_filter(array_map(
+            static fn (string $v): ?RidingStyle => RidingStyle::tryFrom($v),
+            $this->ridingStyles,
+        )));
+    }
+
+    /** @param list<RidingStyle> $ridingStyles */
+    public function setRidingStyles(array $ridingStyles): static
+    {
+        $this->ridingStyles = array_values(array_unique(array_map(
+            static fn (RidingStyle $s): string => $s->value,
+            $ridingStyles,
+        )));
 
         return $this;
     }
