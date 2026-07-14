@@ -2396,7 +2396,51 @@
 
   // street-level imagery (Mapillary) dock controls — the on/off toggle lives in the data-layers list
   document.getElementById('mlyClose').onclick=mlyClose;
-  document.getElementById('mlyFull').onclick=()=>document.getElementById('mlyDock').classList.toggle('full');
+  // User-resizable dock height: drag the top-edge grip (pointer events cover
+  // mouse + touch), ↑/↓ when the grip is focused, double-click resets to the
+  // CSS default. Persisted per browser. The Mapillary canvas measures itself
+  // once at mount, so every height change needs an explicit viewer.resize().
+  const MLY_H_KEY='cc-mly-dock-h';
+  const mlyDockEl=document.getElementById('mlyDock'), mlyGrip=document.getElementById('mlyGrip');
+  function mlyRemeasure(){ requestAnimationFrame(()=>{ if(mlyViewer){ try{ mlyViewer.resize(); }catch(_){} } }); }
+  function setDockH(px, persist){
+    const h=Math.max(160, Math.min(Math.round(window.innerHeight*0.85), Math.round(px)));
+    mlyDockEl.style.height=h+'px';
+    if(persist){ try{ localStorage.setItem(MLY_H_KEY, String(h)); }catch(_){} }
+    mlyRemeasure();
+  }
+  if(mlyGrip){
+    try{ const saved=+localStorage.getItem(MLY_H_KEY); if(saved) setDockH(saved, false); }catch(_){}
+    let _rs=null;   // {y: drag-start clientY, h: drag-start dock height}
+    mlyGrip.addEventListener('pointerdown',e=>{
+      if(mlyDockEl.classList.contains('full')) return;
+      e.preventDefault();
+      _rs={y:e.clientY, h:mlyDockEl.getBoundingClientRect().height};
+      try{ mlyGrip.setPointerCapture(e.pointerId); }catch(_){}   // capture is an optimisation, not a requirement
+    });
+    mlyGrip.addEventListener('pointermove',e=>{ if(_rs) setDockH(_rs.h+(_rs.y-e.clientY), false); });
+    mlyGrip.addEventListener('pointerup',e=>{ if(!_rs) return; setDockH(_rs.h+(_rs.y-e.clientY), true); _rs=null; });
+    mlyGrip.addEventListener('pointercancel',()=>{ _rs=null; });
+    mlyGrip.addEventListener('dblclick',()=>{
+      mlyDockEl.style.height='';
+      try{ localStorage.removeItem(MLY_H_KEY); }catch(_){}
+      mlyRemeasure();
+    });
+    mlyGrip.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowUp' && e.key!=='ArrowDown') return;
+      e.preventDefault();
+      setDockH(mlyDockEl.getBoundingClientRect().height + (e.key==='ArrowUp'?24:-24), true);
+    });
+  }
+  // Fullscreen relies on the class's height:auto, which an inline height would
+  // override — stash the custom height while full, restore it on the way back.
+  document.getElementById('mlyFull').onclick=()=>{
+    const entering=!mlyDockEl.classList.contains('full');
+    if(entering){ mlyDockEl.dataset.h=mlyDockEl.style.height||''; mlyDockEl.style.height=''; }
+    else if(mlyDockEl.dataset.h){ mlyDockEl.style.height=mlyDockEl.dataset.h; }
+    mlyDockEl.classList.toggle('full');
+    mlyRemeasure();
+  };
 
   // "plan from Spa" — pick the sample loop nearest the chosen distance (faked for now)
   let planMarker=null;
