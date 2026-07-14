@@ -10,6 +10,7 @@ use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
@@ -23,7 +24,7 @@ use Symfony\Component\Uid\Uuid;
  */
 final class RiderProfileTest extends WebTestCase
 {
-    private function makeUser(string $email, string $displayName, bool $public): User
+    private function makeUser(string $email, string $displayName, bool $public, ?string $plain = 'securepass12345!'): User
     {
         $container = static::getContainer();
         /** @var UserPasswordHasherInterface $hasher */
@@ -39,12 +40,28 @@ final class RiderProfileTest extends WebTestCase
         $user->setRoles([]);
         $user->setPublicProfile($public);
         $user->setBikeTypes([BikeType::Gravel]);
-        $user->setPassword($hasher->hashPassword($user, 'securepass12345!'));
+        $user->setPassword($hasher->hashPassword($user, $plain ?? 'securepass12345!'));
 
         $em->persist($user);
         $em->flush();
 
         return $user;
+    }
+
+    private function loginAs(KernelBrowser $client, string $email, string $plain): void
+    {
+        $crawler = $client->request('GET', '/login');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Sign in')->form([
+            '_username' => $email,
+            '_password' => $plain,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects();
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
     }
 
     private function makeRoute(string $name, int $proposerId, ItemState $state): RecommendedRoute
@@ -136,5 +153,31 @@ final class RiderProfileTest extends WebTestCase
         $client->request('GET', '/fr/riders/'.$user->getUuid());
 
         self::assertResponseIsSuccessful();
+    }
+
+    public function testSettingsShowsViewLinkWhenPublic(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('viewlink@example.com', 'Viewlink Rider', true);
+        $this->loginAs($client, 'viewlink@example.com', 'securepass12345!');
+
+        $client->request('GET', '/settings');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('a[href$="/riders/'.$user->getUuid().'"]');
+    }
+
+    public function testSettingsShowsHintWhenPrivate(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('nolink@example.com', 'Nolink Rider', false);
+        $this->loginAs($client, 'nolink@example.com', 'securepass12345!');
+
+        $client->request('GET', '/settings');
+
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('/riders/'.$user->getUuid(), $html);
+        self::assertStringContainsString('data-view-public-off', $html);
     }
 }

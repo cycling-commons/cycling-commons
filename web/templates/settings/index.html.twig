@@ -161,6 +161,13 @@
       </label>
     </div>
     {{ form_errors(profileForm.publicProfile) }}
+    <div class="hint" style="margin:.5rem 0 0">
+      {% if cc_user.publicProfile %}
+        <a href="{{ path('rider_profile', {uuid: cc_user.uuid}) }}" target="_blank" rel="noopener">{{ 'settings.view_public'|trans }} ↗</a>
+      {% else %}
+        <span data-view-public-off>{{ 'settings.view_public_off'|trans }}</span>
+      {% endif %}
+    </div>
 
     <div class="submit-row"><button type="submit" class="btn">{{ 'settings.submit_profile'|trans }}</button></div>
   {{ form_end(profileForm) }}

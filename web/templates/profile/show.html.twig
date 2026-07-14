@@ -42,6 +42,13 @@
 
 {% block body %}
 <h1 class="acct-id">{{ 'account.heading'|trans }} — {{ cc_user.displayName }}</h1>
+<p style="margin:.2rem 0 1.4rem;font-size:.85rem">
+  {% if cc_user.publicProfile %}
+    <a href="{{ path('rider_profile', {uuid: cc_user.uuid}) }}" target="_blank" rel="noopener">{{ 'settings.view_public'|trans }} ↗</a>
+  {% else %}
+    <span data-view-public-off>{{ 'settings.view_public_off'|trans }}</span>
+  {% endif %}
+</p>
 
 <div class="dbody">
 

@@ -698,6 +698,8 @@ settings:
   toggle_public_b: 'Profil public'
   toggle_public_small: 'Désactivé, votre profil est masqué et les contributions restent anonymes.'
   submit_profile: 'Enregistrer le profil'
+  view_public: 'Voir votre profil public — exactement comme les autres le voient'
+  view_public_off: 'Pas de page publique — activez le profil public pour en obtenir une.'
   cancel: 'Annuler'
   section_preferences: 'Préférences de pratique'
   section_security: 'Sécurité'

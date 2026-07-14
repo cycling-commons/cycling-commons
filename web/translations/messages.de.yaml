@@ -698,6 +698,8 @@ settings:
   toggle_public_b: 'Öffentliches Profil'
   toggle_public_small: 'Wenn deaktiviert, ist dein Profil verborgen und Beiträge bleiben anonym.'
   submit_profile: 'Profil speichern'
+  view_public: 'Dein öffentliches Profil ansehen — genau so, wie andere es sehen'
+  view_public_off: 'Keine öffentliche Seite — aktiviere das öffentliche Profil, um eine zu erhalten.'
   cancel: 'Abbrechen'
   section_preferences: 'Fahrvorlieben'
   section_security: 'Sicherheit'

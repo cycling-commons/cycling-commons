@@ -698,6 +698,8 @@ settings:
   toggle_public_b: 'Openbaar profiel'
   toggle_public_small: 'Als dit uitstaat, is je profiel verborgen en blijven bijdragen anoniem.'
   submit_profile: 'Profiel opslaan'
+  view_public: 'Bekijk je openbare profiel — precies zoals anderen het zien'
+  view_public_off: 'Geen openbare pagina — zet Openbaar profiel aan om er een te krijgen.'
   cancel: 'Annuleren'
   section_preferences: 'Rijvoorkeuren'
   section_security: 'Beveiliging'

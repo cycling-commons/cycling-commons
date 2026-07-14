@@ -698,6 +698,8 @@ settings:
   toggle_public_b: 'Public profile'
   toggle_public_small: 'When off, your profile is hidden and contributions stay anonymous.'
   submit_profile: 'Save profile'
+  view_public: 'View your public profile — exactly as others see it'
+  view_public_off: 'No public page — enable Public profile to get one.'
   cancel: 'Cancel'
   section_preferences: 'Riding preferences'
   section_security: 'Security'
