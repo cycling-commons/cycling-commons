@@ -1,0 +1,28 @@
+web/src/Catalog/CatalogSchemaProvider.php
+  s_c68dfc59dc9546::t_f4f229d4a37b15 58
+web/src/Catalog/RideCheckService.php
+  s_c68dfc59dc9546::t_74750651170046 92
+  s_c68dfc59dc9546::t_6241bad720ca5d 146
+  s_c68dfc59dc9546::t_6c77d9e1359c6b 182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "2b8042a51c9933108aed3222e08edd76a22e9ea0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
