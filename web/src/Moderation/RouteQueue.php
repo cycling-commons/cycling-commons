@@ -112,6 +112,22 @@ final class RouteQueue
         return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
     }
 
+    /**
+     * Open route corrections (route_suggestion, status=pending) in scope —
+     * the desk's second work stream, counted for the ROUTES tab badge so a
+     * waiting correction is never invisible. The scope fragment reads
+     * region_id off the JOINed recommended_route (suggestions carry none).
+     */
+    public function pendingSuggestionCount(ModerationScope $scope): int
+    {
+        $frag = $scope->sqlFragment('r');
+        $sql = "SELECT COUNT(*) FROM route_suggestion s JOIN recommended_route r ON r.id = s.route_id
+                WHERE s.status = 'pending'"
+            .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
+
+        return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
+    }
+
     /** @return list<array{id:int,name:string}> */
     public function regions(ModerationScope $scope): array
     {

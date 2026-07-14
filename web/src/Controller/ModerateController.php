@@ -107,7 +107,7 @@ final class ModerateController extends AbstractController
             'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
             // Both tab badges show the open count in the moderator's jurisdiction.
             'mod_submission_count' => $this->queue->total($scope),
-            'mod_route_count' => $this->routeQueue->total($scope),
+            'mod_route_count' => $this->routeQueue->total($scope) + $this->routeQueue->pendingSuggestionCount($scope),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
     }
 

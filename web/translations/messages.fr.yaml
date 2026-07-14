@@ -1302,6 +1302,7 @@ moderate_routes:
   meta_title: 'Modérer les itinéraires'
   meta_description: 'Examinez les propositions et suggestions d''itinéraires en attente avant leur publication.'
   role_label: 'Curateur'
+  section_proposals: 'Nouvelles propositions'
   map_placeholder: 'Aperçu de la trace'
   region_none: 'Aucune région'
   region_cap: '%active% / %cap% actifs'

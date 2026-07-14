@@ -32,7 +32,16 @@
   .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
   /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system) */
 
-  .sugg-list{margin:1.4rem 0 2.4rem}
+  /* section bands: an unmistakable divider between the desk's two work
+     streams — new proposals (trail orange) vs corrections on live routes
+     (spruce). */
+  .sec-band{display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);padding:.55rem .9rem;border-radius:6px;margin:2.4rem 0 1.1rem}
+  .sec-band--new{background:var(--trail);color:var(--ink)}
+  .sec-band--corr{background:var(--spruce)}
+  .sec-band .sec-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.3rem;height:1.3rem;padding:0 .35rem;border-radius:999px;background:rgba(20,22,14,.22);font-size:.66rem}
+  .sec-empty{color:#595c4d;font-size:.9rem;padding:.4rem 0 1.5rem}
+
+  .sugg-list{margin:1.1rem 0 2.4rem}
   .sugg-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin-bottom:.8rem;background:var(--paper);display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
   .sugg-body{flex:1 1 260px}
   .sugg-route{font-family:var(--serif);font-weight:600;color:inherit;text-decoration:none;display:inline-block}
@@ -40,7 +49,10 @@
   .sugg-reason{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
   .sugg-actions{display:flex;gap:.5rem}
 
+  /* the two-column message/trash block spans the full suggestion-card width */
+  .sugg-item .mod-2col{flex-basis:100%;margin-top:.4rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
   .msg-rider{flex-basis:100%;margin-top:.4rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
+  .mod-2col .msg-rider{margin-top:0;border-top:none;padding-top:0}
   .msg-rider summary{cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
   .msg-rider summary:hover{color:var(--ink)}
   .msg-rider form{margin-top:.6rem;display:flex;flex-direction:column;gap:.5rem}
@@ -87,6 +99,8 @@
     <button type="submit" class="btn-act btn-decide">{{ 'moderate.filter.apply'|trans }}</button>
   </form>
 
+  {# ── New route proposals — riders' newly-uploaded routes awaiting first review ── #}
+  <h2 class="sec-band sec-band--new">{{ 'moderate_routes.section_proposals'|trans }} <span class="sec-count">{{ routes|length }}</span></h2>
   {% if routes is empty %}
   <div class="empty-queue">
     <div class="ic">&#9650;</div>
@@ -101,9 +115,10 @@
   </div>
   {% endif %}
 
-  <h2>{{ 'moderate_routes.suggestions.title'|trans }}</h2>
+  {# ── Route corrections — riders flagging fixes on EXISTING routes ── #}
+  <h2 class="sec-band sec-band--corr">{{ 'moderate_routes.suggestions.title'|trans }} <span class="sec-count">{{ suggestions|length }}</span></h2>
   {% if suggestions is empty %}
-    <p>{{ 'moderate_routes.suggestions.empty'|trans }}</p>
+    <p class="sec-empty">{{ 'moderate_routes.suggestions.empty'|trans }}</p>
   {% else %}
   <div class="sugg-list">
     {% for s in suggestions %}
@@ -127,26 +142,28 @@
             <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.dismiss'|trans }}</button>
           </form>
         </div>
-        <details class="msg-rider">
-          <summary>{{ 'moderate.msg.summary'|trans }}</summary>
-          <form method="post" action="{{ path('moderate_message') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
-            <input type="hidden" name="channel" value="correction">
-            <input type="hidden" name="id" value="{{ s.id }}">
-            <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
-            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
-          </form>
-        </details>
-        <details class="msg-rider trash-confirm">
-          <summary>{{ 'moderate.trash.button'|trans }}</summary>
-          <form method="post" action="{{ path('moderate_routes_trash') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
-            <input type="hidden" name="kind" value="correction">
-            <input type="hidden" name="id" value="{{ s.id }}">
-            <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong> {{ 'moderate.trash.confirm_rest'|trans }}</p>
-            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
-          </form>
-        </details>
+        <div class="mod-2col">
+          <details class="msg-rider">
+            <summary>{{ 'moderate.msg.summary'|trans }}</summary>
+            <form method="post" action="{{ path('moderate_message') }}">
+              <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
+              <input type="hidden" name="channel" value="correction">
+              <input type="hidden" name="id" value="{{ s.id }}">
+              <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
+              <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
+            </form>
+          </details>
+          <details class="msg-rider trash-confirm">
+            <summary>{{ 'moderate.trash.button'|trans }}</summary>
+            <form method="post" action="{{ path('moderate_routes_trash') }}">
+              <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
+              <input type="hidden" name="kind" value="correction">
+              <input type="hidden" name="id" value="{{ s.id }}">
+              <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong> {{ 'moderate.trash.confirm_rest'|trans }}</p>
+              <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+            </form>
+          </details>
+        </div>
       </div>
     {% endfor %}
   </div>

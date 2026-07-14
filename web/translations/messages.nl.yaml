@@ -1302,6 +1302,7 @@ moderate_routes:
   meta_title: 'Routes modereren'
   meta_description: 'Beoordeel ingediende routevoorstellen en suggesties vóór publicatie.'
   role_label: 'Curator'
+  section_proposals: 'Nieuwe routevoorstellen'
   map_placeholder: 'Trackvoorbeeld'
   region_none: 'Geen regio'
   region_cap: '%active% / %cap% actief'

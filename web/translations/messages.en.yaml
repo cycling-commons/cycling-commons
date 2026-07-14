@@ -1302,6 +1302,7 @@ moderate_routes:
   meta_title: 'Moderate routes'
   meta_description: 'Review pending route proposals and suggestions before they publish.'
   role_label: 'Curator'
+  section_proposals: 'New route proposals'
   map_placeholder: 'Track preview'
   region_none: 'No region'
   region_cap: '%active% / %cap% active'
