@@ -1,0 +1,41 @@
+web/tests/Admin/AdminActionLoggerTest.php
+  s_c68dfc59dc9546::t_5b5c21c94db9e6 19
+web/tests/Admin/UserAdminActionsTest.php
+  s_c68dfc59dc9546::t_8b67aac03bcbfa 43
+web/tests/Community/RouteCorrectionsTest.php
+  s_c68dfc59dc9546::t_d6eff6d1914df9 25
+web/tests/Community/RouteRideItTest.php
+  s_c68dfc59dc9546::t_0e926b6ed54869 21
+web/tests/Admin/UserAdminServiceTest.php
+  s_c68dfc59dc9546::t_42ec447e122761 31
+web/tests/Admin/DashboardStatsTest.php
+  s_c68dfc59dc9546::t_13097a37fc6254 19
+web/tests/Messaging/MessageServiceTest.php
+  s_c68dfc59dc9546::t_e57d23fe8b0872 29
+web/tests/Moderation/ModerateTest.php
+  s_c68dfc59dc9546::t_131345bfe208ba 79,81-82
+  s_c68dfc59dc9546::t_27f40a83072464 51
+web/tests/Community/RouteCommunityReadTest.php
+  s_c68dfc59dc9546::t_1b663785e37491 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "49685e0380414127a0039cdf48f07662e1435d7b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
