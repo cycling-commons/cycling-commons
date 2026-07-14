@@ -27,6 +27,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
 #[ORM\UniqueConstraint(name: 'uniq_users_display_name_canonical', columns: ['display_name_canonical'])]
+#[ORM\UniqueConstraint(name: 'uniq_users_uuid', columns: ['uuid'])]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['email'], message: 'This email address is already registered.')]
 #[UniqueEntity(fields: ['displayNameCanonical'], errorPath: 'displayName', message: 'form.error_display_name_taken')]
