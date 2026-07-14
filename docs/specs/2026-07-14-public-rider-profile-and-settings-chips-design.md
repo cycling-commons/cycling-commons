@@ -190,10 +190,12 @@ the rest of the app).
 
 ## Rider-feedback pass (2026-07-14, same day)
 
-- Account-shell tabs: Settings added; selected tab now unmistakable (tint +
-  underline); moderator tabs (Submissions, Routes) render ONLY inside the
-  moderator section, pushed right under a MODERATION label — user pages show
-  user tabs only (curators reach moderation via the account-chip dropdown).
+- Account-shell tabs: Settings added; selected tab now unmistakable (tint
+  box with real side padding + underline); moderator tabs (Submissions,
+  Routes) render ONLY inside the moderator section — and in moderator mode
+  the bar carries ONLY the moderation tabs (no user items) on its own
+  darker colour under a MODERATION label. User pages show user tabs only;
+  curators cross over via the account-chip dropdown in both directions.
 - Language switcher (shared `_lang_menu`) added to the shell header — fixes
   moderator pages having no switcher.
 - "View your public profile" moved into the contributions pane flow,
