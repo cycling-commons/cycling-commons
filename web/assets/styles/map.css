@@ -273,6 +273,7 @@
   .cc-drawer-x:hover{color:var(--trail)}
   .cc-drawer-x:focus{outline:none}                                           /* no square when focused on open */
   .cc-drawer-x:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}   /* keyboard users keep a ring */
+  .cc-d-grab{display:none}   /* mobile-only affordance; shown in the ≤820px block */
   .cc-d-scrim{display:none}   /* desktop: no scrim; the mobile bottom-sheet rules enable it */
   .cc-d-type{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
     background:var(--c,#FF5A1F);display:inline-block;padding:.25rem .55rem;border-radius:4px}
@@ -479,14 +480,26 @@
     .demo-banner{padding:.35rem .6rem;font-size:.7rem}
     /* feature detail -> bottom slide-up */
     .cc-drawer{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;max-height:80vh;max-height:80svh;transform:translateY(102%);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);z-index:1550;padding:1.2rem 1.3rem 2rem}
-    .cc-drawer.open{transform:none}
+    /* Snap sheet (spec 2026-07-14): three resting states. The sheet keeps its
+       full height and slides via translateY — .open alone now means "at half"
+       (landing state); s-full/s-peek move it up/down. Inline transforms set by
+       JS during a drag override these resting values. */
+    .cc-drawer{--peek:7.5rem}
+    .cc-drawer.open{transform:translateY(calc(100% - 50svh))}                 /* half (default) */
+    .cc-drawer.open.s-full{transform:none}                                     /* full */
+    .cc-drawer.open.s-peek{transform:translateY(calc(100% - var(--peek)))}    /* peek */
+    /* content scrolls only at full; below full every drag moves the sheet */
+    .cc-drawer.open:not(.s-full){overflow:hidden}
+    .cc-d-grab{display:block;width:100%;background:none;border:none;padding:.15rem 0 .55rem;cursor:grab;touch-action:none}
+    .cc-d-grab span{display:block;width:2.6rem;height:.28rem;border-radius:2px;background:rgba(239,230,212,.35);margin:0 auto}
+    .cc-d-grab:focus-visible span{outline:2px solid var(--trail);outline-offset:3px}
     /* pinned close target so it's always reachable on the bottom sheet; right edge lines up with the content/image.
        float:right lets the category/title wrap up beside it (no empty top-left gap); right:auto cancels the desktop
        rule's right inset, which a sticky box would otherwise apply as a 1.4rem leftward offset. */
     .cc-drawer-x{position:sticky;top:0;right:auto;float:right;margin:-.3rem 0 .2rem;width:2.1rem;height:2.1rem;display:flex;align-items:center;justify-content:flex-end;font-size:1.1rem;z-index:2}
     /* tap the dimmed area above the sheet to close it */
     .cc-d-scrim{display:block;position:fixed;inset:0;z-index:1540;background:rgba(16,30,22,.4);opacity:0;pointer-events:none;transition:opacity .25s ease}
-    .cc-drawer.open ~ .cc-d-scrim{opacity:1;pointer-events:auto}
+    .cc-drawer.open.s-full ~ .cc-d-scrim{opacity:1;pointer-events:auto}
     .cc-lightbox{z-index:1600}
     /* keep map zoom/attribution above the sheet peek */
     .maplibregl-ctrl-bottom-left{bottom:3.4rem}

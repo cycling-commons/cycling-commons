@@ -912,6 +912,7 @@ map:
   mly_resize_hint: 'Ziehen zum Anpassen · ↑/↓-Tasten · Doppelklick zum Zurücksetzen'
   drawer_aria: 'Detailansicht'
   drawer_close: 'Detail schließen'
+  drawer_grab: 'Ziehen, um das Panel zu vergrößern oder zu verkleinern'
   lb_close: 'Bild schließen'
   lb_prev: 'Vorheriges Bild'
   lb_next: 'Nächstes Bild'

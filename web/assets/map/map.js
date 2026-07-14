@@ -1777,6 +1777,7 @@
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
+    if(window.innerWidth<=820) sheet.reset();          // land at half; desktop untouched
   }
   // place info card: fly to the town/village, show its info (when known) +
   // everything in the Commons within 5 km, grouped by layer. Works for any
@@ -2072,6 +2073,7 @@
     clearHighlight();
     clearRouteHighlight();
     clearCorrections();
+    sheet.clear();                                     // drop snap classes + inline transform for the next open
   }
   // lightbox doubles as a slideshow over a feature's photo gallery
   let _lb={photos:[],i:0,name:''};
@@ -2095,43 +2097,71 @@
   }
   document.getElementById('drawerClose').onclick=closeDrawer;
   document.getElementById('drawerScrim').onclick=closeDrawer;   // tap the dimmed area above the bottom sheet to close
-  // mobile: drag the detail sheet down (from the top of the sheet) to dismiss it
-  (function initDrawerDrag(){
-    const d=document.getElementById('drawer'); if(!d) return;
-    let active=false, dragging=false, startY=0, startT=0, dy=0;
+  // Mobile snap sheet (spec 2026-07-14): peek / half / full resting states.
+  // Content scrolls only at full; below full any vertical drag moves the
+  // sheet; at full, a downward drag while scrollTop===0 grabs the sheet back
+  // (Google-Maps-style hand-off). Desktop (>820px) never enters this code.
+  const sheet=(function initSnapSheet(){
+    const d=document.getElementById('drawer'), grab=document.getElementById('drawerGrab');
+    if(!d||!grab) return {reset(){}};
+    const mobile=()=>window.innerWidth<=820;
+    const rem=()=>parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
+    let snap='half', justDragged=false;
+    const setSnap=s=>{ snap=s; d.classList.toggle('s-full', s==='full'); d.classList.toggle('s-peek', s==='peek'); d.style.transform=''; if(s==='full') {} else d.scrollTop=0; };
+    // translateY offsets (px from fully-open) for each resting state
+    function offsets(){
+      const h=d.getBoundingClientRect().height;
+      return {full:0, half:Math.max(0, h-window.innerHeight*0.5), peek:Math.max(0, h-7.5*rem())};
+    }
+    let active=false, dragging=false, viaGrab=false, startY=0, startT=0, dy=0, baseOff=0;
     d.addEventListener('touchstart', e=>{
-      if(window.innerWidth>820 || e.touches.length!==1) return;
-      if(d.scrollTop>0) return;   // mid-scroll → leave it to the content
-      active=true; dragging=false; startY=e.touches[0].clientY; startT=e.timeStamp; dy=0;
+      if(!mobile() || e.touches.length!==1 || !d.classList.contains('open')) return;
+      viaGrab=grab.contains(e.target);
+      if(!viaGrab && snap==='full' && d.scrollTop>0) return;   // mid-scroll at full → content's gesture
+      active=true; dragging=false; startY=e.touches[0].clientY; startT=e.timeStamp; dy=0; baseOff=offsets()[snap];
     }, {passive:true});
     d.addEventListener('touchmove', e=>{
       if(!active) return;
       dy=e.touches[0].clientY-startY;
       if(!dragging){
-        if(dy<-4){ active=false; return; }   // moved up first → it's a scroll; bail without hijacking
-        if(dy<=4) return;                     // wait for a clear downward direction
+        // At full, content owns upward drags (scroll); the sheet owns downward
+        // ones from scrollTop 0. Below full the sheet owns both directions.
+        if(!viaGrab && snap==='full' && dy<-4){ active=false; return; }
+        if(Math.abs(dy)<=4) return;                    // wait for a clear direction
         dragging=true;
       }
-      e.preventDefault();                     // own the downward drag (listener is passive:false)
+      e.preventDefault();                              // own the gesture (passive:false)
       d.classList.add('dragging');
-      d.style.transform=`translateY(${Math.max(0,dy)}px)`;
+      const off=offsets();
+      d.style.transform=`translateY(${Math.min(Math.max(0, baseOff+dy), off.peek+40)}px)`;   // clamp: never above full; slight give past peek
     }, {passive:false});
     d.addEventListener('touchend', ()=>{
       if(!dragging){ active=false; return; }
-      active=false; dragging=false;
-      d.classList.remove('dragging');         // restore the transition for the release animation
-      const vel=dy/Math.max(1, performance.now()-startT);   // px/ms
-      if(dy>90 || (dy>30 && vel>0.5)){        // far enough, or a quick flick → dismiss
-        d.style.transform='translateY(100%)';
-        let closed=false;
-        const fin=ev=>{ if(closed||(ev&&ev.propertyName!=='transform')) return; closed=true;
-          d.removeEventListener('transitionend',fin); closeDrawer(); d.style.transform=''; };
-        d.addEventListener('transitionend', fin);
-        setTimeout(fin, 320);                 // fallback if transitionend doesn't fire
-      } else {
-        d.style.transform='';                 // snap back up (CSS .cc-drawer.open → transform:none)
-      }
+      active=false; dragging=false; justDragged=true; setTimeout(()=>{ justDragged=false; }, 450);
+      d.classList.remove('dragging');
+      const off=offsets(), pos=baseOff+dy, vel=dy/Math.max(1, performance.now()-startT);   // px/ms, + = down
+      // fast flick: skip straight to the neighbouring state in the flick's direction
+      if(vel>0.5){ if(snap==='peek' || pos>off.peek+20){ dismiss(); return; } setSnap(snap==='full'?'half':'peek'); return; }
+      if(vel<-0.5){ setSnap(snap==='peek'?'half':'full'); return; }
+      if(pos>off.peek+60){ dismiss(); return; }        // dragged well past peek → close
+      // otherwise: snap to nearest resting state
+      let best='full', bestD=Infinity;
+      ['full','half','peek'].forEach(s=>{ const dd=Math.abs(pos-off[s]); if(dd<bestD){ bestD=dd; best=s; } });
+      setSnap(best);
     });
+    function dismiss(){
+      d.style.transform='translateY(102%)';
+      let closed=false;
+      const fin=ev=>{ if(closed||(ev&&ev.propertyName!=='transform')) return; closed=true;
+        d.removeEventListener('transitionend',fin); closeDrawer(); };
+      d.addEventListener('transitionend', fin);
+      setTimeout(fin, 320);                            // fallback if transitionend doesn't fire
+    }
+    grab.addEventListener('click', ()=>{ if(!mobile()||justDragged) return; setSnap(snap==='full'?'half':'full'); });   // Enter/Space included (button)
+    return {
+      reset(){ setSnap('half'); },                     // openDrawer lands every sheet at half
+      clear(){ d.classList.remove('s-full','s-peek'); d.style.transform=''; snap='half'; },
+    };
   })();
   document.querySelector('.cc-lb-prev').onclick=e=>{ e.stopPropagation(); lbStep(-1); };
   document.querySelector('.cc-lb-next').onclick=e=>{ e.stopPropagation(); lbStep(1); };
