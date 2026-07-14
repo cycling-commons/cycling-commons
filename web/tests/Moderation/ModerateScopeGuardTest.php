@@ -11,6 +11,7 @@ use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Messaging\Entity\UserMessage;
 use App\Moderation\Entity\ModeratorArea;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -204,6 +205,42 @@ final class ModerateScopeGuardTest extends WebTestCase
         self::assertResponseRedirects('/moderate');
     }
 
+    public function testTrashOutOfScopeIs403(): void
+    {
+        $client = static::createClient();
+        $regionA = $this->seedRegion('guard-trash-a', 'Guard Trash A', 'BE');
+        $regionB = $this->seedRegion('guard-trash-b', 'Guard Trash B', 'NL');
+        $this->seedSubmission('Trash in-scope', $regionA->getId());
+        $subB = $this->seedSubmission('Trash out-of-scope', $regionB->getId(), 'NL');
+
+        $curator = $this->curator('guard-trash@example.com');
+        $this->assignRegion($curator, (int) $regionA->getId());
+        $client->loginUser($curator);
+
+        // `moderate-trash` is a session-bound CSRF token id (TrashTest's
+        // submissionTrashToken pattern): read it off the trash-confirm form
+        // the queue renders for the in-scope item — the token is keyed to
+        // (session, token id) only, not to the row id.
+        $crawler = $client->request('GET', '/moderate');
+        self::assertResponseIsSuccessful();
+        $token = (string) $crawler->filter('.trash-confirm input[name="_token"]')->first()->attr('value');
+
+        $client->request('POST', '/moderate/trash', [
+            'kind' => 'submission',
+            'id' => (string) $subB->getId(),
+            '_token' => $token,
+        ]);
+
+        self::assertResponseStatusCodeSame(403);
+
+        // The out-of-scope row must still exist — the guard fires before the
+        // audit log and the remove(), so nothing was deleted.
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        self::assertNotNull($em->find(Submission::class, $subB->getId()));
+    }
+
     public function testMessageOutOfScopeIs403(): void
     {
         $client = static::createClient();
@@ -231,6 +268,15 @@ final class ModerateScopeGuardTest extends WebTestCase
         ]);
 
         self::assertResponseStatusCodeSame(403);
+
+        // The guard fires before MessageService::sendCurator() — no message
+        // row may exist for the out-of-scope submission.
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertCount(0, $em->getRepository(UserMessage::class)->findBy([
+            'channel' => 'submission',
+            'refId' => (int) $subB->getId(),
+        ]));
     }
 
     public function testAdminIgnoresAreaRows(): void
