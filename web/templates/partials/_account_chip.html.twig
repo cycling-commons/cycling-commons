@@ -18,13 +18,13 @@
     {# Personal — your own account. Labelled only when a work section follows,
        so a plain member still sees a clean, unheaded list. #}
     {% set _hasWork = is_granted('ROLE_CURATOR') or is_granted('ROLE_ADMIN') %}
-    {% if _hasWork %}<div class="acct-sec">{{ 'account.menu_personal'|trans }}</div>{% endif %}
+    {% if _hasWork %}<div class="acct-sec acct-sec-personal">{{ 'account.menu_personal'|trans }}</div>{% endif %}
     <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
     <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}</a>
     <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
     {% if is_granted('ROLE_CURATOR') %}
       {# Two moderation queues: submissions (everything except routes) + routes. #}
-      <div class="acct-sec">{{ 'account.menu_moderation'|trans }}</div>
+      <div class="acct-sec acct-sec-mod">{{ 'account.menu_moderation'|trans }}</div>
       <a href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}</a>
       <a href="{{ path('moderate_routes') }}">{{ 'nav.routes'|trans }}</a>
     {% endif %}
