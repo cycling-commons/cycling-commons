@@ -35,6 +35,9 @@ security:
         # scheb's `/2fa` interstitial, `/api`, and `/admin` stay unprefixed (see i18n design).
         - { path: '^(/(fr|nl|de))?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
         - { path: ^/verify, roles: PUBLIC_ACCESS }
+        # Public rider profiles (spec 2026-07-14): explicit PUBLIC_ACCESS for the
+        # same scheb lazy-firewall reason as /map/catalog.json below.
+        - { path: '^(/(fr|nl|de))?/riders/', roles: PUBLIC_ACCESS }
         # Explicit PUBLIC_ACCESS (not just "no rule matches") so scheb's lazy-firewall
         # TwoFactorAccessListener treats the path as publicly accessible and skips
         # tokenStorage->getToken() — otherwise it forces a session read on every

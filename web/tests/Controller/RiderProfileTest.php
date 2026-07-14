@@ -1,0 +1,97 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+namespace App\Tests\Controller;
+
+use App\Catalog\BikeType;
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Uid\Uuid;
+
+/**
+ * Public rider profile (spec 2026-07-14): /riders/{uuid} exists only while
+ * publicProfile is ON; renders public-appropriate data only; never leaks the
+ * email. Anonymous client throughout — the page must not require login.
+ *
+ * Test isolation: DAMA rollback per test.
+ */
+final class RiderProfileTest extends WebTestCase
+{
+    private function makeUser(string $email, string $displayName, bool $public): User
+    {
+        $container = static::getContainer();
+        /** @var UserPasswordHasherInterface $hasher */
+        $hasher = $container->get(UserPasswordHasherInterface::class);
+        /** @var EntityManagerInterface $em */
+        $em = $container->get(EntityManagerInterface::class);
+
+        $user = new User();
+        $user->setEmail($email);
+        $user->setDisplayName($displayName);
+        $user->setEmailVerified(true);
+        $user->setEmailVerifiedAt(new \DateTimeImmutable());
+        $user->setRoles([]);
+        $user->setPublicProfile($public);
+        $user->setBikeTypes([BikeType::Gravel]);
+        $user->setPassword($hasher->hashPassword($user, 'securepass12345!'));
+
+        $em->persist($user);
+        $em->flush();
+
+        return $user;
+    }
+
+    public function testOptedInProfileRendersPublicly(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('public-rider@example.com', 'Public Rider', true);
+
+        $client->request('GET', '/riders/'.$user->getUuid());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Public Rider');
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('public-rider@example.com', $html, 'email must never appear');
+    }
+
+    public function testHiddenProfileIs404(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('hidden-rider@example.com', 'Hidden Rider', false);
+
+        $client->request('GET', '/riders/'.$user->getUuid());
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testUnknownUuidIs404(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/riders/'.Uuid::v7());
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testMalformedUuidIs404(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/riders/not-a-uuid');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testLocalizedPathWorks(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('fr-rider@example.com', 'Rider FR', true);
+
+        $client->request('GET', '/fr/riders/'.$user->getUuid());
+
+        self::assertResponseIsSuccessful();
+    }
+}
