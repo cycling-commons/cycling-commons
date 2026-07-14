@@ -130,14 +130,16 @@ final class RouteScopeGuardTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $regionA = $this->seedRegion($em, 'rsg-decide-a', 'RSG Decide A', 'BE');
         $regionB = $this->seedRegion($em, 'rsg-decide-b', 'RSG Decide B', 'NL');
-        $this->submittedRoute($em, 'Decide in-scope', (int) $regionA->getId());
+        $inScopeRoute = $this->submittedRoute($em, 'Decide in-scope', (int) $regionA->getId());
         $routeB = $this->submittedRoute($em, 'Decide out-of-scope', (int) $regionB->getId());
 
         $curator = $this->curator();
         $this->assignRegion($curator, (int) $regionA->getId());
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate/routes');
+        // The decision form now lives on the proposal's own (in-scope) detail
+        // page rather than the queue list — mint the token there.
+        $crawler = $client->request('GET', '/moderate/routes/'.$inScopeRoute->getId());
         self::assertResponseIsSuccessful();
         $token = (string) $crawler->filter('input[name="route_decision[_token]"]')->first()->attr('value');
 
@@ -198,7 +200,12 @@ final class RouteScopeGuardTest extends WebTestCase
         $this->assignRegion($curator, (int) $regionA->getId());
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate/routes');
+        $client->request('GET', '/moderate/routes');
+        self::assertResponseIsSuccessful();
+
+        // The decision form moved off the queue list onto the proposal's own
+        // detail page (the queue item now just links there for review).
+        $crawler = $client->request('GET', '/moderate/routes/'.$routeA->getId());
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Record decision')->form([

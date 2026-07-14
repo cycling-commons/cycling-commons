@@ -273,6 +273,12 @@
 <script nonce="{{ csp_nonce() }}">
   window.CC_IS_CURATOR = true;
   window.CC_PENDING = {{ pending|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# The map drawer is now the ONLY place a submission is approved/rejected
+     (the queue list carries no decision form anymore) — so the decision CSRF
+     token is emitted here directly, not scraped from the /moderate page.
+     Forms use the global stateless token id 'submit' (config/packages/csrf.yaml
+     → framework.form.csrf_protection.token_id), so that is the id to mint. #}
+  window.CC_MOD_TOKEN = {{ csrf_token('submit')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {% endif %}
 {% if is_granted('ROLE_USER') %}

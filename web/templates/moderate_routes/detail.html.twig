@@ -17,6 +17,13 @@
   .rd-meta td:first-child{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;width:35%}
 
   .rd-edit{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.2rem 1.4rem;margin:1.4rem 0;background:var(--paper)}
+  /* the decision is the primary action on a submitted proposal — a clay accent
+     sets it apart from the plain edit/retire boxes. */
+  .rd-decide{border-left:3px solid var(--clay)}
+  .rd-decide h2{font-family:var(--serif);font-size:1.2rem;margin:0 0 .8rem}
+  .rd-decide-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
+  .rd-decide-row label{font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:0}
+  .rd-decide-row select{max-width:240px}
   .rd-edit label{display:block;font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
   .rd-edit textarea{width:100%;min-height:110px;font-family:var(--sans);font-size:.9rem;padding:.6rem;border:1px solid rgba(20,22,14,.25);border-radius:6px}
   /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system);
@@ -85,6 +92,24 @@
       </tr>
     </table>
   </div>
+
+  {# Decision (approve / reject / retire) — the ONLY place a submitted proposal
+     is decided now; the queue list no longer carries this form. #}
+  {% if decision_form is not null %}
+  <div class="rd-edit rd-decide">
+    <h2>{{ 'moderate_routes.decision.heading'|trans }}</h2>
+    {{ form_start(decision_form) }}
+      {{ form_widget(decision_form.route_id, {value: route.id}) }}
+      <div class="rd-decide-row">
+        <label for="{{ decision_form.decision.vars.id }}">{{ 'moderate_routes.decision.label'|trans }}</label>
+        {{ form_widget(decision_form.decision) }}
+      </div>
+      <label for="{{ decision_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>
+      {{ form_widget(decision_form.note) }}
+      <button type="submit" class="btn-act btn-decide">{{ 'moderate_routes.action.decide'|trans }}</button>
+    {{ form_end(decision_form) }}
+  </div>
+  {% endif %}
 
   <div class="rd-edit">
     {{ form_start(edit_form, {attr: {novalidate: 'novalidate'}}) }}

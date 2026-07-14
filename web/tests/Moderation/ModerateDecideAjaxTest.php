@@ -78,9 +78,13 @@ final class ModerateDecideAjaxTest extends WebTestCase
         $this->login($client, 'ajax-curator@example.com', ['ROLE_CURATOR'], true);
         $sub = $this->seedSubmission();
 
-        // Grab the CSRF token from a rendered decision form (stateless, id "submit").
-        $crawler = $client->request('GET', '/moderate');
-        $token = (string) $crawler->filter('form.q-act-form input[name="moderation_decision[_token]"]')->first()->attr('value');
+        // Grab the CSRF token (stateless, id "submit") from window.CC_MOD_TOKEN
+        // on the map page — the decision form now lives in the map drawer,
+        // not on /moderate.
+        $client->request('GET', '/map');
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
 
         $client->request(
             'POST',
@@ -116,8 +120,10 @@ final class ModerateDecideAjaxTest extends WebTestCase
         $this->login($client, 'ajax-curator-invalid@example.com', ['ROLE_CURATOR'], true);
         $this->seedSubmission();
 
-        $crawler = $client->request('GET', '/moderate');
-        $token = (string) $crawler->filter('form.q-act-form input[name="moderation_decision[_token]"]')->first()->attr('value');
+        $client->request('GET', '/map');
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
         self::assertNotSame('', $token);
 
         $client->request(

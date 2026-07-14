@@ -1266,6 +1266,7 @@ moderate:
     decision_label: 'Decision'
     submit: 'Record decision'
     view: 'View on map ↗'
+    review_on_map: 'Review & approve on the map'
   error:
     submission_id_required: 'Submission ID is required.'
     decision_required: 'A decision is required.'
@@ -1326,6 +1327,7 @@ moderate_routes:
     decide: 'Record decision'
     save: 'Save changes'
     view: 'View proposal ↗'
+    review: 'Review'
     done: 'Mark done'
     dismiss: 'Dismiss'
     retire_route: 'Retire this route'
@@ -1333,6 +1335,8 @@ moderate_routes:
     approve: 'Approve'
     reject: 'Reject'
     retire: 'Retire'
+    heading: 'Decision'
+    label: 'Approve / Reject / Retire'
   suggestions:
     title: 'Pending corrections'
     empty: 'No pending corrections for this queue.'

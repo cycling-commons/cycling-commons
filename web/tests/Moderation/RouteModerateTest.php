@@ -78,9 +78,14 @@ final class RouteModerateTest extends WebTestCase
         $route = $this->submittedRoute($em);
 
         $client->loginUser($this->curator());
-        $crawler = $client->request('GET', '/moderate/routes');
+        $client->request('GET', '/moderate/routes');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Desk proposal · Condroz');
+
+        // The decision form moved off the queue list onto the proposal's own
+        // detail page (the queue item now just links there for review).
+        $crawler = $client->request('GET', '/moderate/routes/'.$route->getId());
+        self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Record decision')->form([
             'route_decision[route_id]' => (string) $route->getId(),

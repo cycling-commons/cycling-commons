@@ -30,6 +30,7 @@
   .q-decision-row label{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:0}
   .q-decision-row select{max-width:220px}
   .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+  .q-review{display:inline-block;text-decoration:none}
   /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system) */
 
   /* section headers: delicate — a coloured label + a thin accent rule marks
@@ -109,7 +110,7 @@
   {% else %}
   <div class="q-list">
     {% for item in routes %}
-      {% include 'moderate_routes/_queue_item.html.twig' with {item: item, form: forms[item.id]} %}
+      {% include 'moderate_routes/_queue_item.html.twig' with {item: item} %}
     {% endfor %}
   </div>
   {% endif %}

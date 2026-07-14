@@ -1264,6 +1264,7 @@ moderate:
     reject: 'Ablehnen'
     needs_info: 'Informationen fehlen'
     decision_label: 'Entscheidung'
+    review_on_map: 'Auf der Karte prüfen & genehmigen'
     submit: 'Entscheidung erfassen'
     view: 'Auf der Karte ansehen ↗'
   error:
@@ -1324,6 +1325,7 @@ moderate_routes:
   surface_hint: 'Gemessener Belag legt nahe: %surface%'
   action:
     decide: 'Entscheidung erfassen'
+    review: 'Prüfen'
     save: 'Änderungen speichern'
     view: 'Vorschlag ansehen ↗'
     done: 'Als erledigt markieren'
@@ -1333,6 +1335,8 @@ moderate_routes:
     approve: 'Genehmigen'
     reject: 'Ablehnen'
     retire: 'Zurückziehen'
+    heading: 'Entscheidung'
+    label: 'Genehmigen / Ablehnen / Zurückziehen'
   suggestions:
     title: 'Ausstehende Korrekturen'
     empty: 'Keine ausstehenden Korrekturen für diese Warteschlange.'

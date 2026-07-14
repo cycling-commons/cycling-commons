@@ -180,9 +180,15 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($curator, (int) $regionA->getId());
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
-        $token = (string) $crawler->filter('input[name="moderation_decision[_token]"]')->first()->attr('value');
+        // The decision form lives on the map drawer now; mint the stateless
+        // "submit" CSRF token from window.CC_MOD_TOKEN there.
+        $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
 
         $client->request('POST', '/moderate/decide', [
             'moderation_decision' => [
@@ -212,9 +218,13 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($curator, (int) $regionA->getId());
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
-        $token = (string) $crawler->filter('input[name="moderation_decision[_token]"]')->first()->attr('value');
+        $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
 
         $client->request('POST', '/moderate/decide', [
             'moderation_decision' => [
@@ -320,13 +330,17 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($admin, (int) $regionA->getId());
         $client->loginUser($admin);
 
-        $crawler = $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
         $body = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('Admin sees A', $body);
         self::assertStringContainsString('Admin sees B', $body);
 
-        $token = (string) $crawler->filter('input[name="moderation_decision[_token]"]')->first()->attr('value');
+        $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
 
         $client->request('POST', '/moderate/decide', [
             'moderation_decision' => [

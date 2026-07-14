@@ -75,29 +75,14 @@ final class ModerateController extends AbstractController
         $scope = $this->scopeProvider->scopeFor($user);
         $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null);
 
-        // The form action carries the live filters (§13) so a decision made from
-        // a filtered view redirects back to that same filtered view.
-        $formAction = $this->generateUrl('moderate_decide', array_filter([
-            'country' => $country,
-            'region' => $region,
-            'type' => $type,
-        ], static fn (string $v): bool => '' !== $v));
-
-        $forms = [];
-        foreach ($items as $item) {
-            $form = $this->createForm(ModerationDecisionType::class, null, [
-                'action' => $formAction,
-                'method' => 'POST',
-            ]);
-            $forms[$item['id']] = $form->createView();
-        }
-
+        // No per-item decision forms here anymore: submissions are approved
+        // ONLY from the map drawer (so a curator always sees the item in place
+        // first). The list routes to /map?pending=<id> to review + decide.
         return $this->render('moderate/index.html.twig', [
             'page_title' => 'meta.moderate_title',
             'page_description' => 'meta.moderate_description',
             'nav_active' => 'moderate',
             'items' => $items,
-            'forms' => $forms,
             'total' => $this->queue->total($scope),
             'filters' => ['country' => $country, 'region' => $region, 'type' => $type],
             'countries' => $this->queue->countries($scope),

@@ -1264,6 +1264,7 @@ moderate:
     reject: 'Afwijzen'
     needs_info: 'Meer info nodig'
     decision_label: 'Beslissing'
+    review_on_map: 'Bekijk en keur goed op de kaart'
     submit: 'Beslissing registreren'
     view: 'Op de kaart bekijken ↗'
   error:
@@ -1324,6 +1325,7 @@ moderate_routes:
   surface_hint: 'Gemeten oppervlak suggereert: %surface%'
   action:
     decide: 'Beslissing registreren'
+    review: 'Bekijken'
     save: 'Wijzigingen opslaan'
     view: 'Voorstel bekijken ↗'
     done: 'Markeer als afgehandeld'
@@ -1333,6 +1335,8 @@ moderate_routes:
     approve: 'Goedkeuren'
     reject: 'Afwijzen'
     retire: 'Intrekken'
+    heading: 'Beslissing'
+    label: 'Goedkeuren / Afwijzen / Intrekken'
   suggestions:
     title: 'Openstaande correcties'
     empty: 'Geen openstaande correcties voor deze wachtrij.'

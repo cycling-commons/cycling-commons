@@ -14,10 +14,6 @@
   <h3 class="q-title">{{ item.title }}</h3>
   <div class="q-submitter">
     {{ item.who }} &middot; {{ item.lat|number_format(3) }}&deg;N {{ item.lng|number_format(3) }}&deg;E
-    &middot;
-    <a class="q-view"
-       href="{{ path('map') }}?pending={{ item.id }}"
-       target="_blank" rel="noopener">{{ 'moderate.action.view'|trans }}</a>
   </div>
   {% if item.body %}
     <p class="q-body">{{ item.body }}</p>
@@ -32,21 +28,13 @@
     <p class="q-rider-reply"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ item.riderReply }}</p>
   {% endif %}
 
+  {# Decisions are made ONLY on the map (so a curator always sees the item in
+     place before approving). This list just routes there — open the pending
+     item's drawer, review, edit if needed, then approve/reject in the drawer. #}
   <div class="q-actions">
-    {# §13: no hardcoded action — the form carries its own action (set in
-       ModerateController with the curator's live country/region/type filters
-       so a decision made from a filtered view redirects back to it). #}
-    {{ form_start(form, {method: 'POST', attr: {class: 'q-act-form'}}) }}
-      {{ form_widget(form.submission_id, {value: item.id}) }}
-      <div class="q-decision-row">
-        {{ form_label(form.decision, 'moderate.action.decision_label'|trans) }}
-        {{ form_widget(form.decision) }}
-      </div>
-      {{ form_widget(form.note) }}
-      <div class="q-act-btns">
-        <button type="submit" class="btn-act btn-decide">{{ 'moderate.action.submit'|trans }}</button>
-      </div>
-    {{ form_end(form) }}
+    <a class="btn-act btn-secondary q-review"
+       href="{{ path('map') }}?pending={{ item.id }}"
+       target="_blank" rel="noopener">{{ 'moderate.action.review_on_map'|trans }} &#8599;</a>
   </div>
 
   {# message + trash side by side (rider feedback: no full-width stack) #}

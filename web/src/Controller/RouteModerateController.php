@@ -62,17 +62,12 @@ final class RouteModerateController extends AbstractController
         $regionId = null !== $region && ctype_digit((string) $region) ? (int) $region : null;
 
         $rows = $this->queue->pending($scope, $regionId);
-        $forms = [];
-        foreach ($rows as $row) {
-            $forms[$row['id']] = $this->createForm(RouteDecisionType::class, null, [
-                'action' => $this->generateUrl('moderate_routes_decide', null !== $regionId ? ['region' => $regionId] : []),
-            ])->createView();
-        }
 
+        // No per-item decision forms here anymore: a proposal is decided ONLY
+        // on its detail page (the review surface). The list routes there.
         return $this->render('moderate_routes/index.html.twig', [
             'nav_active' => 'moderate_routes',
             'routes' => $rows,
-            'forms' => $forms,
             'suggestions' => $this->queue->pendingSuggestions($scope, $regionId),
             'total' => $this->queue->total($scope),
             'regions' => $this->queue->regions($scope),
@@ -176,6 +171,16 @@ final class RouteModerateController extends AbstractController
             ->add('note', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, ['required' => false, 'data' => $attrs['note'] ?? null])
             ->setMethod('POST')->getForm();
 
+        // Decisions now live ONLY on this detail page (and the map for
+        // submissions) — never the queue list. A SUBMITTED proposal awaiting
+        // first review gets the full three-way decision form here.
+        $decisionForm = 'submitted' === $row['state']
+            ? $this->createForm(RouteDecisionType::class, null, [
+                'action' => $this->generateUrl('moderate_routes_decide'),
+                'method' => 'POST',
+            ])
+            : null;
+
         $suggested = SurfaceVocabulary::suggestFromProfile($attrs['surfaces'] ?? null);
 
         // Retire only applies to an already-active (unverified/verified) route —
@@ -204,6 +209,7 @@ final class RouteModerateController extends AbstractController
             'suggestions' => array_values(array_filter($this->queue->pendingSuggestions($scope, null), static fn (array $s): bool => $s['routeId'] === $id)),
             'edit_form' => $editForm->createView(),
             'retire_form' => $retireForm?->createView(),
+            'decision_form' => $decisionForm?->createView(),
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
             'mod_scope_names' => $this->scopeProvider->describe($user, $scope),

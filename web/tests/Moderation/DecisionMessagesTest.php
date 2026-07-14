@@ -191,15 +191,24 @@ final class DecisionMessagesTest extends WebTestCase
         $sub = $this->seedSubmission((int) $submitter->getId(), 'Côte du Message · Long note');
 
         $client->loginUser($curator);
-        $crawler = $client->request('GET', '/moderate');
+
+        // The decision form now lives on the map drawer; mint the stateless
+        // "submit" CSRF token from window.CC_MOD_TOKEN there and POST the
+        // decision endpoint directly, as the drawer's script would.
+        $client->request('GET', '/map');
         self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
 
-        $form = $crawler->selectButton('Record decision')->form();
-        $form['moderation_decision[submission_id]'] = (string) $sub->getId();
-        $form['moderation_decision[decision]'] = 'approve';
-        $form['moderation_decision[note]'] = str_repeat('x', 2001);
-
-        $client->submit($form);
+        $client->request('POST', '/moderate/decide', [
+            'moderation_decision' => [
+                'submission_id' => (string) $sub->getId(),
+                'decision' => 'approve',
+                'note' => str_repeat('x', 2001),
+                '_token' => $token,
+            ],
+        ]);
 
         self::assertResponseStatusCodeSame(422);
 

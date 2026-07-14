@@ -81,7 +81,7 @@ final class ModerateOverviewTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate');
 
         self::assertResponseIsSuccessful();
-        $href = (string) $crawler->filter('.q-item a.q-view')->first()->attr('href');
+        $href = (string) $crawler->filter('.q-item a.q-review')->first()->attr('href');
         self::assertStringContainsString('/map?pending=', $href);
         self::assertStringNotContainsString('/improve', $href);
     }

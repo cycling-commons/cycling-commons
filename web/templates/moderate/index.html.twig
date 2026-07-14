@@ -37,6 +37,7 @@
   .q-decision-row label{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:0}
   .q-decision-row select{max-width:220px}
   .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+  .q-review{display:inline-block;text-decoration:none}
   /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system) */
 
   .msg-rider{margin-top:.8rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.8rem}
@@ -105,7 +106,7 @@
   {% else %}
   <div class="q-list">
     {% for item in items %}
-      {% include 'moderate/_queue_item.html.twig' with {item: item, form: forms[item.id]} %}
+      {% include 'moderate/_queue_item.html.twig' with {item: item} %}
     {% endfor %}
   </div>
   {% endif %}

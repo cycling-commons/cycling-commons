@@ -1264,6 +1264,7 @@ moderate:
     reject: 'Rejeter'
     needs_info: 'Informations manquantes'
     decision_label: 'Décision'
+    review_on_map: 'Examiner et approuver sur la carte'
     submit: 'Enregistrer la décision'
     view: 'Voir sur la carte ↗'
   error:
@@ -1324,6 +1325,7 @@ moderate_routes:
   surface_hint: 'La surface mesurée suggère : %surface%'
   action:
     decide: 'Enregistrer la décision'
+    review: 'Examiner'
     save: 'Enregistrer les modifications'
     view: 'Voir la proposition ↗'
     done: 'Marquer comme traité'
@@ -1333,6 +1335,8 @@ moderate_routes:
     approve: 'Approuver'
     reject: 'Rejeter'
     retire: 'Retirer'
+    heading: 'Décision'
+    label: 'Approuver / Rejeter / Retirer'
   suggestions:
     title: 'Corrections en attente'
     empty: 'Aucune correction en attente pour cette file.'

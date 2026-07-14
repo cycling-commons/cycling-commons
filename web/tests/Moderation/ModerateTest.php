@@ -152,8 +152,9 @@ final class ModerateTest extends WebTestCase
         // The seeded item's title must appear.
         self::assertSelectorTextContains('.q-title', $sub->getTitle());
 
-        // Queue items must have a decision form.
-        self::assertSelectorExists('.q-act-form');
+        // Decisions moved to the map drawer — the queue item now links there
+        // to review & decide, instead of carrying an inline decision form.
+        self::assertSelectorExists('.q-item a.q-review');
     }
 
     /**
@@ -179,8 +180,8 @@ final class ModerateTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
 
-        // One view link per queued item, opening in a new tab.
-        $viewLinks = $crawler->filter('.q-item a.q-view[target="_blank"]');
+        // One review link per queued item, opening in a new tab.
+        $viewLinks = $crawler->filter('.q-item a.q-review[target="_blank"]');
         self::assertSame(1, $viewLinks->count());
 
         // The item links to the real map, deep-linked to its pending id.
@@ -213,16 +214,23 @@ final class ModerateTest extends WebTestCase
         );
         $client->loginUser($curator);
 
-        // GET the queue to obtain CSRF token.
-        $crawler = $client->request('GET', '/moderate');
+        // The decision form lives on the map drawer now — GET /map to obtain
+        // the stateless CSRF token (id "submit") the drawer's JS reads off
+        // window.CC_MOD_TOKEN, then POST the decision endpoint directly, as
+        // the drawer's script would.
+        $client->request('GET', '/map');
         self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m), 'map page must emit CC_MOD_TOKEN for a fully-enrolled curator');
+        $token = $m[1];
 
-        // Submit the first queue item's decision form.
-        $form = $crawler->selectButton('Record decision')->form();
-        $form['moderation_decision[submission_id]'] = (string) $sub->getId();
-        $form['moderation_decision[decision]'] = 'approve';
-
-        $client->submit($form);
+        $client->request('POST', '/moderate/decide', [
+            'moderation_decision' => [
+                'submission_id' => (string) $sub->getId(),
+                'decision' => 'approve',
+                '_token' => $token,
+            ],
+        ]);
 
         self::assertResponseRedirects('/moderate');
 
@@ -255,14 +263,19 @@ final class ModerateTest extends WebTestCase
         );
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate?country=NL');
+        $client->request('GET', '/map');
         self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
 
-        $form = $crawler->selectButton('Record decision')->form();
-        $form['moderation_decision[submission_id]'] = (string) $sub->getId();
-        $form['moderation_decision[decision]'] = 'reject';
-
-        $client->submit($form);
+        $client->request('POST', '/moderate/decide?country=NL', [
+            'moderation_decision' => [
+                'submission_id' => (string) $sub->getId(),
+                'decision' => 'reject',
+                '_token' => $token,
+            ],
+        ]);
 
         self::assertResponseRedirects('/moderate?country=NL');
     }
@@ -286,9 +299,14 @@ final class ModerateTest extends WebTestCase
         );
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate?country=NL');
+        $client->request('GET', '/moderate?country=NL');
         self::assertResponseIsSuccessful();
-        $token = $crawler->filter('input[name="moderation_decision[_token]"]')->first()->attr('value');
+
+        $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
 
         // Post an out-of-range decision → the form is invalid.
         $client->request('POST', '/moderate/decide?country=NL', [

@@ -1695,17 +1695,14 @@
   // a failed decision clears it so the next attempt re-fetches a fresh one.
   let _modToken;
   function moderationToken(){
+    // The decision CSRF token is emitted directly on the map page
+    // (window.CC_MOD_TOKEN) — approval happens only here now, so there is no
+    // /moderate decision form to scrape. Reject if it is somehow absent so the
+    // caller's error state fires rather than a silent CSRF failure later.
     if(_modToken) return _modToken;
-    _modToken = fetch('/moderate', { credentials:'same-origin', headers:{'Accept':'text/html'} })
-      .then(r=>r.text())
-      .then(html=>{
-        const el=new DOMParser().parseFromString(html,'text/html').querySelector('input[name="moderation_decision[_token]"]');
-        // §13: a selector miss must not silently cache an empty token (which
-        // would just fail CSRF later) — reject so the caller's error state fires.
-        if(!el) return Promise.reject(new Error('moderation form not found'));
-        return el.value;
-      })
-      .catch(err=>{ _modToken=undefined; throw err; });
+    _modToken = window.CC_MOD_TOKEN
+      ? Promise.resolve(window.CC_MOD_TOKEN)
+      : Promise.reject(new Error('moderation token not available'));
     return _modToken;
   }
   function submitModeration(btn){

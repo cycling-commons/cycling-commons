@@ -1,10 +1,11 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {#
   Partial: one pending route proposal row in the Routes moderation queue.
+  The queue no longer decides — it routes to the proposal's detail page where
+  the review (map link, metadata, edit) and the decision form live.
 
   Parameters:
-    item  array    — queue item from RouteQueue::pending()
-    form  FormView — RouteDecisionType for this item
+    item  array — queue item from RouteQueue::pending()
 #}
 <div class="q-item" data-item-id="{{ item.id }}">
   <div class="q-meta">
@@ -19,21 +20,9 @@
     {% if item.activeInRegion >= item.cap %}
       <span class="q-tag q-tag--hazard">{{ 'moderate_routes.error.region_full'|trans }}</span>
     {% endif %}
-    &middot;
-    <a class="q-view" href="{{ path('moderate_routes_detail', {id: item.id}) }}">{{ 'moderate_routes.action.view'|trans }}</a>
   </div>
 
   <div class="q-actions">
-    {{ form_start(form, {method: 'POST', attr: {class: 'q-act-form'}}) }}
-      {{ form_widget(form.route_id, {value: item.id}) }}
-      <div class="q-decision-row">
-        {{ form_label(form.decision, 'moderate_routes.decision.approve'|trans ~ ' / ' ~ 'moderate_routes.decision.reject'|trans ~ ' / ' ~ 'moderate_routes.decision.retire'|trans) }}
-        {{ form_widget(form.decision) }}
-      </div>
-      {{ form_widget(form.note) }}
-      <div class="q-act-btns">
-        <button type="submit" class="btn-act btn-decide">{{ 'moderate_routes.action.decide'|trans }}</button>
-      </div>
-    {{ form_end(form) }}
+    <a class="btn-act btn-secondary q-review" href="{{ path('moderate_routes_detail', {id: item.id}) }}">{{ 'moderate_routes.action.review'|trans }} &#8594;</a>
   </div>
 </div>
