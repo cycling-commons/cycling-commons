@@ -116,3 +116,11 @@ scoping + guards (65bd130), admin desk assignment action (8d6ef84+9490ab9),
 shell label + gates (this commit). Migration Version20260714210000 applied
 to test+dev; **prod needs it on deploy**. Full suite green (623 tests),
 statics clean.
+Final whole-branch review (opus, 656de36..7b8b4f3): ready to merge, 0
+critical / 0 important — SQL/PHP predicate twins verified to agree on
+casing, NULL-region and deleted-region edges; no unscoped surface found.
+Minors fixed in 8d39e6a (single scope resolution per request via
+describe(User, ?ModerationScope); explicit unassigned-curator-sees-
+everything regression test). Orphaned-suggestion null-region allowance and
+the 403-vs-redirect existence signal rationale-closed as consistent,
+documented semantics. Final: 624 tests green.
