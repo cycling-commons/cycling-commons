@@ -75,7 +75,9 @@
   public profile" (`settings.view_public`) to `rider_profile` with the
   rider's own uuid, `target="_blank"`; when OFF, hint text
   (`settings.view_public_off`).
-- Own profile dashboard header: same link/hint pair.
+- Settings is the link's ONLY home: it was briefly also on the own-profile
+  dashboard, removed 2026-07-14 after rider feedback ("this link does not
+  belong here") — the dashboard shows contributions, not profile controls.
 
 ### Settings chip checkboxes
 

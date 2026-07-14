@@ -35,8 +35,6 @@
   .lnk.p{background:var(--trail);color:var(--ink)} .lnk.g{border:1.5px solid var(--ink)}
 
   .acct-id{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  .view-public-link{margin:0 0 1.2rem;font-size:.78rem;color:#595c4d}
-  .view-public-link a{color:var(--clay)}
 </style>
 {% endblock %}
 
@@ -49,15 +47,6 @@
 
   {# ── Contributions (PREVIEW data — data-API/Plan 5 replaces the figures) ── #}
   <section class="dpane on" id="p-contrib">
-    {# hint-sized, inside the pane flow — the .acct-id h1 above is sr-only, so
-       anything placed after it otherwise floats at the layout's top-left #}
-    <p class="view-public-link">
-      {% if cc_user.publicProfile %}
-        <a href="{{ path('rider_profile', {uuid: cc_user.uuid}) }}" target="_blank" rel="noopener">{{ 'settings.view_public'|trans }} ↗</a>
-      {% else %}
-        <span data-view-public-off>{{ 'settings.view_public_off'|trans }}</span>
-      {% endif %}
-    </p>
     <div class="stats">
       <div class="stat"><div class="n">142</div><div class="l">{{ 'account.stat_facts'|trans }}</div></div>
       <div class="stat"><div class="n t">38</div><div class="l">{{ 'account.stat_confirmed'|trans }}</div></div>
