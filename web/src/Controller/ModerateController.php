@@ -102,6 +102,7 @@ final class ModerateController extends AbstractController
             'regions' => $this->queue->regions($scope),
             'types' => SubmissionType::values(),
             'receipt' => null,
+            'mod_scope_names' => $this->scopeProvider->describe($user),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
     }
 

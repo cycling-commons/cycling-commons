@@ -77,6 +77,7 @@ final class RouteModerateController extends AbstractController
             'filter_region' => $regionId,
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
+            'mod_scope_names' => $this->scopeProvider->describe($user),
         ]);
     }
 
@@ -200,6 +201,7 @@ final class RouteModerateController extends AbstractController
             'retire_form' => $retireForm?->createView(),
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
+            'mod_scope_names' => $this->scopeProvider->describe($user),
         ]);
     }
 

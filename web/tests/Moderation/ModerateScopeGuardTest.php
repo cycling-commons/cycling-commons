@@ -316,4 +316,29 @@ final class ModerateScopeGuardTest extends WebTestCase
 
         self::assertResponseRedirects('/moderate');
     }
+
+    public function testModeratorBarShowsAssignedRegionName(): void
+    {
+        $client = static::createClient();
+        $region = $this->seedRegion('wallonia', 'Wallonia', 'BE');
+
+        $curator = $this->curator('guard-label-region@example.com');
+        $this->assignRegion($curator, (int) $region->getId());
+        $client->loginUser($curator);
+
+        $client->request('GET', '/moderate');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.dtabs-modlabel', 'Wallonia');
+    }
+
+    public function testModeratorBarShowsAllAreasForUnassignedCurator(): void
+    {
+        $client = static::createClient();
+        $curator = $this->curator('guard-label-all@example.com');
+        $client->loginUser($curator);
+
+        $client->request('GET', '/moderate');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.dtabs-modlabel', 'All areas');
+    }
 }

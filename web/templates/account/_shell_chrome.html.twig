@@ -4,6 +4,9 @@
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
    Param: `active` = contrib | votes | saved | messages | settings | moderate | moderate_routes.
+   Param: `mod_scope_names` (moderator-areas spec 2026-07-14) = the curator's
+   assigned area names (ModerationScopeProvider::describe()) — [] for global,
+   omitted/null for pages that don't pass it. Only rendered in moderator mode.
    Moderator tabs render ONLY inside the moderator section itself (curators
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
@@ -23,7 +26,7 @@
 {# Moderator mode: the bar carries ONLY the moderation tabs, on its own darker
    colour — no user items. Back to the personal area via the account chip. #}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
-  <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}</span>
+  <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
   <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}</a>
   <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}</a>
 </nav>

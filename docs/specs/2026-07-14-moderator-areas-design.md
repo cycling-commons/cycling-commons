@@ -107,3 +107,12 @@ moderation surfaces showing only in-scope items.
 - Scoping riders' own surfaces (messages inbox etc.) — moderation-side
   only.
 - Region-aware curator NOTIFICATIONS (nothing notifies curators today).
+
+## Execution note (2026-07-14, symfony-base, NOT pushed)
+
+Executed as planned: model + scope (c15fe8c+243956b), submissions queue
+scoping (0f77af5), submission write guards (32d54da+a677d75), routes desk
+scoping + guards (65bd130), admin desk assignment action (8d6ef84+9490ab9),
+shell label + gates (this commit). Migration Version20260714210000 applied
+to test+dev; **prod needs it on deploy**. Full suite green (623 tests),
+statics clean.

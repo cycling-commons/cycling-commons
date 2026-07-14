@@ -58,7 +58,7 @@
 </style>
 {% endblock %}
 
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate'} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null} %}{% endblock %}
 
 {% block body %}
 <div class="mh">

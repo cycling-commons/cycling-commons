@@ -44,8 +44,8 @@ final class ModerationScope
     {
         return new self(
             false,
-            array_values(array_map(intval(...), $regionIds)),
-            array_values(array_map(strtoupper(...), $countryCodes)),
+            array_map(intval(...), $regionIds),
+            array_map(strtoupper(...), $countryCodes),
         );
     }
 
