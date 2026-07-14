@@ -189,3 +189,14 @@ Deviations from §3–§4 as designed, all deliberate:
   `ride_check.within`). Fixed in passing: the rail control had reused the
   route-community drawer's `.cc-rc-*` CSS namespace, silently restyling
   its buttons/note — ride-check owns `.cc-ride-*` now.
+
+## Mobile IME fix (2026-07-14)
+
+Typing on Android/GBoard came out reversed ("spa" → "aps"): `runS()` set
+`aria-expanded` on the search input on EVERY keystroke, and mutating an
+attribute of the element being IME-composed restarts composition on Android
+Chrome, re-anchoring the caret at 0. Both the Symfony map and the old HTML
+demo (`atlas/demo/map.html` — where the report's screenshot came from) now
+write `aria-expanded` only on real open/close transitions; the demo also
+gained the Symfony version's 150 ms input debounce. The deployed demo needs
+a deploy from `main` to pick this up.

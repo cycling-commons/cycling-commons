@@ -1864,7 +1864,7 @@
       const layer=layerByKey.stays; if(!layer) return;
       SEARCH_IDX.push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•', color:layer.color||'#6b6f5e', go:()=>openStayPivot(f)}); });
     let sMatches=[], sHL=-1;
-    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; sBox.setAttribute('aria-expanded','false'); };
+    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
     function pickS(i){ const m=sMatches[i]; if(!m) return; sBox.value=m.name; closeS();
       if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
@@ -1875,13 +1875,18 @@
       const starts=[], has=[];                                  // prefix matches rank above substring matches
       for(const it of SEARCH_IDX){ const i=it.key.indexOf(q); if(i===0) starts.push(it); else if(i>0) has.push(it); }
       sMatches=starts.concat(has).slice(0,8); sHL=-1;
-      sRes.hidden=false; sBox.setAttribute('aria-expanded','true');
+      sRes.hidden=false;
+      // Transition-only aria write: mutating an attribute on the composing
+      // input restarts IME composition on Android Chrome and text comes out
+      // reversed ("spa" -> "aps").
+      if(sBox.getAttribute('aria-expanded')!=='true') sBox.setAttribute('aria-expanded','true');
       sRes.innerHTML = sMatches.length
         ? sMatches.map((m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`).join('')
         : '<li class="search-empty">No match in the Wallonia demo yet.</li>';
       sRes.querySelectorAll('button').forEach(b=>b.onclick=()=>pickS(+b.dataset.i));
     }
-    sBox.addEventListener('input', runS);
+    let _sDeb=null;   // debounce: no synchronous per-keystroke DOM work while the IME composes
+    sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150); });
     sBox.addEventListener('keydown', e=>{
       if(sRes.hidden){ if(e.key==='ArrowDown') runS(); return; }
       if(e.key==='ArrowDown'){ e.preventDefault(); sHL=Math.min(sHL+1, sMatches.length-1); hlS(); }

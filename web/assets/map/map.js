@@ -2302,7 +2302,7 @@
       for(let i=ITEM_INDEX.length-1;i>=0;i--){ if(ITEM_INDEX[i].pend===String(id)) ITEM_INDEX.splice(i,1); }
     };
     let sMatches=[], sHL=-1;
-    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; sBox.setAttribute('aria-expanded','false'); };
+    const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
     function pickS(i){ const m=sMatches[i]; if(!m) return; sBox.value=m.name; closeS();
       if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
@@ -2362,7 +2362,12 @@
         html+=`<li class="sgrp" role="presentation">${escH(g.label)}</li>`;
         rows.forEach(m=>{ html+=sRow(m, sMatches.length); sMatches.push(m); });
       }
-      sRes.hidden=false; sBox.setAttribute('aria-expanded','true');
+      sRes.hidden=false;
+      // Only mutate aria-expanded on a real open/close transition: setting an
+      // attribute on the element being IME-composed restarts composition on
+      // Android Chrome, re-anchoring the caret at 0 — typed text comes out
+      // reversed ("spa" → "aps").
+      if(sBox.getAttribute('aria-expanded')!=='true') sBox.setAttribute('aria-expanded','true');
       sRes.innerHTML = sMatches.length ? html : `<li class="search-empty">${D.noMatch||'No match in the Wallonia demo yet.'}</li>`;
     }
     // one delegated listener + a short debounce (review W41): the per-keystroke
