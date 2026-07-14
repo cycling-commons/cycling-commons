@@ -63,9 +63,9 @@
         <h3>{{ 'ride_check.title'|trans }}</h3>
         <div class="hint">{{ 'ride_check.hint'|trans }}</div>
         <input type="file" id="rcFile" accept=".gpx" hidden>
-        <div class="cc-rc-row">
-          <button class="cc-rc-btn" id="rcPick" type="button">{{ 'ride_check.button'|trans }}</button>
-          <label class="cc-rc-radius">{{ 'ride_check.radius'|trans }}
+        <div class="cc-ride-row">
+          <button class="cc-ride-btn" id="rcPick" type="button">{{ 'ride_check.button'|trans }}</button>
+          <label class="cc-ride-radius">{{ 'ride_check.within'|trans }}
             <select id="rcRadius" aria-label="{{ 'ride_check.radius'|trans }}">
               <option value="100">100 m</option>
               <option value="250" selected>250 m</option>
@@ -74,8 +74,8 @@
             </select>
           </label>
         </div>
-        <div class="cc-rc-status" id="rcStatus" role="status" hidden></div>
-        <p class="cc-rc-note">{{ 'ride_check.notice'|trans }}</p>
+        <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
+        <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
       </div>
       {% endif %}
 

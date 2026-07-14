@@ -826,6 +826,7 @@ ride_check:
   hint: 'Upload een GPX om te zien wat de Commons langs je route kent.'
   notice: 'Je GPX wordt in het geheugen verwerkt en nooit opgeslagen.'
   radius: 'Zoekafstand'
+  within: 'binnen'
   button: 'Kies GPX'
   error:
     file_required: 'Kies eerst een GPX-bestand.'

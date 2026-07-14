@@ -991,6 +991,7 @@ ride_check:
   hint: 'Upload a GPX to see what the Commons knows along your route.'
   notice: 'Your GPX is processed in memory and never stored.'
   radius: 'Search distance'
+  within: 'within'
   button: 'Choose GPX'
   error:
     file_required: 'Choose a GPX file first.'

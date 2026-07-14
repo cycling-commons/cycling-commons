@@ -826,6 +826,7 @@ ride_check:
   hint: 'Téléversez un GPX pour voir ce que les Commons connaissent le long de votre itinéraire.'
   notice: 'Votre GPX est traité en mémoire et n''est jamais conservé.'
   radius: 'Distance de recherche'
+  within: 'à moins de'
   button: 'Choisir un GPX'
   error:
     file_required: 'Choisissez d''abord un fichier GPX.'

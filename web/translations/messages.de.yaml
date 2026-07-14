@@ -826,6 +826,7 @@ ride_check:
   hint: 'Lade eine GPX-Datei hoch, um zu sehen, was die Commons entlang deiner Route kennen.'
   notice: 'Deine GPX-Datei wird im Speicher verarbeitet und niemals gespeichert.'
   radius: 'Suchdistanz'
+  within: 'im Umkreis von'
   button: 'GPX wählen'
   error:
     file_required: 'Wähle zuerst eine GPX-Datei.'
