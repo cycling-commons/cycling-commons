@@ -601,7 +601,7 @@
     const out=[], byId=new Set(), byName=new Map();   // byName: 'letter:slug' -> [ll,…]
     function push(e){
       if(e.id!=null){ const k=e.letter+':'+e.id; if(byId.has(k)) return; byId.add(k); }
-      if(e.name && e.ll){
+      if(e.name && e.ll && !e.unnamed){   // unnamed entries share a type label — never name-dedup them
         const nk=e.letter+':'+slug(e.name), seen=byName.get(nk)||[];
         if(seen.some(p=>haversine(p, e.ll)<=0.1)) return;   // same place, another source
         seen.push(e.ll); byName.set(nk, seen);
@@ -632,11 +632,17 @@
     // indexed here or every drinking-water point stays unsearchable/unlisted).
     const pools=OSM_BULK.concat([['water', window.CC_WATER_OSM, 'OpenStreetMap (amenity=drinking_water / drinking_water=yes)']]);
     pools.forEach(([key, data, src])=>{ const layer=layerByKey[key]; if(!layer || !data || !data.features) return;
-      data.features.forEach(f=>{ const p=f.properties||{}; if(!p.n) return;
+      data.features.forEach(f=>{ const p=f.properties||{};
         const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
         const lng=+c[0], lat=+c[1]; if(!isFinite(lng)||!isFinite(lat)) return;
-        push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
-          color:layer.color, letter:layer.letter, ll:[lat,lng], id:p.id,
+        // Unnamed POIs (most drinking-water taps, many shelters/stations) are
+        // real catalog items the town card must list — index them under their
+        // type label, flagged `unnamed` so the search dropdown skips them
+        // (nothing to text-match) and the name-proximity dedup ignores them
+        // (two genuine taps 80 m apart share the fallback label).
+        const nm=p.n||p.t||layer.label; if(!nm) return;
+        push({name:nm, key:slug(nm+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
+          color:layer.color, letter:layer.letter, ll:[lat,lng], id:p.id, unnamed:!p.n,
           hlOff: p.c ? [0,-16] : [0,0],
           go:()=>{ openDrawer(layer, key==='water' ? waterDrawer(p, {lng, lat}) : osmDrawer(layer, p, {lng, lat}, src)); flyToPin([lng,lat]); }});
       });
@@ -1931,7 +1937,7 @@
         html+=`<div class="cc-rc-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${g.letter}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?' <em>(list capped)</em>':''}</div>`;
         html+=g.items.map((it,i)=>
           `<button class="cc-corr-item" data-g="${g.letter}" data-i="${i}"><span class="cc-corr-sw" style="background:${meta.color}"></span>
-           <span class="cc-corr-body"><b>${escPend(it.name)}</b><em>km ${it.alongKm} · ${it.distM} m off</em></span></button>`).join('');
+           <span class="cc-corr-body"><b>${escPend(it.name||meta.label)}</b><em>km ${it.alongKm} · ${it.distM} m off</em></span></button>`).join('');
       });
       if(!d.routes.length && !d.groups.length) html+=`<div class="cc-rc-empty">Nothing in the Commons within ${radius} of this ride yet.</div>`;
       p.innerHTML=html;
@@ -2162,7 +2168,7 @@
     Object.keys(CITIES).forEach(name=>{ const big=CITIES[name].t==='City';   // big cities stand apart from hamlets: ochre ◉ "City" vs teal ◎ "Town"
       SEARCH_IDX.push({name, key:slug(name), kind: big?'City':'Town', badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}); });
     ITEM_INDEX = buildItemIndex();
-    ITEM_INDEX.forEach(e=>SEARCH_IDX.push(e));
+    ITEM_INDEX.forEach(e=>{ if(!e.unnamed) SEARCH_IDX.push(e); });   // nameless POIs list in place cards, not in text search
     // pending entries carry their submission id so hidePendingPin can drop
     // them from the index after a moderation decision (review W36) — the
     // feature disappears from the map, and a search hit that "does nothing"
