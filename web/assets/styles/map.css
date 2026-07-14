@@ -43,6 +43,13 @@
   .acct-dropdown a.acct-sep{margin-top:.25rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
   .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}
   .acct-dropdown form button{color:var(--clay)!important}
+  /* Language switcher (shared partials/_lang_menu.html.twig) — same pill/dropdown
+     pattern as the account chip; dropdown reuses .acct-dropdown above. */
+  .lang-menu{position:relative;flex:none}
+  .lang-chip{display:inline-flex;align-items:center;gap:.32rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.3rem .55rem;color:var(--paper);cursor:pointer;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;line-height:1;transition:border-color .2s}
+  .lang-chip:hover,.lang-chip[aria-expanded=true]{border-color:var(--trail)}
+  .lang-chip svg{opacity:.7;flex:none}
+  .lang-chip[aria-expanded=true] .lang-caret{transform:rotate(180deg)}
   /* Desktop rail tweaks (min-width:821px — above this the rail is the left column;
      at/below it the rail-nav becomes a right-side panel and the shared defaults apply): */
   @media(min-width:821px){
@@ -472,8 +479,6 @@
   .best-facets label{flex:1;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.5);display:flex;flex-direction:column;gap:.25rem}
   .best-facets select{font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--paper);border:1px solid rgba(239,230,212,.25);border-radius:5px;padding:.35rem .45rem}
   .best-facets select:focus{outline:none;border-color:var(--trail)}
-  .best-empty{position:absolute;top:5.5rem;left:50%;transform:translateX(-50%);z-index:1100;background:var(--ink);color:var(--paper);font-size:.8rem;padding:.5rem .9rem;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:min(90vw,420px);text-align:center}
-  .best-empty[hidden]{display:none}
 
   /* Located-correction picking (spec §16). */
   .cc-drawer.cc-drawer-min{transform:translateX(calc(100% - 3.2rem));pointer-events:none}   /* slide mostly off so the map is clickable; can't be re-clicked during picking */

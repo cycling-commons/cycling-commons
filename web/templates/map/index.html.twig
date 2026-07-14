@@ -43,7 +43,7 @@
     <div class="rail-head">
       <a class="brand" href="{{ path('home') }}" style="flex:none"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons" style="height:1.8rem;display:block"></a>
       <div class="co">◎ Wallonia · 50.32°N 5.01°E</div>
-      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">Map</a><a href="{{ path('regions') }}">Regions</a><a href="{{ path('vote') }}">Vote</a><a href="{{ path('developers') }}">Developers</a><a href="{{ path('about') }}">About</a>{% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a href="{{ path('login') }}">Account</a>{% endif %}</nav>
+      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">Map</a><a href="{{ path('regions') }}">Regions</a><a href="{{ path('vote') }}">Vote</a><a href="{{ path('developers') }}">Developers</a><a href="{{ path('about') }}">About</a>{% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a href="{{ path('login') }}">Account</a>{% endif %}{% include 'partials/_lang_menu.html.twig' %}</nav>
       <button class="rail-burger" id="railBurger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="railNav">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
@@ -190,7 +190,6 @@
 
   <!-- ============ MAP ============ -->
   <div class="mapcol">
-    <div class="demo-banner" style="background:rgba(200,146,58,.16);border-bottom:1px solid rgba(200,146,58,.55);color:#6b5320;text-align:center;padding:.6rem 1rem;font-size:.82rem;line-height:1.4"><b style="color:#B5532E">Demo</b> — a glimpse of what the open atlas will hold. Launching 2026.</div>
   <main class="map-wrap">
     <div id="map"></div>
     <div class="map-top">
@@ -198,7 +197,6 @@
       <div class="sub">Curated best-of · Summer 2026</div>
       <a class="add-climb" href="{{ path('contribute') }}">+ Contribute</a>
     </div>
-    <div class="best-empty" id="bestEmpty" hidden>No best-of picks for this season &amp; bike yet — open a route and vote to surface one.</div>
     <div class="legend">
       <button class="lg-toggle" id="lgToggle" type="button" aria-label="Surface legend" aria-expanded="false">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
