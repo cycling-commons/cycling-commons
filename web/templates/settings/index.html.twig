@@ -74,6 +74,14 @@
   .danger-zone{border:1px solid rgba(181,83,46,.35);border-radius:8px;padding:1.2rem 1.4rem;margin-top:2.4rem}
   .danger-zone h2.sec{color:var(--clay);margin-top:0}
   .acct-id{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  /* Profile / Security tabs (spec 2026-07-14) */
+  .dpane{display:none} .dpane.on{display:block}
+  .tabs{display:flex;gap:.4rem;margin:1.2rem 0 1.8rem;border-bottom:1px solid rgba(20,22,14,.14)}
+  .tabs [role=tab]{background:none;border:none;border-bottom:2px solid transparent;padding:.55rem 1rem;cursor:pointer;
+    font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d}
+  .tabs [role=tab][aria-selected="true"]{color:var(--trail);border-bottom-color:var(--trail)}
+  .tabs [role=tab]:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
 </style>
 {% endblock %}
 
@@ -83,9 +91,18 @@
 <h1 class="acct-id">{{ 'settings.heading'|trans }} — {{ cc_user.displayName }}</h1>
 <div class="wrap">
 
+  <div class="tabs" role="tablist" aria-label="{{ 'settings.heading'|trans }}">
+    <button type="button" role="tab" id="tabbtn-profile" aria-controls="tab-profile"
+            aria-selected="{{ active_tab == 'profile' ? 'true' : 'false' }}">{{ 'settings.tab_profile'|trans }}</button>
+    <button type="button" role="tab" id="tabbtn-security" aria-controls="tab-security"
+            aria-selected="{{ active_tab == 'security' ? 'true' : 'false' }}">{{ 'settings.tab_security'|trans }}</button>
+  </div>
+
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('password_error') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('error') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  <div class="dpane {{ active_tab == 'profile' ? 'on' }}" id="tab-profile" role="tabpanel" aria-labelledby="tabbtn-profile">
 
   {# ── Account status (two columns) ── #}
   <h2 class="sec">{{ 'profile.section_status'|trans }}</h2>
@@ -194,6 +211,12 @@
     <div class="submit-row"><button type="submit" class="btn">{{ 'settings.submit_profile'|trans }}</button></div>
   {{ form_end(profileForm) }}
 
+  <div class="notice">{{ 'settings.notice'|trans|rich }}</div>
+
+  </div>{# /#tab-profile #}
+
+  <div class="dpane {{ active_tab == 'security' ? 'on' }}" id="tab-security" role="tabpanel" aria-labelledby="tabbtn-security">
+
   {# ── Security ── #}
   <h2 class="sec">{{ 'settings.section_security'|trans }}</h2>
   {{ form_start(passwordForm, {attr: {novalidate: 'novalidate', id: 'password-form', class: 'cc-validate'}}) }}
@@ -233,8 +256,6 @@
     </div>
   </div>
 
-  <div class="notice">{{ 'settings.notice'|trans|rich }}</div>
-
   {# ── Danger zone ── #}
   <div class="danger-zone" id="delete">
     <h2 class="sec">{{ 'settings.section_danger'|trans }}</h2>
@@ -265,7 +286,17 @@
     </details>
   </div>
 
+  </div>{# /#tab-security #}
+
 </div>
+
+<script nonce="{{ csp_nonce() }}">
+  document.querySelectorAll('.tabs [role=tab]').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs [role=tab]').forEach(b => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
+    document.querySelectorAll('.dpane[role=tabpanel]').forEach(p => p.classList.toggle('on', p.id === btn.getAttribute('aria-controls')));
+    history.replaceState(null, '', btn.id === 'tabbtn-security' ? '?tab=security' : location.pathname);
+  }));
+</script>
 {% endblock %}
 
 {% block body_scripts %}

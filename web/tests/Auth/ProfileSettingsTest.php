@@ -249,7 +249,7 @@ final class ProfileSettingsTest extends WebTestCase
         $client->submit($form);
 
         // Should redirect back with a password_error flash
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/settings?tab=security');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
         // Error flash must appear
@@ -276,7 +276,7 @@ final class ProfileSettingsTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/settings?tab=security');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
         // Success flash must appear

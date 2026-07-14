@@ -76,7 +76,7 @@ final class SettingsController extends AbstractController
             if (!$this->passwordHasher->isPasswordValid($user, $currentPassword)) {
                 $this->addFlash('password_error', 'flash.current_password_incorrect');
 
-                return $this->redirectToRoute('settings');
+                return $this->redirectToRoute('settings', ['tab' => 'security']);
             }
 
             /** @var string $newPassword */
@@ -86,8 +86,15 @@ final class SettingsController extends AbstractController
 
             $this->addFlash('success', 'flash.password_changed');
 
-            return $this->redirectToRoute('settings');
+            return $this->redirectToRoute('settings', ['tab' => 'security']);
         }
+
+        // Two-tab settings (spec 2026-07-14): Security is active when asked for
+        // via ?tab=security or when the password form just failed validation
+        // (a 422 re-render must show the tab holding the errors).
+        $activeTab = 'security' === $request->query->get('tab')
+            || ($passwordForm->isSubmitted() && !$passwordForm->isValid())
+            ? 'security' : 'profile';
 
         return $this->render('settings/index.html.twig', [
             'page_title' => 'meta.settings_title',
@@ -96,6 +103,7 @@ final class SettingsController extends AbstractController
             'cc_user' => $user,
             'profileForm' => $profileForm,
             'passwordForm' => $passwordForm,
+            'active_tab' => $activeTab,
         ]);
     }
 
@@ -111,13 +119,13 @@ final class SettingsController extends AbstractController
         if (!$this->isCsrfTokenValid('delete_request', $request->request->get('_token'))) {
             $this->addFlash('error', 'flash.invalid_token');
 
-            return $this->redirectToRoute('settings');
+            return $this->redirectToRoute('settings', ['tab' => 'security']);
         }
 
         $this->deletionService->requestDeletion($user);
         $this->addFlash('success', 'flash.deletion_code_sent');
 
-        return $this->redirectToRoute('settings');
+        return $this->redirectToRoute('settings', ['tab' => 'security']);
     }
 
     /**
@@ -132,7 +140,7 @@ final class SettingsController extends AbstractController
         if (!$this->isCsrfTokenValid('delete_confirm', $request->request->get('_token'))) {
             $this->addFlash('error', 'flash.invalid_token');
 
-            return $this->redirectToRoute('settings');
+            return $this->redirectToRoute('settings', ['tab' => 'security']);
         }
 
         $code = (string) $request->request->get('deletion_code', '');
@@ -140,7 +148,7 @@ final class SettingsController extends AbstractController
         if (!$this->deletionService->confirmDeletion($user, $code)) {
             $this->addFlash('error', 'flash.deletion_code_invalid');
 
-            return $this->redirectToRoute('settings');
+            return $this->redirectToRoute('settings', ['tab' => 'security']);
         }
 
         $request->getSession()->invalidate();

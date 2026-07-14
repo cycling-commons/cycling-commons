@@ -220,7 +220,7 @@ final class AccountDeletionTest extends WebTestCase
 
         $client->request('POST', '/settings/delete-request', ['_token' => $token]);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/settings?tab=security');
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-success', 'Check your email');
 

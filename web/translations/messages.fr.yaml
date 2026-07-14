@@ -692,6 +692,8 @@ profile:
 settings:
   eyebrow: 'Votre profil'
   heading: 'Paramètres'
+  tab_profile: 'Profil'
+  tab_security: 'Sécurité'
   section_identity: 'Identité & confidentialité'
   label_email: 'Email'
   email_hint: 'Pour modifier votre adresse email, <a href="mailto:info@cyclingcommons.org" style="color:var(--clay)">contactez le support</a>.'
