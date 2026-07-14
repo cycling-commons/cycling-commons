@@ -1395,6 +1395,8 @@ account:
   delete_account: 'Account verwijderen'
   delete_note: 'Verwijdert je identiteit; bijgedragen feiten blijven in de Commons, ontkoppeld.'
   contributions_title: 'Mijn bijdragen'
+  link_map: 'Kaart'
+  link_edit: 'Bewerken'
   contributions_empty: 'Nog niets ingezonden — de kaart wacht.'
   sub_type_new: 'Nieuw item'
   sub_type_edit: 'Bewerking'

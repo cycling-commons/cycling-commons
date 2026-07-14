@@ -21,6 +21,9 @@
   .item .tag-route{background:var(--trail);color:var(--ink)}
   .item h4{flex:1;font-size:1rem;font-weight:500;min-width:8rem}
   .item .co{font-family:var(--mono);font-size:.62rem;color:#595c4d}
+  .item-links{display:inline-flex;gap:.9rem}
+  .item-links a{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);white-space:nowrap}
+  .item-links a:hover{color:var(--trail)}
   .item-note{flex-basis:100%;margin:.1rem 0 0;font-size:.85rem;color:#4a4d40;border-left:2px solid var(--glacier);padding-left:.7rem}
   .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px;white-space:nowrap}
   .pill.ok{background:#3e7d4f;color:#fff} .pill.pend{background:var(--ochre);color:var(--ink)} .pill.conf{background:var(--spruce);color:var(--paper)}
@@ -53,9 +56,19 @@
       <p class="empty">{{ 'account.contributions_empty'|trans }}</p>
     {% else %}
       {% for sub in contributions %}
+        {# links only when the item is actually reachable: an edit always targets
+           a live item; a new item is on the map once approved. Routes (letter K)
+           have no item-edit binding — handled in the route-proposals list. #}
+        {% set sub_live = sub.itemId is not null and sub.letter != 'K' and (sub.type.value == 'edit' or sub.status.value == 'approved') %}
         <div class="item">
           <span class="tag">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
           <h4>{{ sub.title }}</h4>
+          {% if sub_live %}
+            <span class="item-links">
+              <a href="{{ path('map') }}?feature={{ sub.title|url_encode }}">{{ 'account.link_map'|trans }}</a>
+              <a href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
+            </span>
+          {% endif %}
           <time class="co" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|date('Y-m-d') }}</time>
           <span class="pill {{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
           {% if sub.decisionNote %}<p class="item-note">{{ sub.decisionNote }}</p>{% endif %}
@@ -70,6 +83,11 @@
       <div class="item">
         <span class="tag tag-route">{{ 'nav.routes'|trans }}</span>
         <h4>{{ p.name }}</h4>
+        {% if p.state.value in ['verified', 'unverified'] %}
+          <span class="item-links">
+            <a href="{{ path('map') }}?route={{ p.id }}">{{ 'account.link_map'|trans }}</a>
+          </span>
+        {% endif %}
         <time class="co" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|date('Y-m-d') }}</time>
         <span class="pill {{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
       </div>

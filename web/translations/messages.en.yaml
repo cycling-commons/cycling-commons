@@ -1395,6 +1395,8 @@ account:
   delete_account: 'Delete account'
   delete_note: 'Removes your identity; contributed facts stay in the Commons, de-linked.'
   contributions_title: 'My contributions'
+  link_map: 'Map'
+  link_edit: 'Edit'
   contributions_empty: 'Nothing submitted yet — the map is waiting.'
   sub_type_new: 'New item'
   sub_type_edit: 'Edit'

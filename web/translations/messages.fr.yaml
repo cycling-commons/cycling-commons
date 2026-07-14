@@ -1395,6 +1395,8 @@ account:
   delete_account: 'Supprimer le compte'
   delete_note: 'Supprime votre identité ; les faits contribués restent dans le Commons, dissociés.'
   contributions_title: 'Mes contributions'
+  link_map: 'Carte'
+  link_edit: 'Modifier'
   contributions_empty: 'Rien d''envoyé pour l''instant — la carte attend.'
   sub_type_new: 'Nouvel élément'
   sub_type_edit: 'Modification'
