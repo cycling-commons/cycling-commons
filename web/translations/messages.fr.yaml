@@ -1237,6 +1237,7 @@ propose_route:
   submit: 'Envoyer la proposition'
   receipt_h: 'Proposition reçue'
   receipt_p: 'Merci ! Un curateur examinera votre itinéraire. Suivez son statut sur votre profil.'
+  receipt_ref_label: 'Votre référence'
   receipt_back: 'Retour aux contributions'
   error:
     gpx_required: 'Veuillez choisir un fichier GPX.'

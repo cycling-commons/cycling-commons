@@ -1237,6 +1237,7 @@ propose_route:
   submit: 'Vorschlag einreichen'
   receipt_h: 'Vorschlag eingegangen'
   receipt_p: 'Danke! Eine Kuratorin oder ein Kurator prüft deine Route. Den Status siehst du in deinem Profil.'
+  receipt_ref_label: 'Deine Referenz'
   receipt_back: 'Zurück zum Mitmachen'
   error:
     gpx_required: 'Bitte wähle eine GPX-Datei.'

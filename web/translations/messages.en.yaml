@@ -982,6 +982,7 @@ propose_route:
   submit: 'Submit proposal'
   receipt_h: 'Proposal received'
   receipt_p: 'Thanks! A curator will review your route. You can follow its status on your profile.'
+  receipt_ref_label: 'Your reference'
   receipt_back: 'Back to contributing'
   error:
     gpx_required: 'Please choose a GPX file.'

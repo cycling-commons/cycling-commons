@@ -257,6 +257,8 @@ final class ProposeRouteFlowTest extends WebTestCase
         $crawler = $client->request('GET', '/profile');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Condroz · profile test', (string) $client->getResponse()->getContent());
-        self::assertGreaterThan(0, $crawler->filter('.acct-route-list li')->count());
+        // Route proposals render as .item rows carrying a .tag-route badge
+        // (profile rework 2026-07-14 replaced the old .acct-route-list markup).
+        self::assertGreaterThan(0, $crawler->filter('.item .tag-route')->count());
     }
 }

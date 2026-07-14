@@ -1237,6 +1237,7 @@ propose_route:
   submit: 'Voorstel indienen'
   receipt_h: 'Voorstel ontvangen'
   receipt_p: 'Bedankt! Een curator bekijkt je route. Volg de status op je profiel.'
+  receipt_ref_label: 'Je referentie'
   receipt_back: 'Terug naar bijdragen'
   error:
     gpx_required: 'Kies een GPX-bestand.'

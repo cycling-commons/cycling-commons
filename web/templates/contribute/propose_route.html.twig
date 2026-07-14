@@ -39,7 +39,9 @@
   .receipt{text-align:center;padding:3.5rem 1rem}
   .receipt h2{font-family:var(--serif);font-weight:600;font-size:1.8rem;margin:.5rem 0}
   .receipt p{color:#4a4d40;max-width:46ch;margin:0 auto}
-  .receipt .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin:1rem 0}
+  .receipt .ref-box{display:inline-flex;flex-direction:column;align-items:center;gap:.35rem;margin:1.5rem 0}
+  .receipt .ref-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#8a8674}
+  .receipt .ref-code{font-family:var(--mono);font-size:1.05rem;letter-spacing:.14em;color:var(--ink);background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);border-radius:8px;padding:.5rem 1.1rem}
 </style>
 {% endblock %}
 
@@ -57,7 +59,10 @@
     <section class="card receipt" data-receipt>
       <h2>{{ 'propose_route.receipt_h'|trans }}</h2>
       <p>{{ 'propose_route.receipt_p'|trans }}</p>
-      <p class="ref">{{ receipt.reference }}</p>
+      <div class="ref-box">
+        <span class="ref-label">{{ 'propose_route.receipt_ref_label'|trans }}</span>
+        <span class="ref-code">{{ receipt.reference }}</span>
+      </div>
       <a class="btn btn-g" href="{{ path('contribute') }}">{{ 'propose_route.receipt_back'|trans }} →</a>
     </section>
   {% else %}
