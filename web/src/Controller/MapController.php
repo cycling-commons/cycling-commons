@@ -8,8 +8,10 @@ use App\Catalog\BikeType;
 use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
+use App\Catalog\RidingStyle;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
+use App\Entity\User;
 use App\Moderation\SubmissionQueue;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,9 +31,21 @@ final class MapController extends AbstractController
     #[Route('/map', name: 'map')]
     public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator): Response
     {
+        $user = $this->getUser();
         $params = [
             'field_schema' => $schema->all(),
             'map_i18n' => $this->mapI18n($translator),
+            // Rider preferences ride the page render (spec 2026-07-14 map
+            // prefilter): value-lists only, [] for anonymous — map.js treats
+            // empty as "no prefilter" so anonymous behaviour is unchanged.
+            'rider_prefs' => [
+                'bikes' => $user instanceof User
+                    ? array_map(static fn (BikeType $t): string => $t->value, $user->getBikeTypes())
+                    : [],
+                'styles' => $user instanceof User
+                    ? array_map(static fn (RidingStyle $s): string => $s->value, $user->getRidingStyles())
+                    : [],
+            ],
         ];
 
         // Curator-only: hand the pending submissions to the map so the moderation
