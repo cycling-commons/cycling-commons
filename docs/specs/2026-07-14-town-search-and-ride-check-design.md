@@ -172,3 +172,11 @@ Deviations from §3–§4 as designed, all deliberate:
   [0,0] for canvas dots/lines), used by the place card and ride-check
   panel alike. A pulse over empty map in Curated mode is intentional: it
   locates items whose dots are hidden by the mode filter.
+- **§3.1 follow-up (user feedback, same day).** Unnamed POIs (most
+  drinking-water taps, many shelters/stations) were dropped by the index
+  builder's name guard and so missed the place card's nearby list. They now
+  index under their type label, flagged `unnamed`: listed in place cards
+  and highlighted like any entry, excluded from the text-search dropdown,
+  and exempt from the name-proximity dedup (two real taps 80 m apart share
+  the fallback label). Ride-check panel rows fall back to the layer label
+  when the served name is empty.
