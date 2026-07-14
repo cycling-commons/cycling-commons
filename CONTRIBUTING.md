@@ -55,6 +55,11 @@ leaking push server-side — but the local hooks are the front line. You don't n
 to install gitleaks or TruffleHog yourself: `pre-commit` fetches gitleaks
 (the pre-push hook fetches a pinned copy on first use), and TruffleHog runs only in CI.
 
+The same `pre-commit install` also enables a translation-parity check: when you
+stage a `web/translations/messages.*.yaml` file, it verifies every key exists in
+all four locales (en/fr/nl/de). It needs PHP + `composer install` in `web/` and
+skips with a notice otherwise — CI (`make app-test`) enforces it regardless.
+
 **Dev mail (Mailpit):** outbound email (registration confirmation, password-reset links, etc.)
 is sent to a [Mailpit](https://mailpit.axllent.org/) on the host at `:1025` — no real mail is
 sent in local development; read it at <http://localhost:8025>. The stack does **not** bundle its
