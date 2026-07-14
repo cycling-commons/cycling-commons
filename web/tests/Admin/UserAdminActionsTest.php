@@ -4,9 +4,11 @@
 
 namespace App\Tests\Admin;
 
+use App\Catalog\Entity\Region;
 use App\Controller\Admin\DashboardController;
 use App\Controller\Admin\UserCrudController;
 use App\Entity\User;
+use App\Moderation\Entity\ModeratorArea;
 use App\Repository\AdminActionLogRepository;
 use App\Repository\UserRepository;
 use App\Service\UserAdminService;
@@ -101,6 +103,11 @@ final class UserAdminActionsTest extends WebTestCase
         static::createClient();
         $router = static::getContainer()->get('router');
 
+        // MODERATOR_AREAS is deliberately exempt: it renders a form page (GET)
+        // before the curator submits it (POST), unlike every other entry here,
+        // which is a one-click mutation with no intermediate page — so it is
+        // GET+POST by design, not a CSRF gap (see moderator_areas() handler,
+        // which still enforces its own CSRF token check on the POST branch).
         $actions = [
             UserAdminService::UNLOCK, UserAdminService::DISARM_2FA,
             UserAdminService::VERIFY_EMAIL, UserAdminService::UNVERIFY_EMAIL,
@@ -212,5 +219,85 @@ final class UserAdminActionsTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('JBSWY3DPEHPK3PXPSECRETSEED', (string) $client->getResponse()->getContent());
+    }
+
+    // ── Moderator areas (assign) ─────────────────────────────────────────────
+
+    public function testAssignModeratorAreasReplacesRowsAndAudits(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $target = $this->createUser('curator@example.com', ['ROLE_CURATOR']);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $region = new Region();
+        $region->setSlug('wallonia')->setName('Wallonia')->setCountryCode('BE');
+        $em->persist($region);
+        $em->flush();
+        $regionId = (int) $region->getId();
+
+        $client->loginUser($admin);
+
+        $crawler = $client->request('GET', $this->actionUrl(UserAdminService::MODERATOR_AREAS, (int) $target->getId()));
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('form select[name="regions[]"]');
+        self::assertSelectorExists('form select[name="countries[]"]');
+        $token = (string) $crawler->filter('form input[name="token"]')->attr('value');
+        self::assertNotSame('', $token);
+
+        // First POST: one region + one country → two rows.
+        $client->request('POST', $this->actionUrl(UserAdminService::MODERATOR_AREAS, (int) $target->getId()), [
+            'token' => $token,
+            'regions' => [$regionId],
+            'countries' => ['NL'],
+        ]);
+        self::assertResponseRedirects();
+
+        $em->clear();
+        $rows = $em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $target->getId()]);
+        self::assertCount(2, $rows, 'assigning a region + a country must write exactly two rows');
+
+        // Second POST: only a country → the previous rows are REPLACED, not appended.
+        $client->request('POST', $this->actionUrl(UserAdminService::MODERATOR_AREAS, (int) $target->getId()), [
+            'token' => $token,
+            'countries' => ['BE'],
+        ]);
+        self::assertResponseRedirects();
+
+        $em->clear();
+        $rows = $em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $target->getId()]);
+        self::assertCount(1, $rows, 'a second assignment must replace the prior rows, not add to them');
+        self::assertSame('BE', $rows[0]->getCountryCode());
+
+        $logs = static::getContainer()->get(AdminActionLogRepository::class)
+            ->findBy(['action' => UserAdminService::MODERATOR_AREAS], ['id' => 'ASC']);
+        self::assertCount(2, $logs, 'each assignment call must write exactly one audit row');
+        self::assertStringContainsString('BE', (string) $logs[1]->getNote());
+    }
+
+    public function testAssignAreasRejectsUnknownRegion(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $target = $this->createUser('curator@example.com', ['ROLE_CURATOR']);
+
+        $client->loginUser($admin);
+
+        $crawler = $client->request('GET', $this->actionUrl(UserAdminService::MODERATOR_AREAS, (int) $target->getId()));
+        self::assertResponseIsSuccessful();
+        $token = (string) $crawler->filter('form input[name="token"]')->attr('value');
+
+        $client->request('POST', $this->actionUrl(UserAdminService::MODERATOR_AREAS, (int) $target->getId()), [
+            'token' => $token,
+            'regions' => [999999],
+        ]);
+        $client->followRedirect();
+
+        self::assertSelectorExists('.alert-danger, .flash-danger, [class*="danger"]');
+
+        $rows = static::getContainer()->get(EntityManagerInterface::class)
+            ->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $target->getId()]);
+        self::assertCount(0, $rows, 'a rejected assignment must never write rows');
     }
 }

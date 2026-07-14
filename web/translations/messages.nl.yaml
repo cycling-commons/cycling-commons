@@ -1371,6 +1371,7 @@ account:
   sign_out: 'Uitloggen'
   menu_personal: 'Persoonlijk'
   menu_moderation: 'Moderatie'
+  mod_scope_all: 'Alle gebieden'
   tab_contributions: 'Bijdragen'
   tab_votes: 'Stemmen'
   tab_saved: 'Opgeslagen regio''s'
@@ -1588,6 +1589,9 @@ admin:
     revoke_admin: 'Beheerder intrekken'
     remove_account: 'Account verwijderen'
     cancel_removal: 'Verwijdering annuleren'
+    moderator_areas: 'Moderatiegebieden toewijzen'
+  field:
+    mod_areas: 'Moderatiegebieden'
   confirm_irreversible: 'Deze actie is onomkeerbaar. Doorgaan?'
   dashboard:
     title: 'Dashboard'
@@ -1610,6 +1614,14 @@ admin:
     role_changed: 'Rollen bijgewerkt.'
     account_removed: 'Account verwijderd.'
     removal_cancelled: 'Openstaande verwijdering geannuleerd.'
+    areas_saved: 'Moderatiegebieden opgeslagen.'
+  areas:
+    title: 'Moderatiegebieden toewijzen'
+    help: 'Kies de regio''s en/of hele landen die deze curator modereert. De unie geldt; items buiten elke regio blijven zichtbaar voor alle curatoren.'
+    regions: 'Regio''s'
+    countries: 'Landen'
+    empty_note: 'Niets selecteren maakt deze curator globaal (ziet alles).'
+    save: 'Gebieden opslaan'
 route:
   error:
     note_too_long: 'De notitie is langer dan 2.000 tekens.'

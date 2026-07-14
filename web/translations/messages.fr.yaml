@@ -1371,6 +1371,7 @@ account:
   sign_out: 'Se déconnecter'
   menu_personal: 'Personnel'
   menu_moderation: 'Modération'
+  mod_scope_all: 'Toutes les zones'
   tab_contributions: 'Contributions'
   tab_votes: 'Votes'
   tab_saved: 'Régions sauvegardées'
@@ -1588,6 +1589,9 @@ admin:
     revoke_admin: 'Retirer admin'
     remove_account: 'Supprimer le compte'
     cancel_removal: 'Annuler la suppression'
+    moderator_areas: 'Attribuer des zones de modération'
+  field:
+    mod_areas: 'Zones de modération'
   confirm_irreversible: 'Cette action est irréversible. Continuer ?'
   dashboard:
     title: 'Tableau de bord'
@@ -1610,6 +1614,14 @@ admin:
     role_changed: 'Rôles mis à jour.'
     account_removed: 'Compte supprimé.'
     removal_cancelled: 'Suppression en attente annulée.'
+    areas_saved: 'Zones de modération enregistrées.'
+  areas:
+    title: 'Attribuer des zones de modération'
+    help: 'Choisissez les régions et/ou pays entiers que ce curateur modère. L''union s''applique ; les éléments hors de toute région restent visibles par tous les curateurs.'
+    regions: 'Régions'
+    countries: 'Pays'
+    empty_note: 'Ne rien sélectionner rend ce curateur global (il voit tout).'
+    save: 'Enregistrer les zones'
 route:
   error:
     note_too_long: 'La note dépasse 2 000 caractères.'

@@ -6,8 +6,11 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Catalog\Entity\Region;
 use App\Entity\User;
+use App\Moderation\Entity\ModeratorArea;
 use App\Repository\UserRepository;
+use App\World\Entity\Country;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -29,6 +32,7 @@ final class UserAdminService
     public const string REVOKE_ADMIN = 'revoke_admin';
     public const string REMOVE_ACCOUNT = 'remove_account';
     public const string CANCEL_REMOVAL = 'cancel_removal';
+    public const string MODERATOR_AREAS = 'moderator_areas';
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -125,6 +129,53 @@ final class UserAdminService
         $target->setDeletionRequestedAt(null);
         $target->setDeletionCode(null);
         $this->commit($actor, self::CANCEL_REMOVAL, $target);
+    }
+
+    /**
+     * Replace the target's moderation-area rows (moderator-areas spec
+     * 2026-07-14) and audit the resulting set. Codes/ids are validated
+     * against world_country/region — unknown values are an
+     * \InvalidArgumentException (surfaced as the desk's danger flash).
+     *
+     * @param list<string> $countryCodes
+     * @param list<int>    $regionIds
+     */
+    public function setModeratorAreas(User $target, User $actor, array $countryCodes, array $regionIds): void
+    {
+        $countryCodes = array_values(array_unique(array_map(strtoupper(...), $countryCodes)));
+        $regionIds = array_values(array_unique(array_map(intval(...), $regionIds)));
+
+        $regions = [] !== $regionIds ? $this->em->getRepository(Region::class)->findBy(['id' => $regionIds]) : [];
+        if (\count($regions) !== \count($regionIds)) {
+            throw new \InvalidArgumentException('Unknown region in assignment.');
+        }
+        $countries = [] !== $countryCodes ? $this->em->getRepository(Country::class)->findBy(['iso2' => $countryCodes]) : [];
+        if (\count($countries) !== \count($countryCodes)) {
+            throw new \InvalidArgumentException('Unknown country in assignment.');
+        }
+
+        $note = sprintf(
+            'regions: %s; countries: %s',
+            [] !== $regions ? implode(', ', array_map(static fn (Region $r): string => $r->getSlug(), $regions)) : 'none',
+            [] !== $countryCodes ? implode(', ', $countryCodes) : 'none',
+        );
+
+        // Rows + audit are one transaction (#15 precedent): commit() below opens
+        // its own wrapInTransaction, but Doctrine's connection nests transactions
+        // by ref-count rather than starting a second one, so this stays atomic
+        // with the DELETE/persist calls that precede it.
+        $this->em->wrapInTransaction(function () use ($target, $actor, $countryCodes, $regionIds, $note): void {
+            $this->em->createQuery('DELETE FROM App\Moderation\Entity\ModeratorArea m WHERE m.userId = :uid')
+                ->setParameter('uid', (int) $target->getId())
+                ->execute();
+            foreach ($regionIds as $rid) {
+                $this->em->persist(new ModeratorArea((int) $target->getId(), $rid, null));
+            }
+            foreach ($countryCodes as $cc) {
+                $this->em->persist(new ModeratorArea((int) $target->getId(), null, $cc));
+            }
+            $this->commit($actor, self::MODERATOR_AREAS, $target, $note);
+        });
     }
 
     // ── Guardrails ────────────────────────────────────────────────────────────

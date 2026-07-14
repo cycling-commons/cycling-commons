@@ -1371,6 +1371,7 @@ account:
   sign_out: 'Abmelden'
   menu_personal: 'Persönlich'
   menu_moderation: 'Moderation'
+  mod_scope_all: 'Alle Gebiete'
   tab_contributions: 'Beiträge'
   tab_votes: 'Stimmen'
   tab_saved: 'Gespeicherte Regionen'
@@ -1588,6 +1589,9 @@ admin:
     revoke_admin: 'Admin entziehen'
     remove_account: 'Konto entfernen'
     cancel_removal: 'Entfernung abbrechen'
+    moderator_areas: 'Moderationsgebiete zuweisen'
+  field:
+    mod_areas: 'Moderationsgebiete'
   confirm_irreversible: 'Diese Aktion ist unwiderruflich. Fortfahren?'
   dashboard:
     title: 'Dashboard'
@@ -1610,6 +1614,14 @@ admin:
     role_changed: 'Rollen aktualisiert.'
     account_removed: 'Konto entfernt.'
     removal_cancelled: 'Ausstehende Entfernung abgebrochen.'
+    areas_saved: 'Moderationsgebiete gespeichert.'
+  areas:
+    title: 'Moderationsgebiete zuweisen'
+    help: 'Wähle die Regionen und/oder ganze Länder, die diese Kuratorin/dieser Kurator moderiert. Es gilt die Vereinigung; Elemente außerhalb jeder Region bleiben für alle sichtbar.'
+    regions: 'Regionen'
+    countries: 'Länder'
+    empty_note: 'Nichts auswählen macht global (sieht alles).'
+    save: 'Gebiete speichern'
 route:
   error:
     note_too_long: 'Die Notiz ist länger als 2.000 Zeichen.'

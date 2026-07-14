@@ -6,9 +6,14 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Catalog\Entity\Region;
 use App\Entity\User;
+use App\Moderation\Entity\ModeratorArea;
+use App\Moderation\ModerationScopeProvider;
 use App\Service\GuardrailViolationException;
 use App\Service\UserAdminService;
+use App\World\Entity\Country;
+use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -26,6 +31,8 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatableInterface;
@@ -55,6 +62,7 @@ final class UserCrudController extends AbstractCrudController
         private readonly UserAdminService $svc,
         private readonly AdminUrlGenerator $urls,
         private readonly TranslatorInterface $translator,
+        private readonly ModerationScopeProvider $scopeProvider,
     ) {
     }
 
@@ -110,6 +118,16 @@ final class UserCrudController extends AbstractCrudController
         yield DateTimeField::new('lockedUntil', 'Locked Until')->setRequired(false)->hideOnForm();
         yield BooleanField::new('publicProfile', 'Public Profile');
         yield DateTimeField::new('createdAt', 'Registered')->hideOnForm();
+        // 'email' is only a property carrier here — the displayed value comes
+        // entirely from formatValue(), which reads the curator's live
+        // moderator_area rows via ModerationScopeProvider (moderator-areas
+        // spec 2026-07-14, Task 5). 'id' was tried first but EasyAdmin's
+        // TextConfigurator rejects non-string/non-Stringable raw values
+        // (int ids included) before formatValue ever runs; 'email' is
+        // already a string so it clears that check untouched.
+        yield TextField::new('email', $this->t('admin.field.mod_areas'))
+            ->onlyOnDetail()
+            ->formatValue(fn ($v, User $u): string => implode(' · ', $this->scopeProvider->describe($u)) ?: $this->translator->trans('account.mod_scope_all'));
     }
 
     #[\Override]
@@ -143,6 +161,12 @@ final class UserCrudController extends AbstractCrudController
             // Shown only for accounts with a pending self-requested deletion (deletionRequestedAt set).
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REMOVE_ACCOUNT, 'admin.action.remove_account', 'fa fa-trash', true, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::CANCEL_REMOVAL, 'admin.action.cancel_removal', 'fa fa-rotate-left', false, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
+            // Not one of the $mk one-click POST mutations: this opens a form
+            // page (GET) the curator fills in before submitting (POST), so it
+            // stays a plain link rather than the CSRF-form template above.
+            ->add(Crud::PAGE_DETAIL, Action::new(UserAdminService::MODERATOR_AREAS, $this->t('admin.action.moderator_areas'), 'fa fa-map')
+                ->linkToCrudAction(UserAdminService::MODERATOR_AREAS)
+                ->displayIf(fn (User $u) => $this->svc->hasRole($u, 'ROLE_CURATOR')))
             ->add(Crud::PAGE_INDEX, Action::DETAIL);
 
         return $actions;
@@ -218,6 +242,51 @@ final class UserCrudController extends AbstractCrudController
     public function cancel_removal(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->cancelPendingRemoval($t, $a), 'admin.flash.removal_cancelled');
+    }
+
+    /**
+     * Assign moderator areas: GET renders the pick-regions/countries form,
+     * POST validates + replaces the target's moderator_area rows (moderator-
+     * areas spec 2026-07-14, Task 5). Unlike the one-click $mk actions above,
+     * this is a genuine intermediate page, hence GET+POST rather than
+     * POST-only — see the comment on testEverySupportActionRouteIsPostOnly().
+     *
+     * @param AdminContext<User> $context
+     */
+    #[AdminRoute(options: ['methods' => ['GET', 'POST']])]
+    public function moderator_areas(AdminContext $context, Request $request, EntityManagerInterface $em): Response
+    {
+        /** @var User $target */
+        $target = $context->getEntity()->getInstance();
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('token'))) {
+                throw $this->createAccessDeniedException('Invalid CSRF token for a user support action.');
+            }
+            /** @var User $actor */
+            $actor = $this->getUser();
+            /** @var list<string> $countries */
+            $countries = array_map(strval(...), (array) $request->request->all('countries'));
+            /** @var list<int> $regions */
+            $regions = array_map(intval(...), (array) $request->request->all('regions'));
+            try {
+                $this->svc->setModeratorAreas($target, $actor, $countries, $regions);
+                $this->addFlash('success', $this->translator->trans('admin.flash.areas_saved'));
+            } catch (\InvalidArgumentException $e) {
+                $this->addFlash('danger', $e->getMessage());
+            }
+
+            return $this->redirect(
+                $this->urls->setController(self::class)->setAction(Action::DETAIL)->setEntityId($target->getId())->generateUrl()
+            );
+        }
+
+        return $this->render('admin/moderator_areas.html.twig', [
+            'target' => $target,
+            'countries' => $em->getRepository(Country::class)->findBy([], ['name' => 'ASC']),
+            'regions' => $em->getRepository(Region::class)->findBy([], ['name' => 'ASC']),
+            'assigned' => $em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $target->getId()]),
+        ]);
     }
 
     // ── Shared handler plumbing ────────────────────────────────────────────────
