@@ -14,6 +14,7 @@ use App\Catalog\Season;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
+use App\Security\TwoFactorPolicy;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,7 +31,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class MapController extends AbstractController
 {
     #[Route('/map', name: 'map')]
-    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider): Response
+    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
     {
         $user = $this->getUser();
         $params = [
@@ -50,12 +51,17 @@ final class MapController extends AbstractController
         ];
 
         // Curator-only: hand the pending submissions to the map so the moderation
-        // layer can render. Riders never receive this — it is emitted only inside
-        // the template's is_granted('ROLE_CURATOR') block (no leak of un-vetted data).
-        if ($this->isGranted('ROLE_CURATOR')) {
-            /** @var User $u */
-            $u = $this->getUser();
-            $params['pending'] = $queue->pendingForMap($scopeProvider->scopeFor($u));
+        // layer can render. Riders never receive this — the template only emits
+        // it when `pending` is set. Two gates:
+        //   1. ROLE_CURATOR (un-vetted data is a curator capability), AND
+        //   2. mandatory 2FA already completed. /map is on the 2FA-setup
+        //      enforcer's bypass list (public page, cacheable), so a
+        //      setup-pending curator can still reach this page — but they must
+        //      NOT receive any curator capability, including this payload,
+        //      before finishing 2FA. requiresSetup() is the same policy the
+        //      enforcer/login handler use.
+        if ($user instanceof User && $this->isGranted('ROLE_CURATOR') && !$twoFactorPolicy->requiresSetup($user)) {
+            $params['pending'] = $queue->pendingForMap($scopeProvider->scopeFor($user));
         }
 
         return $this->render('map/index.html.twig', $params);

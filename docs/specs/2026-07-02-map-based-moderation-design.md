@@ -150,3 +150,17 @@ These share a common trigger — **real submissions replacing `SampleQueue`** �
   instantly and the drawer closed before a note could be typed. Mouse
   clicks still submit immediately. `map.d_mod_keys` hint updated (4
   locales).
+
+## Security fix (2026-07-14): CC_PENDING gated on completed 2FA
+
+The map's curator payload (`CC_PENDING` / `CC_IS_CURATOR`) was emitted for any
+ROLE_CURATOR. But `/map` is on `TwoFactorSetupEnforcer::BYPASS_PREFIXES`
+(public, cacheable page), so a curator who had NOT completed mandatory 2FA
+setup could still load `/map` and receive the un-vetted pending-submission
+payload — a curator capability leaking before 2FA. `/moderate`, `/settings`,
+`/profile` already redirected such a user to `/2fa/setup`; only the map's
+bypassed page leaked. Fix: `MapController::map()` now emits `pending` only
+when `is_granted('ROLE_CURATOR')` AND `!TwoFactorPolicy::requiresSetup($user)`
+— the same policy the enforcer and login handler use. Reproduced end-to-end
+with a setup-pending curator, covered by
+`MapCuratorInjectionTest::testSetupPendingCuratorMapHasNoPendingData`.

@@ -90,6 +90,29 @@ final class MapCuratorInjectionTest extends WebTestCase
         self::assertStringNotContainsString('Awaiting clarification', $body);
     }
 
+    /**
+     * A curator who has NOT completed mandatory 2FA setup must not receive any
+     * curator capability yet — including the map's pending moderation payload.
+     * /map is a public page on the 2FA-enforcer's bypass list, so the gate has
+     * to live in the controller, not the request enforcer.
+     */
+    public function testSetupPendingCuratorMapHasNoPendingData(): void
+    {
+        $client = static::createClient();
+        // curator: true seeds a TOTP secret + enabled; here we want the
+        // opposite — an elevated user who still owes 2FA setup.
+        $this->login($client, 'map-curator-no2fa@example.com', ['ROLE_CURATOR'], false);
+        $this->seedSubmission('Should Stay Hidden');
+
+        $client->request('GET', '/map');
+
+        self::assertResponseIsSuccessful();
+        $body = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('CC_PENDING', $body);
+        self::assertStringNotContainsString('CC_IS_CURATOR', $body);
+        self::assertStringNotContainsString('Should Stay Hidden', $body);
+    }
+
     public function testPlainRiderMapHasNoPendingData(): void
     {
         $client = static::createClient();
