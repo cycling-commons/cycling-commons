@@ -66,6 +66,19 @@ final class MapPageTest extends WebTestCase
         self::assertArrayHasKey('deselectAll', $i18n);
         self::assertArrayHasKey('seasons', $i18n);
         self::assertArrayHasKey('bikes', $i18n);
+        // drawer namespace — map.js's own strings (record labels, CTAs, toasts)
+        self::assertSame('Modifier cet élément', $i18n['d']['editItem']);
+        self::assertSame('Historique', $i18n['d']['history']);
+
+        // CC_FIELD_SCHEMA select fields carry canonical => localized choice
+        // maps, so stored values render in the rider's language (drawer) while
+        // the improve form keeps submitting canonical English.
+        self::assertSame(1, preg_match('/window\.CC_FIELD_SCHEMA = (\{.*?\});/s', $html, $ms), 'CC_FIELD_SCHEMA must be injected');
+        $schema = json_decode($ms[1], true, 512, JSON_THROW_ON_ERROR);
+        $difficulty = array_values(array_filter($schema['K'], static fn (array $f): bool => 'difficulty' === $f['key']))[0];
+        self::assertSame('Très difficile', $difficulty['choices']['Very hard']);
+        $surface = array_values(array_filter($schema['A'], static fn (array $f): bool => 'surface' === $f['key']))[0];
+        self::assertSame('Asphalte', $surface['choices']['Asphalt'] ?? null);
     }
 
     public function testMapBootsFromCatalogEndpoint(): void

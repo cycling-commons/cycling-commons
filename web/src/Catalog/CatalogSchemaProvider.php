@@ -25,7 +25,7 @@ final class CatalogSchemaProvider
     ) {
     }
 
-    /** @return list<array{key: string, label: string, kind: string}> */
+    /** @return list<array{key: string, label: string, kind: string, choices?: array<string, string>}> */
     public function displayFields(ItemType $type): array
     {
         $out = [];
@@ -33,11 +33,23 @@ final class CatalogSchemaProvider
             if (!$field->display) {
                 continue;
             }
-            $out[] = [
+            $entry = [
                 'key' => $field->name,
                 'label' => $this->translator->trans($field->label),
                 'kind' => $this->renderKind($field),
             ];
+            // Canonical stored value => localized display label, so the drawer
+            // can render select values in the rider's language while the data
+            // (and the improve form's submitted values) stay canonical English.
+            // Rating scales (1-5) render as stars — no labels to translate.
+            if ([] !== $field->choices && 'rating' !== $entry['kind']) {
+                $choices = [];
+                foreach ($field->choices as $choice) {
+                    $choices[$choice] = $this->translator->trans($choice);
+                }
+                $entry['choices'] = $choices;
+            }
+            $out[] = $entry;
         }
 
         return $out;

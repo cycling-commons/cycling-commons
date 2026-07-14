@@ -863,3 +863,35 @@ frontend review's warning batch (the criticals live in
 - Coverage: `MapPageTest::testFrenchMapRailIsTranslated` renders the shell
   with `Accept-Language: fr` and asserts FR rail strings, no leftover English
   headings, and the decoded `CC_I18N` payload.
+
+## Change note (2026-07-14, symfony-base) — drawer i18n + localized catalog values
+
+Completes the follow-up flagged in the previous note: the drawer's internal
+strings are now localized, and so are the catalog's select **values**.
+
+- **Drawer/toast/picker strings:** ~140 `map.d_*` keys (four locales in
+  parity) cover the record row labels (Type/Town/Province/…), route rows
+  (Distance/Status/Starts at/Surfaces + the estimate method line), community
+  panel (rode-it/vote/suggest, reasons, plurals), utility confirmations,
+  moderation UI (Approve/Needs info/Reject, Proposed change, History), the
+  correction picker bar, ride-check results drawer, place cards, search
+  dropdown (Places group, empty state), the stub planner drawer, Mapillary
+  dock messages, and every mapToast. `window.CC_I18N` is now built by
+  `MapController::mapI18n()` (one PHP source of truth) instead of a Twig
+  dict; map.js keeps inline English fallbacks throughout, plus a tiny
+  `tpl('{n} of {m}…')` placeholder filler and one/many key pairs for plurals.
+- **Localized select values, canonical storage:** `CatalogSchemaProvider`
+  now emits `choices: {canonical => localized}` for every select/multiselect
+  display field (ratings excluded). The drawer maps stored values through it
+  (schemaRows per-field; a merged `VALUE_TR` for headlines, the difficulty
+  badge/scale and surface-mix rows). The 113 distinct registry choice values
+  were added to the catalog as English-source-string keys — which also makes
+  the improve form's selects render localized for free (Symfony ChoiceType
+  translates labels through `messages` by default) while submitted values
+  stay canonical English (`DifficultyVocabulary` & co. unchanged).
+- **Deliberately left English:** the hand-authored hazard demo fixture in
+  map.js's CATALOG (demo data, not UI), proper nouns (Mapillary, Wikimedia
+  Commons, SWDE, Tourisme Wallonie), and server-supplied data values outside
+  the registry vocabularies.
+- Coverage: the FR smoke test now also asserts `CC_I18N.d` strings and the
+  translated `choices` maps in `CC_FIELD_SCHEMA` (K difficulty, A surface).

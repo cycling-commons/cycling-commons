@@ -277,50 +277,8 @@
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_FIELD_SCHEMA = {{ field_schema|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Locale bundle for the strings map.js renders itself (layer list, subtitle,
-     select/deselect toggle). Layer labels reuse item_type.*.label so the rail
-     can never drift from the improve form / drawer wording. #}
-  window.CC_I18N = {{ {
-    'layers': {
-      'surface': 'item_type.road-surface.label'|trans,
-      'climbs': 'item_type.climbs.label'|trans,
-      'water': 'item_type.water-food.label'|trans,
-      'services': 'item_type.bike-services.label'|trans,
-      'stays': 'item_type.where-to-sleep.label'|trans,
-      'hazards': 'item_type.hazards.label'|trans,
-      'transit': 'item_type.getting-there.label'|trans,
-      'shelter': 'item_type.shelter.label'|trans,
-      'scenic': 'item_type.scenic-views.label'|trans,
-      'history': 'item_type.history-culture.label'|trans,
-      'experience': 'item_type.quality-rides.label'|trans,
-      'pending': 'map.pending_review'|trans,
-    },
-    'rcChecking': 'map.rc_checking'|trans,
-    'rcResults': 'map.rc_results'|trans,
-    'rcClear': 'map.rc_clear'|trans,
-    'rcError': 'map.rc_error'|trans,
-    'deselectAll': 'map.deselect_all'|trans,
-    'selectAll': 'map.select_all'|trans,
-    'curated': 'map.curated'|trans,
-    'subEverything': 'map.sub_everything'|trans,
-    'allBikes': 'map.all_bikes'|trans,
-    'pendingReview': 'map.pending_review'|trans,
-    'seasons': {
-      'spring': 'map.season_spring'|trans,
-      'summer': 'map.season_summer'|trans,
-      'autumn': 'map.season_autumn'|trans,
-      'winter': 'map.season_winter'|trans,
-    },
-    'bikes': {
-      'Road': 'map.bike_road'|trans,
-      'Gravel': 'map.bike_gravel'|trans,
-      'MTB': 'map.bike_mtb'|trans,
-      'E-bike': 'map.bike_ebike'|trans,
-      'Handbike': 'map.bike_handbike'|trans,
-      'Recumbent': 'map.bike_recumbent'|trans,
-      'Trike': 'map.bike_trike'|trans,
-      'Tandem': 'map.bike_tandem'|trans,
-    },
-  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+     drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
+  window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
    globals (catalog-load.js injects it after the fetch resolves), but its

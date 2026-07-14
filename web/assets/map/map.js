@@ -14,9 +14,22 @@
   // CatalogProvider. This maps it to the plain-English label shown on the
   // drawer's "Source ·" line, so a rider-added/edited item never reads as
   // OpenStreetMap just because it happens to live in a bulk-OSM layer.
+  // Locale bundle injected by the map shell (MapController::mapI18n via
+  // window.CC_I18N); every lookup keeps its English fallback so map.js still
+  // works standalone. `D` is the drawer namespace; tpl() fills {name} slots.
+  const I18N = window.CC_I18N || {};
+  const LAYER_L10N = I18N.layers || {};
+  const D = I18N.d || {};
+  const tpl = (s, vars) => String(s).replace(/\{(\w+)\}/g, (m, k) => vars[k] != null ? vars[k] : m);
+  // Canonical stored value → localized label, merged over every field's
+  // choices map (CC_FIELD_SCHEMA) — for values rendered outside schemaRows
+  // (headlines, difficulty badge, surface mix). Per-field lookups stay exact.
+  const VALUE_TR = {};
+  Object.values(window.CC_FIELD_SCHEMA || {}).forEach(fs => (fs || []).forEach(f => { if (f.choices) Object.assign(VALUE_TR, f.choices); }));
+  const trVal = v => VALUE_TR[v] || v;
   const SOURCE_LABELS = {
     osm:'OpenStreetMap', pivot:'Tourisme Wallonie (CC-BY)', wikidata:'Wikidata',
-    auto:'Derived by the pipeline', user:'Rider-contributed', manual:'Rider-contributed'
+    auto:D.srcAuto||'Derived by the pipeline', user:D.srcRider||'Rider-contributed', manual:D.srcRider||'Rider-contributed'
   };
   const sourceLabel = raw => SOURCE_LABELS[raw] || null;
   // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
@@ -115,7 +128,7 @@
     const dock=document.getElementById('mlyDock');
     dock.classList.add('open','loading'); dock.setAttribute('aria-hidden','false');
     { const ap=document.querySelector('.app'); ap.classList.add('dock-open'); ap.classList.remove('sheet-open'); }   // dock owns the bottom on mobile → hide the filters peek
-    const ld=document.getElementById('mlyLoad'); if(ld) ld.innerHTML='<span class="mly-spin"></span>Loading street-level…';
+    const ld=document.getElementById('mlyLoad'); if(ld) ld.innerHTML=`<span class="mly-spin"></span>${I18N.mlyLoading||'Loading street-level…'}`;
   }
   function mlyDockMessage(msg){           // swap the spinner for a short message (nothing found / error)
     document.getElementById('mlyDock').classList.add('loading');
@@ -139,7 +152,7 @@
     openMapillaryDock();
     const id=nearestImageId(point);
     if(id!=null) openMapillaryImage(String(id));
-    else mlyDockMessage('Zoom in and click a green dot to open street-level here.');
+    else mlyDockMessage(I18N.mlyZoom||'Zoom in and click a green dot to open street-level here.');
   }
   // (legacy) resolve the nearest image via the Graph API — kept as a fallback, no longer wired to clicks
   async function openMapillaryAt(lngLat){
@@ -150,9 +163,9 @@
       const r=await fetch(`https://graph.mapillary.com/images?access_token=${MAPILLARY_TOKEN}&fields=id&bbox=${bbox}&limit=1`);
       const j=await r.json();
       const img=j.data&&j.data[0];
-      if(!img){ mlyDockMessage('No street-level imagery here.'); return; }
+      if(!img){ mlyDockMessage(I18N.mlyNone||'No street-level imagery here.'); return; }
       openMapillaryImage(img.id);
-    }catch(_){ mlyDockMessage('No street-level imagery here.'); }
+    }catch(_){ mlyDockMessage(I18N.mlyNone||'No street-level imagery here.'); }
   }
   // one reusable popup — same accumulation concern as the contextmenu popup (W11)
   let _mlyPopupInst=null;
@@ -260,27 +273,31 @@
       if(skip.indexOf(f.key) >= 0) return;
       const v = src[f.key];
       const has = Array.isArray(v) ? v.length > 0 : (v != null && v !== '');
+      // Stored values are canonical English; f.choices (schema-provided, per
+      // field) maps them to the rider's locale for display only.
+      const cv = f.choices || {};
+      const tv = x => cv[x] != null ? cv[x] : x;
       if(has){
         if(f.kind === 'multiselect'){
           const list = Array.isArray(v) ? v : [v];
-          rows.push({label:f.label, html:true, value:list.map(t=>`<span class="cc-chip">${escPend(t)}</span>`).join('')});
+          rows.push({label:f.label, html:true, value:list.map(t=>`<span class="cc-chip">${escPend(tv(t))}</span>`).join('')});
         } else if(f.kind === 'rating'){
           rows.push({label:f.label, value: /^[1-5]$/.test(String(v)) ? stars(Number(v)) : v});
         } else if(f.kind === 'url'){
-          rows.push({label:f.label, value:String(v).replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site', href:v}]});
+          rows.push({label:f.label, value:String(v).replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:D.visitSite||'Visit site', href:v}]});
         } else {
-          rows.push({label:f.label, value:v});
+          rows.push({label:f.label, value:tv(v)});
         }
       } else if(id != null){
         const href = `/improve?item=${encodeURIComponent(id)}&type=${encodeURIComponent(letter)}&field=${encodeURIComponent(f.key)}`;
-        rows.push({label:f.label, html:true, empty:true, value:`<a class="cc-d-add" href="${href}">＋ add</a>`});
+        rows.push({label:f.label, html:true, empty:true, value:`<a class="cc-d-add" href="${href}">＋ ${D.add||'add'}</a>`});
       }
     });
     return rows;
   }
   // drawer card for a generic bulk-OSM point — shared by the dot click handler and the confirmed pin
   function osmDrawer(layer, p, ll, src){
-    const lbl=(layer||{}).label||'Place';
+    const lbl=(layer||{}).label||D.place||'Place';
     const pivot=p.src==='pivot';   // official Tourisme Wallonie accommodation (CC-BY), not OSM
     // C1-T4 (W6): p.srcType is the item's real ItemSource value from CatalogProvider.
     // A rider-added/edited item (user/manual) must read as rider-contributed even
@@ -289,13 +306,13 @@
     // are corrected here.
     const community = p.srcType==='user' || p.srcType==='manual';
     const originLbl = pivot?'Tourisme Wallonie':(community?sourceLabel(p.srcType):'OSM');
-    let rec=[{label:'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'}];
-    if(p.town && layer.letter!=='E') rec.push({label:'Town', value:p.town});  // stays' 'town' comes from the schema (labelled "Town / commune")
-    rec.push({label:'Province', value:p.prov||'Wallonia'});
-    if(pivot) rec.push({label:'Listed', value:'Official Tourisme Wallonie registry', method:'official'});
-    if(p.sim){ rec.push({label:'Status', value:(p.c||'Confirmed')+' · simulated', method:'demo'});
-      if(p.r) rec.push({label:'Rating', value:'★ '+p.r+' · simulated', method:'demo'}); }
-    if(p.web) rec.push({label:'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:'Visit site',href:p.web}]});
+    let rec=[{label:D.type||'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'}];
+    if(p.town && layer.letter!=='E') rec.push({label:D.town||'Town', value:p.town});  // stays' 'town' comes from the schema (labelled "Town / commune")
+    rec.push({label:D.province||'Province', value:p.prov||D.wallonia||'Wallonia'});
+    if(pivot) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official Tourisme Wallonie registry', method:'official'});
+    if(p.sim){ rec.push({label:D.status||'Status', value:(p.c?trVal(p.c):(D.confirmed||'Confirmed'))+' · '+(D.simulated||'simulated'), method:'demo'});
+      if(p.r) rec.push({label:D.rating||'Rating', value:'★ '+p.r+' · '+(D.simulated||'simulated'), method:'demo'}); }
+    if(p.web) rec.push({label:D.website||'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:D.visitSite||'Visit site',href:p.web}]});
     // Registry-driven attribute rows (single source of truth = CatalogFormRegistry,
     // served as CC_FIELD_SCHEMA). Filled rows replace any structural row of the
     // same label (e.g. a curated 'Type' overriding the raw OSM one); unset fields
@@ -321,18 +338,18 @@
     // take priority over the generic OSM-derived guess below (same
     // dedup-by-label rule as the other POI drawers/climbs).
     const potable = p.potable
-      ? {label:'Potable', value:p.potable}
+      ? {label:D.potable||'Potable', value:trVal(p.potable)}
       : p.c
-        ? {label:'Potable', value:p.c+' · simulated demo flag (not utility-verified)', method:'demo'}
-        : {label:'Potable', value:'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
+        ? {label:D.potable||'Potable', value:trVal(p.c)+' · '+(D.potableSim||'simulated demo flag (not utility-verified)'), method:'demo'}
+        : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
     // C1-T4 (W6): see osmDrawer — a rider-added/edited water point isn't OSM.
     const community = p.srcType==='user' || p.srcType==='manual';
-    const rec=[{label:'Type', value:p.type||p.t||'Drinking water', method: p.type?undefined:'OSM'}, potable,
-      {label:'Verify', value:'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}];
+    const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
+      {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}];
     // Registry-driven rows for the remaining WaterFood fields (seasonal/note/
     // bottleFill/cost). 'type' and 'potable' are rendered structurally above.
     rec.push(...schemaRows('C', p, p.id, {skip:['type','potable']}));
-    const d={name:p.n||p.t||'Drinking water', headline:'drinking water · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
+    const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
       record:rec,
       source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
     if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
@@ -512,10 +529,6 @@
              credit, creditUrl: user ? `https://commons.wikimedia.org/wiki/User:${user.replace(/ /g,'_')}` : '',
              license, source:`https://commons.wikimedia.org/wiki/File:${page}` };
   };
-  // Locale bundle injected by the map shell (window.CC_I18N); every lookup keeps
-  // the English string as fallback so map.js still works standalone.
-  const I18N = window.CC_I18N || {};
-  const LAYER_L10N = I18N.layers || {};
   // One real, verified Ardennes example per catalog type (A–K). geom.ll = [lat,lng].
   // record[] rows render in the detail drawer; omit any attribute we cannot verify.
   const CATALOG = [
@@ -701,13 +714,13 @@
       // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
       const diffLabel = r.difficulty?.label ?? (typeof r.difficulty === 'string' ? r.difficulty : undefined);
       return {
-      id:r.id, name:r.name, state:r.state, headline:`${r.km} km${diffLabel ? ' · ' + diffLabel : ''}`, cur:false, edit:'ride',
+      id:r.id, name:r.name, state:r.state, headline:`${r.km} km${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
       photo:r.photo||wc('Liège-Bastogne-Liège 2014 Echappée du jour Côte de Wanne.JPG','Les Meloures','Les Meloures','CC BY-SA 3.0'),
       // C1-T4 (W6): 'Contributed GPX' is an accurate detail for the pipeline's
       // usual auto-derived routes; a rider-added/edited one gets the plain label.
-      source:(r.srcType==='user'||r.srcType==='manual') ? sourceLabel(r.srcType) : 'Contributed GPX (GPS track only)',
+      source:(r.srcType==='user'||r.srcType==='manual') ? sourceLabel(r.srcType) : (D.contributedGpx||'Contributed GPX (GPS track only)'),
       // C2-T7 (spec §W2): every row below is a real QualityRides registry
       // attribute (CatalogFormRegistry::for(QualityRides), forwarded by
       // CatalogProvider::routes()) — the previous Quietness/Scenic
@@ -718,17 +731,17 @@
       // the attribute.
       record:(()=>{
         const rec=[
-          {label:'Distance', value:r.km+' km'}
+          {label:D.distance||'Distance', value:r.km+' km'}
         ];
         // Phase-2 badge: a proposed route (unverified) rides "ride it to verify";
         // a verified route renders normally. state is served by CatalogProvider.
-        if(r.state === 'unverified') rec.unshift({label:'Status', value:'Proposed · ride it to verify', warn:true});
+        if(r.state === 'unverified') rec.unshift({label:D.status||'Status', value:D.proposedVerify||'Proposed · ride it to verify', warn:true});
         if(cities){
           // html:true — builder-constructed markup from the constant
           // RIDE_CITIES table (cityLink escapes the name); NEVER set this
           // flag on payload-derived values.
-          rec.push({label:'Starts at', value:cityLink(cities[0]), html:true});
-          rec.push({label:'Towns on route', value:cities.map(cityLink).join(' · '), html:true});
+          rec.push({label:D.startsAt||'Starts at', value:cityLink(cities[0]), html:true});
+          rec.push({label:D.townsOnRoute||'Towns on route', value:cities.map(cityLink).join(' · '), html:true});
         }
         // Derived, not declared: measured against the A-layer mapped-road
         // segments at import/intake (SurfaceProfiler). The method note
@@ -736,8 +749,8 @@
         // Kept hand-authored (it is not a registry field; K's declared field is
         // 'dominantSurface', rendered by the schema below).
         if(r.surfaces && Array.isArray(r.surfaces.parts) && r.surfaces.parts.length){
-          rec.push({label:'Surfaces', value:r.surfaces.parts.map(p=>`${p.surface} ${p.pct}%`).join(' · '),
-                    method:`estimate · ${Number(r.surfaces.covered)||0}% of route mapped`});
+          rec.push({label:D.surfaces||'Surfaces', value:r.surfaces.parts.map(p=>`${trVal(p.surface)} ${p.pct}%`).join(' · '),
+                    method:tpl(D.estimateMethod||'estimate · {pct}% of route mapped', {pct:Number(r.surfaces.covered)||0})});
         }
         // Registry-driven (CC_FIELD_SCHEMA[K]): season / dominantSurface /
         // quietness / scenic / friendliness / bikeTypes / gradientLimited /
@@ -758,7 +771,7 @@
       // on the Source line.
       const rec = schemaRows('A', s, s.id);
       return {
-        id:s.id, name:s.name, headline:`${s.surface} · ${s.smoothness}`, cur:(s.cls!=='paved'), edit:'road-surface',
+        id:s.id, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
         photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
         // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
@@ -771,12 +784,12 @@
   // Off the public map by design — riders never receive window.CC_PENDING.
   if(window.CC_IS_CURATOR && Array.isArray(window.CC_PENDING)){
     const pf = window.CC_PENDING.map(s=>({
-      name:s.title, headline:`${s.type} · ${s.who} · ${s.when}`,
+      name:s.title, headline:`${(I18N.pendingTypes||{})[s.type]||s.type} · ${s.who} · ${s.when}`,
       geom:{ll:[s.lat, s.lng]},
       record:[
-        {label:'Submitted by', value:s.who},
-        {label:'Age', value:s.when},
-        {label:'Where', value:`${s.region||''} · ${s.country||''}`}
+        {label:D.submittedBy||'Submitted by', value:s.who},
+        {label:D.age||'Age', value:s.when},
+        {label:D.where||'Where', value:`${s.region||''} · ${s.country||''}`}
       ],
       source:'Pending submission · preview',
       pending:s
@@ -799,7 +812,7 @@
   // draw a polyline with a light casing so it stays visible over the tinted basemap
   const gradColor=p=> p<5?'#D9A6F2':p<8?'#B25BE8':p<12?'#8A2BD0':p<16?'#5E18A0':'#3A0A66';   // purple, wide light→dark range
   // difficulty scale 1–5 — same light→dark purple ramp as the climb gradient, so it reads as "climb-coloured"
-  const DIFF_LABELS=['','Easy','Moderate','Challenging','Hard','Very hard'];
+  const DIFF_LABELS=['','Easy','Moderate','Challenging','Hard','Very hard'].map(l=>l?trVal(l):l);
   const DIFF_PURPLE=['','#D9A6F2','#B25BE8','#8A2BD0','#5E18A0','#3A0A66'];
   // slug for edit-registry ids — must match the keys authored in edit-items.js (diacritics stripped)
   const slug = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -1097,7 +1110,7 @@
             if(f.steep){
               const sEl=document.createElement('div');
               sEl.className='cc-steep'; sEl.textContent=f.steep.pct;
-              sEl.title=`Steepest pitch · ${f.steep.pct}`;
+              sEl.title=`${D.steepest||'Steepest pitch'} · ${f.steep.pct}`;
               // stopPropagation: without it this click bubbles to the map container and
               // ALSO fires the underlying route/line layer's own map.on('click', id, …)
               // handler (MapLibre hit-tests canvas-rendered layers under DOM markers
@@ -1178,8 +1191,8 @@
       <svg class="cc-ap-cam" viewBox="0 0 48 36" width="42" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="1.5" y="7.5" width="45" height="27" rx="4"/><path d="M16 7.5l3-4h10l3 4" stroke-linejoin="round"/><circle cx="24" cy="21.5" r="8"/><path d="M40.5 13h.01" stroke-width="3" stroke-linecap="round"/>
       </svg>
-      <span class="cc-ap-t">No photo yet</span>
-      <span class="cc-ap-b">＋ Add the first photo</span>
+      <span class="cc-ap-t">${D.noPhoto||'No photo yet'}</span>
+      <span class="cc-ap-b">＋ ${D.addPhoto||'Add the first photo'}</span>
     </a>` : '';
     const photo = pl.length ? `<figure class="cc-d-photo">
       <img src="${pl[0].sm}" alt="${escPend(f.name)}" data-i="0" />
@@ -1209,22 +1222,23 @@
       // escPend-escaped below (spec §13).
       return `<li class="${r.empty?'empty':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
     }).join('');
+    const freshState = f.freshness ? ({fresh:D.freshFresh, ageing:D.freshAgeing, stale:D.freshStale}[f.freshness.state] || f.freshness.state) : '';
     const fresh = f.freshness
-      ? `<div class="cc-d-fresh ${f.freshness.state}">${f.freshness.state} · last confirmed ${f.freshness.lastConfirmed}</div>` : '';
+      ? `<div class="cc-d-fresh ${f.freshness.state}">${freshState} · ${D.lastConfirmed||'last confirmed'} ${f.freshness.lastConfirmed==='this season'?(D.thisSeason||'this season'):f.freshness.lastConfirmed}</div>` : '';
     // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
     const diffLabel = f.difficulty?.label ?? (typeof f.difficulty === 'string' ? f.difficulty : undefined);
     const diffScore = f.difficulty?.score ?? null;
     const diff = diffLabel
-      ? `<div class="cc-diff" title="Difficulty 1–5: Easy · Moderate · Challenging · Hard · Very hard">Difficulty
+      ? `<div class="cc-diff" title="${D.difficulty||'Difficulty'} 1–5: ${DIFF_LABELS.slice(1).join(' · ')}">${D.difficulty||'Difficulty'}
           <div class="cc-diff-scale">${[1,2,3,4,5].map(n=>`<span class="cc-diff-dot${n===diffScore?' on':''}" style="--p:${DIFF_PURPLE[n]}" title="${n} · ${DIFF_LABELS[n]}">${n}</span>`).join('')}</div>
-          <b class="cc-diff-lbl">${diffLabel}</b></div>` : '';
-    const elev = f.elev ? `<div class="cc-elev-cap">Elevation · ${Math.min(...f.elev)}–${Math.max(...f.elev)} m`
-      + (f.gain?` · ${f.gain} m climbing`:'') + ` <em>(from GPX)</em></div>` + elevSvg(f.elev) : '';
+          <b class="cc-diff-lbl">${trVal(diffLabel)}</b></div>` : '';
+    const elev = f.elev ? `<div class="cc-elev-cap">${D.elevation||'Elevation'} · ${Math.min(...f.elev)}–${Math.max(...f.elev)} m`
+      + (f.gain?` · ${tpl(D.mClimbing||'{n} m climbing',{n:f.gain})}`:'') + ` <em>${D.fromGpx||'(from GPX)'}</em></div>` + elevSvg(f.elev) : '';
     const grad = f.grad ? gradStrip(f.grad) : '';
     const up = f.uploader
       ? (f.uploader.public
-          ? `<div class="cc-up">Shared by <b>${escPend(f.uploader.name)}</b> · <a href="/profile?u=${slug(f.uploader.name)}">view profile</a></div>`
-          : `<div class="cc-up">Shared anonymously</div>`)
+          ? `<div class="cc-up">${D.sharedBy||'Shared by'} <b>${escPend(f.uploader.name)}</b> · <a href="/profile?u=${slug(f.uploader.name)}">${D.viewProfile||'view profile'}</a></div>`
+          : `<div class="cc-up">${D.sharedAnon||'Shared anonymously'}</div>`)
       : '';
     // The edit-bridge opens /improve bound to the item's real DB id, which
     // loads that exact item and prefills the form with its current values
@@ -1242,11 +1256,11 @@
         const editQ = `item=${f.id}&name=${encodeURIComponent(f.name)}`
           + `&type=${layer.letter}`
           + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
-        edit = `<a class="cc-d-act edit" href="/improve?${editQ}">✎ Edit this item</a>`;
+        edit = `<a class="cc-d-act edit" href="/improve?${editQ}">✎ ${D.editItem||'Edit this item'}</a>`;
         // Direct "this pin is wrong" path — only when we know where it is.
         // editQ already carries lat/lng; fix=location opens the editor expanded.
         if(ell){
-          edit += `<a class="cc-d-act fixloc" href="/improve?${editQ}&fix=location">◎ Fix location</a>`;
+          edit += `<a class="cc-d-act fixloc" href="/improve?${editQ}&fix=location">◎ ${D.fixLocation||'Fix location'}</a>`;
         }
       }
     }
@@ -1261,12 +1275,12 @@
       // Every interpolation is encoded (review W33): the server serves lat/lng
       // numeric and letter as an enum, but this attribute context shouldn't
       // depend on that guarantee holding forever.
-      edit = `<a class="cc-d-act edit" href="/improve?type=${encodeURIComponent(s.letter)}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${encodeURIComponent(s.lat)}&lng=${encodeURIComponent(s.lng)}">✎ Edit this item</a>`;
+      edit = `<a class="cc-d-act edit" href="/improve?type=${encodeURIComponent(s.letter)}&item=${encodeURIComponent(s.id)}&name=${encodeURIComponent(s.title)}&lat=${encodeURIComponent(s.lat)}&lng=${encodeURIComponent(s.lng)}">✎ ${D.editItem||'Edit this item'}</a>`;
       const body = s.body ? `<p class="cc-mod-body">${escPend(s.body)}</p>` : '';
       // "Proposed change" — what THIS submission wants to change, not the
       // item's history. Kept visually distinct from the history section below.
       const diff = (s.was && s.now)
-        ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">Proposed change</div><div class="cc-mod-was">${escPend(s.was)}</div><div class="cc-mod-now">${escPend(s.now)}</div></div>`
+        ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div><div class="cc-mod-was">${escPend(s.was)}</div><div class="cc-mod-now">${escPend(s.now)}</div></div>`
         : '';
       // Moderation-UX (user request): "Everybody should always be able to see
       // the history of an item." A brand-new submission (type 'new') has no
@@ -1276,27 +1290,27 @@
       // below — reusing loadItemHistory/renderHistoryList so both views stay
       // in sync. escPend covers every interpolated value (see historyRow).
       const modHist = 'new' === s.type
-        ? `<div class="cc-d-hist cc-d-hist-initial"><h4 class="cc-d-hist-h">History</h4><p class="cc-mod-initial">Initial entry — new item</p></div>`
+        ? `<div class="cc-d-hist cc-d-hist-initial"><h4 class="cc-d-hist-h">${D.history||'History'}</h4><p class="cc-mod-initial">${D.initialEntry||'Initial entry — new item'}</p></div>`
         : (s.itemId != null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${s.itemId}"></div>` : '');
       moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
         <div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>${body}${diff}
-        <textarea class="cc-mod-note" placeholder="Optional note — a reason, or context…"></textarea>
+        <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
         <div class="cc-mod-acts">
-          <button class="cc-mod-btn approve" data-decision="approve">✓ Approve</button>
-          <button class="cc-mod-btn info" data-decision="needs_info">? Needs info</button>
-          <button class="cc-mod-btn reject" data-decision="reject">✕ Reject</button>
+          <button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>
+          <button class="cc-mod-btn info" data-decision="needs_info">? ${D.needsInfo||'Needs info'}</button>
+          <button class="cc-mod-btn reject" data-decision="reject">✕ ${D.reject||'Reject'}</button>
         </div>
-        <div class="cc-mod-preview">A · approve · R · reject — recorded, not yet persisted.</div>
+        <div class="cc-mod-preview">${D.modKeys||'A · approve · R · reject — recorded, not yet persisted.'}</div>
         ${modHist}
       </div>`;
     }
     // Only votable point types get the vote CTA. Utilities are confirmed, not
     // voted — the erroneous vote link used to show on water/services/etc.
-    const vote = (f.cur && CC_VOTABLE.has(layer.key)) ? `<a class="cc-d-act" href="/vote">▲ Vote in this round</a>` : '';
+    const vote = (f.cur && CC_VOTABLE.has(layer.key)) ? `<a class="cc-d-act" href="/vote">▲ ${D.voteRound||'Vote in this round'}</a>` : '';
     // Non-votable utilities carry a community confirmation panel (water:
     // potable/not-potable, others: "still here?"), hydrated async on open.
     const confirmPanel = (CC_CONFIRMABLE.has(layer.key) && f.id!=null)
-      ? `<div class="cc-cf" data-item="${f.id}"><div class="cc-cf-body" data-cf-body></div><div class="cc-cf-login" hidden>Log in to confirm · <a href="/login">Log in</a></div></div>`
+      ? `<div class="cc-cf" data-item="${f.id}"><div class="cc-cf-body" data-cf-body></div><div class="cc-cf-login" hidden>${D.loginConfirm||'Log in to confirm'} · <a href="/login">${I18N.login||'Log in'}</a></div></div>`
       : '';
     const act = edit + vote;
     const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
@@ -1318,7 +1332,7 @@
     return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
       <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${grad}
       <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-      <div class="cc-d-src">Source · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, `<a href="${osmHref}" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>`).replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${confirmPanel}${act}${moderate}${histSlot}`;
+      <div class="cc-d-src">${D.source||'Source'} · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, `<a href="${osmHref}" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>`).replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${confirmPanel}${act}${moderate}${histSlot}`;
   }
   // C1-T3: renders one change_history row. Every interpolated value is
   // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`
@@ -1339,7 +1353,7 @@
   // acceptance: "no changes yet" is silence, not a section.
   function renderHistoryList(history){
     if(!Array.isArray(history) || !history.length) return '';
-    return `<h4 class="cc-d-hist-h">Recent changes</h4><ul class="cc-d-hist-list">${history.map(historyRow).join('')}</ul>`;
+    return `<h4 class="cc-d-hist-h">${D.recentChanges||'Recent changes'}</h4><ul class="cc-d-hist-list">${history.map(historyRow).join('')}</ul>`;
   }
   // Fetches an item's change log (C1-T2's GET /map/item/{id}/history) and
   // fills the drawer's history slot. Lazy/async on purpose — never blocks
@@ -1370,7 +1384,7 @@
   // carries counts + my-state + a stateless CSRF token; the three POSTs reuse it.
   const CC_BIKES=['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
   const CC_SEASONS=['spring','summer','autumn','winter'];
-  const CC_REASONS=[['broken-track','Wrong / broken track'],['trim-privacy','Trim a private start/end'],['duplicate','Duplicate of another route'],['not-rideable','Not actually rideable'],['other','Something else']];
+  const CC_REASONS=[['broken-track',D.reasonBroken||'Wrong / broken track'],['trim-privacy',D.reasonPrivacy||'Trim a private start/end'],['duplicate',D.reasonDuplicate||'Duplicate of another route'],['not-rideable',D.reasonNotRideable||'Not actually rideable'],['other',D.reasonOther||'Something else']];
   const _rcTokens={};   // route id → CSRF token from the last snapshot
 
   // Votable point types (climbs/stays/scenic/history) carry the vote CTA;
@@ -1382,36 +1396,37 @@
   const _cfTokens={};   // item id → CSRF token from the last confirmations snapshot
 
   function routeCommunityPanel(id, state){
-    const bikeOpts=CC_BIKES.map(b=>`<option value="${b}">${b}</option>`).join('');
+    const bikeL=I18N.bikes||{};
+    const bikeOpts=CC_BIKES.map(b=>`<option value="${b}">${bikeL[b]||b}</option>`).join('');
     // Bike type has no safe default (it changes what a ride/vote means), so the
     // picker opens on a disabled placeholder — the rider must choose actively.
-    const bikePickOpts=`<option value="" selected disabled>Bike type…</option>`+bikeOpts;
-    const seasonOpts=CC_SEASONS.map(s=>`<option value="${s}">${s[0].toUpperCase()+s.slice(1)}</option>`).join('');
+    const bikePickOpts=`<option value="" selected disabled>${D.bikeTypePh||'Bike type…'}</option>`+bikeOpts;
+    const seasonOpts=CC_SEASONS.map(s=>`<option value="${s}">${CC_SEASON_LABEL[s]||s[0].toUpperCase()+s.slice(1)}</option>`).join('');
     const reasonOpts=CC_REASONS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
     // Vote block only for verified routes (spec D7); rode-it for both.
     const voteBlock = state==='verified' ? `
       <div class="cc-rc-vote">
-        <label class="cc-rc-l">Recommend it <span class="cc-rc-count" data-rc="votes"></span></label>
+        <label class="cc-rc-l">${D.recommend||'Recommend it'} <span class="cc-rc-count" data-rc="votes"></span></label>
         <div class="cc-rc-row"><select class="cc-rc-season">${seasonOpts}</select><select class="cc-rc-vbike">${bikePickOpts}</select>
-          <button class="cc-rc-btn" data-rc-act="vote">▲ Vote</button></div>
+          <button class="cc-rc-btn" data-rc-act="vote">▲ ${D.vote||'Vote'}</button></div>
       </div>` : '';
     const rideProgress = state==='unverified' ? `<span class="cc-rc-count" data-rc="rides">…</span>` : '';
     return `<div class="cc-rc" data-route="${id}" data-state="${state||''}">
       <div class="cc-rc-ride">
-        <label class="cc-rc-l">I rode this ${rideProgress}</label>
+        <label class="cc-rc-l">${D.rodeThis||'I rode this'} ${rideProgress}</label>
         <div class="cc-rc-row"><select class="cc-rc-rbike">${bikePickOpts}</select>
-          <button class="cc-rc-btn" data-rc-act="rode-it">✓ I rode this</button></div>
+          <button class="cc-rc-btn" data-rc-act="rode-it">✓ ${D.rodeThis||'I rode this'}</button></div>
       </div>
       ${voteBlock}
-      <details class="cc-rc-suggest"><summary>Suggest a correction</summary>
+      <details class="cc-rc-suggest"><summary>${D.suggestCorrection||'Suggest a correction'}</summary>
         <select class="cc-rc-reason">${reasonOpts}</select>
-        <textarea class="cc-rc-note" placeholder="Optional detail…"></textarea>
-        <button type="button" class="cc-rc-mark" data-rc-mark="${id}">✎ Mark the part(s) on the map</button>
+        <textarea class="cc-rc-note" placeholder="${D.optionalDetail||'Optional detail…'}"></textarea>
+        <button type="button" class="cc-rc-mark" data-rc-mark="${id}">✎ ${D.markParts||'Mark the part(s) on the map'}</button>
         <span class="cc-rc-marks" data-rc-marks></span>
-        <button class="cc-rc-btn" data-rc-act="suggest">Send</button>
+        <button class="cc-rc-btn" data-rc-act="suggest">${D.send||'Send'}</button>
       </details>
-      <a class="cc-d-act edit" href="/routes/${id}.gpx">⤓ Download GPX</a>
-      <div class="cc-rc-login" hidden>Log in to rate this route · <a href="/login">Log in</a></div>
+      <a class="cc-d-act edit" href="/routes/${id}.gpx">⤓ ${D.downloadGpx||'Download GPX'}</a>
+      <div class="cc-rc-login" hidden>${D.loginRate||'Log in to rate this route'} · <a href="/login">${I18N.login||'Log in'}</a></div>
     </div>`;
   }
 
@@ -1424,7 +1439,7 @@
     const segs=_pickSegs[id];
     if(segs && segs.length){
       const m=box.querySelector('[data-rc-marks]');
-      if(m) m.textContent = `· ${segs.length} stretch${segs.length===1?'':'es'} marked`;
+      if(m) m.textContent = tpl((segs.length===1?D.marksOne:D.marksMany)||`· {n} stretch${segs.length===1?'':'es'} marked`, {n:segs.length});
     }
     fetch(`/routes/${id}/community`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
       .then(r=>{ if(r.status===401||r.status===403){ box.querySelector('.cc-rc-login').hidden=false; box.classList.add('cc-rc-anon'); throw new Error('anon'); } if(!r.ok) throw new Error('community'); return r.json(); })
@@ -1433,18 +1448,18 @@
   }
 
   function paintRouteCommunity(box, s){
-    const rides=box.querySelector('[data-rc="rides"]'); if(rides) rides.textContent=`· ${s.rideCount} of ${s.threshold} to verify`;
-    const votes=box.querySelector('[data-rc="votes"]'); if(votes) votes.textContent=s.voteCount?`· ${s.voteCount} vote${s.voteCount>1?'s':''}`:'';
-    if(s.iRode){ const b=box.querySelector('[data-rc-act="rode-it"]'); if(b){ b.textContent='✓ You rode this'; b.disabled=true; } }
-    if(s.iVotedThisSeason){ const b=box.querySelector('[data-rc-act="vote"]'); if(b){ b.textContent='✓ Voted this season'; b.disabled=true; } }
+    const rides=box.querySelector('[data-rc="rides"]'); if(rides) rides.textContent=`· ${tpl(D.ridesProgress||'{n} of {m} to verify', {n:s.rideCount, m:s.threshold})}`;
+    const votes=box.querySelector('[data-rc="votes"]'); if(votes) votes.textContent=s.voteCount?`· ${tpl((s.voteCount===1?D.voteOne:D.voteMany)||`{n} vote${s.voteCount>1?'s':''}`, {n:s.voteCount})}`:'';
+    if(s.iRode){ const b=box.querySelector('[data-rc-act="rode-it"]'); if(b){ b.textContent=`✓ ${D.youRode||'You rode this'}`; b.disabled=true; } }
+    if(s.iVotedThisSeason){ const b=box.querySelector('[data-rc-act="vote"]'); if(b){ b.textContent=`✓ ${D.votedSeason||'Voted this season'}`; b.disabled=true; } }
   }
 
   // --- Community confirmations for non-votable utilities (water potability /
   // "still here?"). Public counts, login to confirm — mirrors the route
   // community loop but simpler (one toggle-able stance per rider). ---
   const CC_CF_STANCES={
-    potability:[['potable','✓ Potable'],['not_potable','✗ Not potable']],
-    existence:[['exists','✓ Confirm it’s here']],
+    potability:[['potable',`✓ ${D.potable||'Potable'}`],['not_potable',`✗ ${D.notPotable||'Not potable'}`]],
+    existence:[['exists',`✓ ${D.confirmHere||'Confirm it’s here'}`]],
   };
   function hydrateItemConfirm(id){
     const box=document.querySelector(`.cc-cf[data-item="${id}"]`); if(!box) return;
@@ -1457,13 +1472,13 @@
     const authed=!!s.token;
     const defs=CC_CF_STANCES[s.stanceKind]||CC_CF_STANCES.existence;
     const heading = s.stanceKind==='potability'
-      ? `Is the water drinkable?` : `Is this still here?`;
+      ? (D.waterQ||'Is the water drinkable?') : (D.hereQ||'Is this still here?');
     const btns=defs.map(([v,l])=>{
       const n=(s.stances&&s.stances[v])||0;
       const mine=s.mine===v?' is-mine':'';
       return `<button class="cc-cf-btn${mine}" data-cf-act="${v}"${authed?'':' disabled'}>${l} <span class="cc-cf-n">${n}</span></button>`;
     }).join('');
-    const total = s.total ? `<span class="cc-cf-total">· ${s.total} rider${s.total===1?'':'s'} confirmed</span>` : '';
+    const total = s.total ? `<span class="cc-cf-total">· ${tpl((s.total===1?D.confirmedOne:D.confirmedMany)||`{n} rider${s.total===1?'':'s'} confirmed`, {n:s.total})}</span>` : '';
     box.querySelector('[data-cf-body]').innerHTML =
       `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>`;
     box.querySelector('.cc-cf-login').hidden = authed;
@@ -1473,31 +1488,31 @@
     const btn=e.target.closest('[data-cf-act]'); if(!btn) return;
     const box=btn.closest('.cc-cf'); if(!box) return;
     const id=box.getAttribute('data-item'), token=_cfTokens[id];
-    if(!token){ mapToast('Please log in to confirm.'); return; }
+    if(!token){ mapToast(D.toastLoginConfirm||'Please log in to confirm.'); return; }
     const body=new URLSearchParams(); body.set('_token', token); body.set('stance', btn.getAttribute('data-cf-act'));
     box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=true);
     fetch(`/items/${id}/confirm`, {method:'POST', credentials:'same-origin',
       headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:body.toString()})
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
-      .then(s=>{ paintItemConfirm(box, s); mapToast('Thanks — recorded.'); })
-      .catch(()=>{ box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false); mapToast('Could not record that — please try again.'); });
+      .then(s=>{ paintItemConfirm(box, s); mapToast(D.toastThanks||'Thanks — recorded.'); })
+      .catch(()=>{ box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false); mapToast(D.toastErr||'Could not record that — please try again.'); });
   });
 
   // Flag a picker the rider left on its placeholder: red border + focus + toast.
   function warnPick(sel, msg){ if(sel){ sel.classList.add('cc-rc-invalid'); sel.focus(); } mapToast(msg); }
   function rcPost(box, act){
     const id=box.dataset.route, token=_rcTokens[id];
-    if(!token){ mapToast('Please log in to rate routes.'); return; }
+    if(!token){ mapToast(D.toastLoginRate||'Please log in to rate routes.'); return; }
     const body=new URLSearchParams(); body.set('_token', token);
     // Bike type must be actively chosen (no default) — block + warn if empty.
     if(act==='rode-it'){
       const sel=box.querySelector('.cc-rc-rbike');
-      if(!sel.value){ warnPick(sel, 'Pick the bike type you rode it on first.'); return; }
+      if(!sel.value){ warnPick(sel, D.pickBikeRode||'Pick the bike type you rode it on first.'); return; }
       body.set('bike_type', sel.value);
     }
     if(act==='vote'){
       const sel=box.querySelector('.cc-rc-vbike');
-      if(!sel.value){ warnPick(sel, 'Pick a bike type to recommend it for first.'); return; }
+      if(!sel.value){ warnPick(sel, D.pickBikeVote||'Pick a bike type to recommend it for first.'); return; }
       body.set('season', box.querySelector('.cc-rc-season').value); body.set('bike_type', sel.value);
     }
     if(act==='suggest'){
@@ -1511,12 +1526,12 @@
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then(s=>{
         box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=false);
-        if(act==='suggest'){ delete _pickSegs[id]; const m=box.querySelector('[data-rc-marks]'); if(m) m.textContent=''; mapToast('Thanks — a curator will review it.'); box.querySelector('.cc-rc-suggest').open=false; box.querySelector('.cc-rc-note').value=''; return; }
+        if(act==='suggest'){ delete _pickSegs[id]; const m=box.querySelector('[data-rc-marks]'); if(m) m.textContent=''; mapToast(D.toastCurator||'Thanks — a curator will review it.'); box.querySelector('.cc-rc-suggest').open=false; box.querySelector('.cc-rc-note').value=''; return; }
         paintRouteCommunity(box, s);
-        if(act==='rode-it' && s.state==='verified' && box.dataset.state==='unverified'){ mapToast('Verified — thanks for confirming this route!'); box.dataset.state='verified'; }
-        else mapToast('Recorded — thanks!');
+        if(act==='rode-it' && s.state==='verified' && box.dataset.state==='unverified'){ mapToast(D.toastVerified||'Verified — thanks for confirming this route!'); box.dataset.state='verified'; }
+        else mapToast(D.toastRecorded||'Recorded — thanks!');
       })
-      .catch(err=>{ box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=false); mapToast(err.message==='429'?'Daily limit reached — try again tomorrow.':'Could not record that — please try again.'); });
+      .catch(err=>{ box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=false); mapToast(err.message==='429'?(D.toastLimit||'Daily limit reached — try again tomorrow.'):(D.toastErr||'Could not record that — please try again.')); });
   }
 
   // --- Located-correction picking mode (spec §16 S1). Segments captured per
@@ -1538,7 +1553,7 @@
 
   function startPicking(routeId){
     if(_pick) return;   // re-entrancy guard: don't orphan an in-progress session
-    const path=routePathById(routeId); if(!path){ mapToast('Open the route first.'); return; }
+    const path=routePathById(routeId); if(!path){ mapToast(D.toastOpenRoute||'Open the route first.'); return; }
     _pick={ routeId, path, points:[], markers:[], segLayers:[] };
     document.querySelector('.cc-drawer')?.classList.add('cc-drawer-min');   // minimise so the map is clickable
     map.getCanvas().style.cursor='crosshair';
@@ -1578,14 +1593,16 @@
     let bar=document.getElementById('cc-pickbar');
     if(!bar){ bar=document.createElement('div'); bar.id='cc-pickbar'; bar.className='cc-pickbar'; document.body.appendChild(bar); }
     bar.innerHTML=`<span class="cc-pickbar-t"></span>
-      <button data-pick="undo">↶ Undo</button><button data-pick="clear">Clear</button><button data-pick="done" class="on">Done</button>`;
+      <button data-pick="undo">↶ ${D.undo||'Undo'}</button><button data-pick="clear">${D.clear||'Clear'}</button><button data-pick="done" class="on">${D.done||'Done'}</button>`;
     bar.hidden=false; updatePickBar();
     bar.onclick=e=>{ const b=e.target.closest('[data-pick]'); if(!b) return; pickAction(b.dataset.pick); };
   }
   function updatePickBar(){
     const t=document.querySelector('#cc-pickbar .cc-pickbar-t'); if(!t) return;
     const done=Math.floor(_pick.points.length/2), pending=_pick.points.length%2;
-    t.textContent = pending ? `Point ${_pick.points.length} set — click the end of this stretch` : `${done} stretch${done===1?'':'es'} marked — click to start another, or Done`;
+    t.textContent = pending
+      ? tpl(D.pointSet||'Point {n} set — click the end of this stretch', {n:_pick.points.length})
+      : tpl((done===1?D.barOne:D.barMany)||`{n} stretch${done===1?'':'es'} marked — click to start another, or Done`, {n:done});
   }
   function pickAction(a){
     if(a==='undo'){ _pick.points.pop(); const m=_pick.markers.pop(); if(m) m.remove(); redrawPickSegments(); updatePickBar(); return; }
@@ -1601,7 +1618,7 @@
     document.getElementById('cc-pickbar').hidden=true;
     document.querySelector('.cc-drawer')?.classList.remove('cc-drawer-min');
     const marks=document.querySelector(`.cc-rc[data-route="${rid}"] [data-rc-marks]`);
-    const n=(_pickSegs[rid]||[]).length; if(marks) marks.textContent = n ? `· ${n} stretch${n===1?'':'es'} marked` : '';
+    const n=(_pickSegs[rid]||[]).length; if(marks) marks.textContent = n ? tpl((n===1?D.marksOne:D.marksMany)||`· {n} stretch${n===1?'':'es'} marked`, {n}) : '';
   }
   // Tear down an in-progress picking session without committing it to
   // _pickSegs (used when the drawer itself closes mid-pick — see closeDrawer).
@@ -1671,20 +1688,20 @@
         body:body.toString() });
     })
       .then(r=>{ if(!r.ok) throw new Error('decide'); return r.json(); })
-      .then(res=>{ hidePendingPin(id); closeDrawer(); mapToast(`Decision recorded (${decision.replace('_',' ')}) — preview, not yet persisted · ${res.reference}`); })
-      .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast('Could not record the decision — please try again.'); });
+      .then(res=>{ hidePendingPin(id); closeDrawer(); mapToast(tpl(D.decisionRecorded||'Decision recorded ({d}) — preview, not yet persisted · {ref}', {d:decision.replace('_',' '), ref:res.reference})); })
+      .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast(D.decisionErr||'Could not record the decision — please try again.'); });
   }
   function gradStrip(grad){
     const max=Math.max(...grad), avg=Math.round(grad.reduce((a,b)=>a+b,0)/grad.length);
     const bars=grad.map(p=>`<span class="cc-grad-bar" style="height:${Math.round(10+(p/Math.max(max,1))*30)}px;background:${gradColor(p)}" title="${p}%"></span>`).join('');
-    return `<div class="cc-elev-cap">Gradient profile · avg ~${avg}% · max ${max}% <em>(illustrative)</em></div>
+    return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · avg ~{a}% · max {m}%', {a:avg, m:max})} <em>${D.illustrative||'(illustrative)'}</em></div>
       <div class="cc-grad">${bars}</div>`;
   }
   function elevSvg(elev){
     const w=300,h=64,pad=3,min=Math.min(...elev),max=Math.max(...elev),rng=Math.max(1,max-min);
     const xy=elev.map((e,i)=>[pad+i/(elev.length-1)*(w-2*pad), h-pad-((e-min)/rng)*(h-2*pad)]);
     const line=xy.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
-    return `<svg class="cc-elev" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Elevation profile">
+    return `<svg class="cc-elev" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="${D.elevAria||'Elevation profile'}">
       <polygon points="${pad},${h-pad} ${line} ${w-pad},${h-pad}" fill="rgba(255,90,31,.16)"/>
       <polyline points="${line}" fill="none" stroke="#FF5A1F" stroke-width="1.6"/></svg>`;
   }
@@ -1764,13 +1781,13 @@
           return `<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${e0.badge}</span>${escPend(e0.kind)} · ${rows.length}</li>`
             + rows.map(n=>`<li><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('');
         }).join('')
-      : '<li class="cc-near-empty">Nothing mapped here yet — be the first to add something.</li>';
+      : `<li class="cc-near-empty">${D.nothingHere||'Nothing mapped here yet — be the first to add something.'}</li>`;
     document.getElementById('drawerBody').innerHTML =
-      `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?'City':'Town'}</span>
+      `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?(D.city||'City'):(D.town||'Town')}</span>
        <div class="cc-d-name">${escPend(name)}</div>
        ${meta.info?`<div class="cc-city-info">${meta.info}</div>`:''}
-       <div class="cc-city-links">${meta.wiki?`<a href="${meta.wiki}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">community notes — none yet</span></div>
-       <h4 class="cc-near-h">In the Commons nearby · ≤ 5 km</h4>
+       <div class="cc-city-links">${meta.wiki?`<a href="${meta.wiki}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">${D.notesNone||'community notes — none yet'}</span></div>
+       <h4 class="cc-near-h">${D.nearbyH||'In the Commons nearby · ≤ 5 km'}</h4>
        <ul class="cc-near-list">${list}</ul>`;
     document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
       const n=near[+b.dataset.i];
@@ -1951,26 +1968,26 @@
       const asc=d.ascentM!=null?` · ↑ ${d.ascentM} m`:'';
       const radius=d.radiusM<1000?`${d.radiusM} m`:'1 km';
       const kColor=(layerByKey.experience||{}).color||'#FF5A1F';
-      let html=`<span class="cc-d-type" style="--c:#3A3A33;color:#fff">➜ Ride check</span>
-       <div class="cc-d-name">Along your ride</div>
-       <div class="cc-city-info">${d.distanceKm} km${asc} · within ${radius} of the track — indication only, nothing stored.</div>
-       <div class="cc-ride-actions"><button class="cc-ride-btn" id="rcClearBtn" type="button">✕ Clear ride</button></div>`;
+      let html=`<span class="cc-d-type" style="--c:#3A3A33;color:#fff">➜ ${D.rideCheck||'Ride check'}</span>
+       <div class="cc-d-name">${D.alongRide||'Along your ride'}</div>
+       <div class="cc-city-info">${d.distanceKm} km${asc} · ${tpl(D.rideMeta||'within {r} of the track — indication only, nothing stored.', {r:radius})}</div>
+       <div class="cc-ride-actions"><button class="cc-ride-btn" id="rcClearBtn" type="button">✕ ${D.clearRide||'Clear ride'}</button></div>`;
       if(d.routes.length){
-        html+=`<h4 class="cc-near-h">Your ride follows</h4><ul class="cc-near-list">`
-          +d.routes.map(r=>`<li><button class="cc-near" data-rc-route="${r.id}"><span class="cc-near-k" style="background:${kColor};color:${txtOn(kColor)}">K</span><span class="cc-near-nm">${escPend(r.name)}</span><em>${r.sharedKm} km shared</em></button></li>`).join('')
+        html+=`<h4 class="cc-near-h">${D.rideFollows||'Your ride follows'}</h4><ul class="cc-near-list">`
+          +d.routes.map(r=>`<li><button class="cc-near" data-rc-route="${r.id}"><span class="cc-near-k" style="background:${kColor};color:${txtOn(kColor)}">K</span><span class="cc-near-nm">${escPend(r.name)}</span><em>${tpl(D.kmShared||'{n} km shared', {n:r.sharedKm})}</em></button></li>`).join('')
           +`</ul>`;
       }
-      html+=`<h4 class="cc-near-h">In the Commons along the track</h4>`;
+      html+=`<h4 class="cc-near-h">${D.alongTrackH||'In the Commons along the track'}</h4>`;
       if(d.groups.length){
         html+=`<ul class="cc-near-list">`;
         d.groups.forEach(g=>{
           const meta=CATALOG.find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
-          html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${g.letter}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?' (capped)':''}</li>`;
-          html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-g="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>km ${it.alongKm} · ${it.distM} m off</em></button></li>`).join('');
+          html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${g.letter}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
+          html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-g="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'km {a} · {b} m off', {a:it.alongKm, b:it.distM})}</em></button></li>`).join('');
         });
         html+=`</ul>`;
       } else {
-        html+=`<div class="cc-near-empty">Nothing in the Commons within ${radius} of this ride yet.</div>`;
+        html+=`<div class="cc-near-empty">${tpl(D.nothingWithin||'Nothing in the Commons within {r} of this ride yet.', {r:radius})}</div>`;
       }
       const body=document.getElementById('drawerBody');
       body.innerHTML=html;
@@ -2195,7 +2212,7 @@
     // PIVOT stay via the catalog-load concat, and missed water) are gone.
     const SEARCH_IDX=[];
     Object.keys(CITIES).forEach(name=>{ const big=CITIES[name].t==='City';   // big cities stand apart from hamlets: ochre ◉ "City" vs teal ◎ "Town"
-      SEARCH_IDX.push({name, key:slug(name), kind: big?'City':'Town', badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}); });
+      SEARCH_IDX.push({name, key:slug(name), kind: big?(D.city||'City'):(D.town||'Town'), badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}); });
     ITEM_INDEX = buildItemIndex();
     ITEM_INDEX.forEach(e=>{ if(!e.unnamed) SEARCH_IDX.push(e); });   // nameless POIs list in place cards, not in text search
     // pending entries carry their submission id so hidePendingPin can drop
@@ -2256,7 +2273,7 @@
       if(_phQ===q) towns.push(..._phHits.slice(0, Math.max(0, 6-towns.length)));   // geocoded towns behind local ones
       const byLetter={};
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
-      const groups=towns.length?[{label:'Places', rows:towns}]:[];
+      const groups=towns.length?[{label:D.places||'Places', rows:towns}]:[];
       Object.keys(byLetter).sort().forEach(L=>groups.push({label:`${L} · ${byLetter[L][0].kind}`, rows:byLetter[L]}));
       const CAP=30;
       sMatches=[]; sHL=-1;
@@ -2268,7 +2285,7 @@
         rows.forEach(m=>{ html+=sRow(m, sMatches.length); sMatches.push(m); });
       }
       sRes.hidden=false; sBox.setAttribute('aria-expanded','true');
-      sRes.innerHTML = sMatches.length ? html : '<li class="search-empty">No match in the Wallonia demo yet.</li>';
+      sRes.innerHTML = sMatches.length ? html : `<li class="search-empty">${D.noMatch||'No match in the Wallonia demo yet.'}</li>`;
     }
     // one delegated listener + a short debounce (review W41): the per-keystroke
     // cost was a full index scan, an innerHTML rebuild AND fresh per-result
@@ -2490,16 +2507,16 @@
     let mnx=180,mny=90,mxx=-180,mxy=-90;
     r.loop.forEach(p=>{mny=Math.min(mny,p[0]);mxy=Math.max(mxy,p[0]);mnx=Math.min(mnx,p[1]);mxx=Math.max(mxx,p[1]);});
     map.fitBounds([[mnx,mny],[mxx,mxy]],{padding:60,duration:600});
-    openDrawer({color:'#FF5A1F',letter:'R',label:'Suggested route'},{
-      name:r.name, cur:false, source:'Illustrative — faked from sample rides',
+    openDrawer({color:'#FF5A1F',letter:'R',label:D.suggestedRoute||'Suggested route'},{
+      name:r.name, cur:false, source:D.fakedSrc||'Illustrative — faked from sample rides',
       elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       record:[
-        {label:'Start', value:'Spa'},
-        {label:'Distance', value:r.km+' km'},
-        {label:'Shape', value:'Roundtrip'},
-        {label:'Season', value:r.season},
-        {label:'Why', value:'Popular this season'},
-        {label:'Note', value:'⚠ Faked — the real planner stitches from the heatmap', warn:true}
+        {label:D.start||'Start', value:'Spa'},
+        {label:D.distance||'Distance', value:r.km+' km'},
+        {label:D.shape||'Shape', value:D.roundtrip||'Roundtrip'},
+        {label:D.season||'Season', value:CC_SEASON_LABEL[r.season]||trVal(r.season)},
+        {label:D.why||'Why', value:D.popularSeason||'Popular this season'},
+        {label:D.note||'Note', value:D.fakedNote||'⚠ Faked — the real planner stitches from the heatmap', warn:true}
       ]
     });
   }
