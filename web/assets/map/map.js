@@ -1825,6 +1825,7 @@
       map.flyTo({center:[meta.ll[1],meta.ll[0]], zoom:12.5, offset:[window.innerWidth<=820?0:-150,0], duration:900, essential:true});
     }
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
+    if(window.innerWidth<=820) sheet.reset();          // land at half; desktop untouched
   }
   // city info card — thin CITIES-lookup wrapper kept for existing callers (drawer .cc-city links, search)
   function openCity(name){
@@ -2018,6 +2019,7 @@
       });
       const dr=document.getElementById('drawer'); dr.classList.add('open'); dr.setAttribute('aria-hidden','false');
       dr.focus({preventScroll:true});
+      if(window.innerWidth<=820) sheet.reset();        // land at half; desktop untouched
     }
     pick.onclick=()=>fileIn.click();
     fileIn.addEventListener('change',()=>{ const f=fileIn.files && fileIn.files[0]; if(!f) return;
