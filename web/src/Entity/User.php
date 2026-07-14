@@ -65,9 +65,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // setDisplayName() so EVERY write path (registration, settings, console,
     // admin CRUD, fixtures) keeps it in sync. A plain unique constraint on
     // this column gives case-insensitive display-name uniqueness without a
-    // functional index Doctrine can't model.
-    #[ORM\Column(type: 'string', length: 100)]
-    private string $displayNameCanonical = '';
+    // functional index Doctrine can't model. An empty name canonicalizes to
+    // NULL so unnamed rows (tests, partial flows) never collide — NULL is
+    // ignored by both the Postgres unique index and UniqueEntity (ignoreNull).
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $displayNameCanonical = null;
 
     // Rider preferences (spec 2026-07-14): which bikes they ride and what
     // kind of riding they do. Stored as enum value strings; read via the
@@ -293,12 +295,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDisplayName(string $displayName): static
     {
         $this->displayName = $displayName;
-        $this->displayNameCanonical = mb_strtolower(trim($displayName));
+        $canonical = mb_strtolower(trim($displayName));
+        $this->displayNameCanonical = '' === $canonical ? null : $canonical;
 
         return $this;
     }
 
-    public function getDisplayNameCanonical(): string
+    public function getDisplayNameCanonical(): ?string
     {
         return $this->displayNameCanonical;
     }

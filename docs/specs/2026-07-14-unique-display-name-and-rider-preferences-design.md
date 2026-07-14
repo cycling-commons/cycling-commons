@@ -34,11 +34,14 @@
 
 ### Display-name uniqueness (shadow canonical column)
 
-- New column `users.display_name_canonical` (string 100, unique constraint
-  `uniq_users_display_name_canonical`): the lowercased (`mb_strtolower`) and
-  trimmed copy of `display_name`, maintained **inside `setDisplayName()`** so
-  every write path is covered automatically (registration form, settings
-  form, `app:create-user` console command, admin CRUD, fixtures).
+- New column `users.display_name_canonical` (string 100, nullable, unique
+  constraint `uniq_users_display_name_canonical`): the lowercased
+  (`mb_strtolower`) and trimmed copy of `display_name`, maintained **inside
+  `setDisplayName()`** so every write path is covered automatically
+  (registration form, settings form, `app:create-user` console command,
+  admin CRUD, fixtures). Empty display names canonicalize to NULL, which
+  neither the unique index nor UniqueEntity considers — unnamed rows (tests,
+  partial flows) never collide.
 - Chosen over a raw `LOWER(display_name)` functional index: the shadow
   column is Doctrine-native (no DBAL schema-diff drift, no schema_filter
   hack) and lets stock `UniqueEntity` validation work with zero custom
@@ -47,11 +50,12 @@
   `User.php` — every write path covered, not just one form):
   `#[UniqueEntity(fields: ['displayNameCanonical'], errorPath: 'displayName',
   message: ...)]`, message translated in en/fr/nl/de.
-- Migration order: add the column nullable → backfill
-  `LOWER(TRIM(display_name))` → **de-duplicate collisions by suffixing**
-  (`name`, `name-2`, `name-3`, … applied to both columns) → set NOT NULL +
-  unique constraint. There is no production DB yet, so the dedup path only
-  ever touches dev data — but it makes the migration order-safe anyway.
+- Migration order: add the column (nullable, stays nullable) → backfill
+  `NULLIF(LOWER(TRIM(display_name)), '')` → **de-duplicate collisions by
+  suffixing** (`name`, `name-2`, `name-3`, … applied to both columns,
+  NULL canonicals excluded) → unique constraint. There is no production DB
+  yet, so the dedup path only ever touches dev data — but it makes the
+  migration order-safe anyway.
 
 ### RidingStyle enum
 

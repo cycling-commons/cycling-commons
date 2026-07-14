@@ -18,9 +18,12 @@ final class Version20260714150000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // 1. Shadow column, nullable for the backfill window.
+        // 1. Shadow column (stays nullable: empty display names canonicalize
+        //    to NULL, so unnamed rows never participate in uniqueness).
         $this->addSql('ALTER TABLE users ADD display_name_canonical VARCHAR(100)');
-        $this->addSql('UPDATE users SET display_name_canonical = LOWER(TRIM(display_name))');
+        $this->addSql(<<<'SQL'
+            UPDATE users SET display_name_canonical = NULLIF(LOWER(TRIM(display_name)), '')
+            SQL);
 
         // 2. De-duplicate existing case-insensitive collisions by suffixing
         //    (name, name-2, name-3, …). Loops because a suffixed name could
@@ -36,6 +39,7 @@ final class Version20260714150000 extends AbstractMigration
                         PARTITION BY display_name_canonical ORDER BY id
                     ) AS rn
                     FROM users
+                    WHERE display_name_canonical IS NOT NULL
                 )
                 UPDATE users u
                 SET display_name = LEFT(u.display_name, 96) || '-' || r.rn,
@@ -47,8 +51,8 @@ final class Version20260714150000 extends AbstractMigration
             END $$
             SQL);
 
-        // 3. Lock it down.
-        $this->addSql('ALTER TABLE users ALTER COLUMN display_name_canonical SET NOT NULL');
+        // 3. Unique index; NULLs (unnamed rows) are ignored by Postgres, so
+        //    only real names participate in uniqueness.
         $this->addSql('CREATE UNIQUE INDEX uniq_users_display_name_canonical ON users (display_name_canonical)');
 
         // 4. Preference columns: DEFAULT backfills existing rows, then the

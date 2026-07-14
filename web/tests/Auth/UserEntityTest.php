@@ -42,6 +42,25 @@ final class UserEntityTest extends TestCase
         self::assertSame('élise østergård', $user->getDisplayNameCanonical());
     }
 
+    public function testEmptyOrWhitespaceDisplayNameYieldsNullCanonical(): void
+    {
+        // An empty name means "no name yet": it must canonicalize to NULL so
+        // unnamed rows (test fixtures, partial flows) never collide on the
+        // unique index — Postgres ignores NULLs, and UniqueEntity's default
+        // ignoreNull skips them too.
+        self::assertNull((new User())->getDisplayNameCanonical());
+
+        $user = new User();
+        $user->setDisplayName('   ');
+        self::assertNull($user->getDisplayNameCanonical());
+
+        $user->setDisplayName('X');
+        self::assertSame('x', $user->getDisplayNameCanonical());
+
+        $user->setDisplayName('');
+        self::assertNull($user->getDisplayNameCanonical());
+    }
+
     // ── bikeTypes / ridingStyles ────────────────────────────────────────────
 
     public function testBikeTypesRoundTripAsEnums(): void
