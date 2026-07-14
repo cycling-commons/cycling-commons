@@ -1370,6 +1370,7 @@ account:
   menu_personal: 'Persoonlijk'
   menu_moderation: 'Moderatie'
   mod_scope_all: 'Alle gebieden'
+  mod_open_in_area: 'Open in jouw gebied'
   tab_contributions: 'Bijdragen'
   tab_votes: 'Stemmen'
   tab_saved: 'Opgeslagen regio''s'

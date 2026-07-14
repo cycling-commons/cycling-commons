@@ -1370,6 +1370,7 @@ account:
   menu_personal: 'Personnel'
   menu_moderation: 'Modération'
   mod_scope_all: 'Toutes les zones'
+  mod_open_in_area: 'Ouverts dans votre zone'
   tab_contributions: 'Contributions'
   tab_votes: 'Votes'
   tab_saved: 'Régions sauvegardées'

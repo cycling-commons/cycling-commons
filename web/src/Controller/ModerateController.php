@@ -14,6 +14,7 @@ use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RetentionService;
+use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
 use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -43,6 +44,7 @@ final class ModerateController extends AbstractController
         private readonly SubmissionQueue $queue,
         private readonly RetentionService $retention,
         private readonly ModerationScopeProvider $scopeProvider,
+        private readonly RouteQueue $routeQueue,
     ) {
     }
 
@@ -103,6 +105,9 @@ final class ModerateController extends AbstractController
             'types' => SubmissionType::values(),
             'receipt' => null,
             'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
+            // Both tab badges show the open count in the moderator's jurisdiction.
+            'mod_submission_count' => $this->queue->total($scope),
+            'mod_route_count' => $this->routeQueue->total($scope),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
     }
 

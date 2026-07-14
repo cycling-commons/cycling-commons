@@ -17,6 +17,7 @@ use App\Moderation\RegionFullException;
 use App\Moderation\RetentionService;
 use App\Moderation\RouteModerationService;
 use App\Moderation\RouteQueue;
+use App\Moderation\SubmissionQueue;
 use App\Moderation\TrashBlockedException;
 use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -42,6 +43,7 @@ final class RouteModerateController extends AbstractController
         private readonly RouteModerationService $moderation,
         private readonly RetentionService $retention,
         private readonly ModerationScopeProvider $scopeProvider,
+        private readonly SubmissionQueue $submissionQueue,
     ) {
     }
 
@@ -78,6 +80,8 @@ final class RouteModerateController extends AbstractController
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
             'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
+            'mod_submission_count' => $this->submissionQueue->total($scope),
+            'mod_route_count' => $this->queue->total($scope),
         ]);
     }
 
@@ -203,6 +207,8 @@ final class RouteModerateController extends AbstractController
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
             'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
+            'mod_submission_count' => $this->submissionQueue->total($scope),
+            'mod_route_count' => $this->queue->total($scope),
         ]);
     }
 
