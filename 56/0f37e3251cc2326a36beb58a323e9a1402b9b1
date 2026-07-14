@@ -1,0 +1,47 @@
+web/translations/messages.nl.yaml
+  s_c68dfc59dc9546::t_8f2aeb4a9db106 695-696
+web/tests/Auth/ProfileSettingsTest.php
+  s_c68dfc59dc9546::t_076560db75bd66 252
+  s_c68dfc59dc9546::t_3426530e34bf5f 279
+web/src/Controller/SettingsController.php
+  s_c68dfc59dc9546::t_707ad4948a9d92 79,89,92-98,106
+  s_c68dfc59dc9546::t_761dd6ae083f0c 143,151
+  s_c68dfc59dc9546::t_4f7b192956baca 122,128
+web/templates/settings/index.html.twig
+  s_c68dfc59dc9546::t_e08c68aecbdea5 94-100,105
+  s_c68dfc59dc9546::t_920ed5b83732eb 214-219
+  s_c68dfc59dc9546::t_d83d8481b8b140 289-290,292-299
+  s_c68dfc59dc9546::t_019e7932179de4 77-84
+  s_c68dfc59dc9546::t_835f0d42c8a4e3 106
+web/tests/Auth/SettingsTabsTest.php
+  s_c68dfc59dc9546::t_3b2154d5ea2e70 1-112
+web/tests/Auth/AccountDeletionTest.php
+  s_c68dfc59dc9546::t_e458b79c6ebc4c 223
+web/translations/messages.fr.yaml
+  s_c68dfc59dc9546::t_33685ae9a3c61f 695-696
+web/translations/messages.en.yaml
+  s_c68dfc59dc9546::t_8fa344630f444b 695-696
+web/translations/messages.de.yaml
+  s_c68dfc59dc9546::t_adf60cedef1011 695-696
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "560f37e3251cc2326a36beb58a323e9a1402b9b1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
