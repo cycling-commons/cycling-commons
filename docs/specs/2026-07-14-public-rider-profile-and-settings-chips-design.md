@@ -173,3 +173,8 @@ errors (69 pre-existing info-level suggestions, none touching this
 plan's files). `php-cs-fixer fix --dry-run --diff` — 0 of 263 files
 need changes. `check-spdx.sh`, `check-licenses.sh` — clean.
 `check-translations.sh` — en/fr/nl/de all at 1720 keys, full parity.
+Final whole-branch review (opus, both plans, e8f2728..e829670): ready to
+merge, 0 critical / 0 important; minors fixed in 9d47910 (plural-key
+`_many` parity, tab arrow-key a11y) with member-since month localization
+rationale-closed (twig/intl-extra not installed; English month names match
+the rest of the app).
