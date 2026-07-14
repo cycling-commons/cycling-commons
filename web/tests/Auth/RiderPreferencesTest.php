@@ -138,11 +138,12 @@ final class RiderPreferencesTest extends WebTestCase
         $client = static::createClient();
         $plain = $this->createUser('prefs-clear@example.com', 'securepass12345!', 'Prefs Clearer');
 
-        // Pre-set a preference directly, then clear it via the form.
+        // Pre-set preferences directly, then clear them via the form.
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $user = $this->fetchUser('prefs-clear@example.com');
         $user->setBikeTypes([BikeType::Mtb]);
+        $user->setRidingStyles([RidingStyle::Urban]);
         $em->flush();
 
         $this->loginAs($client, 'prefs-clear@example.com', $plain);
@@ -151,10 +152,12 @@ final class RiderPreferencesTest extends WebTestCase
         $form = $crawler->selectButton('Save profile')->form();
         $form['settings[displayName]'] = 'Prefs Clearer';
         $form['settings[bikeTypes]'][2]->untick(); // MTB, pre-checked from setup
+        $form['settings[ridingStyles]'][5]->untick(); // Urban, pre-checked from setup
         $client->submit($form);
 
         self::assertResponseRedirects('/settings');
         $user = $this->fetchUser('prefs-clear@example.com');
         self::assertSame([], $user->getBikeTypes());
+        self::assertSame([], $user->getRidingStyles());
     }
 }

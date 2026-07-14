@@ -5,6 +5,7 @@
 namespace App\Command;
 
 use App\Entity\User;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -83,8 +84,20 @@ final class CreateUserCommand extends Command
         $hashed = $this->hasher->hashPassword($user, $plain);
         $user->setPassword($hashed);
 
-        $this->em->persist($user);
-        $this->em->flush();
+        try {
+            $this->em->persist($user);
+            $this->em->flush();
+        } catch (UniqueConstraintViolationException) {
+            // The unique canonical-display-name index rejects this — most likely
+            // because the default (email local part) collides with an existing
+            // user. Surface a friendly message instead of the raw DBAL stack trace.
+            $io->error(sprintf(
+                'Display name "%s" is already taken. Pass --display-name to choose a different one.',
+                $user->getDisplayName(),
+            ));
+
+            return Command::FAILURE;
+        }
 
         $io->success(sprintf('User "%s" created with role(s): %s', $email, implode(', ', $user->getRoles())));
 

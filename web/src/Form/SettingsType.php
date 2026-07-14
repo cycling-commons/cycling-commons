@@ -40,7 +40,9 @@ final class SettingsType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Please enter a display name.'),
                     new Length(
+                        min: 2,
                         max: 100,
+                        minMessage: 'Display name must be at least {{ limit }} characters.',
                         maxMessage: 'Display name may not exceed {{ limit }} characters.',
                     ),
                     // Same invisible-character guard applied to every user text

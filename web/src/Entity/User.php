@@ -309,10 +309,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     /** @return list<BikeType> */
     public function getBikeTypes(): array
     {
-        return array_values(array_filter(array_map(
-            static fn (string $v): ?BikeType => BikeType::tryFrom($v),
-            $this->bikeTypes,
-        )));
+        return array_values(array_filter(
+            array_map(
+                static fn (string $v): ?BikeType => BikeType::tryFrom($v),
+                $this->bikeTypes,
+            ),
+            static fn (?BikeType $t): bool => null !== $t,
+        ));
     }
 
     /** @param list<BikeType> $bikeTypes */
@@ -329,10 +332,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     /** @return list<RidingStyle> */
     public function getRidingStyles(): array
     {
-        return array_values(array_filter(array_map(
-            static fn (string $v): ?RidingStyle => RidingStyle::tryFrom($v),
-            $this->ridingStyles,
-        )));
+        return array_values(array_filter(
+            array_map(
+                static fn (string $v): ?RidingStyle => RidingStyle::tryFrom($v),
+                $this->ridingStyles,
+            ),
+            static fn (?RidingStyle $s): bool => null !== $s,
+        ));
     }
 
     /** @param list<RidingStyle> $ridingStyles */
