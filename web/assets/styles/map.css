@@ -44,18 +44,26 @@
   .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}
   .acct-dropdown form button{color:var(--clay)!important}
   /* Language switcher (shared partials/_lang_menu.html.twig) — same pill/dropdown
-     pattern as the account chip; dropdown reuses .acct-dropdown above. */
+     pattern as the account chip; dropdown reuses .acct-dropdown above. Sits
+     right of the logo in .rail-brandrow (desktop rail AND the mobile top bar). */
+  .rail-brandrow{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
   .lang-menu{position:relative;flex:none}
   .lang-chip{display:inline-flex;align-items:center;gap:.32rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.3rem .55rem;color:var(--paper);cursor:pointer;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;line-height:1;transition:border-color .2s}
   .lang-chip:hover,.lang-chip[aria-expanded=true]{border-color:var(--trail)}
   .lang-chip svg{opacity:.7;flex:none}
   .lang-chip[aria-expanded=true] .lang-caret{transform:rotate(180deg)}
+  /* The rail-nav's mono/uppercase link styling must not leak into the dropdown
+     menus (it made the account menu read shouty and oversized). */
+  .rail .acct-dropdown a,.rail .acct-dropdown button{font-family:var(--sans);font-size:.85rem;text-transform:none;letter-spacing:normal}
   /* Desktop rail tweaks (min-width:821px — above this the rail is the left column;
      at/below it the rail-nav becomes a right-side panel and the shared defaults apply): */
   @media(min-width:821px){
     /* The rail sits on the LEFT, so the chip's menu must open rightward (left-anchored);
        the shared right:0 anchoring is for right-side topnavs and runs off-screen here. */
     .rail .acct-dropdown{left:0;right:auto}
+    /* …except the language menu: its pill sits at the rail's right edge (next
+       to the logo), so its panel must open leftward to stay inside the rail. */
+    .rail .lang-menu .acct-dropdown{left:auto;right:0}
     /* Scale the chip down so it sits in proportion with the small mono rail-nav links
        rather than towering over them. */
     .rail .acct-chip{font-size:.8rem;padding:.18rem .5rem .18rem .2rem;gap:.4rem}
@@ -445,7 +453,7 @@
        for the cramped inline topnav — inside this full panel the rider's name
        stays visible, and the panel widens to fit it. */
     .rail-nav{min-width:13.5rem;max-width:86vw}
-    .rail-nav .acct-menu,.rail-nav .lang-menu{margin:.25rem .5rem}
+    .rail-nav .acct-menu{margin:.25rem .5rem}
     .rail-nav .acct-chip .acct-name,.rail-nav .acct-chip .acct-caret{display:inline-block}
     .rail-nav .acct-chip{padding:.26rem .7rem .26rem .28rem;border-radius:999px}
     .rail-nav .acct-chip .acct-name{max-width:18ch}

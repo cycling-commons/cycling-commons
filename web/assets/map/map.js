@@ -1748,7 +1748,9 @@
   // geocoded place (spec 2026-07-14 §3.3): CITIES entries keep their wiki/info
   // blurbs; Photon hits pass just {ll}.
   function openPlace(name, meta){
-    const near = nearbyItems(meta.ll, 5);
+    // A · Road surface segments are corridor data, not places — near any mapped
+    // town they'd flood the card (Spa: 58 rows). Text search still finds them.
+    const near = nearbyItems(meta.ll, 5).filter(n=>n.e.letter!=='A');
     // group rows by letter, keeping the global nearest-first order inside each group
     const byLetter={};
     near.forEach((n,i)=>{ n._i=i; (byLetter[n.e.letter]=byLetter[n.e.letter]||[]).push(n); });
