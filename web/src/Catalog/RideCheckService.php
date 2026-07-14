@@ -89,7 +89,7 @@ final class RideCheckService
 
         return [
             'track' => array_map(static fn (array $p): array => [$p[0], $p[1]], $points),
-            'distanceKm' => round($rawM / 1000, 1),
+            'distanceKm' => round($rawM / 1000.0, 1),
             'ascentM' => $this->processor->ascentM($track->points),
             'radiusM' => $radiusM,
             'groups' => $this->corridorGroups($geoJson, $radiusM, $rawM),
@@ -143,7 +143,7 @@ final class RideCheckService
                 'name' => $row['name'],
                 'll' => $ll,
                 'distM' => (int) round((float) $row['dist_m']),
-                'alongKm' => round((float) $row['frac'] * $rawM / 1000, 1),
+                'alongKm' => round((float) $row['frac'] * $rawM / 1000.0, 1),
             ];
         }
         ksort($groups);
@@ -179,7 +179,7 @@ final class RideCheckService
                 $routes[] = [
                     'id' => (int) $row['id'],
                     'name' => $row['name'],
-                    'sharedKm' => round($overlapM / 1000, 1),
+                    'sharedKm' => round($overlapM / 1000.0, 1),
                 ];
             }
         }

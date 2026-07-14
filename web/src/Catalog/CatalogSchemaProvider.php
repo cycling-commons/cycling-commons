@@ -55,7 +55,7 @@ final class CatalogSchemaProvider
         return $out;
     }
 
-    /** @return array<string, list<array{key: string, label: string, kind: string}>> */
+    /** @return array<string, list<array{key: string, label: string, kind: string, choices?: array<string, string>}>> */
     public function all(): array
     {
         $out = [];
