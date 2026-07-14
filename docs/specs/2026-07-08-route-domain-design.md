@@ -824,3 +824,17 @@ frontend review's warning batch (the criticals live in
 - **W29/W54 — i18n.** `… m ascent` became `moderate_routes.stat_ascent`
   (`%m%` param), and the raw `route.state` enum on detail now renders through
   the existing `account.route_state_*` keys.
+
+## Change note (2026-07-14, symfony-base)
+
+- **§8 Curated empty state removed** (user request): the "No best-of picks for
+  this season & bike yet — open a route and vote to surface one." overlay
+  (`#bestEmpty` + CSS + both map.js hooks) is gone — Curated with no picks now
+  simply renders no route lines. The subtitle still names the active facet.
+- **Site-wide, same request:** every "Demo — … Launching 2026." banner removed
+  (map shell, account shell, developers/region/coverage/contributors/regions
+  pages) with the dead `demo_label`/`demo_body`/`account.demo_banner` keys
+  dropped from all four locales.
+- **Map rail gained the language switcher**, extracted to the shared
+  `partials/_lang_menu.html.twig` (also used by the site nav); non-localized
+  routes like `/map` keep their clean path via `locale_alternates()`.
