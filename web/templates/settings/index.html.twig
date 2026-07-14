@@ -30,10 +30,18 @@
   /* select look is global (atlas.css); here just the layout width */
   .field select{width:100%;max-width:22rem}
   .field .hint{font-size:.78rem;color:#595c4d;margin-top:.35rem}
-  .checks > div{display:flex;flex-wrap:wrap;gap:.45rem 1.25rem}
-  .checks input[type=checkbox]{accent-color:var(--trail)}
-  .checks label{display:inline;font-family:var(--sans);font-size:.92rem;letter-spacing:0;text-transform:none;color:var(--ink);margin:0 0 0 .35rem}
   .field .help-text{font-size:.78rem;color:#595c4d;margin-top:.35rem}
+
+  /* bike-type/riding-style checkbox chips: same pattern as propose_route.html.twig */
+  .chip-list{display:flex;flex-wrap:wrap;gap:.5rem}
+  .chip-check{display:inline-flex;margin:0}
+  .chip-check input{position:absolute;opacity:0;width:1px;height:1px}
+  .chip-check span{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none;display:inline-block}
+  .chip-check:hover span{border-color:var(--ink)}
+  .chip-check:has(input:checked) span{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  .chip-check input:focus-visible + span{outline:2px solid var(--trail);outline-offset:2px}
+  /* .field label has higher specificity than .chip-check alone; force the override explicitly */
+  .field label.chip-check{display:inline-flex;margin:0}
   .field-errors,.wrap form ul{list-style:none;padding:0;margin:.5rem 0 .2rem}
   .field-errors li,.wrap form ul li{display:flex;gap:.45rem;align-items:flex-start;font-size:.8rem;color:var(--clay);line-height:1.4;padding:.45rem .65rem;margin-top:.35rem;background:rgba(181,83,46,.09);border:1px solid rgba(181,83,46,.28);border-radius:5px}
   .field-errors li::before,.wrap form ul li::before{content:"\26A0";flex:none;font-size:.9em;line-height:1.4}
@@ -138,13 +146,27 @@
     <div class="grid-2">
       <div class="field">
         {{ form_label(profileForm.bikeTypes) }}
-        <div class="checks">{{ form_widget(profileForm.bikeTypes) }}</div>
+        <div class="chip-list">
+          {% for child in profileForm.bikeTypes %}
+            <label class="chip-check">
+              {{ form_widget(child) }}
+              <span>{{ child.vars.label|trans }}</span>
+            </label>
+          {% endfor %}
+        </div>
         {{ form_help(profileForm.bikeTypes) }}
         {{ form_errors(profileForm.bikeTypes) }}
       </div>
       <div class="field">
         {{ form_label(profileForm.ridingStyles) }}
-        <div class="checks">{{ form_widget(profileForm.ridingStyles) }}</div>
+        <div class="chip-list">
+          {% for child in profileForm.ridingStyles %}
+            <label class="chip-check">
+              {{ form_widget(child) }}
+              <span>{{ child.vars.label|trans }}</span>
+            </label>
+          {% endfor %}
+        </div>
         {{ form_help(profileForm.ridingStyles) }}
         {{ form_errors(profileForm.ridingStyles) }}
       </div>
