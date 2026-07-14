@@ -26,6 +26,48 @@ final class MapPageTest extends WebTestCase
         self::assertGreaterThan(0, $crawler->filter('script[src*="map/catalog-load"]')->count());
     }
 
+    public function testEnglishMapRailIsEnglish(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/map');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+
+        self::assertStringContainsString('lang="en"', $html);
+        self::assertStringContainsString('View mode', $html);
+        self::assertStringContainsString('Data layers', $html);
+        self::assertStringContainsString('places shown', $html);
+    }
+
+    public function testFrenchMapRailIsTranslated(): void
+    {
+        $client = static::createClient();
+        // /map is not path-prefixed: locale resolves from session/Accept-Language
+        $client->request('GET', '/map', [], [], ['HTTP_ACCEPT_LANGUAGE' => 'fr']);
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+
+        self::assertStringContainsString('lang="fr"', $html);
+        // rail chrome must come from the FR catalog, not baked-in English
+        self::assertStringContainsString('Rechercher en Wallonie', $html);
+        self::assertStringContainsString('Couches de données', $html);
+        self::assertStringContainsString('lieux affichés', $html);
+        self::assertStringNotContainsString('View mode', $html);
+        self::assertStringNotContainsString('Data layers', $html);
+        self::assertStringNotContainsString('places shown', $html);
+
+        // map.js renders the layer list and subtitle — it gets its strings from
+        // the injected CC_I18N bundle, layer labels reusing item_type.*.label.
+        self::assertSame(1, preg_match('/window\.CC_I18N = (\{.*?\});/s', $html, $m), 'CC_I18N bundle must be injected');
+        $i18n = json_decode($m[1], true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('Revêtement', $i18n['layers']['surface']);
+        self::assertSame('Où dormir', $i18n['layers']['stays']);
+        self::assertArrayHasKey('pending', $i18n['layers']);
+        self::assertArrayHasKey('deselectAll', $i18n);
+        self::assertArrayHasKey('seasons', $i18n);
+        self::assertArrayHasKey('bikes', $i18n);
+    }
+
     public function testMapBootsFromCatalogEndpoint(): void
     {
         $client = static::createClient();

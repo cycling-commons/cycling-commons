@@ -512,15 +512,19 @@
              credit, creditUrl: user ? `https://commons.wikimedia.org/wiki/User:${user.replace(/ /g,'_')}` : '',
              license, source:`https://commons.wikimedia.org/wiki/File:${page}` };
   };
+  // Locale bundle injected by the map shell (window.CC_I18N); every lookup keeps
+  // the English string as fallback so map.js still works standalone.
+  const I18N = window.CC_I18N || {};
+  const LAYER_L10N = I18N.layers || {};
   // One real, verified Ardennes example per catalog type (A–K). geom.ll = [lat,lng].
   // record[] rows render in the detail drawer; omit any attribute we cannot verify.
   const CATALOG = [
-    { key:'surface', letter:'A', label:'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, features:[] }
-    ,{ key:'climbs', letter:'B', label:'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, features:[] }
-    ,{ key:'water', letter:'C', label:'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, features:[] }
-    ,{ key:'services', letter:'D', label:'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, features:[] }
-    ,{ key:'stays', letter:'E', label:'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, features:[] }
-    ,{ key:'hazards', letter:'F', label:'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, features:[
+    { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, features:[] }
+    ,{ key:'climbs', letter:'B', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, features:[] }
+    ,{ key:'water', letter:'C', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, features:[] }
+    ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, features:[] }
+    ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, features:[] }
+    ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, features:[
       { name:'Exposed crosswind · Hautes Fagnes', headline:'wind & fog · plateau', cur:false,
         geom:{ll:[50.5160,6.0700]},
         photo:wc('Hohes Venn Winter 4.jpg','Geolina163','Geolina163','CC BY-SA 3.0'),
@@ -533,11 +537,11 @@
         freshness:{state:'fresh', lastConfirmed:'this season'},
         source:'Community report' }
     ]}
-    ,{ key:'transit', letter:'G', label:'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, features:[] }
-    ,{ key:'shelter', letter:'H', label:'Shelter & emergency', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, features:[] }
-    ,{ key:'scenic', letter:'I', label:'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, features:[] }
-    ,{ key:'history', letter:'J', label:'History & culture', color:'#6E5849', icon:'🏛', kind:'point', exp:true, features:[] }
-    ,{ key:'experience', letter:'K', label:'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, features:[] }
+    ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, features:[] }
+    ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter & emergency', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, features:[] }
+    ,{ key:'scenic', letter:'I', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, features:[] }
+    ,{ key:'history', letter:'J', label:LAYER_L10N.history||'History & culture', color:'#6E5849', icon:'🏛', kind:'point', exp:true, features:[] }
+    ,{ key:'experience', letter:'K', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, features:[] }
   ];
 
   const active = new Set(CATALOG.map(l => l.key));   // all layers (incl. K · Recommended routes) on by default
@@ -777,7 +781,7 @@
       source:'Pending submission · preview',
       pending:s
     }));
-    const pendingLayer = { key:'pending', letter:'⚑', label:'Pending review', color:'#D92D20', icon:'⏳', kind:'point', exp:false, pendingLayer:true, features:pf };
+    const pendingLayer = { key:'pending', letter:'⚑', label:LAYER_L10N.pending||'Pending review', color:'#D92D20', icon:'⏳', kind:'point', exp:false, pendingLayer:true, features:pf };
     CATALOG.push(pendingLayer);
     layerByKey['pending'] = pendingLayer;
     active.add('pending');
@@ -1165,7 +1169,7 @@
     return `© ${credit} · <a href="${ccUrl(p.license)}" target="_blank" rel="noopener">${escPend(p.license)}</a> · <a href="${safeHref(p.source)}" target="_blank" rel="noopener">Wikimedia Commons ↗</a>`;
   }
   function buildRecord(layer, f){
-    const cur = f.cur ? `<div class="cc-d-cur">▲ Curated best-of</div>` : '';
+    const cur = f.cur ? `<div class="cc-d-cur">▲ ${I18N.curated||'Curated best-of'}</div>` : '';
     const pl = photoList(f);
     // Same edit-bridge rule as the "Edit this item" link below (spec §6/§8):
     // the add-photo CTA only ever binds to the item's real DB id — no id, no
@@ -1275,7 +1279,7 @@
         ? `<div class="cc-d-hist cc-d-hist-initial"><h4 class="cc-d-hist-h">History</h4><p class="cc-mod-initial">Initial entry — new item</p></div>`
         : (s.itemId != null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${s.itemId}"></div>` : '');
       moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
-        <div class="cc-mod-badge">⚑ Pending review</div>${body}${diff}
+        <div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>${body}${diff}
         <textarea class="cc-mod-note" placeholder="Optional note — a reason, or context…"></textarea>
         <div class="cc-mod-acts">
           <button class="cc-mod-btn approve" data-decision="approve">✓ Approve</button>
@@ -1895,7 +1899,7 @@
     const say=msg=>{ status.hidden=!msg; status.textContent=msg||''; };
     function loadedStatus(d){
       status.hidden=false;
-      status.innerHTML=`${d.distanceKm} km · <a class="cc-ride-lnk" data-act="show">results</a> · <a class="cc-ride-lnk" data-act="clear">clear</a>`;
+      status.innerHTML=`${d.distanceKm} km · <a class="cc-ride-lnk" data-act="show">${I18N.rcResults||'results'}</a> · <a class="cc-ride-lnk" data-act="clear">${I18N.rcClear||'clear'}</a>`;
     }
     status.addEventListener('click',e=>{ const a=e.target.closest('[data-act]'); if(!a) return;
       if(a.dataset.act==='show' && _last) renderRideDrawer(_last);
@@ -1914,13 +1918,13 @@
     }
     function post(){
       if(!_file || _busy) return;
-      _busy=true; pick.disabled=true; say('Checking…');
+      _busy=true; pick.disabled=true; say(I18N.rcChecking||'Checking…');
       const body=new FormData();
       body.append('gpx', _file); body.append('radius', radiusSel.value); body.append('_token', CC_RIDECHECK.token);
       fetch(CC_RIDECHECK.url, {method:'POST', credentials:'same-origin', headers:{'Accept':'application/json'}, body})
         .then(r=>r.json().then(d=>({ok:r.ok, d})))
         .then(({ok, d})=>{ if(!ok) throw new Error(d.error||'ride-check failed'); loadedStatus(d); renderRideCheck(d); })
-        .catch(err=>{ clearRideCheck(); say(err.message||'Could not check this ride — please try again.'); })
+        .catch(err=>{ clearRideCheck(); say(err.message||I18N.rcError||'Could not check this ride — please try again.'); })
         .finally(()=>{ _busy=false; pick.disabled=false; });
     }
     function renderRideCheck(d){
@@ -2134,7 +2138,7 @@
   });
   // (de)select-all toggle for the data layers
   const layersAll=document.getElementById('layersAll');
-  function syncLayersAll(){ layersAll.textContent = CATALOG.every(l=>active.has(l.key)) ? 'deselect all' : 'select all'; }
+  function syncLayersAll(){ layersAll.textContent = CATALOG.every(l=>active.has(l.key)) ? (I18N.deselectAll||'deselect all') : (I18N.selectAll||'select all'); }
   layersAll.onclick=()=>{
     const allOn=CATALOG.every(l=>active.has(l.key));
     CATALOG.forEach(l=>{ if(allOn) active.delete(l.key); else active.add(l.key); });
@@ -2330,15 +2334,16 @@
   // Route domain phase 4 (spec §8): Curated mode = best-of for a (season, bike)
   // facet, fetched from /map/best-of; the returned ids get cur:true and Curated
   // filters K routes to them. Region is single (Wallonia) — omitted for v1.
-  const CC_SEASON_LABEL={spring:'Spring',summer:'Summer',autumn:'Autumn',winter:'Winter'};
+  const CC_SEASON_LABEL=Object.assign({spring:'Spring',summer:'Summer',autumn:'Autumn',winter:'Winter'}, I18N.seasons||{});
+  const CC_BIKE_LABEL=I18N.bikes||{};
   function currentSeason(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter'; }
   let boSeason=currentSeason(), boBike='all';
 
   function updateSubtitle(){
     const sub=document.querySelector('.map-top .sub'); if(!sub) return;
-    if(mode==='all'){ sub.textContent='Everything · full backlog'; return; }
-    const bike=boBike==='all'?'All bikes':boBike;
-    sub.textContent=`Curated best-of · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
+    if(mode==='all'){ sub.textContent=I18N.subEverything||'Everything · full backlog'; return; }
+    const bike=boBike==='all' ? (I18N.allBikes||'All bikes') : (CC_BIKE_LABEL[boBike]||boBike);
+    sub.textContent=`${I18N.curated||'Curated best-of'} · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
   }
 
   function applyBestOf(ids){

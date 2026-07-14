@@ -45,16 +45,16 @@
         <a class="brand" href="{{ path('home') }}" style="flex:none"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons" style="height:1.8rem;display:block"></a>
         {% include 'partials/_lang_menu.html.twig' %}
       </div>
-      <div class="co">◎ Wallonia · 50.32°N 5.01°E</div>
-      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">Map</a><a href="{{ path('regions') }}">Regions</a><a href="{{ path('vote') }}">Vote</a><a href="{{ path('developers') }}">Developers</a><a href="{{ path('about') }}">About</a>{% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a href="{{ path('login') }}">Account</a>{% endif %}</nav>
-      <button class="rail-burger" id="railBurger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="railNav">
+      <div class="co">{{ 'map.coords'|trans }}</div>
+      <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">{{ 'nav.map'|trans }}</a><a href="{{ path('regions') }}">{{ 'nav.regions'|trans }}</a><a href="{{ path('vote') }}">{{ 'nav.vote'|trans }}</a><a href="{{ path('developers') }}">{{ 'nav.developers'|trans }}</a><a href="{{ path('about') }}">{{ 'nav.about'|trans }}</a>{% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a href="{{ path('login') }}">{{ 'nav.account'|trans }}</a>{% endif %}</nav>
+      <button class="rail-burger" id="railBurger" type="button" aria-label="{{ 'map.menu_aria'|trans }}" aria-expanded="false" aria-controls="railNav">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
     </div>
     <div class="rail-scroll">
       <div class="grp">
-        <h3>Search in Wallonia</h3>
-        <input class="search" id="search" placeholder="Search a climb, town, viewpoint…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="Search the Commons" />
+        <h3>{{ 'map.search_title'|trans }}</h3>
+        <input class="search" id="search" placeholder="{{ 'map.search_placeholder'|trans }}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="{{ 'map.search_aria'|trans }}" />
         <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
       </div>
 
@@ -82,112 +82,112 @@
       </div>
       {% endif %}
 
-      <!-- View mode is the primary filter (curated best-of vs the full backlog), so it sits right
-           under Region. Its active button is styled bright (#mode in the CSS) so the current mode
-           is obvious at a glance. -->
+      {# View mode is the primary filter (curated best-of vs the full backlog), so it sits right
+         under Region. Its active button is styled bright (#mode in the CSS) so the current mode
+         is obvious at a glance. #}
       <div class="grp">
-        <h3>View mode</h3>
+        <h3>{{ 'map.view_mode'|trans }}</h3>
         <div class="toggle" id="mode">
-          <button class="on" data-m="curated">Curated best-of</button>
-          <button data-m="all">Everything</button>
+          <button class="on" data-m="curated">{{ 'map.curated'|trans }}</button>
+          <button data-m="all">{{ 'map.everything'|trans }}</button>
         </div>
         <div class="best-facets" id="bestFacets">
-          <label>Season
+          <label>{{ 'map.season'|trans }}
             <select id="boSeason">
-              <option value="spring">Spring</option><option value="summer">Summer</option>
-              <option value="autumn">Autumn</option><option value="winter">Winter</option>
+              <option value="spring">{{ 'map.season_spring'|trans }}</option><option value="summer">{{ 'map.season_summer'|trans }}</option>
+              <option value="autumn">{{ 'map.season_autumn'|trans }}</option><option value="winter">{{ 'map.season_winter'|trans }}</option>
             </select>
           </label>
-          <label>Bike
+          <label>{{ 'map.bike'|trans }}
             <select id="boBike">
-              <option value="all">All bikes</option>
-              <option value="Road">Road</option><option value="Gravel">Gravel</option>
-              <option value="MTB">MTB</option><option value="E-bike">E-bike</option>
-              <option value="Handbike">Handbike</option><option value="Recumbent">Recumbent</option>
-              <option value="Trike">Trike</option><option value="Tandem">Tandem</option>
+              <option value="all">{{ 'map.all_bikes'|trans }}</option>
+              <option value="Road">{{ 'map.bike_road'|trans }}</option><option value="Gravel">{{ 'map.bike_gravel'|trans }}</option>
+              <option value="MTB">{{ 'map.bike_mtb'|trans }}</option><option value="E-bike">{{ 'map.bike_ebike'|trans }}</option>
+              <option value="Handbike">{{ 'map.bike_handbike'|trans }}</option><option value="Recumbent">{{ 'map.bike_recumbent'|trans }}</option>
+              <option value="Trike">{{ 'map.bike_trike'|trans }}</option><option value="Tandem">{{ 'map.bike_tandem'|trans }}</option>
             </select>
           </label>
         </div>
-        <div class="hint">Curated shows riders' best climbs, stays &amp; views. Utility data (water, hazards, services) aims for full coverage.</div>
+        <div class="hint">{{ 'map.curated_hint'|trans }}</div>
       </div>
 
-      <!-- Discipline chips are a visual stub for now: they toggle but don't yet filter the map
-           (the dataset isn't discipline-tagged). Compact styling lives at #disc in the CSS. -->
+      {# Discipline chips are a visual stub for now: they toggle but don't yet filter the map
+         (the dataset isn't discipline-tagged). Compact styling lives at #disc in the CSS. #}
       <div class="grp">
-        <h3>Discipline</h3>
+        <h3>{{ 'map.discipline'|trans }}</h3>
         <div class="chips" id="disc">
-          <span class="chip on">Road</span><span class="chip on">Gravel</span><span class="chip">MTB</span>
-          <span class="chip">Touring</span><span class="chip">Bikepacking</span><span class="chip">E-bike</span>
-          <span class="chip">Urban</span><span class="chip">Recumbent</span><span class="chip">Handbike</span>
+          <span class="chip on">{{ 'map.disc_road'|trans }}</span><span class="chip on">{{ 'map.disc_gravel'|trans }}</span><span class="chip">{{ 'map.disc_mtb'|trans }}</span>
+          <span class="chip">{{ 'map.disc_touring'|trans }}</span><span class="chip">{{ 'map.disc_bikepacking'|trans }}</span><span class="chip">{{ 'map.disc_ebike'|trans }}</span>
+          <span class="chip">{{ 'map.disc_urban'|trans }}</span><span class="chip">{{ 'map.disc_recumbent'|trans }}</span><span class="chip">{{ 'map.disc_handbike'|trans }}</span>
         </div>
       </div>
 
       <div class="grp">
-        <h3 class="dl-head">Data layers <button class="dl-all" id="layersAll" type="button">deselect all</button></h3>
+        <h3 class="dl-head">{{ 'map.data_layers'|trans }} <button class="dl-all" id="layersAll" type="button">{{ 'map.deselect_all'|trans }}</button></h3>
         <div id="layers"></div>
       </div>
 
       <div class="grp">
-        <h3>Ride heatmap <span style="color:var(--ochre);letter-spacing:.08em">· derived (L)</span></h3>
+        <h3>{{ 'map.heatmap_title'|trans }} <span style="color:var(--ochre);letter-spacing:.08em">{{ 'map.heatmap_derived'|trans }}</span></h3>
         <div class="toggle" id="heattoggle">
-          <button class="on" data-h="off">Off</button>
-          <button data-h="on">Heatmap</button>
+          <button class="on" data-h="off">{{ 'map.heat_off'|trans }}</button>
+          <button data-h="on">{{ 'map.heat_on'|trans }}</button>
         </div>
         <div class="chips" id="season" style="margin-top:.6rem">
-          <span class="chip on" data-s="all">All</span><span class="chip" data-s="spring">Spring</span><span class="chip" data-s="summer">Summer</span><span class="chip" data-s="autumn">Autumn</span><span class="chip" data-s="winter">Winter</span>
+          <span class="chip on" data-s="all">{{ 'map.season_all'|trans }}</span><span class="chip" data-s="spring">{{ 'map.season_spring'|trans }}</span><span class="chip" data-s="summer">{{ 'map.season_summer'|trans }}</span><span class="chip" data-s="autumn">{{ 'map.season_autumn'|trans }}</span><span class="chip" data-s="winter">{{ 'map.season_winter'|trans }}</span>
         </div>
-        <div class="hint">Popular lines from sample rides. Seasons are illustrative; the real system anonymizes rides at ingest.</div>
+        <div class="hint">{{ 'map.heatmap_hint'|trans }}</div>
       </div>
 
       <div class="grp">
-        <h3>Plan a loop from Spa</h3>
+        <h3>{{ 'map.planner_title'|trans }}</h3>
         <div class="chips" id="planner">
           <span class="chip" data-km="20">~20 km</span><span class="chip" data-km="50">~50 km</span><span class="chip" data-km="80">~80 km</span><span class="chip" data-km="125">~125 km</span>
         </div>
-        <div class="hint">Suggests a popular loop (faked for now). The real planner stitches a route from the heatmap.</div>
+        <div class="hint">{{ 'map.planner_hint'|trans }}</div>
       </div>
 
       <div class="grp">
-        <h3>Freshness</h3>
+        <h3>{{ 'map.freshness'|trans }}</h3>
         <div class="chips">
-          <span class="chip on">Confirmed</span><span class="chip">Ageing</span><span class="chip">All</span>
+          <span class="chip on">{{ 'map.fresh_confirmed'|trans }}</span><span class="chip">{{ 'map.fresh_ageing'|trans }}</span><span class="chip">{{ 'map.fresh_all'|trans }}</span>
         </div>
       </div>
 
       <div class="grp">
-        <h3>Climb surface</h3>
+        <h3>{{ 'map.climb_surface'|trans }}</h3>
         <div class="chips" id="sqf">
-          <span class="chip on" data-v="Smooth">Smooth</span><span class="chip on" data-v="Good">Good</span>
-          <span class="chip on" data-v="Worn">Worn</span><span class="chip on" data-v="Rough">Rough</span>
+          <span class="chip on" data-v="Smooth">{{ 'map.surf_smooth'|trans }}</span><span class="chip on" data-v="Good">{{ 'map.surf_good'|trans }}</span>
+          <span class="chip on" data-v="Worn">{{ 'map.surf_worn'|trans }}</span><span class="chip on" data-v="Rough">{{ 'map.surf_rough'|trans }}</span>
         </div>
       </div>
 
       <div class="grp">
-        <h3>Climb traffic</h3>
+        <h3>{{ 'map.climb_traffic'|trans }}</h3>
         <div class="chips" id="trf">
-          <span class="chip on" data-v="Traffic-free">Free</span><span class="chip on" data-v="Quiet">Quiet</span>
-          <span class="chip on" data-v="Moderate">Moderate</span><span class="chip on" data-v="Busy">Busy</span>
+          <span class="chip on" data-v="Traffic-free">{{ 'map.traffic_free'|trans }}</span><span class="chip on" data-v="Quiet">{{ 'map.traffic_quiet'|trans }}</span>
+          <span class="chip on" data-v="Moderate">{{ 'map.traffic_moderate'|trans }}</span><span class="chip on" data-v="Busy">{{ 'map.traffic_busy'|trans }}</span>
         </div>
       </div>
 
       <div class="grp">
-        <h3>Climb effort</h3>
+        <h3>{{ 'map.climb_effort'|trans }}</h3>
         <div class="chips" id="effortf">
-          <span class="chip on" data-v="Steady">Steady</span><span class="chip on" data-v="Challenging">Challenging</span>
-          <span class="chip on" data-v="Tough">Tough</span><span class="chip on" data-v="Very steep">Very steep</span>
+          <span class="chip on" data-v="Steady">{{ 'map.effort_steady'|trans }}</span><span class="chip on" data-v="Challenging">{{ 'map.effort_challenging'|trans }}</span>
+          <span class="chip on" data-v="Tough">{{ 'map.effort_tough'|trans }}</span><span class="chip on" data-v="Very steep">{{ 'map.effort_very_steep'|trans }}</span>
         </div>
       </div>
 
       <div class="grp">
-        <h3>Stay accessibility</h3>
+        <h3>{{ 'map.stay_access'|trans }}</h3>
         <div class="chips" id="accessf">
-          <span class="chip on" data-v="Step-free access">Step-free</span><span class="chip on" data-v="Handbike-friendly">Handbike</span>
-          <span class="chip on" data-v="Wheelchair-accessible">Wheelchair</span>
+          <span class="chip on" data-v="Step-free access">{{ 'map.access_step_free'|trans }}</span><span class="chip on" data-v="Handbike-friendly">{{ 'map.access_handbike'|trans }}</span>
+          <span class="chip on" data-v="Wheelchair-accessible">{{ 'map.access_wheelchair'|trans }}</span>
         </div>
       </div>
     </div>
     <div class="rail-foot">
-      <div class="res"><b id="count">0</b> places shown</div>
+      <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
     </div>
   </aside>
 
@@ -196,60 +196,60 @@
   <main class="map-wrap">
     <div id="map"></div>
     <div class="map-top">
-      <div class="rg">Wallonia, Belgium</div>
-      <div class="sub">Curated best-of · Summer 2026</div>
-      <a class="add-climb" href="{{ path('contribute') }}">+ Contribute</a>
+      <div class="rg">{{ 'map.region_line'|trans }}</div>
+      <div class="sub">{{ 'map.curated'|trans }}</div>
+      <a class="add-climb" href="{{ path('contribute') }}">{{ 'map.contribute'|trans }}</a>
     </div>
     <div class="legend">
-      <button class="lg-toggle" id="lgToggle" type="button" aria-label="Surface legend" aria-expanded="false">
+      <button class="lg-toggle" id="lgToggle" type="button" aria-label="{{ 'map.legend_aria'|trans }}" aria-expanded="false">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
-      <h4>Road surface · A</h4>
+      <h4>{{ 'item_type.road-surface.label'|trans }} · A</h4>
       <div class="skey">
-        <div class="skey-row"><span class="skey-ln" style="--sc:#3E9C8A"></span>Cycleway · RAVeL</div>
-        <div class="skey-row"><span class="skey-ln" style="--sc:#4E6E66"></span>Paved · asphalt</div>
-        <div class="skey-row"><span class="skey-ln dash" style="--sc:#C8923A"></span>Gravel</div>
-        <div class="skey-row"><span class="skey-ln dot" style="--sc:#6E7B96"></span>Pavé · cobbles</div>
-        <div class="skey-row"><span class="skey-ln dash" style="--sc:#6E5849"></span>Dirt</div>
-        <div class="skey-row"><span class="skey-ln dot" style="--sc:#5F5A54"></span>Rock</div>
-        <div class="skey-row"><span class="skey-ln dash" style="--sc:#D92D20"></span>Surface unverified</div>
+        <div class="skey-row"><span class="skey-ln" style="--sc:#3E9C8A"></span>{{ 'map.legend_cycleway'|trans }}</div>
+        <div class="skey-row"><span class="skey-ln" style="--sc:#4E6E66"></span>{{ 'map.legend_paved'|trans }}</div>
+        <div class="skey-row"><span class="skey-ln dash" style="--sc:#C8923A"></span>{{ 'map.legend_gravel'|trans }}</div>
+        <div class="skey-row"><span class="skey-ln dot" style="--sc:#6E7B96"></span>{{ 'map.legend_cobbles'|trans }}</div>
+        <div class="skey-row"><span class="skey-ln dash" style="--sc:#6E5849"></span>{{ 'map.legend_dirt'|trans }}</div>
+        <div class="skey-row"><span class="skey-ln dot" style="--sc:#5F5A54"></span>{{ 'map.legend_rock'|trans }}</div>
+        <div class="skey-row"><span class="skey-ln dash" style="--sc:#D92D20"></span>{{ 'map.legend_unverified'|trans }}</div>
       </div>
     </div>
-    <div class="map-ctrl" aria-label="Base map and overlays">
-      <button class="mc-toggle" id="mcToggle" type="button" aria-label="Map layers" aria-expanded="false">
+    <div class="map-ctrl" aria-label="{{ 'map.base_aria'|trans }}">
+      <button class="mc-toggle" id="mcToggle" type="button" aria-label="{{ 'map.base_layers_aria'|trans }}" aria-expanded="false">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
           <path d="M12 2.5 22 8 12 13.5 2 8z"/><path d="M2.5 12 12 17 21.5 12"/><path d="M2.5 16 12 21 21.5 16"/>
         </svg>
       </button>
       <div class="mc-seg" id="baseSeg">
-        <button class="on" data-b="map">Map</button>
-        <button data-b="satellite">Satellite</button>
+        <button class="on" data-b="map">{{ 'map.base_map'|trans }}</button>
+        <button data-b="satellite">{{ 'map.base_satellite'|trans }}</button>
       </div>
-      <button class="mc-ov" id="ovStreet"><span class="mc-ic">📷</span>Street-level</button>
+      <button class="mc-ov" id="ovStreet"><span class="mc-ic">📷</span>{{ 'map.street_level'|trans }}</button>
     </div>
-    <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="Contribute a place"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
-    <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="Feature detail">
-      <button class="cc-drawer-x" id="drawerClose" aria-label="Close detail">✕</button>
+    <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+    <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">
+      <button class="cc-drawer-x" id="drawerClose" aria-label="{{ 'map.drawer_close'|trans }}">✕</button>
       <div class="cc-drawer-body" id="drawerBody"></div>
     </aside>
     <div class="cc-d-scrim" id="drawerScrim"></div>
     <div class="cc-tooltip" id="tip" hidden></div>
     <div class="cc-lightbox" id="lightbox" aria-hidden="true">
-      <button class="cc-lb-x" aria-label="Close image">✕</button>
-      <button class="cc-lb-nav cc-lb-prev" aria-label="Previous image" hidden>‹</button>
+      <button class="cc-lb-x" aria-label="{{ 'map.lb_close'|trans }}">✕</button>
+      <button class="cc-lb-nav cc-lb-prev" aria-label="{{ 'map.lb_prev'|trans }}" hidden>‹</button>
       <div class="cc-lb-stage"><img alt="" /><div class="cc-lb-cap"></div></div>
-      <button class="cc-lb-nav cc-lb-next" aria-label="Next image" hidden>›</button>
+      <button class="cc-lb-nav cc-lb-next" aria-label="{{ 'map.lb_next'|trans }}" hidden>›</button>
     </div>
-    <section class="mly-dock" id="mlyDock" aria-hidden="true" aria-label="Street-level imagery viewer">
+    <section class="mly-dock" id="mlyDock" aria-hidden="true" aria-label="{{ 'map.mly_title'|trans }}">
       <div class="mly-grip" id="mlyGrip" role="separator" aria-orientation="horizontal" tabindex="0"
-           aria-label="Resize street-level viewer" title="Drag to resize · ↑/↓ keys · double-click to reset"></div>
+           aria-label="{{ 'map.mly_resize'|trans }}" title="{{ 'map.mly_resize_hint'|trans }}"></div>
       <div class="mly-bar">
-        <span class="mly-t" id="mlyTitle">Mapillary · street-level</span>
-        <button id="mlyFull" title="Expand / collapse" aria-label="Expand viewer">⤢</button>
-        <button id="mlyClose" title="Close" aria-label="Close viewer">✕</button>
+        <span class="mly-t" id="mlyTitle">{{ 'map.mly_title'|trans }}</span>
+        <button id="mlyFull" title="{{ 'map.mly_expand'|trans }}" aria-label="{{ 'map.mly_expand'|trans }}">⤢</button>
+        <button id="mlyClose" title="{{ 'map.mly_close'|trans }}" aria-label="{{ 'map.mly_close'|trans }}">✕</button>
       </div>
       <div class="mly-view" id="mlyView"></div>
-      <div class="mly-loading" id="mlyLoad"><span class="mly-spin"></span>Loading street-level…</div>
+      <div class="mly-loading" id="mlyLoad"><span class="mly-spin"></span>{{ 'map.mly_loading'|trans }}</div>
     </section>
   </main>
   </div>
@@ -276,6 +276,51 @@
   window.CC_CATALOG_URL = {{ path('map_catalog')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_FIELD_SCHEMA = {{ field_schema|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Locale bundle for the strings map.js renders itself (layer list, subtitle,
+     select/deselect toggle). Layer labels reuse item_type.*.label so the rail
+     can never drift from the improve form / drawer wording. #}
+  window.CC_I18N = {{ {
+    'layers': {
+      'surface': 'item_type.road-surface.label'|trans,
+      'climbs': 'item_type.climbs.label'|trans,
+      'water': 'item_type.water-food.label'|trans,
+      'services': 'item_type.bike-services.label'|trans,
+      'stays': 'item_type.where-to-sleep.label'|trans,
+      'hazards': 'item_type.hazards.label'|trans,
+      'transit': 'item_type.getting-there.label'|trans,
+      'shelter': 'item_type.shelter.label'|trans,
+      'scenic': 'item_type.scenic-views.label'|trans,
+      'history': 'item_type.history-culture.label'|trans,
+      'experience': 'item_type.quality-rides.label'|trans,
+      'pending': 'map.pending_review'|trans,
+    },
+    'rcChecking': 'map.rc_checking'|trans,
+    'rcResults': 'map.rc_results'|trans,
+    'rcClear': 'map.rc_clear'|trans,
+    'rcError': 'map.rc_error'|trans,
+    'deselectAll': 'map.deselect_all'|trans,
+    'selectAll': 'map.select_all'|trans,
+    'curated': 'map.curated'|trans,
+    'subEverything': 'map.sub_everything'|trans,
+    'allBikes': 'map.all_bikes'|trans,
+    'pendingReview': 'map.pending_review'|trans,
+    'seasons': {
+      'spring': 'map.season_spring'|trans,
+      'summer': 'map.season_summer'|trans,
+      'autumn': 'map.season_autumn'|trans,
+      'winter': 'map.season_winter'|trans,
+    },
+    'bikes': {
+      'Road': 'map.bike_road'|trans,
+      'Gravel': 'map.bike_gravel'|trans,
+      'MTB': 'map.bike_mtb'|trans,
+      'E-bike': 'map.bike_ebike'|trans,
+      'Handbike': 'map.bike_handbike'|trans,
+      'Recumbent': 'map.bike_recumbent'|trans,
+      'Trike': 'map.bike_trike'|trans,
+      'Tandem': 'map.bike_tandem'|trans,
+    },
+  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
    globals (catalog-load.js injects it after the fetch resolves), but its

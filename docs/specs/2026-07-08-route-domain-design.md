@@ -838,3 +838,28 @@ frontend review's warning batch (the criticals live in
 - **Map rail gained the language switcher**, extracted to the shared
   `partials/_lang_menu.html.twig` (also used by the site nav); non-localized
   routes like `/map` keep their clean path via `locale_alternates()`.
+
+## Change note (2026-07-14, symfony-base) — map shell fully localized
+
+- **User report:** most of the map's left rail/filters rendered baked-in
+  English in every locale (View mode, Season/Bike facets, Discipline chips,
+  Data layers, heatmap block, climb/stay filter chips, footer count, legend,
+  base-map controls, Mapillary dock). Only the ride-check block was translated.
+- **Template:** every rail/chrome string in `map/index.html.twig` now goes
+  through `|trans` (`map.*` keys, ~105 per locale, en/fr/nl/de in parity —
+  enforced by `check-translations.sh`). Nav gained `nav.map`/`nav.account`.
+  Filter chip `data-v` values stay canonical English (they key the dataset);
+  only the visible chip text localizes.
+- **map.js:** a `window.CC_I18N` bundle (same nonce'd globals block as
+  `CC_FIELD_SCHEMA`) feeds the strings map.js renders itself: the layer list
+  (labels reuse `item_type.*.label`, so the rail can never drift from the
+  improve form/drawer wording), the curator pending layer, select/deselect-all
+  toggle, the map-top subtitle (mode · season · bike), and the ride-check
+  status line. Every lookup keeps its English fallback so map.js still works
+  standalone.
+- **Out of scope (follow-up):** the drawer's *internal* strings (record row
+  labels like Type/Town/Province, vote/rode-it CTAs, toasts, correction
+  picker) are still English — a larger sweep over map.js's drawer builders.
+- Coverage: `MapPageTest::testFrenchMapRailIsTranslated` renders the shell
+  with `Accept-Language: fr` and asserts FR rail strings, no leftover English
+  headings, and the decoded `CC_I18N` payload.
