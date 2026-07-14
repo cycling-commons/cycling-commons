@@ -485,9 +485,9 @@
        (landing state); s-full/s-peek move it up/down. Inline transforms set by
        JS during a drag override these resting values. */
     .cc-drawer{--peek:7.5rem}
-    .cc-drawer.open{transform:translateY(calc(100% - 50svh))}                 /* half (default) */
+    .cc-drawer.open{transform:translateY(max(0px, calc(100% - 50svh)))}                 /* half (default) — max() keeps a SHORT sheet anchored at the bottom instead of lifting it above its natural position */
     .cc-drawer.open.s-full{transform:none}                                     /* full */
-    .cc-drawer.open.s-peek{transform:translateY(calc(100% - var(--peek)))}    /* peek */
+    .cc-drawer.open.s-peek{transform:translateY(max(0px, calc(100% - var(--peek))))}    /* peek — same short-sheet clamp */
     /* content scrolls only at full; below full every drag moves the sheet */
     .cc-drawer.open:not(.s-full){overflow:hidden}
     .cc-d-grab{display:block;width:100%;background:none;border:none;padding:.15rem 0 .55rem;cursor:grab;touch-action:none}

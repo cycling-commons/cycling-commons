@@ -185,3 +185,18 @@ merge, 0 critical / 0 important; minors fixed in 9d47910 (plural-key
 `_many` parity, tab arrow-key a11y) with member-since month localization
 rationale-closed (twig/intl-extra not installed; English month names match
 the rest of the app).
+
+## Rider-feedback pass (2026-07-14, same day)
+
+- Account-shell tabs: Settings added; selected tab now unmistakable (tint +
+  underline); moderator tabs (Submissions, Routes) render ONLY inside the
+  moderator section, pushed right under a MODERATION label — user pages show
+  user tabs only (curators reach moderation via the account-chip dropdown).
+- Language switcher (shared `_lang_menu`) added to the shell header — fixes
+  moderator pages having no switcher.
+- "View your public profile" moved into the contributions pane flow,
+  hint-sized (it floated top-left because the `.acct-id` h1 is sr-only).
+- Settings save buttons right-aligned (`.submit-row` flex-end).
+- Mobile snap sheet: `max(0px, calc(...))` clamps on the half/peek resting
+  transforms so a SHORT drawer (e.g. a town card) anchors at the bottom
+  instead of lifting above its natural position.

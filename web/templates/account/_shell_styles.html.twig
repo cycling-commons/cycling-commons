@@ -7,13 +7,25 @@
   .dtop .brandblock{display:flex;flex-direction:column;gap:.28rem;align-items:flex-start;flex:none}
   .dtop .brand img{height:1.8rem;display:block}
   .dtop .brandsub{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,212,.55);line-height:1.6;white-space:nowrap}
-  /* the account chip (global styles) sits in the dtop's right slot */
+  /* the account chip (global styles) sits in the dtop's right slot, next to the
+     shared language switcher (scoped copies of the .topnav lang styles — the
+     shell header is its own dark bar, not .topnav). */
+  .dtop-right{display:flex;align-items:center;gap:.8rem}
+  .dtop .lang-menu{position:relative}
+  .dtop .lang-chip{display:inline-flex;align-items:center;gap:.32rem;background:none;border:1.5px solid rgba(239,230,212,.4);border-radius:999px;padding:.34rem .55rem;color:var(--paper);cursor:pointer;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;line-height:1;transition:border-color .2s}
+  .dtop .lang-chip:hover{border-color:var(--trail)}
+  .dtop .lang-caret{transition:transform .2s}
+  .dtop [aria-expanded="true"] .lang-caret{transform:rotate(180deg)}
+  .dtop .lang-dropdown{right:0;left:auto}
   .dtabs{display:flex;gap:1.6rem;padding:0 clamp(1.25rem,4vw,2rem);background:var(--paper-deep);border-bottom:1px solid rgba(20,22,14,.12);overflow-x:auto}
   .dtabs a{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:1rem .2rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;text-decoration:none}
-  .dtabs a.on{color:var(--ink);border-color:var(--trail)}
-  /* moderation is a "work" area — set apart from the personal tabs by a divider
-     and a slightly darker background that fills the rest of the bar. */
-  .dtabs a.dtab-mod{flex:1;padding-left:1.6rem;background:#D8CBB1;border-left:1px solid rgba(20,22,14,.15)}
+  /* the selected section must be unmistakable: ink text + orange underline + a
+     soft tint behind the label (plain colour-only was too subtle). */
+  .dtabs a.on{color:var(--ink);border-color:var(--trail);background:rgba(255,90,31,.09)}
+  /* moderation is a "work" area, shown only inside the moderator section —
+     pushed right, labelled, and set apart by a divider + darker background. */
+  .dtabs-modlabel{margin-left:auto;align-self:center;font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);padding:0 .8rem;white-space:nowrap;border-left:1px solid rgba(20,22,14,.15)}
+  .dtabs a.dtab-mod{padding-left:.9rem;padding-right:.9rem;background:#D8CBB1}
   /* ONE button system for the account/moderation desks — the site's brand orange
      (--trail), matching .export/.cc-d-act. Primary actions = orange fill; the
      less-prominent / destructive ones (reject, dismiss, retire, needs-info) keep

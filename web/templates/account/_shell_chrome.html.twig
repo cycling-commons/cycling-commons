@@ -3,21 +3,30 @@
    Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = contrib | votes | saved | messages | settings | moderate | moderate_routes. #}
+   Param: `active` = contrib | votes | saved | messages | settings | moderate | moderate_routes.
+   Moderator tabs render ONLY inside the moderator section itself (curators
+   reach it via the account-chip dropdown) — user pages show user tabs only,
+   and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
+{% set in_moderation = active in ['moderate', 'moderate_routes'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
     <div class="brandsub"><span class="cc-coord">N 48.87° · E 2.29°</span><br>{{ 'account.brandsub'|trans }}</div>
   </div>
-  {% include 'partials/_account_chip.html.twig' %}
+  <div class="dtop-right">
+    {% include 'partials/_lang_menu.html.twig' %}
+    {% include 'partials/_account_chip.html.twig' %}
+  </div>
 </header>
 <nav class="dtabs" aria-label="{{ 'account.sections'|trans }}">
   <a href="{{ path('profile') }}" data-pane="contrib" class="{{ active == 'contrib' ? 'on' : '' }}">{{ 'account.tab_contributions'|trans }}</a>
   <a href="{{ path('profile') }}?tab=votes" data-pane="votes" class="{{ active == 'votes' ? 'on' : '' }}">{{ 'account.tab_votes'|trans }}</a>
   <a href="{{ path('profile') }}?tab=saved" data-pane="saved" class="{{ active == 'saved' ? 'on' : '' }}">{{ 'account.tab_saved'|trans }}</a>
   <a href="{{ path('messages') }}" class="{{ active == 'messages' ? 'on' : '' }}">{{ 'account.tab_messages'|trans }}</a>
-  {% if is_granted('ROLE_CURATOR') %}
+  <a href="{{ path('settings') }}" class="{{ active == 'settings' ? 'on' : '' }}">{{ 'nav.settings'|trans }}</a>
+  {% if is_granted('ROLE_CURATOR') and in_moderation %}
+    <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}</span>
     <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}</a>
     <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}</a>
   {% endif %}
