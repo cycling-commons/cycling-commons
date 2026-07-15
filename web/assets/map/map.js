@@ -325,7 +325,11 @@
     // served as CC_FIELD_SCHEMA). Filled rows replace any structural row of the
     // same label (e.g. a curated 'Type' overriding the raw OSM one); unset fields
     // become "add" prompts. 'web' dedupes by the shared "Website" label below.
-    const attrRows = schemaRows((layer||{}).letter, p, p.id);
+    // Stations/pumps are unmanned and inherently 24/7 (spec §5) — the /improve
+    // form has no openingHours field for them, so skip the row here too or the
+    // "add" prompt would deep-link to a field that doesn't exist.
+    const unmanned = p.serviceKind==='station' || p.serviceKind==='pump';
+    const attrRows = schemaRows((layer||{}).letter, p, p.id, unmanned ? {skip:['openingHours']} : undefined);
     const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
     rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
     // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
