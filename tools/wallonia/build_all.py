@@ -155,6 +155,20 @@ def annotate_water():
     print(f"water: {nconf}/{len(feats)} flagged confirmed-potable (simulated) -> atlas/demo/water-osm.js")
 
 
+def stamp_service_kind(cfg, features):
+    """Attach properties.serviceKind to each feature per cfg["service_kind_by_label"]
+    (D/services only — see LAYERS). Shared by build_all.run() (feeds the retired atlas
+    demo fixture) and export.run_harvest() (feeds the real DB-import artifact) so both
+    ingest paths stamp the kind identically off one mapping."""
+    kind_by_label = cfg.get("service_kind_by_label")
+    if not kind_by_label:
+        return
+    for f in features:
+        kind = kind_by_label.get(f["properties"].get("t"))
+        if kind:
+            f["properties"]["serviceKind"] = kind
+
+
 def run(layer_keys=None, report=False):
     for key in (layer_keys or (list(LAYERS) + ["water"])):
         if key == "water":
@@ -162,12 +176,7 @@ def run(layer_keys=None, report=False):
             continue
         cfg = LAYERS[key]
         res = harvest_poi.harvest(cfg)
-        kind_by_label = cfg.get("service_kind_by_label")
-        if kind_by_label:
-            for f in res["features"]:
-                kind = kind_by_label.get(f["properties"].get("t"))
-                if kind:
-                    f["properties"]["serviceKind"] = kind
+        stamp_service_kind(cfg, res["features"])
         enriched = 0
         if cfg.get("enrich"):
             from . import enrich as _enrich

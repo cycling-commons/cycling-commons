@@ -215,15 +215,20 @@ def poi_feature(raw):
 def run_harvest():
     """Replay the cached harvest for the six OSM POI layers, keeping _id refs.
 
-    Mirrors build_all.run()'s per-layer flow (harvest -> enrich -> photo
-    validation) so exported properties match the committed fixtures; the
-    .cache dir makes this an offline, deterministic replay.
+    Mirrors build_all.run()'s per-layer flow (harvest -> stamp serviceKind ->
+    enrich -> photo validation) so exported properties match the committed
+    fixtures; the .cache dir makes this an offline, deterministic replay.
+    D/services features get properties.serviceKind stamped via the shared
+    build_all.stamp_service_kind() helper — this artifact (services.json)
+    feeds the real DB-import pipeline (ImportCatalogCommand), unlike
+    build_all.run()'s output which only feeds the retired atlas demo fixture.
     """
     from . import enrich
     for key, letter in LETTERS.items():
         cfg = build_all.LAYERS[key]
         res = harvest_poi.harvest(cfg)
         feats = res["features"]
+        build_all.stamp_service_kind(cfg, feats)
         if cfg.get("enrich"):
             enrich.enrich(feats)
         if cfg.get("validate_photo"):

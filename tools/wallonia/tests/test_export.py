@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Unit tests for export.py pure helpers (no network, no cache)."""
+import json
+
 from wallonia import export
 
 
@@ -169,6 +171,40 @@ def test_routes_payload_preserves_uploader_and_photo(monkeypatch):
     assert routes[0]["attributes"]["photo"]["credit"] == "X"
     assert "uploader" not in routes[1]["attributes"]
     assert "photo" not in routes[1]["attributes"]
+
+
+def test_run_harvest_stamps_service_kind_onto_services_json(monkeypatch, tmp_path):
+    """CRITICAL regression: run_harvest() feeds the REAL DB-import pipeline
+    (tools/wallonia/out/services.json -> ImportCatalogCommand), unlike
+    build_all.run() which only feeds the retired atlas demo fixture. It must
+    stamp properties.serviceKind the same way build_all.run() does, via the
+    shared build_all.stamp_service_kind() helper — not duplicate the mapping."""
+    monkeypatch.setattr(export, "OUT", tmp_path)
+    services_feats = [
+        {"_id": "node/1", "properties": {"t": "Bike shop", "prov": "Namur"},
+         "geometry": {"type": "Point", "coordinates": [4.2, 50.1]}},
+        {"_id": "node/2", "properties": {"t": "Repair station", "prov": "Namur"},
+         "geometry": {"type": "Point", "coordinates": [4.3, 50.2]}},
+        {"_id": "node/3", "properties": {"t": "Pump", "prov": "Namur"},
+         "geometry": {"type": "Point", "coordinates": [4.4, 50.3]}},
+    ]
+    other_feats = [{"_id": "node/9", "properties": {"t": "Viewpoint", "prov": "Namur"},
+                    "geometry": {"type": "Point", "coordinates": [4.5, 50.4]}}]
+
+    def fake_harvest(cfg):
+        if cfg is export.build_all.LAYERS["services"]:
+            return {"features": services_feats, "by_prov": {"Namur": 3}}
+        return {"features": other_feats, "by_prov": {"Namur": 1}}
+
+    monkeypatch.setattr(export.harvest_poi, "harvest", fake_harvest)
+    export.run_harvest()
+
+    services_payload = json.loads((tmp_path / "services.json").read_text(encoding="utf-8"))
+    kinds = [f["properties"]["serviceKind"] for f in services_payload["features"]]
+    assert kinds == ["shop", "station", "pump"]
+
+    scenic_payload = json.loads((tmp_path / "scenic.json").read_text(encoding="utf-8"))
+    assert "serviceKind" not in scenic_payload["features"][0]["properties"]
 
 
 def test_climb_features_preserves_fixture_source_as_attribution(monkeypatch):
