@@ -100,4 +100,22 @@ final class AttributeVocabularyTest extends TestCase
 
         self::assertContains('accessibility', $names);
     }
+
+    /**
+     * CRITICAL fix: serviceKind (shop/station/pump, App\Catalog\ServiceKind) is
+     * the whole point of the D-kind-split feature — without this the importer
+     * rejects it (ImportCatalogCommand::importItemLayers ->
+     * AttributeVocabulary::assertValid) even once the harvester emits it.
+     */
+    public function testBikeServicesAcceptsServiceKind(): void
+    {
+        $this->vocabulary->assertValid(ItemType::BikeServices, ['serviceKind' => 'shop']);
+        $this->addToAssertionCount(1);
+    }
+
+    public function testServiceKindIsNotAllowedOnOtherLetters(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->vocabulary->assertValid(ItemType::Climbs, ['serviceKind' => 'shop']);
+    }
 }

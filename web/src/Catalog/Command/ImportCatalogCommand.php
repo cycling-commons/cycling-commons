@@ -11,6 +11,7 @@ use App\Catalog\Import\ItemUpsert;
 use App\Catalog\Import\ProvinceMap;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Catalog\ServiceKind;
 use App\Catalog\SurfaceProfiler;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
@@ -143,6 +144,16 @@ final class ImportCatalogCommand extends Command
                 }
 
                 $attributes = array_diff_key($props, array_flip(self::CONSUMED_KEYS));
+                // Defense-in-depth for the D-kind split: derive serviceKind from the
+                // legacy `t` label whenever the incoming feature lacks it, so stale
+                // export artifacts (produced before the harvester started stamping
+                // serviceKind directly) still import with the correct kind.
+                if (ItemType::BikeServices === $type && !isset($attributes['serviceKind'])) {
+                    $kind = ServiceKind::fromLegacyLabel(\is_string($attributes['t'] ?? null) ? $attributes['t'] : null);
+                    if (null !== $kind) {
+                        $attributes['serviceKind'] = $kind->value;
+                    }
+                }
                 $this->vocabulary->assertValid($type, $attributes);
 
                 [$source, $ref] = $this->resolveSourceRef($props, $file);

@@ -31,6 +31,11 @@ final class AttributeVocabulary
         // (App\Catalog\ItemSource) — human-approved deviation from the original
         // plan, already implemented on the export side (Task 3).
         'B' => ['headline', 'cur', 'sq', 'tr', 'record', 'attribution', 'route', 'grad', 'steep'],
+        // serviceKind (App\Catalog\ServiceKind: shop/station/pump) — D/bike-services only.
+        // Not a registry field: it's harvester/import-stamped (tools/wallonia's
+        // service_kind_by_label + ImportCatalogCommand's legacy-label fallback),
+        // never a curator-editable form field.
+        'D' => ['serviceKind'],
     ];
 
     public function __construct(private readonly CatalogFormRegistry $registry)

@@ -78,6 +78,20 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertArrayNotHasKey('ref', $shop->getAttributes());
         self::assertSame($region->getId(), $shop->getRegionId());     // inside the square
         self::assertSame('BE', $shop->getCountryCode());
+        // CRITICAL fix: the fixture's services.json (like the real stale
+        // tools/wallonia/out/services.json before the harvester emits
+        // serviceKind directly) has no serviceKind on the feature — the
+        // importer must derive it from the legacy `t` label so the D-kind
+        // split works even against artifacts produced before that fix.
+        self::assertSame('shop', $shop->getAttributes()['serviceKind']);
+
+        $station = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1002']);
+        self::assertNotNull($station);
+        self::assertSame('station', $station->getAttributes()['serviceKind']);
+
+        $pump = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1003']);
+        self::assertNotNull($pump);
+        self::assertSame('pump', $pump->getAttributes()['serviceKind']);
 
         $outside = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1003']);
         self::assertNotNull($outside);
