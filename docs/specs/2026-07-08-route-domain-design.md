@@ -356,6 +356,16 @@ were extended past their original scope, on request, after phase 2 shipped:
    re-import — a pre-existing importer-idempotency gap on label renames, not a
    data-model change.)
 
+6. **P2-D1 legacy vocab retired (2026-07-15):** the `DifficultyVocabulary::LEGACY`
+   fallback (`Gentle`→1, and the old 4-label `Hard`→4 rider map) is deleted.
+   It only ever uniquely resolved the word `Gentle` — every other legacy label
+   (`Moderate`/`Hard`/`Very hard`) is already a canonical `LABELS` string caught
+   by the label branch. Migration `Version20260708140000` normalized all stored
+   difficulty to `{score,label}` on 2026-07-08, and the form now offers only the
+   canonical labels, so no runtime path could still feed `canonical()` a raw
+   legacy string. `canonical('Gentle')` now returns `null` (unknown), locked by
+   `DifficultyVocabularyTest`.
+
 ## 13. Phase-3 (community loop) design decisions (2026-07-10)
 
 Pre-execution decisions pinning the residuals §7 left open, binding on the

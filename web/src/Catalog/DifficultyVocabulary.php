@@ -8,8 +8,8 @@ namespace App\Catalog;
 
 /**
  * One canonical difficulty shape for every route (route-domain spec §12 P2-D1):
- * {score:1..5, label} on the 5-level scale the drawer already renders. Maps the
- * legacy rider 4-label strings and import {score,label} onto it.
+ * {score:1..5, label} on the 5-level scale the drawer already renders. Maps a
+ * canonical label string and import {score,label} onto it.
  *
  * @api Used by the proposal/curator forms, RouteProposalService, CatalogProvider.
  */
@@ -17,9 +17,6 @@ final class DifficultyVocabulary
 {
     /** @var array<int, string> */
     public const array LABELS = [1 => 'Easy', 2 => 'Moderate', 3 => 'Challenging', 4 => 'Hard', 5 => 'Very hard'];
-
-    /** Legacy rider vocab → canonical score. */
-    private const array LEGACY = ['Gentle' => 1, 'Moderate' => 2, 'Hard' => 4, 'Very hard' => 5];
 
     /** @return array{score:int, label:string}|null */
     public static function canonical(mixed $stored): ?array
@@ -33,11 +30,6 @@ final class DifficultyVocabulary
             $byLabel = array_search($stored, self::LABELS, true);
             if (false !== $byLabel) {
                 return ['score' => $byLabel, 'label' => $stored];
-            }
-            if (isset(self::LEGACY[$stored])) {
-                $score = self::LEGACY[$stored];
-
-                return ['score' => $score, 'label' => self::LABELS[$score]];
             }
         }
 
