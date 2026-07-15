@@ -25,6 +25,13 @@ final class CatalogFormRegistry
 {
     private const array UNKNOWN_YES_NO = ['Unknown', 'Yes', 'No'];
 
+    /**
+     * Opening hours is intentionally NOT free text: specific weekly hours change
+     * without notice and we can't verify them, so we only record what stays true
+     * — round-the-clock, or "check the source" — and default to Unknown.
+     */
+    private const array OPENING_HOURS = ['Unknown', '24/7', 'See website'];
+
     public function for(ItemType $type): ItemFieldSet
     {
         return match ($type) {
@@ -87,7 +94,7 @@ final class CatalogFormRegistry
                     // "Website" row; a shop/repair place usually has its own site.
                     CatalogField::url('web', 'Website', placeholder: 'https://… (the shop’s own site)'),
                     CatalogField::select('pumpValve', 'Pump valve', ['Presta + Schrader', 'Presta only', 'Schrader only', 'No pump']),
-                    CatalogField::text('openingHours', 'Opening hours', default: '24/7'),
+                    CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: 'Unknown'),
                     CatalogField::text('tools', 'Tools available', placeholder: 'e.g. chain tool, work stand'),
                     CatalogField::textarea('correction', 'Anything to correct?', "What's wrong or out of date?", display: false),
                 ],
@@ -183,7 +190,7 @@ final class CatalogFormRegistry
                     CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
                 ],
                 addFields: [
-                    CatalogField::text('openingHours', 'Opening hours', placeholder: 'e.g. 10:00–18:00'),
+                    CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: 'Unknown'),
                     CatalogField::select('entryFee', 'Entry fee?', ['Free', 'Paid', 'Unknown']),
                     CatalogField::text('cyclingStory', 'Cycling story / link', placeholder: 'A heritage note worth riding past for'),
                 ],

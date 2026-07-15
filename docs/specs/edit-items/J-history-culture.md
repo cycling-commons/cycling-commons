@@ -24,7 +24,7 @@ Landmarks, local stories and cycling-heritage sites to ride past. (Split out fro
 ### Add missing  (type-specific)
 | Field | Control | Provenance |
 |---|---|---|
-| Opening hours | input (opening_hours) | `[OSM]` |
+| Opening hours | select(Unknown / 24/7 / See website) | `[edit]` |
 | Entry fee? | select(Free / Paid / Unknown) | `[edit]` |
 | Cycling story / link | input | `[edit]` |
 

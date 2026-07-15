@@ -31,8 +31,8 @@ use Symfony\Component\Console\Tester\CommandTester;
  * are: name, pumpValve, openingHours, tools, correction (fix) and workStand,
  * chainTool, ebikeCharging (add-missing) — not the `t`/`hours` names an
  * earlier draft of this test assumed. `tools` (free text) stands in for the
- * "prefilled with a plain value" assertion; `openingHours` (default '24/7')
- * stands in for the was/now snapshot assertion.
+ * "prefilled with a plain value" assertion; `openingHours` (a 24/7 / See
+ * website / Unknown select) stands in for the was/now snapshot assertion.
  */
 final class ImproveBindingTest extends WebTestCase
 {
@@ -499,7 +499,7 @@ final class ImproveBindingTest extends WebTestCase
 
         $receipt = $service->submit('improve', [
             '_item_id' => $item->getId(), 'type' => 'bike-services',
-            'details' => ['tools' => 'Repair station', 'openingHours' => 'closed Sundays'],
+            'details' => ['tools' => 'Repair station', 'openingHours' => 'See website'],
             'extras' => [], 'lat' => '50.426', 'lng' => '6.027',
         ], $user);
 
@@ -507,7 +507,7 @@ final class ImproveBindingTest extends WebTestCase
         self::assertSame(SubmissionType::Edit, $sub->getType());
         self::assertSame($item->getId(), $sub->getItemId());
         self::assertArrayNotHasKey('tools', $sub->getChanges(), 'unchanged fields are not snapshotted');
-        self::assertSame(['was' => '24/7', 'now' => 'closed Sundays'], $sub->getChanges()['openingHours']);
+        self::assertSame(['was' => '24/7', 'now' => 'See website'], $sub->getChanges()['openingHours']);
     }
 
     /**

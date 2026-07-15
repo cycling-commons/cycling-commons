@@ -22,9 +22,16 @@ Shops, public repair stations, pumps and e-bike charging — the places riders r
 | Name | input | `[edit]` |
 | Website | url | `[edit]` |
 | Pump valve | select(Presta + Schrader / Presta only / Schrader only / No pump) | `[OSM]` |
-| Opening hours | input (opening_hours) | `[OSM]` |
+| Opening hours | select(Unknown / 24/7 / See website) | `[edit]` |
 | Tools available | input | `[edit]` |
 | Anything to correct? | textarea | `[edit]` |
+
+> **Opening hours — why a 3-option select, not free text** (2026-07-15): specific
+> weekly hours change without notice and we can't verify them, so the Commons only
+> records what stays true — `24/7`, or `See website` (point riders at the source) —
+> and defaults to `Unknown`. Migration `Version20260715120000` reset every
+> previously-stored free-text value (letters D and J) to `Unknown`. Same treatment
+> on [J-history-culture](J-history-culture.md).
 
 ### Add missing  (type-specific)
 | Field | Control | Provenance |
