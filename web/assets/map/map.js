@@ -307,7 +307,14 @@
     // are corrected here.
     const community = p.srcType==='user' || p.srcType==='manual';
     const originLbl = pivot?'Tourisme Wallonie':(community?sourceLabel(p.srcType):'OSM');
-    let rec=[{label:D.type||'Type', value:p.t||lbl, method: pivot?'Tourisme Wallonie':'OSM'}];
+    // D · services carries a serviceKind (shop/station/pump) — when present, the localized
+    // kind label takes precedence over the raw OSM p.t value for the type row + headline
+    // (e.g. EN 'Repair station' → 'Self-service station'; FR/NL/DE get real translations
+    // instead of the raw English t). Every other layer (and services items with no/unknown
+    // serviceKind) falls back to today's p.t||lbl behaviour, unchanged.
+    const kindLbl = p.serviceKind && ({shop:D.kindShop, station:D.kindStation, pump:D.kindPump}[p.serviceKind] || lbl);
+    const typeLbl = kindLbl || p.t || lbl;
+    let rec=[{label:D.type||'Type', value:typeLbl, method: pivot?'Tourisme Wallonie':'OSM'}];
     if(p.town && layer.letter!=='E') rec.push({label:D.town||'Town', value:p.town});  // stays' 'town' comes from the schema (labelled "Town / commune")
     rec.push({label:D.province||'Province', value:p.prov||D.wallonia||'Wallonia'});
     if(pivot) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official Tourisme Wallonie registry', method:'official'});
@@ -322,7 +329,7 @@
     const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
     rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
     // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
-    const d={name:p.n||p.t||lbl, headline:(p.t||lbl)+' · '+originLbl, cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
+    const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
       source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie'
         :(community?sourceLabel(p.srcType):(src||sourceLabel(p.srcType)||'OpenStreetMap'))};
     if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target

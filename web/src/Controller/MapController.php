@@ -137,6 +137,7 @@ final class MapController extends AbstractController
             'freshFresh' => 'd_fresh_fresh', 'freshAgeing' => 'd_fresh_ageing', 'freshStale' => 'd_fresh_stale',
             'lastConfirmed' => 'd_last_confirmed', 'thisSeason' => 'd_this_season',
             'city' => 'd_city', 'notesNone' => 'd_notes_none', 'nearbyH' => 'd_nearby_h', 'nothingHere' => 'd_nothing_here',
+            'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',
             'rideCheck' => 'd_ride_check',
             'alongRide' => 'd_along_ride', 'rideMeta' => 'd_ride_meta', 'clearRide' => 'd_clear_ride',
             'rideFollows' => 'd_ride_follows', 'kmShared' => 'd_km_shared', 'alongTrackH' => 'd_along_track_h',
