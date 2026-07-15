@@ -11,6 +11,7 @@ use App\Catalog\CatalogFormRegistry;
 use App\Catalog\FieldKind;
 use App\Catalog\ItemType;
 use App\Catalog\LocationMode;
+use App\Catalog\ServiceKind;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -57,7 +58,9 @@ final class ImproveType extends AbstractType
     {
         $type = $options['catalog_type'];
         \assert($type instanceof ItemType);
-        $fieldSet = $this->registry->for($type);
+        $serviceKind = $options['service_kind'];
+        \assert(null === $serviceKind || $serviceKind instanceof ServiceKind);
+        $fieldSet = $this->registry->for($type, $serviceKind);
         /** @var array<string, scalar|list<string>|null> $current */
         $current = $options['current'];
 
@@ -204,8 +207,13 @@ final class ImproveType extends AbstractType
             'data_class' => null,
             'catalog_type' => ItemType::default(),
             'current' => [],
+            // The bound item's D (BikeServices) kind — null for other types or
+            // when the kind is unknown, which preserves the pre-kind-aware
+            // behaviour (openingHours included) via CatalogFormRegistry::for().
+            'service_kind' => null,
         ]);
         $resolver->setAllowedTypes('catalog_type', ItemType::class);
         $resolver->setAllowedTypes('current', 'array');
+        $resolver->setAllowedTypes('service_kind', ['null', ServiceKind::class]);
     }
 }

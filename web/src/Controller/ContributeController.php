@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Catalog\Entity\Item;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
+use App\Catalog\ServiceKind;
 use App\Entity\User;
 use App\Form\AddClimbType;
 use App\Form\ImproveType;
@@ -192,8 +193,18 @@ final class ContributeController extends AbstractController
 
         $type = ItemType::fromParam($item->getLetter());
         $current = ['name' => $item->getName()] + $item->getAttributes();
+        // D (BikeServices) kind-aware form (spec §5): opening hours only makes
+        // sense for a staffed shop, so the registry needs the concrete item's
+        // kind to drop the field for a station/pump. Other types stay null.
+        $serviceKind = ItemType::BikeServices === $type
+            ? ServiceKind::tryFrom((string) ($item->getAttributes()['serviceKind'] ?? ''))
+            : null;
 
-        $form = $this->createForm(ImproveType::class, null, ['catalog_type' => $type, 'current' => $current]);
+        $form = $this->createForm(ImproveType::class, null, [
+            'catalog_type' => $type,
+            'current' => $current,
+            'service_kind' => $serviceKind,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

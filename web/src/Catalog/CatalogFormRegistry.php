@@ -32,7 +32,7 @@ final class CatalogFormRegistry
      */
     private const array OPENING_HOURS = ['Unknown', '24/7', 'See website'];
 
-    public function for(ItemType $type): ItemFieldSet
+    public function for(ItemType $type, ?ServiceKind $serviceKind = null): ItemFieldSet
     {
         return match ($type) {
             ItemType::RoadSurface => new ItemFieldSet(
@@ -88,16 +88,21 @@ final class CatalogFormRegistry
             ),
 
             ItemType::BikeServices => new ItemFieldSet(
-                fields: [
+                fields: array_values(array_filter([
                     CatalogField::text('name', 'Name', display: false),
                     // 'web' matches the Stays key so map.js renders the shared
                     // "Website" row; a shop/repair place usually has its own site.
                     CatalogField::url('web', 'Website', placeholder: 'https://… (the shop’s own site)'),
                     CatalogField::select('pumpValve', 'Pump valve', ['Presta + Schrader', 'Presta only', 'Schrader only', 'No pump']),
-                    CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: 'Unknown'),
+                    // Opening hours only for a staffed shop (spec §5): stations
+                    // and pumps are 24/7 by kind. An unknown kind (null,
+                    // legacy/untyped call sites) preserves today's behaviour.
+                    (null === $serviceKind || $serviceKind->hasOpeningHours())
+                        ? CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: 'Unknown')
+                        : null,
                     CatalogField::text('tools', 'Tools available', placeholder: 'e.g. chain tool, work stand'),
                     CatalogField::textarea('correction', 'Anything to correct?', "What's wrong or out of date?", display: false),
-                ],
+                ])),
                 addFields: [
                     CatalogField::select('workStand', 'Work stand?', self::UNKNOWN_YES_NO),
                     CatalogField::select('chainTool', 'Chain tool?', self::UNKNOWN_YES_NO),
