@@ -373,9 +373,10 @@
   // before; station/pump are new. Shared by both the unverified symbol-layer icons
   // (miniIcon below) and the confirmed/curated DOM pins (pinGlyph below).
   // station/pump deliberately use plain BMP symbols (⚒ hammer-and-pick, ⊕ circled-plus/
-  // "add air") rather than the full-colour emoji 🛠/💨: those live in Unicode's
-  // Miscellaneous Technical/Mathematical Operators blocks — the same block ⚙ (shop) is
-  // already drawn from — so they render from any standard system/UI font, with no
+  // "add air") rather than the full-colour emoji 🛠/💨: ⚒ shares its Miscellaneous
+  // Symbols block with ⚙ (shop, already drawn from there); ⊕ is a Mathematical
+  // Operators-block character — both are plain BMP symbols, so they render from
+  // any standard system/UI font, with no
   // dependency on a colour-emoji font being installed (verified: this dev box has none
   // installed at all — `fc-list | grep -i emoji` is empty — so 🛠/💨, and even the
   // pre-existing 💧/⛺/🚆/⛑/📷/🏛/⛰ layer icons, all silhouette as blank tofu boxes here).
@@ -420,7 +421,10 @@
         // unrecognised serviceKind) is the plain services disc, same as before this feature.
         'icon-image': key==='services'
           ? ['match', ['get','serviceKind'],
-              'shop', miniIcon('services', SERVICE_GLYPH.shop, 'shop'),
+              // shop's glyph (⚙) === the plain services disc's own icon — reuse the
+              // un-suffixed miniIcon so we don't mint a duplicate cached image
+              // (mini-services-shop) identical to the miniIcon(key) fallback below.
+              'shop', miniIcon('services'),
               'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
               'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
               miniIcon(key)]

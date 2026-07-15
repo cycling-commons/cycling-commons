@@ -41,13 +41,4 @@ enum ServiceKind: string
     {
         return self::Shop === $this;
     }
-
-    public function label(): string
-    {
-        return match ($this) {
-            self::Shop => 'Bike shop',
-            self::Station => 'Self-service station',
-            self::Pump => 'Public pump',
-        };
-    }
 }
