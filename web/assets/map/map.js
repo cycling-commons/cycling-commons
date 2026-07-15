@@ -356,9 +356,24 @@
     if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
     return d;
   }
-  // small recognisable marker for UNVERIFIED items: paper disc + category-colour ring + the category glyph
-  function miniIcon(key){
-    const id='mini-'+key;
+  // Bike-services (D) items carry a serviceKind (shop/station/pump) — distinct glyphs
+  // per kind, layered onto the same category-colour disc treatment as every other
+  // marker. shop reuses the layer's own icon (⚙) so staffed shops read exactly as
+  // before; station/pump are new. Shared by both the unverified symbol-layer icons
+  // (miniIcon below) and the confirmed/curated DOM pins (pinGlyph below).
+  // station/pump deliberately use plain BMP symbols (⚒ hammer-and-pick, ⊕ circled-plus/
+  // "add air") rather than the full-colour emoji 🛠/💨: those live in Unicode's
+  // Miscellaneous Technical/Mathematical Operators blocks — the same block ⚙ (shop) is
+  // already drawn from — so they render from any standard system/UI font, with no
+  // dependency on a colour-emoji font being installed (verified: this dev box has none
+  // installed at all — `fc-list | grep -i emoji` is empty — so 🛠/💨, and even the
+  // pre-existing 💧/⛺/🚆/⛑/📷/🏛/⛰ layer icons, all silhouette as blank tofu boxes here).
+  const SERVICE_GLYPH={shop:'⚙', station:'⚒', pump:'⊕'};
+  // small recognisable marker for UNVERIFIED items: paper disc + category-colour ring + the category glyph.
+  // glyph/suffix let a layer mint more than one disc variant (e.g. services' per-serviceKind icons) off the
+  // same colour/id scheme — suffix keeps the cache id distinct so each variant is registered once.
+  function miniIcon(key, glyph, suffix){
+    const id='mini-'+key+(suffix?('-'+suffix):'');
     if(map.hasImage(id)) return id;
     const layer=layerByKey[key], color=(layer||{}).color||'#6b6f5e';
     const r=parseInt(color.slice(1,3),16),g=parseInt(color.slice(3,5),16),b=parseInt(color.slice(5,7),16);
@@ -373,7 +388,7 @@
     const gc=document.createElement('canvas'); gc.width=D; gc.height=D; const gx=gc.getContext('2d');
     gx.font=`${12.5*S}px "Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif`;
     gx.textAlign='center'; gx.textBaseline='middle';
-    gx.fillText((layer||{}).icon||'•', R, R+1*S);
+    gx.fillText(glyph || (layer||{}).icon||'•', R, R+1*S);
     const gd=gx.getImageData(0,0,D,D), gp=gd.data;
     for(let i=0;i<gp.length;i+=4){ if(gp[i+3]>25){ gp[i]=dark?255:20; gp[i+1]=dark?255:22; gp[i+2]=dark?255:14; gp[i+3]=255; } }
     gx.putImageData(gd,0,0); x.drawImage(gc,0,0);
@@ -388,7 +403,18 @@
     map.addSource(id,{type:'geojson',data});
     map.addLayer({id,type:'symbol',source:id,
       filter:['!',['has','c']],
-      layout:{visibility:'none','icon-image':miniIcon(key),'icon-allow-overlap':true,
+      layout:{visibility:'none',
+        // D · services carries a serviceKind (shop/station/pump) per item — distinct disc per
+        // kind; every other bulk-OSM layer keeps its single category icon. Fallback (missing/
+        // unrecognised serviceKind) is the plain services disc, same as before this feature.
+        'icon-image': key==='services'
+          ? ['match', ['get','serviceKind'],
+              'shop', miniIcon('services', SERVICE_GLYPH.shop, 'shop'),
+              'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
+              'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
+              miniIcon(key)]
+          : miniIcon(key),
+        'icon-allow-overlap':true,
         'icon-size':['interpolate',['linear'],['zoom'],8,0.42,13,0.7,18,0.95]}});
     map.on('click',id,e=>{ const f0=e.features[0], p=f0.properties, c=f0.geometry.coordinates, ll={lng:c[0],lat:c[1]}; openDrawer(layerByKey[key], osmDrawer(layerByKey[key], p, ll, srcDesc)); flyToPin([c[0],c[1]]); });   // exact feature coords, not the click point, so the halo sits on the marker
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
@@ -418,7 +444,7 @@
   function confLeafPin(st, p, co){
     const lngLat=[co[0],co[1]], llo={lat:co[1],lng:co[0]};
     const drawerF = st.info.water ? waterDrawer(p, llo) : osmDrawer(st.layer, p, llo, st.info.src);
-    const el=pinEl(st.layer, true);
+    const el=pinEl(st.layer, true, p);
     el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
     el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline);
     el.addEventListener('click', ()=>{ openDrawer(st.layer, drawerF); flyToPin(lngLat); });
@@ -1060,11 +1086,19 @@
       : ['all', base, ['in', ['get','accessibility'], ['literal', Array.from(activeAccess)]]]);
   }
 
-  function pinEl(layer,cur){
+  // D · services confirmed/curated pins show the per-kind glyph (shop/station/pump) instead of
+  // the layer's generic icon; every other layer (and services items with no/unknown serviceKind)
+  // keeps layer.icon exactly as before. props is the feature/properties object carrying serviceKind
+  // (GeoJSON properties for OSM-sourced points, the plain feature object for CATALOG-authored ones).
+  function pinGlyph(layer, props){
+    if(layer.key==='services' && props && props.serviceKind) return SERVICE_GLYPH[props.serviceKind] || layer.icon;
+    return layer.icon;
+  }
+  function pinEl(layer,cur,props){
     const d=document.createElement('div');
     d.className='cc-pin'+(cur?' cur':'')+(layer.pendingLayer?' pending':''); d.style.setProperty('--c',layer.color);
     const white = txtOn(layer.color)==='#fff';   // dark pins (e.g. purple climbs) → white icon
-    d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${layer.icon}</span>`; return d;
+    d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`; return d;
   }
   // Preference prefilter (spec 2026-07-14): riders' saved bike types filter
   // the routes layer. Unknown ≠ unsuitable — a route with NO declared
@@ -1152,7 +1186,7 @@
               markers.push(sm);
             }
           }
-          const el = pinEl(layer,f.cur);
+          const el = pinEl(layer,f.cur,f);
           el.style.cursor='pointer';
           el.tabIndex=0; el.setAttribute('role','button');
           el.setAttribute('aria-label', `${f.name} — ${f.headline}`);
