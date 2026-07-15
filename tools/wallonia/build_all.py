@@ -35,6 +35,13 @@ LAYERS = {
             ("amenity", "bicycle_repair_station", "Repair station"),
             ("amenity", "compressed_air", "Pump"),
         ],
+        # Canonical serviceKind per label — D/services only. Emitted directly on harvested
+        # features (see run()) so future ingests don't rely on the label backfill.
+        "service_kind_by_label": {
+            "Bike shop": "shop",
+            "Repair station": "station",
+            "Pump": "pump",
+        },
         "sim": {"confirmed": "Confirmed", "rating": True},
     },
     "scenic": {
@@ -155,6 +162,12 @@ def run(layer_keys=None, report=False):
             continue
         cfg = LAYERS[key]
         res = harvest_poi.harvest(cfg)
+        kind_by_label = cfg.get("service_kind_by_label")
+        if kind_by_label:
+            for f in res["features"]:
+                kind = kind_by_label.get(f["properties"].get("t"))
+                if kind:
+                    f["properties"]["serviceKind"] = kind
         enriched = 0
         if cfg.get("enrich"):
             from . import enrich as _enrich
