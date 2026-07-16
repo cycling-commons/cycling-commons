@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 """coverage.load — schema bootstrap + per-region atomic swap, against the dev PostGIS."""
 
+import psycopg
 import pytest
 
 from coverage.load import DriftAbort, LoadResult, ensure_schema, load_region
@@ -77,6 +78,56 @@ def test_load_region_drift_abort_keeps_last_slice(db):
         load_region(db, [_row(f"node/{i}", "C") for i in range(5)], "europe/belgium")
     n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
     assert n == 10                                   # last good slice kept
+
+
+def test_load_region_generic_error_rolls_back_whole_swap(db):
+    """Any mid-transaction failure — not just DriftAbort — keeps the last slice.
+
+    A duplicate (ref, letter) pair passes the drift check and the DELETE, then
+    fires coverage_poi's UNIQUE constraint on the INSERT — proving the rollback
+    covers everything after the DELETE, not only the drift guard.
+    """
+    ensure_schema(db)
+    load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
+    with pytest.raises(psycopg.errors.UniqueViolation):
+        load_region(db, [
+            _row(f"node/{i}", "C") for i in range(9)
+        ] + [_row("node/0", "C")], "europe/belgium")   # 10 rows, node/0 twice
+    n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
+    assert n == 10                                     # last good slice intact
+    assert db.execute(
+        "SELECT count(*) FROM coverage_poi WHERE ref = 'node/7'"
+    ).fetchone()[0] == 1                               # sampled prior row survived
+
+
+def test_load_region_exact_drift_boundary_does_not_abort(db):
+    """A drop of exactly DRIFT_ABORT_RATIO is allowed: the guard is strict <."""
+    ensure_schema(db)
+    load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
+    res = load_region(
+        db, [_row(f"node/{i}", "C") for i in range(6)], "europe/belgium"
+    )                                                  # 6 == 10 * (1 - 0.4) -> no abort
+    assert res == LoadResult(inserted=6, previous=10)
+    n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
+    assert n == 6
+
+
+def test_load_region_zero_rows_fresh_region_succeeds(db):
+    """previous=0 disarms the drift guard: an empty first load is not an abort."""
+    ensure_schema(db)
+    res = load_region(db, [], "europe/luxembourg")
+    assert res == LoadResult(inserted=0, previous=0)
+    n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
+    assert n == 0
+
+
+def test_load_region_zero_rows_over_populated_region_aborts(db):
+    ensure_schema(db)
+    load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
+    with pytest.raises(DriftAbort):
+        load_region(db, [], "europe/belgium")
+    n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
+    assert n == 10                                     # populated slice kept
 
 
 def test_same_ref_may_carry_two_letters(db):

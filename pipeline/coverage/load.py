@@ -2,7 +2,7 @@
 """coverage_poi schema bootstrap + per-region atomic load (coverage-provider.md §2-§3).
 
 The table is a pipeline-owned disposable cache: idempotent CREATE at run start,
-never a Doctrine migration (doctrine.yaml schema_filter excludes coverage_*).
+deliberately outside Doctrine migrations (coverage-provider.md §2).
 load_region swaps one src_region slice in a single transaction — readers never
 see a half-loaded region; a drift abort keeps last week's slice serving.
 """
