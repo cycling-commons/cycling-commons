@@ -140,6 +140,9 @@ docker compose --profile storage up
 # → http://localhost:9100 (API)  ·  http://localhost:9101 (console)
 ```
 
+The coverage batch (`make coverage-refresh` from the repo root) publishes its
+weekly PMTiles artifact + manifest here — see `developers/coverage-batch.md`.
+
 The **DEM** directory (`DEM_DIR`, default `./data/dem`) is mounted into the pipeline at
 `/data/dem` even without a profile; drop your downloaded DEM there and check
 http://localhost:8012/dem.

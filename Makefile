@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -152,3 +152,19 @@ tools-test: ## Run the tools/wallonia Python test suite
 
 pipeline-test: ## Run the pipeline Python test suite in the pipeline container (contract + batch job units)
 	@$(DOCKER_COMP) exec -T pipeline python -m pytest tests -q
+
+## —— 🧱 Coverage batch ————————————————————————————————————————————————————————
+# Whole chain against the dev DB + MinIO (see developers/coverage-batch.md).
+# Fixture run (no network): make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
+# (pbf paths are as seen INSIDE the pipeline container, workdir /app = pipeline/)
+# Bucket creds match the compose defaults; override MINIO_ROOT_USER/PASSWORD if you changed developers/docker/.env.
+coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → PostGIS → MinIO)
+	@$(DOCKER_COMP) --profile storage up --detach --wait minio
+	@$(DOCKER_COMP) run --rm \
+		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
+		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
+		-e COVERAGE_S3_SECRET=$${MINIO_ROOT_PASSWORD:-ccadminsecret} \
+		-e COVERAGE_PUBLIC_BASE_URL=http://localhost:9100/cc-maps \
+		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
+		$(if $(pbf),-e COVERAGE_PBF_PATH=$(pbf)) \
+		pipeline python -m coverage.run
