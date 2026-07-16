@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="hand-written Cycling Commons test fixture">
+  <!-- D - bike shop (named) -->
+  <node id="101" version="3" timestamp="2026-06-01T12:00:00Z" lat="50.4600" lon="4.8600">
+    <tag k="shop" v="bicycle"/>
+    <tag k="name" v="Vélo Namur"/>
+  </node>
+  <!-- D - public pump (unnamed) -->
+  <node id="102" version="1" timestamp="2026-05-15T08:30:00Z" lat="50.4700" lon="4.8700">
+    <tag k="amenity" v="compressed_air"/>
+  </node>
+  <!-- C - drinking water -->
+  <node id="103" version="2" timestamp="2026-04-02T10:00:00Z" lat="50.4800" lon="4.8800">
+    <tag k="amenity" v="drinking_water"/>
+  </node>
+  <!-- G - rail -->
+  <node id="104" version="5" timestamp="2026-03-20T09:00:00Z" lat="50.4500" lon="4.8500">
+    <tag k="railway" v="station"/>
+    <tag k="name" v="Gare de Jambes"/>
+  </node>
+  <!-- J - history -->
+  <node id="105" version="4" timestamp="2026-02-11T14:00:00Z" lat="50.2200" lon="5.0000">
+    <tag k="historic" v="castle"/>
+    <tag k="name" v="Château de Vêves"/>
+  </node>
+  <!-- H - shelter -->
+  <node id="106" version="1" timestamp="2026-01-05T16:45:00Z" lat="50.5000" lon="4.9000">
+    <tag k="amenity" v="shelter"/>
+  </node>
+  <!-- I - peak -->
+  <node id="107" version="2" timestamp="2025-12-25T11:00:00Z" lat="50.5014" lon="6.0944">
+    <tag k="natural" v="peak"/>
+    <tag k="name" v="Signal de Botrange"/>
+  </node>
+  <!-- matches NO selector: must be dropped by extract and parse -->
+  <node id="108" version="1" timestamp="2026-06-10T12:00:00Z" lat="50.4650" lon="4.8650">
+    <tag k="amenity" v="bench"/>
+  </node>
+  <!-- two letters on one object: hotel (E) in a castle (J) -->
+  <node id="109" version="7" timestamp="2026-06-20T18:00:00Z" lat="50.3000" lon="4.9500">
+    <tag k="tourism" v="hotel"/>
+    <tag k="historic" v="castle"/>
+    <tag k="name" v="Kasteelhotel"/>
+  </node>
+  <!-- untagged corner nodes of way 201 -->
+  <node id="110" version="1" timestamp="2026-06-01T12:00:00Z" lat="50.0000" lon="5.0000"/>
+  <node id="111" version="1" timestamp="2026-06-01T12:00:00Z" lat="50.0000" lon="5.0200"/>
+  <node id="112" version="1" timestamp="2026-06-01T12:00:00Z" lat="50.0200" lon="5.0200"/>
+  <node id="113" version="1" timestamp="2026-06-01T12:00:00Z" lat="50.0200" lon="5.0000"/>
+  <!-- E - hotel as a CLOSED WAY: proves the centroid reduction (mean = 5.0100, 50.0100) -->
+  <way id="201" version="2" timestamp="2026-06-05T07:00:00Z">
+    <nd ref="110"/>
+    <nd ref="111"/>
+    <nd ref="112"/>
+    <nd ref="113"/>
+    <nd ref="110"/>
+    <tag k="tourism" v="hotel"/>
+    <tag k="name" v="Hôtel du Centre"/>
+  </way>
+</osm>
