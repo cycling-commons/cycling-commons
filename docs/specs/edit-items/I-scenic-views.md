@@ -1,4 +1,8 @@
+<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+
 # Edit spec — I · Scenic views
+
+**Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** I · Scenic views
 - **Map depiction:** ◬ pin, colour #2C5440

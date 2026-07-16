@@ -90,8 +90,10 @@ public Overpass API on a user request.**
    batched Overpass pull) in the `pipeline` service.
 2. Load the result into a **POI index (PostGIS)** for spatial queries ("show all
    bike shops in town X") and **vector tiles (S3/CDN)** for map display.
-3. User requests hit our tiles/index only — zero live Overpass load, and it
-   scales because the subset is tiny (a whole province returns tens of objects).
+3. User requests hit our tiles/index only — zero live Overpass load. The
+   planet-wide subset measures ≈ 4.7 M points
+   ([coverage-provider.md](coverage-provider.md) §10); per-region extracts
+   stay small, so ingestion and serving remain cheap.
 
 ### The complete OSM item catalogue
 
@@ -134,7 +136,8 @@ distinction is a data fact, not just presentation:
 
 Each kind gets a distinct marker so riders see the difference; the
 opening-hours default is kind-specific (`Unknown` for shops, `24/7` for
-stations/pumps).
+stations/pumps). Edit-flow consequences live in
+[edit-items/D-bike-services.md](edit-items/D-bike-services.md).
 
 ## 6. Materialize-on-edit lifecycle
 
@@ -211,9 +214,10 @@ The map and search reach the **full Commons**: our curated/own data (categories
 object appears once, as curated. Presentation ranks **curated/verified first**
 and marks category-1 records as **community** (lighter markers, a "community"
 tag). The display toggle governs ambient map density, not what search can find.
-The detailed presentation contract (ordering, markers, reveal behaviour) lives in
-the map/search UX spec and consumes this document's data model unchanged,
-whether community records arrive from the cache or from OSM.
+The detailed presentation contract (ordering, markers, reveal behaviour) is
+delegated to [map-and-search.md](map-and-search.md), which consumes this
+document's data model unchanged, whether community records arrive from the
+cache or from OSM.
 
 ## 9. Relationship to the current implementation
 

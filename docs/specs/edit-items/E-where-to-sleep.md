@@ -1,4 +1,8 @@
+<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+
 # Edit spec — E · Where to sleep
+
+**Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** E · Where to sleep
 - **Map depiction:** ⛺ pin, colour #B5532E

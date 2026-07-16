@@ -1,4 +1,8 @@
+<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+
 # Edit spec — A · Road surface
+
+**Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** A · Road surface
 - **Map depiction:** line styled by surface class, icon ▰, colour #4E8C84. Rendered **above** ride/climb
@@ -46,6 +50,31 @@ Vith loop** near its end, so a ride's real road type can be recorded.
 Available on this type (CC BY-SA 4.0).
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
+## Styling is keyed on `surface=`, not `smoothness=`
+
+The A layer's classification and rendering key **primarily on the OSM `surface=`
+tag** (with `highway=` only as a fallback for untagged ways); `smoothness=` is a
+displayed/editable attribute row but **never a styling key**. This is deliberate:
+keying style on smoothness reproduces CyclOSM's known failure mode where a gravel
+way tagged `smoothness=intermediate` renders as if paved — the surface disappears
+under the smoothness value. Verified in the harvest classifier
+(`tools/wallonia/route_surfaces.py`, `_cls()`: "the actual `surface=` tag wins")
+and the map styles (`web/assets/map/map.js`, `SURFACE_STYLE` keyed by surface
+class: cycleway teal · paved slate · gravel ochre · pavé slate-grey · dirt brown ·
+rock grey · unverified red dashes — "unverified" = OSM has no `surface=` tag,
+an invitation to tag it).
+
+Rendering is **one line layer per surface class** (over a single consolidated
+GeoJSON source + one shared casing layer) because MapLibre cannot data-drive
+`line-dasharray`/`line-cap` per feature within a layer — the dash pattern that
+distinguishes gravel/pavé/dirt from solid paved must live at the layer level.
+Line width scales from the `width=` tag.
+
 ## Implementation
 - **Demo:** registry entry `road-surface` in `atlas/demo/edit-items.js` (hand-picked fixture data); segment geometry in `atlas/demo/surface-data.js`.
-- **Production:** Overpass `way[surface]` / `[smoothness]` / `[width]` in the region bbox; render one MapLibre line sub-layer per surface class (solid = paved, dashed = gravel, dotted = rough), line width from `width=`.
+- **Production:** sourced via the `tools/wallonia` harvest today; region-bbox bulk harvesting is
+  superseded going forward ([../catalog-data-model.md](../catalog-data-model.md) §12) and A is
+  deliberately excluded from the coverage artifact
+  ([../coverage-provider.md](../coverage-provider.md) §4 — corridor line data, its own future
+  decision). Rendering: one MapLibre line sub-layer per surface class (solid = paved,
+  dashed = gravel, dotted = rough), line width from `width=`.

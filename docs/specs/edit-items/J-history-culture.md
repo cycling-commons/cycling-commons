@@ -1,4 +1,8 @@
+<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+
 # Edit spec — J · History & culture
+
+**Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** J · History & culture
 - **Map depiction:** 🏛 pin, colour #6E5849

@@ -1,4 +1,8 @@
+<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+
 # Edit spec — C · Water & food
+
+**Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** C · Water & food
 - **Map depiction:** pin, icon 💧, colour #8FB6A8

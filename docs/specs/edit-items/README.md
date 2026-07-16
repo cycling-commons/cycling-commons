@@ -1,4 +1,8 @@
+<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+
 # Edit-item specs — one per editable catalog type
+
+**Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 Per the project rule that **every catalog item must have a designed edit flow** (not just the
 service station): each editable type gets its own spec here, documenting what a contributor can
@@ -8,12 +12,12 @@ type is the guarantee that we've thought through the design and implementation o
 **K is the deliberate exception** (since 2026-07-08): recommended routes are *curated
 compositions* — riders propose (GPX + metadata), vote, confirm rides, and suggest corrections,
 but never edit route data; curators own all edits. See
-[`../2026-07-08-route-domain-design.md`](../2026-07-08-route-domain-design.md) and the rewritten
+[`../route-domain.md`](../route-domain.md) and the rewritten
 [K-quality-rides.md](K-quality-rides.md).
 
 These specs are the **design source of truth** for [`atlas/demo/edit-items.js`](../../../atlas/demo/edit-items.js)
 (the registry rendered by [`atlas/demo/improve.html`](../../../atlas/demo/improve.html)) and for the catalog
-[`2026-06-18-catalog-v2-and-per-type-forms.md`](../2026-06-18-catalog-v2-and-per-type-forms.md).
+[`../catalog-data-model.md`](../catalog-data-model.md).
 
 ## Production implementation (Symfony)
 
@@ -24,7 +28,7 @@ The real, server-rendered port of this registry lives in the Symfony app:
   table below) and `CatalogFormRegistry` (each type's *Fix-details* + *Add-missing* fields, lifted from
   `edit-items.js` to per-type schemas). `LocationMode`, `FieldKind`, `CatalogField`, `ItemFieldSet` support them.
   For **K** the registry field set backs the *propose-route* and *curator* forms, not a rider improve form —
-  `/improve` refuses `type=K` (route-id/item-id collision fix, 2026-07-07 security review).
+  `/improve` refuses `type=K` ([route-domain.md](../route-domain.md) §1).
 - **Type-aware form** — [`web/src/Form/ImproveType.php`](../../../web/src/Form/ImproveType.php) builds the
   Details step from the registry; [`web/templates/contribute/improve.html.twig`](../../../web/templates/contribute/improve.html.twig)
   renders it and surfaces this **votability/lifecycle context** in the review step.
@@ -33,25 +37,57 @@ The real, server-rendered port of this registry lives in the Symfony app:
   vote / "I rode this" / GPX download / suggest-a-correction instead of an edit link.
 
 **Persistence** — item submissions persist for real since data-API phase B
-([`../2026-07-04-submissions-and-moderation-on-real-data-design.md`](../2026-07-04-submissions-and-moderation-on-real-data-design.md));
+([../moderation-and-contribution.md](../moderation-and-contribution.md));
 route proposals bypass that pipeline entirely and land as `RecommendedRoute` rows (state `submitted`)
-with purpose-built `route_vote` / `route_ride` / `route_suggestion` tables (route-domain spec).
+with purpose-built `route_vote` / `route_ride` / `route_suggestion` tables (route-domain.md).
+
+## Registry-derivation contract (P1–P4)
+
+The reconciliation principles that keep the contribution frontend honest — binding on
+every type here:
+
+- **P1 — one source of truth.** `CatalogFormRegistry` + `item.attributes` define an item
+  type's editable shape. Forms (`App\Form\ImproveType`), map-drawer attribute rows
+  (`CatalogSchemaProvider::displayFields()` served as `window.CC_FIELD_SCHEMA`, rendered
+  by `map.js`'s `schemaRows()`), and the wizard review step ALL derive from it. No field
+  is ever invented in a template or in `map.js`.
+- **P2 — no hardcoded per-item display.** Every drawer row is either a stored attribute
+  rendered with its provenance or a clearly-labelled derived value; decorative constants
+  are banned.
+- **P3 — honest review step.** The review step echoes exactly the fields that will be
+  POSTed, with their entered values; empty fields are omitted.
+- **P4 — everything on the curated map is a real DB item** (submittable, editable,
+  moderatable). Hand-authored demo content is seed data with `source='manual'`
+  (`App\Catalog\ItemSource::Manual`) — real items in the normal lifecycle, permanently
+  distinguishable from `osm`/`pivot`/`wikidata`/`user`/`auto` — never code. Standing documented
+  exception: the single hazard fixture pin (F), inlined in `map.js` with no serving path.
+- **W5 — change history is user-visible** — see
+  [Change history & field-level diffs](#change-history--field-level-diffs) below.
+- **W6 — provenance renders uniformly** across ALL layers and item types; user/manual
+  contributions and approved edits are legibly attributed wherever they surface.
+
+**Character vocabulary (D2).** The filterable "what the place is like" attributes are
+live registry fields (never "who it's good for" framing): **effort** (`B`, with a map
+filter), road quality **`sq`** + traffic **`tr`** (`B`, with map filters), **famousFor**
+and **approach** (`B` add-missing free text), **accessibility** (`E`, with a map
+filter). The map filter chips' vocab lists mirror the registry's (`map.js`,
+`ALL_EFFORT`/`ALL_ACCESS`), with narrowing semantics: with every chip on, items
+with no value still show; deselect one and unvalued items hide too.
 
 ## Common to every type
 These panes behave the same across all edit items, so the per-type specs don't repeat them:
 
-**Moderation feedback, messages, retention & trash** *(design only — not yet
-built)* — every contribution channel (item submissions A–J, route proposals,
-route corrections) inherits the shared feedback system defined in
-[`../2026-07-12-moderation-feedback-and-messages-design.md`](../2026-07-12-moderation-feedback-and-messages-design.md):
-every decision writes the submitter a dashboard message (thank-you on
-approve/done, informing on reject/dismiss; on item submissions, a needs-info
-request whose reply re-queues the submission — route channels use curator
-messages instead), an unread bulb on the account chip, curator↔rider
-pseudonymous messaging, 3-month retention + GC for dismissed corrections and
-rejected item submissions (rejected route-proposal GC is still an open point —
-common spec §6), and an immediate hard-delete **Trash** for spam. Per-type
-specs only note deviations.
+**Moderation feedback, messages, retention & trash** *(built)* — every
+contribution channel (item submissions A–J, route proposals, route corrections)
+inherits the shared feedback system owned by
+[../moderation-and-contribution.md](../moderation-and-contribution.md) (the
+user-messages contract M1–M12, retention/GC, and Trash): every decision writes
+the submitter a dashboard message (thank-you on approve/done, informing on
+reject/dismiss; on item submissions, a needs-info request whose reply re-queues
+the submission — route channels use curator messages instead), an unread bulb
+on the account chip, curator↔rider pseudonymous messaging, 3-month retention +
+GC for dismissed corrections and rejected item submissions, and an immediate
+hard-delete **Trash** for spam. Per-type specs only note deviations.
 
 **Setting the location (add mode, `?mode=add`).** The *first* action is always to set the location, and
 it varies by type:
@@ -60,8 +96,10 @@ it varies by type:
 - **segment** (road surface) — tap the **start**, then the **end**; the segment line is drawn between them.
 - **none** (quality rides) — no pin; the **GPX** track sets the whole route. Upload happens in the
   dedicated rate-limited **propose-route flow** (not `/improve` add-mode), with server-side validation,
-  privacy trim, and distance/ascent computation (route-domain spec §5).
-- **climbs** use the dedicated `add-climb.html` flow (draw the **foot**, then the **summit**).
+  privacy trim, and distance/ascent computation (route-domain.md §4).
+- **climbs** use the dedicated `/add-climb` wizard: draw the **foot**, then the **summit** — the
+  road between them is auto-routed and a lockable **steepest** marker is placed
+  (three-point definition — [B-climbs.md](B-climbs.md)).
 
 **Report a problem** always includes an **Other** option (free-text) alongside the type-specific reasons.
 
@@ -104,25 +142,30 @@ Every catalog item keeps a **per-field change history** — the durable record b
 
 The history is **append-only** and per item: a submission is one entry, a later correction (by a
 rider or a curator) is another. **For K (routes)** riders never author changes — curator edits and
-state transitions write to a route-scoped `route_change_history` table instead (route-domain spec
-D9); rider input arrives as moderated `route_suggestion` records. The history is the source of
+state transitions write to a route-scoped `route_change_history` table instead (route-domain.md
+§2.2); rider input arrives as moderated `route_suggestion` records. The history is the source of
 truth for:
 
 - the **moderation "was → now" diff** a curator reviews before deciding
-  (see [`2026-07-02-map-based-moderation-design.md`](../2026-07-02-map-based-moderation-design.md));
+  (see [../moderation-and-contribution.md](../moderation-and-contribution.md) §3.2 and §5);
 - an item's public "last confirmed / last edited" line and the freshness signal;
 - honest provenance — we can always show *what* changed and *when*, without exposing rider tracks.
 
-**Persistence is deferred to the data-API** — there is no history table yet. In the demo/stub era the
-diff is carried by the `was`/`now` fixture fields (e.g. `SampleQueue`); when the data-API lands, the
-service that replaces `ContributionStubService` writes one history entry per accepted change, and the
-per-type forms' submissions become history entries rather than throwaway stub receipts.
+**Persistence is real** — the `change_history` table
+(`App\Catalog\Entity\ChangeHistory`, append-only: no code path may ever UPDATE or
+DELETE rows) holds one row per applied field change. The write/apply contract
+(including what `old_value` records) is owned by
+[../moderation-and-contribution.md](../moderation-and-contribution.md). The history is
+user-visible (W5): `GET /map/item/{id}/history` (`MapController::history()`, public,
+cacheable, 200-with-empty-list for never-edited items) feeds the map drawer's
+"Recent changes" section — field, old → new, anonymised rider pseudonym, when,
+newest first — visible to everyone including the contributor for their own edits.
 
 ## Item lifecycle and votability
 
-Every catalog item moves through a lifecycle. The **map's view-mode toggle (Best-of ↔ Everything) is
-driven by _votability_, not verification** — verification is only the gate that lets a votable item
-start collecting votes.
+Every catalog item moves through a lifecycle. The **map's view-mode toggle (Curated best-of ↔
+Everything — [map-and-search.md](../map-and-search.md) §4.2) is driven by _votability_, not
+verification** — verification is only the gate that lets a votable item start collecting votes.
 
 ```
 Submitted → [moderation: spam / abuse / duplicate — ROLE_CURATOR]   ← off the public map
@@ -131,7 +174,7 @@ Submitted → [moderation: spam / abuse / duplicate — ROLE_CURATOR]   ← off 
    → [verification gate: ≥ X independent community confirmations ([tap] "still here / still true")]
    → Verified    — a full pin.                     ◀── utility / coverage types stop here
    → Votable     — votable types only; now accrues votes
-   → Best-of     — top-voted; this is what Best-of mode surfaces
+   → Best-of     — top-voted; this is what Curated best-of mode surfaces
 ```
 
 - **X** (confirmations to verify) is **not one global number** — it's a tier + modifiers model
@@ -143,20 +186,20 @@ Submitted → [moderation: spam / abuse / duplicate — ROLE_CURATOR]   ← off 
 - **Two kinds of "unverified"** collapse to the same on-map treatment (a help-confirm dot in
   Everything): a fresh single-rider submission awaiting corroboration, and a bulk **`[OSM]` import** we
   mirror but haven't confirmed. Neither is votable until it clears the verification gate.
-- The word **_curated_ is deliberately avoided** for this axis — items rise by community **votes**, not
-  editorial hand-picking. (Moderation is a separate spam/abuse gate, not a quality ranking.)
+- Curated best-of surfaces items risen by community **votes**, not editorial hand-picking —
+  moderation is a separate spam/abuse gate, not a quality ranking.
 
-**View modes, restated in these terms:**
-- **Best-of** = top-voted votable items only — the inspiration / trip-planning map.
-- **Everything** = full coverage: all utility + every votable item at any funnel stage + unverified
-  dots — the on-the-road / completeness map.
+**View modes** (Curated best-of ↔ Everything) are owned by
+[map-and-search.md](../map-and-search.md) §4.2; in these terms, **Curated best-of** surfaces
+top-voted votable items only (the inspiration / trip-planning map) and **Everything** is full
+coverage (the on-the-road / completeness map).
 
 Per-pin state carries the trust/vote signal (unverified dot → verified pin → votable → best-of marker);
 the toggle no longer stands in for "trusted". Each per-type spec below tags its **Lifecycle** row
 accordingly.
 
 **Route carve-out (K).** Recommended routes follow the same *shape* but a route-specific machine
-([route-domain spec](../2026-07-08-route-domain-design.md) §4.3): `submitted` proposals are
+([route-domain.md](../route-domain.md) §3): `submitted` proposals are
 reviewed in a dedicated **Routes queue** (an editorial desk with a per-region active cap and
 retire-to-admit, not the item spam/abuse gate); curator-approved routes render a **"proposed"
 badge** (not the help-confirm dot); the confirmation is **"I rode this"** (`route_ride`, X
@@ -174,9 +217,9 @@ low-traffic regions.
 
 | Tier | Types | Base X | Behaviour |
 |---|---|---|---|
-| **Objective utility** | water *existence*, bike services, getting there, road surface | ~2 | existence is binary → cheap to confirm |
+| **Objective utility** | water *existence*, bike services, getting there | ~2 | existence is binary → cheap to confirm |
 | **Experiential / votable** | climbs, where to sleep, scenic views, history | ~2–3 | verification only confirms it *exists*; the **voting** layer does the quality filtering, so no punishing bar |
-| **Routes (K)** | quality rides | X = ~3 "I rode this" | route-specific: confirmation asserts *I rode it*, not *it exists* — `route_ride` rows from independent riders (route-domain spec §7); config, not constant |
+| **Routes (K)** | quality rides | X = ~3 "I rode this" | route-specific: confirmation asserts *I rode it*, not *it exists* — `route_ride` rows from independent riders (route-domain.md §6.2 / §5.1, config key `route.ride_verify_threshold`); config, not constant |
 | **Safety / time-sensitive** | hazards, shelter & emergency, the water *potable* flag | ~1 to publish | publish fast, then rely on **freshness decay** (the `freshness` field) — auto-stale after N days unless re-confirmed |
 
 **Modifiers** adjust the base (floor 1): `[OSM]` provenance −1 (imports arrive source-vetted, and may
@@ -184,6 +227,11 @@ seed as verified-by-source / community-unconfirmed); trusted contributor or cura
 or low-density region −1 (seed coverage early, tighten as the community grows).
 
 **Notes**
+- **A · road surface sits outside the `[tap]` machinery** — it is *measured*, carries no
+  confirmation stances ([../moderation-and-contribution.md](../moderation-and-contribution.md)
+  §10.1), and is excluded from `CC_CONFIRMABLE`
+  ([../map-and-search.md](../map-and-search.md) §6.3); its verification signal is data
+  provenance, not tap-confirmations.
 - **Config, not constants** — base X and modifiers are tunable per region / launch phase without a deploy.
 - **Risk can live at the field, not the item** — "this fountain exists" (low X) ≠ "this water is potable"
   (never fully verifiable → *labelled* "Unsigned — use judgement", not gated). See [C-water-food](C-water-food.md).
