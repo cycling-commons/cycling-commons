@@ -268,6 +268,12 @@
   </div>
 </div>
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{# pmtiles protocol adapter for the coverage vector source
+   (coverage-provider.md §4/§6) — SRI-pinned from unpkg
+   exactly like maplibre-gl above. map.js only registers the protocol when
+   window.CC_COVERAGE_URL is set (the COVERAGE_TILES manifest injection), so
+   with the flag off this script is inert. #}
+<script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js" integrity="sha384-iS2/cbFYol4NsEeda4mW6N/8wPMOT6pv2eY+GNYSJRqVC4nbJECP1+mg6D2T8wT/" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script nonce="{{ csp_nonce() }}">window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 {% if is_granted('ROLE_CURATOR') and pending is defined %}
 <script nonce="{{ csp_nonce() }}">

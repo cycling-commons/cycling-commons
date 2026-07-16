@@ -225,26 +225,33 @@
     if(mlyMarker){ mlyMarker.remove(); mlyMarker=null; }
   }
 
+  // water-droplet icons, minted once and shared by the legacy water-osm layer
+  // AND the coverage C tile layer: blue = tagged drinkable (tile prop
+  // `potable`, coverage-provider.md §4), grey = potability
+  // unknown/untagged — the "confirm on the spot" variant.
+  function mintWaterDrops(){
+    if(map.hasImage('water-drop')) return;
+    const S=2, W=14*S, H=18*S, cx=W/2;
+    const drop=(fill,stroke)=>{
+      const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+      const x=cv.getContext('2d');
+      x.beginPath(); x.moveTo(cx,S);
+      x.bezierCurveTo(W-S, H*0.46, W*0.80, H-S, cx, H-S);
+      x.bezierCurveTo(W*0.20, H-S, S, H*0.46, cx, S);
+      x.closePath();
+      x.fillStyle=fill; x.fill();
+      x.lineWidth=1.4*S; x.strokeStyle=stroke; x.stroke();
+      return new Uint8Array(x.getImageData(0,0,W,H).data.buffer);
+    };
+    map.addImage('water-drop', {width:W, height:H, data:drop('#3E8FB0','#0d2b3a')}, {pixelRatio:S});
+    map.addImage('water-drop-unk', {width:W, height:H, data:drop('#7F8C93','#2b3338')}, {pixelRatio:S});
+  }
+
   // all Wallonia drinking-water points (OSM) as an efficient dot layer, toggled with the Water layer
   function addWaterOsm(){
     if(!window.CC_WATER_OSM || map.getSource('water-osm')) return;
     osmLayers['water']={data:CC_WATER_OSM, water:true};
-    // build a small water-droplet icon (just the drop, no pin/marker around it) once
-    if(!map.hasImage('water-drop')){
-      const S=2, W=14*S, H=18*S, cx=W/2;
-      const drop=(fill,stroke)=>{
-        const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
-        const x=cv.getContext('2d');
-        x.beginPath(); x.moveTo(cx,S);
-        x.bezierCurveTo(W-S, H*0.46, W*0.80, H-S, cx, H-S);
-        x.bezierCurveTo(W*0.20, H-S, S, H*0.46, cx, S);
-        x.closePath();
-        x.fillStyle=fill; x.fill();
-        x.lineWidth=1.4*S; x.strokeStyle=stroke; x.stroke();
-        return new Uint8Array(x.getImageData(0,0,W,H).data.buffer);
-      };
-      map.addImage('water-drop', {width:W, height:H, data:drop('#3E8FB0','#0d2b3a')}, {pixelRatio:S});
-    }
+    mintWaterDrops();
     map.addSource('water-osm',{type:'geojson',data:CC_WATER_OSM});
     map.addLayer({id:'water-osm',type:'symbol',source:'water-osm',
       filter:['!',['has','c']],
@@ -519,8 +526,105 @@
     ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)'],
     ['transit',  window.CC_TRANSIT_OSM,  'OpenStreetMap (railway=station / railway=halt)']
   ];
+  // ---- Coverage tiles (coverage-provider.md §6) ----
+  // Uncurated OSM coverage renders from ONE PMTiles vector source ('coverage',
+  // one tile layer per catalogue letter, OSM-arch: osm-data-architecture.md §5)
+  // instead of inlined GeoJSON pools. Gated on window.CC_COVERAGE_URL (injected
+  // by MapController only when COVERAGE_TILES is on and the manifest resolves)
+  // AND on the pmtiles protocol lib actually having loaded — absent either, the
+  // map keeps today's pool-only behaviour (Photon-style silent degradation).
+  const COVERAGE_KEYS=[['water','c'],['services','d'],['stays','e'],['transit','g'],['shelter','h'],['scenic','i'],['history','j']];
+  const LETTER_KEY={C:'water',D:'services',E:'stays',G:'transit',H:'shelter',I:'scenic',J:'history'};
+  const COVERAGE_ON = typeof window.CC_COVERAGE_URL==='string' && !!window.CC_COVERAGE_URL && typeof pmtiles!=='undefined';
+  // Per-layer OSM source notes for the drawer's Source line — same wording as
+  // OSM_BULK above (water goes through waterDrawer, which owns its own string).
+  const COV_SRC={
+    services:'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)',
+    scenic:'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)',
+    history:'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)',
+    stays:'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)',
+    shelter:'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)',
+    transit:'OpenStreetMap (railway=station / railway=halt)'
+  };
+  // Curated-ref dedupe (osm-data-architecture.md §8): any object already served
+  // as an item draws once, as curated — its coverage twin is filtered out.
+  const covDedupeFilter=()=>['!',['in',['get','ref'],['literal', Array.from(window.CC_CURATED_REFS||[])]]];
+  function addCoverage(){
+    if(!COVERAGE_ON || map.getSource('coverage')) return;
+    maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+    mintWaterDrops();
+    map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
+    COVERAGE_KEYS.forEach(([key, srcLayer])=>{
+      const id=key+'-cov';
+      // Reuse the existing canvas-minted icons: droplet variants for C (keyed
+      // on the flat `potable` tile prop, tolerant of bool/num/string encoding),
+      // the per-serviceKind discs for D (tile prop `kind`), miniIcon elsewhere.
+      const icon = key==='water'
+        ? ['match',['to-string',['get','potable']],['yes','true','1'],'water-drop','water-drop-unk']
+        : key==='services'
+          ? ['match',['get','kind'],
+              'shop', miniIcon('services'),
+              'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
+              'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
+              miniIcon('services')]
+          : miniIcon(key);
+      map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
+        filter:covDedupeFilter(),
+        layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
+          'icon-size': key==='water'
+            ? ['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]
+            : ['interpolate',['linear'],['zoom'],8,0.42,13,0.7,18,0.95]}});
+      map.on('click',id,e=>{ const f0=e.features[0], tp=f0.properties, c=f0.geometry.coordinates;
+        openCoverageDrawer(key, tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });   // exact feature coords, same halo rule as addOsmDots
+      map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
+      map.on('mousemove',id,e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[key]||{}).label||'Item', e.lngLat); });
+      map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+    });
+  }
+  // Adapt coverage properties (tile props + optionally the detail payload) into
+  // the property bag osmDrawer/waterDrawer already consume. Coverage POIs are
+  // always OSM-sourced; a curated twin (detail.curated — normally suppressed by
+  // the dedupe filter, but reachable via deep links/search) binds the drawer to
+  // the real item id so the edit bridge, confirm panel and registry rows work.
+  function covProps(key, tp, d){
+    const p={ srcType:'osm' };
+    if(tp.t) p.t=tp.t;
+    if(tp.n) p.n=tp.n;
+    if(key==='services' && tp.kind) p.serviceKind=tp.kind;
+    if(d){
+      if(d.name) p.n=d.name;
+      if(key==='services' && d.kind) p.serviceKind=d.kind;
+      const tags=d.tags||{};
+      const web=tags.website||tags['contact:website'];
+      if(web) p.web=web;
+      if(d.curated){
+        if(d.curated.itemId!=null) p.id=d.curated.itemId;
+        Object.assign(p, d.curated.fields||{});
+      }
+    }
+    return p;
+  }
+  // Open a coverage POI drawer from tile props immediately, then hydrate from
+  // GET /map/coverage/poi/{ref} — the open-now-enrich-later pattern the drawer
+  // already uses for history/confirmations (coverage-provider.md §6).
+  // Race-guarded like _historyReq: a stale detail response never repaints a
+  // drawer that has since moved on.
+  let _covReq=0;
+  function openCoverageDrawer(key, tp, ll){
+    const layer=layerByKey[key];
+    const open=p=>openDrawer(layer, key==='water' ? waterDrawer(p, ll) : osmDrawer(layer, p, ll, COV_SRC[key]));
+    open(covProps(key, tp, null));
+    if(!tp.ref) return;
+    const myReq=++_covReq;
+    fetch('/map/coverage/poi/'+tp.ref, {headers:{'Accept':'application/json'}})
+      .then(r=>r.ok?r.json():null)
+      .catch(()=>null)   // detail is an enhancement — the tile props already opened the drawer
+      .then(d=>{ if(!d || myReq!==_covReq) return;
+        if(!document.getElementById('drawer').classList.contains('open')) return;   // closed while in flight
+        open(covProps(key, tp, d)); });
+  }
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
-  map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm();   // heatmap is lazy (W43)
+  map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     addRegionBoundary('Wallonia'); setupConfClusters();
     // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
@@ -1099,10 +1203,18 @@
   // stays' bulk-OSM dot layer filter combines the base "unconfirmed only" clause with the
   // accessibility narrowing above; confirmed/clustered stays are filtered in updateConfMarkers().
   function applyStaysAccessFilter(){
-    if(!map.getLayer('stays-osm')) return;
-    const base=['!',['has','c']];
-    map.setFilter('stays-osm', activeAccess.size===ALL_ACCESS.size ? base
-      : ['all', base, ['in', ['get','accessibility'], ['literal', Array.from(activeAccess)]]]);
+    if(map.getLayer('stays-osm')){
+      const base=['!',['has','c']];
+      map.setFilter('stays-osm', activeAccess.size===ALL_ACCESS.size ? base
+        : ['all', base, ['in', ['get','accessibility'], ['literal', Array.from(activeAccess)]]]);
+    }
+    // Coverage stays narrow on the flat `acc` tile prop
+    // (coverage-provider.md §6) — the dedupe filter is the
+    // layer's base filter and must survive every setFilter.
+    if(map.getLayer('stays-cov')){
+      map.setFilter('stays-cov', activeAccess.size===ALL_ACCESS.size ? covDedupeFilter()
+        : ['all', covDedupeFilter(), ['in', ['get','acc'], ['literal', Array.from(activeAccess)]]]);
+    }
   }
 
   // D · services confirmed/curated pins show the per-kind glyph (shop/station/pump) instead of
@@ -1173,6 +1285,12 @@
     ['water','services','scenic','history','stays','shelter','transit'].forEach(k=>{
       // unverified dots show only in Everything mode; Curated best-of keeps just the confirmed pins
       const id=k+'-osm'; if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', (active.has(k) && mode==='all')?'visible':'none');
+    });
+    // Coverage tile layers follow the same rule as the legacy pools for now
+    // (Everything only); the community-tier pass (plan Task 12) re-tiers this
+    // to draw utility letters lightly in Curated too (07-15 decision B).
+    if(COVERAGE_ON) COVERAGE_KEYS.forEach(([key])=>{
+      const id=key+'-cov'; if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', (active.has(key) && mode==='all')?'visible':'none');
     });
     let n=0;
     CATALOG.forEach(layer=>{

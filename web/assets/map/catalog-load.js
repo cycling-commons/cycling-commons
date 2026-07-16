@@ -32,6 +32,13 @@
       window.CC_SCENIC_OSM = d.I;
       window.CC_HISTORY_OSM = d.J;
       window.CC_ROUTES = { routes: d.K, heat: d.L };
+      // Coverage dedupe (coverage-provider.md §6): the set
+      // of source_refs already served as items — the coverage tile layers
+      // filter these out so an object never draws twice (once as a tile dot,
+      // once as a served pool feature). The CatalogProvider ships `refs` from
+      // plan Task 13 on; until then (and on payloads without it) [] simply
+      // means "filter nothing", which is correct — no refs, no possible twin.
+      window.CC_CURATED_REFS = d.refs || [];
       // Stays merge: tag PIVOT features and append them to the OSM stays
       // collection once (drives the Tourisme-Wallonie attribution branch).
       var O = window.CC_STAYS_OSM, P = window.CC_STAYS_PIVOT;
