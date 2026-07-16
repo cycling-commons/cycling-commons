@@ -26,7 +26,8 @@ use Symfony\Component\HttpKernel\KernelEvents;
  *    cannot cover attribute styles. Script execution is the boundary here.
  *  - connect-src: basemap/satellite tiles, geocoders, routing, elevation,
  *    Mapillary APIs, self-hosted Umami. Mapillary image bytes come from
- *    Meta CDN hosts (*.fbcdn.net), fetched by mapillary-js.
+ *    Meta CDN hosts (*.fbcdn.net), fetched by mapillary-js. Coverage PMTiles
+ *    host joins via COVERAGE_CSP_HOST (coverage-provider.md §4).
  *  - img-src: Wikimedia Special:FilePath 302s to upload.wikimedia.org — CSP
  *    checks every hop, so both hosts are listed; data:/blob: for MapLibre
  *    sprites and generated icons.
@@ -36,8 +37,16 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 final class CspSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly CspNonce $nonce)
-    {
+    public function __construct(
+        private readonly CspNonce $nonce,
+        // Browser-facing origin of the coverage PMTiles artifact (env
+        // COVERAGE_CSP_HOST via config/packages/coverage.yaml). A dedicated
+        // param, not a response-time parse of the manifest URL: the manifest
+        // is fetched server-side and may live on a different host than the
+        // tile bytes the browser reads (dev: minio:9000 vs localhost:9100).
+        // Empty string = no coverage host in the policy.
+        private readonly string $coverageCspHost = '',
+    ) {
     }
 
     public function onKernelResponse(ResponseEvent $event): void
@@ -65,24 +74,31 @@ final class CspSubscriber implements EventSubscriberInterface
         $scriptSrc = "script-src 'self' 'nonce-{$nonce}' https://unpkg.com"
             .($isMap ? " 'unsafe-eval'" : '');
 
+        $connectSrc = [
+            "'self'",
+            'https://tiles.openfreemap.org',
+            'https://server.arcgisonline.com',
+            'https://*.mapillary.com',
+            'https://*.fbcdn.net',
+            'https://nominatim.openstreetmap.org',
+            'https://photon.komoot.io',
+            'https://router.project-osrm.org',
+            'https://api.open-meteo.com',
+            'https://analytics.bikecoders.life',
+        ];
+        if ('' !== $this->coverageCspHost) {
+            // Coverage PMTiles byte-range reads straight off the bucket/CDN
+            // (coverage-provider.md §4).
+            $connectSrc[] = $this->coverageCspHost;
+        }
+
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
             $scriptSrc,
             "style-src 'self' 'unsafe-inline' https://unpkg.com",
             "img-src 'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net",
             "font-src 'self'",
-            'connect-src '.implode(' ', [
-                "'self'",
-                'https://tiles.openfreemap.org',
-                'https://server.arcgisonline.com',
-                'https://*.mapillary.com',
-                'https://*.fbcdn.net',
-                'https://nominatim.openstreetmap.org',
-                'https://photon.komoot.io',
-                'https://router.project-osrm.org',
-                'https://api.open-meteo.com',
-                'https://analytics.bikecoders.life',
-            ]),
+            'connect-src '.implode(' ', $connectSrc),
             'worker-src blob:',
             'child-src blob:',
             "object-src 'none'",

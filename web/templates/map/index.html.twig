@@ -299,6 +299,13 @@
      drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
   window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_PREFS = {{ rider_prefs|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% if coverage_url %}
+  {# Coverage tiles (coverage-provider.md §4): the versioned
+     PMTiles artifact URL — emitted only when COVERAGE_TILES is on AND the
+     manifest resolved; map.js keys the whole coverage source on its presence.
+     HEX-escaped like MAPILLARY_TOKEN: the value originates outside the app. #}
+  window.CC_COVERAGE_URL = {{ coverage_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
 </script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
    globals (catalog-load.js injects it after the fetch resolves), but its

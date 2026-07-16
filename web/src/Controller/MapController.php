@@ -11,6 +11,7 @@ use App\Catalog\ChangeHistoryView;
 use App\Catalog\RidingStyle;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
+use App\Coverage\CoverageManifest;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
@@ -31,7 +32,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class MapController extends AbstractController
 {
     #[Route('/map', name: 'map')]
-    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
+    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage): Response
     {
         $user = $this->getUser();
         $params = [
@@ -48,6 +49,11 @@ final class MapController extends AbstractController
                     ? array_map(static fn (RidingStyle $s): string => $s->value, $user->getRidingStyles())
                     : [],
             ],
+            // Coverage tiles (coverage-provider.md §4): the
+            // current versioned PMTiles URL from the bucket manifest (server-
+            // cached 3600 s), or null when the flag is off / the manifest is
+            // unreachable — the template only emits CC_COVERAGE_URL when set.
+            'coverage_url' => $coverage->currentTileUrl(),
         ];
 
         // Curator-only: hand the pending submissions to the map so the moderation

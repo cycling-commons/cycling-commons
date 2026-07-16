@@ -39,3 +39,7 @@ services:
         arguments:
             $tilesEnabled: '%coverage.tiles_enabled%'
             $manifestUrl: '%coverage.manifest_url%'
+
+    App\EventSubscriber\CspSubscriber:
+        arguments:
+            $coverageCspHost: '%coverage.csp_host%'
