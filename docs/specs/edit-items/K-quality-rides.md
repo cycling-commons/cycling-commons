@@ -1,8 +1,12 @@
+<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+
 # Edit spec — K · Quality rides (recommended routes)
+
+**Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** K · Quality rides
 - **Map depiction:** line, icon ★, colour #FF5A1F (brand orange); `unverified` routes carry a **"proposed"** badge
-- **Editable:** **no — curator-only.** K is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Riders **propose**, **vote**, **confirm rides**, **download GPX**, and **suggest corrections** — they never edit route data. Design source of truth: [`../2026-07-08-route-domain-design.md`](../2026-07-08-route-domain-design.md).
+- **Editable:** **no — curator-only.** K is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Riders **propose**, **vote**, **confirm rides**, **download GPX**, and **suggest corrections** — they never edit route data. Design source of truth: [`../route-domain.md`](../route-domain.md).
 - **Lifecycle:** route-specific state machine (NOT the shared item funnel): `submitted` (rider proposal) → curator desk approval → `unverified` ("proposed" on the map) → X independent **"I rode this"** confirmations → `verified` (votable) · plus `rejected` and `retired`. A configurable **per-region cap (~30 active routes)** bounds supply; a full region admits a new route only by retiring a weaker one.
 
 ## What it is
@@ -41,7 +45,8 @@ a region drowns in 1000+ unvetted routes).
 
 A ride needs **no pin** — the (trimmed) GPX track sets the whole route.
 "Starts at / towns on route" reverse-geocoding from the track remains future
-work (route-domain spec §2 non-goals).
+work ([`../route-domain.md`](../route-domain.md) §11 — specified, pending
+implementation).
 
 ## Privacy — trim the ends
 
@@ -72,26 +77,27 @@ never reveals where its proposer started or finished. The drawer states this
 | **Vote** (season + bike type) | ROLE_USER, `verified` routes only | `route_vote` row; unique per user/route/season |
 | **"I rode this"** (bike type) | ROLE_USER, active routes | `route_ride` row; at threshold X → `verified` |
 | **Download GPX** | public, active routes | `GET /routes/{id}.gpx` from the stored trimmed track |
-| **Suggest a correction** | ROLE_USER | preset reason (wrong/broken track · trim a private start/end · duplicate · not actually rideable · other) + note, optionally locating the affected stretch(es) on the map (route-domain spec §16) → moderated `route_suggestion` |
+| **Suggest a correction** | ROLE_USER | preset reason (wrong/broken track · trim a private start/end · duplicate · not actually rideable · other) + note, optionally locating the affected stretch(es) on the map ([`../route-domain.md`](../route-domain.md) §7) → moderated `route_suggestion` |
 
 Proposal decisions and correction resolutions feed the shared moderation-feedback
-system ([`../2026-07-12-moderation-feedback-and-messages-design.md`](../2026-07-12-moderation-feedback-and-messages-design.md)):
+system ([`../moderation-and-contribution.md`](../moderation-and-contribution.md) §7):
 the rider gets a dashboard message on approve/reject/retire and on done/dismissed,
 dismissed corrections are retained 3 months then GC'd, and spam can be Trashed
-(immediate hard delete). Not yet built.
+(immediate hard delete).
 
 ## Curator form (proposal review + metadata edit)
 
-The registry fields (proposal form and curator edit share them):
+The registry fields (proposal form and curator edit share them; canonical
+vocabularies and stored shapes: [`../route-domain.md`](../route-domain.md) §9):
 
 | Field | Control |
 |---|---|
 | Ride name | input |
-| Difficulty | select (Gentle/Moderate/Hard/Very hard) |
-| Best season | select (Spring/Summer/Autumn/Winter/Any) |
-| Dominant surface | select (Asphalt/Mixed/Gravel) |
+| Difficulty | select (Easy/Moderate/Challenging/Hard/Very hard) |
+| Best season | multi-select (Spring/Summer/Autumn/Winter) — no "Any"; all four selected is the "any" |
+| Dominant surface | select — the 9-value `SurfaceVocabulary::DECLARABLE` set (Asphalt/Concrete/Paving stones/Sett — pavé/Compacted/Fine gravel/Gravel/Dirt/Rock) |
 | Note for riders | textarea |
-| Suitable bike types | multi-select (Road/Gravel/MTB/E-bike/Handbike) |
+| Suitable bike types | multi-select — all 8 `BikeType` values (Road/Gravel/MTB/E-bike/Handbike/Recumbent/Trike/Tandem) |
 | Gradient-limited? | select (No/≤6%/≤9%) |
 | Best direction | select (Clockwise/Counter-clockwise/Either) |
 
