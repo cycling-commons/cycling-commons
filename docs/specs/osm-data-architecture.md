@@ -117,19 +117,24 @@ category-3 (our own data) and are **not** part of the OSM extract.
 ### Bike services — one type, three OSM kinds
 
 Item type **D · Bike services** carries a `serviceKind ∈ {shop, station, pump}`
-discriminator, derived from the OSM tag on ingest (and selectable on manual add).
-The distinction is a data fact, not just presentation:
+discriminator, derived from the OSM tag on ingest (and selectable on manual add
+— deferred until an add-new-bike-service flow exists; today items enter only
+via ingest or edits to existing items, which always carry a kind). The
+distinction is a data fact, not just presentation:
 
-- `shop` (`shop=bicycle`) — staffed; opening hours are meaningful (the
-  `24/7 / See website / Unknown` field applies).
+- `shop` (`shop=bicycle`) — staffed; opening hours are meaningful; the
+  `24/7 / See website / Unknown` field defaults to `Unknown`.
 - `station` (`amenity=bicycle_repair_station`) / `pump`
-  (`amenity=compressed_air`) — unmanned; **24/7 is implied by the type**, so
-  there is no opening-hours field. "Unmanned / 24-7" is the *kind*, never a
-  chosen value. Riders still see the implied fact: the item card displays
-  "Opening hours · 24/7" as a read-only row.
+  (`amenity=compressed_air`) — unmanned; **24/7 is the default assumption**.
+  The edit form shows the same opening-hours field with `24/7` preselected —
+  overridable, because some stations follow a host building's hours (e.g. a
+  repair station inside a library). When no value is stored, the item card
+  shows the assumed default as a read-only "Opening hours · 24/7" row; a
+  stored value wins.
 
-Each kind gets a distinct marker so riders see the difference; form fields are
-kind-specific (only `shop` shows opening hours).
+Each kind gets a distinct marker so riders see the difference; the
+opening-hours default is kind-specific (`Unknown` for shops, `24/7` for
+stations/pumps).
 
 ## 6. Materialize-on-edit lifecycle
 
@@ -226,6 +231,7 @@ swap does not touch the map or contribution UX.
 - Stand up the **coverage provider**: the scheduled OSM subset extract → PostGIS
   POI index + vector tiles in the `pipeline` service.
 - Implement **materialize-on-edit** against the cached coverage.
-- Split **D · Bike services** into `shop / station / pump` kinds.
+- ~~Split **D · Bike services** into `shop / station / pump` kinds.~~ Done —
+  kind-selectable manual add remains deferred until an add-new flow exists (§5).
 - Add the **API-only access** rule and **scraping prohibition** to the user terms.
 - Commission a **licence review** confirming §3.

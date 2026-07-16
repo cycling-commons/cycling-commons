@@ -269,11 +269,10 @@
   function schemaRows(letter, src, id, opts){
     const schema = (window.CC_FIELD_SCHEMA || {})[letter] || [];
     const skip = (opts && opts.skip) || [];
-    const fixed = (opts && opts.fixed) || {};   // key -> value implied by the item's nature: shown read-only, never an "add" prompt
+    const fixed = (opts && opts.fixed) || {};   // key -> assumed default when UNSET: shown as a value row instead of an "add" prompt; a stored value wins
     const rows = [];
     schema.forEach(f=>{
       if(skip.indexOf(f.key) >= 0) return;
-      if(fixed[f.key] != null){ const cv0=f.choices||{}; rows.push({label:f.label, value:cv0[fixed[f.key]] != null ? cv0[fixed[f.key]] : fixed[f.key]}); return; }
       const v = src[f.key];
       const has = Array.isArray(v) ? v.length > 0 : (v != null && v !== '');
       // Stored values are canonical English; f.choices (schema-provided, per
@@ -291,6 +290,8 @@
         } else {
           rows.push({label:f.label, value:tv(v)});
         }
+      } else if(fixed[f.key] != null){
+        rows.push({label:f.label, value:tv(fixed[f.key])});
       } else if(id != null){
         const href = `/improve?item=${encodeURIComponent(id)}&type=${encodeURIComponent(letter)}&field=${encodeURIComponent(f.key)}`;
         rows.push({label:f.label, html:true, empty:true, value:`<a class="cc-d-add" href="${href}">＋ ${D.add||'add'}</a>`});

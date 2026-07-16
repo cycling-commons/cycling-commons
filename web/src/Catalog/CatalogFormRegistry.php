@@ -88,21 +88,21 @@ final class CatalogFormRegistry
             ),
 
             ItemType::BikeServices => new ItemFieldSet(
-                fields: array_values(array_filter([
+                fields: [
                     CatalogField::text('name', 'Name', display: false),
                     // 'web' matches the Stays key so map.js renders the shared
                     // "Website" row; a shop/repair place usually has its own site.
                     CatalogField::url('web', 'Website', placeholder: 'https://… (the shop’s own site)'),
                     CatalogField::select('pumpValve', 'Pump valve', ['Presta + Schrader', 'Presta only', 'Schrader only', 'No pump']),
-                    // Opening hours only for a staffed shop (spec §5): stations
-                    // and pumps are 24/7 by kind. An unknown kind (null,
-                    // legacy/untyped call sites) preserves today's behaviour.
-                    (null === $serviceKind || $serviceKind->hasOpeningHours())
-                        ? CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: 'Unknown')
-                        : null,
+                    // Kind-specific DEFAULT (spec §5): an unmanned station/pump is
+                    // assumed 24/7 (preselected, overridable — some stations follow
+                    // a host building's hours, e.g. inside a library); a staffed
+                    // shop — and an unknown kind (null, legacy/untyped call sites) —
+                    // stays 'Unknown' until someone tells us.
+                    CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: (null === $serviceKind || $serviceKind->hasOpeningHours()) ? 'Unknown' : '24/7'),
                     CatalogField::text('tools', 'Tools available', placeholder: 'e.g. chain tool, work stand'),
                     CatalogField::textarea('correction', 'Anything to correct?', "What's wrong or out of date?", display: false),
-                ])),
+                ],
                 addFields: [
                     CatalogField::select('workStand', 'Work stand?', self::UNKNOWN_YES_NO),
                     CatalogField::select('chainTool', 'Chain tool?', self::UNKNOWN_YES_NO),

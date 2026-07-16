@@ -8,14 +8,17 @@ namespace App\Tests\Catalog;
 
 use App\Catalog\CatalogField;
 use App\Catalog\CatalogFormRegistry;
+use App\Catalog\ItemFieldSet;
 use App\Catalog\ItemType;
 use App\Catalog\ServiceKind;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The D (BikeServices) improve form is kind-aware: `openingHours` only makes
- * sense for a staffed shop (spec §5) — a self-service station or a public
- * pump is 24/7 by nature, so asking for its "hours" is meaningless.
+ * The D (BikeServices) improve form is kind-aware in its opening-hours DEFAULT
+ * (spec §5): a staffed shop defaults to 'Unknown', while a self-service station
+ * or public pump is unmanned and defaults to the assumed '24/7' — preselected
+ * but overridable, because some stations follow a host building's hours (e.g.
+ * a repair station inside a library).
  */
 final class CatalogFormRegistryServiceKindTest extends TestCase
 {
@@ -27,47 +30,51 @@ final class CatalogFormRegistryServiceKindTest extends TestCase
         $this->registry = new CatalogFormRegistry();
     }
 
-    public function testStationHasNoOpeningHoursField(): void
+    public function testStationDefaultsOpeningHoursTo247(): void
     {
-        $set = $this->registry->for(ItemType::BikeServices, ServiceKind::Station);
+        $field = $this->field($this->registry->for(ItemType::BikeServices, ServiceKind::Station), 'openingHours');
 
-        self::assertFalse($this->hasField($set->fields, 'openingHours'), 'a station must not carry an openingHours field');
+        self::assertNotNull($field, 'a station must carry the openingHours field');
+        self::assertSame('24/7', $field->default, 'unmanned station: 24/7 preselected');
     }
 
-    public function testPumpHasNoOpeningHoursField(): void
+    public function testPumpDefaultsOpeningHoursTo247(): void
     {
-        $set = $this->registry->for(ItemType::BikeServices, ServiceKind::Pump);
+        $field = $this->field($this->registry->for(ItemType::BikeServices, ServiceKind::Pump), 'openingHours');
 
-        self::assertFalse($this->hasField($set->fields, 'openingHours'), 'a pump must not carry an openingHours field');
+        self::assertNotNull($field, 'a pump must carry the openingHours field');
+        self::assertSame('24/7', $field->default, 'unmanned pump: 24/7 preselected');
     }
 
-    public function testShopHasOpeningHoursField(): void
+    public function testShopDefaultsOpeningHoursToUnknown(): void
     {
-        $set = $this->registry->for(ItemType::BikeServices, ServiceKind::Shop);
+        $field = $this->field($this->registry->for(ItemType::BikeServices, ServiceKind::Shop), 'openingHours');
 
-        self::assertTrue($this->hasField($set->fields, 'openingHours'), 'a shop must carry an openingHours field');
+        self::assertNotNull($field, 'a shop must carry the openingHours field');
+        self::assertSame('Unknown', $field->default, 'staffed shop: hours unverified until someone tells us');
     }
 
-    public function testDefaultNullPreservesTodaysBehaviourAndKeepsOpeningHours(): void
+    public function testDefaultNullPreservesTodaysBehaviour(): void
     {
-        $set = $this->registry->for(ItemType::BikeServices);
+        $field = $this->field($this->registry->for(ItemType::BikeServices), 'openingHours');
 
-        self::assertTrue($this->hasField($set->fields, 'openingHours'), 'null (unknown kind) must preserve today\'s behaviour: openingHours present');
+        self::assertNotNull($field, 'null (unknown kind) must preserve today\'s behaviour: openingHours present');
+        self::assertSame('Unknown', $field->default);
 
         // Explicit null must behave identically to the omitted default.
-        $setExplicitNull = $this->registry->for(ItemType::BikeServices, null);
-        self::assertTrue($this->hasField($setExplicitNull->fields, 'openingHours'));
+        $explicitNull = $this->field($this->registry->for(ItemType::BikeServices, null), 'openingHours');
+        self::assertNotNull($explicitNull);
+        self::assertSame('Unknown', $explicitNull->default);
     }
 
-    /** @param list<CatalogField> $fields */
-    private function hasField(array $fields, string $name): bool
+    private function field(ItemFieldSet $set, string $name): ?CatalogField
     {
-        foreach ($fields as $field) {
+        foreach ($set->fields as $field) {
             if ($name === $field->name) {
-                return true;
+                return $field;
             }
         }
 
-        return false;
+        return null;
     }
 }
