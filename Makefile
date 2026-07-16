@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -109,6 +109,27 @@ app-test: ## run the app test suite + static analysis + gates
 
 app-rector: ## apply Rector refactors (advisory; review the diff before committing)
 	cd web && vendor/bin/rector process
+
+# The test DB accumulates stray committed rows from out-of-band runs (the DAMA
+# transaction wrapper only guards phpunit-managed runs) — symptom: unique-key
+# violations like display_name_canonical=(curator). A clean rebuild needs THREE
+# things migrations alone don't cover: (1) the PostGIS extensions — the docker
+# init script (developers/docker/db/init/01-postgis.sql) only runs on first
+# cluster init, never on a same-cluster drop/recreate; (2) app:world:import —
+# world reference data is seeded out-of-band, not by a migration, and
+# moderator-area tests validate country codes against it; (3) migrations.
+TEST_DB_URL = postgresql://cc:cc@db:5432/cyclingcommons_test?serverVersion=18&charset=utf8
+test-db-reset: ## Drop + rebuild the test DB (PostGIS ext, migrations, world data) — fixes stale-row test failures
+	@echo "→ Dropping and recreating cyclingcommons_test…"
+	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:database:drop --force --if-exists
+	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:database:create
+	@echo "→ Enabling PostGIS extensions…"
+	@$(DOCKER_COMP) exec -T db psql -U cc -d cyclingcommons_test -c "CREATE EXTENSION IF NOT EXISTS postgis; CREATE EXTENSION IF NOT EXISTS postgis_topology;"
+	@echo "→ Running migrations…"
+	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:migrations:migrate --no-interaction
+	@echo "→ Importing world reference data…"
+	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console app:world:import
+	@echo "✔ Test DB rebuilt — run the suite with: make app-test (or docker exec -e APP_ENV=test … php bin/phpunit)"
 
 app-create-admin: ## Bootstrap an admin user: make app-create-admin email=you@example.com  (prompts for password)
 	cd web && php bin/console app:user:create --role=ROLE_ADMIN $(email)
