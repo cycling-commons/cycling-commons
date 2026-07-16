@@ -1,0 +1,25 @@
+pipeline/Dockerfile
+  s_f6d45d977e7468::t_0dab099e1b66ff 27,29,33-37
+  s_f6d45d977e7468::t_f6a1cd97223eb1 8-9,11,15-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "dcef7ec5caed4d2ca6aec7acc2c2540facde744c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
