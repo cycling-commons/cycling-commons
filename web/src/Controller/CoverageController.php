@@ -27,6 +27,12 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CoverageController extends AbstractController
 {
     /**
+     * Hard cap on the search term before it reaches ILIKE/similarity —
+     * typed map queries are short; anything longer is noise or abuse.
+     */
+    private const int SEARCH_QUERY_MAX_LENGTH = 64;
+
+    /**
      * Sidebar search over the coverage tier: curated matches first, then
      * community rows not shadowed by a served ref. Queries under two chars
      * answer an empty result set (cheap contract for the client debounce).
@@ -38,7 +44,7 @@ final class CoverageController extends AbstractController
             return $limited;
         }
 
-        $q = trim((string) $request->query->get('q', ''));
+        $q = mb_substr(trim((string) $request->query->get('q', '')), 0, self::SEARCH_QUERY_MAX_LENGTH);
         $results = mb_strlen($q) >= 2 ? $coverage->search($q) : [];
 
         return $this->cacheable($request, ['results' => $results, 'attribution' => CoverageRepository::ATTRIBUTION], 300);

@@ -105,6 +105,21 @@ final class CoverageQueryTest extends WebTestCase
         self::assertSame('pump', $results[0]['kind']);
     }
 
+    public function testSearchOverlongQueryIsCappedAndStillAnswers(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        $name = 'Fontaine '.str_repeat('a', 55);           // exactly 64 chars = the controller's query cap
+        self::insertCoveragePoi($db, ['ref' => 'node/9901', 'name' => $name]);
+
+        // 64 matching chars + junk beyond the cap: the tail must be truncated
+        // away before ILIKE/similarity, so the row still matches.
+        $data = $this->getJson($client, '/map/coverage/search?q='.urlencode($name.'zzzz'));
+        self::assertResponseIsSuccessful();
+        self::assertSame('node/9901', $data['results'][0]['ref']);
+    }
+
     public function testSearchShortQueryAnswersEmpty(): void
     {
         $client = static::createClient();
@@ -143,6 +158,36 @@ final class CoverageQueryTest extends WebTestCase
         self::assertSame(['Water 1', 'Water 2', 'Water 3'], array_column(\array_slice($group['items'], 1), 'n')); // nearest 3, by distance
     }
 
+    public function testNearbyKmClampsAtTwentyFiveKm(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9601', 'name' => 'Fontaine à 11 km', 'lat' => 50.5, 'lng' => 5.8]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9602', 'name' => 'Fontaine à 30 km', 'lat' => 50.67, 'lng' => 5.8]);
+
+        $data = $this->getJson($client, '/map/coverage/nearby?lat=50.4&lng=5.8&km=999');
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $data['groups']);
+        self::assertSame(1, $data['groups'][0]['total']);  // the 30 km row is beyond the 25 km clamp
+        self::assertSame('node/9601', $data['groups'][0]['items'][0]['ref']);
+    }
+
+    public function testNearbyKmDefaultsToFiveKm(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9611', 'name' => 'Fontaine à 2 km', 'lat' => 50.418, 'lng' => 5.8]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9612', 'name' => 'Fontaine à 8 km', 'lat' => 50.472, 'lng' => 5.8]);
+
+        $data = $this->getJson($client, '/map/coverage/nearby?lat=50.4&lng=5.8');
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $data['groups']);
+        self::assertSame(1, $data['groups'][0]['total']);  // the 8 km row is outside the 5 km default
+        self::assertSame('node/9611', $data['groups'][0]['items'][0]['ref']);
+    }
+
     public function testNearbyInvalidCoordsIs422(): void
     {
         $client = static::createClient();
@@ -162,6 +207,9 @@ final class CoverageQueryTest extends WebTestCase
         self::insertCoveragePoi($db, ['ref' => 'node/9701', 'letter' => 'C']);
         self::insertCoveragePoi($db, ['ref' => 'node/9702', 'letter' => 'C']);
         self::insertCoveragePoi($db, ['ref' => 'way/9703', 'letter' => 'H', 'name' => 'Abri', 'tags' => ['amenity' => 'shelter']]);
+        // A stray non-catalogue letter must never leak into the rail shape:
+        // {C..J} is code-guaranteed (POI_LETTERS_SQL), not data-dependent.
+        self::insertCoveragePoi($db, ['ref' => 'node/9704', 'letter' => 'X', 'name' => 'Stray']);
 
         $data = $this->getJson($client, '/map/coverage/counts');
         self::assertResponseIsSuccessful();

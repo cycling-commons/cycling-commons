@@ -47,6 +47,9 @@ final class CoverageRepository
     /** Community items listed per nearby letter group before the "show all" expander (design §7). */
     private const int NEARBY_COMMUNITY_CAP = 3;
 
+    /** Default result cap for search() (coverage-provider.md §5). */
+    public const int SEARCH_LIMIT = 12;
+
     public function __construct(private readonly Connection $db)
     {
     }
@@ -102,7 +105,7 @@ final class CoverageRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function search(string $q, int $limit = 12): array
+    public function search(string $q, int $limit = self::SEARCH_LIMIT): array
     {
         $like = '%'.addcslashes($q, '\\%_').'%';
         /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
@@ -215,14 +218,20 @@ final class CoverageRepository
     }
 
     /**
-     * Per-letter coverage totals for the rail (design §2 decision E1).
+     * Per-letter coverage totals for the rail (design §2 decision E1). The
+     * letter filter is defensive: the {C..J} response shape is
+     * code-guaranteed, never dependent on what the pipeline loaded.
      *
      * @return array<string, int>
      */
     public function counts(): array
     {
         /** @var list<array{letter: string, n: int|string}> $rows */
-        $rows = $this->db->fetchAllAssociative('SELECT letter, COUNT(*) AS n FROM coverage_poi GROUP BY letter ORDER BY letter');
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT letter, COUNT(*) AS n FROM coverage_poi
+             WHERE letter IN '.self::POI_LETTERS_SQL.'
+             GROUP BY letter ORDER BY letter',
+        );
         $counts = [];
         foreach ($rows as $row) {
             $counts[$row['letter']] = (int) $row['n'];
