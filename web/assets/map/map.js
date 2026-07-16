@@ -2123,7 +2123,7 @@
     const letters=Object.keys(byLetter).sort();
     const list = all.length
       ? letters.map(L=>{ const rows=byLetter[L], e0=rows[0].e;
-          return `<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${e0.badge}</span>${escPend(e0.kind)} · ${rows.length}</li>`
+          return `<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${escPend(e0.badge)}</span>${escPend(e0.kind)} · ${rows.length}</li>`
             + rows.map(n=>`<li><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('');
         }).join('')
       : `<li class="cc-near-empty">${D.nothingHere||'Nothing mapped here yet — be the first to add something.'}</li>`;
@@ -2389,6 +2389,11 @@
     // session hasn't hit Done) are simply dropped; any previously-Done
     // stretches already live in _pickSegs and are untouched.
     if(_pick) cancelPicking();
+    // Task 10 race convention: an explicit close invalidates any in-flight
+    // coverage POI detail — without this, openCoverageByRef (a FIRST opener,
+    // so the its-drawer-still-open guard can't apply) would reopen a drawer
+    // the rider just dismissed when the /map/coverage/poi/{ref} response lands.
+    _covReq++;
     const d=document.getElementById('drawer'); d.classList.remove('open'); d.setAttribute('aria-hidden','true');
     clearHighlight();
     clearRouteHighlight();
@@ -2607,7 +2612,7 @@
     function pickS(i){ const m=sMatches[i]; if(!m) return; sBox.value=m.name; closeS();
       if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
       m.go(); }
-    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
+    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${escH(m.badge)}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
     // Any-town live place search via Photon (spec 2026-07-14 §3.2) — Photon,
     // not Nominatim: Nominatim's usage policy forbids type-ahead. Wallonia
     // bbox, place types only, ≥3 chars, 350 ms debounce, one in-flight request
