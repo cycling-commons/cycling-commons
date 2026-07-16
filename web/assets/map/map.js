@@ -616,6 +616,12 @@
   // steal, no mobile-sheet snap back to half.
   let _covReq=0;
   function openCoverageDrawer(key, tp, ll){
+    // Picking guard (spec §16 S1, same as openDrawer): during a stretch-picking
+    // session the route drawer stays open (minimised) with the suggest form's
+    // typed state — a picking click that also lands on a coverage dot must not
+    // start a detail fetch whose repaint would wipe that form. openDrawer's own
+    // _pick bail-out only stops the initial paint, not the fetch, so bail here.
+    if(_pick) return;
     const layer=layerByKey[key];
     const feat=p=>key==='water' ? waterDrawer(p, ll) : osmDrawer(layer, p, ll, COV_SRC[key]);
     openDrawer(layer, feat(covProps(key, tp, null)));
@@ -624,7 +630,7 @@
     fetch('/map/coverage/poi/'+tp.ref, {headers:{'Accept':'application/json'}})
       .then(r=>r.ok?r.json():null)
       .catch(()=>null)   // detail is an enhancement — the tile props already opened the drawer
-      .then(d=>{ if(!d || myReq!==_covReq) return;   // a newer drawer render superseded this fetch
+      .then(d=>{ if(!d || myReq!==_covReq || _pick) return;   // superseded by a newer drawer render, or a picking session started mid-flight
         if(!document.getElementById('drawer').classList.contains('open')) return;   // closed while in flight
         renderDrawerBody(layer, feat(covProps(key, tp, d))); });
   }
