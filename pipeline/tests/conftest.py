@@ -8,8 +8,10 @@ from the hand-written mini.osm via `osmium cat` (regenerate + re-commit on
 fixture changes — see the plan), per coverage-provider.md §3.
 """
 
+import os
 import pathlib
 
+import psycopg
 import pytest
 
 from coverage.contract import load_contract
@@ -26,3 +28,28 @@ def contract():
 def mini_pbf():
     """The committed PBF twin of the hand-written mini.osm fixture."""
     return FIXTURES / "mini.osm.pbf"
+
+
+@pytest.fixture()
+def db():
+    """Isolated schema on the dev PostGIS (compose DATABASE_DSN).
+
+    coverage_poi and a private `region` land in coverage_pytest (shadowing
+    public.region via search_path) and the schema is dropped afterwards — the
+    real public schema is never written. pg_trgm is ensured in public first so
+    ensure_schema's guard no-ops instead of installing into the test schema.
+    """
+    conn = psycopg.connect(os.environ["DATABASE_DSN"])
+    conn.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public")
+    conn.execute("DROP SCHEMA IF EXISTS coverage_pytest CASCADE")
+    conn.execute("CREATE SCHEMA coverage_pytest")
+    conn.execute("SET search_path TO coverage_pytest, public")
+    conn.execute(
+        "CREATE TABLE region (id bigint PRIMARY KEY, geom geometry(MultiPolygon, 4326))"
+    )
+    conn.commit()
+    yield conn
+    conn.rollback()
+    conn.execute("DROP SCHEMA IF EXISTS coverage_pytest CASCADE")
+    conn.commit()
+    conn.close()
