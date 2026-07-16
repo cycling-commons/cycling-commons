@@ -10,6 +10,7 @@ use App\Coverage\CoverageManifest;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\JsonMockResponse;
@@ -19,7 +20,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * coverage-provider.md §4: the versioned tile URL is read
  * server-side from the stable manifest key, cached 3600 s, and EVERY failure
- * path degrades to null — the map must always render, tiles or not.
+ * path degrades to null — the map must always render, tiles or not. Failures
+ * are negative-cached briefly (hardening, spec-neutral) so a degraded bucket
+ * does not cost a fetch timeout on every /map render under load.
  */
 final class CoverageManifestTest extends TestCase
 {
@@ -80,13 +83,66 @@ final class CoverageManifestTest extends TestCase
         self::assertNull($this->manifest($http)->currentTileUrl());
     }
 
-    public function testFailureIsNotCachedSoNextRequestRetries(): void
+    public function testFailureIsNegativeCachedWithinTheHoldoffWindow(): void
     {
-        $manifest = $this->manifest(new MockHttpClient([
+        $http = new MockHttpClient([
             new MockResponse('boom', ['http_code' => 500]),
             new JsonMockResponse(['version' => 1, 'url' => 'https://maps.test/coverage/20260716-0500.pmtiles']),
-        ]));
+        ]);
+        $manifest = $this->manifest($http);
+
         self::assertNull($manifest->currentTileUrl());
+        // Second render inside the negative-TTL window: null again, but served
+        // from cache — a degraded bucket must not cost a fetch per request.
+        self::assertNull($manifest->currentTileUrl());
+        self::assertSame(1, $http->getRequestsCount());
+    }
+
+    public function testFailureIsRetriedOnceTheNegativeTtlExpires(): void
+    {
+        $clock = new MockClock();
+        $http = new MockHttpClient([
+            new MockResponse('boom', ['http_code' => 500]),
+            new JsonMockResponse(['version' => 1, 'url' => 'https://maps.test/coverage/20260716-0500.pmtiles']),
+        ]);
+        $manifest = new CoverageManifest($http, new ArrayAdapter(clock: $clock), new NullLogger(), true, self::MANIFEST_URL);
+
+        self::assertNull($manifest->currentTileUrl());
+        $clock->modify('+31 seconds');   // past NEGATIVE_TTL (30 s)
         self::assertSame('https://maps.test/coverage/20260716-0500.pmtiles', $manifest->currentTileUrl());
+        self::assertSame(2, $http->getRequestsCount());
+    }
+
+    public function testCacheKeyFollowsTheManifestUrl(): void
+    {
+        // Operator repoints COVERAGE_MANIFEST_URL against a persistent pool:
+        // the old entry must not be served for up to a full TTL.
+        $cache = new ArrayAdapter();
+        $first = new CoverageManifest(
+            new MockHttpClient(new JsonMockResponse(['version' => 1, 'url' => 'https://maps.test/coverage/old.pmtiles'])),
+            $cache, new NullLogger(), true, 'https://maps.test/old/manifest.json',
+        );
+        self::assertSame('https://maps.test/coverage/old.pmtiles', $first->currentTileUrl());
+
+        $second = new CoverageManifest(
+            new MockHttpClient(new JsonMockResponse(['version' => 1, 'url' => 'https://maps.test/coverage/new.pmtiles'])),
+            $cache, new NullLogger(), true, 'https://maps.test/new/manifest.json',
+        );
+        self::assertSame('https://maps.test/coverage/new.pmtiles', $second->currentTileUrl());
+    }
+
+    public function testFetchBoundsIdleAndTotalTime(): void
+    {
+        $captured = null;
+        $http = new MockHttpClient(static function (string $method, string $url, array $options) use (&$captured): JsonMockResponse {
+            $captured = $options;
+
+            return new JsonMockResponse(['version' => 1, 'url' => 'https://maps.test/coverage/20260716-0400.pmtiles']);
+        });
+
+        self::assertNotNull($this->manifest($http)->currentTileUrl());
+        self::assertIsArray($captured);
+        self::assertEquals(5, $captured['timeout'] ?? null, 'idle timeout must bound the fetch');
+        self::assertEquals(5, $captured['max_duration'] ?? null, 'max_duration must bound total request time (slow-drip host)');
     }
 }
