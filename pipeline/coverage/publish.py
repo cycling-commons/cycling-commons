@@ -13,10 +13,20 @@ import os
 import re
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import ClientError
 
 MANIFEST_KEY = "coverage/manifest.json"
 _VERSIONED_KEY = re.compile(r"^coverage/\d{8}-\d{4}\.pmtiles$")
+
+# Prod-sized artifact uploads over object storage: retry transient S3/network
+# errors instead of failing the whole weekly batch, and never hang a timer run
+# on a dead connection.
+_BOTO_CONFIG = Config(
+    retries={"max_attempts": 5, "mode": "standard"},
+    connect_timeout=10,
+    read_timeout=120,
+)
 
 
 def _client():
@@ -27,6 +37,7 @@ def _client():
         aws_secret_access_key=os.environ["COVERAGE_S3_SECRET"],
         # signing region only; MinIO ignores it, Hetzner accepts a matching one
         region_name=os.environ.get("COVERAGE_S3_REGION", "us-east-1"),
+        config=_BOTO_CONFIG,
     )
 
 

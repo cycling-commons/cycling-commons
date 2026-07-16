@@ -13,7 +13,11 @@ Per region (`COVERAGE_REGIONS`, csv, each swapped independently): download
 per-region swap into `coverage_poi`. Then once per run: per-letter GeoJSONL
 export → tippecanoe → go-pmtiles verify → upload a versioned artifact +
 `coverage/manifest.json` → prune (keep the last 4). A failed region keeps last
-week's slice serving and exits non-zero.
+week's slice serving and exits non-zero. In the manifest, `counts` spans the
+whole `coverage_poi` table (every region's current slice — matching the
+artifact, which is always built from the full index), while `regions` lists
+only that run's regions; with staggered per-region prod timers the two
+legitimately diverge.
 
 ## Dev run
 

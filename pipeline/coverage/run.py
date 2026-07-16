@@ -46,7 +46,12 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
     never touch the network."""
     override = os.environ.get("COVERAGE_PBF_PATH")
     if override:
-        return pathlib.Path(override)
+        path = pathlib.Path(override)
+        if not path.is_file():
+            # Fail here with the real cause instead of an opaque osmium error
+            # two stages later (typo'd fixture path, forgotten volume mount).
+            raise RuntimeError(f"override PBF not found: {path}")
+        return path
     url = f"{GEOFABRIK_BASE}/{region}-latest.osm.pbf"
     dest = workdir / (region.replace("/", "-") + "-latest.osm.pbf")
     with urllib.request.urlopen(url + ".md5", timeout=60) as r:
@@ -103,6 +108,11 @@ def main(argv=None) -> int:
         # expect exactly the layers we exported; letters absent from the index
         # (possible on partial fixtures) don't fail the gate
         verify_pmtiles(artifact, expected_layers={letter.lower() for letter in layer_files})
+        # Manifest semantics (shape locked, coverage-provider.md §4): `counts`
+        # spans the WHOLE coverage_poi table — every region's current slice,
+        # matching the artifact, which is always built from the full index —
+        # while `regions` lists only THIS run's regions. Staggered per-region
+        # prod timers make the two legitimately diverge.
         counts = dict(conn.execute(
             "SELECT letter, count(*) FROM coverage_poi GROUP BY letter").fetchall())
         ensure_bucket()
