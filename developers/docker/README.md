@@ -32,8 +32,9 @@ real endpoints and the geo pipeline get built on top.
 
 ## Dev mail (Mailpit)
 
-All outbound email from the Symfony app (registration confirmation, password-reset links, 2FA
-setup) is caught by the **bundled Mailpit** — no real mail is sent in local development. The app
+All outbound email from the Symfony app (registration confirmation, password-reset links,
+account-deletion codes) is caught by the **bundled Mailpit** — no real mail is sent in local
+development. The app
 talks to it over the internal network (`mailpit:1025`), so no host SMTP port is published; only
 the web inbox is exposed, at **<http://localhost:8025>**.
 
