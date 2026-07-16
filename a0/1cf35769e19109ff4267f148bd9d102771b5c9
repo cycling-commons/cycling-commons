@@ -1,0 +1,37 @@
+developers/docker/db/init/02-pg-trgm.sql
+  s_f6d45d977e7468::t_6c39a561e28c4e 1-8
+Makefile
+  s_f6d45d977e7468::t_6d2960f968b0f5 126-127
+developers/docker/.env.example
+  s_f6d45d977e7468::t_a1acc6b637d19b 40-54
+pipeline/requirements.txt
+  s_f6d45d977e7468::t_82b116f834afab 6-8
+pipeline/Dockerfile
+  s_f6d45d977e7468::t_c1b8ccf753233c 1-16,19-30,37-41
+developers/docker/README.md
+  s_f6d45d977e7468::t_4b2d300a6fa19b 110-125
+developers/docker/compose.yaml
+  s_f6d45d977e7468::t_26208d90c7cf31 74,80-90,96
+  s_f6d45d977e7468::t_27d0b9fb8072dd 173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a01cf35769e19109ff4267f148bd9d102771b5c9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
