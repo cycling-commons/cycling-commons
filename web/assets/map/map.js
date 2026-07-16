@@ -634,6 +634,38 @@
         if(!document.getElementById('drawer').classList.contains('open')) return;   // closed while in flight
         renderDrawerBody(layer, feat(covProps(key, tp, d))); });
   }
+  // Open a coverage POI with NO rendered tile feature at hand (search pick,
+  // town-card row, ?feature= fallback): fly, fetch the detail, open the drawer.
+  // Fetch failure still opens a minimal drawer — the pick must never no-op.
+  function openCoverageByRef(ref, letter, ll){
+    const key=LETTER_KEY[letter]; if(!key) return;
+    flyToPin([ll[1],ll[0]]);
+    const myReq=++_covReq;
+    fetch('/map/coverage/poi/'+ref, {headers:{'Accept':'application/json'}})
+      .then(r=>r.ok?r.json():null)
+      .catch(()=>null)
+      .then(d=>{ if(myReq!==_covReq) return;
+        const layer=layerByKey[key], lo={lng:ll[1], lat:ll[0]};
+        const p=covProps(key, {ref, n:d&&d.name, kind:d&&d.kind}, d);
+        openDrawer(layer, key==='water' ? waterDrawer(p, lo) : osmDrawer(layer, p, lo, COV_SRC[key]));
+      });
+  }
+  // ?feature= deep-link fallback (coverage-provider.md §6):
+  // a name that is not in the local index gets ONE search-endpoint lookup —
+  // exact-name hit preferred, else the server's top-ranked result. Nothing
+  // found / coverage off → silently keep the plain map (Photon convention).
+  function openCoverageFeatureByName(name){
+    if(!COVERAGE_ON) return;
+    fetch('/map/coverage/search?q='+encodeURIComponent(name), {headers:{'Accept':'application/json'}})
+      .then(r=>r.ok?r.json():null)
+      .catch(()=>null)
+      .then(d=>{
+        const hits=((d&&d.results)||[]).filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll));
+        if(!hits.length) return;
+        const hit=hits.find(h=>h.n.toLowerCase()===name.toLowerCase())||hits[0];
+        openCoverageByRef(hit.ref, hit.letter, hit.ll);
+      });
+  }
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
   map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
@@ -645,10 +677,21 @@
     let _confRAF=null;
     const scheduleConfMarkers=()=>{ if(_confRAF) return; _confRAF=requestAnimationFrame(()=>{ _confRAF=null; updateConfMarkers(); }); };
     map.on('moveend', scheduleConfMarkers); map.on('idle', scheduleConfMarkers);
+    // Coverage counts: totals once; 'shown' depends on the viewport, so the
+    // legend refreshes when the map settles (same moveend/idle+RAF discipline
+    // as the confirmed-marker reconciliation above — never per frame).
+    if(COVERAGE_ON){
+      fetchCoverageCounts();
+      let _ctRAF=null;
+      const scheduleCovCounts=()=>{ if(_ctRAF) return; _ctRAF=requestAnimationFrame(()=>{ _ctRAF=null; updateCounts(); }); };
+      map.on('moveend', scheduleCovCounts); map.on('idle', scheduleCovCounts);
+    }
     render();
-    // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from a profile page)
+    // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from
+    // a profile page); coverage POIs stay linkable via one search-endpoint
+    // lookup when the local index misses (coverage-provider.md §6)
     const fp = new URLSearchParams(location.search).get('feature');
-    if(fp) openFeatureByName(fp);
+    if(fp && !openFeatureByName(fp)) openCoverageFeatureByName(fp);
     const pp = new URLSearchParams(location.search).get('pending');
     if(pp) openPendingById(pp);
     // ?route=<id> opens a specific route selected (e.g. from the curator Routes desk)
@@ -790,6 +833,11 @@
   // (same letter + normalized name within 100 m) keep the earlier entry —
   // build order makes that curated/pivot over a raw OSM import.
   let ITEM_INDEX = [];
+  // letter:id keys of every DB-backed local-index entry — coverage search/
+  // nearby hits whose curated twin is already indexed must not list twice
+  // (dedupe complement to the tile-side covDedupeFilter). Filled right after
+  // buildItemIndex() runs in the sidebar-search block.
+  let IDX_IDS = new Set();
   function buildItemIndex(){
     const out=[], byId=new Set(), byName=new Map();   // byName: 'letter:slug' -> [ll,…]
     function push(e){
@@ -1262,6 +1310,25 @@
     }
     return show;
   }
+  // Rail totals (coverage-provider.md §5):
+  // per-letter coverage totals fetched ONCE from /map/coverage/counts; the
+  // 'shown' side counts coverage features actually rendered in the viewport,
+  // deduped by ref (tile borders duplicate features across tiles).
+  let _covCounts=null;
+  function fetchCoverageCounts(){
+    if(!COVERAGE_ON) return;
+    fetch('/map/coverage/counts', {headers:{'Accept':'application/json'}})
+      .then(r=>r.ok?r.json():null)
+      .catch(()=>null)
+      .then(d=>{ if(d && d.counts){ _covCounts=d.counts; updateCounts(); } });
+  }
+  function covShownCount(key){
+    const id=key+'-cov';
+    if(!COVERAGE_ON || !map.getLayer(id) || map.getLayoutProperty(id,'visibility')!=='visible') return 0;
+    const seen=new Set();
+    map.queryRenderedFeatures({layers:[id]}).forEach(f=>seen.add(f.properties.ref));
+    return seen.size;
+  }
   // legend count = shown/total: in Curated only confirmed/curated count; in Everything everything does
   function layerCounts(layer){
     const osmFx=window['CC_'+layer.key.toUpperCase()+'_OSM'];
@@ -1273,8 +1340,9 @@
       : rawOsm;
     const osmTotal=osmVisible.length;
     const osmConf=osmVisible.filter(f=>f.properties&&f.properties.c).length;
-    const shown=layer.features.filter(f=>featureVisible(layer,f)).length + (mode==='all'?osmTotal:osmConf);
-    return {shown, total:layer.features.length+rawOsm.length};
+    const covTotal=(_covCounts && _covCounts[layer.letter])||0;
+    const shown=layer.features.filter(f=>featureVisible(layer,f)).length + (mode==='all'?osmTotal:osmConf) + covShownCount(layer.key);
+    return {shown, total:layer.features.length+rawOsm.length+covTotal};
   }
   function updateCounts(){
     CATALOG.forEach(layer=>{
@@ -1999,37 +2067,15 @@
   // geocoded place (spec 2026-07-14 §3.3): CITIES entries keep their wiki/info
   // blurbs; Photon hits pass just {ll}.
   function openPlace(name, meta){
-    _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
     // A · Road surface segments are corridor data, not places — near any mapped
     // town they'd flood the card (Spa: 58 rows). Text search still finds them.
     const near = nearbyItems(meta.ll, 5).filter(n=>n.e.letter!=='A');
-    // group rows by letter, keeping the global nearest-first order inside each group
-    const byLetter={};
-    near.forEach((n,i)=>{ n._i=i; (byLetter[n.e.letter]=byLetter[n.e.letter]||[]).push(n); });
-    const letters=Object.keys(byLetter).sort();
-    const list = near.length
-      ? letters.map(L=>{ const rows=byLetter[L], e0=rows[0].e;
-          return `<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${e0.badge}</span>${escPend(e0.kind)} · ${rows.length}</li>`
-            + rows.map(n=>`<li><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('');
-        }).join('')
-      : `<li class="cc-near-empty">${D.nothingHere||'Nothing mapped here yet — be the first to add something.'}</li>`;
-    document.getElementById('drawerBody').innerHTML =
-      `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?(D.city||'City'):(D.town||'Town')}</span>
-       <div class="cc-d-name">${escPend(name)}</div>
-       ${meta.info?`<div class="cc-city-info">${meta.info}</div>`:''}
-       <div class="cc-city-links">${meta.wiki?`<a href="${meta.wiki}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">${D.notesNone||'community notes — none yet'}</span></div>
-       <h4 class="cc-near-h">${D.nearbyH||'In the Commons nearby · ≤ 5 km'}</h4>
-       <ul class="cc-near-list">${list}</ul>`;
-    document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
-      const n=near[+b.dataset.i];
-      b.onclick=()=>n.e.go();
-      b.onmouseenter=()=>highlightAt(n.e.ll, n.e.hlOff); b.onmouseleave=clearHighlight;
-    });
-    const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
+    renderPlaceCard(name, meta, near);
     // Frame the whole ≤5 km neighbourhood instead of flyToPin's zoom-14 dive —
     // hovering the list must pulse items that are actually on screen. The
     // drawer covers the right edge on desktop (bottom sheet on mobile), hence
-    // the asymmetric padding.
+    // the asymmetric padding. Framed ONCE, from the local rows: the coverage
+    // re-render below must not re-jump the camera.
     if(near.length){
       let minLat=meta.ll[0],maxLat=meta.ll[0],minLng=meta.ll[1],maxLng=meta.ll[1];
       near.forEach(n=>{ if(!n.e.ll) return; const [la,ln]=n.e.ll;
@@ -2040,6 +2086,61 @@
     } else {
       map.flyTo({center:[meta.ll[1],meta.ll[0]], zoom:12.5, offset:[window.innerWidth<=820?0:-150,0], duration:900, essential:true});
     }
+    // Coverage tier (coverage-provider.md §5): uncurated OSM
+    // within the same 5 km from /map/coverage/nearby, merged behind the local
+    // rows per letter group. Photon-style silent degradation — the local card
+    // is already on screen; a slow/failed response changes nothing.
+    if(!COVERAGE_ON) return;
+    const myReq=++_placeReq;
+    fetch(`/map/coverage/nearby?lat=${meta.ll[0]}&lng=${meta.ll[1]}&km=5`, {headers:{'Accept':'application/json'}})
+      .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(d=>{ if(myReq!==_placeReq) return;
+        if(!document.getElementById('drawer').classList.contains('open')) return;   // card closed while in flight
+        renderPlaceCard(name, meta, near, d.groups||[]); })
+      .catch(()=>{});
+  }
+  // town-card body renderer — split from openPlace so the coverage nearby
+  // response re-renders the list without re-running the framing. Row order:
+  // local (curated/served) rows nearest-first, then coverage rows appended
+  // inside the same letter groups. Coverage items with a curated twin already
+  // in the local index are dropped (IDX_IDS — dedupe by served item id).
+  let _placeReq=0;
+  function renderPlaceCard(name, meta, near, covGroups){
+    const all=near.slice();
+    (covGroups||[]).forEach(g=>{
+      const key=LETTER_KEY[g.letter], layer=key&&layerByKey[key]; if(!layer) return;
+      (g.items||[]).forEach(it=>{
+        if(!it || !Array.isArray(it.ll)) return;
+        if(it.itemId!=null && IDX_IDS.has(g.letter+':'+it.itemId)) return;
+        all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
+          badge:g.letter, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
+          go:()=>openCoverageByRef(it.ref, g.letter, it.ll)}});
+      });
+    });
+    // group rows by letter, keeping the global nearest-first order inside each group
+    const byLetter={};
+    all.forEach((n,i)=>{ n._i=i; (byLetter[n.e.letter]=byLetter[n.e.letter]||[]).push(n); });
+    const letters=Object.keys(byLetter).sort();
+    const list = all.length
+      ? letters.map(L=>{ const rows=byLetter[L], e0=rows[0].e;
+          return `<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${e0.badge}</span>${escPend(e0.kind)} · ${rows.length}</li>`
+            + rows.map(n=>`<li><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('');
+        }).join('')
+      : `<li class="cc-near-empty">${D.nothingHere||'Nothing mapped here yet — be the first to add something.'}</li>`;
+    _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
+    document.getElementById('drawerBody').innerHTML =
+      `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?(D.city||'City'):(D.town||'Town')}</span>
+       <div class="cc-d-name">${escPend(name)}</div>
+       ${meta.info?`<div class="cc-city-info">${meta.info}</div>`:''}
+       <div class="cc-city-links">${meta.wiki?`<a href="${meta.wiki}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">${D.notesNone||'community notes — none yet'}</span></div>
+       <h4 class="cc-near-h">${D.nearbyH||'In the Commons nearby · ≤ 5 km'}</h4>
+       <ul class="cc-near-list">${list}</ul>`;
+    document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
+      const n=all[+b.dataset.i];
+      b.onclick=()=>n.e.go();
+      b.onmouseenter=()=>highlightAt(n.e.ll, n.e.hlOff); b.onmouseleave=clearHighlight;
+    });
+    const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
     if(window.innerWidth<=820) sheet.reset();          // land at half; desktop untouched
   }
@@ -2490,6 +2591,7 @@
     Object.keys(CITIES).forEach(name=>{ const big=CITIES[name].t==='City';   // big cities stand apart from hamlets: ochre ◉ "City" vs teal ◎ "Town"
       SEARCH_IDX.push({name, key:slug(name), kind: big?(D.city||'City'):(D.town||'Town'), badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}); });
     ITEM_INDEX = buildItemIndex();
+    IDX_IDS = new Set(ITEM_INDEX.filter(e=>e.id!=null).map(e=>e.letter+':'+e.id));
     ITEM_INDEX.forEach(e=>{ if(!e.unnamed) SEARCH_IDX.push(e); });   // nameless POIs list in place cards, not in text search
     // pending entries carry their submission id so hidePendingPin can drop
     // them from the index after a moderation decision (review W36) — the
@@ -2535,6 +2637,33 @@
         })
         .catch(()=>{});   // abort / network / quota — degrade silently
     }
+    // Coverage search (coverage-provider.md §5/§6): the local
+    // index only spans the served pool; everything else comes from
+    // /map/coverage/search. Photon's conventions apply — ≥2 chars, one
+    // in-flight request (stale ones aborted), silent degradation, results
+    // merged into the open dropdown behind the local rows of each letter group.
+    let _covAbort=null, _covHits=[], _covSQ='';
+    function runCoverageSearch(qRaw){
+      const q=qRaw.trim();
+      if(!COVERAGE_ON || q.length<2){ _covHits=[]; _covSQ=''; return; }
+      if(_covAbort) _covAbort.abort();
+      const ctl=new AbortController(); _covAbort=ctl;
+      fetch('/map/coverage/search?q='+encodeURIComponent(q), {signal:ctl.signal, headers:{'Accept':'application/json'}})
+        .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
+        .then(d=>{
+          if(ctl.signal.aborted) return;
+          _covHits=(d.results||[])
+            .filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll))
+            .filter(h=>!(h.itemId!=null && IDX_IDS.has(h.letter+':'+h.itemId)))   // curated twin already indexed locally
+            .map(h=>{ const layer=layerByKey[LETTER_KEY[h.letter]];
+              return {name:h.n, key:slug(h.n), kind:layer.label, badge:h.letter, color:layer.color,
+                letter:h.letter, ll:h.ll, cov:1, community:!h.curated,
+                go:()=>openCoverageByRef(h.ref, h.letter, h.ll)}; });
+          _covSQ=slug(q);
+          if(!sRes.hidden) runS();   // merge into the open dropdown
+        })
+        .catch(()=>{});   // abort / network / 429 — degrade to the local index
+    }
     function runS(){
       const q=slug(sBox.value.trim());
       if(!q){ closeS(); return; }
@@ -2549,6 +2678,10 @@
       if(_phQ===q) towns.push(..._phHits.slice(0, Math.max(0, 6-towns.length)));   // geocoded towns behind local ones
       const byLetter={};
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
+      // Coverage matches slot into the same letter groups, behind local rows
+      // (same freshness handshake as Photon's _phQ: only merge results that
+      // answer THIS query).
+      if(_covSQ===q) _covHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       const groups=towns.length?[{label:D.places||'Places', rows:towns}]:[];
       Object.keys(byLetter).sort().forEach(L=>groups.push({label:`${L} · ${byLetter[L][0].kind}`, rows:byLetter[L]}));
       const CAP=30;
@@ -2572,9 +2705,10 @@
     // cost was a full index scan, an innerHTML rebuild AND fresh per-result
     // listeners — the pattern that degrades linearly as the catalog grows.
     sRes.addEventListener('click', e=>{ const b=e.target.closest('button[data-i]'); if(b) pickS(+b.dataset.i); });
-    let _sDeb=null, _phDeb=null;
+    let _sDeb=null, _phDeb=null, _covDeb=null;
     sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150);
-      clearTimeout(_phDeb); _phDeb=setTimeout(()=>runPhoton(sBox.value),350); });
+      clearTimeout(_phDeb); _phDeb=setTimeout(()=>runPhoton(sBox.value),350);
+      clearTimeout(_covDeb); _covDeb=setTimeout(()=>runCoverageSearch(sBox.value),250); });
     sBox.addEventListener('keydown', e=>{
       if(sRes.hidden){ if(e.key==='ArrowDown') runS(); return; }
       if(e.key==='ArrowDown'){ e.preventDefault(); sHL=Math.min(sHL+1, sMatches.length-1); hlS(); }
