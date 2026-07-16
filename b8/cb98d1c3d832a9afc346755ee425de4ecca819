@@ -1,0 +1,30 @@
+docs/specs/security-architecture.md
+  s_58bfb339467e97::t_340274df2e231d 202-206
+  s_58bfb339467e97::t_9769ef8ec35347 1-72,74-201,207-254,258-271,274-298,301-343
+  s_58bfb339467e97::t_87d2b98b648a83 73
+  s_58bfb339467e97::t_8c0d508655a068 272
+  s_58bfb339467e97::t_64d3ae27ed6d5b 255-257
+  s_58bfb339467e97::t_b7d89392bb23fd 273
+  s_58bfb339467e97::t_7e2e1ca9a678ab 299-300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "b8cb98d1c3d832a9afc346755ee425de4ecca819",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_58bfb339467e97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9429297-08ac-4b41-b3f6-76a0097d2e4f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
