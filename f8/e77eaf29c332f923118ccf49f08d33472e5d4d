@@ -1,0 +1,29 @@
+pipeline/coverage/load.py
+  s_f6d45d977e7468::t_355d5722b31af5 1-144
+pipeline/tests/test_load.py
+  s_f6d45d977e7468::t_c8b07041faf9e6 1-91
+pipeline/tests/conftest.py
+  s_f6d45d977e7468::t_d2720b3e3a94dc 11,14
+  s_f6d45d977e7468::t_e69453ce31a05e 31-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f8e77eaf29c332f923118ccf49f08d33472e5d4d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
