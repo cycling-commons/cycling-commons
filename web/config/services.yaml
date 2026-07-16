@@ -34,3 +34,8 @@ services:
     App\Moderation\RetentionService:
         arguments:
             $retentionMonths: '%moderation.retention_months%'
+
+    App\Coverage\CoverageManifest:
+        arguments:
+            $tilesEnabled: '%coverage.tiles_enabled%'
+            $manifestUrl: '%coverage.manifest_url%'

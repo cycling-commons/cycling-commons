@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# Coverage tiles (coverage-provider.md §4/§8) — rollout
+# flag + manifest location. Committed defaults live in web/.env; dev-stack
+# overrides in developers/docker/ (compose passes them through).
+parameters:
+    coverage.tiles_enabled: '%env(bool:COVERAGE_TILES)%'
+    coverage.manifest_url: '%env(COVERAGE_MANIFEST_URL)%'
+    # Browser-facing tile origin for CSP connect-src. A dedicated param, NOT
+    # derived from coverage.manifest_url: the manifest is fetched server-side
+    # (dev: http://minio:9000 from the app container) while the browser
+    # range-reads tiles from another origin (dev: http://localhost:9100) —
+    # the two hosts legitimately differ. Empty = no coverage host in the policy.
+    coverage.csp_host: '%env(COVERAGE_CSP_HOST)%'

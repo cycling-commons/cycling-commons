@@ -43,6 +43,11 @@ services:
       # To use a shared host instance instead, override MAILER_DSN, e.g.
       #   MAILER_DSN=smtp://host.docker.internal:1025
       MAILER_DSN: "${MAILER_DSN:-smtp://mailpit:1025}"
+      # Coverage tiles (coverage-provider.md §8): opt-in via
+      # developers/docker/.env once `make coverage-refresh` published to MinIO.
+      COVERAGE_TILES: "${COVERAGE_TILES:-0}"
+      COVERAGE_MANIFEST_URL: "${COVERAGE_MANIFEST_URL:-}"
+      COVERAGE_CSP_HOST: "${COVERAGE_CSP_HOST:-}"
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount
