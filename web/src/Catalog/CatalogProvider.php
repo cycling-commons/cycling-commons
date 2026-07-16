@@ -60,11 +60,12 @@ final class CatalogProvider
     }
 
     /**
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
-        $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov
+        $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov,
+                       (i.state = \'verified\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id)) AS verified
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
                 WHERE i.letter = :letter AND i.state IN '.ItemState::servedSqlTuple();
@@ -78,7 +79,7 @@ final class CatalogProvider
             $params['excludeSource'] = $excludeSource;
         }
 
-        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
@@ -104,6 +105,13 @@ final class CatalogProvider
             // Lets the drawer show "Rider-contributed" for user/manual items
             // instead of a hardcoded per-layer OSM string (map.js sourceLabel()).
             $props['srcType'] = $row['source'];
+            // Real community-tier signal (map-and-search.md
+            // §12): v:1 = verified state OR at least one rider confirmation.
+            // Replaces the simulated 'c' flag as the map's verified derivation;
+            // absent key = community tier (keeps unverified payloads byte-stable).
+            if ($row['verified']) {
+                $props['v'] = 1;
+            }
             // The DB item id always makes $props non-empty, so it always
             // encodes as a JSON object — no more `[] === $props` empty-array
             // case (GeoJSON requires an object; [] would encode as an array).

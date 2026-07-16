@@ -248,4 +248,33 @@ final class CatalogProviderTest extends KernelTestCase
         }
         self::assertSame(['score' => 4, 'label' => 'Hard'], $byName['Difficulty canon test']['difficulty'] ?? null);
     }
+
+    public function testServedPoiCarriesRealVerifiedFlag(): void
+    {
+        // Imported fixture D items are all unverified with zero confirmations —
+        // no 'v' key at all (absence = community tier in the map's index).
+        foreach ($this->payload()['D']['features'] as $f) {
+            self::assertArrayNotHasKey('v', $f['properties']);
+        }
+
+        // Verify one item + confirm another: both must serve v:1. The flag
+        // derives from REAL canonical state/confirmations, never the simulated
+        // demo 'c' attribute (map-and-search.md §12).
+        $ids = array_map(static fn (array $f): int => $f['properties']['id'], $this->payload()['D']['features']);
+        sort($ids);
+        $conn = $this->em->getConnection();
+        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE id = :id", ['id' => $ids[0]]);
+        $conn->executeStatement(
+            'INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (:item, 1, :stance, NOW(), NOW())',
+            ['item' => $ids[1], 'stance' => 'exists'],
+        );
+
+        $byId = [];
+        foreach ($this->payload()['D']['features'] as $f) {
+            $byId[$f['properties']['id']] = $f['properties'];
+        }
+        self::assertSame(1, $byId[$ids[0]]['v']);
+        self::assertSame(1, $byId[$ids[1]]['v']);
+        self::assertArrayNotHasKey('v', $byId[$ids[2]]);
+    }
 }
