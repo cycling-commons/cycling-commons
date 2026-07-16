@@ -71,17 +71,29 @@ services:
       timeout: 5s
       retries: 6
 
-  # ---- Python pipeline: geospatial/raster/routing (FastAPI scaffold) -------
+  # ---- Python pipeline: geospatial/raster/routing + coverage batch ----------
   pipeline:
     build: ../../pipeline
     environment:
       DATABASE_DSN: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}"
       DEM_DIR: /data/dem
+      # Coverage batch (docs/specs/coverage-provider.md §3).
+      # Defaults target the bundled MinIO (profile: storage, root creds from
+      # .env); prod overrides point at the CC Hetzner bucket.
+      COVERAGE_REGIONS: ${COVERAGE_REGIONS:-europe/belgium}
+      COVERAGE_WORKDIR: /data/work
+      COVERAGE_PBF_PATH: ${COVERAGE_PBF_PATH:-}
+      COVERAGE_S3_ENDPOINT: ${COVERAGE_S3_ENDPOINT:-http://minio:9000}
+      COVERAGE_S3_BUCKET: ${COVERAGE_S3_BUCKET:-cc-maps}
+      COVERAGE_S3_KEY: ${COVERAGE_S3_KEY:-ccadmin}
+      COVERAGE_S3_SECRET: ${COVERAGE_S3_SECRET:-ccadminsecret}
+      COVERAGE_PUBLIC_BASE_URL: ${COVERAGE_PUBLIC_BASE_URL:-http://localhost:9100/cc-maps}
     ports:
       - "${PIPELINE_PORT:-8002}:8000"
     volumes:
       - ../../pipeline:/app
       - ${DEM_DIR:-./data/dem}:/data/dem:ro   # downloaded DEM (see README)
+      - cc_pipeline_data:/data/work           # coverage batch scratch (PBFs, GeoJSONL, PMTiles)
     depends_on:
       db:
         condition: service_healthy
@@ -158,3 +170,4 @@ volumes:
   cc_pgdata:
   cc_api_vendor:
   cc_minio:
+  cc_pipeline_data:

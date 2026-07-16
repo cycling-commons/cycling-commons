@@ -107,6 +107,22 @@ inside the container. Instead declare the package in `web/composer.json`
 (`{ "type": "path", "url": "../foo-bundle" }`), make sure its source is bind-mounted into the
 container, and `composer install` wires it up.
 
+**DB extensions (dev + prod bootstrap):** the app relies on PostgreSQL
+extensions that deliberately live OUTSIDE Doctrine migrations: `postgis`,
+`postgis_topology`, and — since the coverage provider
+(`docs/specs/coverage-provider.md` §2) — `pg_trgm`.
+Dev gets them from `developers/docker/db/init/` on first cluster init and from
+`make test-db-reset` for the test DB; an EXISTING dev cluster needs a one-off
+`CREATE EXTENSION IF NOT EXISTS pg_trgm;` (idempotent, non-destructive).
+**Prod bootstrap must run these manually as a privileged role before first
+deploy** — they are never created by migrations:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS postgis_topology;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+```
+
 ## Opt-in profiles (heavy; off by default)
 
 These need data you download yourself — it never enters git.

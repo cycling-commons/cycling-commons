@@ -123,8 +123,8 @@ test-db-reset: ## Drop + rebuild the test DB (PostGIS ext, migrations, world dat
 	@echo "→ Dropping and recreating cyclingcommons_test…"
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:database:drop --force --if-exists
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:database:create
-	@echo "→ Enabling PostGIS extensions…"
-	@$(DOCKER_COMP) exec -T db psql -U cc -d cyclingcommons_test -c "CREATE EXTENSION IF NOT EXISTS postgis; CREATE EXTENSION IF NOT EXISTS postgis_topology;"
+	@echo "→ Enabling PostGIS + pg_trgm extensions…"
+	@$(DOCKER_COMP) exec -T db psql -U cc -d cyclingcommons_test -c "CREATE EXTENSION IF NOT EXISTS postgis; CREATE EXTENSION IF NOT EXISTS postgis_topology; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 	@echo "→ Running migrations…"
 	@$(DOCKER_COMP) exec -T -e DATABASE_URL='$(TEST_DB_URL)' app php bin/console doctrine:migrations:migrate --no-interaction
 	@echo "→ Importing world reference data…"
