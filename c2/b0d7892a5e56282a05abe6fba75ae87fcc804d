@@ -1,0 +1,42 @@
+docs/specs/coverage-provider.md
+  s_58bfb339467e97::t_7d01ee3d0f349c 227-228
+  s_58bfb339467e97::t_3bb4e88d0b0e4b 349-350
+  s_58bfb339467e97::t_ded544812eb944 216
+  s_58bfb339467e97::t_7574347b30e2ba 119-121
+  s_58bfb339467e97::t_d139051482c0de 360-363
+  s_58bfb339467e97::t_e5b087138d06b7 400-401
+  s_58bfb339467e97::t_365c21ab789aa7 156-157
+  s_58bfb339467e97::t_81575b90a0fdbd 198-199
+  s_58bfb339467e97::t_3861d59dd16295 317-319
+  s_58bfb339467e97::t_5786f7fa37b983 235
+  s_58bfb339467e97::t_8941a484c0094d 281-282
+  s_58bfb339467e97::t_1b03b19ed04b82 52
+  s_58bfb339467e97::t_2da5f29d5721e1 191-194
+  s_58bfb339467e97::t_e2f40edee10047 98-99
+  s_58bfb339467e97::t_c817744d2821cd 85
+  s_58bfb339467e97::t_5f8dfc59f4a72d 1-7,12-51,53-84,86-97,100-118,122-155,158-190,195-197,200-215,217-226,229-234,236,241-280,283-316,320-348,351-359,364-368,374-399,402-407
+  s_58bfb339467e97::t_89ce65d52ae4f0 369-373
+  s_58bfb339467e97::t_d9e3bbbe5be8c1 237-240
+  s_58bfb339467e97::t_fd107f0c112c39 8-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c2b0d7892a5e56282a05abe6fba75ae87fcc804d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_58bfb339467e97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9429297-08ac-4b41-b3f6-76a0097d2e4f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
