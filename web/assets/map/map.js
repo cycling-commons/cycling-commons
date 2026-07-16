@@ -254,7 +254,7 @@
     mintWaterDrops();
     map.addSource('water-osm',{type:'geojson',data:CC_WATER_OSM});
     map.addLayer({id:'water-osm',type:'symbol',source:'water-osm',
-      filter:['!',['has','c']],
+      filter:['!',['has','v']],   // v = real verified/confirmed signal (the demo c is dead)
       layout:{visibility:'none','icon-image':'water-drop','icon-allow-overlap':true,
         'icon-size':['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]}});
     map.on('click','water-osm',e=>{ const f0=e.features[0], p=f0.properties, c=f0.geometry.coordinates, ll={lng:c[0],lat:c[1]}; openDrawer(layerByKey['water'], waterDrawer(p, ll)); flyToPin([c[0],c[1]]); });   // use the feature's exact coords, not the click point, so the halo/centre land on the marker
@@ -328,7 +328,7 @@
     if(p.town && layer.letter!=='E') rec.push({label:D.town||'Town', value:p.town});  // stays' 'town' comes from the schema (labelled "Town / commune")
     rec.push({label:D.province||'Province', value:p.prov||D.wallonia||'Wallonia'});
     if(pivot) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official Tourisme Wallonie registry', method:'official'});
-    if(p.sim){ rec.push({label:D.status||'Status', value:(p.c?trVal(p.c):(D.confirmed||'Confirmed'))+' · '+(D.simulated||'simulated'), method:'demo'});
+    if(p.sim){ rec.push({label:D.status||'Status', value:(p.v?trVal(p.v):(D.confirmed||'Confirmed'))+' · '+(D.simulated||'simulated'), method:'demo'});
       if(p.r) rec.push({label:D.rating||'Rating', value:'★ '+p.r+' · '+(D.simulated||'simulated'), method:'demo'}); }
     if(p.web) rec.push({label:D.website||'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:D.visitSite||'Visit site',href:p.web}]});
     // Registry-driven attribute rows (single source of truth = CatalogFormRegistry,
@@ -344,7 +344,7 @@
     const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
     rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
     // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer
-    const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.c, geom:{ll:[ll.lat,ll.lng]}, record:rec,
+    const d={name:p.n||p.t||lbl, headline:typeLbl+' · '+originLbl, cur:!!p.v, geom:{ll:[ll.lat,ll.lng]}, record:rec,
       source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie'
         :(community?sourceLabel(p.srcType):(src||sourceLabel(p.srcType)||'OpenStreetMap'))};
     if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
@@ -362,8 +362,8 @@
     // dedup-by-label rule as the other POI drawers/climbs).
     const potable = p.potable
       ? {label:D.potable||'Potable', value:trVal(p.potable)}
-      : p.c
-        ? {label:D.potable||'Potable', value:trVal(p.c)+' · '+(D.potableSim||'simulated demo flag (not utility-verified)'), method:'demo'}
+      : p.v
+        ? {label:D.potable||'Potable', value:trVal(p.v)+' · '+(D.potableSim||'simulated demo flag (not utility-verified)'), method:'demo'}
         : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
     // C1-T4 (W6): see osmDrawer — a rider-added/edited water point isn't OSM.
     const community = p.srcType==='user' || p.srcType==='manual';
@@ -372,7 +372,7 @@
     // Registry-driven rows for the remaining WaterFood fields (seasonal/note/
     // bottleFill/cost). 'type' and 'potable' are rendered structurally above.
     rec.push(...schemaRows('C', p, p.id, {skip:['type','potable']}));
-    const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.c, geom:{ll:[ll.lat,ll.lng]},
+    const d={name:p.n||p.t||D.drinkingWater||'Drinking water', headline:(D.headlineDrinking||'drinking water')+' · '+(community?sourceLabel(p.srcType):'OSM'), cur:!!p.v, geom:{ll:[ll.lat,ll.lng]},
       record:rec,
       source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
     if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
@@ -425,7 +425,7 @@
     osmLayers[key]={data, src:srcDesc};
     map.addSource(id,{type:'geojson',data});
     map.addLayer({id,type:'symbol',source:id,
-      filter:['!',['has','c']],
+      filter:['!',['has','v']],   // v = real verified/confirmed signal (the demo c is dead)
       layout:{visibility:'none',
         // D · services carries a serviceKind (shop/station/pump) per item — distinct disc per
         // kind; every other bulk-OSM layer keeps its single category icon. Fallback (missing/
@@ -452,7 +452,7 @@
   function setupConfClusters(){
     Object.keys(osmLayers).forEach(key=>{
       const info=osmLayers[key]; if(!info || !info.data) return;
-      const confirmed = info.data.features.filter(f=>f.properties.c);
+      const confirmed = info.data.features.filter(f=>f.properties.v);
       const srcId=key+'-conf';
       if(!confirmed.length || map.getSource(srcId)) return;
       map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
@@ -549,6 +549,23 @@
   // Curated-ref dedupe (osm-data-architecture.md §8): any object already served
   // as an item draws once, as curated — its coverage twin is filtered out.
   const covDedupeFilter=()=>['!',['in',['get','ref'],['literal', Array.from(window.CC_CURATED_REFS||[])]]];
+  // Community tier on the map (07-15 decision B, rebased in
+  // map-and-search.md §12): utility letters C/D/G/H draw
+  // in BOTH modes — at 0.55 opacity in Curated so verified pins keep visual
+  // priority — while experiential letters E/I/J stay Everything-only (Curated
+  // remains best-of for them).
+  const COV_UTILITY=new Set(['C','D','G','H']);
+  const KEY_LETTER={water:'C',services:'D',stays:'E',transit:'G',shelter:'H',scenic:'I',history:'J'};
+  function syncCoverageLayers(){
+    if(!COVERAGE_ON) return;
+    COVERAGE_KEYS.forEach(([key])=>{
+      const id=key+'-cov'; if(!map.getLayer(id)) return;
+      const utility=COV_UTILITY.has(KEY_LETTER[key]);
+      const show=active.has(key) && (mode==='all' || utility);
+      map.setLayoutProperty(id,'visibility', show?'visible':'none');
+      map.setPaintProperty(id,'icon-opacity', (mode==='curated' && utility)?0.55:1);
+    });
+  }
   function addCoverage(){
     if(!COVERAGE_ON || map.getSource('coverage')) return;
     maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
@@ -648,6 +665,12 @@
         const layer=layerByKey[key], lo={lng:ll[1], lat:ll[0]};
         const p=covProps(key, {ref, n:d&&d.name, kind:d&&d.kind}, d);
         openDrawer(layer, key==='water' ? waterDrawer(p, lo) : osmDrawer(layer, p, lo, COV_SRC[key]));
+        // decision C: if this POI's tile layer isn't drawn right now (Curated
+        // mode, experiential letter — or layer toggled off), reveal it with one
+        // temporary pin rather than flipping the map mode.
+        const id=key+'-cov';
+        const drawn = map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
+        if(!drawn) revealPinAt(layer, ll);
       });
   }
   // ?feature= deep-link fallback (coverage-provider.md §6):
@@ -856,6 +879,9 @@
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
       push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
         color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
+        // 07-15 decision A: real signal only — routes carry canonical state,
+        // everything else keys on the curated flag. Never the demo 'c'.
+        verified: f.state ? f.state==='verified' : !!f.cur,
         hlOff: layer.kind==='point' ? [0,-16] : [0,0],
         pend:f.pending?String(f.pending.id):undefined,
         go:()=>openFeatureByName(f.name)});
@@ -865,7 +891,8 @@
       const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
       push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
         color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id,
-        hlOff: p.c ? [0,-16] : [0,0],
+        verified:!!p.v,   // v = real state/confirmation signal from CatalogProvider
+        hlOff: p.v ? [0,-16] : [0,0],   // pin offset keys on the real promotion signal (c is dead, see the re-key step)
         go:()=>openStayPivot(f)});
     });
     // Bulk OSM pools: the shared OSM_BULK table + water (its droplet layer is
@@ -884,7 +911,8 @@
         const nm=p.n||p.t||layer.label; if(!nm) return;
         push({name:nm, key:slug(nm+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
           color:layer.color, letter:layer.letter, ll:[lat,lng], id:p.id, unnamed:!p.n,
-          hlOff: p.c ? [0,-16] : [0,0],
+          verified:!!p.v,   // v = real state/confirmation signal from CatalogProvider
+          hlOff: p.v ? [0,-16] : [0,0],   // pin offset keys on the real promotion signal (c is dead, see the re-key step)
           go:()=>{ openDrawer(layer, key==='water' ? waterDrawer(p, {lng, lat}) : osmDrawer(layer, p, {lng, lat}, src)); flyToPin([lng,lat]); }});
       });
     });
@@ -1263,7 +1291,7 @@
   // accessibility narrowing above; confirmed/clustered stays are filtered in updateConfMarkers().
   function applyStaysAccessFilter(){
     if(map.getLayer('stays-osm')){
-      const base=['!',['has','c']];
+      const base=['!',['has','v']];   // v = real verified/confirmed signal (the demo c is dead)
       map.setFilter('stays-osm', activeAccess.size===ALL_ACCESS.size ? base
         : ['all', base, ['in', ['get','accessibility'], ['literal', Array.from(activeAccess)]]]);
     }
@@ -1339,7 +1367,7 @@
       ? rawOsm.filter(f=>attrMatch((f.properties||{}).accessibility, activeAccess, ALL_ACCESS))
       : rawOsm;
     const osmTotal=osmVisible.length;
-    const osmConf=osmVisible.filter(f=>f.properties&&f.properties.c).length;
+    const osmConf=osmVisible.filter(f=>f.properties&&f.properties.v).length;
     const covTotal=(_covCounts && _covCounts[layer.letter])||0;
     const shown=layer.features.filter(f=>featureVisible(layer,f)).length + (mode==='all'?osmTotal:osmConf) + covShownCount(layer.key);
     return {shown, total:layer.features.length+rawOsm.length+covTotal};
@@ -1365,12 +1393,9 @@
       // unverified dots show only in Everything mode; Curated best-of keeps just the confirmed pins
       const id=k+'-osm'; if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', (active.has(k) && mode==='all')?'visible':'none');
     });
-    // Coverage tile layers follow the same rule as the legacy pools for now
-    // (Everything only); the community-tier pass (plan Task 12) re-tiers this
-    // to draw utility letters lightly in Curated too (07-15 decision B).
-    if(COVERAGE_ON) COVERAGE_KEYS.forEach(([key])=>{
-      const id=key+'-cov'; if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', (active.has(key) && mode==='all')?'visible':'none');
-    });
+    // Community tier (07-15 decision B): utility coverage draws lightly in
+    // Curated; experiential coverage only in Everything. See syncCoverageLayers.
+    syncCoverageLayers();
     let n=0;
     CATALOG.forEach(layer=>{
       // The consolidated surface source is persistent (never torn down by
@@ -2035,6 +2060,7 @@
     // pickClick (bound separately) still gets the same click event and drops
     // the point normally.
     if(_pick) return;
+    clearRevealPin();   // decision C: a new pick supersedes any reveal pin (call sites re-drop after)
     _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
     // Route selection emphasis: covers both the click path and the ?feature=
     // deep-link (both funnel through here). Layer id convention: the K line
@@ -2121,10 +2147,20 @@
     const byLetter={};
     all.forEach((n,i)=>{ n._i=i; (byLetter[n.e.letter]=byLetter[n.e.letter]||[]).push(n); });
     const letters=Object.keys(byLetter).sort();
+    const isComm=n=>n.e.community || n.e.verified===false;
     const list = all.length
       ? letters.map(L=>{ const rows=byLetter[L], e0=rows[0].e;
-          return `<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${escPend(e0.badge)}</span>${escPend(e0.kind)} · ${rows.length}</li>`
-            + rows.map(n=>`<li><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`).join('');
+          // 07-15 decision A: verified/curated rows first, then the community
+          // subgroup capped at 3 behind a "show all N" expander. Same collapsed
+          // presentation on mobile (decision F) — one code path.
+          const ver=rows.filter(n=>!isComm(n)), com=rows.filter(isComm);
+          const row=(n,hidden)=>`<li${hidden?` hidden data-more="${L}"`:''}><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}${isComm(n)?`<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`:''}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`;
+          let html=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${escPend(e0.badge)}</span>${escPend(e0.kind)} · ${rows.length}</li>`;
+          html+=ver.map(n=>row(n,false)).join('');
+          html+=com.slice(0,3).map(n=>row(n,false)).join('');
+          html+=com.slice(3).map(n=>row(n,true)).join('');
+          if(com.length>3) html+=`<li><button class="cc-near-more" data-grp="${L}">${escPend(tpl(D.showAll||'show all {n}',{n:com.length}))}</button></li>`;
+          return html;
         }).join('')
       : `<li class="cc-near-empty">${D.nothingHere||'Nothing mapped here yet — be the first to add something.'}</li>`;
     _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
@@ -2139,6 +2175,11 @@
       const n=all[+b.dataset.i];
       b.onclick=()=>n.e.go();
       b.onmouseenter=()=>highlightAt(n.e.ll, n.e.hlOff); b.onmouseleave=clearHighlight;
+    });
+    // expander: reveal the collapsed community rows of one group, then retire itself
+    document.querySelectorAll('#drawerBody .cc-near-more').forEach(b=>{
+      b.onclick=()=>{ document.querySelectorAll(`#drawerBody li[data-more="${b.dataset.grp}"]`).forEach(li=>li.hidden=false);
+        b.closest('li').hidden=true; };
     });
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
@@ -2165,16 +2206,16 @@
     return true;
   }
   // open a specific route by id, SELECTED (deep-link from the curator Routes desk).
-  // Curated mode only draws best-of routes, so switch to Everything first — else
-  // an un-voted route wouldn't render and couldn't be highlighted.
+  // Curated mode only draws best-of routes; a non-best-of route now gets a
+  // single reveal pin at its start (07-15 decision C) instead of the old
+  // force-switch of the whole map into Everything.
   function openRouteById(id){
     const layer=layerByKey['experience']; if(!layer) return false;
     const f=layer.features.find(x=>String(x.id)===String(id));
     if(!f) return false;
-    const allBtn=document.querySelector('#mode button[data-m="all"]');
-    if(mode!=='all' && allBtn) allBtn.click();   // draw every route so this one is visible/selectable
     openDrawer(layer,f);
     const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
+    if(!(mode==='all'||f.cur) && p) revealPinAt(layer, p);
     showRouteCorrections(id);
     return true;
   }
@@ -2382,6 +2423,19 @@
     hlMarker.setOffset(offset||[0,0]).setLngLat([ll[1],ll[0]]).addTo(map);
   }
   function clearHighlight(){ if(hlMarker) hlMarker.remove(); }
+  // Reveal pin (07-15 decision C): picking a NON-DRAWN feature from search in
+  // Curated mode drops one temporary marker (community look + selection pulse)
+  // instead of force-switching the whole map to Everything. Cleared on the
+  // next pick (openDrawer clears it up front), on drawer close, and on a mode
+  // change.
+  let _revealMarker=null;
+  function clearRevealPin(){ if(_revealMarker){ _revealMarker.remove(); _revealMarker=null; } }
+  function revealPinAt(layer, ll){
+    clearRevealPin();
+    const el=pinEl(layer, false);
+    el.classList.add('community','reveal');
+    _revealMarker=new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([ll[1],ll[0]]).addTo(map);
+  }
   function closeDrawer(){
     // If the rider closes the drawer (X / scrim / Escape) mid-pick, tear the
     // picking session down too — an orphaned map click handler + toolbar with
@@ -2396,6 +2450,7 @@
     _covReq++;
     const d=document.getElementById('drawer'); d.classList.remove('open'); d.setAttribute('aria-hidden','true');
     clearHighlight();
+    clearRevealPin();
     clearRouteHighlight();
     clearCorrections();
     sheet.clear();                                     // drop snap classes + inline transform for the next open
@@ -2612,7 +2667,10 @@
     function pickS(i){ const m=sMatches[i]; if(!m) return; sBox.value=m.name; closeS();
       if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
       m.go(); }
-    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${escH(m.badge)}</span><span class="snm">${escH(m.name)}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
+    // 07-15 decision A: community (unverified) rows carry a dimmed sub-tag so
+    // verified vs community reads at a glance. Towns and pending rows never do.
+    const commRow=m=>!m.town && !m.pend && (m.community || m.verified===false);
+    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${escH(m.badge)}</span><span class="snm">${escH(m.name)}${commRow(m)?`<span class="scomm">${escH(D.community||'community')}</span>`:''}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
     // Any-town live place search via Photon (spec 2026-07-14 §3.2) — Photon,
     // not Nominatim: Nominatim's usage policy forbids type-ahead. Wallonia
     // bbox, place types only, ≥3 chars, 350 ms debounce, one in-flight request
@@ -2633,6 +2691,11 @@
           const seen=new Set(Object.keys(CITIES).map(n=>slug(n)));   // quick-picks win over their Photon twin
           _phHits=(d.features||[])
             .filter(f=>f && f.properties && f.properties.name && f.geometry && Array.isArray(f.geometry.coordinates))
+            // 07-15 decision E: the bbox is a coarse pre-filter that spills over
+            // the French border — countrycode is the precise gate (Mazy BE stays,
+            // Malzy FR goes). Relaxing this is one flag if cross-border coverage
+            // is ever wanted (recorded, not built).
+            .filter(f=>f.properties.countrycode==='BE')
             .filter(f=>{ const k=slug(f.properties.name); if(!k || seen.has(k)) return false; seen.add(k); return true; })
             .map(f=>{ const c=f.geometry.coordinates, name=f.properties.name;
               return {name, key:slug(name), kind:'Town', badge:'◎', color:'#3E7D8C', town:true, ph:1,
@@ -2687,6 +2750,10 @@
       // (same freshness handshake as Photon's _phQ: only merge results that
       // answer THIS query).
       if(_covSQ===q) _covHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
+      // decision A ordering: verified/curated rows first inside each letter
+      // group, community after. Array.prototype.sort is stable (ES2019), so the
+      // prefix-before-substring ranking survives within each tier.
+      Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(commRow(a)?1:0)-(commRow(b)?1:0)));
       const groups=towns.length?[{label:D.places||'Places', rows:towns}]:[];
       Object.keys(byLetter).sort().forEach(L=>groups.push({label:`${L} · ${byLetter[L][0].kind}`, rows:byLetter[L]}));
       const CAP=30;
@@ -2817,6 +2884,7 @@
   document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on'); mode=b.dataset.m;
+    clearRevealPin();   // decision C: mode change clears any reveal pin
     const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode!=='curated');
     updateSubtitle();
     refreshBestOf();          // Curated → fetch + filter; Everything → plain render()

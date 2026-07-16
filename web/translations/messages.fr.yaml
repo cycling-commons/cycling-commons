@@ -1085,6 +1085,8 @@ map:
   d_km_off: 'km {a} · à {b} m'
   d_nothing_within: 'Rien dans les Commons à moins de {r} de ce parcours pour l''instant.'
   d_no_match: 'Aucun résultat dans la démo Wallonie pour l''instant.'
+  d_community: 'communauté'
+  d_show_all: 'tout afficher ({n})'
   mly_none: 'Pas d''imagerie immersive ici.'
   mly_zoom: 'Zoomez et cliquez un point vert pour ouvrir la vue immersive ici.'
 improve:

@@ -105,6 +105,7 @@
   .search-res .sw{flex:0 0 auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.66rem;font-weight:700}
   .search-res .snm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45)}
+  .search-res .scomm{margin-left:.45rem;font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45);border:1px solid rgba(239,230,212,.22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
   .search-empty{padding:.6rem .55rem;font-size:.8rem;color:rgba(239,230,212,.5)}
   /* grouped results (spec 2026-07-14 §3.3): sticky per-layer headers between rows */
   .search-res .sgrp{position:sticky;top:0;background:rgba(20,33,24,.94);font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.55);padding:.35rem .55rem .25rem;border-bottom:1px solid rgba(239,230,212,.1)}
@@ -154,6 +155,10 @@
   .cc-pin span{font-size:.85rem;line-height:1}
   .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
   .cc-pin.pending{border-color:#D92D20;border-width:3px}
+  /* community tier (07-15 decisions B/D): same per-type marker, lighter — no new icon set */
+  .cc-pin.community{opacity:.62;border-style:dashed}
+  /* one-off reveal pin (decision C): community look + the selection pulse */
+  .cc-pin.reveal::before{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(255,90,31,.6);animation:cc-pulse 1.25s infinite}
   .cc-mod{margin-top:1rem;border:1px solid rgba(217,45,32,.4);border-left:3px solid #D92D20;border-radius:0 8px 8px 0;padding:.9rem 1rem;background:rgba(217,45,32,.05)}
   .cc-mod-badge{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#F97066;margin-bottom:.5rem}   /* readable red on the dark drawer (was #D92D20) */
   .cc-mod-body{font-size:.85rem;line-height:1.5;margin-bottom:.6rem}
@@ -380,6 +385,8 @@
   .cc-near-empty{color:rgba(239,230,212,.5);font-size:.88rem;padding:.4rem 0}
   /* per-layer group header in the place card's nearby list (spec 2026-07-14 §3.3) */
   .cc-near-grp{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding:.25rem 0;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+  .cc-comm-tag{margin-left:.45rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.5);border:1px solid rgba(239,230,212,.22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
+  .cc-near-more{background:none;border:none;padding:.45rem 0;color:var(--trail);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .cc-elev-cap{margin-top:.9rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:rgba(239,230,212,.6)}
   .cc-elev-cap em{color:rgba(239,230,212,.4);font-style:normal}
   .cc-elev{width:100%;height:64px;display:block;margin-top:.3rem}

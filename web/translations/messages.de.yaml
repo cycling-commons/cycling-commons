@@ -1085,6 +1085,8 @@ map:
   d_km_off: 'km {a} · {b} m entfernt'
   d_nothing_within: 'Noch nichts in den Commons im Umkreis von {r} dieser Tour.'
   d_no_match: 'Noch kein Treffer in der Wallonien-Demo.'
+  d_community: 'Community'
+  d_show_all: 'alle {n} anzeigen'
   mly_none: 'Keine Straßenansicht hier.'
   mly_zoom: 'Hineinzoomen und einen grünen Punkt anklicken, um die Straßenansicht zu öffnen.'
 improve:
