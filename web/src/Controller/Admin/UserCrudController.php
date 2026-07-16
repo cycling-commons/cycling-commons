@@ -43,7 +43,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *
  * Exposed fields only: email, displayName, roles, emailVerified, twoFaEnabled
  * (read-only), lockedUntil, publicProfile, createdAt. NEVER exposes password,
- * totpSecret, backupCodes (see docs/specs/2026-07-01-admin-panel-account-support-design.md §10).
+ * totpSecret, backupCodes (see docs/specs/account-and-auth.md §6.5).
  *
  * Support actions delegate to UserAdminService; guardrail violations become a
  * flash + redirect, never a 500.

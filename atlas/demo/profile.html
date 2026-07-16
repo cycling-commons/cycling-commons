@@ -144,8 +144,8 @@
 <script>
   /* Render a contributor profile from the shared CC_PROFILES fixture.
      The "Edit profile" button and each contribution's Edit link expose the
-     full edit flow (settings.html / improve.html) — see
-     docs/specs/2026-06-20-editable-profile-demo-design.md */
+     full edit flow (settings.html / improve.html). Prototype-only mechanics;
+     the real profile contract is docs/specs/account-and-auth.md. */
   const u = new URLSearchParams(location.search).get('u');
   const slug = window.CC_PROFILES[u] ? u : 'hanne-v';
   const P = window.CC_PROFILES[slug];

@@ -75,6 +75,10 @@ docs/*.md
 docs/plans/
 docs/superpowers/
 
+# Dated working specs — consolidated into the canonical set, then kept local for
+# reference. Only the date-less canonical specs ship (docs/specs/README.md).
+docs/specs/Dated/
+
 # Agent scratch (worktrees, SDD ledger) — local only, never committed.
 .claude/
 .superpowers/

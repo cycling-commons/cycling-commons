@@ -4,8 +4,10 @@ Reproducible OpenStreetMap harvest that fills the Atlas demo's Wallonia layers w
 region-balanced data. Replaces hand-placed demo POIs; supersedes the one-off, frozen
 [`atlas/demo/water-osm.js`](../../atlas/demo/water-osm.js) approach with a rerunnable pipeline.
 
-See the design spec: [`docs/specs/2026-06-24-wallonia-data-fill-design.md`](../../docs/specs/2026-06-24-wallonia-data-fill-design.md)
-and the Phase 0 plan in `docs/superpowers/plans/` (local working doc).
+Surviving data rules live in [`docs/specs/catalog-data-model.md`](../../docs/specs/catalog-data-model.md)
+(attribution/licence-lint, seeds-not-hand-edits); the harvest approach itself is
+superseded by [`docs/specs/osm-data-architecture.md`](../../docs/specs/osm-data-architecture.md)
+and [`docs/specs/coverage-provider.md`](../../docs/specs/coverage-provider.md).
 
 ## Run
 

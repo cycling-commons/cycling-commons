@@ -5,14 +5,15 @@
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 This directory holds two kinds of documents. The distinction is load-bearing:
-tooling, reviews, and tests treat them differently.
+tooling, reviews, and tests treat them differently. Only the canonical tier is
+committed — working docs stay local.
 
 ## The two tiers
 
 | Tier | Filename | Role | Lifetime |
 |------|----------|------|----------|
-| **Canonical** | date-less (`route-domain.md`, `edit-items/…`) | The official contract set: developer reference, and the base TDD builds against. Versionless, kept current. | Permanent |
-| **Working** | dated (`YYYY-MM-DD-<topic>-design.md`) | Design docs for one round of work: options, rationale, execution notes. | Sweepable after consolidation |
+| **Canonical** | date-less (`route-domain.md`, `edit-items/…`) | The official contract set: developer reference, and the base TDD builds against. Versionless, kept current. | Permanent, committed |
+| **Working** | dated (`Dated/YYYY-MM-DD-<topic>-design.md`) | Design docs for one round of work: options, rationale, execution notes. | Local-only (gitignored); swept into `Dated/` after consolidation |
 
 **Nothing binding may live only in a dated file once its design has shipped.**
 
@@ -38,7 +39,7 @@ tooling, reviews, and tests treat them differently.
    same session moves its surviving binding decisions into the owning canonical
    doc and stamps the dated file (`> Consolidated into <doc>.md (<date>).`).
    Only stamped files (or files stamped `retired, nothing survives`) may be
-   swept.
+   swept — moved into the local `Dated/` folder and removed from the repo.
 2. **One owner per fact.** Canonical docs cross-link instead of restating.
    The wiki owns the public "why" (principles, taxonomy, governance); specs own
    the "what/how" (schemas, state machines, endpoints, invariants).
@@ -56,5 +57,6 @@ tooling, reviews, and tests treat them differently.
    builds against, including approved-but-unbuilt contracts.
 6. **Ops flags stay out.** Pending prod migrations, token setup, go-live gates
    live in `docs/TODO.md`; design decisions never do.
-7. **Sweep guard.** Before deleting a dated spec, grep the canonical set and
-   `web/tests` for its filename; repoint anything that matches first.
+7. **Sweep guard.** Before sweeping a dated spec out of the tracked tree, grep
+   the whole repo for its filename; repoint anything that matches first —
+   past hits have surfaced in docs, tests, tooling, and code comments alike.

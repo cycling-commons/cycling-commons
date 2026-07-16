@@ -115,7 +115,7 @@ final class UserAdminService
             // Log first (target still exists); the target FK becomes NULL when the
             // row is deleted (ON DELETE SET NULL), so snapshot the email into the note.
             // Commons rule: personal data goes; contributed data is anonymised,
-            // never cascade-deleted — see docs/specs/2026-07-01-admin-panel-account-support-design.md §7.
+            // never cascade-deleted — see docs/specs/account-and-auth.md §6.3.
             $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account: '.$email);
             // Route through the shared deletion seam so admin removal runs the
             // same UserDeletionHookInterface anonymisation as self-service (#41).

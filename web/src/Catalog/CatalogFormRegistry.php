@@ -12,7 +12,7 @@ namespace App\Catalog;
  * This is the Symfony port of the demo registry in `atlas/demo/edit-items.js`,
  * lifted from per-feature entries to per-type schemas (the four demo climbs
  * collapse to one Climbs schema, etc.). Design source of truth:
- * docs/specs/edit-items/<LETTER>-*.md and 2026-06-18-catalog-v2-and-per-type-forms.md §4.
+ * docs/specs/edit-items/<LETTER>-*.md and docs/specs/edit-items/README.md.
  *
  * Form/attribute schema, not a domain schema — it declares the per-type field
  * shape and vocabulary (consumed by {@see Import\AttributeVocabulary}

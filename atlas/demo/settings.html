@@ -179,8 +179,8 @@
 <script>
   /* Full-page profile editor (prototype). Pre-fills from the shared CC_PROFILES
      fixture; Save is a mock — it shows a toast and returns to the profile, but
-     nothing persists. See the spec:
-     docs/specs/2026-06-20-editable-profile-demo-design.md */
+     nothing persists. Prototype-only mechanics; the real profile contract is
+     docs/specs/account-and-auth.md. */
   const u = new URLSearchParams(location.search).get('u');
   const slug = window.CC_PROFILES[u] ? u : 'hanne-v';
   const P = window.CC_PROFILES[slug];
