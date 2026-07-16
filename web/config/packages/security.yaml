@@ -56,6 +56,11 @@ security:
         # login). Explicit PUBLIC_ACCESS for the same lazy-firewall reason as the
         # map endpoints above.
         - { path: '^/items/\d+/confirmations$', roles: PUBLIC_ACCESS }
+        # Coverage query plane (coverage-provider.md §5):
+        # anonymous cacheable JSON over the coverage_poi cache — explicit
+        # PUBLIC_ACCESS for the same scheb lazy-firewall cacheability reason
+        # as /map/catalog.json above.
+        - { path: '^/map/coverage/poi/(node|way)/\d+$', roles: PUBLIC_ACCESS }
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.
         # Must precede the ^/2fa rule below, which guards scheb's interstitial (/2fa, /2fa_check)
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.

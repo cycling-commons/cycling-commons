@@ -1,8 +1,10 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
-        # Exclude PostGIS extension schemas from Doctrine's schema diff tool
-        schema_filter: '~^(?!topology\.)~'
+        # Exclude PostGIS extension schemas AND the pipeline-owned coverage_*
+        # cache tables (coverage-provider.md §2: pipeline
+        # DDL, never a Doctrine migration) from Doctrine's schema diff tool
+        schema_filter: '~^(?!topology\.|coverage_)~'
         types:
             # AES-256-GCM at-rest encryption (key derived from APP_SECRET) for the TOTP secret
             encrypted_string: App\Doctrine\EncryptedStringType
