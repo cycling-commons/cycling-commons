@@ -74,7 +74,9 @@ class _Collector(osmium.SimpleHandler):
                 name=tags.get("name"),
                 lon=lon,
                 lat=lat,
-                tags=tags,
+                # Per-row copy: sibling rows of a multi-letter object must not
+                # share one mutable dict (mutating one row can't corrupt another).
+                tags=dict(tags),
                 osm_version=obj.version or None,
                 osm_ts=obj.timestamp if obj.version else None,
                 src_region=self._src_region,

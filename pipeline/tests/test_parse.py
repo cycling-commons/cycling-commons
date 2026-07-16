@@ -40,6 +40,11 @@ def test_multi_letter_object_yields_one_row_per_letter(rows):
         r.tags == {"tourism": "hotel", "historic": "castle", "name": "Kasteelhotel"}
         for r in hotel_castle
     )
+    # Sibling rows carry equal tags but never share one mutable dict — a
+    # consumer mutating one row's tags must not corrupt its sibling.
+    row_a, row_b = hotel_castle
+    assert row_a.tags == row_b.tags
+    assert row_a.tags is not row_b.tags
 
 
 def test_way_reduces_to_centroid(rows):
@@ -69,3 +74,51 @@ def test_name_tags_and_osm_metadata(rows):
 
 def test_region_stamp(rows):
     assert {(r.src_region, r.country_code) for r in rows} == {("europe/belgium", "BE")}
+
+
+def _parse_xml(tmp_path, contract, xml):
+    """Parse a throwaway hand-written XML (pyosmium reads .osm by extension —
+    no conversion, no committed fixture, no network)."""
+    src = tmp_path / "throwaway.osm"
+    src.write_text(xml, encoding="utf-8")
+    return list(parse_pois(src, contract, "europe/belgium", "BE"))
+
+
+def test_missing_osm_metadata_falls_back_to_none(tmp_path, contract):
+    # pyosmium reports version 0 + epoch timestamp for a metadata-less object;
+    # the parse fallback must surface both as None, not fabricated values.
+    rows = _parse_xml(tmp_path, contract, """<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="throwaway metadata-fallback test">
+  <node id="1" lat="50.1000" lon="4.1000">
+    <tag k="amenity" v="drinking_water"/>
+  </node>
+</osm>
+""")
+    (row,) = rows
+    assert row.ref == "node/1"
+    assert row.letter == "C"
+    assert row.osm_version is None
+    assert row.osm_ts is None
+
+
+def test_open_way_centroid_is_plain_mean(tmp_path, contract):
+    # NON-closed way: no repeated closing node to drop — the centroid is the
+    # plain mean over ALL member node locations, and exactly one row emits.
+    rows = _parse_xml(tmp_path, contract, """<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="throwaway open-way test">
+  <node id="1" version="1" timestamp="2026-06-01T12:00:00Z" lat="50.0000" lon="4.0000"/>
+  <node id="2" version="1" timestamp="2026-06-01T12:00:00Z" lat="50.0000" lon="4.0300"/>
+  <node id="3" version="1" timestamp="2026-06-01T12:00:00Z" lat="50.0300" lon="4.0300"/>
+  <way id="9" version="1" timestamp="2026-06-05T07:00:00Z">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="tourism" v="camp_site"/>
+  </way>
+</osm>
+""")
+    (way,) = rows
+    assert way.ref == "way/9"
+    assert way.letter == "E"
+    assert way.lon == pytest.approx((4.0000 + 4.0300 + 4.0300) / 3, abs=1e-6)
+    assert way.lat == pytest.approx((50.0000 + 50.0000 + 50.0300) / 3, abs=1e-6)

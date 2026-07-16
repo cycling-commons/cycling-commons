@@ -20,8 +20,14 @@ class _TaggedNodeScan(osmium.SimpleHandler):
 
 def test_selector_expressions_cover_contract_nodes_and_ways(contract):
     exprs = selector_expressions(contract)
-    assert "nw/shop=bicycle" in exprs
-    assert "nw/tourism=hotel" in exprs
+    contract_tags = {
+        sel.tag for spec in contract.letters.values() for sel in spec.selectors
+    }
+    # Exhaustive: every contract selector maps to exactly ONE expression — a
+    # silently dropped selector fails here, not in production coverage data.
+    for tag in sorted(contract_tags):
+        assert exprs.count(f"nw/{tag}") == 1, f"selector {tag} missing or duplicated"
+    assert len(exprs) == len(contract_tags)          # nothing extra, nothing dropped
     assert len(exprs) == len(set(exprs))             # deduped
     assert all(e.startswith("nw/") for e in exprs)   # decision B1: nodes + ways
 
