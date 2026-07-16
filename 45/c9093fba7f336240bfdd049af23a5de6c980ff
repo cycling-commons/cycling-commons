@@ -1,0 +1,32 @@
+docs/specs/osm-data-architecture.md
+  s_e6d6993eda7318::t_08e5bdc96650a4 234-235
+  s_e6d6993eda7318::t_802589273fd6c7 120-123,125-126,128-133,135-137
+web/tests/Catalog/CatalogFormRegistryServiceKindTest.php
+  s_e6d6993eda7318::t_f38118a5639e83 11,17-21,33,35,37-38,41,43,45-46,49,51,53-54,57,59,61-62,65-67,70,72,74,78
+web/src/Catalog/CatalogFormRegistry.php
+  s_e6d6993eda7318::t_f5379d3fd55a20 91,97-102,105
+web/assets/map/map.js
+  s_e6d6993eda7318::t_04824bf9012524 272
+  s_e6d6993eda7318::t_7d84a2d1be71ff 293-294
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "45c9093fba7f336240bfdd049af23a5de6c980ff",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e6d6993eda7318": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "081baf86-6152-46e3-a19d-aa12c114220a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
