@@ -269,9 +269,11 @@
   function schemaRows(letter, src, id, opts){
     const schema = (window.CC_FIELD_SCHEMA || {})[letter] || [];
     const skip = (opts && opts.skip) || [];
+    const fixed = (opts && opts.fixed) || {};   // key -> value implied by the item's nature: shown read-only, never an "add" prompt
     const rows = [];
     schema.forEach(f=>{
       if(skip.indexOf(f.key) >= 0) return;
+      if(fixed[f.key] != null){ const cv0=f.choices||{}; rows.push({label:f.label, value:cv0[fixed[f.key]] != null ? cv0[fixed[f.key]] : fixed[f.key]}); return; }
       const v = src[f.key];
       const has = Array.isArray(v) ? v.length > 0 : (v != null && v !== '');
       // Stored values are canonical English; f.choices (schema-provided, per
@@ -326,10 +328,11 @@
     // same label (e.g. a curated 'Type' overriding the raw OSM one); unset fields
     // become "add" prompts. 'web' dedupes by the shared "Website" label below.
     // Stations/pumps are unmanned and inherently 24/7 (spec §5) — the /improve
-    // form has no openingHours field for them, so skip the row here too or the
-    // "add" prompt would deep-link to a field that doesn't exist.
+    // form has no openingHours field for them, so instead of an "add" prompt
+    // (which would deep-link to a field that doesn't exist) the drawer states
+    // the implied fact: Opening hours · 24/7.
     const unmanned = p.serviceKind==='station' || p.serviceKind==='pump';
-    const attrRows = schemaRows((layer||{}).letter, p, p.id, unmanned ? {skip:['openingHours']} : undefined);
+    const attrRows = schemaRows((layer||{}).letter, p, p.id, unmanned ? {fixed:{openingHours:'24/7'}} : undefined);
     const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
     rec = rec.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
     // source is shown once, in the bottom cc-d-src line (linkified there) — like every other drawer

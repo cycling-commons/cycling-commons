@@ -125,7 +125,8 @@ The distinction is a data fact, not just presentation:
 - `station` (`amenity=bicycle_repair_station`) / `pump`
   (`amenity=compressed_air`) — unmanned; **24/7 is implied by the type**, so
   there is no opening-hours field. "Unmanned / 24-7" is the *kind*, never a
-  chosen value.
+  chosen value. Riders still see the implied fact: the item card displays
+  "Opening hours · 24/7" as a read-only row.
 
 Each kind gets a distinct marker so riders see the difference; form fields are
 kind-specific (only `shop` shows opening hours).
