@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+> **Consolidated into** moderation-and-contribution.md (unassigned=global, NULL-region-visible-to-all, filter+hard-guard enforcement, twin SQL/PHP in-scope rule, exactly-one-of CHECK constraint, audited assignment action, visible-scope bar rule, 403 semantics) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
 
 # Moderator areas — region/country-scoped moderation (2026-07-14)
 

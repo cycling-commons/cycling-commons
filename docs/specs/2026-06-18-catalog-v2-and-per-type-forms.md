@@ -1,3 +1,5 @@
+> **Consolidated into** map-and-search.md (§8 behaviours: city cards, ?feature= deep-link, difficulty scale, lightbox, layer defaults, L-not-in-rail rule), edit-items/A-road-surface.md (surface-over-smoothness keying, sub-layer-per-class rendering) and edit-items/README.md (A–L lettering, already official) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Spec — Catalog v2 (A–L), Road-surface layer, Quality rides & per-type edit forms
 
 - **Status:** Approved (scheme chosen: A–L) — implementing

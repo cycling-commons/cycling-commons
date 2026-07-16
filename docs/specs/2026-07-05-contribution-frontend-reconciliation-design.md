@@ -1,3 +1,5 @@
+> **Consolidated into** edit-items/README.md (P1-P4 registry-derivation contract, W5 visible change history, W6 uniform provenance, D4 ratings-deferred rationale), the per-type edit-items/ docs (D2 vocabulary sync) and catalog-data-model.md (ItemSource::Manual seeding rule) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Contribution Front-End Reconciliation — Design (Phase C)
 
 > **Status:** Approved 2026-07-05 (decisions D1–D4 recorded in §5). W1/W2/W3/W5/W6 shipped 2026-07-05 (see §8). W4 + ratings/reviews deferred.

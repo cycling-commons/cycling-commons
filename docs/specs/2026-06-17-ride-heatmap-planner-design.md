@@ -1,3 +1,5 @@
+> **Consolidated into** map-and-search.md (L toggle/season chips/lazy build, faked-planner labelling, no-raw-GPX rule) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Seasonal ride-heatmap + "Plan from Spa" — prototype slice
 
 **Date:** 2026-06-17

@@ -1,3 +1,5 @@
+> **Consolidated into** map-and-search.md (street-level imagery: token dormancy gate, coverage tiles rendering, click resolver, lazy viewer dock incl. resize contract, error table, CSP unsafe-eval note) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Mapillary street-level imagery layer — design
 
 **Date:** 2026-06-19

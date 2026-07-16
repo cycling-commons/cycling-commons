@@ -1,3 +1,5 @@
+> **Consolidated into** moderation-and-contribution.md (/improve entry-point matrix + field= param contract, with pointer from edit-items/README.md) and map-and-search.md (drawer a11y contrast rule, Fix-location affordance); the superseded English-literals i18n note is dropped **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Locate Confirm-Map, "Fix Location", and Drawer A11y — Design
 
 **Status:** Approved (2026-07-13). Follow-up to

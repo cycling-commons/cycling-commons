@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+> **Consolidated into** moderation-and-contribution.md (community confirmation loop: per-type stance table, one-switchable-stance uniqueness, GET/POST endpoint contract with clean-401 + stateless CSRF, CC_VOTABLE/CC_CONFIRMABLE gating; cross-referenced from edit-items/README.md) and map-and-search.md (drawer panel behaviour) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
 
 # Utility confirmations — potability & "still here?" (2026-07-13)
 

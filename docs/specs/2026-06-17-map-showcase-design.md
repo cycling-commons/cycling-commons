@@ -1,3 +1,5 @@
+> **Consolidated into** map-and-search.md (rail-as-catalog-index, tooltip+drawer model, drawer anatomy, omit-unknowns rule, line/area layer rule) and edit-items/README.md (best-of derivation, already official) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # The Map is the Showcase — real Ardennes data across the full catalog
 
 > ⚠️ **Superseded by [2026-06-18-catalog-v2-and-per-type-forms.md](2026-06-18-catalog-v2-and-per-type-forms.md).**

@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+> **Consolidated into** account-and-auth.md (case-insensitive canonical shadow column maintained in setDisplayName, empty-to-NULL rule, entity-level validation rationale, RidingStyle 7-case enum as the Discipline-chip contract, BikeType split, silently-drop-unknown enum read rule) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
 
 # Unique display names & rider preferences (2026-07-14)
 

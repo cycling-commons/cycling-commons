@@ -1,3 +1,5 @@
+> **Retired (2026-07-16), nothing survives** — HTML-demo mechanics; see docs/specs/account-and-auth.md for the real profile contract.
+
 # Spec — Editable profile: interface & flow (prototype)
 
 **Date:** 2026-06-20

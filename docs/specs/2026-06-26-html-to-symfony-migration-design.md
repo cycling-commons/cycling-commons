@@ -1,3 +1,5 @@
+> **Consolidated into** account-and-auth.md (user model, role ladder, 2FA policy + TwoFactorSetupEnforcer, security.yaml shape, lockout, GDPR deletion + open Art. 20 export, admin-vs-moderate boundary, mail) and dev-environment.md (stack, hybrid rendering, AssetMapper-no-Node, SPDX/CI, secrets convention, i18n-from-day-one) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # HTML → Symfony migration (presentation + auth foundation) — design
 
 **Date:** 2026-06-26

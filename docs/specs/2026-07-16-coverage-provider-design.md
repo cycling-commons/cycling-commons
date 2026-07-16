@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+> **Consolidated into** coverage-provider.md (the canonical implementation contract; implementation plan pending execution), osm-data-architecture.md (§11 corrections), map-and-search.md (consumer behaviour summary) and dev-environment.md (prod topology) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
 
 # Coverage Provider (Plan 2) — Design
 

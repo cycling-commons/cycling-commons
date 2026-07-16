@@ -1,3 +1,5 @@
+> **Consolidated into** edit-items/B-climbs.md (add-climb wizard steps/gates, journey-diagram requirement, honesty rule), map-and-search.md (basemap/search stack notes) and edit-items/README.md (stale foot/summit line fixed) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Spec — Add a climb to the atlas
 
 - **Status:** Draft for review

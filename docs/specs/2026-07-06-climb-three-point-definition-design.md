@@ -1,3 +1,5 @@
+> **Consolidated into** edit-items/B-climbs.md (three-point editor UX, steep={at,pct,manual} attribute shape, steepest manual-lock rule, auto-route + no-fake-profile fallback, edit-prefill/untraced-climb path) and catalog-data-model.md (route/grad/steep registry shapes) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Climb Definition by Three Points — Design
 
 > **Status:** Draft — for review before planning/implementation.

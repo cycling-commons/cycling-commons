@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+> **Consolidated into** map-and-search.md (prefilter predicate incl. unknown-is-not-unsuitable, never-silent chip + localStorage key, CC_PREFS delivery, discipline-chip rebase, mobile 3-snap drawer contract, short-drawer clamp), with the RidingStyle enum contract cross-referenced to account-and-auth.md **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
 
 # Map preferences prefilter & mobile drawer snap sheet (2026-07-14)
 

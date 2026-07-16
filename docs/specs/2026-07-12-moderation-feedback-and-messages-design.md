@@ -1,3 +1,5 @@
+> **Consolidated into** moderation-and-contribution.md (M1-M12 contract: inbox-vs-audit split, in-transaction messaging, kind vocabulary, no-poll bulb, needs-info re-queue, retention + GC, Trash hard-delete, user_message FK exception, map-link rules, open points), with the stale 'not yet built' paragraph updated in edit-items/README.md **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Moderation Feedback & User Messages — Common Design (all contribution channels)
 
 - **Status:** design approved (user, 2026-07-12) — **NOT built**; no implementation plan yet.

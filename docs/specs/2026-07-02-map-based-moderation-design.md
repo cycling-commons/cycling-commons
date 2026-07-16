@@ -1,3 +1,5 @@
+> **Consolidated into** moderation-and-contribution.md (decisions-off-the-queue rule, CC_PENDING gating on ROLE_CURATOR + completed 2FA, CC_MOD_TOKEN CSRF contract, arm-then-Enter keyboard flow, field-diff principle), with the pending-pin visual contract cross-referenced from map-and-search.md **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Spec — Map-based moderation (curator pending layer + world-overview queue)
 
 - **Status:** Approved — implementing

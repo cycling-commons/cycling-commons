@@ -1,3 +1,5 @@
+> **Consolidated into** security-architecture.md (site-wide CSP + nonce contract, |trans|rich sanitizer rule, escaping rules), map-and-search.md (consolidated-vs-per-feature layer strategy, _styleReady gate, DOM-markers-for-a11y precedent) and dev-environment.md (gzip config, vendor-volume gotcha); the per-finding ledger retires **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Frontend-review fixes (2026-07-12)
 
 Execution note for the 2026-07-12 multi-agent frontend review (artifact:

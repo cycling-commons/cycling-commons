@@ -1,3 +1,5 @@
+> **Consolidated into** catalog-data-model.md (E/H shelter de-overlap rule, per-source attribution + licence-lint contract, seeds-not-hand-edits rule, illustrative-heatmap rule); harvest/region-balancing material retired as superseded by osm-data-architecture.md and coverage-provider.md **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Spec — Wallonia data fill: making the Atlas "live-real"
 
 - **Status:** Draft — awaiting user review (author stepped away; plan written for review on return)

@@ -1,3 +1,5 @@
+> **Consolidated into** map-and-search.md (permalink hash contract, interactive-elevation contract, per-item GPX + embedded ODbL attribution rule, all recorded as specified, pending implementation); route GPX cross-links edit-items/K-quality-rides.md **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Spec — Map enhancements: permalink, GPX export, interactive elevation
 
 - **Status:** Draft — awaiting user review

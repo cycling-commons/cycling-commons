@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+> **Consolidated into** map-and-search.md (approved-but-pending community-tier presentation contract: density-vs-intent reframe, verified-first search ordering + community subgroup caps, community marker modifier, temporary reveal pin, Photon countrycode gate; recorded as pending via the coverage-provider plan, not as shipped) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
 
 # Full-Commons search & the community tier (2026-07-15)
 

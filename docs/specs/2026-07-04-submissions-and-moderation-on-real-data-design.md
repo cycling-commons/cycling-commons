@@ -1,3 +1,5 @@
+> **Consolidated into** moderation-and-contribution.md (apply-on-approve transactional semantics, submission-row-as-audit-record, changes/payload jsonb shapes, append-only change_history + history-never-lies rule, SubmissionDraft validate-twice boundary, rate limits, intake security posture), with table shapes cross-referenced from catalog-data-model.md and the stale history paragraph fixed in edit-items/README.md **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Submissions & Moderation on Real Data — Design (Data-API Phase B)
 
 - **Status:** draft — awaiting review

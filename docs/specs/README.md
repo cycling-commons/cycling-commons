@@ -46,8 +46,11 @@ tooling, reviews, and tests treat them differently.
    `<canonical>.md §heading`, never a dated filename. Numeric thresholds are
    stated as config keys in the spec; tests assert against config, not
    literals.
-4. **Section references are doc-qualified** everywhere (specs, code comments,
-   commit messages): `osm-data-architecture.md §5`, never a bare `§5`.
+4. **Cross-doc section references are doc-qualified** everywhere (specs, code
+   comments, commit messages): `osm-data-architecture.md §5`, never a bare
+   `§5` when pointing into *another* document. Within a doc's own body, a bare
+   `§N` refers to that same doc — the established practice across the
+   canonical set.
 5. **Pending contracts go canonical immediately**, marked
    *“specified, pending implementation”* — the canonical set is what TDD
    builds against, including approved-but-unbuilt contracts.

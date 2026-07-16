@@ -1,3 +1,5 @@
+> **Consolidated into** account-and-auth.md (admin support desk: AdminActionLog contract, guardrails, anonymize-not-delete removal semantics + UserMessage cascade exception, secret-field never-render rule, POST+CSRF convention, confirmed-future inactivity lifecycle) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Admin panel — account support desk (starter) — design
 
 **Date:** 2026-07-01

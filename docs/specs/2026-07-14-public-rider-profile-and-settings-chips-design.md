@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+> **Consolidated into** account-and-auth.md (uuid-only /riders/{uuid}, exists-only-while-public 404 rule, view-as = real page with zero special-casing, public content allow/never-show lists, two-tab Settings contract, account-shell moderator-mode navigation rules) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
 
 # Public rider profile, "view as others", settings chips & tabs (2026-07-14)
 

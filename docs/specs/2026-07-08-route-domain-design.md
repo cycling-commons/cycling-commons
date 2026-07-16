@@ -1,3 +1,5 @@
+> **Consolidated into** route-domain.md (the canonical deep spec absorbing §3-§16), with edit-items/K-quality-rides.md repointed to route-domain.md as design source of truth and the app-wide validator-i18n rule recorded in dev-environment.md **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Route Domain v1 — Recommended Routes (K) — Design
 
 - **Status:** draft — awaiting review

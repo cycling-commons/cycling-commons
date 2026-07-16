@@ -1,3 +1,5 @@
+> **Consolidated into** account-and-auth.md (opt-in public-profile posture, dashboard Contributions/Votes/Saved-regions pane contract) and edit-items/README.md (improve/registry material, already official) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Spec — "Edit this item" on every feature + contributor profile page
 
 - **Status:** Draft for review

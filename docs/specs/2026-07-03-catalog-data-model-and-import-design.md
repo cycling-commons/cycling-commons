@@ -1,3 +1,5 @@
+> **Consolidated into** catalog-data-model.md (four-table schema, boundary rule, registry-validated jsonb, (source,source_ref,letter) identity + idempotent upsert, state semantics + no-auto-retire, region membership mechanics, scale contract, /map/catalog.json contract + PUBLIC_ACCESS gotcha, bridge to the osm-data-architecture.md target model) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Spec — Catalog data model, Wallonia import, DB-served map (data-API phase A)
 
 - **Status:** Landed — phase A complete (plans 1 + 2)

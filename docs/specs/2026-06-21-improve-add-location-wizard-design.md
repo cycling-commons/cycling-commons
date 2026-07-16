@@ -1,3 +1,5 @@
+> **Consolidated into** moderation-and-contribution.md (4-step wizard, per-step gating, Photon + offline fallback, segment hidden-field carrier, mobile layout contract), cross-linked from edit-items/README.md **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Add-spot location wizard for `improve.html`
 
 **Date:** 2026-06-21

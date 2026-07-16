@@ -1,3 +1,5 @@
+> **Consolidated into** dev-environment.md (compose-only orchestration, nginx+FPM mirrors prod, profiles/mounted-data rule, healthcheck/env contract, PostGIS as the PHP-Python boundary, known gotchas) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Dockerized development stack — design
 
 **Date:** 2026-06-19

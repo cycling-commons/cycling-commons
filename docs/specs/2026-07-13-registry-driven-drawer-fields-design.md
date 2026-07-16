@@ -1,3 +1,5 @@
+> **Consolidated into** map-and-search.md (registry-driven drawer rendering contract: registry as single source, CC_FIELD_SCHEMA per-locale delivery + out-of-catalog.json rule, empty-prompt affordance, rating/url kind derivation, dedup-by-label, localized-choices extension) and edit-items/README.md (CatalogField.display flag) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Registry-driven map-drawer fields — design
 
 **Date:** 2026-07-13

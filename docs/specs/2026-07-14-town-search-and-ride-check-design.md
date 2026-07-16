@@ -1,3 +1,5 @@
+> **Consolidated into** map-and-search.md (ITEM_INDEX dedupe semantics marked transitional pending coverage provider, unnamed-POI rules, Photon-over-Nominatim policy + silent degradation, grouped dropdown, openPlace/fit-bounds, ride-check endpoint contract + never-stored rule + MATERIALIZED corridor SQL idiom + follows-floor formula, drawer/overlay behaviour, IME aria-expanded rule) **(2026-07-16).** This dated working doc is sweepable; the canonical docs above are the source of truth.
+
 # Town search completeness + GPX ride-check (2026-07-14)
 
 - **Status:** Approved (design reviewed in-session 2026-07-14)
