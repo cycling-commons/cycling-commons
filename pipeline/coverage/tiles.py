@@ -96,9 +96,36 @@ def build_pmtiles(layer_files, out_path):
     subprocess.run(cmd, check=True)
 
 
+def _run(cmd: list[str], text: bool = False):
+    """Run a tile-toolchain command, surfacing its output on failure.
+
+    Mirrors extract.py's osmium error pattern: a nonzero exit raises
+    RuntimeError carrying the command plus the captured stderr/stdout instead
+    of a bare CalledProcessError whose diagnostics are discarded."""
+    proc = subprocess.run(cmd, capture_output=True, text=text)
+    if proc.returncode != 0:
+        err = proc.stderr if text else proc.stderr.decode("utf-8", "replace")
+        out = proc.stdout if text else proc.stdout.decode("utf-8", "replace")
+        detail = " ".join(part.strip() for part in (err, out) if part and part.strip())
+        raise RuntimeError(f"`{' '.join(cmd)}` failed ({proc.returncode}): {detail}")
+    return proc.stdout
+
+
+def _show(path, *flags: str) -> str:
+    return _run(["pmtiles", "show", str(path), *flags], text=True)
+
+
+def _tile_bytes(path, z: int, x: int, y: int) -> bytes:
+    """One tile's raw bytes; b'' when the tile is absent (go-pmtiles exits 0)."""
+    return _run(["pmtiles", "tile", str(path), str(z), str(x), str(y)])
+
+
 def _header_bounds(show: str) -> list[float]:
-    """min_lon, min_lat, max_lon, max_lat from the `pmtiles show` bounds line."""
-    m = re.search(r"bounds:?(.*)", show, re.IGNORECASE)
+    """min_lon, min_lat, max_lon, max_lat from the `pmtiles show` bounds line.
+
+    Anchored to line start so `antimeridian_adjusted_bounds` (a metadata echo
+    in the same output) can never be picked up if go-pmtiles reorders lines."""
+    m = re.search(r"^bounds\b:?(.*)", show, re.IGNORECASE | re.MULTILINE)
     return [float(x) for x in re.findall(r"-?\d+(?:\.\d+)?", m.group(1))][:4] if m else []
 
 
@@ -115,8 +142,7 @@ def verify_pmtiles(path, expected_layers=None, expected_bbox=None):
     contract letters, lowercased); header bounds intersecting `expected_bbox`
     (min_lon, min_lat, max_lon, max_lat) when given; and at least one min-zoom
     tile inside the header bounds decoding non-empty. RuntimeError on failure."""
-    show = subprocess.run(["pmtiles", "show", str(path)],
-                          check=True, capture_output=True, text=True).stdout
+    show = _show(path)
     m = re.search(r"addressed tiles(?: count)?:\s*(\d+)", show)
     if not m or int(m.group(1)) == 0:
         raise RuntimeError(f"pmtiles verify: no addressed tiles in {path}\n{show}")
@@ -132,8 +158,7 @@ def verify_pmtiles(path, expected_layers=None, expected_bbox=None):
                 f"pmtiles verify: header bounds {bounds} do not intersect "
                 f"expected bbox {list(expected_bbox)} in {path}")
 
-    meta = subprocess.run(["pmtiles", "show", str(path), "--metadata"],
-                          check=True, capture_output=True, text=True).stdout
+    meta = _show(path, "--metadata")
     layers = {vl["id"] for vl in json.loads(meta).get("vector_layers", [])}
     expected = (set(expected_layers) if expected_layers is not None
                 else {letter.lower() for letter in load_contract().letters})
@@ -156,11 +181,13 @@ def verify_pmtiles(path, expected_layers=None, expected_bbox=None):
     checked = 0
     for x in range(x0, x1 + 1):
         for y in range(y0, y1 + 1):
-            out = subprocess.run(["pmtiles", "tile", str(path), str(z), str(x), str(y)],
-                                 check=True, capture_output=True).stdout
-            if out:
+            if _tile_bytes(path, z, x, y):
                 return
             checked += 1
+            # Cap assumes a single populated region: a multi-region header
+            # bbox could exhaust 256 min-zoom tiles over the empty span
+            # between regions — revisit the sampling when the planet-scale
+            # dry-run happens (coverage-provider.md Open questions).
             if checked >= 256:
                 raise RuntimeError(
                     f"pmtiles verify: no non-empty tile in the first {checked} "

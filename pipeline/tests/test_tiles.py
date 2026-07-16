@@ -1,15 +1,14 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 """tiles.py — GeoJSONL export shape, tippecanoe build, go-pmtiles verify.
 
-The export test writes its own synthetic rows under src_region 'test/tiles'
-(never a real Geofabrik region name) into the dev DB and removes them again;
-the build/verify tests need no DB at all — just the container's tippecanoe
-and pmtiles binaries.
+The export test rides the shared `db` conftest fixture (isolated
+coverage_pytest schema on the dev PostGIS, dropped at teardown) — it never
+writes the shared public table; the build/verify tests need no DB at all —
+just the container's tippecanoe and pmtiles binaries.
 """
 import json
-import os
+import re
 
-import psycopg
 import pytest
 from psycopg.types.json import Json
 
@@ -17,8 +16,7 @@ from coverage import tiles
 from coverage.contract import load_contract
 from coverage.load import ensure_schema
 
-DSN = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
-SRC = "test/tiles"
+SRC = "test/tiles"  # synthetic src_region label, never a real Geofabrik name
 
 FIXTURE_ROWS = [
     # (ref, letter, kind, name, lon, lat, tags)
@@ -43,37 +41,34 @@ def _features(path):
         return {f["properties"]["ref"]: f for f in map(json.loads, fh)}
 
 
-def test_export_geojsonl_shapes(tmp_path):
-    with psycopg.connect(DSN) as conn:
-        ensure_schema(conn)
-        conn.execute("DELETE FROM coverage_poi WHERE src_region = %s", (SRC,))
-        for ref, letter, kind, name, lon, lat, tags in FIXTURE_ROWS:
-            conn.execute(
-                "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region)"
-                " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s)",
-                (ref, letter, kind, name, lon, lat, Json(tags), SRC))
-        conn.commit()
-        try:
-            out = tiles.export_geojsonl(conn, tmp_path)
+def test_export_geojsonl_shapes(db, tmp_path):
+    ensure_schema(db)
+    for ref, letter, kind, name, lon, lat, tags in FIXTURE_ROWS:
+        db.execute(
+            "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region)"
+            " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s)",
+            (ref, letter, kind, name, lon, lat, Json(tags), SRC))
+    out = tiles.export_geojsonl(db, tmp_path)
 
-            shop = _features(out["D"])["node/900000001"]
-            assert shop["id"] == 900000001
-            assert shop["geometry"]["coordinates"] == pytest.approx([4.35, 50.85])
-            assert shop["properties"]["t"] == _label("D", "shop=bicycle")
-            assert shop["properties"]["kind"] == "shop"
-            assert shop["properties"]["n"] == "Vélodroom"
+    # Empty-letter omission contract: exactly the letters with rows appear.
+    assert set(out) == {"C", "D", "E"}
+    assert "G" not in out
 
-            water = _features(out["C"])
-            assert water["node/900000002"]["properties"]["potable"] is True
-            assert "n" not in water["node/900000002"]["properties"]  # jsonb_strip_nulls
-            assert water["node/900000003"]["properties"]["potable"] is False
+    shop = _features(out["D"])["node/900000001"]
+    assert shop["id"] == 900000001
+    assert shop["geometry"]["coordinates"] == pytest.approx([4.35, 50.85])
+    assert shop["properties"]["t"] == _label("D", "shop=bicycle")
+    assert shop["properties"]["kind"] == "shop"
+    assert shop["properties"]["n"] == "Vélodroom"
 
-            stay = _features(out["E"])["node/900000004"]
-            assert stay["properties"]["t"] == _label("E", "tourism=camp_site")
-            assert stay["properties"]["acc"] == "Wheelchair-accessible"
-        finally:
-            conn.execute("DELETE FROM coverage_poi WHERE src_region = %s", (SRC,))
-            conn.commit()
+    water = _features(out["C"])
+    assert water["node/900000002"]["properties"]["potable"] is True
+    assert "n" not in water["node/900000002"]["properties"]  # jsonb_strip_nulls
+    assert water["node/900000003"]["properties"]["potable"] is False
+
+    stay = _features(out["E"])["node/900000004"]
+    assert stay["properties"]["t"] == _label("E", "tourism=camp_site")
+    assert stay["properties"]["acc"] == "Wheelchair-accessible"
 
 
 def _geojsonl(path, rows):
@@ -104,7 +99,8 @@ def built(tmp_path):
 def test_build_and_verify_pmtiles(built):
     # Fixture bounds ≈ (4.35, 50.63, 5.57, 50.85) — must intersect the expected
     # Belgium box; passing expected_bbox also exercises the bounds check and
-    # the sample-tile decode (design §5 step 7: bounds, tile count, decode).
+    # the sample-tile decode (coverage-provider.md §3 step 7: bounds, tile
+    # count, decode).
     tiles.verify_pmtiles(built, expected_layers={"c", "d"},
                          expected_bbox=(4.0, 50.0, 6.0, 51.5))  # must not raise
 
@@ -114,7 +110,50 @@ def test_verify_pmtiles_missing_layer_raises(built):
         tiles.verify_pmtiles(built, expected_layers={"c", "d", "e"})
 
 
+def test_verify_pmtiles_default_layers_expect_all_contract_letters(built):
+    # expected_layers=None defaults to every contract letter lowercased; the
+    # two-layer fixture must fail, naming exactly the absent letters.
+    with pytest.raises(RuntimeError, match="missing layer") as exc:
+        tiles.verify_pmtiles(built)
+    absent = sorted({letter.lower() for letter in load_contract().letters} - {"c", "d"})
+    assert str(absent) in str(exc.value)
+
+
 def test_verify_pmtiles_disjoint_bounds_raise(built):
     with pytest.raises(RuntimeError, match="bounds"):
         tiles.verify_pmtiles(built, expected_layers={"c", "d"},
                              expected_bbox=(120.0, 10.0, 121.0, 11.0))
+
+
+def test_verify_pmtiles_zero_addressed_tiles_raise(built, monkeypatch):
+    # tippecanoe refuses to build from zero features (exit 110, no valid
+    # archive written), so a real zero-addressed-tiles artifact cannot exist
+    # on disk; doctor the parsed `show` header instead — this tests the raise
+    # semantics of the count gate only.
+    doctored = re.sub(r"(addressed tiles(?: count)?:)\s*\d+", r"\1 0",
+                      tiles._show(built))
+    monkeypatch.setattr(tiles, "_show", lambda path, *flags: doctored)
+    with pytest.raises(RuntimeError, match="no addressed tiles"):
+        tiles.verify_pmtiles(built, expected_layers={"c", "d"})
+
+
+def test_verify_pmtiles_all_sample_tiles_empty_raises(built, monkeypatch):
+    # A real archive whose header bbox is populated but whose min-zoom sample
+    # area decodes entirely empty cannot be built (tippecanoe derives the
+    # header bounds from the features themselves); stub the tile fetch to
+    # test the decode-gate raise semantics.
+    monkeypatch.setattr(tiles, "_tile_bytes", lambda *a: b"")
+    with pytest.raises(RuntimeError, match="no decodable non-empty tile"):
+        tiles.verify_pmtiles(built, expected_layers={"c", "d"})
+
+
+def test_verify_pmtiles_subprocess_failure_surfaces_diagnostics(tmp_path):
+    # A failing go-pmtiles invocation must raise RuntimeError carrying the
+    # command and its stderr diagnostics, not a bare CalledProcessError.
+    bogus = tmp_path / "bogus.pmtiles"
+    bogus.write_bytes(b"not a pmtiles archive")
+    with pytest.raises(RuntimeError) as exc:
+        tiles.verify_pmtiles(bogus)
+    msg = str(exc.value)
+    assert "pmtiles show" in msg      # the exact failing command
+    assert "magic number" in msg      # go-pmtiles' captured stderr
