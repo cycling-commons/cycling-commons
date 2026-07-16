@@ -1,0 +1,74 @@
+{
+    "version": 1,
+    "letters": {
+        "C": {
+            "selectors": [
+                {"tag": "amenity=drinking_water", "label": "Drinking water"},
+                {"tag": "drinking_water=yes", "label": "Drinking water"}
+            ],
+            "tileProps": ["potable"]
+        },
+        "D": {
+            "selectors": [
+                {"tag": "shop=bicycle", "label": "Bike shop"},
+                {"tag": "amenity=bicycle_repair_station", "label": "Repair station"},
+                {"tag": "amenity=compressed_air", "label": "Pump"}
+            ],
+            "tileProps": ["kind"]
+        },
+        "E": {
+            "selectors": [
+                {"tag": "tourism=camp_site", "label": "Campsite"},
+                {"tag": "tourism=hostel", "label": "Hostel"},
+                {"tag": "tourism=guest_house", "label": "Guest house"},
+                {"tag": "tourism=chalet", "label": "Chalet"},
+                {"tag": "tourism=wilderness_hut", "label": "Wilderness hut"},
+                {"tag": "tourism=alpine_hut", "label": "Mountain hut"},
+                {"tag": "tourism=motel", "label": "Motel"},
+                {"tag": "tourism=hotel", "label": "Hotel"}
+            ],
+            "tileProps": ["acc"]
+        },
+        "G": {
+            "selectors": [
+                {"tag": "railway=station", "label": "Train station"},
+                {"tag": "railway=halt", "label": "Train halt"}
+            ],
+            "tileProps": []
+        },
+        "H": {
+            "selectors": [
+                {"tag": "amenity=shelter", "label": "Shelter"},
+                {"tag": "emergency=phone", "label": "Emergency phone"},
+                {"tag": "emergency=defibrillator", "label": "Defibrillator"}
+            ],
+            "tileProps": []
+        },
+        "I": {
+            "selectors": [
+                {"tag": "tourism=viewpoint", "label": "Viewpoint"},
+                {"tag": "natural=peak", "label": "Peak"},
+                {"tag": "waterway=waterfall", "label": "Waterfall"}
+            ],
+            "tileProps": []
+        },
+        "J": {
+            "selectors": [
+                {"tag": "historic=castle", "label": "Castle"},
+                {"tag": "historic=fort", "label": "Fort"},
+                {"tag": "historic=ruins", "label": "Ruins"},
+                {"tag": "historic=monument", "label": "Monument"},
+                {"tag": "historic=memorial", "label": "Memorial"},
+                {"tag": "historic=archaeological_site", "label": "Archaeological site"},
+                {"tag": "historic=manor", "label": "Manor"},
+                {"tag": "historic=monastery", "label": "Monastery"}
+            ],
+            "tileProps": []
+        }
+    },
+    "serviceKind": {
+        "shop=bicycle": "shop",
+        "amenity=bicycle_repair_station": "station",
+        "amenity=compressed_air": "pump"
+    }
+}

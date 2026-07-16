@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -149,3 +149,6 @@ wallonia-export: ## Export catalog import artifacts (fixtures + cached harvest) 
 
 tools-test: ## Run the tools/wallonia Python test suite
 	cd tools && python3 -m pytest wallonia/tests -q
+
+pipeline-test: ## Run the pipeline Python test suite in the pipeline container (contract + batch job units)
+	@$(DOCKER_COMP) exec -T pipeline python -m pytest tests -q
