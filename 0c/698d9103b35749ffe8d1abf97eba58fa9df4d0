@@ -1,0 +1,29 @@
+wiki/building.md
+  s_58bfb339467e97::t_ac6f740425c93f 105-108
+  s_58bfb339467e97::t_8edbccd3a40255 126
+  s_58bfb339467e97::t_af47a1064f171d 30-33
+  s_58bfb339467e97::t_d3856f695eeb15 34
+  s_58bfb339467e97::t_7f8880d1e86801 5-6,8-13,15,17-18,22-27,29,35,37-43,49-51,55-85,88-94,97,109-110,115-118,127-135,137-138
+  s_58bfb339467e97::t_a61de7703f3139 95-96,98-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0c698d9103b35749ffe8d1abf97eba58fa9df4d0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_58bfb339467e97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9429297-08ac-4b41-b3f6-76a0097d2e4f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
