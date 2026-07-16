@@ -89,3 +89,17 @@ def test_rejects_malformed_selector_entry(tmp_path):
     raw["letters"]["C"]["selectors"][0] = {"tag": "no-equals-sign", "label": "Broken"}
     with pytest.raises(ValueError, match="selector"):
         load_contract(_reload(tmp_path, raw))
+
+
+def test_rejects_contract_missing_letters_key(tmp_path):
+    raw = _raw()
+    del raw["letters"]
+    with pytest.raises(ValueError, match="letters"):
+        load_contract(_reload(tmp_path, raw))
+
+
+def test_rejects_contract_missing_service_kind_key(tmp_path):
+    raw = _raw()
+    del raw["serviceKind"]
+    with pytest.raises(ValueError, match="serviceKind"):
+        load_contract(_reload(tmp_path, raw))

@@ -81,6 +81,9 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     if raw.get("version") != 1:
         raise ValueError(f"unsupported contract version: {raw.get('version')!r}")
 
+    if "letters" not in raw:
+        raise ValueError("contract missing top-level \"letters\" key")
+
     letters = {
         letter: LetterSpec(
             selectors=[_selector(letter, entry) for entry in spec["selectors"]],
@@ -95,6 +98,9 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     for letter, spec in letters.items():
         if not spec.selectors:
             raise ValueError(f"letter {letter} has no selectors")
+
+    if "serviceKind" not in raw:
+        raise ValueError("contract missing top-level \"serviceKind\" key")
 
     service_kind = dict(raw["serviceKind"])
     d_rules = [sel.tag for sel in letters["D"].selectors]
