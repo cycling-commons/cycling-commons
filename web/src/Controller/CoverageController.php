@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -18,25 +19,98 @@ use Symfony\Component\Routing\Attribute\Route;
  * anonymous, cacheable JSON over the pipeline-owned coverage_poi cache.
  * Site-internal map endpoints, not the Plan 4 public API — the serving cache
  * may return OSM fields with attribution (osm-data-architecture.md §4).
+ * Every action consumes the coverage_read limiter (120/min per IP), the
+ * app's first anonymous-read limiter.
  *
  * @api Instantiated by Symfony's router; called by assets/map/map.js.
  */
 final class CoverageController extends AbstractController
 {
     /**
+     * Sidebar search over the coverage tier: curated matches first, then
+     * community rows not shadowed by a served ref. Queries under two chars
+     * answer an empty result set (cheap contract for the client debounce).
+     */
+    #[Route('/map/coverage/search', name: 'map_coverage_search', methods: ['GET'])]
+    public function search(Request $request, CoverageRepository $coverage, RateLimiterFactoryInterface $coverageReadLimiter): Response
+    {
+        if (null !== ($limited = $this->rateLimited($request, $coverageReadLimiter))) {
+            return $limited;
+        }
+
+        $q = trim((string) $request->query->get('q', ''));
+        $results = mb_strlen($q) >= 2 ? $coverage->search($q) : [];
+
+        return $this->cacheable($request, ['results' => $results, 'attribution' => CoverageRepository::ATTRIBUTION], 300);
+    }
+
+    /**
+     * Town-card nearby (design §7): letter groups within :km of a point,
+     * curated first, community capped behind the client's "show all" expander.
+     */
+    #[Route('/map/coverage/nearby', name: 'map_coverage_nearby', methods: ['GET'])]
+    public function nearby(Request $request, CoverageRepository $coverage, RateLimiterFactoryInterface $coverageReadLimiter): Response
+    {
+        if (null !== ($limited = $this->rateLimited($request, $coverageReadLimiter))) {
+            return $limited;
+        }
+
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+        if (!is_numeric($lat) || !is_numeric($lng) || abs((float) $lat) > 90.0 || abs((float) $lng) > 180.0) {
+            return $this->json(['error' => 'invalid_coords'], 422);
+        }
+        $km = $request->query->get('km');
+        $km = is_numeric($km) ? min(25.0, max(0.1, (float) $km)) : 5.0;
+
+        return $this->cacheable($request, ['groups' => $coverage->nearby((float) $lat, (float) $lng, $km), 'attribution' => CoverageRepository::ATTRIBUTION], 300);
+    }
+
+    /** Rail totals (design §2 decision E1): per-letter coverage counts. */
+    #[Route('/map/coverage/counts', name: 'map_coverage_counts', methods: ['GET'])]
+    public function counts(Request $request, CoverageRepository $coverage, RateLimiterFactoryInterface $coverageReadLimiter): Response
+    {
+        if (null !== ($limited = $this->rateLimited($request, $coverageReadLimiter))) {
+            return $limited;
+        }
+
+        // (object) so an empty table still serves {"counts":{}} — a JSON
+        // object, never [] (the client indexes by letter).
+        return $this->cacheable($request, ['counts' => (object) $coverage->counts(), 'attribution' => CoverageRepository::ATTRIBUTION], 3600);
+    }
+
+    /**
      * Drawer detail for a tile POI: display-whitelisted cached OSM tags +
      * curated overlay where a served item shares the ref. 404 for refs the
      * coverage cache does not hold.
      */
     #[Route('/map/coverage/poi/{osmType}/{osmId}', name: 'map_coverage_poi', requirements: ['osmType' => 'node|way', 'osmId' => '\d+'], methods: ['GET'])]
-    public function poi(string $osmType, int $osmId, Request $request, CoverageRepository $coverage): Response
+    public function poi(string $osmType, int $osmId, Request $request, CoverageRepository $coverage, RateLimiterFactoryInterface $coverageReadLimiter): Response
     {
+        if (null !== ($limited = $this->rateLimited($request, $coverageReadLimiter))) {
+            return $limited;
+        }
+
         $detail = $coverage->detail($osmType, $osmId);
         if (null === $detail) {
             throw $this->createNotFoundException('No coverage POI.');
         }
 
         return $this->cacheable($request, $detail, 300);
+    }
+
+    /**
+     * coverage_read enforcement (design §7: sliding window, 120/min per IP) —
+     * the RideCheckController consume-or-429 pattern, keyed by client IP
+     * because the whole plane is anonymous.
+     */
+    private function rateLimited(Request $request, RateLimiterFactoryInterface $limiter): ?JsonResponse
+    {
+        if (!$limiter->create('ip-'.($request->getClientIp() ?? 'unknown'))->consume()->isAccepted()) {
+            return $this->json(['error' => 'rate_limited'], 429);
+        }
+
+        return null;
     }
 
     /**

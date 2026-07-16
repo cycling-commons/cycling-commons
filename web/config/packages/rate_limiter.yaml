@@ -11,6 +11,8 @@ framework:
                 adapter: cache.adapter.filesystem
             cache.ride_check_limiter:
                 adapter: cache.adapter.filesystem
+            cache.coverage_read_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -38,6 +40,14 @@ framework:
             limit: 20
             interval: '1 day'
             cache_pool: cache.ride_check_limiter
+        # Coverage query plane (coverage-provider.md §5): the
+        # app's first anonymous-read limiter — per-IP sliding window, generous
+        # for normal map use, bounded against scraping (access-terms rule).
+        coverage_read:
+            policy: sliding_window
+            limit: 120
+            interval: '1 minute'
+            cache_pool: cache.coverage_read_limiter
 
 when@test:
     framework:
@@ -48,4 +58,6 @@ when@test:
                 cache.route_suggest_limiter:
                     adapter: cache.adapter.array
                 cache.ride_check_limiter:
+                    adapter: cache.adapter.array
+                cache.coverage_read_limiter:
                     adapter: cache.adapter.array

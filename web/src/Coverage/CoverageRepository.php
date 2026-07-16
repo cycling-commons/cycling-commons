@@ -40,12 +40,12 @@ final class CoverageRepository
 
     /**
      * Coverage POI letters (osm-data-architecture.md §5; A/B/K stay
-     * curated-only). Forward-declared: unused until the search/nearby/counts
-     * methods land (coverage-provider.md §5).
-     *
-     * @phpstan-ignore classConstant.unused
+     * curated-only).
      */
     private const string POI_LETTERS_SQL = "('C', 'D', 'E', 'G', 'H', 'I', 'J')";
+
+    /** Community items listed per nearby letter group before the "show all" expander (design §7). */
+    private const int NEARBY_COMMUNITY_CAP = 3;
 
     public function __construct(private readonly Connection $db)
     {
@@ -93,6 +93,167 @@ final class CoverageRepository
                 : $this->curatedOverlay((int) $row['item_id'], (string) $row['item_state'], (string) $row['item_name'], (string) $row['item_attributes']),
             'attribution' => self::ATTRIBUTION,
         ];
+    }
+
+    /**
+     * Ranked name search, curated first (design §7): served items matched by
+     * name, then coverage rows not shadowed by a served ref — both
+     * pg_trgm-ranked, deduped by ref (osm-data-architecture.md §8).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function search(string $q, int $limit = 12): array
+    {
+        $like = '%'.addcslashes($q, '\\%_').'%';
+        /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
+        $curated = $this->db->fetchAllAssociative(
+            "SELECT i.id AS item_id, i.source_ref AS ref, i.letter, i.name,
+                    i.attributes->>'serviceKind' AS kind,
+                    ST_Y(i.geom) AS lat, ST_X(i.geom) AS lng
+             FROM item i
+             WHERE i.letter IN ".self::POI_LETTERS_SQL.'
+               AND i.state IN '.ItemState::servedSqlTuple().'
+               AND i.name ILIKE :like
+             ORDER BY similarity(i.name, :q) DESC, i.id
+             LIMIT :limit',
+            ['like' => $like, 'q' => $q, 'limit' => $limit],
+            ['limit' => ParameterType::INTEGER],
+        );
+
+        $results = [];
+        foreach ($curated as $row) {
+            $results[] = $this->entry($row, curated: true, itemId: (int) $row['item_id']);
+        }
+
+        $remaining = $limit - \count($results);
+        if ($remaining > 0) {
+            /** @var list<array{ref: string, letter: string, name: string|null, kind: string|null, lat: string|float, lng: string|float}> $coverage */
+            $coverage = $this->db->fetchAllAssociative(
+                'SELECT cp.ref, cp.letter, cp.name, cp.kind, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
+                 FROM coverage_poi cp
+                 WHERE cp.name ILIKE :like
+                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().')
+                 ORDER BY similarity(cp.name, :q) DESC, cp.id
+                 LIMIT :limit',
+                ['like' => $like, 'q' => $q, 'limit' => $remaining],
+                ['limit' => ParameterType::INTEGER],
+            );
+            foreach ($coverage as $row) {
+                $results[] = $this->entry($row, curated: false);
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Letter-grouped POIs within $km of a point (the town card, design §7):
+     * curated entries first, then the nearest NEARBY_COMMUNITY_CAP community
+     * rows; `total` counts everything in range so the client can render the
+     * "show all" expander (07-15 decision A).
+     *
+     * @return list<array{letter: string, total: int, items: list<array<string, mixed>>}>
+     */
+    public function nearby(float $lat, float $lng, float $km): array
+    {
+        $params = ['lat' => $lat, 'lng' => $lng, 'm' => $km * 1000.0];
+        $point = 'ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography';
+
+        /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
+        $curated = $this->db->fetchAllAssociative(
+            "SELECT i.id AS item_id, i.source_ref AS ref, i.letter, i.name,
+                    i.attributes->>'serviceKind' AS kind,
+                    ST_Y(i.geom) AS lat, ST_X(i.geom) AS lng
+             FROM item i
+             WHERE i.letter IN ".self::POI_LETTERS_SQL.'
+               AND i.state IN '.ItemState::servedSqlTuple()."
+               AND ST_DWithin(i.geom::geography, $point, :m)
+             ORDER BY i.letter, ST_Distance(i.geom::geography, $point), i.id",
+            $params,
+        );
+
+        /** @var list<array{letter: string, ref: string, name: string|null, kind: string|null, lat: string|float, lng: string|float, letter_total: int|string}> $community */
+        $community = $this->db->fetchAllAssociative(
+            "SELECT letter, ref, name, kind, lat, lng, letter_total FROM (
+                 SELECT cp.letter, cp.ref, cp.name, cp.kind,
+                        ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng,
+                        ROW_NUMBER() OVER (PARTITION BY cp.letter ORDER BY ST_Distance(cp.geom::geography, $point), cp.id) AS rn,
+                        COUNT(*) OVER (PARTITION BY cp.letter) AS letter_total
+                 FROM coverage_poi cp
+                 WHERE ST_DWithin(cp.geom::geography, $point, :m)
+                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN ".ItemState::servedSqlTuple().')
+             ) ranked
+             WHERE rn <= '.self::NEARBY_COMMUNITY_CAP.'
+             ORDER BY letter, rn',
+            $params,
+        );
+
+        $groups = [];
+        foreach ($curated as $row) {
+            $groups[$row['letter']]['items'][] = $this->entry($row, curated: true, itemId: (int) $row['item_id']);
+            $groups[$row['letter']]['curated_total'] = ($groups[$row['letter']]['curated_total'] ?? 0) + 1;
+        }
+        foreach ($community as $row) {
+            $groups[$row['letter']]['items'][] = $this->entry($row, curated: false);
+            // letter_total counts every community row in range, capped rows included.
+            $groups[$row['letter']]['community_total'] = (int) $row['letter_total'];
+        }
+
+        $out = [];
+        foreach (str_split('CDEGHIJ') as $letter) {
+            if (!isset($groups[$letter])) {
+                continue;
+            }
+            $out[] = [
+                'letter' => $letter,
+                'total' => ($groups[$letter]['curated_total'] ?? 0) + ($groups[$letter]['community_total'] ?? 0),
+                'items' => $groups[$letter]['items'],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Per-letter coverage totals for the rail (design §2 decision E1).
+     *
+     * @return array<string, int>
+     */
+    public function counts(): array
+    {
+        /** @var list<array{letter: string, n: int|string}> $rows */
+        $rows = $this->db->fetchAllAssociative('SELECT letter, COUNT(*) AS n FROM coverage_poi GROUP BY letter ORDER BY letter');
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[$row['letter']] = (int) $row['n'];
+        }
+
+        return $counts;
+    }
+
+    /**
+     * One search/nearby entry: {ref, letter, n?, kind?, ll, curated, itemId?}.
+     *
+     * @param array{ref: string, letter: string, name: string|null, kind: string|null, lat: string|float, lng: string|float, ...<array-key, mixed>} $row
+     *
+     * @return array<string, mixed>
+     */
+    private function entry(array $row, bool $curated, ?int $itemId = null): array
+    {
+        $entry = ['ref' => $row['ref'], 'letter' => $row['letter']];
+        if (null !== $row['name'] && '' !== $row['name']) {
+            $entry['n'] = $row['name'];
+        }
+        if (null !== $row['kind']) {
+            $entry['kind'] = $row['kind'];
+        }
+        $entry['ll'] = [(float) $row['lat'], (float) $row['lng']];
+        $entry['curated'] = $curated;
+        if (null !== $itemId) {
+            $entry['itemId'] = $itemId;
+        }
+
+        return $entry;
     }
 
     /**
