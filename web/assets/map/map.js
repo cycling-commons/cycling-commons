@@ -607,21 +607,26 @@
   // Open a coverage POI drawer from tile props immediately, then hydrate from
   // GET /map/coverage/poi/{ref} — the open-now-enrich-later pattern the drawer
   // already uses for history/confirmations (coverage-provider.md §6).
-  // Race-guarded like _historyReq: a stale detail response never repaints a
-  // drawer that has since moved on.
+  // Race guard: EVERY drawer-context render (openDrawer, openPlace, the
+  // ride-check results drawer) bumps _covReq, so a stale detail response can
+  // never repaint a drawer that has since moved on — regardless of which
+  // click path (coverage dot, curated pin, -osm dot, route, place card)
+  // opened the newer drawer. The enrich repaint itself is a content-only
+  // patch (renderDrawerBody), not a re-open: no halo restart, no focus
+  // steal, no mobile-sheet snap back to half.
   let _covReq=0;
   function openCoverageDrawer(key, tp, ll){
     const layer=layerByKey[key];
-    const open=p=>openDrawer(layer, key==='water' ? waterDrawer(p, ll) : osmDrawer(layer, p, ll, COV_SRC[key]));
-    open(covProps(key, tp, null));
+    const feat=p=>key==='water' ? waterDrawer(p, ll) : osmDrawer(layer, p, ll, COV_SRC[key]);
+    openDrawer(layer, feat(covProps(key, tp, null)));
     if(!tp.ref) return;
     const myReq=++_covReq;
     fetch('/map/coverage/poi/'+tp.ref, {headers:{'Accept':'application/json'}})
       .then(r=>r.ok?r.json():null)
       .catch(()=>null)   // detail is an enhancement — the tile props already opened the drawer
-      .then(d=>{ if(!d || myReq!==_covReq) return;
+      .then(d=>{ if(!d || myReq!==_covReq) return;   // a newer drawer render superseded this fetch
         if(!document.getElementById('drawer').classList.contains('open')) return;   // closed while in flight
-        open(covProps(key, tp, d)); });
+        renderDrawerBody(layer, feat(covProps(key, tp, d))); });
   }
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
   map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
@@ -1909,36 +1914,13 @@
       <polygon points="${pad},${h-pad} ${line} ${w-pad},${h-pad}" fill="rgba(255,90,31,.16)"/>
       <polyline points="${line}" fill="none" stroke="#FF5A1F" stroke-width="1.6"/></svg>`;
   }
-  function openDrawer(layer, f){
-    // Guard (spec §16 S1): while picking correction stretches, the route line
-    // still carries its normal layer click handler (drawLine's map.on('click',
-    // 'experience-'+i, ()=>openDrawer(...))) — a click meant to drop a picking
-    // point would ALSO fire that handler and open/switch the drawer under the
-    // rider's feet. Bail out here so picking clicks never re-open a drawer;
-    // pickClick (bound separately) still gets the same click event and drops
-    // the point normally.
-    if(_pick) return;
-    // Route selection emphasis: covers both the click path and the ?feature=
-    // deep-link (both funnel through here). Layer id convention: the K line
-    // layers are `experience-<feature index>` (see the drawLine call site).
-    if(layer.key==='experience'){
-      const i=layer.features.indexOf(f);
-      if(i>=0 && map.getLayer('experience-'+i)) highlightRoute('experience-'+i);
-      clearHighlight();                    // routes read as the wide line halo, not a point halo
-    } else {
-      clearRouteHighlight();
-      // Pulsing selection halo on the clicked point — curated AND OSM — so the
-      // selected place stands out; persists while the drawer is open and is
-      // cleared by closeDrawer()/the next open. highlightAt(null) no-ops.
-      // Confirmed items render as bottom-anchored teardrop pins whose icon sits
-      // ~16px above the ground point, so raise the halo to ring the icon; flat
-      // WebGL dots (unverified OSM) are centred on the point → no offset.
-      // PENDING (moderation) pins are bottom-anchored teardrops too → same lift.
-      // Climbs place their pin at the route START (foot), not geom.ll — the
-      // halo must ring the pin the rider actually sees, not the centroid.
-      const hlAt = f.route ? f.route[0] : (f.geom && f.geom.ll);   // [lat,lng] arrays both
-      highlightAt(hlAt, (f.cur || f.pending) ? [0,-16] : [0,0]);
-    }
+  // Content-only body render, shared by openDrawer and the coverage detail
+  // repaint (openCoverageDrawer's enrich-later step). (Re)writes #drawerBody
+  // + its content-scoped wiring/hydrations, and deliberately does NOT touch
+  // the open state, selection halo, focus or the mobile sheet snap — so a
+  // progressive-hydration repaint (the loadItemHistory/hydrateItemConfirm
+  // convention) never yanks the bottom sheet back to half or re-steals focus.
+  function renderDrawerBody(layer, f){
     document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
     if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
     if(CC_CONFIRMABLE.has(layer.key) && f.id!=null) hydrateItemConfirm(f.id);
@@ -1969,6 +1951,39 @@
     document.querySelectorAll('#drawerBody .cc-mod-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>submitModeration(btn));
     });
+  }
+  function openDrawer(layer, f){
+    // Guard (spec §16 S1): while picking correction stretches, the route line
+    // still carries its normal layer click handler (drawLine's map.on('click',
+    // 'experience-'+i, ()=>openDrawer(...))) — a click meant to drop a picking
+    // point would ALSO fire that handler and open/switch the drawer under the
+    // rider's feet. Bail out here so picking clicks never re-open a drawer;
+    // pickClick (bound separately) still gets the same click event and drops
+    // the point normally.
+    if(_pick) return;
+    _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
+    // Route selection emphasis: covers both the click path and the ?feature=
+    // deep-link (both funnel through here). Layer id convention: the K line
+    // layers are `experience-<feature index>` (see the drawLine call site).
+    if(layer.key==='experience'){
+      const i=layer.features.indexOf(f);
+      if(i>=0 && map.getLayer('experience-'+i)) highlightRoute('experience-'+i);
+      clearHighlight();                    // routes read as the wide line halo, not a point halo
+    } else {
+      clearRouteHighlight();
+      // Pulsing selection halo on the clicked point — curated AND OSM — so the
+      // selected place stands out; persists while the drawer is open and is
+      // cleared by closeDrawer()/the next open. highlightAt(null) no-ops.
+      // Confirmed items render as bottom-anchored teardrop pins whose icon sits
+      // ~16px above the ground point, so raise the halo to ring the icon; flat
+      // WebGL dots (unverified OSM) are centred on the point → no offset.
+      // PENDING (moderation) pins are bottom-anchored teardrops too → same lift.
+      // Climbs place their pin at the route START (foot), not geom.ll — the
+      // halo must ring the pin the rider actually sees, not the centroid.
+      const hlAt = f.route ? f.route[0] : (f.geom && f.geom.ll);   // [lat,lng] arrays both
+      highlightAt(hlAt, (f.cur || f.pending) ? [0,-16] : [0,0]);
+    }
+    renderDrawerBody(layer, f);
     const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
     d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
     if(window.innerWidth<=820) sheet.reset();          // land at half; desktop untouched
@@ -1978,6 +1993,7 @@
   // geocoded place (spec 2026-07-14 §3.3): CITIES entries keep their wiki/info
   // blurbs; Photon hits pass just {ll}.
   function openPlace(name, meta){
+    _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
     // A · Road surface segments are corridor data, not places — near any mapped
     // town they'd flood the card (Spa: 58 rows). Text search still finds them.
     const near = nearbyItems(meta.ll, 5).filter(n=>n.e.letter!=='A');
@@ -2200,6 +2216,7 @@
         html+=`<div class="cc-near-empty">${tpl(D.nothingWithin||'Nothing in the Commons within {r} of this ride yet.', {r:radius})}</div>`;
       }
       const body=document.getElementById('drawerBody');
+      _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
       body.innerHTML=html;
       document.getElementById('rcClearBtn').onclick=clearRideCheck;
       const groupsByLetter=Object.fromEntries(d.groups.map(g=>[g.letter,g]));
