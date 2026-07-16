@@ -1,0 +1,26 @@
+pipeline/coverage/extract.py
+  s_f6d45d977e7468::t_d93578ddbd7906 1-42
+pipeline/tests/test_extract.py
+  s_f6d45d977e7468::t_d646cadabb73b6 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6d72b76dfb48605e914b610d92584e0768953099",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
