@@ -359,6 +359,12 @@ final class CatalogProviderTest extends KernelTestCase
         // renders as community instead of being ref-suppressed into
         // invisibility during the pre-retirement window.
         self::assertNotContains('node/1003', $tilesOn->payload()['refs']);
+        // Mirror rule, letter-exempt side: the untouched A surface row is
+        // STILL served under the flag (A never routes through the coverage
+        // exclusion, coverage-provider.md §7), so its ref must stay listed —
+        // refs mirrors the payload exactly (coverage-provider.md §6), letter
+        // scope included.
+        self::assertContains('way/2001', $tilesOn->payload()['refs']);
         // A row failing the retirement predicate (here: verified) stays listed.
         $conn->executeStatement("UPDATE item SET state = 'verified' WHERE source_ref = 'node/5001'");
         self::assertContains('node/5001', (new CatalogProvider($conn, true))->payload()['refs']);

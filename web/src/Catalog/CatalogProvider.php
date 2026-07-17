@@ -92,13 +92,11 @@ final class CatalogProvider
             // Coverage retirement predicate (coverage-provider.md
             // §9): once tiles serve the uncurated OSM pool (COVERAGE_TILES=1),
             // imported-OSM rows no human ever touched drop out of the payload —
-            // the exact rows app:coverage:retire-legacy deletes (keep the two in
-            // sync). Anything with change history, a confirmation, or a
-            // submission stays canonical.
-            $sql .= " AND NOT (i.source = 'osm' AND i.state = 'unverified'
-                AND NOT EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = i.id)
-                AND NOT EXISTS (SELECT 1 FROM item_confirmation ic WHERE ic.item_id = i.id)
-                AND NOT EXISTS (SELECT 1 FROM submission sb WHERE sb.item_id = i.id))";
+            // the exact rows app:coverage:retire-legacy deletes. The SQL is
+            // owned by CoverageRetirement (single source; the command and
+            // curatedRefs() consume the same fragment). No letter scope needed
+            // here: only featureCollection() (letters C–J) passes the flag.
+            $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
         }
 
         /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}> */
@@ -109,11 +107,14 @@ final class CatalogProvider
      * Plan 2 Task 13 (osm-data-architecture.md §8, client half): source_ref of
      * every source='osm' item the payload itself serves, DISTINCT because one
      * entity may carry two letters (UNIQUE(source, source_ref, letter) on item).
-     * MIRRORS itemRows(): with COVERAGE_TILES on, coverage-served (untouched)
-     * rows are excluded here too — their tile twins must render as community
-     * POIs. Listing their refs would suppress the twins while the payload
-     * drops the rows, and the object would display nowhere until
-     * retire-legacy --force removes it.
+     * MIRRORS itemRows() exactly (coverage-provider.md §6): with COVERAGE_TILES
+     * on, coverage-served (untouched) rows are excluded here too — their tile
+     * twins must render as community POIs. Listing their refs would suppress
+     * the twins while the payload drops the rows, and the object would display
+     * nowhere until retire-legacy --force removes it. The exclusion is
+     * letter-scoped like the payload's: only the coverage letters
+     * (CoverageRetirement::LETTERS) ever drop rows — an untouched A surface
+     * row keeps serving under the flag, so its ref keeps listing.
      *
      * @return list<string>
      */
@@ -121,10 +122,8 @@ final class CatalogProvider
     {
         $sql = "SELECT DISTINCT i.source_ref FROM item i WHERE i.source = 'osm' AND i.state IN ".ItemState::servedSqlTuple();
         if ($this->coverageTiles) {
-            $sql .= " AND NOT (i.state = 'unverified'
-                AND NOT EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = i.id)
-                AND NOT EXISTS (SELECT 1 FROM item_confirmation ic WHERE ic.item_id = i.id)
-                AND NOT EXISTS (SELECT 1 FROM submission sb WHERE sb.item_id = i.id))";
+            $sql .= ' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple()
+                .' AND '.CoverageRetirement::untouchedOsmSql('i').')';
         }
 
         /* @var list<string> */

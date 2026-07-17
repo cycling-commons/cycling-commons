@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Command\Coverage;
 
+use App\Catalog\CoverageRetirement;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -25,8 +26,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * (coverage-provider.md §7); B (climbs) is
  * wikidata-sourced and off-predicate anyway.
  *
- * The predicate mirrors CatalogProvider::itemRows()'s $excludeCoverageServed
- * clause — what COVERAGE_TILES=1 hides is exactly what this deletes.
+ * The touch-predicate is owned by CoverageRetirement — the SAME SQL fragment
+ * CatalogProvider::itemRows()/curatedRefs() apply under COVERAGE_TILES=1, so
+ * what the flag hides is structurally exactly what this deletes.
  *
  * Dry-run by default: prints per-letter counts, changes nothing. The
  * destructive run (--force) is owner-gated — explicit approval plus a dev-DB
@@ -39,17 +41,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class RetireLegacyOsmCommand extends Command
 {
     /**
-     * Retirement predicate over `item` (coverage-provider.md
-     * §9) — keep in sync with CatalogProvider::itemRows().
+     * Retirement predicate over `item` (coverage-provider.md §9). The letter
+     * guard is composed HERE, in the command itself, so A and B stay
+     * structurally undeletable no matter how the shared touch-clause evolves;
+     * the touch-clause comes from CoverageRetirement, the single owner all
+     * provider call sites also consume.
      */
-    private const string PREDICATE = <<<'SQL'
-        letter IN ('C', 'D', 'E', 'G', 'H', 'I', 'J')
-        AND source = 'osm'
-        AND state = 'unverified'
-        AND NOT EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = item.id)
-        AND NOT EXISTS (SELECT 1 FROM item_confirmation ic WHERE ic.item_id = item.id)
-        AND NOT EXISTS (SELECT 1 FROM submission sb WHERE sb.item_id = item.id)
-        SQL;
+    private static function predicate(): string
+    {
+        return 'letter IN '.CoverageRetirement::lettersSqlTuple()
+            .' AND '.CoverageRetirement::untouchedOsmSql('item');
+    }
 
     public function __construct(private readonly Connection $db)
     {
@@ -69,7 +71,7 @@ final class RetireLegacyOsmCommand extends Command
 
         /** @var list<array{letter: string, n: int|string}> $counts */
         $counts = $this->db->fetchAllAssociative(
-            'SELECT letter, COUNT(*) AS n FROM item WHERE '.self::PREDICATE.' GROUP BY letter ORDER BY letter',
+            'SELECT letter, COUNT(*) AS n FROM item WHERE '.self::predicate().' GROUP BY letter ORDER BY letter',
         );
         if ([] === $counts) {
             $io->success('Nothing to retire — no coverage-served legacy OSM rows found.');
@@ -91,7 +93,7 @@ final class RetireLegacyOsmCommand extends Command
 
         try {
             $this->db->beginTransaction();
-            $deleted = $this->db->executeStatement('DELETE FROM item WHERE '.self::PREDICATE);
+            $deleted = $this->db->executeStatement('DELETE FROM item WHERE '.self::predicate());
             $this->db->commit();
         } catch (DBALException $e) {
             if ($this->db->isTransactionActive()) {
@@ -100,6 +102,14 @@ final class RetireLegacyOsmCommand extends Command
             $io->error($e->getMessage());
 
             return Command::FAILURE;
+        } catch (\Throwable $e) {
+            // Non-DBAL failure mid-transaction: never leave it dangling —
+            // roll back, then let the real error surface unchanged.
+            if ($this->db->isTransactionActive()) {
+                $this->db->rollBack();
+            }
+
+            throw $e;
         }
 
         $io->success(sprintf('Deleted %d legacy OSM row(s) now served by the coverage cache.', $deleted));
