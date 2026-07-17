@@ -350,8 +350,10 @@ cascade. The single documented exception is `user_message` (§7.6).
 
 `M1`–`M12` are the twelve decisions that define this system. Code comments
 and the section headings below cite them by number, so this table is what
-those citations resolve to. Not all of them live in §7: Trash and retention
-have their own sections, and three were deliberately not built.
+those citations resolve to. Not all of them live in §7: Trash (M9) and
+retention (M8) have their own sections. Everything here is built except
+M7 (email) and M8's phase-2 scheduled runner, which are specified and
+pending, and M12, which is deliberately out of scope — see §7.8.
 
 | Code | Decision | Where |
 |---|---|---|
