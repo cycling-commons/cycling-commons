@@ -101,7 +101,7 @@ Example (before, 12 lines → after, 5 lines):
 - Twig, JS, YAML comments — PHP only for this pass.
 - Any behavior change, however small.
 
-## Open point
+## Decisions
 
-- Files or areas the user wants protected from the pass: none named yet —
-  confirm before execution.
+- Parallel subagents: approved (2026-07-17).
+- Protected files or areas: none. All of `web/src` is in scope.
