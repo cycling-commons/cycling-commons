@@ -11,33 +11,26 @@ use PHPUnit\Framework\TestCase;
 
 final class BikeTypeVocabularyTest extends TestCase
 {
-    public function testListIsFilteredToValidTypes(): void
+    public function testFiltersToValidTypesAndDeduplicates(): void
     {
-        self::assertSame(['Road', 'Gravel'], BikeTypeVocabulary::normalize(['Road', 'Gravel', 'Unicycle']));
-    }
-
-    public function testLegacyStringBecomesSingletonList(): void
-    {
-        self::assertSame(['MTB'], BikeTypeVocabulary::normalize('MTB'));
-    }
-
-    public function testAnyExpandsToGeneralBikes(): void
-    {
-        self::assertSame(['Road', 'Gravel', 'MTB', 'E-bike'], BikeTypeVocabulary::normalize('Any'));
-    }
-
-    public function testLegacyHandbikeYesFoldsIn(): void
-    {
-        self::assertSame(['Gravel', 'Handbike'], BikeTypeVocabulary::normalize(['Gravel'], 'Yes'));
-    }
-
-    public function testNewHardwareTypesPassThroughButAnyStaysGeneralBikesOnly(): void
-    {
-        self::assertSame(['Trike', 'Tandem'], BikeTypeVocabulary::normalize(['Trike', 'Tandem']));
         self::assertSame(
-            ['Road', 'Gravel', 'MTB', 'E-bike'],
-            BikeTypeVocabulary::normalize('Any'),
-            'Any still excludes Handbike/Recumbent/Trike/Tandem — general bikes only',
+            ['Road', 'Gravel'],
+            BikeTypeVocabulary::normalize(['Road', 'Gravel', 'Road', 'Unicycle']),
         );
+    }
+
+    public function testHandbikeAndOtherHardwareAreOrdinaryValues(): void
+    {
+        self::assertSame(
+            ['Gravel', 'Handbike', 'Trike', 'Tandem'],
+            BikeTypeVocabulary::normalize(['Gravel', 'Handbike', 'Trike', 'Tandem']),
+        );
+    }
+
+    public function testNonListInputYieldsEmpty(): void
+    {
+        self::assertSame([], BikeTypeVocabulary::normalize(null));
+        self::assertSame([], BikeTypeVocabulary::normalize(''));
+        self::assertSame([], BikeTypeVocabulary::normalize('MTB'));
     }
 }

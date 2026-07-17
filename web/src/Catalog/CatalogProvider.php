@@ -281,7 +281,7 @@ final class CatalogProvider
             foreach ([
                 'difficulty', 'uploader', 'photo',
                 'dominantSurface', 'surfaces', 'note', 'quietness', 'scenic', 'friendliness',
-                'bikeTypes', 'handbike', 'gradientLimited', 'bestDirection',
+                'bikeTypes', 'gradientLimited', 'bestDirection',
             ] as $key) {
                 if (isset($attrs[$key])) {
                     $route[$key] = $attrs[$key];
@@ -296,17 +296,15 @@ final class CatalogProvider
             } else {
                 unset($route['difficulty']);
             }
-            // Canonicalize bikeTypes to a list<string>, folding the legacy
-            // separate 'handbike' attribute in (docs/specs/route-domain.md §9)
-            // regardless of how it was stored (single string, 'Any', or
-            // already a list), so every serving path emits one shape.
-            $canonicalBikeTypes = BikeTypeVocabulary::normalize($attrs['bikeTypes'] ?? null, $attrs['handbike'] ?? null);
+            // Serve bikeTypes as a deduplicated list of valid BikeType values
+            // (docs/specs/route-domain.md §9), so every serving path emits one
+            // shape.
+            $canonicalBikeTypes = BikeTypeVocabulary::normalize($attrs['bikeTypes'] ?? null);
             if ([] !== $canonicalBikeTypes) {
                 $route['bikeTypes'] = $canonicalBikeTypes;
             } else {
                 unset($route['bikeTypes']);
             }
-            unset($route['handbike']);
             $routes[] = $route;
         }
 

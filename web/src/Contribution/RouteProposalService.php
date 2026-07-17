@@ -103,10 +103,9 @@ final class RouteProposalService
         } else {
             unset($attributes['difficulty']);
         }
-        // Canonicalize bikeTypes to a list<string> over BikeType::values(),
-        // folding the legacy separate 'handbike' field in (route-domain spec
-        // §9). Never persist the pre-canonical shapes.
-        $bikeTypes = BikeTypeVocabulary::normalize($meta['bikeTypes'] ?? null, $meta['handbike'] ?? null);
+        // Store bikeTypes as a deduplicated list of valid BikeType values
+        // (docs/specs/route-domain.md §9).
+        $bikeTypes = BikeTypeVocabulary::normalize($meta['bikeTypes'] ?? null);
         if ([] !== $bikeTypes) {
             $attributes['bikeTypes'] = $bikeTypes;
         } else {

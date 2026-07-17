@@ -7,9 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Canonical bikeTypes shape: a list of BikeType values. Normalizes legacy
- * single strings, the retired `Any`, and the old separate `handbike`
- * attribute (Handbike is now a bikeTypes value).
+ * Canonical bikeTypes shape: a deduplicated list of valid `BikeType` values.
+ * Handbike is one of those values, so it is stored in the list like any
+ * other; there is no separate handbike field.
  *
  * @see docs/specs/route-domain.md §9
  *
@@ -17,25 +17,21 @@ namespace App\Catalog;
  */
 final class BikeTypeVocabulary
 {
-    /** @return list<string> */
-    public static function normalize(mixed $stored, mixed $legacyHandbike = null): array
+    /**
+     * @return list<string>
+     */
+    public static function normalize(mixed $stored): array
     {
-        $valid = BikeType::values();
-        $list = match (true) {
-            'Any' === $stored => ['Road', 'Gravel', 'MTB', 'E-bike'],
-            \is_array($stored) => $stored,
-            \is_string($stored) && '' !== $stored => [$stored],
-            default => [],
-        };
+        if (!\is_array($stored)) {
+            return [];
+        }
 
+        $valid = BikeType::values();
         $out = [];
-        foreach ($list as $t) {
+        foreach ($stored as $t) {
             if (\is_string($t) && \in_array($t, $valid, true) && !\in_array($t, $out, true)) {
                 $out[] = $t;
             }
-        }
-        if ((\is_string($legacyHandbike) && 'No' !== $legacyHandbike && 'Unknown' !== $legacyHandbike && '' !== $legacyHandbike || true === $legacyHandbike) && !\in_array('Handbike', $out, true)) {
-            $out[] = 'Handbike';
         }
 
         return $out;

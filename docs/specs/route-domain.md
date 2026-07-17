@@ -418,9 +418,9 @@ Best-of for a specialty type additionally requires the route's declared
 `attributes.bikeTypes` to contain that type (JSONB containment
 `attributes -> 'bikeTypes' @> to_jsonb(:bike)`) — a physical-fit safety gate
 (width, turning radius, clearance). For general types a vote is itself the
-signal; declared suitability does not filter them. The legacy `'Any'` value
-expands to the four general types and deliberately excludes all four
-specialty types (`BikeTypeVocabulary::normalize()`).
+signal; declared suitability does not filter them. Which types count as
+specialty is defined by `BikeType::isSpecialty()`, the single owner of the
+split.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
@@ -437,7 +437,7 @@ backfill):
 | `difficulty` | `{score: 1..5, label}` | `DifficultyVocabulary::LABELS` (Easy / Moderate / Challenging / Hard / Very hard); `canonical()` accepts `{score,…}` and exact canonical label strings only; unknown free-text strings canonicalize to null (never carried through) |
 | `season` | `list<string>` | multi-select over Spring/Summer/Autumn/Winter (capitalized attribute values — distinct from the lowercase `Season` vote enum); **no "Any"** — all four selected is the new "any"; drawer/curator forms tolerate the legacy scalar string on imported routes, no backfill |
 | `dominantSurface` | string | `SurfaceVocabulary::DECLARABLE` — the full 9-value set (Asphalt, Concrete, Paving stones, Sett — pavé, Compacted, Fine gravel, Gravel, Dirt, Rock), shared with the A-layer curator `surface` field; legacy `Mixed` displays as-is. `SurfaceVocabulary::BUCKETS` folds these to coarse Asphalt/Mixed/Gravel for the desk's measured-vs-declared hint |
-| `bikeTypes` | `list<string>` over `BikeType::values()` | **semantics: designed-for, not physically rideable** (a route rideable on MTB but built for road excludes MTB — consistent with the route-domain.md §8.3 gate); the legacy separate `handbike` field and `'Any'` fold in via `BikeTypeVocabulary::normalize()` |
+| `bikeTypes` | `list<string>` over `BikeType::values()` | **semantics: designed-for, not physically rideable** (a route rideable on MTB but built for road excludes MTB — consistent with the route-domain.md §8.3 gate); Handbike is one of these values, selected like any other. `BikeTypeVocabulary::normalize()` filters to valid values and de-duplicates |
 | `gradientLimited` | string | stored values stay `No` / `≤6%` / `≤9%`; display-only labels ("No cap" / "Whole route ≤ 6%" / "Whole route ≤ 9%") — an accessibility guarantee that the whole route stays under the cap |
 | `note` | string ≤ 2000 | free text for riders |
 | `surfaces` | profile object | **derived, never user-supplied** — `SurfaceProfiler` A-layer intersect with disclosed coverage |
