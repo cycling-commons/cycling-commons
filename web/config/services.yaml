@@ -43,3 +43,7 @@ services:
     App\EventSubscriber\CspSubscriber:
         arguments:
             $coverageCspHost: '%coverage.csp_host%'
+
+    App\Catalog\CatalogProvider:
+        arguments:
+            $coverageTiles: '%coverage.tiles_enabled%'

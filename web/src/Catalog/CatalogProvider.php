@@ -19,8 +19,14 @@ use Doctrine\DBAL\Connection;
  */
 final class CatalogProvider
 {
-    public function __construct(private readonly Connection $db)
-    {
+    public function __construct(
+        private readonly Connection $db,
+        // COVERAGE_TILES (config/packages/coverage.yaml, Task 9): when the
+        // coverage PMTiles pool is live, the C–J collections exclude the rows
+        // the coverage cache now serves (coverage-provider.md
+        // §8/§9) — catalog.json slims down to curated/human-touched data.
+        private readonly bool $coverageTiles = false,
+    ) {
     }
 
     /**
@@ -50,6 +56,10 @@ final class CatalogProvider
             'J' => $this->featureCollection('J'),
             'K' => $this->routes(),
             'L' => $this->heat(),
+            // Plan 2 Task 13: served OSM refs for client-side tile dedupe —
+            // map.js filters coverage tile features whose ref is listed here
+            // (osm-data-architecture.md §8: the object appears once, as curated).
+            'refs' => $this->curatedRefs(),
         ];
     }
 
@@ -62,7 +72,7 @@ final class CatalogProvider
     /**
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}>
      */
-    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null): array
+    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, bool $excludeCoverageServed = false): array
     {
         $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov,
                        (i.state = \'verified\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id)) AS verified
@@ -78,9 +88,47 @@ final class CatalogProvider
             $sql .= ' AND i.source != :excludeSource';
             $params['excludeSource'] = $excludeSource;
         }
+        if ($excludeCoverageServed) {
+            // Coverage retirement predicate (coverage-provider.md
+            // §9): once tiles serve the uncurated OSM pool (COVERAGE_TILES=1),
+            // imported-OSM rows no human ever touched drop out of the payload —
+            // the exact rows app:coverage:retire-legacy deletes (keep the two in
+            // sync). Anything with change history, a confirmation, or a
+            // submission stays canonical.
+            $sql .= " AND NOT (i.source = 'osm' AND i.state = 'unverified'
+                AND NOT EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = i.id)
+                AND NOT EXISTS (SELECT 1 FROM item_confirmation ic WHERE ic.item_id = i.id)
+                AND NOT EXISTS (SELECT 1 FROM submission sb WHERE sb.item_id = i.id))";
+        }
 
         /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
+    }
+
+    /**
+     * Plan 2 Task 13 (osm-data-architecture.md §8, client half): source_ref of
+     * every source='osm' item the payload itself serves, DISTINCT because one
+     * entity may carry two letters (UNIQUE(source, source_ref, letter) on item).
+     * MIRRORS itemRows(): with COVERAGE_TILES on, coverage-served (untouched)
+     * rows are excluded here too — their tile twins must render as community
+     * POIs. Listing their refs would suppress the twins while the payload
+     * drops the rows, and the object would display nowhere until
+     * retire-legacy --force removes it.
+     *
+     * @return list<string>
+     */
+    private function curatedRefs(): array
+    {
+        $sql = "SELECT DISTINCT i.source_ref FROM item i WHERE i.source = 'osm' AND i.state IN ".ItemState::servedSqlTuple();
+        if ($this->coverageTiles) {
+            $sql .= " AND NOT (i.state = 'unverified'
+                AND NOT EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = i.id)
+                AND NOT EXISTS (SELECT 1 FROM item_confirmation ic WHERE ic.item_id = i.id)
+                AND NOT EXISTS (SELECT 1 FROM submission sb WHERE sb.item_id = i.id))";
+        }
+
+        /* @var list<string> */
+        return $this->db->fetchFirstColumn($sql.' ORDER BY i.source_ref');
     }
 
     /**
@@ -92,7 +140,7 @@ final class CatalogProvider
     private function featureCollection(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
         $features = [];
-        foreach ($this->itemRows($letter, $source, $excludeSource) as $row) {
+        foreach ($this->itemRows($letter, $source, $excludeSource, $this->coverageTiles) as $row) {
             $props = $this->decode($row['attributes']);
             if ('' !== $row['name']) {
                 $props['n'] = $row['name'];

@@ -300,4 +300,67 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame(1, $this->payload()['B'][0]['v']);
         self::assertSame(1, $this->payload()['A'][0]['v']);
     }
+
+    /** Plan 2 Task 13: payload ships the served OSM refs so the map's tile
+     *  layers can hide already-curated objects (osm-data-architecture.md §8
+     *  ref dedupe, client half). */
+    public function testPayloadCarriesServedOsmRefs(): void
+    {
+        $refs = $this->payload()['refs'];
+        self::assertContains('node/1001', $refs);                              // D shop
+        self::assertContains('node/5001', $refs);                              // E stay (osm bucket)
+        self::assertContains('way/2001', $refs);                               // A surface — osm-sourced, listed too (harmless to tiles)
+        self::assertNotContains('fx:pivot:gite-test|testbourg', $refs);        // pivot is not an OSM ref
+
+        // Served-only: a rejected row's ref must disappear (ItemState::SERVED).
+        $this->em->getConnection()->executeStatement("UPDATE item SET state = 'rejected' WHERE source_ref = 'node/1001'");
+        self::assertNotContains('node/1001', $this->payload()['refs']);
+    }
+
+    /** Plan 2 Task 13: with COVERAGE_TILES on, the C–J collections drop the
+     *  rows the coverage cache now serves (coverage-provider.md
+     *  §8/§9) — imported OSM, unverified, never touched by a human. */
+    public function testCoverageTilesFlagExcludesCoverageServedRows(): void
+    {
+        $conn = $this->em->getConnection();
+        $tilesOn = new CatalogProvider($conn, true);
+
+        // All 3 D fixtures and the E.osm stay are untouched imported-OSM rows.
+        self::assertCount(0, $tilesOn->payload()['D']['features']);
+        self::assertCount(0, $tilesOn->payload()['E']['osm']['features']);
+        self::assertCount(1, $tilesOn->payload()['E']['pivot']['features']);   // pivot stays canonical
+        // The container provider (flag off in the test env) is unchanged.
+        self::assertCount(3, $this->payload()['D']['features']);
+
+        // Human-touched rows stay canonical: a confirmation pins the shop …
+        $user = (new \App\Entity\User())->setEmail('coverage-confirmer@test.test');
+        $user->setPassword('x');
+        $this->em->persist($user);
+        $this->em->flush();
+        $shopId = (int) $conn->fetchOne("SELECT id FROM item WHERE source_ref = 'node/1001' AND letter = 'D'");
+        $conn->executeStatement(
+            "INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (:item, :user, 'exists', NOW(), NOW())",
+            ['item' => $shopId, 'user' => $user->getId()],
+        );
+        // … and a verified state keeps the station regardless of touch history.
+        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE source_ref = 'node/1002'");
+        self::assertCount(2, $tilesOn->payload()['D']['features']);
+
+        // Letters outside the coverage artifact never pass the predicate:
+        // A road surface (kept out of tiles, coverage-provider.md
+        // §7) and B climbs serve unchanged even with the flag on.
+        self::assertCount(1, $tilesOn->payload()['A']);
+        self::assertCount(1, $tilesOn->payload()['B']);
+
+        // Mirror rule (refs track what the payload serves): the still-untouched
+        // D pump (node/1003 — node/1001 was just confirmed above, node/1002 just
+        // verified) has its ref disappear with the flag, since its D feature
+        // dropped too (assertCount(2, …) above) — its coverage-tile twin now
+        // renders as community instead of being ref-suppressed into
+        // invisibility during the pre-retirement window.
+        self::assertNotContains('node/1003', $tilesOn->payload()['refs']);
+        // A row failing the retirement predicate (here: verified) stays listed.
+        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE source_ref = 'node/5001'");
+        self::assertContains('node/5001', (new CatalogProvider($conn, true))->payload()['refs']);
+    }
 }

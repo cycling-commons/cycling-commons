@@ -40,6 +40,8 @@ final class CatalogEndpointTest extends WebTestCase
         foreach (['A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'J', 'K', 'L'] as $letter) {
             self::assertArrayHasKey($letter, $data);
         }
+        self::assertArrayHasKey('refs', $data);            // Plan 2 Task 13: curated-OSM refs for tile dedupe
+        self::assertContains('node/1001', $data['refs']);
         self::assertCount(3, $data['D']['features']);
         self::assertCount(1, $data['K']);
         self::assertCount(2, $data['L']);
