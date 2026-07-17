@@ -1,0 +1,23 @@
+docs/specs/map-and-search.md
+  s_f6d45d977e7468::t_e6221edf88a181 589,591-595
+developers/coverage-batch.md
+  s_f6d45d977e7468::t_e6221edf88a181 96-106
+docs/specs/security-architecture.md
+  s_f6d45d977e7468::t_e6221edf88a181 315,336-342
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "797bb6ccf5c9fc9cc172c50ebe4c28f896e31e1c",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
