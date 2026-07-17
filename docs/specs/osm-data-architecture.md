@@ -42,6 +42,29 @@ on data ingestion, the map, the contribution flow, or the public API.
 Categories 2 and 3 are "curated" for display; category 1 is "community"
 coverage. The join key between our data and OSM is always `osm_ref`.
 
+How the source families flow into the two data planes as built
+(provenance values: catalog-data-model.md §5; tiers: map-and-search.md §12):
+
+```
+ OpenStreetMap (ODbL)          official registries:         our own inputs:
+   │                           Tourisme Wallonie PIVOT      riders (user) ·
+   │ weekly per-region         (CC-BY) · Wikidata           curators (manual) ·
+   │ Geofabrik extract                  │                   our tooling (auto)
+   ▼                                    ▼                            │
+ ┌──────────────────────────┐   ┌──────────────────────────────────────────┐
+ │ COVERAGE PLANE — cache   │   │ CANONICAL STORE — the `item` table       │
+ │ coverage_poi + PMTiles   │   │ source = pivot | wikidata | user |       │
+ │ pure OSM subset (§5);    │   │          manual | auto | osm             │
+ │ rebuilt weekly, never    │──▶│ `osm` rows = ref + OUR additions only    │
+ │ edited, never canonical  │§6 │ (category 2), created the moment a       │
+ └──────────────────────────┘   │ human curates a coverage object          │
+   │      materialize-on-edit   └──────────────────────────────────────────┘
+   │ PMTiles + /map/coverage/*     │ catalog.json + item endpoints
+   ▼                               ▼
+ community tier on the map      curated/verified tiers on the map
+ (map-and-search.md §12)        (PIVOT = verified by registry provenance)
+```
+
 ## 3. Licensing posture
 
 Cycling Commons publishes under:

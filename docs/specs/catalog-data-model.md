@@ -174,6 +174,9 @@ cap) — route-domain.md owns it.
 
 ## 5. Provenance sources (`App\Catalog\ItemSource`)
 
+How these families flow into the coverage cache vs the canonical store is
+diagrammed in [osm-data-architecture.md §2](osm-data-architecture.md).
+
 | Value | Meaning |
 |---|---|
 | `osm` | Harvested from OpenStreetMap (`source_ref` = `node/…` / `way/…`) |
