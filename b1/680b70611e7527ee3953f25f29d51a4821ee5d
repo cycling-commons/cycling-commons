@@ -1,0 +1,25 @@
+pipeline/tests/fixtures/mini.osm
+  s_f6d45d977e7468::t_6eefab0d1c5920 26-27,30
+web/assets/map/map.js
+  s_f6d45d977e7468::t_09333c7b37aef2 511,531
+docs/specs/osm-data-architecture.md
+  s_f6d45d977e7468::t_09333c7b37aef2 127
+pipeline/contract/coverage-contract.json
+  s_f6d45d977e7468::t_35c93c520372cf 41-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "b1680b70611e7527ee3953f25f29d51a4821ee5d",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
