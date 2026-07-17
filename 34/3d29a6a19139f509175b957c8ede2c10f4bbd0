@@ -1,0 +1,25 @@
+web/tests/Catalog/CatalogProviderTest.php
+  s_f6d45d977e7468::t_e7b8a20a76af2a 128-147
+  s_f6d45d977e7468::t_f915b0fe64ec58 127
+docs/specs/map-and-search.md
+  s_f6d45d977e7468::t_375be78aab08cb 594-596
+web/src/Catalog/CatalogProvider.php
+  s_f6d45d977e7468::t_ed51a23f0d191b 77
+  s_f6d45d977e7468::t_28ec1203515d4b 67-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "343d29a6a19139f509175b957c8ede2c10f4bbd0",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
