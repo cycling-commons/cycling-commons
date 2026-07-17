@@ -1,0 +1,76 @@
+web/src/Catalog/Entity/Region.php
+  s_ed348b2f9c4e8c::t_e9fd8c16d93172 29
+  s_ed348b2f9c4e8c::t_2455f7a9211414 12-16
+web/src/Catalog/Entity/Item.php
+  s_ed348b2f9c4e8c::t_92eb8d89d5e64d 90
+  s_ed348b2f9c4e8c::t_f3b264d7c8c85b 35
+  s_ed348b2f9c4e8c::t_6deb3ce9d3b4f3 257
+  s_ed348b2f9c4e8c::t_c012f0f52439f2 15-19
+  s_ed348b2f9c4e8c::t_361acfa7641a65 58
+  s_ed348b2f9c4e8c::t_cb92c3f642a141 62
+web/src/Service/UserDeletionService.php
+  s_ed348b2f9c4e8c::t_eb557a8360bcd5 14-19
+  s_ed348b2f9c4e8c::t_fe4b3e70a6ed0c 74-75
+web/src/Catalog/Entity/RouteChangeHistory.php
+  s_ed348b2f9c4e8c::t_5ebd6cfeb66ae0 13-19
+web/src/Catalog/Entity/HeatPoint.php
+  s_ed348b2f9c4e8c::t_0552ab9747a41b 13-16
+  s_ed348b2f9c4e8c::t_1492690c3ed3b9 39
+web/src/Service/ContributionStubInterface.php
+  s_ed348b2f9c4e8c::t_fb586e7e071047 12
+web/src/Entity/AdminActionLog.php
+  s_ed348b2f9c4e8c::t_b1b0a25627f30b 12-17
+web/src/Catalog/Entity/Submission.php
+  s_ed348b2f9c4e8c::t_0d6cc290ddc8f2 57
+  s_ed348b2f9c4e8c::t_ae7ad4514c741b 16-20
+web/src/Catalog/Entity/ItemConfirmation.php
+  s_ed348b2f9c4e8c::t_7ef7d619964155 14-18,20-22
+web/src/Catalog/Entity/RecommendedRoute.php
+  s_ed348b2f9c4e8c::t_b0eac53c4adea9 45
+  s_ed348b2f9c4e8c::t_5ec6324c5beff3 14-17
+  s_ed348b2f9c4e8c::t_94fef42d5d2086 81
+  s_ed348b2f9c4e8c::t_2fa10712888fa2 68-70
+web/src/Service/GuardrailViolationException.php
+  s_ed348b2f9c4e8c::t_a8fc0d76bfb333 12-13
+web/src/Catalog/Entity/ChangeHistory.php
+  s_ed348b2f9c4e8c::t_ce25e48dddb900 12-17
+web/src/Service/AdminActionLogger.php
+  s_ed348b2f9c4e8c::t_94fde339cfc6cd 16-17
+web/src/Entity/User.php
+  s_ed348b2f9c4e8c::t_f8d53c5b485092 23-30
+  s_ed348b2f9c4e8c::t_7de0259fcf6d5d 234,237
+  s_ed348b2f9c4e8c::t_bce76ce400bab9 81
+  s_ed348b2f9c4e8c::t_9c14ff31632864 76
+  s_ed348b2f9c4e8c::t_2b711cd18f9783 51
+  s_ed348b2f9c4e8c::t_ff984326102938 82-85
+  s_ed348b2f9c4e8c::t_c2f34a42401ab7 113
+web/src/Catalog/Entity/RouteVote.php
+  s_ed348b2f9c4e8c::t_560580877799de 15-18,20-22
+web/src/Catalog/Entity/RouteRide.php
+  s_ed348b2f9c4e8c::t_6535826f434732 14-16,18-20
+web/src/Service/UserAdminService.php
+  s_ed348b2f9c4e8c::t_2fc70da8e36872 115,120,123
+  s_ed348b2f9c4e8c::t_83c2cacfd2092c 167-168
+  s_ed348b2f9c4e8c::t_e8d403a1e953b9 137-142
+  s_ed348b2f9c4e8c::t_fdb9f8f7408220 17-21
+  s_ed348b2f9c4e8c::t_b25afd75db8973 207
+  s_ed348b2f9c4e8c::t_05142341cc9dd6 218
+web/src/Catalog/Entity/RouteSuggestion.php
+  s_ed348b2f9c4e8c::t_233aa6698a664a 15-17,19-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "1caa91d3963b0d50b79b52ebaed719d2766d4fc5",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
