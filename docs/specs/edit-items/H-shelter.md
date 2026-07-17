@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Edit spec — H · Shelter & emergency
+# Edit spec — H · Shelter
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** H · Shelter & emergency
+- **Catalog layer:** H · Shelter
 - **Map depiction:** ⛑ pin, colour #9A8FB6
 - **Edit-item id:** `shelter-baraque-michel` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18

@@ -38,9 +38,7 @@
         },
         "H": {
             "selectors": [
-                {"tag": "amenity=shelter", "label": "Shelter"},
-                {"tag": "emergency=phone", "label": "Emergency phone"},
-                {"tag": "emergency=defibrillator", "label": "Defibrillator"}
+                {"tag": "amenity=shelter", "label": "Shelter"}
             ],
             "tileProps": []
         },

@@ -508,7 +508,7 @@
     ['scenic',   window.CC_SCENIC_OSM,   'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)'],
     ['history',  window.CC_HISTORY_OSM,  'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)'],
     ['stays',    window.CC_STAYS_OSM,    'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)'],
-    ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)'],
+    ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (amenity=shelter)'],
     ['transit',  window.CC_TRANSIT_OSM,  'OpenStreetMap (railway=station / railway=halt)']
   ];
   // ---- Coverage tiles (coverage-provider.md §6) ----
@@ -528,7 +528,7 @@
     scenic:'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)',
     history:'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)',
     stays:'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)',
-    shelter:'OpenStreetMap (amenity=shelter / emergency=phone/defibrillator)',
+    shelter:'OpenStreetMap (amenity=shelter)',
     transit:'OpenStreetMap (railway=station / railway=halt)'
   };
   // Curated-ref dedupe (osm-data-architecture.md §8): any object already served
@@ -802,7 +802,7 @@
         source:'Community report' }
     ]}
     ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, features:[] }
-    ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter & emergency', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, features:[] }
+    ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, features:[] }
     ,{ key:'scenic', letter:'I', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, features:[] }
     ,{ key:'history', letter:'J', label:LAYER_L10N.history||'History & culture', color:'#6E5849', icon:'🏛', kind:'point', exp:true, features:[] }
     ,{ key:'experience', letter:'K', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, features:[] }

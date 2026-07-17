@@ -248,7 +248,7 @@ or low-density region −1 (seed coverage early, tighten as the community grows)
 | **E** | Where to sleep | [E-where-to-sleep.md](E-where-to-sleep.md) | pin | **votable** | yes |
 | **F** | Hazards & conditions | [F-hazards.md](F-hazards.md) | pin | utility | yes |
 | **G** | Getting there | [G-getting-there.md](G-getting-there.md) | pin | utility | yes |
-| **H** | Shelter & emergency | [H-shelter.md](H-shelter.md) | pin | utility | yes |
+| **H** | Shelter | [H-shelter.md](H-shelter.md) | pin | utility | yes |
 | **I** | Scenic views | [I-scenic-views.md](I-scenic-views.md) | pin | **votable** | yes |
 | **J** | History & culture | [J-history-culture.md](J-history-culture.md) | pin | **votable** | yes |
 | **K** | Quality rides | [K-quality-rides.md](K-quality-rides.md) | line + GPX | **votable** (typed: season + bike type) | **no — curator-only**; riders propose / vote / rode-it / suggest |
