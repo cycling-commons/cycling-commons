@@ -1,0 +1,75 @@
+web/src/Controller/RideCheckController.php
+  s_ed348b2f9c4e8c::t_e05f18abefbf5e 22
+web/src/Controller/ContributeController.php
+  s_ed348b2f9c4e8c::t_48663581b67574 176
+  s_ed348b2f9c4e8c::t_f85e3e8ed62e18 164-165
+  s_ed348b2f9c4e8c::t_60489d37657912 32-33
+  s_ed348b2f9c4e8c::t_98e4028fae0bdf 197-200
+  s_ed348b2f9c4e8c::t_1b6cdd0089e241 166-169
+  s_ed348b2f9c4e8c::t_ce61dcfb2477a5 253-255
+  s_ed348b2f9c4e8c::t_7387706d8bbb70 154-160
+  s_ed348b2f9c4e8c::t_438625f99a513e 137-140,144
+web/src/Controller/ProposeRouteController.php
+  s_ed348b2f9c4e8c::t_83f832f97ea35a 25
+web/src/Controller/RiderProfileController.php
+  s_ed348b2f9c4e8c::t_1cc4d8bfcd8df9 20
+web/src/Controller/MessagesController.php
+  s_ed348b2f9c4e8c::t_445d07db460f54 24-28
+web/src/Controller/MapController.php
+  s_ed348b2f9c4e8c::t_b98ce40d6d989d 250
+  s_ed348b2f9c4e8c::t_5b11a5814a984b 41-42
+  s_ed348b2f9c4e8c::t_8b6e2b22a924d9 240-243
+  s_ed348b2f9c4e8c::t_5345a7c494ef98 220-224
+  s_ed348b2f9c4e8c::t_71c50f392553f0 201-204
+web/src/Controller/RouteCommunityController.php
+  s_ed348b2f9c4e8c::t_9a017b2cf4d6ef 28-29,31
+  s_ed348b2f9c4e8c::t_6ea755e25f49fd 174,178
+  s_ed348b2f9c4e8c::t_9f3c3823c0bbc1 187
+  s_ed348b2f9c4e8c::t_807b51632da497 60
+  s_ed348b2f9c4e8c::t_8526d7e3fe21f5 108
+  s_ed348b2f9c4e8c::t_f447c5313cd792 144
+  s_ed348b2f9c4e8c::t_0521ada9db1b67 73
+web/src/Controller/SettingsController.php
+  s_ed348b2f9c4e8c::t_0a0bf1937a8f55 92
+  s_ed348b2f9c4e8c::t_ce6d4b226ca9e2 23-26
+web/src/Controller/TwoFactorController.php
+  s_ed348b2f9c4e8c::t_0348b0ea0bd626 142
+  s_ed348b2f9c4e8c::t_27436cf66f95c0 51
+web/src/Controller/ApiController.php
+  s_ed348b2f9c4e8c::t_9624b7a1771ebf 12
+web/src/Controller/RouteModerateController.php
+  s_ed348b2f9c4e8c::t_0e5aa38fcf503a 30
+  s_ed348b2f9c4e8c::t_4d257af0ebd8a4 248
+web/src/Controller/ResetPasswordController.php
+  s_ed348b2f9c4e8c::t_c79a936a2833de 121
+web/src/Controller/ModerateController.php
+  s_ed348b2f9c4e8c::t_4eaf9f6b1326da 136-138
+  s_ed348b2f9c4e8c::t_fef3b60b0f80bf 161
+  s_ed348b2f9c4e8c::t_f1e7aab924501b 69
+web/src/Controller/LocaleController.php
+  s_ed348b2f9c4e8c::t_31a27f78d85e44 21
+web/src/Controller/ModerateMessageController.php
+  s_ed348b2f9c4e8c::t_dc8e47439b4dd0 139-144
+  s_ed348b2f9c4e8c::t_7c6a853248b05b 116
+web/src/Controller/RouteGpxController.php
+  s_ed348b2f9c4e8c::t_2bd25ca667c40f 17-19
+web/src/Controller/CoverageController.php
+  s_ed348b2f9c4e8c::t_36f50f1acb9dad 20
+  s_ed348b2f9c4e8c::t_1a3ce524c5d881 83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "263167d1cceb4f72b333a26d5383ea10885e74dc",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
