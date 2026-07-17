@@ -8,25 +8,23 @@ namespace App\Catalog;
 
 /**
  * Single owner of the coverage-retirement predicate (coverage-provider.md
- * §9): an item row the coverage cache serves once COVERAGE_TILES is on —
- * imported OSM, unverified, and ZERO human touches (no change_history, no
- * item_confirmation, no submission referencing it). Anything a human ever
- * touched stays canonical.
+ * §9): an item row the coverage cache serves — imported OSM, unverified,
+ * and ZERO human touches (no change_history, no item_confirmation, no
+ * submission referencing it). Anything a human ever touched stays canonical.
  *
  * Three call sites consume it and MUST stay in sync — that is why the SQL
  * lives here and nowhere else (drift on a DELETE predicate is the failure
  * mode this class exists to prevent):
- *  - CatalogProvider::itemRows() — the flag-gated payload exclusion
+ *  - CatalogProvider::itemRows() — the unconditional payload exclusion
  *    (coverage-provider.md §8),
  *  - CatalogProvider::curatedRefs() — the refs mirror
  *    (coverage-provider.md §6),
  *  - RetireLegacyOsmCommand — the owner-gated DELETE
  *    (coverage-provider.md §9).
  *
- * LETTERS scopes both the refs mirror and the command's letter guard: A
- * (road surface) never entered the coverage artifact
- * (coverage-provider.md §7) and B (climbs) is wikidata-sourced — neither
- * may ever match retirement.
+ * LETTERS scopes all three call sites' letter guards: A (road surface)
+ * never entered the coverage artifact (coverage-provider.md §7) and B
+ * (climbs) is wikidata-sourced — neither may ever match retirement.
  */
 final class CoverageRetirement
 {

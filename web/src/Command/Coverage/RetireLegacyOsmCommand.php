@@ -27,8 +27,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * wikidata-sourced and off-predicate anyway.
  *
  * The touch-predicate is owned by CoverageRetirement — the SAME SQL fragment
- * CatalogProvider::itemRows()/curatedRefs() apply under COVERAGE_TILES=1, so
- * what the flag hides is structurally exactly what this deletes.
+ * CatalogProvider::itemRows()/curatedRefs() apply unconditionally, so what
+ * the payload drops is structurally exactly what this deletes.
  *
  * Dry-run by default: prints per-letter counts, changes nothing. The
  * destructive run (--force) is owner-gated — explicit approval plus a dev-DB

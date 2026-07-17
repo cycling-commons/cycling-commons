@@ -256,7 +256,9 @@
     mintWaterDrops();
   }
 
-  // registry of bulk-OSM dot layers so render() can promote confirmed (simulated) points to icon pins
+  // registry of the bulk-OSM POI pools: feeds the confirmed-pin cluster
+  // machinery (setupConfClusters/updateConfMarkers) and the per-layer drawer
+  // source strings osmDrawer() falls back to.
   const osmLayers = {};
   // Star glyphs for 1-5 ratings, shared by schemaRows' 'rating' kind.
   const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
