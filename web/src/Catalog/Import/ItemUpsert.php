@@ -9,16 +9,17 @@ namespace App\Catalog\Import;
 /**
  * The single item-upsert statement shared by every catalog-seeding command
  * (harvest {@see \App\Catalog\Command\ImportCatalogCommand} and manual
- * {@see \App\Catalog\Command\SeedManualCatalogCommand}) — previously copied
- * verbatim into each (review #51).
+ * {@see \App\Catalog\Command\SeedManualCatalogCommand}).
  *
  * Upserts by (source, source_ref, letter). Lifecycle `state` is set only on
- * INSERT, never on update. A row that carries an approved curator edit — marked
- * by the existence of change_history rows (ModerationService::applyEdit) — keeps
- * its DB content and only refreshes imported_at, so a re-run never clobbers a
- * moderation-approved edit (review #26).
+ * INSERT, never on update. A row that carries an approved curator edit -
+ * marked by the existence of change_history rows
+ * (ModerationService::applyEdit) - keeps its DB content and only refreshes
+ * imported_at, so a re-run never clobbers a moderation-approved edit.
  *
  * Bind: letter, name, geom (GeoJSON string), cc, sub, state, source, ref, attrs.
+ *
+ * @see docs/specs/catalog-data-model.md §3
  *
  * @api Referenced by the catalog seeding commands.
  */

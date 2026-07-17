@@ -20,38 +20,28 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Backfills discrete registry attributes from an imported item's baked
- * `record` array (bug fix: the improve/edit FORM prefills from discrete
- * `item.attributes` keyed by registry field name — {@see CatalogFormRegistry}
- * — but the Wallonia harvest baked its display values as pre-formatted
- * strings inside a `record` array instead of also writing the discrete keys.
- * The DRAWER renders `record` directly (map.js), so it showed the values
- * fine; the edit form could not, because it looks for e.g. `attributes.surface`
- * and found nothing).
+ * Backfills discrete registry attributes from an item's baked `record` array.
+ * The Wallonia harvest bakes some display values as pre-formatted strings in
+ * a `record` array instead of also writing the discrete `item.attributes` key
+ * the edit form reads ({@see CatalogFormRegistry}), so those items show fine
+ * in the drawer but leave the edit form blank for the same field.
  *
- * For each served item/route carrying a baked `record`, each row whose
- * `label` matches one of the type's registry field labels
+ * For each served item/route carrying a baked `record`, a row whose `label`
+ * matches one of the type's registry field labels
  * ({@see CatalogFormRegistry::for()}) is parsed into that field's discrete
- * attribute key — but ONLY when the discrete key isn't already set (an
- * existing discrete value always wins; this never overwrites a real edit).
- * "Length" has no registry field (it's derived/display-only for Climbs) and
- * is therefore never matched — it stays record-only, exactly as before.
+ * attribute key, but only when the discrete key is not already set - an
+ * existing discrete value always wins and is never overwritten. Labels with
+ * no matching registry field (e.g. "Length", which is derived and
+ * display-only) are left in `record` untouched.
  *
  * Idempotent: a key already present is left untouched, so re-running changes
- * nothing. `record` itself is never removed — the drawer's dedup-by-label
- * already prefers the discrete attribute row over a same-label `record` row
- * (see map.js buildRecord()'s climbs attrRows/attrLabels filter), and
- * `record` still carries derived rows (Length) that have no discrete home.
+ * nothing. `record` itself is never removed, since it still carries fields
+ * such as Length that have no discrete home.
  *
- * Audited letters (2026-07-05, dev DB): only letter B (Climbs, source
- * wikidata — the Wallonia harvest) currently carries a baked `record` with
- * registry-matching labels and no discrete key (10 items). Letter A
- * (road-surface) and K (quality-rides, table `recommended_route`) currently
- * have zero rows with a `record` attribute — audited and clean, but this
- * command is written generically over every {@see ItemType} (and, for K,
- * over `recommended_route` directly, since that letter lives in its own
- * table) so a future harvest that reintroduces the same baked-record
- * shortcut for another type is covered without a code change.
+ * Written generically over every {@see ItemType} (and, for K, over
+ * `recommended_route` directly, since that letter lives in its own table),
+ * so a harvest that bakes the same shortcut for another type is covered
+ * without a code change.
  *
  * Known parsing rules (extend {@see self::extractValue()} if the harvest
  * ever bakes another field this way):
@@ -63,12 +53,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *    no match -> left unset and reported, never guessed.
  *  - Every other text field (e.g. `famousFor`): copied verbatim (trimmed).
  *
- * Upstream follow-up (not fixed here, see the report): the Wallonia
- * export/import pipeline (`tools/wallonia` -> {@see ImportCatalogCommand})
- * still emits this baked-`record`-only shape, so a future `make
- * wallonia-import` would re-introduce the same gap for newly-harvested
- * climbs. The durable fix is upstream (export discrete attributes, or have
- * the importer derive them) — this command only backfills the current DB.
+ * The Wallonia import pipeline still emits data in this shape, so a future
+ * harvest re-import can reintroduce the same gap for newly imported items.
+ * The durable fix belongs upstream, in the export or import step; this
+ * command only backfills the current database.
  *
  * @api Console entry point (dev/ops one-off backfill, safe to re-run).
  */
@@ -97,9 +85,9 @@ final class BackfillAttributesCommand extends Command
             $routeCounts = $this->backfillTable('recommended_route', $io);
             $this->db->commit();
         } catch (\JsonException|DBALException|\InvalidArgumentException $e) {
-            // Include \InvalidArgumentException: AttributeVocabulary::assertValid()
-            // throws it on a vocabulary violation, which previously escaped this
-            // handler and left the transaction open (#36).
+            // Includes \InvalidArgumentException: AttributeVocabulary::assertValid()
+            // throws it on a vocabulary violation, and that must roll back the
+            // transaction like every other exception caught here.
             if ($this->db->isTransactionActive()) {
                 $this->db->rollBack();
             }
@@ -129,9 +117,9 @@ final class BackfillAttributesCommand extends Command
 
     /**
      * The item and recommended_route (letter K) tables carry the same baked
-     * `record` shape and are backfilled identically — one loop, parameterised
-     * by table (#58). K lives in its own table with no `letter` column, so its
-     * type is fixed to QualityRides; item rows resolve their type per `letter`.
+     * `record` shape and are backfilled identically - one loop, parameterised
+     * by table. K lives in its own table with no `letter` column, so its type
+     * is fixed to QualityRides; item rows resolve their type per `letter`.
      *
      * @return array{0: array<string, int>, 1: int, items: int, attrs: int}
      *                                                                      [letter => items-backfilled, total
@@ -204,10 +192,10 @@ final class BackfillAttributesCommand extends Command
 
             $field = $fieldsByLabel[self::normalizeLabel($label)] ?? null;
             if (null === $field) {
-                continue; // no registry field for this label (e.g. "Length" — derived, display-only)
+                continue; // no registry field for this label (e.g. "Length" - derived, display-only)
             }
             if (\array_key_exists($field->name, $attributes)) {
-                continue; // a discrete value already exists — never overwrite it
+                continue; // a discrete value already exists - never overwrite it
             }
 
             $extracted = $this->extractValue($field, $rawValue);
@@ -226,7 +214,7 @@ final class BackfillAttributesCommand extends Command
     /**
      * A registry field label may carry a unit/hint suffix the baked `record`
      * label never had (e.g. "Average gradient (%)" vs. record's plain
-     * "Average gradient", "Max gradient (%)" vs. "Max gradient") — strip a
+     * "Average gradient", "Max gradient (%)" vs. "Max gradient") - strip a
      * trailing "(...)" and casefold so both sides compare on the same
      * "what the field actually is" text, not incidental UI decoration.
      */
@@ -244,7 +232,7 @@ final class BackfillAttributesCommand extends Command
         }
 
         if (\in_array($field->name, self::NUMERIC_FIELDS, true)) {
-            // "5.7%" -> "5.7"; "~13% (steepest ramp)" -> "13" — first leading number, ignoring a "~" prefix or trailing text.
+            // "5.7%" -> "5.7"; "~13% (steepest ramp)" -> "13" - first leading number, ignoring a "~" prefix or trailing text.
             return preg_match('/(\d+(?:\.\d+)?)/', $value, $m) ? $m[1] : null;
         }
 
@@ -255,7 +243,7 @@ final class BackfillAttributesCommand extends Command
                 }
             }
 
-            return null; // no exact-enough registry choice — never guess
+            return null; // no exact-enough registry choice - never guess
         }
 
         return $value;

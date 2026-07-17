@@ -12,26 +12,26 @@ use App\Catalog\ItemType;
 /**
  * The only attribute keys an imported item may carry: the catalog registry's
  * editable field names for the letter, plus shared display keys, plus a few
- * per-letter fixture extras. Unknown keys are an import ERROR — the "no key
+ * per-letter fixture extras. Unknown keys are an import ERROR - the "no key
  * exists unless declared" rule starts at the front door.
+ *
+ * @see docs/specs/catalog-data-model.md §7
  *
  * @api Used by the catalog importer.
  */
 final class AttributeVocabulary
 {
-    // 'photos' (plural) sits alongside singular 'photo': a gallery of 2+ images for
-    // a pin (e.g. the demo climbs/scenic/history pins recovered in the C5 data-loss
-    // fix) — map.js's photoList(f) already prefers f.photos over f.photo.
+    // 'photos' (plural) sits alongside singular 'photo': a gallery of 2+ images
+    // for a pin - map.js's photoList(f) already prefers f.photos over f.photo.
     private const array COMMON = ['t', 'town', 'web', 'c', 'sim', 'r', 'desc', 'descTr', 'photo', 'photos'];
 
     private const array EXTRAS = [
         'A' => ['cls', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense'],
-        // 'attribution' (not 'source'): the climbs export preserves the fixture's
-        // citation as `attribution` since `source` is reserved for provenance
-        // (App\Catalog\ItemSource) — human-approved deviation from the original
-        // plan, already implemented on the export side (Task 3).
+        // 'attribution' (not 'source'): the climbs export preserves the citation
+        // as `attribution` since `source` is reserved for provenance
+        // (App\Catalog\ItemSource).
         'B' => ['headline', 'cur', 'sq', 'tr', 'record', 'attribution', 'route', 'grad', 'steep'],
-        // serviceKind (App\Catalog\ServiceKind: shop/station/pump) — D/bike-services only.
+        // serviceKind (App\Catalog\ServiceKind: shop/station/pump) - D/bike-services only.
         // Not a registry field: it's harvester/import-stamped (tools/wallonia's
         // service_kind_by_label + ImportCatalogCommand's legacy-label fallback),
         // never a curator-editable form field.

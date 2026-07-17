@@ -18,63 +18,41 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Seeds the ~23 hand-authored "hero" pins that used to live baked into
- * `web/assets/map/map.js`'s CATALOG array (famous climbs, a showcase gîte, …)
- * as real `source = manual` item rows (spec §W3, plan C3-T9).
+ * Seeds a small set of hand-authored "hero" pins (famous climbs, a showcase
+ * gîte, …) as real `source = manual` item rows, so they get an id and can be
+ * edited and moderated like any other row.
  *
- * Until now these pins had no DB row: no id, so map.js could never show an
- * Edit button or moderate them. This command transcribes their data —
- * geometry + the subset of their demo prose that maps onto a real
- * {@see \App\Catalog\CatalogFormRegistry} field for the letter — into `item`
- * rows, so they become editable/moderatable like every other row. The
- * hardcoded CATALOG entries in map.js were removed in C3-T10 (except the
- * single letter-F hazard pin, deliberately skipped here — see the F comment
- * in {@see self::pins()}).
- *
- * Every row lands as `state = unverified` (never `verified`) — a seeded pin
+ * Every row lands as `state = unverified` (never `verified`) - a seeded pin
  * is treated exactly like a fresh rider contribution; "verified" is only
  * ever earned through the real voting funnel.
  *
  * Idempotent: upserts by the same (source, source_ref, letter) key the
- * importer uses, with source_ref = `manual:<stable-slug>` — safe to re-run.
+ * importer uses, with source_ref = `manual:<stable-slug>` - safe to re-run.
  *
- * Collision-safe (C4-T11): before inserting/upserting a pin, skips it if a
- * NON-manual item already exists with the same (name, letter) — i.e. never
- * seeds a manual duplicate of a place the OSM/pivot/… harvest already
- * imported. Skipped pins are reported on stdout.
+ * Collision-safe: before inserting/upserting a pin, skips it if a non-manual
+ * item already exists with the same (name, letter) - i.e. never seeds a
+ * manual duplicate of a place the OSM/pivot/… harvest already imported.
+ * Skipped pins are reported on stdout.
  *
- * C5 data-loss fix: the original C3-T9 cut also DROPPED `route`/`grad`/
- * `steep` (the climb line + gradient profile + steepest-ramp marker) and
- * collapsed every demo pin's `photos` (plural) gallery down to a single
- * `photo` — losing real map/drawer content, not just derived prose. These
- * are now restored verbatim from the pre-migration map.js CATALOG (git
- * `8bae43d^`) as attributes: `route`/`grad`/`steep` are already valid
- * letter-B vocab keys (imported climbs carry them — see
- * {@see \App\Catalog\CatalogProvider::climbs()}), and `photos` (plural) is
- * now a {@see AttributeVocabulary} COMMON key so any letter can carry a
- * gallery (map.js's `photoList(f)` already prefers `f.photos` over
- * `f.photo`).
+ * Deliberately not persisted: derived/display-only values such as the
+ * literal "Length" record row, the pre-baked `record`/`attribution` blobs
+ * (already decomposed into discrete registry fields), free-text "links",
+ * and the form-only "anything to correct?" intake field.
  *
- * Still deliberately NOT persisted (documented in the C3-T9 report): the
- * demo's derived/display-only values — the literal "Length" record row, the
- * pre-baked `record`/`attribution` blobs (already decomposed into discrete
- * registry fields: `avgGradient`, `maxGradient`, `famousFor`, `approach`,
- * `waterOnClimb`, `surface`), free-text "links", and the form-only "anything
- * to correct?" intake field.
+ * @see docs/specs/catalog-data-model.md §5
  *
  * @api Console entry point (dev/ops seeding tool, run once per environment).
  */
 #[AsCommand(name: 'app:catalog:seed-manual', description: 'Seed the hand-authored demo pins (map.js CATALOG) as real manual item rows')]
 final class SeedManualCatalogCommand extends Command
 {
-    /** ISO 3166-2 code for Liège — every seeded pin sits in the Amblève/Hautes-Fagnes/Spa-Stavelot area. */
+    /** ISO 3166-2 code for Liège - every seeded pin sits in the Amblève/Hautes-Fagnes/Spa-Stavelot area. */
     private const string SUBDIVISION_CODE = 'BE-WLG';
 
     /**
-     * The transcribed pins, grouped in map.js CATALOG order. Each entry:
-     * letter, name (-> item.name column), lat/lng (Point geometry), ref
-     * (-> source_ref suffix, stable across runs) and attributes (registry-
-     * validated per {@see AttributeVocabulary}).
+     * The transcribed pins. Each entry: letter, name (-> item.name column),
+     * lat/lng (Point geometry), ref (-> source_ref suffix, stable across
+     * runs) and attributes (registry-validated per {@see AttributeVocabulary}).
      *
      * @return list<array{letter: string, name: string, lat: float, lng: float, ref: string, attributes: array<string, mixed>}>
      */
@@ -241,13 +219,12 @@ final class SeedManualCatalogCommand extends Command
                     'photo' => self::wc('Gîte rural de Puyolle.JPG', 'Darreenvt', 'Darreenvt', 'CC BY-SA 4.0'),
                 ],
             ],
-            // F · Hazards & conditions — deliberately SKIPPED (C3-T10, spec §W3
-            // decision D3). Hazards have no serving path in CatalogProvider or
-            // map.js, so a seeded manual F row could never render — it would
-            // just be a permanent orphan. Letter F's single demo pin ("Exposed
-            // crosswind · Hautes Fagnes") stays hardcoded in map.js's CATALOG
-            // until hazards get a real serving path; don't re-add an F pin
-            // here without wiring that up first.
+            // F · Hazards & conditions - deliberately SKIPPED. Hazards have no
+            // serving path in CatalogProvider or map.js, so a seeded manual F
+            // row could never render - it would just be a permanent orphan.
+            // The single demo hazard pin stays hardcoded in map.js until
+            // hazards get a real serving path; don't add an F pin here
+            // without wiring that up first.
             // G · Getting there
             [
                 'letter' => 'G', 'name' => 'Aywaille station', 'lat' => 50.4730, 'lng' => 5.6770,
@@ -398,12 +375,11 @@ final class SeedManualCatalogCommand extends Command
 
     /**
      * Guards against re-seeding a manual duplicate of a place the OSM/pivot/…
-     * harvest already imported under a different source (C4-T11 dedup fix —
-     * items 11018/11019/11021 duplicated osm rows 3597/3602/3353 before this
-     * guard existed). Matches on (name, letter): the same real-world place,
-     * re-seeded under `source = manual`, would otherwise double/triple-render
-     * on the map. Only non-manual rows count as a collision — re-running the
-     * seeder must still upsert its own previously-seeded manual rows.
+     * harvest already imported under a different source. Matches on (name,
+     * letter): the same real-world place, re-seeded under `source = manual`,
+     * would otherwise double/triple-render on the map. Only non-manual rows
+     * count as a collision - re-running this command must still update the
+     * rows it seeded before, not duplicate them.
      */
     private function duplicatesNonManualItem(string $name, string $letter): bool
     {
@@ -423,7 +399,7 @@ final class SeedManualCatalogCommand extends Command
         return false !== $id ? (int) $id : null;
     }
 
-    /** Only touches rows this command owns — never widens to the full item/recommended_route tables. */
+    /** Only touches rows this command owns - never widens to the full item/recommended_route tables. */
     private function recomputeMembership(): void
     {
         $this->db->executeStatement(
@@ -432,7 +408,7 @@ final class SeedManualCatalogCommand extends Command
     }
 
     /**
-     * Wikimedia Commons photo helper — PHP port of map.js's `wc()`. Mirrors
+     * Wikimedia Commons photo helper - PHP port of map.js's `wc()`. Mirrors
      * JS `encodeURIComponent`'s unreserved set (adds back ! ' ( ) * that
      * `rawurlencode` would otherwise percent-escape) so the URL matches
      * exactly what the client would have produced for the same filename.

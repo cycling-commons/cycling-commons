@@ -25,10 +25,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Imports catalog export artifacts (tools/wallonia/out) into the database:
  * regions first, then item layers; items upsert by (source, source_ref, letter)
- * — one entity may carry two classifications — routes by (source, source_ref);
+ * - one entity may carry two classifications - routes by (source, source_ref);
  * region membership recomputed every run. Updates never touch lifecycle state.
  *
- * @api Console entry point, invoked by the router of humans (make/CLI).
+ * @see docs/specs/catalog-data-model.md §8
+ *
+ * @api Console entry point, run via `make` or the CLI.
  */
 #[AsCommand(name: 'app:catalog:import', description: 'Import catalog export artifacts (regions, items) into the database')]
 final class ImportCatalogCommand extends Command
@@ -40,7 +42,7 @@ final class ImportCatalogCommand extends Command
         'G' => 'Point', 'H' => 'Point', 'I' => 'Point', 'J' => 'Point',
     ];
 
-    /** Property keys consumed into columns — never stored as attributes. */
+    /** Property keys consumed into columns - never stored as attributes. */
     private const array CONSUMED_KEYS = ['n', 'name', 'prov', 'source', 'ref'];
 
     public function __construct(
@@ -129,7 +131,7 @@ final class ImportCatalogCommand extends Command
             /** @var array{layer?: string, letter?: string, features?: list<array{properties: array<string, mixed>, geometry: array{type: string, coordinates: array<mixed>}}>} $payload */
             $payload = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
             if (!isset($payload['letter'], $payload['features'])) {
-                continue; // routes.json / heat.json are handled by their own importers (Task 6)
+                continue; // routes.json / heat.json are handled by their own importers
             }
             $letter = (string) $payload['letter'];
             $type = ItemType::fromParam($letter);
@@ -160,7 +162,7 @@ final class ImportCatalogCommand extends Command
 
                 $prov = (string) ($props['prov'] ?? '');
                 // Shared upsert; preserves curator-approved edits on re-harvest
-                // (#26 — see ItemUpsert).
+                // (see ItemUpsert).
                 $this->db->executeStatement(
                     ItemUpsert::SQL,
                     [
@@ -233,7 +235,7 @@ final class ImportCatalogCommand extends Command
             $values = [];
             $params = [];
             foreach ($chunk as $i => $point) {
-                // fixture order is [lat, lng, season] — ST_Point takes (x=lng, y=lat)
+                // fixture order is [lat, lng, season] - ST_Point takes (x=lng, y=lat)
                 $values[] = sprintf('(ST_SetSRID(ST_Point(:lng%1$d, :lat%1$d), 4326), 1.0, \'auto\', :season%1$d, NOW())', $i);
                 $params['lng'.$i] = $point[1];
                 $params['lat'.$i] = $point[0];
@@ -251,7 +253,7 @@ final class ImportCatalogCommand extends Command
 
     /**
      * Validates and extracts the (source, ref) pair a file-supplied record must
-     * carry: both keys present and non-empty, and `source` a real ItemSource —
+     * carry: both keys present and non-empty, and `source` a real ItemSource -
      * a drifted/hand-made export with a bad or missing source would otherwise
      * insert fine into the varchar column and only blow up later, poisoning
      * every ORM read that hydrates the enum.
