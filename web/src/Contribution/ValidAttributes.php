@@ -10,8 +10,8 @@ use Symfony\Component\Validator\Constraint;
 
 /**
  * Class-level constraint: SubmissionDraft.attributes keys must belong to the
- * letter's vocabulary (AttributeVocabulary — the same rule the importer
- * enforces, spec §6.1 "one vocabulary").
+ * letter's vocabulary (AttributeVocabulary), the same rule the importer
+ * enforces (catalog-data-model.md §7).
  *
  * @api Applied on SubmissionDraft.
  */

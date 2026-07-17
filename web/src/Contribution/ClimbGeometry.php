@@ -10,7 +10,7 @@ namespace App\Contribution;
  * typed PHP arrays. One place for the shape rules so the contribution service
  * stays thin and the rules are unit-tested. Coordinates are stored [lat, lng]
  * to match the existing `route`/`steep.at` attribute shape and map.js. The
- * validator only checks pairs of finite numbers — the editor is responsible
+ * validator only checks pairs of finite numbers - the editor is responsible
  * for emitting them in [lat, lng] order at the storage boundary.
  *
  * @api Used by CatalogContributionService.

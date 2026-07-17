@@ -11,7 +11,7 @@ use Doctrine\DBAL\Connection;
 /**
  * Point → containing region + country, the intake-side twin of the importer's
  * membership recompute (same ST_Contains predicate; country comes from
- * region.country_code, added for phase B).
+ * region.country_code).
  *
  * @api Used by CatalogContributionService at submit time.
  */

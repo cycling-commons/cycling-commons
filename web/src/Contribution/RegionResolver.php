@@ -10,12 +10,12 @@ use Doctrine\DBAL\Connection;
 
 /**
  * Assigns a proposed route to its operational region at intake (route-domain
- * spec §5.4) with the exact membership rule the importer applies wholesale
+ * spec §4.2) with the exact membership rule the importer applies wholesale
  * (ImportCatalogCommand::recomputeMembership): the region polygon that
- * contains the route's point-on-surface. NULL when no region matches —
+ * contains the route's point-on-surface. NULL when no region matches, so
  * a proposal outside every region is still reviewable.
  *
- * @api Region assignment at route intake (route-domain spec §5.4); consumed by
+ * @api Region assignment at route intake (route-domain spec §4.2); consumed by
  *      RouteProposalService, covered by RegionResolverTest.
  */
 final class RegionResolver

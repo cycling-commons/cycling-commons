@@ -7,21 +7,22 @@ declare(strict_types=1);
 namespace App\Contribution\Gpx;
 
 /**
- * Geometry post-processing for proposed routes (route-domain spec §5.4).
- * All light tabular math — deliberately PHP, not the Python pipeline (D5).
+ * Geometry post-processing for proposed routes (route-domain spec §4.2). All
+ * light tabular math, deliberately kept in PHP rather than the Python
+ * pipeline.
  *
  * Every method takes/returns [lat, lng, ele|null] triples.
  *
- * @api Public geometry post-processing API (route-domain spec §5.4); covered by TrackProcessorTest.
+ * @api Public geometry post-processing API (route-domain spec §4.2); covered by TrackProcessorTest.
  */
 final class TrackProcessor
 {
     private const float EARTH_RADIUS_M = 6_371_000.0;
-    private const int TRIM_MIN_M = 350;   // spec D4
+    private const int TRIM_MIN_M = 350;   // privacy trim, route-domain spec §4.3
     private const int TRIM_SPAN_M = 401;  // 350 + [0..400] → 350..750
     // Bound Douglas-Peucker inner-scan work: legitimate routes are O(n log n);
     // an adversarial saw-tooth is O(n^2). 200n gives smooth tracks ample
-    // head-room while a zigzag trips a clean reject (carry-in §12.1).
+    // head-room while a zigzag trips a clean reject (route-domain spec §4.1).
     private const int MAX_DP_WORK_FACTOR = 200;
 
     /** @param list<array{0: float, 1: float, 2: float|null}> $points */
@@ -36,7 +37,7 @@ final class TrackProcessor
     }
 
     /**
-     * Positive elevation gain; null when any point lacks <ele> (spec §5.4 —
+     * Positive elevation gain; null when any point lacks <ele> (spec §4.2 -
      * a partial profile would silently under-report, so refuse instead).
      *
      * @param list<array{0: float, 1: float, 2: float|null}> $points
@@ -62,9 +63,10 @@ final class TrackProcessor
     }
 
     /**
-     * Privacy trim (spec D4): cut ~350–750 m off each end, deterministic per
-     * content ($seedHex = sha256 of the raw upload). The cut interpolates new
-     * endpoints at the exact trim distance, so sparse tracks trim correctly.
+     * Privacy trim (route-domain spec §4.3): cut ~350–750 m off each end,
+     * deterministic per content ($seedHex = sha256 of the raw upload). The
+     * cut interpolates new endpoints at the exact trim distance, so sparse
+     * tracks trim correctly.
      *
      * @param list<array{0: float, 1: float, 2: float|null}> $points
      *
@@ -81,7 +83,7 @@ final class TrackProcessor
     }
 
     /**
-     * Douglas-Peucker with a metric tolerance (equirectangular projection —
+     * Douglas-Peucker with a metric tolerance (equirectangular projection,
      * fine at route scale). Elevation of kept points is preserved.
      *
      * @param list<array{0: float, 1: float, 2: float|null}> $points
@@ -94,7 +96,7 @@ final class TrackProcessor
             return $points;
         }
 
-        // Radial pre-decimation (spec §5.4): drop points within tolerance/2 of
+        // Radial pre-decimation (spec §4.2): drop points within tolerance/2 of
         // their kept predecessor. Dense loggers (1 Hz) produce huge clusters of
         // near-identical points that make Douglas-Peucker pathologically slow;
         // collapsing them first bounds the DP input. First/last always kept.
@@ -179,9 +181,9 @@ final class TrackProcessor
             $walked += $seg;
         }
 
-        // The whole track is shorter than the cut — degenerate; keep the last
-        // two points so downstream code always has a line. The ≥2 km raw
-        // length guard (service) makes this unreachable in practice.
+        // The whole track is shorter than the cut. This is a degenerate case;
+        // keep the last two points so downstream code always has a line. The
+        // >=2 km raw length guard (service) makes this unreachable in practice.
         return \array_slice($points, -2);
     }
 
@@ -210,7 +212,7 @@ final class TrackProcessor
             // Each iteration scans ~($hi - $lo) points below; an adversarial
             // saw-tooth keeps nearly every point, splitting into near-equal
             // halves at every level and re-scanning most of the range each
-            // time — O(n^2) total. Track that scan cost against the budget.
+            // time, for O(n^2) total. Track that scan cost against the budget.
             $work += $hi - $lo;
             if ($work > $budget) {
                 throw new \InvalidArgumentException('contribute.error.route_too_complex');

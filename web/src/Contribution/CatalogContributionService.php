@@ -25,31 +25,24 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * The real contribution intake (replaces the deleted honest-stub service,
- * keeps the interface). 'climb' → NewItem: item row (state=submitted, source=user,
- * source_ref sub:<id>) + submission, one transaction. 'improve' → Edit: bound
- * to a real Item (`_item_id`), snapshots only the fields whose proposed value
- * differs from the item's current attribute value ({field: {was, now}}) —
- * unchanged fields are never recorded. 'vote' passes through unpersisted —
- * voting is verification-gate machinery (spec non-goal), the receipt stays
- * honest about it.
+ * Turns contribute-form payloads into catalog submissions for moderator
+ * review. New climbs create an item plus a submission. Improvements
+ * snapshot only the fields that changed.
+ *
+ * @see docs/specs/moderation-and-contribution.md
  *
  * @api Autowired via ContributionStubInterface.
  */
 final class CatalogContributionService implements ContributionStubInterface
 {
     /**
-     * AddClimbType field → registry attribute key (letter B vocabulary, see
-     * CatalogFormRegistry::for(Climbs) + AttributeVocabulary::allowedKeys('B')).
-     * The registry's Climbs fields are name/surface/avgGradient/maxGradient/
-     * correction/waterOnClimb/hairpins/shade, plus the 'sq' and 'tr'
-     * harvest-vocabulary extras (surface quality / traffic, per the wallonia
-     * export shape in atlas/demo/climbs-data.js). AddClimbType's fLen/fGain/
-     * fOsm have no matching registry attribute (climb length/elevation gain
-     * are derived from geometry per the B-climbs spec, and "already in OSM?"
-     * is submission-only metadata) — they stay out of `attributes` but are
-     * still preserved verbatim in the submission's raw `payload` for
-     * moderator review.
+     * Maps AddClimbType field names to registry attribute keys (letter B
+     * vocabulary). Length, elevation gain and "already in OSM?" have no
+     * matching attribute: they are derived from geometry or are
+     * submission-only metadata. Both stay out of `attributes` but are kept
+     * verbatim in the submission's raw `payload` for moderator review.
+     *
+     * @see docs/specs/edit-items/B-climbs.md
      */
     private const array CLIMB_FIELDS = [
         'fAvg' => 'avgGradient',
@@ -78,6 +71,8 @@ final class CatalogContributionService implements ContributionStubInterface
         return match ($kind) {
             'climb' => $this->submitClimb($payload, $by),
             'improve' => $this->submitImprove($payload, $by),
+            // 'vote' (and any other kind) is intentionally not persisted here.
+            // Voting is verification-gate machinery, not catalog intake.
             default => new ContributionReceipt(
                 'CC-'.strtoupper(bin2hex(random_bytes(6))), $kind, false, new \DateTimeImmutable(),
             ),
@@ -87,9 +82,9 @@ final class CatalogContributionService implements ContributionStubInterface
     /** @param array<string, mixed> $payload */
     private function submitClimb(array $payload, User $by): ContributionReceipt
     {
-        // Reject rather than coerce: an absent/blank/non-numeric coordinate must
-        // not silently cast to 0.0 and land the climb on Null Island. The
-        // geocoder always fills these; a violation surfaces to the form.
+        // Reject rather than coerce: an absent, blank, or non-numeric
+        // coordinate must not silently become 0.0. The geocoder always fills
+        // these fields; a violation here surfaces as a normal form error.
         if (!is_numeric($payload['lat'] ?? null) || !is_numeric($payload['lng'] ?? null)) {
             $this->reject('contribute.error.invalid_location', 'lat');
         }
@@ -139,16 +134,14 @@ final class CatalogContributionService implements ContributionStubInterface
         /** @var array<string, mixed> $extras */
         $extras = (array) ($payload['extras'] ?? []);
         // Keep empty values here (do not array_filter): an emptied prefilled
-        // field must survive as a removal — the change loop below normalises
-        // '' / null / [] to null and records was → null.
+        // field must survive as a removal. The change loop below normalises
+        // '', null and [] to null and records the change as was -> null.
         $proposed = $details + $extras;
 
-        // Climb shape (route/grad/steep) is carried as TOP-LEVEL hidden fields
-        // by ImproveType (not nested under details/extras — see ClimbGeometry),
-        // written by the shared three-point editor (Task 5). Decode + merge it
-        // into $proposed so a shape edit shows in $changes (was/now, array
-        // `!==` comparison below) and is applied to $attributes on approve,
-        // the same as the add-climb path (submitClimb).
+        // Climb shape (route/grad/steep) is a top-level hidden field on
+        // ImproveType, not nested under details/extras (see ClimbGeometry).
+        // Merge it into $proposed so a shape edit is recorded in $changes and
+        // applied to $attributes on approve, the same as submitClimb.
         try {
             foreach (ClimbGeometry::fromPayload($payload) as $k => $v) {
                 $proposed[$k] = $v;
@@ -161,14 +154,13 @@ final class CatalogContributionService implements ContributionStubInterface
         $changes = [];
         $attributes = [];
         foreach ($proposed as $field => $rawNow) {
-            // Normalise empties ('' / null / []) to null so clearing a
-            // prefilled field is recorded as a removal (was → null) rather
-            // than silently discarded, while an always-empty field records no
-            // phantom change.
+            // Normalise empty values ('', null, []) to null so clearing a
+            // prefilled field is recorded as a removal, while a field that
+            // was already empty records no phantom change.
             $now = self::normalizeEmpty($rawNow);
             // The name pseudo-field lives on Item::name, never in attributes
-            // (see Item::NAME_FIELD) — comparing it against $currentAttrs would
-            // always see null and wrongly record an unchanged name as a "change".
+            // (see Item::NAME_FIELD). Comparing it against $currentAttrs would
+            // always see null and wrongly record an unchanged name as a change.
             $was = Item::NAME_FIELD === $field ? $item->getName() : ($currentAttrs[$field] ?? null);
             if (self::normalizeEmpty($was) !== $now) {
                 $changes[$field] = ['was' => $was, 'now' => $now];
@@ -178,9 +170,9 @@ final class CatalogContributionService implements ContributionStubInterface
             }
         }
 
-        // Items may be Points, LineStrings (road surfaces) or Polygons — never
-        // assume a flat [lng,lat] pair. Derive a representative point (first
-        // vertex) so a segment edit is not stranded at Point(1 1).
+        // Items may be Points, LineStrings (road surfaces) or Polygons. Never
+        // assume a flat [lng,lat] pair. Derive a representative point (the
+        // first vertex) so a segment edit is not stranded at Point(1 1).
         [$lng, $lat] = self::representativePoint((string) $item->getGeom());
 
         $draft = new SubmissionDraft(
@@ -193,7 +185,7 @@ final class CatalogContributionService implements ContributionStubInterface
         );
 
         // Pass the computed was/now map into submitDraft so it is set inside
-        // the same transaction — no second flush outside wrapInTransaction.
+        // the same transaction, with no second flush outside wrapInTransaction.
         $submission = $this->submitDraft($draft, SubmissionType::Edit, $by, $payload, $changes);
 
         return new ContributionReceipt(
@@ -284,7 +276,7 @@ final class CatalogContributionService implements ContributionStubInterface
 
     /**
      * First coordinate of any GeoJSON geometry, as [lng, lat]. Points,
-     * LineStrings and Polygons alike — descend to the first numeric pair.
+     * LineStrings and Polygons alike descend to the first numeric pair.
      *
      * @return array{0: float, 1: float}
      */

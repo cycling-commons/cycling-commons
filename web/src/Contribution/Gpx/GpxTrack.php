@@ -7,8 +7,8 @@ declare(strict_types=1);
 namespace App\Contribution\Gpx;
 
 /**
- * A parsed GPX track. Points are [lat, lng, ele|null] triples — NOTE the
- * [lat, lng] order (GeoJSON storage flips to [lng, lat] at persist time).
+ * A parsed GPX track. Points are [lat, lng, ele|null] triples. Note the
+ * [lat, lng] order: GeoJSON storage flips to [lng, lat] at persist time.
  *
  * @api Immutable result of GpxParser::parse(); its $points feed TrackProcessor.
  */

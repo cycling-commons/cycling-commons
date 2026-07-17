@@ -20,21 +20,21 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
- * Route proposal intake (route-domain spec §5). Deliberately NOT part of the
- * item Submission pipeline (spec D1): a proposal is a RecommendedRoute row in
- * state `submitted`, reviewed later in the Routes moderation queue (phase 2).
+ * Route proposal intake (route-domain spec §4). Deliberately not part of the
+ * item Submission pipeline: a proposal is a RecommendedRoute row in state
+ * `submitted`, reviewed later in the Routes moderation queue.
  *
- * Processing order (spec §5.4): parse → raw-length guard → privacy trim
- * (content-hash seeded, ONLY the trimmed track is ever persisted, D4) →
+ * Processing order (spec §4.2): parse → raw-length guard → privacy trim
+ * (content-hash seeded, only the trimmed track is ever persisted) →
  * distance/ascent on the trimmed track → simplify for serving → region.
  *
- * @api Route-proposal intake entry point (route-domain spec §5); consumed by
+ * @api Route-proposal intake entry point (route-domain spec §4); consumed by
  *      ProposeRouteController, covered by RouteProposalServiceTest.
  */
 final class RouteProposalService
 {
-    private const int MIN_RAW_M = 2_000;    // spec §5.3
-    private const int MAX_RAW_M = 400_000;  // spec §5.3
+    private const int MIN_RAW_M = 2_000;    // spec §4.1
+    private const int MAX_RAW_M = 400_000;  // spec §4.1
 
     /** Attribute keys copied from the metadata form when non-empty. */
     private const array META_KEYS = ['difficulty', 'season', 'dominantSurface', 'note', 'bikeTypes', 'gradientLimited'];
@@ -95,8 +95,8 @@ final class RouteProposalService
                 $attributes[$key] = $value;
             }
         }
-        // Canonicalize difficulty to {score,label} (route-domain spec §12 P2-D1)
-        // so the form's rider-facing string is never persisted verbatim.
+        // Canonicalize difficulty to {score,label} (route-domain spec §9) so
+        // the form's rider-facing string is never persisted verbatim.
         $canonicalDifficulty = DifficultyVocabulary::canonical($meta['difficulty'] ?? null);
         if (null !== $canonicalDifficulty) {
             $attributes['difficulty'] = $canonicalDifficulty;
@@ -105,7 +105,7 @@ final class RouteProposalService
         }
         // Canonicalize bikeTypes to a list<string> over BikeType::values(),
         // folding the legacy separate 'handbike' field in (route-domain spec
-        // §12 P2-D2) — never persist the pre-canonical shapes.
+        // §9). Never persist the pre-canonical shapes.
         $bikeTypes = BikeTypeVocabulary::normalize($meta['bikeTypes'] ?? null, $meta['handbike'] ?? null);
         if ([] !== $bikeTypes) {
             $attributes['bikeTypes'] = $bikeTypes;
@@ -130,7 +130,7 @@ final class RouteProposalService
             ->setState(ItemState::Submitted)
             ->setSource(ItemSource::User)
             // Unique per proposal so harvest upserts keyed on (source,
-            // source_ref) can never clobber rider proposals (spec §4.1).
+            // source_ref) can never clobber rider proposals (spec §2.1).
             ->setSourceRef('user:'.bin2hex(random_bytes(12)))
             ->setAttributes($attributes)
             ->setProposedBy($user->getId())
