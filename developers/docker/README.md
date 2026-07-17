@@ -147,6 +147,39 @@ The **DEM** directory (`DEM_DIR`, default `./data/dem`) is mounted into the pipe
 `/data/dem` even without a profile; drop your downloaded DEM there and check
 http://localhost:8012/dem.
 
+## Coverage tiles (weekly OSM extract)
+
+The map's uncurated-OSM layer is served from artefacts built by the pipeline
+container (`docs/specs/coverage-provider.md`): the
+`coverage_poi` PostGIS table + a `coverage.pmtiles` file on S3 storage. In dev
+the S3 side is the bundled MinIO (profile `storage`, bucket `cc-maps`).
+
+```sh
+docker compose --profile storage up -d   # MinIO must be running
+make coverage-refresh                    # from the repo root
+```
+
+`make coverage-refresh` runs the whole chain inside the pipeline container:
+download (or reuse) the Geofabrik extract for `COVERAGE_REGIONS` (default
+`europe/belgium`) → filter (`osmium tags-filter`) → parse (pyosmium) → load
+`coverage_poi` (atomic per-region swap, drift abort) → build tiles
+(tippecanoe) → verify (go-pmtiles) → upload the versioned artifact + the
+stable `coverage/manifest.json` to MinIO.
+
+- **Offline / fast run:** set `COVERAGE_PBF_PATH` to a PBF path *inside the
+  pipeline container* to skip the Geofabrik download — the committed pytest
+  fixture works: `make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf`
+  (that is `pipeline/tests/fixtures/mini.osm.pbf` on the host).
+- The pipeline image bundles the batch tooling (`osmium-tool`, `tippecanoe`,
+  `pyosmium`, go-pmtiles, an S3 client) and a writable scratch volume at
+  `/data/work` (`COVERAGE_WORKDIR`).
+- The Symfony side reads `COVERAGE_TILES` (**default 1 in dev**) and
+  `COVERAGE_MANIFEST_URL`; with tiles off the map degrades to curated data
+  only. The tile host must stay in the CSP `connect-src` list (see
+  `docs/specs/coverage-provider.md` §4).
+- Every `COVERAGE_*` knob has a placeholder in
+  `developers/docker/.env.example`.
+
 ## Common commands
 
 ```sh

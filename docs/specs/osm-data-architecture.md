@@ -95,6 +95,21 @@ public Overpass API on a user request.**
    ([coverage-provider.md](coverage-provider.md) §10); per-region extracts
    stay small, so ingestion and serving remain cheap.
 
+**Concrete implementation (shipped 2026-07-16).** The `pipeline` container runs
+a weekly per-region batch (`pipeline/coverage/`, regions from
+`COVERAGE_REGIONS`, v1 `europe/belgium`): Geofabrik PBF → `osmium tags-filter`
+→ pyosmium → the **`coverage_poi`** PostGIS table (atomic per-region swap),
+then tippecanoe builds **`coverage.pmtiles`** from the full index, go-pmtiles
+verifies it, and the artifact + manifest upload to the Cycling Commons' **own
+Hetzner Object Storage bucket** (`cc-maps`) — deliberately separate from any
+shared basemap bucket so coverage cost stays observable
+(coverage-provider.md §1). Symfony serves search / nearby /
+counts / drawer detail from `coverage_poi` (`/map/coverage/*`); the map reads
+the PMTiles by byte range. Selectors, letters, and the D `serviceKind` mapping
+live in the shared contract file `pipeline/contract/coverage-contract.json`,
+held in sync with `App\Catalog\ServiceKind` by cross-language tests. Full
+design: [coverage-provider.md](coverage-provider.md).
+
 ### The complete OSM item catalogue
 
 This is the authoritative, exhaustive list of OSM data we cache. Extending it is
@@ -221,19 +236,27 @@ cache or from OSM.
 
 ## 9. Relationship to the current implementation
 
-The initial Wallonia dataset harvests uncurated OSM into the `item` table and
-inlines it for the map. That single-region harvest is **superseded** by this
-architecture: going forward, uncurated OSM is cached coverage (§5), not canonical
-rows, and enters the canonical store only via materialize-on-edit (§6). The
-harvest may remain as the first concrete implementation of the coverage provider
-until the pre-extract pipeline and tiles exist, behind the same interface, so the
-swap does not touch the map or contribution UX.
+The initial Wallonia dataset harvested uncurated OSM into the `item` table and
+inlined it for the map. That single-region harvest is **superseded** by this
+architecture: uncurated OSM is cached coverage (§5), not canonical rows, and
+enters the canonical store only via materialize-on-edit (§6). The interim
+clause that let the harvest stand in for the coverage provider is **retired
+(2026-07-16)** — the pre-extract pipeline, the `coverage_poi` index, and the
+PMTiles artifact are live and are the only serving path for uncurated OSM.
+Harvested `item` rows no human ever touched are removed by
+`app:coverage:retire-legacy` (dry-run report first; the destructive run is
+owner-gated); anything with an edit, confirmation, or submission stays
+canonical. `tools/wallonia` remains for the retired atlas demo and the
+canonical seeds (climbs, routes, surface, PIVOT stays) — the coverage path
+never touches Overpass again.
 
 ## 10. Before go-live
 
 - Build the administrative **regions** (spatial buckets) worldwide.
-- Stand up the **coverage provider**: the scheduled OSM subset extract → PostGIS
-  POI index + vector tiles in the `pipeline` service.
+- ~~Stand up the **coverage provider**~~ — done 2026-07-16: weekly per-region
+  extract in the `pipeline` service → `coverage_poi` (PostGIS) +
+  `coverage.pmtiles` on the CC bucket
+  ([coverage-provider.md](coverage-provider.md)).
 - Implement **materialize-on-edit** against the cached coverage.
 - ~~Split **D · Bike services** into `shop / station / pump` kinds.~~ Done —
   kind-selectable manual add remains deferred until an add-new flow exists (§5).
