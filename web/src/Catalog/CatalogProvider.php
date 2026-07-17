@@ -148,7 +148,15 @@ final class CatalogProvider
             // W6: 'source' above is the free-text citation (attribution); 'srcType'
             // is the raw ItemSource enum value, kept separate so map.js can tell a
             // rider-added/edited climb apart from an OSM/Wikidata one.
-            $climbs[] = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
+            $climb = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
+            // Real community-tier signal, same derivation as featureCollection()
+            // (map-and-search.md §12): absent key = community, unverified
+            // payloads stay byte-stable. The demo 'cur' attribute keeps its
+            // best-of/badge meaning; the tier keys on this real signal.
+            if ($row['verified']) {
+                $climb['v'] = 1;
+            }
+            $climbs[] = $climb;
         }
 
         return $climbs;
@@ -165,6 +173,11 @@ final class CatalogProvider
         foreach ($this->itemRows('A') as $row) {
             // W6: srcType is the raw ItemSource enum value (see featureCollection()).
             $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $this->decode($row['attributes']);
+            // Real community-tier signal, same derivation as featureCollection()
+            // (map-and-search.md §12); absent key = community, byte-stable.
+            if ($row['verified']) {
+                $seg['v'] = 1;
+            }
             if (str_starts_with($row['source_ref'], 'way/')) {
                 $seg['wayId'] = (int) substr($row['source_ref'], 4);
             }

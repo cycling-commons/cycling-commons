@@ -328,8 +328,9 @@
     if(p.town && layer.letter!=='E') rec.push({label:D.town||'Town', value:p.town});  // stays' 'town' comes from the schema (labelled "Town / commune")
     rec.push({label:D.province||'Province', value:p.prov||D.wallonia||'Wallonia'});
     if(pivot) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official Tourisme Wallonie registry', method:'official'});
-    if(p.sim){ rec.push({label:D.status||'Status', value:(p.v?trVal(p.v):(D.confirmed||'Confirmed'))+' · '+(D.simulated||'simulated'), method:'demo'});
-      if(p.r) rec.push({label:D.rating||'Rating', value:'★ '+p.r+' · '+(D.simulated||'simulated'), method:'demo'}); }
+    // The simulated demo Status/Rating rows are gone — simulated flags die
+    // (map-and-search.md §12); their payload keys stay for byte-stability but
+    // nothing reads them.
     if(p.web) rec.push({label:D.website||'Website', value:p.web.replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:D.visitSite||'Visit site',href:p.web}]});
     // Registry-driven attribute rows (single source of truth = CatalogFormRegistry,
     // served as CC_FIELD_SCHEMA). Filled rows replace any structural row of the
@@ -360,11 +361,13 @@
     // (CatalogFormRegistry::for(WaterFood)) — when a rider has set them, they
     // take priority over the generic OSM-derived guess below (same
     // dedup-by-label rule as the other POI drawers/climbs).
+    // The simulated middle branch (demo potable flag) is gone — simulated
+    // flags die (map-and-search.md §12). v:1 is existence/verification, not a
+    // potability statement: without a rider-set potable field the honest row
+    // is the OSM-unverified fallback.
     const potable = p.potable
       ? {label:D.potable||'Potable', value:trVal(p.potable)}
-      : p.v
-        ? {label:D.potable||'Potable', value:trVal(p.v)+' · '+(D.potableSim||'simulated demo flag (not utility-verified)'), method:'demo'}
-        : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
+      : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
     // C1-T4 (W6): see osmDrawer — a rider-added/edited water point isn't OSM.
     const community = p.srcType==='user' || p.srcType==='manual';
     const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
@@ -879,9 +882,11 @@
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
       push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
         color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
-        // 07-15 decision A: real signal only — routes carry canonical state,
-        // everything else keys on the curated flag. Never the demo 'c'.
-        verified: f.state ? f.state==='verified' : !!f.cur,
+        // 07-15 decision A: real signal only — routes carry canonical state;
+        // everything else keys on the real v (verified state / rider
+        // confirmation, emitted by CatalogProvider for climbs and surface
+        // segments too) OR the curated best-of flag. Never the demo 'c'.
+        verified: f.state ? f.state==='verified' : !!(f.v || f.cur),
         hlOff: layer.kind==='point' ? [0,-16] : [0,0],
         pend:f.pending?String(f.pending.id):undefined,
         go:()=>openFeatureByName(f.name)});

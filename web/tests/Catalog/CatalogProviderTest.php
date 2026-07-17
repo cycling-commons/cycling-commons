@@ -277,4 +277,27 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame(1, $byId[$ids[1]]['v']);
         self::assertArrayNotHasKey('v', $byId[$ids[2]]);
     }
+
+    public function testClimbAndSurfaceCarryRealVerifiedFlag(): void
+    {
+        // Climbs (B) and surface segments (A) serve through their own shapes,
+        // not featureCollection() — they must still carry the SAME real
+        // verified signal (map-and-search.md §12: v:1 = verified state OR ≥1
+        // confirmation), or the map's index mislabels every DB-verified climb
+        // as community. Imported seeds are unverified: no 'v' key (byte-stable).
+        self::assertArrayNotHasKey('v', $this->payload()['B'][0]);
+        self::assertArrayNotHasKey('v', $this->payload()['A'][0]);
+
+        $conn = $this->em->getConnection();
+        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE letter = 'B'");
+        // A takes the confirmation branch so both derivation legs are pinned.
+        $segId = $this->payload()['A'][0]['id'];
+        $conn->executeStatement(
+            'INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (:item, 1, :stance, NOW(), NOW())',
+            ['item' => $segId, 'stance' => 'exists'],
+        );
+
+        self::assertSame(1, $this->payload()['B'][0]['v']);
+        self::assertSame(1, $this->payload()['A'][0]['v']);
+    }
 }
