@@ -1,0 +1,23 @@
+developers/docker/README.md
+  s_f6d45d977e7468::t_841726095ddf3f 150-182
+docs/specs/osm-data-architecture.md
+  s_f6d45d977e7468::t_9014c1a19ae01b 256-259
+  s_f6d45d977e7468::t_15d4c031abf4b7 98-112
+  s_f6d45d977e7468::t_0d3dd51a1ade83 239-251
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "26862f2df025cd10c4fbbfddd60c14deb807da85",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
