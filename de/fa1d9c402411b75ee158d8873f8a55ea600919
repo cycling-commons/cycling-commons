@@ -1,0 +1,129 @@
+web/src/Catalog/RouteRankingService.php
+  s_ed348b2f9c4e8c::t_c1ceb4842d4666 14-16
+  s_ed348b2f9c4e8c::t_38d92f5468881c 12,30
+  s_ed348b2f9c4e8c::t_21cdc6ee6e5155 29
+web/src/Catalog/CatalogField.php
+  s_ed348b2f9c4e8c::t_5aab5f6e187bc6 45
+  s_ed348b2f9c4e8c::t_1e68e83b785a7e 59-60
+  s_ed348b2f9c4e8c::t_48a6a2f80ebc34 11
+web/src/Catalog/DifficultyVocabulary.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 10
+web/src/Catalog/ServiceKind.php
+  s_ed348b2f9c4e8c::t_dacf2abe779dbf 20
+  s_ed348b2f9c4e8c::t_38d92f5468881c 9
+web/src/Catalog/ItemSource.php
+  s_ed348b2f9c4e8c::t_a8a3e749a27c8d 12
+web/src/Contribution/Gpx/GpxParser.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 10,21
+web/src/Catalog/RouteSuggestionReason.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 9
+  s_ed348b2f9c4e8c::t_66825e9478673f 21
+web/src/Catalog/RideCheckService.php
+  s_ed348b2f9c4e8c::t_f5152bcedf920e 14-16,23,28-29
+  s_ed348b2f9c4e8c::t_017e089b76c885 45-47
+  s_ed348b2f9c4e8c::t_3a3bdfff065673 140
+  s_ed348b2f9c4e8c::t_58dd652862b96c 109,111
+  s_ed348b2f9c4e8c::t_38d92f5468881c 27
+web/src/Catalog/ChangeHistoryView.php
+  s_ed348b2f9c4e8c::t_3d6ee6ff0e5114 15-19
+web/src/Catalog/ItemType.php
+  s_ed348b2f9c4e8c::t_74dcc5892c1b3b 43-44
+  s_ed348b2f9c4e8c::t_8ff584bcc990b9 12-13,19-20,23
+  s_ed348b2f9c4e8c::t_1d623738a9d640 66
+  s_ed348b2f9c4e8c::t_22b6cac9fcdb83 196
+  s_ed348b2f9c4e8c::t_bf99435a11281d 109-110
+web/src/Catalog/CatalogFormRegistry.php
+  s_ed348b2f9c4e8c::t_121871a1496df9 32-33
+  s_ed348b2f9c4e8c::t_475315966863b4 100-104
+  s_ed348b2f9c4e8c::t_9b83b1e9e1276e 211-214,216
+  s_ed348b2f9c4e8c::t_797d11cf36fb26 12-16,18-21
+  s_ed348b2f9c4e8c::t_38d92f5468881c 99
+  s_ed348b2f9c4e8c::t_1f2b513902e271 120-123
+  s_ed348b2f9c4e8c::t_0faee5c56307da 59-62
+  s_ed348b2f9c4e8c::t_a576dbc7ae12d8 218
+  s_ed348b2f9c4e8c::t_fa36317ec2c484 226-227
+web/src/Contribution/Gpx/GpxWriter.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 10,14
+web/src/Catalog/CatalogSchemaProvider.php
+  s_ed348b2f9c4e8c::t_ad4e79412a60fb 13
+  s_ed348b2f9c4e8c::t_8ec7dbfbc8b3cd 44
+web/src/Contribution/Gpx/TrackProcessor.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 10,16,21,25,66
+web/src/Catalog/SubmissionType.php
+  s_ed348b2f9c4e8c::t_72545cf8acb024 10-11
+web/src/Catalog/SurfaceProfiler.php
+  s_ed348b2f9c4e8c::t_c0662f04a21ab6 84
+  s_ed348b2f9c4e8c::t_6124ba9261a8c1 165
+  s_ed348b2f9c4e8c::t_cbb55c40ce48d3 185,189
+  s_ed348b2f9c4e8c::t_d8bf2e6dc1100d 196
+  s_ed348b2f9c4e8c::t_2aafa3dc1f0a4b 13,20-22
+web/src/Contribution/RouteProposalService.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 23,31,98
+web/src/Catalog/LocationMode.php
+  s_ed348b2f9c4e8c::t_d5be22dabfc107 12,20
+web/src/Catalog/Season.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 10
+  s_ed348b2f9c4e8c::t_e471e52651588c 11-13
+web/src/Community/RouteCommunityService.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 147
+web/src/Catalog/SurfaceVocabulary.php
+  s_ed348b2f9c4e8c::t_5cf5722d5485eb 23-28
+  s_ed348b2f9c4e8c::t_38d92f5468881c 12
+  s_ed348b2f9c4e8c::t_37c9a9c14b0c97 19-22,36,38-40
+web/src/Catalog/RidingStyle.php
+  s_ed348b2f9c4e8c::t_483c114fa26224 10-11
+web/src/Catalog/BikeTypeVocabulary.php
+  s_ed348b2f9c4e8c::t_6d15cb6cceef83 10-14
+web/src/Catalog/CoverageRetirement.php
+  s_ed348b2f9c4e8c::t_36ece46aaf8ff4 11-12,15,18,20,22,27,33
+web/src/Contribution/RegionResolver.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 18
+web/src/Catalog/CatalogProvider.php
+  s_ed348b2f9c4e8c::t_b5a017b9a3df2c 38,40
+  s_ed348b2f9c4e8c::t_7a577f11bf47f3 110-120
+  s_ed348b2f9c4e8c::t_6009030f6ccc75 323-325
+  s_ed348b2f9c4e8c::t_eebf1913a9aeba 68-69
+  s_ed348b2f9c4e8c::t_62f6cc3b87b540 265
+  s_ed348b2f9c4e8c::t_b409cd5f8d2364 277-279
+  s_ed348b2f9c4e8c::t_41028c4c3d64bf 163-164
+  s_ed348b2f9c4e8c::t_9ce4db5b7fde43 188
+  s_ed348b2f9c4e8c::t_8e874dff4f4292 53-54
+  s_ed348b2f9c4e8c::t_875029dad344a8 221
+  s_ed348b2f9c4e8c::t_c1886ebcf9647c 151,158
+  s_ed348b2f9c4e8c::t_9224b2b22f23a5 90-100
+  s_ed348b2f9c4e8c::t_38286663b5cc11 292
+  s_ed348b2f9c4e8c::t_38d92f5468881c 300
+  s_ed348b2f9c4e8c::t_82ba611c8fc009 302
+  s_ed348b2f9c4e8c::t_97e198e76f1acc 256,258-259
+  s_ed348b2f9c4e8c::t_162e0240c4dcd5 13-16
+  s_ed348b2f9c4e8c::t_ef8be3290e0dd8 136
+  s_ed348b2f9c4e8c::t_2336ef1e0540f8 195
+web/src/Catalog/RiderPseudonym.php
+  s_ed348b2f9c4e8c::t_d6b66e3b980f26 12
+web/src/Catalog/BikeType.php
+  s_ed348b2f9c4e8c::t_b87a65571944bb 11-15
+  s_ed348b2f9c4e8c::t_0bea4c3028baf5 40-41
+  s_ed348b2f9c4e8c::t_38d92f5468881c 38
+web/src/Catalog/ItemState.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 21
+web/src/Catalog/RouteSuggestionStatus.php
+  s_ed348b2f9c4e8c::t_38d92f5468881c 9
+web/src/Catalog/FieldKind.php
+  s_ed348b2f9c4e8c::t_79b505a1e856f9 10,20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "defa1d9c402411b75ee158d8873f8a55ea600919",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
