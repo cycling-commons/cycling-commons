@@ -26,7 +26,7 @@ final readonly class SubmissionDraft
      *                                         keys (e.g. climb `route`/
      *                                         `grad`/`steep`, `photos`,
      *                                         `record`) are structured
-     *                                         arrays — see AttributeVocabulary.
+     *                                         arrays. See AttributeVocabulary.
      */
     public function __construct(
         public ItemType $type,

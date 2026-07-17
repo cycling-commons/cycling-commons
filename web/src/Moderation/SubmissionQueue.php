@@ -96,7 +96,6 @@ final class SubmissionQueue
      *                                     (see filtered()/pendingForMap());
      *                                     every user-supplied value is bound
      *                                     via $params, never interpolated
-     *                                     (review #21)
      * @param array<string, mixed> $params bound query parameters
      *
      * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}>
