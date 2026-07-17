@@ -346,6 +346,29 @@ cascade. The single documented exception is `user_message` (§7.6).
 
 ## 7. Messages — the moderation feedback system (M1–M12)
 
+### 7.0 What the M-codes mean
+
+`M1`–`M12` are the twelve decisions that define this system. Code comments
+and the section headings below cite them by number, so this table is what
+those citations resolve to. Not all of them live in §7: Trash and retention
+have their own sections, and three were deliberately not built.
+
+| Code | Decision | Where |
+|---|---|---|
+| M1 | One `UserMessage` entity carries all moderation feedback. It is the recipient's inbox copy, **not** the institutional audit trail — that stays on `Submission.decisionNote`/`decidedBy`/`decidedAt` and `route_change_history`, which survive account deletion. | §7.1 |
+| M2 | Every decision on every channel writes a message inside the decision's own transaction, so the pair is atomic and duplicate-proof. | §7.2 |
+| M3 | Riders read their messages on a Messages page, reachable from the account shell's tab row. Shipped as its own route (`/messages`, mark-all-read on view), not as a `?tab=` panel inside `/profile` as originally designed. | §7.3, [account-and-auth.md](account-and-auth.md) §8 |
+| M4 | Unread bulb on the shared account chip, server-rendered once per page load. No polling. | §7.5 |
+| M5 | The map page carries the account chip too, so the bulb reaches the biggest logged-in surface. | §7.5 |
+| M6 | Curator → rider messaging, and the rider's reply to a needs-info request, which flips the submission back to `pending`. Both directions stay pseudonymous. | §7.3, §7.4 |
+| M6a | The curator → rider direction specifically (`curator_message`). | §7.4 |
+| M7 | Email as a later delivery channel on top of messages. **Specified, pending implementation.** | §7.8 |
+| M8 | Retention: dismissed/rejected contributions are kept `moderation.retention_months` (3), then collected. Phase 1 is lazy filtering plus an opportunistic sweep; the scheduled runner is phase 2. | §8, §7.8 |
+| M9 | Trash: immediate permanent hard delete for spam or abuse. No retention, no message sent, and a content-free audit row written before the delete. | §6 |
+| M10 | `user_message.user_id` carries a real `ON DELETE CASCADE` FK — the schema's only user FK, and a documented exception to "contributed data is anonymised, never cascade-deleted". Messages are correspondence *to* a person, not contributed content. | §7.6, §5.6 |
+| M11 | Message and note bodies have an explicit length cap (`MessageService::BODY_TEXT_MAX_LENGTH`, 2000) and are HTML-escaped on every render. | §7.2, §7.4 |
+| M12 | Account lock/ban is **not** part of this system. Trash handles the content; the account is the admin desk's job. | §7.8 |
+
 ### 7.1 `UserMessage` (entity `App\Messaging\Entity\UserMessage`) — M1
 
 Columns: `user_id` (recipient), `kind` (enum `UserMessageKind`), `sender`
