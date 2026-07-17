@@ -55,6 +55,14 @@ final class CatalogProviderTest extends KernelTestCase
         $tester = new CommandTester($app->find('app:catalog:import'));
         $tester->execute(['dir' => $dir]);
         $tester->assertCommandIsSuccessful();
+
+        // Coverage retirement (coverage-provider.md §9):
+        // untouched osm/unverified POIs no longer serve from catalog.json.
+        // These fixtures assert payload SHAPE, so promote them to verified
+        // (still a served state) instead of re-plumbing every assertion.
+        $this->em->getConnection()->executeStatement(
+            "UPDATE item SET state = 'verified' WHERE letter IN ('C','D','E','G','H','I','J')",
+        );
     }
 
     private function payload(): array
@@ -114,6 +122,40 @@ final class CatalogProviderTest extends KernelTestCase
         // W6: each bucket's srcType matches the split it was fetched by.
         self::assertSame('osm', $e['osm']['features'][0]['properties']['srcType']);
         self::assertSame('pivot', $e['pivot']['features'][0]['properties']['srcType']);
+    }
+
+    /**
+     * Coverage retirement (coverage-provider.md §9): the
+     * retirement predicate no longer sits behind COVERAGE_TILES — an untouched
+     * source=osm state=unverified POI never serves from catalog.json (it lives
+     * in coverage_poi now); the same row serves again as soon as any human
+     * signal exists (here: an item_confirmation).
+     */
+    public function testUntouchedOsmUnverifiedRowsAreExcludedUnconditionally(): void
+    {
+        $conn = $this->em->getConnection();
+        // Revert one fixture POI to the untouched-coverage shape.
+        $conn->executeStatement(
+            "UPDATE item SET state = 'unverified', source = 'osm' WHERE source_ref = 'node/1003'",
+        );
+        $types = array_map(
+            static fn (array $f): string => $f['properties']['t'],
+            $this->payload()['D']['features'],
+        );
+        self::assertNotContains('Pump', $types, 'untouched osm/unverified must be coverage-only');
+
+        // A community confirmation is a human touch — the row stays canonical.
+        $id = (int) $conn->fetchOne("SELECT id FROM item WHERE source_ref = 'node/1003'");
+        $conn->executeStatement(
+            "INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at)
+             VALUES (:item, 999999, 'exists', NOW(), NOW())",
+            ['item' => $id],
+        );
+        $types = array_map(
+            static fn (array $f): string => $f['properties']['t'],
+            $this->payload()['D']['features'],
+        );
+        self::assertContains('Pump', $types, 'a confirmed row stays canonical and served');
     }
 
     public function testClimbShapeRestoresCitationAndLatLng(): void
@@ -251,31 +293,32 @@ final class CatalogProviderTest extends KernelTestCase
 
     public function testServedPoiCarriesRealVerifiedFlag(): void
     {
-        // Imported fixture D items are all unverified with zero confirmations —
-        // no 'v' key at all (absence = community tier in the map's index).
+        // import() promotes the shape fixtures to verified (coverage
+        // retirement, Task 14) — every served D feature carries the real flag.
         foreach ($this->payload()['D']['features'] as $f) {
-            self::assertArrayNotHasKey('v', $f['properties']);
+            self::assertSame(1, $f['properties']['v']);
         }
 
-        // Verify one item + confirm another: both must serve v:1. The flag
-        // derives from REAL canonical state/confirmations, never the simulated
-        // demo 'c' attribute (map-and-search.md §12).
+        // Demote one to unverified + confirm it: still served (human touch)
+        // and still v:1 (the confirmation is the real signal). Demote another
+        // without any touch: it leaves the payload entirely (coverage-only).
         $ids = array_map(static fn (array $f): int => $f['properties']['id'], $this->payload()['D']['features']);
         sort($ids);
         $conn = $this->em->getConnection();
-        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE id = :id", ['id' => $ids[0]]);
+        $conn->executeStatement("UPDATE item SET state = 'unverified' WHERE id = :id", ['id' => $ids[0]]);
         $conn->executeStatement(
             'INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (:item, 1, :stance, NOW(), NOW())',
-            ['item' => $ids[1], 'stance' => 'exists'],
+            ['item' => $ids[0], 'stance' => 'exists'],
         );
+        $conn->executeStatement("UPDATE item SET state = 'unverified' WHERE id = :id", ['id' => $ids[1]]);
 
         $byId = [];
         foreach ($this->payload()['D']['features'] as $f) {
             $byId[$f['properties']['id']] = $f['properties'];
         }
-        self::assertSame(1, $byId[$ids[0]]['v']);
-        self::assertSame(1, $byId[$ids[1]]['v']);
-        self::assertArrayNotHasKey('v', $byId[$ids[2]]);
+        self::assertSame(1, $byId[$ids[0]]['v']);          // confirmed → served + real flag
+        self::assertArrayNotHasKey($ids[1], $byId);        // untouched unverified → coverage-only
+        self::assertSame(1, $byId[$ids[2]]['v']);          // still verified
     }
 
     public function testClimbAndSurfaceCarryRealVerifiedFlag(): void
@@ -315,58 +358,5 @@ final class CatalogProviderTest extends KernelTestCase
         // Served-only: a rejected row's ref must disappear (ItemState::SERVED).
         $this->em->getConnection()->executeStatement("UPDATE item SET state = 'rejected' WHERE source_ref = 'node/1001'");
         self::assertNotContains('node/1001', $this->payload()['refs']);
-    }
-
-    /** Plan 2 Task 13: with COVERAGE_TILES on, the C–J collections drop the
-     *  rows the coverage cache now serves (coverage-provider.md
-     *  §8/§9) — imported OSM, unverified, never touched by a human. */
-    public function testCoverageTilesFlagExcludesCoverageServedRows(): void
-    {
-        $conn = $this->em->getConnection();
-        $tilesOn = new CatalogProvider($conn, true);
-
-        // All 3 D fixtures and the E.osm stay are untouched imported-OSM rows.
-        self::assertCount(0, $tilesOn->payload()['D']['features']);
-        self::assertCount(0, $tilesOn->payload()['E']['osm']['features']);
-        self::assertCount(1, $tilesOn->payload()['E']['pivot']['features']);   // pivot stays canonical
-        // The container provider (flag off in the test env) is unchanged.
-        self::assertCount(3, $this->payload()['D']['features']);
-
-        // Human-touched rows stay canonical: a confirmation pins the shop …
-        $user = (new \App\Entity\User())->setEmail('coverage-confirmer@test.test');
-        $user->setPassword('x');
-        $this->em->persist($user);
-        $this->em->flush();
-        $shopId = (int) $conn->fetchOne("SELECT id FROM item WHERE source_ref = 'node/1001' AND letter = 'D'");
-        $conn->executeStatement(
-            "INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (:item, :user, 'exists', NOW(), NOW())",
-            ['item' => $shopId, 'user' => $user->getId()],
-        );
-        // … and a verified state keeps the station regardless of touch history.
-        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE source_ref = 'node/1002'");
-        self::assertCount(2, $tilesOn->payload()['D']['features']);
-
-        // Letters outside the coverage artifact never pass the predicate:
-        // A road surface (kept out of tiles, coverage-provider.md
-        // §7) and B climbs serve unchanged even with the flag on.
-        self::assertCount(1, $tilesOn->payload()['A']);
-        self::assertCount(1, $tilesOn->payload()['B']);
-
-        // Mirror rule (refs track what the payload serves): the still-untouched
-        // D pump (node/1003 — node/1001 was just confirmed above, node/1002 just
-        // verified) has its ref disappear with the flag, since its D feature
-        // dropped too (assertCount(2, …) above) — its coverage-tile twin now
-        // renders as community instead of being ref-suppressed into
-        // invisibility during the pre-retirement window.
-        self::assertNotContains('node/1003', $tilesOn->payload()['refs']);
-        // Mirror rule, letter-exempt side: the untouched A surface row is
-        // STILL served under the flag (A never routes through the coverage
-        // exclusion, coverage-provider.md §7), so its ref must stay listed —
-        // refs mirrors the payload exactly (coverage-provider.md §6), letter
-        // scope included.
-        self::assertContains('way/2001', $tilesOn->payload()['refs']);
-        // A row failing the retirement predicate (here: verified) stays listed.
-        $conn->executeStatement("UPDATE item SET state = 'verified' WHERE source_ref = 'node/5001'");
-        self::assertContains('node/5001', (new CatalogProvider($conn, true))->payload()['refs']);
     }
 }

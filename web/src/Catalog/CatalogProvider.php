@@ -19,14 +19,8 @@ use Doctrine\DBAL\Connection;
  */
 final class CatalogProvider
 {
-    public function __construct(
-        private readonly Connection $db,
-        // COVERAGE_TILES (config/packages/coverage.yaml, Task 9): when the
-        // coverage PMTiles pool is live, the C–J collections exclude the rows
-        // the coverage cache now serves (coverage-provider.md
-        // §8/§9) — catalog.json slims down to curated/human-touched data.
-        private readonly bool $coverageTiles = false,
-    ) {
+    public function __construct(private readonly Connection $db)
+    {
     }
 
     /**
@@ -72,7 +66,7 @@ final class CatalogProvider
     /**
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}>
      */
-    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, bool $excludeCoverageServed = false): array
+    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
         $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov,
                        (i.state = \'verified\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id)) AS verified
@@ -88,14 +82,18 @@ final class CatalogProvider
             $sql .= ' AND i.source != :excludeSource';
             $params['excludeSource'] = $excludeSource;
         }
-        if ($excludeCoverageServed) {
-            // Coverage retirement predicate (coverage-provider.md
-            // §9): once tiles serve the uncurated OSM pool (COVERAGE_TILES=1),
-            // imported-OSM rows no human ever touched drop out of the payload —
-            // the exact rows app:coverage:retire-legacy deletes. The SQL is
-            // owned by CoverageRetirement (single source; the command and
-            // curatedRefs() consume the same fragment). No letter scope needed
-            // here: only featureCollection() (letters C–J) passes the flag.
+        // Coverage retirement predicate (coverage-provider.md
+        // §9): a pure uncurated OSM row — source=osm, state=unverified, never
+        // touched by any human (no change history, no confirmation, no
+        // submission) — is exactly what coverage_poi serves now, so catalog.json
+        // drops it unconditionally: the exact rows app:coverage:retire-legacy
+        // deletes (keep the two in sync). Anything a human ever touched stays
+        // served. Letter-scoped like curatedRefs()'s mirror and the retirement
+        // command's guard (CoverageRetirement docblock: "callers compose the
+        // letter scope themselves") — A (road surface) never entered the
+        // coverage artifact and B (climbs) is wikidata-sourced, so neither may
+        // ever match, even if a stray row happens to carry source='osm'.
+        if (\in_array($letter, CoverageRetirement::LETTERS, true)) {
             $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
         }
 
@@ -107,24 +105,22 @@ final class CatalogProvider
      * Plan 2 Task 13 (osm-data-architecture.md §8, client half): source_ref of
      * every source='osm' item the payload itself serves, DISTINCT because one
      * entity may carry two letters (UNIQUE(source, source_ref, letter) on item).
-     * MIRRORS itemRows() exactly (coverage-provider.md §6): with COVERAGE_TILES
-     * on, coverage-served (untouched) rows are excluded here too — their tile
+     * MIRRORS itemRows() exactly (coverage-provider.md §6): coverage-served
+     * (untouched) rows are excluded here too, unconditionally — their tile
      * twins must render as community POIs. Listing their refs would suppress
      * the twins while the payload drops the rows, and the object would display
      * nowhere until retire-legacy --force removes it. The exclusion is
      * letter-scoped like the payload's: only the coverage letters
      * (CoverageRetirement::LETTERS) ever drop rows — an untouched A surface
-     * row keeps serving under the flag, so its ref keeps listing.
+     * row keeps serving, so its ref keeps listing.
      *
      * @return list<string>
      */
     private function curatedRefs(): array
     {
         $sql = "SELECT DISTINCT i.source_ref FROM item i WHERE i.source = 'osm' AND i.state IN ".ItemState::servedSqlTuple();
-        if ($this->coverageTiles) {
-            $sql .= ' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple()
-                .' AND '.CoverageRetirement::untouchedOsmSql('i').')';
-        }
+        $sql .= ' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple()
+            .' AND '.CoverageRetirement::untouchedOsmSql('i').')';
 
         /* @var list<string> */
         return $this->db->fetchFirstColumn($sql.' ORDER BY i.source_ref');
@@ -139,7 +135,7 @@ final class CatalogProvider
     private function featureCollection(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
         $features = [];
-        foreach ($this->itemRows($letter, $source, $excludeSource, $this->coverageTiles) as $row) {
+        foreach ($this->itemRows($letter, $source, $excludeSource) as $row) {
             $props = $this->decode($row['attributes']);
             if ('' !== $row['name']) {
                 $props['n'] = $row['name'];
