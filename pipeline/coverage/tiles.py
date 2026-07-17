@@ -53,7 +53,13 @@ def _letter_sql(letter: str, spec) -> str:
     return (
         "COPY (SELECT jsonb_build_object("
         "'type', 'Feature', "
-        "'id', split_part(ref, '/', 2)::bigint, "  # feature id = numeric osm id (coverage-provider.md §4)
+        # feature id = numeric osm id (coverage-provider.md §4). node/NNN and
+        # way/NNN are independent OSM id spaces, so this strips the type and
+        # can collide within one tile layer (a node and a way sharing the
+        # same numeric id both land at feature id NNN) — do not rely on `id`
+        # for identity; `properties.ref` (the full "node/NNN"|"way/NNN"
+        # string) is the only authoritative join key.
+        "'id', split_part(ref, '/', 2)::bigint, "
         "'geometry', ST_AsGeoJSON(geom)::jsonb, "
         f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
         f")::text FROM coverage_poi WHERE letter = {_lit(letter)}) TO STDOUT"
