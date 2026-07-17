@@ -982,6 +982,7 @@ map:
   d_drinking_water: 'Trinkwasser'
   d_headline_drinking: 'Trinkwasser'
   d_potable_osm: 'In OSM als trinkbar markiert — nicht vom Versorger verifiziert; vor Ort prüfen'
+  d_potable_osm_no: 'In OSM als nicht trinkbar markiert — nicht vom Versorger verifiziert; vermeiden, sofern nicht vor Ort bestätigt'
   d_potable_sim: 'simulierte Demo-Markierung (nicht vom Versorger verifiziert)'
   d_verify_water: 'Trinkwasserqualität beim regionalen Versorger / Brunnenverzeichnis gegenprüfen'
   d_proposed_verify: 'Vorgeschlagen · zum Verifizieren abfahren'

@@ -1148,6 +1148,7 @@ map:
   d_drinking_water: 'Drinking water'
   d_headline_drinking: 'drinking water'
   d_potable_osm: 'Tagged drinkable in OSM — not utility-verified; confirm on the spot'
+  d_potable_osm_no: 'Tagged not drinkable in OSM — not utility-verified; avoid unless confirmed on the spot'
   d_potable_sim: 'simulated demo flag (not utility-verified)'
   d_verify_water: 'Cross-check tap-water quality with the regional utility / fountain directory'
   d_proposed_verify: 'Proposed · ride it to verify'

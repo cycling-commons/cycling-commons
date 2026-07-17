@@ -982,6 +982,7 @@ map:
   d_drinking_water: 'Drinkwater'
   d_headline_drinking: 'drinkwater'
   d_potable_osm: 'In OSM als drinkbaar gemarkeerd — niet door het waterbedrijf geverifieerd; controleer ter plekke'
+  d_potable_osm_no: 'In OSM als niet-drinkbaar gemarkeerd — niet door het waterbedrijf geverifieerd; vermijd tenzij ter plekke bevestigd'
   d_potable_sim: 'gesimuleerde demovlag (niet geverifieerd door het waterbedrijf)'
   d_verify_water: 'Controleer de kraanwaterkwaliteit bij het regionale waterbedrijf / fonteinenregister'
   d_proposed_verify: 'Voorgesteld · rijd hem om te verifiëren'

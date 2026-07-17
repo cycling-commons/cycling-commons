@@ -982,6 +982,7 @@ map:
   d_drinking_water: 'Eau potable'
   d_headline_drinking: 'eau potable'
   d_potable_osm: 'Indiqué potable dans OSM — non vérifié par le distributeur ; confirmez sur place'
+  d_potable_osm_no: 'Indiqué non potable dans OSM — non vérifié par le distributeur ; évitez sauf confirmation sur place'
   d_potable_sim: 'indicateur de démo simulé (non vérifié par le distributeur)'
   d_verify_water: 'Vérifiez la qualité de l''eau auprès du distributeur régional / répertoire des fontaines'
   d_proposed_verify: 'Proposé · roulez-le pour le vérifier'

@@ -108,7 +108,7 @@ final class MapController extends AbstractController
             'age' => 'd_age', 'where' => 'd_where', 'place' => 'd_place', 'wallonia' => 'd_wallonia',
             'officialRegistry' => 'd_official_registry', 'confirmed' => 'd_confirmed', 'simulated' => 'd_simulated',
             'drinkingWater' => 'd_drinking_water', 'headlineDrinking' => 'd_headline_drinking',
-            'potableOsm' => 'd_potable_osm', 'potableSim' => 'd_potable_sim', 'verifyWater' => 'd_verify_water',
+            'potableOsm' => 'd_potable_osm', 'potableOsmNo' => 'd_potable_osm_no', 'potableSim' => 'd_potable_sim', 'verifyWater' => 'd_verify_water',
             'proposedVerify' => 'd_proposed_verify', 'estimateMethod' => 'd_estimate_method',
             'contributedGpx' => 'd_contributed_gpx', 'srcAuto' => 'd_src_auto', 'srcRider' => 'd_src_rider',
             'source' => 'd_source', 'editItem' => 'd_edit_item', 'fixLocation' => 'd_fix_location',
