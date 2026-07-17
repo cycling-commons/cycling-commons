@@ -66,7 +66,11 @@ final class CoverageRepository
      * Drawer payload for one coverage POI, curated overlay merged
      * (coverage-provider.md §5 keys: ref, letter, name, kind, ll, tags,
      * curated, attribution). Null
-     * when the ref is not in the coverage cache.
+     * when the ref is not in the coverage cache. The overlay join requires a
+     * *payload-served* item — the letter-scoped retirement exclusion mirrors
+     * CatalogProvider::curatedRefs() exactly, so an untouched legacy row
+     * (whose tile renders as community) never presents a curated{...} block
+     * in the drawer.
      *
      * @return array<string, mixed>|null
      */
@@ -80,6 +84,7 @@ final class CoverageRepository
                     i.id AS item_id, i.state AS item_state, i.name AS item_name, i.attributes AS item_attributes
              FROM coverage_poi cp
              LEFT JOIN item i ON i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().'
+                 AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
              WHERE cp.ref = :ref
              ORDER BY cp.letter, i.id
              LIMIT 1',

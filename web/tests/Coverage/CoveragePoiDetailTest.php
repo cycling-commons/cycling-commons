@@ -175,6 +175,45 @@ final class CoveragePoiDetailTest extends WebTestCase
         self::assertNull($data['curated']);
     }
 
+    public function testUntouchedLegacyRowDoesNotOverlay(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // Coverage-retirement predicate (CoverageRetirement::untouchedOsmSql):
+        // imported OSM, unverified, zero human touches — its tile renders as
+        // community, so the drawer must not present a curated{...} overlay
+        // (the app:coverage:retire-legacy --force run must not change what
+        // the drawer shows: coverage-provider.md §9 "zero display change").
+        self::insertCoveragePoi($db, ['ref' => 'node/777004', 'letter' => 'C', 'name' => 'Fontaine oubliée']);
+        $this->item('node/777004', ItemState::Unverified);
+
+        $data = $this->getJson($client, '/map/coverage/poi/node/777004');
+        self::assertResponseIsSuccessful();
+        self::assertNull($data['curated']);
+    }
+
+    public function testHumanTouchedUnverifiedRowStillOverlays(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // Unverified but a rider confirmed it — "anything a human ever
+        // touched stays canonical" (coverage-provider.md §9): it stays
+        // payload-served, so the overlay must survive, state included.
+        self::insertCoveragePoi($db, ['ref' => 'node/777005', 'letter' => 'C', 'name' => 'Fontaine confirmée']);
+        $item = $this->item('node/777005', ItemState::Unverified);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist(new ItemConfirmation((int) $item->getId(), 9201, ConfirmationStance::Potable));
+        $em->flush();
+
+        $data = $this->getJson($client, '/map/coverage/poi/node/777005');
+        self::assertResponseIsSuccessful();
+        self::assertSame($item->getId(), $data['curated']['itemId']);
+        self::assertSame('unverified', $data['curated']['state']);
+        self::assertEquals(['potable' => 1], $data['curated']['confirmations']);
+    }
+
     public function testEtagRevalidationAnd304(): void
     {
         $client = static::createClient();
