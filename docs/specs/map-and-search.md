@@ -586,13 +586,13 @@ requirement).
   to the trimmed path). The canonical end-trim rule for real route intake is
   owned by [route-domain.md](route-domain.md).
 
-## 12. Community tier — **Specified, pending implementation**
+## 12. Community tier
 
-Approved 2026-07-15; implementation lands with
-[coverage-provider.md](coverage-provider.md) (its §8 rebases these decisions
-onto the tile/endpoint data source; the `verified` flag will derive from real
-canonical state, not the simulated `c` attribute). None of this is in map.js
-yet.
+Approved 2026-07-15; implemented via
+[coverage-provider.md](coverage-provider.md) (its §6 rebases these decisions
+onto the tile/endpoint data source; the `verified` flag derives from real
+canonical state — `CatalogProvider`'s `v:1` — not the simulated `c`
+attribute).
 
 - **1.** Search and the town card always read the full Commons; every index
   entry carries a `verified` flag; within each category verified/curated rows

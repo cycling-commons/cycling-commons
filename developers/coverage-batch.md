@@ -93,6 +93,17 @@ Enable with `systemctl enable --now cc-coverage.timer`. A non-zero exit
 (region drift abort, verify failure, upload failure) surfaces through the
 worker's existing timer-failure mail; last good data keeps serving either way.
 
+**Before flipping `COVERAGE_TILES=1` in prod:** verify client-IP propagation
+for the per-IP `coverage_read` limiter
+([security-architecture.md](../docs/specs/security-architecture.md) §7) —
+`SYMFONY_TRUSTED_PROXIES`/`X-Forwarded-For` must be correctly wired through
+the LB → nginx frontends chain
+([dev-environment.md](../docs/specs/dev-environment.md) §9) so
+`Request::getClientIp()` (`CoverageController::rateLimited()`) resolves the
+real rider IP, not the LB/frontend's. Skip this and every anonymous rider
+shares one limiter bucket keyed on the same upstream IP — the coverage plane
+429s site-wide well before 120 req/min of real traffic.
+
 ## Planet dry-run (measurement only — do not schedule)
 
 Before any worldwide flip, size the planet path ONCE on worker-class hardware

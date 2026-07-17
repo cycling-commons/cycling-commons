@@ -312,7 +312,7 @@ literal numbers. Every current limiter is keyed **per user**
 | `route_propose` | sliding_window | 3 / 1 day | `user-<id>` | Route proposal intake (GPX upload) — `App\Contribution\RouteProposalService::propose()`; proposals are heavier than pin edits, the supply gate starts at intake | `TooManyRequestsHttpException` → flash (`ProposeRouteController`) |
 | `route_suggest` | sliding_window | 5 / 1 day | `user-<id>` | Route correction channel — `App\Community\RouteCommunityService::recordSuggestion()`; the suggest channel is the flood vector (each pending row is a curator task); vote/rode-it are self-bounded by UNIQUE constraints instead | `429 {"error":"rate_limited"}` (`RouteCommunityController::suggest`) |
 | `ride_check` | sliding_window | 20 / 1 day | `user-<id>` | GPX ride-check compute — `App\Controller\RideCheckController::check()`; read-only (parse + two PostGIS corridor queries, nothing persisted), hence more generous than intake | `429` JSON with translated `contribute.error.rate_limited` |
-| `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints — the app's first anonymous-read limiter, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | **Specified, pending implementation** — see [coverage-provider.md](coverage-provider.md) |
+| `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints — the app's first anonymous-read limiter, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | `429 JSON {"error":"rate_limited"}` (`CoverageController::rateLimited()`) |
 
 Storage note: `route_propose`, `route_suggest` and `ride_check` use dedicated
 cache pools (`cache.<name>_limiter`, filesystem adapter) that `when@test`
@@ -333,10 +333,13 @@ Login throttling is Symfony's built-in limiter and is inventoried in
   so it uses session-backed tokens as built. Harmless today (only logged-in
   users POST, so a session exists), but either the id should be added to the
   list or the "stateless" wording corrected.
-- **`coverage_read` final shape** — policy/limit/key above are from the
-  coverage-provider design (120/min per IP, sliding window) and are not yet
-  in `rate_limiter.yaml`; the concrete key derivation (raw IP vs. proxied
-  client IP) is unverified until the limiter exists.
+- **`coverage_read` prod client-IP propagation** — the limiter is shipped
+  (`web/config/packages/rate_limiter.yaml`, `CoverageController::rateLimited()`,
+  keyed on `Request::getClientIp()`); whether that resolves the real rider IP
+  behind the prod LB + nginx frontends (`SYMFONY_TRUSTED_PROXIES`/
+  `X-Forwarded-For`) is unverified until flipped in prod — checklist item in
+  `developers/coverage-batch.md`. Until then, anonymous traffic could share
+  one bucket and 429 site-wide.
 - **CSP on empty-`Content-Type` responses** — `CspSubscriber` treats a
   response without a `Content-Type` as a document and stamps the policy.
   Believed to affect no current endpoint; whether that default should be
