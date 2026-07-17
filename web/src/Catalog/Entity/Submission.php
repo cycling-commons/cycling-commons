@@ -13,9 +13,11 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * A user contribution awaiting (or past) moderation. The row doubles as the
  * decision audit record (decided_by/decided_at/decision_note). For NewItem
- * submissions the created item row (state=submitted) is referenced by item_id;
- * for Edit submissions item_id is the edit target and `changes` holds the
- * per-field was/now snapshot taken at submit time.
+ * submissions the created item row (state=submitted) is referenced by
+ * item_id; for Edit submissions item_id is the edit target and `changes`
+ * holds the per-field was/now snapshot taken at submit time.
+ *
+ * @see docs/specs/moderation-and-contribution.md §3.1
  *
  * @api Catalog domain entity.
  */
@@ -52,7 +54,7 @@ class Submission
     #[ORM\Column(type: 'string', length: 200)]
     private string $title = '';
 
-    /** GeoJSON Point (SRID 4326) — the pending-pin location. */
+    /** GeoJSON Point (SRID 4326): the pending-pin location. */
     #[ORM\Column(type: 'geometry')]
     private ?string $geom = null;
 

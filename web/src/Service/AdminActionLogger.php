@@ -13,6 +13,8 @@ use Doctrine\ORM\EntityManagerInterface;
 /**
  * Writes one immutable audit row per administrative action.
  *
+ * @see docs/specs/account-and-auth.md §6.2
+ *
  * @api Autowired by the DI container; consumed by UserAdminService.
  */
 final class AdminActionLogger

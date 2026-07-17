@@ -14,9 +14,11 @@ use App\World\Entity\Country;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Administrative support operations on a User account. All mutations flush and
- * write an audit row (AdminActionLogger). Guardrails prevent an admin from
- * locking themselves out or removing the last administrator.
+ * Administrative support operations on a User account. All mutations flush
+ * and write an audit row (AdminActionLogger). Guardrails prevent an admin
+ * from locking themselves out or removing the last administrator.
+ *
+ * @see docs/specs/account-and-auth.md §6
  *
  * @api Autowired by the DI container; consumed by UserCrudController.
  */
@@ -110,15 +112,15 @@ final class UserAdminService
         $email = $target->getEmail();
         // Audit + deletion are one transaction: a failure in either (e.g. a
         // deletion hook) rolls BOTH back, so the audit trail can never claim a
-        // removal that did not happen (#15).
+        // removal that did not happen.
         $this->em->wrapInTransaction(function () use ($actor, $target, $email): void {
             // Log first (target still exists); the target FK becomes NULL when the
             // row is deleted (ON DELETE SET NULL), so snapshot the email into the note.
             // Commons rule: personal data goes; contributed data is anonymised,
-            // never cascade-deleted — see docs/specs/account-and-auth.md §6.3.
+            // never cascade-deleted; see docs/specs/account-and-auth.md §6.3.
             $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account: '.$email);
             // Route through the shared deletion seam so admin removal runs the
-            // same UserDeletionHookInterface anonymisation as self-service (#41).
+            // same UserDeletionHookInterface anonymisation as self-service.
             $this->deletion->purge($target);
             $this->em->flush();
         });
@@ -132,10 +134,12 @@ final class UserAdminService
     }
 
     /**
-     * Replace the target's moderation-area rows (moderator-areas spec
-     * 2026-07-14) and audit the resulting set. Codes/ids are validated
-     * against world_country/region — unknown values are an
-     * \InvalidArgumentException (surfaced as the desk's danger flash).
+     * Replace the target's moderation-area rows and audit the resulting set.
+     * Codes and ids are validated against world_country/region; an unknown
+     * value throws \InvalidArgumentException, shown as the desk's danger
+     * flash.
+     *
+     * @see docs/specs/moderation-and-contribution.md §9.4
      *
      * @param list<string> $countryCodes
      * @param list<int>    $regionIds
@@ -160,8 +164,8 @@ final class UserAdminService
             [] !== $countryCodes ? implode(', ', $countryCodes) : 'none',
         );
 
-        // Rows + audit are one transaction (#15 precedent): commit() below opens
-        // its own wrapInTransaction, but Doctrine's connection nests transactions
+        // Rows and audit are one transaction: commit() below opens its own
+        // wrapInTransaction, but Doctrine's connection nests transactions
         // by ref-count rather than starting a second one, so this stays atomic
         // with the DELETE/persist calls that precede it.
         $this->em->wrapInTransaction(function () use ($target, $actor, $countryCodes, $regionIds, $note): void {
@@ -200,7 +204,7 @@ final class UserAdminService
     private function setRole(User $user, string $role, bool $enabled): void
     {
         // Drop ROLE_USER (implicit) and the target role in one pass, then append
-        // it back iff enabling — no residual duplicate to unique away.
+        // it back only if enabling, so there is no residual duplicate to remove.
         $roles = array_values(array_diff($user->getRoles(), ['ROLE_USER', $role]));
         if ($enabled) {
             $roles[] = $role;
@@ -211,7 +215,7 @@ final class UserAdminService
     private function commit(User $actor, string $action, User $target, ?string $note = null): void
     {
         // The mutation and its audit row are one transaction so they can never
-        // diverge (#15) — both commit or both roll back.
+        // diverge: both commit or both roll back.
         $this->em->wrapInTransaction(function () use ($actor, $action, $target, $note): void {
             $this->em->flush();
             $this->logger->log($actor, $action, $target, $note);

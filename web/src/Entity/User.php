@@ -20,8 +20,14 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @api Consumed by Symfony Security, Doctrine lifecycle events, and future auth controllers.
- *      All public methods are live entry points; Psalm must not flag them as unused.
+ * A registered account: one entity for every role (member, curator, admin),
+ * with 2FA, lockout, and self-service deletion built in.
+ *
+ * @see docs/specs/account-and-auth.md §1
+ *
+ * @api Consumed by Symfony Security, Doctrine lifecycle events, and future
+ *      auth controllers. All public methods are live entry points; Psalm
+ *      must not flag them as unused.
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
@@ -42,7 +48,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private ?Uuid $uuid = null;
 
     // Validate on the entity so EVERY write path is covered (registration form,
-    // future JSON API, console commands) — not just the one form. Length is
+    // future JSON API, console commands), not just the one form. Length is
     // capped at the column width so an over-long value fails validation instead
     // of blowing up at flush; Email keeps a malformed address out before
     // Address() would throw RfcComplianceException on send.
@@ -67,15 +73,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // admin CRUD, fixtures) keeps it in sync. A plain unique constraint on
     // this column gives case-insensitive display-name uniqueness without a
     // functional index Doctrine can't model. An empty name canonicalizes to
-    // NULL so unnamed rows (tests, partial flows) never collide — NULL is
+    // NULL so unnamed rows (tests, partial flows) never collide; NULL is
     // ignored by both the Postgres unique index and UniqueEntity (ignoreNull).
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $displayNameCanonical = null;
 
-    // Rider preferences (spec 2026-07-14): which bikes they ride and what
-    // kind of riding they do. Stored as enum value strings; read via the
-    // enum-typed accessors, which drop unknown values so a vocabulary change
-    // can never fatal a render. The map will later prefilter on these.
+    // Rider preferences (docs/specs/account-and-auth.md §9): which bikes
+    // they ride and what kind of riding they do. Stored as enum value
+    // strings; read via the enum-typed accessors, which drop unknown values
+    // so a vocabulary change can never fatal a render. The map will later
+    // prefilter on these.
     /** @var list<string> */
     #[ORM\Column(type: 'json')]
     private array $bikeTypes = [];
@@ -103,7 +110,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'boolean')]
     private bool $twoFaEnabled = false;
 
-    // Encrypted at rest (AES-256-GCM, key from APP_SECRET) — a DB leak alone
+    // Encrypted at rest (AES-256-GCM, key from APP_SECRET); a DB leak alone
     // does not expose the authenticator seed.
     #[ORM\Column(type: 'encrypted_string', nullable: true)]
     private ?string $totpSecret = null;
@@ -224,10 +231,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
      * Keyed (peppered) hash for a single-use backup code.
      *
      * The codes carry ≥80 bits of entropy (see TwoFactorController), so a fast
-     * digest is not itself the risk — but keying it with a secret derived from
+     * digest is not itself the risk, but keying it with a secret derived from
      * APP_SECRET (never stored in the DB) means a database-only leak cannot even
      * compute candidate hashes, closing the offline-enumeration path that an
-     * unsalted SHA-256 left open (review #13). Rotating APP_SECRET invalidates
+     * unsalted SHA-256 left open. Rotating APP_SECRET invalidates
      * stored codes (same trade-off as the encrypted TOTP secret).
      *
      * @api Also used by the enrolment controller when first storing codes.

@@ -9,9 +9,11 @@ namespace App\Catalog\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A named operational region (day-one seed: Wallonia). The future anchor for
- * per-region moderator groups, a user's preferred region and region-scoped
- * voting; today it drives item membership (item.region_id) at import.
+ * A named operational region (day-one seed: Wallonia). Anchors moderator
+ * areas and region-scoped voting/rankings, and drives item membership
+ * (item.region_id), recomputed at every import.
+ *
+ * @see docs/specs/catalog-data-model.md §2.4
  *
  * @api Catalog domain entity.
  */
@@ -24,7 +26,7 @@ class Region
     #[ORM\Column(type: 'bigint')]
     private ?int $id = null;
 
-    /** Stable machine reference, e.g. "wallonia" — the import upsert key. */
+    /** Stable machine reference, e.g. "wallonia": the import upsert key. */
     #[ORM\Column(type: 'string', length: 80, unique: true)]
     private string $slug = '';
 

@@ -11,12 +11,15 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * One rider's community stance on a non-votable item (drinking-water potability
- * or a plain existence confirmation for a utility). One row per user per item
- * (UNIQUE), changeable — a rider may switch potable ↔ not potable. The map
- * drawer tallies these; the counts are public, recording requires an account.
+ * One rider's community stance on a non-votable item (drinking-water
+ * potability or a plain existence confirmation for a utility). One row per
+ * user per item (UNIQUE), and changeable: a rider may switch between
+ * potable and not potable. The map drawer tallies these; the counts are
+ * public, recording requires an account.
  *
- * @api Created/updated by ItemConfirmationService.
+ * @see docs/specs/moderation-and-contribution.md §10.1
+ *
+ * @api Created and updated by ItemConfirmationService.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'item_confirmation')]

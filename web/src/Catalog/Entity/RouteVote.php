@@ -12,12 +12,14 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A typed seasonal vote (route-domain spec §4.2, §7): "I recommend this as a
- * [season] ride on [bike type]." One per user per route per season (UNIQUE);
- * `created_at` enables the future annual reset (spec non-goal). Votes are only
- * accepted on `verified` routes (spec D7) — enforced in the controller.
+ * A typed seasonal vote: "I recommend this as a [season] ride on [bike
+ * type]." One per user per route per season (UNIQUE). `created_at` enables
+ * a future annual reset (route-domain.md §11). Votes are only accepted on
+ * `verified` routes, enforced in the controller.
  *
- * @api Created by RouteCommunityService (phase 3); ranked in phase 4.
+ * @see docs/specs/route-domain.md §2.2, §8.2
+ *
+ * @api Created by RouteCommunityService; ranked by RouteRankingService.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'route_vote')]

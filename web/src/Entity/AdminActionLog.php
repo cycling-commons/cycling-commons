@@ -9,9 +9,12 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * One immutable record of an administrative action taken against an account.
- * `actor` is null for system-driven actions (e.g. the future inactivity sweep);
- * `targetUser` is nullable so a row outlives the account it recorded the removal
- * of (FK is ON DELETE SET NULL) — the target's email is snapshotted into `note`.
+ * `actor` is null for system-driven actions (e.g. the future inactivity
+ * sweep). `targetUser` is nullable so a row outlives the account it
+ * recorded the removal of (FK is ON DELETE SET NULL); the target's email is
+ * snapshotted into `note`.
+ *
+ * @see docs/specs/account-and-auth.md §6.2
  *
  * @api Persisted by AdminActionLogger; read by the admin backend.
  */

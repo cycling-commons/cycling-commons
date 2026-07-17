@@ -12,11 +12,13 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A rider-reported correction on a route (spec §4.2). Preset reason + optional
- * note; resolved by a curator in the Routes desk. `note` is HTML-escaped on
- * render (moderation drawer XSS rule).
+ * A rider-reported correction on a route. Preset reason plus an optional
+ * note; a curator resolves it in the Routes desk. `note` is HTML-escaped
+ * when rendered, to prevent XSS.
  *
- * @api Created in phase 3 (drawer), listed + resolved by the Routes desk (phase 2).
+ * @see docs/specs/route-domain.md §2.2
+ *
+ * @api Created from the map drawer; listed and resolved by the Routes desk.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'route_suggestion')]

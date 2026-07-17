@@ -11,11 +11,13 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A rider's "I rode this" confirmation (route-domain spec §4.2, §7). One per
- * user per route (UNIQUE). Distinct confirmers other than the proposer verify
- * an `unverified` route once they reach `route.ride_verify_threshold` (§13 P3-D1).
+ * A rider's "I rode this" confirmation. One per user per route (UNIQUE).
+ * Distinct confirmers other than the proposer verify an `unverified` route
+ * once they reach `route.ride_verify_threshold`.
  *
- * @api Created by RouteCommunityService (phase 3).
+ * @see docs/specs/route-domain.md §2.2, §6.2
+ *
+ * @api Created by RouteCommunityService.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'route_ride')]

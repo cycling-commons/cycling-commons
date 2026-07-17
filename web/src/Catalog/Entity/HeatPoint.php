@@ -10,8 +10,10 @@ use App\Catalog\ItemSource;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Aggregate ride-heat point (layer L) — never editable, never moderated;
- * delete+reload on import.
+ * Aggregate ride-heat point (layer L). Never editable, never moderated;
+ * delete and reload on import.
+ *
+ * @see docs/specs/catalog-data-model.md §2.3
  *
  * @api Catalog domain entity.
  */
@@ -34,7 +36,7 @@ class HeatPoint
     #[ORM\Column(type: 'string', length: 10, enumType: ItemSource::class)]
     private ItemSource $source = ItemSource::Auto;
 
-    /** Ride-heat layer filter facet ("summer"/"winter"/…); nullable — not every point carries one. */
+    /** Ride-heat layer filter facet ("summer"/"winter"/…); nullable, not every point carries one. */
     #[ORM\Column(type: 'string', length: 8, nullable: true)]
     private ?string $season = null;
 

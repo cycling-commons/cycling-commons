@@ -9,6 +9,8 @@ namespace App\Service;
 /**
  * Thrown when an admin action is blocked by a safety guardrail
  * (self-lockout or removing the last remaining administrator).
+ *
+ * @see docs/specs/account-and-auth.md §6.4
  */
 final class GuardrailViolationException extends \RuntimeException
 {

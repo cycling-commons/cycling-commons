@@ -10,11 +10,13 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Append-only audit of curator route decisions and field edits (spec D9).
- * One row per state transition (`field = 'state'`) or per changed metadata
- * field. Route-scoped: `change_history.item_id` FKs `item`, so routes — which
- * live outside the item pipeline (D1) — keep their own table. Never updated or
- * deleted; `oldValue` records the route's ACTUAL value at apply time.
+ * Append-only audit of curator route decisions and field edits. One row per
+ * state transition (`field = 'state'`) or per changed metadata field.
+ * Route-scoped: `change_history.item_id` FKs `item`, so routes, which live
+ * outside the item pipeline, keep their own table. Never updated or
+ * deleted; `oldValue` records the route's actual value at apply time.
+ *
+ * @see docs/specs/route-domain.md §2.2
  *
  * @api Written by RouteModerationService.
  */

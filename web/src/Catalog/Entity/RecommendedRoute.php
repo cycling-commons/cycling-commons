@@ -11,8 +11,10 @@ use App\Catalog\ItemState;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A curated ride recommendation (letter K) — a composition, not an atomic map
- * feature.
+ * A curated ride recommendation (letter K): a composition, not an atomic
+ * map feature.
+ *
+ * @see docs/specs/catalog-data-model.md §2.2
  *
  * @api Catalog domain entity.
  */
@@ -40,7 +42,7 @@ class RecommendedRoute
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $ascentM = null;
 
-    /** region.id — routes span provinces; region is the operational scope. */
+    /** region.id: routes span provinces, so region is the operational scope. */
     #[ORM\Column(type: 'bigint', nullable: true)]
     private ?int $regionId = null;
 
@@ -63,9 +65,9 @@ class RecommendedRoute
     private array $attributes = [];
 
     /**
-     * users.id of the proposing rider (route-domain spec §4.1); NULL for
-     * imported routes. Plain column, no relation — provenance only, confers
-     * no edit rights (spec D3).
+     * users.id of the proposing rider (route-domain.md §2.1); NULL for
+     * imported routes. Plain column, no relation: provenance only, confers
+     * no edit rights.
      */
     #[ORM\Column(name: 'proposed_by', type: 'integer', nullable: true)]
     private ?int $proposedBy = null;
@@ -76,7 +78,7 @@ class RecommendedRoute
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    /** Last harvest touch — staleness signal (no auto-retire). */
+    /** Last harvest touch: a staleness signal (no auto-retire). */
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $importedAt = null;
 

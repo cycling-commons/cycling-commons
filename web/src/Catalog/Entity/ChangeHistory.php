@@ -9,10 +9,12 @@ namespace App\Catalog\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * One applied field change on a catalog item — APPEND-ONLY (no code path may
- * ever UPDATE or DELETE rows; moderation spec §9). old_value records the
- * item's actual value at apply time, never the submitter's possibly-stale
- * snapshot. Time-partitionable from day one: nothing references its id.
+ * One applied field change on a catalog item. Append-only: no code path
+ * may ever update or delete rows. old_value records the item's actual
+ * value at apply time, never the submitter's possibly-stale snapshot.
+ * Time-partitionable from day one: nothing references its id.
+ *
+ * @see docs/specs/moderation-and-contribution.md §4.1
  *
  * @api Catalog domain entity.
  */

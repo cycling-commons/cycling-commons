@@ -12,8 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * An atomic editable catalog feature (letters A–J): points for most letters,
- * LineStrings for A (road surface). Common/filterable fields are real columns;
- * type-specific detail lives in registry-validated jsonb attributes.
+ * LineStrings for A (road surface). Common/filterable fields are real
+ * columns; type-specific detail lives in registry-validated jsonb
+ * attributes.
+ *
+ * @see docs/specs/catalog-data-model.md §2.1
  *
  * @api Catalog domain entity.
  */
@@ -29,7 +32,7 @@ class Item
      * The one pseudo-field name that lives on Item::name, never in the jsonb
      * `attributes` map. Change-detection (CatalogContributionService) and
      * apply-on-approve (ModerationService) both special-case it; referencing
-     * this constant keeps that rule in one place (review #42).
+     * this constant keeps that rule in one place.
      */
     public const string NAME_FIELD = 'name';
 
@@ -52,11 +55,11 @@ class Item
     #[ORM\Column(type: 'string', length: 2)]
     private string $countryCode = '';
 
-    /** Plain column (no FK object) — world_subdivision.id, resolved at import. */
+    /** Plain column (no FK object): world_subdivision.id, resolved at import. */
     #[ORM\Column(type: 'bigint', nullable: true)]
     private ?int $subdivisionId = null;
 
-    /** region.id — membership recomputed on every import run. */
+    /** region.id: membership recomputed on every import run. */
     #[ORM\Column(type: 'bigint', nullable: true)]
     private ?int $regionId = null;
 
@@ -84,7 +87,7 @@ class Item
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    /** Last harvest touch — staleness signal (no auto-retire). */
+    /** Last harvest touch: a staleness signal (no auto-retire). */
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $importedAt = null;
 
@@ -251,7 +254,7 @@ class Item
     /**
      * Mark the row as freshly changed. Called by every content setter
      * (name/geom/state/attributes) so updatedAt tracks any edit, not only an
-     * attribute change (#30).
+     * attribute change.
      */
     private function touch(): void
     {
