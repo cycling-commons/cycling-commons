@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * A country (ISO 3166-1). Names + ISO codes are seeded from symfony/intl; the
  * continent link from a static code→continent map. The flag is an SVG served
- * from assets/flags/<iso2 lowercased>.svg (see flagBasename()).
+ * from assets/flags/<iso2 lowercased>.svg (see flagAsset()).
  *
  * @api Reference data for the World bundle.
  */

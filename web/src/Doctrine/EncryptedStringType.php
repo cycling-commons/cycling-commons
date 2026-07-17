@@ -60,15 +60,16 @@ final class EncryptedStringType extends Type
             return null;
         }
 
-        // Any unreadable stored value (structurally invalid, or key
-        // rotated / data corrupted so GCM auth fails) hydrates as NULL rather
-        // than throwing. This type is mapped on User::$totpSecret, so a throw
-        // here would 500 EVERY hydration of the affected row — the user could
-        // never log in and an admin could never open them to disarm 2FA.
-        // Returning null makes the seed read as absent, so the documented
-        // "affected users simply re-enrol" path (and the mandatory-2FA
-        // enforcer) actually works (#14). An affected account is observable:
-        // it simply shows 2FA disabled and is prompted to re-enrol.
+        // Any unreadable stored value (structurally invalid, or the key was
+        // rotated, or the data is corrupted so the GCM auth check fails)
+        // hydrates as NULL instead of throwing. This type is mapped on
+        // User::$totpSecret, so throwing here would break every hydration of
+        // the affected row: the user could never log in, and an admin could
+        // never open the account to turn off 2FA. Returning null makes the
+        // seed read as absent, so the documented "affected users simply
+        // re-enrol" path, and the mandatory 2FA enforcer, actually work. An
+        // affected account is observable: it just shows 2FA disabled and
+        // prompts the user to re-enrol.
         $raw = base64_decode((string) $value, true);
         if (false === $raw || \strlen($raw) <= self::IV_LEN + self::TAG_LEN) {
             return null;

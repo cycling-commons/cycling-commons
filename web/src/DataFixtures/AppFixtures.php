@@ -13,7 +13,7 @@ use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Seeds the dev database with four ready-to-use demo accounts — one per role,
+ * Seeds the dev database with four ready-to-use demo accounts, one per role,
  * plus a public and an anonymous rider. All share the password `password1234`.
  *
  *   admin@example.test      ROLE_ADMIN    (2FA preset)      Belgium
@@ -72,13 +72,15 @@ final class AppFixtures extends Fixture
         $user->setCountry($country);
         $user->setPassword($this->hasher->hashPassword($user, self::DEV_PASSWORD));
 
-        // Preset an ENROLLED 2FA state: both the TOTP secret and the enabled flag.
-        // TwoFactorPolicy::requiresSetup() checks isTotpAuthenticationEnabled()
-        // (twoFaEnabled && secret), so setting only the secret would leave elevated
-        // accounts perpetually redirected to /2fa/setup by TwoFactorSetupEnforcer.
-        // Enrolling them fully matches the mandatory-2FA policy: login shows the TOTP
-        // interstitial, and the well-known seed below lets any authenticator (or
-        // `oathtool --totp -b JBSWY3DPEHPK3PXP`) generate valid codes for dev/demo.
+        // Preset an ENROLLED 2FA state: set both the TOTP secret and the
+        // enabled flag. TwoFactorPolicy::requiresSetup() checks
+        // isTotpAuthenticationEnabled() (twoFaEnabled && secret), so setting
+        // only the secret would leave elevated accounts stuck at /2fa/setup,
+        // always redirected there by TwoFactorSetupEnforcer. Enrolling them
+        // fully matches the mandatory 2FA policy: login shows the TOTP
+        // prompt, and the well-known seed below lets any authenticator app
+        // (or `oathtool --totp -b JBSWY3DPEHPK3PXP`) generate valid codes
+        // for dev and demo use.
         if ($presetTotp) {
             $user->setTotpSecret('JBSWY3DPEHPK3PXP');
             $user->setTwoFaEnabled(true);

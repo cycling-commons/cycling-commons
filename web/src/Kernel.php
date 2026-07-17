@@ -11,8 +11,9 @@ class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
 
-    // Allow cache/logs to live outside the bind-mounted source (set via env in
-    // the dev container) so there are no host-permission headaches.
+    // Cache and log directories can live outside the bind-mounted source
+    // (set via an environment variable in the dev container) to avoid file
+    // permission problems on the host.
     public function getCacheDir(): string
     {
         return $_SERVER['APP_CACHE_DIR'] ?? parent::getCacheDir();

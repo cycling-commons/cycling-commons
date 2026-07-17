@@ -21,8 +21,8 @@ use Symfony\Component\Intl\Countries;
 /**
  * Seed/refresh the World reference data: continents (static), countries
  * (symfony/intl + the upstream-derived continent map) and subdivisions
- * (sokil/php-isocodes, ISO 3166-2). Idempotent — upserts by code, so it is safe
- * to re-run to pick up dataset updates.
+ * (sokil/php-isocodes, ISO 3166-2). Idempotent - upserts by code, so it is
+ * safe to re-run to pick up dataset updates.
  *
  * @api CLI entry point.
  */
@@ -76,8 +76,9 @@ final class ImportWorldDataCommand extends Command
         $this->em->flush();
 
         // 3) Subdivisions (sokil/php-isocodes, ISO 3166-2) -------------------
-        // Uses sokil's default gettext driver (ext-gettext is installed in the image);
-        // -db-only ships English msgids, so names come out canonical English.
+        // Uses sokil's default gettext driver (ext-gettext is installed in
+        // the image). The php-isocodes-db-only package ships English msgids
+        // only, so names come out in canonical English.
         $subDb = (new IsoCodesFactory())->getSubdivisions();
         $subRepo = $this->em->getRepository(Subdivision::class);
         /** @var array<string, Subdivision> $byCode */
@@ -85,12 +86,13 @@ final class ImportWorldDataCommand extends Command
         /** @var array<string, string> $parentOf */
         $parentOf = [];
         $total = 0;
-        // Iterate the whole subdivision database rather than getAllByCountryCode()
-        // per country: sokil's index-based lookups (find()/getAllByCountryCode)
-        // return entries with a NULL parent, whereas plain iteration hydrates the
-        // full entry including `parent`. Using the country lookup left every
-        // parent link (and therefore every level) unset (review #29). The country
-        // is the alpha-2 prefix of the ISO 3166-2 code ("BE-VAN" → "BE").
+        // Iterate the whole subdivision database rather than calling
+        // getAllByCountryCode() per country: sokil's index-based lookups
+        // (find()/getAllByCountryCode) return entries with a NULL parent,
+        // while plain iteration hydrates the full entry, including
+        // `parent`. Using the country lookup left every parent link, and
+        // therefore every level, unset. The country is the alpha-2 prefix
+        // of the ISO 3166-2 code ("BE-VAN" → "BE").
         foreach ($subDb as $s) {
             $code = strtoupper($s->getCode());
             $country = $countries[substr($code, 0, 2)] ?? null;

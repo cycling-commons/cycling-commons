@@ -22,12 +22,14 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
- * The route community loop (route-domain spec §7): reads a per-route snapshot
- * (counts + the current rider's state) and owns the three writes (ride + the
- * verification flip, vote, suggestion). Purpose-built — not the item pipeline
- * (spec D1). Reads are raw DBAL; writes go through the ORM.
+ * The route community loop: reads a per-route snapshot (counts and the
+ * current rider's state) and owns the three writes (ride and the
+ * verification flip, vote, suggestion). Purpose-built, not the item
+ * pipeline. Reads use raw DBAL; writes go through the ORM.
  *
- * @api Consumed by RouteCommunityController (phase 3).
+ * @see docs/specs/route-domain.md §6
+ *
+ * @api Consumed by RouteCommunityController.
  */
 final class RouteCommunityService
 {
@@ -49,8 +51,8 @@ final class RouteCommunityService
         $routeId = (int) $route->getId();
         $userId = $user->getId();
 
-        // rideCount is the INDEPENDENT distinct-rider count (excludes the
-        // proposer, P3-D1) so the drawer's "N of X" equals the flip's own count.
+        // rideCount is the independent distinct-rider count (it excludes the
+        // proposer) so the drawer's "N of X" matches the flip's own count.
         $rideCount = (int) $this->db->fetchOne(
             'SELECT COUNT(DISTINCT user_id) FROM route_ride WHERE route_id = :r AND user_id <> :p',
             ['r' => $routeId, 'p' => $route->getProposedBy() ?? -1],
@@ -79,10 +81,10 @@ final class RouteCommunityService
     }
 
     /**
-     * Records "I rode this" (idempotent per user/route) and, when a currently
-     * `unverified` route reaches the independent-rider threshold (excluding the
-     * proposer, P3-D1), flips it to `verified` — logging one history row
-     * attributed to the tipping rider (P3-D2). All in one flush.
+     * Records "I rode this" (idempotent per user per route). When a
+     * currently `unverified` route reaches the independent-rider threshold
+     * (this excludes the proposer), it flips to `verified` and logs one
+     * history row attributed to the tipping rider. All in one flush.
      */
     public function recordRide(RecommendedRoute $route, User $user, BikeType $bike): void
     {
@@ -142,11 +144,12 @@ final class RouteCommunityService
     }
 
     /**
-     * Records a moderated correction (route-domain spec §4.2). Rate-limited
-     * (P3-D4) — the only self-unbounded community write; each pending row is a
-     * curator task. `note` is stored raw and HTML-escaped on the desk render.
+     * Records a moderated correction (route-domain spec §10). Rate-limited:
+     * this is the only self-unbounded community write, and each pending row
+     * is a curator task. `note` is stored raw and HTML-escaped on the desk
+     * render.
      *
-     * @param list<array{start: float, end: float}>|null $segments located stretches (spec §16 S4)
+     * @param list<array{start: float, end: float}>|null $segments located stretches (docs/specs/route-domain.md §7)
      *
      * @throws TooManyRequestsHttpException over the daily suggestion limit
      * @throws \InvalidArgumentException    if the trimmed note exceeds 2000 characters (M11, route.error.note_too_long)
