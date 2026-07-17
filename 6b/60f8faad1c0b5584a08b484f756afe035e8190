@@ -1,0 +1,24 @@
+web/.env
+  s_f6d45d977e7468::t_4f57765eaa0994 42-43
+  s_f6d45d977e7468::t_1604269267e46e 44
+developers/docker/.env.example
+  s_f6d45d977e7468::t_aa6ac0f87989e0 60
+developers/docker/compose.yaml
+  s_f6d45d977e7468::t_3b322233151e9d 48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6b60f8faad1c0b5584a08b484f756afe035e8190",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
