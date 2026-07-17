@@ -22,8 +22,24 @@ final class MapCoverageUrlTest extends WebTestCase
 {
     public function testMapOmitsCoverageUrlWhenTilesAreOff(): void
     {
-        // COVERAGE_TILES=0 is the committed default (web/.env) — no override needed.
         $client = static::createClient();
+        // Construct the manifest service with enabled=false explicitly —
+        // this test must not trust ambient env. COVERAGE_TILES=1 is the
+        // committed default (web/.env) since the default-on flip, and
+        // developers/docker/compose.yaml passes the real container env var
+        // through, which beats .env.test's placeholder. A dev whose
+        // .env.example values point at a real, published manifest would
+        // otherwise trigger a genuine MinIO/bucket fetch here. Same
+        // override pattern as testMapInjectsCoverageUrlWhenManifestResolves
+        // below, just flag-off.
+        static::getContainer()->set(CoverageManifest::class, new CoverageManifest(
+            new MockHttpClient(),   // never called — tilesEnabled=false short-circuits before any HTTP request
+            new ArrayAdapter(),
+            new NullLogger(),
+            false,
+            'https://maps.test/coverage/manifest.json',
+        ));
+
         $client->request('GET', '/map');
         self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('window.CC_COVERAGE_URL', (string) $client->getResponse()->getContent());
