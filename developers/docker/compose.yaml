@@ -45,7 +45,7 @@ services:
       MAILER_DSN: "${MAILER_DSN:-smtp://mailpit:1025}"
       # Coverage tiles (coverage-provider.md §8): opt-in via
       # developers/docker/.env once `make coverage-refresh` published to MinIO.
-      COVERAGE_TILES: "${COVERAGE_TILES:-0}"
+      COVERAGE_TILES: "${COVERAGE_TILES:-1}"
       COVERAGE_MANIFEST_URL: "${COVERAGE_MANIFEST_URL:-}"
       COVERAGE_CSP_HOST: "${COVERAGE_CSP_HOST:-}"
     volumes:
