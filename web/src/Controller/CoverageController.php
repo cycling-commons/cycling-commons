@@ -51,7 +51,7 @@ final class CoverageController extends AbstractController
     }
 
     /**
-     * Town-card nearby (design §7): letter groups within :km of a point,
+     * Town-card nearby (coverage-provider.md §5): letter groups within :km of a point,
      * curated first, community capped behind the client's "show all" expander.
      */
     #[Route('/map/coverage/nearby', name: 'map_coverage_nearby', methods: ['GET'])]
@@ -72,7 +72,7 @@ final class CoverageController extends AbstractController
         return $this->cacheable($request, ['groups' => $coverage->nearby((float) $lat, (float) $lng, $km), 'attribution' => CoverageRepository::ATTRIBUTION], 300);
     }
 
-    /** Rail totals (design §2 decision E1): per-letter coverage counts. */
+    /** Rail totals (coverage-provider.md §5): per-letter coverage counts. */
     #[Route('/map/coverage/counts', name: 'map_coverage_counts', methods: ['GET'])]
     public function counts(Request $request, CoverageRepository $coverage, RateLimiterFactoryInterface $coverageReadLimiter): Response
     {
@@ -106,17 +106,25 @@ final class CoverageController extends AbstractController
     }
 
     /**
-     * coverage_read enforcement (design §7: sliding window, 120/min per IP) —
+     * coverage_read enforcement (coverage-provider.md §5: sliding window, 120/min per IP) —
      * the RideCheckController consume-or-429 pattern, keyed by client IP
-     * because the whole plane is anonymous.
+     * because the whole plane is anonymous. The 429 carries a Retry-After
+     * header (seconds) derived from the limiter's own retry-after instant, so
+     * an anonymous client (or a well-behaved scraper) knows exactly when to
+     * come back instead of hammering the plane immediately.
      */
     private function rateLimited(Request $request, RateLimiterFactoryInterface $limiter): ?JsonResponse
     {
-        if (!$limiter->create('ip-'.($request->getClientIp() ?? 'unknown'))->consume()->isAccepted()) {
-            return $this->json(['error' => 'rate_limited'], 429);
+        $limit = $limiter->create('ip-'.($request->getClientIp() ?? 'unknown'))->consume();
+        if ($limit->isAccepted()) {
+            return null;
         }
 
-        return null;
+        $response = $this->json(['error' => 'rate_limited'], 429);
+        $retryAfter = max(0, $limit->getRetryAfter()->getTimestamp() - time());
+        $response->headers->set('Retry-After', (string) $retryAfter);
+
+        return $response;
     }
 
     /**
