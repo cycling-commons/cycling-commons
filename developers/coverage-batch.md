@@ -93,6 +93,42 @@ Enable with `systemctl enable --now cc-coverage.timer`. A non-zero exit
 (region drift abort, verify failure, upload failure) surfaces through the
 worker's existing timer-failure mail; last good data keeps serving either way.
 
+**Before flipping `COVERAGE_TILES=1` in prod — bucket CORS + Range matrix:**
+MapLibre reads `coverage.pmtiles` by HTTP **byte range** from the **browser
+origin** (`docs/specs/coverage-provider.md` §4). Both behaviours must be
+proven at the Hetzner bucket, or the coverage layer silently renders nothing
+(range failure) or is CORS-blocked with console errors. Same two-curl matrix
+the dev pass ran against MinIO:
+
+    PM_URL=$(curl -s https://<bucket-or-proxy>/cc-maps/coverage/manifest.json | jq -r '.url')
+    curl -sI -H "Range: bytes=0-16383" "$PM_URL" | grep -iE '^HTTP|^content-range|^content-length'
+    curl -sI -H "Origin: https://<prod host>" -H "Range: bytes=0-16383" "$PM_URL" \
+      | grep -iE '^HTTP|^access-control-allow-origin'
+
+Expected: `206 Partial Content` + `Content-Range` on the first;
+206 again plus an `Access-Control-Allow-Origin` covering the app origin on
+the second. If CORS is missing, two remediation paths:
+
+1. **Bucket-level CORS** (Hetzner Object Storage is S3-compatible):
+
+        aws s3api put-bucket-cors --endpoint-url https://<endpoint> \
+          --bucket cc-maps --cors-configuration '{
+          "CORSRules": [{
+            "AllowedOrigins": ["https://<prod host>"],
+            "AllowedMethods": ["GET", "HEAD"],
+            "AllowedHeaders": ["Range"],
+            "ExposeHeaders": ["Content-Range", "Content-Length", "ETag"],
+            "MaxAgeSeconds": 3600
+          }]}'
+
+2. **Range proxy in front of the bucket** — the pattern already serving
+   `world.pmtiles` (an nginx proxy adds the CORS headers itself and caches
+   range responses); point `COVERAGE_PUBLIC_BASE_URL` at the proxy host and
+   add that host to `COVERAGE_CSP_HOST` instead of the raw bucket.
+
+Re-run the matrix after either change; record the output with the go-live
+notes.
+
 **Before flipping `COVERAGE_TILES=1` in prod:** verify client-IP propagation
 for the per-IP `coverage_read` limiter
 ([security-architecture.md](../docs/specs/security-architecture.md) §7) —
