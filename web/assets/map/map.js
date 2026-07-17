@@ -359,10 +359,14 @@
     // The simulated middle branch (demo potable flag) is gone — simulated
     // flags die (map-and-search.md §12). v:1 is existence/verification, not a
     // potability statement: without a rider-set potable field the honest row
-    // is the OSM-unverified fallback.
+    // is the OSM-derived fallback — and that fallback must not claim
+    // "drinkable" for a fountain OSM tags as NOT potable (p.osmPotable===false,
+    // derived in covProps from the tile `potable` prop / tags.drinking_water).
     const potable = p.potable
       ? {label:D.potable||'Potable', value:trVal(p.potable)}
-      : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'};
+      : (p.osmPotable===false
+          ? {label:D.potable||'Potable', value:D.potableOsmNo||'Tagged not drinkable in OSM — not utility-verified; avoid unless confirmed on the spot', method:'unverified'}
+          : {label:D.potable||'Potable', value:D.potableOsm||'Tagged drinkable in OSM — not utility-verified; confirm on the spot', method:'unverified'});
     // C1-T4 (W6): see osmDrawer — a rider-added/edited water point isn't OSM.
     const community = p.srcType==='user' || p.srcType==='manual';
     const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
@@ -585,12 +589,29 @@
     if(tp.t) p.t=tp.t;
     if(tp.n) p.n=tp.n;
     if(key==='services' && tp.kind) p.serviceKind=tp.kind;
+    // C · water potability (coverage-provider.md §4 `potable` tile prop): the
+    // pipeline pre-computes it as OSM drinking_water='yes' OR (bare
+    // amenity=drinking_water with no contradicting tag); false covers every
+    // other case, including an explicit drinking_water='no'. Tolerant
+    // coercion matches the icon-choice expression (mintWaterDrops' paint
+    // match on ['yes','true','1']) since the tile value's wire type isn't
+    // guaranteed. Threaded through immediately so the open-now paint never
+    // claims "Tagged drinkable in OSM" for a fountain OSM does not attest as
+    // drinkable — waterDrawer reads p.osmPotable.
+    if(key==='water' && tp.potable!=null){
+      const v=tp.potable;
+      p.osmPotable = v===true || v==='true' || v===1 || v==='1' || v==='yes';
+    }
     if(d){
       if(d.name) p.n=d.name;
       if(key==='services' && d.kind) p.serviceKind=d.kind;
       const tags=d.tags||{};
       const web=tags.website||tags['contact:website'];
       if(web) p.web=web;
+      // The whitelisted raw tag (CoverageRepository::TAG_WHITELIST) is more
+      // precise than the tile's precomputed boolean once hydrated — an
+      // explicit 'no' is definitive.
+      if(key==='water' && tags.drinking_water==='no') p.osmPotable=false;
       if(d.curated){
         if(d.curated.itemId!=null) p.id=d.curated.itemId;
         Object.assign(p, d.curated.fields||{});
@@ -601,14 +622,21 @@
   // Open a coverage POI drawer from tile props immediately, then hydrate from
   // GET /map/coverage/poi/{ref} — the open-now-enrich-later pattern the drawer
   // already uses for history/confirmations (coverage-provider.md §6).
-  // Race guard: EVERY drawer-context render (openDrawer, openPlace, the
-  // ride-check results drawer) bumps _covReq, so a stale detail response can
+  // Race guard: EVERY drawer-context render (openDrawer, openPlace/
+  // renderPlaceCard, the ride-check results drawer, closeDrawer) bumps BOTH
+  // _covReq and _placeReq together — one shared drawer-generation convention,
+  // two names so each call site reads as "this fetch kind is now stale". A
+  // stale GET /map/coverage/poi/{ref} detail response (_covReq) or a stale
+  // GET /map/coverage/nearby town-card response (_placeReq) can therefore
   // never repaint a drawer that has since moved on — regardless of which
-  // click path (coverage dot, curated pin, -osm dot, route, place card)
-  // opened the newer drawer. The enrich repaint itself is a content-only
-  // patch (renderDrawerBody), not a re-open: no halo restart, no focus
-  // steal, no mobile-sheet snap back to half.
-  let _covReq=0;
+  // click path (coverage dot, curated pin, -osm dot, route, place card,
+  // another town) opened the newer drawer. Before this pairing, _placeReq
+  // was bumped only in openPlace, so switching from a town card to a plain
+  // feature drawer (or to a different town) mid-fetch let the stale nearby
+  // response resurrect the old town card over the new drawer content. The
+  // enrich repaint itself is a content-only patch (renderDrawerBody), not a
+  // re-open: no halo restart, no focus steal, no mobile-sheet snap to half.
+  let _covReq=0, _placeReq=0;
   function openCoverageDrawer(key, tp, ll){
     // Picking guard (spec §16 S1, same as openDrawer): during a stretch-picking
     // session the route drawer stays open (minimised) with the suggest form's
@@ -2001,7 +2029,7 @@
     // the point normally.
     if(_pick) return;
     clearRevealPin();   // decision C: a new pick supersedes any reveal pin (call sites re-drop after)
-    _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
+    _covReq++; _placeReq++;   // invalidate any in-flight coverage POI detail + town-card nearby fetch — this render supersedes them
     // Route selection emphasis: covers both the click path and the ?feature=
     // deep-link (both funnel through here). Layer id convention: the K line
     // layers are `experience-<feature index>` (see the drawLine call site).
@@ -2070,7 +2098,7 @@
   // local (curated/served) rows nearest-first, then coverage rows appended
   // inside the same letter groups. Coverage items with a curated twin already
   // in the local index are dropped (IDX_IDS — dedupe by served item id).
-  let _placeReq=0;
+  // (_placeReq is declared with _covReq above — shared drawer-generation convention.)
   function renderPlaceCard(name, meta, near, covGroups){
     const all=near.slice();
     (covGroups||[]).forEach(g=>{
@@ -2304,7 +2332,7 @@
         html+=`<div class="cc-near-empty">${tpl(D.nothingWithin||'Nothing in the Commons within {r} of this ride yet.', {r:radius})}</div>`;
       }
       const body=document.getElementById('drawerBody');
-      _covReq++;   // invalidate any in-flight coverage POI detail — this render supersedes it
+      _covReq++; _placeReq++;   // invalidate any in-flight coverage POI detail + town-card nearby fetch — this render supersedes them
       body.innerHTML=html;
       document.getElementById('rcClearBtn').onclick=clearRideCheck;
       const groupsByLetter=Object.fromEntries(d.groups.map(g=>[g.letter,g]));
@@ -2384,10 +2412,13 @@
     // stretches already live in _pickSegs and are untouched.
     if(_pick) cancelPicking();
     // Task 10 race convention: an explicit close invalidates any in-flight
-    // coverage POI detail — without this, openCoverageByRef (a FIRST opener,
-    // so the its-drawer-still-open guard can't apply) would reopen a drawer
-    // the rider just dismissed when the /map/coverage/poi/{ref} response lands.
-    _covReq++;
+    // coverage POI detail AND any in-flight town-card nearby fetch — without
+    // this, openCoverageByRef (a FIRST opener, so the its-drawer-still-open
+    // guard can't apply) would reopen a drawer the rider just dismissed when
+    // the /map/coverage/poi/{ref} response lands, and a stale
+    // /map/coverage/nearby response would resurrect a dismissed town card
+    // (_placeReq bumps everywhere _covReq does — shared drawer-generation convention).
+    _covReq++; _placeReq++;
     const d=document.getElementById('drawer'); d.classList.remove('open'); d.setAttribute('aria-hidden','true');
     clearHighlight();
     clearRevealPin();
