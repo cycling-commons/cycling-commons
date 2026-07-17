@@ -50,7 +50,6 @@ final class AdminActionLogCrudController extends AbstractCrudController
     #[\Override]
     public function configureActions(Actions $actions): Actions
     {
-        // Read-only: no new/edit/delete anywhere.
         return $actions
             ->disable(Action::NEW, Action::EDIT, Action::DELETE, Action::BATCH_DELETE);
     }

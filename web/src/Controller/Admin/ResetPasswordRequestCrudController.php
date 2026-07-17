@@ -20,8 +20,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * Read-only password-reset diagnostics: which accounts have an outstanding
  * request, when it expires, and whether it is still active. Secrets
- * (selector/hashedToken) are NEVER exposed — only Delete is allowed, to purge a
- * stuck row.
+ * (selector/hashedToken) are never exposed. Only Delete is allowed, to purge
+ * a stuck row.
+ *
+ * @see docs/specs/account-and-auth.md §6.5
  *
  * @api Instantiated by EasyAdmin's router.
  *
@@ -48,7 +50,8 @@ final class ResetPasswordRequestCrudController extends AbstractCrudController
     #[\Override]
     public function configureActions(Actions $actions): Actions
     {
-        // No create/edit; keep Delete only (purge a stuck row). No detail (secrets live there).
+        // Only Delete is enabled, to purge a stuck row. Detail is disabled
+        // because the secret fields (selector/hashedToken) must never render.
         return $actions
             ->disable(Action::NEW, Action::EDIT, Action::DETAIL, Action::BATCH_DELETE);
     }

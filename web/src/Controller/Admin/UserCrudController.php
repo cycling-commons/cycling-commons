@@ -103,11 +103,11 @@ final class UserCrudController extends AbstractCrudController
     {
         yield EmailField::new('email');
         yield TextField::new('displayName', 'Display Name');
-        // roles / emailVerified / lockedUntil are shown but NOT form-editable:
-        // changing them must go through the audited UserAdminService support
-        // actions (grant/revoke, verify, unlock), never the generic EA form —
-        // which is why the built-in EDIT/DELETE are disabled below too
-        // (security review 2026-07-07, #2 + related warning).
+        // roles / emailVerified / lockedUntil are shown but not form-editable.
+        // Changes must go through the audited UserAdminService support actions
+        // (grant/revoke, verify, unlock), never the generic EA form. That is
+        // also why the built-in EDIT/DELETE are disabled below
+        // (docs/specs/account-and-auth.md §6.1).
         yield ChoiceField::new('roles')
             ->setChoices(['Curator' => 'ROLE_CURATOR', 'Admin' => 'ROLE_ADMIN'])
             ->allowMultipleChoices()
@@ -118,13 +118,14 @@ final class UserCrudController extends AbstractCrudController
         yield DateTimeField::new('lockedUntil', 'Locked Until')->setRequired(false)->hideOnForm();
         yield BooleanField::new('publicProfile', 'Public Profile');
         yield DateTimeField::new('createdAt', 'Registered')->hideOnForm();
-        // 'email' is only a property carrier here — the displayed value comes
+        // 'email' is only a property carrier here. The displayed value comes
         // entirely from formatValue(), which reads the curator's live
-        // moderator_area rows via ModerationScopeProvider (moderator-areas
-        // spec 2026-07-14, Task 5). 'id' was tried first but EasyAdmin's
-        // TextConfigurator rejects non-string/non-Stringable raw values
-        // (int ids included) before formatValue ever runs; 'email' is
-        // already a string so it clears that check untouched.
+        // moderator_area rows via ModerationScopeProvider
+        // (docs/specs/moderation-and-contribution.md §9). 'id' was tried
+        // first, but EasyAdmin's TextConfigurator rejects non-string,
+        // non-Stringable raw values (int ids included) before formatValue
+        // ever runs. 'email' is already a string, so it clears that check
+        // untouched.
         yield TextField::new('email', $this->t('admin.field.mod_areas'))
             ->onlyOnDetail()
             ->formatValue(fn ($v, User $u): string => implode(' · ', $this->scopeProvider->describe($u)) ?: $this->translator->trans('account.mod_scope_all'));
@@ -136,8 +137,9 @@ final class UserCrudController extends AbstractCrudController
         // Every support action renders through a custom template that POSTs a
         // CSRF-tokened form (see admin/user_support_action.html.twig) instead of
         // EasyAdmin's default GET <a href>. Paired with the POST-only route on
-        // each handler + the token check in run(), this closes the CSRF hole
-        // (security review 2026-07-07, #2).
+        // each handler and the token check in run(), this closes the CSRF hole
+        // a GET link with no token would otherwise leave open
+        // (docs/specs/account-and-auth.md §6.1).
         $mk = fn (string $name, string $label, string $icon, bool $confirm, callable $when): Action => Action::new($name, $this->t($label), $icon)
             ->linkToCrudAction($name)
             ->displayIf($when)
@@ -158,7 +160,6 @@ final class UserCrudController extends AbstractCrudController
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REVOKE_CURATOR, 'admin.action.revoke_curator', 'fa fa-user', true, fn (User $u) => $this->svc->hasRole($u, 'ROLE_CURATOR')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::GRANT_ADMIN, 'admin.action.grant_admin', 'fa fa-user-gear', true, fn (User $u) => !$this->svc->hasRole($u, 'ROLE_ADMIN')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REVOKE_ADMIN, 'admin.action.revoke_admin', 'fa fa-user-minus', true, fn (User $u) => $this->svc->hasRole($u, 'ROLE_ADMIN')))
-            // Shown only for accounts with a pending self-requested deletion (deletionRequestedAt set).
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REMOVE_ACCOUNT, 'admin.action.remove_account', 'fa fa-trash', true, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::CANCEL_REMOVAL, 'admin.action.cancel_removal', 'fa fa-rotate-left', false, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
             // Not one of the $mk one-click POST mutations: this opens a form
@@ -246,10 +247,11 @@ final class UserCrudController extends AbstractCrudController
 
     /**
      * Assign moderator areas: GET renders the pick-regions/countries form,
-     * POST validates + replaces the target's moderator_area rows (moderator-
-     * areas spec 2026-07-14, Task 5). Unlike the one-click $mk actions above,
-     * this is a genuine intermediate page, hence GET+POST rather than
-     * POST-only — see the comment on testEverySupportActionRouteIsPostOnly().
+     * POST validates and replaces the target's moderator_area rows
+     * (docs/specs/moderation-and-contribution.md §9). Unlike the one-click
+     * $mk actions above, this is a genuine intermediate page, hence GET+POST
+     * rather than POST-only; see the comment on
+     * testEverySupportActionRouteIsPostOnly().
      *
      * @param AdminContext<User> $context
      */

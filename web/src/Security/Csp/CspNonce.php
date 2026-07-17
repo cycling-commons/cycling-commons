@@ -9,7 +9,9 @@ namespace App\Security\Csp;
 /**
  * Request-scoped CSP nonce: one random value per request, shared between the
  * Twig `csp_nonce()` function (stamped on every inline <script>) and the
- * response header the subscriber emits. Frontend review 2026-07-12 W3.
+ * response header the subscriber emits.
+ *
+ * @see docs/specs/security-architecture.md §2.2
  *
  * @api Auto-registered service, injected into CspExtension + CspSubscriber.
  */

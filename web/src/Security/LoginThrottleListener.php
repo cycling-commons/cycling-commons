@@ -32,18 +32,22 @@ use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
  *             disable IP throttle and observe the account lock cleanly).
  * Cooldown  : 15 minutes from the last locking failure.
  *
- * Residual DoS (review #9): because the hard lock rejects even the correct
- * password, an unauthenticated party who knows a victim's email can trip a
- * 15-minute lock by submitting 5 bad passwords. This is inherent to any
- * account-scoped lock. It is bounded, not eliminated: the window now genuinely
- * elapses (failures while locked no longer re-arm it — onLoginFailure below),
- * and the owner's password-reset flow clears the lock (ResetPasswordController),
- * so the lock can never permanently deny a legitimate holder. A stronger
- * mitigation (IP-diversity gate or CAPTCHA step-up before hard-locking) is a
- * deliberate product decision left to a dedicated change.
+ * Residual DoS: because the hard lock rejects even the correct password, an
+ * unauthenticated party who knows a victim's email can trip a 15-minute lock
+ * by submitting 5 bad passwords. This is inherent to any account-scoped lock.
+ * It is bounded, not eliminated: failures while the account is already locked
+ * never count and never re-arm the window, so the cooldown always genuinely
+ * elapses, and the owner's password-reset flow clears the lock
+ * (ResetPasswordController), so the lock can never permanently deny a
+ * legitimate holder. A stronger mitigation (IP-diversity gate or CAPTCHA
+ * step-up before hard-locking) is a deliberate product decision left to a
+ * dedicated change.
+ *
+ * @see docs/specs/account-and-auth.md §3
  *
  * @api Wired via #[AsEventListener] attributes; autoconfigured by the container.
- *      Never referenced directly from application code — Psalm must not flag as unused.
+ *      Never referenced directly from application code. Psalm must not flag it
+ *      as unused.
  */
 final class LoginThrottleListener
 {
@@ -62,7 +66,7 @@ final class LoginThrottleListener
      * Runs at priority 0 (default), after the UserProvider has resolved the user
      * but before the PasswordHasher listener (priority -10) verifies the password.
      * This ensures a locked account is rejected even when the supplied password is
-     * correct — the password is never checked.
+     * correct. The password is never checked.
      */
     #[AsEventListener(event: CheckPassportEvent::class, priority: 0)]
     public function onCheckPassport(CheckPassportEvent $event): void
@@ -111,9 +115,9 @@ final class LoginThrottleListener
         // A failure that occurs while the account is ALREADY locked is either
         // the CheckPassportEvent lock-rejection itself (which dispatches a
         // LoginFailureEvent) or a fresh attempt against a locked target. Never
-        // count it and never re-arm the window — doing so keeps resetting
+        // count it and never re-arm the window: doing so would keep resetting
         // lockedUntil to now+15min on every attempt, so the advertised cooldown
-        // never elapses (permanent DoS). The 15-minute window must run down.
+        // would never elapse (permanent DoS). The 15-minute window must run down.
         if ($user->isLocked()) {
             return;
         }
@@ -148,7 +152,7 @@ final class LoginThrottleListener
         }
 
         if (0 === $user->getFailedLoginAttempts() && null === $user->getLockedUntil()) {
-            // Nothing to reset — skip the flush.
+            // Nothing to reset, skip the flush.
             return;
         }
 
@@ -175,7 +179,7 @@ final class LoginThrottleListener
                     return $resolved;
                 }
             } catch (\Throwable) {
-                // User not found via badge — fall through to identifier lookup.
+                // User not found via badge, fall through to identifier lookup.
             }
 
             // Fall back: look up by identifier from the badge (avoids getUser() exception path).
