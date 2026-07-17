@@ -12,37 +12,35 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Server-side reader of the coverage tile manifest
- * (coverage-provider.md §4): the weekly pipeline uploads a
- * versioned PMTiles artifact plus a manifest at the stable key
- * coverage/manifest.json; this resolves the current versioned tile URL so
- * MapController can inject it as window.CC_COVERAGE_URL — no client manifest
- * fetch on boot, and a new artifact goes live within the cache TTL without a
- * deploy.
+ * Server-side reader of the coverage tile manifest: the weekly pipeline
+ * uploads a versioned PMTiles artifact plus a manifest at a stable key.
+ * This resolves the current tile URL so MapController can inject it into
+ * the page, with no client-side manifest fetch needed, and a new artifact
+ * goes live within the cache TTL without a deploy.
  *
  * Tolerant by design: the map must render without coverage tiles whenever
- * the flag is off, the manifest URL is unset, or the bucket is unreachable —
- * every failure path returns null (and logs a warning), never throws.
- * Failures are negative-cached for NEGATIVE_TTL so a degraded bucket costs
- * one bounded fetch per holdoff window, not one per /map render.
+ * the flag is off, the manifest URL is unset, or the bucket is unreachable.
+ * Every failure path returns null and logs a warning; it never throws.
+ * Failures are cached briefly, so a broken bucket costs one bounded fetch
+ * per holdoff window, not one per /map render.
+ *
+ * @see docs/specs/coverage-provider.md §4
  *
  * @api Injected into MapController::map().
  */
 final class CoverageManifest
 {
-    /** Manifest re-read interval (s) — coverage-provider.md §4 (CACHE_TTL, 3600 s). */
+    /** How long, in seconds, the manifest URL stays cached before being re-read. */
     private const int CACHE_TTL = 3600;
 
     /**
-     * Failure holdoff (s): coverage-provider.md §4 mandates null on every
-     * failure path; this negative TTL is spec-neutral implementation
-     * hardening on top — 30 s keeps a degraded bucket from costing a
-     * FETCH_TIMEOUT-bounded fetch on every /map render under load, while
-     * recovery is still picked up within half a minute.
+     * How long, in seconds, a failed fetch is remembered before retrying.
+     * This keeps a broken bucket from costing a slow fetch on every /map
+     * render, while still recovering within half a minute.
      */
     private const int NEGATIVE_TTL = 30;
 
-    /** Bucket fetch bound (s), both idle timeout and total max_duration — a slow (or slow-dripping) bucket must not stall a /map render. */
+    /** Bucket fetch bound, in seconds, used as both idle timeout and total max duration. A slow bucket must not stall a /map render. */
     private const int FETCH_TIMEOUT = 5;
 
     public function __construct(
@@ -67,9 +65,9 @@ final class CoverageManifest
                     /** @var array<string, mixed> $manifest */
                     $manifest = $this->http
                         ->request('GET', $this->manifestUrl, [
-                            // Both bounds: 'timeout' caps idle time between
-                            // chunks, 'max_duration' caps the whole request —
-                            // a slow-drip host defeats the former alone.
+                            // 'timeout' caps idle time between chunks;
+                            // 'max_duration' caps the whole request. A
+                            // slow-drip host would defeat 'timeout' alone.
                             'timeout' => self::FETCH_TIMEOUT,
                             'max_duration' => self::FETCH_TIMEOUT,
                         ])
@@ -82,8 +80,7 @@ final class CoverageManifest
 
                     return $url;
                 } catch (\Throwable $e) {
-                    // Negative cache: null (coverage-provider.md §4's mandated
-                    // failure result) held for NEGATIVE_TTL, then retried.
+                    // Cache the failure (null) for NEGATIVE_TTL, then retry.
                     $item->expiresAfter(self::NEGATIVE_TTL);
                     $this->logger->warning('Coverage manifest unavailable — map serves without coverage tiles.', [
                         'manifest_url' => $this->manifestUrl,
@@ -94,7 +91,7 @@ final class CoverageManifest
                 }
             });
         } catch (\Throwable $e) {
-            // The cache backend itself failed — same silent degradation.
+            // The cache backend itself failed. Same silent degradation as above.
             $this->logger->warning('Coverage manifest cache unavailable — map serves without coverage tiles.', [
                 'manifest_url' => $this->manifestUrl,
                 'exception' => $e,
@@ -105,10 +102,10 @@ final class CoverageManifest
     }
 
     /**
-     * Cache key derived from the manifest URL (hex digest, PSR-6-safe): an
-     * operator repointing COVERAGE_MANIFEST_URL against a persistent pool
-     * self-corrects on the next request instead of serving the previous
-     * versioned URL for up to CACHE_TTL.
+     * Cache key derived from the manifest URL (hex digest, PSR-6-safe). If
+     * an operator repoints COVERAGE_MANIFEST_URL while using a persistent
+     * cache, the next request uses the new key, instead of serving the old
+     * URL for up to CACHE_TTL.
      */
     private function cacheKey(): string
     {

@@ -12,10 +12,12 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * A dashboard message delivered to a rider or curator: a decision outcome
- * (submission/route/correction), a free-form curator note, or a rider's
- * needs-info reply (moderation-feedback spec M1/M2). `user_id` carries a
- * DB-level `ON DELETE CASCADE` FK to `users(id)` (spec M10) — the entity
- * keeps a plain int column, matching every other entity's FK convention.
+ * (submission, route, or correction), a free-form curator note, or a
+ * rider's needs-info reply. The `user_id` column has a DB-level
+ * `ON DELETE CASCADE` foreign key to `users(id)`, but the entity keeps it
+ * as a plain int column, matching every other entity's FK convention.
+ *
+ * @see docs/specs/moderation-and-contribution.md §7
  *
  * @api Read by the messages dashboard; written by moderation decision handlers.
  */

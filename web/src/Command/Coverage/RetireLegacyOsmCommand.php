@@ -17,35 +17,36 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Retires the legacy imported-OSM item rows the coverage cache now serves
- * (coverage-provider.md §9): letters C–J only,
- * source=osm, state=unverified, and ZERO human touches — no change_history,
- * no item_confirmation, no submission referencing the row. Anything a human
- * ever touched stays canonical. A (road surface) is letter-exempt because it
- * never entered the coverage artifact
- * (coverage-provider.md §7); B (climbs) is
- * wikidata-sourced and off-predicate anyway.
+ * Retires the legacy imported-OSM item rows that the coverage cache now
+ * serves. Eligible rows are letter C-J, source=osm, state=unverified, and
+ * have zero human touches: no change_history, no item_confirmation, no
+ * submission referencing the row. Anything a human ever touched stays
+ * canonical. Letter A (road surface) is exempt because it never entered
+ * the coverage artifact (docs/specs/coverage-provider.md §4). Letter B
+ * (climbs) is wikidata-sourced and is never eligible either.
  *
- * The touch-predicate is owned by CoverageRetirement — the SAME SQL fragment
- * CatalogProvider::itemRows()/curatedRefs() apply unconditionally, so what
- * the payload drops is structurally exactly what this deletes.
+ * The eligibility rule lives in CoverageRetirement, the same SQL fragment
+ * CatalogProvider::itemRows()/curatedRefs() apply unconditionally. So what
+ * this command deletes is structurally exactly what the payload already
+ * drops.
  *
- * Dry-run by default: prints per-letter counts, changes nothing. The
- * destructive run (--force) is owner-gated — explicit approval plus a dev-DB
- * backup (developers/docker/backups/) before running it, per standing rule.
+ * Dry-run by default: prints per-letter counts and changes nothing. The
+ * destructive run (--force) needs explicit owner approval and a dev-DB
+ * backup in developers/docker/backups/ first, per standing rule.
  *
- * @api Console entry point (one-off migration; safe to re-run — a second
- *      --force run always reports nothing left to retire).
+ * @see docs/specs/coverage-provider.md §9
+ *
+ * @api Console entry point. Safe to re-run: a second --force run always
+ *      reports nothing left to retire.
  */
 #[AsCommand(name: 'app:coverage:retire-legacy', description: 'Retire imported-OSM item rows the coverage cache now serves (dry-run by default; delete with --force)')]
 final class RetireLegacyOsmCommand extends Command
 {
     /**
-     * Retirement predicate over `item` (coverage-provider.md §9). The letter
-     * guard is composed HERE, in the command itself, so A and B stay
-     * structurally undeletable no matter how the shared touch-clause evolves;
-     * the touch-clause comes from CoverageRetirement, the single owner all
-     * provider call sites also consume.
+     * Retirement predicate over `item`. The letter guard is added here, in
+     * the command itself, so A and B can never be deleted no matter how
+     * the shared touch-clause in CoverageRetirement changes. Every provider
+     * call site consumes that same touch-clause.
      */
     private static function predicate(): string
     {
@@ -103,8 +104,8 @@ final class RetireLegacyOsmCommand extends Command
 
             return Command::FAILURE;
         } catch (\Throwable $e) {
-            // Non-DBAL failure mid-transaction: never leave it dangling —
-            // roll back, then let the real error surface unchanged.
+            // A non-DBAL failure mid-transaction. Roll back first, then let
+            // the real error surface unchanged.
             if ($this->db->isTransactionActive()) {
                 $this->db->rollBack();
             }

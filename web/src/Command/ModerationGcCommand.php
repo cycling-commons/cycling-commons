@@ -15,13 +15,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Deletes decided moderation rows past the retention cutoff
- * ({@see RetentionService}). The opportunistic sweep on the moderation desks
- * already keeps this current in practice; this command is the standalone
- * ops/dev entry point — e.g. for a cron, or to force a sweep without waiting
- * on a desk render.
+ * ({@see RetentionService}). The moderation desks already sweep
+ * opportunistically in practice; this command is the standalone ops/dev
+ * entry point, for example a cron job, or to force a sweep without
+ * waiting for a desk to render.
  *
- * @api Console entry point, safe to re-run (idempotent — a second run always
- *      reports zero once the backlog is clear).
+ * @see docs/specs/moderation-and-contribution.md §8
+ *
+ * @api Console entry point. Safe to re-run: it is idempotent, so a second
+ *      run always reports zero once the backlog is clear.
  */
 #[AsCommand(name: 'app:moderation:gc', description: 'Delete decided moderation rows past the retention cutoff')]
 final class ModerationGcCommand extends Command

@@ -13,26 +13,24 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 
 /**
- * Read plane over the pipeline-owned coverage_poi cache
- * (coverage-provider.md §5): drawer detail, name search,
- * town-card nearby and rail counts for the uncurated OSM tier. Raw DBAL like
- * App\Catalog\CatalogProvider — the map read path never hydrates entities.
+ * Read plane over the coverage_poi cache filled by the coverage pipeline:
+ * drawer detail, name search, town-card nearby lists and rail counts for
+ * the uncurated OSM tier. Uses raw DBAL, like App\Catalog\CatalogProvider,
+ * because the map read path never hydrates entities.
  *
- * Dedupe rule (osm-data-architecture.md §8): a coverage row is suppressed
- * wherever a *payload-served* `item` with the same source_ref exists — the
- * object appears once, as curated. "Payload-served" mirrors
- * CatalogProvider::itemRows()/curatedRefs() exactly (coverage-provider.md
- * §6/§9): a served item row that also matches the coverage-retirement
- * predicate (App\Catalog\CoverageRetirement::untouchedOsmSql()) is *not*
- * payload-served — its tile twin renders as community, so search/nearby/
- * counts must key "curated" the same way, or the query plane and the tiles
- * disagree and the owner-gated retirement DELETE would visibly change
- * search/nearby (coverage-provider.md §9's "zero display change").
+ * A coverage row is hidden whenever a payload-served `item` shares its
+ * source_ref, so each place appears once, as curated, and the results
+ * match what the map tiles show. "Payload-served" excludes any item row
+ * that also matches the coverage-retirement predicate, so a legacy row
+ * that is about to be retired still counts as community here too.
  *
- * Note: the shadow NOT EXISTS clauses here apply NOT(untouched) WITHOUT a
- * letter guard — a deliberate divergence from the letter-scoped
- * detail()/curatedRefs() form; the two only differ if one OSM way were
- * simultaneously an untouched A-surface item and a C–J POI (theoretical).
+ * The NOT EXISTS checks below test "not touched" without a letter filter,
+ * unlike detail()/curatedRefs(). This only matters if a single OSM element
+ * were somehow both an untouched surface item and a POI at the same time,
+ * which should not happen in practice.
+ *
+ * @see docs/specs/coverage-provider.md §5
+ * @see docs/specs/osm-data-architecture.md §8
  *
  * @api Consumed by CoverageController.
  */
@@ -42,8 +40,10 @@ final class CoverageRepository
     public const string ATTRIBUTION = '© OpenStreetMap contributors (ODbL)';
 
     /**
-     * Display whitelist for cached OSM tags (coverage-provider.md §5): store
-     * rich, serve trimmed — the drawer never sees the full filtered tag set.
+     * Tags shown to the public for a coverage POI. The cache stores every
+     * OSM tag, but only these are ever sent to the drawer.
+     *
+     * @see docs/specs/coverage-provider.md §5
      */
     public const array TAG_WHITELIST = [
         'opening_hours', 'website', 'contact:website', 'url', 'phone', 'contact:phone',
@@ -52,15 +52,16 @@ final class CoverageRepository
     ];
 
     /**
-     * Coverage POI letters (osm-data-architecture.md §5; A/B/K stay
-     * curated-only).
+     * Coverage POI letters. A, B and K stay curated-only.
+     *
+     * @see docs/specs/osm-data-architecture.md §5
      */
     private const string POI_LETTERS_SQL = "('C', 'D', 'E', 'G', 'H', 'I', 'J')";
 
-    /** Community items listed per nearby letter group before the "show all" expander (coverage-provider.md §5). */
+    /** Community items listed per nearby letter group before the "show all" expander. */
     private const int NEARBY_COMMUNITY_CAP = 3;
 
-    /** Default result cap for search() (coverage-provider.md §5). */
+    /** Default result cap for search(). */
     public const int SEARCH_LIMIT = 12;
 
     public function __construct(private readonly Connection $db)
@@ -68,14 +69,13 @@ final class CoverageRepository
     }
 
     /**
-     * Drawer payload for one coverage POI, curated overlay merged
-     * (coverage-provider.md §5 keys: ref, letter, name, kind, ll, tags,
-     * curated, attribution). Null
-     * when the ref is not in the coverage cache. The overlay join requires a
-     * *payload-served* item — the letter-scoped retirement exclusion mirrors
-     * CatalogProvider::curatedRefs() exactly, so an untouched legacy row
-     * (whose tile renders as community) never presents a curated{...} block
-     * in the drawer.
+     * Drawer payload for one coverage POI, with the curated overlay merged
+     * in when the place is also a payload-served item. Returns null when
+     * the ref is not in the coverage cache.
+     *
+     * The join that decides "curated" must match CatalogProvider::
+     * curatedRefs() exactly, so an untouched legacy row (rendered as
+     * community on the tiles) never shows a curated block in the drawer.
      *
      * @return array<string, mixed>|null
      */
@@ -118,12 +118,15 @@ final class CoverageRepository
     }
 
     /**
-     * Ranked name search, curated first (coverage-provider.md §5): payload-served items
-     * matched by name, then coverage rows not shadowed by a payload-served
-     * ref — both pg_trgm-ranked, deduped by ref (osm-data-architecture.md
-     * §8). "Payload-served" excludes the coverage-retirement predicate
-     * (CoverageRetirement::untouchedOsmSql()) so an untouched legacy row
-     * lists as community, matching its tile twin.
+     * Ranked name search, curated first: payload-served items matched by
+     * name, then coverage rows not already covered by one of those items.
+     * Both lists are ranked by trigram similarity and deduped by ref.
+     *
+     * "Payload-served" excludes the coverage-retirement predicate, so an
+     * untouched legacy row lists as community, matching its tile.
+     *
+     * @see docs/specs/coverage-provider.md §5
+     * @see docs/specs/osm-data-architecture.md §8
      *
      * @return list<array<string, mixed>>
      */
@@ -173,13 +176,15 @@ final class CoverageRepository
     }
 
     /**
-     * Letter-grouped POIs within $km of a point (the town card, coverage-provider.md §5):
+     * Letter-grouped POIs within $km of a point, for the town card:
      * payload-served entries first, then the nearest NEARBY_COMMUNITY_CAP
-     * community rows; `total` counts everything in range so the client can
-     * render the "show all" expander (07-15 decision A). "Payload-served"
-     * excludes the coverage-retirement predicate
-     * (CoverageRetirement::untouchedOsmSql()) so an untouched legacy row
-     * lists as community, matching its tile twin.
+     * community rows. `total` counts everything in range, so the client can
+     * render a "show all" expander.
+     *
+     * "Payload-served" excludes the coverage-retirement predicate, so an
+     * untouched legacy row lists as community, matching its tile.
+     *
+     * @see docs/specs/coverage-provider.md §5
      *
      * @return list<array{letter: string, total: int, items: list<array<string, mixed>>}>
      */
@@ -245,13 +250,15 @@ final class CoverageRepository
     }
 
     /**
-     * Per-letter coverage totals for the rail (coverage-provider.md §5). The
-     * letter filter is defensive: the {C..J} response shape is
-     * code-guaranteed, never dependent on what the pipeline loaded. Rows
-     * shadowed by a payload-served item (same weakened-shadow semantics as
-     * search()/nearby()) are excluded, so the rail total stays coherent with
-     * the map, which adds payload features on top of the tile layer — a
-     * confirmed item's coverage twin must not count twice.
+     * Per-letter coverage totals for the rail. The letter filter is
+     * defensive, so the {C..J} response shape never depends on what the
+     * pipeline actually loaded.
+     *
+     * Rows already covered by a payload-served item are excluded (the same
+     * rule as search()/nearby()), so a confirmed item's coverage twin is
+     * never counted twice.
+     *
+     * @see docs/specs/coverage-provider.md §5
      *
      * @return array<string, int>
      */
@@ -298,9 +305,9 @@ final class CoverageRepository
     }
 
     /**
-     * The curated overlay block: canonical fields (attributes + the name
-     * pseudo-field) and public confirmation tallies — the same GROUP BY as
-     * ItemConfirmationService::snapshot().
+     * The curated overlay block: canonical fields (attributes plus the name
+     * pseudo-field) and public confirmation tallies. Uses the same GROUP BY
+     * as ItemConfirmationService::snapshot().
      *
      * @return array{itemId: int, state: string, fields: object, confirmations: object}
      */

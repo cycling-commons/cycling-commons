@@ -11,13 +11,14 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * The single owner of message writes and reads (moderation-feedback spec
- * M1/M2): system decision outcomes, free-form curator notes, and rider
- * needs-info replies all funnel through here, plus the dashboard's list/
- * unread-count/mark-read reads.
+ * The single owner of message writes and reads: system decision outcomes,
+ * free-form curator notes, and rider needs-info replies all go through
+ * here, along with the dashboard's list, unread-count, and mark-read reads.
+ *
+ * @see docs/specs/moderation-and-contribution.md §7
  *
  * @api Called by moderation decision handlers, the curator message action,
- *      the rider reply action, and the messages dashboard (Tasks 3-9).
+ *      the rider reply action, and the messages dashboard.
  */
 final class MessageService
 {
@@ -33,24 +34,26 @@ final class MessageService
 
     /**
      * Records a system decision outcome. Persists WITHOUT flushing: callers
-     * invoke this from inside a decision transaction (e.g. ModerationService
-     * ::decide's `wrapInTransaction` closure) whose own flush-on-commit
-     * writes this row alongside the decision — an extra flush here would be
-     * redundant and would risk flushing a still-inconsistent unit of work.
+     * call this from inside a decision transaction (for example,
+     * ModerationService::decide's `wrapInTransaction` closure), whose own
+     * flush-on-commit writes this row alongside the decision. An extra
+     * flush here would be redundant, and could flush a still-inconsistent
+     * unit of work.
      *
-     * `$curatorNote`, when non-empty after trimming, rides along in
-     * `body_text` next to the translated `body_key` headline so the rider
+     * `$curatorNote`, when non-empty after trimming, is stored in
+     * `body_text` next to the translated `body_key` headline, so the rider
      * sees the curator's note under it.
      *
      * `user_message.user_id` carries a real FK (`ON DELETE CASCADE`) to
      * `users`, but every referenced entity's author/proposer column
      * (`submission.user_id`, `route_suggestion.user_id`,
      * `recommended_route.proposed_by`) is a plain no-FK int that survives
-     * account deletion. If the recipient's account is already gone, the
-     * message is the recipient's cascade-away inbox copy (M1/M10) — no
-     * recipient, no message; the durable audit lives on the row/change-
-     * history, so returning null here (instead of letting the INSERT
-     * violate the FK) never loses the decision itself.
+     * account deletion. If the recipient's account is already gone, this
+     * method returns null instead of letting the INSERT violate the FK: no
+     * recipient, no message. The durable audit still lives on the row or
+     * its change history, so the decision itself is never lost.
+     *
+     * @see docs/specs/moderation-and-contribution.md §7.6
      *
      * @param array<string, mixed> $bodyParams
      *
@@ -90,15 +93,14 @@ final class MessageService
     }
 
     /**
-     * Records a free-form curator note to a rider. Standalone action (not
-     * inside a decision transaction) — persists and flushes immediately.
+     * Records a free-form curator note to a rider. Standalone action, not
+     * inside a decision transaction: persists and flushes immediately.
      *
      * `$userId` is resolved by the caller from the same no-FK author/
      * proposer columns `sendSystem()` guards against (submission.user_id,
-     * route_suggestion.user_id, recommended_route.proposed_by) — a deleted
-     * account isn't merely a same-request race here, it's the same
-     * already-dangling-id case, so this gets the identical existence guard
-     * for correctness, not just uniformity.
+     * route_suggestion.user_id, recommended_route.proposed_by). A deleted
+     * account is the same already-dangling-id case there, so this method
+     * needs the identical existence guard, not just for consistency.
      *
      * @throws \InvalidArgumentException if the trimmed body is empty or exceeds 2000 characters
      */
@@ -119,16 +121,16 @@ final class MessageService
 
     /**
      * Records a rider's needs-info reply, delivered TO the curator (the
-     * message recipient is the curator, not the rider). Standalone action —
+     * message recipient is the curator, not the rider). Standalone action:
      * persists and flushes immediately.
      *
      * `submission.decided_by` (the source of `$recipientCuratorId`) is
      * another no-FK column, so the deciding curator's account can be gone
      * by the time the rider replies. `MessagesController::reply` already
-     * checks this before opening the transaction and flashes the same
-     * `messages.reply_too_late` outcome as an already-resolved submission;
-     * this guard is the defense-in-depth backstop for that same race (and
-     * for any future direct caller) — negligible window, documented rather
+     * checks this before opening the transaction, and flashes the same
+     * `messages.reply_too_late` outcome as an already-resolved submission.
+     * This guard is a backstop for that same race, for any future direct
+     * caller. The window is small, so it is only documented here rather
      * than specially handled by the caller's transaction.
      *
      * @throws \InvalidArgumentException if the trimmed body is empty or exceeds 2000 characters
@@ -177,8 +179,9 @@ final class MessageService
     }
 
     /**
-     * True when `$userId` still has a row in `users` — the deleted-recipient
-     * guard shared by every send* method (see their docblocks).
+     * True when `$userId` still has a row in `users`. This is the
+     * deleted-recipient guard shared by every send* method (see their
+     * docblocks).
      */
     private function recipientExists(int $userId): bool
     {

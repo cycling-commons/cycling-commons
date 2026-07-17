@@ -17,7 +17,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * @api Bootstrap CLI command — wired by Symfony's DI; never referenced from code.
+ * @api Bootstrap CLI command, wired by Symfony's DI. Never referenced
+ *      directly from application code.
  */
 #[AsCommand(
     name: 'app:user:create',
@@ -88,9 +89,10 @@ final class CreateUserCommand extends Command
             $this->em->persist($user);
             $this->em->flush();
         } catch (UniqueConstraintViolationException) {
-            // The unique canonical-display-name index rejects this — most likely
-            // because the default (email local part) collides with an existing
-            // user. Surface a friendly message instead of the raw DBAL stack trace.
+            // The unique canonical-display-name index rejected this insert,
+            // most likely because the default name (the email's local part)
+            // collides with an existing user. Show a friendly message
+            // instead of the raw DBAL error.
             $io->error(sprintf(
                 'Display name "%s" is already taken. Pass --display-name to choose a different one.',
                 $user->getDisplayName(),

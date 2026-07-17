@@ -7,9 +7,11 @@ declare(strict_types=1);
 namespace App\Messaging;
 
 /**
- * What a dashboard message is about (moderation-feedback spec M1/M2): one kind
- * per decision outcome per channel, plus free-form curator messages and the
- * rider's needs-info reply.
+ * What a dashboard message is about: one kind per decision outcome per
+ * channel, plus free-form curator messages and the rider's needs-info
+ * reply.
+ *
+ * @see docs/specs/moderation-and-contribution.md §7
  *
  * @api Messaging vocabulary.
  */
