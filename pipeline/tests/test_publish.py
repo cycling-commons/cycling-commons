@@ -79,3 +79,18 @@ def test_ensure_bucket_noop_when_present(env):
     with stub:
         publish.ensure_bucket(client=client)
     stub.assert_no_pending_responses()
+
+
+def test_ensure_bucket_reraises_forbidden_instead_of_masking_with_create(env):
+    # A 403 (bad/expired creds, or a bucket the batch credential can't even
+    # HEAD) must surface as itself — not be swallowed and then fail
+    # confusingly on create_bucket, which a create-less prod credential can't
+    # do either.
+    client, stub = _stubbed_client()
+    stub.add_client_error("head_bucket", service_error_code="403", http_status_code=403,
+                          expected_params={"Bucket": "cc-maps"})
+    with stub:
+        with pytest.raises(publish.ClientError) as exc_info:
+            publish.ensure_bucket(client=client)
+    assert exc_info.value.response["Error"]["Code"] == "403"
+    stub.assert_no_pending_responses()   # create_bucket must never be called

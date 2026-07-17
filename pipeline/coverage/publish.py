@@ -49,14 +49,21 @@ def ensure_bucket(client=None):
     """Dev bootstrap: create the bucket (anonymous-read) when it does not exist.
 
     Prod buckets pre-exist, so head_bucket short-circuits and the batch
-    credentials never need create/policy rights there."""
+    credentials never need create/policy rights there. Only a confirmed
+    "bucket does not exist" response falls through to create_bucket — an
+    auth/permission error (403 Forbidden, wrong/expired credentials) must
+    surface as itself instead of being swallowed here and then failing
+    confusingly on create_bucket (a create-less credential can't do that
+    either, and the resulting error hides the real cause)."""
     client = client or _client()
     bucket = _bucket()
     try:
         client.head_bucket(Bucket=bucket)
         return
-    except ClientError:
-        pass
+    except ClientError as e:
+        code = e.response.get("Error", {}).get("Code", "")
+        if code not in ("404", "NoSuchBucket"):
+            raise
     client.create_bucket(Bucket=bucket)
     client.put_bucket_policy(Bucket=bucket, Policy=json.dumps({
         "Version": "2012-10-17",
