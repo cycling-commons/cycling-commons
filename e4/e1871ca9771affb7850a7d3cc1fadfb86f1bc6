@@ -1,0 +1,44 @@
+wiki/building.md
+  s_f6d45d977e7468::t_403141f306c546 1-2
+  s_f6d45d977e7468::t_3253a92a578446 128
+wiki/manifesto.md
+  s_f6d45d977e7468::t_403141f306c546 1-2
+README.md
+  s_f6d45d977e7468::t_11bf443f3bb195 185
+.pre-commit-config.yaml
+  s_f6d45d977e7468::t_f1ccd565fb4a95 37-47
+wiki/landscape.md
+  s_f6d45d977e7468::t_403141f306c546 1-2
+wiki/curation-and-voting.md
+  s_f6d45d977e7468::t_403141f306c546 1-2
+wiki/contributing.md
+  s_f6d45d977e7468::t_403141f306c546 1-2
+wiki/data-catalog.md
+  s_f6d45d977e7468::t_403141f306c546 1-2
+mkdocs.yml
+  s_f6d45d977e7468::t_403141f306c546 8
+wiki/governance.md
+  s_f6d45d977e7468::t_403141f306c546 1-2
+docs/specs/osm-data-architecture.md
+  s_f6d45d977e7468::t_f83545597c6e05 74-75
+wiki/index.md
+  s_f6d45d977e7468::t_403141f306c546 1-2
+tools/check-wiki-spdx.sh
+  s_f6d45d977e7468::t_96edca9e044be6 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "e4e1871ca9771affb7850a7d3cc1fadfb86f1bc6",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
