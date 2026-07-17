@@ -13,10 +13,13 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * Exposes the current user's unread-message count to every template — the
- * account chip's unread bulb (moderation-feedback spec M4) reads it on
- * every page render, including anonymous ones, so the no-user path returns
- * 0 without touching the database.
+ * Exposes the current user's unread-message count to every template.
+ *
+ * The account chip's unread bulb reads it on every page render, including
+ * anonymous ones, so the no-user path returns 0 without touching the
+ * database.
+ *
+ * @see docs/specs/moderation-and-contribution.md §7.5
  *
  * @api Auto-registered Twig extension.
  */

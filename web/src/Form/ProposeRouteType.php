@@ -22,9 +22,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
 /**
- * Rider route-proposal form (route-domain spec §5.2): the GPX file plus the
- * K metadata fields. Deep validation of the file CONTENT happens in
- * GpxParser/RouteProposalService — this form only gates size/extension.
+ * Rider route-proposal form (route-domain.md §4.1): the GPX file plus the
+ * K metadata fields. Deep validation of the file content happens in
+ * GpxParser/RouteProposalService. This form only gates size/extension.
  */
 final class ProposeRouteType extends AbstractType
 {
@@ -59,9 +59,10 @@ final class ProposeRouteType extends AbstractType
                 'label' => false,
                 'choices' => DifficultyVocabulary::choices(),
             ])
-            // Best season is now MULTI-select (spec §15): pick any of the four —
-            // selecting all is the retired "Any". Stored as a list<string> in
-            // attributes.season; the drawer tolerates the legacy scalar string.
+            // Best season is a multi-select (route-domain.md §9): choosing all
+            // four means "any" season. Stored as a list<string> in
+            // attributes.season; the drawer must still accept the legacy
+            // scalar string on older routes.
             ->add('season', ChoiceType::class, [
                 'label' => false,
                 'required' => false,
@@ -69,8 +70,9 @@ final class ProposeRouteType extends AbstractType
                 'expanded' => true,
                 'choices' => ['Spring' => 'Spring', 'Summer' => 'Summer', 'Autumn' => 'Autumn', 'Winter' => 'Winter'],
             ])
-            // All surface types (spec §15), shared with the A-layer vocabulary —
-            // was the coarse Asphalt/Mixed/Gravel. Legacy 'Mixed' values still display.
+            // Full surface vocabulary (route-domain.md §9), shared with the
+            // A-layer vocabulary. Legacy 'Mixed' values must still display for
+            // older routes.
             ->add('dominantSurface', ChoiceType::class, [
                 'label' => false,
                 'choices' => array_combine(SurfaceVocabulary::DECLARABLE, SurfaceVocabulary::DECLARABLE),
@@ -94,9 +96,10 @@ final class ProposeRouteType extends AbstractType
             ->add('gradientLimited', ChoiceType::class, [
                 'label' => false,
                 'required' => false,
-                // Display wording clarified (2026-07-11) but the STORED values stay
-                // 'No'/'≤6%'/'≤9%' — no data migration. "Whole route ≤ X%" reads as
-                // an accessibility guarantee (suitable for riders who need that cap).
+                // The labels are friendlier text, but the stored values must
+                // stay 'No'/'≤6%'/'≤9%' to avoid a data migration. "Whole
+                // route ≤ X%" is an accessibility guarantee for riders who
+                // need that cap.
                 'choices' => ['No cap' => 'No', 'Whole route ≤ 6%' => '≤6%', 'Whole route ≤ 9%' => '≤9%'],
             ])
         ;

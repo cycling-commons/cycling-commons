@@ -68,7 +68,7 @@ final class SettingsType extends AbstractType
                 'label' => 'form.label_language',
                 'required' => false,
                 'placeholder' => 'form.ph_language',
-                // Endonyms — the same in every locale, so keep them out of the translator.
+                // Endonyms: the same in every locale, so keep them out of the translator.
                 'choices' => [
                     'English' => 'en',
                     'Français' => 'fr',
@@ -77,9 +77,9 @@ final class SettingsType extends AbstractType
                 ],
                 'choice_translation_domain' => false,
             ])
-            // Rider preferences (spec 2026-07-14). EnumType hands the entity
-            // setters real enum instances. Bike-type labels reuse the map's
-            // existing vocabulary keys (already translated in all 4 locales).
+            // Rider preferences (account-and-auth.md §9). EnumType hands the
+            // entity setters real enum instances. Bike-type labels reuse the
+            // map's existing vocabulary keys (already translated in all 4 locales).
             ->add('bikeTypes', EnumType::class, [
                 'class' => BikeType::class,
                 'label' => 'form.label_bike_types',

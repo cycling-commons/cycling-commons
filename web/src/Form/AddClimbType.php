@@ -29,8 +29,9 @@ use Symfony\Component\Validator\Constraints\Regex;
  * types. The geocoded location (lat/lng/place) is filled by client-side JS and
  * carried as hidden/text fields. CSRF protection is provided automatically.
  *
- * @api Instantiated by Symfony's form factory — `@api` tells Psalm the
- *      constructor is a live entry point, not dead code.
+ * @see docs/specs/edit-items/B-climbs.md
+ *
+ * @api Instantiated by Symfony's form factory.
  */
 final class AddClimbType extends AbstractType
 {
@@ -42,7 +43,7 @@ final class AddClimbType extends AbstractType
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        // Surface/quality/traffic choices from the shared Climbs registry (#49).
+        // Surface/quality/traffic choices come from the shared Climbs registry.
         $climbFields = [];
         foreach ($this->registry->for(ItemType::Climbs)->all() as $field) {
             $climbFields[$field->name] = array_combine($field->choices, $field->choices);
@@ -90,8 +91,9 @@ final class AddClimbType extends AbstractType
                 'required' => false,
                 // Average gradient: a bare number, optionally with a decimal
                 // and/or trailing '%' (e.g. "6.4" or "8%"). Kept as text (not
-                // NumberType) so the editor's "%" affordance round-trips, but
-                // no longer an unbounded free string into published attributes.
+                // NumberType) so the editor's "%" affordance round-trips. The
+                // Length and Regex constraints below keep the stored value
+                // bounded before it reaches the published attributes.
                 'constraints' => [
                     new Length(max: 8, maxMessage: 'add_climb.error.avg_gradient_invalid'),
                     new Regex(
@@ -113,10 +115,9 @@ final class AddClimbType extends AbstractType
                 ],
             ])
             // Climb surface/quality/traffic vocabularies come from the ONE
-            // registry (Climbs surface/sq/tr fields) so add-climb and the
+            // registry (Climbs surface/sq/tr fields), so add-climb and the
             // improve form can never store divergent values for the same
-            // attribute (#49) — add-climb previously offered Concrete/Mixed,
-            // which the registry-driven improve select does not recognise.
+            // attribute.
             ->add('fSurface', ChoiceType::class, [
                 'label' => false,
                 'choices' => $climbChoices['surface'],
@@ -138,7 +139,6 @@ final class AddClimbType extends AbstractType
                     new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
                 ],
             ])
-            // Geocoded location carried as hidden fields (filled by client JS)
             ->add('lat', HiddenType::class, [
                 'label' => false,
                 'required' => false,

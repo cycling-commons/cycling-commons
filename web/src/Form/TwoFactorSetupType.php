@@ -14,7 +14,7 @@ use Symfony\Component\Validator\Constraints\Regex;
 /**
  * One-time code entry used to confirm a freshly scanned TOTP secret during /2fa/setup.
  * The code itself is verified against the pending secret by the controller (scheb's
- * TotpAuthenticatorInterface::checkCode), not by this form — the constraints only guard shape.
+ * TotpAuthenticatorInterface::checkCode), not by this form. The constraints only guard shape.
  */
 final class TwoFactorSetupType extends AbstractType
 {

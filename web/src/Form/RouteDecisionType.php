@@ -14,7 +14,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
-/** Curator decision on a route proposal (spec §6). Array form; CSRF auto. */
+/** Curator decision on a route proposal (route-domain.md §5). Array form; CSRF auto. */
 final class RouteDecisionType extends AbstractType
 {
     #[\Override]

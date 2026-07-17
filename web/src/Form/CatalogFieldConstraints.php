@@ -16,9 +16,11 @@ use Symfony\Component\Validator\Constraints\Regex;
 use Symfony\Component\Validator\Constraints\Url;
 
 /**
- * Registry descriptor → validator constraints, in ONE place (spec §6.1):
- * every text-like catalog field gets Length + NoSuspiciousCharacters;
+ * Turns a registry field descriptor into validator constraints, in one
+ * place: every text-like catalog field gets Length + NoSuspiciousCharacters;
  * required fields get NotBlank. Selects are constrained by ChoiceType itself.
+ *
+ * @see docs/specs/moderation-and-contribution.md §2
  *
  * @api Used by ImproveType (and any future registry-driven form).
  */
@@ -33,25 +35,25 @@ final class CatalogFieldConstraints
         if ($field->required) {
             $constraints[] = new NotBlank(message: 'contribute.error.field_required');
         }
-        // Select and MultiSelect values are constrained by ChoiceType itself
-        // (and MultiSelect's value is a list<string>, not a scalar — the
+        // Select and MultiSelect values are constrained by ChoiceType itself.
+        // MultiSelect's value is a list<string>, not a scalar, so the
         // string-shaped Length/NoSuspiciousCharacters/Cf-regex checks below
-        // don't apply to either).
+        // do not apply to either.
         if (!\in_array($field->kind, [FieldKind::Select, FieldKind::MultiSelect], true)) {
             $constraints[] = new Length(max: $field->maxLength, maxMessage: 'contribute.error.field_too_long');
             $constraints[] = self::noSuspiciousCharacters();
             // NoSuspiciousCharacters' CHECK_INVISIBLE (ICU Spoofchecker) only fires on
             // *repeated identical* nonspacing combining marks, not a lone Cf format
             // character (e.g. U+200B ZERO WIDTH SPACE); soft hyphen U+00AD is also Cf
-            // and thus rejected too — acceptable for the en/fr/nl/de locale set.
+            // and thus rejected too. That is acceptable for the en/fr/nl/de locale set.
             $constraints[] = new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters');
         }
 
-        // A url-kind field (a stay's `web` / `bookingLink`) is text-like — it
-        // keeps Length + suspicious-character guards above — but its value is
-        // interpolated into an `<a href>` on the public map, so it must ALSO be
-        // a real http(s) URL. Restricting protocols to http/https is what stops
-        // a `javascript:`/`data:` payload from ever persisting (critical #3).
+        // A url-kind field (a stay's `web` / `bookingLink`) is text-like. It
+        // keeps the Length + suspicious-character guards above, but its value
+        // is interpolated into an `<a href>` on the public map, so it must
+        // ALSO be a real http(s) URL. Restricting protocols to http/https is
+        // what stops a `javascript:`/`data:` payload from ever persisting.
         if (FieldKind::Url === $field->kind) {
             $constraints[] = new Url(
                 message: 'contribute.error.invalid_url',
@@ -70,8 +72,8 @@ final class CatalogFieldConstraints
      * messages (restriction-level / invisible / mixed-numbers / hidden-overlay),
      * all English; since framework.validation.translation_domain is `messages`
      * (not `validators`), leaving any on its default would render English to
-     * fr/nl/de users. One key covers them all — the exact sub-check is an
-     * implementation detail the rider doesn't need spelled out.
+     * fr/nl/de users. One key covers them all: the exact sub-check is an
+     * implementation detail the rider does not need to see.
      *
      * @api Shared by ProposeRouteType and AddClimbType.
      */

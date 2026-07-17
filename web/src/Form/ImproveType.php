@@ -37,13 +37,14 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * 'improve' kind as an Edit submission (was/now snapshot against the bound
  * item's current attributes).
  *
- * The `current` option (`array<string, scalar|list<string>|null>`, keyed by registry field
- * name) prefills Text/Textarea/Select fields with the bound item's current
- * name + attribute values — the edit-bridge acceptance criterion (spec §8):
- * `/improve?item=<id>` opens pre-filled, never blank/default.
+ * The `current` option (`array<string, scalar|list<string>|null>`, keyed by
+ * registry field name) prefills Text/Textarea/Select fields with the bound
+ * item's current name and attribute values, so `/improve?item=<id>` opens
+ * pre-filled, never blank or default.
  *
- * @api Instantiated by Symfony's form factory — `@api` tells Psalm the
- *      constructor is a live entry point, not dead code.
+ * @see docs/specs/moderation-and-contribution.md §1.4
+ *
+ * @api Instantiated by Symfony's form factory.
  */
 final class ImproveType extends AbstractType
 {
@@ -80,7 +81,7 @@ final class ImproveType extends AbstractType
         // ── Shared fields (all types) ────────────────────────────────────────
         $builder
             // Opaque feature reference (which specific item is being edited),
-            // filled by JS from ?item= — distinct from the catalog type.
+            // filled by JS from ?item=. This is distinct from the catalog type.
             ->add('subject', HiddenType::class, ['required' => false])
             ->add('photoUrl', UrlType::class, [
                 'label' => false,
@@ -88,9 +89,9 @@ final class ImproveType extends AbstractType
                 // Don't let FixUrlProtocolListener turn an empty optional field
                 // into the bare string "http://".
                 'default_protocol' => null,
-                // UrlType is only a widget — validate server-side so a
+                // UrlType is only a widget. Validate server-side so a
                 // javascript:/data:/file: scheme or an unbounded string can
-                // never reach the submission payload (#12).
+                // never reach the submission payload.
                 'constraints' => self::mediaUrlConstraints(),
             ])
             ->add('videoUrl', UrlType::class, [
@@ -106,10 +107,11 @@ final class ImproveType extends AbstractType
         ;
 
         // Climb shape drawn by the three-point editor (client JS), carried as
-        // JSON — top-level (not nested under details/extras) so it lands at
-        // $payload['route'|'grad'|'steep'] for App\Contribution\ClimbGeometry
-        // to decode, exactly like AddClimbType (Task 4). Only climbs get
-        // these — other catalog types have no geometry to edit.
+        // JSON. These fields stay top-level (not nested under details/extras)
+        // so they land at $payload['route'|'grad'|'steep'], where
+        // App\Contribution\ClimbGeometry decodes them, exactly like
+        // AddClimbType. Only climbs get these fields; other catalog types
+        // have no geometry to edit.
         if (ItemType::Climbs === $type) {
             $builder
                 ->add('route', HiddenType::class, ['label' => false, 'required' => false])
@@ -119,12 +121,12 @@ final class ImproveType extends AbstractType
         }
 
         // Segment-located types (road surface): the wizard's two drawn
-        // endpoints, carried as JSON {"a":[lng,lat],"b":[lng,lat]} — frontend
-        // review 2026-07-12 critical C6: without this carrier the drawn
-        // segment was held only in client memory and silently dropped on
-        // submit. Recorded in the submission payload (parity with the point
-        // branch's lat/lng); applying geometry edits on approve is a separate
-        // moderation feature for points and segments alike.
+        // endpoints, carried as JSON {"a":[lng,lat],"b":[lng,lat]}. Without
+        // this field the drawn segment only lives in client memory and is
+        // silently dropped on submit. It is recorded in the submission
+        // payload for parity with the point branch's lat/lng. Applying
+        // geometry edits on approve is a separate moderation feature for
+        // points and segments alike.
         if (LocationMode::Segment === $type->locationMode()) {
             $builder->add('segment', HiddenType::class, ['label' => false, 'required' => false]);
         }
@@ -148,7 +150,7 @@ final class ImproveType extends AbstractType
                 'choices' => array_combine($field->choices, $field->choices),
                 'data' => $data,
             ]),
-            // P2-D2: same choice universe as Select, but multiple/expanded so the
+            // Same choice universe as Select, but multiple/expanded so the
             // submitted value is a list<string> (BikeTypeVocabulary consumes it).
             FieldKind::MultiSelect => $builder->add($field->name, ChoiceType::class, [
                 'label' => $field->label,
@@ -174,7 +176,7 @@ final class ImproveType extends AbstractType
             ]),
             // A real http(s) URL field: rendered as <input type="url"> (no
             // protocol auto-prefixing) and validated by the Url constraint the
-            // registry emits — see CatalogFieldConstraints (critical #3).
+            // registry emits. See CatalogFieldConstraints.
             FieldKind::Url => $builder->add($field->name, UrlType::class, [
                 'label' => $field->label,
                 'required' => false,
@@ -207,9 +209,9 @@ final class ImproveType extends AbstractType
             'data_class' => null,
             'catalog_type' => ItemType::default(),
             'current' => [],
-            // The bound item's D (BikeServices) kind — null for other types or
-            // when the kind is unknown, which preserves the pre-kind-aware
-            // behaviour (openingHours included) via CatalogFormRegistry::for().
+            // The bound item's D (BikeServices) kind. Null for other types or
+            // when the kind is unknown; CatalogFormRegistry::for() then falls
+            // back to the default field set, which includes openingHours.
             'service_kind' => null,
         ]);
         $resolver->setAllowedTypes('catalog_type', ItemType::class);

@@ -13,7 +13,7 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * Exposes the current page re-generated in every enabled locale — used by the
+ * Exposes the current page re-generated in every enabled locale. Used by the
  * nav language switcher (as the post-switch redirect target) and by the
  * `<link rel="alternate" hreflang>` tags in the document head.
  *
@@ -67,7 +67,7 @@ final class LocaleExtension extends AbstractExtension
         /** @var array<string, mixed> $params */
         $params = $request->attributes->get('_route_params', []);
         // The target locale is driven through the router context, not the
-        // parameters — passing `_locale` as a param would append `?_locale=…`
+        // parameters. Passing `_locale` as a param would append `?_locale=…`
         // to non-localized routes.
         unset($params['_locale']);
 
@@ -82,7 +82,7 @@ final class LocaleExtension extends AbstractExtension
                     $urls[$locale] = $this->router->generate($route, $params);
                 } catch (\Throwable) {
                     // Route not generatable in this locale (e.g. a required
-                    // parameter is absent) — omit it rather than fail the page.
+                    // parameter is absent). Omit it rather than fail the page.
                 }
             }
         } finally {
