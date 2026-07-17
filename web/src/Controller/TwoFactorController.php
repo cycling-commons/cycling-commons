@@ -48,7 +48,7 @@ final class TwoFactorController extends AbstractController
         EntityManagerInterface $entityManager,
     ): Response {
         // Defence-in-depth beyond the access_control regex: never dereference a
-        // null user (#18). IsGranted above already guarantees authentication;
+        // null user. IsGranted above already guarantees authentication;
         // this keeps the invariant explicit at the code boundary.
         $user = $this->getUser();
         if (!$user instanceof User) {
@@ -139,7 +139,7 @@ final class TwoFactorController extends AbstractController
         for ($i = 0; $i < self::BACKUP_CODE_COUNT; ++$i) {
             // 80 bits of entropy per code (10 random bytes → 20 hex chars),
             // grouped in 4s for legibility. 32 bits was offline-enumerable
-            // against the stored hashes (review #13).
+            // against the stored hashes.
             $codes[] = implode('-', str_split(bin2hex(random_bytes(10)), 4));
         }
 

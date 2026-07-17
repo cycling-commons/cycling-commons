@@ -113,7 +113,7 @@ final class ModerateMessageController extends AbstractController
     private function resolveRoute(int $id): ?array
     {
         $route = $this->em->find(RecommendedRoute::class, $id);
-        // Imported routes carry no proposer (route-domain spec D3) — nobody to message.
+        // Imported routes carry no proposer: nobody to message.
         if (null === $route || null === $route->getProposedBy()) {
             return null;
         }
@@ -136,11 +136,12 @@ final class ModerateMessageController extends AbstractController
     }
 
     /**
-     * §13-style redirect-after-POST: send the curator back to the desk row
-     * they messaged from, filters intact. Only the *path* component of the
-     * Referer is trusted (host/scheme are discarded), and only when it
-     * points back into `/moderate` — this rules out an open redirect via a
-     * forged Referer header. Falls back to the channel's own desk route.
+     * Redirect-after-POST (moderation-and-contribution.md §5.1 pattern): send
+     * the curator back to the desk row they messaged from, filters intact.
+     * Only the *path* component of the Referer is trusted (host/scheme are
+     * discarded), and only when it points back into `/moderate` — this rules
+     * out an open redirect via a forged Referer header. Falls back to the
+     * channel's own desk route.
      */
     private function redirectBack(Request $request, string $channel): Response
     {

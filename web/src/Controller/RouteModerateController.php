@@ -27,7 +27,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Curator "Routes" moderation desk (spec §6). index() lists pending route
+ * Curator "Routes" moderation desk (route-domain.md §5). index() lists pending route
  * proposals + suggestions; decide() applies approve/reject/retire via
  * RouteModerationService (the only write-path). detail()/edit() land in a
  * later task.
@@ -245,7 +245,7 @@ final class RouteModerateController extends AbstractController
     }
 
     /**
-     * Trash (moderation-feedback spec M9): an immediate, permanent hard
+     * Trash (route-domain.md §3): an immediate, permanent hard
      * delete of a route correction (any status) or a route proposal (ONLY
      * while `submitted` or `rejected` — RouteModerationService enforces the
      * guardrail). Audited content-free; never sends the rider a message.

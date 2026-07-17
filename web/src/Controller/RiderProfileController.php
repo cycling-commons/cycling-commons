@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Public rider profile (spec 2026-07-14): exists only while the rider's
+ * Public rider profile (account-and-auth.md §7): exists only while the rider's
  * publicProfile toggle is ON — the "view as others see it" link renders this
  * exact page with zero owner special-casing. Public-appropriate data only.
  *

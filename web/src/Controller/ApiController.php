@@ -9,8 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Dev-scaffold endpoints. These exist to prove the wiring works end to end;
- * the real query / contribution / moderation routes get built on top.
+ * Dev-scaffold endpoints that confirm the app and database are wired up.
  *
  * @api Instantiated by Symfony's router, never referenced from code — `@api`
  *      tells Psalm this (and its actions) is a live entry point, not dead code.

@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 /**
  * The coverage query plane (coverage-provider.md §5):
  * anonymous, cacheable JSON over the pipeline-owned coverage_poi cache.
- * Site-internal map endpoints, not the Plan 4 public API — the serving cache
+ * Site-internal map endpoints, not a public API — the serving cache
  * may return OSM fields with attribution (osm-data-architecture.md §4).
  * Every action consumes the coverage_read limiter (120/min per IP), the
  * app's first anonymous-read limiter.
@@ -80,7 +80,7 @@ final class CoverageController extends AbstractController
             return $limited;
         }
 
-        // (object) so an empty table still serves {"counts":{}} — a JSON
+        // (object) so an empty table still serves {"counts":{}}, a JSON
         // object, never [] (the client indexes by letter).
         return $this->cacheable($request, ['counts' => (object) $coverage->counts(), 'attribution' => CoverageRepository::ATTRIBUTION], 3600);
     }

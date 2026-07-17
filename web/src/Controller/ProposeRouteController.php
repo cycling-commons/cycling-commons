@@ -22,7 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Rider route-proposal intake (route-domain spec §5): the K contribute-hub
+ * Rider route-proposal intake (route-domain.md §4): the K contribute-hub
  * card lands here. Proposals become RecommendedRoute rows (state submitted),
  * reviewed later in the Routes moderation queue — never the item pipeline.
  *

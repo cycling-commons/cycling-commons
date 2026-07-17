@@ -21,10 +21,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Renders the authenticated user's messages dashboard (moderation-feedback
- * spec M3): decision outcomes, curator notes, and rider replies, newest
- * first. Also owns the needs-info reply loop (spec M6b): a rider answering a
- * curator's needs-info request re-queues their submission to `pending`.
+ * Renders the authenticated user's messages dashboard: decision outcomes,
+ * curator notes, and rider replies, newest first. Also owns the needs-info
+ * reply loop (docs/specs/moderation-and-contribution.md §7.3): a rider
+ * answering a curator's needs-info request re-queues their submission to
+ * `pending`.
  *
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.

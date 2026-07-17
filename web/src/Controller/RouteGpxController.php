@@ -14,9 +14,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Public GPX download for ACTIVE recommended routes (route-domain spec §7):
- * the track riders ride (and later ride-verify). Serves the stored,
- * privacy-trimmed geometry — the untrimmed upload never persisted (D4).
+ * Public GPX download for ACTIVE recommended routes: the track riders ride
+ * (and later ride-verify). Serves the stored, privacy-trimmed geometry
+ * (route-domain.md §4.3); the untrimmed upload never persisted.
  *
  * @api Instantiated by Symfony's router.
  */

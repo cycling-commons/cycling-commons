@@ -118,7 +118,7 @@ final class ResetPasswordController extends AbstractController
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
             // Completing a reset is the account owner's recovery path — clear any
             // brute-force lockout so a locked-out (or DoS-targeted) owner can log
-            // in again immediately with the new password (#20).
+            // in again immediately with the new password.
             $user->setLockedUntil(null);
             $user->setFailedLoginAttempts(0);
             $this->entityManager->flush();

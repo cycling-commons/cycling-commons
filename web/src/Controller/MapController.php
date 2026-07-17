@@ -38,8 +38,8 @@ final class MapController extends AbstractController
         $params = [
             'field_schema' => $schema->all(),
             'map_i18n' => $this->mapI18n($translator),
-            // Rider preferences ride the page render (spec 2026-07-14 map
-            // prefilter): value-lists only, [] for anonymous — map.js treats
+            // Rider preferences ride the page render (map-and-search.md §4.4):
+            // value-lists only, [] for anonymous — map.js treats
             // empty as "no prefilter" so anonymous behaviour is unchanged.
             'rider_prefs' => [
                 'bikes' => $user instanceof User
@@ -198,9 +198,10 @@ final class MapController extends AbstractController
     }
 
     /**
-     * The whole catalog as one cacheable JSON payload — spec §7's named interim
-     * until vector tiles. Letters key the layers; values are the fixture shapes
-     * map.js has always consumed. Public data only (unverified/verified rows).
+     * The whole catalog as one cacheable JSON payload (catalog-data-model.md
+     * §9): a named interim until vector tiles. Letters key the layers; values
+     * are the fixture shapes map.js has always consumed. Public data only
+     * (unverified/verified rows).
      */
     #[Route('/map/catalog.json', name: 'map_catalog', methods: ['GET'])]
     public function catalog(Request $request, CatalogProvider $catalog): Response
@@ -216,10 +217,11 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Per-item change log (design spec W5): who changed what, when — newest
-     * first. Public, read-only; feeds the map drawer's "Recent changes"
-     * (C1-T3). Unknown/never-edited items simply have no rows — 200 with an
-     * empty list, not 404, so the drawer never has to special-case it.
+     * Per-item change log (moderation-and-contribution.md §4.1): who changed
+     * what, when, newest first. Public, read-only; feeds the map drawer's
+     * "Recent changes" panel. Unknown/never-edited items simply have no rows:
+     * 200 with an empty list, not 404, so the drawer never has to
+     * special-case it.
      */
     #[Route('/map/item/{id}/history', name: 'map_item_history', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function history(int $id, Request $request, ChangeHistoryView $history): Response
@@ -235,16 +237,17 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Best-of ranking for the map's Curated mode (spec §8): ranked verified-route
-     * ids for a (season, bike, region?) facet. Public + cacheable like
-     * catalog.json; the map flags these ids `cur` and filters Curated to them.
+     * Best-of ranking for the map's Curated mode (route-domain.md §8): ranked
+     * verified-route ids for a (season, bike, region?) facet. Public + cacheable
+     * like catalog.json; the map flags these ids `cur` and filters Curated to
+     * them.
      */
     #[Route('/map/best-of', name: 'map_best_of', methods: ['GET'])]
     public function bestOf(Request $request, RouteRankingService $ranking): Response
     {
         $season = Season::tryFrom((string) $request->query->get('season')) ?? Season::current(new \DateTimeImmutable());
         $bikeParam = (string) $request->query->get('bike', 'all');
-        $bike = 'all' === $bikeParam ? null : BikeType::tryFrom($bikeParam);   // invalid → null (all)
+        $bike = 'all' === $bikeParam ? null : BikeType::tryFrom($bikeParam);
         $region = $request->query->has('region') ? $request->query->getInt('region') : null;
 
         $ids = $ranking->bestOf($season, $bike, $region);

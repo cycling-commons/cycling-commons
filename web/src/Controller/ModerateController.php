@@ -66,7 +66,7 @@ final class ModerateController extends AbstractController
      * Render the moderation desk for the given filters. Shared by index() and
      * the invalid-decision branch of decide() so the queue-rendering block is
      * not duplicated and the curator's active filters are preserved on an
-     * invalid submit rather than reset to unfiltered (review #48).
+     * invalid submit rather than reset to unfiltered.
      */
     private function renderQueue(string $country, string $region, string $type, int $status = Response::HTTP_OK): Response
     {
@@ -133,8 +133,9 @@ final class ModerateController extends AbstractController
                 ]);
             }
 
-            // §13 redirect-after-POST: preserve the curator's active filters
-            // instead of resetting to an unfiltered queue.
+            // Redirect-after-POST (moderation-and-contribution.md §5.1):
+            // preserve the curator's active filters instead of resetting to
+            // an unfiltered queue.
             return $this->redirectToRoute('moderate', array_filter([
                 'country' => $request->query->getString('country'),
                 'region' => $request->query->getString('region'),
@@ -157,7 +158,7 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * Trash (moderation-feedback spec M9): an immediate, permanent hard
+     * Trash (moderation-and-contribution.md §6): an immediate, permanent hard
      * delete of a spam/abusive submission — any status is legal (unlike a
      * route proposal, there's no state guardrail here). Audited content-free
      * by ModerationService; never sends the rider a message.

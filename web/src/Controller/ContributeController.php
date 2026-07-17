@@ -29,7 +29,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 
 /**
- * Handles authenticated contribution actions (vote, and future tasks).
+ * Handles authenticated contribution actions: adding a climb, voting, and
+ * improving an existing item.
  *
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.
@@ -133,13 +134,14 @@ final class ContributeController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function improve(Request $request, EntityManagerInterface $em): Response
     {
-        // The edit flow is bound to a real item — the map edit-bridge always
-        // sends `?item=<dbId>` (spec §6/§8). No valid item id: no more fake
-        // default editor, just an explainer pointing to the map.
+        // The edit flow is bound to a real item: the map edit-bridge always
+        // sends `?item=<dbId>` (docs/specs/moderation-and-contribution.md
+        // §1.4). No valid item id means no fake default editor, just an
+        // explainer pointing to the map.
         //
         // Deliberately not `$request->query->getInt('item')`: InputBag::filter()
         // throws BadRequestHttpException on a non-numeric value (e.g. a stale
-        // slug-based link) instead of coercing it — a non-numeric `item` is
+        // slug-based link) instead of coercing it. A non-numeric `item` is
         // exactly the "no valid item" case, not a 400.
         $item = null;
         $itemParam = (string) $request->query->get('item', '');
@@ -149,30 +151,29 @@ final class ContributeController extends AbstractController
         $typeParam = (string) $request->query->get('type', '');
         $requestedType = '' === $typeParam ? null : ItemType::fromParam($typeParam);
 
-        // Security review 2026-07-07 (critical): K (Recommended routes) live in
-        // `recommended_route` — a separate table and id sequence from `item`.
-        // The map renders the K "Edit this ride" link as
-        // `/improve?item=<recommended_route.id>&type=K`, so resolving that id
-        // against the item table would bind the edit to an unrelated item that
-        // merely shares the numeric id (cross-sequence collision). Route editing
-        // has no item binding yet, so K always falls through to the unbound
-        // explainer.
+        // K (Recommended routes) live in `recommended_route`, a separate table
+        // and id sequence from `item`. The map renders the K "Edit this ride"
+        // link as `/improve?item=<recommended_route.id>&type=K`, so resolving
+        // that id against the item table would bind the edit to an unrelated
+        // item that merely shares the numeric id (cross-sequence collision).
+        // Route editing has no item binding yet, so K always falls through to
+        // the unbound explainer.
         //
         // ctype_digit('') is false, so this also rejects a missing/blank param.
         if (ItemType::QualityRides !== $requestedType && ctype_digit($itemParam)) {
-            // Only bind items in a publicly-served state (spec §8: /map serves
-            // only unverified/verified). A 'submitted' item is another rider's
-            // un-moderated contribution; 'rejected'/'retired' are withdrawn.
-            // Binding any of them would prefill the form with — and leak — data
-            // that no public read path exposes (#11). Everything else falls
-            // through to the unbound explainer.
+            // Only bind items in a publicly-served state: /map serves only
+            // unverified/verified (docs/specs/catalog-data-model.md §4).
+            // A 'submitted' item is another rider's un-moderated contribution;
+            // 'rejected'/'retired' are withdrawn. Binding any of them would
+            // prefill the form with data that no public read path exposes.
+            // Everything else falls through to the unbound explainer.
             $item = $em->getRepository(Item::class)->findOneBy([
                 'id' => (int) $itemParam,
                 'state' => [ItemState::Unverified, ItemState::Verified],
             ]);
             // Guard the shared client-side id contract for A–J: the resolved row
             // must be the type the client opened. A mismatch means the id
-            // collided across sequences (or the link was hand-crafted) — treat
+            // collided across sequences (or the link was hand-crafted). Treat
             // it as unbound rather than editing the wrong item.
             if (null !== $item && null !== $requestedType && $item->getLetter() !== $requestedType->letter()) {
                 $item = null;
@@ -193,9 +194,10 @@ final class ContributeController extends AbstractController
 
         $type = ItemType::fromParam($item->getLetter());
         $current = ['name' => $item->getName()] + $item->getAttributes();
-        // D (BikeServices) kind-aware form (spec §5): opening hours only makes
-        // sense for a staffed shop, so the registry needs the concrete item's
-        // kind to drop the field for a station/pump. Other types stay null.
+        // D (BikeServices) kind-aware form: opening hours only makes sense
+        // for a staffed shop, so the registry needs the concrete item's kind
+        // to drop the field for a station/pump. Other types stay null.
+        // See docs/specs/edit-items/D-bike-services.md.
         $serviceKind = ItemType::BikeServices === $type
             ? ServiceKind::tryFrom((string) ($item->getAttributes()['serviceKind'] ?? ''))
             : null;
@@ -248,9 +250,9 @@ final class ContributeController extends AbstractController
             'edit_name' => $item->getName(),
             'receipt' => null,
             'form' => $form,
-            // C5: lets step 3 ("Photos & video") show the item's EXISTING photo(s)
-            // above the add-media controls — a rider editing an item should see
-            // what's already there, not just an empty upload prompt.
+            // Lets step 3 ("Photos & video") show the item's existing photo(s)
+            // above the add-media controls, so a rider editing an item sees
+            // what's already there instead of an empty upload prompt.
             'current' => $current,
         ]);
     }

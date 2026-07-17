@@ -25,10 +25,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
- * The rider community loop on the route drawer (route-domain spec §7): a
- * per-route snapshot fetched on drawer-open (P3-D3) and the ride/vote/suggest
+ * The rider community loop on the route drawer (route-domain.md §6): a
+ * per-route snapshot fetched on drawer-open and the ride/vote/suggest
  * writes. Unlocalized `/routes/{id}/…` JSON API (matches RouteGpxController),
- * user-only + stateless CSRF (P3-D5). Auth is enforced in-controller (401,
+ * user-only + stateless CSRF. Auth is enforced in-controller (401,
  * not a login redirect) because these are API endpoints, not pages.
  *
  * @api Instantiated by Symfony's router; called by assets/map/map.js.
@@ -57,7 +57,7 @@ final class RouteCommunityController extends AbstractController
 
     /**
      * The API auth gate: a fully-authenticated ROLE_USER, or a clean 401 — a
-     * JSON client must not be 302-redirected to the login page (P3-D5). Also
+     * JSON client must not be 302-redirected to the login page. Also
      * catches 2FA-in-progress tokens (they lack ROLE_USER).
      */
     private function requireUser(): User
@@ -70,7 +70,7 @@ final class RouteCommunityController extends AbstractController
         return $user;
     }
 
-    /** Loads a route that is currently served (P3-D5); 404 otherwise. */
+    /** Loads a route that is currently served; 404 otherwise. */
     private function activeRoute(int $id): RecommendedRoute
     {
         $route = $this->em->find(RecommendedRoute::class, $id);
@@ -105,7 +105,7 @@ final class RouteCommunityController extends AbstractController
         $this->validateCsrf($request);
         $route = $this->activeRoute($id);
         if (ItemState::Verified !== $route->getState()) {
-            throw $this->createNotFoundException('Route is not open for voting.');   // spec D7
+            throw $this->createNotFoundException('Route is not open for voting.');
         }
 
         $season = Season::tryFrom((string) $request->request->get('season'));
@@ -141,7 +141,7 @@ final class RouteCommunityController extends AbstractController
         } catch (TooManyRequestsHttpException) {
             return $this->json(['error' => 'rate_limited'], 429);
         } catch (\InvalidArgumentException) {
-            // M11: recordSuggestion's only throw path today is the note-length cap.
+            // recordSuggestion's only throw path today is the note-length cap.
             return $this->json(['error' => 'note_too_long'], 422);
         }
 
@@ -171,11 +171,11 @@ final class RouteCommunityController extends AbstractController
             $a = (float) $seg['start'];
             $b = (float) $seg['end'];
             if ($a < 0 || $b > 1 || $a > $b) {
-                return false;   // out of range or inverted
+                return false;
             }
             $out[] = ['start' => $a, 'end' => $b];
         }
-        if (\count($out) > 50) {   // sane cap
+        if (\count($out) > 50) {
             return false;
         }
 
@@ -184,7 +184,7 @@ final class RouteCommunityController extends AbstractController
 
     /**
      * Curator-only: a route's PENDING corrections + their located segments, for the
-     * moderator map (spec §16 S3/S5). Colours are assigned client-side.
+     * moderator map (route-domain.md §7). Colours are assigned client-side.
      */
     #[Route('/routes/{id}/corrections', name: 'route_corrections', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function corrections(int $id, Connection $db): JsonResponse

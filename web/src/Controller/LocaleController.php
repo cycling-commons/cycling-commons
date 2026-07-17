@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * This is a GET link in the nav, so it deliberately performs NO persistent
  * account mutation — a state-changing GET has no CSRF protection and could be
  * triggered cross-site (e.g. an <img> tag) to silently flip a logged-in user's
- * stored language (review #17). The account's saved locale is owned by the
+ * stored language. The account's saved locale is owned by the
  * CSRF-protected settings form; the session locale here covers the visit.
  *
  * @api Instantiated by Symfony's router.

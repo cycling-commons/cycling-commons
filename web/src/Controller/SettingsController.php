@@ -20,10 +20,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * Account settings page — display name, public-profile toggle, and password change.
  *
- * Email change decision: email is rendered read-only with a "contact support" note.
- * Reason: changing email requires re-verification (EmailVerifier token flow) which
- * is a non-trivial addition for this task. The simpler, honest option is chosen here
- * and documented. Email change via support is noted in the template.
+ * Email is read-only here: changing it needs re-verification, so users are
+ * pointed to support instead.
+ *
+ * @see docs/specs/account-and-auth.md §8
  *
  * @api Instantiated by Symfony's router — `@api` tells Psalm this is a live
  *      entry point, not dead code.
@@ -89,7 +89,7 @@ final class SettingsController extends AbstractController
             return $this->redirectToRoute('settings', ['tab' => 'security']);
         }
 
-        // Two-tab settings (spec 2026-07-14): Security is active when asked for
+        // Two-tab settings (account-and-auth.md §8): Security is active when asked for
         // via ?tab=security or when the password form just failed validation
         // (a 422 re-render must show the tab holding the errors).
         $activeTab = 'security' === $request->query->get('tab')

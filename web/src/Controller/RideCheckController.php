@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Ride-check intake (spec 2026-07-14 §4.1): a logged-in rider uploads a GPX
+ * Ride-check intake (map-and-search.md §9): a logged-in rider uploads a GPX
  * and gets back the catalog items along it. Stateless JSON API in the
  * RouteCommunityController mould — in-controller auth (clean 401, never a
  * login redirect), stateless CSRF (`ride-check` token id), per-user daily

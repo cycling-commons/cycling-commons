@@ -75,7 +75,6 @@ final class RegistrationController extends AbstractController
                 ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
             }
 
-            // Send email confirmation
             $this->emailVerifier->sendEmailConfirmation(
                 'verify_email',
                 $user,
