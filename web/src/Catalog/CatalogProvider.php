@@ -64,12 +64,17 @@ final class CatalogProvider
     }
 
     /**
+     * The verified derivation (map-and-search.md §12): verified state, a rider
+     * confirmation, OR official-registry provenance — Tourisme Wallonie PIVOT
+     * rows count as verified (owner decision 2026-07-17), never the dead
+     * simulated 'c' attribute.
+     *
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
         $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov,
-                       (i.state = \'verified\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id)) AS verified
+                       (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id)) AS verified
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
                 WHERE i.letter = :letter AND i.state IN '.ItemState::servedSqlTuple();

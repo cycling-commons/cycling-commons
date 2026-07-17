@@ -125,6 +125,27 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
+     * Official-registry provenance counts as verified (map-and-search.md §12,
+     * owner decision 2026-07-17): a Tourisme Wallonie PIVOT row serves v:1
+     * even in unverified state with zero confirmations — the registry listing
+     * is the trust signal, so it never renders as community tier.
+     */
+    public function testPivotRowsCarryVerifiedFlagFromRegistryProvenance(): void
+    {
+        $conn = $this->em->getConnection();
+        $conn->executeStatement(
+            "UPDATE item SET state = 'unverified' WHERE source = 'pivot'",
+        );
+        $conn->executeStatement(
+            'DELETE FROM item_confirmation WHERE item_id IN (SELECT id FROM item WHERE source = \'pivot\')',
+        );
+
+        foreach ($this->payload()['E']['pivot']['features'] as $f) {
+            self::assertSame(1, $f['properties']['v'], 'registry provenance alone must verify a pivot row');
+        }
+    }
+
+    /**
      * Coverage retirement (coverage-provider.md §9): the
      * retirement predicate no longer sits behind COVERAGE_TILES — an untouched
      * source=osm state=unverified POI never serves from catalog.json (it lives

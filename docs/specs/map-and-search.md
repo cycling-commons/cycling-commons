@@ -591,7 +591,9 @@ requirement).
 Approved 2026-07-15; implemented via
 [coverage-provider.md](coverage-provider.md) (its §6 rebases these decisions
 onto the tile/endpoint data source; the `verified` flag derives from real
-canonical state — `CatalogProvider`'s `v:1` — not the simulated `c`
+canonical state — `CatalogProvider`'s `v:1`: verified state, a rider
+confirmation, or official-registry provenance (Tourisme Wallonie PIVOT rows
+count as verified — owner decision 2026-07-17) — never the simulated `c`
 attribute).
 
 - **1.** Search and the town card always read the full Commons; every index
