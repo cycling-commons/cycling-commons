@@ -9,7 +9,7 @@ namespace App\Catalog;
 /**
  * How a contributor sets a catalog item's location in add mode.
  *
- * Common to every edit type — see docs/specs/edit-items/README.md ("Setting the
+ * Common to every edit type, see docs/specs/edit-items/README.md ("Setting the
  * location"). The improve wizard's step 1 renders differently per mode.
  */
 enum LocationMode: string
@@ -17,7 +17,7 @@ enum LocationMode: string
     /** Tap the map to drop a single pin (most point types). */
     case Point = 'point';
 
-    /** Tap the start, then the end — a drawn line (road surface). */
+    /** Tap the start, then the end, drawing a line (road surface). */
     case Segment = 'segment';
 
     /** No pin; a GPX/FIT track sets the whole route (quality rides). */

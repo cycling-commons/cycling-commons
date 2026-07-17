@@ -9,18 +9,18 @@ namespace App\Catalog;
 /**
  * The canonical A–K catalog of editable item types.
  *
- * Single source of truth for the per-type contribution forms (the Symfony port
- * of the demo's `atlas/demo/edit-items.js` registry). Design source of truth:
+ * Single source of truth for the per-type contribution forms, matching the
+ * demo's `atlas/demo/edit-items.js` registry. Design source of truth:
  * docs/specs/edit-items/<LETTER>-*.md and its README.md.
  *
  * Intrinsic metadata (letter, label, icon, location mode, votability) lives
  * here; the bulkier per-type field schemas live in {@see CatalogFormRegistry}.
  *
- * L · Ride heatmap is a derived, anonymized aggregate — intentionally NOT an
- * editable type, so it is not represented here.
+ * L · Ride heatmap is a derived, anonymized aggregate. It is intentionally
+ * NOT an editable type, so it is not represented here.
  *
  * @api Public catalog surface consumed by the improve form, controller and
- *      templates — `@api` tells Psalm these members are entry points, not dead.
+ *      templates. `@api` tells Psalm these members are entry points, not dead.
  */
 enum ItemType: string
 {
@@ -40,8 +40,8 @@ enum ItemType: string
      * Resolve a URL/query value to a type. Accepts a canonical slug (the nice
      * ?type=water-food form the hub uses) or a catalog letter A–K (the
      * identifier the map layers carry, layer.letter). Falls back to the default
-     * when null/empty/unknown — mirrors the demo's fallback to the service
-     * station for a bare improve page (edit-item-and-profile §3.1).
+     * when null/empty/unknown. It mirrors the demo's fallback to the service
+     * station for a bare improve page.
      */
     public static function fromParam(?string $value): self
     {
@@ -63,7 +63,7 @@ enum ItemType: string
         return self::default();
     }
 
-    /** D · Bike services — the demo's no-param fallback item. */
+    /** D · Bike services: the demo's no-param fallback item. */
     public static function default(): self
     {
         return self::BikeServices;
@@ -106,8 +106,8 @@ enum ItemType: string
     }
 
     /**
-     * Translation key for {@see label()} — use with `|trans` so localized
-     * improve pages don't render the hardcoded English (review #38).
+     * Translation key for {@see label()}. Use with `|trans` so localized
+     * improve pages don't render the hardcoded English.
      */
     public function labelKey(): string
     {
@@ -193,7 +193,7 @@ enum ItemType: string
      * (spec: utilities are confirmed, not voted). Drinking water carries a
      * potability judgement; other point utilities carry a plain existence
      * confirmation. Votable types (see {@see isVotable()}) and the measured
-     * road-surface segment carry none — they are empty here.
+     * road-surface segment carry none: they are empty here.
      *
      * @return list<ConfirmationStance>
      */

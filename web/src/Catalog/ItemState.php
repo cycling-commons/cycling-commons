@@ -18,7 +18,7 @@ enum ItemState: string
     case Rejected = 'rejected';
     case Retired = 'retired';
 
-    /** Spec §8: the only lifecycle states ever served publicly. */
+    /** docs/specs/catalog-data-model.md §4: the only lifecycle states ever served publicly. */
     public const array SERVED = [self::Unverified, self::Verified];
 
     /** SQL tuple literal for interpolation into raw DBAL queries. */

@@ -7,8 +7,8 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Rider riding-style vocabulary (spec 2026-07-14): what KIND of riding a
- * rider does, deliberately excluding hardware — bikes (E-bike, Handbike,
+ * Rider riding-style vocabulary: what KIND of riding a
+ * rider does, deliberately excluding hardware. Bikes (E-bike, Handbike,
  * Recumbent, Trike, Tandem, …) are declared separately via BikeType. The
  * map's Discipline chips (today a visual stub) get re-based onto this enum
  * when preference prefiltering is built; this enum is that contract.

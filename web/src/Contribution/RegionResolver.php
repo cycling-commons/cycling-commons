@@ -15,7 +15,7 @@ use Doctrine\DBAL\Connection;
  * contains the route's point-on-surface. NULL when no region matches, so
  * a proposal outside every region is still reviewable.
  *
- * @api Region assignment at route intake (route-domain spec §4.2); consumed by
+ * @api Region assignment at route intake (docs/specs/route-domain.md §4.2); consumed by
  *      RouteProposalService, covered by RegionResolverTest.
  */
 final class RegionResolver

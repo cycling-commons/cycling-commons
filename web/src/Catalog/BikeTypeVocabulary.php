@@ -7,9 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Canonical bikeTypes shape: a list of BikeType values (route-domain spec §12
- * P2-D2, D6). Normalizes legacy single strings, the retired `Any`, and the
- * old separate `handbike` attribute (Handbike is now a bikeTypes value, §5.2).
+ * Canonical bikeTypes shape: a list of BikeType values. Normalizes legacy
+ * single strings, the retired `Any`, and the old separate `handbike`
+ * attribute (Handbike is now a bikeTypes value).
+ *
+ * @see docs/specs/route-domain.md §9
  *
  * @api Used by the proposal/curator forms, RouteProposalService, CatalogProvider.
  */

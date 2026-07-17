@@ -10,7 +10,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Serialises a type's *display* fields for the map drawer, straight from the
- * same {@see CatalogFormRegistry} that builds the improve form — one source of
+ * same {@see CatalogFormRegistry} that builds the improve form: one source of
  * truth, so the drawer can never drift from the form. Labels are localised
  * (the `messages` domain, source-string keys, exactly as ImproveType renders
  * them) so no English label is baked into map.js.
@@ -41,7 +41,7 @@ final class CatalogSchemaProvider
             // Canonical stored value => localized display label, so the drawer
             // can render select values in the rider's language while the data
             // (and the improve form's submitted values) stay canonical English.
-            // Rating scales (1-5) render as stars — no labels to translate.
+            // Rating scales (1-5) render as stars, so there are no labels to translate.
             if ([] !== $field->choices && 'rating' !== $entry['kind']) {
                 $choices = [];
                 foreach ($field->choices as $choice) {

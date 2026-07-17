@@ -10,10 +10,10 @@ use Doctrine\DBAL\Connection;
 
 /**
  * Serializes the catalog tables back into the exact fixture shapes the map
- * client has always consumed (spec §7: the data changes address, not shape).
- * One payload, all layers keyed by letter; E (stays) splits by provenance
- * source and L is the heat point set. Raw DBAL — the map read path never
- * hydrates entities.
+ * client has always consumed: the data source changed, not the shape. One
+ * payload, all layers keyed by letter; E (stays) splits by provenance source
+ * and L is the heat point set. Raw DBAL: the map read path never hydrates
+ * entities.
  *
  * @api Consumed by MapController::catalog().
  */
@@ -35,9 +35,9 @@ final class CatalogProvider
             'B' => $this->climbs(),
             'C' => $this->featureCollection('C'),
             'D' => $this->featureCollection('D'),
-            // C3-T9: E is the only letter split by source. 'pivot' (official
+            // E is the only letter split by source. 'pivot' (official
             // Tourisme Wallonie accommodation) is its own bucket; every other
-            // source — osm, user, manual, wikidata, auto — lands in the 'osm'
+            // source (osm, user, manual, wikidata, auto) lands in the 'osm'
             // bucket, matching catalog-load.js's merge (window.CC_STAYS_OSM is
             // the generic stays collection; only PIVOT rows get tagged apart).
             'E' => [
@@ -50,8 +50,8 @@ final class CatalogProvider
             'J' => $this->featureCollection('J'),
             'K' => $this->routes(),
             'L' => $this->heat(),
-            // Plan 2 Task 13: served OSM refs for client-side tile dedupe —
-            // map.js filters coverage tile features whose ref is listed here
+            // Served OSM refs for client-side tile dedupe: map.js filters
+            // coverage tile features whose ref is listed here
             // (osm-data-architecture.md §8: the object appears once, as curated).
             'refs' => $this->curatedRefs(),
         ];
@@ -65,9 +65,8 @@ final class CatalogProvider
 
     /**
      * The verified derivation (map-and-search.md §12): verified state, a rider
-     * confirmation, OR official-registry provenance — Tourisme Wallonie PIVOT
-     * rows count as verified (owner decision 2026-07-17), never the dead
-     * simulated 'c' attribute.
+     * confirmation, or official-registry provenance. Tourisme Wallonie PIVOT
+     * rows count as verified.
      *
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}>
      */
@@ -88,16 +87,17 @@ final class CatalogProvider
             $params['excludeSource'] = $excludeSource;
         }
         // Coverage retirement predicate (coverage-provider.md
-        // §9): a pure uncurated OSM row — source=osm, state=unverified, never
-        // touched by any human (no change history, no confirmation, no
-        // submission) — is exactly what coverage_poi serves now, so catalog.json
-        // drops it unconditionally: the exact rows app:coverage:retire-legacy
-        // deletes (keep the two in sync). Anything a human ever touched stays
-        // served. Letter-scoped like curatedRefs()'s mirror and the retirement
-        // command's guard (CoverageRetirement docblock: "callers compose the
-        // letter scope themselves") — A (road surface) never entered the
-        // coverage artifact and B (climbs) is wikidata-sourced, so neither may
-        // ever match, even if a stray row happens to carry source='osm'.
+        // §9): a pure uncurated OSM row (source=osm, state=unverified, never
+        // touched by any human: no change history, no confirmation, no
+        // submission) is exactly what coverage_poi serves now, so catalog.json
+        // drops it unconditionally. These are the exact rows
+        // app:coverage:retire-legacy deletes (keep the two in sync). Anything
+        // a human ever touched stays served. Letter-scoped like
+        // curatedRefs()'s mirror and the retirement command's guard
+        // (CoverageRetirement docblock: "callers compose the letter scope
+        // themselves"): A (road surface) never entered the coverage artifact
+        // and B (climbs) is wikidata-sourced, so neither may ever match, even
+        // if a stray row happens to carry source='osm'.
         if (\in_array($letter, CoverageRetirement::LETTERS, true)) {
             $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
         }
@@ -107,17 +107,17 @@ final class CatalogProvider
     }
 
     /**
-     * Plan 2 Task 13 (osm-data-architecture.md §8, client half): source_ref of
-     * every source='osm' item the payload itself serves, DISTINCT because one
-     * entity may carry two letters (UNIQUE(source, source_ref, letter) on item).
-     * MIRRORS itemRows() exactly (coverage-provider.md §6): coverage-served
-     * (untouched) rows are excluded here too, unconditionally — their tile
-     * twins must render as community POIs. Listing their refs would suppress
-     * the twins while the payload drops the rows, and the object would display
-     * nowhere until retire-legacy --force removes it. The exclusion is
-     * letter-scoped like the payload's: only the coverage letters
-     * (CoverageRetirement::LETTERS) ever drop rows — an untouched A surface
-     * row keeps serving, so its ref keeps listing.
+     * Source_ref of every source='osm' item the payload itself serves
+     * (osm-data-architecture.md §8, client half). DISTINCT because one entity
+     * may carry two letters (UNIQUE(source, source_ref, letter) on item).
+     * Mirrors itemRows() exactly (coverage-provider.md §6): coverage-served
+     * (untouched) rows are excluded here too, unconditionally, because their
+     * tile twins must render as community POIs. Listing their refs would
+     * suppress the twins while the payload drops the rows, and the object
+     * would display nowhere until retire-legacy --force removes it. The
+     * exclusion is letter-scoped like the payload's: only the coverage
+     * letters (CoverageRetirement::LETTERS) ever drop rows. An untouched A
+     * surface row keeps serving, so its ref keeps listing.
      *
      * @return list<string>
      */
@@ -133,7 +133,7 @@ final class CatalogProvider
 
     /**
      * POI fixture shape: properties = attributes + n (when named) + prov (when
-     * resolved) + id (the DB item id — the map edit-bridge's `?item=` target).
+     * resolved) + id (the DB item id, used by the map edit-bridge's `?item=` target).
      *
      * @return array{type: string, features: list<array<string, mixed>>}
      */
@@ -148,21 +148,20 @@ final class CatalogProvider
             if (null !== $row['prov']) {
                 $props['prov'] = $row['prov'];
             }
-            // W6: display-safe provenance — the raw ItemSource value (osm/pivot/
+            // Display-safe provenance: the raw ItemSource value (osm/pivot/
             // wikidata/auto/user/manual), never the internal provenance detail.
             // Lets the drawer show "Rider-contributed" for user/manual items
             // instead of a hardcoded per-layer OSM string (map.js sourceLabel()).
             $props['srcType'] = $row['source'];
             // Real community-tier signal (map-and-search.md
             // §12): v:1 = verified state OR at least one rider confirmation.
-            // Replaces the simulated 'c' flag as the map's verified derivation;
-            // absent key = community tier (keeps unverified payloads byte-stable).
+            // Absent key = community tier (keeps unverified payloads byte-stable).
             if ($row['verified']) {
                 $props['v'] = 1;
             }
             // The DB item id always makes $props non-empty, so it always
-            // encodes as a JSON object — no more `[] === $props` empty-array
-            // case (GeoJSON requires an object; [] would encode as an array).
+            // encodes as a JSON object, never `[]` (GeoJSON requires an
+            // object; an empty array would encode as `[]` instead).
             $props['id'] = (int) $row['id'];
             $features[] = [
                 'type' => 'Feature',
@@ -186,14 +185,14 @@ final class CatalogProvider
             $attrs = $this->decode($row['attributes']);
             // The fixture's top-level "source" is a citation string; the import
             // stores it as "attribution" because provenance owns the source
-            // column. Rename it back — nested photo.source is untouched.
+            // column. Rename it back. Nested photo.source is untouched.
             if (\array_key_exists('attribution', $attrs)) {
                 $attrs['source'] = $attrs['attribution'];
                 unset($attrs['attribution']);
             }
             /** @var array{coordinates: array{0: float, 1: float}} $geo */
             $geo = $this->decode($row['geom']);
-            // W6: 'source' above is the free-text citation (attribution); 'srcType'
+            // 'source' above is the free-text citation (attribution); 'srcType'
             // is the raw ItemSource enum value, kept separate so map.js can tell a
             // rider-added/edited climb apart from an OSM/Wikidata one.
             $climb = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
@@ -219,7 +218,7 @@ final class CatalogProvider
     {
         $segments = [];
         foreach ($this->itemRows('A') as $row) {
-            // W6: srcType is the raw ItemSource enum value (see featureCollection()).
+            // srcType is the raw ItemSource enum value (see featureCollection()).
             $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $this->decode($row['attributes']);
             // Real community-tier signal, same derivation as featureCollection()
             // (map-and-search.md §12); absent key = community, byte-stable.
@@ -254,16 +253,16 @@ final class CatalogProvider
         $routes = [];
         foreach ($rows as $row) {
             $attrs = $this->decode($row['attributes']);
-            // W6: srcType is the raw ItemSource enum value (see featureCollection()).
+            // srcType is the raw ItemSource enum value (see featureCollection()).
             $route = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']];
-            // Phase 2 (§4.2): raw ItemState value so the map can badge
-            // unverified ("proposed") routes distinct from verified ones.
+            // Raw ItemState value so the map can badge unverified ("proposed")
+            // routes distinct from verified ones.
             $route['state'] = (string) $row['state'];
             if (isset($attrs['season'])) {
                 $route['season'] = $attrs['season'];
             }
             // Force float: PHP's / returns int for evenly divisible ints, but the
-            // fixture serializes whole-number km as 87.0 — keep the bytes identical.
+            // fixture serializes whole-number km as 87.0. Keep the bytes identical.
             $route['km'] = (float) ($row['distance_m'] / 1000);
             if (isset($attrs['start'])) {
                 $route['start'] = $attrs['start'];
@@ -275,9 +274,9 @@ final class CatalogProvider
                 $route['elev'] = $attrs['elev'];
             }
             $route['gain'] = $row['ascent_m'];
-            // C2-T7 (spec §W2): the QualityRides registry's suitability/rating
-            // fields (CatalogFormRegistry::for(QualityRides)) — forwarded the same
-            // way as difficulty/uploader/photo so an approved improve-form edit
+            // The QualityRides registry's suitability/rating fields
+            // (CatalogFormRegistry::for(QualityRides)) are forwarded the same
+            // way as difficulty/uploader/photo, so an approved improve-form edit
             // reaches map.js's route drawer instead of being silently dropped.
             foreach ([
                 'difficulty', 'uploader', 'photo',
@@ -290,7 +289,7 @@ final class CatalogProvider
             }
             // Canonicalize difficulty to {score,label} regardless of how it was
             // stored (legacy import string, rider vocab string, or already
-            // canonical) so every serving path emits one shape (P2-D1).
+            // canonical), so every serving path emits one shape.
             $canonicalDifficulty = DifficultyVocabulary::canonical($attrs['difficulty'] ?? null);
             if (null !== $canonicalDifficulty) {
                 $route['difficulty'] = $canonicalDifficulty;
@@ -298,9 +297,9 @@ final class CatalogProvider
                 unset($route['difficulty']);
             }
             // Canonicalize bikeTypes to a list<string>, folding the legacy
-            // separate 'handbike' attribute in (route-domain spec §12 P2-D2)
+            // separate 'handbike' attribute in (docs/specs/route-domain.md §9)
             // regardless of how it was stored (single string, 'Any', or
-            // already a list) so every serving path emits one shape.
+            // already a list), so every serving path emits one shape.
             $canonicalBikeTypes = BikeTypeVocabulary::normalize($attrs['bikeTypes'] ?? null, $attrs['handbike'] ?? null);
             if ([] !== $canonicalBikeTypes) {
                 $route['bikeTypes'] = $canonicalBikeTypes;
@@ -321,9 +320,9 @@ final class CatalogProvider
      */
     private function heat(): array
     {
-        // Phase-B note: only 'auto' heat is served (spec §2 non-goal); rows from
-        // any future source (e.g. user-contributed traces) are deliberately absent
-        // until that phase decides how they surface.
+        // Only 'auto' heat is served today. Rows from any future source
+        // (e.g. user-contributed traces) are deliberately absent until a
+        // future decision adds them.
         /** @var list<array{geom: string, season: string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
             "SELECT ST_AsGeoJSON(geom) AS geom, season FROM heat_point WHERE source = 'auto' ORDER BY id",

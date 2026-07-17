@@ -9,14 +9,16 @@ namespace App\Catalog;
 /**
  * The per-type field schemas that make the improve wizard type-aware.
  *
- * This is the Symfony port of the demo registry in `atlas/demo/edit-items.js`,
- * lifted from per-feature entries to per-type schemas (the four demo climbs
- * collapse to one Climbs schema, etc.). Design source of truth:
- * docs/specs/edit-items/<LETTER>-*.md and docs/specs/edit-items/README.md.
+ * Schemas are per item type, not per individual feature: the demo registry in
+ * `atlas/demo/edit-items.js` has one entry per climb, but here the four demo
+ * climbs collapse to one Climbs schema, and so on for every type. Design
+ * source of truth: docs/specs/edit-items/<LETTER>-*.md and
+ * docs/specs/edit-items/README.md.
  *
- * Form/attribute schema, not a domain schema — it declares the per-type field
- * shape and vocabulary (consumed by {@see Import\AttributeVocabulary}
- * and {@see \App\Contribution\CatalogContributionService}), independent of
+ * This is a form/attribute schema, not a domain schema: it declares the
+ * per-type field shape and vocabulary, consumed by
+ * {@see Import\AttributeVocabulary} and
+ * {@see \App\Contribution\CatalogContributionService}, independent of
  * whether a given kind ('climb', 'improve', …) is wired to real persistence yet.
  *
  * @api Injected into the improve form/controller to build type-aware fields.
@@ -27,8 +29,8 @@ final class CatalogFormRegistry
 
     /**
      * Opening hours is intentionally NOT free text: specific weekly hours change
-     * without notice and we can't verify them, so we only record what stays true
-     * — round-the-clock, or "check the source" — and default to Unknown.
+     * without notice and we can't verify them, so we only record what stays true,
+     * round-the-clock or "check the source", and default to Unknown.
      */
     private const array OPENING_HOURS = ['Unknown', '24/7', 'See website'];
 
@@ -54,10 +56,10 @@ final class CatalogFormRegistry
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
                     CatalogField::select('surface', 'Surface', ['Smooth asphalt', 'Asphalt', 'Worn asphalt', 'Cobbles', 'Gravel']),
-                    // sq/tr: same vocab as AddClimbType's fSurfaceQ/fTraffic
-                    // (App\Contribution\CatalogContributionService::CLIMB_FIELDS)
-                    // — the drawer already shows these per-climb (map.js's
-                    // 'Road quality'/'Traffic' rows), C2-T6 makes them editable.
+                    // sq/tr use the same vocabulary as
+                    // App\Contribution\CatalogContributionService::CLIMB_FIELDS.
+                    // The drawer already shows these per climb (map.js's
+                    // 'Road quality'/'Traffic' rows); this makes them editable.
                     CatalogField::select('sq', 'Road quality', ['Smooth', 'Good', 'Worn', 'Rough', 'Broken / loose']),
                     CatalogField::select('tr', 'Traffic', ['Traffic-free', 'Quiet', 'Moderate', 'Busy']),
                     CatalogField::text('avgGradient', 'Average gradient (%)'),
@@ -94,11 +96,12 @@ final class CatalogFormRegistry
                     // "Website" row; a shop/repair place usually has its own site.
                     CatalogField::url('web', 'Website', placeholder: 'https://… (the shop’s own site)'),
                     CatalogField::select('pumpValve', 'Pump valve', ['Presta + Schrader', 'Presta only', 'Schrader only', 'No pump']),
-                    // Kind-specific DEFAULT (spec §5): an unmanned station/pump is
-                    // assumed 24/7 (preselected, overridable — some stations follow
-                    // a host building's hours, e.g. inside a library); a staffed
-                    // shop — and an unknown kind (null, legacy/untyped call sites) —
-                    // stays 'Unknown' until someone tells us.
+                    // Kind-specific default (docs/specs/osm-data-architecture.md §5): an
+                    // unmanned station or pump is assumed 24/7 (preselected,
+                    // overridable; some stations follow a host building's hours,
+                    // e.g. inside a library). A staffed shop, and an unknown kind
+                    // (null, legacy or untyped call sites), stays 'Unknown' until
+                    // someone tells us.
                     CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: (null === $serviceKind || $serviceKind->hasOpeningHours()) ? 'Unknown' : '24/7'),
                     CatalogField::text('tools', 'Tools available', placeholder: 'e.g. chain tool, work stand'),
                     CatalogField::textarea('correction', 'Anything to correct?', "What's wrong or out of date?", display: false),
@@ -114,10 +117,10 @@ final class CatalogFormRegistry
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
                     CatalogField::text('town', 'Town / commune'),
-                    // C2-T7 (spec §W2): keyed 'web', not 'website' — 'web' is the
-                    // shared vocabulary key every OSM-harvested stay already carries
-                    // (AttributeVocabulary::COMMON) and the one osmDrawer already
-                    // renders as the "Website" row in map.js — an edited value must
+                    // Keyed 'web', not 'website': 'web' is the shared vocabulary
+                    // key every OSM-harvested stay already carries
+                    // (AttributeVocabulary::COMMON), and the one osmDrawer already
+                    // renders as the "Website" row in map.js. An edited value must
                     // land in the same key the drawer reads, or the edit is invisible.
                     CatalogField::url('web', 'Website', placeholder: 'https://… (the place’s own site)'),
                     CatalogField::select('bikeStorage', 'Secure bike storage', ['Yes — locked room', 'Yes — garage/shed', 'On request', 'No']),
@@ -205,14 +208,14 @@ final class CatalogFormRegistry
                 fields: [
                     CatalogField::text('rideName', 'Ride name', placeholder: 'e.g. Spa · Sankt Vith', display: false),
                     CatalogField::select('difficulty', 'Difficulty', array_values(DifficultyVocabulary::LABELS)),
-                    // C2-T7 (spec §W2): keyed 'season', not 'bestSeason' — 'season' is
-                    // the key CatalogProvider::routes() already reads/serves as
-                    // route.season and every imported/harvested route already carries;
-                    // an edited value must land there or map.js's Season row (and the
+                    // Keyed 'season', not 'bestSeason': 'season' is the key
+                    // CatalogProvider::routes() already reads/serves as
+                    // route.season and every imported/harvested route already carries.
+                    // An edited value must land there or map.js's Season row (and the
                     // provider's forwarding) never sees it.
-                    // Multi-select (spec §15): pick any of the four; all = the retired 'Any'.
+                    // Multi-select: pick any of the four; all four selected means the retired 'Any'.
                     CatalogField::multiselect('season', 'Best season', ['Spring', 'Summer', 'Autumn', 'Winter']),
-                    // All surface types (spec §15) — shared with the A-layer field.
+                    // All surface types, shared with the A-layer field.
                     CatalogField::select('dominantSurface', 'Dominant surface', SurfaceVocabulary::DECLARABLE),
                     CatalogField::textarea('note', 'Note for riders', 'What is this loop like?'),
                 ],
@@ -220,8 +223,8 @@ final class CatalogFormRegistry
                     CatalogField::select('quietness', 'Quietness rating (1–5)', ['1', '2', '3', '4', '5']),
                     CatalogField::select('scenic', 'Scenic rating (1–5)', ['1', '2', '3', '4', '5']),
                     CatalogField::select('friendliness', 'Cycling-friendliness (1–5)', ['1', '2', '3', '4', '5']),
-                    // P2-D2: a route's suitable bike types is one canonical list<string>
-                    // over BikeType::values() (BikeTypeVocabulary) — the retired 'Any'
+                    // A route's suitable bike types is one canonical list<string>
+                    // over BikeType::values() (BikeTypeVocabulary). The retired 'Any'
                     // and the separate 'handbike' Yes/No field both fold into this list
                     // rather than staying independent attributes.
                     CatalogField::multiselect('bikeTypes', 'Suitable bike types', BikeType::values()),

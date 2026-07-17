@@ -144,7 +144,7 @@ final class RouteCommunityService
     }
 
     /**
-     * Records a moderated correction (route-domain spec §10). Rate-limited:
+     * Records a moderated correction (docs/specs/route-domain.md §10). Rate-limited:
      * this is the only self-unbounded community write, and each pending row
      * is a curator task. `note` is stored raw and HTML-escaped on the desk
      * render.

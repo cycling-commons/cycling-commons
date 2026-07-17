@@ -8,11 +8,11 @@ namespace App\Catalog;
 
 /**
  * The shared bike-type enum (route-domain spec D6): one value set for route
- * suitability declarations and — in later phases — typed votes and ride
- * confirmations. Handbike, Recumbent, Trike and Tandem are deliberately
- * first-class hardware types (not folded into a generic "other"): each has
- * real route-suitability implications (turning radius, width, ground
- * clearance) distinct from the general Road/Gravel/MTB/E-bike group.
+ * suitability declarations, and later for typed votes and ride confirmations.
+ * Handbike, Recumbent, Trike and Tandem are deliberately first-class hardware
+ * types, not folded into a generic "other": each has real route-suitability
+ * limits (turning radius, width, ground clearance) that the general
+ * Road/Gravel/MTB/E-bike group does not have.
  *
  * @api Route-domain vocabulary.
  */
@@ -35,10 +35,10 @@ enum BikeType: string
 
     /**
      * The specialty/accessibility hardware types whose best-of lists are gated
-     * by a route's declared suitability (route-domain spec §14 P4-D4) — their
+     * by a route's declared suitability (docs/specs/route-domain.md §8.3). Their
      * physical constraints (width, turning radius, clearance) make an
-     * undeclared route a real mismatch, unlike the general Road/Gravel/MTB/E-bike
-     * group where a vote is signal enough.
+     * undeclared route a real mismatch. For the general Road/Gravel/MTB/E-bike
+     * group, a vote is signal enough.
      *
      * @api Consumed by RouteRankingService's SQL builder.
      */

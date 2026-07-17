@@ -11,22 +11,22 @@ use App\Contribution\Gpx\TrackProcessor;
 use Doctrine\DBAL\Connection;
 
 /**
- * Ride-check (spec 2026-07-14 §4.2): given an uploaded GPX, list the served
- * catalog items inside a rider-chosen corridor of the track — grouped by
- * letter, ordered by distance along the ride — plus the Commons routes the
+ * Ride-check (map-and-search.md §9): given an uploaded GPX, list the served
+ * catalog items inside a rider-chosen corridor of the track, grouped by
+ * letter and ordered by distance along the ride, plus the Commons routes the
  * ride genuinely follows. Read-only indication: the GPX is parsed in memory,
  * answered, and discarded; this service never writes anything.
  *
  * Corridor query is the SurfaceProfiler idiom (ST_DWithin over ::geography,
  * GIST-indexed); the along-the-ride ordering key is ST_LineLocatePoint of the
  * item's closest point projected onto the track. Letter A (road-surface
- * segments) is excluded from the listing — every metre of a mapped ride
+ * segments) is excluded from the listing: every metre of a mapped ride
  * would "match", which is corridor noise, and the surface story already has
  * its own feature (SurfaceProfiler).
  *
- * Deliberately NO privacy trim (unlike route intake, spec D4): the track is
- * shown only back to its uploader and never persisted, and trimming would
- * silently drop matches near the rider's actual start/end.
+ * Deliberately NO privacy trim (unlike route intake, docs/specs/route-domain.md §4.3):
+ * the track is shown only back to its uploader and never persisted, and
+ * trimming would silently drop matches near the rider's actual start/end.
  *
  * @api Consumed by RideCheckController; covered by RideCheckServiceTest.
  */
@@ -42,8 +42,9 @@ final class RideCheckService
     /**
      * A route only counts as "followed" when the shared stretch clearly
      * exceeds what a mere crossing produces: a perpendicular route yields
-     * ~2×radius of overlap inside the corridor buffer, so the floor scales
-     * with the radius (Upstream's penetration-filter idea, radius-proof).
+     * about 2x the radius of overlap inside the corridor buffer, so the
+     * floor scales with the radius. This keeps the check valid no matter
+     * which radius is chosen.
      */
     private const int ROUTE_MIN_OVERLAP_BASE_M = 300;
 
@@ -105,9 +106,9 @@ final class RideCheckService
         // MATERIALIZED is load-bearing twice over: an inlined `track` CTE
         // re-parses the whole GeoJSON per row per ST_* occurrence, and the
         // one-off `corridor` buffer turns the containment test into a plain
-        // ST_Intersects the idx_item_geom GIST index can serve — the naive
+        // ST_Intersects the idx_item_geom GIST index can serve. The naive
         // ST_DWithin(::geography) formulation seq-scanned with spheroid maths
-        // against the full track per item (62 s → sub-second, dev catalog).
+        // against the full track per item (62 s down to sub-second, dev catalog).
         /** @var list<array{id: int|string, letter: string, name: string, geom: string, dist_m: string|float, frac: string|float}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
@@ -136,7 +137,7 @@ final class RideCheckService
             $geo = json_decode($row['geom'], true, 512, \JSON_THROW_ON_ERROR);
             $ll = self::representativeLatLng($geo);
             if (null === $ll) {
-                continue; // unrenderable geometry — nothing to point at
+                continue; // unrenderable geometry: nothing to point at
             }
             $groups[$letter]['items'][] = [
                 'id' => (int) $row['id'],

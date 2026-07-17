@@ -9,19 +9,23 @@ namespace App\Catalog;
 /**
  * Reconciles the declared coarse dominant-surface vocabulary (Asphalt/Mixed/
  * Gravel) with the A-layer's richer surface set measured by SurfaceProfiler
- * (route-domain spec §12 P2-D3). Buckets measured surfaces and suggests the
+ * (docs/specs/route-domain.md §12). Buckets measured surfaces and suggests the
  * dominant coarse surface, shown to curators on the Routes desk.
  *
  * @api Read by RouteModerateController::detail().
  */
 final class SurfaceVocabulary
 {
-    /** @var list<string> The full declarable surface vocabulary (spec §15) — the
-     *  A-layer set, now shared by the A-layer curator `surface` field AND the
-     *  route `dominantSurface` field (was the coarse Asphalt/Mixed/Gravel;
-     *  supersedes P2-D3's rider-facing 3-way). BUCKETS still folds these to the
-     *  coarse measured-vs-declared reconciliation. Legacy 'Mixed' values (from
-     *  the old vocabulary) simply display as-is — no backfill. */
+    /** @var list<string> The full declarable surface vocabulary: the
+     *  A-layer set, shared by the A-layer curator `surface` field and the
+     *  route `dominantSurface` field. BUCKETS still folds these down to the
+     *  coarse measured-vs-declared reconciliation, which stays a simple 3-way
+     *  split even though this declarable vocabulary itself is richer.
+     *
+     *  This list is not exhaustive of what is stored: some rows hold a
+     *  'Mixed' surface, which is not declarable here. Those rows are never
+     *  backfilled and simply display as-is, so do not validate stored
+     *  values against this list. */
     public const array DECLARABLE = [
         'Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Dirt', 'Rock',
     ];
@@ -29,11 +33,11 @@ final class SurfaceVocabulary
     /** @var array<string, string> A-layer surface → coarse bucket. Covers both
      *  the curator-dropdown labels (e.g. 'Sett — pavé', em-dash spelling) and the
      *  harvester's emitted labels (route_surfaces.py's SURF, e.g. 'Sett (pavé)',
-     *  parens spelling, and 'Cycleway · RAVeL') — the two label sets aren't
+     *  parens spelling, and 'Cycleway · RAVeL'). The two label sets are not
      *  identical, so both spellings/entries are kept. Dirt/Rock (MTB terrain
-     *  carry-in) fold into the same coarse Gravel bucket as Fine gravel —
-     *  P2-D3's declared rider-facing vocabulary stays 3-way; the precise
-     *  Dirt/Rock split is curator/A-layer detail only. */
+     *  carry-in) fold into the same coarse Gravel bucket as Fine gravel: the
+     *  declared rider-facing vocabulary stays a 3-way split (Asphalt/Mixed/
+     *  Gravel); the precise Dirt/Rock split is curator/A-layer detail only. */
     public const array BUCKETS = [
         'Asphalt' => 'Asphalt', 'Concrete' => 'Asphalt', 'Cycleway · RAVeL' => 'Asphalt',
         'Paving stones' => 'Mixed', 'Sett — pavé' => 'Mixed', 'Sett (pavé)' => 'Mixed', 'Compacted' => 'Mixed',

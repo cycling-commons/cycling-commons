@@ -10,17 +10,16 @@ use Doctrine\DBAL\Connection;
 
 /**
  * Derives the road surfaces a route actually crosses from the served A-layer
- * (Road surface) segments, as an honest estimate with disclosed coverage — the
- * replacement for the always-"Unknown" filler row (route-domain design §12).
+ * (Road surface) segments, as an honest estimate with disclosed coverage.
  *
  * Two figures, deliberately measured on different sides so neither lies:
  *  - `parts`: per-surface metres of mapped segment within a {@see self::BUFFER_M}
  *    buffer of the route, normalized over TOTAL mapped metres. Parallel/duplicate
  *    mapping inflates numerator and denominator equally, so shares stay ≤ 100 %.
  *  - `covered`: how much of the ROUTE falls within the buffer of the UNION of
- *    those segments — route-side and union-flattened, so double mapping cannot
- *    push it past 100 %. This is the "how much of the route is even mapped" honesty
- *    figure surfaced next to the estimate.
+ *    those segments, measured route-side and union-flattened, so double
+ *    mapping cannot push it past 100 %. This is the "how much of the route
+ *    is even mapped" honesty figure surfaced next to the estimate.
  *
  * `Surface unverified` segments say nothing and are excluded from both. Raw DBAL:
  * this is a read/derive path, never an entity hydrate.
@@ -82,7 +81,7 @@ final class SurfaceProfiler
         // each exact share, then hand the leftover integer points to the largest
         // fractional remainders (ties: longer segment first, then the stable
         // length-descending order). Kept parts sum to round(100 · kept_metres /
-        // total) ≤ 100 — dropped small parts honestly leave the rest below 100,
+        // total) ≤ 100: dropped small parts honestly leave the rest below 100,
         // but the row can never exceed it.
         usort($byMetres, static fn (array $a, array $b): int => $b['metres'] <=> $a['metres']);
         $kept = \array_slice($byMetres, 0, 4);
@@ -163,7 +162,7 @@ final class SurfaceProfiler
 
     /**
      * Recompute `attributes.surfaces` for every recommended_route row (all
-     * states — proposals included). A route that gains coverage gets the key;
+     * states, proposals included). A route that gains coverage gets the key;
      * one that lost it loses the stale key; every other attribute key is left
      * untouched. Returns the number of rows whose profile actually changed.
      */
@@ -183,18 +182,18 @@ final class SurfaceProfiler
 
             if (null === $profile) {
                 if (!$had) {
-                    continue; // never mapped, still isn't — nothing to write
+                    continue; // never mapped, still isn't: nothing to write
                 }
                 unset($attributes['surfaces']);
             } elseif ($had && self::sameProfile($attributes['surfaces'], $profile)) {
-                continue; // profile unchanged — keep the run idempotent
+                continue; // profile unchanged: keep the run idempotent
             } else {
                 $attributes['surfaces'] = $profile;
             }
 
             // Rewrite the whole jsonb (BackfillAttributesCommand convention): every
             // other key round-trips untouched, and an empty `[]` becomes an object
-            // once the derived key lands — jsonb_set cannot target a JSON array.
+            // once the derived key lands. jsonb_set cannot target a JSON array.
             $this->db->executeStatement(
                 'UPDATE recommended_route SET attributes = :attrs, updated_at = NOW() WHERE id = :id',
                 ['attrs' => json_encode($attributes, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION), 'id' => $row['id']],

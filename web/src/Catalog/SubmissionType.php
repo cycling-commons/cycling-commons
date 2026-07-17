@@ -7,9 +7,8 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * What a submission proposes (moderation spec §13 "TYPES relocation" —
- * this enum replaces ModerateController::TYPES). Intake produces
- * NewItem/Edit today; Hazard/Photo are queue-renderable, not yet collectable.
+ * What a submission proposes. Intake produces NewItem/Edit today;
+ * Hazard/Photo are queue-renderable, not yet collectable.
  *
  * @api Catalog domain enum.
  */

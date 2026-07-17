@@ -12,11 +12,11 @@ use Doctrine\DBAL\ParameterType;
 use Symfony\Component\Clock\ClockInterface;
 
 /**
- * Read model over the append-only change_history table (moderation spec §9;
- * design spec W5): what changed on a catalog item, who changed it, and when
- * — newest first, capped. Reuses the rider#-hash and RelativeTime
- * conventions SubmissionQueue established for the moderation queue, so the
- * map drawer's history reads the same way.
+ * Read model over the append-only change_history table
+ * (moderation-and-contribution.md §4): what changed on a catalog item, who
+ * changed it, and when, newest first, capped. Reuses the rider#-hash and
+ * RelativeTime conventions SubmissionQueue established for the moderation
+ * queue, so the map drawer's history reads the same way.
  *
  * @api Read by MapController::history().
  */

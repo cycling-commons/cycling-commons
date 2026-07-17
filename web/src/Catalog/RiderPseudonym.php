@@ -9,8 +9,7 @@ namespace App\Catalog;
 /**
  * The stable, non-reversible "rider#abcd" pseudonym shown for a contributor in
  * curator-facing views (the moderation queue and an item's change history).
- * One definition so both surfaces render the same handle for the same user
- * (previously duplicated — review #54).
+ * One definition so both surfaces render the same handle for the same user.
  *
  * @api Used by SubmissionQueue and ChangeHistoryView.
  */

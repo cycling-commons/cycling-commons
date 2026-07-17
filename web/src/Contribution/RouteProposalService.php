@@ -20,7 +20,7 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
- * Route proposal intake (route-domain spec §4). Deliberately not part of the
+ * Route proposal intake (docs/specs/route-domain.md §4). Deliberately not part of the
  * item Submission pipeline: a proposal is a RecommendedRoute row in state
  * `submitted`, reviewed later in the Routes moderation queue.
  *
@@ -28,7 +28,7 @@ use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
  * (content-hash seeded, only the trimmed track is ever persisted) →
  * distance/ascent on the trimmed track → simplify for serving → region.
  *
- * @api Route-proposal intake entry point (route-domain spec §4); consumed by
+ * @api Route-proposal intake entry point (docs/specs/route-domain.md §4); consumed by
  *      ProposeRouteController, covered by RouteProposalServiceTest.
  */
 final class RouteProposalService
@@ -95,7 +95,7 @@ final class RouteProposalService
                 $attributes[$key] = $value;
             }
         }
-        // Canonicalize difficulty to {score,label} (route-domain spec §9) so
+        // Canonicalize difficulty to {score,label} (docs/specs/route-domain.md §9) so
         // the form's rider-facing string is never persisted verbatim.
         $canonicalDifficulty = DifficultyVocabulary::canonical($meta['difficulty'] ?? null);
         if (null !== $canonicalDifficulty) {

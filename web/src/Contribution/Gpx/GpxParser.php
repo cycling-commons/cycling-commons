@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Contribution\Gpx;
 
 /**
- * Strict GPX intake parser (route-domain spec §4.1): reject, never coerce.
+ * Strict GPX intake parser (docs/specs/route-domain.md §4.1): reject, never coerce.
  *
  * DOMDocument + getElementsByTagNameNS('*', …) so GPX 1.0/1.1 files parse
  * regardless of their default namespace. XXE-safe: PHP ≥8.0 never loads
@@ -18,7 +18,7 @@ namespace App\Contribution\Gpx;
  * translation key (propose_route.error.*) - the controller surfaces it as a
  * form error, mirroring the ClimbGeometry/ContributeController pattern.
  *
- * @api Public entry point for GPX intake (route-domain spec §4.1); covered by GpxParserTest.
+ * @api Public entry point for GPX intake (docs/specs/route-domain.md §4.1); covered by GpxParserTest.
  */
 final class GpxParser
 {

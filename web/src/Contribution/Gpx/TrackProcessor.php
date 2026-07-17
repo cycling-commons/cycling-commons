@@ -7,22 +7,22 @@ declare(strict_types=1);
 namespace App\Contribution\Gpx;
 
 /**
- * Geometry post-processing for proposed routes (route-domain spec §4.2). All
+ * Geometry post-processing for proposed routes (docs/specs/route-domain.md §4.2). All
  * light tabular math, deliberately kept in PHP rather than the Python
  * pipeline.
  *
  * Every method takes/returns [lat, lng, ele|null] triples.
  *
- * @api Public geometry post-processing API (route-domain spec §4.2); covered by TrackProcessorTest.
+ * @api Public geometry post-processing API (docs/specs/route-domain.md §4.2); covered by TrackProcessorTest.
  */
 final class TrackProcessor
 {
     private const float EARTH_RADIUS_M = 6_371_000.0;
-    private const int TRIM_MIN_M = 350;   // privacy trim, route-domain spec §4.3
+    private const int TRIM_MIN_M = 350;   // privacy trim, docs/specs/route-domain.md §4.3
     private const int TRIM_SPAN_M = 401;  // 350 + [0..400] → 350..750
     // Bound Douglas-Peucker inner-scan work: legitimate routes are O(n log n);
     // an adversarial saw-tooth is O(n^2). 200n gives smooth tracks ample
-    // head-room while a zigzag trips a clean reject (route-domain spec §4.1).
+    // head-room while a zigzag trips a clean reject (docs/specs/route-domain.md §4.1).
     private const int MAX_DP_WORK_FACTOR = 200;
 
     /** @param list<array{0: float, 1: float, 2: float|null}> $points */
@@ -63,7 +63,7 @@ final class TrackProcessor
     }
 
     /**
-     * Privacy trim (route-domain spec §4.3): cut ~350–750 m off each end,
+     * Privacy trim (docs/specs/route-domain.md §4.3): cut ~350–750 m off each end,
      * deterministic per content ($seedHex = sha256 of the raw upload). The
      * cut interpolates new endpoints at the exact trim distance, so sparse
      * tracks trim correctly.

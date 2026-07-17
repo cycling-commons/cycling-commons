@@ -8,7 +8,7 @@ namespace App\Catalog;
 
 /**
  * One editable field in a type's form (a row in the "Fix details" or
- * "Add missing" pane). Immutable fixture data ported from edit-items.js.
+ * "Add missing" pane).
  *
  * @api Read by the improve form and template.
  */
@@ -42,7 +42,7 @@ final readonly class CatalogField
      * A text-like field whose value must be a real http(s) URL. Constrained by
      * {@see \App\Form\CatalogFieldConstraints} to http/https so a non-http
      * scheme (javascript:, data:, …) can never persist and reach the map's
-     * `<a href>` — security review 2026-07-07 (critical #3).
+     * `<a href>`.
      */
     public static function url(string $name, string $label, string $placeholder = ''): self
     {
@@ -56,8 +56,8 @@ final readonly class CatalogField
     }
 
     /**
-     * A select field whose stored value is a list<string> over $choices
-     * (P2-D2) — e.g. a route's suitable bike types — rather than a single
+     * A select field whose stored value is a list<string> over $choices,
+     * for example a route's suitable bike types, rather than a single
      * scalar.
      *
      * @param list<string> $choices

@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * One canonical difficulty shape for every route (route-domain spec §12 P2-D1):
+ * One canonical difficulty shape for every route (docs/specs/route-domain.md §12):
  * {score:1..5, label} on the 5-level scale the drawer already renders. Maps a
  * canonical label string and import {score,label} onto it.
  *

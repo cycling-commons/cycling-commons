@@ -9,10 +9,11 @@ namespace App\Catalog;
 use Doctrine\DBAL\Connection;
 
 /**
- * Best-of ranking (route-domain spec §8, §14): ranks `verified` routes by their
+ * Best-of ranking (docs/specs/route-domain.md §8): ranks `verified` routes by their
  * typed-seasonal-vote count for a (season, bike, region?) facet, computed in SQL
- * at serve time (regions hold ≤ the active cap — no materialization needed).
- * Reads only; raw DBAL like CatalogProvider. Consumed by MapController::bestOf.
+ * at serve time (regions hold at most the active cap, so no materialization
+ * is needed). Reads only; raw DBAL like CatalogProvider. Consumed by
+ * MapController::bestOf.
  *
  * @api Serving entry point for the map's Curated best-of.
  */
@@ -25,8 +26,8 @@ final class RouteRankingService
     /**
      * Ranked verified-route ids for the facet, best first. `$bike === null`
      * means "all bikes" (aggregate across bike types). Only routes with ≥1
-     * matching vote are returned (P4-D3); the four specialty bike types are
-     * additionally gated by declared suitability (P4-D4).
+     * matching vote are returned; the four specialty bike types are
+     * additionally gated by declared suitability (docs/specs/route-domain.md §8.3).
      *
      * @return list<int>
      */

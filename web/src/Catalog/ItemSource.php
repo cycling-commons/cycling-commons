@@ -9,7 +9,7 @@ namespace App\Catalog;
 /**
  * Provenance of a catalog row ([OSM]/[auto]/… tags from the edit-items spec).
  * `Manual` is a hand-added/seeded row (e.g. demo pins authored directly in the
- * DB) — treated like a rider contribution: never touched by the importer
+ * DB), treated like a rider contribution: never touched by the importer
  * (which only upserts harvested osm/pivot/wikidata rows) and served the same
  * as any other source by CatalogProvider (source-agnostic except letter E).
  *
