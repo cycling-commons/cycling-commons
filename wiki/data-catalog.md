@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # The Commons — Data Catalog
 
 Everything a rider can contribute to the open cycling Commons — climbs, water, stays, hazards,

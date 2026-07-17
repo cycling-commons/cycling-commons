@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # Contributing
 
 The Commons grows one small fact at a time. Nobody fills in a form — a rider adds a water tap, a

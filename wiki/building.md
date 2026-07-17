@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # Building the Commons
 
 How the Cycling Commons is built and run — and how to help build it. This page is part *what
@@ -123,7 +125,7 @@ The Commons grows two ways, and both need people.
 
 **With code.** The source is at
 [github.com/cycling-commons/cycling-commons](https://github.com/cycling-commons/cycling-commons).
-The platform code is **source-available under the [PolyForm Shield License 1.0.0](https://github.com/cycling-commons/cycling-commons/blob/main/LICENSE)** — read it, run it, self-host and modify it freely; the one limit is you can't use it to build a product that competes with the Commons. The open *data* (ODbL) and the query API ([access policy](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/osm-data-architecture.md)) are what you build on commercially. (Note: source-available is **not** OSI open-source — the data is open; the platform code is shared but non-compete.)
+The platform code is **source-available under the [PolyForm Shield License 1.0.0](https://github.com/cycling-commons/cycling-commons/blob/main/LICENSE)** — read it, run it, self-host and modify it freely; the one limit is you can't use it to build a product that competes with the Commons. The open *data* (ODbL) and the query API ([access policy](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/osm-data-architecture.md)) are what you build on commercially. (Note: source-available is **not** OSI open-source — the data is open; the platform code is shared but non-compete.) The text of this wiki itself is [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) — share and adapt it with attribution, same-licence.
 Right now the most useful work is on the application itself and the first real slices of the Python
 pipeline — the specs in
 [`docs/specs/`](https://github.com/cycling-commons/cycling-commons/tree/main/docs/specs) are the

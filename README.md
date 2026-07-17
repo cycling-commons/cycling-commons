@@ -182,4 +182,5 @@ source-available code:
 - **Code** — [PolyForm Shield 1.0.0](LICENSE) (the platform: API, pipeline, site, tooling). Source-available: use it for any purpose **except** building a product that competes with the Cycling Commons. To build *on the Commons*, use the open data and API — free for any use, including commercial — rather than forking the platform. See [`NOTICE`](NOTICE).
 - **Data** — [Open Database License (ODbL)](licenses/COMMONS-DATA-LICENSE.md)
 - **Media** — [Commons Media License](licenses/COMMONS-MEDIA-LICENSE.md)
+- **Wiki text** (`wiki/`, published at wiki.cyclingcommons.org) — [CC BY-SA 4.0](licenses/CC-BY-SA-4.0.txt); each page carries an SPDX header (pre-commit enforced)
 - **Terms** — [Commons Terms & Clause](licenses/COMMONS-TERMS-CLAUSE.md)

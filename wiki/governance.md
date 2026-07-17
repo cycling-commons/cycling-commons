@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # Governance
 
 The credibility of a commons rests on one question: *can the people who built it quietly enclose it

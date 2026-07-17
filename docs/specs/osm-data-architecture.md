@@ -71,6 +71,8 @@ Cycling Commons publishes under:
 
 - **Data:** Open Database License 1.0 (ODbL) + Database Contents License 1.0 (DbCL).
 - **Media (photos):** CC BY-SA 4.0.
+- **Wiki prose** (`wiki/`, wiki.cyclingcommons.org): CC BY-SA 4.0 — per-page
+  SPDX headers, pre-commit enforced (decision 2026-07-17).
 - **Code:** PolyForm Shield 1.0.0 (source-available, non-compete).
 
 Consequences for OSM handling:

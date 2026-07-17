@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # The fragmented landscape
 
 *Why the Commons exists: today a cyclist's knowledge is scattered across dozens of separate, mostly

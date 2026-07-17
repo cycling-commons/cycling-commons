@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # Cycling Commons — Wiki
 
 The reference documentation for the open cycling-data Commons. The public site

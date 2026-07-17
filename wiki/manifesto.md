@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # The Cycling Commons Manifesto
 
 A commons is not a free-for-all and it is not a company's database with an open licence bolted on. It

@@ -34,6 +34,17 @@ repos:
         pass_filenames: false
         always_run: true
 
+      # Wiki prose is CC BY-SA 4.0 (README §License): every wiki/**/*.md must
+      # open with its SPDX header. Runs only when wiki pages are staged, so a
+      # new page can't land headerless; the rendered site footer comes from
+      # mkdocs.yml `copyright` and needs nothing per page.
+      - id: check-wiki-spdx
+        name: wiki pages carry the CC-BY-SA-4.0 SPDX header
+        entry: tools/check-wiki-spdx.sh
+        language: script
+        files: ^wiki/.*\.md$
+        pass_filenames: false
+
       # Locale parity: a key added to one messages.*.yaml must exist in all
       # four (en/fr/nl/de). Runs only when translation files are staged;
       # skips gracefully without php/vendor (CI still enforces it).

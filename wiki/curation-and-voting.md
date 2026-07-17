@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # Curation & Voting
 
 This is the heart of what makes the Cycling Commons different: **curation over completeness.** The
