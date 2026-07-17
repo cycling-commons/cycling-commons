@@ -23,9 +23,11 @@
     <tag k="historic" v="castle"/>
     <tag k="name" v="Château de Vêves"/>
   </node>
-  <!-- H - shelter -->
+  <!-- H - shelter (typed: bare amenity=shelter no longer qualifies — the
+       whitelist keys on shelter_type, keeping bus-stop shelters out) -->
   <node id="106" version="1" timestamp="2026-01-05T16:45:00Z" lat="50.5000" lon="4.9000">
     <tag k="amenity" v="shelter"/>
+    <tag k="shelter_type" v="weather_shelter"/>
   </node>
   <!-- I - peak -->
   <node id="107" version="2" timestamp="2025-12-25T11:00:00Z" lat="50.5014" lon="6.0944">

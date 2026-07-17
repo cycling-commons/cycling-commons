@@ -38,7 +38,17 @@
         },
         "H": {
             "selectors": [
-                {"tag": "amenity=shelter", "label": "Shelter"}
+                {"tag": "shelter_type=basic_hut", "label": "Basic hut"},
+                {"tag": "shelter_type=dugout", "label": "Dugout"},
+                {"tag": "shelter_type=field_shelter", "label": "Field shelter"},
+                {"tag": "shelter_type=gazebo", "label": "Gazebo"},
+                {"tag": "shelter_type=lean_to", "label": "Lean-to"},
+                {"tag": "shelter_type=pavilion", "label": "Pavilion"},
+                {"tag": "shelter_type=picnic_shelter", "label": "Picnic shelter"},
+                {"tag": "shelter_type=rock_shelter", "label": "Rock shelter"},
+                {"tag": "shelter_type=sun_shelter", "label": "Sun shelter"},
+                {"tag": "shelter_type=weather_shelter", "label": "Weather shelter"},
+                {"tag": "shelter_type=wildlife_hide", "label": "Wildlife hide"}
             ],
             "tileProps": []
         },

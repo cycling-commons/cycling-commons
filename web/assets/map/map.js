@@ -508,7 +508,7 @@
     ['scenic',   window.CC_SCENIC_OSM,   'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)'],
     ['history',  window.CC_HISTORY_OSM,  'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)'],
     ['stays',    window.CC_STAYS_OSM,    'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)'],
-    ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (amenity=shelter)'],
+    ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (shelter_type=picnic/weather/field/…)'],
     ['transit',  window.CC_TRANSIT_OSM,  'OpenStreetMap (railway=station / railway=halt)']
   ];
   // ---- Coverage tiles (coverage-provider.md §6) ----
@@ -528,7 +528,7 @@
     scenic:'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)',
     history:'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)',
     stays:'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)',
-    shelter:'OpenStreetMap (amenity=shelter)',
+    shelter:'OpenStreetMap (shelter_type=picnic/weather/field/…)',
     transit:'OpenStreetMap (railway=station / railway=halt)'
   };
   // Curated-ref dedupe (osm-data-architecture.md §8): any object already served

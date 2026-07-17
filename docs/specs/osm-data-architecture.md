@@ -124,7 +124,7 @@ a deliberate decision — every addition widens ingestion and the cache.
 | **D · Public pump** | point | `amenity=compressed_air` | Unmanned; 24/7 |
 | E · Where to sleep | point | `tourism=hotel/hostel/guest_house/chalet/camp_site/…` | |
 | G · Getting there | point | `railway=station`, `railway=halt` | |
-| H · Shelter | point | `amenity=shelter` | |
+| H · Shelter | point | `shelter_type=picnic_shelter/weather_shelter/field_shelter/lean_to/basic_hut/gazebo/pavilion/rock_shelter/sun_shelter/wildlife_hide/dugout` (typed shelters only — bare `amenity=shelter` and `shelter_type=public_transport` bus stops stay out) | |
 | I · Scenic views | point | `tourism=viewpoint`, `natural=peak`, `waterway=waterfall` | |
 | J · History & culture | point | `historic=castle/fort/ruins/monument/memorial/…` | |
 
