@@ -1,0 +1,66 @@
+web/src/Contribution/CatalogContributionService.php
+  s_ed348b2f9c4e8c::t_18c801241098a4 39-45
+  s_ed348b2f9c4e8c::t_50aa71519b2706 162-163
+  s_ed348b2f9c4e8c::t_fac42f312f536a 74-75
+  s_ed348b2f9c4e8c::t_0aa161b52563ef 141-144
+  s_ed348b2f9c4e8c::t_ba8bf33f698d6d 188
+  s_ed348b2f9c4e8c::t_f9cbd6999b1e6c 279
+  s_ed348b2f9c4e8c::t_5bf0ed6c1ab689 28-32
+  s_ed348b2f9c4e8c::t_bfeb91f89ad201 137-138
+  s_ed348b2f9c4e8c::t_27060aa045b873 157-159
+  s_ed348b2f9c4e8c::t_7d4f3d6d6b1106 173-175
+  s_ed348b2f9c4e8c::t_50d7686a13dba8 85-87
+web/src/Contribution/Gpx/GpxParser.php
+  s_ed348b2f9c4e8c::t_6ac25b8b1a8c6b 76
+  s_ed348b2f9c4e8c::t_f825d0222c7929 18
+  s_ed348b2f9c4e8c::t_4e2e01cbdc1f72 67-68
+  s_ed348b2f9c4e8c::t_b0cd0786e8f57f 25
+  s_ed348b2f9c4e8c::t_b4071499873308 21
+  s_ed348b2f9c4e8c::t_d69a4f7c5f447c 10
+web/src/Contribution/SubmissionDraft.php
+  s_ed348b2f9c4e8c::t_d0f4f288007bd3 14-16
+  s_ed348b2f9c4e8c::t_308cffa197a43e 37,41-45
+web/src/Contribution/RouteProposalService.php
+  s_ed348b2f9c4e8c::t_efa38bc0dbf4da 108
+  s_ed348b2f9c4e8c::t_a632c4e8d4eaac 133
+  s_ed348b2f9c4e8c::t_c6198ecc9824b0 23-25,27-28,31
+  s_ed348b2f9c4e8c::t_e4efa634f9a22b 36-37
+  s_ed348b2f9c4e8c::t_9acb254ea890fb 98-99
+web/src/Contribution/SpatialResolver.php
+  s_ed348b2f9c4e8c::t_65dc7f7ff7961f 14
+web/src/Contribution/Gpx/GpxTrack.php
+  s_ed348b2f9c4e8c::t_41f531d61842e4 10-11
+web/src/Contribution/RegionResolver.php
+  s_ed348b2f9c4e8c::t_bb2da8542e0b89 13,15,18
+web/src/Contribution/ClimbGeometry.php
+  s_ed348b2f9c4e8c::t_40d9b944b7a46f 13
+web/src/Contribution/ValidAttributes.php
+  s_ed348b2f9c4e8c::t_45b6a6de5e0046 13-14
+web/src/Contribution/Gpx/TrackProcessor.php
+  s_ed348b2f9c4e8c::t_15bebc78f8571b 40
+  s_ed348b2f9c4e8c::t_19e252a538e433 86
+  s_ed348b2f9c4e8c::t_8540b0607529d3 66-69
+  s_ed348b2f9c4e8c::t_a5e658e70b0134 21,25
+  s_ed348b2f9c4e8c::t_27807d9e8f2418 215
+  s_ed348b2f9c4e8c::t_c603069d50d30d 10-12,16
+  s_ed348b2f9c4e8c::t_542e61001300a1 99
+  s_ed348b2f9c4e8c::t_7a983c49c9628a 184-186
+web/src/Contribution/Gpx/GpxWriter.php
+  s_ed348b2f9c4e8c::t_f3713850710f71 10,14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "950a9bc37c2ac5b9109afac3e60fd213e2307f7b",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
