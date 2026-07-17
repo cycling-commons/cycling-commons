@@ -152,6 +152,27 @@ derives `country_code` + `region_id` with the same parameterised spatial
 containment logic as import. For edits on non-point items, a representative
 point (first coordinate of the item's geometry) anchors the submission pin.
 
+**What intake does not accept — `'vote'` is a deliberate non-goal.**
+`CatalogContributionService::submit()` routes exactly two kinds:
+`'climb'` → a new-item submission, `'improve'` → an edit submission. Every
+other kind falls to a `default` arm that **persists nothing** and returns a
+`ContributionReceipt` with `persisted: false` and a throwaway `CC-<random>`
+reference. That arm is live, not dead code: `POST /vote`
+(`ContributeController::vote()`, gated `ROLE_USER`) sends `'vote'` through it
+on every submission.
+
+This is intended. Voting is verification-gate machinery — a rider signalling
+that a place or route is real — and that funnel is owned elsewhere
+(edit-items/README.md for items, [route-domain.md](route-domain.md) §6 for
+routes). It is not catalog intake, so it produces no `submission` row and no
+curator task. The vote page states this plainly rather than implying a
+recorded tally (`vote.receipt.stub_note`: "this is a preview — votes are
+queued for review and not yet persisted to a live tally").
+
+**Do not "fix" the `default` arm by persisting a submission for `'vote'`.**
+Wiring voting to a real tally means building it on the verification gate, and
+then `/vote` should stop calling this service at all.
+
 ## 3. Submission persistence
 
 ### 3.1 `submission` (entity `App\Catalog\Entity\Submission`)

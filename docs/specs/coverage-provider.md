@@ -226,6 +226,26 @@ Rules:
   `App\Catalog\ItemState::servedSqlTuple()`
   (`web/src/Catalog/ItemState.php`; the served-state set is owned by
   [catalog-data-model.md §4](catalog-data-model.md)).
+- **The dedupe's letter guard is deliberately uneven.** A served `item` only
+  cancels a coverage row if it is more than an untouched OSM import — a row
+  still matching the retirement predicate
+  (`App\Catalog\CoverageRetirement::untouchedOsmSql()`) counts as community,
+  not curated (coverage-provider.md §9). Two shapes of that test coexist:
+
+  | Endpoint | Test on the joined `item` |
+  |---|---|
+  | `poi/{osmType}/{osmId}` (`detail()`) | `NOT (i.letter IN (C,D,E,G,H,I,J) AND untouched)` — letter-guarded |
+  | `search`, `nearby`, `counts` | `NOT (untouched)` — **no letter guard** |
+
+  The two diverge only for an untouched OSM `item` whose letter is outside
+  `CoverageRetirement::LETTERS` (so A, B, F or K) that nonetheless shares a
+  `source_ref` with a cached POI: `poi` would report it `curated`, while
+  `search`/`counts` would still show the place as community. This is accepted,
+  not overlooked. It cannot arise from the current pipeline, which writes only
+  those same seven letters into `coverage_poi`, and A never enters the artifact
+  while B is wikidata-sourced (coverage-provider.md §4). **Before letting any
+  other letter share a `source_ref` with a coverage row, add the letter guard
+  to the three `NOT EXISTS` clauses too.**
 - Every response carries `"attribution": "© OpenStreetMap contributors (ODbL)"`
   (`CoverageRepository::ATTRIBUTION`), per
   [osm-data-architecture.md §3–4](osm-data-architecture.md).
