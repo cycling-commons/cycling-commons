@@ -1,0 +1,54 @@
+web/src/Messaging/MessageService.php
+  s_ed348b2f9c4e8c::t_e9a478f962dfe4 14-18,21
+  s_ed348b2f9c4e8c::t_ae5d888d52782b 124,130-133
+  s_ed348b2f9c4e8c::t_2aaebeb9d9471c 37-41,43-44,51-56
+  s_ed348b2f9c4e8c::t_e6b192fe3b8f92 182-184
+  s_ed348b2f9c4e8c::t_aa5ac30749a3ae 96-97,101-103
+web/src/Messaging/UserMessageKind.php
+  s_ed348b2f9c4e8c::t_4db7bb49da03c9 10-14
+web/src/Command/ModerationGcCommand.php
+  s_ed348b2f9c4e8c::t_faf6f0f4662c70 18-21,23-26
+web/src/Command/Coverage/RetireLegacyOsmCommand.php
+  s_ed348b2f9c4e8c::t_ab916c810f0ac2 46-49
+  s_ed348b2f9c4e8c::t_c6642cbea4b02a 20-24,28-31,33-35,37-40
+  s_ed348b2f9c4e8c::t_bbb15790170100 25-26
+  s_ed348b2f9c4e8c::t_025f6091d88f1a 107-108
+web/src/Command/CreateUserCommand.php
+  s_ed348b2f9c4e8c::t_483c27014e6756 92-95
+  s_ed348b2f9c4e8c::t_b77a4e4e85c635 20-21
+web/src/Coverage/CoverageRepository.php
+  s_ed348b2f9c4e8c::t_328c0dd0dc9073 121-129
+  s_ed348b2f9c4e8c::t_e293891db367a8 16-19,21-25,27-33
+  s_ed348b2f9c4e8c::t_afd6aa73c7ec10 55-57
+  s_ed348b2f9c4e8c::t_70a533a066e03d 61,64
+  s_ed348b2f9c4e8c::t_84cac1fa432926 179,181-187
+  s_ed348b2f9c4e8c::t_96b8a6da546433 43-46
+  s_ed348b2f9c4e8c::t_340d8fe352769e 72-78
+  s_ed348b2f9c4e8c::t_32aecd56d45dbd 308-310
+  s_ed348b2f9c4e8c::t_2096ea2bb1583b 253-261
+web/src/Messaging/Entity/UserMessage.php
+  s_ed348b2f9c4e8c::t_fc1c49bd25ae93 15-20
+web/src/Coverage/CoverageManifest.php
+  s_ed348b2f9c4e8c::t_66a760e70d2a58 83
+  s_ed348b2f9c4e8c::t_a760ab81db0cdb 94
+  s_ed348b2f9c4e8c::t_5763227cb78192 33,37-39,43
+  s_ed348b2f9c4e8c::t_a2020a0651e036 105-108
+  s_ed348b2f9c4e8c::t_8ac29aaf221cd3 15-19,22-27
+  s_ed348b2f9c4e8c::t_a3f504016a066a 68-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "fde0e6c72f9233c3cf11106683e55c300bfeba26",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
