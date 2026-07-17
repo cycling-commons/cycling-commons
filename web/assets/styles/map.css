@@ -155,8 +155,11 @@
   .cc-pin span{font-size:.85rem;line-height:1}
   .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
   .cc-pin.pending{border-color:#D92D20;border-width:3px}
-  /* community tier (07-15 decisions B/D): same per-type marker, lighter — no new icon set */
-  .cc-pin.community{opacity:.62;border-style:dashed}
+  /* community tier (07-15 decisions B/D): same per-type marker, lighter — no new icon set.
+     !important: MapLibre's Marker._updateOpacity() sets an inline style.opacity on every
+     marker element on each position update (occlusion-fade machinery), which otherwise
+     silently beats this class rule — confirmed live, the dashed border alone rendered. */
+  .cc-pin.community{opacity:.62 !important;border-style:dashed}
   /* one-off reveal pin (decision C): community look + the selection pulse */
   .cc-pin.reveal::before{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(255,90,31,.6);animation:cc-pulse 1.25s infinite}
   .cc-mod{margin-top:1rem;border:1px solid rgba(217,45,32,.4);border-left:3px solid #D92D20;border-radius:0 8px 8px 0;padding:.9rem 1rem;background:rgba(217,45,32,.05)}
