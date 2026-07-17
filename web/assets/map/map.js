@@ -321,7 +321,11 @@
     const typeLbl = kindLbl || p.t || lbl;
     let rec=[{label:D.type||'Type', value:typeLbl, method: pivot?'Tourisme Wallonie':'OSM'}];
     if(p.town && layer.letter!=='E') rec.push({label:D.town||'Town', value:p.town});  // stays' 'town' comes from the schema (labelled "Town / commune")
-    rec.push({label:D.province||'Province', value:p.prov||D.wallonia||'Wallonia'});
+    // Province renders only when the item actually carries one (curated PIVOT/
+    // harvest rows). Coverage POIs are Belgium-wide with region_id NULL by design
+    // (coverage-provider.md §2) — the old 'Wallonia' fallback mislabelled every
+    // Flanders POI, so no prov means no row until region attribution exists.
+    if(p.prov) rec.push({label:D.province||'Province', value:p.prov});
     if(pivot) rec.push({label:D.listed||'Listed', value:D.officialRegistry||'Official Tourisme Wallonie registry', method:'official'});
     // The simulated demo Status/Rating rows are gone — simulated flags die
     // (map-and-search.md §12); their payload keys stay for byte-stability but
