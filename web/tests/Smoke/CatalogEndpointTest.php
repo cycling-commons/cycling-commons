@@ -27,6 +27,14 @@ final class CatalogEndpointTest extends WebTestCase
         $tester->execute(['dir' => $dir]);
         $tester->assertCommandIsSuccessful();
 
+        // Coverage retirement (coverage-provider.md §9): untouched
+        // osm/unverified POIs no longer serve from catalog.json — this smoke
+        // test asserts payload SHAPE, so promote the fixtures to verified
+        // (still a served state) exactly like CatalogProviderTest::import().
+        static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class)->getConnection()->executeStatement(
+            "UPDATE item SET state = 'verified' WHERE letter IN ('C','D','E','G','H','I','J')",
+        );
+
         $client->request('GET', '/map/catalog.json');
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'application/json');

@@ -1,4 +1,5 @@
 <?php
+
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 declare(strict_types=1);
 
@@ -30,7 +31,7 @@ final class CoverageContractTest extends TestCase
             self::markTestSkipped('pipeline/contract/coverage-contract.json is not present in this checkout');
         }
 
-        /** @var array{version: int, letters: array<string, array{selectors: list<array{tag: string, label: string}>, tileProps: list<string>}>, serviceKind: array<string, string>} */
+        /* @var array{version: int, letters: array<string, array{selectors: list<array{tag: string, label: string}>, tileProps: list<string>}>, serviceKind: array<string, string>} */
         return json_decode((string) file_get_contents($path), true, flags: \JSON_THROW_ON_ERROR);
     }
 

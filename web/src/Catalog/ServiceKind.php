@@ -1,4 +1,5 @@
 <?php
+
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 declare(strict_types=1);
 
@@ -15,7 +16,15 @@ enum ServiceKind: string
     case Station = 'station';
     case Pump = 'pump';
 
-    /** @param array<string,string> $tags raw OSM tags */
+    /**
+     * @api Not called from PHP production code — the pipeline (Python) does
+     *      the real OSM→kind mapping for coverage_poi. This copy exists so
+     *      CoverageContractTest can pin PHP's mapping against
+     *      pipeline/contract/coverage-contract.json and catch drift
+     *      (coverage-provider.md §7).
+     *
+     * @param array<string,string> $tags raw OSM tags
+     */
     public static function fromOsmTags(array $tags): ?self
     {
         return match (true) {

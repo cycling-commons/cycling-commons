@@ -59,6 +59,16 @@ final class ManualSourceTest extends KernelTestCase
         $this->em->persist($manual);
         $this->em->flush();
 
+        // Coverage retirement (coverage-provider.md §9): an
+        // untouched source=osm/unverified row no longer serves from
+        // catalog.json (it lives in coverage_poi now) — a human touch (here: a
+        // confirmation) keeps it canonical without changing its state, so this
+        // test still compares manual vs. osm serving in the SAME state.
+        $this->em->getConnection()->executeStatement(
+            'INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (:item, 1, :stance, NOW(), NOW())',
+            ['item' => $osm->getId(), 'stance' => 'exists'],
+        );
+
         $json = static::getContainer()->get(CatalogProvider::class)->json();
         self::assertStringContainsString('Test osm pump', $json);
         self::assertStringContainsString('Test manual pump', $json);
