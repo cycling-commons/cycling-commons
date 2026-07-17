@@ -12,14 +12,16 @@ use Symfony\Component\Clock\ClockInterface;
 
 /**
  * The real moderation queue, DB-backed: pending + needs-info submissions,
- * filterable by country/region/type. Row shape is the long-standing contract
- * map.js and moderate/index.html.twig have always consumed.
+ * filterable by country/region/type. The row shape is a shared contract used
+ * by both map.js and moderate/index.html.twig.
+ *
+ * @see docs/specs/moderation-and-contribution.md §5.2
  *
  * @api Read by ModerateController and MapController.
  */
 final class SubmissionQueue
 {
-    private ?\Collator $collator = null; // §13: hoisted, not per-call
+    private ?\Collator $collator = null; // created once and reused, not rebuilt per call
 
     public function __construct(
         private readonly Connection $db,
@@ -102,8 +104,8 @@ final class SubmissionQueue
      * The returned row is a deliberate shared view-model: the SAME shape is
      * consumed by both moderate/index.html.twig AND map.js (as JSON). The
      * server-side formatting below (anonymised who, relative when, ' · '-joined
-     * diffs) is therefore the single source of truth for both consumers; moving
-     * it into one template would fork the logic into client JS (review #44).
+     * diffs) is the single source of truth for both consumers. Moving it into
+     * one template would fork the logic into client JS.
      */
     private function rows(ModerationScope $scope, string $where, array $params): array
     {
@@ -171,8 +173,8 @@ final class SubmissionQueue
 
     /**
      * Locale-aware sort of a column of strings. Takes already-fetched values
-     * (not a SQL string) so no method here accepts raw SQL text as an argument
-     * (review #21).
+     * (not a SQL string) so no method here accepts raw SQL text as an
+     * argument.
      *
      * @param list<mixed> $values
      *

@@ -12,8 +12,9 @@ use Doctrine\DBAL\Connection;
 
 /**
  * Resolves a curator's ModerationScope from moderator_area rows and answers
- * per-item scope checks (moderator-areas spec 2026-07-14). ROLE_ADMIN and
- * row-less curators are global.
+ * per-item scope checks. ROLE_ADMIN and row-less curators are global.
+ *
+ * @see docs/specs/moderation-and-contribution.md §9.2
  *
  * @api Consumed by the moderation queues, write guards, and the shell label.
  */
@@ -50,7 +51,9 @@ final class ModerationScopeProvider
     }
 
     /**
-     * PHP twin of ModerationScope::sqlFragment() — the write-guard predicate.
+     * PHP twin of ModerationScope::sqlFragment() - the write-guard predicate.
+     *
+     * @see docs/specs/moderation-and-contribution.md §9.2
      */
     public function allowsRegion(ModerationScope $scope, ?int $regionId): bool
     {

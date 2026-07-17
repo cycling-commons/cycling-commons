@@ -9,12 +9,13 @@ namespace App\Moderation;
 use Doctrine\DBAL\ArrayParameterType;
 
 /**
- * The acting curator's moderation scope (moderator-areas spec 2026-07-14):
- * global (admin, or a curator with no area rows) or a union of region ids +
- * country codes. One SQL fragment scopes the queues; the provider's
- * allowsRegion() is the matching PHP predicate for write guards. NULL-region
- * items are ALWAYS in scope — intake keeps outside-all-regions proposals
- * reviewable by everyone.
+ * The acting curator's moderation scope: global (admin, or a curator with no
+ * area rows) or a union of region ids + country codes. One SQL fragment
+ * scopes the queues; the provider's allowsRegion() is the matching PHP
+ * predicate for write guards. NULL-region items are ALWAYS in scope - intake
+ * keeps outside-all-regions proposals reviewable by everyone.
+ *
+ * @see docs/specs/moderation-and-contribution.md §9.2
  *
  * @api Moderation vocabulary.
  */

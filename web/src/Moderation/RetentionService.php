@@ -12,16 +12,18 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 /**
- * Retention phase 1 (spec M8 §6 open point, resolved for the two decided-row
- * kinds that are safe to purge): decided rows older than
- * `moderation.retention_months` are garbage — the moderation decision is
- * already recorded (audit trail lives in change_history / the decision
- * itself), the rider-facing value of keeping the row fades, and unbounded
- * growth of dismissed/rejected rows is pure liability.
+ * Retention phase 1, resolved for the two decided-row kinds that are safe to
+ * purge: decided rows older than `moderation.retention_months` are garbage.
+ * The moderation decision is already recorded (the audit trail lives in
+ * change_history and the decision itself), the rider-facing value of keeping
+ * the row fades, and unbounded growth of dismissed/rejected rows is pure
+ * liability.
  *
- * Deliberately NOT swept here (spec §6 open point, still pending a decision):
- * rejected `recommended_route` rows, and `needs_info` submissions (still
- * awaiting the rider, never terminal on a timer).
+ * Deliberately NOT swept here, pending a policy decision: rejected
+ * `recommended_route` rows, and `needs_info` submissions (still awaiting the
+ * rider, never terminal on a timer).
+ *
+ * @see docs/specs/moderation-and-contribution.md §8
  *
  * @api Read by ProfileController for its lazy cutoff filter; run by
  *      ModerateController/RouteModerateController's opportunistic hook and by
@@ -46,7 +48,7 @@ final class RetentionService
     }
 
     /**
-     * Deletes decided rows past the cutoff. Idempotent — safe to re-run any
+     * Deletes decided rows past the cutoff. Idempotent - safe to re-run any
      * number of times; a row already deleted simply isn't matched again.
      *
      * @return array{corrections: int, submissions: int}
@@ -69,7 +71,7 @@ final class RetentionService
 
     /**
      * Fire-and-forget sweep, throttled to at most once per TTL via the
-     * default cache pool — safe to call on every desk render. Never throws:
+     * default cache pool - safe to call on every desk render. Never throws:
      * a failed sweep must not break the curator's page.
      */
     public function sweepOpportunistically(): void
@@ -82,11 +84,11 @@ final class RetentionService
                 return true;
             });
         } catch (\Throwable) {
-            // Opportunistic housekeeping only — no logger is wired anywhere
-            // in this codebase (checked), and a failed sweep here must never
-            // surface as a broken moderation desk. The next opportunistic
-            // call (or an operator running `app:moderation:gc` by hand) will
-            // simply try again.
+            // Opportunistic housekeeping only. No logger is wired anywhere in
+            // this codebase, and a failed sweep here must never surface as a
+            // broken moderation desk. The next opportunistic call (or an
+            // operator running `app:moderation:gc` by hand) will simply try
+            // again.
         }
     }
 }

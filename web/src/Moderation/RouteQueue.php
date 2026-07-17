@@ -10,9 +10,11 @@ use App\Catalog\ItemState;
 use Doctrine\DBAL\Connection;
 
 /**
- * Raw-DBAL read model for the Routes desk (spec §6). Proposals have no
- * Submission row (D1), so this reads recommended_route WHERE state='submitted'
- * directly, oldest first, each row carrying its region's active count vs cap.
+ * Raw-DBAL read model for the Routes desk. Proposals have no Submission row,
+ * so this reads recommended_route WHERE state='submitted' directly, oldest
+ * first, each row carrying its region's active count vs cap.
+ *
+ * @see docs/specs/route-domain.md §5
  *
  * @api Consumed by RouteModerateController.
  */
@@ -75,7 +77,7 @@ final class RouteQueue
             $where .= ' AND r.region_id = :region';
             $params['region'] = $regionId;
         }
-        // The fragment reads region_id off the JOINed recommended_route r —
+        // The fragment reads region_id off the JOINed recommended_route r.
         // route_suggestion itself has no region_id column.
         $frag = $scope->sqlFragment('r');
         if ('' !== $frag['sql']) {
@@ -113,10 +115,11 @@ final class RouteQueue
     }
 
     /**
-     * Open route corrections (route_suggestion, status=pending) in scope —
-     * the desk's second work stream, counted for the ROUTES tab badge so a
-     * waiting correction is never invisible. The scope fragment reads
-     * region_id off the JOINed recommended_route (suggestions carry none).
+     * Open route corrections (route_suggestion, status=pending) in scope.
+     * This is the desk's second work stream, counted for the ROUTES tab
+     * badge so a waiting correction is never invisible. The scope fragment
+     * reads region_id off the JOINed recommended_route (suggestions carry
+     * none).
      */
     public function pendingSuggestionCount(ModerationScope $scope): int
     {

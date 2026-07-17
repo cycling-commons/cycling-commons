@@ -8,7 +8,9 @@ namespace App\Moderation;
 
 /**
  * A moderation write targeted an item outside the acting curator's assigned
- * areas (moderator-areas spec 2026-07-14). Controllers map this to a 403.
+ * areas. Controllers map this to a 403.
+ *
+ * @see docs/specs/moderation-and-contribution.md §9.3
  *
  * @api Thrown by ModerationService/RouteModerationService guards.
  */

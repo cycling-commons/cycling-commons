@@ -10,11 +10,12 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * One moderation-area assignment: a user + EITHER a region OR a country
- * (moderator-areas spec 2026-07-14). A user's scope is the union of their
- * rows; no rows = global. DB-level FKs (users, region) ON DELETE CASCADE and
- * the one-of-two CHECK live in the migration; the entity keeps plain columns
- * per house convention.
+ * One moderation-area assignment: a user + EITHER a region OR a country. A
+ * user's scope is the union of their rows; no rows = global. DB-level FKs
+ * (users, region) ON DELETE CASCADE and the one-of-two CHECK live in the
+ * migration; the entity keeps plain columns per house convention.
+ *
+ * @see docs/specs/moderation-and-contribution.md §9.1
  *
  * @api Written by UserAdminService::setModeratorAreas; read by
  *      ModerationScopeProvider (raw DBAL).

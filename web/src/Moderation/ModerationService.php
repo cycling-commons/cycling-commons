@@ -21,9 +21,11 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * The ONLY write-path for moderation decisions. Approve applies the change
- * to the catalog inside one transaction and appends change_history rows
- * (moderation spec §9: history records the item's ACTUAL value at apply
- * time — never the submitter's possibly-stale snapshot).
+ * to the catalog inside one transaction and appends change_history rows.
+ * History records the item's ACTUAL value at apply time, never the
+ * submitter's possibly-stale snapshot.
+ *
+ * @see docs/specs/moderation-and-contribution.md §4
  *
  * @api Called by ModerateController::decide()/trash().
  */
@@ -47,7 +49,7 @@ final class ModerationService
             // Pessimistic row lock: two curators deciding the same submission
             // concurrently would otherwise both read it as pending and both
             // apply. The second now blocks until the first commits, then sees
-            // the decided status and is rejected below (#25).
+            // the decided status and is rejected below.
             $submission = $this->em->find(Submission::class, $submissionId, LockMode::PESSIMISTIC_WRITE);
             if (null === $submission) {
                 throw new \InvalidArgumentException(sprintf('Unknown submission %d', $submissionId));
@@ -64,9 +66,9 @@ final class ModerationService
             switch ($decision) {
                 case 'approve':
                     // A submission bound to an item (itemId set) whose target row
-                    // has since vanished cannot be applied — fail loudly (rolling
+                    // has since vanished cannot be applied. Fail loudly (rolling
                     // back the whole transaction) instead of silently marking it
-                    // approved with no effect (#33).
+                    // approved with no effect.
                     if (null !== $submission->getItemId() && null === $item) {
                         throw new \InvalidArgumentException(sprintf('Cannot approve submission %d: its target item %d no longer exists', $submissionId, $submission->getItemId()));
                     }
@@ -99,7 +101,7 @@ final class ModerationService
                 'reject' => UserMessageKind::SubmissionRejected,
                 'needs_info' => UserMessageKind::SubmissionNeedsInfo,
             };
-            // M2: the outcome message rides the decision transaction — atomic,
+            // M2: the outcome message rides the decision transaction. Atomic,
             // duplicate-proof (the AlreadyDecidedException guard above means
             // at most one message per outcome).
             $this->messages->sendSystem(
@@ -114,10 +116,12 @@ final class ModerationService
     }
 
     /**
-     * Trash (M9): a hard, permanent delete of a submission row in ANY status
-     * — spam/abuse needs no state check, unlike a route proposal. Audited
+     * Trash (M9): a hard, permanent delete of a submission row in ANY status.
+     * Spam and abuse need no state check, unlike a route proposal. Audited
      * content-free FIRST (AdminActionLogger::log() flushes its own row inside
-     * this transaction), never a UserMessage — trashing never feeds spam.
+     * this transaction), never a UserMessage - trashing never feeds spam.
+     *
+     * @see docs/specs/moderation-and-contribution.md §6
      */
     public function trashSubmission(int $id, User $curator): void
     {

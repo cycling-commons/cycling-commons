@@ -8,8 +8,10 @@ namespace App\Moderation;
 
 /**
  * Thrown by RouteModerationService::trashProposal() when the route is not in
- * a trashable state (spec M9: only `submitted` or `rejected` — never an
+ * a trashable state (M9: only `submitted` or `rejected`, never an
  * active/served or retired route).
+ *
+ * @see docs/specs/moderation-and-contribution.md §6
  *
  * @api Consumed by RouteModerateController::trash().
  */

@@ -8,7 +8,7 @@ namespace App\Moderation;
 
 /**
  * Thrown by ModerationService::decide() when a submission is not in a
- * decidable state (Pending or NeedsInfo) — e.g. a second decision on an
+ * decidable state (Pending or NeedsInfo), e.g. a second decision on an
  * already-decided submission.
  *
  * @api Consumed by ModerateController::decide().

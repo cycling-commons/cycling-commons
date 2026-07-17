@@ -18,11 +18,14 @@ use App\Service\AdminActionLogger;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * The ONLY write-path for route moderation (spec §6, D1 — purpose-built, no
- * reuse of ModerationService). Every transition is transactional and appends
- * route_change_history (D9). The region cap (D8) is enforced on approve.
- * Decision outcomes message the proposer (moderation-feedback spec M2) —
- * skipped for imported routes (`proposedBy === null`).
+ * The ONLY write-path for route moderation - purpose-built, no reuse of
+ * ModerationService. Every transition is transactional and appends
+ * route_change_history. The region cap is enforced on approve. Decision
+ * outcomes message the proposer, skipped for imported routes
+ * (`proposedBy === null`).
+ *
+ * @see docs/specs/route-domain.md §5.1
+ * @see docs/specs/moderation-and-contribution.md §7.2
  *
  * @api Called by RouteModerateController.
  */
@@ -54,7 +57,7 @@ final class RouteModerationService
             }
             // Known TOCTOU: this COUNT(*) isn't locked, so two concurrent approve()
             // calls at cap-1 could both pass and both commit, briefly exceeding the
-            // cap. Accepted tradeoff, not a bug — few curators, soft editorial cap,
+            // cap. Accepted tradeoff, not a bug: few curators, soft editorial cap,
             // recoverable via retire(); not worth locking for this workflow.
             if ($this->activeCountForRegion($route->getRegionId()) >= $this->regionActiveCap) {
                 throw new RegionFullException(sprintf('Region %s is at the active-route cap.', $route->getRegionId() ?? 'none'));
@@ -114,7 +117,7 @@ final class RouteModerationService
             foreach ($changes as $field => $new) {
                 $current = 'name' === $field ? $route->getName() : ($attributes[$field] ?? null);
                 if ($current === $new || (null === $new && null === ($current ?? null))) {
-                    continue; // no-op — never snapshot an unchanged field
+                    continue; // no-op: never snapshot an unchanged field
                 }
                 if ('name' === $field) {
                     $route->setName((string) $new);
@@ -164,7 +167,9 @@ final class RouteModerationService
      * status). Its `segments` are a JSON column on the row itself, so the
      * delete leaves no orphan segment data. Audited content-free FIRST
      * (AdminActionLogger::log() flushes its own row inside this transaction),
-     * never a UserMessage — trashing never feeds spam.
+     * never a UserMessage - trashing never feeds spam.
+     *
+     * @see docs/specs/moderation-and-contribution.md §6
      */
     public function trashSuggestion(int $id, User $curator): void
     {
@@ -182,10 +187,12 @@ final class RouteModerationService
     }
 
     /**
-     * Trash (M9): a hard, permanent delete of a route proposal — ONLY while
+     * Trash (M9): a hard, permanent delete of a route proposal, ONLY while
      * it is `submitted` or `rejected`. Never an active/served (unverified,
      * verified) or retired route (TrashBlockedException guardrail). Audited
-     * content-free FIRST, never a UserMessage — trashing never feeds spam.
+     * content-free FIRST, never a UserMessage - trashing never feeds spam.
+     *
+     * @see docs/specs/moderation-and-contribution.md §6
      */
     public function trashProposal(int $routeId, User $curator): void
     {
@@ -196,7 +203,7 @@ final class RouteModerationService
                 throw new TrashBlockedException(sprintf('Route %d is %s and cannot be trashed.', $routeId, $route->getState()->value));
             }
 
-            // Content-free audit (M9): NO rider-authored text — a submitted
+            // Content-free audit (M9): NO rider-authored text. A submitted
             // proposal's NAME is unvetted free text and must not land in the
             // immutable log (same rule as the submission path's enum-only note).
             $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf('route %d state=%s', $routeId, $route->getState()->value));
@@ -204,7 +211,7 @@ final class RouteModerationService
         });
     }
 
-    /** The configured region active-route cap (D8; %route.region_active_cap%). */
+    /** The configured region active-route cap (%route.region_active_cap%). */
     public function regionCap(): int
     {
         return $this->regionActiveCap;
@@ -237,7 +244,7 @@ final class RouteModerationService
     }
 
     /**
-     * M2: rides the same transaction as the decision — atomic, and skipped
+     * M2: rides the same transaction as the decision, atomic, and skipped
      * entirely for imported routes (`proposedBy === null`, no rider to tell).
      */
     private function notifyProposer(RecommendedRoute $route, UserMessageKind $kind, ?string $note): void
