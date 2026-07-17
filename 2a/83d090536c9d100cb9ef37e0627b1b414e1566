@@ -1,0 +1,52 @@
+web/src/Catalog/Import/ItemUpsert.php
+  s_ed348b2f9c4e8c::t_61e6510e77d4a1 12,15-18,22
+  s_ed348b2f9c4e8c::t_dd20dbc08e3bb2 23
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_ed348b2f9c4e8c::t_fd55e13ed7365e 30-32
+  s_ed348b2f9c4e8c::t_73059c488994fd 24-25
+  s_ed348b2f9c4e8c::t_2d0389b2549276 34
+  s_ed348b2f9c4e8c::t_f6b3f8ed8cf227 15,18
+  s_ed348b2f9c4e8c::t_4ab0db15665b86 19
+web/src/Catalog/Command/BackfillAttributesCommand.php
+  s_ed348b2f9c4e8c::t_ff695cfd780c03 198
+  s_ed348b2f9c4e8c::t_c182ed3c62179b 23-27,29-30,32-35,38-39,41-44,56-59
+  s_ed348b2f9c4e8c::t_13e5019fa4399e 120-122
+  s_ed348b2f9c4e8c::t_cbbef0b321dd95 195
+  s_ed348b2f9c4e8c::t_858ad2082571c5 88-90
+  s_ed348b2f9c4e8c::t_6a910de36b7361 246
+  s_ed348b2f9c4e8c::t_98618884f64a69 235
+  s_ed348b2f9c4e8c::t_9c4ad0d80f8b90 217
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_ed348b2f9c4e8c::t_4831d9c3f09d63 165
+  s_ed348b2f9c4e8c::t_f3761fecc4f901 45
+  s_ed348b2f9c4e8c::t_53d9c76df5db6d 28,31-33
+  s_ed348b2f9c4e8c::t_a8acec2e04a599 256
+  s_ed348b2f9c4e8c::t_93120e68735872 134
+  s_ed348b2f9c4e8c::t_03bd777a07acdd 238
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_ed348b2f9c4e8c::t_e1d7d1ffdb9d77 411
+  s_ed348b2f9c4e8c::t_ba8c855cf2de86 49
+  s_ed348b2f9c4e8c::t_7e1ef3d07c8e32 21-23,25,30,32-35,37-40,42
+  s_ed348b2f9c4e8c::t_62da1eb8fedee4 53-55
+  s_ed348b2f9c4e8c::t_aa0960492aea0a 222-227
+  s_ed348b2f9c4e8c::t_2877c0905b8960 378-382
+  s_ed348b2f9c4e8c::t_201a32ac2e717c 402
+web/src/Catalog/Doctrine/GeometryType.php
+  s_ed348b2f9c4e8c::t_22e7a70679e9ba 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "2a83d090536c9d100cb9ef37e0627b1b414e1566",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
