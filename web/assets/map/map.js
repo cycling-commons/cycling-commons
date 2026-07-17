@@ -225,10 +225,10 @@
     if(mlyMarker){ mlyMarker.remove(); mlyMarker=null; }
   }
 
-  // water-droplet icons, minted once and shared by the legacy water-osm layer
-  // AND the coverage C tile layer: blue = tagged drinkable (tile prop
-  // `potable`, coverage-provider.md §4), grey = potability
-  // unknown/untagged — the "confirm on the spot" variant.
+  // water-droplet icons, minted once for the coverage C tile layer: blue =
+  // tagged drinkable (tile prop `potable`, coverage-provider.md
+  // §4), grey = potability unknown/untagged — the "confirm on the spot"
+  // variant.
   function mintWaterDrops(){
     if(map.hasImage('water-drop')) return;
     const S=2, W=14*S, H=18*S, cx=W/2;
@@ -247,20 +247,13 @@
     map.addImage('water-drop-unk', {width:W, height:H, data:drop('#7F8C93','#2b3338')}, {pixelRatio:S});
   }
 
-  // all Wallonia drinking-water points (OSM) as an efficient dot layer, toggled with the Water layer
+  // Water POI registry entry + confirmed-pin data (display moved to the
+  // coverage tile layer, addCoverage() — this only feeds osmLayers so
+  // setupConfClusters()/updateConfMarkers() keep rendering confirmed water pins).
   function addWaterOsm(){
-    if(!window.CC_WATER_OSM || map.getSource('water-osm')) return;
+    if(!window.CC_WATER_OSM || osmLayers['water']) return;
     osmLayers['water']={data:CC_WATER_OSM, water:true};
     mintWaterDrops();
-    map.addSource('water-osm',{type:'geojson',data:CC_WATER_OSM});
-    map.addLayer({id:'water-osm',type:'symbol',source:'water-osm',
-      filter:['!',['has','v']],   // v = real verified/confirmed signal (the demo c is dead)
-      layout:{visibility:'none','icon-image':'water-drop','icon-allow-overlap':true,
-        'icon-size':['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]}});
-    map.on('click','water-osm',e=>{ const f0=e.features[0], p=f0.properties, c=f0.geometry.coordinates, ll={lng:c[0],lat:c[1]}; openDrawer(layerByKey['water'], waterDrawer(p, ll)); flyToPin([c[0],c[1]]); });   // use the feature's exact coords, not the click point, so the halo/centre land on the marker
-    map.on('mouseenter','water-osm',()=>map.getCanvas().style.cursor='pointer');
-    map.on('mousemove','water-osm',e=>{ const p=e.features[0].properties; showTip(p.t||'Drinking water', e.lngLat); });
-    map.on('mouseleave','water-osm',()=>{ map.getCanvas().style.cursor=''; hideTip(); });
   }
 
   // registry of bulk-OSM dot layers so render() can promote confirmed (simulated) points to icon pins
@@ -421,34 +414,13 @@
     map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
     return id;
   }
-  // generic bulk-OSM layer: UNVERIFIED items get the small category marker; confirmed become large pins (clustered)
+  // Bulk-OSM POI registry entry + confirmed-pin data (display moved to the
+  // coverage tile layer, addCoverage() — this only feeds osmLayers so
+  // setupConfClusters()/updateConfMarkers() keep rendering confirmed pins, and
+  // the per-layer drawer source string osmDrawer() falls back to).
   function addOsmDots(key, data, srcDesc){
-    const id=key+'-osm';
-    if(!data || map.getSource(id)) return;
+    if(!data || osmLayers[key]) return;
     osmLayers[key]={data, src:srcDesc};
-    map.addSource(id,{type:'geojson',data});
-    map.addLayer({id,type:'symbol',source:id,
-      filter:['!',['has','v']],   // v = real verified/confirmed signal (the demo c is dead)
-      layout:{visibility:'none',
-        // D · services carries a serviceKind (shop/station/pump) per item — distinct disc per
-        // kind; every other bulk-OSM layer keeps its single category icon. Fallback (missing/
-        // unrecognised serviceKind) is the plain services disc, same as before this feature.
-        'icon-image': key==='services'
-          ? ['match', ['get','serviceKind'],
-              // shop's glyph (⚙) === the plain services disc's own icon — reuse the
-              // un-suffixed miniIcon so we don't mint a duplicate cached image
-              // (mini-services-shop) identical to the miniIcon(key) fallback below.
-              'shop', miniIcon('services'),
-              'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
-              'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
-              miniIcon(key)]
-          : miniIcon(key),
-        'icon-allow-overlap':true,
-        'icon-size':['interpolate',['linear'],['zoom'],8,0.42,13,0.7,18,0.95]}});
-    map.on('click',id,e=>{ const f0=e.features[0], p=f0.properties, c=f0.geometry.coordinates, ll={lng:c[0],lat:c[1]}; openDrawer(layerByKey[key], osmDrawer(layerByKey[key], p, ll, srcDesc)); flyToPin([c[0],c[1]]); });   // exact feature coords, not the click point, so the halo sits on the marker
-    map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-    map.on('mousemove',id,e=>{ const p=e.features[0].properties; showTip(p.t||(layerByKey[key]||{}).label||'Item', e.lngLat); });
-    map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
   }
   // --- clustering for confirmed (validated/simulated) points: count bubble at low zoom → icon pins when spread ---
   const confState = {};   // srcId -> {key, layer, info, onScreen:{}}
@@ -515,12 +487,12 @@
       st.onScreen=next;
     });
   }
-  // The bulk OSM POI layers (layer key, data collection, OSM source note),
-  // declared once so the map-load renderer AND the sidebar-search index below
-  // stay in lockstep — previously the search skipped all of these, so every OSM
-  // stay/shop/viewpoint/station was unfindable ("Les Louveteaux and other things
-  // not searchable"). Read straight from the inlined CC_*_OSM globals (available
-  // synchronously), since osmLayers is only populated later on map 'load'.
+  // The bulk OSM POI pools (layer key, data collection, OSM source note).
+  // Display moved to the coverage tile layer (addCoverage()); this table now
+  // only feeds the addOsmDots() registry loop below — the confirmed-pin data
+  // + per-layer drawer source strings osmDrawer() falls back to. Read straight
+  // from the inlined CC_*_OSM globals (available synchronously), since
+  // osmLayers is only populated later on map 'load'.
   const OSM_BULK = [
     ['services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)'],
     ['scenic',   window.CC_SCENIC_OSM,   'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)'],
@@ -848,16 +820,16 @@
     return 2*R*Math.asin(Math.sqrt(x)); }
   function featurePoint(f){ return (f.geom&&f.geom.ll) || (f.route&&f.route[0]) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
   // ---- Unified searchable-item index (spec 2026-07-14 §3.1) ----
-  // Every catalog item exactly once, across ALL pools: CATALOG features
-  // (curated: climbs, hazards, routes, curator-pending) first, then PIVOT
-  // stays, then the bulk-OSM dot pools (incl. water, which loads its dot layer
-  // separately from OSM_BULK). Search and nearbyItems() both consume this —
-  // previously the town card scanned only CATALOG[].features (7 of 10 item
-  // types silently missing) and the search index pushed PIVOT stays twice
-  // (explicitly AND via the deliberate pivot→OSM concat in catalog-load.js).
+  // Every curated/DB-backed item exactly once: CATALOG features (curated:
+  // climbs, hazards, routes, curator-pending) then PIVOT stays. Search and
+  // nearbyItems() both consume this; uncurated OSM coverage is NOT indexed
+  // here (coverage-provider.md §6) — it's looked up live via
+  // /map/coverage/search and /map/coverage/nearby (openCoverageFeatureByName(),
+  // the search box, town-card nearby groups), deduped against this index by
+  // IDX_IDS/CC_CURATED_REFS so a curated twin never lists twice.
   // Dedup: DB-backed entries on letter+id; cross-source physical doubles
   // (same letter + normalized name within 100 m) keep the earlier entry —
-  // build order makes that curated/pivot over a raw OSM import.
+  // build order makes that curated over pivot.
   let ITEM_INDEX = [];
   // letter:id keys of every DB-backed local-index entry — coverage search/
   // nearby hits whose curated twin is already indexed must not list twice
@@ -899,27 +871,6 @@
         verified:!!p.v,   // v = real state/confirmation signal from CatalogProvider
         hlOff: p.v ? [0,-16] : [0,0],   // pin offset keys on the real promotion signal (c is dead, see the re-key step)
         go:()=>openStayPivot(f)});
-    });
-    // Bulk OSM pools: the shared OSM_BULK table + water (its droplet layer is
-    // registered separately in addWaterOsm(), so it never appears in OSM_BULK —
-    // indexed here or every drinking-water point stays unsearchable/unlisted).
-    const pools=OSM_BULK.concat([['water', window.CC_WATER_OSM, 'OpenStreetMap (amenity=drinking_water / drinking_water=yes)']]);
-    pools.forEach(([key, data, src])=>{ const layer=layerByKey[key]; if(!layer || !data || !data.features) return;
-      data.features.forEach(f=>{ const p=f.properties||{};
-        const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
-        const lng=+c[0], lat=+c[1]; if(!isFinite(lng)||!isFinite(lat)) return;
-        // Unnamed POIs (most drinking-water taps, many shelters/stations) are
-        // real catalog items the town card must list — index them under their
-        // type label, flagged `unnamed` so the search dropdown skips them
-        // (nothing to text-match) and the name-proximity dedup ignores them
-        // (two genuine taps 80 m apart share the fallback label).
-        const nm=p.n||p.t||layer.label; if(!nm) return;
-        push({name:nm, key:slug(nm+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
-          color:layer.color, letter:layer.letter, ll:[lat,lng], id:p.id, unnamed:!p.n,
-          verified:!!p.v,   // v = real state/confirmation signal from CatalogProvider
-          hlOff: p.v ? [0,-16] : [0,0],   // pin offset keys on the real promotion signal (c is dead, see the re-key step)
-          go:()=>{ openDrawer(layer, key==='water' ? waterDrawer(p, {lng, lat}) : osmDrawer(layer, p, {lng, lat}, src)); flyToPin([lng,lat]); }});
-      });
     });
     return out;
   }
@@ -1292,14 +1243,9 @@
     return value ? activeSet.has(value) : false;
   }
   let activeEffort=chipSet('effortf'), activeAccess=chipSet('accessf');
-  // stays' bulk-OSM dot layer filter combines the base "unconfirmed only" clause with the
-  // accessibility narrowing above; confirmed/clustered stays are filtered in updateConfMarkers().
+  // stays' coverage tile layer narrows on the accessibility filter above;
+  // confirmed/clustered stays are filtered in updateConfMarkers().
   function applyStaysAccessFilter(){
-    if(map.getLayer('stays-osm')){
-      const base=['!',['has','v']];   // v = real verified/confirmed signal (the demo c is dead)
-      map.setFilter('stays-osm', activeAccess.size===ALL_ACCESS.size ? base
-        : ['all', base, ['in', ['get','accessibility'], ['literal', Array.from(activeAccess)]]]);
-    }
     // Coverage stays narrow on the flat `acc` tile prop
     // (coverage-provider.md §6) — the dedupe filter is the
     // layer's base filter and must survive every setFilter.
@@ -1364,18 +1310,9 @@
   }
   // legend count = shown/total: in Curated only confirmed/curated count; in Everything everything does
   function layerCounts(layer){
-    const osmFx=window['CC_'+layer.key.toUpperCase()+'_OSM'];
-    const rawOsm=osmFx?osmFx.features:[];
-    // C2-T8: stays' shown/total narrows with the accessibility filter, same as climbs above
-    // ('total' stays the true unfiltered count, matching how sq/tr never shrink climbs' total).
-    const osmVisible = layer.key==='stays'
-      ? rawOsm.filter(f=>attrMatch((f.properties||{}).accessibility, activeAccess, ALL_ACCESS))
-      : rawOsm;
-    const osmTotal=osmVisible.length;
-    const osmConf=osmVisible.filter(f=>f.properties&&f.properties.v).length;
     const covTotal=(_covCounts && _covCounts[layer.letter])||0;
-    const shown=layer.features.filter(f=>featureVisible(layer,f)).length + (mode==='all'?osmTotal:osmConf) + covShownCount(layer.key);
-    return {shown, total:layer.features.length+rawOsm.length+covTotal};
+    const shown=layer.features.filter(f=>featureVisible(layer,f)).length + covShownCount(layer.key);
+    return {shown, total:layer.features.length+covTotal};
   }
   function updateCounts(){
     CATALOG.forEach(layer=>{
@@ -1394,10 +1331,6 @@
     if(!_styleReady) return;
     markers.forEach(m=>m.remove()); markers=[];
     clearDynamic();
-    ['water','services','scenic','history','stays','shelter','transit'].forEach(k=>{
-      // unverified dots show only in Everything mode; Curated best-of keeps just the confirmed pins
-      const id=k+'-osm'; if(map.getLayer(id)) map.setLayoutProperty(id,'visibility', (active.has(k) && mode==='all')?'visible':'none');
-    });
     // Community tier (07-15 decision B): utility coverage draws lightly in
     // Curated; experiential coverage only in Everything. See syncCoverageLayers.
     syncCoverageLayers();
