@@ -663,16 +663,13 @@
   // Open a coverage POI with NO rendered tile feature at hand (search pick,
   // town-card row, ?feature= fallback): fly, fetch the detail, open the drawer.
   // Fetch failure still opens a minimal drawer — the pick must never no-op.
-  function openCoverageByRef(ref, letter, ll){
+  function openCoverageByRef(ref, letter, ll, name){
     const key=LETTER_KEY[letter]; if(!key) return;
     flyToPin([ll[1],ll[0]]);
     const myReq=++_covReq;
-    fetch('/map/coverage/poi/'+ref, {headers:{'Accept':'application/json'}})
-      .then(r=>r.ok?r.json():null)
-      .catch(()=>null)
-      .then(d=>{ if(myReq!==_covReq) return;
+    const paint=(d)=>{ if(myReq!==_covReq) return;
         const layer=layerByKey[key], lo={lng:ll[1], lat:ll[0]};
-        const p=covProps(key, {ref, n:d&&d.name, kind:d&&d.kind}, d);
+        const p=covProps(key, {ref, n:(d&&d.name)||name, kind:d&&d.kind}, d);
         openDrawer(layer, key==='water' ? waterDrawer(p, lo) : osmDrawer(layer, p, lo, COV_SRC[key]));
         // decision C: if this POI's tile layer isn't drawn right now (Curated
         // mode, experiential letter — or layer toggled off), reveal it with one
@@ -680,7 +677,15 @@
         const id=key+'-cov';
         const drawn = map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
         if(!drawn) revealPinAt(layer, ll);
-      });
+      };
+    // Non-OSM refs (manual: rider adds, fx: seeds) have no coverage detail —
+    // /map/coverage/poi serves node|way only. Open the minimal drawer with the
+    // caller-supplied name straight away instead of a guaranteed-404 round-trip.
+    if(!/^(node|way)\/\d+$/.test(ref)){ paint(null); return; }
+    fetch('/map/coverage/poi/'+ref, {headers:{'Accept':'application/json'}})
+      .then(r=>r.ok?r.json():null)
+      .catch(()=>null)
+      .then(paint);
   }
   // ?feature= deep-link fallback (coverage-provider.md §6):
   // a name that is not in the local index gets ONE search-endpoint lookup —
@@ -695,7 +700,7 @@
         const hits=((d&&d.results)||[]).filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll));
         if(!hits.length) return;
         const hit=hits.find(h=>h.n.toLowerCase()===name.toLowerCase())||hits[0];
-        openCoverageByRef(hit.ref, hit.letter, hit.ll);
+        openCoverageByRef(hit.ref, hit.letter, hit.ll, hit.n);
       });
   }
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
@@ -2112,7 +2117,7 @@
         if(it.itemId!=null && IDX_IDS.has(g.letter+':'+it.itemId)) return;
         all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
           badge:g.letter, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
-          go:()=>openCoverageByRef(it.ref, g.letter, it.ll)}});
+          go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n)}});
       });
     });
     // group rows by letter, keeping the global nearest-first order inside each group
@@ -2166,7 +2171,22 @@
   function openFeatureByName(name){
     let found=null;
     CATALOG.forEach(layer=>layer.features.forEach(f=>{ if(f.name===name) found={layer,f}; }));
-    if(!found) return false;
+    if(!found){
+      // PIVOT stays live in CC_STAYS_PIVOT, not CATALOG — resolve them here so
+      // an official Tourisme Wallonie deep-link opens the full stay drawer
+      // (name, province, official-registry provenance) instead of falling
+      // through to the coverage path, whose /poi endpoint knows only node|way
+      // refs and 404s on fx:pivot:/manual: source_refs.
+      const pv=(window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || [])
+        .find(f=>f.properties && f.properties.n===name);
+      if(pv){
+        const c=pv.geometry && pv.geometry.coordinates;
+        if(c && c.length>=2) flyToPin([+c[0],+c[1]]);
+        openStayPivot(pv);
+        return true;
+      }
+      return false;
+    }
     const {layer,f}=found;
     if(!active.has(layer.key)){
       active.add(layer.key);
@@ -2701,7 +2721,7 @@
             .map(h=>{ const layer=layerByKey[LETTER_KEY[h.letter]];
               return {name:h.n, key:slug(h.n), kind:layer.label, badge:h.letter, color:layer.color,
                 letter:h.letter, ll:h.ll, cov:1, community:!h.curated,
-                go:()=>openCoverageByRef(h.ref, h.letter, h.ll)}; });
+                go:()=>openCoverageByRef(h.ref, h.letter, h.ll, h.n)}; });
           _covSQ=slug(q);
           if(!sRes.hidden) runS();   // merge into the open dropdown
         })
