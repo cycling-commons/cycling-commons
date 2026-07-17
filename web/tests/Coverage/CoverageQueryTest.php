@@ -6,7 +6,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Coverage;
 
+use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\ItemConfirmation;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use Doctrine\DBAL\Connection;
@@ -36,6 +38,26 @@ final class CoverageQueryTest extends WebTestCase
         $item = (new Item())->setLetter($letter)->setName($name)
             ->setGeom(json_encode(['type' => 'Point', 'coordinates' => [$lng, $lat]], \JSON_THROW_ON_ERROR))
             ->setCountryCode('BE')->setState(ItemState::Verified)->setSource(ItemSource::Osm)
+            ->setSourceRef($sourceRef)->setAttributes([]);
+        $em->persist($item);
+        $em->flush();
+
+        return $item;
+    }
+
+    /**
+     * An imported-OSM row nobody has touched (coverage-retirement predicate,
+     * CoverageRetirement::untouchedOsmSql): source=osm, state=unverified,
+     * zero change_history/item_confirmation/submission. This is exactly what
+     * app:coverage:retire-legacy would delete, so the query plane must key
+     * it as community, not curated, to mirror the payload/tile pair.
+     */
+    private function untouchedOsmItem(string $sourceRef, string $name, float $lat = 50.4, float $lng = 5.8, string $letter = 'C'): Item
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter($letter)->setName($name)
+            ->setGeom(json_encode(['type' => 'Point', 'coordinates' => [$lng, $lat]], \JSON_THROW_ON_ERROR))
+            ->setCountryCode('BE')->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
             ->setSourceRef($sourceRef)->setAttributes([]);
         $em->persist($item);
         $em->flush();
@@ -75,6 +97,46 @@ final class CoverageQueryTest extends WebTestCase
         self::assertFalse($results[1]['curated']);
         self::assertArrayNotHasKey('itemId', $results[1]);
         self::assertSame([50.4, 5.8], $results[1]['ll']);
+    }
+
+    public function testSearchUntouchedLegacyRowListsAsCommunityNotShadowed(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // An untouched legacy row (coverage-retirement predicate) must NOT
+        // be treated as payload-served: it lists once, as community — its
+        // coverage twin is not shadowed (finding 1, coverage-provider.md §9
+        // "zero display change").
+        self::insertCoveragePoi($db, ['ref' => 'node/9010', 'name' => 'Fontaine oubliée']);
+        $this->untouchedOsmItem('node/9010', 'Fontaine oubliée');
+
+        $results = $this->getJson($client, '/map/coverage/search?q=fontaine')['results'];
+        self::assertCount(1, $results);
+        self::assertSame('node/9010', $results[0]['ref']);
+        self::assertFalse($results[0]['curated']);
+        self::assertArrayNotHasKey('itemId', $results[0]);
+    }
+
+    public function testSearchHumanTouchedUnverifiedRowStaysCuratedAndShadowsTwin(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // Unverified but a rider confirmed it — "anything a human ever
+        // touched stays canonical" (coverage-provider.md §9): it must stay
+        // curated and its coverage twin must stay shadowed.
+        self::insertCoveragePoi($db, ['ref' => 'node/9011', 'name' => 'Fontaine confirmée']);
+        $item = $this->untouchedOsmItem('node/9011', 'Fontaine confirmée');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist(new ItemConfirmation((int) $item->getId(), 9101, ConfirmationStance::Exists));
+        $em->flush();
+
+        $results = $this->getJson($client, '/map/coverage/search?q=fontaine')['results'];
+        self::assertCount(1, $results);
+        self::assertSame('node/9011', $results[0]['ref']);
+        self::assertTrue($results[0]['curated']);
+        self::assertSame($item->getId(), $results[0]['itemId']);
     }
 
     public function testSearchRanksBySimilarity(): void
@@ -158,6 +220,25 @@ final class CoverageQueryTest extends WebTestCase
         self::assertSame(['Water 1', 'Water 2', 'Water 3'], array_column(\array_slice($group['items'], 1), 'n')); // nearest 3, by distance
     }
 
+    public function testNearbyUntouchedLegacyRowListsAsCommunityNotShadowed(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9561', 'name' => 'Fontaine oubliée', 'lat' => 50.401, 'lng' => 5.8]);
+        $this->untouchedOsmItem('node/9561', 'Fontaine oubliée', 50.401, 5.8);
+
+        $data = $this->getJson($client, '/map/coverage/nearby?lat=50.4&lng=5.8&km=5');
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $data['groups']);
+        $group = $data['groups'][0];
+        self::assertSame(1, $group['total']);
+        self::assertCount(1, $group['items']);
+        self::assertSame('node/9561', $group['items'][0]['ref']);
+        self::assertFalse($group['items'][0]['curated']);
+        self::assertArrayNotHasKey('itemId', $group['items'][0]);
+    }
+
     public function testNearbyKmClampsAtTwentyFiveKm(): void
     {
         $client = static::createClient();
@@ -218,6 +299,24 @@ final class CoverageQueryTest extends WebTestCase
         self::assertSame('max-age=3600, public', $client->getResponse()->headers->get('Cache-Control'));
     }
 
+    public function testCountsExcludePayloadServedTwinButIncludeUntouchedLegacyRow(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // A confirmed (payload-served) item's coverage twin must not count
+        // (minor finding 7: rail coherence with the payload-on-top map).
+        self::insertCoveragePoi($db, ['ref' => 'node/9705', 'letter' => 'C', 'name' => 'Fontaine confirmée']);
+        $this->item('node/9705', 'Fontaine confirmée');
+        // An untouched legacy row is not payload-served — it must still count.
+        self::insertCoveragePoi($db, ['ref' => 'node/9706', 'letter' => 'C', 'name' => 'Fontaine oubliée']);
+        $this->untouchedOsmItem('node/9706', 'Fontaine oubliée');
+
+        $data = $this->getJson($client, '/map/coverage/counts');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['C' => 1], $data['counts']);
+    }
+
     public function testSearchEtagRevalidates304(): void
     {
         $client = static::createClient();
@@ -252,5 +351,11 @@ final class CoverageQueryTest extends WebTestCase
 
         $client->request('GET', '/map/coverage/counts');
         self::assertResponseStatusCodeSame(429);
+        // Anonymous plane — the client must be told when to come back
+        // (finding: 429 Retry-After) rather than hammering it immediately.
+        $retryAfter = $client->getResponse()->headers->get('Retry-After');
+        self::assertNotNull($retryAfter);
+        self::assertGreaterThanOrEqual(0, (int) $retryAfter);
+        self::assertLessThanOrEqual(60, (int) $retryAfter);   // sliding window is 1 minute
     }
 }

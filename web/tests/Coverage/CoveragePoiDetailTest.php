@@ -67,7 +67,8 @@ final class CoveragePoiDetailTest extends WebTestCase
         $client = static::createClient();
         self::ensureCoverageSchema($this->db());
 
-        // B1 (design §2): v1 extracts nodes + ways only — relations 404 at the router.
+        // v1 extracts nodes + ways only (coverage-provider.md §3); the router
+        // requirement enforces it — relations 404 (coverage-provider.md §5: osmType ∈ {node, way}).
         $client->request('GET', '/map/coverage/poi/relation/1');
         self::assertResponseStatusCodeSame(404);
     }
@@ -94,7 +95,7 @@ final class CoveragePoiDetailTest extends WebTestCase
         self::assertSame('Fontaine Sainte-Anne', $data['name']);
         self::assertNull($data['kind']);
         self::assertSame([50.4005, 5.8102], $data['ll']);
-        // Store rich, serve trimmed (design §4): only TAG_WHITELIST keys leave
+        // Store rich, serve trimmed (coverage-provider.md §5): only TAG_WHITELIST keys leave
         // the server. assertEquals — jsonb does not preserve key order.
         self::assertEquals(
             ['drinking_water' => 'yes', 'opening_hours' => '24/7', 'operator' => 'Ville de Test'],

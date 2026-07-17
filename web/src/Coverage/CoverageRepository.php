@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Coverage;
 
+use App\Catalog\CoverageRetirement;
 use App\Catalog\Entity\Item;
 use App\Catalog\ItemState;
 use Doctrine\DBAL\Connection;
@@ -18,8 +19,15 @@ use Doctrine\DBAL\ParameterType;
  * App\Catalog\CatalogProvider — the map read path never hydrates entities.
  *
  * Dedupe rule (osm-data-architecture.md §8): a coverage row is suppressed
- * wherever a served `item` with the same source_ref exists — the object
- * appears once, as curated.
+ * wherever a *payload-served* `item` with the same source_ref exists — the
+ * object appears once, as curated. "Payload-served" mirrors
+ * CatalogProvider::itemRows()/curatedRefs() exactly (coverage-provider.md
+ * §6/§9): a served item row that also matches the coverage-retirement
+ * predicate (App\Catalog\CoverageRetirement::untouchedOsmSql()) is *not*
+ * payload-served — its tile twin renders as community, so search/nearby/
+ * counts must key "curated" the same way, or the query plane and the tiles
+ * disagree and the owner-gated retirement DELETE would visibly change
+ * search/nearby (coverage-provider.md §9's "zero display change").
  *
  * @api Consumed by CoverageController.
  */
@@ -29,8 +37,8 @@ final class CoverageRepository
     public const string ATTRIBUTION = '© OpenStreetMap contributors (ODbL)';
 
     /**
-     * Display whitelist for cached OSM tags (design §7): store rich, serve
-     * trimmed — the drawer never sees the full filtered tag set.
+     * Display whitelist for cached OSM tags (coverage-provider.md §5): store
+     * rich, serve trimmed — the drawer never sees the full filtered tag set.
      */
     public const array TAG_WHITELIST = [
         'opening_hours', 'website', 'contact:website', 'url', 'phone', 'contact:phone',
@@ -44,7 +52,7 @@ final class CoverageRepository
      */
     private const string POI_LETTERS_SQL = "('C', 'D', 'E', 'G', 'H', 'I', 'J')";
 
-    /** Community items listed per nearby letter group before the "show all" expander (design §7). */
+    /** Community items listed per nearby letter group before the "show all" expander (coverage-provider.md §5). */
     private const int NEARBY_COMMUNITY_CAP = 3;
 
     /** Default result cap for search() (coverage-provider.md §5). */
@@ -55,8 +63,9 @@ final class CoverageRepository
     }
 
     /**
-     * Drawer payload for one coverage POI, curated overlay merged (design §7
-     * keys: ref, letter, name, kind, ll, tags, curated, attribution). Null
+     * Drawer payload for one coverage POI, curated overlay merged
+     * (coverage-provider.md §5 keys: ref, letter, name, kind, ll, tags,
+     * curated, attribution). Null
      * when the ref is not in the coverage cache.
      *
      * @return array<string, mixed>|null
@@ -99,9 +108,12 @@ final class CoverageRepository
     }
 
     /**
-     * Ranked name search, curated first (design §7): served items matched by
-     * name, then coverage rows not shadowed by a served ref — both
-     * pg_trgm-ranked, deduped by ref (osm-data-architecture.md §8).
+     * Ranked name search, curated first (coverage-provider.md §5): payload-served items
+     * matched by name, then coverage rows not shadowed by a payload-served
+     * ref — both pg_trgm-ranked, deduped by ref (osm-data-architecture.md
+     * §8). "Payload-served" excludes the coverage-retirement predicate
+     * (CoverageRetirement::untouchedOsmSql()) so an untouched legacy row
+     * lists as community, matching its tile twin.
      *
      * @return list<array<string, mixed>>
      */
@@ -117,6 +129,7 @@ final class CoverageRepository
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
                AND i.state IN '.ItemState::servedSqlTuple().'
                AND i.name ILIKE :like
+               AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')
              ORDER BY similarity(i.name, :q) DESC, i.id
              LIMIT :limit',
             ['like' => $like, 'q' => $q, 'limit' => $limit],
@@ -135,7 +148,7 @@ final class CoverageRepository
                 'SELECT cp.ref, cp.letter, cp.name, cp.kind, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
                  FROM coverage_poi cp
                  WHERE cp.name ILIKE :like
-                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().')
+                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))
                  ORDER BY similarity(cp.name, :q) DESC, cp.id
                  LIMIT :limit',
                 ['like' => $like, 'q' => $q, 'limit' => $remaining],
@@ -150,10 +163,13 @@ final class CoverageRepository
     }
 
     /**
-     * Letter-grouped POIs within $km of a point (the town card, design §7):
-     * curated entries first, then the nearest NEARBY_COMMUNITY_CAP community
-     * rows; `total` counts everything in range so the client can render the
-     * "show all" expander (07-15 decision A).
+     * Letter-grouped POIs within $km of a point (the town card, coverage-provider.md §5):
+     * payload-served entries first, then the nearest NEARBY_COMMUNITY_CAP
+     * community rows; `total` counts everything in range so the client can
+     * render the "show all" expander (07-15 decision A). "Payload-served"
+     * excludes the coverage-retirement predicate
+     * (CoverageRetirement::untouchedOsmSql()) so an untouched legacy row
+     * lists as community, matching its tile twin.
      *
      * @return list<array{letter: string, total: int, items: list<array<string, mixed>>}>
      */
@@ -171,6 +187,7 @@ final class CoverageRepository
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
                AND i.state IN '.ItemState::servedSqlTuple()."
                AND ST_DWithin(i.geom::geography, $point, :m)
+               AND NOT (".CoverageRetirement::untouchedOsmSql('i').")
              ORDER BY i.letter, ST_Distance(i.geom::geography, $point), i.id",
             $params,
         );
@@ -184,7 +201,7 @@ final class CoverageRepository
                         COUNT(*) OVER (PARTITION BY cp.letter) AS letter_total
                  FROM coverage_poi cp
                  WHERE ST_DWithin(cp.geom::geography, $point, :m)
-                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN ".ItemState::servedSqlTuple().')
+                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN ".ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))
              ) ranked
              WHERE rn <= '.self::NEARBY_COMMUNITY_CAP.'
              ORDER BY letter, rn',
@@ -218,9 +235,13 @@ final class CoverageRepository
     }
 
     /**
-     * Per-letter coverage totals for the rail (design §2 decision E1). The
+     * Per-letter coverage totals for the rail (coverage-provider.md §5). The
      * letter filter is defensive: the {C..J} response shape is
-     * code-guaranteed, never dependent on what the pipeline loaded.
+     * code-guaranteed, never dependent on what the pipeline loaded. Rows
+     * shadowed by a payload-served item (same weakened-shadow semantics as
+     * search()/nearby()) are excluded, so the rail total stays coherent with
+     * the map, which adds payload features on top of the tile layer — a
+     * confirmed item's coverage twin must not count twice.
      *
      * @return array<string, int>
      */
@@ -228,9 +249,10 @@ final class CoverageRepository
     {
         /** @var list<array{letter: string, n: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT letter, COUNT(*) AS n FROM coverage_poi
-             WHERE letter IN '.self::POI_LETTERS_SQL.'
-             GROUP BY letter ORDER BY letter',
+            'SELECT cp.letter, COUNT(*) AS n FROM coverage_poi cp
+             WHERE cp.letter IN '.self::POI_LETTERS_SQL.'
+               AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))
+             GROUP BY cp.letter ORDER BY cp.letter',
         );
         $counts = [];
         foreach ($rows as $row) {
