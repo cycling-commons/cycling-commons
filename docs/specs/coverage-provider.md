@@ -4,11 +4,11 @@
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-> **Specified, pending implementation.** This is the approved, buildable
-> contract for the coverage provider (the implementation plan exists but has
-> not been executed). Every file path below that does not exist yet is the
-> *planned* location. Where the design and the implementation plan refined a
-> detail differently, the plan's refinement is recorded here.
+> **Implemented** (2026-07-17). This is the shipped contract for the coverage
+> provider — the batch job, serving cache, tiles, and query plane described
+> below are built, and every file path is the real location in the tree.
+> Where the design and the implementation plan refined a detail differently,
+> the plan's refinement is recorded here.
 
 This document is the concrete realization of the coverage architecture in
 [osm-data-architecture.md §5](osm-data-architecture.md): how uncurated OSM
@@ -310,18 +310,20 @@ source of truth for the mapping both languages need:
 ## 8. Rollout: `COVERAGE_TILES`
 
 - Env flag `COVERAGE_TILES` (0|1, container param `coverage.tiles_enabled`,
-  wired in `web/config/packages/coverage.yaml`; ships defaulted `0`). Off
-  keeps today's behaviour end to end: no manifest fetch, no
-  `CC_COVERAGE_URL`, full legacy payload.
-- With the flag **on**, `CatalogProvider` additionally excludes rows matching
-  the retirement predicate (coverage-provider.md §9) from the
-  C/D/E-osm/G/H/I/J collections — A and B never pass through it — and the
-  `refs` list mirrors that exclusion (coverage-provider.md §6).
-- Sequence: dev flips first; after end-to-end verification the flag defaults
-  on and the **legacy `*-osm` display path is deleted in the same plan** — no
-  long-lived dual path. After deletion the retirement exclusion becomes
-  unconditional and the flag plumbing is removed; the `refs` key and the
-  `verified` property stay.
+  wired in `web/config/packages/coverage.yaml`; **defaults `1`** since the
+  default-on flip). Off disables the tile *display* plane: no manifest
+  fetch, no `CC_COVERAGE_URL`, no coverage CSP host — the map degrades to
+  basemap + curated data.
+- The rollout sequence this section originally planned has been **executed**:
+  dev flipped first, the flag defaulted on after end-to-end verification, and
+  the legacy `*-osm` display path was deleted in the same plan — no
+  long-lived dual path. The retirement exclusion in `CatalogProvider`
+  (coverage-provider.md §9) is now **unconditional** (not flag-gated), the
+  `refs` list mirrors it (coverage-provider.md §6), and the `verified`
+  property stays. A and B never pass through the exclusion.
+- Enabling the flag in prod is gated on the checklist in
+  `developers/coverage-batch.md` (bucket + manifest published, and client-IP
+  propagation verified for the per-IP `coverage_read` limiter).
 
 ## 9. Legacy retirement (owner-gated)
 
@@ -359,7 +361,7 @@ interim clause retires):
   provider implements (tag catalogue, data categories, licensing,
   materialize-on-edit, API policy). Its §5 scale claim now carries the real
   measure (planet-wide subset ≈ 4.7 M points; per-region extracts stay
-  small); its §9 interim-harvest clause is retired by the pending
+  small); its §9 interim-harvest clause was retired by the
   implementation's documentation sweep, not by this document.
 - [map-and-search.md](map-and-search.md) owns how coverage is presented
   (markers, ordering, community tier, reveal behaviour).
@@ -369,7 +371,7 @@ interim clause retires):
 - [security-architecture.md](security-architecture.md) owns the CSP host
   enumeration and the rate-limiter inventory that this provider extends:
   `COVERAGE_CSP_HOST` joins its §2 connect-src table, and `coverage_read` is
-  the pending anonymous-read row in its §7 inventory (which already
+  the anonymous-read row in its §7 inventory (which already
   cross-links back here).
 - [dev-environment.md](dev-environment.md) owns the container stack the
   pipeline runs in (compose profiles, MinIO, worker scheduling, prod
@@ -396,12 +398,3 @@ interim clause retires):
 - **Tile density tuning** at z14 (peaks, memorials) may need per-layer minzoom
   adjustment beyond `--drop-densest-as-needed`; to be observed on real
   artifacts.
-- All `web/src`, `web/tests`, `web/config` and `pipeline/` paths in this
-  document do not exist yet — they are the planned locations; nothing
-  described here is built. The verified-present anchors are:
-  `App\Catalog\ServiceKind::fromOsmTags()`, `ItemState::servedSqlTuple()`,
-  `Item::$sourceRef`/`NAME_FIELD`, `CatalogProvider`/`/map/catalog.json`,
-  the `topology.` schema-filter pattern, the exact-path `PUBLIC_ACCESS` +
-  dedicated-limiter-pool precedents, `CspSubscriber`, the MinIO `storage`
-  profile, the FastAPI pipeline stub, and the `developers/docker/db/init/`
-  extension bootstrap.

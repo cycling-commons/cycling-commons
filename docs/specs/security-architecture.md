@@ -303,8 +303,10 @@ Not restated here.
 
 All limiters are defined in `web/config/packages/rate_limiter.yaml`
 (`framework.rate_limiter.<name>`); tests must assert against the config, not
-literal numbers. Every current limiter is keyed **per user**
-(`'user-'.$user->getId()`) and consumed with `consume()->isAccepted()`.
+literal numbers. Every limiter is keyed **per user**
+(`'user-'.$user->getId()`) and consumed with `consume()->isAccepted()` —
+except `coverage_read`, the anonymous read plane, which is keyed **per IP**
+(`'ip-'.$request->getClientIp()`).
 
 | Limiter | Policy | Limit (current config) | Key | Guards | Over-limit behaviour |
 |---|---|---|---|---|---|

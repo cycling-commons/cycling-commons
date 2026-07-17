@@ -41,8 +41,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
    **ambient map density only**. Search and the town card are intent-driven
    surfaces and always reach the **full Commons**; "too much" is solved by
    ranking and collapsing (curated first, community tagged and capped), never
-   by hiding. (Approved 2026-07-15; presentation details in §12,
-   **specified, pending implementation** via
+   by hiding. (Approved 2026-07-15; presentation details in §12, shipped via
    [coverage-provider.md](coverage-provider.md).)
 3. **Omit unknowns.** A drawer record row renders only when the attribute has a
    real value — unknown fields are never rendered blank and never invented.
@@ -445,10 +444,11 @@ the index and the dropdown.
 - **Failure mode: silent degradation** to index + quick-picks — no toast, no
   error state. (The muted "place search unavailable" row from the design was
   not shipped; degradation is fully silent — see Open questions.)
-- **Specified, pending implementation:** Photon results filter to
+- **Shipped:** Photon results filter to
   `properties.countrycode === 'BE'` (precise gate; bbox stays the coarse
-  pre-filter) to kill cross-border near-spellings; relaxing it is one recorded
-  flag (§12, carried by the coverage-provider plan).
+  pre-filter) to kill cross-border near-spellings; relaxing it for the
+  worldwide flip is a recorded open flag (§12, landed with the
+  coverage-provider work).
 
 ### 7.3 Dropdown presentation
 

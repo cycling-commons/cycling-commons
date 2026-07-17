@@ -29,6 +29,11 @@ use Doctrine\DBAL\ParameterType;
  * disagree and the owner-gated retirement DELETE would visibly change
  * search/nearby (coverage-provider.md §9's "zero display change").
  *
+ * Note: the shadow NOT EXISTS clauses here apply NOT(untouched) WITHOUT a
+ * letter guard — a deliberate divergence from the letter-scoped
+ * detail()/curatedRefs() form; the two only differ if one OSM way were
+ * simultaneously an untouched A-surface item and a C–J POI (theoretical).
+ *
  * @api Consumed by CoverageController.
  */
 final class CoverageRepository
