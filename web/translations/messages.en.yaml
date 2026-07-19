@@ -552,6 +552,19 @@ regions:
   count_countries: '%n% countries'
   badge_live: 'Live'
 region:
+  # Map scope-selector + dynamic header labels (region.<slug>.label). Display
+  # names live here, not on the World Subdivision link (English-only msgids).
+  # docs/specs/2026-07-19-region-scoping-design.md §3.
+  wallonia:
+    label: 'Wallonia'
+  flanders:
+    label: 'Flanders'
+  brussels:
+    label: 'Brussels'
+  all_belgium:
+    label: 'All Belgium'
+  everywhere:
+    label: 'Everywhere'
   kicker: 'BE · Wallonia · region atlas'
   title: 'Wallonia'
   lead: 'The Ardennes classics, in one open layer — the best climbs, views and routes, kept fresh by the riders who know them.'
