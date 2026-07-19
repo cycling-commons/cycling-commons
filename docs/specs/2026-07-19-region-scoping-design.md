@@ -273,6 +273,68 @@ so recruiting targets the busiest beats. `UserAdminService::setModeratorAreas`
 convention, delegation groups) layers onto the same `moderator_area` rows without
 schema change.
 
+## 5a. Curator-sized jurisdictions (owner direction 2026-07-19 — recommended mechanics)
+
+Owner direction from plan review: start each country **unsplit**; when someone wants
+to curate, *they* pick the size — a Wallonia-sized chunk, a bigger request, or a
+small area they personally know and can verify on the ground; others can join a
+region; jurisdictions may merge later; leave it open and see how it evolves. With
+the frontend no longer depending on regions (My-area does the rider-side work),
+curation granularity is free to follow people, not planning.
+
+Recommended mechanics — "curator-sized jurisdictions over official-line atoms":
+
+1. **No upfront country configs.** Delete the idea of pre-deciding operating levels.
+   A country has zero region rows until its first curator steps up. (Rider scope is
+   unaffected: My area / country / Everywhere work without region rows.)
+2. **Seeding follows the request.** When a curator volunteers, seed that country's
+   subdivisions at the granularity that matches the *smallest* jurisdiction anyone
+   there wants: level-4 for a "Wallonia-sized" request, provinces or communes for an
+   "area I can verify in person" request. The ~16,900 km² band drops to purely
+   advisory.
+3. **A jurisdiction is a SET of official-subdivision rows**, not a drawn polygon.
+   `ModeratorArea` already has union-of-rows semantics, so "my province + the two
+   neighbouring ones" or "all five Walloon provinces" are just rows. Growing,
+   joining (second curator adds the same rows), and merging jurisdictions are set
+   edits — no schema change, no geometry work.
+4. **Why official lines instead of freeform curator-drawn polygons:** deterministic
+   membership stamping keeps working (`ST_Contains` over a tessellation), names stay
+   legible to riders/partners/dispute counterparties, no overlap arbitration
+   between rival hand-drawn shapes, and the never-delete/re-import lifecycle stays
+   sound. The curator still gets exactly the *size* they asked for — composed from
+   official pieces.
+5. **One operating level per country at a time** (the tessellation invariant).
+   If later demand needs finer granularity than the country was seeded with,
+   re-seed at the finer level as a versioned migration event and remap existing
+   jurisdiction sets onto the new rows (coarse jurisdictions = the union of their
+   finer pieces, so remapping is lossless).
+6. **Governance follows the canonical commons doctrine** (owner direction
+   2026-07-19; wiki/governance.md "Ostrom's design principles, applied" and
+   "Regional governance: subsidiarity, not hierarchy"): the moderators of a country
+   govern that country's regional organisation **themselves**. Seeding granularity,
+   splits, joins and merges are collective-choice decisions of the country's
+   moderator community (Ostrom principle 3), whose right to self-organise the core
+   recognises rather than grants (principle 7), nested commune ⊂ province ⊂ region ⊂
+   country ⊂ core ⊂ foundation (principle 8). Per the wiki's subsidiarity rule,
+   the core's role is **coordination, not taste**: it checks *standards* (official-
+   line atoms, one tessellation per country, audit trail, never-delete rows, the
+   moderation safety net, anti-abuse) and executes what the community decides via
+   the audited `UserAdminService::setModeratorAreas` flow — it does not approve or
+   override a country's *judgment* about its own organisation. Cold start follows
+   the wiki verbatim ("most regions won't have a curator community at the start;
+   this is the structure the Commons grows into"): the core recognises a country's
+   first curator and executes the seeding they request, standards-checked only;
+   from the second moderator on, organisation is the community's collective call.
+   The per-region `active_cap` is principle 2 made concrete (the curated target
+   scales with local conditions — e.g. the Brussels cap decision), and a region's
+   curators are the natural voice for tuning it. Vetting conventions
+   (Trailforks-style local-club preference) can be adopted *by* a community, never
+   imposed on it.
+
+Impact if confirmed: Phase 5's "per-country operating-level config" bullet is
+replaced by demand-driven seeding as above; Belgium keeps its already-planned
+level-4 split (the owner's verbatim example and our live moderation reality).
+
 ## 6. Server contract changes
 
 **Query endpoints.**
@@ -374,12 +436,12 @@ Belgium-first, then worldwide. Every phase independently shippable.
 
 **Phase 5 — Worldwide rollout (per-country, incremental).**
 
-- Per-country operating-level config (admin level or explicit ISO-code list), chosen
-  with the ~16,900 km² calibration band.
-- Lazy demand-driven seeding (moderation volume or curator candidate); coverage
-  expansion (`COVERAGE_REGIONS` env/CLI default + `COUNTRY_BY_REGION` map in
-  `pipeline/coverage/run.py` — env/config change plus the dict, verified) is the
-  upper bound, not the trigger; per-country opt-in after disputed-territory review.
+- Region seeding per this spec's section 5a (curator-demand-driven, curator-sized
+  jurisdiction sets over official-line atoms; the ~16,900 km² band advisory only) —
+  pending owner confirmation of 5a; coverage expansion (`COVERAGE_REGIONS` env/CLI
+  default + `COUNTRY_BY_REGION` map in `pipeline/coverage/run.py` — env/config
+  change plus the dict, verified) is the upper bound, not the trigger; per-country
+  opt-in after disputed-territory review.
 - Unsplit-country country stamping (verified gap): country-polygon fallback in
   `SpatialResolver` (country areas from the same Overture import) and de-hardcode
   `'cc' => 'BE'` / Belgian ProvinceMap in `importItemLayers` — required before the
@@ -421,15 +483,24 @@ Belgium-first, then worldwide. Every phase independently shippable.
 1. **Default precedence:** ~~base location set → My area wins over last-used named
    region — confirm.~~ **Decided 2026-07-19 (owner, via plan review): My area wins
    whenever a base location is set.**
-2. **Brussels cap:** `active_cap` for BE-BRU (162 km² can't justify 30 active
-   routes) — proposed start 10, tune with data.
-3. **Radius bounds:** default 40 km, clamp 10–150 — sign off; radius slider in v1 of
-   the settings field or later?
-4. **Anonymous base location:** localStorage-only client circle acceptable? One-shot
-   device-location suggestion on first visit?
-5. **Operating levels for large countries** (France's 13 régions mostly too big;
-   Bavaria): decided per country at seed time — who signs off each config?
+2. **Brussels cap:** ~~proposed start 10, tune with data — sign off.~~ **Decided
+   2026-07-19: BE-BRU `active_cap` starts at 10, tuned with data.**
+3. **Radius bounds:** ~~default 40 km, clamp 10–150 — sign off; slider v1?~~
+   **Decided 2026-07-19: bounds confirmed (10–150 km, default 40 km); the radius
+   slider ships in v1 of the settings field.**
+4. **Anonymous base location:** ~~localStorage-only circle acceptable? Device-location
+   suggestion?~~ **Decided 2026-07-19: yes — localStorage-only client circle; no
+   device-location prompt.**
+5. **Jurisdiction sizing — owner direction 2026-07-19 (supersedes the "who signs off
+   operating levels" framing):** countries start **unsplit**; region seeding is
+   triggered by curator demand, and the curator chooses the size they can stand
+   behind — a Wallonia-sized chunk, a bigger request, or a small area they know and
+   can verify in person; others can join a region; jurisdictions may merge later;
+   keep it open and let it evolve. The recommended mechanics (curator-sized
+   jurisdictions composed as *sets of official-subdivision rows*, no freeform
+   polygons) are specified in section 5a below. **Recommendation proposed, awaiting
+   owner confirmation.**
 6. **Named-region browse pages** (AllTrails-style SEO directory over the same region
    rows): later phase or explicitly parked?
-7. **Everywhere scope in v1:** ship guarded (hard LIMIT) in Phase 2, or hold until
-   Phase 3 coverage scoping lands?
+7. **Everywhere scope in v1:** ~~ship guarded in Phase 2, or hold for Phase 3?~~
+   **Decided 2026-07-19: ship guarded (hard LIMIT) in Phase 2.**
