@@ -1,0 +1,38 @@
+Makefile
+  s_eb16961f3ecd46::t_c0bf4dd225b410 12
+  s_eb16961f3ecd46::t_9109f189e93513 150-154
+tools/divisions/config.py
+  s_eb16961f3ecd46::t_d7e89d8f22c311 1-43
+tools/wallonia/export.py
+  s_eb16961f3ecd46::t_cd6d1b0aecd11f 28-31
+.gitignore
+  s_eb16961f3ecd46::t_85445e50fc8799 70,72
+tools/divisions/export_divisions.py
+  s_eb16961f3ecd46::t_cbae8fd680083a 1-25,28-30,56-95,97,99-109,111-129,131-136,139-164
+  s_eb16961f3ecd46::t_85efa6edf56963 26-27,31-55
+  s_eb16961f3ecd46::t_4af636c462f493 130,137-138
+  s_eb16961f3ecd46::t_544be0471db05b 96,98,110
+tools/divisions/tests/test_export_divisions.py
+  s_eb16961f3ecd46::t_1defedbdd9d575 1-76
+tools/divisions/requirements.txt
+  s_eb16961f3ecd46::t_19f337daa7db7e 1-2,5-6
+  s_eb16961f3ecd46::t_cbcd517859267c 3-4,7
+tools/divisions/README.md
+  s_eb16961f3ecd46::t_3753d97b9c3659 1-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "acfc7d9c5ceccf82621dbc15833a0d9a196d4d6d",
+  "prompts": {},
+  "sessions": {
+    "s_eb16961f3ecd46": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32a5798c-4df2-4e41-b9bb-1c452e700604",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
