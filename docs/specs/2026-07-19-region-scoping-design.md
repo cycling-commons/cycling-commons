@@ -273,7 +273,7 @@ so recruiting targets the busiest beats. `UserAdminService::setModeratorAreas`
 convention, delegation groups) layers onto the same `moderator_area` rows without
 schema change.
 
-## 5a. Curator-sized jurisdictions (owner direction 2026-07-19 — recommended mechanics)
+## 5a. Curator-sized jurisdictions (owner direction 2026-07-19 — **adopted**)
 
 Owner direction from plan review: start each country **unsplit**; when someone wants
 to curate, *they* pick the size — a Wallonia-sized chunk, a bigger request, or a
@@ -331,9 +331,10 @@ Recommended mechanics — "curator-sized jurisdictions over official-line atoms"
    (Trailforks-style local-club preference) can be adopted *by* a community, never
    imposed on it.
 
-Impact if confirmed: Phase 5's "per-country operating-level config" bullet is
-replaced by demand-driven seeding as above; Belgium keeps its already-planned
-level-4 split (the owner's verbatim example and our live moderation reality).
+Impact (confirmed 2026-07-19): Phase 5's "per-country operating-level config"
+bullet is replaced by demand-driven seeding as above; Belgium keeps its
+already-planned level-4 split (the owner's verbatim example and our live
+moderation reality).
 
 ## 6. Server contract changes
 
@@ -437,8 +438,8 @@ Belgium-first, then worldwide. Every phase independently shippable.
 **Phase 5 — Worldwide rollout (per-country, incremental).**
 
 - Region seeding per this spec's section 5a (curator-demand-driven, curator-sized
-  jurisdiction sets over official-line atoms; the ~16,900 km² band advisory only) —
-  pending owner confirmation of 5a; coverage expansion (`COVERAGE_REGIONS` env/CLI
+  jurisdiction sets over official-line atoms; the ~16,900 km² band advisory only —
+  adopted 2026-07-19); coverage expansion (`COVERAGE_REGIONS` env/CLI
   default + `COUNTRY_BY_REGION` map in `pipeline/coverage/run.py` — env/config
   change plus the dict, verified) is the upper bound, not the trigger; per-country
   opt-in after disputed-territory review.
@@ -496,11 +497,12 @@ Belgium-first, then worldwide. Every phase independently shippable.
    triggered by curator demand, and the curator chooses the size they can stand
    behind — a Wallonia-sized chunk, a bigger request, or a small area they know and
    can verify in person; others can join a region; jurisdictions may merge later;
-   keep it open and let it evolve. The recommended mechanics (curator-sized
-   jurisdictions composed as *sets of official-subdivision rows*, no freeform
-   polygons) are specified in section 5a below. **Recommendation proposed, awaiting
-   owner confirmation.**
-6. **Named-region browse pages** (AllTrails-style SEO directory over the same region
-   rows): later phase or explicitly parked?
+   keep it open and let it evolve. **Decided 2026-07-19: recommendation adopted —
+   curator-sized jurisdictions composed as sets of official-subdivision rows,
+   demand-driven seeding, no freeform polygons, governed per section 5a (country
+   moderators self-govern under wiki/governance.md subsidiarity).**
+6. **Named-region browse pages:** ~~later phase or explicitly parked?~~ **Decided
+   2026-07-19: later phase — stays in the spec (AllTrails-style SEO directory over
+   the same region rows, e.g. /regions/wallonia).**
 7. **Everywhere scope in v1:** ~~ship guarded in Phase 2, or hold for Phase 3?~~
    **Decided 2026-07-19: ship guarded (hard LIMIT) in Phase 2.**
