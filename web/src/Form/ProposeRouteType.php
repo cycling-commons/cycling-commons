@@ -71,8 +71,9 @@ final class ProposeRouteType extends AbstractType
                 'choices' => ['Spring' => 'Spring', 'Summer' => 'Summer', 'Autumn' => 'Autumn', 'Winter' => 'Winter'],
             ])
             // Full surface vocabulary (route-domain.md §9), shared with the
-            // A-layer vocabulary. Legacy 'Mixed' values must still display for
-            // older routes.
+            // A-layer vocabulary. Stored dominantSurface is always one of these
+            // (form-validated; no route stores anything else — 'Mixed' is only
+            // a coarse SurfaceVocabulary::BUCKETS output, never a stored value).
             ->add('dominantSurface', ChoiceType::class, [
                 'label' => false,
                 'choices' => array_combine(SurfaceVocabulary::DECLARABLE, SurfaceVocabulary::DECLARABLE),

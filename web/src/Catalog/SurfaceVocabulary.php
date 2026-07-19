@@ -22,10 +22,12 @@ final class SurfaceVocabulary
      *  coarse measured-vs-declared reconciliation, which stays a simple 3-way
      *  split even though this declarable vocabulary itself is richer.
      *
-     *  This list is not exhaustive of what is stored: some rows hold a
-     *  'Mixed' surface, which is not declarable here. Those rows are never
-     *  backfilled and simply display as-is, so do not validate stored
-     *  values against this list. */
+     *  This list is not exhaustive of what is stored: harvested A-layer rows
+     *  also hold harvester-only labels ('Cycleway · RAVeL', 'Sett (pavé)',
+     *  'Unhewn cobblestone', 'Cobblestone') and the 'Surface unverified'
+     *  placeholder, none declarable here. Those rows are never backfilled and
+     *  simply display as-is, so do not validate stored values against this
+     *  list. ('Mixed' is only a coarse BUCKETS output, never a stored value.) */
     public const array DECLARABLE = [
         'Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Dirt', 'Rock',
     ];
