@@ -109,6 +109,23 @@ final class SubmissionQueueTest extends KernelTestCase
     }
 
     /**
+     * `body` comes from the improve form's nested `details.note` — the only
+     * place any current form writes a rider note. A flat `payload.body` key is
+     * written by no path (verified 2026-07-19: sole writer is
+     * CatalogContributionService::submit()'s raw form payload) and is ignored.
+     */
+    public function testBodyReadsTheNestedDetailsNoteOnly(): void
+    {
+        $sub = $this->seed('edit', 'BE');
+        $sub->setPayload(['details' => ['note' => 'low flow behind the church'], 'body' => 'stray flat key']);
+        $this->em->flush();
+
+        $item = $this->queue->filtered(ModerationScope::global(), null, null, null)[0];
+
+        self::assertSame('low flow behind the church', $item['body']);
+    }
+
+    /**
      * The pending drawer needs the target item's id to fetch its applied
      * change history (moderation-UX: "always see the history of an item").
      * `seed()` never sets item_id, so it must come back null — not omitted.

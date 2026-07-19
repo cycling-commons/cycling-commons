@@ -116,7 +116,7 @@ final class SubmissionQueue
         $rows = $this->db->fetchAllAssociative(
             'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
-                    COALESCE(s.payload->>\'body\', s.payload->\'details\'->>\'note\', \'\') AS body,
+                    COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
                     rr.body_text AS rider_reply
              FROM submission s LEFT JOIN region r ON r.id = s.region_id
                   LEFT JOIN LATERAL (
