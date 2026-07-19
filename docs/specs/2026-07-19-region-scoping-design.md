@@ -101,9 +101,13 @@ Decisions:
 (ODbL; conflates OSM + geoBoundaries; carries ISO 3166-1/-2 and a normalised
 per-country admin level). Cross-check/fallback: OSM admin boundaries directly (also
 ODbL). GADM excluded (non-commercial licence). Natural Earth never used for stamping
-(display-generalised). A new exporter (evolution of `tools/wallonia/export.py`) emits
-`region-<slug>.geojson` artifacts for the existing `ImportCatalogCommand::importRegions`
-glob — same pipeline, more files.
+(display-generalised). A dedicated exporter (`tools/divisions/`, Overture
+`division_area` via DuckDB — **owner decision 2026-07-20:** build it worldwide-ready
+from the base rather than extending the Wallonia OSM harvest, which was a test
+scaffold) emits `region-<slug>.geojson` artifacts for the existing
+`ImportCatalogCommand::importRegions` glob — same pipeline, more files. Wallonia is
+re-sourced through it (`source` osm→overture, slug stable). Region areas are computed
+geodesically (`pyproj.Geod`); DuckDB `ST_Area_Spheroid` mis-scales by ~1/cos(lat).
 
 **`region` table / `App\Catalog\Entity\Region`** — extend, never parallel:
 
@@ -426,6 +430,34 @@ Nominatim fetch; invariants + seeding playbook in catalog-data-model.md §2.4.
 - `featureVisible` scope test + `region_id` exposed in the catalog payload; best-of
   sends `&region=`; widen chip ("Search in Belgium instead") with auto-surface on
   sparse results; Photon bbox/countrycode derived from scope; deep links auto-widen.
+
+**Phase 2 — in progress (2026-07-20, symfony-base, not pushed).** Backend + data
++ shared-module slices landed and verified; the rider-facing map/search UI slices
+(rail group, spotlight, `featureVisible`, search widening) remain, gated on the
+dev-DB region import (bulk membership recompute — owner approval required). Landed:
+
+- **Exporter** (`tools/divisions/`, commit acfc7d9): Overture `division_area` →
+  `region-{wallonia,flanders,brussels}.geojson` with the required provenance;
+  geodesic areas verified (Wallonia 16 903 km² vs 16 901 official). Region export
+  removed from `tools/wallonia/export.py`; `make divisions-data` added.
+- **Translations** (3790d8f): `region.<slug>.label` + all-belgium/everywhere,
+  4 locales in parity.
+- **Payload** (5c756f5): `CatalogProvider` serves `region_id` as `rid` on every
+  shape (POI/climb/surface/route), conditional on non-null; aligns with the
+  Phase-3 tile prop for one client filter.
+- **Scope module** (6688c59): `web/assets/map/scope.js` (`window.CCScope`) —
+  `{kind, regionIds, countryCode}`, localStorage+URL persistence, widen ladder,
+  bbox, best-of/Photon param derivation. `kind`, not `mode`. Node-smoke-verified.
+- **Tessellation gate** (589574b): sub-permille sliver-tolerance test + a
+  real-Overture-Belgium tessellation test through PostGIS. **Finding:** Overture's
+  Belgium boundaries are topologically clean — the 3 regions share exact edges
+  with ZERO area overlap, so the guard passes with maximal margin (the tolerance
+  is a safety net for sliver-prone sources like independent OSM relations).
+
+Remaining (post dev-import): rail Region group + dynamic header + per-region
+spotlight + scope-bbox initial bounds; `featureVisible` scope filter + best-of
+`&region=`; search widen ladder + Photon-from-scope + deep-link auto-widen +
+Everywhere; end-to-end browser verification.
 
 **Phase 3 — Coverage scoping.**
 
