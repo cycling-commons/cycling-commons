@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+r"""Export official administrative subdivisions from Overture Maps `division_area`
+as region-<slug>.geojson artifacts for App\Catalog\Command\ImportCatalogCommand.
+
+Worldwide-ready region export (region-scoping-design.md §3, §7 Phase 2). A country
+is seeded at ONE operating level (Belgium: subtype=region -> ISO 3166-2
+BE-WAL/BE-VLG/BE-BRU). Provenance: source="overture" (Overture divisions theme,
+ODbL — conflates OSM + geoBoundaries, carries ISO 3166-1/-2 and a normalised
+per-country admin level).
+
+Each artifact carries the props the importer REQUIRES (country_code) plus
+iso_code / admin_level / source — an unstamped region is a silent
+moderation-jurisdiction hole (region-scoping-design.md §3, §8 risk 1).
+
+Requires duckdb with httpfs + spatial (see requirements.txt). Regeneration hits
+the public Overture S3 bucket anonymously — a network step, like the OSM harvest.
+
+Usage:
+    cd tools && python3 -m divisions.export_divisions --country BE --out divisions/out
+"""
+import argparse
+import json
+import pathlib
+
+from pyproj import Geod
+
+from . import config
+
+OUT_DEFAULT = pathlib.Path(__file__).resolve().parent / "out"
+
+# Geodesic area on the WGS84 ellipsoid — worldwide-exact and axis-safe. DuckDB's
+# ST_Area_Spheroid over-estimated by ~1/cos(lat) here (Wallonia read 26,161 km²
+# vs the true 16,901), so area is computed in Python from the lon/lat rings.
+_GEOD = Geod(ellps="WGS84")
+
+
+def _ring_area_m2(ring):
+    lons = [c[0] for c in ring]
+    lats = [c[1] for c in ring]
+    area, _perim = _GEOD.polygon_area_perimeter(lons, lats)
+    return abs(area)
+
+
+def geodesic_area_km2(geom):
+    """True geographic area (km²) of a GeoJSON Polygon/MultiPolygon, holes subtracted."""
+    polys = geom["coordinates"] if geom["type"] == "MultiPolygon" else [geom["coordinates"]]
+    total = 0.0
+    for poly in polys:
+        if not poly:
+            continue
+        total += _ring_area_m2(poly[0])          # outer ring
+        for hole in poly[1:]:
+            total -= _ring_area_m2(hole)          # interior rings
+    return total / 1e6
+
+
+def build_feature(iso, cc, geom_geojson, area_km2, cfg):
+    """Assemble one region Feature with the importer's required provenance props.
+
+    geom_geojson : a parsed GeoJSON geometry dict (Polygon or MultiPolygon).
+                   Brussels arrives as a Polygon; the geometry column stores
+                   MultiPolygon, so promote it (matches the OSM path's
+                   normalisation in tools/wallonia/export.py).
+    """
+    geom = geom_geojson
+    if geom.get("type") == "Polygon":
+        geom = {"type": "MultiPolygon", "coordinates": [geom["coordinates"]]}
+    return {
+        "type": "Feature",
+        "properties": {
+            "slug": cfg["slugs"][iso],
+            "name": cfg["names"][iso],
+            "area_km2": round(float(area_km2)),
+            "country_code": cc,
+            "iso_code": iso,
+            "admin_level": config.SUBTYPE_ADMIN_LEVEL[cfg["subtype"]],
+            "source": "overture",
+        },
+        "geometry": geom,
+    }
+
+
+def _connect():
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute("INSTALL httpfs; LOAD httpfs; INSTALL spatial; LOAD spatial;")
+    con.execute("SET s3_region='us-west-2';")
+    # public bucket -> anonymous / unsigned access
+    con.execute("SET s3_access_key_id=''; SET s3_secret_access_key='';")
+    return con
+
+
+def query_country(con, cc, cfg, release):
+    """Return [(iso, geojson_str), ...] for a country's operating-level regions.
+
+    Geometry only — area is computed geodesically in Python (see geodesic_area_km2).
+    """
+    path = config.OVERTURE_DIVISION_AREA.format(release=release)
+    where = ["country = ?", "subtype = ?"]
+    params = [cc, cfg["subtype"]]
+    if cfg.get("bbox"):  # predicate pushdown for fast reads
+        xmin, ymin, xmax, ymax = cfg["bbox"]
+        where.append("bbox.xmin BETWEEN ? AND ?")
+        where.append("bbox.ymin BETWEEN ? AND ?")
+        params += [xmin, xmax, ymin, ymax]
+    sql = f"""
+        SELECT region AS iso,
+               ST_AsGeoJSON(geometry) AS geojson
+        FROM read_parquet('{path}', hive_partitioning=1)
+        WHERE {' AND '.join(where)}
+    """
+    return con.execute(sql, params).fetchall()
+
+
+def export_country(cc, out_dir, release=None, con=None):
+    """Query Overture for `cc`'s operating-level regions and write region-<slug>.geojson."""
+    release = release or config.OVERTURE_RELEASE
+    cfg = config.COUNTRY_CONFIG.get(cc)
+    if cfg is None:
+        raise SystemExit(
+            f"No COUNTRY_CONFIG for {cc} — add its operating level + ISO->slug map "
+            "(region-scoping-design.md §5a)."
+        )
+    con = con or _connect()
+    out_dir = pathlib.Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written, seen = [], set()
+    for iso, geojson in query_country(con, cc, cfg, release):
+        if iso not in cfg["slugs"]:
+            # A subtype='region' code Overture carries but we have not chosen to
+            # seed (worldwide guard: seed only configured regions).
+            print(f"  skip {iso}: in Overture but not in {cc} config")
+            continue
+        seen.add(iso)
+        geom = json.loads(geojson)
+        feat = build_feature(iso, cc, geom, geodesic_area_km2(geom), cfg)
+        path = out_dir / f"region-{feat['properties']['slug']}.geojson"
+        path.write_text(json.dumps(feat, ensure_ascii=False), encoding="utf-8")
+        p = feat["properties"]
+        print(f"  {path.name}: {p['iso_code']} {p['area_km2']} km² ({feat['geometry']['type']})")
+        written.append(path)
+    missing = set(cfg["slugs"]) - seen
+    if missing:
+        raise SystemExit(
+            f"Overture returned no rows for {sorted(missing)} in {cc} "
+            f"(subtype={cfg['subtype']}, release={release}) — check the config."
+        )
+    return written
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="Overture divisions -> region-<slug>.geojson")
+    ap.add_argument("--country", required=True, help="ISO 3166-1 alpha-2 (e.g. BE)")
+    ap.add_argument("--out", default=str(OUT_DEFAULT), help="output dir (default tools/divisions/out)")
+    ap.add_argument("--release", default=None, help="Overture release (default config.OVERTURE_RELEASE)")
+    args = ap.parse_args(argv)
+    written = export_country(args.country.upper(), args.out, args.release)
+    print(f"Wrote {len(written)} region artifact(s) to {args.out}")
+
+
+if __name__ == "__main__":
+    main()

@@ -25,14 +25,10 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 DEMO = ROOT / "atlas/demo"
 OUT = pathlib.Path(__file__).resolve().parent / "out"
 
-# Provenance stamped into the region artifact so ImportCatalogCommand can fill
-# region.country_code / iso_code / admin_level / source (region-scoping-design.md
-# §3, §7 Phase 1). country_code is REQUIRED by the importer — an unstamped
-# region is a silent moderation-jurisdiction hole. Wallonia is the OSM
-# admin_level=4 relation (ISO 3166-2 BE-WAL), harvested below.
-WALLONIA = {"slug": "wallonia", "name": "Wallonia", "area_km2": 16901,
-            "country_code": "BE", "iso_code": "BE-WAL", "admin_level": 4,
-            "source": "osm"}
+# Region boundary artifacts (region-<slug>.geojson) are no longer produced here.
+# They moved to tools/divisions/ (Overture division_area, worldwide-ready) —
+# region-scoping-design.md §3 / §7 Phase 2. This module still emits the POI /
+# fixture catalog layers below.
 
 LETTERS = {"services": "D", "scenic": "I", "history": "J",
            "stays": "E", "shelter": "H", "transit": "G"}
@@ -195,24 +191,6 @@ def heat_payload():
     return {"layer": "heat", "points": data["heat"]}
 
 
-def wallonia_region_feature():
-    """Wallonia boundary: Overpass relation id (cached) + polygons.openstreetmap.fr (cached)."""
-    ql = ('[out:json][timeout:60];area["ISO3166-1"="BE"][admin_level=2]->.be;'
-          'relation(area.be)["admin_level"="4"]["name"="Wallonie"];out ids;')
-    els = overpass.query(ql).get("elements", [])
-    if not els:
-        raise RuntimeError("Wallonia admin relation not found via Overpass")
-    rel_id = els[0]["id"]
-    geo = overpass.get_json(
-        f"https://polygons.openstreetmap.fr/get_geojson.py?id={rel_id}&params=0")
-    if not geo:
-        raise RuntimeError(f"polygons.openstreetmap.fr returned nothing for relation {rel_id}")
-    geom = geo.get("geometries", [geo])[0] if geo.get("type") == "GeometryCollection" else geo
-    if geom["type"] == "Polygon":
-        geom = {"type": "MultiPolygon", "coordinates": [geom["coordinates"]]}
-    return {"type": "Feature", "properties": dict(WALLONIA), "geometry": geom}
-
-
 def poi_feature(raw):
     props = dict(raw["properties"])
     props["source"], props["ref"] = "osm", raw["_id"]
@@ -266,7 +244,6 @@ def run_fixtures():
     write("surface.json", {"layer": "surface", "letter": "A", "features": surface_features()})
     write("routes.json", routes_payload())
     write("heat.json", heat_payload())
-    write("region-wallonia.geojson", wallonia_region_feature())
 
 
 if __name__ == "__main__":

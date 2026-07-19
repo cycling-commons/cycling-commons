@@ -1,0 +1,7 @@
+# Overture divisions exporter (tools/divisions/export_divisions.py).
+# DuckDB reads the Overture GeoParquet on S3 with httpfs + spatial extensions
+# (installed at runtime by _connect()); pyproj computes worldwide-exact geodesic
+# region areas (DuckDB's ST_Area_Spheroid mis-scales by ~1/cos(lat)). Everything
+# else is stdlib.
+duckdb>=1.5
+pyproj>=3.6
