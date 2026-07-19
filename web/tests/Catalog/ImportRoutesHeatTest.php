@@ -50,6 +50,10 @@ final class ImportRoutesHeatTest extends KernelTestCase
         self::assertNotNull($route);
         self::assertSame(12300, $route->getDistanceM());
         self::assertSame(ItemState::Unverified, $route->getState());
+        // The harvest artifact carries season as a lowercase scalar ('summer');
+        // the importer normalizes it to the canonical capitalized list shape
+        // the proposal form writes, so serving/drawer never see two shapes.
+        self::assertSame(['Summer'], $route->getAttributes()['season']);
         $region = $this->em->getRepository(Region::class)->findOneBy(['slug' => 'test-square']);
         self::assertNotNull($region);
         self::assertSame($region->getId(), $route->getRegionId());

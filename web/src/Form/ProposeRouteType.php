@@ -61,8 +61,9 @@ final class ProposeRouteType extends AbstractType
             ])
             // Best season is a multi-select (route-domain.md §9): choosing all
             // four means "any" season. Stored as a list<string> in
-            // attributes.season; the drawer must still accept the legacy
-            // scalar string on older routes.
+            // attributes.season — the one stored shape everywhere: the importer
+            // canonicalizes the harvest's scalar at intake and
+            // Version20260719120000 backfilled the pre-normalization rows.
             ->add('season', ChoiceType::class, [
                 'label' => false,
                 'required' => false,

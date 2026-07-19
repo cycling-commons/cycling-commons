@@ -199,6 +199,12 @@ final class ImportCatalogCommand extends Command
         $payload = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
         foreach ($payload['routes'] as $route) {
             [$source, $ref] = $this->resolveSourceRef($route, $file);
+            // The harvest artifact seeds season as a lowercase scalar
+            // ('summer', tools/wallonia/routes.py); the canonical stored shape
+            // is the capitalized list the proposal form writes (['Summer'],
+            // route-domain.md §12). Normalize at intake so re-imports never
+            // reintroduce the scalar and readers see exactly one shape.
+            $route['attributes'] = $this->normalizeSeason($route['attributes']);
             $this->db->executeStatement(
                 'INSERT INTO recommended_route (name, geom, distance_m, ascent_m, state, source, source_ref, attributes, created_at, updated_at, imported_at)
                  VALUES (:name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :dist, :ascent, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())
@@ -224,6 +230,39 @@ final class ImportCatalogCommand extends Command
         $io->writeln(sprintf('  routes.json: %d route(s)', \count($payload['routes'])));
 
         return \count($payload['routes']);
+    }
+
+    /**
+     * Canonicalize attributes.season to the stored list shape: scalar or list,
+     * any case, → capitalized list over Spring/Summer/Autumn/Winter. Unknown
+     * entries are dropped; an empty result removes the key entirely.
+     *
+     * @param array<string, mixed> $attributes
+     *
+     * @return array<string, mixed>
+     */
+    private function normalizeSeason(array $attributes): array
+    {
+        if (!\array_key_exists('season', $attributes)) {
+            return $attributes;
+        }
+        $canonical = ['spring' => 'Spring', 'summer' => 'Summer', 'autumn' => 'Autumn', 'winter' => 'Winter'];
+        $raw = \is_array($attributes['season']) ? $attributes['season'] : [$attributes['season']];
+        $seasons = [];
+        foreach ($raw as $value) {
+            $season = \is_string($value) ? ($canonical[mb_strtolower($value)] ?? null) : null;
+            if (null !== $season && !\in_array($season, $seasons, true)) {
+                $seasons[] = $season;
+            }
+        }
+        if ([] === $seasons) {
+            unset($attributes['season']);
+
+            return $attributes;
+        }
+        $attributes['season'] = $seasons;
+
+        return $attributes;
     }
 
     private function importHeat(string $dir, SymfonyStyle $io): int
