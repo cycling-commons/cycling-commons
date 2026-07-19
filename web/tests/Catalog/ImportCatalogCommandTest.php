@@ -243,6 +243,65 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'overlap-b']));
     }
 
+    public function testAdjacentRegionsWithSubPermilleSliverImport(): void
+    {
+        // The other half of the tessellation guard: it TOLERATES the sub-permille
+        // slivers real adjacent admin boundaries carry (REGION_OVERLAP_TOLERANCE
+        // = 0.001). Two same-country regions sharing an edge whose interiors
+        // overlap by << 0.1% of the smaller area must IMPORT — only a MEANINGFUL
+        // overlap trips (testOverlappingRegionsInSameCountryFail). This pins the
+        // real-data gate for importing adjacent Flanders/Wallonia/Brussels
+        // boundaries (region-scoping-design.md §3, §7 Phase 2).
+        $dir = sys_get_temp_dir().'/catalog-import-region-sliver-'.getmypid();
+        @mkdir($dir, 0777, true);
+        $square = static fn (string $slug, array $ring): string => json_encode([
+            'type' => 'Feature',
+            'properties' => ['slug' => $slug, 'name' => $slug, 'area_km2' => 100, 'country_code' => 'BE'],
+            'geometry' => ['type' => 'MultiPolygon', 'coordinates' => [[$ring]]],
+        ], \JSON_THROW_ON_ERROR);
+        // A = [4,50]-[5,51] (1 deg²). B is its eastern neighbour nudged 0.0002°
+        // west, so their interiors overlap in a 0.0002 × 1 strip: intersection
+        // ≈ 2e-4 deg² vs ≈ 1 deg² → 0.02% << the 0.1% tolerance. ST_Overlaps is
+        // TRUE (real 2-D overlap), so this exercises the area-ratio filter, not
+        // a no-overlap short-circuit.
+        file_put_contents($dir.'/region-sliver-a.geojson', $square('sliver-a',
+            [[4.0, 50.0], [5.0, 50.0], [5.0, 51.0], [4.0, 51.0], [4.0, 50.0]]));
+        file_put_contents($dir.'/region-sliver-b.geojson', $square('sliver-b',
+            [[4.9998, 50.0], [6.0, 50.0], [6.0, 51.0], [4.9998, 51.0], [4.9998, 50.0]]));
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+        self::assertNotNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'sliver-a']));
+        self::assertNotNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'sliver-b']));
+    }
+
+    public function testRealBelgiumRegionsTessellate(): void
+    {
+        // Real-data gate (region-scoping-design.md §7 Phase 2): the ACTUAL Overture
+        // Belgium boundaries (Wallonia/Flanders/Brussels) must pass the
+        // tessellation guard through real PostGIS — adjacent admin polygons carry
+        // digitisation slivers the tolerance is designed to absorb. Consumes the
+        // artifacts from `make divisions-data` (generated, gitignored); skipped
+        // when they are absent (e.g. CI). DAMA rolls the import back.
+        $out = \dirname(__DIR__, 3).'/tools/divisions/out';
+        $files = ['region-wallonia.geojson', 'region-flanders.geojson', 'region-brussels.geojson'];
+        foreach ($files as $f) {
+            if (!is_file($out.'/'.$f)) {
+                self::markTestSkipped("run `make divisions-data` first — {$f} not generated");
+            }
+        }
+        $dir = sys_get_temp_dir().'/catalog-import-be-real-'.getmypid();
+        @mkdir($dir, 0777, true);
+        foreach ($files as $f) {
+            copy($out.'/'.$f, $dir.'/'.$f);
+        }
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+        $repo = $this->em->getRepository(Region::class);
+        foreach (['wallonia', 'flanders', 'brussels'] as $slug) {
+            self::assertNotNull($repo->findOneBy(['slug' => $slug]), "{$slug} imported (tessellation guard passed)");
+        }
+    }
+
     public function testMembershipPrefersSmallestAreaRegionOnContainment(): void
     {
         // Nested regions (outer contains inner) are NOT an ST_Overlaps overlap,
