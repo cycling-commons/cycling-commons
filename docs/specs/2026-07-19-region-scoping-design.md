@@ -418,8 +418,9 @@ Belgium-first, then worldwide. Every phase independently shippable.
 
 ## 9. Open product questions
 
-1. **Default precedence:** base location set → My area wins over last-used named
-   region — confirm.
+1. **Default precedence:** ~~base location set → My area wins over last-used named
+   region — confirm.~~ **Decided 2026-07-19 (owner, via plan review): My area wins
+   whenever a base location is set.**
 2. **Brussels cap:** `active_cap` for BE-BRU (162 km² can't justify 30 active
    routes) — proposed start 10, tune with data.
 3. **Radius bounds:** default 40 km, clamp 10–150 — sign off; radius slider in v1 of
