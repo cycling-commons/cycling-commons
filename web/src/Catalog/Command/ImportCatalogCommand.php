@@ -167,6 +167,10 @@ final class ImportCatalogCommand extends Command
                     ItemUpsert::SQL,
                     [
                         'letter' => $letter,
+                        // Two live producers, not old-data tolerance: the bulk OSM
+                        // pools emit the short key 'n' (services/stays/water/…),
+                        // while the climbs and surface exporters emit 'name'
+                        // (10/10 resp. 351/351 features in the real artifacts).
                         'name' => (string) ($props['n'] ?? $props['name'] ?? ''),
                         'geom' => json_encode($geometry, \JSON_THROW_ON_ERROR),
                         'cc' => 'BE',
