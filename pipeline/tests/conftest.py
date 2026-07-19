@@ -44,8 +44,11 @@ def db():
     conn.execute("DROP SCHEMA IF EXISTS coverage_pytest CASCADE")
     conn.execute("CREATE SCHEMA coverage_pytest")
     conn.execute("SET search_path TO coverage_pytest, public")
+    # area_km2 mirrors public.region: load_region's smallest-area-wins tie-break
+    # (region-scoping-design.md §3) orders overlapping matches by it.
     conn.execute(
-        "CREATE TABLE region (id bigint PRIMARY KEY, geom geometry(MultiPolygon, 4326))"
+        "CREATE TABLE region (id bigint PRIMARY KEY, area_km2 double precision, "
+        "geom geometry(MultiPolygon, 4326))"
     )
     conn.commit()
     yield conn

@@ -47,6 +47,10 @@ security:
         - { path: ^/map/catalog\.json$, roles: PUBLIC_ACCESS }
         - { path: ^/map/best-of$, roles: PUBLIC_ACCESS }
         - { path: '^/map/item/\d+/history$', roles: PUBLIC_ACCESS }
+        # Region spotlight polygon (region-scoping-design.md §4): the cacheable
+        # DB boundary that replaced the Nominatim fetch. Same lazy-firewall
+        # rationale as /map/catalog.json above.
+        - { path: '^/map/region/[a-z0-9-]+/boundary$', roles: PUBLIC_ACCESS }
         # Same cacheability rationale as /map/catalog.json above: explicit
         # PUBLIC_ACCESS so scheb's TwoFactorAccessListener skips the session
         # read that would downgrade Cache-Control to private.

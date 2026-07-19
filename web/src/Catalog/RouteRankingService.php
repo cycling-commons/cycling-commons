@@ -19,6 +19,16 @@ use Doctrine\DBAL\Connection;
  */
 final class RouteRankingService
 {
+    /**
+     * Hard top-N cap on the best-of aggregate. Without a region filter the query
+     * aggregates across every region unbounded — the flagged latent constraint
+     * (route-domain.md §12, item 1). Region-scoped facets hold ≤ the active cap,
+     * far below this, so the cap only ever bounds the Everywhere facet and never
+     * truncates a real region list. Landed in Phase 1, before any widening UI
+     * exists (region-scoping-design.md §6, §7 Phase 1).
+     */
+    public const int MAX_RESULTS = 200;
+
     public function __construct(private readonly Connection $db)
     {
     }
@@ -55,7 +65,8 @@ final class RouteRankingService
                 JOIN recommended_route rr ON rr.id = rv.route_id
                 WHERE '.implode(' AND ', $where).'
                 GROUP BY rv.route_id
-                ORDER BY COUNT(*) DESC, MAX(rv.created_at) DESC, rv.route_id ASC';
+                ORDER BY COUNT(*) DESC, MAX(rv.created_at) DESC, rv.route_id ASC
+                LIMIT '.self::MAX_RESULTS;
 
         /** @var list<array{route_id: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative($sql, $params);

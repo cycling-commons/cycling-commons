@@ -489,11 +489,12 @@ contract is the consumption semantics:
 Accepted, documented tradeoffs — re-visit when the triggering condition
 arrives:
 
-1. **Best-of has no LIMIT without a region filter.** The "no materialization"
-   guarantee holds only region-scoped (≤ cap rows); the map currently omits
-   `region` (single harvested region), so the query aggregates across all
-   regions unbounded. Before a multi-region UI: require `region` or add a
-   top-N cap.
+1. ~~**Best-of has no LIMIT without a region filter.**~~ **Resolved
+   (region-scoping-design.md §7 Phase 1, 2026-07-19):**
+   `RouteRankingService::bestOf` now applies a hard
+   `LIMIT RouteRankingService::MAX_RESULTS` (200). The Everywhere/no-region
+   facet is bounded; region-scoped facets (≤ the active cap) are never
+   truncated. The guard landed before any scope-widening UI exists.
 2. **Rank is positional** in the best-of response; the SQL ordering is latent
    until a ranked-list UI consumes it.
 3. **Concurrent threshold-crossing rode-its** can each write a

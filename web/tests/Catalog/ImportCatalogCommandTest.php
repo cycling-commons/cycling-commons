@@ -63,6 +63,14 @@ final class ImportCatalogCommandTest extends KernelTestCase
 
         $region = $this->em->getRepository(Region::class)->findOneBy(['slug' => 'test-square']);
         self::assertNotNull($region);
+        // Phase 1 gate: provenance stamped from artifact properties
+        // (region-scoping-design.md §3). country_code is the load-bearing one —
+        // country-scoped curators match on it, so an unstamped region is a
+        // silent moderation hole.
+        self::assertSame('BE', $region->getCountryCode());
+        self::assertSame('BE-TST', $region->getIsoCode());
+        self::assertSame(4, $region->getAdminLevel());
+        self::assertSame('osm', $region->getSource());
 
         $items = $this->em->getRepository(Item::class)->findAll();
         self::assertCount(4, $items); // 3 services + 1 surface
@@ -189,6 +197,88 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertSame(1, $tester->getStatusCode());
         self::assertCount(0, $this->em->getRepository(Item::class)->findAll());
         self::assertNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'test-square']));
+    }
+
+    public function testRegionArtifactMissingCountryCodeFails(): void
+    {
+        // Phase 1 gate: a region artifact with no country_code must fail loudly
+        // at import, never insert an unstamped row — country-scoped curators
+        // match on region.country_code, so an unstamped region is a silent
+        // moderation-jurisdiction hole (region-scoping-design.md §3/§8 risk 1).
+        $dir = sys_get_temp_dir().'/catalog-import-region-nocc-'.getmypid();
+        @mkdir($dir, 0777, true);
+        file_put_contents($dir.'/region-nocc.geojson', json_encode([
+            'type' => 'Feature',
+            'properties' => ['slug' => 'no-country', 'name' => 'No Country', 'area_km2' => 50],
+            'geometry' => ['type' => 'MultiPolygon', 'coordinates' => [[[[4.0, 50.0], [5.0, 50.0], [5.0, 51.0], [4.0, 51.0], [4.0, 50.0]]]]],
+        ], \JSON_THROW_ON_ERROR));
+
+        $tester = $this->runImport($dir);
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('country_code', $tester->getDisplay());
+        self::assertNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'no-country']));
+    }
+
+    public function testOverlappingRegionsInSameCountryFail(): void
+    {
+        // Operating-level regions must tessellate, not overlap: an ST_Overlaps
+        // pair within one country is a bad import and must roll the whole
+        // transaction back (region-scoping-design.md §3).
+        $dir = sys_get_temp_dir().'/catalog-import-region-overlap-'.getmypid();
+        @mkdir($dir, 0777, true);
+        $square = static fn (string $slug, array $ring): string => json_encode([
+            'type' => 'Feature',
+            'properties' => ['slug' => $slug, 'name' => $slug, 'area_km2' => 100, 'country_code' => 'BE'],
+            'geometry' => ['type' => 'MultiPolygon', 'coordinates' => [[$ring]]],
+        ], \JSON_THROW_ON_ERROR);
+        file_put_contents($dir.'/region-a.geojson', $square('overlap-a',
+            [[4.0, 50.0], [6.0, 50.0], [6.0, 52.0], [4.0, 52.0], [4.0, 50.0]]));
+        file_put_contents($dir.'/region-b.geojson', $square('overlap-b',
+            [[5.0, 51.0], [7.0, 51.0], [7.0, 53.0], [5.0, 53.0], [5.0, 51.0]]));
+
+        $tester = $this->runImport($dir);
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsStringIgnoringCase('overlap', $tester->getDisplay());
+        self::assertNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'overlap-a']));
+        self::assertNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'overlap-b']));
+    }
+
+    public function testMembershipPrefersSmallestAreaRegionOnContainment(): void
+    {
+        // Nested regions (outer contains inner) are NOT an ST_Overlaps overlap,
+        // so the import is accepted — and recomputeMembership must give an item
+        // inside both the SMALLER (inner) region, deterministically by area not
+        // row order (region-scoping-design.md §3). Files are named so the OUTER
+        // (bigger) region imports first and takes the LOWER id: an id-ordered
+        // bug would pick it, an area-ordered rule picks the inner.
+        $dir = sys_get_temp_dir().'/catalog-import-nested-'.getmypid();
+        @mkdir($dir, 0777, true);
+        $region = static fn (string $slug, float $area, array $ring): string => json_encode([
+            'type' => 'Feature',
+            'properties' => ['slug' => $slug, 'name' => $slug, 'area_km2' => $area, 'country_code' => 'BE'],
+            'geometry' => ['type' => 'MultiPolygon', 'coordinates' => [[$ring]]],
+        ], \JSON_THROW_ON_ERROR);
+        file_put_contents($dir.'/region-1-outer.geojson', $region('nest-outer', 400.0,
+            [[3.0, 49.0], [7.0, 49.0], [7.0, 53.0], [3.0, 53.0], [3.0, 49.0]]));
+        file_put_contents($dir.'/region-2-inner.geojson', $region('nest-inner', 4.0,
+            [[4.5, 50.5], [5.5, 50.5], [5.5, 51.5], [4.5, 51.5], [4.5, 50.5]]));
+        file_put_contents($dir.'/services.json', json_encode([
+            'layer' => 'services', 'letter' => 'D', 'features' => [[
+                'type' => 'Feature',
+                'properties' => ['t' => 'Bike shop', 'serviceKind' => 'shop', 'n' => 'Nested Shop', 'source' => 'osm', 'ref' => 'node/7777'],
+                'geometry' => ['type' => 'Point', 'coordinates' => [5.0, 51.0]],
+            ]],
+        ], \JSON_THROW_ON_ERROR));
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+        $inner = $this->em->getRepository(Region::class)->findOneBy(['slug' => 'nest-inner']);
+        $outer = $this->em->getRepository(Region::class)->findOneBy(['slug' => 'nest-outer']);
+        self::assertNotNull($inner);
+        self::assertNotNull($outer);
+        self::assertLessThan($inner->getId(), $outer->getId()); // outer took the lower id
+        $shop = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/7777']);
+        self::assertNotNull($shop);
+        self::assertSame($inner->getId(), $shop->getRegionId()); // smallest-area region wins
     }
 
     public function testUpdatePreservesState(): void

@@ -44,4 +44,31 @@ final class RegionResolverTest extends KernelTestCase
         $em->remove($region);
         $em->flush();
     }
+
+    public function testSmallestAreaWinsWhenRegionsOverlap(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $resolver = static::getContainer()->get(RegionResolver::class);
+
+        // Two overlapping boxes in the empty mid-Atlantic. The BIG one is
+        // persisted first (lower id), so a lower-id-wins ordering would pick it;
+        // area_km2 must decide instead (region-scoping-design.md §3).
+        $suffix = bin2hex(random_bytes(4));
+        $big = (new Region())->setSlug('overlap-big-'.$suffix)->setName('Big')->setAreaKm2(400.0)
+            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[-32.0,-2.0],[-28.0,-2.0],[-28.0,2.0],[-32.0,2.0],[-32.0,-2.0]]]]}');
+        $small = (new Region())->setSlug('overlap-small-'.$suffix)->setName('Small')->setAreaKm2(4.0)
+            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[-31.0,-1.0],[-29.0,-1.0],[-29.0,1.0],[-31.0,1.0],[-31.0,-1.0]]]]}');
+        $em->persist($big);
+        $em->persist($small);
+        $em->flush();
+
+        // PointOnSurface lands near (-30.05, 0), inside both boxes.
+        $insideBoth = '{"type":"LineString","coordinates":[[-30.1,-0.1],[-30.0,0.1]]}';
+        self::assertSame((int) $small->getId(), $resolver->resolve($insideBoth));
+
+        $em->remove($big);
+        $em->remove($small);
+        $em->flush();
+    }
 }

@@ -1,8 +1,9 @@
 # Region scoping, search scope widening, and rider base location — design (working spec)
 
-Status: **proposed** (2026-07-19). Multi-agent research + design run; all repo-structural
-claims below were adversarially verified against the codebase (4 corrections from that
-pass are folded in and marked "verified correction" where decision-relevant).
+Status: **proposed** (2026-07-19); **Phase 1 executed 2026-07-19** (see §7).
+Multi-agent research + design run; all repo-structural claims below were
+adversarially verified against the codebase (4 corrections from that pass are
+folded in and marked "verified correction" where decision-relevant).
 
 Product requirements (owner, 2026-07-19):
 
@@ -385,6 +386,17 @@ for unsplit countries.
 Belgium-first, then worldwide. Every phase independently shippable.
 
 **Phase 1 — Foundation hardening (zero UX change, correctness only). Hard gate.**
+
+**Executed 2026-07-19 (symfony-base, not pushed).** Every bullet landed with
+unit tests + end-to-end verification against the dev stack. Anchors: migration
+`Version20260719140000` (region `iso_code`/`admin_level`/`source`/`active_cap`,
+all nullable); the importer now **requires** `country_code` and rejects
+meaningful `ST_Overlaps` pairs (sub-permille boundary slivers tolerated);
+membership is smallest-area-wins in **all four** writers — the three named in §3
+plus `SeedManualCatalogCommand::recomputeMembership`, a fourth writer caught in
+review (catalog-data-model.md §6); `RouteRankingService::MAX_RESULTS` = 200; boundary endpoint
+`GET /map/region/{slug}/boundary` (`RegionBoundaryProvider`) replaced the
+Nominatim fetch; invariants + seeding playbook in catalog-data-model.md §2.4.
 
 - `importRegions`: stamp `country_code`/`iso_code`/`admin_level`/`source` from
   artifact properties + regression test; re-export `region-wallonia.geojson` with

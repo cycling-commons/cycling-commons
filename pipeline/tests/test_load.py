@@ -33,7 +33,8 @@ def test_ensure_schema_is_idempotent(db):
         "SELECT indexname FROM pg_indexes WHERE schemaname = 'coverage_pytest'"
     ).fetchall()}
     assert {"coverage_poi_geom_idx", "coverage_poi_letter_idx",
-            "coverage_poi_region_id_idx", "coverage_poi_name_trgm_idx"} <= idx
+            "coverage_poi_region_id_idx", "coverage_poi_country_code_idx",
+            "coverage_poi_name_trgm_idx"} <= idx
 
 
 def test_load_region_inserts_and_backfills_region_id(db):
@@ -57,6 +58,29 @@ def test_load_region_inserts_and_backfills_region_id(db):
     ).fetchone()
     assert lon == pytest.approx(4.86)
     assert lat == pytest.approx(50.46)
+
+
+def test_load_region_smallest_area_wins_on_overlap(db):
+    """Overlapping regions: the smaller-area one wins, not the lower id.
+
+    The third membership writer must agree with RegionResolver /
+    recomputeMembership (region-scoping-design.md §3). Region 101 (area 400)
+    has the LOWER id but the BIGGER area; region 102 (area 4) must win.
+    """
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, geom) VALUES "
+        "(101, 400, ST_GeomFromText("
+        "'MULTIPOLYGON(((3 49, 7 49, 7 53, 3 53, 3 49)))', 4326)),"
+        "(102, 4, ST_GeomFromText("
+        "'MULTIPOLYGON(((4 50, 6 50, 6 52, 4 52, 4 50)))', 4326))"
+    )
+    db.commit()
+    load_region(db, [_row("node/1", "C", lon=5.0, lat=51.0)], "europe/belgium")
+    region_id = db.execute(
+        "SELECT region_id FROM coverage_poi WHERE ref = 'node/1'"
+    ).fetchone()[0]
+    assert region_id == 102
 
 
 def test_load_region_swaps_only_its_region_slice(db):

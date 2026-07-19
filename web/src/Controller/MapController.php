@@ -8,6 +8,7 @@ use App\Catalog\BikeType;
 use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
+use App\Catalog\RegionBoundaryProvider;
 use App\Catalog\RidingStyle;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
@@ -261,6 +262,33 @@ final class MapController extends AbstractController
         $response->setEtag(md5($json));
         $response->setPublic();
         $response->setMaxAge(300);
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    /**
+     * Region spotlight polygon (region-scoping-design.md §4): the simplified DB
+     * boundary the map dims around, served cacheably to retire the map's
+     * Nominatim fetch (an external dependency and a Nominatim usage-policy
+     * problem in production). Public + cacheable like catalog.json; unknown
+     * slugs 404 so the client's `.catch` degrades gracefully (the map works
+     * without a spotlight).
+     */
+    #[Route('/map/region/{slug}/boundary', name: 'map_region_boundary', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET'])]
+    public function regionBoundary(string $slug, Request $request, RegionBoundaryProvider $boundaries): Response
+    {
+        $json = $boundaries->featureJson($slug);
+        if (null === $json) {
+            return new JsonResponse(['error' => 'Unknown region'], Response::HTTP_NOT_FOUND);
+        }
+
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        // Boundaries change only on a versioned re-import (rare); an hour matches
+        // catalog.json's discipline and keeps the shared cache warm.
+        $response->setMaxAge(3600);
         $response->isNotModified($request);
 
         return $response;

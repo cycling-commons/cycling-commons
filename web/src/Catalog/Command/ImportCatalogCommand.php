@@ -45,6 +45,15 @@ final class ImportCatalogCommand extends Command
     /** Property keys consumed into columns - never stored as attributes. */
     private const array CONSUMED_KEYS = ['n', 'name', 'prov', 'source', 'ref'];
 
+    /**
+     * Same-country regions overlapping by more than this fraction of the smaller
+     * one's area are rejected as a bad import (mismatched operating levels or
+     * duplicated geometry); at or below it the overlap is a digitization sliver
+     * between adjacent OSM/Overture admin boundaries and is tolerated
+     * (see assertRegionsTessellate).
+     */
+    private const float REGION_OVERLAP_TOLERANCE = 0.001;
+
     public function __construct(
         private readonly Connection $db,
         private readonly AttributeVocabulary $vocabulary,
@@ -99,28 +108,103 @@ final class ImportCatalogCommand extends Command
     {
         $count = 0;
         foreach (glob($dir.'/region-*.geojson') ?: [] as $file) {
-            /** @var array{properties: array{slug: string, name: string, area_km2?: float|int}, geometry: array<string, mixed>} $feature */
+            /** @var array{properties: array{slug: string, name: string, area_km2?: float|int, country_code?: mixed, iso_code?: mixed, admin_level?: mixed, source?: mixed}, geometry: array<string, mixed>} $feature */
             $feature = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
+            $props = $feature['properties'];
+            [$countryCode, $isoCode, $adminLevel, $source] = $this->regionProvenance($props, $file);
+            // Stamp country_code / iso_code / admin_level / source from the
+            // artifact (region-scoping-design.md §3, §7 Phase 1). country_code is
+            // required and validated at the door: a region row with no country is
+            // a SILENT moderation-jurisdiction hole — country-scoped curators
+            // match on region.country_code (ModerationScope), so an unstamped
+            // region is invisible to them (region-scoping-design.md §8 risk 1).
+            // The four columns join the change-detection tuple so a re-import
+            // that only changes provenance still bumps updated_at.
             $this->db->executeStatement(
-                'INSERT INTO region (slug, name, geom, area_km2, created_at, updated_at)
-                 VALUES (:slug, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :area, NOW(), NOW())
+                'INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+                 VALUES (:slug, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :area, :cc, :iso, :admin, :source, NOW(), NOW())
                  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, geom = EXCLUDED.geom,
-                   area_km2 = EXCLUDED.area_km2,
-                   updated_at = CASE WHEN (region.name, ST_AsEWKB(region.geom), region.area_km2)
-                                     IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.area_km2)
+                   area_km2 = EXCLUDED.area_km2, country_code = EXCLUDED.country_code,
+                   iso_code = EXCLUDED.iso_code, admin_level = EXCLUDED.admin_level, source = EXCLUDED.source,
+                   updated_at = CASE WHEN (region.name, ST_AsEWKB(region.geom), region.area_km2, region.country_code, region.iso_code, region.admin_level, region.source)
+                                     IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.area_km2, EXCLUDED.country_code, EXCLUDED.iso_code, EXCLUDED.admin_level, EXCLUDED.source)
                                 THEN NOW() ELSE region.updated_at END',
                 [
                     'slug' => $feature['properties']['slug'],
                     'name' => $feature['properties']['name'],
                     'geom' => json_encode($feature['geometry'], \JSON_THROW_ON_ERROR),
                     'area' => $feature['properties']['area_km2'] ?? null,
+                    'cc' => $countryCode,
+                    'iso' => $isoCode,
+                    'admin' => $adminLevel,
+                    'source' => $source,
                 ],
             );
             ++$count;
             $io->writeln(sprintf('  region %s', $feature['properties']['slug']));
         }
 
+        // Operating-level regions must tessellate within a country, never
+        // overlap: an ST_Overlaps pair means a bad import (mismatched levels or
+        // duplicated geometry). Reject it here so the transaction rolls back —
+        // the import check PREVENTS the ambiguity, while the smallest-area-wins
+        // ordering in recomputeMembership SURVIVES one that slips through
+        // (region-scoping-design.md §3).
+        $this->assertRegionsTessellate();
+
         return $count;
+    }
+
+    /**
+     * Extracts and validates a region artifact's provenance columns.
+     * `country_code` is required (2-letter ISO 3166-1, uppercased); the rest
+     * are optional and default to NULL.
+     *
+     * @param array<string, mixed> $props
+     *
+     * @return array{0: string, 1: string|null, 2: int|null, 3: string|null} [countryCode, isoCode, adminLevel, source]
+     */
+    private function regionProvenance(array $props, string $file): array
+    {
+        $rawCc = \is_string($props['country_code'] ?? null) ? strtoupper(trim($props['country_code'])) : '';
+        if (1 !== preg_match('/^[A-Z]{2}$/', $rawCc)) {
+            throw new \InvalidArgumentException(sprintf('%s: region artifact missing required 2-letter country_code (got %s) — an unstamped region is a silent moderation-jurisdiction hole (region-scoping-design.md §3).', basename($file), '' === $rawCc ? '<missing>' : sprintf('"%s"', $rawCc)));
+        }
+
+        $iso = \is_string($props['iso_code'] ?? null) && '' !== trim($props['iso_code'])
+            ? strtoupper(trim($props['iso_code'])) : null;
+        $admin = \is_numeric($props['admin_level'] ?? null) ? (int) $props['admin_level'] : null;
+        $source = \is_string($props['source'] ?? null) && '' !== trim($props['source'])
+            ? trim($props['source']) : null;
+
+        return [$rawCc, $iso, $admin, $source];
+    }
+
+    /**
+     * @throws \InvalidArgumentException when two same-country regions overlap
+     */
+    private function assertRegionsTessellate(): void
+    {
+        // ST_Overlaps already excludes a shared border (a line, not an area) and
+        // nested containment (that is ST_Contains — handled deterministically by
+        // recomputeMembership's smallest-area-wins). The area-ratio gate on top
+        // tolerates the sub-permille slivers real adjacent OSM/Overture admin
+        // boundaries carry, so only a MEANINGFUL overlap trips the guard.
+        /** @var array{a: string, b: string}|false $overlap */
+        $overlap = $this->db->fetchAssociative(
+            "SELECT a.slug AS a, b.slug AS b
+               FROM region a JOIN region b ON a.id < b.id
+              WHERE a.country_code = b.country_code AND a.country_code <> ''
+                AND a.geom IS NOT NULL AND b.geom IS NOT NULL
+                AND ST_Overlaps(a.geom, b.geom)
+                AND ST_Area(ST_Intersection(a.geom, b.geom))
+                    > :tol * LEAST(ST_Area(a.geom), ST_Area(b.geom))
+              LIMIT 1",
+            ['tol' => self::REGION_OVERLAP_TOLERANCE],
+        );
+        if (false !== $overlap) {
+            throw new \InvalidArgumentException(sprintf('Region overlap: "%s" and "%s" share more than a boundary sliver within the same country — operating-level regions must tessellate, not overlap (region-scoping-design.md §3).', $overlap['a'], $overlap['b']));
+        }
     }
 
     private function importItemLayers(string $dir, SymfonyStyle $io): int
@@ -341,14 +425,27 @@ final class ImportCatalogCommand extends Command
 
     private function recomputeMembership(): int
     {
+        // Smallest-area-wins on overlap: DISTINCT ON keeps exactly one region
+        // per row, ordered by area then id, so membership is deterministic
+        // regardless of region row order once regions multiply past the single
+        // Wallonia seed (region-scoping-design.md §3). Rows in no region stay
+        // NULL (the reset above is never overwritten for them).
         $this->db->executeStatement('UPDATE item SET region_id = NULL');
         $assigned = (int) $this->db->executeStatement(
-            'UPDATE item SET region_id = r.id FROM region r WHERE ST_Contains(r.geom, ST_PointOnSurface(item.geom))',
+            'UPDATE item SET region_id = m.region_id FROM (
+                SELECT DISTINCT ON (i.id) i.id AS item_id, r.id AS region_id
+                FROM item i JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(i.geom))
+                ORDER BY i.id, r.area_km2 ASC NULLS LAST, r.id ASC
+             ) m WHERE item.id = m.item_id',
         );
 
         $this->db->executeStatement('UPDATE recommended_route SET region_id = NULL');
         $assigned += (int) $this->db->executeStatement(
-            'UPDATE recommended_route SET region_id = r.id FROM region r WHERE ST_Contains(r.geom, ST_PointOnSurface(recommended_route.geom))',
+            'UPDATE recommended_route SET region_id = m.region_id FROM (
+                SELECT DISTINCT ON (rr.id) rr.id AS route_id, r.id AS region_id
+                FROM recommended_route rr JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(rr.geom))
+                ORDER BY rr.id, r.area_km2 ASC NULLS LAST, r.id ASC
+             ) m WHERE recommended_route.id = m.route_id',
         );
 
         return $assigned;

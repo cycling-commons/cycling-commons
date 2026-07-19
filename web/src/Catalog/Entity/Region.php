@@ -44,6 +44,26 @@ class Region
     #[ORM\Column(type: 'string', length: 2, options: ['default' => ''])]
     private string $countryCode = '';
 
+    /** ISO 3166-2 subdivision code (e.g. BE-WAL), joins World Subdivision.code. */
+    #[ORM\Column(type: 'string', length: 10, nullable: true)]
+    private ?string $isoCode = null;
+
+    /** Administrative level of the source boundary (Belgium: 4). */
+    #[ORM\Column(type: 'smallint', nullable: true)]
+    private ?int $adminLevel = null;
+
+    /** Polygon provenance: 'osm' | 'overture' (region-scoping-design.md §3). */
+    #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    private ?string $source = null;
+
+    /**
+     * Per-region override of route.region_active_cap (route_domain.yaml); NULL
+     * falls back to the global default. Brussels and Flanders cannot share a
+     * cap (region-scoping-design.md §5). Set via admin, never by the importer.
+     */
+    #[ORM\Column(type: 'smallint', nullable: true)]
+    private ?int $activeCap = null;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
@@ -118,6 +138,54 @@ class Region
     public function setCountryCode(string $countryCode): static
     {
         $this->countryCode = strtoupper($countryCode);
+
+        return $this;
+    }
+
+    public function getIsoCode(): ?string
+    {
+        return $this->isoCode;
+    }
+
+    public function setIsoCode(?string $isoCode): static
+    {
+        $this->isoCode = $isoCode;
+
+        return $this;
+    }
+
+    public function getAdminLevel(): ?int
+    {
+        return $this->adminLevel;
+    }
+
+    public function setAdminLevel(?int $adminLevel): static
+    {
+        $this->adminLevel = $adminLevel;
+
+        return $this;
+    }
+
+    public function getSource(): ?string
+    {
+        return $this->source;
+    }
+
+    public function setSource(?string $source): static
+    {
+        $this->source = $source;
+
+        return $this;
+    }
+
+    public function getActiveCap(): ?int
+    {
+        return $this->activeCap;
+    }
+
+    public function setActiveCap(?int $activeCap): static
+    {
+        $this->activeCap = $activeCap;
 
         return $this;
     }

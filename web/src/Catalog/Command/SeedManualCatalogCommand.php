@@ -402,8 +402,20 @@ final class SeedManualCatalogCommand extends Command
     /** Only touches rows this command owns - never widens to the full item/recommended_route tables. */
     private function recomputeMembership(): void
     {
+        // Smallest-area-wins on overlap — the SAME deterministic rule the three
+        // other membership writers use (ImportCatalogCommand::recomputeMembership,
+        // RegionResolver, pipeline/coverage/load.py), so a manual pin can never
+        // land in a different region than an identically-located imported item
+        // (region-scoping-design.md §3, catalog-data-model.md §6). Scoped to
+        // source='manual', contained pins only — a pin outside every region
+        // keeps whatever it had, unchanged from before.
         $this->db->executeStatement(
-            "UPDATE item SET region_id = r.id FROM region r WHERE item.source = 'manual' AND ST_Contains(r.geom, ST_PointOnSurface(item.geom))",
+            "UPDATE item SET region_id = m.region_id FROM (
+                SELECT DISTINCT ON (i.id) i.id AS item_id, r.id AS region_id
+                FROM item i JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(i.geom))
+                WHERE i.source = 'manual'
+                ORDER BY i.id, r.area_km2 ASC NULLS LAST, r.id ASC
+             ) m WHERE item.id = m.item_id",
         );
     }
 

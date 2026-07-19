@@ -112,11 +112,46 @@ feed it.
 
 `id` bigint identity · `slug` varchar(80) unique (the upsert key; seed:
 `wallonia`) · `name` varchar(160) · `geom` (MultiPolygon) nullable + GiST ·
-`area_km2` float nullable (informational) · `country_code` varchar(2)
-(added by `Version20260704222148` for moderation filtering) · timestamps.
+`area_km2` float nullable (informational **and the overlap tie-break** —
+catalog-data-model.md §6) · `country_code` varchar(2) (added by
+`Version20260704222148` for moderation filtering) · `iso_code` varchar(10)
+nullable (ISO 3166-2, joins World `Subdivision.code`, e.g. `BE-WAL`) ·
+`admin_level` smallint nullable · `source` varchar(32) nullable (polygon
+provenance: `osm` | `overture`) · `active_cap` smallint nullable (per-region
+override of `route.region_active_cap`; NULL = the global default) · timestamps.
+The last four columns were added by `Version20260719140000` (region-scoping
+Phase 1); `importRegions` stamps `country_code`/`iso_code`/`admin_level`/
+`source` from the artifact and **requires `country_code`** (invariants below).
 Regions are the day-one operational unit: moderator areas, region-scoped
 voting/rankings, and the per-region route cap all anchor to `region.id`
 (owned by moderation-and-contribution.md and route-domain.md respectively).
+
+**Invariants (region-scoping-design.md §3, review-enforced):**
+
+- **Never delete a region row.** `moderator_area.region_id` is
+  `ON DELETE CASCADE` (`Version20260714210000`), so deleting a region silently
+  drops curator jurisdictions. Region lifecycle is **upsert-by-slug only**;
+  geometry changes only via an explicit versioned re-import. Slug and ISO code
+  are the stable identity across re-imports — boundaries may shift, the row
+  endures.
+- **`country_code` is required at import.** A region with no country is
+  invisible to country-scoped curators (`ModerationScope` matches on
+  `region.country_code`) — a silent jurisdiction hole. `importRegions` rejects
+  an artifact that lacks it (region-scoping-design.md §8 risk 1).
+- **Operating-level regions tessellate, never overlap.** The importer rejects
+  an `ST_Overlaps` pair within one country; membership additionally resolves
+  any overlap smallest-area-wins, so a bad row that slips through is still
+  deterministic (catalog-data-model.md §6).
+
+**Seeding playbook (region-scoping-design.md §5a — curator-demand-driven):**
+countries start **unsplit** (zero region rows; rider scope still works via
+My-area / country / Everywhere). When a curator volunteers, seed that country's
+subdivisions at the granularity of the smallest jurisdiction anyone there wants
+— one operating level per country. Mechanically: add a `region-<slug>.geojson`
+artifact carrying `slug`/`name`/`area_km2`/`country_code` (plus `iso_code`/
+`admin_level`/`source`), drop it in the export dir, and run `app:catalog:import`
+— the same glob, more files; membership recomputes from scratch. A jurisdiction
+is a **set of region rows** on `moderator_area`, never a drawn polygon.
 
 ### 2.5 `change_history` (referenced, owned elsewhere)
 
@@ -203,20 +238,31 @@ documented standing exception, since F has no serving path yet).
 
 Assigned by a deterministic containment rule, recomputed **from scratch on
 every import run** (`ImportCatalogCommand::recomputeMembership()`): null out
-`region_id` on `item` and `recommended_route`, then
+`region_id` on `item` and `recommended_route`, then assign the containing
+region — **smallest by `area_km2` first when regions overlap**, so membership
+never depends on row order once regions multiply past the Wallonia seed
+(region-scoping-design.md §3):
 
 ```sql
-UPDATE item SET region_id = r.id
-FROM region r WHERE ST_Contains(r.geom, ST_PointOnSurface(item.geom))
+UPDATE item SET region_id = m.region_id FROM (
+  SELECT DISTINCT ON (i.id) i.id AS item_id, r.id AS region_id
+  FROM item i JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(i.geom))
+  ORDER BY i.id, r.area_km2 ASC NULLS LAST, r.id ASC
+) m WHERE item.id = m.item_id
 ```
 
-`ST_PointOnSurface` is guaranteed on-geometry for points *and* lines, so a
-border-crossing segment gets exactly one home region (the map still finds it
-from neighboring viewports via the GiST index). Because membership is a
-recompute, regions can split/merge later without touching item schema.
-Rider route proposals never pass the importer; intake resolves `region_id`
-with the same containment rule (route-domain.md). `heat_point` carries no
-region — it is never moderated or voted.
+The **same smallest-area-wins rule is shared by all four membership writers** —
+`recomputeMembership`, `RegionResolver` (route intake),
+`SeedManualCatalogCommand::recomputeMembership` (the `manual` hero pins,
+catalog-data-model.md §5), and `pipeline/coverage/load.py` (the `coverage_poi`
+stamp) — so a manual pin can never land in a different region than an
+identically-located imported item (region-scoping-design.md §3). `ST_PointOnSurface` is guaranteed
+on-geometry for points *and* lines, so a border-crossing segment gets exactly
+one home region (the map still finds it from neighboring viewports via the GiST
+index). Because membership is a recompute, regions can split/merge later without
+touching item schema. Rider route proposals never pass the importer; intake
+resolves `region_id` with the same rule (route-domain.md). `heat_point` carries
+no region — it is never moderated or voted.
 
 Ad-hoc spatial queries ("all items in an arbitrary polygon") need no region
 row — GiST + `ST_Intersects` works day one.

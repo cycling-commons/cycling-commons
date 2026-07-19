@@ -25,7 +25,14 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 DEMO = ROOT / "atlas/demo"
 OUT = pathlib.Path(__file__).resolve().parent / "out"
 
-WALLONIA = {"slug": "wallonia", "name": "Wallonia", "area_km2": 16901}
+# Provenance stamped into the region artifact so ImportCatalogCommand can fill
+# region.country_code / iso_code / admin_level / source (region-scoping-design.md
+# §3, §7 Phase 1). country_code is REQUIRED by the importer — an unstamped
+# region is a silent moderation-jurisdiction hole. Wallonia is the OSM
+# admin_level=4 relation (ISO 3166-2 BE-WAL), harvested below.
+WALLONIA = {"slug": "wallonia", "name": "Wallonia", "area_km2": 16901,
+            "country_code": "BE", "iso_code": "BE-WAL", "admin_level": 4,
+            "source": "osm"}
 
 LETTERS = {"services": "D", "scenic": "I", "history": "J",
            "stays": "E", "shelter": "H", "transit": "G"}

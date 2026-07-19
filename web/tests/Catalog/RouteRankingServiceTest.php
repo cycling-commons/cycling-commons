@@ -106,6 +106,36 @@ final class RouteRankingServiceTest extends KernelTestCase
         self::assertContains($notDeclared->getId(), $svc->bestOf(Season::Spring, BikeType::Gravel, null));
     }
 
+    public function testEverywhereFacetIsHardCapped(): void
+    {
+        // Without a region filter the aggregate is unbounded (route-domain.md
+        // §12 item 1); the Phase 1 guard caps it at MAX_RESULTS. Seed one more
+        // than the cap, all qualifying (verified + one spring/gravel vote), and
+        // assert the no-region facet returns exactly the cap.
+        self::bootKernel();
+        $em = $this->em();
+        $svc = static::getContainer()->get(RouteRankingService::class);
+
+        $routes = [];
+        for ($i = 0; $i <= RouteRankingService::MAX_RESULTS; ++$i) {
+            $r = (new RecommendedRoute())->setName('Cap'.$i)
+                ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+                ->setDistanceM(20000)->setState(ItemState::Verified)
+                ->setSource(ItemSource::User)->setSourceRef('user:cap-'.uniqid().'-'.$i);
+            $em->persist($r);
+            $routes[] = $r;
+        }
+        $em->flush();
+        $uid = 1000;
+        foreach ($routes as $r) {
+            $em->persist(new RouteVote($r->getId(), $uid++, Season::Spring, BikeType::Gravel));
+        }
+        $em->flush();
+
+        $ids = $svc->bestOf(Season::Spring, BikeType::Gravel, null);
+        self::assertCount(RouteRankingService::MAX_RESULTS, $ids);
+    }
+
     public function testRegionScoping(): void
     {
         self::bootKernel();

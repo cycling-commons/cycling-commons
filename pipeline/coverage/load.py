@@ -44,6 +44,9 @@ _INDEX_DDL = (
     "CREATE INDEX IF NOT EXISTS coverage_poi_geom_idx ON coverage_poi USING gist (geom)",
     "CREATE INDEX IF NOT EXISTS coverage_poi_letter_idx ON coverage_poi (letter)",
     "CREATE INDEX IF NOT EXISTS coverage_poi_region_id_idx ON coverage_poi (region_id)",
+    # country_code arm of /map/coverage/search|nearby|counts (region-scoping-design.md §3, §6):
+    # this table is pipeline-owned, so its index lands here, not in web/migrations.
+    "CREATE INDEX IF NOT EXISTS coverage_poi_country_code_idx ON coverage_poi (country_code)",
     "CREATE INDEX IF NOT EXISTS coverage_poi_name_trgm_idx ON coverage_poi USING gin (name gin_trgm_ops)",
 )
 
@@ -132,12 +135,24 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
             cur.execute(
                 f"INSERT INTO coverage_poi ({_COLUMNS}) SELECT {_COLUMNS} FROM coverage_poi_staging"
             )
+            # Smallest-area-wins on overlap (region-scoping-design.md §3): the
+            # third membership writer besides RegionResolver and
+            # ImportCatalogCommand::recomputeMembership. DISTINCT ON keeps one
+            # region per POI, ordered by area then id, so the stamp is
+            # deterministic once regions multiply past the Wallonia seed. Only
+            # this slice's freshly-inserted rows are candidates; POIs in no
+            # region keep the NULL they were inserted with.
             cur.execute(
                 """
-                UPDATE coverage_poi SET region_id = r.id
-                FROM region r
-                WHERE ST_Contains(r.geom, coverage_poi.geom)
-                  AND coverage_poi.src_region = %s
+                UPDATE coverage_poi SET region_id = m.region_id
+                FROM (
+                    SELECT DISTINCT ON (c.id) c.id AS poi_id, r.id AS region_id
+                    FROM coverage_poi c
+                    JOIN region r ON ST_Contains(r.geom, c.geom)
+                    WHERE c.src_region = %s
+                    ORDER BY c.id, r.area_km2 ASC NULLS LAST, r.id ASC
+                ) m
+                WHERE coverage_poi.id = m.poi_id
                 """,
                 (src_region,),
             )

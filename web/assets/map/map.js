@@ -46,11 +46,14 @@
 
   // region boundary — dim everything OUTSIDE the region (spotlight) + a clear
   // dashed outline, so the region you're filtering inside reads at a glance.
-  function addRegionBoundary(name){
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=jsonv2&polygon_geojson=1&limit=1`)
-      .then(r=>{ if(!r.ok) throw new Error('nominatim HTTP '+r.status); return r.json(); }).then(d=>{
-        if(!d[0]||!d[0].geojson||!map.getStyle()||map.getSource('region')) return;
-        const g=d[0].geojson;
+  // Served from our own DB (region-scoping-design.md §4): the simplified region
+  // polygon via the cacheable boundary endpoint, replacing the old Nominatim
+  // fetch (an external dependency and a Nominatim usage-policy problem in prod).
+  function addRegionBoundary(slug){
+    fetch(`/map/region/${encodeURIComponent(slug)}/boundary`)
+      .then(r=>{ if(!r.ok) throw new Error('boundary HTTP '+r.status); return r.json(); }).then(d=>{
+        const g = d && d.geometry;
+        if(!g||!map.getStyle()||map.getSource('region')) return;
         const polys = g.type==='MultiPolygon' ? g.coordinates : [g.coordinates];
         const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
         const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...polys.map(p=>p[0])]}};
@@ -706,7 +709,7 @@
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
   map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
-    addRegionBoundary('Wallonia'); setupConfClusters();
+    addRegionBoundary('wallonia'); setupConfClusters();
     // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
     // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a
     // flyTo, is what made zooming/flying stutter. MapLibre repositions the existing markers smoothly on
