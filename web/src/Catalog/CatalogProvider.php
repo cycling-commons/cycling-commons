@@ -68,11 +68,11 @@ final class CatalogProvider
      * confirmation, or official-registry provenance. Tourisme Wallonie PIVOT
      * rows count as verified.
      *
-     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}>
+     * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null): array
     {
-        $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov,
+        $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
                        (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id)) AS verified
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
@@ -102,7 +102,7 @@ final class CatalogProvider
             $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
         }
 
-        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, verified: bool}> */
+        /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);
     }
 
@@ -163,6 +163,11 @@ final class CatalogProvider
             // encodes as a JSON object, never `[]` (GeoJSON requires an
             // object; an empty array would encode as `[]` instead).
             $props['id'] = (int) $row['id'];
+            // Region membership for map.js scope filtering (region-scoping-design.md
+            // §4 / §7 Phase 2). Absent for rows outside every region (byte-stable).
+            if (null !== $row['region_id']) {
+                $props['rid'] = (int) $row['region_id'];
+            }
             $features[] = [
                 'type' => 'Feature',
                 'properties' => $props,
@@ -203,6 +208,9 @@ final class CatalogProvider
             if ($row['verified']) {
                 $climb['v'] = 1;
             }
+            if (null !== $row['region_id']) {
+                $climb['rid'] = (int) $row['region_id'];
+            }
             $climbs[] = $climb;
         }
 
@@ -225,6 +233,9 @@ final class CatalogProvider
             if ($row['verified']) {
                 $seg['v'] = 1;
             }
+            if (null !== $row['region_id']) {
+                $seg['rid'] = (int) $row['region_id'];
+            }
             if (str_starts_with($row['source_ref'], 'way/')) {
                 $seg['wayId'] = (int) substr($row['source_ref'], 4);
             }
@@ -244,9 +255,9 @@ final class CatalogProvider
      */
     private function routes(): array
     {
-        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string}> $rows */
+        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state
+            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state, region_id
              FROM recommended_route WHERE state IN '.ItemState::servedSqlTuple().' ORDER BY id',
         );
 
@@ -258,6 +269,11 @@ final class CatalogProvider
             // Raw ItemState value so the map can badge unverified ("proposed")
             // routes distinct from verified ones.
             $route['state'] = (string) $row['state'];
+            // Region membership for map.js scope filtering (region-scoping-design.md
+            // §4 / §7 Phase 2). Absent for routes outside every region.
+            if (null !== $row['region_id']) {
+                $route['rid'] = (int) $row['region_id'];
+            }
             if (isset($attrs['season'])) {
                 $route['season'] = $attrs['season'];
             }

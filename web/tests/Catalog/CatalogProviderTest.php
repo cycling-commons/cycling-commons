@@ -380,4 +380,33 @@ final class CatalogProviderTest extends KernelTestCase
         $this->em->getConnection()->executeStatement("UPDATE item SET state = 'rejected' WHERE source_ref = 'node/1001'");
         self::assertNotContains('node/1001', $this->payload()['refs']);
     }
+
+    /**
+     * Phase 2 (region-scoping-design.md §4 / §7): every served feature carries
+     * its region_id as `rid` so map.js `featureVisible` can filter by scope.
+     * Rows outside every region carry no rid (byte-stable for null-region rows).
+     */
+    public function testServedFeaturesCarryRegionIdAsRid(): void
+    {
+        $byType = [];
+        foreach ($this->payload()['D']['features'] as $f) {
+            $byType[$f['properties']['t']] = $f['properties'];
+        }
+        // Bike shop [4.4,50.7] + Repair station [4.9,50.3] fall inside the
+        // test-square region ([4,50]-[5,51]); both get the same rid.
+        self::assertIsInt($byType['Bike shop']['rid']);
+        self::assertGreaterThan(0, $byType['Bike shop']['rid']);
+        self::assertSame($byType['Bike shop']['rid'], $byType['Repair station']['rid'], 'same region → same rid');
+        // Pump [6.5,49.0] is outside every region → no rid key.
+        self::assertArrayNotHasKey('rid', $byType['Pump']);
+
+        // Climbs (B) and surface (A) serve through their own shapes — they carry rid too.
+        self::assertIsInt($this->payload()['B'][0]['rid']);   // Côte de Test [50.61,4.41] inside
+        self::assertIsInt($this->payload()['A'][0]['rid']);   // Test seg inside
+
+        // Routes (K) carry rid via recommended_route.region_id (Test loop inside).
+        $route = $this->payload()['K'][0];
+        self::assertIsInt($route['rid']);
+        self::assertGreaterThan(0, $route['rid']);
+    }
 }
