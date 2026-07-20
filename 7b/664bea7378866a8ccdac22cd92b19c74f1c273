@@ -1,0 +1,23 @@
+docs/specs/2026-07-19-region-scoping-design.md
+  s_eb16961f3ecd46::t_62c31a1fb2fd49 3-5
+  s_eb16961f3ecd46::t_18966b73e53656 436-443
+  s_eb16961f3ecd46::t_b1333d353af7c7 463-480
+web/tests/Catalog/RegionRegistryProviderTest.php
+  s_eb16961f3ecd46::t_085f9d4edd2892 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7b664bea7378866a8ccdac22cd92b19c74f1c273",
+  "prompts": {},
+  "sessions": {
+    "s_eb16961f3ecd46": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32a5798c-4df2-4e41-b9bb-1c452e700604",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
