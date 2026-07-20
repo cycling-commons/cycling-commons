@@ -1,6 +1,8 @@
 # Region scoping, search scope widening, and rider base location — design (working spec)
 
-Status: **proposed** (2026-07-19); **Phase 1 executed 2026-07-19** (see §7).
+Status: **proposed** (2026-07-19); **Phase 1 + Phase 2 executed** (2026-07-19 /
+2026-07-20; see §7). Belgium is tessellated (Wallonia/Flanders/Brussels) and the
+map + search are scope-aware; Phases 3–5 not started.
 Multi-agent research + design run; all repo-structural claims below were
 adversarially verified against the codebase (4 corrections from that pass are
 folded in and marked "verified correction" where decision-relevant).
@@ -431,10 +433,14 @@ Nominatim fetch; invariants + seeding playbook in catalog-data-model.md §2.4.
   sends `&region=`; widen chip ("Search in Belgium instead") with auto-surface on
   sparse results; Photon bbox/countrycode derived from scope; deep links auto-widen.
 
-**Phase 2 — in progress (2026-07-20, symfony-base, not pushed).** Backend + data
-+ shared-module slices landed and verified; the rider-facing map/search UI slices
-(rail group, spotlight, `featureVisible`, search widening) remain, gated on the
-dev-DB region import (bulk membership recompute — owner approval required). Landed:
+**Phase 2 — EXECUTED 2026-07-20 (symfony-base `acfc7d9..cf941f7`, NOT pushed).**
+Belgium is fully tessellated (3 Overture regions imported to the dev DB — 1592
+items region-assigned) and the map + search are scope-aware end-to-end. Every
+slice below landed with unit/functional tests + browser verification on the dev
+stack (0 console errors). Belgium data is currently Wallonia-only, so the scope
+filter is binary in practice (Flanders/Brussels render empty until their POIs are
+harvested — a data task, not Phase 2); the widen ladder makes that legible.
+Landed:
 
 - **Exporter** (`tools/divisions/`, commit acfc7d9): Overture `division_area` →
   `region-{wallonia,flanders,brussels}.geojson` with the required provenance;
@@ -454,10 +460,24 @@ dev-DB region import (bulk membership recompute — owner approval required). La
   with ZERO area overlap, so the guard passes with maximal margin (the tolerance
   is a safety net for sliver-prone sources like independent OSM relations).
 
-Remaining (post dev-import): rail Region group + dynamic header + per-region
-spotlight + scope-bbox initial bounds; `featureVisible` scope filter + best-of
-`&region=`; search widen ladder + Photon-from-scope + deep-link auto-widen +
-Everywhere; end-to-end browser verification.
+- **Scope selector + filtering** (6776c0b): `RegionRegistryProvider` feeds
+  `window.CC_REGIONS`; rail Region group (Wallonia/Flanders/Brussels/All Belgium/
+  Everywhere), dynamic header + brand kicker, per-region spotlight from the
+  boundary endpoint, scope-bbox initial bounds (retired the hardcoded `map.js`
+  Wallonia literal). `featureVisible` + `renderSurfaceLayer` + the verified-POI
+  clusters gate on `rid`; best-of sends `&region=` for a named region. Verified:
+  Wallonia 77 markers → Flanders 0 → All Belgium 77. **Bug caught in browser +
+  fixed:** the registry emitted `cc` but `CCScope` expects `countryCode`, which
+  silently broke "All Belgium" + the widen ladder; aligned to `countryCode`.
+- **Search widening** (cf941f7): Photon bbox + countrycode derive from scope
+  (retired the hardcoded Wallonia bbox / BE gate); one-tap widen chip in the
+  results (region → country → everywhere, always offered while widenable, dropdown
+  stays open); dynamic search title; deep links (`?feature/?pending/?route`)
+  transiently widen to Everywhere so a narrow saved scope can't hide the target.
+
+Coverage-tile scoping (`rid`/`cc` tile props + `rids`/`cc` coverage params) stays
+Phase 3; base location / My area stays Phase 4. `kind` leaves room for the future
+`myArea` value.
 
 **Phase 3 — Coverage scoping.**
 
