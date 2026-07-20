@@ -170,6 +170,12 @@ final class MapController extends AbstractController
             'allBikes' => $t->trans('map.all_bikes'),
             'pendingReview' => $t->trans('map.pending_review'),
             'login' => $t->trans('nav.login'),
+            // Search scope widening (region-scoping-design.md §4 / §7 Phase 2):
+            // dynamic search title + the one-tap widen chip. {area} is filled by
+            // map.js tpl().
+            'searchIn' => $t->trans('map.search_in'),
+            'searchEverywhere' => $t->trans('map.search_everywhere'),
+            'searchWiden' => $t->trans('map.search_widen'),
             'seasons' => [
                 'spring' => $t->trans('map.season_spring'),
                 'summer' => $t->trans('map.season_summer'),

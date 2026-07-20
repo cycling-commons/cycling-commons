@@ -107,6 +107,12 @@
   .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45)}
   .search-res .scomm{margin-left:.45rem;font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45);border:1px solid rgba(239,230,212,.22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
   .search-empty{padding:.6rem .55rem;font-size:.8rem;color:rgba(239,230,212,.5)}
+  /* Widen chip (region-scoping-design.md §4): the one-tap "search wider" ladder,
+     visually set apart from result rows (top border, glacier accent, mono). */
+  .search-widen{border-top:1px solid rgba(239,230,212,.16)}
+  .search-widen button{width:100%;display:flex;align-items:center;gap:.4rem;background:none;border:none;color:var(--glacier);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer;transition:background .12s}
+  .search-widen button::before{content:'⊕';font-size:.8rem}
+  .search-widen button:hover{background:rgba(255,90,31,.14)}
   /* grouped results (spec 2026-07-14 §3.3): sticky per-layer headers between rows */
   .search-res .sgrp{position:sticky;top:0;background:rgba(20,33,24,.94);font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.55);padding:.35rem .55rem .25rem;border-bottom:1px solid rgba(239,230,212,.1)}
 

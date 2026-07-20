@@ -856,6 +856,9 @@ ride_check:
 map:
   coords: '◎ Wallonië · 50.32°N 5.01°E'
   search_title: 'Zoeken in Wallonië'
+  search_in: 'Zoeken in {area}'
+  search_everywhere: 'Overal zoeken'
+  search_widen: 'Liever in {area} zoeken'
   search_placeholder: 'Zoek een helling, stad, uitzichtpunt…'
   search_aria: 'Zoek in de Commons'
   region: 'Regio'

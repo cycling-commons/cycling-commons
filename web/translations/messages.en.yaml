@@ -1022,6 +1022,9 @@ ride_check:
 map:
   coords: '◎ Wallonia · 50.32°N 5.01°E'
   search_title: 'Search in Wallonia'
+  search_in: 'Search in {area}'
+  search_everywhere: 'Search everywhere'
+  search_widen: 'Search in {area} instead'
   search_placeholder: 'Search a climb, town, viewpoint…'
   search_aria: 'Search the Commons'
   region: 'Region'

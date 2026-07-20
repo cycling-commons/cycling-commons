@@ -119,6 +119,8 @@
     // scope label + bbox-centre coords, or just the label for Everywhere.
     const co = document.getElementById('regionCoords');
     if(co){ const b = window.CCScope && window.CCScope.bbox(); co.textContent = b ? `◎ ${scopeLabel(s)} · ${((b[1]+b[3])/2).toFixed(2)}°N ${((b[0]+b[2])/2).toFixed(2)}°E` : `◎ ${scopeLabel(s)}`; }
+    const stt = document.getElementById('searchTitle');
+    if(stt) stt.textContent = (s && s.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere') : tpl(I18N.searchIn||'Search in {area}', {area:scopeLabel(s)});
     setSpotlight(s&&s.kind==='region'&&s.regionIds.length===1 ? slugOfRegion(s.regionIds[0]) : null);
     refilterClusters(); updateConfMarkers();   // served-POI clusters follow scope (no-ops until setupConfClusters runs)
     render();                                   // climbs/routes/surface via featureVisible / renderSurfaceLayer
@@ -800,6 +802,14 @@
       map.on('moveend', scheduleCovCounts); map.on('idle', scheduleCovCounts);
     }
     render();
+    // Deep links (?feature/?pending/?route) point at a specific object a narrow
+    // scope might filter out (region-scoping-design.md §4): widen to Everywhere
+    // so the target always renders. Transient (persist:false) — the saved scope
+    // returns on the next plain load; the handlers below flyTo the target.
+    const _dl = new URLSearchParams(location.search);
+    if((_dl.get('feature')||_dl.get('pending')||_dl.get('route')) && window.CCScope && curScope().kind!=='everywhere'){
+      window.CCScope.set({kind:'everywhere', regionIds:[], countryCode:null}, {persist:false});
+    }
     // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from
     // a profile page); coverage POIs stay linkable via one search-endpoint
     // lookup when the local index misses (coverage-provider.md §6)
@@ -2750,25 +2760,30 @@
     // (stale ones aborted). On error/timeout search silently degrades to the
     // local index + hardcoded quick-picks — no toast. Host already in CSP.
     let _phAbort=null, _phHits=[], _phQ='';
-    const PH_URL='https://photon.komoot.io/api/?limit=6&bbox=2.75,49.45,6.55,50.90'
+    const PH_BASE='https://photon.komoot.io/api/?limit=6'
       +'&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village&osm_tag=place:hamlet&osm_tag=place:municipality';
     function runPhoton(qRaw){
       const q=qRaw.trim();
       if(q.length<3){ _phHits=[]; _phQ=''; return; }
       if(_phAbort) _phAbort.abort();
       const ctl=new AbortController(); _phAbort=ctl;
-      fetch(PH_URL+'&q='+encodeURIComponent(q), {signal:ctl.signal})
+      // Photon bbox + country gate derive from the active scope (region-scoping-
+      // design.md §4/§7 Phase 2), replacing the hardcoded Wallonia bbox / BE gate:
+      // a named region/country biases + filters to its country; Everywhere drops
+      // both and searches worldwide. The widen ladder just changes the scope.
+      const pp = window.CCScope ? window.CCScope.photonParams() : {bbox:null, countrycode:null};
+      const url = PH_BASE + (pp.bbox ? '&bbox='+pp.bbox.join(',') : '') + '&q='+encodeURIComponent(q);
+      fetch(url, {signal:ctl.signal})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
         .then(d=>{
           if(ctl.signal.aborted) return;
           const seen=new Set(Object.keys(CITIES).map(n=>slug(n)));   // quick-picks win over their Photon twin
           _phHits=(d.features||[])
             .filter(f=>f && f.properties && f.properties.name && f.geometry && Array.isArray(f.geometry.coordinates))
-            // 07-15 decision E: the bbox is a coarse pre-filter that spills over
-            // the French border — countrycode is the precise gate (Mazy BE stays,
-            // Malzy FR goes). Relaxing this is one flag if cross-border coverage
-            // is ever wanted (recorded, not built).
-            .filter(f=>f.properties.countrycode==='BE')
+            // The bbox is a coarse pre-filter that spills over borders; countrycode
+            // is the precise gate (Mazy BE stays, Malzy FR goes) — but only when the
+            // scope has a country. Everywhere (no countrycode) admits worldwide hits.
+            .filter(f=>!pp.countrycode || String(f.properties.countrycode||'').toLowerCase()===pp.countrycode)
             .filter(f=>{ const k=slug(f.properties.name); if(!k || seen.has(k)) return false; seen.add(k); return true; })
             .map(f=>{ const c=f.geometry.coordinates, name=f.properties.name;
               return {name, key:slug(name), kind:'Town', badge:'◎', color:'#3E7D8C', town:true, ph:1,
@@ -2844,12 +2859,31 @@
       // Android Chrome, re-anchoring the caret at 0 — typed text comes out
       // reversed ("spa" → "aps").
       if(sBox.getAttribute('aria-expanded')!=='true') sBox.setAttribute('aria-expanded','true');
-      sRes.innerHTML = sMatches.length ? html : `<li class="search-empty">${D.noMatch||'No match in the Wallonia demo yet.'}</li>`;
+      // Widen chip (region-scoping-design.md §4, the Craigslist lesson): a
+      // one-tap ladder to the next-wider scope, always offered while the scope
+      // can widen. It sits under the results, so it auto-surfaces exactly when
+      // they are sparse — no settings dig.
+      let widenHtml='';
+      if(window.CCScope && window.CCScope.canWiden()){
+        const nw = window.CCScope.nextWider();
+        const wl = (nw && nw.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere')
+          : tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)});
+        widenHtml = `<li class="search-widen" role="presentation"><button type="button" data-widen="1">${escH(wl)}</button></li>`;
+      }
+      sRes.innerHTML = (sMatches.length ? html : `<li class="search-empty">${D.noMatch||'No match in the Wallonia demo yet.'}</li>`) + widenHtml;
     }
     // one delegated listener + a short debounce (review W41): the per-keystroke
     // cost was a full index scan, an innerHTML rebuild AND fresh per-result
     // listeners — the pattern that degrades linearly as the catalog grows.
-    sRes.addEventListener('click', e=>{ const b=e.target.closest('button[data-i]'); if(b) pickS(+b.dataset.i); });
+    sRes.addEventListener('click', e=>{
+      // Widen chip: step the scope one rung wider (cc:scopechange re-runs
+      // applyScope), then re-query so the wider Photon bbox + fresh chip appear.
+      // stopPropagation: runS() rebuilds the dropdown, detaching this button, so
+      // the document close-listener would otherwise see a detached target
+      // (closest('#searchRes')===null) and close the just-reopened dropdown.
+      if(e.target.closest('button[data-widen]')){ e.stopPropagation(); if(window.CCScope){ window.CCScope.widen(); runPhoton(sBox.value); runS(); } return; }
+      const b=e.target.closest('button[data-i]'); if(b) pickS(+b.dataset.i);
+    });
     let _sDeb=null, _phDeb=null, _covDeb=null;
     sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150);
       clearTimeout(_phDeb); _phDeb=setTimeout(()=>runPhoton(sBox.value),350);
