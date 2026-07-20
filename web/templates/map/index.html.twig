@@ -45,7 +45,7 @@
         <a class="brand" href="{{ path('home') }}" style="flex:none"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons" style="height:1.8rem;display:block"></a>
         {% include 'partials/_lang_menu.html.twig' %}
       </div>
-      <div class="co">{{ 'map.coords'|trans }}</div>
+      <div class="co" id="regionCoords">{{ 'map.coords'|trans }}</div>
       <nav class="rail-nav" id="railNav"><a href="{{ path('map') }}" class="on">{{ 'nav.map'|trans }}</a><a href="{{ path('regions') }}">{{ 'nav.regions'|trans }}</a><a href="{{ path('vote') }}">{{ 'nav.vote'|trans }}</a><a href="{{ path('developers') }}">{{ 'nav.developers'|trans }}</a><a href="{{ path('about') }}">{{ 'nav.about'|trans }}</a>{% if app.user %}{% include 'partials/_account_chip.html.twig' %}{% else %}<a href="{{ path('login') }}">{{ 'nav.account'|trans }}</a>{% endif %}</nav>
       <button class="rail-burger" id="railBurger" type="button" aria-label="{{ 'map.menu_aria'|trans }}" aria-expanded="false" aria-controls="railNav">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -79,6 +79,23 @@
         </div>
         <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
         <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
+      </div>
+      {% endif %}
+
+      {# Region scope selector (region-scoping-design.md §4 / §7 Phase 2): the area
+         the map + search filter to. Sits directly above View mode. Buttons carry a
+         data-scope token (region:<slug> / country:<cc> / everywhere) that map.js
+         hands to window.CCScope; labels come from region.<slug>.label. #}
+      {% if regions is not empty %}
+      <div class="grp">
+        <h3>{{ 'map.region'|trans }}</h3>
+        <div class="scope-toggle" id="regionScope">
+          {% for r in regions %}
+          <button data-scope="region:{{ r.slug }}">{{ ('region.' ~ r.slug ~ '.label')|trans }}</button>
+          {% endfor %}
+          <button data-scope="country:{{ regions[0].countryCode }}">{{ 'region.all_belgium.label'|trans }}</button>
+          <button data-scope="everywhere">{{ 'region.everywhere.label'|trans }}</button>
+        </div>
       </div>
       {% endif %}
 
@@ -208,7 +225,7 @@
   <main class="map-wrap">
     <div id="map"></div>
     <div class="map-top">
-      <div class="rg">{{ 'map.region_line'|trans }}</div>
+      <div class="rg" id="regionLine">{{ 'map.region_line'|trans }}</div>
       <div class="sub">{{ 'map.curated'|trans }}</div>
       <a class="add-climb" href="{{ path('contribute') }}">{{ 'map.contribute'|trans }}</a>
     </div>
@@ -305,6 +322,9 @@
      drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
   window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_PREFS = {{ rider_prefs|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Region registry (region-scoping-design.md §4 / §7 Phase 2): id/slug/cc/bbox
+     per region, consumed by window.CCScope for the scope selector + viewport. #}
+  window.CC_REGIONS = {{ regions|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {% if coverage_url %}
   {# Coverage tiles (coverage-provider.md §4): the versioned
      PMTiles artifact URL — emitted only when COVERAGE_TILES is on AND the
@@ -319,6 +339,8 @@
    preload puts both requests in flight together, so boot() executes map.js
    straight from cache. #}
 <link rel="preload" href="{{ asset('map/map.js') }}" as="script">
+{# Scope model (window.CCScope) — must be defined before catalog-load.js injects map.js. #}
+<script src="{{ asset('map/scope.js') }}"></script>
 <script src="{{ asset('map/catalog-load.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/version.js') }}"></script>

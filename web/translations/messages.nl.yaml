@@ -858,6 +858,7 @@ map:
   search_title: 'Zoeken in Wallonië'
   search_placeholder: 'Zoek een helling, stad, uitzichtpunt…'
   search_aria: 'Zoek in de Commons'
+  region: 'Regio'
   view_mode: 'Weergave'
   curated: 'Best-of'
   everything: 'Alles'

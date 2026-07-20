@@ -126,6 +126,12 @@
   .toggle{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
   .toggle button{flex:1;background:transparent;color:var(--paper);font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem;border:none;cursor:pointer;transition:all .18s}
   .toggle button.on{background:var(--spruce-lift)}
+  /* Region scope selector (region-scoping-design.md §4): 5 options, so it wraps
+     into a chip grid instead of the 2-up segmented pill .toggle assumes. */
+  .scope-toggle{display:flex;flex-wrap:wrap;gap:.35rem}
+  .scope-toggle button{flex:1 1 auto;min-width:calc(33.3% - .35rem);background:transparent;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .3rem;border:1px solid rgba(239,230,212,.25);border-radius:6px;cursor:pointer;transition:all .18s}
+  .scope-toggle button:hover{border-color:rgba(239,230,212,.5)}
+  .scope-toggle button.on{background:var(--spruce-lift);border-color:var(--glacier);color:var(--paper)}
   /* discipline filter — compacted (visual-only chips, see markup note): smaller pad/type + tighter gap */
   #disc{gap:.3rem}
   #disc .chip{padding:.26rem .5rem;font-size:.6rem;letter-spacing:.05em}

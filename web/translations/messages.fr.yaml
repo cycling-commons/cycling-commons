@@ -858,6 +858,7 @@ map:
   search_title: 'Rechercher en Wallonie'
   search_placeholder: 'Cherchez une côte, une ville, un point de vue…'
   search_aria: 'Rechercher dans les Commons'
+  region: 'Région'
   view_mode: 'Affichage'
   curated: 'Best-of'
   everything: 'Tout'

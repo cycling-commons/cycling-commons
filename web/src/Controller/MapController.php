@@ -9,6 +9,7 @@ use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\RegionBoundaryProvider;
+use App\Catalog\RegionRegistryProvider;
 use App\Catalog\RidingStyle;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
@@ -33,12 +34,16 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class MapController extends AbstractController
 {
     #[Route('/map', name: 'map')]
-    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage): Response
+    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions): Response
     {
         $user = $this->getUser();
         $params = [
             'field_schema' => $schema->all(),
             'map_i18n' => $this->mapI18n($translator),
+            // Region registry for the scope selector (region-scoping-design.md
+            // §4 / §7 Phase 2): id/slug/cc/bbox per region, consumed by
+            // window.CCScope. Display labels come from region.<slug>.label.
+            'regions' => $regions->all(),
             // Rider preferences ride the page render (map-and-search.md §4.4):
             // value-lists only, [] for anonymous — map.js treats
             // empty as "no prefilter" so anonymous behaviour is unchanged.

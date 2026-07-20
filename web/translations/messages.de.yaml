@@ -858,6 +858,7 @@ map:
   search_title: 'In Wallonien suchen'
   search_placeholder: 'Anstieg, Ort oder Aussichtspunkt suchen…'
   search_aria: 'Die Commons durchsuchen'
+  region: 'Region'
   view_mode: 'Ansicht'
   curated: 'Best-of'
   everything: 'Alles'

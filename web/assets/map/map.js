@@ -19,6 +19,23 @@
   // works standalone. `D` is the drawer namespace; tpl() fills {name} slots.
   const I18N = window.CC_I18N || {};
   const PREFS = window.CC_PREFS || {bikes: [], styles: []};
+  // Region scope (region-scoping-design.md §4 / §7 Phase 2): the area the map +
+  // search filter to, owned by window.CCScope (scope.js). Registry injected by
+  // the shell (window.CC_REGIONS: id/slug/cc/bbox); display labels are the rail
+  // buttons' own text. Default scope = today's Wallonia behaviour.
+  const CC_REGIONS = window.CC_REGIONS || [];
+  const _regionById = new Map(CC_REGIONS.map(r => [r.id, r]));
+  const slugOfRegion = id => { const r = _regionById.get(id); return r ? r.slug : null; };
+  const _defaultScope = (() => {
+    const w = CC_REGIONS.find(r => r.slug === 'wallonia') || CC_REGIONS[0];
+    return w ? {kind: 'region', regionIds: [w.id], countryCode: w.countryCode} : {kind: 'everywhere', regionIds: [], countryCode: null};
+  })();
+  if (window.CCScope) window.CCScope.init(CC_REGIONS, _defaultScope);
+  const curScope = () => window.CCScope ? window.CCScope.get() : _defaultScope;
+  // A served feature is in scope when its region id (rid) is in the active
+  // scope. A region/country scope hides rid-less or out-of-region features;
+  // Everywhere shows all. Coverage tiles are scoped separately (Phase 3).
+  const inScope = rid => { const s = curScope(); return !s || s.kind === 'everywhere' || s.regionIds.indexOf(rid) !== -1; };
   const LAYER_L10N = I18N.layers || {};
   const D = I18N.d || {};
   const tpl = (s, vars) => String(s).replace(/\{(\w+)\}/g, (m, k) => vars[k] != null ? vars[k] : m);
@@ -37,23 +54,37 @@
   // bumped on every openDrawer() call so a slow response from a since-replaced
   // drawer never paints stale history over whatever is open now.
   let _historyReq = 0;
+  const _scopeBb = window.CCScope ? window.CCScope.bbox() : null;
   const map = new maplibregl.Map({
     container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
-    bounds:[[2.84,49.45],[6.41,50.85]], fitBoundsOptions:{padding:24}, attributionControl:false  // all of Wallonia visible on load
+    // Initial viewport = the active scope's bbox (Wallonia by default; a saved
+    // Flanders/Brussels/Everywhere scope reopens there). The old hardcoded
+    // Wallonia literal survives only as the no-scope fallback.
+    bounds: _scopeBb ? [[_scopeBb[0],_scopeBb[1]],[_scopeBb[2],_scopeBb[3]]] : [[2.84,49.45],[6.41,50.85]],
+    fitBoundsOptions:{padding:24}, attributionControl:false
   });
   map.addControl(new maplibregl.AttributionControl({customAttribution:'© OpenStreetMap contributors · ODbL'}),'bottom-right');
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
 
-  // region boundary — dim everything OUTSIDE the region (spotlight) + a clear
-  // dashed outline, so the region you're filtering inside reads at a glance.
-  // Served from our own DB (region-scoping-design.md §4): the simplified region
-  // polygon via the cacheable boundary endpoint, replacing the old Nominatim
-  // fetch (an external dependency and a Nominatim usage-policy problem in prod).
-  function addRegionBoundary(slug){
+  // Region spotlight — dim everything OUTSIDE the active named region + a dashed
+  // outline (region-scoping-design.md §4). Served from our own DB via the
+  // cacheable boundary endpoint (replaced the old Nominatim fetch). Re-callable:
+  // clears the previous spotlight first, so it follows the scope selector; a
+  // race token stops a slow response repainting after a newer scope switch.
+  let _spotReq = 0;
+  function clearSpotlight(){
+    ['region-mask','region-line'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    ['region-mask','region'].forEach(id=>{ if(map.getSource(id)) map.removeSource(id); });
+  }
+  function setSpotlight(slug){
+    if(!map.getStyle()) return;
+    const req = ++_spotReq;
+    clearSpotlight();
+    if(!slug) return;   // country / everywhere: no single-region spotlight
     fetch(`/map/region/${encodeURIComponent(slug)}/boundary`)
       .then(r=>{ if(!r.ok) throw new Error('boundary HTTP '+r.status); return r.json(); }).then(d=>{
         const g = d && d.geometry;
-        if(!g||!map.getStyle()||map.getSource('region')) return;
+        if(req!==_spotReq||!g||!map.getStyle()||map.getSource('region')) return;   // superseded or gone
         const polys = g.type==='MultiPolygon' ? g.coordinates : [g.coordinates];
         const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
         const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...polys.map(p=>p[0])]}};
@@ -63,6 +94,38 @@
         map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
       // decorative only — the map works without the boundary, but log why it's missing (W34)
       }).catch(e=>console.warn('Region boundary unavailable:', e));
+  }
+
+  // The data-scope token a scope maps to (matches the rail buttons' data-scope).
+  function scopeToken(s){
+    if(!s||s.kind==='everywhere') return 'everywhere';
+    if(s.kind==='country') return 'country:'+s.countryCode;
+    const slug = slugOfRegion(s.regionIds[0]);
+    return slug ? 'region:'+slug : 'everywhere';
+  }
+  // Dynamic header label — reuse the matching rail button's already-localized
+  // text, so the header line can never drift from the selector's wording.
+  function scopeLabel(s){
+    const btn = document.querySelector(`#regionScope button[data-scope="${scopeToken(s)}"]`);
+    return btn ? btn.textContent.trim() : '';
+  }
+  // Apply a scope: active rail button + dynamic header + spotlight (single named
+  // region only) + viewport + re-render (scope-filtered from Task 7). fit:false
+  // on the initial paint — the map constructor already opened on the scope bbox.
+  function applyScope(s, opts){
+    document.querySelectorAll('#regionScope button').forEach(x=>x.classList.toggle('on', x.dataset.scope===scopeToken(s)));
+    const rl = document.getElementById('regionLine'); if(rl) rl.textContent = scopeLabel(s);
+    // Brand kicker follows the scope (retires the hardcoded "Wallonia · 50.32°N"):
+    // scope label + bbox-centre coords, or just the label for Everywhere.
+    const co = document.getElementById('regionCoords');
+    if(co){ const b = window.CCScope && window.CCScope.bbox(); co.textContent = b ? `◎ ${scopeLabel(s)} · ${((b[1]+b[3])/2).toFixed(2)}°N ${((b[0]+b[2])/2).toFixed(2)}°E` : `◎ ${scopeLabel(s)}`; }
+    setSpotlight(s&&s.kind==='region'&&s.regionIds.length===1 ? slugOfRegion(s.regionIds[0]) : null);
+    refilterClusters(); updateConfMarkers();   // served-POI clusters follow scope (no-ops until setupConfClusters runs)
+    render();                                   // climbs/routes/surface via featureVisible / renderSurfaceLayer
+    if(!opts||opts.fit!==false){                // a user scope change, not the initial paint
+      const bb = window.CCScope && window.CCScope.bbox(); if(bb) map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
+      refreshBestOf();                          // re-fetch best-of with the new &region= (init fetch is the standalone call below)
+    }
   }
   // optional satellite base — Esri World Imagery (added below the data layers, hidden by default)
   function addSatellite(){
@@ -444,10 +507,20 @@
       const srcId=key+'-conf';
       if(!confirmed.length || map.getSource(srcId)) return;
       map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
-        data:{type:'FeatureCollection', features:confirmed}});
+        data:{type:'FeatureCollection', features:confirmed.filter(f=>inScope(f.properties.rid))}});
       // invisible layer so the clustered source loads tiles (querySourceFeatures needs rendered tiles)
       map.addLayer({id:srcId+'-hit', type:'circle', source:srcId, paint:{'circle-radius':0,'circle-opacity':0}});
-      confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}};
+      confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}, confirmed};
+    });
+  }
+  // Region scope changed → rebuild each cluster source from its full confirmed
+  // set, keeping only in-scope features, so cluster counts + leaf pins match the
+  // scope (region-scoping-design.md §4). updateConfMarkers repaints on the
+  // resulting sourcedata/idle.
+  function refilterClusters(){
+    Object.keys(confState).forEach(srcId=>{
+      const st=confState[srcId], src=map.getSource(srcId);
+      if(src) src.setData({type:'FeatureCollection', features:st.confirmed.filter(f=>inScope(f.properties.rid))});
     });
   }
   function clusterEl(layer, count){
@@ -709,7 +782,7 @@
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
   map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
-    addRegionBoundary('wallonia'); setupConfClusters();
+    applyScope(curScope(), {fit:false}); setupConfClusters();
     // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
     // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a
     // flyTo, is what made zooming/flying stutter. MapLibre repositions the existing markers smoothly on
@@ -964,7 +1037,7 @@
       // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
       const diffLabel = r.difficulty?.label ?? (typeof r.difficulty === 'string' ? r.difficulty : undefined);
       return {
-      id:r.id, name:r.name, state:r.state, headline:`${r.km} km${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
+      id:r.id, rid:r.rid, name:r.name, state:r.state, headline:`${r.km} km${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
       bikeTypes: Array.isArray(r.bikeTypes) ? r.bikeTypes : [],   // declared suitability (may be empty = undeclared)
@@ -1022,7 +1095,7 @@
       // on the Source line.
       const rec = schemaRows('A', s, s.id);
       return {
-        id:s.id, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
+        id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width,
         photo: s.photoFile ? wc(s.photoFile, s.photoCredit, s.photoUser, s.photoLicense) : undefined,
         // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
@@ -1241,6 +1314,7 @@
     const feats=[];
     if(visible) layer.features.forEach((f,i)=>{
       if(!((mode==='all')||!layer.exp||f.cur)) return;   // same visibility rule as featureVisible()
+      if(!inScope(f.rid)) return;                        // region scope gate (region-scoping-design.md §4)
       feats.push({type:'Feature',
         properties:{idx:i, cls:SURFACE_STYLE[f.surfaceClass]?f.surfaceClass:'other'},
         geometry:{type:'LineString',coordinates:f.geom.path.map(p=>[p[1],p[0]])}});
@@ -1324,6 +1398,7 @@
   }
   function featureVisible(layer, f){
     let show = layer.key==='experience' ? (mode==='all'||f.cur) : ((mode==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K uses the render loop's own carve-out
+    if(show) show = inScope(f.rid);   // region scope gate (region-scoping-design.md §4)
     if(show && layer.key==='experience') show = prefMatch(f);
     if(show && layer.key==='climbs'){
       show = activeSurface.has(f.sq) && activeTraffic.has(f.tr);
@@ -2835,7 +2910,8 @@
 
   // Route domain phase 4 (spec §8): Curated mode = best-of for a (season, bike)
   // facet, fetched from /map/best-of; the returned ids get cur:true and Curated
-  // filters K routes to them. Region is single (Wallonia) — omitted for v1.
+  // filters K routes to them. A named-region scope now sends &region= too
+  // (region-scoping-design.md §6 / §7 Phase 2).
   const CC_SEASON_LABEL=Object.assign({spring:'Spring',summer:'Summer',autumn:'Autumn',winter:'Winter'}, I18N.seasons||{});
   const CC_BIKE_LABEL=I18N.bikes||{};
   function currentSeason(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter'; }
@@ -2866,7 +2942,12 @@
   function refreshBestOf(){
     const req=++_bestOfReq;
     if(mode!=='curated'){ render(); return; }
-    fetch(`/map/best-of?season=${encodeURIComponent(boSeason)}&bike=${encodeURIComponent(boBike)}`,
+    // A named-region scope sends &region= so best-of ranks within that region
+    // (MapController parses it; the Phase-1 LIMIT guard stays). Country/Everywhere
+    // send no region — the guarded unbounded aggregate (region-scoping-design.md §6).
+    const region = window.CCScope && window.CCScope.bestOfRegionParam();
+    const regionQ = region ? `&region=${encodeURIComponent(region)}` : '';
+    fetch(`/map/best-of?season=${encodeURIComponent(boSeason)}&bike=${encodeURIComponent(boBike)}${regionQ}`,
       {credentials:'same-origin', headers:{'Accept':'application/json'}})
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then(d=>{ if(req===_bestOfReq) applyBestOf(d.ids); })
@@ -2887,6 +2968,18 @@
     updateSubtitle();
     refreshBestOf();          // Curated → fetch + filter; Everything → plain render()
   });
+
+  // Region scope selector (region-scoping-design.md §4 / §7 Phase 2): buttons
+  // call window.CCScope; its cc:scopechange event drives the single visual
+  // update path (applyScope), which also persists to localStorage + URL.
+  document.querySelectorAll('#regionScope button').forEach(b=>b.onclick=()=>{
+    const tok = b.dataset.scope||'';
+    if(!window.CCScope) return;
+    if(tok==='everywhere') window.CCScope.setEverywhere();
+    else if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
+    else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
+  });
+  window.addEventListener('cc:scopechange', e=>applyScope(e.detail, {fit:true}));
 
   // Exactly one saved bike → preselect the Curated facet (single-valued
   // select; multi-bike riders keep the neutral 'all').

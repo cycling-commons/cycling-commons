@@ -1024,6 +1024,7 @@ map:
   search_title: 'Search in Wallonia'
   search_placeholder: 'Search a climb, town, viewpoint…'
   search_aria: 'Search the Commons'
+  region: 'Region'
   view_mode: 'View mode'
   curated: 'Curated best-of'
   everything: 'Everything'
