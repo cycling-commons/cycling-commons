@@ -1,0 +1,32 @@
+web/src/Controller/MapController.php
+  s_b9f6c785e9346d::t_2b87558e1bc1af 66-78
+web/config/packages/csrf.yaml
+  s_b9f6c785e9346d::t_38b5435e6b986b 14
+web/src/Controller/MyAreaController.php
+  s_b9f6c785e9346d::t_6b99ad50e82a34 1-74
+web/templates/map/index.html.twig
+  s_b9f6c785e9346d::t_1015ceb9e46035 321-326
+web/tests/Controller/MyAreaControllerTest.php
+  s_b9f6c785e9346d::t_2a30224f8713d3 60
+  s_b9f6c785e9346d::t_84c20c0244b46c 150,153-160
+  s_b9f6c785e9346d::t_305c10d60a97dd 84
+  s_b9f6c785e9346d::t_23931b88f942ad 1-59,61-83,85-118,120-137,139-149,151-152,161-169
+  s_b9f6c785e9346d::t_22390075e99115 138
+  s_b9f6c785e9346d::t_28c187292ca1c9 119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "dac98ed340212894bdde9c5e6f7ad68785fdc896",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
