@@ -1,0 +1,28 @@
+web/src/Catalog/Entity/HeatPoint.php
+  s_085edbe215fabf::t_23ae0aed81a44b 43-46
+  s_085edbe215fabf::t_57257fd9460832 108-119
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_085edbe215fabf::t_55d1940acc52d9 451-463
+web/tests/Catalog/CatalogProviderTest.php
+  s_085edbe215fabf::t_2520bb9c7eaa41 227-234
+web/src/Catalog/CatalogProvider.php
+  s_085edbe215fabf::t_3b0c0a896cdbe3 331-334,336,343,345,352-357
+web/migrations/Version20260721120000.php
+  s_085edbe215fabf::t_ea5b02bafd88a2 1-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "773bc6d159411920c9fa420d276f1ddd90f64d18",
+  "prompts": {},
+  "sessions": {
+    "s_085edbe215fabf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23bf1945-17b0-4677-b9ed-806199440d71",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
