@@ -1591,10 +1591,11 @@ form:
   riding_leisure: 'Recreatief / gezin'
   label_base_location: 'Uitvalsbasis (optioneel)'
   placeholder_base_location: 'Zoek een stad…'
-  help_base_location: 'Stelt je standaard "Mijn gebied"-kaartweergave in. Opgeslagen op stadsniveau (~1 km nauwkeurig), nooit aan anderen getoond.'
+  help_base_location: 'Stelt je standaard "Mijn gebied"-kaartweergave in.'
   label_base_radius: 'Rijradius'
   label_base_clear: 'Uitvalsbasis verwijderen'
   base_current: 'Jouw gebied: %regions%'
+  base_current_none: 'Uitvalsbasis opgeslagen — nog geen Commons-regio’s in de buurt, dus de kaartweergave "Mijn gebied" start leeg. Gebruik "Overal" op de kaart tot de dekking jouw gebied bereikt.'
 js:
   pw_show: 'Wachtwoord tonen'
   pw_hide: 'Wachtwoord verbergen'

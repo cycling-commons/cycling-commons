@@ -1591,10 +1591,11 @@ form:
   riding_leisure: 'Loisir / famille'
   label_base_location: 'Localisation de base (facultatif)'
   placeholder_base_location: 'Rechercher une ville…'
-  help_base_location: 'Définit votre vue par défaut « Ma zone » sur la carte. Enregistrée avec une précision à l''échelle de la ville (~1 km), jamais montrée aux autres.'
+  help_base_location: 'Définit votre vue par défaut « Ma zone » sur la carte.'
   label_base_radius: 'Rayon de pratique'
   label_base_clear: 'Supprimer ma localisation de base'
   base_current: 'Votre zone : %regions%'
+  base_current_none: 'Localisation de base enregistrée — aucune région Commons à proximité pour l’instant : la vue « Ma zone » démarre vide. Utilisez « Partout » sur la carte en attendant que la couverture arrive.'
 js:
   pw_show: 'Afficher le mot de passe'
   pw_hide: 'Masquer le mot de passe'

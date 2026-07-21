@@ -1595,10 +1595,11 @@ form:
   riding_leisure: 'Leisure / family'
   label_base_location: 'Base location (optional)'
   placeholder_base_location: 'Search a town…'
-  help_base_location: 'Sets your default "My area" map view. Stored at town-level precision (~1 km), never shown to others.'
+  help_base_location: 'Sets your default "My area" map view.'
   label_base_radius: 'Riding radius'
   label_base_clear: 'Remove my base location'
   base_current: 'Your area: %regions%'
+  base_current_none: 'Base location saved — no Commons regions near it yet, so the "My area" map view starts empty. Use "Everywhere" on the map until coverage reaches your area.'
 js:
   pw_show: 'Show password'
   pw_hide: 'Hide password'

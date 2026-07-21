@@ -139,12 +139,19 @@ final class SettingsController extends AbstractController
         // keys — the same convention the map's scope selector uses.
         $baseRegionSlugs = [];
         if ([] !== $user->getBaseRegionIds()) {
-            /** @var list<string> $baseRegionSlugs */
-            $baseRegionSlugs = $this->db->fetchFirstColumn(
-                'SELECT slug FROM region WHERE id IN (:ids) ORDER BY name',
+            // Keep the DERIVED order (containing region first, then by
+            // distance — region-scoping-design.md §3), not alphabetical: the
+            // first label the rider reads should be where they actually live.
+            $rows = $this->db->fetchAllKeyValue(
+                'SELECT id, slug FROM region WHERE id IN (:ids)',
                 ['ids' => $user->getBaseRegionIds()],
                 ['ids' => ArrayParameterType::INTEGER],
             );
+            foreach ($user->getBaseRegionIds() as $rid) {
+                if (isset($rows[$rid])) {
+                    $baseRegionSlugs[] = (string) $rows[$rid];
+                }
+            }
         }
 
         return $this->render('settings/index.html.twig', [

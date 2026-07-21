@@ -201,8 +201,14 @@
     <div class="field">
       {{ form_label(profileForm.baseQuery) }}
       <div class="base-loc-wrap">
+        {# Prefill with the stored place so a saved base ("Hoorn") is visible on
+           reload — same attr.value trick as the radius slider below: baseQuery is
+           unmapped, so the widget's own view value is always empty and never
+           collides with this override. Editing the text without picking a new
+           town changes nothing (only a Photon pick fills baseLat/baseLng). #}
         {{ form_widget(profileForm.baseQuery, {attr: {
           role: 'combobox', 'aria-expanded': 'false', 'aria-controls': 'baseLocRes', autocomplete: 'off',
+          value: cc_user.hasBaseLocation and cc_user.basePlace ? cc_user.basePlace : '',
         }}) }}
         <ul class="base-loc-res" id="baseLocRes" role="listbox" hidden></ul>
       </div>
@@ -213,8 +219,16 @@
       {{ form_errors(profileForm.baseQuery) }}
       {% if cc_user.hasBaseLocation %}
         <div class="base-loc-current" data-base-current>
-          {%- set region_labels = base_region_slugs|map(s => ('region.' ~ s ~ '.label')|trans) -%}
-          {{ 'form.base_current'|trans({'%regions%': region_labels|join(' · ')}) }}
+          {% if base_region_slugs is not empty %}
+            {%- set region_labels = base_region_slugs|map(s => ('region.' ~ s ~ '.label')|trans) -%}
+            {{ 'form.base_current'|trans({'%regions%': region_labels|join(' · ')}) }}
+          {% else %}
+            {# Empty derived set (base outside every seeded region — e.g. a Dutch
+               base today): say so instead of rendering a bare "Your area:".
+               The map-side default for this state is the recorded Phase 5
+               follow-up (region-scoping-design.md §7 Phase 4 review round). #}
+            {{ 'form.base_current_none'|trans }}
+          {% endif %}
         </div>
       {% endif %}
 
