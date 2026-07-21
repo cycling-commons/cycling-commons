@@ -1594,7 +1594,7 @@ form:
   help_base_location: 'Legt deine Standardansicht „Mein Gebiet“ auf der Karte fest. Wird mit Genauigkeit auf Ortsebene (~1 km) gespeichert und niemals anderen angezeigt.'
   label_base_radius: 'Fahrradius'
   label_base_clear: 'Standort entfernen'
-  base_current: 'Deine Gegend: %regions%'
+  base_current: 'Dein Gebiet: %regions%'
 js:
   pw_show: 'Passwort anzeigen'
   pw_hide: 'Passwort verbergen'
