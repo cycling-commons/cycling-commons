@@ -58,8 +58,9 @@
   const map = new maplibregl.Map({
     container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
     // Initial viewport = the active scope's bbox (Wallonia by default; a saved
-    // Flanders/Brussels/Everywhere scope reopens there). The old hardcoded
-    // Wallonia literal survives only as the no-scope fallback.
+    // Flanders/Brussels scope reopens there). Everywhere has NO bbox (null), so
+    // it — like a missing registry — opens on the old hardcoded Wallonia
+    // literal: a deliberate anchor view, not a scope (review 07-20 info c).
     bounds: _scopeBb ? [[_scopeBb[0],_scopeBb[1]],[_scopeBb[2],_scopeBb[3]]] : [[2.84,49.45],[6.41,50.85]],
     fitBoundsOptions:{padding:24}, attributionControl:false
   });
@@ -114,19 +115,34 @@
   // on the initial paint — the map constructor already opened on the scope bbox.
   function applyScope(s, opts){
     document.querySelectorAll('#regionScope button').forEach(x=>x.classList.toggle('on', x.dataset.scope===scopeToken(s)));
-    const rl = document.getElementById('regionLine'); if(rl) rl.textContent = scopeLabel(s);
-    // Brand kicker follows the scope (retires the hardcoded "Wallonia · 50.32°N"):
-    // scope label + bbox-centre coords, or just the label for Everywhere.
-    const co = document.getElementById('regionCoords');
-    if(co){ const b = window.CCScope && window.CCScope.bbox(); co.textContent = b ? `◎ ${scopeLabel(s)} · ${((b[1]+b[3])/2).toFixed(2)}°N ${((b[0]+b[2])/2).toFixed(2)}°E` : `◎ ${scopeLabel(s)}`; }
-    const stt = document.getElementById('searchTitle');
-    if(stt) stt.textContent = (s && s.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere') : tpl(I18N.searchIn||'Search in {area}', {area:scopeLabel(s)});
+    // Header/kicker/search-title rewrites only when the rail can label the
+    // scope (07-20 review finding 7): with an empty region registry the
+    // template renders no rail, scopeLabel() is '' for every scope, and these
+    // writes would wipe the server-rendered fallback text with blanks.
+    const lbl = scopeLabel(s);
+    if(lbl){
+      const rl = document.getElementById('regionLine'); if(rl) rl.textContent = lbl;
+      // Brand kicker follows the scope (retires the hardcoded "Wallonia · 50.32°N"):
+      // scope label + bbox-centre coords, or just the label for Everywhere.
+      const co = document.getElementById('regionCoords');
+      if(co){ const b = window.CCScope && window.CCScope.bbox(); co.textContent = b ? `◎ ${lbl} · ${((b[1]+b[3])/2).toFixed(2)}°N ${((b[0]+b[2])/2).toFixed(2)}°E` : `◎ ${lbl}`; }
+      const stt = document.getElementById('searchTitle');
+      if(stt) stt.textContent = (s && s.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere') : tpl(I18N.searchIn||'Search in {area}', {area:lbl});
+    }
     setSpotlight(s&&s.kind==='region'&&s.regionIds.length===1 ? slugOfRegion(s.regionIds[0]) : null);
     refilterClusters(); updateConfMarkers();   // served-POI clusters follow scope (no-ops until setupConfClusters runs)
-    render();                                   // climbs/routes/surface via featureVisible / renderSurfaceLayer
+    updateHeatFilter();                         // ride-heat follows scope too (no-op until the lazy layer exists)
     if(!opts||opts.fit!==false){                // a user scope change, not the initial paint
       const bb = window.CCScope && window.CCScope.bbox(); if(bb) map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
+      // One render per scope switch (review 07-20 info d): in Everything mode
+      // refreshBestOf() IS the render (its non-curated branch renders
+      // synchronously); in Curated we render now for instant A–J + K feedback
+      // while the region-ranked best-of fetch is in flight — applyBestOf
+      // re-renders K when it lands.
+      if(mode==='curated') render();
       refreshBestOf();                          // re-fetch best-of with the new &region= (init fetch is the standalone call below)
+    } else {
+      render();                                 // initial paint — climbs/routes/surface via featureVisible / renderSurfaceLayer
     }
   }
   // optional satellite base — Esri World Imagery (added below the data layers, hidden by default)
@@ -143,7 +159,9 @@
   // cost; the toggle handler below calls this before flipping visibility.
   function addHeatmap(){
     if(!window.CC_ROUTES || map.getSource('rideheat')) return;
-    const feats=CC_ROUTES.heat.map(h=>({type:'Feature',properties:{season:h[2]},
+    // h = [lat, lng, season, rid] (CatalogProvider::heat()) — rid feeds the
+    // scope half of updateHeatFilter() (07-20 review finding 5).
+    const feats=CC_ROUTES.heat.map(h=>({type:'Feature',properties:{season:h[2],rid:h[3]},
       geometry:{type:'Point',coordinates:[h[1],h[0]]}}));
     map.addSource('rideheat',{type:'geojson',data:{type:'FeatureCollection',features:feats}});
     map.addLayer({id:'rideheat',type:'heatmap',source:'rideheat',layout:{visibility:'none'},paint:{
@@ -160,6 +178,21 @@
         0.88,'#E23617',
         1,'#FFF1C8']
     }});
+    updateHeatFilter();   // the layer is built lazily — apply the current season + scope immediately
+  }
+  // The ONE heat filter: season facet AND region scope combined (07-20 review
+  // finding 5 — heat used to be the only served layer the scope never reached,
+  // and season/scope each overwrote the other's setFilter). A rid-less point
+  // shows only in Everywhere, the same leak-safe default as inScope(); the
+  // coalesce(-1) keeps the 'in' needle typed when rid is absent.
+  function updateHeatFilter(){
+    if(!map.getLayer('rideheat')) return;
+    const clauses=[];
+    const sc=document.querySelector('#season .chip.on');
+    if(sc && sc.dataset.s!=='all') clauses.push(['==',['get','season'],sc.dataset.s]);
+    const s=curScope();
+    if(s && s.kind!=='everywhere') clauses.push(['in',['coalesce',['get','rid'],-1],['literal',s.regionIds]]);
+    map.setFilter('rideheat', clauses.length ? (clauses.length===1 ? clauses[0] : ['all'].concat(clauses)) : null);
   }
   // ---------- Mapillary street-level imagery ----------
   // Public Mapillary client token (MLY|...). Replace the placeholder, preferably in config.js to enable the layer.
@@ -806,19 +839,27 @@
     // scope might filter out (region-scoping-design.md §4): widen to Everywhere
     // so the target always renders. Transient (persist:false) — the saved scope
     // returns on the next plain load; the handlers below flyTo the target.
+    // ONLY when the target actually resolves (07-20 review finding 9): a stale
+    // or mistyped id must not flip the whole map to Everywhere with nothing to
+    // show. Coverage POIs (the openCoverageFeatureByName fallback) render
+    // scope-unfiltered until Phase 3, so a coverage-only ?feature needs no
+    // widen either — the resolvers below are exactly the ones the open calls
+    // use, so gate and open can never disagree.
     const _dl = new URLSearchParams(location.search);
-    if((_dl.get('feature')||_dl.get('pending')||_dl.get('route')) && window.CCScope && curScope().kind!=='everywhere'){
+    const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route');
+    const _dlHit =
+      (fp && !!resolveLocalFeature(fp)) ||
+      (pp && !!(layerByKey.pending && (layerByKey.pending.features||[]).some(x=>x.pending && String(x.pending.id)===String(pp)))) ||
+      (rp && ((layerByKey['experience']||{}).features||[]).some(x=>String(x.id)===String(rp)));
+    if(_dlHit && window.CCScope && curScope().kind!=='everywhere'){
       window.CCScope.set({kind:'everywhere', regionIds:[], countryCode:null}, {persist:false});
     }
     // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from
     // a profile page); coverage POIs stay linkable via one search-endpoint
     // lookup when the local index misses (coverage-provider.md §6)
-    const fp = new URLSearchParams(location.search).get('feature');
     if(fp && !openFeatureByName(fp)) openCoverageFeatureByName(fp);
-    const pp = new URLSearchParams(location.search).get('pending');
     if(pp) openPendingById(pp);
     // ?route=<id> opens a specific route selected (e.g. from the curator Routes desk)
-    const rp = new URLSearchParams(location.search).get('route');
     if(rp) openRouteById(rp);
   });
 
@@ -879,19 +920,13 @@
     ,{ key:'water', letter:'C', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, features:[] }
     ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, features:[] }
     ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, features:[] }
-    ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, features:[
-      { name:'Exposed crosswind · Hautes Fagnes', headline:'wind & fog · plateau', cur:false,
-        geom:{ll:[50.5160,6.0700]},
-        photo:wc('Hohes Venn Winter 4.jpg','Geolina163','Geolina163','CC BY-SA 3.0'),
-        record:[
-          {label:'Type', value:'Notorious crosswind / fog', method:'safety'},
-          {label:'Where', value:'Hautes Fagnes plateau (Baraque Michel)'},
-          {label:'Severity', value:'Moderate — exposed open moorland'},
-          {label:'Seasonal', value:'Worst in autumn/winter; ice & fog possible'}
-        ],
-        freshness:{state:'fresh', lastConfirmed:'this season'},
-        source:'Community report' }
-    ]}
+    // F ships empty until real hazard rows are served: the last hardcoded demo
+    // fixture ("Exposed crosswind · Hautes Fagnes") was retired in the 07-20
+    // review round — it carried no rid, so the scope gate hid it in every
+    // scope except Everywhere (including its own region), and a rid-less
+    // client-side fixture has no honest place in a scope-filtered map.
+    // Hazard data arrives as served, region-stamped rows like every layer.
+    ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, features:[]}
     ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, features:[] }
     ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, features:[] }
     ,{ key:'scenic', letter:'I', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, features:[] }
@@ -979,6 +1014,7 @@
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
       push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
         color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
+        rid:f.rid,   // region membership — search filters to scope like the map (07-20 review finding 3)
         // 07-15 decision A: real signal only — routes carry canonical state;
         // everything else keys on the real v (verified state / rider
         // confirmation, emitted by CatalogProvider for climbs and surface
@@ -993,12 +1029,17 @@
       const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
       push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
         color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id,
+        rid:p.rid,   // pivot stays carry rid via catalog-load's property merge (finding 3)
         verified:!!p.v,   // v = real state/confirmation signal from CatalogProvider
         hlOff: p.v ? [0,-16] : [0,0],   // pin offset keys on the real promotion signal (c is dead, see the re-key step)
         go:()=>openStayPivot(f)});
     });
     return out;
   }
+  // Deliberately scope-EXEMPT (07-20 review finding 3, owner decision):
+  // opening a town card is an explicit location choice, so its nearby list
+  // shows what is physically there regardless of the active scope — unlike
+  // text search, which filters to scope (runS). Keep this asymmetry.
   function nearbyItems(ll, km){
     const out=[];
     ITEM_INDEX.forEach(e=>{ if(!e.ll) return; const dist=haversine(ll, e.ll); if(dist<=km) out.push({e, dist}); });
@@ -1407,7 +1448,7 @@
     return f.bikeTypes.some(t=>PREFS.bikes.includes(t));
   }
   function featureVisible(layer, f){
-    let show = layer.key==='experience' ? (mode==='all'||f.cur) : ((mode==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K uses the render loop's own carve-out
+    let show = layer.key==='experience' ? (mode==='all'||f.cur) : ((mode==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
     if(show) show = inScope(f.rid);   // region scope gate (region-scoping-design.md §4)
     if(show && layer.key==='experience') show = prefMatch(f);
     if(show && layer.key==='climbs'){
@@ -1515,9 +1556,13 @@
       }
       if(layer.kind==='line'){
         layer.features.forEach((f,i)=>{
-          // Route domain phase 4: K routes honour cur in Curated (best-of), all in Everything.
-          if(layer.key==='experience'){ if(!(mode==='all'||f.cur)) return; }
-          else if(!((mode==='all')||!layer.exp||f.cur)) return;
+          // The FULL visibility rule, same as the legend counts with: mode/cur
+          // (Route domain phase 4), the region scope gate, and the bike-pref
+          // prefilter. Review 07-20 finding 1: this branch used to re-implement
+          // only the mode/cur half, so route lines leaked into out-of-scope
+          // views (map showed 11 while the legend said 0/11) — never inline a
+          // subset of featureVisible() here.
+          if(!featureVisible(layer,f)) return;
           drawLine(`${layer.key}-${i}`, f.geom.path, layer.color, layer, f);
           n++;
         });
@@ -2255,25 +2300,33 @@
     const c = CITIES[name]; if(!c) return;
     openPlace(name, c);
   }
-  // open a specific feature by name (deep-link from e.g. a profile page): activate its layer, draw, zoom in
-  function openFeatureByName(name){
+  // Resolve a name to a CATALOG feature or PIVOT stay WITHOUT side effects —
+  // shared by openFeatureByName and the deep-link auto-widen gate (07-20
+  // review finding 9), so "does this deep link resolve?" can be asked before
+  // any scope change or drawer open, and the two lookups can never drift.
+  function resolveLocalFeature(name){
     let found=null;
     CATALOG.forEach(layer=>layer.features.forEach(f=>{ if(f.name===name) found={layer,f}; }));
-    if(!found){
-      // PIVOT stays live in CC_STAYS_PIVOT, not CATALOG — resolve them here so
-      // an official Tourisme Wallonie deep-link opens the full stay drawer
-      // (name, province, official-registry provenance) instead of falling
-      // through to the coverage path, whose /poi endpoint knows only node|way
-      // refs and 404s on fx:pivot:/manual: source_refs.
-      const pv=(window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || [])
-        .find(f=>f.properties && f.properties.n===name);
-      if(pv){
-        const c=pv.geometry && pv.geometry.coordinates;
-        if(c && c.length>=2) flyToPin([+c[0],+c[1]]);
-        openStayPivot(pv);
-        return true;
-      }
-      return false;
+    if(found) return found;
+    // PIVOT stays live in CC_STAYS_PIVOT, not CATALOG — resolve them here so
+    // an official Tourisme Wallonie deep-link opens the full stay drawer
+    // (name, province, official-registry provenance) instead of falling
+    // through to the coverage path, whose /poi endpoint knows only node|way
+    // refs and 404s on fx:pivot:/manual: source_refs.
+    const pv=(window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || [])
+      .find(f=>f.properties && f.properties.n===name);
+    return pv ? {pivot:pv} : null;
+  }
+  // open a specific feature by name (deep-link from e.g. a profile page): activate its layer, draw, zoom in
+  function openFeatureByName(name){
+    const found=resolveLocalFeature(name);
+    if(!found) return false;
+    if(found.pivot){
+      const pv=found.pivot;
+      const c=pv.geometry && pv.geometry.coordinates;
+      if(c && c.length>=2) flyToPin([+c[0],+c[1]]);
+      openStayPivot(pv);
+      return true;
     }
     const {layer,f}=found;
     if(!active.has(layer.key)){
@@ -2747,7 +2800,14 @@
     let sMatches=[], sHL=-1;
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
-    function pickS(i){ const m=sMatches[i]; if(!m) return; sBox.value=m.name; closeS();
+    // One-tap ladder to the next-wider scope — shared by the widen chip's
+    // click and keyboard paths (07-20 review info b). cc:scopechange re-runs
+    // applyScope; the re-query surfaces the wider Photon bbox, the local rows
+    // the narrower scope hid, and the next rung's chip.
+    function widenSearch(){ if(!window.CCScope) return; window.CCScope.widen(); runPhoton(sBox.value); runS(); }
+    function pickS(i){ const m=sMatches[i]; if(!m) return;
+      if(m.widen){ m.go(); return; }   // widen chip: dropdown stays open, results re-query
+      sBox.value=m.name; closeS();
       if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
       m.go(); }
     // 07-15 decision A: community (unverified) rows carry a dimmed sub-tag so
@@ -2824,7 +2884,16 @@
       const q=slug(sBox.value.trim());
       if(!q){ closeS(); return; }
       const starts=[], has=[];                                  // prefix matches rank above substring matches
-      for(const it of SEARCH_IDX){ const i=it.key.indexOf(q); if(i===0) starts.push(it); else if(i>0) has.push(it); }
+      for(const it of SEARCH_IDX){
+        // Scope-first search (region-scoping-design.md §4, 07-20 review
+        // finding 3): served rows filter to the active scope with exactly the
+        // map's gate — a hidden pin must not resurface as a search row that
+        // opens a drawer over an empty spot. Out-of-scope rows come back via
+        // the widen chip. Towns are exempt (places, not scoped features —
+        // the hardcoded CITIES list generalises per scope in Phase 5).
+        if(!it.town && !inScope(it.rid)) continue;
+        const i=it.key.indexOf(q); if(i===0) starts.push(it); else if(i>0) has.push(it);
+      }
       const ranked=starts.concat(has);
       // Grouped display (spec 2026-07-14 §3.3): places first, then items by
       // letter A–K, 30 rows total (the old flat slice(0,8) hid most matches
@@ -2836,7 +2905,9 @@
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       // Coverage matches slot into the same letter groups, behind local rows
       // (same freshness handshake as Photon's _phQ: only merge results that
-      // answer THIS query).
+      // answer THIS query). Deliberately NOT scope-filtered: coverage tiles
+      // render scope-unfiltered until Phase 3 (region-scoping-design.md §7),
+      // and search must mirror what the map shows — gate both in Phase 3.
       if(_covSQ===q) _covHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       // decision A ordering: verified/curated rows first inside each letter
       // group, community after. Array.prototype.sort is stable (ES2019), so the
@@ -2862,15 +2933,20 @@
       // Widen chip (region-scoping-design.md §4, the Craigslist lesson): a
       // one-tap ladder to the next-wider scope, always offered while the scope
       // can widen. It sits under the results, so it auto-surfaces exactly when
-      // they are sparse — no settings dig.
+      // they are sparse — no settings dig. It is a REAL option (07-20 review
+      // info b): it carries data-i and joins sMatches as a pseudo-entry so
+      // ArrowDown/Enter reach it like any row; realCount keeps the empty-state
+      // message keyed on actual matches, not the chip.
+      const realCount=sMatches.length;
       let widenHtml='';
       if(window.CCScope && window.CCScope.canWiden()){
         const nw = window.CCScope.nextWider();
         const wl = (nw && nw.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere')
           : tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)});
-        widenHtml = `<li class="search-widen" role="presentation"><button type="button" data-widen="1">${escH(wl)}</button></li>`;
+        widenHtml = `<li class="search-widen" role="option"><button type="button" data-widen="1" data-i="${sMatches.length}">${escH(wl)}</button></li>`;
+        sMatches.push({widen:true, go:widenSearch});
       }
-      sRes.innerHTML = (sMatches.length ? html : `<li class="search-empty">${D.noMatch||'No match in the Wallonia demo yet.'}</li>`) + widenHtml;
+      sRes.innerHTML = (realCount ? html : `<li class="search-empty">${D.noMatch||'No match in the Wallonia demo yet.'}</li>`) + widenHtml;
     }
     // one delegated listener + a short debounce (review W41): the per-keystroke
     // cost was a full index scan, an innerHTML rebuild AND fresh per-result
@@ -2881,7 +2957,7 @@
       // stopPropagation: runS() rebuilds the dropdown, detaching this button, so
       // the document close-listener would otherwise see a detached target
       // (closest('#searchRes')===null) and close the just-reopened dropdown.
-      if(e.target.closest('button[data-widen]')){ e.stopPropagation(); if(window.CCScope){ window.CCScope.widen(); runPhoton(sBox.value); runS(); } return; }
+      if(e.target.closest('button[data-widen]')){ e.stopPropagation(); widenSearch(); return; }
       const b=e.target.closest('button[data-i]'); if(b) pickS(+b.dataset.i);
     });
     let _sDeb=null, _phDeb=null, _covDeb=null;
@@ -3057,18 +3133,14 @@
   // ride-heatmap toggle + season filter (source built on first On — W43)
   document.querySelectorAll('#heattoggle button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#heattoggle button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-    if(b.dataset.h==='on' && !map.getLayer('rideheat')){
-      addHeatmap();
-      // honour a season chip selected before the layer existed
-      const sc=document.querySelector('#season .chip.on');
-      if(sc && sc.dataset.s!=='all' && map.getLayer('rideheat')) map.setFilter('rideheat',['==',['get','season'],sc.dataset.s]);
-    }
+    // addHeatmap ends with updateHeatFilter(), which honours a season chip
+    // selected before the layer existed AND the active region scope.
+    if(b.dataset.h==='on' && !map.getLayer('rideheat')) addHeatmap();
     if(map.getLayer('rideheat')) map.setLayoutProperty('rideheat','visibility', b.dataset.h==='on'?'visible':'none');
   });
   document.querySelectorAll('#season .chip').forEach(c=>c.onclick=()=>{
     document.querySelectorAll('#season .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
-    const s=c.dataset.s;
-    if(map.getLayer('rideheat')) map.setFilter('rideheat', s==='all'?null:['==',['get','season'],s]);
+    updateHeatFilter();
   });
 
   // street-level imagery (Mapillary) dock controls — the on/off toggle lives in the data-layers list

@@ -67,13 +67,16 @@
     const rest = str.slice(i + 1);
     if (kind === 'country') return byCountry.has(rest) ? countryScope(rest) : null;
     if (kind === 'region') {
-      const ids = [];
-      let cc = null;
+      // A multi-region token collapses to its FIRST resolvable region (07-20
+      // review finding 10): every label/spotlight/best-of surface renders a
+      // single named region today, so honouring the extra ids would filter on
+      // regions the UI cannot show. Phase 4's derived sets (myArea) build
+      // multi-region scopes internally, not from URL tokens — revisit then.
       for (const tok of rest.split(',')) {
         const r = bySlug.get(tok) || byId.get(Number(tok));
-        if (r) { ids.push(r.id); cc = r.countryCode || cc; }
+        if (r) return regionScope(r);
       }
-      return ids.length ? { kind: 'region', regionIds: ids, countryCode: cc } : null;
+      return null;
     }
     return null;
   };
