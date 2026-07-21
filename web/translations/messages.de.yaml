@@ -1624,6 +1624,8 @@ admin:
     users: 'Benutzer'
     activity: 'Aktivität'
     reset_requests: 'Zurücksetzungsanfragen'
+    playbooks: 'Leitfäden'
+    playbook_email: 'E-Mail-Änderung'
   action:
     unlock: 'Konto entsperren'
     disarm_2fa: '2FA deaktivieren'
@@ -1668,6 +1670,21 @@ admin:
     countries: 'Länder'
     empty_note: 'Nichts auswählen macht global (sieht alles).'
     save: 'Gebiete speichern'
+  playbook_email:
+    title: 'Leitfaden: Anfragen zur E-Mail-Änderung'
+    why: 'Die E-Mail-Adresse ist in den Einstellungen schreibgeschützt; jede Änderungsanfrage landet daher im Support-Postfach. Prüfe die Kontrolle über die bestehenden Anker des Kontos, bevor du irgendetwas änderst — die Anfrage-Mail selbst beweist nichts.'
+    s1_t: 'Der Anfrage-Mail niemals vertrauen'
+    s1_b: 'From-Header sind fälschbar, und „ich schreibe von meiner neuen Adresse, die alte ist weg“ ist die Standard-Eröffnung einer Übernahme. Anzeigename, Beiträge und Beitrittsdatum sind öffentlich — sie zu kennen beweist nichts.'
+    s2_t: 'Anker 1 — das alte Postfach'
+    s2_b: 'Antworte an die hinterlegte Adresse (aus diesem Admin abgetippt, nie per Reply) mit einem Einmalcode und fordere ihn zurück. Kann die Person dort empfangen, ist die Änderung risikoarm.'
+    s3_t: 'Anker 2 — eine eingeloggte Sitzung'
+    s3_b: 'Altes Postfach angeblich tot? Diktiere eine Aktion im Konto („stell deinen Radius auf 120 km“, „füge diesen Code eine Stunde in deinen Anzeigenamen ein“) und prüfe, dass sie stattfand. Das beweist das Passwort — und bei eingeschriebenen Konten auch den 2FA-Faktor.'
+    s4_t: 'Kein Anker mehr = ablehnen'
+    s4_b: 'Weder Empfang an der alten Adresse NOCH Login möglich: Es gibt keinen ehrlichen Weg, Eigentümer von Angreifer zu unterscheiden. Die sichere Antwort ist „lege ein neues Konto an“. Hier abzulehnen ist der Sinn des manuellen Prozesses, kein Support-Versagen.'
+    s5_t: 'Nach der Prüfung trotzdem absichern'
+    s5_b: 'Benachrichtige die alte Adresse mit einer „das war ich nicht“-Einspruchsfrist, verzögere die Ausführung um 48–72 h und protokolliere die Änderung mit einer Audit-Notiz am Nutzerkonto.'
+    rule: 'Dringlichkeit ist ein Warnsignal, nie ein Grund, einen Schritt zu überspringen — der echte Eigentümer übersteht 48 Stunden Verzögerung; das Zeitfenster des Angreifers meist nicht.'
+    spec: 'Kanonische Fassung: docs/specs/account-and-auth.md §8 „Support playbook“ — beide synchron halten.'
 route:
   error:
     note_too_long: 'Die Notiz ist länger als 2.000 Zeichen.'

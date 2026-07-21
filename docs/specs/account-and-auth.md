@@ -474,6 +474,13 @@ Contract points:
 
 ### Support playbook: manual email-change requests
 
+This playbook is mirrored as an admin page: **/admin → Playbooks → Email
+change** (`DashboardController::emailChangePlaybook`,
+`admin/playbook_email_change.html.twig`) so the script sits in front of the
+operator executing the change — this section stays the canonical text; keep
+the two in sync. The menu section is deliberately plural: future operator
+playbooks slot in beside it.
+
 A manual flow is only safer than self-serve if support actually verifies —
 otherwise it is the same account-takeover vector with a human rubber stamp.
 "Legit" means proving control of the account's **existing anchors**; this

@@ -107,4 +107,44 @@ final class AdminAccessTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
     }
+
+    /**
+     * The email-change playbook page (account-and-auth.md §8 "Support
+     * playbook") renders for an enrolled admin and carries the verification
+     * script; it is admin-gated like every /admin route.
+     */
+    public function testEmailChangePlaybookRendersForAdmin(): void
+    {
+        $client = static::createClient();
+
+        $admin = $this->createUser(
+            'admin-playbook@example.com',
+            'hunter2secure!',
+            roles: ['ROLE_ADMIN'],
+            totpSecret: 'JBSWY3DPEHPK3PXP',
+            twoFaEnabled: true,
+        );
+        $client->loginUser($admin);
+
+        $client->request('GET', '/admin/playbook/email-change');
+
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('Playbook: email-change requests', $html);
+        self::assertStringContainsString('Never trust the request mail', $html);
+        self::assertStringContainsString('No anchor left', $html);
+    }
+
+    /** The playbook page must stay behind the ROLE_ADMIN gate. */
+    public function testEmailChangePlaybookForbiddenForRoleUser(): void
+    {
+        $client = static::createClient();
+
+        $user = $this->createUser('rider-playbook@example.com', 'hunter2secure!');
+        $client->loginUser($user);
+
+        $client->request('GET', '/admin/playbook/email-change');
+
+        self::assertResponseStatusCodeSame(403);
+    }
 }

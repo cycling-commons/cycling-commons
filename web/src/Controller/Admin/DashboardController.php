@@ -8,6 +8,7 @@ namespace App\Controller\Admin;
 
 use App\Service\AdminDashboardStats;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -60,5 +61,22 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(UserCrudController::class, new TranslatableMessage('admin.menu.users'), 'fa fa-users')->setAction('index');
         yield MenuItem::linkTo(AdminActionLogCrudController::class, new TranslatableMessage('admin.menu.activity'), 'fa fa-clock-rotate-left')->setAction('index');
         yield MenuItem::linkTo(ResetPasswordRequestCrudController::class, new TranslatableMessage('admin.menu.reset_requests'), 'fa fa-key')->setAction('index');
+        // Operator playbooks: verification scripts for manual support requests.
+        // A dedicated section so future playbooks slot in beside this one.
+        yield MenuItem::section(new TranslatableMessage('admin.menu.playbooks'));
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.playbook_email'), 'fa fa-envelope-circle-check', 'admin_playbook_email_change');
+    }
+
+    /**
+     * Operator playbook for manual email-change requests. Email is read-only
+     * in settings (account-and-auth.md §8), so every change request lands in
+     * the support mailbox; this page keeps the verification script in front
+     * of the admin executing it. Canonical text: account-and-auth.md §8
+     * "Support playbook" — keep the two in sync.
+     */
+    #[AdminRoute('/playbook/email-change', 'playbook_email_change')]
+    public function emailChangePlaybook(): Response
+    {
+        return $this->render('admin/playbook_email_change.html.twig');
     }
 }

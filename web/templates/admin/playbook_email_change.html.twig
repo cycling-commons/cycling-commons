@@ -1,0 +1,31 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   Operator playbook: manual email-change verification. Canonical text lives in
+   docs/specs/account-and-auth.md §8 "Support playbook" — keep the two in sync.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.playbook_email.title'|trans }}{% endblock %}
+
+{% block main %}
+    <div class="col-lg-8">
+        <p class="text-muted">{{ 'admin.playbook_email.why'|trans }}</p>
+
+        {% set steps = [1, 2, 3, 4, 5] %}
+        {% for n in steps %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="fw-bold mb-1">{{ n }}. {{ ('admin.playbook_email.s' ~ n ~ '_t')|trans }}</div>
+                    <div>{{ ('admin.playbook_email.s' ~ n ~ '_b')|trans }}</div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="alert alert-warning">
+            <i class="fa fa-triangle-exclamation"></i>
+            {{ 'admin.playbook_email.rule'|trans }}
+        </div>
+
+        <p class="text-muted small">{{ 'admin.playbook_email.spec'|trans }}</p>
+    </div>
+{% endblock %}

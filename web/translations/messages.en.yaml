@@ -1628,6 +1628,8 @@ admin:
     users: 'Users'
     activity: 'Activity'
     reset_requests: 'Reset requests'
+    playbooks: 'Playbooks'
+    playbook_email: 'Email change'
   action:
     unlock: 'Unlock account'
     disarm_2fa: 'Disarm 2FA'
@@ -1672,6 +1674,21 @@ admin:
     countries: 'Countries'
     empty_note: 'Selecting nothing makes this curator global (sees everything).'
     save: 'Save areas'
+  playbook_email:
+    title: 'Playbook: email-change requests'
+    why: 'Email is read-only in settings, so every change request lands in the support mailbox. Verify control of the account’s existing anchors before touching anything — the request mail itself proves nothing.'
+    s1_t: 'Never trust the request mail'
+    s1_b: 'From-headers are spoofable, and “writing from my new address because I lost the old one” is the standard opening of a takeover. Display name, contributions and join date are public — knowing them proves nothing.'
+    s2_t: 'Anchor 1 — the old mailbox'
+    s2_b: 'Reply to the address on file (typed from this admin, never reply-to) with a one-time code and require it back. If they can receive there, the change is low-risk.'
+    s3_t: 'Anchor 2 — a logged-in session'
+    s3_b: 'Old mailbox claimed dead? Dictate an in-account action (“set your riding radius to 120 km”, “paste this code into your display name for an hour”) and verify it happened. That proves the password — and the 2FA factor on enrolled accounts.'
+    s4_t: 'No anchor left = refuse'
+    s4_b: 'Cannot receive at the old address AND cannot log in: there is no honest way to tell owner from attacker. The safe answer is “create a new account”. Refusing here is the point of the manual flow, not a support failure.'
+    s5_t: 'After verifying, still hedge'
+    s5_b: 'Notify the old address with a “this wasn’t me” contest window, delay execution 48–72 h, and record the change with an audit note on the user record.'
+    rule: 'Urgency is a red flag, never a reason to skip a step — the legitimate owner survives a 48-hour delay; the attacker’s window usually doesn’t.'
+    spec: 'Canonical version: docs/specs/account-and-auth.md §8 “Support playbook” — keep the two in sync.'
 route:
   error:
     note_too_long: 'The note must be 2,000 characters or fewer.'

@@ -1624,6 +1624,8 @@ admin:
     users: 'Gebruikers'
     activity: 'Activiteit'
     reset_requests: 'Reset-verzoeken'
+    playbooks: 'Draaiboeken'
+    playbook_email: 'E-mailwijziging'
   action:
     unlock: 'Account ontgrendelen'
     disarm_2fa: '2FA uitschakelen'
@@ -1668,6 +1670,21 @@ admin:
     countries: 'Landen'
     empty_note: 'Niets selecteren maakt deze curator globaal (ziet alles).'
     save: 'Gebieden opslaan'
+  playbook_email:
+    title: 'Draaiboek: verzoeken tot e-mailwijziging'
+    why: 'E-mail is alleen-lezen in de instellingen; elk wijzigingsverzoek komt dus in de supportmailbox terecht. Verifieer controle over de bestaande ankers van het account voordat je iets doet — de verzoekmail zelf bewijst niets.'
+    s1_t: 'Vertrouw de verzoekmail nooit'
+    s1_b: 'From-headers zijn te vervalsen, en “ik schrijf vanaf mijn nieuwe adres want het oude is weg” is de standaardopening van een overname. Weergavenaam, bijdragen en aanmelddatum zijn openbaar — die kennen bewijst niets.'
+    s2_t: 'Anker 1 — de oude mailbox'
+    s2_b: 'Antwoord aan het adres in het dossier (ingetypt vanuit dit admin, nooit via reply) met een eenmalige code en eis die terug. Kan de persoon daar ontvangen, dan is de wijziging laag risico.'
+    s3_t: 'Anker 2 — een ingelogde sessie'
+    s3_b: 'Oude mailbox zogenaamd dood? Dicteer een actie in het account (“zet je fietsradius op 120 km”, “plak deze code een uur in je weergavenaam”) en controleer dat het gebeurd is. Dat bewijst het wachtwoord — en op ingeschreven accounts ook de 2FA-factor.'
+    s4_t: 'Geen anker meer = weigeren'
+    s4_b: 'Niet kunnen ontvangen op het oude adres ÉN niet kunnen inloggen: er is geen eerlijke manier om eigenaar en aanvaller te onderscheiden. Het veilige antwoord is “maak een nieuw account”. Hier weigeren is precies waarvoor het handmatige proces bestaat, geen supportfout.'
+    s5_t: 'Ook na verificatie: dek je in'
+    s5_b: 'Informeer het oude adres met een “dit was ik niet”-bezwaartermijn, stel uitvoering 48–72 uur uit en leg de wijziging vast met een auditnotitie op de gebruiker.'
+    rule: 'Urgentie is een rood signaal, nooit een reden om een stap over te slaan — de echte eigenaar overleeft 48 uur vertraging; het venster van de aanvaller meestal niet.'
+    spec: 'Canonieke versie: docs/specs/account-and-auth.md §8 “Support playbook” — houd beide synchroon.'
 route:
   error:
     note_too_long: 'De notitie is langer dan 2.000 tekens.'

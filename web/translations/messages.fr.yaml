@@ -1624,6 +1624,8 @@ admin:
     users: 'Utilisateurs'
     activity: 'Activité'
     reset_requests: 'Demandes de réinitialisation'
+    playbooks: 'Guides'
+    playbook_email: 'Changement d’e-mail'
   action:
     unlock: 'Déverrouiller le compte'
     disarm_2fa: 'Désactiver la 2FA'
@@ -1668,6 +1670,21 @@ admin:
     countries: 'Pays'
     empty_note: 'Ne rien sélectionner rend ce curateur global (il voit tout).'
     save: 'Enregistrer les zones'
+  playbook_email:
+    title: 'Guide : demandes de changement d’e-mail'
+    why: 'L’e-mail est en lecture seule dans les réglages ; chaque demande de changement arrive donc dans la boîte support. Vérifiez le contrôle des ancres existantes du compte avant toute action — le message de demande ne prouve rien en soi.'
+    s1_t: 'Ne jamais se fier au message de demande'
+    s1_b: 'Les en-têtes « From » sont falsifiables, et « j’écris depuis ma nouvelle adresse car j’ai perdu l’ancienne » est l’ouverture classique d’un détournement. Pseudo, contributions et date d’inscription sont publics — les connaître ne prouve rien.'
+    s2_t: 'Ancre 1 — l’ancienne boîte mail'
+    s2_b: 'Répondez à l’adresse au dossier (saisie depuis cet admin, jamais via « répondre ») avec un code à usage unique et exigez-le en retour. Si la personne peut y recevoir, le changement est à faible risque.'
+    s3_t: 'Ancre 2 — une session connectée'
+    s3_b: 'Ancienne boîte déclarée perdue ? Dictez une action dans le compte (« réglez votre rayon à 120 km », « collez ce code dans votre pseudo pendant une heure ») et vérifiez qu’elle a eu lieu. Cela prouve le mot de passe — et le facteur 2FA sur les comptes inscrits.'
+    s4_t: 'Plus aucune ancre = refuser'
+    s4_b: 'Impossible de recevoir à l’ancienne adresse ET impossible de se connecter : aucun moyen honnête de distinguer propriétaire et attaquant. La réponse sûre est « créez un nouveau compte ». Refuser ici est la raison d’être du processus manuel, pas un échec du support.'
+    s5_t: 'Après vérification, rester prudent'
+    s5_b: 'Prévenez l’ancienne adresse avec un délai de contestation « ce n’était pas moi », différez l’exécution de 48–72 h et consignez le changement avec une note d’audit sur la fiche utilisateur.'
+    rule: 'L’urgence est un signal d’alerte, jamais une raison de sauter une étape — le vrai propriétaire survit à un délai de 48 h ; la fenêtre de l’attaquant rarement.'
+    spec: 'Version canonique : docs/specs/account-and-auth.md §8 « Support playbook » — garder les deux synchronisés.'
 route:
   error:
     note_too_long: 'La note dépasse 2 000 caractères.'
