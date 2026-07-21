@@ -37,13 +37,20 @@ final class MapController extends AbstractController
     public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions): Response
     {
         $user = $this->getUser();
+        $regionRows = $regions->all();
         $params = [
             'field_schema' => $schema->all(),
             'map_i18n' => $this->mapI18n($translator),
             // Region registry for the scope selector (region-scoping-design.md
             // §4 / §7 Phase 2): id/slug/cc/bbox per region, consumed by
             // window.CCScope. Display labels come from region.<slug>.label.
-            'regions' => $regions->all(),
+            'regions' => $regionRows,
+            // One "All <country>" rung per DISTINCT registry country, in
+            // registry order (07-20 review finding 6): the template must never
+            // hardcode a single country — the first non-BE region import gets
+            // its rung + region.all_<cc>.label key the same way regions get
+            // region.<slug>.label.
+            'scope_countries' => array_values(array_unique(array_column($regionRows, 'countryCode'))),
             // Rider preferences ride the page render (map-and-search.md §4.4):
             // value-lists only, [] for anonymous — map.js treats
             // empty as "no prefilter" so anonymous behaviour is unchanged.

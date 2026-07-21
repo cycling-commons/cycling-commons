@@ -561,7 +561,7 @@ region:
     label: 'Vlaanderen'
   brussels:
     label: 'Brussel'
-  all_belgium:
+  all_be:
     label: 'Heel België'
   everywhere:
     label: 'Overal'

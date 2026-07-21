@@ -93,7 +93,13 @@
           {% for r in regions %}
           <button data-scope="region:{{ r.slug }}">{{ ('region.' ~ r.slug ~ '.label')|trans }}</button>
           {% endfor %}
-          <button data-scope="country:{{ regions[0].countryCode }}">{{ 'region.all_belgium.label'|trans }}</button>
+          {# One rung per distinct registry country (07-20 review finding 6) —
+             labels follow the same per-key convention as regions: a country
+             import adds region.all_<cc>.label alongside its region.<slug>.label
+             keys. Never hardcode a country here. #}
+          {% for cc in scope_countries %}
+          <button data-scope="country:{{ cc }}">{{ ('region.all_' ~ cc|lower ~ '.label')|trans }}</button>
+          {% endfor %}
           <button data-scope="everywhere">{{ 'region.everywhere.label'|trans }}</button>
         </div>
       </div>
