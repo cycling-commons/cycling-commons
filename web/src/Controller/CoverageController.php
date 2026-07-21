@@ -33,6 +33,16 @@ final class CoverageController extends AbstractController
     private const int SEARCH_QUERY_MAX_LENGTH = 64;
 
     /**
+     * Hard cap on the region-id set a `rids` scope param may carry
+     * (region-scoping-design.md §8 risk 10): a small, sorted id set keeps the
+     * shared HTTP-cache keyspace bounded. A country scope always sends `cc`
+     * alongside, whose OR arm covers every row even if the id list is capped,
+     * so the cap is safe (never under-inclusive for a country). Real scopes
+     * are tiny (Belgium: 3; a Phase-4 My-area set: 8).
+     */
+    private const int MAX_SCOPE_REGIONS = 24;
+
+    /**
      * Sidebar search over the coverage tier: curated matches first, then
      * community rows not shadowed by a served ref. Queries under two chars
      * answer an empty result set (cheap contract for the client debounce).
@@ -45,7 +55,8 @@ final class CoverageController extends AbstractController
         }
 
         $q = mb_substr(trim((string) $request->query->get('q', '')), 0, self::SEARCH_QUERY_MAX_LENGTH);
-        $results = mb_strlen($q) >= 2 ? $coverage->search($q) : [];
+        [$rids, $cc] = $this->scopeParams($request);
+        $results = mb_strlen($q) >= 2 ? $coverage->search($q, $rids, $cc) : [];
 
         return $this->cacheable($request, ['results' => $results, 'attribution' => CoverageRepository::ATTRIBUTION], 300);
     }
@@ -68,8 +79,9 @@ final class CoverageController extends AbstractController
         }
         $km = $request->query->get('km');
         $km = is_numeric($km) ? min(25.0, max(0.1, (float) $km)) : 5.0;
+        [$rids, $cc] = $this->scopeParams($request);
 
-        return $this->cacheable($request, ['groups' => $coverage->nearby((float) $lat, (float) $lng, $km), 'attribution' => CoverageRepository::ATTRIBUTION], 300);
+        return $this->cacheable($request, ['groups' => $coverage->nearby((float) $lat, (float) $lng, $km, $rids, $cc), 'attribution' => CoverageRepository::ATTRIBUTION], 300);
     }
 
     /** Rail totals (coverage-provider.md §5): per-letter coverage counts. */
@@ -80,9 +92,11 @@ final class CoverageController extends AbstractController
             return $limited;
         }
 
+        [$rids, $cc] = $this->scopeParams($request);
+
         // (object) so an empty table still serves {"counts":{}}, a JSON
         // object, never [] (the client indexes by letter).
-        return $this->cacheable($request, ['counts' => (object) $coverage->counts(), 'attribution' => CoverageRepository::ATTRIBUTION], 3600);
+        return $this->cacheable($request, ['counts' => (object) $coverage->counts($rids, $cc), 'attribution' => CoverageRepository::ATTRIBUTION], 3600);
     }
 
     /**
@@ -103,6 +117,36 @@ final class CoverageController extends AbstractController
         }
 
         return $this->cacheable($request, $detail, 300);
+    }
+
+    /**
+     * Parse the region-scope query params (region-scoping-design.md §6): `rids`
+     * a csv of region ids compiled to a `region_id IN (…)` arm, `cc` a 2-letter
+     * country code. Both are always client-sent, never server-resolved from a
+     * user (the coverage plane is anonymous + cacheable — §6 cacheability
+     * discipline). The id set is de-duped, sorted and capped so the shared
+     * HTTP-cache keyspace stays bounded (§8 risk 10); sorting also makes the
+     * cache key order-independent. Absent/garbage params yield the empty scope
+     * (Everywhere), i.e. current behaviour.
+     *
+     * @return array{0: list<int>, 1: ?string}
+     */
+    private function scopeParams(Request $request): array
+    {
+        $rids = [];
+        foreach (explode(',', (string) $request->query->get('rids', '')) as $part) {
+            if (ctype_digit($part = trim($part))) {
+                $rids[$part] = (int) $part;   // key by string to de-dupe
+            }
+        }
+        $rids = array_values($rids);
+        sort($rids);
+        $rids = \array_slice($rids, 0, self::MAX_SCOPE_REGIONS);
+
+        $cc = $request->query->get('cc');
+        $cc = (\is_string($cc) && 1 === preg_match('/^[A-Za-z]{2}$/', $cc)) ? strtoupper($cc) : null;
+
+        return [$rids, $cc];
     }
 
     /**

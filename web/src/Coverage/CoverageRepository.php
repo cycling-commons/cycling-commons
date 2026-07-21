@@ -9,6 +9,7 @@ namespace App\Coverage;
 use App\Catalog\CoverageRetirement;
 use App\Catalog\Entity\Item;
 use App\Catalog\ItemState;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 
@@ -69,6 +70,50 @@ final class CoverageRepository
     }
 
     /**
+     * SQL filter arm for the active region scope (region-scoping-design.md §6),
+     * or '' for the Everywhere scope (no params). `rids` (region ids) compiles
+     * to `<alias>.region_id IN (:rids)`; `cc` to `<alias>.country_code = :cc`;
+     * a country scope sends both, ORed, so a stamped-region row OR an unsplit
+     * country row (region_id NULL, cc set) both pass. Placeholders are bound
+     * once per query via scopeBind(). Absent params = current behaviour,
+     * backward compatible.
+     *
+     * @param list<int> $rids
+     */
+    private function scopeArm(string $alias, array $rids, ?string $cc): string
+    {
+        $arms = [];
+        if ([] !== $rids) {
+            $arms[] = "$alias.region_id IN (:rids)";
+        }
+        if (null !== $cc) {
+            $arms[] = "$alias.country_code = :cc";
+        }
+
+        return [] === $arms ? '' : ' AND ('.implode(' OR ', $arms).')';
+    }
+
+    /**
+     * Bind the :rids/:cc placeholders scopeArm() references onto a query's
+     * param + type maps. A no-op arm adds nothing, so an Everywhere scope
+     * leaves the query untouched.
+     *
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $types
+     * @param list<int>            $rids
+     */
+    private function scopeBind(array &$params, array &$types, array $rids, ?string $cc): void
+    {
+        if ([] !== $rids) {
+            $params['rids'] = $rids;
+            $types['rids'] = ArrayParameterType::INTEGER;
+        }
+        if (null !== $cc) {
+            $params['cc'] = $cc;
+        }
+    }
+
+    /**
      * Drawer payload for one coverage POI, with the curated overlay merged
      * in when the place is also a payload-served item. Returns null when
      * the ref is not in the coverage cache.
@@ -125,14 +170,23 @@ final class CoverageRepository
      * "Payload-served" excludes the coverage-retirement predicate, so an
      * untouched legacy row lists as community, matching its tile.
      *
+     * `rids`/`cc` scope the results to the active region scope
+     * (region-scoping-design.md §6), so the sidebar mirrors the scope-filtered
+     * tiles; absent = every row (backward compatible).
+     *
      * @see docs/specs/coverage-provider.md §5
      * @see docs/specs/osm-data-architecture.md §8
      *
+     * @param list<int> $rids
+     *
      * @return list<array<string, mixed>>
      */
-    public function search(string $q, int $limit = self::SEARCH_LIMIT): array
+    public function search(string $q, array $rids = [], ?string $cc = null, int $limit = self::SEARCH_LIMIT): array
     {
         $like = '%'.addcslashes($q, '\\%_').'%';
+        $curatedParams = ['like' => $like, 'q' => $q, 'limit' => $limit];
+        $curatedTypes = ['limit' => ParameterType::INTEGER];
+        $this->scopeBind($curatedParams, $curatedTypes, $rids, $cc);
         /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
         $curated = $this->db->fetchAllAssociative(
             "SELECT i.id AS item_id, i.source_ref AS ref, i.letter, i.name,
@@ -142,11 +196,12 @@ final class CoverageRepository
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
                AND i.state IN '.ItemState::servedSqlTuple().'
                AND i.name ILIKE :like
-               AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')
+               AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')'
+               .$this->scopeArm('i', $rids, $cc).'
              ORDER BY similarity(i.name, :q) DESC, i.id
              LIMIT :limit',
-            ['like' => $like, 'q' => $q, 'limit' => $limit],
-            ['limit' => ParameterType::INTEGER],
+            $curatedParams,
+            $curatedTypes,
         );
 
         $results = [];
@@ -156,16 +211,20 @@ final class CoverageRepository
 
         $remaining = $limit - \count($results);
         if ($remaining > 0) {
+            $covParams = ['like' => $like, 'q' => $q, 'limit' => $remaining];
+            $covTypes = ['limit' => ParameterType::INTEGER];
+            $this->scopeBind($covParams, $covTypes, $rids, $cc);
             /** @var list<array{ref: string, letter: string, name: string|null, kind: string|null, lat: string|float, lng: string|float}> $coverage */
             $coverage = $this->db->fetchAllAssociative(
                 'SELECT cp.ref, cp.letter, cp.name, cp.kind, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
                  FROM coverage_poi cp
                  WHERE cp.name ILIKE :like
-                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))
+                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
+                   .$this->scopeArm('cp', $rids, $cc).'
                  ORDER BY similarity(cp.name, :q) DESC, cp.id
                  LIMIT :limit',
-                ['like' => $like, 'q' => $q, 'limit' => $remaining],
-                ['limit' => ParameterType::INTEGER],
+                $covParams,
+                $covTypes,
             );
             foreach ($coverage as $row) {
                 $results[] = $this->entry($row, curated: false);
@@ -184,13 +243,20 @@ final class CoverageRepository
      * "Payload-served" excludes the coverage-retirement predicate, so an
      * untouched legacy row lists as community, matching its tile.
      *
+     * `rids`/`cc` scope the groups to the active region scope
+     * (region-scoping-design.md §6); absent = every row.
+     *
      * @see docs/specs/coverage-provider.md §5
+     *
+     * @param list<int> $rids
      *
      * @return list<array{letter: string, total: int, items: list<array<string, mixed>>}>
      */
-    public function nearby(float $lat, float $lng, float $km): array
+    public function nearby(float $lat, float $lng, float $km, array $rids = [], ?string $cc = null): array
     {
         $params = ['lat' => $lat, 'lng' => $lng, 'm' => $km * 1000.0];
+        $types = [];
+        $this->scopeBind($params, $types, $rids, $cc);
         $point = 'ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography';
 
         /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
@@ -202,9 +268,11 @@ final class CoverageRepository
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
                AND i.state IN '.ItemState::servedSqlTuple()."
                AND ST_DWithin(i.geom::geography, $point, :m)
-               AND NOT (".CoverageRetirement::untouchedOsmSql('i').")
+               AND NOT (".CoverageRetirement::untouchedOsmSql('i').')'
+               .$this->scopeArm('i', $rids, $cc)."
              ORDER BY i.letter, ST_Distance(i.geom::geography, $point), i.id",
             $params,
+            $types,
         );
 
         /** @var list<array{letter: string, ref: string, name: string|null, kind: string|null, lat: string|float, lng: string|float, letter_total: int|string}> $community */
@@ -216,11 +284,13 @@ final class CoverageRepository
                         COUNT(*) OVER (PARTITION BY cp.letter) AS letter_total
                  FROM coverage_poi cp
                  WHERE ST_DWithin(cp.geom::geography, $point, :m)
-                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN ".ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))
+                   AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN ".ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
+                   .$this->scopeArm('cp', $rids, $cc).'
              ) ranked
              WHERE rn <= '.self::NEARBY_COMMUNITY_CAP.'
              ORDER BY letter, rn',
             $params,
+            $types,
         );
 
         $groups = [];
@@ -258,18 +328,30 @@ final class CoverageRepository
      * rule as search()/nearby()), so a confirmed item's coverage twin is
      * never counted twice.
      *
+     * `rids`/`cc` make the totals scope-aware (region-scoping-design.md §6/§7):
+     * the rail badge's "total" side then matches the scope-filtered "shown"
+     * dots the client renders from the tile props; absent = global totals.
+     *
      * @see docs/specs/coverage-provider.md §5
+     *
+     * @param list<int> $rids
      *
      * @return array<string, int>
      */
-    public function counts(): array
+    public function counts(array $rids = [], ?string $cc = null): array
     {
+        $params = [];
+        $types = [];
+        $this->scopeBind($params, $types, $rids, $cc);
         /** @var list<array{letter: string, n: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT cp.letter, COUNT(*) AS n FROM coverage_poi cp
              WHERE cp.letter IN '.self::POI_LETTERS_SQL.'
-               AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))
+               AND NOT EXISTS (SELECT 1 FROM item i WHERE i.source_ref = cp.ref AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
+               .$this->scopeArm('cp', $rids, $cc).'
              GROUP BY cp.letter ORDER BY cp.letter',
+            $params,
+            $types,
         );
         $counts = [];
         foreach ($rows as $row) {

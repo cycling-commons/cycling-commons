@@ -317,6 +317,117 @@ final class CoverageQueryTest extends WebTestCase
         self::assertSame(['C' => 1], $data['counts']);
     }
 
+    public function testSearchScopesToRidsAndCc(): void
+    {
+        // Region scope (region-scoping-design.md §6/§7 Phase 3): rids filters
+        // community + curated rows to the region; cc catches unsplit rows.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9901', 'name' => 'Fontaine Wallonne', 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9902', 'name' => 'Fontaine Flamande', 'region_id' => 2]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9903', 'name' => 'Fontaine Néerlandaise', 'region_id' => null, 'country_code' => 'NL']);
+
+        // rids=1 → only the region-1 row.
+        $r = $this->getJson($client, '/map/coverage/search?q=fontaine&rids=1')['results'];
+        self::assertSame(['node/9901'], array_column($r, 'ref'));
+
+        // rids=1,2 (a country's stamped regions) → both Belgian rows, never NL.
+        $r = $this->getJson($client, '/map/coverage/search?q=fontaine&rids=1,2')['results'];
+        self::assertEqualsCanonicalizing(['node/9901', 'node/9902'], array_column($r, 'ref'));
+
+        // cc=BE → the two BE-stamped rows; the NL row (cc='NL') is excluded.
+        $r = $this->getJson($client, '/map/coverage/search?q=fontaine&cc=BE')['results'];
+        self::assertEqualsCanonicalizing(['node/9901', 'node/9902'], array_column($r, 'ref'));
+
+        // No params → every row (backward compatible).
+        $r = $this->getJson($client, '/map/coverage/search?q=fontaine')['results'];
+        self::assertCount(3, $r);
+    }
+
+    public function testSearchScopeOrsRegionAndCountryForUnsplitRows(): void
+    {
+        // A country scope sends rids (its stamped regions) AND cc; the OR arm
+        // must admit an unsplit BE row (region_id NULL, cc='BE') the id list
+        // can't match (region-scoping-design.md §6).
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9911', 'name' => 'Fontaine stamped', 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9912', 'name' => 'Fontaine unsplit', 'region_id' => null, 'country_code' => 'BE']);
+
+        $r = $this->getJson($client, '/map/coverage/search?q=fontaine&rids=1&cc=BE')['results'];
+        self::assertEqualsCanonicalizing(['node/9911', 'node/9912'], array_column($r, 'ref'));
+    }
+
+    public function testCuratedSearchArmScopesToRids(): void
+    {
+        // The curated (item) arm scopes too, so a served POI outside the scope
+        // never appears in the sidebar while the scope-filtered tiles hide it.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9921', 'name' => 'Fontaine curated in', 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9922', 'name' => 'Fontaine curated out', 'region_id' => 2]);
+        $this->item('node/9921', 'Fontaine curated in')->setRegionId(1);
+        $this->item('node/9922', 'Fontaine curated out')->setRegionId(2);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $r = $this->getJson($client, '/map/coverage/search?q=fontaine&rids=1')['results'];
+        self::assertSame(['node/9921'], array_column($r, 'ref'));
+        self::assertTrue($r[0]['curated']);
+    }
+
+    public function testCountsScopeToRids(): void
+    {
+        // Rail totals become scope-aware (region-scoping-design.md §7 Phase 3),
+        // so "total" matches the scope-filtered "shown" dots the client renders.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9931', 'letter' => 'C', 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9932', 'letter' => 'C', 'region_id' => 2]);
+        self::insertCoveragePoi($db, ['ref' => 'way/9933', 'letter' => 'H', 'name' => 'Abri', 'tags' => ['amenity' => 'shelter'], 'region_id' => 1]);
+
+        self::assertSame(['C' => 1, 'H' => 1], $this->getJson($client, '/map/coverage/counts?rids=1')['counts']);
+        self::assertSame(['C' => 2, 'H' => 1], $this->getJson($client, '/map/coverage/counts')['counts']);
+    }
+
+    public function testNearbyScopesToRids(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // Two community rows within 5 km of the same point, different regions.
+        self::insertCoveragePoi($db, ['ref' => 'node/9941', 'name' => 'Fontaine A', 'lat' => 50.40, 'lng' => 5.80, 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9942', 'name' => 'Fontaine B', 'lat' => 50.41, 'lng' => 5.81, 'region_id' => 2]);
+
+        $groups = $this->getJson($client, '/map/coverage/nearby?lat=50.40&lng=5.80&km=5&rids=1')['groups'];
+        $refs = [];
+        foreach ($groups as $g) {
+            foreach ($g['items'] as $it) {
+                $refs[] = $it['ref'];
+            }
+        }
+        self::assertSame(['node/9941'], $refs);
+    }
+
+    public function testScopeParamsAreCappedAndSanitised(): void
+    {
+        // Garbage rids are dropped; the id set is capped (region-scoping-design.md
+        // §8 risk 10). A too-long list still answers (never a 500), scoped to
+        // whatever survived the cap — here region 1 is within the first 24.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9951', 'name' => 'Fontaine capped', 'region_id' => 1]);
+
+        $manyIds = implode(',', range(1, 60));
+        $r = $this->getJson($client, '/map/coverage/search?q=fontaine&rids='.$manyIds.'&cc=zz9');
+        self::assertResponseIsSuccessful();               // cc 'zz9' is not 2 alpha → ignored, no 500
+        self::assertSame(['node/9951'], array_column($r['results'], 'ref'));
+    }
+
     public function testSearchEtagRevalidates304(): void
     {
         $client = static::createClient();

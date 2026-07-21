@@ -50,8 +50,10 @@ trait CoverageSchema
 
     /**
      * Insert one coverage row (defaults form a valid Belgian water node).
+     * `region_id`/`country_code` default to NULL/BE; pass them to exercise the
+     * region-scope arms (region-scoping-design.md §6).
      *
-     * @param array<string, mixed> $overrides ref|letter|kind|name|lat|lng|tags
+     * @param array<string, mixed> $overrides ref|letter|kind|name|lat|lng|tags|region_id|country_code
      */
     private static function insertCoveragePoi(Connection $db, array $overrides = []): void
     {
@@ -63,15 +65,17 @@ trait CoverageSchema
             'lat' => 50.4,
             'lng' => 5.8,
             'tags' => ['amenity' => 'drinking_water'],
+            'region_id' => null,
+            'country_code' => 'BE',
         ];
         $db->executeStatement(
-            'INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region, country_code)
-             VALUES (:ref, :letter, :kind, :name, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), :tags::jsonb, :src, :cc)',
+            'INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region, country_code, region_id)
+             VALUES (:ref, :letter, :kind, :name, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), :tags::jsonb, :src, :cc, :rid)',
             [
                 'ref' => $row['ref'], 'letter' => $row['letter'], 'kind' => $row['kind'], 'name' => $row['name'],
                 'lng' => $row['lng'], 'lat' => $row['lat'],
                 'tags' => json_encode($row['tags'], \JSON_THROW_ON_ERROR),
-                'src' => 'europe/belgium', 'cc' => 'BE',
+                'src' => 'europe/belgium', 'cc' => $row['country_code'], 'rid' => $row['region_id'],
             ],
         );
     }
