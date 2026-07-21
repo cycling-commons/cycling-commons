@@ -1,0 +1,24 @@
+web/assets/map/map.js
+  s_51ed87ec737f32::t_291eb4e5e1b7c5 921-925
+  s_51ed87ec737f32::t_5e4016006db740 1577-1580,1592-1601,1605
+docs/specs/coverage-provider.md
+  s_51ed87ec737f32::t_8274f245430929 239-246
+docs/specs/2026-07-19-region-scoping-design.md
+  s_51ed87ec737f32::t_a244ad552b3744 597-611
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "34a1152894a53b072ed4496115bc03eb7b911764",
+  "prompts": {},
+  "sessions": {
+    "s_51ed87ec737f32": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cfcc005-7ab4-4c37-848d-fb8a89f6021f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
