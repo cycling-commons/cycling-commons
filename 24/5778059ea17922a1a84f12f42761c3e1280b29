@@ -1,0 +1,20 @@
+web/templates/settings/index.html.twig
+  s_b9f6c785e9346d::t_cb0e0b8033f609 204-219,221-225,227-238,240-245,247-263
+  s_b9f6c785e9346d::t_2fac0d65da7281 49-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "245778059ea17922a1a84f12f42761c3e1280b29",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
