@@ -100,7 +100,13 @@ def build_pmtiles(layer_files, out_path):
     """tippecanoe → one .pmtiles, one lowercase layer per letter (coverage-provider.md §4)."""
     cmd = [
         "tippecanoe", "-o", str(out_path), "--force", "--quiet",
-        "--minimum-zoom", "8", "--maximum-zoom", "14",
+        # minzoom 6 (was 8): the region-scoping scope selector fits the map to a
+        # region/country bbox, and All Belgium lands at ~z7 — below the old z8
+        # coverage floor, so every coverage dot vanished at that overview
+        # (region-scoping-design.md §7). z6 keeps coverage visible at the zooms
+        # the selector navigates to; --drop-densest-as-needed thins the low-zoom
+        # tiles so the artifact stays small.
+        "--minimum-zoom", "6", "--maximum-zoom", "14",
         "--drop-densest-as-needed",
     ]
     for letter in sorted(layer_files):

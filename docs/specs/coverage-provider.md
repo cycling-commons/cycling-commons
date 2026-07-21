@@ -132,8 +132,10 @@ Per region in `COVERAGE_REGIONS`, independently:
 After all regions, once per run:
 
 5. **Export** per-letter newline-delimited GeoJSON from the full index.
-6. **Build tiles** with tippecanoe: one layer per letter, minzoom 8 / maxzoom
-   14, `--drop-densest-as-needed`, direct `.pmtiles` output
+6. **Build tiles** with tippecanoe: one layer per letter, minzoom 6 / maxzoom
+   14, `--drop-densest-as-needed`, direct `.pmtiles` output (minzoom 6, not 8,
+   so coverage stays visible at the region/country overview zooms the scope
+   selector fits to — All Belgium lands at ~z7; region-scoping-design.md §7)
    (`pipeline/coverage/tiles.py::build_pmtiles`).
 7. **Verify** with go-pmtiles (`verify_pmtiles`): header bounds, addressed tile
    count, expected layers, and a sample tile decode — a broken build never
