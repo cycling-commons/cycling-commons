@@ -1,0 +1,25 @@
+docs/specs/catalog-data-model.md
+  s_085edbe215fabf::t_d1928214d5719c 107-110
+  s_085edbe215fabf::t_85b08fbe75008e 268-271
+docs/specs/2026-07-19-region-scoping-design.md
+  s_085edbe215fabf::t_b7a326647fdfde 616-622
+  s_085edbe215fabf::t_6138bdb4e9bef5 488-552
+  s_085edbe215fabf::t_bc87043b46c7b0 4-7
+  s_085edbe215fabf::t_b82b93d8847efd 471-475
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3a57378b15addd9700c16c1d7cba4efea1b00956",
+  "prompts": {},
+  "sessions": {
+    "s_085edbe215fabf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23bf1945-17b0-4677-b9ed-806199440d71",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
