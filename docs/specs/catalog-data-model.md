@@ -104,7 +104,10 @@ tables) are owned by route-domain.md.
 
 `id` bigint identity · `geom` (Point) + GiST · `weight` float · `source`
 (`ItemSource`; only `auto` exists and only `auto` is served) · `season`
-varchar(8) nullable (the ride-heat layer's filter facet) · `computed_at`.
+varchar(8) nullable (the ride-heat layer's filter facet) · `region_id` bigint
+nullable (region membership for the map's scope filter — stamped by
+`recomputeMembership` on every import, backfilled by `Version20260721120000`;
+region-scoping-design.md §7 Phase-2 review finding 5) · `computed_at`.
 First candidate for partitioning and tile/aggregation serving when real rides
 feed it.
 
@@ -262,7 +265,10 @@ one home region (the map still finds it from neighboring viewports via the GiST
 index). Because membership is a recompute, regions can split/merge later without
 touching item schema. Rider route proposals never pass the importer; intake
 resolves `region_id` with the same rule (route-domain.md). `heat_point` carries
-no region — it is never moderated or voted.
+`region_id` too — never for moderation or voting (heat stays unmoderated), but
+because the ride-heat layer scope-filters client-side like every served layer
+(region-scoping-design.md §7, Phase-2 review finding 5); points are stamped in
+the same `recomputeMembership` pass, `ST_Contains` on the point directly.
 
 Ad-hoc spatial queries ("all items in an arbitrary polygon") need no region
 row — GiST + `ST_Intersects` works day one.

@@ -1,8 +1,10 @@
 # Region scoping, search scope widening, and rider base location — design (working spec)
 
 Status: **proposed** (2026-07-19); **Phase 1 + Phase 2 executed** (2026-07-19 /
-2026-07-20; see §7). Belgium is tessellated (Wallonia/Flanders/Brussels) and the
-map + search are scope-aware; Phases 3–5 not started.
+2026-07-20; see §7), **Phase 2 adversarially reviewed 2026-07-21 — all 10
+findings fixed** (review round note in §7). Belgium is tessellated
+(Wallonia/Flanders/Brussels) and the map + search are scope-aware; Phases 3–5
+not started.
 Multi-agent research + design run; all repo-structural claims below were
 adversarially verified against the codebase (4 corrections from that pass are
 folded in and marked "verified correction" where decision-relevant).
@@ -466,7 +468,11 @@ Landed:
   boundary endpoint, scope-bbox initial bounds (retired the hardcoded `map.js`
   Wallonia literal). `featureVisible` + `renderSurfaceLayer` + the verified-POI
   clusters gate on `rid`; best-of sends `&region=` for a named region. Verified:
-  Wallonia 77 markers → Flanders 0 → All Belgium 77. **Bug caught in browser +
+  Wallonia 77 markers → Flanders 0 → All Belgium 77. **Correction (07-21 review
+  round):** this list was incomplete as executed — `render()`'s route-line branch
+  bypassed `featureVisible` (review finding 1) and the heat layer had no gate at
+  all (finding 5); the 77→0→77 measurement counted marker DOM nodes and could see
+  neither. Both fixed in the review round below. **Bug caught in browser +
   fixed:** the registry emitted `cc` but `CCScope` expects `countryCode`, which
   silently broke "All Belgium" + the widen ladder; aligned to `countryCode`.
 - **Search widening** (cf941f7): Photon bbox + countrycode derive from scope
@@ -478,6 +484,71 @@ Landed:
 Coverage-tile scoping (`rid`/`cc` tile props + `rids`/`cc` coverage params) stays
 Phase 3; base location / My area stays Phase 4. `kind` leaves room for the future
 `myArea` value.
+
+**Phase 2 — adversarial review round (2026-07-21, all findings fixed).** A
+fresh-context reviewer (docs/2026-07-20-phase2-review-brief.md, local-only)
+audited `1cd5f44..HEAD`; 10 findings + 5 info items, all resolved:
+
+1. *Route lines bypassed the scope gate* (HIGH, live-reproduced: Flanders scope
+   + Everything drew all 11 Wallonia lines while the legend said 0/11). Fixed:
+   `render()`'s line branch now calls `featureVisible()` — the full rule
+   (mode/cur + `inScope` + bike-pref), never an inlined subset. This also fixed
+   a latent legend-vs-map mismatch for the bike-pref prefilter on lines.
+2. *The hardcoded Hautes Fagnes hazard fixture* carried no `rid`, so the scope
+   gate hid it everywhere except Everywhere — including the default Wallonia
+   view (HIGH). **Owner decision: retired.** F ships empty until real hazard
+   rows are served as region-stamped data; rid-less stays the leak-safe hidden
+   default. (The stale twin row in the dead demo file
+   `web/assets/data/profiles-data.js` — no consumers — is left for the planned
+   dead-legacy sweep.)
+3. *Local search ignored scope while the header claimed "Search in X"*
+   (MED-HIGH). Fixed: `runS` filters served rows with the map's own
+   `inScope(rid)` gate; the widen chip restores them rung by rung. **Owner
+   decisions:** towns stay exempt (places, not scoped features — CITIES
+   generalises in Phase 5); the town card's `nearbyItems()` stays deliberately
+   scope-exempt (opening a town is an explicit location choice); coverage
+   search rows stay unfiltered until Phase 3 so search always mirrors the map.
+4. *Exporter maritime/duplicate hazards* (MED). Fixed: `class='land'`
+   predicate (coastal divisions carry a maritime twin row), fail-loud on
+   duplicate ISO rows (never last-wins-overwrite), and the bbox pushdown is
+   now a true overlap test (the min-corner BETWEEN dropped regions whose min
+   corner fell outside the config box). Live-verified against Overture
+   `2026-06-17.0`: Belgium still exports exactly its 3 regions.
+5. *Heat layer was scope-exempt undeclared* (MED-LOW). **Owner decision:
+   scope it.** `heat_point.region_id` (migration `Version20260721120000`,
+   backfilled; `recomputeMembership` stamps it on every import), payload tuple
+   is now `[lat, lng, season, rid]`, and `updateHeatFilter()` composes the
+   season facet with the scope (the two setFilter sites used to overwrite each
+   other).
+6. *Single-country selector hardcoding* (LOW-MED). Fixed: one country rung per
+   distinct registry country (`scope_countries`), labels follow the per-key
+   convention `region.all_<cc>.label` (was `all_belgium`) — a country import
+   adds its key exactly like `region.<slug>.label`.
+7. *Empty registry blanked the header* (LOW). Fixed: `applyScope` rewrites the
+   header/kicker/search-title only when the rail can label the scope; the
+   server-rendered fallbacks survive a region-less install.
+8. *scope.js had zero committed tests* (LOW). Fixed: `web/tests/js/scope.test.cjs`
+   (17 node:test cases — init precedence, sanitize, widen ladder, bbox union,
+   persistence, transient set), `make scope-test`, wired into `make app-test` +
+   App CI; the divisions pytest suite was also missing from ci-tools — added.
+9. *Unresolvable deep links still widened* (LOW). Fixed: the transient widen
+   fires only when the `?feature/?pending/?route` target actually resolves,
+   via the same resolvers the open calls use (`resolveLocalFeature` extracted
+   so gate and open can't drift). Coverage-only `?feature` targets don't widen
+   (coverage renders scope-unfiltered until Phase 3).
+10. *Multi-region URL tokens filtered on both regions but labelled one* (LOW).
+    Fixed: `deserialize` collapses `region:a,b` to the first resolvable slug
+    until Phase 4's derived sets make multi-region scopes a real UI state.
+
+Info items: widen chip is now a real keyboard option in the search listbox
+(data-i + sMatches pseudo-entry); the Everywhere-reopen comment now states the
+Wallonia-literal fallback truthfully; scope switches render once, not twice
+(`applyScope` defers to `refreshBestOf`'s render in Everything mode);
+antimeridian risk recorded as §8 risk 11. Rationale-closed (accepted as-is): a
+quote inside a region slug would throw in `scopeLabel()`'s attribute selector —
+slugs are curator-authored config validated at import (`[a-z0-9-]+` route
+requirement), not user input, so the querySelector interpolation is not an
+injection surface.
 
 **Phase 3 — Coverage scoping.**
 
@@ -542,6 +613,13 @@ Phase 3; base location / My area stays Phase 4. `kind` leaves room for the futur
    consider self-hosting if town search becomes core.
 10. **Scope params fragment the shared HTTP cache keyspace** on coverage endpoints —
     bounded by coarse rounding + small id sets; monitor hit rates after Phase 3/4.
+11. **Antimeridian-spanning regions break both bbox paths** (07-21 review, info a):
+    `RegionRegistryProvider` publishes `ST_XMin/ST_XMax` extents and
+    `CCScope.bbox()` takes a naive min/max union — a region crossing 180°
+    (Chukotka, Fiji, NZ incl. the Chathams) yields a world-wrapping box, so the
+    viewport fit, Photon bbox and widen-chip bbox all go wrong. Fix (split
+    boxes or lon-normalised union) is REQUIRED before seeding any such country
+    — add it to the section 5a per-country seeding checklist when it happens.
 
 ## 9. Open product questions
 
