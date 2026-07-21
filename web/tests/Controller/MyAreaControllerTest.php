@@ -22,13 +22,17 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
  */
 final class MyAreaControllerTest extends WebTestCase
 {
+    // Fixture geometry follows BaseAreaResolverTest's open mid-Atlantic box
+    // idiom, never real Belgian coordinates — seeded region rows carry a real,
+    // non-null area_km2 that would beat a NULL-area fixture on the ORDER BY
+    // area_km2 tie-break if the two ever overlapped.
     private function makeRegion(EntityManagerInterface $em): Region
     {
         $region = (new Region())
             ->setSlug('my-area-test-'.bin2hex(random_bytes(4)))
             ->setName('My area test box')
             ->setCountryCode('BE')
-            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[4.70,50.30],[5.00,50.30],[5.00,50.60],[4.70,50.60],[4.70,50.30]]]]}');
+            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[-46.00,0.30],[-45.00,0.30],[-45.00,0.60],[-46.00,0.60],[-46.00,0.30]]]]}');
         $em->persist($region);
         $em->flush();
 
@@ -58,7 +62,7 @@ final class MyAreaControllerTest extends WebTestCase
             [],
             [],
             ['HTTP_X_CSRF_TOKEN' => $this->token(), 'CONTENT_TYPE' => 'application/json', 'HTTP_SEC_FETCH_SITE' => 'same-origin'],
-            (string) json_encode(['lat' => 50.45, 'lng' => 4.85]),
+            (string) json_encode(['lat' => 0.45, 'lng' => -45.85]),
         );
 
         // In-controller auth (RideCheckController/RouteCommunityController
@@ -82,14 +86,14 @@ final class MyAreaControllerTest extends WebTestCase
             [],
             [],
             ['HTTP_X_CSRF_TOKEN' => $this->token(), 'CONTENT_TYPE' => 'application/json', 'HTTP_SEC_FETCH_SITE' => 'same-origin'],
-            (string) json_encode(['lat' => 50.451234, 'lng' => 4.851234, 'radiusKm' => 55, 'place' => 'Namur']),
+            (string) json_encode(['lat' => 0.451234, 'lng' => -45.851234, 'radiusKm' => 55, 'place' => 'Namur']),
         );
 
         self::assertResponseIsSuccessful();
         /** @var array{lat: float, lng: float, radiusKm: int, place: ?string, regionIds: list<int>, countryCodes: list<string>} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true);
-        self::assertSame(50.45, $body['lat']);
-        self::assertSame(4.85, $body['lng']);
+        self::assertSame(0.45, $body['lat']);
+        self::assertSame(-45.85, $body['lng']);
         self::assertSame(55, $body['radiusKm']);
         self::assertSame('Namur', $body['place']);
         self::assertSame([$region->getId()], $body['regionIds']);
@@ -98,8 +102,8 @@ final class MyAreaControllerTest extends WebTestCase
         $em->clear();
         $reloaded = $em->getRepository(User::class)->find($user->getId());
         self::assertNotNull($reloaded);
-        self::assertSame(50.45, $reloaded->getBaseLat());
-        self::assertSame(4.85, $reloaded->getBaseLng());
+        self::assertSame(0.45, $reloaded->getBaseLat());
+        self::assertSame(-45.85, $reloaded->getBaseLng());
         self::assertSame([$region->getId()], $reloaded->getBaseRegionIds());
         self::assertSame(['BE'], $reloaded->getBaseCountryCodes());
     }
@@ -117,7 +121,7 @@ final class MyAreaControllerTest extends WebTestCase
             [],
             [],
             ['HTTP_X_CSRF_TOKEN' => 'not-a-valid-token', 'CONTENT_TYPE' => 'application/json', 'HTTP_SEC_FETCH_SITE' => 'cross-site'],
-            (string) json_encode(['lat' => 50.45, 'lng' => 4.85]),
+            (string) json_encode(['lat' => 0.45, 'lng' => -45.85]),
         );
 
         self::assertResponseStatusCodeSame(403);
@@ -136,7 +140,7 @@ final class MyAreaControllerTest extends WebTestCase
             [],
             [],
             ['HTTP_X_CSRF_TOKEN' => $this->token(), 'CONTENT_TYPE' => 'application/json', 'HTTP_SEC_FETCH_SITE' => 'same-origin'],
-            (string) json_encode(['lat' => 95.0, 'lng' => 4.85]),
+            (string) json_encode(['lat' => 95.0, 'lng' => -45.85]),
         );
 
         self::assertResponseStatusCodeSame(400);

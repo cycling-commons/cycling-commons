@@ -1591,7 +1591,7 @@ form:
   riding_leisure: 'Freizeit / Familie'
   label_base_location: 'Standort (optional)'
   placeholder_base_location: 'Ort suchen…'
-  help_base_location: 'Legt deine Standardansicht „Meine Gegend“ auf der Karte fest. Wird mit Genauigkeit auf Ortsebene (~1 km) gespeichert und niemals anderen angezeigt.'
+  help_base_location: 'Legt deine Standardansicht „Mein Gebiet“ auf der Karte fest. Wird mit Genauigkeit auf Ortsebene (~1 km) gespeichert und niemals anderen angezeigt.'
   label_base_radius: 'Fahrradius'
   label_base_clear: 'Standort entfernen'
   base_current: 'Deine Gegend: %regions%'

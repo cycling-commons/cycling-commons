@@ -15,8 +15,11 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 /**
  * region-scoping-design.md §3/§4: BaseLocationService owns every base-location
  * write so the derived region/country set can never drift from the stored
- * (coarse) point. Region fixture follows BaseAreaResolverTest's box idiom,
- * sized to contain the coarsened probe point used below.
+ * (coarse) point. Region fixture follows BaseAreaResolverTest's box idiom
+ * (open mid-Atlantic geometry, never real Belgian coordinates — seeded region
+ * rows carry a real, non-null area_km2 that would beat a NULL-area fixture on
+ * the ORDER BY area_km2 tie-break if the two ever overlapped), sized to
+ * contain the coarsened probe point used below.
  */
 final class BaseLocationServiceTest extends KernelTestCase
 {
@@ -33,7 +36,7 @@ final class BaseLocationServiceTest extends KernelTestCase
         $this->region->setSlug('base-location-test-'.bin2hex(random_bytes(4)))
             ->setName('Base location test box')
             ->setCountryCode('BE')
-            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[4.70,50.30],[5.00,50.30],[5.00,50.60],[4.70,50.60],[4.70,50.30]]]]}');
+            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[-46.00,0.30],[-45.00,0.30],[-45.00,0.60],[-46.00,0.60],[-46.00,0.30]]]]}');
         $this->em->persist($this->region);
         $this->em->flush();
     }
@@ -51,9 +54,9 @@ final class BaseLocationServiceTest extends KernelTestCase
     {
         $u = $this->makeUser();
         $svc = static::getContainer()->get(BaseLocationService::class);
-        $svc->apply($u, 50.451234, 4.851234, 'Namur', 55);
+        $svc->apply($u, 0.451234, -45.851234, 'Namur', 55);
 
-        self::assertSame(50.45, $u->getBaseLat());
+        self::assertSame(0.45, $u->getBaseLat());
         self::assertSame(55, $u->getBaseRadiusKm());
         self::assertSame([$this->region->getId()], $u->getBaseRegionIds());
         self::assertSame(['BE'], $u->getBaseCountryCodes());
@@ -65,7 +68,7 @@ final class BaseLocationServiceTest extends KernelTestCase
         // (region-scoping-design.md §4).
         $u = $this->makeUser();
         $svc = static::getContainer()->get(BaseLocationService::class);
-        $svc->apply($u, 50.451234, 4.851234, 'Namur', 55);
+        $svc->apply($u, 0.451234, -45.851234, 'Namur', 55);
 
         $this->em->clear();
         $reloaded = $this->em->getRepository(User::class)->find($u->getId());
@@ -77,7 +80,7 @@ final class BaseLocationServiceTest extends KernelTestCase
     {
         $u = $this->makeUser();
         $svc = static::getContainer()->get(BaseLocationService::class);
-        $svc->apply($u, 50.451234, 4.851234, 'Namur', 55);
+        $svc->apply($u, 0.451234, -45.851234, 'Namur', 55);
         $this->em->flush();
         self::assertTrue($u->hasBaseLocation());
 
@@ -92,7 +95,7 @@ final class BaseLocationServiceTest extends KernelTestCase
     public function testRederiveAllRestampsUsersInsideNewPolygons(): void
     {
         $u = $this->makeUser();
-        $u->setBaseLocation(50.45, 4.85, null);
+        $u->setBaseLocation(0.45, -45.85, null);
         $u->setBaseRegionIds([]); // stale
         $this->em->flush();
 

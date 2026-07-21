@@ -335,6 +335,27 @@ test('coverageTileFilter: myArea scope has a ridtok arm only, no cctok arm', () 
   assert.equal(shows(f, { ridtok: '', cctok: '' }), true, 'prop-less renders');
 });
 
+test('coverageParams: myArea with zero derived regions returns the empty-set sentinel (map-and-search.md §4.5)', () => {
+  // All stale ids -> the derived regionIds set is empty, but this is still a
+  // myArea scope ("in scope: nothing"), not Everywhere ("no scope").
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [999], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  assert.deepEqual(CCScope.get().regionIds, []);
+  // rids:[] (an array) is distinct from Everywhere's rids:null — callers
+  // (map.js fetchCoverageCounts/runCoverageSearch) use this to skip a fetch
+  // that would otherwise silently fall back to GLOBAL results.
+  assert.deepEqual(CCScope.coverageParams(), { rids: [], cc: null });
+});
+
+test('coverageTileFilter: myArea with zero derived regions still renders only prop-less rows', () => {
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [999], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  const f = CCScope.coverageTileFilter();
+  assert.equal(shows(f, { ridtok: '', cctok: '' }), true, 'prop-less still renders (weekly-rebuild fallback)');
+  assert.equal(shows(f, { ridtok: '|1|', cctok: '|BE|' }), false, 'a stamped row has nothing to match, hides');
+  assert.equal(shows(f, { ridtok: '', cctok: '|BE|' }), false, 'cc-only row hides too (myArea has no cc arm)');
+});
+
 test('stale CC_MY_AREA region ids are dropped against the registry', () => {
   boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 999], countryCodes: ['BE'] } });
   CCScope.setMyArea();

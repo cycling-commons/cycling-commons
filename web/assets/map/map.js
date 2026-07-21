@@ -138,7 +138,9 @@
     clearSpotlight();
     if(!center || !rkm) return;
     const n=64, lat=center[0];
-    const dLat = rkm/111.32, dLng = rkm/(111.32*Math.cos(lat*Math.PI/180));
+    // Pole safety (region-scoping-design.md §4): cos(lat) -> 0 near +/-90 would blow dLng up to Infinity/NaN.
+    const cosLat=Math.max(0.01, Math.cos(lat*Math.PI/180));
+    const dLat = rkm/111.32, dLng = rkm/(111.32*cosLat);
     const ring=[];
     for(let i=0;i<=n;i++){ const a=2*Math.PI*i/n; ring.push([center[1]+dLng*Math.cos(a), lat+dLat*Math.sin(a)]); }
     const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
@@ -802,6 +804,15 @@
       }
       if(map.getLayer(id+'-cl')) map.setFilter(id+'-cl', covClusterFilter());
     });
+  }
+  // A myArea scope whose derived region set is empty (map-and-search.md §4.5):
+  // coverageParams() returns rids:[] (an empty array, NOT null) as an explicit
+  // "in scope: nothing" sentinel, distinct from Everywhere's rids:null. Callers
+  // that would otherwise build an unscoped '' query — and silently fall back to
+  // GLOBAL /counts or /search results — check this first and skip the fetch.
+  function covScopeIsZero(){
+    const p=window.CCScope && window.CCScope.coverageParams();
+    return !!(p && Array.isArray(p.rids) && !p.rids.length);
   }
   // Active-scope coverage params (rids/cc) as a query fragment
   // (region-scoping-design.md §6); '' for Everywhere so the URL — and the
@@ -1724,7 +1735,14 @@
   let _covCounts=null, _covCountReq=0;
   function fetchCoverageCounts(){
     if(!COVERAGE_ON) return;
-    const q=covScopeQuery(), myReq=++_covCountReq;
+    ++_covCountReq;   // invalidate any earlier in-flight scope's response, fetched or not
+    if(covScopeIsZero()){
+      // myArea derived to zero regions (map-and-search.md §4.5): skip the
+      // request entirely — an unscoped fetch would silently return GLOBAL
+      // counts — and zero the rail instead.
+      _covCounts=null; updateCounts(); return;
+    }
+    const q=covScopeQuery(), myReq=_covCountReq;
     fetch('/map/coverage/counts'+(q?('?'+q):''), {headers:{'Accept':'application/json'}})
       .then(r=>r.ok?r.json():null)
       .catch(()=>null)
@@ -3149,6 +3167,14 @@
       const q=qRaw.trim();
       if(!COVERAGE_ON || q.length<2){ _covHits=[]; _covSQ=''; return; }
       if(_covAbort) _covAbort.abort();
+      // myArea derived to zero regions (map-and-search.md §4.5): an unscoped
+      // fetch would silently return GLOBAL results, so skip it and contribute
+      // no coverage rows — same "in scope: nothing" rule as fetchCoverageCounts.
+      if(covScopeIsZero()){
+        _covHits=[]; _covSQ=slug(q);
+        if(!sRes.hidden) runS();
+        return;
+      }
       const ctl=new AbortController(); _covAbort=ctl;
       // Scope the search to the active region (Phase 3, region-scoping-design.md
       // §6): the server returns only in-scope rows, so the coverage results

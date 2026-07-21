@@ -76,7 +76,9 @@
   // [west, south, east, north] bbox around a lat/lng circle of radius rkm.
   const circleBbox = (center, rkm) => {
     const dLat = rkm / 111.32;
-    const dLng = rkm / (111.32 * Math.cos(center[0] * Math.PI / 180));
+    // Pole safety: cos(lat) -> 0 near +/-90 would blow dLng up to Infinity/NaN.
+    const cosLat = Math.max(0.01, Math.cos(center[0] * Math.PI / 180));
+    const dLng = rkm / (111.32 * cosLat);
     return [center[1] - dLng, center[0] - dLat, center[1] + dLng, center[0] + dLat];
   };
 
@@ -326,13 +328,17 @@
     },
 
     /** Store an anonymous circle (rounded to 2 decimals — same coarseness as
-     *  the server) for logged-out users, then apply it as the myArea scope. */
+     *  the server) for logged-out users, then apply it as the myArea scope.
+     *  radiusKm is clamped to [10,150] and rounded — the server (User::
+     *  BASE_RADIUS_MIN/MAX, default 40) applies the same clamp, so this is
+     *  the client-side mirror the docblock already claimed. */
     setAnonCircle(lat, lng, radiusKm) {
       try {
+        const rkm = Math.round(Math.max(10, Math.min(150, radiusKm)));
         localStorage.setItem(LS_AREA_KEY, JSON.stringify({
           lat: Math.round(lat * 100) / 100,
           lng: Math.round(lng * 100) / 100,
-          radiusKm,
+          radiusKm: rkm,
         }));
       } catch (e) { /* private mode */ }
       return this.setMyArea();
@@ -353,10 +359,17 @@
      *  region-scoping-design.md §6). A region sends its ids only; a country
      *  sends its ids AND cc (the server ORs them, so an unsplit country row
      *  region_id NULL still matches on cc); Everywhere sends neither. rids are
-     *  sorted so the shared HTTP-cache key is order-independent (§8 risk 10). */
+     *  sorted so the shared HTTP-cache key is order-independent (§8 risk 10).
+     *  A myArea scope whose derived region set is empty is NOT "no scope" —
+     *  it returns rids: [] (an empty array, distinct from Everywhere's null)
+     *  as an explicit "in scope: nothing" sentinel, so callers never fall
+     *  through to an unscoped/GLOBAL request for a rider whose area matched
+     *  no region (map-and-search.md §4.5's leak-safe-hide rule, extended to
+     *  this client-side seam). */
     coverageParams() {
       if (!scope || scope.kind === 'everywhere') return { rids: null, cc: null };
       const rids = scope.regionIds.slice().sort((a, b) => a - b);
+      if (scope.kind === 'myArea' && !rids.length) return { rids: [], cc: null };
       return { rids: rids.length ? rids : null, cc: scope.kind === 'country' ? scope.countryCode : null };
     },
 

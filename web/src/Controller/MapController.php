@@ -205,7 +205,9 @@ final class MapController extends AbstractController
             'myAreaLinePlain' => $t->trans('map.my_area_line_plain'),
             // Cold-start "Set my area" prompt + pan-away widen nudge
             // (region-scoping-design.md §4 / §9.1 Phase 4): rendered by map.js.
-            'setMyArea' => $t->trans('map.set_my_area'),
+            // Note: the chip's own label ('map.set_my_area') is twig-rendered
+            // (templates/map/index.html.twig), not read from this payload —
+            // map.js never touches I18N.setMyArea.
             'myAreaSet' => $t->trans('map.my_area_set'),
             'myAreaSetAnon' => $t->trans('map.my_area_set_anon'),
             'outsideArea' => $t->trans('map.outside_area'),

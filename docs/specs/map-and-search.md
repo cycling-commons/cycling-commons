@@ -218,6 +218,13 @@ the newest rung of that same ladder.
   (`countryCode` is always `null`) — Phase 5's country-polygon fallback
   doesn't exist yet to safely resolve a circle to a country, so myArea stays
   region-id-only on those arms until then.
+- **Empty derived set is "in scope: nothing", not "no scope."** When a myArea
+  scope's derived region set is empty, `coverageParams()` returns `rids: []`
+  (an empty array) rather than `null` — a distinct sentinel from Everywhere's
+  `rids: null` — so `map.js`'s `fetchCoverageCounts()`/`runCoverageSearch()`
+  skip the request instead of building an unscoped query that would silently
+  fall back to GLOBAL results (the leak-safe-hide rule of
+  region-scoping-design.md §4/§9.1, extended to this client-side seam).
 - **Widen ladder:** myArea → the single registry-known country among the
   derived `countryCodes` (exactly one such country, else straight to
   Everywhere — an ambiguous/border myArea has no single "wider" country) →
