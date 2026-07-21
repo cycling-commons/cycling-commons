@@ -601,13 +601,18 @@ verification on the dev stack. Slices:
   region with 3 dots). Scope-aware totals keep the two sides in the same frame
   of reference. `fetchCoverageCounts` re-fetches with a race guard on each
   scope change.
-- **Data window (bounded, same class as the Phase-2 `coverage_poi` note):** the
-  dev PMTiles was built before this change, so its tiles carry no `rid`/`cc`
-  until the next weekly pipeline rebuild (or a manual `make coverage-refresh`).
-  Until then every coverage dot is prop-less and renders unfiltered under the
-  fallback — correct-by-design, not a bug. The `coverage_poi.country_code`
-  index (`load.py`) likewise lands on the next pipeline run on any DB that
-  predates it; the `cc` arm works without it, just unindexed.
+- **Data window (bounded, same class as the Phase-2 `coverage_poi` note):** a
+  freshly-changed props schema reaches live tiles only on the next pipeline
+  rebuild (weekly timer, or a manual `make coverage-refresh`); until then tiles
+  are prop-less and render unfiltered under the fallback — correct-by-design,
+  not a bug. **Closed for dev 2026-07-21:** `make coverage-refresh` was run
+  (artifact `20260721-0814.pmtiles`), re-stamping `coverage_poi` (Flanders
+  11410 / Wallonia 9832 / Brussels 1581 — the earlier Wallonia-only state was
+  the Phase-2 window, not the extract) and landing the
+  `coverage_poi.country_code` index. Real tile filtering then verified in the
+  browser: framed on the Brussels enclave, water `shown` 31 (Brussels scope) →
+  39 (Everywhere, viewport unchanged) as the border Flanders/Wallonia dots
+  reappear when the filter lifts.
 
 **Phase 4 — Base location + My area (requirement 3).**
 
