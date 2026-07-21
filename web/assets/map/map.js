@@ -68,6 +68,22 @@
   });
   map.addControl(new maplibregl.AttributionControl({customAttribution:'© OpenStreetMap contributors · ODbL'}),'bottom-right');
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
+  // Live zoom readout — a MapLibre control so it stacks above the nav control
+  // (bottom-left) with the framework's own positioning, no absolute-layout
+  // guesswork. Useful context now that the scope selector fits to region/country
+  // bboxes at different zooms (e.g. All Belgium ~z7, below the coverage minzoom).
+  map.addControl({
+    onAdd(m){
+      const d=document.createElement('div');
+      d.className='maplibregl-ctrl zoom-badge';
+      d.setAttribute('aria-hidden','true');   // decorative; the value is not actionable AT/via keyboard
+      const upd=()=>{ d.textContent='z'+m.getZoom().toFixed(1); };
+      m.on('zoom', upd); upd();
+      this._d=d; this._upd=upd; this._m=m;
+      return d;
+    },
+    onRemove(){ this._m.off('zoom', this._upd); this._d.remove(); },
+  },'bottom-left');
 
   // Region spotlight — dim everything OUTSIDE the active named region + a dashed
   // outline (region-scoping-design.md §4). Served from our own DB via the
