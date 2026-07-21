@@ -233,7 +233,7 @@ scope to fit their target instead of failing inside a narrow scope; panning far
 outside the My-area circle surfaces the widen chip rather than silently keeping
 home-scoped lists.
 
-**Settings + privacy.** Field lives in Settings → profile tab, "Identity & privacy"
+**Settings + privacy.** Field lives in Settings → profile tab, "Identity" (renamed from "Identity & privacy" 2026-07-21 when Public profile became its own section)
 section beside the country picker (`web/src/Form/SettingsType.php`). Pick a town
 (Photon geocode → town centroid) or drop a pin (truncated to 2 decimals before
 persisting). Optional, deletable. Privacy invariants (named, review-enforced):

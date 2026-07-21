@@ -711,7 +711,7 @@ settings:
   heading: 'Einstellungen'
   tab_profile: 'Profil'
   tab_security: 'Sicherheit'
-  section_identity: 'Identität &amp; Datenschutz'
+  section_identity: 'Identität'
   label_email: 'E-Mail'
   email_hint: 'Um deine E-Mail-Adresse zu ändern, <a href="mailto:info@cyclingcommons.org" style="color:var(--clay)">kontaktiere den Support</a>.'
   toggle_public_b: 'Öffentliches Profil'
