@@ -61,11 +61,11 @@ final class MyAreaControllerTest extends WebTestCase
             (string) json_encode(['lat' => 50.45, 'lng' => 4.85]),
         );
 
-        $status = $client->getResponse()->getStatusCode();
-        self::assertTrue(
-            \in_array($status, [401, 403], true) || $client->getResponse()->isRedirect(),
-            'expected anonymous POST to be rejected (401/403) or redirected to login, got '.$status,
-        );
+        // In-controller auth (RideCheckController/RouteCommunityController
+        // convention) — a clean 401, never a login redirect, so a JSON
+        // fetch() caller can branch on the status instead of following a
+        // 302 into the login page's HTML.
+        self::assertResponseStatusCodeSame(401);
     }
 
     public function testSetFromPointCoarsensDerivesAndReturnsSet(): void

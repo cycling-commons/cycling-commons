@@ -12,8 +12,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * "Set my area" write path (region-scoping-design.md §4/§6): a rider picks a
@@ -25,14 +26,22 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * §4's privacy invariant is "requests transmit only the already-coarse
  * stored value (request precision == stored precision)".
  *
+ * In-controller auth (clean 401, never a login redirect) instead of
+ * `#[IsGranted]` — same RideCheckController/RouteCommunityController
+ * convention: a JSON `fetch()` caller can't branch on a 302-to-/login the
+ * way an `#[IsGranted]` attribute would produce for an anonymous request.
+ *
  * @api Instantiated by Symfony's router; called by assets/map/scope.js.
  */
 final class MyAreaController extends AbstractController
 {
     #[Route('/map/my-area', name: 'map_my_area_set', methods: ['POST'])]
-    #[IsGranted('ROLE_USER')]
     public function set(Request $request, BaseLocationService $baseLocations, EntityManagerInterface $em): JsonResponse
     {
+        $user = $this->getUser();
+        if (!$this->isGranted('ROLE_USER') || !$user instanceof User) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, 'authentication_required');
+        }
         if (!$this->isCsrfTokenValid('my-area', (string) $request->headers->get('X-CSRF-Token'))) {
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
@@ -54,8 +63,6 @@ final class MyAreaController extends AbstractController
             return new JsonResponse(['error' => 'bad_coords'], 400);
         }
 
-        /** @var User $user */
-        $user = $this->getUser();
         $radius = \is_numeric($body['radiusKm'] ?? null) ? (int) $body['radiusKm'] : $user->getBaseRadiusKm();
         $place = \is_string($body['place'] ?? null) ? $body['place'] : null;
 
