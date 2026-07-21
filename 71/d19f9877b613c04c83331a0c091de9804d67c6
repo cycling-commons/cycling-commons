@@ -1,0 +1,21 @@
+pipeline/coverage/tiles.py
+  s_51ed87ec737f32::t_e0b45a27bebff5 103-109
+docs/specs/coverage-provider.md
+  s_51ed87ec737f32::t_5628fc2a85a574 135-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "71d19f9877b613c04c83331a0c091de9804d67c6",
+  "prompts": {},
+  "sessions": {
+    "s_51ed87ec737f32": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cfcc005-7ab4-4c37-848d-fb8a89f6021f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
