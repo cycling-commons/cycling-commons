@@ -1,0 +1,31 @@
+web/src/Catalog/RouteRankingService.php
+  s_b9f6c785e9346d::t_7f2660303b0266 39-43,46-47,50,53,65-68,80
+  s_b9f6c785e9346d::t_216851169d961e 9
+web/tests/Controller/MapBestOfTest.php
+  s_b9f6c785e9346d::t_81710b7638ab2d 72-103
+  s_b9f6c785e9346d::t_48b92ced4ba12a 20,25
+web/tests/Catalog/RouteRankingServiceTest.php
+  s_b9f6c785e9346d::t_22ef629329c061 60,74,87-88,103,106,135,150
+  s_b9f6c785e9346d::t_4b3ad9e2e15528 152-169
+  s_b9f6c785e9346d::t_764e8af3ec9024 151
+web/src/Controller/MapController.php
+  s_b9f6c785e9346d::t_3116d4baf645e5 21
+  s_b9f6c785e9346d::t_b98709b4063b72 262-268
+  s_b9f6c785e9346d::t_d4dcd1c19b1dbf 276-298,300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "9ef75c2ab8902db95d975d2f87a47c41af4ac5f4",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
