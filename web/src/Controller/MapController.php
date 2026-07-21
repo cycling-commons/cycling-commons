@@ -18,6 +18,7 @@ use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
 use App\Security\TwoFactorPolicy;
+use App\Service\BaseAreaResolver;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -258,9 +259,13 @@ final class MapController extends AbstractController
 
     /**
      * Best-of ranking for the map's Curated mode (route-domain.md §8): ranked
-     * verified-route ids for a (season, bike, region?) facet. Public + cacheable
-     * like catalog.json; the map flags these ids `cur` and filters Curated to
-     * them.
+     * verified-route ids for a (season, bike, region-set?) facet. Public +
+     * cacheable like catalog.json; the map flags these ids `cur` and filters
+     * Curated to them. `region` accepts a CSV of ids (region-scoping-design.md
+     * §7 Phase 4) so a My-area derived scope can rank across several regions
+     * at once; a bare single id stays valid. The response body (and so the
+     * ETag, which hashes it) already varies with the resolved `ids`, which
+     * differ per region set, so no separate cache-key handling is needed.
      */
     #[Route('/map/best-of', name: 'map_best_of', methods: ['GET'])]
     public function bestOf(Request $request, RouteRankingService $ranking): Response
@@ -268,9 +273,31 @@ final class MapController extends AbstractController
         $season = Season::tryFrom((string) $request->query->get('season')) ?? Season::current(new \DateTimeImmutable());
         $bikeParam = (string) $request->query->get('bike', 'all');
         $bike = 'all' === $bikeParam ? null : BikeType::tryFrom($bikeParam);
-        $region = $request->query->has('region') ? $request->query->getInt('region') : null;
+        // CSV of region ids (region-scoping-design.md §7 Phase 4): a My-area
+        // derived scope sends up to BaseAreaResolver::MAX_REGIONS ids, e.g.
+        // `region=1,24,23`; a bare `region=3` stays valid (single-element
+        // set). Mirrors CoverageController::scopeParams's rids idiom:
+        // canonical positive-integer parts only (ctype_digit + the
+        // zero-padding/overflow guard keeps an oversized numeral from
+        // silently saturating to a phantom id), deduped by numeric value,
+        // capped, sorted for a stable IN-list. Garbage parts are dropped, not
+        // rejected — an all-garbage CSV degrades to Everywhere, same as
+        // omitting the param entirely.
+        $regionIds = [];
+        foreach (explode(',', (string) $request->query->get('region', '')) as $part) {
+            $part = trim($part);
+            if ('' === $part || !ctype_digit($part)) {
+                continue;
+            }
+            $n = (int) $part;
+            if ($n > 0 && (string) $n === ltrim($part, '0')) {
+                $regionIds[$n] = $n;
+            }
+        }
+        $regionIds = \array_slice(array_values($regionIds), 0, BaseAreaResolver::MAX_REGIONS);
+        sort($regionIds);
 
-        $ids = $ranking->bestOf($season, $bike, $region);
+        $ids = $ranking->bestOf($season, $bike, $regionIds);
         $json = json_encode([
             'season' => $season->value,
             'bike' => null === $bike ? 'all' : $bike->value,

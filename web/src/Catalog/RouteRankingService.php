@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -35,15 +36,21 @@ final class RouteRankingService
 
     /**
      * Ranked verified-route ids for the facet, best first. `$bike === null`
-     * means "all bikes" (aggregate across bike types). Only routes with ≥1
-     * matching vote are returned; the four specialty bike types are
+     * means "all bikes" (aggregate across bike types). `$regionIds === []`
+     * means Everywhere (unbounded, subject to MAX_RESULTS); a non-empty set
+     * merges votes across every listed region in one ranking, the My-area
+     * derived scope (region-scoping-design.md §7 Phase 4). Only routes with
+     * ≥1 matching vote are returned; the four specialty bike types are
      * additionally gated by declared suitability (docs/specs/route-domain.md §8.3).
+     *
+     * @param list<int> $regionIds
      *
      * @return list<int>
      */
-    public function bestOf(Season $season, ?BikeType $bike, ?int $regionId): array
+    public function bestOf(Season $season, ?BikeType $bike, array $regionIds = []): array
     {
         $params = ['season' => $season->value];
+        $types = [];
         $where = ["rr.state = 'verified'", 'rv.season = :season'];
 
         if (null !== $bike) {
@@ -55,9 +62,10 @@ final class RouteRankingService
                 $params['bikeText'] = $bike->value;
             }
         }
-        if (null !== $regionId) {
-            $where[] = 'rr.region_id = :region';
-            $params['region'] = $regionId;
+        if ([] !== $regionIds) {
+            $where[] = 'rr.region_id IN (:rids)';
+            $params['rids'] = $regionIds;
+            $types['rids'] = ArrayParameterType::INTEGER;
         }
 
         $sql = 'SELECT rv.route_id
@@ -69,7 +77,7 @@ final class RouteRankingService
                 LIMIT '.self::MAX_RESULTS;
 
         /** @var list<array{route_id: int|string}> $rows */
-        $rows = $this->db->fetchAllAssociative($sql, $params);
+        $rows = $this->db->fetchAllAssociative($sql, $params, $types);
 
         return array_map(static fn (array $r): int => (int) $r['route_id'], $rows);
     }

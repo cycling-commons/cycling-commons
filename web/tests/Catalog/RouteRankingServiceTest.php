@@ -57,7 +57,7 @@ final class RouteRankingServiceTest extends KernelTestCase
         $this->vote($em, $b->getId(), 11, Season::Spring, BikeType::Gravel);
         $this->vote($em, $b->getId(), 12, Season::Spring, BikeType::Gravel);
 
-        self::assertSame([$b->getId(), $a->getId()], $svc->bestOf(Season::Spring, BikeType::Gravel, null));
+        self::assertSame([$b->getId(), $a->getId()], $svc->bestOf(Season::Spring, BikeType::Gravel, []));
     }
 
     public function testExcludesZeroVoteAndOtherFacets(): void
@@ -71,7 +71,7 @@ final class RouteRankingServiceTest extends KernelTestCase
         $this->vote($em, $voted->getId(), 10, Season::Spring, BikeType::Gravel);
         $this->vote($em, $voted->getId(), 11, Season::Summer, BikeType::Road);   // other facet, ignored
 
-        self::assertSame([$voted->getId()], $svc->bestOf(Season::Spring, BikeType::Gravel, null));
+        self::assertSame([$voted->getId()], $svc->bestOf(Season::Spring, BikeType::Gravel, []));
     }
 
     public function testAllBikesAggregatesAcrossBikeTypes(): void
@@ -84,8 +84,8 @@ final class RouteRankingServiceTest extends KernelTestCase
         $this->vote($em, $r->getId(), 10, Season::Spring, BikeType::Gravel);
         $this->vote($em, $r->getId(), 11, Season::Spring, BikeType::Road);
 
-        self::assertSame([$r->getId()], $svc->bestOf(Season::Spring, null, null));   // both count
-        self::assertSame([$r->getId()], $svc->bestOf(Season::Spring, BikeType::Gravel, null)); // one counts, still listed
+        self::assertSame([$r->getId()], $svc->bestOf(Season::Spring, null, []));   // both count
+        self::assertSame([$r->getId()], $svc->bestOf(Season::Spring, BikeType::Gravel, [])); // one counts, still listed
     }
 
     public function testSpecialtyTypeRequiresDeclaredSuitability(): void
@@ -100,10 +100,10 @@ final class RouteRankingServiceTest extends KernelTestCase
         $this->vote($em, $notDeclared->getId(), 11, Season::Spring, BikeType::Handbike);
 
         // Only the declared-suitable route appears in the Handbike list (P4-D4).
-        self::assertSame([$suitable->getId()], $svc->bestOf(Season::Spring, BikeType::Handbike, null));
+        self::assertSame([$suitable->getId()], $svc->bestOf(Season::Spring, BikeType::Handbike, []));
         // But a general type (Gravel) is NOT gated by suitability — vote alone suffices.
         $this->vote($em, $notDeclared->getId(), 12, Season::Spring, BikeType::Gravel);
-        self::assertContains($notDeclared->getId(), $svc->bestOf(Season::Spring, BikeType::Gravel, null));
+        self::assertContains($notDeclared->getId(), $svc->bestOf(Season::Spring, BikeType::Gravel, []));
     }
 
     public function testEverywhereFacetIsHardCapped(): void
@@ -132,7 +132,7 @@ final class RouteRankingServiceTest extends KernelTestCase
         }
         $em->flush();
 
-        $ids = $svc->bestOf(Season::Spring, BikeType::Gravel, null);
+        $ids = $svc->bestOf(Season::Spring, BikeType::Gravel, []);
         self::assertCount(RouteRankingService::MAX_RESULTS, $ids);
     }
 
@@ -147,6 +147,25 @@ final class RouteRankingServiceTest extends KernelTestCase
         $this->vote($em, $r1->getId(), 10, Season::Spring, BikeType::Gravel);
         $this->vote($em, $r2->getId(), 11, Season::Spring, BikeType::Gravel);
 
-        self::assertSame([$r1->getId()], $svc->bestOf(Season::Spring, BikeType::Gravel, 1));
+        self::assertSame([$r1->getId()], $svc->bestOf(Season::Spring, BikeType::Gravel, [1]));
+    }
+
+    public function testMultiRegionSetMergesAcrossRegions(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $svc = static::getContainer()->get(RouteRankingService::class);
+
+        $r1 = $this->route($em, ItemState::Verified, 1);
+        $r24 = $this->route($em, ItemState::Verified, 24);
+        $r23 = $this->route($em, ItemState::Verified, 23);
+        $this->vote($em, $r1->getId(), 10, Season::Summer, BikeType::Gravel);
+        $this->vote($em, $r24->getId(), 11, Season::Summer, BikeType::Gravel);
+        $this->vote($em, $r23->getId(), 12, Season::Summer, BikeType::Gravel);
+
+        $ids = $svc->bestOf(Season::Summer, BikeType::Gravel, [1, 24]);
+        self::assertContains($r1->getId(), $ids);
+        self::assertContains($r24->getId(), $ids);
+        self::assertNotContains($r23->getId(), $ids);
     }
 }
