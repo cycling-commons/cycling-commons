@@ -711,7 +711,7 @@ criticals, 11 warnings + 10 info, all fixed this round:
 - Privacy: frozen profile exposure list, no public derived distances, privacy-copy
   update.
 
-**Phase 4 — EXECUTED 2026-07-21 (symfony-base `d5cfa4c..0198bf0`, NOT
+**Phase 4 — EXECUTED 2026-07-21 (symfony-base `d5cfa4c..0d4373a`, NOT
 pushed).** Base location / My area landed end-to-end — user columns,
 derivation service, the settings field, the map UI, the anonymous circle,
 the cold-start prompt, and the privacy fence + copy. Every slice landed with
@@ -784,6 +784,25 @@ location is set, except an explicit shared URL scope (§9.1); the radius
 slider ships as the only v1 control (no freehand draw); anonymous My-area is
 localStorage-only with no server round-trip and no device-location prompt
 (the only anonymous input is the map-centre pin drop).
+
+**Phase 4 — final review round (2026-07-21, all findings fixed;
+`deaca47`/`0d4373a`).** A whole-branch review (per-task gates had already
+run) found no criticals; 1 important + 5 triaged minors, all closed:
+real-coordinate test fixtures relocated to the mid-Atlantic idiom (seeded
+Belgian regions carry non-NULL `area_km2` and would win the smallest-area
+tie-break against NULL-area fixtures, silently flipping exact-match
+assertions); `setAnonCircle` now clamps+rounds the radius (10–150, matching
+the server); `cos(lat)` floored at 0.01 in both circle-bbox paths (pole
+safety); the empty-derived-set myArea seam closed client-side —
+`coverageParams()` returns a `rids: []` "in scope: nothing" sentinel
+(distinct from Everywhere's `null`) and the coverage counts/search zero out
+instead of falling back to global totals while the map hides everything
+(map-and-search.md §4.5); NL/DE settings copy aligned on the rail's
+gebied/Gebiet terminology. Follow-ups on record for Phase 5: the empty
+derived set is the default first-run experience outside seeded countries —
+revisit before opening a second country; `ImportCatalogCommandTest`'s
+rederive probe shares the Belgium-area `region-square.geojson` fixture
+(same theoretical collision class, bounded by the shared fixture).
 
 **Task 5 — `scope.js` `myArea` kind (client model only) — EXECUTED 2026-07-21
 (symfony-base, NOT pushed).** `web/assets/map/scope.js` gained the `myArea`
