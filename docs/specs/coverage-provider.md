@@ -174,9 +174,20 @@ layer per letter — `c d e g h i j` — feature id = numeric OSM id.
 | `ref` | all | join key: drawer detail fetch, curated dedupe, deep links |
 | `n` | all (when named) | labels, search-pick highlight |
 | `t` | all | type label (existing marker/drawer vocabulary) |
+| `rid` | all (when region-stamped) | region scope filter (region-scoping-design.md §6, Phase 3) |
+| `cc` | all (when stamped) | country scope filter (region-scoping-design.md §6, Phase 3) |
 | `kind` | D | shop/station/pump icon match |
 | `potable` | C | water marker variant, derived from OSM `drinking_water` tags |
 | `acc` | E | stays accessibility filter |
+
+`ref`/`n`/`t`/`rid`/`cc` are the **universal** props (every layer, declared as
+`universalTileProps` in `coverage-contract.json`, pinned by both language
+contract suites); `kind`/`potable`/`acc` are per-letter extras (`tileProps`).
+`rid`/`cc` are NULL-stripped, so a row outside every region (or a tile built
+before Phase 3) is prop-less; the client renders a prop-less coverage feature
+**unfiltered** (region-scoping-design.md §8 risk 2 fallback — the artifact lags
+the DB by up to a weekly rebuild, so hiding-all would blank the map), the
+inverse of the leak-safe default for served data.
 
 - **A · road surface stays out** of the coverage artifact: corridor line data,
   orders of magnitude larger, its own future decision. The existing curated
@@ -215,8 +226,23 @@ itemId?}`.
 |---|---|---|
 | `GET /map/coverage/search?q=` | in-memory `ITEM_INDEX` sidebar search (coverage part) | `{"results": entry[], "attribution"}` — ranked curated first, then community; trgm-backed; default limit `CoverageRepository::SEARCH_LIMIT` (value `12`); ETag + `max-age=300` |
 | `GET /map/coverage/nearby?lat=&lng=&km=` | town-card 5 km client-side haversine scan | `{"groups": [{letter, total, items: entry[]}], "attribution"}` — `ST_DWithin`, grouped by letter, community capped per group (`CoverageRepository::NEARBY_COMMUNITY_CAP`, value `3`) behind a "show all" expander; 422 on bad coords; `max-age=300` |
-| `GET /map/coverage/counts` | rail totals | `{"counts": {"C": n, …}, "attribution"}`; `max-age=3600` |
+| `GET /map/coverage/counts` | rail totals | `{"counts": {"C": n, …}, "attribution"}`; **scope-aware** (Phase 3); `max-age=3600` |
 | `GET /map/coverage/poi/{osmType}/{osmId}` | new: drawer detail for tile POIs | `{ref, letter, name, kind, ll, tags, curated, attribution}` — `tags` filtered to `CoverageRepository::TAG_WHITELIST` (store rich, serve trimmed); `curated` = `{itemId, state, fields, confirmations}` or `null`; `osmType ∈ {node, way}`; 404 when the ref is not cached; ETag + `max-age=300` |
+
+- **Region scope params (Phase 3, region-scoping-design.md §6).** `search`,
+  `nearby` and `counts` accept optional `rids` (csv region ids →
+  `region_id IN (…)`) and `cc` (2-letter country → `country_code = :cc`),
+  applied to both the curated (`item`) and community (`coverage_poi`) arms.
+  A country scope sends both, ORed, so an unsplit-country row (region_id NULL,
+  cc set) still matches. Counts totals become scope-aware so the rail's
+  `shown/total` stay coherent. Params are client-sent only (the plane is
+  anonymous + cacheable — never server-resolved from a user), de-duped, sorted
+  and capped at `CoverageController::MAX_SCOPE_REGIONS` (value `24`) to bound
+  the shared HTTP-cache keyspace (region-scoping-design.md §8 risk 10); the cap
+  is safe because a country scope's `cc` arm is the complete fallback. Absent =
+  current behaviour (backward compatible). The deep-link resolver
+  (`openCoverageFeatureByName`) deliberately sends **no** scope params, so a
+  deep link finds its target regardless of the saved scope, then widens.
 
 Rules:
 
