@@ -41,15 +41,24 @@ const REGIONS = [
 ];
 const DEFAULT = { kind: 'region', regionIds: [1], countryCode: 'BE' };
 
+// A registry variant that ALSO covers a non-BE country, for the myArea widen
+// "ambiguous -> everywhere" case (both derived ccs present in the registry).
+const REGIONS_NL = REGIONS.concat([
+  { id: 50, slug: 'holland', countryCode: 'NL', bbox: [4.0, 51.0, 6.0, 53.0] },
+]);
+
 // Fresh-page init: set the URL + storage a browser would arrive with, wipe the
-// event/persist capture, then re-run init exactly like the map page does.
-function boot({ search = '', ls = null } = {}) {
+// event/persist capture and window.CC_MY_AREA (Task 6 payload) + the anon
+// circle's localStorage entry, then re-run init exactly like the map page does.
+function boot({ search = '', ls = null, myArea = null, defaultScope = DEFAULT, areaLs = null, regionsList = REGIONS } = {}) {
   globalThis.location = { href: `http://localhost/map${search}`, search };
   store.clear();
   if (ls !== null) store.set('cc-scope', ls);
+  if (areaLs !== null) store.set('cc-my-area', areaLs);
+  globalThis.window.CC_MY_AREA = myArea;
   events = [];
   replacedUrls = [];
-  return CCScope.init(REGIONS, DEFAULT);
+  return CCScope.init(regionsList, defaultScope);
 }
 
 test('module exports the API (dual-export guard)', () => {
@@ -242,4 +251,142 @@ test('regions() resolves the active scope to registry objects', () => {
   boot();
   CCScope.setCountry('BE');
   assert.deepEqual(CCScope.regions().map((r) => r.slug), ['wallonia', 'flanders', 'brussels']);
+});
+
+// ---- myArea kind (Phase 4, region-scoping-design.md §9.1) -----------------
+
+test('myArea resolves from CC_MY_AREA and serializes as bare token', () => {
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, place: 'Namur', regionIds: [1, 24], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  const s = CCScope.get();
+  assert.equal(s.kind, 'myArea');
+  assert.deepEqual(s.regionIds, [1, 24]);
+  assert.match(replacedUrls.at(-1), /scope=myarea/);
+  assert.doesNotMatch(replacedUrls.at(-1), /50\.4|4\.8/); // no coords in URL, ever
+  assert.equal(store.get('cc-scope'), 'myarea'); // no coords in the 'cc-scope' LS entry either
+});
+
+test('myArea default beats localStorage named scope; URL still wins', () => {
+  const myArea = { lat: 50.45, lng: 4.85, radiusKm: 40, place: 'Namur', regionIds: [1, 24], countryCodes: ['BE'] };
+  const s1 = boot({ ls: 'region:flanders', myArea, defaultScope: { kind: 'myArea' } });
+  assert.equal(s1.kind, 'myArea');
+  assert.deepEqual(s1.regionIds, [1, 24]);
+
+  const s2 = boot({ search: '?scope=region:flanders', ls: 'region:flanders', myArea, defaultScope: { kind: 'myArea' } });
+  assert.deepEqual(s2, { kind: 'region', regionIds: [24], countryCode: 'BE' });
+});
+
+test('anonymous circle derives ids from registry bboxes, capped', () => {
+  boot();
+  // A circle centred near Brussels overlaps both the Wallonia and Flanders bboxes.
+  CCScope.setAnonCircle(50.8467, 4.3499, 50);
+  const s = CCScope.get();
+  assert.equal(s.kind, 'myArea');
+  assert.ok(s.regionIds.includes(1), 'wallonia derived');
+  assert.ok(s.regionIds.includes(24), 'flanders derived');
+  assert.ok(s.regionIds.length <= 8, 'capped at 8');
+  assert.equal(s.myArea.anon, true);
+  assert.equal(s.myArea.place, null);
+});
+
+test('myArea widen goes to single country then everywhere', () => {
+  // Exactly one derived country present in the registry -> widen to it.
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 24], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  assert.deepEqual(CCScope.nextWider(), { kind: 'country', regionIds: [1, 24, 23], countryCode: 'BE' });
+  assert.deepEqual(CCScope.widen(), { kind: 'country', regionIds: [1, 24, 23], countryCode: 'BE' });
+
+  // A second cc absent from the registry doesn't change the "exactly one" outcome.
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 24], countryCodes: ['BE', 'NL'] } });
+  CCScope.setMyArea();
+  assert.deepEqual(CCScope.nextWider(), { kind: 'country', regionIds: [1, 24, 23], countryCode: 'BE' });
+
+  // Both derived ccs present in the registry -> ambiguous -> everywhere.
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 24], countryCodes: ['BE', 'NL'] }, regionsList: REGIONS_NL });
+  CCScope.setMyArea();
+  assert.deepEqual(CCScope.nextWider(), { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.deepEqual(CCScope.widen(), { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.equal(CCScope.canWiden(), false);
+});
+
+test('myArea photonParams has circle bbox and NO countrycode gate', () => {
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 24], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  const p = CCScope.photonParams();
+  assert.equal(p.countrycode, null);
+  assert.deepEqual(p.bbox, CCScope.bbox());
+  const b = p.bbox;
+  assert.ok(b[0] < 4.85 && b[2] > 4.85 && b[1] < 50.45 && b[3] > 50.45, 'bbox is the circle, not a region union');
+});
+
+test('myArea coverageParams is rid-only', () => {
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [24, 1], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  assert.deepEqual(CCScope.coverageParams(), { rids: [1, 24], cc: null });
+});
+
+test('coverageTileFilter: myArea scope has a ridtok arm only, no cctok arm', () => {
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  const f = CCScope.coverageTileFilter();
+  assert.equal(shows(f, { ridtok: '|1|', cctok: '|BE|' }), true, 'in-region icon shows');
+  assert.equal(shows(f, { ridtok: '|24|', cctok: '|BE|' }), false, 'out-of-region icon hides');
+  assert.equal(shows(f, { ridtok: '', cctok: '|BE|' }), false, 'cc-only row hides under myArea scope (rid-only)');
+  assert.equal(shows(f, { ridtok: '', cctok: '' }), true, 'prop-less renders');
+});
+
+test('stale CC_MY_AREA region ids are dropped against the registry', () => {
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 999], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  const s = CCScope.get();
+  assert.equal(s.kind, 'myArea');
+  assert.deepEqual(s.regionIds, [1]);
+});
+
+test('scope=myarea in URL without any source falls back', () => {
+  assert.deepEqual(boot({ search: '?scope=myarea' }), DEFAULT);
+});
+
+test('myAreaAvailable reflects CC_MY_AREA / anon-circle presence', () => {
+  boot();
+  assert.equal(CCScope.myAreaAvailable(), false);
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1], countryCodes: ['BE'] } });
+  assert.equal(CCScope.myAreaAvailable(), true);
+  boot();
+  CCScope.setAnonCircle(50.45, 4.85, 40);
+  assert.equal(CCScope.myAreaAvailable(), true);
+});
+
+test('setAnonCircle rounds to 2 decimals, sets myArea scope, and marks anon:true', () => {
+  boot();
+  CCScope.setAnonCircle(50.456789, 4.851234, 40);
+  const raw = JSON.parse(store.get('cc-my-area'));
+  assert.deepEqual(raw, { lat: 50.46, lng: 4.85, radiusKm: 40 });
+  const s = CCScope.get();
+  assert.equal(s.kind, 'myArea');
+  assert.equal(s.myArea.anon, true);
+  assert.equal(s.myArea.place, null);
+});
+
+test('clearAnonCircle removes the stored circle; myArea becomes unavailable', () => {
+  boot();
+  CCScope.setAnonCircle(50.45, 4.85, 40);
+  assert.equal(CCScope.myAreaAvailable(), true);
+  CCScope.clearAnonCircle();
+  assert.equal(store.get('cc-my-area'), undefined);
+  assert.equal(CCScope.myAreaAvailable(), false);
+});
+
+test('bestOfRegionIds: single named region, myArea derived set, else null', () => {
+  boot();
+  CCScope.setRegion('wallonia');
+  assert.deepEqual(CCScope.bestOfRegionIds(), [1]);
+  CCScope.setCountry('BE');
+  assert.equal(CCScope.bestOfRegionIds(), null);
+  CCScope.setEverywhere();
+  assert.equal(CCScope.bestOfRegionIds(), null);
+
+  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [24, 1], countryCodes: ['BE'] } });
+  CCScope.setMyArea();
+  assert.deepEqual(CCScope.bestOfRegionIds(), [1, 24]);
 });

@@ -711,6 +711,26 @@ criticals, 11 warnings + 10 info, all fixed this round:
 - Privacy: frozen profile exposure list, no public derived distances, privacy-copy
   update.
 
+**Task 5 — `scope.js` `myArea` kind (client model only) — EXECUTED 2026-07-21
+(symfony-base, NOT pushed).** `web/assets/map/scope.js` gained the `myArea`
+kind: resolves from `window.CC_MY_AREA` (server payload, Task 6 — not yet
+wired) or an anonymous circle (`localStorage['cc-my-area']`, rounded to 2
+decimals on write); serializes as the bare URL/`cc-scope` token `'myarea'`
+(coordinates never leave localStorage); init precedence is URL > myArea
+default > localStorage (§9.1 owner decision — My area wins whenever a base
+location is set, except an explicit shared URL); `bbox()`/`photonParams()` use
+the circle, not a region union; `coverageParams()`/`coverageTileFilter()` stay
+rid-only (no `cc` arm — `countryCode` is always `null` on a myArea scope);
+widen ladder goes myArea → the single registry-known country among the
+derived `countryCodes` (exactly one, else straight to Everywhere) →
+everywhere; new `myAreaAvailable()`/`setMyArea()`/`setAnonCircle()`/
+`clearAnonCircle()`/`bestOfRegionIds()` API, `bestOfRegionParam()` kept
+unchanged for compatibility. Anonymous derivation is a registry-bbox ∩
+circle-bbox intersection, nearest-centre-first, capped at 8. Server payload
+injection (Task 6), the settings UI, and map.js wiring (Task 8) are still
+outstanding — this task only lands the client-side model + tests
+(`web/tests/js/scope.test.cjs`, 34/34 green).
+
 **Phase 5 — Worldwide rollout (per-country, incremental).**
 
 - Region seeding per this spec's section 5a (curator-demand-driven, curator-sized

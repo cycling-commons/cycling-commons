@@ -9,12 +9,15 @@
 // This is a focused module extracted from map.js (a 3000-line classic script);
 // map.js consumes window.CCScope. The scope uses `kind`, NOT `mode` — map.js
 // already owns `mode` for the Curated/Everything view toggle (verified name
-// collision, region-scoping-design.md §4). A future `myArea` kind (Phase 4)
-// slots in without touching this contract.
+// collision, region-scoping-design.md §4). The `myArea` kind (Phase 4, §9.1)
+// derives from the logged-in home base (window.CC_MY_AREA, Task 6) or an
+// anonymous circle (localStorage 'cc-my-area'), never from the URL/'cc-scope'
+// token — those only ever carry the bare literal 'myarea', no coordinates.
 (() => {
   'use strict';
 
   const LS_KEY = 'cc-scope';
+  const LS_AREA_KEY = 'cc-my-area';
   const URL_PARAM = 'scope';
   const EVENT = 'cc:scopechange';
 
@@ -25,7 +28,9 @@
   let bySlug = new Map();
   let byCountry = new Map();
 
-  // {kind:'region'|'country'|'everywhere', regionIds:int[], countryCode:str|null}
+  // {kind:'region'|'country'|'everywhere'|'myArea', regionIds:int[], countryCode:str|null}
+  // — myArea additionally carries `myArea: {center:[lat,lng], radiusKm, place|null,
+  // countryCodes:[], anon:bool}`; countryCode stays null (rid-only, never a cc arm).
   let scope = null;
   let fallback = { kind: 'everywhere', regionIds: [], countryCode: null };
 
@@ -44,15 +49,113 @@
     }
   };
 
-  const clone = (s) => ({ kind: s.kind, regionIds: s.regionIds.slice(), countryCode: s.countryCode });
+  const clone = (s) => {
+    const c = { kind: s.kind, regionIds: s.regionIds.slice(), countryCode: s.countryCode };
+    if (s.myArea) {
+      c.myArea = {
+        center: s.myArea.center.slice(),
+        radiusKm: s.myArea.radiusKm,
+        place: s.myArea.place,
+        countryCodes: s.myArea.countryCodes.slice(),
+        anon: s.myArea.anon,
+      };
+    }
+    return c;
+  };
 
   const regionScope = (r) => ({ kind: 'region', regionIds: [r.id], countryCode: r.countryCode || null });
   const countryScope = (cc) => ({ kind: 'country', regionIds: (byCountry.get(cc) || []).map((r) => r.id), countryCode: cc });
   const everywhereScope = () => ({ kind: 'everywhere', regionIds: [], countryCode: null });
 
+  // --- myArea (Phase 4, region-scoping-design.md §9.1): "what's near my home
+  // base" for logged-in users (window.CC_MY_AREA, Task 6) or an anonymous
+  // circle (localStorage). The circle itself never leaves this module — the
+  // URL/'cc-scope' token is the bare literal 'myarea', and the derived scope
+  // (rid set only) is what every other API surface sees. ----------------------
+
+  // [west, south, east, north] bbox around a lat/lng circle of radius rkm.
+  const circleBbox = (center, rkm) => {
+    const dLat = rkm / 111.32;
+    const dLng = rkm / (111.32 * Math.cos(center[0] * Math.PI / 180));
+    return [center[1] - dLng, center[0] - dLat, center[1] + dLng, center[0] + dLat];
+  };
+
+  // The source of truth for myArea: the server-injected payload wins; an
+  // anonymous circle (set via setAnonCircle) is the fallback for logged-out
+  // users. Returns null when neither is present.
+  const myAreaSource = () => {
+    const a = (typeof window !== 'undefined' && window.CC_MY_AREA) || null;
+    if (a && a.lat != null && a.lng != null) {
+      return {
+        center: [a.lat, a.lng], radiusKm: a.radiusKm || 40, place: a.place || null,
+        regionIds: (a.regionIds || []).slice(), countryCodes: (a.countryCodes || []).slice(), anon: false,
+      };
+    }
+    try {
+      const raw = localStorage.getItem(LS_AREA_KEY);
+      if (raw) {
+        const c = JSON.parse(raw);
+        if (typeof c.lat === 'number' && typeof c.lng === 'number') {
+          return { center: [c.lat, c.lng], radiusKm: c.radiusKm || 40, place: null, regionIds: null, countryCodes: null, anon: true };
+        }
+      }
+    } catch (e) { /* ignore */ }
+    return null;
+  };
+
+  // Anonymous circles carry no server-derived region ids: approximate with a
+  // registry-bbox intersection, nearest-centre-first, capped at 8. Over-inclusive
+  // is fine — the filter widens, never narrows wrongly.
+  const deriveFromBboxes = (center, rkm) => {
+    const cb = circleBbox(center, rkm);
+    const hits = [];
+    regions.forEach((r) => {
+      const b = r.bbox;
+      if (b && b[0] <= cb[2] && cb[0] <= b[2] && b[1] <= cb[3] && cb[1] <= b[3]) {
+        const cx = (b[0] + b[2]) / 2; const cy = (b[1] + b[3]) / 2;
+        hits.push({ id: r.id, cc: r.countryCode, d: (cx - center[1]) ** 2 + (cy - center[0]) ** 2 });
+      }
+    });
+    hits.sort((p, q) => p.d - q.d);
+    return hits.slice(0, 8);
+  };
+
+  // Rebuild the myArea scope fresh from the source of truth (never from a
+  // passed-in object) — this is what makes sanitize()/set() drop stale ids.
+  // Returns null when there is no source (caller falls through to fallback).
+  const myAreaScope = () => {
+    const src = myAreaSource();
+    if (!src) return null;
+    let ids; let ccs;
+    if (src.anon) {
+      const hits = deriveFromBboxes(src.center, src.radiusKm);
+      ids = hits.map((h) => h.id);
+      ccs = [];
+      hits.forEach((h) => { if (h.cc && ccs.indexOf(h.cc) === -1) ccs.push(h.cc); });
+    } else {
+      ids = src.regionIds.filter((id) => byId.has(id)); // drop stale ids
+      ccs = src.countryCodes;
+    }
+    return {
+      kind: 'myArea', regionIds: ids, countryCode: null,
+      myArea: { center: src.center, radiusKm: src.radiusKm, place: src.place, countryCodes: ccs, anon: src.anon },
+    };
+  };
+
+  // The single registry-known country among myArea's derived countryCodes, or
+  // null when zero or more than one qualify (widen()/nextWider()'s "exactly
+  // one" rule — an ambiguous myArea widens straight to Everywhere).
+  const singleMyAreaCountry = () => {
+    if (!scope || scope.kind !== 'myArea' || !scope.myArea) return null;
+    const present = scope.myArea.countryCodes.filter((cc) => byCountry.has(cc));
+    return present.length === 1 ? present[0] : null;
+  };
+
   // --- serialization for URL/storage: slug-based so links survive re-imports ---
   const serialize = (s) => {
     if (!s || s.kind === 'everywhere') return 'everywhere';
+    // Bare literal — NEVER coordinates in the URL or the 'cc-scope' LS entry.
+    if (s.kind === 'myArea') return 'myarea';
     if (s.kind === 'country') return `country:${s.countryCode}`;
     const slugs = s.regionIds.map((id) => { const r = byId.get(id); return r && r.slug ? r.slug : String(id); });
     return `region:${slugs.join(',')}`;
@@ -61,6 +164,9 @@
   const deserialize = (str) => {
     if (!str) return null;
     if (str === 'everywhere') return everywhereScope();
+    // May be null (no CC_MY_AREA payload and no anon circle) — caller falls
+    // through to localStorage/default, same as any other unresolvable token.
+    if (str === 'myarea') return myAreaScope();
     const i = str.indexOf(':');
     if (i < 0) return null;
     const kind = str.slice(0, i);
@@ -85,6 +191,9 @@
   // returns null when nothing valid remains so the caller can fall back.
   const sanitize = (s) => {
     if (!s || !s.kind) return null;
+    // Source of truth is the payload/circle, never the passed object — this
+    // also handles stale ids (myAreaScope drops them against the registry).
+    if (s.kind === 'myArea') return myAreaScope();
     if (s.kind === 'everywhere') return everywhereScope();
     const ids = (s.regionIds || []).filter((id) => byId.has(id));
     if (!ids.length) return null;
@@ -117,7 +226,15 @@
       try { fromUrl = deserialize(new URLSearchParams(location.search).get(URL_PARAM)); } catch (e) { /* noop */ }
       let fromLs = null;
       try { fromLs = deserialize(localStorage.getItem(LS_KEY)); } catch (e) { /* noop */ }
-      scope = fromUrl || fromLs || clone(fallback);
+      // Phase 4 (region-scoping-design.md §9.1, owner decision): My area wins
+      // whenever a base location is set — EXCEPT an explicit URL scope, which
+      // always wins (a shared deep link must reproduce what was shared, not
+      // silently swap in "my area").
+      if (!fromUrl && fallback.kind === 'myArea') {
+        scope = clone(fallback);
+      } else {
+        scope = fromUrl || fromLs || clone(fallback);
+      }
       return this.get();
     },
 
@@ -141,10 +258,15 @@
     setCountry(cc) { return byCountry.has(cc) ? this.set(countryScope(cc)) : this.get(); },
     setEverywhere() { return this.set(everywhereScope()); },
 
-    /** One rung wider: region -> its country -> everywhere. */
+    /** One rung wider: region -> its country -> everywhere; myArea -> its single
+     *  registry-known country (if exactly one) -> everywhere. */
     widen() {
       if (!scope || scope.kind === 'everywhere') return this.get();
       if (scope.kind === 'country') return this.setEverywhere();
+      if (scope.kind === 'myArea') {
+        const cc = singleMyAreaCountry();
+        return cc ? this.setCountry(cc) : this.setEverywhere();
+      }
       return (scope.countryCode && byCountry.has(scope.countryCode)) ? this.setCountry(scope.countryCode) : this.setEverywhere();
     },
     canWiden() { return !!scope && scope.kind !== 'everywhere'; },
@@ -153,14 +275,20 @@
     nextWider() {
       if (!scope || scope.kind === 'everywhere') return null;
       if (scope.kind === 'country') return everywhereScope();
+      if (scope.kind === 'myArea') {
+        const cc = singleMyAreaCountry();
+        return cc ? countryScope(cc) : everywhereScope();
+      }
       return (scope.countryCode && byCountry.has(scope.countryCode)) ? countryScope(scope.countryCode) : everywhereScope();
     },
 
     /** Region registry objects currently in scope (for spotlight + labels). */
     regions() { return (scope ? scope.regionIds : []).map((id) => byId.get(id)).filter(Boolean); },
 
-    /** Union bbox [west, south, east, north] of the scope's regions; null for everywhere. */
+    /** Union bbox [west, south, east, north] of the scope's regions; the circle
+     *  bbox for myArea; null for everywhere. */
     bbox() {
+      if (scope && scope.kind === 'myArea' && scope.myArea) return circleBbox(scope.myArea.center, scope.myArea.radiusKm);
       const rs = this.regions();
       if (!rs.length) return null;
       let w = Infinity; let s = Infinity; let e = -Infinity; let n = -Infinity;
@@ -172,9 +300,47 @@
       return Number.isFinite(w) ? [w, s, e, n] : null;
     },
 
-    /** Single region id for best-of &region= (only a single named region qualifies). */
+    /** Single region id for best-of &region= (only a single named region qualifies).
+     *  Kept for compatibility — bestOfRegionIds() supersedes it for callers that
+     *  can send a set (Phase 4). */
     bestOfRegionParam() {
       return (scope && scope.kind === 'region' && scope.regionIds.length === 1) ? scope.regionIds[0] : null;
+    },
+
+    /** Region id set for best-of: [id] for a single named region, the myArea
+     *  derived set (sorted ascending to match the server-side sort), else null. */
+    bestOfRegionIds() {
+      if (!scope) return null;
+      if (scope.kind === 'region' && scope.regionIds.length === 1) return scope.regionIds.slice();
+      if (scope.kind === 'myArea' && scope.regionIds.length) return scope.regionIds.slice().sort((a, b) => a - b);
+      return null;
+    },
+
+    /** Whether a myArea source (CC_MY_AREA payload or anon circle) is available. */
+    myAreaAvailable() { return myAreaScope() !== null; },
+
+    /** Resolve + apply the myArea scope from its source of truth; no-op if unavailable. */
+    setMyArea() {
+      const s = myAreaScope();
+      return s ? this.set(s) : this.get();
+    },
+
+    /** Store an anonymous circle (rounded to 2 decimals — same coarseness as
+     *  the server) for logged-out users, then apply it as the myArea scope. */
+    setAnonCircle(lat, lng, radiusKm) {
+      try {
+        localStorage.setItem(LS_AREA_KEY, JSON.stringify({
+          lat: Math.round(lat * 100) / 100,
+          lng: Math.round(lng * 100) / 100,
+          radiusKm,
+        }));
+      } catch (e) { /* private mode */ }
+      return this.setMyArea();
+    },
+
+    /** Forget the anonymous circle (does not touch an in-progress CC_MY_AREA scope). */
+    clearAnonCircle() {
+      try { localStorage.removeItem(LS_AREA_KEY); } catch (e) { /* private mode */ }
     },
 
     /** Photon geocode hints derived from scope (Task 8): scoped bbox + country gate. */
