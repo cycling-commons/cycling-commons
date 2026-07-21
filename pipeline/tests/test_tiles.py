@@ -179,3 +179,89 @@ def test_verify_pmtiles_subprocess_failure_surfaces_diagnostics(tmp_path):
     msg = str(exc.value)
     assert "pmtiles show" in msg      # the exact failing command
     assert "magic number" in msg      # go-pmtiles' captured stderr
+
+
+# ---- Low-zoom clustering (region-scoping-design.md §7) ----
+# The rail shows a coverage layer's full in-scope count ("D 2015/2015"), and the
+# TILES must represent that same set at overview zooms — as point_count clusters,
+# not tippecanoe's default point-thinning (which dropped ~99%, leaving the map
+# empty under a 2015 label). These tests pin the flags AND the emergent
+# behaviour: sum(point_count) == every input point, and the maxzoom cap.
+
+def _tile_xy(lon: float, lat: float, z: int) -> tuple[int, int]:
+    n = 2 ** z
+    x = min(n - 1, max(0, int((lon + 180.0) / 360.0 * n)))
+    return x, tiles._tile_y(lat, n)
+
+
+def _decode_layer(path, z: int, x: int, y: int, layer: str) -> list:
+    """tippecanoe-decode one tile → the features of one named vector layer.
+
+    Output shape (tippecanoe-decode): a top FeatureCollection whose `features`
+    are per-layer FeatureCollections, each tagged `properties.layer`."""
+    doc = json.loads(tiles._run(
+        ["tippecanoe-decode", str(path), str(z), str(x), str(y)], text=True))
+    for lyr in doc.get("features", []):
+        if lyr.get("properties", {}).get("layer") == layer:
+            return lyr.get("features", [])
+    return []
+
+
+def test_build_command_carries_clustering_flags(tmp_path, monkeypatch):
+    # The overview-clustering flags are load-bearing: -r1 keeps every point,
+    # cluster-distance/maxzoom group at low zoom only, cluster-densest fits tile
+    # size by MERGING not dropping. Pin them so a future edit can't silently fall
+    # back to point-thinning (--drop-densest-as-needed), which is exactly the
+    # regression this round fixed.
+    captured = {}
+    monkeypatch.setattr(tiles.subprocess, "run",
+                        lambda cmd, check=True: captured.setdefault("cmd", cmd))
+    tiles.build_pmtiles({"D": tmp_path / "d.geojsonl"}, tmp_path / "o.pmtiles")
+    cmd = captured["cmd"]
+    assert "-r1" in cmd, "must keep every point (no rate-based dropping)"
+    assert "--cluster-densest-as-needed" in cmd
+    assert "--drop-densest-as-needed" not in cmd, "dropping must NOT return"
+    for flag, val in [("--cluster-distance", "20"), ("--cluster-maxzoom", "11"),
+                      ("--minimum-zoom", "6"), ("--maximum-zoom", "14")]:
+        assert flag in cmd and cmd[cmd.index(flag) + 1] == val, f"{flag} {val}"
+
+
+def test_clustering_represents_every_point_at_low_zoom(tmp_path):
+    # 60 D-services packed into a ~0.02° box near Brussels. At z6 (below the
+    # cluster-maxzoom cap) tippecanoe MUST cluster them into point_count features
+    # whose counts sum to EXACTLY 60 — proving nothing is dropped (the -r1 +
+    # cluster-densest promise) and nothing is double-counted at a tile edge.
+    n = 60
+    rows = [(4.34 + (i % 10) * 0.002, 50.84 + (i // 10) * 0.002,
+             {"ref": f"node/{i}", "t": "Bike shop", "kind": "shop"})
+            for i in range(n)]
+    out = tmp_path / "cl.pmtiles"
+    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+
+    x, y = _tile_xy(4.35, 50.85, 6)
+    feats = _decode_layer(out, 6, x, y, "d")
+    assert feats, "z6 tile must contain the packed points"
+    # unclustered feature = 1 point; clustered = point_count members.
+    total = sum(f["properties"].get("point_count", 1) for f in feats)
+    assert total == n, f"clustering must represent all {n} points at z6, got {total}"
+    assert any("point_count" in f["properties"] for f in feats), \
+        "such a dense box must yield at least one point_count cluster at z6"
+
+
+def test_cluster_maxzoom_leaves_high_zoom_individual(tmp_path):
+    # Above --cluster-maxzoom=11, features render individually (no point_count),
+    # so a rider zoomed into a town sees the actual POIs, not a bubble. Few,
+    # tightly-grouped points so the z12 tile is nowhere near the size limit
+    # (cluster-densest never fires) and the ONLY reason to cluster would be the
+    # distance rule — which the maxzoom cap disables at z12.
+    rows = [(4.350 + (i % 5) * 0.001, 50.850 + (i // 5) * 0.001,
+             {"ref": f"node/{i}", "t": "Bike shop", "kind": "shop"})
+            for i in range(15)]
+    out = tmp_path / "hz.pmtiles"
+    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+
+    x, y = _tile_xy(4.351, 50.851, 12)
+    feats = _decode_layer(out, 12, x, y, "d")
+    assert feats, "z12 tile must contain the grouped points"
+    assert all("point_count" not in f["properties"] for f in feats), \
+        "z12 is above --cluster-maxzoom=11 → every feature must be individual"
