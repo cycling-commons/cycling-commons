@@ -27,10 +27,20 @@
   const _regionById = new Map(CC_REGIONS.map(r => [r.id, r]));
   const slugOfRegion = id => { const r = _regionById.get(id); return r ? r.slug : null; };
   const _defaultScope = (() => {
+    // My area wins whenever a base location is set (region-scoping-design.md §4 /
+    // §9.1 Phase 4, owner decision) — an explicit ?scope= URL still beats it
+    // (CCScope.init handles that precedence). myAreaAvailable() reads the source
+    // (CC_MY_AREA payload / anon 'cc-my-area' circle) directly, not the registry,
+    // so it's safe to probe before init() and resolves to the same source there.
+    if (window.CCScope && window.CCScope.myAreaAvailable()) return {kind: 'myArea', regionIds: [], countryCode: null};
     const w = CC_REGIONS.find(r => r.slug === 'wallonia') || CC_REGIONS[0];
     return w ? {kind: 'region', regionIds: [w.id], countryCode: w.countryCode} : {kind: 'everywhere', regionIds: [], countryCode: null};
   })();
   if (window.CCScope) window.CCScope.init(CC_REGIONS, _defaultScope);
+  // Reveal the My-area rail button once we know a source exists (Phase 4); it
+  // ships hidden so a rider with no base location (and no anon circle) never
+  // sees a dead control.
+  { const myBtn = document.getElementById('myAreaBtn'); if (myBtn && window.CCScope && window.CCScope.myAreaAvailable()) myBtn.hidden = false; }
   const curScope = () => window.CCScope ? window.CCScope.get() : _defaultScope;
   // A served feature is in scope when its region id (rid) is in the active
   // scope. A region/country scope hides rid-less or out-of-region features
@@ -115,9 +125,34 @@
       }).catch(e=>console.warn('Region boundary unavailable:', e));
   }
 
+  // My-area spotlight (region-scoping-design.md §4 / §9.1 Phase 4): a locally
+  // computed soft circle — zero fetch, unlike the named-region boundary. The
+  // deliberately fuzzy edge (line-blur) is §4's anti-border message made visible.
+  // Reuses the SAME source/layer ids as setSpotlight so clearSpotlight() and the
+  // scope-switch respotlight path keep working, and bumps the same _spotReq race
+  // token so a still-in-flight setSpotlight() fetch from a prior region scope
+  // sees its req superseded and never repaints over this circle.
+  function setCircleSpotlight(center, rkm){
+    if(!map.getStyle()) return;
+    ++_spotReq;
+    clearSpotlight();
+    if(!center || !rkm) return;
+    const n=64, lat=center[0];
+    const dLat = rkm/111.32, dLng = rkm/(111.32*Math.cos(lat*Math.PI/180));
+    const ring=[];
+    for(let i=0;i<=n;i++){ const a=2*Math.PI*i/n; ring.push([center[1]+dLng*Math.cos(a), lat+dLat*Math.sin(a)]); }
+    const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
+    const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world, ring]}};   // world minus the circle = the dimmed outside
+    map.addSource('region-mask',{type:'geojson',data:mask});
+    map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:{type:'Polygon',coordinates:[ring]}}});
+    map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
+    map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-blur':3,'line-opacity':0.95}});
+  }
+
   // The data-scope token a scope maps to (matches the rail buttons' data-scope).
   function scopeToken(s){
     if(!s||s.kind==='everywhere') return 'everywhere';
+    if(s.kind==='myArea') return 'myarea';   // bare literal — matches #myAreaBtn, never coordinates
     if(s.kind==='country') return 'country:'+s.countryCode;
     const slug = slugOfRegion(s.regionIds[0]);
     return slug ? 'region:'+slug : 'everywhere';
@@ -139,15 +174,28 @@
     // writes would wipe the server-rendered fallback text with blanks.
     const lbl = scopeLabel(s);
     if(lbl){
-      const rl = document.getElementById('regionLine'); if(rl) rl.textContent = lbl;
+      // My area (region-scoping-design.md §4 / §9.1 Phase 4): the header + search
+      // line name the base place + radius, NEVER coordinates — the deliberately
+      // vague "Near X · N km" wording is the anti-border message in text form.
+      const isMy = !!(s && s.kind==='myArea' && s.myArea);
+      const myLine = isMy
+        ? (s.myArea.place ? tpl(I18N.myAreaLine||'Near {place} · {km} km', {place:s.myArea.place, km:s.myArea.radiusKm})
+                          : tpl(I18N.myAreaLinePlain||'My area · {km} km', {km:s.myArea.radiusKm}))
+        : null;
+      const rl = document.getElementById('regionLine'); if(rl) rl.textContent = myLine || lbl;
       // Brand kicker follows the scope (retires the hardcoded "Wallonia · 50.32°N"):
-      // scope label + bbox-centre coords, or just the label for Everywhere.
+      // scope label + bbox-centre coords, or just the label for Everywhere. My
+      // area shows its line WITHOUT the coordinate suffix (no precise point leak).
       const co = document.getElementById('regionCoords');
-      if(co){ const b = window.CCScope && window.CCScope.bbox(); co.textContent = b ? `◎ ${lbl} · ${((b[1]+b[3])/2).toFixed(2)}°N ${((b[0]+b[2])/2).toFixed(2)}°E` : `◎ ${lbl}`; }
+      if(co){
+        if(isMy){ co.textContent = `◎ ${myLine}`; }
+        else { const b = window.CCScope && window.CCScope.bbox(); co.textContent = b ? `◎ ${lbl} · ${((b[1]+b[3])/2).toFixed(2)}°N ${((b[0]+b[2])/2).toFixed(2)}°E` : `◎ ${lbl}`; }
+      }
       const stt = document.getElementById('searchTitle');
-      if(stt) stt.textContent = (s && s.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere') : tpl(I18N.searchIn||'Search in {area}', {area:lbl});
+      if(stt) stt.textContent = isMy ? myLine : ((s && s.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere') : tpl(I18N.searchIn||'Search in {area}', {area:lbl}));
     }
-    setSpotlight(s&&s.kind==='region'&&s.regionIds.length===1 ? slugOfRegion(s.regionIds[0]) : null);
+    if(s&&s.kind==='myArea'&&s.myArea) setCircleSpotlight(s.myArea.center, s.myArea.radiusKm);
+    else setSpotlight(s&&s.kind==='region'&&s.regionIds.length===1 ? slugOfRegion(s.regionIds[0]) : null);
     refilterClusters(); updateConfMarkers();   // served-POI clusters follow scope (no-ops until setupConfClusters runs)
     updateHeatFilter();                         // ride-heat follows scope too (no-op until the lazy layer exists)
     updateCoverageScopeFilter();                // coverage tile dots follow scope (Phase 3; no-op until addCoverage runs)
@@ -3296,11 +3344,13 @@
   function refreshBestOf(){
     const req=++_bestOfReq;
     if(mode!=='curated'){ render(); return; }
-    // A named-region scope sends &region= so best-of ranks within that region
-    // (MapController parses it; the Phase-1 LIMIT guard stays). Country/Everywhere
-    // send no region — the guarded unbounded aggregate (region-scoping-design.md §6).
-    const region = window.CCScope && window.CCScope.bestOfRegionParam();
-    const regionQ = region ? `&region=${encodeURIComponent(region)}` : '';
+    // A named-region scope sends &region=<id>; My area sends its derived rid SET
+    // as a CSV (&region=1,24) so best-of ranks across the whole home-base area
+    // (MapController parses the CSV; region-scoping-design.md §6 / §9.1 Phase 4).
+    // Country/Everywhere send no region — the guarded unbounded aggregate. A
+    // single named region keeps the identical single-id request as before.
+    const regionIds = window.CCScope && window.CCScope.bestOfRegionIds();
+    const regionQ = (regionIds && regionIds.length) ? `&region=${encodeURIComponent(regionIds.join(','))}` : '';
     fetch(`/map/best-of?season=${encodeURIComponent(boSeason)}&bike=${encodeURIComponent(boBike)}${regionQ}`,
       {credentials:'same-origin', headers:{'Accept':'application/json'}})
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
@@ -3330,6 +3380,7 @@
     const tok = b.dataset.scope||'';
     if(!window.CCScope) return;
     if(tok==='everywhere') window.CCScope.setEverywhere();
+    else if(tok==='myarea') window.CCScope.setMyArea();   // Phase 4: resolves from the base-location source
     else if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
     else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
   });

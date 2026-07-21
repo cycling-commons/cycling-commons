@@ -559,6 +559,8 @@ region:
   # distinct registry country (07-20 review finding 6) — importing a new
   # country's regions means adding its all_<cc> key here in all four locales,
   # exactly like the per-region label keys.
+  my_area:
+    label: 'My area'
   wallonia:
     label: 'Wallonia'
   flanders:
@@ -1029,6 +1031,8 @@ map:
   search_in: 'Search in {area}'
   search_everywhere: 'Search everywhere'
   search_widen: 'Search in {area} instead'
+  my_area_line: 'Near {place} · {km} km'
+  my_area_line_plain: 'My area · {km} km'
   search_placeholder: 'Search a climb, town, viewpoint…'
   search_aria: 'Search the Commons'
   region: 'Region'

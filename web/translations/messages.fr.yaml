@@ -555,6 +555,8 @@ region:
   # Map scope-selector + dynamic header labels (region.<slug>.label). Display
   # names live here, not on the World Subdivision link (English-only msgids).
   # docs/specs/2026-07-19-region-scoping-design.md §3.
+  my_area:
+    label: 'Ma zone'
   wallonia:
     label: 'Wallonie'
   flanders:
@@ -859,6 +861,8 @@ map:
   search_in: 'Rechercher dans {area}'
   search_everywhere: 'Rechercher partout'
   search_widen: 'Rechercher dans {area} plutôt'
+  my_area_line: 'Près de {place} · {km} km'
+  my_area_line_plain: 'Ma zone · {km} km'
   search_placeholder: 'Cherchez une côte, une ville, un point de vue…'
   search_aria: 'Rechercher dans les Commons'
   region: 'Région'

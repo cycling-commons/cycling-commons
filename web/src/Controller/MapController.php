@@ -198,6 +198,11 @@ final class MapController extends AbstractController
             'searchIn' => $t->trans('map.search_in'),
             'searchEverywhere' => $t->trans('map.search_everywhere'),
             'searchWiden' => $t->trans('map.search_widen'),
+            // My-area header/search line (region-scoping-design.md §4 / §9.1
+            // Phase 4). {place}/{km} filled by map.js tpl(); the _plain variant
+            // is used when the base location has no place name.
+            'myAreaLine' => $t->trans('map.my_area_line'),
+            'myAreaLinePlain' => $t->trans('map.my_area_line_plain'),
             'seasons' => [
                 'spring' => $t->trans('map.season_spring'),
                 'summer' => $t->trans('map.season_summer'),

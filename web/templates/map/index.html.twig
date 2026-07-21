@@ -90,6 +90,11 @@
       <div class="grp">
         <h3>{{ 'map.region'|trans }}</h3>
         <div class="scope-toggle" id="regionScope">
+          {# My area (region-scoping-design.md §4 / §9.1 Phase 4): the rider's home-base
+             circle, FIRST in the group. Revealed by map.js only when CCScope has a
+             My-area source (logged-in base location or anonymous circle); the token is
+             the bare literal 'myarea' — never coordinates. #}
+          <button type="button" data-scope="myarea" id="myAreaBtn" hidden>{{ 'region.my_area.label'|trans }}</button>
           {% for r in regions %}
           <button data-scope="region:{{ r.slug }}">{{ ('region.' ~ r.slug ~ '.label')|trans }}</button>
           {% endfor %}
