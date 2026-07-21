@@ -14,9 +14,20 @@
   var radiusInput = document.querySelector('[data-base-radius]');
   var radiusOutput = document.querySelector('[data-radius-output]');
   if (radiusInput && radiusOutput) {
+    // --fill drives the green filled portion of the custom track (the
+    // template's .radius-row input[type=range] gradient).
+    var syncRadiusFill = function () {
+      var min = parseFloat(radiusInput.min) || 0;
+      var max = parseFloat(radiusInput.max) || 100;
+      var val = parseFloat(radiusInput.value) || min;
+      var pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+      radiusInput.style.setProperty('--fill', pct + '%');
+    };
     radiusInput.addEventListener('input', function () {
       radiusOutput.textContent = radiusInput.value + ' km';
+      syncRadiusFill();
     });
+    syncRadiusFill();
   }
 
   var results = document.getElementById('baseLocRes');
