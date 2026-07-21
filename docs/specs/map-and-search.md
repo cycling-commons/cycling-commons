@@ -240,6 +240,18 @@ the newest rung of that same ladder.
   "Outside your area" nudge (`map.outside_area`) with a widen action
   (`CCScope.widen()`); it never auto-widens the map itself, and fires **once
   per page load** (re-dismissing doesn't re-arm until reload).
+- **Out-of-scope town opens transiently widen (owner decision 2026-07-21):**
+  town search is scope-exempt (a place is an explicit location choice), so
+  opening a town whose coordinates fall **outside the current scope's bbox**
+  transiently widens to Everywhere via the deep-link mechanism
+  (`persist:false` — localStorage/URL keep the saved scope, which returns on
+  the next plain load). Without this, the scope-exempt town drawer filled
+  with nearby items while the scoped map rendered the same area empty — the
+  worst case being a myArea scope with an **empty derived set** (base
+  location outside every seeded region, e.g. a Dutch base today), where the
+  whole map is leak-safe-hidden. Bbox containment is the deliberate
+  approximation: an inside-bbox town already renders its surroundings, so no
+  widen is needed there. Applies to every scope kind, not just myArea.
 - **Default precedence (owner decision, region-scoping-design.md §9.1):** on load, `URL scope > myArea
   (if available) > localStorage`. My-area wins the default scope whenever a
   base location is set, overriding a stale localStorage scope — except an

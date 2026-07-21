@@ -2496,6 +2496,18 @@
   // geocoded place (spec 2026-07-14 §3.3): CITIES entries keep their wiki/info
   // blurbs; Photon hits pass just {ll}.
   function openPlace(name, meta){
+    // Town outside the current scope → transiently widen (persist:false, the
+    // deep-link mechanism), so the map matches the scope-exempt town drawer
+    // instead of zooming into an area the scope renders empty (owner decision
+    // 2026-07-21, map-and-search.md §4.5; opening a town is an explicit
+    // location choice — the map should follow it). Bbox containment is the
+    // deliberate approximation: a town inside the scope bbox already renders
+    // its surroundings, so no widen is needed there. The saved scope returns
+    // on the next plain load.
+    const sbb = window.CCScope && window.CCScope.bbox ? window.CCScope.bbox() : null;
+    if(sbb && (meta.ll[1]<sbb[0] || meta.ll[0]<sbb[1] || meta.ll[1]>sbb[2] || meta.ll[0]>sbb[3])){
+      widenForDeepLink();
+    }
     // A · Road surface segments are corridor data, not places — near any mapped
     // town they'd flood the card (Spa: 58 rows). Text search still finds them.
     const near = nearbyItems(meta.ll, 5).filter(n=>n.e.letter!=='A');
