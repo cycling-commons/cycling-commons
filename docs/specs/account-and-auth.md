@@ -315,15 +315,16 @@ with an account**. Removal targets personal data only.
   deletion (§10) both route through the **shared seam**
   `UserDeletionService::purge()`: run every `UserDeletionHookInterface`
   pre-delete hook, then remove the `User` row.
-- **Today no hook implementations exist** (verified: no class implements
-  `App\Service\UserDeletionHookInterface`), so removal is a hard delete of the
-  row and the public profile URL 404s naturally. **Known gap:**
-  `reset_password_request.user_id` is a plain restrictive FK (no `ON DELETE`
-  action — `Version20260628225933`): live reset rows are NOT cleaned up by
-  either deletion path, so removing a user with a pending reset request
-  currently fails with an FK violation; the rows must be purged in
-  `UserDeletionService::purge()` (or the FK changed to `CASCADE`) before
-  removal works unconditionally. **Specified, pending implementation:**
+- **One hook implementation exists**: `App\Service\ResetPasswordCleanupHook`
+  (added 2026-07-22, closing the former known gap) — purges the user's
+  `reset_password_request` rows via the bundle's `removeRequests()` before
+  the row delete. `reset_password_request.user_id` is a plain restrictive FK
+  (no `ON DELETE` action — `Version20260628225933`), so without the hook
+  BOTH deletion paths threw an FK violation for any user with a live reset
+  request (regression pinned:
+  `AccountDeletionTest::testConfirmDeletionSucceedsWithPendingResetRequest`).
+  Beyond that, removal is a hard delete of the row and the public profile
+  URL 404s naturally. **Specified, pending implementation:**
   as contributed-content anonymization is needed, it is written as hooks on
   this seam — contributions are dissociated and retained under an anonymous
   "former contributor" identity, never deleted.

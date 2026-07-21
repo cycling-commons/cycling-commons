@@ -134,6 +134,52 @@ final class AccountDeletionTest extends WebTestCase
         self::assertNull($found, 'User must be removed from DB after confirmed deletion');
     }
 
+    /**
+     * Regression (account-and-auth.md §6.3 known gap, fixed): deleting a user
+     * with a LIVE password-reset request used to throw an FK violation —
+     * reset_password_request.user_id is a restrictive FK (Version20260628225933)
+     * and nothing purged the rows first. The ResetPasswordCleanupHook now
+     * removes them inside purge(), on both deletion paths.
+     */
+    public function testConfirmDeletionSucceedsWithPendingResetRequest(): void
+    {
+        $email = 'delete-with-reset@example.com';
+        $user = $this->createUser($email);
+
+        $container = static::getContainer();
+        /** @var EntityManagerInterface $em */
+        $em = $container->get(EntityManagerInterface::class);
+
+        // Seed a live reset request the way the bundle would.
+        /** @var \App\Repository\ResetPasswordRequestRepository $resetRepo */
+        $resetRepo = $container->get(\App\Repository\ResetPasswordRequestRepository::class);
+        $request = $resetRepo->createResetPasswordRequest(
+            $user,
+            new \DateTimeImmutable('+1 hour'),
+            'sel-'.bin2hex(random_bytes(8)), // selector column is varchar(20)
+            'hashed-token-value',
+        );
+        $em->persist($request);
+        $em->flush();
+
+        /** @var UserDeletionService $service */
+        $service = $container->get(UserDeletionService::class);
+        $service->requestDeletion($user);
+        $em->refresh($user);
+        $code = $user->getDeletionCode();
+        self::assertNotNull($code);
+
+        $result = $service->confirmDeletion($user, $code);
+
+        self::assertTrue($result, 'Deletion must succeed despite a pending reset request');
+        self::assertNull($this->fetchUser($email), 'User must be removed from DB');
+        self::assertSame(
+            0,
+            (int) $em->getConnection()->fetchOne('SELECT COUNT(*) FROM reset_password_request'),
+            'The pending reset request must be purged with the account',
+        );
+    }
+
     // ── (c) confirmDeletion with wrong code rejects ──────────────────────────
 
     public function testConfirmDeletionWithWrongCodeReturnsFalse(): void
