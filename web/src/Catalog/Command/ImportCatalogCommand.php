@@ -13,6 +13,7 @@ use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
 use App\Catalog\ServiceKind;
 use App\Catalog\SurfaceProfiler;
+use App\Service\BaseLocationService;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -58,6 +59,7 @@ final class ImportCatalogCommand extends Command
         private readonly Connection $db,
         private readonly AttributeVocabulary $vocabulary,
         private readonly SurfaceProfiler $surfaces,
+        private readonly BaseLocationService $baseLocations,
     ) {
         parent::__construct();
     }
@@ -86,6 +88,13 @@ final class ImportCatalogCommand extends Command
             $routes = $this->importRoutes($dir, $io);
             $heat = $this->importHeat($dir, $io);
             $assigned = $this->recomputeMembership();
+            // Rider base areas depend on region geometry, which this run may have
+            // just changed - re-derive every rider's set inside the same
+            // transaction so it never drifts from what was just imported (no
+            // queue in this app, so re-derivation is transactional-inline by
+            // design, region-scoping-design.md §3).
+            $rederived = $this->baseLocations->rederiveAll();
+            $io->text(sprintf('Re-derived base areas for %d rider(s).', $rederived));
             // Derived surfaces depend on the freshly-upserted A-layer + routes,
             // so recompute after membership, inside the same transaction.
             $surfaced = $this->surfaces->recomputeAll();

@@ -10,6 +10,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Region;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Entity\User;
 use App\World\Entity\Country;
 use App\World\Entity\Subdivision;
 use Doctrine\ORM\EntityManagerInterface;
@@ -430,6 +431,32 @@ final class ImportCatalogCommandTest extends KernelTestCase
         $tester = $this->runImport($dir);
         self::assertSame(1, $tester->getStatusCode());
         self::assertStringContainsString('services.json', $tester->getDisplay());
+    }
+
+    /**
+     * BaseLocationService::rederiveAll() runs inside the import transaction,
+     * right after recomputeMembership() (region-scoping-design.md §3, §4): a
+     * rider whose base point sits inside a freshly-imported region must come
+     * out of the very same `app:catalog:import` run with that region in their
+     * derived set, proving the hook actually fires in the import flow.
+     */
+    public function testImportRederivesRiderBaseAreas(): void
+    {
+        $user = (new User())->setEmail('base-import-'.bin2hex(random_bytes(4)).'@example.test')->setPassword('x');
+        // region-square.geojson covers lng [4.0, 5.0] x lat [50.0, 51.0].
+        $user->setBaseLocation(50.5, 4.5, null);
+        $this->em->persist($user);
+        $this->em->flush();
+
+        $tester = $this->runImport($this->fixturesDir());
+        $tester->assertCommandIsSuccessful();
+        self::assertStringContainsString('Re-derived base areas for 1 rider', $tester->getDisplay());
+
+        $region = $this->em->getRepository(Region::class)->findOneBy(['slug' => 'test-square']);
+        self::assertNotNull($region);
+        $this->em->refresh($user);
+        self::assertSame([$region->getId()], $user->getBaseRegionIds());
+        self::assertSame(['BE'], $user->getBaseCountryCodes());
     }
 
     public function testSubdivisionResolvedWhenWorldDataPresent(): void

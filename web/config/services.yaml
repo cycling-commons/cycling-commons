@@ -43,10 +43,3 @@ services:
     App\EventSubscriber\CspSubscriber:
         arguments:
             $coverageCspHost: '%coverage.csp_host%'
-
-    # Standalone derivation service (region-scoping-design.md §3); no consumer
-    # wired yet (lands with BaseLocationService's settings-save re-derivation and
-    # the map's set-my-area endpoint), so it must be public or Symfony's compiler
-    # prunes it as unused before KernelTestCase can fetch it.
-    App\Service\BaseAreaResolver:
-        public: true
