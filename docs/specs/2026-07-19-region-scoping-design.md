@@ -711,6 +711,80 @@ criticals, 11 warnings + 10 info, all fixed this round:
 - Privacy: frozen profile exposure list, no public derived distances, privacy-copy
   update.
 
+**Phase 4 — EXECUTED 2026-07-21 (symfony-base `d5cfa4c..0198bf0`, NOT
+pushed).** Base location / My area landed end-to-end — user columns,
+derivation service, the settings field, the map UI, the anonymous circle,
+the cold-start prompt, and the privacy fence + copy. Every slice landed with
+unit/functional tests (PHP + the `scope.js` node suite) plus browser
+verification on the dev stack. Task 5's client-model note (below) covers the
+first slice of this phase in more detail; the rest:
+
+- **User columns** (migration `Version20260721160000`): `base_point`
+  (geometry GeoJSON Point, coords rounded to `User::BASE_COORD_DECIMALS`=2 at
+  write — ~1 km precision, §4 privacy invariants), `base_radius_km` (smallint,
+  default 40, clamped [10,150]), `base_region_ids`/`base_country_codes` (json,
+  derived — `App\Service\BaseAreaResolver`, cap `MAX_REGIONS`=8). **Plan
+  decision, beyond this section's original bullet list:** a fifth column,
+  `base_place` varchar(120), was added so the scope line has a human label
+  ("Near Namur · 40 km") without a live reverse-geocode call on every page
+  load. No GIST index — nothing queries users spatially.
+- **Derivation** (`App\Service\BaseAreaResolver` + `App\Service\BaseLocationService`):
+  `ST_DWithin` geography radius query over `region`,
+  containing region always first (`ST_Contains` DESC) then distance/area/id
+  tie-break, capped at 8. `BaseLocationService::apply()`/`clear()` own every
+  base-location write (settings save + the map endpoint) and never flush
+  themselves — the caller's transaction does; `rederiveAll()` runs one loop
+  per rider inside `ImportCatalogCommand`'s existing transaction, right after
+  `recomputeMembership()` (catalog-data-model.md §6).
+- **Endpoint** (`MyAreaController`, `POST /map/my-area`): in-controller
+  clean-401 auth (the `RideCheckController` pattern, not a login redirect),
+  CSRF token id `my-area`, 400 on malformed coordinates, response echoes the
+  STORED coarse values (never the raw request precision) so the client's
+  circle always matches what got persisted. `window.CC_MY_AREA`, injected in
+  the `ROLE_USER` twig block, feeds `scope.js`'s `myArea` kind (Task 5).
+- **Settings field**: town pick via Photon typeahead, radius slider
+  (10-150, step 5), and a clear checkbox; a radius-only change re-derives
+  from the already-stored point (no re-geocode). **Plan decision:** pin-drop
+  lives on the MAP page ("Set my area" from the map's current centre) —
+  settings stays map-free and town-pick-only, keeping the heavier
+  Leaflet/pin UI out of the settings bundle.
+- **Map UI**: My-area rail button, first entry in the Region group; circle
+  spotlight (64-vertex polygon, `line-blur` 3 for a soft edge — deliberately
+  not a hard boundary, the same anti-border-anxiety message as §4's fuzzy
+  circle); header line "Near {place} · {km} km" or the place-less fallback;
+  best-of sends the derived set as `region=<csv>` (capped at 8, under
+  `RouteRankingService::MAX_RESULTS`=200); cold-start "Set my area" chip for
+  riders with no base location yet (localStorage dismissal
+  `cc-area-prompt-dismissed`); pan-away nudge when the viewport centre drifts
+  past 1.5× the radius from the My-area centre (fires once per page load,
+  `CCScope.widen()` on tap, never auto-widens the map itself).
+- **Plan decision — viewport bbox is the CIRCLE, not a region-union bbox.**
+  This section's original Phase 4 bullet list (above) said "union-bbox
+  viewport"; as executed, `bbox()`/`photonParams()` fit the circle's own
+  bbox, not the union of the derived regions' boxes. Rationale: a border
+  rider's derived set can span two whole regions, and framing to their union
+  would zoom the map out to both entire regions instead of the rider's
+  actual area — the derived region set still governs **filtering** (best-of,
+  coverage); only the viewport/search framing uses the circle.
+  **Corollary — plan decision: My-area is rid-only on the coverage/best-of
+  arms.** No `cc` arm is sent for a myArea scope (`countryCode` is always
+  `null`, per Task 5) because Phase 5's country-polygon fallback doesn't
+  exist yet to safely resolve a myArea circle to a country; this stays
+  region-id-only until Phase 5 lands unsplit-country stamping (§7 Phase 5).
+- **Privacy fence**: `RiderProfileTest::
+  testBaseLocationNeverExposedOnPublicProfile` pins the §4 "frozen exposure
+  list" invariant — a base-located, `publicProfile`-on rider's place,
+  coordinates, and derived sets never render on `/riders/{uuid}`. Green on
+  first run: nothing in `RiderProfileController`/`profile/public.html.twig`
+  ever touched base data, so no Tasks-6-8 leak was found. Privacy copy added
+  (`privacy.collect_account_base`, 4 locales) under the account-data list.
+
+**Owner decisions honored:** My-area wins the default scope whenever a base
+location is set, except an explicit shared URL scope (§9.1); the radius
+slider ships as the only v1 control (no freehand draw); anonymous My-area is
+localStorage-only with no server round-trip and no device-location prompt
+(the only anonymous input is the map-centre pin drop).
+
 **Task 5 — `scope.js` `myArea` kind (client model only) — EXECUTED 2026-07-21
 (symfony-base, NOT pushed).** `web/assets/map/scope.js` gained the `myArea`
 kind: resolves from `window.CC_MY_AREA` (server payload, Task 6 — not yet

@@ -92,6 +92,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 | `CC_PREFS` | `{bikes:[], styles:[]}` value-lists; `[]/[]` for anonymous (§4.4) | all |
 | `MAPILLARY_TOKEN` | from `%env(MAPILLARY_TOKEN)%` via `twig.yaml` (§10) | all |
 | `CC_RIDECHECK` | `{url, token}` — ride-check endpoint + stateless CSRF token | `ROLE_USER` block only |
+| `CC_MY_AREA` | `{lat, lng, place, radiusKm, regionIds, countryCodes}` (any field may be `null`/empty when no base location is set) plus `{url, token}` for `POST /map/my-area` — feeds `scope.js`'s `myArea` kind (§4.5, region-scoping-design.md §7 Phase 4) | `ROLE_USER` block only |
 | `CC_IS_CURATOR`, `CC_PENDING`, `CC_MOD_TOKEN` | pending-submission layer + decision CSRF token | curators with completed 2FA only (`MapController::map()` gates on `TwoFactorPolicy::requiresSetup()`) |
 
 - **No preferences endpoint:** rider preferences and i18n ride the page render;
@@ -179,6 +180,63 @@ lazy-firewall caching gotcha — see
   off state persists in `localStorage` key **`cc-pref-filter`**
   (`on`/`off`, default `on` when preferences exist). Anonymous visitors
   (`CC_PREFS.bikes` empty): zero behaviour change, chip group stays hidden.
+
+### 4.5 Region / My-area scope
+
+The rail's Region group (a per-registry list of named regions/countries plus
+Everywhere) and its `scope.js` (`window.CCScope`) client model are the full
+region-scoping design owned by region-scoping-design.md — this subsection
+covers only the `myArea` scope kind (region-scoping-design.md §7 Phase 4),
+the newest rung of that same ladder.
+
+- **`myArea` scope kind.** A rider with a base location gets a **My-area**
+  rail button, first entry in the Region group. Unlike `region`/`country`, its
+  region set is *derived* (`BaseAreaResolver`, capped at 8) rather than
+  curator-authored, so it can span more than one named region — the rail
+  button itself carries no fixed boundary.
+- **`myarea` token.** Serializes to the bare, literal string `'myarea'` in the
+  URL and the `cc-scope` localStorage key — never coordinates. Deserializing
+  `'myarea'` re-resolves the scope from its source of truth (below), so a
+  shared/bookmarked `?scope=myarea` link always reflects the *opener's* area,
+  not the sharer's.
+- **Source of truth, logged-in vs anonymous.** Logged in: `window.CC_MY_AREA`
+  (server-stored coarse point, §2). Logged out: an anonymous circle
+  `{lat, lng, radiusKm}` (2 decimals, ~1 km) in `localStorage['cc-my-area']`,
+  written by the map-centre "Set my area" pin drop (cold-start chip, below) — never a
+  device-location prompt (owner decision). Anonymous region-set derivation is
+  a registry-bbox ∩ circle-bbox intersection, nearest-centre-first, capped at
+  8, computed client-side (no round trip).
+- **Viewport/search framing uses the circle, not a region union.** `bbox()`
+  and the Photon geocode params fit the myArea *circle*, not the union of its
+  derived regions' boxes — a border rider's derived set can span two whole
+  regions, and framing to their union would zoom out to both entire regions
+  instead of the rider's actual area. The derived region set still governs
+  **filtering** (best-of `region=<csv>`, coverage tile/search params); only
+  the framing differs.
+- **Rid-only, no country arm.** `coverageParams()`/`coverageTileFilter()` and
+  the best-of region param never send a country code for a myArea scope
+  (`countryCode` is always `null`) — Phase 5's country-polygon fallback
+  doesn't exist yet to safely resolve a circle to a country, so myArea stays
+  region-id-only on those arms until then.
+- **Widen ladder:** myArea → the single registry-known country among the
+  derived `countryCodes` (exactly one such country, else straight to
+  Everywhere — an ambiguous/border myArea has no single "wider" country) →
+  Everywhere.
+- **Cold-start chip:** a rider/anonymous visitor with no base location sees a
+  dismissable "Set my area" chip driven from the current map centre
+  (`map.set_my_area`); dismissal persists in localStorage
+  (`cc-area-prompt-dismissed`). Setting it calls the myArea endpoint (logged
+  in) or writes the anonymous circle (logged out), then activates the
+  `myArea` scope immediately.
+- **Pan-away nudge:** while a myArea scope is active, panning the map centre
+  past **1.5× the radius** from the circle's centre surfaces a dismissable
+  "Outside your area" nudge (`map.outside_area`) with a widen action
+  (`CCScope.widen()`); it never auto-widens the map itself, and fires **once
+  per page load** (re-dismissing doesn't re-arm until reload).
+- **Default precedence (owner decision, region-scoping-design.md §9.1):** on load, `URL scope > myArea
+  (if available) > localStorage`. My-area wins the default scope whenever a
+  base location is set, overriding a stale localStorage scope — except an
+  explicit shared URL scope, which always wins.
 
 ## 5. Layer rendering strategy
 

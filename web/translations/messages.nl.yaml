@@ -94,6 +94,7 @@ privacy:
   collect_account_password: 'Een <b>wachtwoord</b>, dat we uitsluitend als gezouten hash opslaan — we zien of bewaren de platte tekst nooit.'
   collect_account_displayname: 'Een <b>weergavenaam</b> die je zelf kiest — het kan een pseudoniem zijn, en het is het enige dat anderen van je zien.'
   collect_account_2fa: 'Als je <b>twee-factor-authenticatie (2FA)</b> inschakelt, slaan we het TOTP-geheim <b>versleuteld op</b>, en je back-upcodes uitsluitend als hashes.'
+  collect_account_base: 'Een optionele <b>uitvalsbasis</b> — een punt op stadsniveau (~1 km nauwkeurig) en een rijradius, als je die instelt. Wordt alleen gebruikt om je eigen kaartweergave af te bakenen; nooit getoond aan andere fietsers, en nooit onderdeel van de Commons-dataset.'
   h3_contribute: 'Wanneer je bijdraagt'
   collect_contribute_items: 'De <b>klimmen, plaatsen, verbeteringen en stemmen</b> die je indient, en het gegeven dat een account ze heeft ingediend (herkomst). Als je profiel privé is, blijven bijdragen anoniem.'
   collect_contribute_media: 'Eventuele <b>foto''s of video''s</b> die je uploadt. Media kan ingebedde metadata (EXIF) bevatten, zoals een locatie — we verwijderen locatiemetadata uit geüploade media aan onze kant.'

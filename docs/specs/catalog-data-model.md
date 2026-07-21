@@ -273,6 +273,17 @@ the same `recomputeMembership` pass, `ST_Contains` on the point directly.
 Ad-hoc spatial queries ("all items in an arbitrary polygon") need no region
 row — GiST + `ST_Intersects` works day one.
 
+**Rider base-area re-derivation rides the same import transaction
+(region-scoping-design.md §7 Phase 4).** `ImportCatalogCommand` calls
+`App\Service\BaseLocationService::rederiveAll()` immediately after
+`recomputeMembership()`, inside the same transaction: every rider with a
+stored base point (`users.base_point`) gets a fresh `base_region_ids`/
+`base_country_codes` from `App\Service\BaseAreaResolver`, so a My-area scope
+never drifts stale against region geometry that just changed in this same
+import run. There is no queue in this app, so re-derivation is
+transactional-inline by design, not deferred to a worker — the per-rider loop
+runs at import time, not on read.
+
 ## 7. `attributes`: registry-validated jsonb
 
 **Only registry-declared keys may enter `attributes` — an unknown key is an

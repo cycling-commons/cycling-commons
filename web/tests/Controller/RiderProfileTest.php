@@ -167,6 +167,38 @@ final class RiderProfileTest extends WebTestCase
         self::assertSelectorExists('a[href$="/riders/'.$user->getUuid().'"]');
     }
 
+    /**
+     * Privacy invariant fence (region-scoping-design.md §4 "frozen exposure
+     * list"): a rider's base location (point/place/radius/derived sets) is
+     * account-private, never rendered on the public profile — even when the
+     * profile is opted in and the rider has a base area set.
+     */
+    public function testBaseLocationNeverExposedOnPublicProfile(): void
+    {
+        $client = static::createClient();
+        $user = $this->makeUser('based-rider@example.com', 'Based Rider', true);
+        $user->setBaseLocation(50.4674, 4.8720, 'Namur')
+            ->setBaseRadiusKm(40)
+            ->setBaseRegionIds([1, 2])
+            ->setBaseCountryCodes(['BE']);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->flush();
+
+        $client->request('GET', '/riders/'.$user->getUuid());
+
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('Based Rider', $html, 'sanity: the page must actually render the rider');
+        self::assertStringNotContainsString('Namur', $html, 'base place must never leak to the public profile');
+        self::assertStringNotContainsString('50.47', $html, 'base latitude must never leak');
+        self::assertStringNotContainsString('4.87', $html, 'base longitude must never leak');
+        self::assertStringNotContainsString('base_point', $html, 'no raw column name via debug dump');
+        self::assertStringNotContainsString('basePlace', $html, 'no raw property name via debug dump');
+        self::assertStringNotContainsString('baseRadius', $html, 'no raw property name via debug dump');
+    }
+
     public function testSettingsShowsHintWhenPrivate(): void
     {
         $client = static::createClient();

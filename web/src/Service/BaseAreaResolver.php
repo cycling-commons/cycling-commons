@@ -14,9 +14,9 @@ use Doctrine\DBAL\Connection;
  * MAX_REGIONS (region-scoping-design.md §3 "User base location").
  * Raw DBAL like SpatialResolver/RegionResolver.
  *
- * @api Feeds the future My-area consumers described in region-scoping-design.md §3:
- *      BaseLocationService's settings-save re-derivation and the map's set-my-area
- *      endpoint. Not yet wired to a caller.
+ * @api Autowired by the DI container; consumed by BaseLocationService's
+ *      apply()/rederiveAll() (settings save, the map "Set my area" endpoint,
+ *      and import re-derivation).
  */
 final class BaseAreaResolver
 {
@@ -38,7 +38,7 @@ final class BaseAreaResolver
                        ST_Distance(r.geom::geography, ST_SetSRID(ST_Point(:lng, :lat), 4326)::geography) ASC,
                        r.area_km2 ASC NULLS LAST, r.id ASC
               LIMIT '.self::MAX_REGIONS,
-            ['lat' => $lat, 'lng' => $lng, 'm' => $radiusKm * 1000.0],
+            ['lat' => $lat, 'lng' => $lng, 'm' => (float) $radiusKm * 1000.0],
         );
 
         $ids = [];

@@ -94,6 +94,7 @@ privacy:
   collect_account_password: 'Ein <b>Passwort</b>, das wir nur als gesalzenen Hash speichern — wir sehen oder behalten den Klartext nie.'
   collect_account_displayname: 'Einen <b>Anzeigenamen</b>, den du wählst — er kann ein Pseudonym sein, und er ist alles, was andere sehen.'
   collect_account_2fa: 'Wenn du die <b>Zwei-Faktor-Authentifizierung (2FA)</b> aktivierst, speichern wir das TOTP-Geheimnis <b>verschlüsselt im Ruhezustand</b>, und deine Backup-Codes nur als Hashes.'
+  collect_account_base: 'Ein optionaler <b>Standort</b> — ein Punkt auf Ortsebene (~1 km Genauigkeit) und ein Fahrradius, falls du einen festlegst. Wird nur verwendet, um deine eigene Kartenansicht einzugrenzen; wird nie anderen Fahrer:innen gezeigt und ist nie Teil des Commons-Datensatzes.'
   h3_contribute: 'Wenn du beiträgst'
   collect_contribute_items: 'Die <b>Anstiege, Orte, Korrekturen und Stimmen</b>, die du einreichst, und die Tatsache, dass ein Konto sie eingereicht hat (Provenienz). Wenn dein Profil privat ist, bleiben Beiträge anonym.'
   collect_contribute_media: 'Alle <b>Fotos oder Videos</b>, die du hochlädst. Medien können eingebettete Metadaten (EXIF) wie einen Aufnahmeort enthalten — wir entfernen Ortsmetadaten von hochgeladenen Medien auf unserer Seite.'

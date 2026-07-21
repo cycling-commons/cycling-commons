@@ -15,6 +15,9 @@ use Doctrine\DBAL\Connection;
  * endpoint call apply()/clear(); ImportCatalogCommand calls rederiveAll()
  * inside its import transaction after recomputeMembership() - there is no
  * queue in this app, so re-derivation is transactional-inline by design.
+ *
+ * @api Autowired by the DI container; consumed by SettingsController,
+ *      MyAreaController, and ImportCatalogCommand.
  */
 final class BaseLocationService
 {

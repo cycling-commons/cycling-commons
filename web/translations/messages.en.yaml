@@ -94,6 +94,7 @@ privacy:
   collect_account_password: 'A <b>password</b>, which we store only as a salted hash — we never see or keep the plain text.'
   collect_account_displayname: 'A <b>display name</b> you choose — it can be a pseudonym, and it''s all anyone else sees.'
   collect_account_2fa: 'If you enable <b>two-factor authentication (2FA)</b>, we store the TOTP secret <b>encrypted at rest</b>, and your backup codes only as hashes.'
+  collect_account_base: 'An optional <b>base location</b> — a town-level point (~1 km precision) and riding radius, if you set one. Used only to scope your own map view; never shown to other riders, and never part of the Commons dataset.'
   h3_contribute: 'When you contribute'
   collect_contribute_items: 'The <b>climbs, places, fixes and votes</b> you submit, and the fact that an account made them (provenance). If your profile is private, contributions stay anonymous.'
   collect_contribute_media: 'Any <b>photos or video</b> you upload. Media can carry embedded metadata (EXIF) such as a capture location — we strip location metadata from uploaded media on our side.'

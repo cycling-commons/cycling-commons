@@ -94,6 +94,7 @@ privacy:
   collect_account_password: 'Un <b>mot de passe</b>, que nous stockons uniquement sous forme de hachage salé — nous ne voyons ni ne conservons jamais le texte en clair.'
   collect_account_displayname: 'Un <b>nom d''affichage</b> de votre choix — ce peut être un pseudonyme, et c''est tout ce que les autres voient.'
   collect_account_2fa: 'Si vous activez l''<b>authentification à deux facteurs (2FA)</b>, nous stockons le secret TOTP <b>chiffré au repos</b>, et vos codes de secours uniquement sous forme de hachages.'
+  collect_account_base: 'Une <b>localisation de base</b> facultative — un point à l''échelle de la ville (précision ~1 km) et un rayon de pratique, si vous en définissez une. Utilisée uniquement pour cadrer votre propre vue de la carte ; jamais montrée aux autres cyclistes, et jamais incluse dans le jeu de données Commons.'
   h3_contribute: 'Quand vous contribuez'
   collect_contribute_items: 'Les <b>cols, lieux, corrections et votes</b> que vous soumettez, et le fait qu''un compte les a effectués (provenance). Si votre profil est privé, les contributions restent anonymes.'
   collect_contribute_media: 'Tout <b>photo ou vidéo</b> que vous téléchargez. Les médias peuvent contenir des métadonnées intégrées (EXIF) comme un lieu de capture — nous supprimons les métadonnées de localisation des médias téléchargés de notre côté.'

@@ -116,11 +116,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'smallint')]
     private int $baseRadiusKm = self::BASE_RADIUS_DEFAULT;
 
-    /** @var list<int> derived region ids (ST_DWithin, cap 8) — recomputed on save + region import */
+    // Doctrine's json type hydrates this property directly (bypassing
+    // setBaseRegionIds()), so a stale/malformed DB row can hand back anything
+    // JSON allows — hence `array`, not `list<int>`, and the is_numeric() guard
+    // in getBaseRegionIds() below actually does work.
+    /** @var array<mixed> derived region ids (ST_DWithin, cap 8) — recomputed on save + region import */
     #[ORM\Column(type: 'json')]
     private array $baseRegionIds = [];
 
-    /** @var list<string> derived ISO 3166-1 alpha-2 codes of those regions */
+    // Same hydration caveat as $baseRegionIds above.
+    /** @var array<mixed> derived ISO 3166-1 alpha-2 codes of those regions */
     #[ORM\Column(type: 'json')]
     private array $baseCountryCodes = [];
 
@@ -518,12 +523,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         return $out;
     }
 
-    /** @param array<string> $ccs */
+    /** @param array<string> $ccs already-string per the declared param type (unlike setBaseRegionIds, no caller passes non-strings) */
     public function setBaseCountryCodes(array $ccs): static
     {
         $clean = [];
         foreach ($ccs as $cc) {
-            if (\is_string($cc) && 1 === preg_match('/^[A-Za-z]{2}$/D', $cc) && !\in_array(strtoupper($cc), $clean, true)) {
+            if (1 === preg_match('/^[A-Za-z]{2}$/D', $cc) && !\in_array(strtoupper($cc), $clean, true)) {
                 $clean[] = strtoupper($cc);
             }
         }
