@@ -5,7 +5,7 @@ on:
     paths: ['tools/**', '.github/workflows/ci-tools.yml']
   push:
     branches: [main]
-    paths: ['tools/**']
+    paths: ['tools/**', '.github/workflows/ci-tools.yml']
 jobs:
   wallonia:
     runs-on: ubuntu-latest

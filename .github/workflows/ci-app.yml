@@ -5,7 +5,7 @@ on:
     paths: ['web/**', '.github/workflows/ci-app.yml']
   push:
     branches: [main]
-    paths: ['web/**']
+    paths: ['web/**', '.github/workflows/ci-app.yml']
 jobs:
   app:
     runs-on: ubuntu-latest
