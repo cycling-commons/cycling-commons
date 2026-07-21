@@ -1005,6 +1005,7 @@ map:
   d_proposed_verify: 'Voorgesteld · rijd hem om te verifiëren'
   d_estimate_method: 'schatting · {pct}% van de route in kaart'
   d_contributed_gpx: 'Bijgedragen GPX (alleen GPS-track)'
+  d_community_report: 'Melding uit de gemeenschap'
   d_src_auto: 'Afgeleid door de pipeline'
   d_src_rider: 'Bijgedragen door een renner'
   d_source: 'Bron'

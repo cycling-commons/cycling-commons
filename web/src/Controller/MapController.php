@@ -124,6 +124,7 @@ final class MapController extends AbstractController
             'potableOsm' => 'd_potable_osm', 'potableOsmNo' => 'd_potable_osm_no', 'potableSim' => 'd_potable_sim', 'verifyWater' => 'd_verify_water',
             'proposedVerify' => 'd_proposed_verify', 'estimateMethod' => 'd_estimate_method',
             'contributedGpx' => 'd_contributed_gpx', 'srcAuto' => 'd_src_auto', 'srcRider' => 'd_src_rider',
+            'communityReport' => 'd_community_report',
             'source' => 'd_source', 'editItem' => 'd_edit_item', 'fixLocation' => 'd_fix_location',
             'voteRound' => 'd_vote_round', 'downloadGpx' => 'd_download_gpx',
             'proposedChange' => 'd_proposed_change', 'history' => 'd_history', 'initialEntry' => 'd_initial_entry',

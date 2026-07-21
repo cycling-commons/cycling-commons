@@ -48,7 +48,7 @@ final class CatalogProviderTest extends KernelTestCase
         $src = __DIR__.'/../fixtures/catalog';
         $dir = sys_get_temp_dir().'/catalog-provider-'.getmypid();
         @mkdir($dir, 0777, true);
-        foreach (['region-square.geojson', 'services.json', 'surface.json', 'climbs.json', 'stays.json', 'routes.json', 'heat.json'] as $f) {
+        foreach (['region-square.geojson', 'services.json', 'surface.json', 'climbs.json', 'stays.json', 'hazards.json', 'routes.json', 'heat.json'] as $f) {
             copy($src.'/'.$f, $dir.'/'.$f);
         }
         $app = new Application(self::$kernel);
@@ -108,6 +108,33 @@ final class CatalogProviderTest extends KernelTestCase
         $pump = $this->payload()['D']['features'];
         $pump = array_values(array_filter($pump, static fn (array $f): bool => 'Pump' === $f['properties']['t']))[0];
         self::assertArrayNotHasKey('prov', $pump['properties']);
+    }
+
+    /**
+     * F · Hazards & conditions (region-scoping-design.md §7 Task A): served as a
+     * plain FeatureCollection like the other point letters, so map.js can render
+     * it as CATALOG features. The manual hazard is not an untouched-osm row, so
+     * the coverage-retirement predicate never drops it; its attributes reach the
+     * client and it carries rid for the scope gate.
+     */
+    public function testHazardsServeAsFeatureCollection(): void
+    {
+        $f = $this->payload()['F'];
+        self::assertSame('FeatureCollection', $f['type']);
+        self::assertCount(1, $f['features']);
+        $hazard = $f['features'][0];
+        self::assertSame('Test crosswind', $hazard['properties']['n']);
+        self::assertSame('Crosswind / fog', $hazard['properties']['hazardType']);
+        self::assertSame('Moderate', $hazard['properties']['severity']);
+        self::assertSame('manual', $hazard['properties']['srcType']);
+        self::assertSame([4.5, 50.5], $hazard['geometry']['coordinates']);   // GeoJSON [lng, lat]
+        self::assertIsInt($hazard['properties']['id']);
+        // Inside the test-square region ([4,50]-[5,51]) → carries rid for scope.
+        self::assertIsInt($hazard['properties']['rid']);
+        self::assertGreaterThan(0, $hazard['properties']['rid']);
+        // Consumed keys never leak as attributes.
+        self::assertArrayNotHasKey('source', $hazard['properties']);
+        self::assertArrayNotHasKey('ref', $hazard['properties']);
     }
 
     public function testStaysSplitBySource(): void

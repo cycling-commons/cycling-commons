@@ -27,6 +27,7 @@
       window.CC_SERVICES_OSM = d.D;
       window.CC_STAYS_OSM = d.E.osm;
       window.CC_STAYS_PIVOT = d.E.pivot;
+      window.CC_HAZARDS = d.F;
       window.CC_TRANSIT_OSM = d.G;
       window.CC_SHELTER_OSM = d.H;
       window.CC_SCENIC_OSM = d.I;

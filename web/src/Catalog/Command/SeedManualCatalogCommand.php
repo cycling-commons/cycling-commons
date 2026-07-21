@@ -219,12 +219,22 @@ final class SeedManualCatalogCommand extends Command
                     'photo' => self::wc('Gîte rural de Puyolle.JPG', 'Darreenvt', 'Darreenvt', 'CC BY-SA 4.0'),
                 ],
             ],
-            // F · Hazards & conditions - deliberately SKIPPED. Hazards have no
-            // serving path in CatalogProvider or map.js, so a seeded manual F
-            // row could never render - it would just be a permanent orphan.
-            // The single demo hazard pin stays hardcoded in map.js until
-            // hazards get a real serving path; don't add an F pin here
-            // without wiring that up first.
+            // F · Hazards & conditions. Served end-to-end since
+            // region-scoping-design.md §7 Task A (CatalogProvider 'F' key ->
+            // window.CC_HAZARDS -> map.js CATALOG features). This row is the
+            // retired map.js demo hazard, re-homed as real region-stamped data:
+            // recomputeMembership stamps its region_id (Hautes Fagnes = Wallonia)
+            // so it flows through the scope gate like every other letter.
+            [
+                'letter' => 'F', 'name' => 'Exposed crosswind · Hautes Fagnes', 'lat' => 50.5160, 'lng' => 6.0700,
+                'ref' => 'manual:crosswind-hautes-fagnes',
+                'attributes' => [
+                    'hazardType' => 'Crosswind / fog', 'severity' => 'Moderate',
+                    'worstWhen' => 'Autumn / winter',
+                    'whatYouSaw' => 'Notorious crosswind and fog on exposed open moorland at Baraque Michel; ice and low visibility possible in autumn and winter.',
+                    'photo' => self::wc('Hohes Venn Winter 4.jpg', 'Geolina163', 'Geolina163', 'CC BY-SA 3.0'),
+                ],
+            ],
             // G · Getting there
             [
                 'letter' => 'G', 'name' => 'Aywaille station', 'lat' => 50.4730, 'lng' => 5.6770,

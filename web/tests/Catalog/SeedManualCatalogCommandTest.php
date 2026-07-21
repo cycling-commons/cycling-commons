@@ -48,9 +48,10 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $tester->assertCommandIsSuccessful();
 
         $items = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]);
-        // C3-T10: letter F is deliberately skipped (no serving path for hazards yet),
-        // so 24 -> 23; its one demo pin stays hardcoded in map.js.
-        self::assertCount(23, $items, 'expected exactly the ~23 hand-authored demo pins (F excluded)');
+        // Hazards (F) now have a real serving path (region-scoping-design.md §7
+        // Task A), so the retired Hautes Fagnes crosswind demo returns as one
+        // seeded manual F row: 23 -> 24.
+        self::assertCount(24, $items, 'expected exactly the hand-authored demo pins (incl. the F hazard)');
 
         $byLetter = [];
         foreach ($items as $item) {
@@ -60,9 +61,14 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         }
         ksort($byLetter);
         self::assertSame(
-            ['B' => 5, 'C' => 5, 'D' => 4, 'E' => 1, 'G' => 1, 'H' => 4, 'I' => 2, 'J' => 1],
+            ['B' => 5, 'C' => 5, 'D' => 4, 'E' => 1, 'F' => 1, 'G' => 1, 'H' => 4, 'I' => 2, 'J' => 1],
             $byLetter,
         );
+
+        $crosswind = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:crosswind-hautes-fagnes']);
+        self::assertNotNull($crosswind);
+        self::assertSame('F', $crosswind->getLetter());
+        self::assertSame('Crosswind / fog', $crosswind->getAttributes()['hazardType']);
 
         $redoute = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:cote-de-la-redoute']);
         self::assertNotNull($redoute);
@@ -124,7 +130,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $this->runSeed()->assertCommandIsSuccessful();
         $countAfterSecond = \count($this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]));
 
-        self::assertSame(23, $countAfterFirst);
+        self::assertSame(24, $countAfterFirst);
         self::assertSame($countAfterFirst, $countAfterSecond, 're-running must not duplicate rows');
     }
 
@@ -148,9 +154,9 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $manualAbri = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:abri-jean-poumay']);
         self::assertNull($manualAbri, 'a manual pin duplicating an existing non-manual (name, letter) item must not be seeded');
 
-        // Every other manual pin still seeds normally (22, not 23 — Abri Jean Poumay skipped).
+        // Every other manual pin still seeds normally (23, not 24 — Abri Jean Poumay skipped).
         $items = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]);
-        self::assertCount(22, $items);
+        self::assertCount(23, $items);
 
         self::assertStringContainsString('Abri Jean Poumay', $tester->getDisplay());
     }

@@ -1005,6 +1005,7 @@ map:
   d_proposed_verify: 'Proposé · roulez-le pour le vérifier'
   d_estimate_method: 'estimation · {pct}% de l''itinéraire cartographié'
   d_contributed_gpx: 'GPX contribué (trace GPS uniquement)'
+  d_community_report: 'Signalement de la communauté'
   d_src_auto: 'Dérivé par le pipeline'
   d_src_rider: 'Contribué par un cycliste'
   d_source: 'Source'

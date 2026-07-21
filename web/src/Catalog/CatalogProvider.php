@@ -24,7 +24,7 @@ final class CatalogProvider
     }
 
     /**
-     * The full catalog payload, letters A–L (F/hazards has no data).
+     * The full catalog payload, letters A–L.
      *
      * @return array<string, mixed>
      */
@@ -44,6 +44,12 @@ final class CatalogProvider
                 'osm' => $this->featureCollection('E', excludeSource: 'pivot'),
                 'pivot' => $this->featureCollection('E', 'pivot'),
             ],
+            // F (hazards & conditions): served items with no coverage-tile
+            // layer and no OSM bulk pool — they render as CATALOG point
+            // features client-side (region-scoping-design.md §7 Task A). Region
+            // stamping is automatic (item rows; recomputeMembership), so the
+            // rid flows through the map's scope gate like every other letter.
+            'F' => $this->featureCollection('F'),
             'G' => $this->featureCollection('G'),
             'H' => $this->featureCollection('H'),
             'I' => $this->featureCollection('I'),

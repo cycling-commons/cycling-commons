@@ -920,12 +920,12 @@
     ,{ key:'water', letter:'C', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, features:[] }
     ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, features:[] }
     ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, features:[] }
-    // F ships empty until real hazard rows are served: the last hardcoded demo
-    // fixture ("Exposed crosswind · Hautes Fagnes") was retired in the 07-20
-    // review round — it carried no rid, so the scope gate hid it in every
-    // scope except Everywhere (including its own region), and a rid-less
-    // client-side fixture has no honest place in a scope-filtered map.
-    // Hazard data arrives as served, region-stamped rows like every layer.
+    // F · Hazards — features filled below from window.CC_HAZARDS (the served
+    // payload), region-stamped like every letter (region-scoping-design.md §7
+    // Task A). The hardcoded demo fixture ("Exposed crosswind · Hautes Fagnes")
+    // was retired in the 07-20 review round (rid-less client fixtures have no
+    // honest place in a scope-filtered map); it now returns as a real seeded,
+    // region-stamped SeedManualCatalogCommand row served through this path.
     ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, features:[]}
     ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, features:[] }
     ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, features:[] }
@@ -1152,6 +1152,33 @@
         // C1-T4 (W6): a rider-added/edited surface segment isn't OSM.
         source:(s.srcType==='user'||s.srcType==='manual') ? sourceLabel(s.srcType) : 'OSM (surface=*)',
         record:rec
+      };
+    });
+  }
+  // F · Hazards & conditions — served items (region-scoping-design.md §7 Task A).
+  // Hazards have no coverage tile layer and no OSM bulk pool, so they render as
+  // CATALOG point features (like climbs), sourced from the served payload
+  // (CatalogProvider 'F' key -> window.CC_HAZARDS). Region stamping is automatic
+  // (item rows; recomputeMembership), so f.rid flows through featureVisible()'s
+  // scope gate with zero extra work. The drawer's registry rows / confirm panel
+  // / edit-bridge all key on f.id + schemaRows('F', …), same as every letter.
+  if(window.CC_HAZARDS && Array.isArray(CC_HAZARDS.features)){
+    layerByKey['hazards'].features = CC_HAZARDS.features.map(ft=>{
+      const p=ft.properties||{}, c=(ft.geometry&&ft.geometry.coordinates)||[];
+      // headline: localized hazard type + severity when the item carries them
+      // (schema choices localize the stored English via trVal/VALUE_TR).
+      const bits=[p.hazardType, p.severity].filter(Boolean).map(trVal);
+      return {
+        id:p.id, rid:p.rid, name:p.n||(LAYER_L10N.hazards||'Hazard'),
+        headline:bits.join(' · ')||(LAYER_L10N.hazards||'Hazards & conditions'),
+        cur:false, geom:{ll:[c[1], c[0]]},
+        // Registry-driven record (CC_FIELD_SCHEMA[F]) — filled rows + "add" prompts.
+        record:schemaRows('F', p, p.id),
+        photo:p.photo,
+        // A rider-added/edited hazard reads as rider-contributed; anything else
+        // is a community report (hazards have no OSM/official provenance).
+        source:(p.srcType==='user'||p.srcType==='manual') ? sourceLabel(p.srcType) : (D.communityReport||'Community report'),
+        v:p.v
       };
     });
   }

@@ -1175,6 +1175,7 @@ map:
   d_proposed_verify: 'Proposed · ride it to verify'
   d_estimate_method: 'estimate · {pct}% of route mapped'
   d_contributed_gpx: 'Contributed GPX (GPS track only)'
+  d_community_report: 'Community report'
   d_src_auto: 'Derived by the pipeline'
   d_src_rider: 'Rider-contributed'
   d_source: 'Source'
