@@ -11,3 +11,4 @@ framework:
             - logout
             - route-community
             - ride-check
+            - my-area

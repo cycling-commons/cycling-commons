@@ -318,6 +318,12 @@
     url: {{ path('map_ride_check')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
     token: {{ csrf_token('ride-check')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
   };
+  {# "My area" base location (region-scoping-design.md §4/§6): the stored
+     coarse point + derived region/country set from MapController::map's
+     `my_area` param, merged with the set-my-area endpoint + stateless CSRF
+     token. null lat/lng/place and empty arrays when no base location is
+     set — riders-only block, same as CC_RIDECHECK above. #}
+  window.CC_MY_AREA = {{ (my_area ?? {})|merge({url: path('map_my_area_set'), token: csrf_token('my-area')})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {% endif %}
 <script nonce="{{ csp_nonce() }}">

@@ -63,6 +63,19 @@ final class MapController extends AbstractController
                     ? array_map(static fn (RidingStyle $s): string => $s->value, $user->getRidingStyles())
                     : [],
             ],
+            // "My area" base location (region-scoping-design.md §4/§6): the
+            // stored coarse point + derived region/country set, or null for
+            // anonymous. Anonymous-safe to compute (null, not omitted) — the
+            // template only ever emits window.CC_MY_AREA inside the
+            // ROLE_USER script block below.
+            'my_area' => $user instanceof User ? [
+                'lat' => $user->getBaseLat(),
+                'lng' => $user->getBaseLng(),
+                'radiusKm' => $user->getBaseRadiusKm(),
+                'place' => $user->getBasePlace(),
+                'regionIds' => $user->getBaseRegionIds(),
+                'countryCodes' => $user->getBaseCountryCodes(),
+            ] : null,
             // Coverage tiles (coverage-provider.md §4): the
             // current versioned PMTiles URL from the bucket manifest (server-
             // cached 3600 s), or null when the flag is off / the manifest is
