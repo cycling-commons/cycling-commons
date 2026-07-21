@@ -104,10 +104,28 @@ def build_pmtiles(layer_files, out_path):
         # region/country bbox, and All Belgium lands at ~z7 — below the old z8
         # coverage floor, so every coverage dot vanished at that overview
         # (region-scoping-design.md §7). z6 keeps coverage visible at the zooms
-        # the selector navigates to; --drop-densest-as-needed thins the low-zoom
-        # tiles so the artifact stays small.
+        # the selector navigates to.
         "--minimum-zoom", "6", "--maximum-zoom", "14",
-        "--drop-densest-as-needed",
+        # Cluster nearby POIs at low zoom into a single feature carrying a
+        # `point_count` (tippecanoe-injected) instead of tippecanoe's default
+        # point-thinning, which silently dropped ~99% of the points at overview
+        # zooms (23 of 2015 D-services survived at z8) so the map looked empty
+        # while the rail said 2015/2015. The client renders clustered features
+        # (point_count present) as a count bubble that breaks into individual
+        # icons as you zoom in (region-scoping-design.md §7; mirrors the
+        # confirmed-pin clusters). Clusters carry one member's ref/n/t/rid/cc +
+        # point_count. `-r1` keeps EVERY point (no rate-based dropping — else
+        # clustering only merged the handful that survived the drop);
+        # --cluster-densest-as-needed merges (never drops) to fit tile size, so
+        # sum(point_count) at each zoom equals the full in-scope total.
+        "--cluster-distance", "20",
+        # Cluster only at the overview zooms (z6–11); z12+ shows individual
+        # icons so a rider zoomed into a town sees the actual shops, not a
+        # bubble. Without this cap tippecanoe clusters up to maxzoom, so dense
+        # city POIs never broke apart even at z14.
+        "--cluster-maxzoom", "11",
+        "-r1",
+        "--cluster-densest-as-needed",
     ]
     for letter in sorted(layer_files):
         cmd += ["-L", f"{letter.lower()}:{layer_files[letter]}"]

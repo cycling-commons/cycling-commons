@@ -609,6 +609,16 @@ verification on the dev stack. Slices:
   dots actually render at those overview zooms, not just count. No moveend/idle
   recount (shown is no longer viewport-derived); `fetchCoverageCounts`
   re-fetches with a race guard on each scope change.
+  **Clustering (follow-up, owner-directed):** even at z6–8 the *tiles* were
+  near-empty — tippecanoe's default point-thinning dropped ~99% (23 of 2015
+  D-services survived at z8), so "2015/2015" sat over an empty map. Fixed by
+  low-zoom clustering (coverage-provider.md §3/§4): `-r1` keeps every point,
+  `--cluster-distance=20 --cluster-maxzoom=11` merges nearby POIs into
+  `point_count` count bubbles at z6–11 and shows individual icons at z12+. The
+  client renders a `{key}-cov-cl` bubble layer (disc + count, click-to-zoom)
+  beside the unclustered `{key}-cov` icon layer, both composing the dedupe +
+  scope arms. Verified: All Belgium z8 shows ~45 service bubbles summing to the
+  full 2015; z12 shows 281 individual shop icons.
 - **Data window (bounded, same class as the Phase-2 `coverage_poi` note):** a
   freshly-changed props schema reaches live tiles only on the next pipeline
   rebuild (weekly timer, or a manual `make coverage-refresh`); until then tiles

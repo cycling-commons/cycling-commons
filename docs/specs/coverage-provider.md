@@ -133,10 +133,18 @@ After all regions, once per run:
 
 5. **Export** per-letter newline-delimited GeoJSON from the full index.
 6. **Build tiles** with tippecanoe: one layer per letter, minzoom 6 / maxzoom
-   14, `--drop-densest-as-needed`, direct `.pmtiles` output (minzoom 6, not 8,
-   so coverage stays visible at the region/country overview zooms the scope
-   selector fits to — All Belgium lands at ~z7; region-scoping-design.md §7)
-   (`pipeline/coverage/tiles.py::build_pmtiles`).
+   14, direct `.pmtiles` output (`pipeline/coverage/tiles.py::build_pmtiles`).
+   minzoom 6 (not 8) keeps coverage visible at the region/country overview
+   zooms the scope selector fits to (All Belgium ~z7; region-scoping-design.md
+   §7). **Low-zoom clustering** (`--cluster-distance=20 --cluster-maxzoom=11
+   -r1 --cluster-densest-as-needed`): tippecanoe's default point-thinning
+   dropped ~99% of the points at overview zooms (23 of 2015 D-services survived
+   at z8), so the map looked empty while the rail said 2015/2015. Instead `-r1`
+   keeps EVERY point and clustering merges nearby ones (z6–11) into one feature
+   carrying `point_count` (sum over a zoom = the full total); above the
+   `--cluster-maxzoom` cap (z12+) points render individually so a rider zoomed
+   into a town sees the actual POIs. `--cluster-densest-as-needed` merges
+   (never drops) if a tile still exceeds the size limit.
 7. **Verify** with go-pmtiles (`verify_pmtiles`): header bounds, addressed tile
    count, expected layers, and a sample tile decode — a broken build never
    ships.
@@ -185,6 +193,12 @@ layer per letter — `c d e g h i j` — feature id = numeric OSM id.
 `ref`/`n`/`t`/`rid`/`cc` are the **universal** props (every layer, declared as
 `universalTileProps` in `coverage-contract.json`, pinned by both language
 contract suites); `kind`/`potable`/`acc` are per-letter extras (`tileProps`).
+**`point_count`/`clustered`** are injected by tippecanoe on cluster features at
+z6–11 (§3 step 6): the client draws a clustered feature (`has point_count`) as a
+count bubble (`{key}-cov-cl` symbol layer — a colour disc + the count) that, on
+click, zooms in until it splits into individual icons; the `{key}-cov` icon
+layer filters to unclustered features (`!has point_count`). Both layers compose
+the dedupe + region-scope arms (`covIconFilter`/`covClusterFilter` in map.js).
 `rid`/`cc` are NULL-stripped, so a row outside every region (or a tile built
 before Phase 3) is prop-less; the client renders a prop-less coverage feature
 **unfiltered** (region-scoping-design.md §8 risk 2 fallback — the artifact lags

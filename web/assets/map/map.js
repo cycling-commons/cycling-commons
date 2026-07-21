@@ -550,6 +550,21 @@
     map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
     return id;
   }
+  // Plain filled disc (layer colour + dark ring, no glyph), minted once per
+  // coverage key — the backdrop for a cluster bubble; the point_count is drawn
+  // over it as a text-field (addCoverage, Phase 3 clustering).
+  function covClusterIcon(key){
+    const id='covcl-'+key;
+    if(map.hasImage(id)) return id;
+    const color=(layerByKey[key]||{}).color||'#6b6f5e';
+    const S=2, D=30*S, R=D/2;
+    const cv=document.createElement('canvas'); cv.width=D; cv.height=D; const x=cv.getContext('2d');
+    x.beginPath(); x.arc(R,R,R-3*S,0,Math.PI*2);
+    x.fillStyle=color; x.globalAlpha=0.92; x.fill(); x.globalAlpha=1;
+    x.lineWidth=2*S; x.strokeStyle='rgba(20,22,14,.85)'; x.stroke();
+    map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
+    return id;
+  }
   // Bulk-OSM POI registry entry + confirmed-pin data (display moved to the
   // coverage tile layer, addCoverage() — this only feeds osmLayers so
   // setupConfClusters()/updateConfMarkers() keep rendering confirmed pins, and
@@ -690,25 +705,40 @@
     if(s.kind==='country' && s.countryCode) arms.push(['==',['get','cc'], s.countryCode]);
     return ['any'].concat(arms);
   }
-  // A coverage layer's full filter: the curated-ref dedupe (always the base) AND
-  // the scope filter (when scoped) AND any per-layer extra (stays' accessibility
-  // narrow). Every setFilter on a *-cov layer must go through here so no arm is
-  // ever dropped by another.
-  function covBaseFilter(extra){
+  // A coverage layer's shared base filter: the curated-ref dedupe (always) AND
+  // the region scope (when scoped). Every setFilter on a *-cov layer composes
+  // from here so no arm is ever dropped by another.
+  function covBaseFilter(){
     const f=['all', covDedupeFilter()];
     const sc=covScopeFilter(); if(sc) f.push(sc);
-    if(extra) f.push(extra);
     return f;
   }
-  // Re-apply covBaseFilter to every coverage layer on a scope change, so the
-  // dots track the scope like every served layer. stays-cov re-composes through
-  // applyStaysAccessFilter (it owns the acc extra); the rest get the plain base.
+  // The two sublayers a coverage letter renders as (Phase 3 clustering,
+  // region-scoping-design.md §7): individual ICONS for unclustered features
+  // (tippecanoe adds `point_count` only to clusters, so `!has point_count` =
+  // an individual POI) plus any per-layer extra (stays' accessibility narrow),
+  // and count BUBBLES for clustered features (`has point_count`). Splitting the
+  // base keeps the dedupe + scope arms on both.
+  function covIconFilter(extra){
+    const f=covBaseFilter(); f.push(['!',['has','point_count']]); if(extra) f.push(extra); return f;
+  }
+  function covClusterFilter(){
+    const f=covBaseFilter(); f.push(['has','point_count']); return f;
+  }
+  // Re-apply the composed filters to every coverage layer (icon + cluster) on a
+  // scope change, so both track scope like every served layer. stays' icon
+  // layer re-composes through applyStaysAccessFilter (it owns the acc extra);
+  // the acc narrow deliberately does NOT apply to a cluster bubble (a cluster's
+  // accessibility is ambiguous — the narrow bites once it splits into icons).
   function updateCoverageScopeFilter(){
     if(!COVERAGE_ON) return;
     COVERAGE_KEYS.forEach(([key])=>{
-      const id=key+'-cov'; if(!map.getLayer(id)) return;
-      if(key==='stays'){ applyStaysAccessFilter(); return; }
-      map.setFilter(id, covBaseFilter());
+      const id=key+'-cov';
+      if(map.getLayer(id)){
+        if(key==='stays') applyStaysAccessFilter();
+        else map.setFilter(id, covIconFilter());
+      }
+      if(map.getLayer(id+'-cl')) map.setFilter(id+'-cl', covClusterFilter());
     });
   }
   // Active-scope coverage params (rids/cc) as a query fragment
@@ -734,8 +764,16 @@
       const id=key+'-cov'; if(!map.getLayer(id)) return;
       const utility=COV_UTILITY.has(KEY_LETTER[key]);
       const show=active.has(key) && (mode==='all' || utility);
+      const dim=(mode==='curated' && utility)?0.55:1;
       map.setLayoutProperty(id,'visibility', show?'visible':'none');
-      map.setPaintProperty(id,'icon-opacity', (mode==='curated' && utility)?0.55:1);
+      map.setPaintProperty(id,'icon-opacity', dim);
+      // Cluster bubble layer (Phase 3) tracks the same on/off + Curated dim.
+      const cl=id+'-cl';
+      if(map.getLayer(cl)){
+        map.setLayoutProperty(cl,'visibility', show?'visible':'none');
+        map.setPaintProperty(cl,'icon-opacity', dim);
+        map.setPaintProperty(cl,'text-opacity', dim);
+      }
     });
   }
   function addCoverage(){
@@ -757,8 +795,10 @@
               'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
               miniIcon('services')]
           : miniIcon(key);
+      // Individual-POI icons: unclustered features only (covIconFilter gates on
+      // `!has point_count`); the count bubbles below draw the clustered ones.
       map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
-        filter:covBaseFilter(),   // dedupe + active region scope (Phase 3)
+        filter:covIconFilter(),   // dedupe + scope + unclustered (Phase 3)
         layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
           'icon-size': key==='water'
             ? ['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]
@@ -768,6 +808,26 @@
       map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
       map.on('mousemove',id,e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[key]||{}).label||'Item', e.lngLat); });
       map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+      // Cluster bubbles (Phase 3, region-scoping-design.md §7): a disc sized by
+      // point_count with the count as a label, for the clustered features
+      // tippecanoe groups at low zoom. Clicking one zooms in until it splits
+      // into individual icons — same affordance as the confirmed-pin clusters.
+      const clId=id+'-cl';
+      map.addLayer({id:clId, type:'symbol', source:'coverage', 'source-layer':srcLayer,
+        filter:covClusterFilter(),
+        layout:{visibility:'none','icon-image':covClusterIcon(key),'icon-allow-overlap':true,'text-allow-overlap':true,
+          'icon-size':['interpolate',['linear'],['get','point_count'], 2,0.55, 25,0.8, 200,1.1, 1000,1.5],
+          'text-field':['to-string',['get','point_count']],
+          'text-font':['Noto Sans Bold'],
+          'text-size':['interpolate',['linear'],['get','point_count'], 2,11, 200,13, 1000,15]},
+        paint:{'text-color':txtOn((layerByKey[key]||{}).color||'#6b6f5e'),
+          'text-halo-color':'rgba(20,22,14,.35)','text-halo-width':0.8}});
+      map.on('click',clId,e=>{ const c=e.features[0].geometry.coordinates;
+        map.easeTo({center:c, zoom:Math.min(14, map.getZoom()+2.2), duration:600}); });
+      map.on('mouseenter',clId,()=>map.getCanvas().style.cursor='pointer');
+      map.on('mousemove',clId,e=>{ const p=e.features[0].properties;
+        showTip((p.point_count||'')+' '+((layerByKey[key]||{}).label||'items'), e.lngLat); });
+      map.on('mouseleave',clId,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
     });
   }
   // Adapt coverage properties (tile props + optionally the detail payload) into
@@ -1528,13 +1588,14 @@
   // stays' coverage tile layer narrows on the accessibility filter above;
   // confirmed/clustered stays are filtered in updateConfMarkers().
   function applyStaysAccessFilter(){
-    // Coverage stays narrow on the flat `acc` tile prop
-    // (coverage-provider.md §6) — the dedupe + region-scope arms are the
-    // layer's base filter (covBaseFilter) and must survive every setFilter.
+    // Coverage stays' individual icons narrow on the flat `acc` tile prop
+    // (coverage-provider.md §6) — the dedupe + region-scope + unclustered arms
+    // (covIconFilter) are the base and must survive every setFilter. The acc
+    // narrow applies to icons only, not the cluster bubbles (see covIconFilter).
     if(map.getLayer('stays-cov')){
       const extra = activeAccess.size===ALL_ACCESS.size ? null
         : ['in', ['get','acc'], ['literal', Array.from(activeAccess)]];
-      map.setFilter('stays-cov', covBaseFilter(extra));
+      map.setFilter('stays-cov', covIconFilter(extra));
     }
   }
 
