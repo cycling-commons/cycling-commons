@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Coverage\CoverageRepository;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,6 +43,10 @@ final class CoverageController extends AbstractController
      * are tiny (Belgium: 3; a Phase-4 My-area set: 8).
      */
     private const int MAX_SCOPE_REGIONS = 24;
+
+    public function __construct(private readonly LoggerInterface $logger = new NullLogger())
+    {
+    }
 
     /**
      * Sidebar search over the coverage tier: curated matches first, then
@@ -124,27 +130,58 @@ final class CoverageController extends AbstractController
      * a csv of region ids compiled to a `region_id IN (…)` arm, `cc` a 2-letter
      * country code. Both are always client-sent, never server-resolved from a
      * user (the coverage plane is anonymous + cacheable — §6 cacheability
-     * discipline). The id set is de-duped, sorted and capped so the shared
-     * HTTP-cache keyspace stays bounded (§8 risk 10); sorting also makes the
-     * cache key order-independent. Absent/garbage params yield the empty scope
-     * (Everywhere), i.e. current behaviour.
+     * discipline). The id set is de-duped by numeric value and capped so the SQL
+     * IN-list stays bounded (§8 risk 10); the cap is what keeps the query small,
+     * NOT the HTTP-cache key — that key is the raw query string the client sends,
+     * which the client already canonicalises (covScopeQuery: sorted, deduped).
+     * Sorting here only keeps the DBAL binding stable across equivalent inputs.
+     * Absent/garbage params yield the empty scope (Everywhere), i.e. current
+     * behaviour — including array-valued (`rids[]=1`) params, which coerce to
+     * Everywhere via all() instead of raising Symfony's HTML 400.
      *
      * @return array{0: list<int>, 1: ?string}
      */
     private function scopeParams(Request $request): array
     {
+        // all() never throws on an array-valued param, unlike get(), so
+        // `rids[]=1` / `cc[]=BE` degrade to Everywhere instead of a 400.
+        $query = $request->query->all();
+        $ridsRaw = \is_string($query['rids'] ?? null) ? $query['rids'] : '';
+
         $rids = [];
-        foreach (explode(',', (string) $request->query->get('rids', '')) as $part) {
-            if (ctype_digit($part = trim($part))) {
-                $rids[$part] = (int) $part;   // key by string to de-dupe
+        foreach (explode(',', $ridsRaw) as $part) {
+            $part = trim($part);
+            // Canonical positive integer only, keyed by numeric value so a
+            // zero-padded duplicate ('01' vs '1') collapses instead of eating a
+            // cap slot. An overflow string (e.g. 20+ nines) saturates (int) to
+            // PHP_INT_MAX and would round-trip to a different, non-canonical
+            // string — reject it so garbage stays Everywhere, never a phantom
+            // `region_id IN (9223372036854775807)` empty scope.
+            if ('' === $part || !ctype_digit($part)) {
+                continue;
+            }
+            $n = (int) $part;
+            if ($n >= 1 && (string) $n === ltrim($part, '0')) {
+                $rids[$n] = $n;   // key by int value → dedupe by identity
             }
         }
         $rids = array_values($rids);
         sort($rids);
-        $rids = \array_slice($rids, 0, self::MAX_SCOPE_REGIONS);
+        if (\count($rids) > self::MAX_SCOPE_REGIONS) {
+            // A truncated scope is under-inclusive on rids alone; the cc arm is
+            // the country-wide safety net (see MAX_SCOPE_REGIONS). Surface it so
+            // a real >24-region scope (a future large country) is never a silent
+            // hole rather than a diagnosable one.
+            $this->logger->warning('Coverage scope rids capped at {cap} (received {count}); relying on the cc arm for completeness.', ['cap' => self::MAX_SCOPE_REGIONS, 'count' => \count($rids)]);
+            $rids = \array_slice($rids, 0, self::MAX_SCOPE_REGIONS);
+        }
 
-        $cc = $request->query->get('cc');
-        $cc = (\is_string($cc) && 1 === preg_match('/^[A-Za-z]{2}$/', $cc)) ? strtoupper($cc) : null;
+        $cc = $query['cc'] ?? null;
+        // /D so a trailing newline ("BE\n") can't slip past $ — PCRE's $ matches
+        // before a final \n by default, which would keep the newline through
+        // strtoupper and yield country_code = 'BE\n' matching nothing (the
+        // inverse of the garbage-→-Everywhere contract).
+        $cc = (\is_string($cc) && 1 === preg_match('/^[A-Za-z]{2}$/D', $cc)) ? strtoupper($cc) : null;
 
         return [$rids, $cc];
     }

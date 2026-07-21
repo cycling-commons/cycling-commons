@@ -141,10 +141,17 @@ After all regions, once per run:
    dropped ~99% of the points at overview zooms (23 of 2015 D-services survived
    at z8), so the map looked empty while the rail said 2015/2015. Instead `-r1`
    keeps EVERY point and clustering merges nearby ones (z6–11) into one feature
-   carrying `point_count` (sum over a zoom = the full total); above the
-   `--cluster-maxzoom` cap (z12+) points render individually so a rider zoomed
-   into a town sees the actual POIs. `--cluster-densest-as-needed` merges
-   (never drops) if a tile still exceeds the size limit.
+   carrying `point_count` (`point_count` summed **within a single tile** = that
+   tile's total); above the `--cluster-maxzoom` cap (z12+) points render
+   individually so a rider zoomed into a town sees the actual POIs.
+   `--cluster-densest-as-needed` merges (never drops) if a tile still exceeds the
+   size limit. The scope tokens `ridtok`/`cctok` are unioned across a cluster's
+   members via `--accumulate-attribute=ridtok:concat`/`cctok:concat` (§4), so a
+   bubble is scoped by its full member set. **Conservation is per-tile, not
+   global:** tippecanoe's default 5/256 feature buffer duplicates seam-strip
+   points into both adjacent tiles' clusters, so a cross-tile `point_count` sum
+   overshoots (+~9% at z6 for Belgium) — the authoritative total is the
+   buffer-free SQL `/map/coverage/counts`, never a bubble sum.
 7. **Verify** with go-pmtiles (`verify_pmtiles`): header bounds, addressed tile
    count, expected layers, and a sample tile decode — a broken build never
    ships.
@@ -184,26 +191,38 @@ layer per letter — `c d e g h i j` — feature id = numeric OSM id.
 | `ref` | all | join key: drawer detail fetch, curated dedupe, deep links |
 | `n` | all (when named) | labels, search-pick highlight |
 | `t` | all | type label (existing marker/drawer vocabulary) |
-| `rid` | all (when region-stamped) | region scope filter (region-scoping-design.md §6, Phase 3) |
-| `cc` | all (when stamped) | country scope filter (region-scoping-design.md §6, Phase 3) |
+| `ridtok` | all (always; `""` when unstamped) | region scope filter — `"|<region_id>|"` (region-scoping-design.md §6, Phase 3) |
+| `cctok` | all (always; `""` when unstamped) | country scope filter — `"|<cc>|"` (region-scoping-design.md §6, Phase 3) |
 | `kind` | D | shop/station/pump icon match |
 | `potable` | C | water marker variant, derived from OSM `drinking_water` tags |
 | `acc` | E | stays accessibility filter |
 
-`ref`/`n`/`t`/`rid`/`cc` are the **universal** props (every layer, declared as
-`universalTileProps` in `coverage-contract.json`, pinned by both language
-contract suites); `kind`/`potable`/`acc` are per-letter extras (`tileProps`).
-**`point_count`/`clustered`** are injected by tippecanoe on cluster features at
-z6–11 (§3 step 6): the client draws a clustered feature (`has point_count`) as a
-count bubble (`{key}-cov-cl` symbol layer — a colour disc + the count) that, on
-click, zooms in until it splits into individual icons; the `{key}-cov` icon
-layer filters to unclustered features (`!has point_count`). Both layers compose
-the dedupe + region-scope arms (`covIconFilter`/`covClusterFilter` in map.js).
-`rid`/`cc` are NULL-stripped, so a row outside every region (or a tile built
-before Phase 3) is prop-less; the client renders a prop-less coverage feature
+`ref`/`n`/`t`/`ridtok`/`cctok` are the **universal** props (every layer, declared
+as `universalTileProps` in `coverage-contract.json`, consumed by
+`tiles.py::_universal_props` and pinned by both language contract suites);
+`kind`/`potable`/`acc` are per-letter extras (`tileProps`).
+**`point_count`/`clustered`/`sqrt_point_count`/`point_count_abbreviated`** are all
+injected by tippecanoe on cluster features at z6–11 (§3 step 6; the last two are
+tippecanoe conveniences the client does not read): the client draws a clustered
+feature (`has point_count`) as a count bubble (`{key}-cov-cl` symbol layer — a
+colour disc + the count) that, on click, zooms in until it splits into individual
+icons; the `{key}-cov` icon layer filters to unclustered features
+(`!has point_count`). Icons compose the dedupe + region-scope arms
+(`covIconFilter`); bubbles take scope only (`covClusterFilter` — a bubble is
+never an exact curated twin, so the dedupe arm could only mis-hide it).
+
+`ridtok`/`cctok` are region-scoping TOKENS, not scalars: pipe-delimited so
+`'|<id>|' in ridtok` is a delimiter-safe set test, and ALWAYS emitted (empty
+string when unstamped, never NULL-stripped) so `--accumulate-attribute=concat`
+can UNION them across a cluster's members — a bubble's `ridtok` then holds every
+member's region and is scoped by set membership, not one member's lottery-inherited
+`rid`. "Prop-less" is the explicit both-tokens-empty state (a row outside every
+region with no cc, or a tile built before this change): the client renders it
 **unfiltered** (region-scoping-design.md §8 risk 2 fallback — the artifact lags
-the DB by up to a weekly rebuild, so hiding-all would blank the map), the
-inverse of the leak-safe default for served data.
+the DB by up to a weekly rebuild, so hiding-all would blank the map), the inverse
+of the leak-safe default for served data. A cc-bearing rid-less row (cctok
+non-empty) is NOT prop-less — it hides under a region scope (matching `/counts`)
+and reappears under its country scope.
 
 - **A · road surface stays out** of the coverage artifact: corridor line data,
   orders of magnitude larger, its own future decision. The existing curated
@@ -247,22 +266,32 @@ itemId?}`.
 
 - **Region scope params (Phase 3, region-scoping-design.md §6).** `search`,
   `nearby` and `counts` accept optional `rids` (csv region ids →
-  `region_id IN (…)`) and `cc` (2-letter country → `country_code = :cc`),
-  applied to both the curated (`item`) and community (`coverage_poi`) arms.
-  A country scope sends both, ORed, so an unsplit-country row (region_id NULL,
-  cc set) still matches. Counts become scope-aware and drive BOTH sides of a
-  coverage layer's rail badge: the in-scope count is the `total`, and also the
-  `shown` (every in-scope POI is on the map, revealed progressively as you
-  zoom — the client does NOT count viewport-rendered tiles, which
-  `--drop-densest-as-needed` thins to a confusing near-zero at overview zooms;
-  `map.js covShownCount`). So a coverage layer reads N/N when on, 0/N when
-  toggled off or mode-hidden — matching the served layers. Params are
-  client-sent only (the plane is
-  anonymous + cacheable — never server-resolved from a user), de-duped, sorted
-  and capped at `CoverageController::MAX_SCOPE_REGIONS` (value `24`) to bound
-  the shared HTTP-cache keyspace (region-scoping-design.md §8 risk 10); the cap
-  is safe because a country scope's `cc` arm is the complete fallback. Absent =
-  current behaviour (backward compatible). The deep-link resolver
+  `region_id IN (…)`) and `cc` (2-letter country → `country_code = :cc`). The
+  **community (`coverage_poi`) arm** takes both, ORed, so an unsplit-country row
+  (region_id NULL, cc set) still matches. The **curated (`item`) arm is rid-ONLY**
+  (drops `cc`): the map's served-data gate is rid-only and the catalog payload
+  carries no `cc`, so a `cc`-OR arm here would list a curated POI whose pin the
+  map hides — a served item gets its region stamped on write (`SpatialResolver`)
+  or by the importer's membership recompute, so rid-only is complete. Counts
+  become scope-aware and drive BOTH sides of a coverage layer's rail badge: the
+  in-scope count is the `total`, and also the `shown` (every in-scope POI is on
+  the map, revealed progressively as you zoom — the client does NOT count
+  viewport-rendered tiles, which before clustering read a confusing near-zero at
+  overview zooms; `map.js covShownCount`). So a coverage layer reads N/N when on,
+  0/N when toggled off or mode-hidden — matching the served layers. **Below the
+  coverage minzoom (z6) the layer reads its full N/N while nothing renders** — a
+  large country fitted below z6 (e.g. Germany ~z5.8) has no coverage geometry
+  yet; the count is honest (every POI IS in scope), the pixels arrive on zoom-in.
+  Params are client-sent only (the plane is anonymous + cacheable — never
+  server-resolved from a user); `rids` is de-duped by numeric value (zero-padded
+  duplicates collapse), sorted, overflow/garbage rejected to the empty scope, and
+  capped at `CoverageController::MAX_SCOPE_REGIONS` (value `24`) to bound the SQL
+  IN-list (region-scoping-design.md §8 risk 10) — the cap is safe because a
+  country scope's `cc` arm is the complete fallback (guaranteed by the pipeline's
+  region ⇒ cc invariant), and it logs when it actually truncates. The HTTP-cache
+  key is the raw client query string, which `covScopeQuery` already canonicalises
+  (sorted, deduped) — the server sort/dedupe only keeps the SQL binding stable.
+  Absent = current behaviour (backward compatible). The deep-link resolver
   (`openCoverageFeatureByName`) deliberately sends **no** scope params, so a
   deep link finds its target regardless of the saved scope, then widens.
 
@@ -464,5 +493,28 @@ interim clause retires):
 - **A · road surface at coverage scale** (corridor line data in tiles) has no
   decision — deliberately excluded from this artifact.
 - **Tile density tuning** at z14 (peaks, memorials) may need per-layer minzoom
-  adjustment beyond `--drop-densest-as-needed`; to be observed on real
+  adjustment beyond `--cluster-densest-as-needed`; to be observed on real
   artifacts.
+
+### Planet-flip dry-run checklist (pipeline, not reachable with Belgium data)
+
+Two clustering behaviours are safe for Belgium but must be verified before the
+worldwide flip (region-scoping-design.md §7 Phase 5):
+
+- **tippecanoe segfault on an oversized above-cap tile.** With the pinned combo
+  (`--cluster-maxzoom=11 --cluster-densest-as-needed -r1`), a single z12–14 tile
+  holding ~30 000 same-letter points (a megacity-density tile) crashes
+  tippecanoe v2.79.0 with SIGSEGV instead of clustering — the as-needed cluster
+  path on an above-cap tile. `run.py` aborts before publish, so a crash freezes
+  the artifact at last-good permanently until the flags change. Belgium's densest
+  real z12 letter tile is 65 features, so it is unreachable today; 20 000 points
+  build fine, and removing either flag avoids the crash. File upstream at
+  felt/tippecanoe (nearest existing: mapbox/tippecanoe#840) and re-test the pin.
+- **Scope-token string size.** `ridtok`/`cctok` are concatenated (not deduped)
+  across a cluster's members, so a giant z6 cluster carries one long string
+  (Belgium worst case: a 1081-member bubble → ~4.3 KB; deduped it would be one
+  token). Correct at any scale (the client's `in` test is dedup-agnostic), but a
+  planet megacity cluster of tens of thousands compounds the tile-size pressure
+  above. If it bloats tiles, dedup the tokens in a post-tile pass (needs an MVT
+  round-trip lib the pipeline does not yet carry) rather than truncating (which
+  would mis-hide regions).

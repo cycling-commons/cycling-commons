@@ -362,8 +362,8 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testCuratedSearchArmScopesToRids(): void
     {
-        // The curated (item) arm scopes too, so a served POI outside the scope
-        // never appears in the sidebar while the scope-filtered tiles hide it.
+        // The curated (item) arm scopes by rid too, so a served POI outside the
+        // scope never appears in the sidebar while the scope-filtered tiles hide it.
         $client = static::createClient();
         $db = $this->db();
         self::ensureCoverageSchema($db);
@@ -376,6 +376,71 @@ final class CoverageQueryTest extends WebTestCase
         $r = $this->getJson($client, '/map/coverage/search?q=fontaine&rids=1')['results'];
         self::assertSame(['node/9921'], array_column($r, 'ref'));
         self::assertTrue($r[0]['curated']);
+    }
+
+    public function testCuratedArmIsRidOnlyForMapParity(): void
+    {
+        // finding 6: the curated arm is rid-ONLY (drops cc), mirroring the map's
+        // rid-only served-data gate — else the sidebar would list a curated POI
+        // (region_id NULL, cc='BE') whose pin the map hides. The COMMUNITY arm
+        // keeps cc, so an identically-shaped coverage row IS still listed.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // A community coverage row: region_id NULL, cc='BE' (kept by the cc arm).
+        self::insertCoveragePoi($db, ['ref' => 'node/9961', 'name' => 'Fontaine community be', 'region_id' => null, 'country_code' => 'BE']);
+        // A curated item with the same shape: region_id NULL, cc='BE'.
+        self::insertCoveragePoi($db, ['ref' => 'node/9962', 'name' => 'Fontaine curated be', 'region_id' => null, 'country_code' => 'BE']);
+        $this->item('node/9962', 'Fontaine curated be');   // item() leaves region_id NULL, cc='BE'
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        // Country scope (region ids + cc). The curated cc-only item is HIDDEN
+        // (rid-only arm), the community cc-only row is SHOWN (cc arm).
+        $r = $this->getJson($client, '/map/coverage/search?q=fontaine&rids=1,2&cc=BE')['results'];
+        $refs = array_column($r, 'ref');
+        self::assertContains('node/9961', $refs, 'community cc-only row stays listed (cc arm)');
+        self::assertNotContains('node/9962', $refs, 'curated cc-only item is hidden — matches the rid-only map gate');
+    }
+
+    public function testCcRejectsTrailingNewline(): void
+    {
+        // finding 7: PCRE $ matches before a trailing \n, so 'BE\n' used to pass
+        // and yield country_code = 'BE\n' matching nothing (the inverse of the
+        // garbage-→-Everywhere contract). /D closes it: 'BE%0A' is garbage → cc
+        // ignored → Everywhere, identical to the no-param counts.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9971', 'letter' => 'C', 'region_id' => 1, 'country_code' => 'BE']);
+
+        $everywhere = $this->getJson($client, '/map/coverage/counts')['counts'];
+        $newline = $this->getJson($client, '/map/coverage/counts?cc=BE%0A')['counts'];
+        self::assertSame($everywhere, $newline, "'BE\\n' must be garbage → Everywhere, not an empty country_code='BE\\n' scope");
+        self::assertSame(['C' => 1], $newline);
+    }
+
+    public function testRidsParserEdges(): void
+    {
+        // finding 17: zero-padded rids collapse onto their numeric value (no
+        // wasted cap slot), overflow strings are rejected (garbage → Everywhere,
+        // never a phantom empty scope), and an array-valued rids[] degrades to
+        // Everywhere instead of Symfony's HTML 400.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9981', 'letter' => 'C', 'region_id' => 1]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9982', 'letter' => 'C', 'region_id' => 2]);
+
+        // '01' is region 1 (zero-padded), deduped with '1' — scopes to region 1.
+        self::assertSame(['C' => 1], $this->getJson($client, '/map/coverage/counts?rids=01,1')['counts']);
+
+        // A 20-digit overflow saturates (int); rejected → Everywhere (both rows).
+        self::assertSame(['C' => 2], $this->getJson($client, '/map/coverage/counts?rids=99999999999999999999')['counts']);
+
+        // Array-valued param must not 500/400 — degrades to Everywhere.
+        $client->request('GET', '/map/coverage/counts?rids[]=1');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['C' => 2], json_decode((string) $client->getResponse()->getContent(), true)['counts']);
     }
 
     public function testCountsScopeToRids(): void
@@ -426,6 +491,25 @@ final class CoverageQueryTest extends WebTestCase
         $r = $this->getJson($client, '/map/coverage/search?q=fontaine&rids='.$manyIds.'&cc=zz9');
         self::assertResponseIsSuccessful();               // cc 'zz9' is not 2 alpha → ignored, no 500
         self::assertSame(['node/9951'], array_column($r['results'], 'ref'));
+    }
+
+    public function testCapTruncationIsRescuedByCc(): void
+    {
+        // finding 8/21: the 24-region cap is only safe because the cc arm is the
+        // complete fallback. A row whose region sorts PAST the cap is dropped from
+        // the rids IN-list, but a country scope's cc arm still counts it — proven
+        // by comparing a >24-id scope WITH vs WITHOUT cc.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // region_id 100 is beyond the 24-id cap when rids=1..30 (sorted, sliced).
+        self::insertCoveragePoi($db, ['ref' => 'node/9991', 'letter' => 'C', 'region_id' => 100, 'country_code' => 'BE']);
+
+        $ids = implode(',', range(1, 30));
+        // With cc: the cc arm rescues the capped-out region-100 row.
+        self::assertSame(['C' => 1], $this->getJson($client, '/map/coverage/counts?rids='.$ids.'&cc=BE')['counts']);
+        // Without cc: region 100 is past the cap and there is no fallback → empty.
+        self::assertSame([], $this->getJson($client, '/map/coverage/counts?rids='.$ids)['counts']);
     }
 
     public function testSearchEtagRevalidates304(): void

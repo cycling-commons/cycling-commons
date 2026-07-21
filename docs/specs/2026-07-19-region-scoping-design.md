@@ -497,9 +497,10 @@ audited `1cd5f44..HEAD`; 10 findings + 5 info items, all resolved:
    a latent legend-vs-map mismatch for the bike-pref prefilter on lines.
 2. *The hardcoded Hautes Fagnes hazard fixture* carried no `rid`, so the scope
    gate hid it everywhere except Everywhere — including the default Wallonia
-   view (HIGH). **Owner decision: retired.** F ships empty until real hazard
-   rows are served as region-stamped data; rid-less stays the leak-safe hidden
-   default. (The stale twin row in the dead demo file
+   view (HIGH). **Owner decision: retired**, then re-served as region-stamped
+   data by **Task A** (below) — F now ships real hazard rows through
+   `featureVisible()`'s scope gate; rid-less stays the leak-safe hidden default.
+   (The stale twin row in the dead demo file
    `web/assets/data/profiles-data.js` — no consumers — is left for the planned
    dead-legacy sweep.)
 3. *Local search ignored scope while the header claimed "Search in X"*
@@ -563,12 +564,15 @@ now filters to scope — the coverage carve-outs are retired. Landed with
 unit/functional tests (PHP + pipeline pytest + scope node suite) and browser
 verification on the dev stack. Slices:
 
-- **Tile props** (`pipeline/coverage/tiles.py::_letter_sql`): `rid`
-  (`region_id`) + `cc` (`country_code`) emitted on EVERY layer alongside
-  `ref`/`n`/`t`; `jsonb_strip_nulls` drops them for NULL rows, so a prop-less
-  feature is legal. Declared as `universalTileProps` in
-  `coverage-contract.json` and pinned by both contract test suites
-  (`pipeline/tests/test_contract.py`, `web/tests/Catalog/CoverageContractTest.php`).
+- **Tile props** (`pipeline/coverage/tiles.py::_letter_sql`): `ridtok`
+  (`"|<region_id>|"`) + `cctok` (`"|<cc>|"`) emitted on EVERY layer alongside
+  `ref`/`n`/`t` (superseding the earlier scalar `rid`/`cc` — see the review-round
+  note below for why tokens). ALWAYS present (empty string when unstamped, never
+  NULL-stripped) so a cluster bubble can union them across its members. Declared
+  as `universalTileProps` in `coverage-contract.json`, consumed AND pinned by
+  both contract test suites (`pipeline/tests/test_contract.py`,
+  `web/tests/Catalog/CoverageContractTest.php`) — `tiles.py::_universal_props`
+  now asserts its emitted key set equals the contract so the two can't drift.
 - **Endpoint params** (`CoverageRepository` + `CoverageController`): `rids`
   (csv region ids) → `region_id IN (…)`, `cc` → `country_code = :cc`, on
   `/search` (both the curated-item and community arms), `/nearby`, `/counts`.
@@ -598,7 +602,8 @@ verification on the dev stack. Slices:
   **Correction (post-review browser test):** the one scope-aware count drives
   BOTH sides of a coverage layer's rail badge — it is the `total` AND the
   `shown`. The original `covShownCount` counted viewport-*rendered* tiles, but
-  coverage is thinned by tippecanoe `--drop-densest-as-needed` at low zoom, so
+  before clustering landed the low-zoom tiles were near-empty (tippecanoe's
+  default point-thinning, since replaced by `--cluster-densest-as-needed`), so
   at the region/country overview zooms the scope selector fits to, that read a
   confusing near-zero ("16/2015", even "0/2015", for All Belgium at ~z8) while
   every in-scope POI is genuinely on the map (revealed as you zoom). So
@@ -616,21 +621,82 @@ verification on the dev stack. Slices:
   `--cluster-distance=20 --cluster-maxzoom=11` merges nearby POIs into
   `point_count` count bubbles at z6–11 and shows individual icons at z12+. The
   client renders a `{key}-cov-cl` bubble layer (disc + count, click-to-zoom)
-  beside the unclustered `{key}-cov` icon layer, both composing the dedupe +
-  scope arms. Verified: All Belgium z8 shows ~45 service bubbles summing to the
-  full 2015; z12 shows 281 individual shop icons.
+  beside the unclustered `{key}-cov` icon layer. Verified: All Belgium z8 shows
+  ~45 service bubbles; z12 shows 281 individual shop icons. **Bubble-sum caveat
+  (review round):** a cross-tile sum of `point_count` OVERSHOOTS the true total —
+  tippecanoe's default 5/256 feature buffer duplicates seam-strip points into
+  both adjacent tiles' clusters (+~9% at z6 for Belgium). Conservation holds
+  **per tile**, not globally; the authoritative total the rail shows is the
+  buffer-free SQL `/map/coverage/counts`, never a bubble sum. The bubble is a
+  density blob, not a counter.
 - **Data window (bounded, same class as the Phase-2 `coverage_poi` note):** a
   freshly-changed props schema reaches live tiles only on the next pipeline
   rebuild (weekly timer, or a manual `make coverage-refresh`); until then tiles
   are prop-less and render unfiltered under the fallback — correct-by-design,
   not a bug. **Closed for dev 2026-07-21:** `make coverage-refresh` was run
-  (artifact `20260721-0814.pmtiles`), re-stamping `coverage_poi` (Flanders
+  (artifact `20260721-0944.pmtiles`), re-stamping `coverage_poi` (Flanders
   11410 / Wallonia 9832 / Brussels 1581 — the earlier Wallonia-only state was
   the Phase-2 window, not the extract) and landing the
   `coverage_poi.country_code` index. Real tile filtering then verified in the
   browser: framed on the Brussels enclave, water `shown` 31 (Brussels scope) →
   39 (Everywhere, viewport unchanged) as the border Flanders/Wallonia dots
   reappear when the filter lifts.
+
+**Task A — Serve F hazards (EXECUTED 2026-07-21, same round).** Hazards have no
+coverage-tile layer and no OSM bulk pool, so F renders as served CATALOG point
+features (like climbs): `CatalogProvider` `'F'` key → `window.CC_HAZARDS` →
+`layerByKey['hazards']`. Region stamping is automatic (item rows go through
+`recomputeMembership` / intake `SpatialResolver`), so `f.rid` flows through
+`featureVisible()`'s scope gate with no extra work. A first real hazard row
+(Hautes Fagnes crosswind) is seeded by `SeedManualCatalogCommand`. The drawer's
+registry rows / confirm panel / edit-bridge key on `f.id` + `schemaRows('F', …)`,
+same as every letter. Referenced from code as "region-scoping-design.md §7 Task A".
+
+**Phase 3 adversarial-review fix round — EXECUTED 2026-07-21.** The Phase 3 +
+Task A slices were reviewed (`docs/2026-07-21-phase3-review-findings.md`); no
+criticals, 11 warnings + 10 info, all fixed this round:
+
+- **Cluster-bubble region lottery (was: wrong by up to 100% under a scope).** A
+  bubble used to inherit ONE member's `rid`, so a region scope admitted/hid the
+  whole blob on a lottery (Wallonia z6: water bubbles summed 0 vs rail 422).
+  Fixed by carrying region membership as pipe-delimited TOKENS unioned across the
+  cluster: `tiles.py` emits `ridtok`/`cctok` on every feature and
+  `build_pmtiles` adds `--accumulate-attribute=ridtok:concat`/`cctok:concat`, so
+  a bubble's `ridtok` holds every member's `"|id|"` and the client tests
+  `'|id|' in ridtok` (set membership) for both bubbles and icons. Verified on the
+  real Belgium artifact: z6 bubbles carry all three region tokens; 18 clusters
+  hold both Wallonia + Flanders members.
+- **cc-bearing rid-less tile leak (finding 5).** The old `!has rid` prop-less arm
+  rendered region_id-NULL/cc-set rows under a region scope while `/counts`
+  excluded them. Now "prop-less" = BOTH tokens empty; a cc-only row (cctok
+  non-empty) hides under a region scope and reappears only under its country
+  scope, matching `/counts`. Data side: `load.py` snaps boundary-miss rows to the
+  nearest region of their own country within `BOUNDARY_SNAP_DEG`, and backfills
+  `cc` from the region for any stamped-but-cc-less row (the region ⇒ cc invariant
+  the 24-region cap's safety rests on).
+- **Curated sidebar/map parity (finding 6).** The curated (served-item) search
+  arm is now rid-ONLY (dropped `cc`), mirroring the client's rid-only `inScope`
+  gate, so search never lists a curated POI whose pin the map hides. The
+  community/coverage arm keeps `cc`.
+- **Bubble dedupe mis-hide (finding 4).** The curated-ref dedupe arm is dropped
+  from the cluster layer (a bubble is never an exact curated twin); icons keep it.
+- **Parser hardening (findings 7, 17).** `cc` regex gained `/D` (a trailing
+  newline no longer validates); `rids` dedupe by numeric value (zero-padded
+  duplicates collapse), overflow strings are rejected (stay Everywhere, not a
+  phantom empty scope), array-valued params degrade to Everywhere instead of a
+  400, and the 24-region cap logs when it truncates.
+- **Hazard transform (findings 9, 12–14).** Nameless hazards are flagged
+  `unnamed` (no name-dedup, no shared-label routing — they open their exact pin);
+  `srcType` drives the source line (osm keeps ODbL attribution, only truly
+  source-less rows read "Community report"); a confirmed hazard gets the verified
+  tier (`cur:!!p.v`); `photo` is parsed with the `osmDrawer` guard and the drawer
+  `<img src>` goes through `safeHref`.
+- **Contract/tests.** `universalTileProps` is required (not silently optional) and
+  asserted equal to the emitted SQL keys; the z11 cluster-cap boundary, the
+  cluster token union, and the per-tile (not global) conservation invariant are
+  pinned in `pipeline/tests`.
+- **Planet-scale deferrals (findings 1 + token size).** See coverage-provider.md
+  "Planet-flip dry-run checklist".
 
 **Phase 4 — Base location + My area (requirement 3).**
 

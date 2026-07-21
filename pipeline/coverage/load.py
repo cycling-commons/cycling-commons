@@ -21,6 +21,13 @@ from coverage.parse import PoiRow
 # run for the same region — a truncated download/filter must not wipe a region.
 DRIFT_ABORT_RATIO = 0.4
 
+# Degrees (SRID 4326) a region-less POI may sit outside every region polygon and
+# still snap to the nearest region of its own country (region-scoping-design.md
+# §6, finding 5). ~0.01° ≈ 1.1 km at Belgian latitudes — wide enough for
+# polygon-simplification gaps, tight enough that a genuine outside-coverage point
+# stays unstamped.
+BOUNDARY_SNAP_DEG = 0.01
+
 # coverage-provider.md §2 DDL, verbatim (indexes named below).
 _TABLE_DDL = """
 CREATE TABLE IF NOT EXISTS coverage_poi (
@@ -153,6 +160,50 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                     ORDER BY c.id, r.area_km2 ASC NULLS LAST, r.id ASC
                 ) m
                 WHERE coverage_poi.id = m.poi_id
+                """,
+                (src_region,),
+            )
+            # Boundary-miss rescue (region-scoping-design.md §6, finding 5): a POI
+            # inside the extract but outside every region polygon — an ST_Contains
+            # gap from polygon simplification, ~206 rows in dev Belgium — snaps to
+            # the NEAREST region of its OWN country within BOUNDARY_SNAP_DEG,
+            # smallest-area-wins on a tie. Constrained to the same country_code so
+            # a true country-border row is never pulled across; a row with no cc,
+            # or none near, stays NULL (a genuine outside-coverage point). Without
+            # this a boundary POI carries cc but no rid, so it vanishes under a
+            # region scope (the rail excludes region_id-NULL rows) yet the client
+            # can only show it under the whole country.
+            cur.execute(
+                """
+                UPDATE coverage_poi SET region_id = m.region_id
+                FROM (
+                    SELECT DISTINCT ON (c.id) c.id AS poi_id, r.id AS region_id
+                    FROM coverage_poi c
+                    JOIN region r ON r.country_code = c.country_code
+                                 AND ST_DWithin(r.geom, c.geom, %s)
+                    WHERE c.src_region = %s
+                      AND c.region_id IS NULL
+                      AND c.country_code IS NOT NULL
+                    ORDER BY c.id, ST_Distance(r.geom, c.geom),
+                             r.area_km2 ASC NULLS LAST, r.id ASC
+                ) m
+                WHERE coverage_poi.id = m.poi_id
+                """,
+                (BOUNDARY_SNAP_DEG, src_region),
+            )
+            # region ⇒ cc invariant (region-scoping-design.md §8 risk 10, finding
+            # 8): the controller's 24-region cap is only safe if every
+            # region-stamped row also carries cc (the cc arm is the completeness
+            # net when the rid list truncates). Backfill cc from the region for
+            # any stamped row whose extract left it NULL (~10 rows in dev), so a
+            # region-stamped row can never be cc-less.
+            cur.execute(
+                """
+                UPDATE coverage_poi SET country_code = r.country_code
+                FROM region r
+                WHERE coverage_poi.region_id = r.id
+                  AND coverage_poi.country_code IS NULL
+                  AND coverage_poi.src_region = %s
                 """,
                 (src_region,),
             )

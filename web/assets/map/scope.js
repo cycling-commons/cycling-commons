@@ -193,6 +193,28 @@
       const rids = scope.regionIds.slice().sort((a, b) => a - b);
       return { rids: rids.length ? rids : null, cc: scope.kind === 'country' ? scope.countryCode : null };
     },
+
+    /** MapLibre filter expression for the coverage TILE layers (Phase 3,
+     *  region-scoping-design.md §6/§7), or null for Everywhere (no filter). The
+     *  scope keys are pipe-delimited membership TOKENS: ridtok = "|<region_id>|"
+     *  (empty when unstamped), cctok = "|<cc>|", UNIONed across a cluster's
+     *  members by tippecanoe (--accumulate-attribute=concat). Testing
+     *  `'|id|' in ridtok` answers "does ANY member fall in this region?" for a
+     *  bubble and works identically on an individual icon, so ONE filter serves
+     *  both sublayers. Prop-less (both tokens empty) RENDERS — the artifact lags
+     *  the DB by up to a weekly rebuild, so hiding-all would blank the map (§8
+     *  risk 2); a cc-bearing rid-less row (cctok non-empty) is NOT prop-less, so
+     *  it hides under a region scope (matching /counts) and shows under its
+     *  country scope. coalesce keeps the test safe against a stale pre-token tile. */
+    coverageTileFilter() {
+      if (!scope || scope.kind === 'everywhere') return null;
+      const ridtok = ['coalesce', ['get', 'ridtok'], ''];
+      const cctok = ['coalesce', ['get', 'cctok'], ''];
+      const arms = [['all', ['==', ridtok, ''], ['==', cctok, '']]];
+      scope.regionIds.forEach((id) => arms.push(['in', '|' + id + '|', ridtok]));
+      if (scope.kind === 'country' && scope.countryCode) arms.push(['in', '|' + scope.countryCode + '|', cctok]);
+      return ['any'].concat(arms);
+    },
   };
 
   if (typeof window !== 'undefined') window.CCScope = API;

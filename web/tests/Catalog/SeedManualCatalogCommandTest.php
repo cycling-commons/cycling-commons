@@ -6,8 +6,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Catalog;
 
+use App\Catalog\CatalogFormRegistry;
 use App\Catalog\CatalogProvider;
 use App\Catalog\Entity\Item;
+use App\Catalog\FieldKind;
 use App\Catalog\Import\AttributeVocabulary;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
@@ -75,6 +77,44 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         self::assertSame('Côte de la Redoute', $redoute->getName());
         self::assertSame('B', $redoute->getLetter());
         self::assertSame('Tough', $redoute->getAttributes()['effort']);
+    }
+
+    public function testSeededSelectValuesAreValidRegistryChoices(): void
+    {
+        // finding 21: a typo'd choice in the seed (e.g. severity 'Modrate') would
+        // seed, serve and render untranslated, silently. Pin EVERY seeded manual
+        // item's select/multiselect attribute values to the CatalogFormRegistry
+        // choices for its letter — the hazard's hazardType/severity/worstWhen
+        // included, but the whole seed set for free.
+        $this->runSeed()->assertCommandIsSuccessful();
+        $registry = static::getContainer()->get(CatalogFormRegistry::class);
+
+        // letter -> [selectFieldName => choices[]] for every select/multiselect field.
+        $choicesByLetter = [];
+        foreach (ItemType::cases() as $type) {
+            foreach ($registry->for($type)->all() as $field) {
+                if (\in_array($field->kind, [FieldKind::Select, FieldKind::MultiSelect], true)) {
+                    $choicesByLetter[$type->letter()][$field->name] = $field->choices;
+                }
+            }
+        }
+
+        $checked = 0;
+        foreach ($this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]) as $item) {
+            $fieldChoices = $choicesByLetter[$item->getLetter()] ?? [];
+            foreach ($item->getAttributes() as $key => $value) {
+                if (!isset($fieldChoices[$key])) {
+                    continue;   // not a registry select field (free text, extra, display key)
+                }
+                foreach ((array) $value as $v) {
+                    self::assertContains($v, $fieldChoices[$key], sprintf(
+                        '%s (%s): attribute %s=%s is not a valid registry choice',
+                        $item->getName(), $item->getLetter(), $key, (string) $v));
+                    ++$checked;
+                }
+            }
+        }
+        self::assertGreaterThan(0, $checked, 'the seed must exercise at least one select field');
     }
 
     /**

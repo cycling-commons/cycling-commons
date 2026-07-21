@@ -70,27 +70,50 @@ def test_export_geojsonl_shapes(db, tmp_path):
     assert stay["properties"]["t"] == _label("E", "tourism=camp_site")
     assert stay["properties"]["acc"] == "Wheelchair-accessible"
 
-    # rid/cc are the region-scoping keys (region-scoping-design.md §6). The
-    # fixture rows carry neither region_id nor country_code, so jsonb_strip_nulls
-    # drops them — a prop-less feature the client renders unfiltered (the §8
-    # risk-2 fallback until the weekly rebuild stamps them).
-    assert "rid" not in shop["properties"]
-    assert "cc" not in shop["properties"]
+    # ridtok/cctok are the region-scoping keys (region-scoping-design.md §6) as
+    # pipe-delimited membership tokens. They are ALWAYS emitted (never
+    # NULL-stripped): an unstamped row gets the empty string, which the client
+    # reads as prop-less and renders unfiltered (the §8 risk-2 fallback until the
+    # weekly rebuild stamps them). Empty is what lets --accumulate-attribute=concat
+    # union tokens across a cluster without tippecanoe's missing-attribute abort.
+    assert shop["properties"]["ridtok"] == ""
+    assert shop["properties"]["cctok"] == ""
+
+    # Contract enforcement (universalTileProps consumed, not just declared): every
+    # exported feature's key set is exactly the contract's universal props plus
+    # this letter's declared extras — an undeclared column can't ship silently.
+    contract = load_contract()
+    for letter, feats in (("D", _features(out["D"])), ("C", _features(out["C"])),
+                          ("E", _features(out["E"]))):
+        allowed = set(contract.universal_tile_props) | set(contract.letters[letter].tile_props)
+        for ref, feat in feats.items():
+            extra = set(feat["properties"]) - allowed
+            assert not extra, f"{ref}: undeclared tile prop(s) {extra} (contract drift)"
 
 
-def test_export_carries_rid_cc_when_stamped(db, tmp_path):
-    """A region-stamped coverage_poi row emits rid (region_id) + cc
-    (country_code) as flat tile props for the client scope filter."""
+def test_export_carries_scope_tokens_when_stamped(db, tmp_path):
+    """A region-stamped row emits ridtok="|<region_id>|" + cctok="|<cc>|"; a
+    cc-only boundary row (region_id NULL) emits an EMPTY ridtok but a non-empty
+    cctok — the shape the client hides under a region scope yet shows under its
+    country scope (region-scoping-design.md §6, finding 5)."""
     ensure_schema(db)
     db.execute(
         "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region, region_id, country_code)"
         " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s, %s, %s)",
         ("node/900001001", "D", "shop", "Scoped shop", 4.35, 50.85,
          Json({"shop": "bicycle", "name": "Scoped shop"}), SRC, 42, "BE"))
+    db.execute(
+        "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region, region_id, country_code)"
+        " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s, %s, %s)",
+        ("node/900001002", "D", "shop", "Border shop", 4.36, 50.86,
+         Json({"shop": "bicycle", "name": "Border shop"}), SRC, None, "BE"))
     out = tiles.export_geojsonl(db, tmp_path)
-    props = _features(out["D"])["node/900001001"]["properties"]
-    assert props["rid"] == 42          # flat bigint, MVT-legal
-    assert props["cc"] == "BE"
+    stamped = _features(out["D"])["node/900001001"]["properties"]
+    assert stamped["ridtok"] == "|42|"
+    assert stamped["cctok"] == "|BE|"
+    ccOnly = _features(out["D"])["node/900001002"]["properties"]
+    assert ccOnly["ridtok"] == ""       # region-scope hides it (matches /counts)
+    assert ccOnly["cctok"] == "|BE|"    # country-scope shows it
 
 
 def _geojsonl(path, rows):
@@ -224,13 +247,26 @@ def test_build_command_carries_clustering_flags(tmp_path, monkeypatch):
     for flag, val in [("--cluster-distance", "20"), ("--cluster-maxzoom", "11"),
                       ("--minimum-zoom", "6"), ("--maximum-zoom", "14")]:
         assert flag in cmd and cmd[cmd.index(flag) + 1] == val, f"{flag} {val}"
+    # The scope tokens MUST be unioned across a cluster's members (finding 2):
+    # without these a bubble would inherit one member's region, so a region scope
+    # admits/hides the whole bubble on a lottery.
+    assert "ridtok:concat" in cmd, "cluster bubbles must union member region tokens"
+    assert "cctok:concat" in cmd, "cluster bubbles must union member country tokens"
 
 
-def test_clustering_represents_every_point_at_low_zoom(tmp_path):
-    # 60 D-services packed into a ~0.02° box near Brussels. At z6 (below the
-    # cluster-maxzoom cap) tippecanoe MUST cluster them into point_count features
-    # whose counts sum to EXACTLY 60 — proving nothing is dropped (the -r1 +
-    # cluster-densest promise) and nothing is double-counted at a tile edge.
+def test_clustering_represents_every_point_within_one_tile_at_low_zoom(tmp_path):
+    # 60 D-services packed into a ~0.02° box near Brussels, ALL inside one z6
+    # tile. At z6 (below the cluster-maxzoom cap) tippecanoe MUST cluster them
+    # into point_count features whose counts sum to EXACTLY 60 — proving nothing
+    # is dropped (the -r1 + cluster-densest promise).
+    #
+    # SCOPE OF THE INVARIANT: conservation is PER TILE, not global. Tippecanoe's
+    # default 5/256 feature buffer duplicates points within the seam strip into
+    # both adjacent tiles' clusters, so summing point_count across tiles that
+    # straddle a seam OVERSHOOTS the input (finding 3). The box here is chosen to
+    # sit wholly inside a single tile so no seam duplication is in play; the rail
+    # /map/coverage/counts (exact SQL, buffer-free) — not a cross-tile bubble sum
+    # — is the authoritative total the client shows.
     n = 60
     rows = [(4.34 + (i % 10) * 0.002, 50.84 + (i // 10) * 0.002,
              {"ref": f"node/{i}", "t": "Bike shop", "kind": "shop"})
@@ -246,6 +282,73 @@ def test_clustering_represents_every_point_at_low_zoom(tmp_path):
     assert total == n, f"clustering must represent all {n} points at z6, got {total}"
     assert any("point_count" in f["properties"] for f in feats), \
         "such a dense box must yield at least one point_count cluster at z6"
+
+
+def test_cluster_unions_member_region_tokens(tmp_path):
+    # Finding 2: a bubble must carry the UNION of its members' region tokens, so
+    # `'|<id>|' in ridtok` answers "does any member fall in this region?" instead
+    # of trusting one lottery-chosen representative. Pack 40 points alternating
+    # region 1 / 23 (all cc BE) into one z6 tile; the cluster's ridtok must
+    # contain BOTH tokens and its cctok the country token.
+    rows = []
+    for i in range(40):
+        rid = 1 if i % 2 == 0 else 23
+        rows.append((4.34 + (i % 10) * 0.002, 50.84 + (i // 10) * 0.002,
+                     {"ref": f"node/{i}", "t": "Bike shop",
+                      "ridtok": f"|{rid}|", "cctok": "|BE|"}))
+    out = tmp_path / "u.pmtiles"
+    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+
+    x, y = _tile_xy(4.35, 50.85, 6)
+    clusters = [f for f in _decode_layer(out, 6, x, y, "d")
+                if "point_count" in f["properties"]]
+    assert clusters, "dense box must cluster at z6"
+    unioned = next(f for f in clusters if f["properties"]["point_count"] > 1)
+    ridtok = unioned["properties"]["ridtok"]
+    assert "|1|" in ridtok and "|23|" in ridtok, \
+        f"bubble must union both member regions, got {ridtok!r}"
+    assert "|BE|" in unioned["properties"]["cctok"]
+    # No false positive: a region not present must NOT match.
+    assert "|99|" not in ridtok
+
+
+def test_cluster_tokens_survive_rid_less_members(tmp_path):
+    # concat aborts tippecanoe on a MISSING attribute; _universal_props emits ''
+    # (not NULL) for unstamped rows so a cluster mixing stamped + rid-less members
+    # (the 206-boundary-row shape) still builds, and the empty tokens contribute
+    # nothing to the union (finding 5 + the concat-abort guard).
+    rows = []
+    for i in range(30):
+        stamped = i % 3 != 0
+        rows.append((4.34 + (i % 6) * 0.002, 50.84 + (i // 6) * 0.002,
+                     {"ref": f"node/{i}", "t": "Bike shop",
+                      "ridtok": ("|7|" if stamped else ""), "cctok": "|BE|"}))
+    out = tmp_path / "m.pmtiles"
+    # Builds without tippecanoe's "can't happen" concat abort.
+    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+    x, y = _tile_xy(4.35, 50.85, 6)
+    clusters = [f for f in _decode_layer(out, 6, x, y, "d")
+                if "point_count" in f["properties"]]
+    assert clusters, "dense box must cluster at z6"
+    ridtok = clusters[0]["properties"]["ridtok"]
+    assert "|7|" in ridtok            # stamped members present
+    assert "||" not in ridtok or ridtok.count("|") % 2 == 0  # empties add no stray delimiter
+
+
+def test_z11_is_still_clustered_the_cap_boundary(tmp_path):
+    # The cluster-maxzoom=11 boundary is inclusive: z11 still clusters, z12 does
+    # not (finding 19 — the tests pinned z6 and z12 but never the z11 edge the
+    # flag literal alone guards). 60 packed points, same box as the z6 test.
+    n = 60
+    rows = [(4.34 + (i % 10) * 0.0002, 50.84 + (i // 10) * 0.0002,
+             {"ref": f"node/{i}", "t": "Bike shop"}) for i in range(n)]
+    out = tmp_path / "z11.pmtiles"
+    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+    x, y = _tile_xy(4.34, 50.84, 11)
+    feats = _decode_layer(out, 11, x, y, "d")
+    assert feats, "z11 tile must contain the packed points"
+    assert any("point_count" in f["properties"] for f in feats), \
+        "z11 is at (not above) --cluster-maxzoom=11 → must still cluster"
 
 
 def test_cluster_maxzoom_leaves_high_zoom_individual(tmp_path):

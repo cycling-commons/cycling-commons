@@ -60,6 +60,60 @@ def test_load_region_inserts_and_backfills_region_id(db):
     assert lat == pytest.approx(50.46)
 
 
+def test_load_region_snaps_boundary_miss_to_nearest_region(db):
+    """A cc-bearing POI just OUTSIDE every region polygon (an ST_Contains gap)
+    snaps to the nearest region of its own country (finding 5); one genuinely far
+    away stays NULL."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (7, 100, 'BE', "
+        "ST_GeomFromText('MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))"
+    )
+    db.commit()
+    load_region(db, [
+        _row("node/near", "C", lon=3.995, lat=50.5),   # ~0.005° west of the 4.0 edge → snaps
+        _row("node/far", "C", lon=10.0, lat=45.0),      # far outside → stays NULL
+    ], "europe/belgium")
+    got = dict(db.execute("SELECT ref, region_id FROM coverage_poi").fetchall())
+    assert got["node/near"] == 7, "a boundary-miss row must snap to the nearest region"
+    assert got["node/far"] is None, "a genuinely distant row must stay unstamped"
+
+
+def test_load_region_never_snaps_across_country(db):
+    """The snap is constrained to the POI's own country_code, so a border POI is
+    never pulled into a neighbouring country's region (finding 5)."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (8, 100, 'FR', "
+        "ST_GeomFromText('MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))"
+    )
+    db.commit()
+    load_region(db, [_row("node/be", "C", lon=3.995, lat=50.5, country_code="BE")],
+                "europe/belgium")
+    region_id = db.execute(
+        "SELECT region_id FROM coverage_poi WHERE ref = 'node/be'"
+    ).fetchone()[0]
+    assert region_id is None, "a BE row must not snap into an FR region"
+
+
+def test_load_region_backfills_cc_from_region_when_extract_left_it_null(db):
+    """region ⇒ cc invariant (finding 8): a stamped row whose extract left
+    country_code NULL gets cc backfilled from its region, so the controller's
+    24-region cap always has a complete cc safety net."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (9, 100, 'BE', "
+        "ST_GeomFromText('MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))"
+    )
+    db.commit()
+    load_region(db, [_row("node/1", "C", country_code=None)], "europe/belgium")
+    rid, cc = db.execute(
+        "SELECT region_id, country_code FROM coverage_poi WHERE ref = 'node/1'"
+    ).fetchone()
+    assert rid == 9
+    assert cc == "BE", "a region-stamped row must never be left cc-less"
+
+
 def test_load_region_smallest_area_wins_on_overlap(db):
     """Overlapping regions: the smaller-area one wins, not the lower id.
 

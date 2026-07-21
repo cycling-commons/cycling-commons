@@ -47,14 +47,42 @@ _EXTRA_SQL = {
 }
 
 
-def _letter_sql(letter: str, spec) -> str:
-    # ref/n/t + rid/cc are the universal props carried on every layer
-    # (contract.universalTileProps); rid/cc are the region-scoping filter keys
-    # (region-scoping-design.md §6). jsonb_strip_nulls drops them for rows with
-    # a NULL region_id/country_code, so a prop-less feature renders unfiltered
-    # (the client's leak-safe fallback until the weekly rebuild lands, §8 risk 2).
-    props = ["'ref', ref", "'n', name", f"'t', {_label_case(spec.selectors)}",
-             "'rid', region_id", "'cc', country_code"]
+def _universal_props(spec, universal: list[str]) -> list[str]:
+    """The contract.universalTileProps SQL fragments, in the contract's order.
+
+    ref/n/t are identity; ridtok/cctok are the region-scoping filter keys
+    (region-scoping-design.md §6) as pipe-delimited membership tokens
+    ("|<region_id>|" / "|<cc>|"). They are ALWAYS emitted — an unstamped row
+    gets the empty string, never NULL/absent — for two reasons: (1) so
+    --accumulate-attribute=concat can union them across a cluster's members
+    without tippecanoe's missing-attribute abort, giving each bubble the full
+    member set the client scope filter tests against (no lottery-inherited rid,
+    region-scoping-design.md §7); (2) so "prop-less" is the explicit empty-token
+    state (ridtok='' AND cctok=''), which the client renders unfiltered as the
+    transition/unsplit fallback (§8 risk 2), while a cc-bearing rid-less row
+    (cctok non-empty) is correctly scoped, not fallback-rendered.
+
+    Asserted equal to the contract so tiles.py and the contract can never drift
+    (finding: universalTileProps was previously consumed by nothing)."""
+    frags = {
+        "ref": "'ref', ref",
+        "n": "'n', name",
+        "t": f"'t', {_label_case(spec.selectors)}",
+        "ridtok": "'ridtok', CASE WHEN region_id IS NOT NULL THEN '|' || region_id || '|' ELSE '' END",
+        "cctok": "'cctok', CASE WHEN country_code IS NOT NULL THEN '|' || country_code || '|' ELSE '' END",
+    }
+    if list(frags) != universal:
+        raise ValueError(
+            f"tiles.py universal props {list(frags)} != contract.universalTileProps "
+            f"{universal} — keep coverage-contract.json and _universal_props in lockstep")
+    return [frags[k] for k in universal]
+
+
+def _letter_sql(letter: str, spec, universal: list[str]) -> str:
+    # jsonb_strip_nulls still drops a NULL name or a NULL per-letter extra, but
+    # NOT ridtok/cctok — those are empty strings, never NULL, so every feature
+    # carries them (see _universal_props for why).
+    props = _universal_props(spec, universal)
     props += [_EXTRA_SQL[p] for p in spec.tile_props]
     return (
         "COPY (SELECT jsonb_build_object("
@@ -79,11 +107,13 @@ def export_geojsonl(conn, workdir):
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
     out = {}
-    for letter, spec in load_contract().letters.items():
+    contract = load_contract()
+    universal = contract.universal_tile_props
+    for letter, spec in contract.letters.items():
         path = workdir / f"{letter.lower()}.geojsonl"
         n = 0
         with open(path, "w", encoding="utf-8") as fh, conn.cursor() as cur:
-            with cur.copy(_letter_sql(letter, spec)) as cp:
+            with cur.copy(_letter_sql(letter, spec, universal)) as cp:
                 cp.set_types(["text"])
                 for (line,) in cp.rows():  # rows() unescapes COPY text format
                     fh.write(line)
@@ -113,12 +143,24 @@ def build_pmtiles(layer_files, out_path):
         # while the rail said 2015/2015. The client renders clustered features
         # (point_count present) as a count bubble that breaks into individual
         # icons as you zoom in (region-scoping-design.md §7; mirrors the
-        # confirmed-pin clusters). Clusters carry one member's ref/n/t/rid/cc +
-        # point_count. `-r1` keeps EVERY point (no rate-based dropping — else
-        # clustering only merged the handful that survived the drop);
-        # --cluster-densest-as-needed merges (never drops) to fit tile size, so
-        # sum(point_count) at each zoom equals the full in-scope total.
+        # confirmed-pin clusters). A cluster carries one member's ref/n/t +
+        # point_count, but the scope tokens ridtok/cctok are UNIONed across all
+        # members by --accumulate-attribute=concat below, so a bubble is scoped
+        # by its full member set, not one member's lottery-inherited region
+        # (region-scoping-design.md §7). `-r1` keeps EVERY point (no rate-based
+        # dropping — else clustering only merged the handful that survived the
+        # drop); --cluster-densest-as-needed merges (never drops) to fit tile
+        # size, so sum(point_count) at each zoom equals the full in-scope total.
         "--cluster-distance", "20",
+        # Union the pipe-delimited membership tokens across a cluster's members
+        # (region-scoping-design.md §7): the bubble's ridtok becomes the
+        # concatenation of every member's "|<region_id>|", so the client tests
+        # scope-set membership ('|1|' in ridtok) instead of trusting one
+        # representative's rid. concat needs the attribute present on EVERY
+        # feature — tippecanoe aborts ("can't happen") on a missing one — which
+        # is why _universal_props emits '' (not NULL) for unstamped rows.
+        "--accumulate-attribute", "ridtok:concat",
+        "--accumulate-attribute", "cctok:concat",
         # Cluster only at the overview zooms (z6–11); z12+ shows individual
         # icons so a rider zoomed into a town sees the actual shops, not a
         # bubble. Without this cap tippecanoe clusters up to maxzoom, so dense

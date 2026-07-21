@@ -164,6 +164,56 @@ test('coverageParams: region sends sorted rids only; country adds cc; everywhere
   assert.deepEqual(CCScope.coverageParams(), { rids: null, cc: null });
 });
 
+// A tiny MapLibre-expression evaluator for the subset coverageTileFilter uses
+// (any/all/==/in/coalesce/get), so the filter can be asserted against real
+// feature props — the map.js hazard/coverage scope logic that had zero tests.
+function evalExpr(e, props) {
+  if (!Array.isArray(e)) return e;
+  const [op, ...a] = e;
+  switch (op) {
+    case 'get': return props[a[0]];
+    case 'coalesce': { for (const x of a) { const v = evalExpr(x, props); if (v !== undefined && v !== null) return v; } return null; }
+    case '==': return evalExpr(a[0], props) === evalExpr(a[1], props);
+    case 'in': { const needle = evalExpr(a[0], props), hay = evalExpr(a[1], props); return typeof hay === 'string' ? hay.includes(needle) : false; }
+    case 'all': return a.every((x) => evalExpr(x, props));
+    case 'any': return a.some((x) => evalExpr(x, props));
+    default: throw new Error('unhandled op ' + op);
+  }
+}
+const shows = (filter, props) => filter === null ? true : evalExpr(filter, props);
+
+test('coverageTileFilter: Everywhere returns null (no filter)', () => {
+  boot();
+  CCScope.setEverywhere();
+  assert.equal(CCScope.coverageTileFilter(), null);
+});
+
+test('coverageTileFilter: region scope shows in-region tokens, hides others, renders prop-less', () => {
+  boot();
+  CCScope.setRegion('wallonia');   // regionIds [1]
+  const f = CCScope.coverageTileFilter();
+  assert.equal(shows(f, { ridtok: '|1|', cctok: '|BE|' }), true, 'in-region icon shows');
+  assert.equal(shows(f, { ridtok: '|24|', cctok: '|BE|' }), false, 'out-of-region icon hides');
+  // A cluster bubble whose UNIONed ridtok includes region 1 shows (finding 2).
+  assert.equal(shows(f, { ridtok: '|24||1||24|', cctok: '|BE|' }), true, 'bubble with a region-1 member shows');
+  assert.equal(shows(f, { ridtok: '|24||23|', cctok: '|BE|' }), false, 'bubble with no region-1 member hides');
+  // Prop-less (both tokens empty) renders — the weekly-rebuild fallback.
+  assert.equal(shows(f, { ridtok: '', cctok: '' }), true, 'prop-less renders');
+  // cc-bearing rid-less row hides under a REGION scope (finding 5).
+  assert.equal(shows(f, { ridtok: '', cctok: '|BE|' }), false, 'cc-only row hides under region scope');
+  // No false positive: region 1 must not match region 21's token.
+  assert.equal(shows(f, { ridtok: '|21|', cctok: '|BE|' }), false, 'delimiters prevent |1| matching |21|');
+});
+
+test('coverageTileFilter: country scope admits cc-bearing rid-less rows (finding 5)', () => {
+  boot();
+  CCScope.setCountry('BE');   // regionIds [1,24,23], cc BE
+  const f = CCScope.coverageTileFilter();
+  assert.equal(shows(f, { ridtok: '|24|', cctok: '|BE|' }), true, 'stamped BE row shows');
+  assert.equal(shows(f, { ridtok: '', cctok: '|BE|' }), true, 'cc-only BE row shows under country scope');
+  assert.equal(shows(f, { ridtok: '', cctok: '|NL|' }), false, 'a foreign cc row hides');
+});
+
 test('set persists slug-serialized to storage + URL; persist:false leaves both alone', () => {
   boot();
   CCScope.setRegion('flanders');

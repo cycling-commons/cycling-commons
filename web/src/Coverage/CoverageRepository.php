@@ -186,7 +186,15 @@ final class CoverageRepository
         $like = '%'.addcslashes($q, '\\%_').'%';
         $curatedParams = ['like' => $like, 'q' => $q, 'limit' => $limit];
         $curatedTypes = ['limit' => ParameterType::INTEGER];
-        $this->scopeBind($curatedParams, $curatedTypes, $rids, $cc);
+        // Curated (served-item) arm is rid-ONLY, deliberately dropping cc: the
+        // map's served-data gate (map.js inScope) is rid-only and the catalog
+        // payload carries no cc, so an item admitted by a cc arm here but hidden
+        // by rid there would list a POI whose pin the map hides. A served item
+        // gets its region stamped on write (SpatialResolver) or by the importer's
+        // membership recompute, so rid-only is complete once membership runs.
+        // The community/coverage arm below keeps cc (the tile filter admits
+        // cc-scoped rows), so the two tiers scope by their own authoritative key.
+        $this->scopeBind($curatedParams, $curatedTypes, $rids, null);
         /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
         $curated = $this->db->fetchAllAssociative(
             "SELECT i.id AS item_id, i.source_ref AS ref, i.letter, i.name,
@@ -197,7 +205,7 @@ final class CoverageRepository
                AND i.state IN '.ItemState::servedSqlTuple().'
                AND i.name ILIKE :like
                AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')'
-               .$this->scopeArm('i', $rids, $cc).'
+               .$this->scopeArm('i', $rids, null).'
              ORDER BY similarity(i.name, :q) DESC, i.id
              LIMIT :limit',
             $curatedParams,
@@ -254,6 +262,11 @@ final class CoverageRepository
      */
     public function nearby(float $lat, float $lng, float $km, array $rids = [], ?string $cc = null): array
     {
+        // Curated arm is rid-only (see search()): its own param set so :cc is
+        // never bound for a query that no longer references it.
+        $curatedParams = ['lat' => $lat, 'lng' => $lng, 'm' => $km * 1000.0];
+        $curatedTypes = [];
+        $this->scopeBind($curatedParams, $curatedTypes, $rids, null);
         $params = ['lat' => $lat, 'lng' => $lng, 'm' => $km * 1000.0];
         $types = [];
         $this->scopeBind($params, $types, $rids, $cc);
@@ -269,10 +282,10 @@ final class CoverageRepository
                AND i.state IN '.ItemState::servedSqlTuple()."
                AND ST_DWithin(i.geom::geography, $point, :m)
                AND NOT (".CoverageRetirement::untouchedOsmSql('i').')'
-               .$this->scopeArm('i', $rids, $cc)."
+               .$this->scopeArm('i', $rids, null)."
              ORDER BY i.letter, ST_Distance(i.geom::geography, $point), i.id",
-            $params,
-            $types,
+            $curatedParams,
+            $curatedTypes,
         );
 
         /** @var list<array{letter: string, ref: string, name: string|null, kind: string|null, lat: string|float, lng: string|float, letter_total: int|string}> $community */

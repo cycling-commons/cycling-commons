@@ -121,9 +121,15 @@ final class CatalogProviderTest extends KernelTestCase
     {
         $f = $this->payload()['F'];
         self::assertSame('FeatureCollection', $f['type']);
-        self::assertCount(1, $f['features']);
-        $hazard = $f['features'][0];
-        self::assertSame('Test crosswind', $hazard['properties']['n']);
+        // Locate the seeded hazard by name rather than assuming it is the ONLY F
+        // feature — the DB is shared across tests, so a global count(1) is fragile
+        // (finding 21 / CodeRabbit).
+        $matches = array_values(array_filter(
+            $f['features'],
+            static fn (array $ft): bool => 'Test crosswind' === ($ft['properties']['n'] ?? null),
+        ));
+        self::assertCount(1, $matches, 'exactly one "Test crosswind" hazard is served');
+        $hazard = $matches[0];
         self::assertSame('Crosswind / fog', $hazard['properties']['hazardType']);
         self::assertSame('Moderate', $hazard['properties']['severity']);
         self::assertSame('manual', $hazard['properties']['srcType']);

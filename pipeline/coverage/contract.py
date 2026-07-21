@@ -112,10 +112,13 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     if list(service_kind) != d_rules:
         raise ValueError("serviceKind rules must be exactly the D letter selectors")
 
-    universal = list(raw.get("universalTileProps", []))
-    if universal and universal != ["ref", "n", "t", "rid", "cc"]:
+    if "universalTileProps" not in raw:
+        raise ValueError("contract missing top-level \"universalTileProps\" key")
+    universal = list(raw["universalTileProps"])
+    if universal != ["ref", "n", "t", "ridtok", "cctok"]:
         raise ValueError(
-            f"universalTileProps must be [ref, n, t, rid, cc] (got {universal}) — "
-            "tiles.py::_letter_sql emits exactly these on every layer")
+            f"universalTileProps must be [ref, n, t, ridtok, cctok] (got {universal}) — "
+            "tiles.py::_letter_sql emits exactly these on every layer, and "
+            "_universal_props asserts equality so the two never drift")
 
     return Contract(letters=letters, service_kind=service_kind, universal_tile_props=universal)

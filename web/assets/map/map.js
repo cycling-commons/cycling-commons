@@ -71,7 +71,7 @@
   // Live zoom readout — a MapLibre control so it stacks above the nav control
   // (bottom-left) with the framework's own positioning, no absolute-layout
   // guesswork. Useful context now that the scope selector fits to region/country
-  // bboxes at different zooms (e.g. All Belgium ~z7, below the coverage minzoom).
+  // bboxes at different zooms (e.g. All Belgium ~z7, at the coverage minzoom 6).
   map.addControl({
     onAdd(m){
       const d=document.createElement('div');
@@ -683,47 +683,61 @@
     transit:'OpenStreetMap (railway=station / railway=halt)'
   };
   // Curated-ref dedupe (osm-data-architecture.md §8): any object already served
-  // as an item draws once, as curated — its coverage twin is filtered out.
+  // as an item draws once, as curated — its coverage twin is filtered out. Only
+  // meaningful on INDIVIDUAL icons: a ref identifies one point, never a merged
+  // bubble, so this arm is applied to icons only (see covClusterFilter).
   const covDedupeFilter=()=>['!',['in',['get','ref'],['literal', Array.from(window.CC_CURATED_REFS||[])]]];
   // Region scope filter for the coverage tile layers (Phase 3,
-  // region-scoping-design.md §6). DELIBERATELY the inverse of the leak-safe rule
-  // updateHeatFilter()/inScope() use for served data: a prop-less feature (no
-  // `rid`) RENDERS here instead of hiding. Rationale: the coverage PMTiles is a
-  // separately-built, weekly-rebuilt artifact (§8 risk 2) — until the rebuild
-  // stamps rid/cc, every tile is prop-less, and hiding-all would blank the map,
-  // so prop-less → render unfiltered (fallback ladder, never hide-all). A
-  // rebuilt unsplit-country row (rid absent, cc present) is admitted by that
-  // same prop-less arm; a rebuilt split row is gated on rid, plus a cc arm for
-  // country scope (mirrors CoverageRepository's OR arm). Served GeoJSON layers
-  // (heat, clusters, CATALOG features) keep the OPPOSITE default because their
-  // rid is authoritative and present. Returns null for Everywhere (no filter).
+  // region-scoping-design.md §6). Scope keys are pipe-delimited membership
+  // TOKENS, not scalars: ridtok = "|<region_id>|" (empty when unstamped), cctok
+  // = "|<cc>|". tippecanoe UNIONs them across a cluster's members
+  // (--accumulate-attribute=concat), so a bubble's ridtok holds EVERY member's
+  // region and `'|id|' in ridtok` answers "does any member fall in scope?" — no
+  // lottery-inherited rid (finding 2). The identical test works on an individual
+  // icon (a single token), so one filter serves both sublayers.
+  //
+  // DELIBERATELY the inverse of the leak-safe rule updateHeatFilter()/inScope()
+  // use for served data: a PROP-LESS feature (ridtok AND cctok both empty)
+  // RENDERS instead of hiding. Rationale: the coverage PMTiles is a
+  // separately-built, weekly-rebuilt artifact (§8 risk 2) — a transition/unsplit
+  // row carries no tokens, and hiding-all would blank the map, so empty tokens →
+  // render unfiltered (fallback ladder, never hide-all). But a cc-bearing
+  // rid-less row (cctok non-empty, ridtok empty) is NOT prop-less, so under a
+  // region scope it HIDES — matching /counts, which excludes region_id-NULL rows
+  // (finding 5: the tile used to leak these via the old `!has rid` arm). It
+  // reappears only under its country scope, admitted by the cctok arm. coalesce
+  // keeps the test safe against a stale pre-token tile (absent → '' → prop-less →
+  // render). Returns null for Everywhere (no filter).
+  // Delegates to the pure, unit-tested builder in scope.js (web/tests/js) so the
+  // token/prop-less/coalesce logic lives in one place with real tests, not buried
+  // in this IIFE. Falls back to a null filter if scope.js is somehow absent.
   function covScopeFilter(){
-    const s=curScope();
-    if(!s || s.kind==='everywhere') return null;
-    const arms=[['!',['has','rid']]];                                       // prop-less → render (transition / unsplit fallback)
-    if(s.regionIds.length) arms.push(['in',['get','rid'],['literal', s.regionIds]]);
-    if(s.kind==='country' && s.countryCode) arms.push(['==',['get','cc'], s.countryCode]);
-    return ['any'].concat(arms);
+    return window.CCScope && window.CCScope.coverageTileFilter ? window.CCScope.coverageTileFilter() : null;
   }
-  // A coverage layer's shared base filter: the curated-ref dedupe (always) AND
-  // the region scope (when scoped). Every setFilter on a *-cov layer composes
-  // from here so no arm is ever dropped by another.
+  // A coverage layer's shared scope base (scope only). Every setFilter on a
+  // *-cov layer composes from here so no arm is ever dropped by another.
+  function covScopeBase(){
+    const f=['all']; const sc=covScopeFilter(); if(sc) f.push(sc); return f;
+  }
+  // Icon base = scope + the curated-ref dedupe (icons can be exact curated twins).
   function covBaseFilter(){
-    const f=['all', covDedupeFilter()];
-    const sc=covScopeFilter(); if(sc) f.push(sc);
-    return f;
+    const f=['all', covDedupeFilter()]; const sc=covScopeFilter(); if(sc) f.push(sc); return f;
   }
   // The two sublayers a coverage letter renders as (Phase 3 clustering,
   // region-scoping-design.md §7): individual ICONS for unclustered features
   // (tippecanoe adds `point_count` only to clusters, so `!has point_count` =
   // an individual POI) plus any per-layer extra (stays' accessibility narrow),
-  // and count BUBBLES for clustered features (`has point_count`). Splitting the
-  // base keeps the dedupe + scope arms on both.
+  // and count BUBBLES for clustered features (`has point_count`).
   function covIconFilter(extra){
     const f=covBaseFilter(); f.push(['!',['has','point_count']]); if(extra) f.push(extra); return f;
   }
+  // Bubbles take SCOPE ONLY — no dedupe arm. A cluster is never an exact curated
+  // twin (a curated ref is one point, not a merged blob), so the dedupe arm has
+  // no correct hit on a bubble; it could only ever MIS-hide a whole bubble whose
+  // representative ref happened to be curated (finding 4). The ±curated-count
+  // bubble overcount this leaves is negligible and the rail /counts stays exact.
   function covClusterFilter(){
-    const f=covBaseFilter(); f.push(['has','point_count']); return f;
+    const f=covScopeBase(); f.push(['has','point_count']); return f;
   }
   // Re-apply the composed filters to every coverage layer (icon + cluster) on a
   // scope change, so both track scope like every served layer. stays' icon
@@ -1160,7 +1174,7 @@
     // markers, confirmed OSM/pivot icon pins) centre the pulse on the pin
     // BODY with [0,-16]; canvas dots and line features pulse at the point.
     CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
-      push({name:f.name, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
+      push({name:f.name, unnamed:f.unnamed, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
         color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
         rid:f.rid,   // region membership — search filters to scope like the map (07-20 review finding 3)
         // 07-15 decision A: real signal only — routes carry canonical state;
@@ -1170,7 +1184,10 @@
         verified: f.state ? f.state==='verified' : !!(f.v || f.cur),
         hlOff: layer.kind==='point' ? [0,-16] : [0,0],
         pend:f.pending?String(f.pending.id):undefined,
-        go:()=>openFeatureByName(f.name)});
+        // Open the EXACT resolved feature, not a re-lookup by name — a nameless
+        // hazard shares its label with siblings, so openFeatureByName(f.name)
+        // would last-match-wins onto the wrong pin (finding 9).
+        go:()=>openLocalFeature(layer,f)});
     }));
     (window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties;
       if(!p || !p.n) return; const layer=layerByKey.stays; if(!layer) return;
@@ -1316,16 +1333,33 @@
       // headline: localized hazard type + severity when the item carries them
       // (schema choices localize the stored English via trVal/VALUE_TR).
       const bits=[p.hazardType, p.severity].filter(Boolean).map(trVal);
+      const named=!!p.n;
+      // photo may arrive as a JSON string (importable attribute) — parse it with
+      // the same guard osmDrawer uses, else a raw string flows unparsed into
+      // photoList()/the <img> sink (finding 14).
+      let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
       return {
-        id:p.id, rid:p.rid, name:p.n||(LAYER_L10N.hazards||'Hazard'),
-        headline:bits.join(' · ')||(LAYER_L10N.hazards||'Hazards & conditions'),
-        cur:false, geom:{ll:[c[1], c[0]]},
+        // Real name when the item carries one; otherwise the layer label for
+        // DISPLAY only, flagged `unnamed` so the index neither name-dedupes
+        // nameless hazards (two potholes 50 m apart → one dropped) nor routes
+        // them by the shared label (last-match-wins onto the wrong pin) — finding 9.
+        id:p.id, rid:p.rid, name:p.n||(LAYER_L10N.hazards||'Hazard'), unnamed:!named,
+        // Only append the layer label as a headline when there's no type/severity
+        // AND no real name would already carry it, so a bare hazard never reads
+        // "Hazards & conditions · Hazards & conditions" (finding 9, cosmetic).
+        headline:bits.join(' · ')||(named?(LAYER_L10N.hazards||'Hazards & conditions'):''),
+        // A rider-confirmed hazard (v) earns the same verified tier as a C/D/G/H
+        // confirmed twin, not a pixel-identical unconfirmed pin (finding 13).
+        cur:!!p.v, geom:{ll:[c[1], c[0]]},
         // Registry-driven record (CC_FIELD_SCHEMA[F]) — filled rows + "add" prompts.
         record:schemaRows('F', p, p.id),
-        photo:p.photo,
-        // A rider-added/edited hazard reads as rider-contributed; anything else
-        // is a community report (hazards have no OSM/official provenance).
-        source:(p.srcType==='user'||p.srcType==='manual') ? sourceLabel(p.srcType) : (D.communityReport||'Community report'),
+        photo:photo,
+        // srcType drives the source line: an osm-sourced row keeps the OSM label
+        // (its ODbL linkifier + attribution), user/manual reads rider-contributed,
+        // and only a genuinely source-less row falls back to "Community report"
+        // (finding 12 — the old ternary made osm unreachable AND would have
+        // dropped OSM attribution by labelling it a community report).
+        source:sourceLabel(p.srcType) || (D.communityReport||'Community report'),
         v:p.v
       };
     });
@@ -1647,17 +1681,21 @@
       .then(r=>r.ok?r.json():null)
       .catch(()=>null)
       // Race-guard: a slow scoped-counts response must not overwrite a newer
-      // scope's totals (rapid rail switching). Same _historyReq discipline.
-      .then(d=>{ if(myReq===_covCountReq && d && d.counts){ _covCounts=d.counts; updateCounts(); } });
+      // scope's totals (rapid rail switching). Same _historyReq discipline. On a
+      // FAILED fetch for the current scope, clear the counts rather than leave the
+      // PREVIOUS scope's numbers on the rail while the dots already re-filtered to
+      // the new scope (finding 16 — an offline mismatch that self-heals on the
+      // next success); an honest blank beats a wrong-scope total.
+      .then(d=>{ if(myReq===_covCountReq){ _covCounts=(d && d.counts) || null; updateCounts(); } });
   }
   // "Shown" for a coverage layer = its in-scope count (the scope-aware
   // /counts value), NOT the handful of tiles rendered in the current viewport.
-  // Coverage is a dense vector-tile layer that tippecanoe thins with
-  // --drop-densest-as-needed at low zoom, so a viewport-render count read a
-  // confusing near-zero at the region/country overview zooms the scope selector
-  // fits to (All Belgium at ~z8 showed "16/2015", even "0/2015" on a slightly
-  // different frame). Every in-scope POI IS on the map — revealed progressively
-  // as you zoom — so the whole scope counts as shown, mirroring the served
+  // Coverage is a dense vector-tile layer clustered at low zoom (and, before
+  // clustering, point-thinned), so a viewport-render count read a confusing
+  // near-zero at the region/country overview zooms the scope selector fits to
+  // (All Belgium at ~z8 showed "16/2015", even "0/2015" on a slightly different
+  // frame). Every in-scope POI IS on the map — revealed progressively as you
+  // zoom — so the whole scope counts as shown, mirroring the served
   // layers (A shows 351/351). 0 when the layer is toggled off or mode-hidden
   // (experiential coverage E/I/J in Curated), which the visibility gate covers.
   function covShownCount(key){
@@ -1798,9 +1836,9 @@
       <span class="cc-ap-b">＋ ${D.addPhoto||'Add the first photo'}</span>
     </a>` : '';
     const photo = pl.length ? `<figure class="cc-d-photo">
-      <img src="${pl[0].sm}" alt="${escPend(f.name)}" data-i="0" />
+      <img src="${safeHref(pl[0].sm)}" alt="${escPend(f.name)}" data-i="0" />
       <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
-      ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${p.sm}" data-i="${i}" alt="${escPend(f.name)} — photo ${i+1}" />`).join('')}</div>` : ''}
+      ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${safeHref(p.sm)}" data-i="${i}" alt="${escPend(f.name)} — photo ${i+1}" />`).join('')}</div>` : ''}
     </figure>` : addPhoto;
     let recs = f.record || [];
     if(layer.key==='climbs'){
@@ -2517,7 +2555,12 @@
       openStayPivot(pv);
       return true;
     }
-    const {layer,f}=found;
+    return openLocalFeature(found.layer, found.f);
+  }
+  // Open an ALREADY-resolved CATALOG feature (no name lookup) — the
+  // side-effecting half of openFeatureByName, shared by the index/place-card
+  // `go` so a nameless feature opens its exact pin rather than a name-slug guess.
+  function openLocalFeature(layer, f){
     if(!active.has(layer.key)){
       active.add(layer.key);
       const t=document.querySelector(`#layers .layer[data-key="${layer.key}"]`); if(t) t.classList.remove('off');

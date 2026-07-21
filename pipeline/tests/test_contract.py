@@ -52,10 +52,21 @@ def test_letter_specific_tile_props():
 
 
 def test_universal_tile_props_carry_the_scope_keys():
-    # ref/n/t identity + the rid/cc region-scoping keys are emitted on EVERY
-    # layer (region-scoping-design.md §6). Per-letter tileProps stay extras-only.
+    # ref/n/t identity + the ridtok/cctok region-scoping tokens are emitted on
+    # EVERY layer (region-scoping-design.md §6): pipe-delimited membership tokens
+    # so tippecanoe can union them across a cluster (finding 2). Per-letter
+    # tileProps stay extras-only.
     contract = load_contract()
-    assert contract.universal_tile_props == ["ref", "n", "t", "rid", "cc"]
+    assert contract.universal_tile_props == ["ref", "n", "t", "ridtok", "cctok"]
+
+
+def test_universal_tile_props_required_not_optional(tmp_path):
+    # A contract missing universalTileProps is an error, not a silent empty list
+    # (finding 18: load_contract used to accept the absent key without complaint).
+    raw = _raw()
+    del raw["universalTileProps"]
+    with pytest.raises(ValueError, match="universalTileProps"):
+        load_contract(_reload(tmp_path, raw))
 
 
 def test_service_kind_mapping_matches_php_service_kind_cases():

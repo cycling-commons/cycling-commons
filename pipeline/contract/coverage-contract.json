@@ -79,5 +79,5 @@
         "amenity=bicycle_repair_station": "station",
         "amenity=compressed_air": "pump"
     },
-    "universalTileProps": ["ref", "n", "t", "rid", "cc"]
+    "universalTileProps": ["ref", "n", "t", "ridtok", "cctok"]
 }
