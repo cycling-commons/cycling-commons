@@ -1,0 +1,85 @@
+pipeline/coverage/load.py
+  s_276d54862c2776::t_a1fefdc404b7f7 24-30
+  s_276d54862c2776::t_a6da563c3854c4 166-209
+pipeline/tests/test_tiles.py
+  s_276d54862c2776::t_f7f7e15deafcac 73-98,105-109,111-116
+  s_276d54862c2776::t_1c81c90ae5e13c 257-269,287-351
+  s_276d54862c2776::t_5152a136d203dd 250-254
+  s_276d54862c2776::t_12edecf357980f 255-256
+  s_276d54862c2776::t_7317d2c9b647d8 352-353
+docs/specs/2026-07-19-region-scoping-design.md
+  s_276d54862c2776::t_a8496b0437f818 605-606
+  s_276d54862c2776::t_7c5e5091a215e5 637
+  s_276d54862c2776::t_806671d74431b8 567-575
+  s_276d54862c2776::t_f70dc3e05cfd48 500-503
+  s_276d54862c2776::t_24de458890da83 624-631
+  s_276d54862c2776::t_e48c65ea6820c4 645-700
+web/tests/Catalog/CatalogProviderTest.php
+  s_276d54862c2776::t_8c415fe4ba5df1 124-132
+web/src/Coverage/CoverageRepository.php
+  s_276d54862c2776::t_b9b4e51bec003c 189-197
+  s_276d54862c2776::t_e98fa8f468ffb7 208
+  s_276d54862c2776::t_75e822bb429ab5 265-269,285,287-288
+docs/specs/coverage-provider.md
+  s_276d54862c2776::t_f7055bcd6cae31 144-154
+  s_276d54862c2776::t_f821e612987581 269-294
+  s_276d54862c2776::t_a0085b495b9dca 194-195,200-220,222-225
+  s_276d54862c2776::t_e5d02600706561 496,498-520
+web/tests/Coverage/CoverageQueryTest.php
+  s_276d54862c2776::t_db89158a1cc36d 444,496-514
+  s_276d54862c2776::t_bba185740e70d0 365-366,381-443
+  s_276d54862c2776::t_5c064be0b477ff 445
+pipeline/tests/test_contract.py
+  s_276d54862c2776::t_75ab91c84202e9 55-58,60-62,64-65,67-68
+  s_276d54862c2776::t_931c4112aa4cdc 63,66,69
+pipeline/tests/conftest.py
+  s_276d54862c2776::t_d19eff1ad7938a 48-50,53
+pipeline/tests/test_load.py
+  s_276d54862c2776::t_442ef8b9127a44 63-116
+web/assets/map/scope.js
+  s_276d54862c2776::t_477cce9a71c671 196-217
+web/tests/js/scope.test.cjs
+  s_276d54862c2776::t_5b7758951d7962 167-216
+pipeline/contract/coverage-contract.json
+  s_276d54862c2776::t_44c31da8bbeb1e 82
+pipeline/coverage/contract.py
+  s_276d54862c2776::t_5db75ebaeeb0be 115-118,120-122
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_276d54862c2776::t_c718631b02781e 82-119
+  s_276d54862c2776::t_610c844c44dff5 9,12
+web/assets/map/map.js
+  s_276d54862c2776::t_c93688579e59de 711-713,715
+  s_276d54862c2776::t_6b3023f6ddb7af 1187-1190
+  s_276d54862c2776::t_d23ca75c757d42 686-688,691-710,717-722,724,730,734-738,740
+  s_276d54862c2776::t_2bcb83e1b949e4 1684-1689
+  s_276d54862c2776::t_e7a08962cd357c 716,2558-2563
+  s_276d54862c2776::t_3b76d6ebf3ec50 1177
+  s_276d54862c2776::t_2b9d3cfd4f2369 1336-1340,1342-1353,1356-1362
+  s_276d54862c2776::t_b5210649d0963c 74
+  s_276d54862c2776::t_5e7bece4ad0984 1693-1698
+  s_276d54862c2776::t_fa5a8d57aafacc 1839,1841
+web/src/Controller/CoverageController.php
+  s_276d54862c2776::t_55ed9c07ef1628 10-11
+  s_276d54862c2776::t_4bc2956dd05f77 47-50
+  s_276d54862c2776::t_3dc525d7af9c2a 133-140,146-150,152-165,170-177,179-184
+pipeline/coverage/tiles.py
+  s_276d54862c2776::t_7c2c40deec30e7 110-112,116
+  s_276d54862c2776::t_ee8cb39830e0c1 146-153,155-163
+  s_276d54862c2776::t_05141f89f90cf7 50-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "731c802de5a321291c48603de5bc82dc688d1b6b",
+  "prompts": {},
+  "sessions": {
+    "s_276d54862c2776": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "52c94201-4f94-4cc4-bff1-304adcdfd01a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
