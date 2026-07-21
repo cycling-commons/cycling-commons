@@ -48,7 +48,13 @@ _EXTRA_SQL = {
 
 
 def _letter_sql(letter: str, spec) -> str:
-    props = ["'ref', ref", "'n', name", f"'t', {_label_case(spec.selectors)}"]
+    # ref/n/t + rid/cc are the universal props carried on every layer
+    # (contract.universalTileProps); rid/cc are the region-scoping filter keys
+    # (region-scoping-design.md §6). jsonb_strip_nulls drops them for rows with
+    # a NULL region_id/country_code, so a prop-less feature renders unfiltered
+    # (the client's leak-safe fallback until the weekly rebuild lands, §8 risk 2).
+    props = ["'ref', ref", "'n', name", f"'t', {_label_case(spec.selectors)}",
+             "'rid', region_id", "'cc', country_code"]
     props += [_EXTRA_SQL[p] for p in spec.tile_props]
     return (
         "COPY (SELECT jsonb_build_object("

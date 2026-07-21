@@ -40,6 +40,11 @@ class LetterSpec:
 class Contract:
     letters: dict[str, LetterSpec]
     service_kind: dict[str, str]  # "key=value" rule -> shop|station|pump (D only)
+    # Props carried on EVERY tile layer (ref/n/t identity + t label, plus the
+    # rid/cc region-scoping keys — region-scoping-design.md §6). Per-letter
+    # extras live in LetterSpec.tile_props; these are implicit and universal,
+    # emitted by tiles.py::_letter_sql for every letter.
+    universal_tile_props: list[str]
 
     def letters_for(self, tags: dict) -> list[str]:
         """Letters whose selectors match `tags`, in catalogue order (one object
@@ -107,4 +112,10 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     if list(service_kind) != d_rules:
         raise ValueError("serviceKind rules must be exactly the D letter selectors")
 
-    return Contract(letters=letters, service_kind=service_kind)
+    universal = list(raw.get("universalTileProps", []))
+    if universal and universal != ["ref", "n", "t", "rid", "cc"]:
+        raise ValueError(
+            f"universalTileProps must be [ref, n, t, rid, cc] (got {universal}) — "
+            "tiles.py::_letter_sql emits exactly these on every layer")
+
+    return Contract(letters=letters, service_kind=service_kind, universal_tile_props=universal)

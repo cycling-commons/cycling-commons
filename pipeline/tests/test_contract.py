@@ -51,6 +51,13 @@ def test_letter_specific_tile_props():
         assert contract.letters[letter].tile_props == []
 
 
+def test_universal_tile_props_carry_the_scope_keys():
+    # ref/n/t identity + the rid/cc region-scoping keys are emitted on EVERY
+    # layer (region-scoping-design.md §6). Per-letter tileProps stay extras-only.
+    contract = load_contract()
+    assert contract.universal_tile_props == ["ref", "n", "t", "rid", "cc"]
+
+
 def test_service_kind_mapping_matches_php_service_kind_cases():
     contract = load_contract()
     assert contract.service_kind == {

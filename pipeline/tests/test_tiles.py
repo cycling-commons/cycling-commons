@@ -70,6 +70,28 @@ def test_export_geojsonl_shapes(db, tmp_path):
     assert stay["properties"]["t"] == _label("E", "tourism=camp_site")
     assert stay["properties"]["acc"] == "Wheelchair-accessible"
 
+    # rid/cc are the region-scoping keys (region-scoping-design.md §6). The
+    # fixture rows carry neither region_id nor country_code, so jsonb_strip_nulls
+    # drops them — a prop-less feature the client renders unfiltered (the §8
+    # risk-2 fallback until the weekly rebuild stamps them).
+    assert "rid" not in shop["properties"]
+    assert "cc" not in shop["properties"]
+
+
+def test_export_carries_rid_cc_when_stamped(db, tmp_path):
+    """A region-stamped coverage_poi row emits rid (region_id) + cc
+    (country_code) as flat tile props for the client scope filter."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region, region_id, country_code)"
+        " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s, %s, %s)",
+        ("node/900001001", "D", "shop", "Scoped shop", 4.35, 50.85,
+         Json({"shop": "bicycle", "name": "Scoped shop"}), SRC, 42, "BE"))
+    out = tiles.export_geojsonl(db, tmp_path)
+    props = _features(out["D"])["node/900001001"]["properties"]
+    assert props["rid"] == 42          # flat bigint, MVT-legal
+    assert props["cc"] == "BE"
+
 
 def _geojsonl(path, rows):
     path.write_text("".join(

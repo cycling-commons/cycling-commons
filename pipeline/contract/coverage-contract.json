@@ -78,5 +78,6 @@
         "shop=bicycle": "shop",
         "amenity=bicycle_repair_station": "station",
         "amenity=compressed_air": "pump"
-    }
+    },
+    "universalTileProps": ["ref", "n", "t", "rid", "cc"]
 }

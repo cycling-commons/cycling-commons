@@ -98,4 +98,12 @@ final class CoverageContractTest extends TestCase
             self::assertSame([], $letters[$letter]['tileProps']);
         }
     }
+
+    public function testUniversalTilePropsCarryTheScopeKeys(): void
+    {
+        // ref/n/t identity + the rid/cc region-scoping keys
+        // (region-scoping-design.md §6) are emitted on EVERY tile layer by
+        // pipeline tiles.py::_letter_sql; per-letter tileProps stay extras-only.
+        self::assertSame(['ref', 'n', 't', 'rid', 'cc'], $this->loadContract()['universalTileProps']);
+    }
 }
