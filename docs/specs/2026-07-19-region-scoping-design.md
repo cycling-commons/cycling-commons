@@ -594,13 +594,21 @@ verification on the dev stack. Slices:
   it. The deep-link coverage lookup stays UNSCOPED so it can find the target
   regardless of the saved scope, then widens to reveal it.
 - **Counts decision (open item in this phase — DECIDED):** `/map/coverage/counts`
-  totals become **scope-aware** (they take `rids`/`cc` too), not global. The
-  rail legend renders `shown/total`; `shown` counts scope-filtered rendered
-  tiles (`covShownCount`) and the served side counts `featureVisible`, both
-  scope-aware — so a global `total` would read incoherently (e.g. "3/500" in a
-  region with 3 dots). Scope-aware totals keep the two sides in the same frame
-  of reference. `fetchCoverageCounts` re-fetches with a race guard on each
-  scope change.
+  totals become **scope-aware** (they take `rids`/`cc` too), not global.
+  **Correction (post-review browser test):** the one scope-aware count drives
+  BOTH sides of a coverage layer's rail badge — it is the `total` AND the
+  `shown`. The original `covShownCount` counted viewport-*rendered* tiles, but
+  coverage is thinned by tippecanoe `--drop-densest-as-needed` at low zoom, so
+  at the region/country overview zooms the scope selector fits to, that read a
+  confusing near-zero ("16/2015", even "0/2015", for All Belgium at ~z8) while
+  every in-scope POI is genuinely on the map (revealed as you zoom). So
+  `covShownCount` now returns the in-scope count when the layer is visible, 0
+  when toggled off or mode-hidden — a coverage layer reads N/N / 0/N, matching
+  the served layers (A 351/351). The served side still counts `featureVisible`.
+  Also lowered the coverage tile `minzoom` 8→6 (coverage-provider.md §3) so the
+  dots actually render at those overview zooms, not just count. No moveend/idle
+  recount (shown is no longer viewport-derived); `fetchCoverageCounts`
+  re-fetches with a race guard on each scope change.
 - **Data window (bounded, same class as the Phase-2 `coverage_poi` note):** a
   freshly-changed props schema reaches live tiles only on the next pipeline
   rebuild (weekly timer, or a manual `make coverage-refresh`); until then tiles

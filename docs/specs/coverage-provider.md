@@ -236,8 +236,14 @@ itemId?}`.
   `region_id IN (…)`) and `cc` (2-letter country → `country_code = :cc`),
   applied to both the curated (`item`) and community (`coverage_poi`) arms.
   A country scope sends both, ORed, so an unsplit-country row (region_id NULL,
-  cc set) still matches. Counts totals become scope-aware so the rail's
-  `shown/total` stay coherent. Params are client-sent only (the plane is
+  cc set) still matches. Counts become scope-aware and drive BOTH sides of a
+  coverage layer's rail badge: the in-scope count is the `total`, and also the
+  `shown` (every in-scope POI is on the map, revealed progressively as you
+  zoom — the client does NOT count viewport-rendered tiles, which
+  `--drop-densest-as-needed` thins to a confusing near-zero at overview zooms;
+  `map.js covShownCount`). So a coverage layer reads N/N when on, 0/N when
+  toggled off or mode-hidden — matching the served layers. Params are
+  client-sent only (the plane is
   anonymous + cacheable — never server-resolved from a user), de-duped, sorted
   and capped at `CoverageController::MAX_SCOPE_REGIONS` (value `24`) to bound
   the shared HTTP-cache keyspace (region-scoping-design.md §8 risk 10); the cap

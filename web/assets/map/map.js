@@ -918,15 +918,11 @@
     let _confRAF=null;
     const scheduleConfMarkers=()=>{ if(_confRAF) return; _confRAF=requestAnimationFrame(()=>{ _confRAF=null; updateConfMarkers(); }); };
     map.on('moveend', scheduleConfMarkers); map.on('idle', scheduleConfMarkers);
-    // Coverage counts: totals once; 'shown' depends on the viewport, so the
-    // legend refreshes when the map settles (same moveend/idle+RAF discipline
-    // as the confirmed-marker reconciliation above — never per frame).
-    if(COVERAGE_ON){
-      fetchCoverageCounts();
-      let _ctRAF=null;
-      const scheduleCovCounts=()=>{ if(_ctRAF) return; _ctRAF=requestAnimationFrame(()=>{ _ctRAF=null; updateCounts(); }); };
-      map.on('moveend', scheduleCovCounts); map.on('idle', scheduleCovCounts);
-    }
+    // Coverage counts fetched once at load (and again on each scope change via
+    // applyScope). No moveend/idle refresh: the coverage 'shown' is the
+    // scope-aware count (covShownCount), not a viewport-render count, so it
+    // never changes on pan/zoom.
+    if(COVERAGE_ON) fetchCoverageCounts();
     render();
     // Deep links (?feature/?pending/?route) point at a specific object a narrow
     // scope might filter out (region-scoping-design.md §4): widen to Everywhere
@@ -1578,10 +1574,10 @@
     return show;
   }
   // Rail totals (coverage-provider.md §5):
-  // per-letter coverage totals from /map/coverage/counts, re-fetched on each
-  // scope change (Phase 3: totals are scope-aware, region-scoping-design.md §7);
-  // the 'shown' side counts coverage features actually rendered in the viewport,
-  // deduped by ref (tile borders duplicate features across tiles).
+  // per-letter coverage counts from /map/coverage/counts, re-fetched on each
+  // scope change (Phase 3: scope-aware, region-scoping-design.md §7). This one
+  // scoped count drives BOTH the 'shown' and 'total' sides for a coverage layer
+  // (see covShownCount).
   let _covCounts=null, _covCountReq=0;
   function fetchCoverageCounts(){
     if(!COVERAGE_ON) return;
@@ -1593,12 +1589,20 @@
       // scope's totals (rapid rail switching). Same _historyReq discipline.
       .then(d=>{ if(myReq===_covCountReq && d && d.counts){ _covCounts=d.counts; updateCounts(); } });
   }
+  // "Shown" for a coverage layer = its in-scope count (the scope-aware
+  // /counts value), NOT the handful of tiles rendered in the current viewport.
+  // Coverage is a dense vector-tile layer that tippecanoe thins with
+  // --drop-densest-as-needed at low zoom, so a viewport-render count read a
+  // confusing near-zero at the region/country overview zooms the scope selector
+  // fits to (All Belgium at ~z8 showed "16/2015", even "0/2015" on a slightly
+  // different frame). Every in-scope POI IS on the map — revealed progressively
+  // as you zoom — so the whole scope counts as shown, mirroring the served
+  // layers (A shows 351/351). 0 when the layer is toggled off or mode-hidden
+  // (experiential coverage E/I/J in Curated), which the visibility gate covers.
   function covShownCount(key){
     const id=key+'-cov';
     if(!COVERAGE_ON || !map.getLayer(id) || map.getLayoutProperty(id,'visibility')!=='visible') return 0;
-    const seen=new Set();
-    map.queryRenderedFeatures({layers:[id]}).forEach(f=>seen.add(f.properties.ref));
-    return seen.size;
+    return (_covCounts && _covCounts[KEY_LETTER[key]]) || 0;
   }
   // legend count = shown/total: in Curated only confirmed/curated count; in Everything everything does
   function layerCounts(layer){
