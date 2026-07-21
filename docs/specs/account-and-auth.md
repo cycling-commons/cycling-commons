@@ -447,9 +447,11 @@ lives in the shell header.
 
 Two tabs:
 
-- **Profile** (default): account status, identity & privacy (display name,
-  country, language, preference chips §9, public-profile toggle + view-as
-  link/hint), the profiles-opt-in notice.
+- **Profile** (default): account status; Identity section (display name,
+  country, language, base location); Riding preferences (preference chips,
+  account-and-auth.md §9); Public profile section (toggle + view-as
+  link/hint — split out of the former "Identity & privacy" heading
+  2026-07-21); the profiles-opt-in notice.
 - **Security**: password change, 2FA block, danger zone (account deletion §10).
 
 Contract points:
@@ -469,6 +471,42 @@ Contract points:
 - Preference checkbox groups use the **chip-check pill pattern** (label wraps
   the input; `:has(input:checked)` drives the active look) — the established
   styling shared with the propose-route form.
+
+### Support playbook: manual email-change requests
+
+A manual flow is only safer than self-serve if support actually verifies —
+otherwise it is the same account-takeover vector with a human rubber stamp.
+"Legit" means proving control of the account's **existing anchors**; this
+platform has exactly three: the old mailbox, the password, and (when
+enrolled) the TOTP factor. Whoever handles the `info@` mailbox follows this
+script, in order:
+
+1. **Never trust the request mail itself.** From-headers are spoofable, and
+   "writing from my new address because I lost the old one" is the standard
+   opening of an attack. Request content proves nothing — display name,
+   contributions and join date are all public on rider profiles.
+2. **Anchor 1 — the old mailbox:** reply to the address **on file** (typed
+   from the admin panel, never reply-to) with a one-time confirmation code
+   and require it back. If they can receive there, the change is low-risk.
+3. **Anchor 2 — a logged-in session:** if the old mailbox is claimed dead,
+   dictate an in-account action ("set your riding radius to 120 km", "paste
+   this code into your display name for an hour") and verify it happened.
+   That proves password possession — and for 2FA-enrolled accounts it
+   implicitly proves the TOTP factor too, since login required it.
+4. **No anchor left** (can't receive at the old address AND can't log in) =
+   account recovery, not an email change, and there is no honest way to
+   distinguish owner from attacker. The safe answer is "create a new
+   account". Refusing here is the point of the manual flow, not a support
+   failure.
+5. **After verifying, still hedge:** notify the old address with a
+   "this wasn't me" contest window and delay execution 48–72 h; record the
+   change through the audited admin path (the `UserAdminService` audit-note
+   pattern of the account-support desk, account-and-auth.md §6) so there is
+   a trail.
+
+Rule of thumb: **urgency is a red flag, never a reason to skip a step** —
+the legitimate owner survives a 48-hour delay; the attacker's window
+usually doesn't.
 
 ## 9. Display-name identity and rider preferences
 
