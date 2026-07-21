@@ -106,6 +106,10 @@ app-serve: ## run the Symfony app locally at http://127.0.0.1:8010
 
 app-test: ## run the app test suite + static analysis + gates
 	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh && ./tools/check-translations.sh
+	$(MAKE) scope-test
+
+scope-test: ## run the map scope-model Node smoke tests (no deps — node:test ships with Node ≥18)
+	node --test web/tests/js/*.test.cjs
 
 app-rector: ## apply Rector refactors (advisory; review the diff before committing)
 	cd web && vendor/bin/rector process

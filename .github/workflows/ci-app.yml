@@ -42,3 +42,6 @@ jobs:
         continue-on-error: true
       - run: php bin/console doctrine:migrations:migrate -n --env=test
       - run: php bin/phpunit
+      # Map scope-model smoke tests (07-20 review finding 8) — plain node:test,
+      # no npm install; the runner image ships Node.
+      - run: node --test tests/js/*.test.cjs
