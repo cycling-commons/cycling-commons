@@ -1,0 +1,21 @@
+.github/workflows/ci-app.yml
+  s_b9f6c785e9346d::t_c89c6112fa2c3b 8
+.github/workflows/ci-tools.yml
+  s_b9f6c785e9346d::t_c89c6112fa2c3b 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "5e18edc852c38b29f11b6b5757ab39a4968581fd",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
