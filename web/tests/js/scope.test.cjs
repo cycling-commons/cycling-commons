@@ -150,6 +150,20 @@ test('photonParams: scoped bbox + lowercase country gate; everywhere drops both'
   assert.deepEqual(CCScope.photonParams(), { bbox: null, countrycode: null });
 });
 
+test('coverageParams: region sends sorted rids only; country adds cc; everywhere sends neither', () => {
+  boot();
+  // A single named region: its id only, no cc (region is narrower than country).
+  CCScope.setRegion('flanders');
+  assert.deepEqual(CCScope.coverageParams(), { rids: [24], cc: null });
+  // A country scope: all its region ids (SORTED for a stable cache key) AND cc,
+  // so the server's OR arm also catches unsplit rows (region_id NULL, cc set).
+  CCScope.setCountry('BE');
+  assert.deepEqual(CCScope.coverageParams(), { rids: [1, 23, 24], cc: 'BE' });
+  // Everywhere: no params, so the URL + shared HTTP-cache key stay scope-free.
+  CCScope.setEverywhere();
+  assert.deepEqual(CCScope.coverageParams(), { rids: null, cc: null });
+});
+
 test('set persists slug-serialized to storage + URL; persist:false leaves both alone', () => {
   boot();
   CCScope.setRegion('flanders');

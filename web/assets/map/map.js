@@ -33,8 +33,10 @@
   if (window.CCScope) window.CCScope.init(CC_REGIONS, _defaultScope);
   const curScope = () => window.CCScope ? window.CCScope.get() : _defaultScope;
   // A served feature is in scope when its region id (rid) is in the active
-  // scope. A region/country scope hides rid-less or out-of-region features;
-  // Everywhere shows all. Coverage tiles are scoped separately (Phase 3).
+  // scope. A region/country scope hides rid-less or out-of-region features
+  // (leak-safe default for authoritative served data); Everywhere shows all.
+  // Coverage TILES scope through covScopeFilter()/covScopeQuery() instead
+  // (Phase 3) — with the inverse prop-less rule, since the tile artifact lags.
   const inScope = rid => { const s = curScope(); return !s || s.kind === 'everywhere' || s.regionIds.indexOf(rid) !== -1; };
   const LAYER_L10N = I18N.layers || {};
   const D = I18N.d || {};
@@ -132,7 +134,14 @@
     setSpotlight(s&&s.kind==='region'&&s.regionIds.length===1 ? slugOfRegion(s.regionIds[0]) : null);
     refilterClusters(); updateConfMarkers();   // served-POI clusters follow scope (no-ops until setupConfClusters runs)
     updateHeatFilter();                         // ride-heat follows scope too (no-op until the lazy layer exists)
+    updateCoverageScopeFilter();                // coverage tile dots follow scope (Phase 3; no-op until addCoverage runs)
     if(!opts||opts.fit!==false){                // a user scope change, not the initial paint
+      // Coverage rail totals become scope-aware (Phase 3, region-scoping-design.md
+      // §7 counts decision): re-fetch with the new rids/cc so the legend's
+      // 'total' side matches the now scope-filtered 'shown' dots. Init doesn't
+      // need this call — the standalone fetchCoverageCounts() below runs once
+      // the layers exist, already reading the initial scope.
+      fetchCoverageCounts();
       const bb = window.CCScope && window.CCScope.bbox(); if(bb) map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
       // One render per scope switch (review 07-20 info d): in Everything mode
       // refreshBestOf() IS the render (its non-curated branch renders
@@ -645,6 +654,57 @@
   // Curated-ref dedupe (osm-data-architecture.md §8): any object already served
   // as an item draws once, as curated — its coverage twin is filtered out.
   const covDedupeFilter=()=>['!',['in',['get','ref'],['literal', Array.from(window.CC_CURATED_REFS||[])]]];
+  // Region scope filter for the coverage tile layers (Phase 3,
+  // region-scoping-design.md §6). DELIBERATELY the inverse of the leak-safe rule
+  // updateHeatFilter()/inScope() use for served data: a prop-less feature (no
+  // `rid`) RENDERS here instead of hiding. Rationale: the coverage PMTiles is a
+  // separately-built, weekly-rebuilt artifact (§8 risk 2) — until the rebuild
+  // stamps rid/cc, every tile is prop-less, and hiding-all would blank the map,
+  // so prop-less → render unfiltered (fallback ladder, never hide-all). A
+  // rebuilt unsplit-country row (rid absent, cc present) is admitted by that
+  // same prop-less arm; a rebuilt split row is gated on rid, plus a cc arm for
+  // country scope (mirrors CoverageRepository's OR arm). Served GeoJSON layers
+  // (heat, clusters, CATALOG features) keep the OPPOSITE default because their
+  // rid is authoritative and present. Returns null for Everywhere (no filter).
+  function covScopeFilter(){
+    const s=curScope();
+    if(!s || s.kind==='everywhere') return null;
+    const arms=[['!',['has','rid']]];                                       // prop-less → render (transition / unsplit fallback)
+    if(s.regionIds.length) arms.push(['in',['get','rid'],['literal', s.regionIds]]);
+    if(s.kind==='country' && s.countryCode) arms.push(['==',['get','cc'], s.countryCode]);
+    return ['any'].concat(arms);
+  }
+  // A coverage layer's full filter: the curated-ref dedupe (always the base) AND
+  // the scope filter (when scoped) AND any per-layer extra (stays' accessibility
+  // narrow). Every setFilter on a *-cov layer must go through here so no arm is
+  // ever dropped by another.
+  function covBaseFilter(extra){
+    const f=['all', covDedupeFilter()];
+    const sc=covScopeFilter(); if(sc) f.push(sc);
+    if(extra) f.push(extra);
+    return f;
+  }
+  // Re-apply covBaseFilter to every coverage layer on a scope change, so the
+  // dots track the scope like every served layer. stays-cov re-composes through
+  // applyStaysAccessFilter (it owns the acc extra); the rest get the plain base.
+  function updateCoverageScopeFilter(){
+    if(!COVERAGE_ON) return;
+    COVERAGE_KEYS.forEach(([key])=>{
+      const id=key+'-cov'; if(!map.getLayer(id)) return;
+      if(key==='stays'){ applyStaysAccessFilter(); return; }
+      map.setFilter(id, covBaseFilter());
+    });
+  }
+  // Active-scope coverage params (rids/cc) as a query fragment
+  // (region-scoping-design.md §6); '' for Everywhere so the URL — and the
+  // shared HTTP-cache key — stays scope-free. Callers prepend '?' or '&'.
+  function covScopeQuery(){
+    if(!window.CCScope) return '';
+    const p=window.CCScope.coverageParams(), parts=[];
+    if(p.rids && p.rids.length) parts.push('rids='+p.rids.join(','));
+    if(p.cc) parts.push('cc='+encodeURIComponent(p.cc));
+    return parts.join('&');
+  }
   // Community tier on the map (07-15 decision B, rebased in
   // map-and-search.md §12): utility letters C/D/G/H draw
   // in BOTH modes — at 0.55 opacity in Curated so verified pins keep visual
@@ -682,7 +742,7 @@
               miniIcon('services')]
           : miniIcon(key);
       map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
-        filter:covDedupeFilter(),
+        filter:covBaseFilter(),   // dedupe + active region scope (Phase 3)
         layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
           'icon-size': key==='water'
             ? ['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]
@@ -798,10 +858,22 @@
       .catch(()=>null)
       .then(paint);
   }
+  // Transiently widen the scope to Everywhere so a resolved deep-link target
+  // always renders, then return (region-scoping-design.md §4). persist:false —
+  // the saved scope returns on the next plain load. Only ever called AFTER a
+  // target actually resolves (07-20 review finding 9), so it never flips the
+  // map with nothing to show. No-op when already Everywhere.
+  function widenForDeepLink(){
+    if(window.CCScope && curScope().kind!=='everywhere'){
+      window.CCScope.set({kind:'everywhere', regionIds:[], countryCode:null}, {persist:false});
+    }
+  }
   // ?feature= deep-link fallback (coverage-provider.md §6):
   // a name that is not in the local index gets ONE search-endpoint lookup —
   // exact-name hit preferred, else the server's top-ranked result. Nothing
   // found / coverage off → silently keep the plain map (Photon convention).
+  // The lookup is deliberately UNSCOPED (no covScopeQuery): a deep link must
+  // resolve its target regardless of the saved scope, then widen to reveal it.
   function openCoverageFeatureByName(name){
     if(!COVERAGE_ON) return;
     fetch('/map/coverage/search?q='+encodeURIComponent(name), {headers:{'Accept':'application/json'}})
@@ -811,6 +883,11 @@
         const hits=((d&&d.results)||[]).filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll));
         if(!hits.length) return;
         const hit=hits.find(h=>h.n.toLowerCase()===name.toLowerCase())||hits[0];
+        // Phase 3: coverage tiles are now scope-filtered, so a coverage-only
+        // ?feature target CAN be hidden by a narrow saved scope — widen once
+        // the target has actually resolved (the F9 gate below only covers the
+        // synchronous local/pending/route resolvers; this is the async arm).
+        widenForDeepLink();
         openCoverageByRef(hit.ref, hit.letter, hit.ll, hit.n);
       });
   }
@@ -837,23 +914,22 @@
     render();
     // Deep links (?feature/?pending/?route) point at a specific object a narrow
     // scope might filter out (region-scoping-design.md §4): widen to Everywhere
-    // so the target always renders. Transient (persist:false) — the saved scope
-    // returns on the next plain load; the handlers below flyTo the target.
-    // ONLY when the target actually resolves (07-20 review finding 9): a stale
-    // or mistyped id must not flip the whole map to Everywhere with nothing to
-    // show. Coverage POIs (the openCoverageFeatureByName fallback) render
-    // scope-unfiltered until Phase 3, so a coverage-only ?feature needs no
-    // widen either — the resolvers below are exactly the ones the open calls
-    // use, so gate and open can never disagree.
+    // so the target always renders. Transient — the saved scope returns on the
+    // next plain load; the handlers below flyTo the target. ONLY when the target
+    // actually resolves (07-20 review finding 9): a stale or mistyped id must
+    // not flip the whole map to Everywhere with nothing to show. This gate
+    // covers the SYNCHRONOUS resolvers (local feature / pending / route); a
+    // coverage-only ?feature resolves async and now (Phase 3, coverage tiles
+    // scope-filtered) widens inside openCoverageFeatureByName on its own hit —
+    // the resolvers here are exactly the ones the open calls use, so gate and
+    // open can never disagree.
     const _dl = new URLSearchParams(location.search);
     const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route');
     const _dlHit =
       (fp && !!resolveLocalFeature(fp)) ||
       (pp && !!(layerByKey.pending && (layerByKey.pending.features||[]).some(x=>x.pending && String(x.pending.id)===String(pp)))) ||
       (rp && ((layerByKey['experience']||{}).features||[]).some(x=>String(x.id)===String(rp)));
-    if(_dlHit && window.CCScope && curScope().kind!=='everywhere'){
-      window.CCScope.set({kind:'everywhere', regionIds:[], countryCode:null}, {persist:false});
-    }
+    if(_dlHit) widenForDeepLink();
     // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from
     // a profile page); coverage POIs stay linkable via one search-endpoint
     // lookup when the local index misses (coverage-provider.md §6)
@@ -1441,11 +1517,12 @@
   // confirmed/clustered stays are filtered in updateConfMarkers().
   function applyStaysAccessFilter(){
     // Coverage stays narrow on the flat `acc` tile prop
-    // (coverage-provider.md §6) — the dedupe filter is the
-    // layer's base filter and must survive every setFilter.
+    // (coverage-provider.md §6) — the dedupe + region-scope arms are the
+    // layer's base filter (covBaseFilter) and must survive every setFilter.
     if(map.getLayer('stays-cov')){
-      map.setFilter('stays-cov', activeAccess.size===ALL_ACCESS.size ? covDedupeFilter()
-        : ['all', covDedupeFilter(), ['in', ['get','acc'], ['literal', Array.from(activeAccess)]]]);
+      const extra = activeAccess.size===ALL_ACCESS.size ? null
+        : ['in', ['get','acc'], ['literal', Array.from(activeAccess)]];
+      map.setFilter('stays-cov', covBaseFilter(extra));
     }
   }
 
@@ -1485,16 +1562,20 @@
     return show;
   }
   // Rail totals (coverage-provider.md §5):
-  // per-letter coverage totals fetched ONCE from /map/coverage/counts; the
-  // 'shown' side counts coverage features actually rendered in the viewport,
+  // per-letter coverage totals from /map/coverage/counts, re-fetched on each
+  // scope change (Phase 3: totals are scope-aware, region-scoping-design.md §7);
+  // the 'shown' side counts coverage features actually rendered in the viewport,
   // deduped by ref (tile borders duplicate features across tiles).
-  let _covCounts=null;
+  let _covCounts=null, _covCountReq=0;
   function fetchCoverageCounts(){
     if(!COVERAGE_ON) return;
-    fetch('/map/coverage/counts', {headers:{'Accept':'application/json'}})
+    const q=covScopeQuery(), myReq=++_covCountReq;
+    fetch('/map/coverage/counts'+(q?('?'+q):''), {headers:{'Accept':'application/json'}})
       .then(r=>r.ok?r.json():null)
       .catch(()=>null)
-      .then(d=>{ if(d && d.counts){ _covCounts=d.counts; updateCounts(); } });
+      // Race-guard: a slow scoped-counts response must not overwrite a newer
+      // scope's totals (rapid rail switching). Same _historyReq discipline.
+      .then(d=>{ if(myReq===_covCountReq && d && d.counts){ _covCounts=d.counts; updateCounts(); } });
   }
   function covShownCount(key){
     const id=key+'-cov';
@@ -2831,7 +2912,13 @@
     // click and keyboard paths (07-20 review info b). cc:scopechange re-runs
     // applyScope; the re-query surfaces the wider Photon bbox, the local rows
     // the narrower scope hid, and the next rung's chip.
-    function widenSearch(){ if(!window.CCScope) return; window.CCScope.widen(); runPhoton(sBox.value); runS(); }
+    // Widen one rung, then re-run all three result sources against the wider
+    // scope: Photon (wider bbox), the local index (runS re-gates on inScope),
+    // and coverage — which since Phase 3 is scope-filtered at the source
+    // (region-scoping-design.md §6), so the wider rung's rows only appear once
+    // runCoverageSearch re-fetches with the new rids/cc. runS runs last so it
+    // renders the freshly-updated Photon + (imminently) coverage hits.
+    function widenSearch(){ if(!window.CCScope) return; window.CCScope.widen(); runPhoton(sBox.value); runCoverageSearch(sBox.value); runS(); }
     function pickS(i){ const m=sMatches[i]; if(!m) return;
       if(m.widen){ m.go(); return; }   // widen chip: dropdown stays open, results re-query
       sBox.value=m.name; closeS();
@@ -2891,7 +2978,11 @@
       if(!COVERAGE_ON || q.length<2){ _covHits=[]; _covSQ=''; return; }
       if(_covAbort) _covAbort.abort();
       const ctl=new AbortController(); _covAbort=ctl;
-      fetch('/map/coverage/search?q='+encodeURIComponent(q), {signal:ctl.signal, headers:{'Accept':'application/json'}})
+      // Scope the search to the active region (Phase 3, region-scoping-design.md
+      // §6): the server returns only in-scope rows, so the coverage results
+      // mirror the scope-filtered tiles. Everywhere adds no params.
+      const sq=covScopeQuery();
+      fetch('/map/coverage/search?q='+encodeURIComponent(q)+(sq?('&'+sq):''), {signal:ctl.signal, headers:{'Accept':'application/json'}})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
         .then(d=>{
           if(ctl.signal.aborted) return;
@@ -2932,9 +3023,11 @@
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       // Coverage matches slot into the same letter groups, behind local rows
       // (same freshness handshake as Photon's _phQ: only merge results that
-      // answer THIS query). Deliberately NOT scope-filtered: coverage tiles
-      // render scope-unfiltered until Phase 3 (region-scoping-design.md §7),
-      // and search must mirror what the map shows — gate both in Phase 3.
+      // answer THIS query). Scope-filtered at the SOURCE (Phase 3,
+      // region-scoping-design.md §6/§7): runCoverageSearch sends the active
+      // scope's rids/cc, so _covHits already mirror the scope-filtered tiles —
+      // the widen chip re-runs the fetch rung by rung. (The served local rows
+      // above are gated client-side by inScope() since they aren't re-fetched.)
       if(_covSQ===q) _covHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       // decision A ordering: verified/curated rows first inside each letter
       // group, community after. Array.prototype.sort is stable (ES2019), so the

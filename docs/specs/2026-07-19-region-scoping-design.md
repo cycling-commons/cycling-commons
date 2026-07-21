@@ -1,10 +1,11 @@
 # Region scoping, search scope widening, and rider base location — design (working spec)
 
-Status: **proposed** (2026-07-19); **Phase 1 + Phase 2 executed** (2026-07-19 /
-2026-07-20; see §7), **Phase 2 adversarially reviewed 2026-07-21 — all 10
-findings fixed** (review round note in §7). Belgium is tessellated
-(Wallonia/Flanders/Brussels) and the map + search are scope-aware; Phases 3–5
-not started.
+Status: **proposed** (2026-07-19); **Phases 1–3 executed** (2026-07-19 /
+2026-07-20 / 2026-07-21; see §7), **Phase 2 adversarially reviewed 2026-07-21 —
+all 10 findings fixed** (review round note in §7). Belgium is tessellated
+(Wallonia/Flanders/Brussels); the map, search AND coverage tier are all
+scope-aware — the whole map filters to scope. Phases 4–5 (base location / My
+area; worldwide rollout) not started.
 Multi-agent research + design run; all repo-structural claims below were
 adversarially verified against the codebase (4 corrections from that pass are
 folded in and marked "verified correction" where decision-relevant).
@@ -556,6 +557,57 @@ injection surface.
   `setFilter` composed with the dedupe filter; prop-less-tile fallback until the
   weekly rebuild lands.
 - `rids`/`cc` params on `/map/coverage/search`, `/nearby`, `/counts`.
+
+**Phase 3 — EXECUTED 2026-07-21 (symfony-base, NOT pushed).** The whole map
+now filters to scope — the coverage carve-outs are retired. Landed with
+unit/functional tests (PHP + pipeline pytest + scope node suite) and browser
+verification on the dev stack. Slices:
+
+- **Tile props** (`pipeline/coverage/tiles.py::_letter_sql`): `rid`
+  (`region_id`) + `cc` (`country_code`) emitted on EVERY layer alongside
+  `ref`/`n`/`t`; `jsonb_strip_nulls` drops them for NULL rows, so a prop-less
+  feature is legal. Declared as `universalTileProps` in
+  `coverage-contract.json` and pinned by both contract test suites
+  (`pipeline/tests/test_contract.py`, `web/tests/Catalog/CoverageContractTest.php`).
+- **Endpoint params** (`CoverageRepository` + `CoverageController`): `rids`
+  (csv region ids) → `region_id IN (…)`, `cc` → `country_code = :cc`, on
+  `/search` (both the curated-item and community arms), `/nearby`, `/counts`.
+  A country scope sends both, ORed, so an unsplit-country row (region_id NULL,
+  cc set) still matches. Params are de-duped, **sorted**, and capped at
+  `MAX_SCOPE_REGIONS = 24` in the controller (§8 risk 10 cache-keyspace
+  discipline; the cap is safe because a country scope's `cc` arm is the
+  complete fallback). Client-sent only, never server-resolved (§6 cacheability
+  discipline); absent = current behaviour.
+- **Client filter** (`map.js`): `covScopeFilter()` composes with
+  `covDedupeFilter()` (and stays' `acc` extra) through one `covBaseFilter()`
+  helper, re-applied on every scope change via `updateCoverageScopeFilter()`.
+  **Deliberate asymmetry from served data (documented in code):** a prop-less
+  coverage feature RENDERS (the §8 risk-2 fallback — the PMTiles artifact lags
+  the DB by up to a weekly rebuild, so hiding-all would blank the map), whereas
+  `inScope()`/`updateHeatFilter()` HIDE rid-less served rows (authoritative
+  rid). `runCoverageSearch` sends the scope params (search mirrors the tiles);
+  the runS "scope-unfiltered until Phase 3" exemption comment is retired; the
+  widen chip re-runs `runCoverageSearch` so wider rungs surface.
+- **Deep-link widen flip:** `widenForDeepLink()` (extracted, shared by the
+  synchronous F9 gate) now also fires inside `openCoverageFeatureByName` once a
+  coverage-only `?feature` target resolves — because a scoped tile can now hide
+  it. The deep-link coverage lookup stays UNSCOPED so it can find the target
+  regardless of the saved scope, then widens to reveal it.
+- **Counts decision (open item in this phase — DECIDED):** `/map/coverage/counts`
+  totals become **scope-aware** (they take `rids`/`cc` too), not global. The
+  rail legend renders `shown/total`; `shown` counts scope-filtered rendered
+  tiles (`covShownCount`) and the served side counts `featureVisible`, both
+  scope-aware — so a global `total` would read incoherently (e.g. "3/500" in a
+  region with 3 dots). Scope-aware totals keep the two sides in the same frame
+  of reference. `fetchCoverageCounts` re-fetches with a race guard on each
+  scope change.
+- **Data window (bounded, same class as the Phase-2 `coverage_poi` note):** the
+  dev PMTiles was built before this change, so its tiles carry no `rid`/`cc`
+  until the next weekly pipeline rebuild (or a manual `make coverage-refresh`).
+  Until then every coverage dot is prop-less and renders unfiltered under the
+  fallback — correct-by-design, not a bug. The `coverage_poi.country_code`
+  index (`load.py`) likewise lands on the next pipeline run on any DB that
+  predates it; the `cc` arm works without it, just unindexed.
 
 **Phase 4 — Base location + My area (requirement 3).**
 

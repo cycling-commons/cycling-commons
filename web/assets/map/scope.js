@@ -182,6 +182,17 @@
       if (!scope || scope.kind === 'everywhere') return { bbox: null, countrycode: null };
       return { bbox: this.bbox(), countrycode: scope.countryCode ? scope.countryCode.toLowerCase() : null };
     },
+
+    /** Coverage endpoint params {rids, cc} for the active scope (Phase 3,
+     *  region-scoping-design.md §6). A region sends its ids only; a country
+     *  sends its ids AND cc (the server ORs them, so an unsplit country row
+     *  region_id NULL still matches on cc); Everywhere sends neither. rids are
+     *  sorted so the shared HTTP-cache key is order-independent (§8 risk 10). */
+    coverageParams() {
+      if (!scope || scope.kind === 'everywhere') return { rids: null, cc: null };
+      const rids = scope.regionIds.slice().sort((a, b) => a - b);
+      return { rids: rids.length ? rids : null, cc: scope.kind === 'country' ? scope.countryCode : null };
+    },
   };
 
   if (typeof window !== 'undefined') window.CCScope = API;
