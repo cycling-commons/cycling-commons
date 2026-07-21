@@ -40,6 +40,10 @@ class HeatPoint
     #[ORM\Column(type: 'string', length: 8, nullable: true)]
     private ?string $season = null;
 
+    /** region.id: membership recomputed on every import run (same rule as Item/RecommendedRoute). */
+    #[ORM\Column(type: 'bigint', nullable: true)]
+    private ?int $regionId = null;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $computedAt;
 
@@ -97,6 +101,18 @@ class HeatPoint
     public function setSeason(?string $season): static
     {
         $this->season = $season;
+
+        return $this;
+    }
+
+    public function getRegionId(): ?int
+    {
+        return $this->regionId;
+    }
+
+    public function setRegionId(?int $regionId): static
+    {
+        $this->regionId = $regionId;
 
         return $this;
     }

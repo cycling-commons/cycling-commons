@@ -448,6 +448,19 @@ final class ImportCatalogCommand extends Command
              ) m WHERE recommended_route.id = m.route_id',
         );
 
+        // Heat points too (07-20 review finding 5): the ride-heat layer filters
+        // client-side on the scope like every served layer, so its points carry
+        // rid — an unstamped heat point would render in every scope or none.
+        // Point geometry: ST_Contains against the point directly.
+        $this->db->executeStatement('UPDATE heat_point SET region_id = NULL');
+        $assigned += (int) $this->db->executeStatement(
+            'UPDATE heat_point SET region_id = m.region_id FROM (
+                SELECT DISTINCT ON (h.id) h.id AS heat_id, r.id AS region_id
+                FROM heat_point h JOIN region r ON ST_Contains(r.geom, h.geom)
+                ORDER BY h.id, r.area_km2 ASC NULLS LAST, r.id ASC
+             ) m WHERE heat_point.id = m.heat_id',
+        );
+
         return $assigned;
     }
 }

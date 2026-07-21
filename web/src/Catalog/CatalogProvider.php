@@ -328,25 +328,33 @@ final class CatalogProvider
     }
 
     /**
-     * CC_ROUTES.heat shape: [[lat, lng, season], …] in import order.
+     * CC_ROUTES.heat shape: [[lat, lng, season, rid], …] in import order.
+     * rid = region_id (07-20 review finding 5): the heat layer scope-filters
+     * client-side like every served layer; null renders only in Everywhere
+     * (the leak-safe rid-less default, region-scoping-design.md §4).
      *
-     * @return list<array{0: float, 1: float, 2: string|null}>
+     * @return list<array{0: float, 1: float, 2: string|null, 3: int|null}>
      */
     private function heat(): array
     {
         // Only 'auto' heat is served today. Rows from any future source
         // (e.g. user-contributed traces) are deliberately absent until a
         // future decision adds them.
-        /** @var list<array{geom: string, season: string|null}> $rows */
+        /** @var list<array{geom: string, season: string|null, region_id: int|string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            "SELECT ST_AsGeoJSON(geom) AS geom, season FROM heat_point WHERE source = 'auto' ORDER BY id",
+            "SELECT ST_AsGeoJSON(geom) AS geom, season, region_id FROM heat_point WHERE source = 'auto' ORDER BY id",
         );
 
         $points = [];
         foreach ($rows as $row) {
             /** @var array{coordinates: array{0: float, 1: float}} $geo */
             $geo = $this->decode($row['geom']);
-            $points[] = [$geo['coordinates'][1], $geo['coordinates'][0], $row['season']];
+            $points[] = [
+                $geo['coordinates'][1],
+                $geo['coordinates'][0],
+                $row['season'],
+                null === $row['region_id'] ? null : (int) $row['region_id'],
+            ];
         }
 
         return $points;

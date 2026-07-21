@@ -224,7 +224,14 @@ final class CatalogProviderTest extends KernelTestCase
         // always have — an approved improve-form edit must reach the client.
         self::assertSame('Mixed', $route['dominantSurface']);
         self::assertSame('4', $route['quietness']);
-        self::assertSame([[50.5, 4.5, 'summer'], [50.6, 4.6, 'winter']], $p['L']);
+        // Heat points carry rid as element 3 (07-20 review finding 5): both
+        // fixture points sit inside the region-square fixture, so this pins
+        // the whole chain — import → recomputeMembership stamping → payload.
+        $regionId = (int) $this->em->getConnection()->fetchOne(
+            "SELECT id FROM region WHERE slug = 'test-square'",
+        );
+        self::assertGreaterThan(0, $regionId);
+        self::assertSame([[50.5, 4.5, 'summer', $regionId], [50.6, 4.6, 'winter', $regionId]], $p['L']);
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
         self::assertIsInt($route['id']);
         self::assertGreaterThan(0, $route['id']);
