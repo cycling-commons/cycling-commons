@@ -1,0 +1,28 @@
+web/src/Service/BaseLocationService.php
+  s_b9f6c785e9346d::t_5d734e7a6ea057 1-82
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_b9f6c785e9346d::t_94d012182972eb 13
+  s_b9f6c785e9346d::t_1c3b67252bc85f 436-461
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_b9f6c785e9346d::t_518d9922bbca8b 62
+  s_b9f6c785e9346d::t_394c19e49957ef 91-97
+  s_b9f6c785e9346d::t_051c0d7f1a7aca 16
+web/tests/Service/BaseLocationServiceTest.php
+  s_b9f6c785e9346d::t_7f8f7ad6aa82a5 1-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a567ce12ae840498caed2a58becfb8be77c35b6c",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
