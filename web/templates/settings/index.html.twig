@@ -46,7 +46,11 @@
   .base-loc-res button:hover,.base-loc-res button:focus-visible{background:rgba(255,90,31,.1)}
   .base-loc-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
     text-transform:uppercase;color:#8a8d7d}
-  .base-loc-current{font-size:.82rem;color:#595c4d;margin:.5rem 0 0}
+  /* derived-area remark: second grid column, palette green; top margin lines it
+     up with the neighbouring column's input (label row above it), collapses
+     with the grid on narrow screens */
+  .base-loc-current{font-size:.82rem;color:var(--spruce-lift);margin:1.45rem 0 0;line-height:1.55}
+  @media(max-width:700px){.base-loc-current{margin:.5rem 0 0}}
   .radius-row{display:flex;align-items:center;gap:.9rem;max-width:26rem}
   /* green track (filled portion darker via --fill, kept current by base-location.js)
      + orange (--trail) knob; custom appearance drops the browser's default blue */
@@ -197,60 +201,66 @@
 
     {# ── Base location (region-scoping-design.md §4): Photon town pick + radius.
        The pin-drop path lives on the map page's "Set my area" — this page stays
-       map-free, so it's a plain text search, not a map click. #}
-    <div class="field">
-      {{ form_label(profileForm.baseQuery) }}
-      <div class="base-loc-wrap">
-        {# Prefill with the stored place so a saved base ("Hoorn") is visible on
-           reload — same attr.value trick as the radius slider below: baseQuery is
-           unmapped, so the widget's own view value is always empty and never
-           collides with this override. Editing the text without picking a new
-           town changes nothing (only a Photon pick fills baseLat/baseLng). #}
-        {{ form_widget(profileForm.baseQuery, {attr: {
-          role: 'combobox', 'aria-expanded': 'false', 'aria-controls': 'baseLocRes', autocomplete: 'off',
-          value: cc_user.hasBaseLocation and cc_user.basePlace ? cc_user.basePlace : '',
-        }}) }}
-        <ul class="base-loc-res" id="baseLocRes" role="listbox" hidden></ul>
+       map-free, so it's a plain text search, not a map click. Same two-column
+       grid as the identity rows above: inputs left, derived-area remark right. #}
+    <div class="grid-2">
+      <div class="field">
+        {{ form_label(profileForm.baseQuery) }}
+        <div class="base-loc-wrap">
+          {# Prefill with the stored place so a saved base ("Hoorn") is visible on
+             reload — same attr.value trick as the radius slider below: baseQuery is
+             unmapped, so the widget's own view value is always empty and never
+             collides with this override. Editing the text without picking a new
+             town changes nothing (only a Photon pick fills baseLat/baseLng). #}
+          {{ form_widget(profileForm.baseQuery, {attr: {
+            role: 'combobox', 'aria-expanded': 'false', 'aria-controls': 'baseLocRes', autocomplete: 'off',
+            value: cc_user.hasBaseLocation and cc_user.basePlace ? cc_user.basePlace : '',
+          }}) }}
+          <ul class="base-loc-res" id="baseLocRes" role="listbox" hidden></ul>
+        </div>
+        {{ form_widget(profileForm.baseLat) }}
+        {{ form_widget(profileForm.baseLng) }}
+        {{ form_widget(profileForm.basePlace) }}
+        {{ form_help(profileForm.baseQuery) }}
+        {{ form_errors(profileForm.baseQuery) }}
+
+        <div style="margin-top:.9rem">
+          {{ form_label(profileForm.baseRadiusKm) }}
+        </div>
+        <div class="radius-row">
+          {# baseRadiusKm is unmapped, so the form view's own `value` is always
+             empty on render — Symfony's range widget only emits its own
+             value="..." when that's non-empty (form_div_layout.html.twig
+             form_widget_simple), so this attr.value is the sole one rendered
+             and there is no competing/duplicate value attribute. #}
+          {{ form_widget(profileForm.baseRadiusKm, {attr: {value: cc_user.baseRadiusKm}}) }}
+          <output for="settings_baseRadiusKm" data-radius-output>{{ cc_user.baseRadiusKm }} km</output>
+        </div>
+
+        <div class="base-clear-row">
+          <label>
+            {{ form_widget(profileForm.baseClear) }}
+            {{ 'form.label_base_clear'|trans }}
+          </label>
+        </div>
       </div>
-      {{ form_widget(profileForm.baseLat) }}
-      {{ form_widget(profileForm.baseLng) }}
-      {{ form_widget(profileForm.basePlace) }}
-      {{ form_help(profileForm.baseQuery) }}
-      {{ form_errors(profileForm.baseQuery) }}
+
       {% if cc_user.hasBaseLocation %}
-        <div class="base-loc-current" data-base-current>
-          {% if base_region_slugs is not empty %}
-            {%- set region_labels = base_region_slugs|map(s => ('region.' ~ s ~ '.label')|trans) -%}
-            {{ 'form.base_current'|trans({'%regions%': region_labels|join(' · ')}) }}
-          {% else %}
-            {# Empty derived set (base outside every seeded region — e.g. a Dutch
-               base today): say so instead of rendering a bare "Your area:".
-               The map-side default for this state is the recorded Phase 5
-               follow-up (region-scoping-design.md §7 Phase 4 review round). #}
-            {{ 'form.base_current_none'|trans }}
-          {% endif %}
+        <div class="field">
+          <div class="base-loc-current" data-base-current>
+            {% if base_region_slugs is not empty %}
+              {%- set region_labels = base_region_slugs|map(s => ('region.' ~ s ~ '.label')|trans) -%}
+              {{ 'form.base_current'|trans({'%regions%': region_labels|join(' · ')}) }}
+            {% else %}
+              {# Empty derived set (base outside every seeded region — e.g. a Dutch
+                 base today): say so instead of rendering a bare "Your area:".
+                 The map-side default for this state is the recorded Phase 5
+                 follow-up (region-scoping-design.md §7 Phase 4 review round). #}
+              {{ 'form.base_current_none'|trans }}
+            {% endif %}
+          </div>
         </div>
       {% endif %}
-
-      <div style="margin-top:.9rem">
-        {{ form_label(profileForm.baseRadiusKm) }}
-      </div>
-      <div class="radius-row">
-        {# baseRadiusKm is unmapped, so the form view's own `value` is always
-           empty on render — Symfony's range widget only emits its own
-           value="..." when that's non-empty (form_div_layout.html.twig
-           form_widget_simple), so this attr.value is the sole one rendered
-           and there is no competing/duplicate value attribute. #}
-        {{ form_widget(profileForm.baseRadiusKm, {attr: {value: cc_user.baseRadiusKm}}) }}
-        <output for="settings_baseRadiusKm" data-radius-output>{{ cc_user.baseRadiusKm }} km</output>
-      </div>
-
-      <div class="base-clear-row">
-        <label>
-          {{ form_widget(profileForm.baseClear) }}
-          {{ 'form.label_base_clear'|trans }}
-        </label>
-      </div>
     </div>
 
     {# ── Riding preferences (bike types + type of riding, spec 2026-07-14) ── #}
