@@ -1,0 +1,25 @@
+Makefile
+  s_085edbe215fabf::t_5b8c8953147635 109-112
+.github/workflows/ci-app.yml
+  s_085edbe215fabf::t_2e232fd4991a4d 45-47
+web/tests/js/scope.test.cjs
+  s_085edbe215fabf::t_d4863cc12ce3b6 1-181
+.github/workflows/ci-tools.yml
+  s_085edbe215fabf::t_b6de0407a86417 17-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8092475d463fb49cb741f02b20f0eb24d3a67fc6",
+  "prompts": {},
+  "sessions": {
+    "s_085edbe215fabf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23bf1945-17b0-4677-b9ed-806199440d71",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
