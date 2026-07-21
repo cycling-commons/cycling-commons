@@ -1,11 +1,12 @@
 # Region scoping, search scope widening, and rider base location — design (working spec)
 
-Status: **proposed** (2026-07-19); **Phases 1–3 executed** (2026-07-19 /
-2026-07-20 / 2026-07-21; see §7), **Phase 2 adversarially reviewed 2026-07-21 —
-all 10 findings fixed** (review round note in §7). Belgium is tessellated
-(Wallonia/Flanders/Brussels); the map, search AND coverage tier are all
-scope-aware — the whole map filters to scope. Phases 4–5 (base location / My
-area; worldwide rollout) not started.
+Status: **proposed** (2026-07-19); **Phases 1–4 executed** (2026-07-19 /
+2026-07-20 / 2026-07-21 / 2026-07-21; see §7), **Phases 2, 3 and 4 each
+adversarially reviewed with all findings fixed** (review round notes in §7).
+Belgium is tessellated (Wallonia/Flanders/Brussels); the map, search AND
+coverage tier are all scope-aware — the whole map filters to scope — and the
+rider base location / My-area default scope is live end-to-end. Phase 5
+(worldwide rollout) not started.
 Multi-agent research + design run; all repo-structural claims below were
 adversarially verified against the codebase (4 corrections from that pass are
 folded in and marked "verified correction" where decision-relevant).
