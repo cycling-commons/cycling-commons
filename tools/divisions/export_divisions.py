@@ -92,19 +92,36 @@ def _connect():
     return con
 
 
+def build_where(cc, cfg):
+    """WHERE clauses + params selecting a country's operating-level LAND areas.
+
+    class='land' (07-20 review finding 4): division_area carries a maritime
+    twin row (territorial waters) for coastal divisions; without the filter a
+    coastal country's export could silently ship a sea polygon as the region
+    and corrupt membership stamping. Belgium happened to be single-row; the
+    first NL/FR/DK seeding would not be.
+
+    bbox: a true OVERLAP test — the old min-corner containment
+    (bbox.xmin BETWEEN …) dropped any region whose min corner fell outside the
+    configured box. Same pushdown benefit; the `missing` guard in
+    export_country still makes a too-small config box fail loud.
+    """
+    where = ["country = ?", "subtype = ?", '"class" = ?']
+    params = [cc, cfg["subtype"], "land"]
+    if cfg.get("bbox"):  # predicate pushdown for fast reads
+        xmin, ymin, xmax, ymax = cfg["bbox"]
+        where += ["bbox.xmin <= ?", "bbox.xmax >= ?", "bbox.ymin <= ?", "bbox.ymax >= ?"]
+        params += [xmax, xmin, ymax, ymin]
+    return where, params
+
+
 def query_country(con, cc, cfg, release):
     """Return [(iso, geojson_str), ...] for a country's operating-level regions.
 
     Geometry only — area is computed geodesically in Python (see geodesic_area_km2).
     """
     path = config.OVERTURE_DIVISION_AREA.format(release=release)
-    where = ["country = ?", "subtype = ?"]
-    params = [cc, cfg["subtype"]]
-    if cfg.get("bbox"):  # predicate pushdown for fast reads
-        xmin, ymin, xmax, ymax = cfg["bbox"]
-        where.append("bbox.xmin BETWEEN ? AND ?")
-        where.append("bbox.ymin BETWEEN ? AND ?")
-        params += [xmin, xmax, ymin, ymax]
+    where, params = build_where(cc, cfg)
     sql = f"""
         SELECT region AS iso,
                ST_AsGeoJSON(geometry) AS geojson
@@ -133,6 +150,15 @@ def export_country(cc, out_dir, release=None, con=None):
             # seed (worldwide guard: seed only configured regions).
             print(f"  skip {iso}: in Overture but not in {cc} config")
             continue
+        if iso in seen:
+            # Never last-wins-overwrite a written artifact (07-20 review
+            # finding 4): >1 land row per ISO means release/schema drift or a
+            # config mistake — a human decides which geometry is the region.
+            raise SystemExit(
+                f"Overture returned multiple land rows for {iso} in {cc} "
+                f"(subtype={cfg['subtype']}, release={release}) — refusing to "
+                f"overwrite region-{cfg['slugs'][iso]}.geojson; inspect the rows."
+            )
         seen.add(iso)
         geom = json.loads(geojson)
         feat = build_feature(iso, cc, geom, geodesic_area_km2(geom), cfg)

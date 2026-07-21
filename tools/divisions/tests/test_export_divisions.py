@@ -11,7 +11,7 @@ import os
 import pytest
 
 from divisions import config
-from divisions.export_divisions import build_feature, export_country
+from divisions.export_divisions import build_feature, build_where, export_country
 
 BE = config.COUNTRY_CONFIG["BE"]
 
@@ -62,6 +62,47 @@ def test_area_km2_is_rounded_int():
 def test_unknown_country_raises():
     with pytest.raises(SystemExit):
         export_country("ZZ", "/tmp/does-not-matter")
+
+
+def test_where_filters_maritime_rows():
+    # 07-20 review finding 4: coastal divisions carry a maritime twin row;
+    # only class='land' geometries may become regions.
+    where, params = build_where("BE", BE)
+    assert '"class" = ?' in where
+    assert params[where.index('"class" = ?')] == "land"
+
+
+def test_where_bbox_is_an_overlap_test():
+    # A region OVERLAPPING the config box must match even when its min corner
+    # lies outside the box (the old BETWEEN-on-min-corner dropped those).
+    where, params = build_where("BE", BE)
+    xmin, ymin, xmax, ymax = BE["bbox"]
+    clauses = dict(zip(where[3:], params[3:]))
+    assert clauses == {
+        "bbox.xmin <= ?": xmax,
+        "bbox.xmax >= ?": xmin,
+        "bbox.ymin <= ?": ymax,
+        "bbox.ymax >= ?": ymin,
+    }
+
+
+def test_where_without_bbox_has_no_pushdown():
+    cfg = dict(BE, bbox=None)
+    where, params = build_where("BE", cfg)
+    assert where == ["country = ?", "subtype = ?", '"class" = ?']
+    assert params == ["BE", cfg["subtype"], "land"]
+
+
+def test_duplicate_iso_rows_fail_loud(monkeypatch, tmp_path):
+    # Two land rows for one ISO must abort, never last-wins-overwrite the
+    # already-written artifact (07-20 review finding 4).
+    square = json.dumps(SQUARE)
+    monkeypatch.setattr(
+        "divisions.export_divisions.query_country",
+        lambda con, cc, cfg, release: [("BE-WAL", square), ("BE-WAL", square)],
+    )
+    with pytest.raises(SystemExit, match="multiple land rows for BE-WAL"):
+        export_country("BE", tmp_path, con=object())
 
 
 @pytest.mark.skipif(os.environ.get("RUN_LIVE_OVERTURE") != "1", reason="hits Overture S3")
