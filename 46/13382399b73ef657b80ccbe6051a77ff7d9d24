@@ -1,0 +1,34 @@
+docs/specs/account-and-auth.md
+  s_b9f6c785e9346d::t_ccb6700b874280 477-483
+web/tests/Auth/AdminAccessTest.php
+  s_b9f6c785e9346d::t_a09201c4d5052b 110-149
+web/src/Controller/Admin/DashboardController.php
+  s_b9f6c785e9346d::t_7b15123c325210 11
+  s_b9f6c785e9346d::t_a26f07a0f392e6 64-80
+web/templates/admin/playbook_email_change.html.twig
+  s_b9f6c785e9346d::t_e248e2a593a2a6 1-31
+web/translations/messages.de.yaml
+  s_b9f6c785e9346d::t_09f5d4d461b260 1627-1628,1673-1687
+web/translations/messages.en.yaml
+  s_b9f6c785e9346d::t_3798a6bda5f626 1631-1632,1677-1691
+web/translations/messages.fr.yaml
+  s_b9f6c785e9346d::t_d4579858562050 1627-1628,1673-1687
+web/translations/messages.nl.yaml
+  s_b9f6c785e9346d::t_4d4d52963f5ebd 1627-1628,1673-1687
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "4613382399b73ef657b80ccbe6051a77ff7d9d24",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
