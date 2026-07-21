@@ -9,7 +9,13 @@
 
 {% block main %}
     <div class="col-lg-8">
-        <p class="text-muted">{{ 'admin.playbook_email.why'|trans }}</p>
+        {# no text-muted here: EasyAdmin's dark theme renders it near-invisible #}
+        <p>{{ 'admin.playbook_email.why'|trans }}</p>
+
+        <div class="alert alert-warning">
+            <i class="fa fa-triangle-exclamation"></i>
+            {{ 'admin.playbook_email.rule'|trans }}
+        </div>
 
         {% set steps = [1, 2, 3, 4, 5] %}
         {% for n in steps %}
@@ -21,11 +27,6 @@
             </div>
         {% endfor %}
 
-        <div class="alert alert-warning">
-            <i class="fa fa-triangle-exclamation"></i>
-            {{ 'admin.playbook_email.rule'|trans }}
-        </div>
-
-        <p class="text-muted small">{{ 'admin.playbook_email.spec'|trans }}</p>
+        <p class="small">{{ 'admin.playbook_email.spec'|trans }}</p>
     </div>
 {% endblock %}
