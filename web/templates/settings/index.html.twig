@@ -294,23 +294,32 @@
       </div>
     </div>
 
-    <div class="toggle">
-      <span class="lab">
-        <b>{{ 'settings.toggle_public_b'|trans }}</b>
-        <small>{{ 'settings.toggle_public_small'|trans }}</small>
-      </span>
-      <label class="sw">
-        {{ form_widget(profileForm.publicProfile, {attr: {class: ''}}) }}
-        <span class="track"></span><span class="knob"></span>
-      </label>
-    </div>
-    {{ form_errors(profileForm.publicProfile) }}
-    <div class="hint" style="margin:.5rem 0 0">
-      {% if cc_user.publicProfile %}
-        <a href="{{ path('rider_profile', {uuid: cc_user.uuid}) }}" target="_blank" rel="noopener">{{ 'settings.view_public'|trans }} ↗</a>
-      {% else %}
-        <span data-view-public-off>{{ 'settings.view_public_off'|trans }}</span>
-      {% endif %}
+    {# Section header like the other .sec headers; the toggle's old bold label
+       is redundant under it, so the row keeps only the description + switch.
+       Two-column split per the rest of the page: toggle left, view-link right. #}
+    <h2 class="sec">{{ 'settings.toggle_public_b'|trans }}</h2>
+    <div class="grid-2">
+      <div class="field">
+        <div class="toggle">
+          <span class="lab">
+            <small>{{ 'settings.toggle_public_small'|trans }}</small>
+          </span>
+          <label class="sw">
+            {{ form_widget(profileForm.publicProfile, {attr: {class: ''}}) }}
+            <span class="track"></span><span class="knob"></span>
+          </label>
+        </div>
+        {{ form_errors(profileForm.publicProfile) }}
+      </div>
+      <div class="field">
+        <div class="hint" style="margin:.85rem 0 0">
+          {% if cc_user.publicProfile %}
+            <a href="{{ path('rider_profile', {uuid: cc_user.uuid}) }}" target="_blank" rel="noopener">{{ 'settings.view_public'|trans }} ↗</a>
+          {% else %}
+            <span data-view-public-off>{{ 'settings.view_public_off'|trans }}</span>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
     <div class="submit-row"><button type="submit" class="btn">{{ 'settings.submit_profile'|trans }}</button></div>
