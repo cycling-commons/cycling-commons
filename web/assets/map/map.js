@@ -3386,6 +3386,51 @@
   });
   window.addEventListener('cc:scopechange', e=>applyScope(e.detail, {fit:true}));
 
+  // Pan-away widen nudge (region-scoping-design.md §4 "Deep links & far panning"):
+  // when a My-area scope is active and the map centre drifts past 1.5× the circle
+  // radius, surface a one-tap widen prompt — NEVER auto-widen, the rider taps. It
+  // hides again once the centre comes back inside; once dismissed or acted on it
+  // stays gone for the rest of the page load (no per-moveend nagging).
+  (function initPanAwayNudge(){
+    if(!window.CCScope) return;
+    let nudge=null, dismissed=false;
+    const build=()=>{
+      nudge=document.createElement('div'); nudge.id='cc-area-nudge'; nudge.className='cc-area-nudge'; nudge.hidden=true;
+      const msg=document.createElement('span'); msg.className='cc-nudge-msg';
+      const go=document.createElement('button'); go.type='button'; go.className='cc-nudge-go';
+      const x=document.createElement('button'); x.type='button'; x.className='cc-nudge-x'; x.textContent='✕';
+      x.setAttribute('aria-label', I18N.areaDismiss||'Dismiss');
+      nudge.append(msg,go,x);
+      (document.querySelector('.map-wrap')||document.body).appendChild(nudge);
+      go.onclick=()=>{ dismissed=true; nudge.hidden=true; window.CCScope.widen(); };   // the rider chose to widen
+      x.onclick=()=>{ dismissed=true; nudge.hidden=true; };
+    };
+    const hide=()=>{ if(nudge) nudge.hidden=true; };
+    const show=()=>{
+      if(!nudge) build();
+      nudge.querySelector('.cc-nudge-msg').textContent = I18N.outsideArea||'Outside your area';
+      const nw=window.CCScope.nextWider();
+      // Reuse the search-widen label so the nudge names the target rung; Everywhere
+      // has no rail label to interpolate, so it reads "Search everywhere".
+      nudge.querySelector('.cc-nudge-go').textContent = (nw && nw.kind==='everywhere')
+        ? (I18N.searchEverywhere||'Search everywhere')
+        : tpl(I18N.searchWiden||'Search in {area} instead', {area:scopeLabel(nw)});
+      nudge.hidden=false;
+    };
+    map.on('moveend',()=>{
+      const s=curScope();
+      if(!s||s.kind!=='myArea'||!s.myArea){ hide(); return; }
+      const c=map.getCenter(), ctr=s.myArea.center;   // ctr = [lat, lng]
+      // Equirectangular ground distance (km) from the map centre to the home
+      // circle centre — plenty accurate at riding scale.
+      const dLat=(c.lat-ctr[0])*111.32;
+      const dLng=(c.lng-ctr[1])*111.32*Math.cos(ctr[0]*Math.PI/180);
+      const dist=Math.sqrt(dLat*dLat+dLng*dLng);
+      if(dist > 1.5*s.myArea.radiusKm){ if(!dismissed) show(); }
+      else hide();
+    });
+  })();
+
   // Exactly one saved bike → preselect the Curated facet (single-valued
   // select; multi-bike riders keep the neutral 'all').
   if(PREFS.bikes.length===1 && boBikeEl && [...boBikeEl.options].some(o=>o.value===PREFS.bikes[0])){
@@ -3413,6 +3458,56 @@
     chip.onclick=flip;
     chip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
     sync();
+  })();
+  // "Set my area" cold-start prompt (region-scoping-design.md §4 / §9.1 Phase 4):
+  // the pref-chip pattern — a hidden rail chip revealed only when the rider has
+  // NO My-area source yet (no base location, no anon circle) AND hasn't dismissed
+  // it. Tapping derives the base from the map centre (Komoot's suggest-home
+  // pattern): a logged-in POST to the base-location endpoint, or an anonymous
+  // localStorage-only circle. Coordinates are rounded to 2 decimals BEFORE they
+  // leave the page (request precision == stored precision — no raw point in the
+  // request or in localStorage; owner privacy invariant). MUST run after the
+  // generic '.grp .chips .chip' toggle binder above (same as initPrefChip), or
+  // that assignment clobbers this chip's onclick with a toggle-only handler.
+  (function initAreaPrompt(){
+    const row=document.getElementById('areaPromptRow');
+    const setChip=document.getElementById('areaPromptSet');
+    const xBtn=document.getElementById('areaPromptX');
+    if(!row||!setChip||!xBtn||!window.CCScope) return;
+    const DISMISS_KEY='cc-area-prompt-dismissed';
+    let dismissed=false; try{ dismissed=!!localStorage.getItem(DISMISS_KEY); }catch(e){}
+    // A My-area already exists (base location or a saved anon circle) → the prompt
+    // is moot; leave it hidden.
+    if(window.CCScope.myAreaAvailable()||dismissed) return;
+    row.hidden=false;
+    const hide=()=>{ row.hidden=true; };
+    const revealMyAreaBtn=()=>{ const mb=document.getElementById('myAreaBtn'); if(mb) mb.hidden=false; };
+    function setMyAreaFromCentre(){
+      const c=map.getCenter();
+      const lat=Math.round(c.lat*100)/100, lng=Math.round(c.lng*100)/100;   // round client-side
+      if(window.CC_MY_AREA && CC_MY_AREA.url){
+        // Logged-in: persist the coarse point server-side (the server rounds again
+        // as the invariant holder) and merge back the derived region/country set.
+        fetch(CC_MY_AREA.url,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CC_MY_AREA.token},body:JSON.stringify({lat,lng})})
+          .then(r=>r.ok?r.json():null)
+          .then(a=>{
+            if(!a) return;                                        // silent degradation — keep the chip
+            window.CC_MY_AREA=Object.assign({},window.CC_MY_AREA,a);
+            revealMyAreaBtn(); window.CCScope.setMyArea(); hide();
+            mapToast(I18N.myAreaSet||'My area saved');
+          })
+          .catch(()=>{ /* network/CSRF failure — leave the chip so the rider can retry */ });
+      } else {
+        // Anonymous: a localStorage-only circle (setAnonCircle rounds to 2dp on
+        // write); NOTHING server-side, no device-location prompt (owner decision).
+        window.CCScope.setAnonCircle(c.lat,c.lng,40);
+        revealMyAreaBtn(); hide();
+        mapToast(I18N.myAreaSetAnon||'My area set on this device');
+      }
+    }
+    setChip.onclick=setMyAreaFromCentre;
+    setChip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setMyAreaFromCentre(); } };
+    xBtn.onclick=()=>{ try{ localStorage.setItem(DISMISS_KEY,'1'); }catch(e){} hide(); };
   })();
   // climb surface + traffic chips actually filter the climbs layer; C2-T8 adds
   // climb effort + stay accessibility to the same wiring (this assignment runs

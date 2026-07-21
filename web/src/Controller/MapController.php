@@ -203,6 +203,13 @@ final class MapController extends AbstractController
             // is used when the base location has no place name.
             'myAreaLine' => $t->trans('map.my_area_line'),
             'myAreaLinePlain' => $t->trans('map.my_area_line_plain'),
+            // Cold-start "Set my area" prompt + pan-away widen nudge
+            // (region-scoping-design.md §4 / §9.1 Phase 4): rendered by map.js.
+            'setMyArea' => $t->trans('map.set_my_area'),
+            'myAreaSet' => $t->trans('map.my_area_set'),
+            'myAreaSetAnon' => $t->trans('map.my_area_set_anon'),
+            'outsideArea' => $t->trans('map.outside_area'),
+            'areaDismiss' => $t->trans('map.area_dismiss'),
             'seasons' => [
                 'spring' => $t->trans('map.season_spring'),
                 'summer' => $t->trans('map.season_summer'),

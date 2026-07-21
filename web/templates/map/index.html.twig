@@ -107,6 +107,16 @@
           {% endfor %}
           <button data-scope="everywhere">{{ 'region.everywhere.label'|trans }}</button>
         </div>
+        {# "Set my area" cold-start prompt (region-scoping-design.md §4 / §9.1
+           Phase 4): the pref-chip pattern — hidden here, revealed by map.js only
+           when the rider has NO My-area source yet (no base location, no anon
+           circle) and hasn't dismissed it. Tapping derives the base from the map
+           centre (Komoot's suggest-home pattern); coordinates are rounded to 2
+           decimals before they ever leave the page. #}
+        <div class="chips cc-area-prompt" id="areaPromptRow" hidden>
+          <span class="chip" id="areaPromptSet" role="button" tabindex="0">{{ 'map.set_my_area'|trans }}</span>
+          <button type="button" class="cc-area-x" id="areaPromptX" aria-label="{{ 'map.area_dismiss'|trans }}">✕</button>
+        </div>
       </div>
       {% endif %}
 
