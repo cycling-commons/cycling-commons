@@ -32,6 +32,29 @@
   .field .hint{font-size:.78rem;color:#595c4d;margin-top:.35rem}
   .field .help-text{font-size:.78rem;color:#595c4d;margin-top:.35rem}
 
+  /* base-location field (region-scoping-design.md §4): Photon town typeahead
+     + radius slider. Map-free — no MapLibre/PMTiles on this page. */
+  .base-loc-wrap{position:relative;max-width:26rem}
+  .base-loc-res{list-style:none;margin:.3rem 0 0;padding:0;max-height:260px;overflow-y:auto;
+    border:1px solid rgba(20,22,14,.18);border-radius:8px;background:var(--paper);
+    position:absolute;left:0;right:0;z-index:5;box-shadow:0 6px 18px rgba(20,22,14,.14)}
+  .base-loc-res li{margin:0}
+  .base-loc-res button{display:flex;align-items:baseline;gap:.5rem;width:100%;text-align:left;
+    background:none;border:none;border-bottom:1px solid rgba(20,22,14,.08);color:var(--ink);
+    font-family:var(--sans);font-size:.88rem;padding:.5rem .6rem;cursor:pointer}
+  .base-loc-res li:last-child button{border-bottom:none}
+  .base-loc-res button:hover,.base-loc-res button:focus-visible{background:rgba(255,90,31,.1)}
+  .base-loc-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
+    text-transform:uppercase;color:#8a8d7d}
+  .base-loc-current{font-size:.82rem;color:#595c4d;margin:.5rem 0 0}
+  .radius-row{display:flex;align-items:center;gap:.9rem;max-width:26rem}
+  .radius-row input[type=range]{flex:1}
+  .radius-row output{font-family:var(--mono);font-size:.78rem;color:var(--ink);min-width:4.5em;text-align:right}
+  .base-clear-row{margin-top:.7rem;display:flex;align-items:center;gap:.5rem}
+  .base-clear-row label{display:flex;align-items:center;gap:.5rem;font-family:var(--sans);
+    font-size:.85rem;color:var(--ink);text-transform:none;letter-spacing:normal;cursor:pointer}
+  .base-clear-row input{margin:0}
+
   /* bike-type/riding-style checkbox chips: same pattern as propose_route.html.twig */
   .chip-list{display:flex;flex-wrap:wrap;gap:.5rem}
   .chip-check{display:inline-flex;margin:0}
@@ -157,6 +180,45 @@
         {{ form_label(profileForm.locale) }}
         {{ form_widget(profileForm.locale) }}
         {{ form_errors(profileForm.locale) }}
+      </div>
+    </div>
+
+    {# ── Base location (region-scoping-design.md §4): Photon town pick + radius.
+       The pin-drop path lives on the map page's "Set my area" — this page stays
+       map-free, so it's a plain text search, not a map click. #}
+    <div class="field">
+      {{ form_label(profileForm.baseQuery) }}
+      <div class="base-loc-wrap">
+        {{ form_widget(profileForm.baseQuery, {attr: {
+          role: 'combobox', 'aria-expanded': 'false', 'aria-controls': 'baseLocRes', autocomplete: 'off',
+        }}) }}
+        <ul class="base-loc-res" id="baseLocRes" role="listbox" hidden></ul>
+      </div>
+      {{ form_widget(profileForm.baseLat) }}
+      {{ form_widget(profileForm.baseLng) }}
+      {{ form_widget(profileForm.basePlace) }}
+      {{ form_help(profileForm.baseQuery) }}
+      {{ form_errors(profileForm.baseQuery) }}
+      {% if cc_user.hasBaseLocation %}
+        <div class="base-loc-current" data-base-current>
+          {%- set region_labels = base_region_slugs|map(s => ('region.' ~ s ~ '.label')|trans) -%}
+          {{ 'form.base_current'|trans({'%regions%': region_labels|join(' · ')}) }}
+        </div>
+      {% endif %}
+
+      <div style="margin-top:.9rem">
+        {{ form_label(profileForm.baseRadiusKm) }}
+      </div>
+      <div class="radius-row">
+        {{ form_widget(profileForm.baseRadiusKm, {attr: {value: cc_user.baseRadiusKm}}) }}
+        <output for="settings_baseRadiusKm" data-radius-output>{{ cc_user.baseRadiusKm }} km</output>
+      </div>
+
+      <div class="base-clear-row">
+        <label>
+          {{ form_widget(profileForm.baseClear) }}
+          {{ 'form.label_base_clear'|trans }}
+        </label>
       </div>
     </div>
 
@@ -326,4 +388,5 @@
 {% include 'partials/_auth_i18n.html.twig' %}
 <script src="{{ asset('js/password-toggle.js') }}" defer></script>
 <script src="{{ asset('js/auth-validate.js') }}" defer></script>
+<script src="{{ asset('settings/base-location.js') }}" defer></script>
 {% endblock %}

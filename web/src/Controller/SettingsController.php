@@ -8,7 +8,10 @@ use App\Entity\User;
 use App\Form\SettingsPasswordType;
 use App\Form\SettingsType;
 use App\Routing\LocalePrefix;
+use App\Service\BaseLocationService;
 use App\Service\UserDeletionService;
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,6 +39,8 @@ final class SettingsController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly UserDeletionService $deletionService,
+        private readonly BaseLocationService $baseLocations,
+        private readonly Connection $db,
     ) {
     }
 
@@ -50,6 +55,39 @@ final class SettingsController extends AbstractController
         $profileForm->handleRequest($request);
 
         if ($profileForm->isSubmitted() && $profileForm->isValid()) {
+            // Base location (region-scoping-design.md §4): unmapped fields, handled
+            // here before flush so the derived region/country set can never drift
+            // from the stored point. The pin-drop path lives on the map page's
+            // "Set my area"; this form only takes a Photon town pick + radius.
+            $lat = $profileForm->get('baseLat')->getData();
+            $lng = $profileForm->get('baseLng')->getData();
+            $radius = $profileForm->get('baseRadiusKm')->getData();
+            if ($profileForm->get('baseClear')->getData()) {
+                $this->baseLocations->clear($user);
+            } elseif (is_numeric($lat) && is_numeric($lng)) {
+                $this->baseLocations->apply(
+                    $user,
+                    (float) $lat,
+                    (float) $lng,
+                    $profileForm->get('basePlace')->getData() ?: null,
+                    is_numeric($radius) ? (int) $radius : $user->getBaseRadiusKm(),
+                );
+            } elseif ($user->hasBaseLocation() && is_numeric($radius) && (int) $radius !== $user->getBaseRadiusKm()) {
+                // Radius-only change (the hidden lat/lng/place fields are never
+                // pre-filled from the entity — only JS fills them on a fresh
+                // Photon pick): re-derive from the STORED coarse point, not from
+                // empty form input.
+                $this->baseLocations->apply(
+                    $user,
+                    (float) $user->getBaseLat(),
+                    (float) $user->getBaseLng(),
+                    $user->getBasePlace(),
+                    (int) $radius,
+                );
+            }
+            // Garbage/absent coords with no radius change fall through here:
+            // the base location is left untouched, the rest of the form still saves.
+
             $this->em->flush();
 
             // Apply the (possibly changed) language choice immediately; clearing it
@@ -96,6 +134,19 @@ final class SettingsController extends AbstractController
             || ($passwordForm->isSubmitted() && !$passwordForm->isValid())
             ? 'security' : 'profile';
 
+        // Current derived area (region-scoping-design.md §4): slugs for the
+        // template, which renders each through the existing region.<slug>.label
+        // keys — the same convention the map's scope selector uses.
+        $baseRegionSlugs = [];
+        if ([] !== $user->getBaseRegionIds()) {
+            /** @var list<string> $baseRegionSlugs */
+            $baseRegionSlugs = $this->db->fetchFirstColumn(
+                'SELECT slug FROM region WHERE id IN (:ids) ORDER BY name',
+                ['ids' => $user->getBaseRegionIds()],
+                ['ids' => ArrayParameterType::INTEGER],
+            );
+        }
+
         return $this->render('settings/index.html.twig', [
             'page_title' => 'meta.settings_title',
             'page_description' => 'meta.settings_description',
@@ -104,6 +155,7 @@ final class SettingsController extends AbstractController
             'profileForm' => $profileForm,
             'passwordForm' => $passwordForm,
             'active_tab' => $activeTab,
+            'base_region_slugs' => $baseRegionSlugs,
         ]);
     }
 

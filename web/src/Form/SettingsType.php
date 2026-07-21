@@ -14,6 +14,8 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\RangeType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -63,6 +65,41 @@ final class SettingsType extends AbstractType
                     ->leftJoin('c.continent', 'cont')->addSelect('cont')
                     ->orderBy('c.name', 'ASC'),
                 'attr' => ['autocomplete' => 'country-name'],
+            ])
+            // Base location (region-scoping-design.md §4): town pick + radius,
+            // unmapped — the controller reads these raw and calls
+            // BaseLocationService::apply()/clear() before flush. baseLat/baseLng/
+            // basePlace are filled by base-location.js from a Photon pick; the
+            // pin-drop path lives on the map page, not here.
+            ->add('baseQuery', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'form.label_base_location',
+                'help' => 'form.help_base_location',
+                'attr' => [
+                    'autocomplete' => 'off',
+                    'data-base-query' => '1',
+                    'placeholder' => 'form.placeholder_base_location',
+                ],
+            ])
+            ->add('baseLat', HiddenType::class, ['mapped' => false, 'required' => false])
+            ->add('baseLng', HiddenType::class, ['mapped' => false, 'required' => false])
+            ->add('basePlace', HiddenType::class, ['mapped' => false, 'required' => false])
+            ->add('baseRadiusKm', RangeType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'form.label_base_radius',
+                'attr' => [
+                    'min' => User::BASE_RADIUS_MIN,
+                    'max' => User::BASE_RADIUS_MAX,
+                    'step' => 5,
+                    'data-base-radius' => '1',
+                ],
+            ])
+            ->add('baseClear', CheckboxType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'form.label_base_clear',
             ])
             ->add('locale', ChoiceType::class, [
                 'label' => 'form.label_language',

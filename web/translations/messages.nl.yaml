@@ -1579,6 +1579,12 @@ form:
   riding_trail: 'Trail / MTB'
   riding_urban: 'Stad / woon-werk'
   riding_leisure: 'Recreatief / gezin'
+  label_base_location: 'Uitvalsbasis (optioneel)'
+  placeholder_base_location: 'Zoek een stad…'
+  help_base_location: 'Stelt je standaard "Mijn omgeving"-kaartweergave in. Opgeslagen op stadsniveau (~1 km nauwkeurig), nooit aan anderen getoond.'
+  label_base_radius: 'Rijradius'
+  label_base_clear: 'Uitvalsbasis verwijderen'
+  base_current: 'Jouw omgeving: %regions%'
 js:
   pw_show: 'Wachtwoord tonen'
   pw_hide: 'Wachtwoord verbergen'

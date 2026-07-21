@@ -4,8 +4,10 @@
 
 namespace App\Tests\Auth;
 
+use App\Catalog\Entity\Region;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\BaseLocationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -340,5 +342,160 @@ final class ProfileSettingsTest extends WebTestCase
 
         $user = $this->fetchUser($email);
         self::assertSame('BE', $user->getCountry()?->getIso2());
+    }
+
+    // ── Base-location tests (region-scoping-design.md §4) ────────────────────
+
+    /**
+     * Region fixture in the open mid-Atlantic (BaseAreaResolverTest's box
+     * idiom) so derivation never collides with real seeded region data.
+     * Contains the coarsened probe point (0.45, -45.85) used below.
+     */
+    private function makeBaseRegion(): Region
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $region = new Region();
+        $region->setSlug('settings-base-test-'.bin2hex(random_bytes(4)))
+            ->setName('Settings base test box')
+            ->setCountryCode('BE')
+            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[-46.00,0.30],[-45.00,0.30],[-45.00,0.60],[-46.00,0.60],[-46.00,0.30]]]]}');
+        $em->persist($region);
+        $em->flush();
+
+        return $region;
+    }
+
+    public function testBaseLocationRoundTripThroughSettingsForm(): void
+    {
+        $client = static::createClient();
+        $this->makeBaseRegion();
+
+        $email = 'base-round@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Base Rider');
+        $this->loginAs($client, $email, $plain);
+
+        $crawler = $client->request('GET', '/settings');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Save profile')->form([
+            'settings[displayName]' => 'Base Rider',
+            'settings[baseLat]' => '0.451234',
+            'settings[baseLng]' => '-45.851234',
+            'settings[basePlace]' => 'Namur',
+            'settings[baseRadiusKm]' => '60',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/settings');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+
+        $user = $this->fetchUser($email);
+        self::assertSame(0.45, $user->getBaseLat());
+        self::assertSame(-45.85, $user->getBaseLng());
+        self::assertSame(60, $user->getBaseRadiusKm());
+        self::assertSame('Namur', $user->getBasePlace());
+        self::assertNotSame([], $user->getBaseRegionIds(), 'derivation should find the fixture region');
+    }
+
+    public function testBaseClearRemovesLocation(): void
+    {
+        $client = static::createClient();
+        $this->makeBaseRegion();
+
+        $email = 'base-clear@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Base Rider');
+        $this->loginAs($client, $email, $plain);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->fetchUser($email);
+        $svc = static::getContainer()->get(BaseLocationService::class);
+        $svc->apply($user, 0.451234, -45.851234, 'Namur', 60);
+        $em->flush();
+        self::assertTrue($user->hasBaseLocation());
+
+        $crawler = $client->request('GET', '/settings');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Save profile')->form([
+            'settings[displayName]' => 'Base Rider',
+            'settings[baseClear]' => true,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/settings');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+
+        $updated = $this->fetchUser($email);
+        self::assertFalse($updated->hasBaseLocation());
+        self::assertSame([], $updated->getBaseRegionIds());
+    }
+
+    public function testRadiusOnlyChangeRederives(): void
+    {
+        $client = static::createClient();
+        $this->makeBaseRegion();
+
+        $email = 'base-radius@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Base Rider');
+        $this->loginAs($client, $email, $plain);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->fetchUser($email);
+        $svc = static::getContainer()->get(BaseLocationService::class);
+        $svc->apply($user, 0.451234, -45.851234, 'Namur', 40);
+        $em->flush();
+
+        $crawler = $client->request('GET', '/settings');
+        self::assertResponseIsSuccessful();
+
+        // Hidden lat/lng/place fields stay empty — only the slider moves — so
+        // the controller must re-derive from the STORED point, not the form.
+        $form = $crawler->selectButton('Save profile')->form([
+            'settings[displayName]' => 'Base Rider',
+            'settings[baseRadiusKm]' => '120',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/settings');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+
+        $updated = $this->fetchUser($email);
+        self::assertSame(120, $updated->getBaseRadiusKm());
+        self::assertSame('Namur', $updated->getBasePlace(), 'place is preserved across a radius-only change');
+        self::assertSame(0.45, $updated->getBaseLat(), 'stored point is unchanged by a radius-only submit');
+        self::assertNotSame([], $updated->getBaseRegionIds(), 'derivation re-ran against the wider radius');
+    }
+
+    public function testGarbageCoordsIgnored(): void
+    {
+        $client = static::createClient();
+
+        $email = 'base-garbage@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Old Name');
+        $this->loginAs($client, $email, $plain);
+
+        $crawler = $client->request('GET', '/settings');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Save profile')->form([
+            'settings[displayName]' => 'New Name',
+            'settings[baseLat]' => 'abc',
+            'settings[baseLng]' => 'xyz',
+        ]);
+        $client->submit($form);
+
+        // Garbage coords are silently ignored — the rest of the form still saves.
+        self::assertResponseRedirects('/settings');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+
+        $user = $this->fetchUser($email);
+        self::assertSame('New Name', $user->getDisplayName());
+        self::assertFalse($user->hasBaseLocation());
     }
 }
