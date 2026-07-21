@@ -112,4 +112,53 @@ final class UserEntityTest extends TestCase
 
         self::assertSame([RidingStyle::Urban], $user->getRidingStyles());
     }
+
+    // ── base location (region-scoping-design.md §3) ─────────────────────────
+
+    public function testBaseLocationIsCoarsenedAtWrite(): void
+    {
+        $u = new User();
+        $u->setBaseLocation(50.467123456, 4.871987654, 'Namur');
+        self::assertSame(50.47, $u->getBaseLat());
+        self::assertSame(4.87, $u->getBaseLng());
+        self::assertSame('Namur', $u->getBasePlace());
+        self::assertTrue($u->hasBaseLocation());
+    }
+
+    public function testBaseRadiusClampsToBounds(): void
+    {
+        $u = new User();
+        self::assertSame(User::BASE_RADIUS_DEFAULT, $u->getBaseRadiusKm());
+        $u->setBaseRadiusKm(5);
+        self::assertSame(User::BASE_RADIUS_MIN, $u->getBaseRadiusKm());
+        $u->setBaseRadiusKm(999);
+        self::assertSame(User::BASE_RADIUS_MAX, $u->getBaseRadiusKm());
+        $u->setBaseRadiusKm(60);
+        self::assertSame(60, $u->getBaseRadiusKm());
+    }
+
+    public function testClearBaseLocationResetsEverything(): void
+    {
+        $u = new User();
+        $u->setBaseLocation(50.47, 4.87, 'Namur');
+        $u->setBaseRadiusKm(80);
+        $u->setBaseRegionIds([1, 24]);
+        $u->setBaseCountryCodes(['BE']);
+        $u->clearBaseLocation();
+        self::assertFalse($u->hasBaseLocation());
+        self::assertNull($u->getBaseLat());
+        self::assertNull($u->getBasePlace());
+        self::assertSame(User::BASE_RADIUS_DEFAULT, $u->getBaseRadiusKm());
+        self::assertSame([], $u->getBaseRegionIds());
+        self::assertSame([], $u->getBaseCountryCodes());
+    }
+
+    public function testBaseRegionIdsToleratesJunkAndDedupes(): void
+    {
+        $u = new User();
+        $u->setBaseRegionIds([3, '7', 3, 0, -2, 'x']);
+        self::assertSame([3, 7], $u->getBaseRegionIds());
+        $u->setBaseCountryCodes(['be', 'NL', 'be', '', 'toolong']);
+        self::assertSame(['BE', 'NL'], $u->getBaseCountryCodes());
+    }
 }

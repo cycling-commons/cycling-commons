@@ -96,6 +96,34 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Country $country = null;
 
+    public const int BASE_RADIUS_DEFAULT = 40;
+    public const int BASE_RADIUS_MIN = 10;
+    public const int BASE_RADIUS_MAX = 150;
+    public const int BASE_COORD_DECIMALS = 2;
+
+    /**
+     * Optional rider base location, COARSE ONLY: coordinates are rounded to
+     * 2 decimals (~1 km) at write time; the raw pick is never persisted
+     * (region-scoping-design.md §4 privacy invariants). GeoJSON Point.
+     */
+    #[ORM\Column(type: 'geometry', nullable: true)]
+    private ?string $basePoint = null;
+
+    /** Town-level label for the scope line ("Near Namur · 40 km"); never public. */
+    #[ORM\Column(type: 'string', length: 120, nullable: true)]
+    private ?string $basePlace = null;
+
+    #[ORM\Column(type: 'smallint')]
+    private int $baseRadiusKm = self::BASE_RADIUS_DEFAULT;
+
+    /** @var list<int> derived region ids (ST_DWithin, cap 8) — recomputed on save + region import */
+    #[ORM\Column(type: 'json')]
+    private array $baseRegionIds = [];
+
+    /** @var list<string> derived ISO 3166-1 alpha-2 codes of those regions */
+    #[ORM\Column(type: 'json')]
+    private array $baseCountryCodes = [];
+
     // Preferred UI language (short code: en|fr|nl|de). Null = follow the
     // language switcher / browser / site default.
     #[ORM\Column(type: 'string', length: 5, nullable: true)]
@@ -368,6 +396,138 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setCountry(?Country $country): static
     {
         $this->country = $country;
+
+        return $this;
+    }
+
+    public function setBaseLocation(float $lat, float $lng, ?string $place): static
+    {
+        $lat = round($lat, self::BASE_COORD_DECIMALS);
+        $lng = round($lng, self::BASE_COORD_DECIMALS);
+        $this->basePoint = json_encode(
+            ['type' => 'Point', 'coordinates' => [$lng, $lat]],
+            JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION,
+        );
+        $this->basePlace = null !== $place ? mb_substr(trim($place), 0, 120) : null;
+        if ('' === $this->basePlace) {
+            $this->basePlace = null;
+        }
+
+        return $this;
+    }
+
+    public function clearBaseLocation(): static
+    {
+        $this->basePoint = null;
+        $this->basePlace = null;
+        $this->baseRadiusKm = self::BASE_RADIUS_DEFAULT;
+        $this->baseRegionIds = [];
+        $this->baseCountryCodes = [];
+
+        return $this;
+    }
+
+    public function hasBaseLocation(): bool
+    {
+        return null !== $this->basePoint;
+    }
+
+    /** @return array{0: float, 1: float}|null [lat, lng] */
+    private function baseCoords(): ?array
+    {
+        if (null === $this->basePoint) {
+            return null;
+        }
+        try {
+            $g = json_decode($this->basePoint, true, 8, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return null;
+        }
+        $c = $g['coordinates'] ?? null;
+        if (!\is_array($c) || !\is_numeric($c[0] ?? null) || !\is_numeric($c[1] ?? null)) {
+            return null;
+        }
+
+        return [(float) $c[1], (float) $c[0]];
+    }
+
+    public function getBaseLat(): ?float
+    {
+        return $this->baseCoords()[0] ?? null;
+    }
+
+    public function getBaseLng(): ?float
+    {
+        return $this->baseCoords()[1] ?? null;
+    }
+
+    public function getBasePlace(): ?string
+    {
+        return $this->basePlace;
+    }
+
+    public function getBaseRadiusKm(): int
+    {
+        return max(self::BASE_RADIUS_MIN, min(self::BASE_RADIUS_MAX, $this->baseRadiusKm));
+    }
+
+    public function setBaseRadiusKm(int $km): static
+    {
+        $this->baseRadiusKm = max(self::BASE_RADIUS_MIN, min(self::BASE_RADIUS_MAX, $km));
+
+        return $this;
+    }
+
+    /** @return list<int> */
+    public function getBaseRegionIds(): array
+    {
+        $out = [];
+        foreach ($this->baseRegionIds as $id) {
+            if (is_numeric($id) && (int) $id > 0 && !\in_array((int) $id, $out, true)) {
+                $out[] = (int) $id;
+            }
+        }
+
+        return $out;
+    }
+
+    /** @param array<int|string> $ids */
+    public function setBaseRegionIds(array $ids): static
+    {
+        $clean = [];
+        foreach ($ids as $id) {
+            if (is_numeric($id) && (int) $id > 0 && !\in_array((int) $id, $clean, true)) {
+                $clean[] = (int) $id;
+            }
+        }
+        $this->baseRegionIds = $clean;
+
+        return $this;
+    }
+
+    /** @return list<string> */
+    public function getBaseCountryCodes(): array
+    {
+        $out = [];
+        foreach ($this->baseCountryCodes as $cc) {
+            if (\is_string($cc) && 1 === preg_match('/^[A-Za-z]{2}$/D', $cc) && !\in_array(strtoupper($cc), $out, true)) {
+                $out[] = strtoupper($cc);
+            }
+        }
+
+        return $out;
+    }
+
+    /** @param array<string> $ccs */
+    public function setBaseCountryCodes(array $ccs): static
+    {
+        $clean = [];
+        foreach ($ccs as $cc) {
+            if (\is_string($cc) && 1 === preg_match('/^[A-Za-z]{2}$/D', $cc) && !\in_array(strtoupper($cc), $clean, true)) {
+                $clean[] = strtoupper($cc);
+            }
+        }
+        $this->baseCountryCodes = $clean;
 
         return $this;
     }
