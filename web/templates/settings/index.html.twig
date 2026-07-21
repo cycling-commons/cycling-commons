@@ -210,6 +210,11 @@
         {{ form_label(profileForm.baseRadiusKm) }}
       </div>
       <div class="radius-row">
+        {# baseRadiusKm is unmapped, so the form view's own `value` is always
+           empty on render — Symfony's range widget only emits its own
+           value="..." when that's non-empty (form_div_layout.html.twig
+           form_widget_simple), so this attr.value is the sole one rendered
+           and there is no competing/duplicate value attribute. #}
         {{ form_widget(profileForm.baseRadiusKm, {attr: {value: cc_user.baseRadiusKm}}) }}
         <output for="settings_baseRadiusKm" data-radius-output>{{ cc_user.baseRadiusKm }} km</output>
       </div>

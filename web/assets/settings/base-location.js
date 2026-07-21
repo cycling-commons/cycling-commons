@@ -74,12 +74,17 @@
 
   function runPhoton(qRaw) {
     var q = qRaw.trim();
+    // Abort any in-flight request unconditionally, even when the query has
+    // since dropped below the length threshold below — otherwise a request
+    // started at >=3 chars can still resolve after the user deletes back
+    // below 3 (its signal was never aborted) and reopen the dropdown with
+    // results that no longer match the visible input.
+    if (abortCtl) abortCtl.abort();
     if (q.length < 3) {
       hits = [];
       closeResults();
       return;
     }
-    if (abortCtl) abortCtl.abort();
     var ctl = new AbortController();
     abortCtl = ctl;
     var url = PH_BASE + '&q=' + encodeURIComponent(q);
