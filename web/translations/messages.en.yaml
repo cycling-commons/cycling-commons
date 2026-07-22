@@ -594,8 +594,42 @@ region:
     label: 'Zeeland'
   zuid-holland:
     label: 'South Holland'
+  baden-wurttemberg:
+    label: 'Baden-Württemberg'
+  bayern:
+    label: 'Bavaria'
+  berlin:
+    label: 'Berlin'
+  brandenburg:
+    label: 'Brandenburg'
+  bremen:
+    label: 'Bremen'
+  hamburg:
+    label: 'Hamburg'
+  hessen:
+    label: 'Hesse'
+  mecklenburg-vorpommern:
+    label: 'Mecklenburg-Western Pomerania'
+  niedersachsen:
+    label: 'Lower Saxony'
+  nordrhein-westfalen:
+    label: 'North Rhine-Westphalia'
+  rheinland-pfalz:
+    label: 'Rhineland-Palatinate'
+  saarland:
+    label: 'Saarland'
+  sachsen:
+    label: 'Saxony'
+  sachsen-anhalt:
+    label: 'Saxony-Anhalt'
+  schleswig-holstein:
+    label: 'Schleswig-Holstein'
+  thuringen:
+    label: 'Thuringia'
   all_nl:
     label: 'All Netherlands'
+  all_de:
+    label: 'All Germany'
   everywhere:
     label: 'Everywhere'
   kicker: 'BE · Wallonia · region atlas'

@@ -63,4 +63,30 @@ COUNTRY_CONFIG = {
         },
         "bbox": [3.2, 50.7, 7.3, 53.6],
     },
+    # subtype=region -> ISO 3166-2 (16 Bundesländer). Slugs are native identity
+    # (mirrors NL's noord-holland convention); `names` carry the English exonym
+    # placeholder — rider-facing labels come from the messages domain (4 locales).
+    # No collisions with BE/NL slugs. bbox = mainland Germany.
+    "DE": {
+        "subtype": "region",
+        "slugs": {
+            "DE-BW": "baden-wurttemberg", "DE-BY": "bayern", "DE-BE": "berlin",
+            "DE-BB": "brandenburg", "DE-HB": "bremen", "DE-HH": "hamburg",
+            "DE-HE": "hessen", "DE-MV": "mecklenburg-vorpommern",
+            "DE-NI": "niedersachsen", "DE-NW": "nordrhein-westfalen",
+            "DE-RP": "rheinland-pfalz", "DE-SL": "saarland", "DE-SN": "sachsen",
+            "DE-ST": "sachsen-anhalt", "DE-SH": "schleswig-holstein",
+            "DE-TH": "thuringen",
+        },
+        "names": {
+            "DE-BW": "Baden-Württemberg", "DE-BY": "Bavaria", "DE-BE": "Berlin",
+            "DE-BB": "Brandenburg", "DE-HB": "Bremen", "DE-HH": "Hamburg",
+            "DE-HE": "Hesse", "DE-MV": "Mecklenburg-Western Pomerania",
+            "DE-NI": "Lower Saxony", "DE-NW": "North Rhine-Westphalia",
+            "DE-RP": "Rhineland-Palatinate", "DE-SL": "Saarland", "DE-SN": "Saxony",
+            "DE-ST": "Saxony-Anhalt", "DE-SH": "Schleswig-Holstein",
+            "DE-TH": "Thuringia",
+        },
+        "bbox": [5.77, 47.17, 15.14, 55.16],
+    },
 }

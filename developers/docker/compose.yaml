@@ -85,7 +85,7 @@ services:
       # Coverage batch (docs/specs/coverage-provider.md §3).
       # Defaults target the bundled MinIO (profile: storage, root creds from
       # .env); prod overrides point at the CC Hetzner bucket.
-      COVERAGE_REGIONS: ${COVERAGE_REGIONS:-europe/belgium,europe/netherlands}
+      COVERAGE_REGIONS: ${COVERAGE_REGIONS:-europe/belgium,europe/netherlands,europe/germany}
       COVERAGE_WORKDIR: /data/work
       COVERAGE_PBF_PATH: ${COVERAGE_PBF_PATH:-}
       COVERAGE_S3_ENDPOINT: ${COVERAGE_S3_ENDPOINT:-http://minio:9000}

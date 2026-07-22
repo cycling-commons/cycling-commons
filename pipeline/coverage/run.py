@@ -28,7 +28,7 @@ from .tiles import build_pmtiles, export_geojsonl, verify_pmtiles
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 # country_code stamped per extract (coverage-provider.md §2 country_code column);
 # extend per region.
-COUNTRY_BY_REGION = {"europe/belgium": "BE", "europe/netherlands": "NL"}
+COUNTRY_BY_REGION = {"europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE"}
 
 
 def _md5(path: pathlib.Path) -> str:
@@ -74,12 +74,12 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Weekly coverage batch (PostGIS index + PMTiles)")
     ap.add_argument("--regions",
-                    help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands)")
+                    help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands,europe/germany)")
     args = ap.parse_args(argv)
     # Code-level fallback mirrors the shipped .env.example / compose default so
     # an env-less invocation still covers every onboarded region, not just BE.
     regions = [r.strip() for r in
-               (args.regions or os.environ.get("COVERAGE_REGIONS", "europe/belgium,europe/netherlands")).split(",")
+               (args.regions or os.environ.get("COVERAGE_REGIONS", "europe/belgium,europe/netherlands,europe/germany")).split(",")
                if r.strip()]
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
