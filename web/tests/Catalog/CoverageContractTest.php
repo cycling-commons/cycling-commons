@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Tests\Catalog;
 
 use App\Catalog\ServiceKind;
+use App\Coverage\CoverageRepository;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 final class CoverageContractTest extends TestCase
 {
     /**
-     * @return array{version: int, letters: array<string, array{selectors: list<array{tag: string, label: string}>, tileProps: list<string>}>, serviceKind: array<string, string>}
+     * @return array{version: int, letters: array<string, array{selectors: list<array{tag: string, label: string}>, tileProps: list<string>}>, serviceKind: array<string, string>, universalTileProps: list<string>, storedTagKeys: list<string>}
      */
     private function loadContract(): array
     {
@@ -31,7 +32,7 @@ final class CoverageContractTest extends TestCase
             self::markTestSkipped('pipeline/contract/coverage-contract.json is not present in this checkout');
         }
 
-        /* @var array{version: int, letters: array<string, array{selectors: list<array{tag: string, label: string}>, tileProps: list<string>}>, serviceKind: array<string, string>} */
+        /* @var array{version: int, letters: array<string, array{selectors: list<array{tag: string, label: string}>, tileProps: list<string>}>, serviceKind: array<string, string>, universalTileProps: list<string>, storedTagKeys: list<string>} */
         return json_decode((string) file_get_contents($path), true, flags: \JSON_THROW_ON_ERROR);
     }
 
@@ -107,5 +108,41 @@ final class CoverageContractTest extends TestCase
         // layer by pipeline tiles.py::_letter_sql; per-letter tileProps stay
         // extras-only.
         self::assertSame(['ref', 'n', 't', 'ridtok', 'cctok'], $this->loadContract()['universalTileProps']);
+    }
+
+    public function testEveryWhitelistedDisplayTagIsActuallyStored(): void
+    {
+        // The drawer can only ever render what the pipeline stored: the detail
+        // endpoint is served purely from coverage_poi, with no live OSM fallback
+        // anywhere in the request path (coverage-provider.md §5). So a key in
+        // TAG_WHITELIST that the pipeline trims away is a permanently blank
+        // drawer row - this test is what makes the two halves one contract.
+        $stored = $this->loadContract()['storedTagKeys'];
+
+        foreach (CoverageRepository::TAG_WHITELIST as $tag) {
+            self::assertContains($tag, $stored, sprintf(
+                'TAG_WHITELIST carries "%s" but storedTagKeys does not: the drawer would ask for a tag the cache never stores',
+                $tag,
+            ));
+        }
+    }
+
+    public function testStoredTagKeysAreSortedUniqueAndExcludePersonalData(): void
+    {
+        $stored = $this->loadContract()['storedTagKeys'];
+
+        self::assertSame(array_values(array_unique($stored)), $stored, 'storedTagKeys must be unique');
+        $sorted = $stored;
+        sort($sorted);
+        self::assertSame($sorted, $stored, 'storedTagKeys must be sorted (reviewable diffs)');
+
+        // Deliberate exclusions, not oversights (coverage-provider.md §2).
+        // `name` is promoted to the coverage_poi.name column. `email` is ~99 %
+        // redundant against website/phone and is frequently a private mailbox,
+        // so storing it would put personal data in a dataset we describe as
+        // non-personal - without any drawer ever showing it.
+        foreach (['name', 'email', 'contact:email'] as $excluded) {
+            self::assertNotContains($excluded, $stored);
+        }
     }
 }

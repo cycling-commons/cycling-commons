@@ -95,6 +95,72 @@ def test_kind_for_matches_service_kind_rules():
     assert contract.kind_for({"tourism": "hotel"}) is None
 
 
+def test_stored_tag_keys_are_sorted_unique_and_exclude_name():
+    # Sorted + unique keeps contract diffs reviewable. `name` must never appear:
+    # it is promoted to the dedicated coverage_poi.name column and stripped from
+    # tags (commit d2ce930) — listing it here would silently reintroduce the
+    # duplication on every named row.
+    keys = load_contract().stored_tag_keys
+    assert keys == sorted(set(keys))
+    assert "name" not in keys
+    # Deliberate exclusions, not oversights (coverage-provider.md §2): email is
+    # ~99 % redundant against website/phone and is often a private mailbox.
+    for excluded in ("email", "contact:email", "addr:postcode"):
+        assert excluded not in keys
+
+
+def test_stored_tag_keys_cover_every_selector_key():
+    # A selector key that isn't stored would classify the row at parse time and
+    # then vanish, breaking tiles.py::_label_case on the next tile build.
+    contract = load_contract()
+    selector_keys = {
+        sel.key for spec in contract.letters.values() for sel in spec.selectors
+    }
+    assert selector_keys <= set(contract.stored_tag_keys)
+
+
+def test_stored_tag_keys_cover_the_tile_derived_keys():
+    # tiles.py::_EXTRA_SQL reads these back out of tags when building the
+    # per-letter tile properties; test_tiles.py pins the constant to _EXTRA_SQL.
+    from coverage.contract import TILE_DERIVED_TAG_KEYS
+    assert TILE_DERIVED_TAG_KEYS <= set(load_contract().stored_tag_keys)
+
+
+def test_rejects_contract_missing_stored_tag_keys(tmp_path):
+    raw = _raw()
+    del raw["storedTagKeys"]
+    with pytest.raises(ValueError, match="storedTagKeys"):
+        load_contract(_reload(tmp_path, raw))
+
+
+def test_rejects_stored_tag_keys_dropping_a_selector_key(tmp_path):
+    raw = _raw()
+    raw["storedTagKeys"] = [k for k in raw["storedTagKeys"] if k != "historic"]
+    with pytest.raises(ValueError, match="selector key"):
+        load_contract(_reload(tmp_path, raw))
+
+
+def test_rejects_stored_tag_keys_dropping_a_tile_derived_key(tmp_path):
+    raw = _raw()
+    raw["storedTagKeys"] = [k for k in raw["storedTagKeys"] if k != "wheelchair"]
+    with pytest.raises(ValueError, match="tile"):
+        load_contract(_reload(tmp_path, raw))
+
+
+def test_rejects_unsorted_stored_tag_keys(tmp_path):
+    raw = _raw()
+    raw["storedTagKeys"] = list(reversed(raw["storedTagKeys"]))
+    with pytest.raises(ValueError, match="sorted"):
+        load_contract(_reload(tmp_path, raw))
+
+
+def test_rejects_stored_tag_keys_carrying_name(tmp_path):
+    raw = _raw()
+    raw["storedTagKeys"] = sorted([*raw["storedTagKeys"], "name"])
+    with pytest.raises(ValueError, match="name"):
+        load_contract(_reload(tmp_path, raw))
+
+
 def test_rejects_contract_missing_a_catalogue_letter(tmp_path):
     raw = _raw()
     del raw["letters"]["J"]

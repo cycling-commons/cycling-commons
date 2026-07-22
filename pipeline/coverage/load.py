@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
     kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
     name          varchar(255),           -- OSM name tag, NULL when unnamed
     geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
-    tags          jsonb        NOT NULL,  -- full filtered tag subset (drawer + Plan 3/4 source)
+    tags          jsonb        NOT NULL,  -- trimmed to contract storedTagKeys (parse.py), NOT the object's full tag set
     osm_version   int,                    -- upstream version (Plan 3 materialization snapshot)
     osm_ts        timestamptz,            -- upstream last-edit timestamp
     src_region_id smallint     NOT NULL REFERENCES coverage_source(id), -- harvest extract (normalized)

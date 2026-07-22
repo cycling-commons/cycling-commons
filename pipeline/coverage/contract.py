@@ -19,6 +19,12 @@ CONTRACT_PATH = pathlib.Path(__file__).resolve().parents[1] / "contract" / "cove
 # data and stays out of the coverage artifact; B/F/K are category-3.
 LETTERS = frozenset("CDEGHIJ")
 
+# Tag keys tiles.py::_EXTRA_SQL reads back out of `tags` when it builds the
+# per-letter tile properties. They must survive the storedTagKeys trim or the
+# derived tile column is silently always NULL; load_contract enforces that, and
+# test_tiles.py pins this constant to the SQL so the two cannot drift.
+TILE_DERIVED_TAG_KEYS = frozenset({"amenity", "drinking_water", "wheelchair"})
+
 
 @dataclass(frozen=True)
 class Selector:
@@ -45,6 +51,15 @@ class Contract:
     # extras live in LetterSpec.tile_props; these are implicit and universal,
     # emitted by tiles.py::_letter_sql for every letter.
     universal_tile_props: list[str]
+    # The ONLY tag keys parse.py writes into coverage_poi.tags — the serve-set
+    # of the narrow serving cache (osm-data-architecture.md §1 principle 4,
+    # coverage-provider.md §2). `osmium tags-filter` selects OBJECTS, not keys,
+    # so a matching object arrives with every tag it carries; without this trim
+    # the cache stores ~4,200 distinct keys of which nothing reads more than 27.
+    # Three groups: selector keys (classification + tiles.py label), the drawer's
+    # TAG_WHITELIST, and the provisional media/reference group. `name` is absent
+    # by design — it is promoted to the coverage_poi.name column.
+    stored_tag_keys: list[str]
 
     def letters_for(self, tags: dict) -> list[str]:
         """Letters whose selectors match `tags`, in catalogue order (one object
@@ -121,4 +136,28 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
             "tiles.py::_letter_sql emits exactly these on every layer, and "
             "_universal_props asserts equality so the two never drift")
 
-    return Contract(letters=letters, service_kind=service_kind, universal_tile_props=universal)
+    if "storedTagKeys" not in raw:
+        raise ValueError("contract missing top-level \"storedTagKeys\" key")
+    stored = list(raw["storedTagKeys"])
+    if stored != sorted(set(stored)):
+        raise ValueError("storedTagKeys must be sorted and unique (reviewable diffs)")
+    if "name" in stored:
+        raise ValueError(
+            "storedTagKeys must not list \"name\": it is promoted to the "
+            "coverage_poi.name column and stripped from tags (coverage-provider.md §2)")
+    selector_keys = {sel.key for spec in letters.values() for sel in spec.selectors}
+    if missing := sorted(selector_keys - set(stored)):
+        raise ValueError(
+            f"storedTagKeys drops selector key(s) {missing} — a row classified by a "
+            "key that is not stored loses it before tiles.py::_label_case runs")
+    if missing := sorted(TILE_DERIVED_TAG_KEYS - set(stored)):
+        raise ValueError(
+            f"storedTagKeys drops tile-derived key(s) {missing} — tiles.py::_EXTRA_SQL "
+            "reads them back out of tags, so the derived property would always be NULL")
+
+    return Contract(
+        letters=letters,
+        service_kind=service_kind,
+        universal_tile_props=universal,
+        stored_tag_keys=stored,
+    )

@@ -51,6 +51,29 @@ def test_multi_letter_object_yields_one_row_per_letter(rows):
     assert row_a.tags is not row_b.tags
 
 
+def test_tags_trimmed_to_the_contract_stored_set(rows, contract):
+    # osmium tags-filter selects OBJECTS, not keys, so a matching object arrives
+    # carrying every tag it has. parse.py trims to contract.stored_tag_keys —
+    # the serve-set (coverage-provider.md §2): selector keys (classification),
+    # TAG_WHITELIST keys (drawer), and the media/reference group.
+    (castle,) = _by_ref(rows)["node/105"]
+    assert castle.tags == {
+        "historic": "castle",              # selector — drives the J letter + tile label
+        "website": "https://chateau-veves.example",   # TAG_WHITELIST — drawer
+        "wheelchair": "limited",           # TAG_WHITELIST + tiles.py `acc`
+        "wikidata": "Q1857286",            # media/reference group
+        "image": "https://commons.example/veves.jpg",
+    }
+    assert castle.name == "Château de Vêves"  # promoted to the column, not in tags
+    # Everything else the object carried is dropped at parse time, so it never
+    # reaches the cache: dead weight (inscription/building), personal data
+    # (person:date_of_birth), and the deliberately-excluded email.
+    for dropped in ("name", "inscription", "person:date_of_birth", "email",
+                    "addr:postcode", "building"):
+        assert dropped not in castle.tags
+    assert set(castle.tags) <= set(contract.stored_tag_keys)
+
+
 def test_way_reduces_to_centroid(rows):
     (way,) = _by_ref(rows)["way/201"]
     assert way.letter == "E"

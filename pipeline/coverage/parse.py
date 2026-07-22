@@ -27,7 +27,7 @@ class PoiRow:
     name: str | None
     lon: float
     lat: float
-    tags: dict[str, str]              # full tag dict of the filtered object
+    tags: dict[str, str]              # object's tags trimmed to contract.stored_tag_keys
     osm_version: int | None           # upstream version (Plan 3 snapshot source)
     osm_ts: datetime.datetime | None  # upstream last-edit timestamp
     src_region: str
@@ -42,6 +42,9 @@ class _Collector(osmium.SimpleHandler):
         self._contract = contract
         self._src_region = src_region
         self._country_code = country_code
+        # Set for O(1) membership in the per-object trim below (hot path: every
+        # tag of every matching object in the extract).
+        self._stored_keys = frozenset(contract.stored_tag_keys)
         self.rows: list[PoiRow] = []
 
     def node(self, n) -> None:
@@ -74,13 +77,20 @@ class _Collector(osmium.SimpleHandler):
                 name=tags.get("name"),
                 lon=lon,
                 lat=lat,
-                # Per-row copy MINUS `name`: the name is promoted to the dedicated
-                # column above, and nothing reads tags->>'name' back (the detail
-                # endpoint's TAG_WHITELIST excludes it) — so storing it in tags is
-                # pure duplication of the authoritative column on every named row
-                # (coverage-provider.md §2). Each sibling still gets its own dict
-                # (mutating one row can't corrupt another).
-                tags={k: v for k, v in tags.items() if k != "name"},
+                # Trimmed to the contract's serve-set. `osmium tags-filter`
+                # selects OBJECTS, not keys, so `tags` here is the object's FULL
+                # tag dict — a single memorial can arrive with 20 keys. Storing
+                # all of them made coverage_poi a bulk OSM copy, which
+                # osm-data-architecture.md §1 principle 1 forbids and principle 4
+                # replaces with a narrow serving cache; measured at 3 countries,
+                # 52 % of the stored tags payload was keys nothing reads
+                # (coverage-provider.md §2). `name` is excluded by the contract
+                # (promoted to the dedicated column), as is `email` (redundant
+                # against website/phone, and often a private mailbox — storing
+                # personal data we never serve is the liability without the
+                # benefit). Each sibling row still gets its own dict, so a
+                # consumer mutating one row's tags can't corrupt another.
+                tags={k: v for k, v in tags.items() if k in self._stored_keys},
                 osm_version=obj.version or None,
                 osm_ts=obj.timestamp if obj.version else None,
                 src_region=self._src_region,

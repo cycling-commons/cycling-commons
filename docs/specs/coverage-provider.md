@@ -117,9 +117,43 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   cache/OSM at read time** — it needs no per-row full-tag snapshot. So carrying a
   rich tag copy for all rows is the bulk-OSM duplication principle 1 forbids, and
   at the ~4.7 M planet-wide subset it is the table's dominant cost. Target: trim
-  `tags` to the true serve-set. Redundancy to remove first — `tags->>'name'`
-  duplicates the authoritative `name` column on 100 % of named rows (done
-  2026-07-22, commit `d2ce930`). Tracked in the storage backlog.
+  `tags` to the true serve-set. **Done 2026-07-23** — see the storage policy
+  below.
+- **Storage policy: store only what we serve.** `tags` holds exactly the
+  contract's `storedTagKeys`, applied at parse time
+  (`pipeline/coverage/parse.py`). This matters because `osmium tags-filter`
+  selects **objects, not keys**: a matching object arrives carrying every tag it
+  has, so without a trim a single memorial contributed 20 keys. Measured across
+  BE + NL + DE (375,078 rows) the cache held **4,220 distinct keys** of which
+  nothing read more than 27; trimming cut the tags payload **73 MB → 35 MB
+  (-51.7 %, 203 → 98 B/row)**, taking the whole row from 517 → 412 B.
+  The keep-set is three groups:
+  1. **Selector keys** (9) — classification; `tiles.py::_label_case` reads them
+     back at tile-build time.
+  2. **`TAG_WHITELIST`** (14) — exactly what the drawer displays (§5).
+  3. **Media/reference** (4) — `wikidata`, `wikipedia`, `image`,
+     `wikimedia_commons`; **provisional**, kept pending a review of whether we
+     actually use them (they cost 19 B/row, ≈ 89 MB at planet scale).
+
+  Two deliberate exclusions, both enforced by tests rather than convention:
+  `name` (promoted to the `name` column, commit `d2ce930`), and **`email` /
+  `contact:email`** — 98.6 % of rows carrying one also have a website or phone,
+  and 12.6 % of the addresses sit on free consumer providers, i.e. private
+  mailboxes. Storing personal data the drawer never renders is liability without
+  benefit, and it would undercut the "the Commons dataset is non-personal"
+  claim in the privacy copy. `addr:postcode` is out on the same
+  store-only-what-we-serve rule.
+
+  The policy is load-bearing rather than cosmetic because **the drawer has no
+  live-OSM fallback** — `/map/coverage/poi/{ref}` is served purely from
+  `coverage_poi` (§5), so a key that is not stored can never be displayed.
+  `load_contract()` therefore refuses a `storedTagKeys` that drops a selector key
+  or a key `tiles.py::_EXTRA_SQL` reads, and
+  `web/tests/Catalog/CoverageContractTest.php` asserts
+  `TAG_WHITELIST ⊆ storedTagKeys` so the two halves cannot drift.
+  **Changing the keep-set requires a re-harvest** to take effect on existing
+  rows (weekly cadence, so cheap — but decide once rather than re-harvesting
+  twice).
 - **Measured sizing (2026-07-23).** At 375,078 rows (BE + NL + DE, compacted):
   **341 B/row heap + 176 B/row indexes = 517 B/row**, and the per-row figure is
   stable across countries (tags average 205 B/row in DE, 199 in BE, 197 in NL —
@@ -463,19 +497,34 @@ source of truth for the mapping both languages need:
  "letters": {"C": {"selectors": [{"tag": "amenity=drinking_water", "label": "Drinking water"}, …],
              "tileProps": […]}, …},
  "serviceKind": {"shop=bicycle": "shop", "amenity=bicycle_repair_station": "station",
-                 "amenity=compressed_air": "pump"}}
+                 "amenity=compressed_air": "pump"},
+ "universalTileProps": ["ref", "n", "t", "ridtok", "cctok"],
+ "storedTagKeys": ["addr:city", "amenity", …]}
 ```
 
 - `letters` keys are exactly `C D E G H I J` — the
   [osm-data-architecture.md §5](osm-data-architecture.md) point catalogue.
+- `storedTagKeys` is the **serve-set**: the only tag keys `parse.py` writes into
+  `coverage_poi.tags` (§2 storage policy). Sorted + unique, and validated on
+  load — `load_contract()` raises if it drops a selector key, drops a key
+  `tiles.py::_EXTRA_SQL` reads (`contract.py::TILE_DERIVED_TAG_KEYS`, itself
+  pinned to that SQL by `pipeline/tests/test_tiles.py`), or lists `name`.
 - The **Python job consumes it** (`pipeline/coverage/contract.py::load_contract`,
   dataclasses `Selector`/`LetterSpec`/`Contract` with `letters_for(tags)` and
   `kind_for(tags)`); PHP never reads it at runtime.
 - **PHP tests pin it** (`web/tests/Catalog/CoverageContractTest.php`): the
   `serviceKind` rules must resolve identically through
   `App\Catalog\ServiceKind::fromOsmTags()`, every PHP kind must be reachable,
-  and the D selectors must be exactly the `serviceKind` rule set. The test
-  skips (not fails) when the file is absent so `web/` stays runnable alone.
+  the D selectors must be exactly the `serviceKind` rule set, and
+  **`CoverageRepository::TAG_WHITELIST ⊆ storedTagKeys`** — the drawer can only
+  render what the pipeline stored, and there is no live-OSM fallback to cover a
+  gap. The test skips (not fails) when the file is absent so `web/` stays
+  runnable alone.
+  ⚠️ That skip means this guard only fires where the whole repo is checked out.
+  It is **not** currently reached on a contract-only change: `ci-app.yml` triggers
+  on `web/**` and `ci-tools.yml` on `tools/**`, so nothing under `pipeline/**`
+  triggers any workflow (the pipeline's own pytest suite does not run in CI at
+  all). Tracked in the storage backlog.
 - Result: the Python extractor and the Symfony serving plane cannot drift —
   one mapping, asserted from both sides.
 

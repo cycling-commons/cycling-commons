@@ -79,5 +79,13 @@
         "amenity=bicycle_repair_station": "station",
         "amenity=compressed_air": "pump"
     },
-    "universalTileProps": ["ref", "n", "t", "ridtok", "cctok"]
+    "universalTileProps": ["ref", "n", "t", "ridtok", "cctok"],
+    "storedTagKeys": [
+        "addr:city", "addr:housenumber", "addr:street",
+        "amenity", "capacity", "contact:phone", "contact:website",
+        "description", "drinking_water", "fee", "historic", "image",
+        "natural", "opening_hours", "operator", "phone", "railway",
+        "shelter_type", "shop", "tourism", "url", "waterway", "website",
+        "wheelchair", "wikidata", "wikimedia_commons", "wikipedia"
+    ]
 }

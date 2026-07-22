@@ -19,9 +19,24 @@
     <tag k="name" v="Gare de Jambes"/>
   </node>
   <!-- J - history -->
+  <!-- Carries the three storedTagKeys groups (selector / serve / media) plus
+       the kind of noise a real J object drags in: osmium tags-filter selects
+       OBJECTS, not keys, so every tag on a matching object arrives here and
+       parse.py must trim it to the contract's storedTagKeys
+       (coverage-provider.md §2). `email` is deliberately NOT stored: it is
+       ~99 % redundant against website/phone and often a private mailbox. -->
   <node id="105" version="4" timestamp="2026-02-11T14:00:00Z" lat="50.2200" lon="5.0000">
     <tag k="historic" v="castle"/>
     <tag k="name" v="Château de Vêves"/>
+    <tag k="website" v="https://chateau-veves.example"/>
+    <tag k="wheelchair" v="limited"/>
+    <tag k="wikidata" v="Q1857286"/>
+    <tag k="image" v="https://commons.example/veves.jpg"/>
+    <tag k="inscription" v="Anno 1230"/>
+    <tag k="person:date_of_birth" v="1907-04-12"/>
+    <tag k="email" v="info@chateau-veves.example"/>
+    <tag k="addr:postcode" v="5561"/>
+    <tag k="building" v="castle"/>
   </node>
   <!-- H - shelter (typed: bare amenity=shelter no longer qualifies — the
        whitelist keys on shelter_type, keeping bus-stop shelters out) -->

@@ -409,3 +409,22 @@ def test_cluster_maxzoom_leaves_high_zoom_individual(tmp_path):
     assert feats, "z12 tile must contain the grouped points"
     assert all("point_count" not in f["properties"] for f in feats), \
         "z12 is above --cluster-maxzoom=11 → every feature must be individual"
+
+
+def test_extra_sql_tag_keys_are_pinned_to_the_contract_constant():
+    """TILE_DERIVED_TAG_KEYS must equal what _EXTRA_SQL actually reads from tags.
+
+    load_contract() validates that every key in the constant survives the
+    storedTagKeys trim (coverage-provider.md §2). That guarantee is only as good
+    as the constant tracking this SQL, so pin the two together: adding a
+    `tags->>'foo'` to a tile property without listing `foo` fails here, before it
+    can ship a tile column that is silently always NULL.
+    """
+    from coverage.contract import TILE_DERIVED_TAG_KEYS
+
+    read_by_sql = {
+        key
+        for fragment in tiles._EXTRA_SQL.values()
+        for key in re.findall(r"tags\s*(?:->>|\?)\s*'([^']+)'", fragment)
+    }
+    assert read_by_sql == TILE_DERIVED_TAG_KEYS
