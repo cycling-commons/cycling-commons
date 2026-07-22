@@ -78,18 +78,21 @@ Everywhere. Short, bounded, no wall.
 A **left-click on empty map** (not on a POI, cluster, or route line — those keep
 their current select/zoom behaviour) is the explicit "focus here" gesture:
 
+A click **always resolves to a region**, never a whole country — scoping all of
+the USA / France / China from one click would be far too coarse. Onboarded
+countries are fully tessellated, so a click inside one lands in a region.
+
 1. Resolve the **region** under the clicked point — client-side point-in-bbox
-   test over the registry, refined to point-in-polygon only if needed via the
-   existing scope-boundary data. A click over an onboarded country but outside
-   all its seeded regions (a gap) falls back to that **country** scope; a click
-   outside every onboarded region resolves to nothing and is a no-op.
+   test over the registry, refined to point-in-polygon via the existing
+   scope-boundary data. A rare polygon-simplification gap (point inside a country
+   but between region polygons) **snaps to the nearest region of that country**,
+   not to country scope. A click outside every onboarded region resolves to
+   nothing and is a no-op.
 2. On a hit, **set the scope** to that region (`region:<slug>`), which **serves
    the items** (coverage + features re-filter to the scope, counts update) **and
    repopulates the region chips** in the filter menu to that region's country
    siblings — the clicked region active — so the rider can immediately refine to
    a neighbour, widen to `All <country>`, or click elsewhere.
-   *(Product decision to confirm: click scopes to the specific region under the
-   point, not the whole country. Country-level-on-click is the alternative.)*
 
 Nothing runs until the click — no `moveend` work, no speculative serving. The
 feature-vs-empty distinction is the one careful edge: the empty-map handler must
