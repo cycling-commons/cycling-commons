@@ -1,0 +1,21 @@
+tools/divisions/config.py
+  s_c5bcd8e7c7eb21::t_a57bb593ef1154 43-65
+tools/divisions/tests/test_export_divisions.py
+  s_c5bcd8e7c7eb21::t_f7b5e1eb4a015e 118-155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8d02aed33170a444847de97f16a9b250ebc9ef49",
+  "prompts": {},
+  "sessions": {
+    "s_c5bcd8e7c7eb21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
