@@ -28,7 +28,7 @@ from .tiles import build_pmtiles, export_geojsonl, verify_pmtiles
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 # country_code stamped per extract (coverage-provider.md §2 country_code column);
 # extend per region.
-COUNTRY_BY_REGION = {"europe/belgium": "BE"}
+COUNTRY_BY_REGION = {"europe/belgium": "BE", "europe/netherlands": "NL"}
 
 
 def _md5(path: pathlib.Path) -> str:

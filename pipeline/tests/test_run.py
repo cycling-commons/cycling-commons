@@ -133,3 +133,9 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     assert manifests == [{"counts": {"C": 3, "D": 2}, "regions": ["dev/bad", "dev/ok"]}]
     err = capsys.readouterr().err
     assert "dev/bad: FAILED" in err and "simulated drift" in err
+
+
+def test_country_by_region_stamps_netherlands():
+    """europe/netherlands is a first-class coverage region — its POIs must be
+    stamped country_code NL (country-onboarding-design.md §5)."""
+    assert run.COUNTRY_BY_REGION["europe/netherlands"] == "NL"

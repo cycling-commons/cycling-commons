@@ -42,7 +42,7 @@ Check the result:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `COVERAGE_REGIONS` | `europe/belgium` | csv of Geofabrik regions, each swapped independently |
+| `COVERAGE_REGIONS` | `europe/belgium,europe/netherlands` | csv of Geofabrik regions, each swapped independently |
 | `COVERAGE_WORKDIR` | `/data/work` | scratch dir (PBFs, GeoJSONL, pmtiles) |
 | `COVERAGE_PBF_PATH` | – | local PBF override; skips the Geofabrik download (dev/fixture runs) |
 | `COVERAGE_S3_ENDPOINT` | – | S3 endpoint (dev: `http://minio:9000`) |
