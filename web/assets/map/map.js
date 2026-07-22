@@ -187,6 +187,45 @@
     const btn = document.querySelector(`#regionScope button[data-scope="${scopeToken(s)}"]`);
     return btn ? btn.textContent.trim() : '';
   }
+  // Contextual scope chips (2026-07-22-scope-selector-scale-design.md §B): the
+  // home country's regions + its All-<country> rung, or the onboarded country
+  // rungs as the cold-start fallback. Replaces the flat all-regions wall.
+  // Reuses escPend (top of file) rather than a third hand-rolled escaper —
+  // it's the same house idiom the search results list (escH, ~L3204) and the
+  // drawer's pending-submission renderer (§13) already use for building
+  // interactive lists into innerHTML: string-concat + a shared HTML-escaper +
+  // one delegated/rebind pass, not a third one-off.
+  function renderScopeChips(){
+    const host=document.getElementById('scopeChips'); if(!host||!window.CCScope) return;
+    const s=curScope();
+    // Which country's regions to show: the active scope's country, else the inferred home.
+    const cc=(s&&s.countryCode) || (s&&s.regionIds&&s.regionIds.length&&(window.CCScope.regions()[0]||{}).countryCode) || window.CCScope.inferHomeCountry();
+    let html='';
+    if(cc){
+      const regions=window.CCScope.contextualRegions(cc);   // bound once — the brief called this twice
+      regions.forEach(r=>{
+        html+=`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label||r.slug)}</button>`;
+      });
+      const cl=(regions[0]||{}).countryLabel||('All '+cc);
+      html+=`<button data-scope="country:${escPend(cc)}">${escPend(cl)}</button>`;
+    } else {
+      // cold-start fallback: onboarded country rungs (window.CC_REGIONS-derived)
+      const seen=new Set();
+      (window.CC_REGIONS||[]).forEach(r=>{ if(r.countryCode&&!seen.has(r.countryCode)){ seen.add(r.countryCode);
+        html+=`<button data-scope="country:${escPend(r.countryCode)}">${escPend(r.countryLabel||('All '+r.countryCode))}</button>`; }});
+    }
+    host.innerHTML=html;
+    // (re)bind the freshly-rendered chips to CCScope, same contract as the static ones.
+    host.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const tok=b.dataset.scope;
+      if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
+      else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
+    });
+    // Self-mark the active chip (do NOT call applyScope here — the cc:scopechange
+    // handler already calls applyScope; calling it back would recurse/double-work).
+    const tok=scopeToken(curScope());
+    host.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x.dataset.scope===tok));
+  }
   // Apply a scope: active rail button + dynamic header + spotlight (single named
   // region only) + viewport + re-render (scope-filtered from Task 7). fit:false
   // on the initial paint — the map constructor already opened on the scope bbox.
@@ -1120,7 +1159,12 @@
   let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
   map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
-    applyScope(curScope(), {fit:false}); setupConfClusters();
+    // renderScopeChips() must wait until here (not right after CCScope.init near
+    // the top of the file): it reads curScope/scopeToken, both consts defined
+    // later in this same top-level script — calling it any earlier would hit
+    // the TDZ. The 'load' handler already runs the one-time initial applyScope,
+    // so it's also the natural one-time initial chip render.
+    applyScope(curScope(), {fit:false}); renderScopeChips(); setupConfClusters();
     // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
     // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a
     // flyTo, is what made zooming/flying stutter. MapLibre repositions the existing markers smoothly on
@@ -3528,7 +3572,11 @@
   // Region scope selector (region-scoping-design.md §4 / §7 Phase 2): buttons
   // call window.CCScope; its cc:scopechange event drives the single visual
   // update path (applyScope), which also persists to localStorage + URL.
-  document.querySelectorAll('#regionScope button').forEach(b=>b.onclick=()=>{
+  // Narrowed to the two STATIC buttons (myarea/everywhere) — the region/country
+  // chips are JS-rendered now (2026-07-22-scope-selector-scale-design.md §B) and
+  // bind themselves inside renderScopeChips(); a wildcard #regionScope selector
+  // here would double-bind them.
+  document.querySelectorAll('#regionScope > button').forEach(b=>b.onclick=()=>{
     const tok = b.dataset.scope||'';
     if(!window.CCScope) return;
     if(tok==='everywhere') window.CCScope.setEverywhere();
@@ -3536,7 +3584,7 @@
     else if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
     else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
   });
-  window.addEventListener('cc:scopechange', e=>applyScope(e.detail, {fit:true}));
+  window.addEventListener('cc:scopechange', e=>{ applyScope(e.detail, {fit:true}); renderScopeChips(); });
 
   // Pan-away widen nudge (region-scoping-design.md §4 "Deep links & far panning"):
   // when a My-area scope is active and the map centre drifts past 1.5× the circle

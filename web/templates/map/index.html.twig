@@ -95,16 +95,10 @@
              My-area source (logged-in base location or anonymous circle); the token is
              the bare literal 'myarea' — never coordinates. #}
           <button type="button" data-scope="myarea" id="myAreaBtn" hidden>{{ 'region.my_area.label'|trans }}</button>
-          {% for r in regions %}
-          <button data-scope="region:{{ r.slug }}">{{ ('region.' ~ r.slug ~ '.label')|trans }}</button>
-          {% endfor %}
-          {# One rung per distinct registry country (07-20 review finding 6) —
-             labels follow the same per-key convention as regions: a country
-             import adds region.all_<cc>.label alongside its region.<slug>.label
-             keys. Never hardcode a country here. #}
-          {% for cc in scope_countries %}
-          <button data-scope="country:{{ cc }}">{{ ('region.all_' ~ cc|lower ~ '.label')|trans }}</button>
-          {% endfor %}
+          {# Region + country chips are rendered by map.js renderScopeChips() from
+             the contextual home country (2026-07-22-scope-selector-scale-design.md §B);
+             the flat all-regions wall is gone. #}
+          <div id="scopeChips"></div>
           <button data-scope="everywhere">{{ 'region.everywhere.label'|trans }}</button>
         </div>
         {# "Set my area" cold-start prompt (region-scoping-design.md §4 / §9.1
