@@ -1,0 +1,31 @@
+web/tests/Controller/ScopeBoundaryTest.php
+  s_df3998a6d85dff::t_5315dc0825710d 54-64,66-94,96-110
+  s_df3998a6d85dff::t_47f9da01acdb08 65
+  s_df3998a6d85dff::t_7c2a2a496158aa 95
+pipeline/coverage/run.py
+  s_df3998a6d85dff::t_1e8102624f41ee 110-111
+web/src/Catalog/RegionBoundaryProvider.php
+  s_df3998a6d85dff::t_79708a821ddf7e 71-89,93-95
+docs/specs/2026-07-22-coverage-scope-rendering-design.md
+  s_df3998a6d85dff::t_c3c7599253c0e0 106-116
+  s_df3998a6d85dff::t_7840673ad34878 149-156
+  s_df3998a6d85dff::t_d974c1a83fc4d8 157-158
+pipeline/coverage/tiles.py
+  s_df3998a6d85dff::t_828b5e1b4076b8 232-239
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3e9fd1bbc260a2bc175fa205e9e64dd166ee7082",
+  "prompts": {},
+  "sessions": {
+    "s_df3998a6d85dff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b62ab3d-4369-4c6c-b455-8e080dcc93fb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
