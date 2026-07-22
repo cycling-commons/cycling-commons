@@ -440,6 +440,28 @@
       return out.slice(0, cap).map(({ _s, ...rest }) => rest);
     },
 
+    /** The region whose bbox contains [lng,lat]; nearest-centre on overlap;
+     *  null outside every region (a no-op click). Always a region, never a
+     *  country (2026-07-22-scope-selector-scale-design.md §C). */
+    regionOfPoint(lng, lat) {
+      let best = null; let bestD = Infinity;
+      for (const r of regions) {
+        const b = r.bbox;
+        if (!b || lng < b[0] || lng > b[2] || lat < b[1] || lat > b[3]) continue;
+        const cx = (b[0] + b[2]) / 2; const cy = (b[1] + b[3]) / 2;
+        const d = (cx - lng) ** 2 + (cy - lat) ** 2;
+        if (d < bestD) { bestD = d; best = r; }
+      }
+      return best;
+    },
+
+    /** Onboarded regions of a country, label-sorted, for the contextual chips
+     *  (2026-07-22-scope-selector-scale-design.md §C, Tasks 5-6). */
+    contextualRegions(cc) {
+      return (byCountry.get(cc) || []).slice()
+        .sort((a, b) => (a.label || a.slug).localeCompare(b.label || b.slug));
+    },
+
     /** MapLibre filter expression for the coverage TILE layers (Phase 3,
      *  region-scoping-design.md §6/§7), or null for Everywhere (no filter). The
      *  scope keys are pipe-delimited membership TOKENS: ridtok = "|<region_id>|"

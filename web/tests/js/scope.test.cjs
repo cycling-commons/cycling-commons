@@ -544,6 +544,28 @@ test('searchScopes: limit caps the result count to the top-ranked entries', () =
   assert.deepEqual(capped[0], full[0]); // the cap keeps the highest-ranked entry, not an arbitrary one
 });
 
+// ---- regionOfPoint / contextualRegions (Task 4, 2026-07-22-scope-selector-scale-design.md §C) --
+
+test('regionOfPoint: returns the bbox-containing region, nearest centre on overlap', () => {
+  const S = freshScope([
+    { id: 1, slug: 'a', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'A', countryLabel: 'All Germany' },
+    { id: 2, slug: 'b', countryCode: 'DE', bbox: [11, 49, 13, 51], label: 'B', countryLabel: 'All Germany' },
+  ]);
+  assert.equal(S.regionOfPoint(10.5, 48.5).slug, 'a'); // only a
+  assert.equal(S.regionOfPoint(20, 20), null);         // outside all -> no-op
+  assert.equal(S.regionOfPoint(11.4, 49.4).slug, 'a'); // overlap: nearer a's centre (11,49) than b's (12,50)
+});
+
+test('contextualRegions: onboarded regions of a country, label-sorted', () => {
+  const S = freshScope([
+    { id: 1, slug: 'z', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Zeta', countryLabel: 'All Germany' },
+    { id: 2, slug: 'a', countryCode: 'DE', bbox: [11, 49, 13, 51], label: 'Alpha', countryLabel: 'All Germany' },
+    { id: 3, slug: 'x', countryCode: 'NL', bbox: [4, 52, 5, 53], label: 'X', countryLabel: 'All Netherlands' },
+  ]);
+  assert.deepEqual(S.contextualRegions('DE').map((r) => r.label), ['Alpha', 'Zeta']);
+  assert.deepEqual(S.contextualRegions('FR'), []);
+});
+
 test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (2026-07-22-scope-selector-scale-design.md §F rule 1)', () => {
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['DE'] };
