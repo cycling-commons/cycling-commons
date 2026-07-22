@@ -1,0 +1,21 @@
+tools/divisions/probe_areas.py
+  s_c5bcd8e7c7eb21::t_a4b776b2c5f896 1-131
+tools/divisions/tests/test_probe_areas.py
+  s_c5bcd8e7c7eb21::t_a62760178f3890 1-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2928902698c4d031b79a6c9b752a4b28689e6780",
+  "prompts": {},
+  "sessions": {
+    "s_c5bcd8e7c7eb21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
