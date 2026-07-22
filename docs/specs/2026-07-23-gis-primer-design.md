@@ -29,6 +29,7 @@ Seven decisions were taken with the owner on 2026-07-23:
 | D5 | Exercise slots **reserved, filled later** | Each chapter ends with a marked slot so hands-on "run this against the Docker stack" boxes drop in without a rewrite |
 | D6 | Structure is **layered order, narrative spine** | Concepts must build (no tiles before coordinates), but each chapter opens on the next stop in one worked example so the reader always knows why |
 | D7 | **Short excerpts, path citations** | The wiki is CC BY-SA 4.0, the code is PolyForm Shield; citing `File.php` + symbol beats pasting functions, and it rots slower |
+| D8 | A concept with no repo anchor is **written and flagged, never cut** | An unanchored concept is a signal. Either it is general GIS knowledge this system genuinely has no counterpart for, or it is a gap the owner may want built. Cutting it destroys that signal; §10 collects them for review |
 
 ### The narrative spine
 
@@ -115,7 +116,8 @@ These are acceptance criteria, not style suggestions.
 - **Concrete before abstract.** No concept is introduced before the reader has seen the thing it
   explains. The fountain comes first; the projection comes second.
 - **Every claim is checkable.** Each concept cites a real file and symbol. Line numbers only where
-  the anchor is stable; otherwise file plus symbol name.
+  the anchor is stable; otherwise file plus symbol name. Where no anchor exists, the concept is
+  still written — see D8 and §10.
 - **Chapters stay under ~1,200 words.** A chapter that outgrows this is two chapters.
 - **No page depends on a later page.** Forward references are links, never prerequisites.
 - **Each chapter ends with a reserved exercise slot** (an HTML comment marking where the hands-on
@@ -129,6 +131,8 @@ These are acceptance criteria, not style suggestions.
 - All sixteen figures render legibly in both the light and dark palette.
 - The eleven pages appear in nav order under **For developers**.
 - No chapter exceeds ~1,200 words.
+- Every `UNANCHORED` marker in the pages has a matching row in the §10 queue, and every
+  `type: absent` marker carries its reader-visible admonition.
 
 ## 8. Risks
 
@@ -136,13 +140,71 @@ These are acceptance criteria, not style suggestions.
 |------|------------|
 | Code citations drift as the repo changes | Cite file + symbol over line numbers; add the series to the docs consistency sweep |
 | Licence boundary (CC BY-SA wiki quoting PolyForm Shield code) | D7: short illustrative excerpts and path citations, never whole functions |
-| Scope creep into a full GIS textbook | Chapter word cap and the "no concept without a repo anchor" rule; anything without an anchor is out of scope |
+| Scope creep into a full GIS textbook | Chapter word cap, and the §10 review queue: an unanchored concept must earn its place by being useful to *this* reader, and it is visible in a list the owner reviews rather than buried |
+| An unanchored concept reads as "the system does this" when it does not | The `type: absent` marker in §10 is reader-visible by rule, so the page never implies functionality that is not built |
 | Enabling Mermaid changes existing page rendering | Additive `custom_fences` only; no existing page uses a `mermaid` fence — verified before the change lands |
 
 ## 9. Out of scope
+
+Writing a concept that this system does not implement is explicitly **in** scope (D8). What is out
+of scope is *building* anything it turns out we want — §10 hands the owner a list, and each entry
+becomes its own decision.
 
 - Hands-on exercises (D5 — slots reserved, content later).
 - Raster/DEM analysis, elevation modelling beyond what `SurfaceProfiler` already does.
 - Valhalla routing internals; the primer names it and points at the compose profile.
 - Any change to application code. This design touches `mkdocs.yml`, `wiki/`, and
   `wiki/stylesheets/extra.css` only.
+
+## 10. Unanchored concepts — review queue
+
+Per D8, a concept the repo does not demonstrate is written anyway and flagged here. The owner
+reviews this list after the pages land; each entry resolves one of three ways: an anchor was
+missed and gets cited, the concept is genuinely general and the marker stays, or it becomes a
+roadmap item.
+
+### Two kinds, marked differently
+
+The distinction is load-bearing, because only one of them risks misleading the reader.
+
+**`type: general`** — ordinary GIS knowledge this system has no counterpart for, and none is
+expected. The antimeridian is the archetype: worth knowing, and we have no code for it because our
+data has not crossed it. **No reader-visible marker.** Nothing here implies a missing feature.
+
+**`type: absent`** — describes behaviour a reader could reasonably assume the Commons has, but it
+is not built. **A reader-visible marker is mandatory**, because an unmarked description of
+non-existent behaviour is simply false, and a new developer is exactly the reader least able to
+tell the difference:
+
+```markdown
+!!! note "Not in the Commons — yet"
+    This is how the problem is usually solved. We do not do it today.
+```
+
+The `admonition` extension is already enabled in `mkdocs.yml`, so this needs no config change.
+
+### The marker
+
+Every unanchored concept, of either kind, carries a greppable HTML comment at the point it appears:
+
+```html
+<!-- UNANCHORED id=U01 type=general concept="antimeridian / dateline wrapping" -->
+```
+
+Listing the whole queue is then one command:
+
+```sh
+grep -rn 'UNANCHORED' wiki/developers/gis/
+```
+
+### The queue
+
+Filled during writing, one row per marker. Empty until the pages are drafted.
+
+| ID | Ch | Type | Concept | Why it has no anchor | Resolution |
+|----|----|------|---------|----------------------|------------|
+| _(filled during implementation)_ | | | | | |
+
+Each chapter's review step checks that every `UNANCHORED` marker in the page has a matching row
+here, and that every `type: absent` marker is accompanied by its reader-visible admonition. That
+pairing is an acceptance criterion, not a convention.
