@@ -1,0 +1,19 @@
+web/tests/World/ScaffoldRegionsCommandTest.php
+  s_c5bcd8e7c7eb21::t_4bbee598241b01 126-172
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "232e025aa4d2c746ed1471b5ed43749afa43842f",
+  "prompts": {},
+  "sessions": {
+    "s_c5bcd8e7c7eb21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
