@@ -38,7 +38,13 @@ final class MapController extends AbstractController
     public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions): Response
     {
         $user = $this->getUser();
-        $regionRows = $regions->all();
+        $regionRows = array_map(
+            static fn (array $r): array => $r + [
+                'label' => $translator->trans('region.'.$r['slug'].'.label'),
+                'countryLabel' => $translator->trans('region.all_'.strtolower($r['countryCode']).'.label'),
+            ],
+            $regions->all(),
+        );
         $params = [
             'field_schema' => $schema->all(),
             'map_i18n' => $this->mapI18n($translator),
