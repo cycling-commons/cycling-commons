@@ -1,0 +1,21 @@
+web/src/Controller/MapController.php
+  s_df3998a6d85dff::t_4de0955d7c9b3b 383-387,395-397,400
+web/tests/Controller/ScopeBoundaryTest.php
+  s_df3998a6d85dff::t_118e942a97810d 47-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "9863fae032bbc1e50512e03a673050cfdb292a52",
+  "prompts": {},
+  "sessions": {
+    "s_df3998a6d85dff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b62ab3d-4369-4c6c-b455-8e080dcc93fb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
