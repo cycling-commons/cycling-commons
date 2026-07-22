@@ -1,0 +1,46 @@
+pipeline/tests/test_load.py
+  s_df3998a6d85dff::t_62770dfa3ef099 304-342
+  s_df3998a6d85dff::t_79660b0de2946e 30,32-37,43
+web/tests/Coverage/CoverageSchema.php
+  s_df3998a6d85dff::t_f1b1a27f68bc29 42-43
+  s_df3998a6d85dff::t_006ac155f12133 39
+  s_df3998a6d85dff::t_1cace4b2367b7d 73-74,79
+pipeline/coverage/load.py
+  s_df3998a6d85dff::t_5b68d0a53958b2 58
+  s_df3998a6d85dff::t_80fc3d026f91ab 31-44,47-57
+  s_df3998a6d85dff::t_2aacb594ad7022 135-146,152,155
+  s_df3998a6d85dff::t_b779bada6d8f86 242,250
+  s_df3998a6d85dff::t_0d8455774e5c15 71-73,76-78,93
+  s_df3998a6d85dff::t_6766d89d30df91 217,222
+  s_df3998a6d85dff::t_d0522468f383ce 174
+  s_df3998a6d85dff::t_6b22c401176b8c 269,271
+  s_df3998a6d85dff::t_48997756cd9c53 117
+  s_df3998a6d85dff::t_c0537b14366d8b 194-195,199-201
+docs/specs/coverage-provider.md
+  s_df3998a6d85dff::t_ff199a6dd37f0b 78-85,87-97,101
+  s_df3998a6d85dff::t_f214e24f704abb 541
+  s_df3998a6d85dff::t_eece198844381a 98
+  s_df3998a6d85dff::t_db6159cc42272f 114-118
+  s_df3998a6d85dff::t_93ec34cceed839 144-145
+pipeline/tests/test_tiles.py
+  s_df3998a6d85dff::t_e9b803f9f411df 19-25
+  s_df3998a6d85dff::t_89ed02636a7a13 132,141,143
+  s_df3998a6d85dff::t_8ddb71aef7285a 52,55,57
+  s_df3998a6d85dff::t_db3d885e56d40e 110,112,115,117,120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "1278e06dcf9724774be35406daa804d1f7771077",
+  "prompts": {},
+  "sessions": {
+    "s_df3998a6d85dff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b62ab3d-4369-4c6c-b455-8e080dcc93fb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": null
+    }
+  }
+}
