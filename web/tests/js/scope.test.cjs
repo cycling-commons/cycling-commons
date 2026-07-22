@@ -486,7 +486,7 @@ test('inferHomeCountry: unknown/none -> null', () => {
   assert.equal(S.inferHomeCountry(), null);
 });
 
-test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (spec §F rule 1)', () => {
+test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (2026-07-22-scope-selector-scale-design.md §F rule 1)', () => {
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['DE'] };
   globalThis.__ccTz = 'Europe/Berlin';
