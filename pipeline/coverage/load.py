@@ -30,11 +30,18 @@ BOUNDARY_SNAP_DEG = 0.01
 
 # coverage-provider.md §2 DDL (indexes named below). Provenance is normalized:
 # the Geofabrik extract slug lives once in coverage_source and each POI carries a
-# 2-byte src_region_id FK instead of repeating a ~16-byte string per row — the
-# win that matters at the worldwide 100M+ row target. The lookup self-fills via
-# get-or-create in load_region (no enum DDL, no pre-seeding — any extract on Earth
-# gets a row the first time it's harvested); smallint holds far more than
-# Geofabrik's ~700 extracts.
+# 2-byte src_region_id FK instead of repeating a ~16-byte string per row. The
+# lookup self-fills via get-or-create in load_region (no enum DDL, no pre-seeding
+# — any extract on Earth gets a row the first time it's harvested); smallint holds
+# far more than Geofabrik's ~700 extracts.
+#
+# Sizing (corrected 2026-07-23 — earlier comments here claimed a "100M+ row
+# target", which was naive area extrapolation from German POI density). The
+# osm-data-architecture.md §5 subset is ≈ 4.7 M points planet-wide (taginfo
+# breakdown: coverage-provider.md §10), so the whole table lands around 2 GB, not
+# tens of GB. Measured at 375,078 rows (BE+NL+DE, compacted): 341 B/row heap +
+# 176 B/row indexes. This normalization plus region_id bigint→int is worth
+# 16.2 B/row (-4.2 % heap) — real, but do not oversell it.
 _SOURCE_DDL = """
 CREATE TABLE IF NOT EXISTS coverage_source (
     id   smallint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -69,7 +76,7 @@ _INDEX_DDL = (
     "CREATE INDEX IF NOT EXISTS coverage_poi_country_code_idx ON coverage_poi (country_code)",
     "CREATE INDEX IF NOT EXISTS coverage_poi_name_trgm_idx ON coverage_poi USING gin (name gin_trgm_ops)",
     # src_region_id is the per-region atomic-swap key (previous-count / DELETE /
-    # membership backfills all filter on it), so index it for the 100M+ row target.
+    # membership backfills all filter on it), so index it.
     "CREATE INDEX IF NOT EXISTS coverage_poi_src_region_id_idx ON coverage_poi (src_region_id)",
 )
 

@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
     tags          jsonb        NOT NULL,  -- full filtered tag subset (drawer + Plans 3/4 source)
     osm_version   int,                    -- upstream version (materialization snapshot)
     osm_ts        timestamptz,            -- upstream last-edit timestamp
-    src_region_id smallint     NOT NULL REFERENCES coverage_source(id), -- harvest extract (normalized: 2 bytes/row, not a repeated ~16-byte string — the win at the 100M+ row target)
+    src_region_id smallint     NOT NULL REFERENCES coverage_source(id), -- harvest extract (normalized: 2 bytes/row, not a repeated ~16-byte string)
     country_code  char(2),                -- stamped from extract config
     region_id     int,                    -- ST_Contains(region.geom, geom) at load; NULL until polygons exist. Soft ref to region.id (4 bytes: region count never nears int4)
     UNIQUE (ref, letter)                  -- one entity may carry two letters (item's uniq_item_source_ref_letter, source-scoped: catalog-data-model.md §3)
@@ -118,8 +118,21 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   rich tag copy for all rows is the bulk-OSM duplication principle 1 forbids, and
   at the ~4.7 M planet-wide subset it is the table's dominant cost. Target: trim
   `tags` to the true serve-set. Redundancy to remove first — `tags->>'name'`
-  duplicates the authoritative `name` column on 100 % of named rows. Tracked in
-  the storage backlog.
+  duplicates the authoritative `name` column on 100 % of named rows (done
+  2026-07-22, commit `d2ce930`). Tracked in the storage backlog.
+- **Measured sizing (2026-07-23).** At 375,078 rows (BE + NL + DE, compacted):
+  **341 B/row heap + 176 B/row indexes = 517 B/row**, and the per-row figure is
+  stable across countries (tags average 205 B/row in DE, 199 in BE, 197 in NL —
+  Germany is the most exhaustively tagged country on Earth, so the worldwide
+  average should drift down, not up; the one item that grows is the `name`
+  trigram index once names are multibyte CJK/Cyrillic/Arabic, ≈ +20 B/row).
+  Against the ≈ 4.7 M planet-wide subset (§10) that projects to **≈ 2.4 GB
+  all-in** for full world coverage (≈ 1.8 GB at 75 %), with a credible band of
+  1.3-2.7 GB driven entirely by the row-count estimate, not by per-row cost.
+  Two consequences: the whole coverage index fits in page cache on the existing
+  DB host, and any earlier "100M+ rows / tens of GB" framing (naive area
+  extrapolation from German POI density) is wrong and has been removed from
+  `pipeline/coverage/load.py`.
 - Region membership (`region_id`, `country_code`) and provenance
   (`src_region_id`) are stamped at **load time**, so region/country-scoped
   queries never test containment at request time. `src_region_id` is the
