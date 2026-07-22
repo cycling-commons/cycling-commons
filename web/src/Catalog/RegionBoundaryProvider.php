@@ -68,12 +68,31 @@ final class RegionBoundaryProvider
         if ([] === $rids && (null === $cc || '' === $cc)) {
             return null;
         }
+
+        // Scope arms are built conditionally, mirroring CoverageRepository::
+        // scopeArm() (Coverage/CoverageRepository.php:83-94): a static
+        // `... OR country_code = :cc` bound to '' for a rids-only call would
+        // also union in every region still carrying the schema-default ''
+        // country_code, not just the requested ids.
+        $arms = [];
+        $params = ['tol' => self::SIMPLIFY_TOLERANCE];
+        $types = [];
+        if ([] !== $rids) {
+            $arms[] = 'id IN (:rids)';
+            $params['rids'] = $rids;
+            $types['rids'] = ArrayParameterType::INTEGER;
+        }
+        if (null !== $cc && '' !== $cc) {
+            $arms[] = 'country_code = :cc';
+            $params['cc'] = $cc;
+        }
+
         $geoJson = $this->db->fetchOne(
             'SELECT ST_AsGeoJSON(ST_SimplifyPreserveTopology(ST_Union(geom), :tol))
              FROM region
-             WHERE geom IS NOT NULL AND (id IN (:rids) OR country_code = :cc)',
-            ['tol' => self::SIMPLIFY_TOLERANCE, 'rids' => [] !== $rids ? $rids : [-1], 'cc' => (string) $cc],
-            ['rids' => ArrayParameterType::INTEGER],
+             WHERE geom IS NOT NULL AND ('.implode(' OR ', $arms).')',
+            $params,
+            $types,
         );
         if (!\is_string($geoJson)) {
             return null;

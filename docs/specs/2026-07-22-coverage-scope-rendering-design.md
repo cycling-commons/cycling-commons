@@ -103,6 +103,17 @@ letter's features by country into separate tile layers.
   through to the page (`window.CC_COVERAGE_COUNTRIES`); an older manifest without
   the field falls back to a single unsplit layer set (`<letter>-cov`) so a
   not-yet-rebuilt artifact still renders (degrade, don't blank).
+  - **Caveat:** an empty `country_codes` array reads to the client as this
+    same pre-split signal (plain `<letter>` layers), not as "every POI landed
+    in `zz`." A hypothetical artifact where every row is unstamped (only
+    `<letter>_zz` buckets, `country_codes` empty because the manifest build
+    excludes `ZZ` from the set) would take the pre-split fallback path and
+    look for a `<letter>` source-layer that doesn't exist in a post-split
+    tile — nothing would render. This is pathological, not a real rollout
+    risk: production always stamps a country via `COUNTRY_BY_REGION` before
+    tiling (§A above), so a fully-unstamped artifact shouldn't occur. Noted
+    so a future reader doesn't mistake the empty-`country_codes` signal for
+    "only-zz."
 - **Tile contract** (`docs/specs/coverage-provider.md §4`): source-layer names
   become `<letter>_<cc>`; document the split + the `zz` bucket + the manifest
   `country_codes` field.
@@ -135,6 +146,16 @@ Extend the single-region spotlight to any region-set scope.
   current path (or routes through the same endpoint with one rid). Everywhere →
   `setSpotlight(null)`, no mask. My-area with an empty derived set → no mask
   (nothing in scope), consistent with the leak-safe-hide rule.
+  - **Caveat:** in practice the country/multi-region union mask only ever
+    fires for a `country`-kind scope. A multi-region scope today only exists
+    as `myArea` (a derived region set), and `myArea` keeps its own soft-circle
+    mask rather than routing through this union path; `scope.js` also
+    collapses a multi-region scope's region-tokens down to their first region
+    before the mask decision is made. So there is no exercised path today
+    where a hand-built, non-`myArea` multi-region region-scope reaches the
+    union mask — the multi-region branch of this design is currently
+    unexercised for that case, kept for when a non-`myArea` multi-region
+    scope is introduced.
 
 ## Testing
 

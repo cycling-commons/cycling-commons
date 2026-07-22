@@ -229,7 +229,14 @@ def verify_pmtiles(path, expected_layers=None, expected_bbox=None):
     Asserts: a nonzero addressed-tile count; every expected layer (default: all
     contract letters, lowercased); header bounds intersecting `expected_bbox`
     (min_lon, min_lat, max_lon, max_lat) when given; and at least one min-zoom
-    tile inside the header bounds decoding non-empty. RuntimeError on failure."""
+    tile inside the header bounds decoding non-empty. RuntimeError on failure.
+
+    Caveat: the `expected_layers=None` default is a legacy shape — bare
+    lowercased contract letters, never `<letter>_<cc>` — that can no longer
+    match a post-split artifact's real layer names. The production caller
+    (run.py) always passes an explicit `{<letter>_<cc>}` set built from the
+    layers it actually exported, so the bare-letter default only matters to a
+    caller that skips that step."""
     show = _show(path)
     m = re.search(r"addressed tiles(?: count)?:\s*(\d+)", show)
     if not m or int(m.group(1)) == 0:

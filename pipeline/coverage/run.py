@@ -107,8 +107,8 @@ def main(argv=None) -> int:
             return 1
         artifact = workdir / "coverage.pmtiles"
         build_pmtiles(layer_files, artifact)
-        # expect exactly the layers we exported; letters absent from the index
-        # (possible on partial fixtures) don't fail the gate
+        # expect exactly the (letter, cc) layer pairs we exported; pairs absent
+        # from the index (possible on partial fixtures) don't fail the gate
         verify_pmtiles(artifact, expected_layers={
             f"{letter.lower()}_{cc.lower()}" for (letter, cc) in layer_files})
         # Manifest semantics (shape locked, coverage-provider.md §4): `counts`
