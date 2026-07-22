@@ -114,6 +114,11 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
     """
     with conn.transaction():
         with conn.cursor() as cur:
+            # Rows this src_region currently owns. Cross-region border overlap
+            # (see the upsert below) lets a neighbour reclaim shared rows, so this
+            # can undercount a bordering region's true last extract size by the
+            # shared-row count — but only lowers the drift threshold (more
+            # lenient), never triggering a spurious abort or losing data.
             previous = cur.execute(
                 "SELECT count(*) FROM coverage_poi WHERE src_region = %s", (src_region,)
             ).fetchone()[0]

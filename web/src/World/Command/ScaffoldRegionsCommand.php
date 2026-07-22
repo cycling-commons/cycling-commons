@@ -132,8 +132,14 @@ final class ScaffoldRegionsCommand extends Command
 
                 return Command::FAILURE;
             }
-            /** @var array{subtypes?: array<string, array{bbox?: list<mixed>}>} $probe */
-            $probe = json_decode((string) file_get_contents($probeFile), true, 8, \JSON_THROW_ON_ERROR);
+            try {
+                /** @var array{subtypes?: array<string, array{bbox?: list<mixed>}>} $probe */
+                $probe = json_decode((string) file_get_contents($probeFile), true, 8, \JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                $io->error(sprintf('%s is not valid JSON (%s) — re-run `make region-probe c="%s"`', $probeFile, $e->getMessage(), $cc));
+
+                return Command::FAILURE;
+            }
             $bbox = $probe['subtypes'][$subtype]['bbox'] ?? null;
             $bboxIsValid = \is_array($bbox) && 4 === \count($bbox);
             if ($bboxIsValid) {

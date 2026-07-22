@@ -74,10 +74,12 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Weekly coverage batch (PostGIS index + PMTiles)")
     ap.add_argument("--regions",
-                    help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium)")
+                    help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands)")
     args = ap.parse_args(argv)
+    # Code-level fallback mirrors the shipped .env.example / compose default so
+    # an env-less invocation still covers every onboarded region, not just BE.
     regions = [r.strip() for r in
-               (args.regions or os.environ.get("COVERAGE_REGIONS", "europe/belgium")).split(",")
+               (args.regions or os.environ.get("COVERAGE_REGIONS", "europe/belgium,europe/netherlands")).split(",")
                if r.strip()]
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
@@ -93,7 +95,7 @@ def main(argv=None) -> int:
                 run_extract(pbf, filtered, contract)
                 rows = parse_pois(filtered, contract, region, COUNTRY_BY_REGION.get(region))
                 result = load_region(conn, rows, region)
-                print(f"[coverage] {region}: loaded {result.inserted} rows "
+                print(f"[coverage] {region}: loaded/updated {result.inserted} rows "
                       f"(previous {result.previous})")
             except Exception as exc:  # noqa: BLE001 — one region must not stop the rest (coverage-provider.md §3 failure mode)
                 failed.append(region)

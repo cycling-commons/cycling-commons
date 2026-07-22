@@ -199,7 +199,7 @@ Translations (`web/translations/messages.{en,fr,nl,de}.yaml`), 12
 | zuid-holland | South Holland | Hollande-Méridionale | Südholland | Zuid-Holland |
 | zeeland | Zeeland | Zélande | Zeeland | Zeeland |
 | noord-brabant | North Brabant | Brabant-Septentrional | Nordbrabant | Noord-Brabant |
-| friesland | Friesland | Frise | Friesland | Friesland (Fryslân) |
+| friesland | Friesland | Frise | Friesland | Friesland |
 | all_nl | All Netherlands | Tous les Pays-Bas | Gesamte Niederlande | Heel Nederland |
 
 (de `Zeeland` — corrected during planning from an earlier "Seeland", which is the
