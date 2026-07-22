@@ -956,6 +956,23 @@
         map.on('mouseleave',clId,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
       });
     });
+    // Selected-POI icon overlay (fix 2026-07-22): a coverage POI's individual
+    // icon is drawn only by the tile <key>-<cc>-cov layer, which tippecanoe
+    // clusters away on zoom-out — but the selection pulse (a coord-anchored DOM
+    // marker) stays, leaving an "empty pulsing halo". This single-feature GeoJSON
+    // overlay redraws the SELECTED POI's icon on top, independent of tile
+    // clustering, so it stays visible at every zoom. Sits under the DOM pulse,
+    // which then rings the icon as intended. Same icon-image + size ramps as the
+    // tile icon layers so there's no visual jump where the two overlap at high zoom.
+    if(!map.getSource('cov-sel')){
+      map.addSource('cov-sel',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+      map.addLayer({id:'cov-sel-icon',type:'symbol',source:'cov-sel',
+        // ONE zoom interpolate (MapLibre forbids two), with per-feature stop
+        // outputs (_s8/_s13/_s18) so water vs the rest keep their exact tile ramps.
+        layout:{'icon-image':['get','_icon'],'icon-allow-overlap':true,
+          'icon-size':['interpolate',['linear'],['zoom'],
+            8,['get','_s8'],13,['get','_s13'],18,['get','_s18']]}});
+    }
   }
   // Adapt coverage properties (tile props + optionally the detail payload) into
   // the property bag osmDrawer/waterDrawer already consume. Coverage POIs are
@@ -1025,6 +1042,7 @@
     const layer=layerByKey[key];
     const feat=p=>key==='water' ? waterDrawer(p, ll) : osmDrawer(layer, p, ll, COV_SRC[key]);
     openDrawer(layer, feat(covProps(key, tp, null)));
+    showSelectedCoverageIcon(key, tp, ll);   // keep the icon visible after openDrawer's clear, incl. when the tile clusters it away on zoom-out
     if(!tp.ref) return;
     const myReq=++_covReq;
     fetch('/map/coverage/poi/'+tp.ref, {headers:{'Accept':'application/json'}})
@@ -1055,6 +1073,7 @@
           return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
         });
         if(!drawn) revealPinAt(layer, ll);
+        else showSelectedCoverageIcon(key, {kind:d&&d.kind}, lo);   // drawn: keep the icon visible when the tile clusters it away on zoom-out (matches the drawer's unknown-potability droplet for water opened without a tile prop)
       };
     // Non-OSM refs (manual: rider adds, fx: seeds) have no coverage detail —
     // /map/coverage/poi serves node|way only. Open the minimal drawer with the
@@ -2533,6 +2552,7 @@
     // the point normally.
     if(_pick) return;
     clearRevealPin();   // decision C: a new pick supersedes any reveal pin (call sites re-drop after)
+    clearSelectedCoverageIcon();   // drop the previous coverage selection's icon overlay; openCoverageDrawer re-adds it right after this returns
     _covReq++; _placeReq++;   // invalidate any in-flight coverage POI detail + town-card nearby fetch — this render supersedes them
     // Route selection emphasis: covers both the click path and the ?feature=
     // deep-link (both funnel through here). Layer id convention: the K line
@@ -2935,6 +2955,30 @@
     hlMarker.setOffset(offset||[0,0]).setLngLat([ll[1],ll[0]]).addTo(map);
   }
   function clearHighlight(){ if(hlMarker) hlMarker.remove(); }
+  // Selected coverage-POI icon overlay (fix 2026-07-22): the exact tile icon id
+  // for a clicked POI, so the cov-sel overlay redraws it and it survives the
+  // tile clustering that hides the individual icon on zoom-out. Mirrors the
+  // icon-image match expressions of the <key>-<cc>-cov layers (addCoverage).
+  function coverageIconId(key, tp){
+    if(key==='water') return ['yes','true','1'].includes(String(tp.potable)) ? 'water-drop' : 'water-drop-unk';
+    if(key==='services'){
+      if(tp.kind==='station') return miniIcon('services', SERVICE_GLYPH.station, 'station');
+      if(tp.kind==='pump') return miniIcon('services', SERVICE_GLYPH.pump, 'pump');
+      return miniIcon('services');
+    }
+    return miniIcon(key);
+  }
+  function showSelectedCoverageIcon(key, tp, ll){
+    const src=map.getSource('cov-sel'); if(!src||!ll) return;
+    // Per-key icon-size ramps, identical to the <key>-<cc>-cov tile layers, as
+    // data-driven stop outputs for the overlay's single zoom interpolate.
+    const w=key==='water';
+    src.setData({type:'FeatureCollection',features:[{type:'Feature',
+      geometry:{type:'Point',coordinates:[ll.lng,ll.lat]},
+      properties:{_icon:coverageIconId(key,tp),
+        _s8:w?0.55:0.42, _s13:w?0.9:0.7, _s18:w?1.3:0.95}}]});
+  }
+  function clearSelectedCoverageIcon(){ const src=map.getSource('cov-sel'); if(src) src.setData({type:'FeatureCollection',features:[]}); }
   // Reveal pin (07-15 decision C): picking a NON-DRAWN feature from search in
   // Curated mode drops one temporary marker (community look + selection pulse)
   // instead of force-switching the whole map to Everything. Cleared on the
@@ -2965,6 +3009,7 @@
     _covReq++; _placeReq++;
     const d=document.getElementById('drawer'); d.classList.remove('open'); d.setAttribute('aria-hidden','true');
     clearHighlight();
+    clearSelectedCoverageIcon();                        // remove the selected coverage POI's persistent icon overlay
     clearRevealPin();
     clearRouteHighlight();
     clearCorrections();

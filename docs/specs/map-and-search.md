@@ -342,6 +342,14 @@ the newest rung of that same ladder.
   Routes get the line highlight instead of a point halo. The halo persists
   while the drawer is open; `closeDrawer()` clears halo, route highlight, and
   any corrections overlay.
+- **Selected coverage POI stays visible on zoom-out:** a coverage POI's icon is
+  drawn only by its tile `<key>-<cc>-cov` layer, which tippecanoe clusters away
+  at low zoom — so zooming out with a coverage POI selected would leave the halo
+  ringing empty space. A single-feature GeoJSON overlay (`cov-sel` source +
+  `cov-sel-icon` layer) redraws the *selected* POI's icon on top, independent of
+  tile clustering, so it stays visible at every zoom (the halo then rings it).
+  `showSelectedCoverageIcon()` sets it on open (mirroring the tile icon-image +
+  size ramps); `openDrawer()`/`closeDrawer()` clear it.
 
 ### 6.2 Registry-driven attribute rows
 
