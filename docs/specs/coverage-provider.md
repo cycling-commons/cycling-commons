@@ -272,7 +272,7 @@ and reappears under its country scope.
   `<letter>-cov-cl` layer pair per letter against the plain `<letter>`
   source-layer, exactly the pre-split shape — so an old artifact still
   renders (degrade, don't blank), matching this document's manifest-failure
-  convention (coverage-provider.md §4 above: `CoverageManifest` returns
+  convention (coverage-provider.md §4 below: `CoverageManifest` returns
   `null` on every failure path).
 - **Server-side manifest read.** `App\Coverage\CoverageManifest`
   (`web/src/Coverage/CoverageManifest.php`) fetches the manifest server-side,
