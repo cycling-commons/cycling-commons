@@ -24,6 +24,7 @@ final class ResetPasswordCleanupHook implements UserDeletionHookInterface
     {
     }
 
+    #[\Override]
     public function preDelete(User $user): void
     {
         // Bundle-provided bulk delete of every request row for this user
