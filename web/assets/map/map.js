@@ -720,6 +720,17 @@
   // AND on the pmtiles protocol lib actually having loaded — absent either, the
   // map keeps today's pool-only behaviour (Photon-style silent degradation).
   const COVERAGE_KEYS=[['water','c'],['services','d'],['stays','e'],['transit','g'],['shelter','h'],['scenic','i'],['history','j']];
+  // Coverage tiles split their source-layers per country (Task 1:
+  // 2026-07-22-coverage-scope-rendering-design.md §A): a letter's rows live in
+  // '<letter>_<cc>' (lowercase cc), with unstamped rows in the 'zz' bucket. The
+  // published manifest (window.CC_COVERAGE_COUNTRIES, §D) lists the real
+  // countries; we always append 'zz' so unstamped rows still render. Each
+  // (letter, cc) pair becomes its own icon + cluster layer. [null] is the
+  // pre-split fallback: a single unsplit '<letter>' source-layer, so a tile
+  // artifact built before the per-country split still renders.
+  const COVERAGE_CCS = (Array.isArray(window.CC_COVERAGE_COUNTRIES) && window.CC_COVERAGE_COUNTRIES.length)
+    ? window.CC_COVERAGE_COUNTRIES.map(c=>c.toLowerCase()).concat(['zz'])
+    : [null];   // [null] = single unsplit '<letter>' layer (tiles predate the per-country split)
   const LETTER_KEY={C:'water',D:'services',E:'stays',G:'transit',H:'shelter',I:'scenic',J:'history'};
   const COVERAGE_ON = typeof window.CC_COVERAGE_URL==='string' && !!window.CC_COVERAGE_URL && typeof pmtiles!=='undefined';
   // Per-layer OSM source notes for the drawer's Source line — same wording as
@@ -797,12 +808,17 @@
   function updateCoverageScopeFilter(){
     if(!COVERAGE_ON) return;
     COVERAGE_KEYS.forEach(([key])=>{
-      const id=key+'-cov';
-      if(map.getLayer(id)){
-        if(key==='stays') applyStaysAccessFilter();
-        else map.setFilter(id, covIconFilter());
-      }
-      if(map.getLayer(id+'-cl')) map.setFilter(id+'-cl', covClusterFilter());
+      COVERAGE_CCS.forEach(cc=>{
+        const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+        if(map.getLayer(id)){
+          // stays owns an acc extra; applyStaysAccessFilter re-composes every
+          // stays-<cc>-cov icon layer itself (it loops COVERAGE_CCS), so calling
+          // it once per key is enough — guard so it fires only on the first cc.
+          if(key==='stays'){ if(cc===COVERAGE_CCS[0]) applyStaysAccessFilter(); }
+          else map.setFilter(id, covIconFilter());
+        }
+        if(map.getLayer(id+'-cl')) map.setFilter(id+'-cl', covClusterFilter());
+      });
     });
   }
   // A myArea scope whose derived region set is empty (map-and-search.md §4.5):
@@ -834,19 +850,23 @@
   function syncCoverageLayers(){
     if(!COVERAGE_ON) return;
     COVERAGE_KEYS.forEach(([key])=>{
-      const id=key+'-cov'; if(!map.getLayer(id)) return;
+      // on/off + Curated dim are per-letter decisions; apply them uniformly to
+      // every per-country layer of this letter (icon + cluster).
       const utility=COV_UTILITY.has(KEY_LETTER[key]);
       const show=active.has(key) && (mode==='all' || utility);
       const dim=(mode==='curated' && utility)?0.55:1;
-      map.setLayoutProperty(id,'visibility', show?'visible':'none');
-      map.setPaintProperty(id,'icon-opacity', dim);
-      // Cluster bubble layer (Phase 3) tracks the same on/off + Curated dim.
-      const cl=id+'-cl';
-      if(map.getLayer(cl)){
-        map.setLayoutProperty(cl,'visibility', show?'visible':'none');
-        map.setPaintProperty(cl,'icon-opacity', dim);
-        map.setPaintProperty(cl,'text-opacity', dim);
-      }
+      COVERAGE_CCS.forEach(cc=>{
+        const id = cc ? key+'-'+cc+'-cov' : key+'-cov'; if(!map.getLayer(id)) return;
+        map.setLayoutProperty(id,'visibility', show?'visible':'none');
+        map.setPaintProperty(id,'icon-opacity', dim);
+        // Cluster bubble layer (Phase 3) tracks the same on/off + Curated dim.
+        const cl=id+'-cl';
+        if(map.getLayer(cl)){
+          map.setLayoutProperty(cl,'visibility', show?'visible':'none');
+          map.setPaintProperty(cl,'icon-opacity', dim);
+          map.setPaintProperty(cl,'text-opacity', dim);
+        }
+      });
     });
   }
   function addCoverage(){
@@ -854,53 +874,64 @@
     maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
     mintWaterDrops();
     map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
-    COVERAGE_KEYS.forEach(([key, srcLayer])=>{
-      const id=key+'-cov';
-      // Reuse the existing canvas-minted icons: droplet variants for C (keyed
-      // on the flat `potable` tile prop, tolerant of bool/num/string encoding),
-      // the per-serviceKind discs for D (tile prop `kind`), miniIcon elsewhere.
-      const icon = key==='water'
-        ? ['match',['to-string',['get','potable']],['yes','true','1'],'water-drop','water-drop-unk']
-        : key==='services'
-          ? ['match',['get','kind'],
-              'shop', miniIcon('services'),
-              'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
-              'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
-              miniIcon('services')]
-          : miniIcon(key);
-      // Individual-POI icons: unclustered features only (covIconFilter gates on
-      // `!has point_count`); the count bubbles below draw the clustered ones.
-      map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
-        filter:covIconFilter(),   // dedupe + scope + unclustered (Phase 3)
-        layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
-          'icon-size': key==='water'
-            ? ['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]
-            : ['interpolate',['linear'],['zoom'],8,0.42,13,0.7,18,0.95]}});
-      map.on('click',id,e=>{ const f0=e.features[0], tp=f0.properties, c=f0.geometry.coordinates;
-        openCoverageDrawer(key, tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });   // exact feature coords, same halo rule as addOsmDots
-      map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-      map.on('mousemove',id,e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[key]||{}).label||'Item', e.lngLat); });
-      map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
-      // Cluster bubbles (Phase 3, region-scoping-design.md §7): a disc sized by
-      // point_count with the count as a label, for the clustered features
-      // tippecanoe groups at low zoom. Clicking one zooms in until it splits
-      // into individual icons — same affordance as the confirmed-pin clusters.
-      const clId=id+'-cl';
-      map.addLayer({id:clId, type:'symbol', source:'coverage', 'source-layer':srcLayer,
-        filter:covClusterFilter(),
-        layout:{visibility:'none','icon-image':covClusterIcon(key),'icon-allow-overlap':true,'text-allow-overlap':true,
-          'icon-size':['interpolate',['linear'],['get','point_count'], 2,0.55, 25,0.8, 200,1.1, 1000,1.5],
-          'text-field':['to-string',['get','point_count']],
-          'text-font':['Noto Sans Bold'],
-          'text-size':['interpolate',['linear'],['get','point_count'], 2,11, 200,13, 1000,15]},
-        paint:{'text-color':txtOn((layerByKey[key]||{}).color||'#6b6f5e'),
-          'text-halo-color':'rgba(20,22,14,.35)','text-halo-width':0.8}});
-      map.on('click',clId,e=>{ const c=e.features[0].geometry.coordinates;
-        map.easeTo({center:c, zoom:Math.min(14, map.getZoom()+2.2), duration:600}); });
-      map.on('mouseenter',clId,()=>map.getCanvas().style.cursor='pointer');
-      map.on('mousemove',clId,e=>{ const p=e.features[0].properties;
-        showTip((p.point_count||'')+' '+((layerByKey[key]||{}).label||'items'), e.lngLat); });
-      map.on('mouseleave',clId,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+    COVERAGE_KEYS.forEach(([key, letter])=>{
+      // One icon + cluster layer per (letter, country): the source-layer is
+      // '<letter>_<cc>' (lowercase cc; 'zz' = unstamped rows), and the layer ids
+      // carry the cc so scope filters / visibility toggles address each country.
+      // A missing '<letter>_<cc>' source-layer (e.g. no unstamped rows) renders
+      // nothing — the correct "empty bucket" outcome, no special-casing. cc===null
+      // is the pre-split fallback: the plain '<letter>' source-layer + '<key>-cov'
+      // ids, so a tile artifact built before the split still renders.
+      COVERAGE_CCS.forEach(cc=>{
+        const srcLayer = cc ? letter+'_'+cc : letter;
+        const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+        // Reuse the existing canvas-minted icons: droplet variants for C (keyed
+        // on the flat `potable` tile prop, tolerant of bool/num/string encoding),
+        // the per-serviceKind discs for D (tile prop `kind`), miniIcon elsewhere.
+        // Icons are shared across a letter's countries, so they stay keyed on `key`.
+        const icon = key==='water'
+          ? ['match',['to-string',['get','potable']],['yes','true','1'],'water-drop','water-drop-unk']
+          : key==='services'
+            ? ['match',['get','kind'],
+                'shop', miniIcon('services'),
+                'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
+                'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
+                miniIcon('services')]
+            : miniIcon(key);
+        // Individual-POI icons: unclustered features only (covIconFilter gates on
+        // `!has point_count`); the count bubbles below draw the clustered ones.
+        map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
+          filter:covIconFilter(),   // dedupe + scope + unclustered (Phase 3)
+          layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
+            'icon-size': key==='water'
+              ? ['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]
+              : ['interpolate',['linear'],['zoom'],8,0.42,13,0.7,18,0.95]}});
+        map.on('click',id,e=>{ const f0=e.features[0], tp=f0.properties, c=f0.geometry.coordinates;
+          openCoverageDrawer(key, tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });   // exact feature coords, same halo rule as addOsmDots
+        map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
+        map.on('mousemove',id,e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[key]||{}).label||'Item', e.lngLat); });
+        map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+        // Cluster bubbles (Phase 3, region-scoping-design.md §7): a disc sized by
+        // point_count with the count as a label, for the clustered features
+        // tippecanoe groups at low zoom. Clicking one zooms in until it splits
+        // into individual icons — same affordance as the confirmed-pin clusters.
+        const clId=id+'-cl';
+        map.addLayer({id:clId, type:'symbol', source:'coverage', 'source-layer':srcLayer,
+          filter:covClusterFilter(),
+          layout:{visibility:'none','icon-image':covClusterIcon(key),'icon-allow-overlap':true,'text-allow-overlap':true,
+            'icon-size':['interpolate',['linear'],['get','point_count'], 2,0.55, 25,0.8, 200,1.1, 1000,1.5],
+            'text-field':['to-string',['get','point_count']],
+            'text-font':['Noto Sans Bold'],
+            'text-size':['interpolate',['linear'],['get','point_count'], 2,11, 200,13, 1000,15]},
+          paint:{'text-color':txtOn((layerByKey[key]||{}).color||'#6b6f5e'),
+            'text-halo-color':'rgba(20,22,14,.35)','text-halo-width':0.8}});
+        map.on('click',clId,e=>{ const c=e.features[0].geometry.coordinates;
+          map.easeTo({center:c, zoom:Math.min(14, map.getZoom()+2.2), duration:600}); });
+        map.on('mouseenter',clId,()=>map.getCanvas().style.cursor='pointer');
+        map.on('mousemove',clId,e=>{ const p=e.features[0].properties;
+          showTip((p.point_count||'')+' '+((layerByKey[key]||{}).label||'items'), e.lngLat); });
+        map.on('mouseleave',clId,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+      });
     });
   }
   // Adapt coverage properties (tile props + optionally the detail payload) into
@@ -993,9 +1024,13 @@
         openDrawer(layer, key==='water' ? waterDrawer(p, lo) : osmDrawer(layer, p, lo, COV_SRC[key]));
         // decision C: if this POI's tile layer isn't drawn right now (Curated
         // mode, experiential letter — or layer toggled off), reveal it with one
-        // temporary pin rather than flipping the map mode.
-        const id=key+'-cov';
-        const drawn = map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
+        // temporary pin rather than flipping the map mode. A letter's per-country
+        // layers share one on/off state (syncCoverageLayers), so "any visible" =
+        // this key's coverage is drawn.
+        const drawn = COVERAGE_CCS.some(cc=>{
+          const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+          return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
+        });
         if(!drawn) revealPinAt(layer, ll);
       };
     // Non-OSM refs (manual: rider adds, fx: seeds) have no coverage detail —
@@ -1685,11 +1720,14 @@
     // (coverage-provider.md §6) — the dedupe + region-scope + unclustered arms
     // (covIconFilter) are the base and must survive every setFilter. The acc
     // narrow applies to icons only, not the cluster bubbles (see covIconFilter).
-    if(map.getLayer('stays-cov')){
-      const extra = activeAccess.size===ALL_ACCESS.size ? null
-        : ['in', ['get','acc'], ['literal', Array.from(activeAccess)]];
-      map.setFilter('stays-cov', covIconFilter(extra));
-    }
+    const extra = activeAccess.size===ALL_ACCESS.size ? null
+      : ['in', ['get','acc'], ['literal', Array.from(activeAccess)]];
+    // stays split per country (Task 4): narrow every stays-<cc>-cov icon layer,
+    // not just a single hardcoded id. cc===null is the pre-split 'stays-cov' id.
+    COVERAGE_CCS.forEach(cc=>{
+      const id = cc ? 'stays-'+cc+'-cov' : 'stays-cov';
+      if(map.getLayer(id)) map.setFilter(id, covIconFilter(extra));
+    });
   }
 
   // D · services confirmed/curated pins show the per-kind glyph (shop/station/pump) instead of
@@ -1765,8 +1803,16 @@
   // layers (A shows 351/351). 0 when the layer is toggled off or mode-hidden
   // (experiential coverage E/I/J in Curated), which the visibility gate covers.
   function covShownCount(key){
-    const id=key+'-cov';
-    if(!COVERAGE_ON || !map.getLayer(id) || map.getLayoutProperty(id,'visibility')!=='visible') return 0;
+    // _covCounts is a per-LETTER scope-aware aggregate (server-side), so it is
+    // NOT summed per country — the whole letter's in-scope count is "shown" as
+    // soon as any of its per-country layers is drawn. Visibility is uniform
+    // across a letter's countries (syncCoverageLayers), so "any visible" gates it.
+    if(!COVERAGE_ON) return 0;
+    const drawn = COVERAGE_CCS.some(cc=>{
+      const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+      return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
+    });
+    if(!drawn) return 0;
     return (_covCounts && _covCounts[KEY_LETTER[key]]) || 0;
   }
   // legend count = shown/total: in Curated only confirmed/curated count; in Everything everything does

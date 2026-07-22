@@ -55,12 +55,52 @@ final class CoverageManifest
     /** The current versioned .pmtiles URL, or null when coverage is off/unavailable. */
     public function currentTileUrl(): ?string
     {
+        $manifest = $this->manifest();
+        // The cached manifest is only ever non-null once its 'url' key has been
+        // validated as a non-empty string (see manifest()), so this is a plain read.
+        $url = $manifest['url'] ?? null;
+
+        return \is_string($url) ? $url : null;
+    }
+
+    /**
+     * The country codes the current tile artifact was built for
+     * (2026-07-22-coverage-scope-rendering-design.md §D), e.g. ['BE', 'NL'] —
+     * the map client turns each into a per-country coverage layer. Empty when
+     * coverage is off, the manifest is unreachable, or a pre-split manifest
+     * carries no `country_codes` key (the client then falls back to a single
+     * unsplit layer per letter). Only string members survive.
+     *
+     * @return list<string>
+     */
+    public function countryCodes(): array
+    {
+        $manifest = $this->manifest();
+        $codes = $manifest['country_codes'] ?? null;
+        if (!\is_array($codes)) {
+            return [];
+        }
+
+        return array_values(array_filter($codes, 'is_string'));
+    }
+
+    /**
+     * The decoded manifest array, or null when coverage is off/unavailable.
+     * Cached (CACHE_TTL) as the whole decoded array — both currentTileUrl() and
+     * countryCodes() derive from this single cached read, so one bucket fetch
+     * per holdoff window serves both. A manifest with no valid 'url' is treated
+     * as unavailable (null), same as before the array widening.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function manifest(): ?array
+    {
         if (!$this->tilesEnabled || '' === $this->manifestUrl) {
             return null;
         }
 
         try {
-            return $this->cache->get($this->cacheKey(), function (ItemInterface $item): ?string {
+            return $this->cache->get($this->cacheKey(), function (ItemInterface $item): ?array {
                 try {
                     /** @var array<string, mixed> $manifest */
                     $manifest = $this->http
@@ -78,7 +118,7 @@ final class CoverageManifest
                     }
                     $item->expiresAfter(self::CACHE_TTL);
 
-                    return $url;
+                    return $manifest;
                 } catch (\Throwable $e) {
                     // Cache the failure (null) for NEGATIVE_TTL, then retry.
                     $item->expiresAfter(self::NEGATIVE_TTL);

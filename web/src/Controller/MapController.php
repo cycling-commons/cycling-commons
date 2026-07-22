@@ -81,6 +81,11 @@ final class MapController extends AbstractController
             // cached 3600 s), or null when the flag is off / the manifest is
             // unreachable — the template only emits CC_COVERAGE_URL when set.
             'coverage_url' => $coverage->currentTileUrl(),
+            // Country codes the tile artifact was built for
+            // (2026-07-22-coverage-scope-rendering-design.md §D): the map turns
+            // each into a per-country coverage layer (source-layers <letter>_<cc>);
+            // [] falls the client back to a single unsplit layer per letter.
+            'coverage_countries' => $coverage->countryCodes(),
         ];
 
         // Curator-only: hand the pending submissions to the map so the moderation

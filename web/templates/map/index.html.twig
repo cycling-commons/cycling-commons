@@ -363,6 +363,11 @@
      manifest resolved; map.js keys the whole coverage source on its presence.
      HEX-escaped like MAPILLARY_TOKEN: the value originates outside the app. #}
   window.CC_COVERAGE_URL = {{ coverage_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Country codes the tile artifact was built for (2026-07-22-coverage-scope-
+     rendering-design.md §D): map.js turns each into a per-(letter, country)
+     coverage layer; an empty/absent array falls back to one unsplit layer per
+     letter, so an old manifest still renders. #}
+  window.CC_COVERAGE_COUNTRIES = {{ coverage_countries|default([])|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {% endif %}
 </script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
