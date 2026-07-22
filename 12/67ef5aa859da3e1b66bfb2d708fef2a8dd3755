@@ -1,0 +1,21 @@
+web/tests/Coverage/CoverageManifestTest.php
+  s_df3998a6d85dff::t_94d35827903617 134-191
+web/src/Coverage/CoverageManifest.php
+  s_df3998a6d85dff::t_12a358f4320f39 149-156,160
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "1267ef5aa859da3e1b66bfb2d708fef2a8dd3755",
+  "prompts": {},
+  "sessions": {
+    "s_df3998a6d85dff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b62ab3d-4369-4c6c-b455-8e080dcc93fb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
