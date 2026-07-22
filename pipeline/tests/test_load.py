@@ -153,6 +153,41 @@ def test_load_region_upserts_shared_border_entity_across_regions(db):
     )
 
 
+def test_load_region_reclaimed_boundary_miss_reevaluates_region(db):
+    """A boundary-miss shared entity, reclaimed cross-region, must re-derive its
+    region — not keep the previous owner's.
+
+    A POI in the gap between two regions (outside every polygon) boundary-snaps
+    to the nearest region of its OWN country. When a neighbouring extract later
+    reclaims the same (ref, letter), the upsert must reset region_id so the snap
+    re-runs under the new owner; otherwise the stale region_id (a) skips the snap
+    (gated on region_id IS NULL) and (b) makes cc-authority re-stamp the wrong
+    country. region ⇒ cc stays *self*-consistent while both are wrong, so only a
+    geometry-aware test catches it."""
+    ensure_schema(db)
+    # BE region ends at x=1.0; NL region starts at x=1.012 — a 0.012° gap.
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES "
+        "(1, 100, 'BE', ST_GeomFromText('MULTIPOLYGON(((0 50, 1 50, 1 51, 0 51, 0 50)))', 4326)), "
+        "(2, 100, 'NL', ST_GeomFromText('MULTIPOLYGON(((1.012 50, 2 50, 2 51, 1.012 51, 1.012 50)))', 4326))"
+    )
+    db.commit()
+    # Shared boundary-miss POI at x=1.008: outside both polygons, but within the
+    # 0.01° snap of BOTH edges (0.008° to BE, 0.004° to NL).
+    load_region(db, [_row("node/b", "C", lon=1.008, lat=50.5,
+                          src_region="europe/belgium", country_code="BE")], "europe/belgium")
+    assert db.execute(
+        "SELECT region_id, country_code FROM coverage_poi WHERE ref = 'node/b'"
+    ).fetchone() == (1, "BE"), "BE first snaps the boundary-miss to its own region"
+    # NL reclaims the same entity (border overlap): it must snap to the NL region,
+    # not stay stuck on BE.
+    load_region(db, [_row("node/b", "C", lon=1.008, lat=50.5,
+                          src_region="europe/netherlands", country_code="NL")], "europe/netherlands")
+    assert db.execute(
+        "SELECT region_id, country_code FROM coverage_poi WHERE ref = 'node/b'"
+    ).fetchone() == (2, "NL"), "the reclaimed boundary-miss re-snaps to the NL region + cc"
+
+
 def test_load_region_smallest_area_wins_on_overlap(db):
     """Overlapping regions: the smaller-area one wins, not the lower id.
 

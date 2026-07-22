@@ -145,12 +145,18 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
             # The DELETE above only clears THIS src_region, so a border entity
             # still owned by a neighbour would violate the global
             # UNIQUE(ref, letter) and roll the whole slice back. ON CONFLICT
-            # takes last-writer-wins ownership; the membership recompute below
-            # then re-derives region_id/cc from geometry for the new owner. These
-            # conflicts are staging-vs-table (one row per (ref, letter) per
-            # extract), so DO UPDATE never hits "affect a row a second time"; a
-            # malformed extract with an intra-batch dup fails loud there and rolls
-            # the swap back — safe, and covered by the generic-error test.
+            # takes last-writer-wins ownership; the membership steps below then
+            # re-derive region_id/cc for the new owner. region_id MUST be reset to
+            # NULL on conflict (as a fresh INSERT starts it): the ST_Contains
+            # recompute only SETs region_id for rows inside a polygon and never
+            # clears a stale one, and the boundary-snap is gated on
+            # region_id IS NULL — so a reclaimed boundary-miss row that kept the
+            # previous owner's region_id would skip the snap and then get its cc
+            # re-stamped from the wrong region (region ⇒ cc stays self-consistent
+            # but wrong). These conflicts are staging-vs-table (one row per
+            # (ref, letter) per extract), so DO UPDATE never hits "affect a row a
+            # second time"; a malformed extract with an intra-batch dup fails loud
+            # there and rolls the swap back — safe, covered by the generic-error test.
             cur.execute(
                 f"INSERT INTO coverage_poi ({_COLUMNS}) "
                 f"SELECT {_COLUMNS} FROM coverage_poi_staging "
@@ -158,7 +164,7 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                 f"kind = EXCLUDED.kind, name = EXCLUDED.name, geom = EXCLUDED.geom, "
                 f"tags = EXCLUDED.tags, osm_version = EXCLUDED.osm_version, "
                 f"osm_ts = EXCLUDED.osm_ts, src_region = EXCLUDED.src_region, "
-                f"country_code = EXCLUDED.country_code"
+                f"country_code = EXCLUDED.country_code, region_id = NULL"
             )
             # Smallest-area-wins on overlap (region-scoping-design.md §3): the
             # third membership writer besides RegionResolver and
