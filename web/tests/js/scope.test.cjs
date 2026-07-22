@@ -486,6 +486,64 @@ test('inferHomeCountry: unknown/none -> null', () => {
   assert.equal(S.inferHomeCountry(), null);
 });
 
+// ---- searchScopes (Task 3, 2026-07-22-scope-selector-scale-design.md §A) --
+
+test('searchScopes: matches region by label and slug', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria', countryLabel: 'All Germany' },
+    { id: 2, slug: 'wallonia', countryCode: 'BE', bbox: [4, 49, 6, 51], label: 'Wallonia', countryLabel: 'All Belgium' },
+  ]);
+  assert.deepEqual(S.searchScopes('bav').map((r) => r.slug), ['bayern']); // label prefix
+  assert.deepEqual(S.searchScopes('bayern').map((r) => r.slug), ['bayern']); // slug
+  assert.equal(S.searchScopes('  ').length, 0); // blank -> none
+});
+
+test('searchScopes: country rung ranks above its regions on a country hit', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria', countryLabel: 'All Germany' },
+  ]);
+  const r = S.searchScopes('germany');
+  assert.equal(r[0].kind, 'country');
+  assert.equal(r[0].cc, 'DE');
+});
+
+// The two tests above pass even under a REVERSED sort comparator: the first
+// only ever has one match, and the second's single region ('bayern'/'Bavaria')
+// never matches 'germany' at all, so there is nothing for the country rung to
+// out-rank in practice — neither pins the ordering guarantee. This test
+// forces a genuine 3-way tie/rank spread (country + a same-rank region "on a
+// tie" + a lower-rank substring-only region) so a reversed or dropped -0.5
+// nudge, or a reversed sort direction, actually fails the assertion.
+test('searchScopes: full ranking — prefix before substring, country before its region on a tie, non-matches excluded', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria', countryLabel: 'Germany' },
+    // Ties the DE country rung at rank 0 (prefix) on the query below.
+    { id: 2, slug: 'germany-alps', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Germany Alps', countryLabel: 'Germany' },
+    // Only a substring match (rank 1) -> must sort AFTER the rank-0 tier.
+    { id: 3, slug: 'east-germany-trail', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'East Germany Trail', countryLabel: 'Germany' },
+    // Unrelated country/region -> must not appear at all.
+    { id: 4, slug: 'wallonia', countryCode: 'BE', bbox: [4, 49, 6, 51], label: 'Wallonia', countryLabel: 'All Belgium' },
+  ]);
+  const r = S.searchScopes('germany');
+  assert.deepEqual(
+    r.map((x) => `${x.kind}:${x.slug || x.cc}`),
+    ['country:DE', 'region:germany-alps', 'region:east-germany-trail'],
+  );
+  for (const x of r) assert.equal('_s' in x, false, 'internal _s score must not leak');
+});
+
+test('searchScopes: limit caps the result count to the top-ranked entries', () => {
+  const S = freshScope([
+    { id: 1, slug: 'germany-alps', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Germany Alps', countryLabel: 'Germany' },
+    { id: 2, slug: 'east-germany-trail', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'East Germany Trail', countryLabel: 'Germany' },
+  ]);
+  const full = S.searchScopes('germany');
+  assert.equal(full.length, 3); // country:DE + both regions
+  const capped = S.searchScopes('germany', 1);
+  assert.equal(capped.length, 1);
+  assert.deepEqual(capped[0], full[0]); // the cap keeps the highest-ranked entry, not an arbitrary one
+});
+
 test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (2026-07-22-scope-selector-scale-design.md §F rule 1)', () => {
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['DE'] };

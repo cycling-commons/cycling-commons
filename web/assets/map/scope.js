@@ -411,6 +411,32 @@
       return { rids: rids.length ? rids : null, cc: scope.kind === 'country' ? scope.countryCode : null };
     },
 
+    /** Scope search results for the unified search box
+     *  (2026-07-22-scope-selector-scale-design.md §A): matching country rungs +
+     *  regions, prefix-before-substring, country rungs first on a country hit.
+     *  Pure/compute-only — reads the registry only, never touches storage,
+     *  module state, or the scopechange event. */
+    searchScopes(query, limit) {
+      const q = (query || '').trim().toLowerCase();
+      if (q.length < 1) return [];
+      const cap = limit || 8;
+      const rank = (hay) => { const h = (hay || '').toLowerCase(); const i = h.indexOf(q); return i < 0 ? Infinity : (i === 0 ? 0 : 1); };
+      const out = [];
+      // country rungs (one per onboarded country)
+      for (const [cc, rs] of byCountry) {
+        const cl = rs[0] && rs[0].countryLabel ? rs[0].countryLabel : cc;
+        const score = Math.min(rank(cl), rank(cc));
+        if (score < Infinity) out.push({ kind: 'country', cc, label: cl, _s: score - 0.5 }); // -0.5: rung above its regions on a tie
+      }
+      // regions
+      for (const r of regions) {
+        const score = Math.min(rank(r.label), rank(r.slug));
+        if (score < Infinity) out.push({ kind: 'region', slug: r.slug, cc: r.countryCode || '', label: r.label || r.slug, _s: score });
+      }
+      out.sort((a, b) => (a._s - b._s) || a.label.localeCompare(b.label));
+      return out.slice(0, cap).map(({ _s, ...rest }) => rest);
+    },
+
     /** MapLibre filter expression for the coverage TILE layers (Phase 3,
      *  region-scoping-design.md §6/§7), or null for Everywhere (no filter). The
      *  scope keys are pipe-delimited membership TOKENS: ridtok = "|<region_id>|"
