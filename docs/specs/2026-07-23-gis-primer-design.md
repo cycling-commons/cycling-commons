@@ -87,16 +87,28 @@ Sixteen figures. Fourteen inline SVG, two Mermaid. The split is a rule, not a pr
 | F16 | 9 | SVG | `SurfaceProfiler`'s two measurements — `parts` measured segment-side, `covered` measured route-side |
 
 **SVGs are inlined in the Markdown**, not referenced as `<img>`. An external SVG file cannot
-inherit the page's CSS, and these must work in both the light and dark palette. Inline SVG using
-`currentColor` and CSS custom properties does. `md_in_html` and `attr_list` are already enabled in
-`mkdocs.yml`, so this works today with no extension changes.
+inherit the page's CSS; an inline one reads the site's own custom properties and so cannot drift
+from the palette. `md_in_html` and `attr_list` are already enabled in `mkdocs.yml`, so this works
+today with no extension changes.
+
+The wiki has **one palette** — `scheme: atlas`, a light paper-and-ink theme, with no dark toggle
+configured. Figures therefore target that single scheme and reuse the existing `--cc-*` custom
+properties in `wiki/stylesheets/extra.css` (`--cc-ink`, `--cc-paper`, `--cc-spruce`, `--cc-trail`,
+`--cc-clay`, `--cc-glacier`, `--cc-ochre`) rather than inventing a parallel palette. If a dark
+scheme is ever added, figures built on those properties follow it for free.
 
 ## 5. Mechanics
 
 1. **`mkdocs.yml`** — add a `For developers` nav section listing the eleven pages, and add the
    `custom_fences` block to `pymdownx.superfences` that maps ` ```mermaid ` to
    `pymdownx.superfences.fence_code_format`. Mermaid is **not currently enabled**; this is the one
-   config change the series needs. It is purely additive and cannot affect existing pages.
+   config change the series needs. It is purely additive and cannot affect existing pages — no page
+   in `wiki/` uses a `mermaid` fence today (verified 2026-07-23).
+
+   **Cost, disclosed:** Material 9.7.6 does not bundle Mermaid. It lazy-loads
+   `https://unpkg.com/mermaid@11/dist/mermaid.min.js` from a third-party CDN, on pages containing a
+   `.mermaid` element only. That means two of the eleven pages make an outbound request to unpkg on
+   view, on a wiki that otherwise ships no third-party JS. See §8 for the alternative.
 2. **`wiki/developers/gis/*.md`** — eleven files, each opening with
    `<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->`. The `tools/check-wiki-spdx.sh` pre-commit gate
    globs `wiki/**/*.md`, so the nested path is already covered and a missing header fails the
@@ -128,7 +140,8 @@ These are acceptance criteria, not style suggestions.
 - `mkdocs build --strict` passes with no warnings.
 - `tools/check-wiki-spdx.sh` passes across all eleven new files.
 - Every `file`/`file:line` citation is verified against the working tree at write time.
-- All sixteen figures render legibly in both the light and dark palette.
+- All sixteen figures render legibly against the `atlas` paper background, at both narrow (mobile)
+  and wide viewports, using only the existing `--cc-*` custom properties.
 - The eleven pages appear in nav order under **For developers**.
 - No chapter exceeds ~1,200 words.
 - Every `UNANCHORED` marker in the pages has a matching row in the §10 queue, and every
@@ -142,7 +155,8 @@ These are acceptance criteria, not style suggestions.
 | Licence boundary (CC BY-SA wiki quoting PolyForm Shield code) | D7: short illustrative excerpts and path citations, never whole functions |
 | Scope creep into a full GIS textbook | Chapter word cap, and the §10 review queue: an unanchored concept must earn its place by being useful to *this* reader, and it is visible in a list the owner reviews rather than buried |
 | An unanchored concept reads as "the system does this" when it does not | The `type: absent` marker in §10 is reader-visible by rule, so the page never implies functionality that is not built |
-| Enabling Mermaid changes existing page rendering | Additive `custom_fences` only; no existing page uses a `mermaid` fence — verified before the change lands |
+| Enabling Mermaid changes existing page rendering | Additive `custom_fences` only; no existing page uses a `mermaid` fence — verified 2026-07-23 |
+| Mermaid pulls third-party JS from unpkg on two pages (§5.1) | **Open for the owner.** The alternative is to drop Mermaid and hand-author F10 and F13 as SVG like the other fourteen — two more diagrams, both simple boxes-and-arrows, against fourteen already being drawn. That keeps the wiki free of third-party JS, keeps one visual language across all sixteen figures, and avoids theming Mermaid to the atlas palette. Plan Task 1 implements the Mermaid path as decided in D3; switching is a surgical change to Task 1 and to F10/F13 only |
 
 ## 9. Out of scope
 
