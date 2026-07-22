@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh region-probe region-scaffold
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -153,6 +153,12 @@ wallonia-export: ## Export catalog import artifacts (fixtures + cached harvest) 
 
 divisions-data: ## Export region-<slug>.geojson from Overture divisions to tools/divisions/out/ (country: make divisions-data c="BE")
 	cd tools && python3 -m divisions.export_divisions --country $(or $(c),BE) --out divisions/out
+
+region-probe: ## Onboarding step 1: probe Overture subdivision areas (make region-probe c="NL" [subtypes="region,county"])
+	cd tools && python3 -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes))
+
+region-scaffold: ## Onboarding step 2: emit region config + label stubs for review (make region-scaffold c="NL" [flags="--probe-areas"])
+	@$(DOCKER_COMP) exec -T app php bin/console app:region:scaffold $(or $(c),NL) $(flags)
 
 tools-test: ## Run the tools Python test suites (wallonia + divisions)
 	cd tools && python3 -m pytest wallonia/tests divisions/tests -q
