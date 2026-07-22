@@ -1,0 +1,26 @@
+docs/specs/2026-07-22-country-onboarding-design.md
+  s_c5bcd8e7c7eb21::t_0468f699f36e74 202
+pipeline/coverage/run.py
+  s_c5bcd8e7c7eb21::t_136b55076f16bb 77,79-80,82
+  s_c5bcd8e7c7eb21::t_ae796e5f943212 98
+web/src/World/Command/ScaffoldRegionsCommand.php
+  s_c5bcd8e7c7eb21::t_be4577e2d44ad3 135-142
+pipeline/coverage/load.py
+  s_c5bcd8e7c7eb21::t_78e1f332ae5a56 117-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3edaf3630246816664ddff33ae34662facdb4810",
+  "prompts": {},
+  "sessions": {
+    "s_c5bcd8e7c7eb21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
