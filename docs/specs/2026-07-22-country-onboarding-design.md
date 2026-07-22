@@ -8,7 +8,20 @@ verified serving NL (Noord-Holland region scope a correct subset of whole-NL;
 BE unregressed). The first non-BE coverage run surfaced a real bug —
 Geofabrik extracts overlap at borders (203 shared OSM refs BE↔NL) violating the
 global `coverage_poi` `UNIQUE(ref, letter)` — root-caused and fixed (upsert +
-authoritative region⇒cc; see `pipeline/coverage/load.py`). Generalizes the one-off
+authoritative region⇒cc; see `pipeline/coverage/load.py`).
+**Second run: Germany** (2026-07-22) — 16 Bundesländer (subtype=region/ISO 3166-2)
+seeded, `europe/germany` coverage harvested (**317,887 POIs**; 99.9% region-stamped,
+0 null country_code). First continental-scale run: `coverage_poi` now 375,078 rows
+/ 360 MB across BE/NL/DE with **0 region⇒cc violations**, validating the provenance
+normalization (`src_region_id`/`region_id`, coverage-provider.md §2) and the
+border-overlap dedup at scale (DE borders both BE and NL; shared refs reassigned
+last-writer-wins, counts stayed self-consistent). Browser-verified: All-Germany
+scope renders per-country clusters (0 cross-border mixed bubbles into NL/BE) + the
+country dim mask; 16 localized region labels (Bavaria/Saxony/… exonyms) render.
+This run also exposed + fixed a Geofabrik **mirror-lag** flaw in the PBF md5 check
+(a valid 4.8 GB download failed because `.md5` and `.pbf` came from mirrors at
+different sync states; `run.py::fetch_pbf` now pins the verify to the resolved
+mirror URL + retries). Generalizes the one-off
 "add a country" path in `tools/divisions/README.md` into a fixed, largely
 automated sequence that works for any country **or** a single state of a big
 country, worldwide. Supersedes the informal runbook it extends; does **not**

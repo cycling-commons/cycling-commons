@@ -7,8 +7,12 @@ Belgium is tessellated (Wallonia/Flanders/Brussels); the map, search AND
 coverage tier are all scope-aware — the whole map filters to scope — and the
 rider base location / My-area default scope is live end-to-end. **Phase 5
 (worldwide rollout) opened 2026-07-22 with the Netherlands** (12 provinces at
-subtype=region, seeded in dev + coverage); the repeatable onboarding process and
-playbook live in
+subtype=region, seeded in dev + coverage), then **Germany** (16 Bundesländer at
+subtype=region/ISO 3166-2, native slugs like `bayern`/`sachsen` with English
+exonym labels; seeded in dev + `europe/germany` coverage) — the third country
+and the first at continental scale, validating the coverage_poi provenance
+normalization (`src_region_id`/`region_id`, coverage-provider.md §2) at real row
+counts. The repeatable onboarding process and playbook live in
 [2026-07-22-country-onboarding-design.md](2026-07-22-country-onboarding-design.md)
 and `tools/divisions/README.md`.
 Multi-agent research + design run; all repo-structural claims below were
