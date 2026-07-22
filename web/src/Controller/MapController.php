@@ -366,4 +366,41 @@ final class MapController extends AbstractController
 
         return $response;
     }
+
+    /**
+     * Scope-union boundary (2026-07-22-coverage-scope-rendering-design.md §B):
+     * the ST_Union of a scope's regions — an explicit `rids` id list and/or
+     * every region of a `cc` country — so the map's dim mask can grey
+     * everything outside a whole-country scope, not just a single named
+     * region. `rids` parsing mirrors CoverageController::scopeParams's rids
+     * idiom (canonical positive-integer CSV parts only, garbage dropped).
+     * Public + cacheable like regionBoundary; an empty scope (no rids, no cc)
+     * is a 204 — there is nothing to dim around.
+     */
+    #[Route('/map/scope/boundary', name: 'map_scope_boundary', methods: ['GET'])]
+    public function scopeBoundary(Request $request, RegionBoundaryProvider $boundaries): Response
+    {
+        $ridsRaw = \is_string($request->query->get('rids')) ? (string) $request->query->get('rids') : '';
+        $rids = [];
+        foreach (explode(',', $ridsRaw) as $part) {
+            $part = trim($part);
+            if ('' !== $part && ctype_digit($part) && (string) (int) $part === ltrim($part, '0')) {
+                $rids[(int) $part] = (int) $part;
+            }
+        }
+        $cc = $request->query->get('cc');
+        $cc = \is_string($cc) && 1 === preg_match('/^[A-Za-z]{2}$/D', $cc) ? strtoupper($cc) : null;
+
+        $json = $boundaries->unionFeatureJson(array_values($rids), $cc);
+        if (null === $json) {
+            return new Response('', Response::HTTP_NO_CONTENT);
+        }
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        $response->setMaxAge(3600);
+        $response->isNotModified($request);
+
+        return $response;
+    }
 }

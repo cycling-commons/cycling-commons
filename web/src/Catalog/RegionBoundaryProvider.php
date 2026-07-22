@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -50,6 +51,37 @@ final class RegionBoundaryProvider
         return json_encode([
             'type' => 'Feature',
             'properties' => ['slug' => $slug],
+            'geometry' => json_decode($geoJson, true, 512, \JSON_THROW_ON_ERROR),
+        ], \JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * GeoJSON Feature (JSON string) for the UNION of the regions in a scope —
+     * an explicit id list and/or every region of a country — for the map's
+     * country/multi-region dim mask (2026-07-22-coverage-scope-rendering-design.md
+     * §B). Null when nothing matches (Everywhere / empty scope).
+     *
+     * @param list<int> $rids
+     */
+    public function unionFeatureJson(array $rids, ?string $cc): ?string
+    {
+        if ([] === $rids && (null === $cc || '' === $cc)) {
+            return null;
+        }
+        $geoJson = $this->db->fetchOne(
+            'SELECT ST_AsGeoJSON(ST_SimplifyPreserveTopology(ST_Union(geom), :tol))
+             FROM region
+             WHERE geom IS NOT NULL AND (id IN (:rids) OR country_code = :cc)',
+            ['tol' => self::SIMPLIFY_TOLERANCE, 'rids' => [] !== $rids ? $rids : [-1], 'cc' => (string) $cc],
+            ['rids' => ArrayParameterType::INTEGER],
+        );
+        if (!\is_string($geoJson)) {
+            return null;
+        }
+
+        return json_encode([
+            'type' => 'Feature',
+            'properties' => (object) [],
             'geometry' => json_decode($geoJson, true, 512, \JSON_THROW_ON_ERROR),
         ], \JSON_THROW_ON_ERROR);
     }
