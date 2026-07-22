@@ -10,6 +10,18 @@ from coverage import run
 from coverage.load import DriftAbort, LoadResult
 
 
+class _Resp(io.BytesIO):
+    """urlopen response double that also carries geturl() (the resolved,
+    post-redirect URL fetch_pbf pins the .md5 verify to)."""
+
+    def __init__(self, data: bytes, url: str = "") -> None:
+        super().__init__(data)
+        self._url = url
+
+    def geturl(self) -> str:
+        return self._url
+
+
 def test_fetch_pbf_honours_override(monkeypatch, tmp_path):
     override = tmp_path / "mini.osm.pbf"
     override.write_bytes(b"local fixture bytes")
@@ -54,17 +66,46 @@ def test_fetch_pbf_skips_unchanged_download(monkeypatch, tmp_path):
 
 
 def test_fetch_pbf_md5_mismatch_aborts(monkeypatch, tmp_path):
+    """A genuinely corrupt download: NO mirror .md5 ever matches, so after the
+    retry set the swap aborts and the .part is cleaned up."""
     monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.setattr(run.time, "sleep", lambda *a, **k: None)  # no backoff in tests
 
     def fake_urlopen(url, timeout=None):
         if url.endswith(".md5"):
             return io.BytesIO(b"0" * 32 + b"  europe-belgium-latest.osm.pbf\n")
-        return io.BytesIO(b"corrupted download")
+        return _Resp(b"corrupted download", url)
 
     monkeypatch.setattr(run.urllib.request, "urlopen", fake_urlopen)
     with pytest.raises(RuntimeError, match="md5 mismatch"):
         run.fetch_pbf("europe/belgium", tmp_path)
     assert not (tmp_path / "europe-belgium-latest.osm.pbf").exists()
+    assert not (tmp_path / "europe-belgium-latest.osm.part").exists()
+
+
+def test_fetch_pbf_recovers_when_md5_mirror_lags(monkeypatch, tmp_path):
+    """The download is VALID but the first .md5 reads (a lagging Geofabrik
+    mirror) disagree; a later retry (another mirror) matches the bytes we got —
+    the load must succeed, not crash. This is the europe/germany failure mode."""
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.setattr(run.time, "sleep", lambda *a, **k: None)
+    pbf = b"valid germany extract bytes"
+    good = hashlib.md5(pbf).hexdigest()
+    stale = "0" * 32
+    n = {"md5": 0}
+
+    def fake_urlopen(url, timeout=None):
+        if url.endswith(".md5"):
+            n["md5"] += 1
+            # skip-check (1) + first verify (2) lag; the second verify converges
+            h = good if n["md5"] >= 3 else stale
+            return io.BytesIO(f"{h}  europe-germany-latest.osm.pbf\n".encode())
+        return _Resp(pbf, url)
+
+    monkeypatch.setattr(run.urllib.request, "urlopen", fake_urlopen)
+    dest = run.fetch_pbf("europe/germany", tmp_path)
+    assert dest.read_bytes() == pbf
+    assert not (tmp_path / "europe-germany-latest.osm.part").exists()
 
 
 def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, capsys):

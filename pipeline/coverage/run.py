@@ -14,6 +14,8 @@ import hashlib
 import os
 import pathlib
 import sys
+import time
+import urllib.error
 import urllib.request
 
 import psycopg
@@ -54,21 +56,48 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
         return path
     url = f"{GEOFABRIK_BASE}/{region}-latest.osm.pbf"
     dest = workdir / (region.replace("/", "-") + "-latest.osm.pbf")
-    with urllib.request.urlopen(url + ".md5", timeout=60) as r:
-        want = r.read().decode().split()[0]
-    if dest.exists() and _md5(dest) == want:
-        print(f"[coverage] {region}: PBF unchanged (md5 {want}), skipping download")
-        return dest
+    # Race-tolerant skip: a stale mirror .md5 here at worst forces a needless
+    # re-download, never a crash — so a flaky .md5 must not block a needed load.
+    try:
+        with urllib.request.urlopen(url + ".md5", timeout=60) as r:
+            if dest.exists() and _md5(dest) == r.read().decode().split()[0]:
+                print(f"[coverage] {region}: PBF unchanged, skipping download")
+                return dest
+    except urllib.error.URLError:
+        pass
+    # Geofabrik 302-round-robins across mirrors and rebuilds -latest daily, so a
+    # -latest.md5 fetched from one mirror can disagree with the -latest.pbf a
+    # different mirror serves — a VALID multi-GB download then fails the check
+    # (observed for europe/germany; small cached extracts never hit the window).
+    # Pin the mirror: verify the bytes we actually received against the .md5 from
+    # the SAME resolved URL that served them (r.geturl() after redirects), which
+    # is consistent by construction. The retry then re-reads -latest.md5
+    # (round-robin) as a fallback so a mirror missing its sibling .md5 still
+    # converges on the current hash rather than crashing a good download.
     tmp = dest.with_suffix(".part")
     with urllib.request.urlopen(url, timeout=600) as r, open(tmp, "wb") as out:
+        resolved = r.geturl()
         while chunk := r.read(1 << 20):
             out.write(chunk)
     got = _md5(tmp)
-    if got != want:
-        tmp.unlink()
-        raise RuntimeError(f"{region}: md5 mismatch after download (want {want}, got {got})")
-    tmp.replace(dest)
-    return dest
+    md5_sources = [resolved + ".md5", *([url + ".md5"] * 4)]
+    want = None
+    for i, src in enumerate(md5_sources):
+        try:
+            with urllib.request.urlopen(src, timeout=60) as r:
+                want = r.read().decode().split()[0]
+        except urllib.error.URLError:
+            want = None
+        if want == got:
+            tmp.replace(dest)
+            return dest
+        if i < len(md5_sources) - 1:
+            time.sleep(3)
+    tmp.unlink()
+    raise RuntimeError(
+        f"{region}: md5 mismatch after download (got {got}; last want {want}) — "
+        "no mirror .md5 matched across retries, the download may be corrupt"
+    )
 
 
 def main(argv=None) -> int:
