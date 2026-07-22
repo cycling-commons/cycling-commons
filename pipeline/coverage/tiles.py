@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-"""Tile artifact: coverage_poi → per-letter GeoJSONL → PMTiles → verification.
+"""Tile artifact: coverage_poi → per-(letter, country) GeoJSONL → PMTiles → verification.
 
-One tile layer per osm-data-architecture.md §5 letter (lowercase), thin
-properties only (coverage-provider.md §4 tile artifact contract): ref/n/t
-everywhere plus the per-letter extras declared in coverage-contract.json
-tileProps. The 't' label is the contract selector's label, first matching
-selector wins — the same derivation tools/wallonia/overpass.py used, off the
-shared contract.
+One tile layer per osm-data-architecture.md §5 letter, split further by
+country_code (lowercase `<letter>_<cc>`, unstamped rows bucket under 'zz') so
+tippecanoe never clusters point features across a national border
+(2026-07-22-coverage-scope-rendering-design.md §A). Thin properties only
+(coverage-provider.md §4 tile artifact contract): ref/n/t everywhere plus the
+per-letter extras declared in coverage-contract.json tileProps. The 't' label
+is the contract selector's label, first matching selector wins — the same
+derivation tools/wallonia/overpass.py used, off the shared contract.
 """
 import json
 import math
@@ -78,7 +80,7 @@ def _universal_props(spec, universal: list[str]) -> list[str]:
     return [frags[k] for k in universal]
 
 
-def _letter_sql(letter: str, spec, universal: list[str]) -> str:
+def _letter_sql(letter: str, spec, universal: list[str], cc: str) -> str:
     # jsonb_strip_nulls still drops a NULL name or a NULL per-letter extra, but
     # NOT ridtok/cctok — those are empty strings, never NULL, so every feature
     # carries them (see _universal_props for why).
@@ -96,38 +98,46 @@ def _letter_sql(letter: str, spec, universal: list[str]) -> str:
         "'id', split_part(ref, '/', 2)::bigint, "
         "'geometry', ST_AsGeoJSON(geom)::jsonb, "
         f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
-        f")::text FROM coverage_poi WHERE letter = {_lit(letter)}) TO STDOUT"
+        f")::text FROM coverage_poi "
+        f"WHERE letter = {_lit(letter)} AND COALESCE(country_code, 'ZZ') = {_lit(cc)}) TO STDOUT"
     )
 
 
 def export_geojsonl(conn, workdir):
-    """Stream one newline-delimited GeoJSON file per letter from the full index.
-
-    Returns {letter: Path} for letters that produced at least one feature."""
+    """One newline-delimited GeoJSON file per (letter, country) from the full
+    index (coverage-provider.md §4). Splitting by country_code keeps tippecanoe
+    from clustering across a national border — a bubble's members, count and
+    scope tokens are then single-country. Unstamped rows (country_code NULL)
+    bucket under 'ZZ' so none is dropped. Returns {(LETTER, CC): Path}."""
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
     out = {}
     contract = load_contract()
     universal = contract.universal_tile_props
+    ccs = [r[0] for r in conn.execute(
+        "SELECT DISTINCT COALESCE(country_code, 'ZZ') FROM coverage_poi ORDER BY 1").fetchall()]
     for letter, spec in contract.letters.items():
-        path = workdir / f"{letter.lower()}.geojsonl"
-        n = 0
-        with open(path, "w", encoding="utf-8") as fh, conn.cursor() as cur:
-            with cur.copy(_letter_sql(letter, spec, universal)) as cp:
-                cp.set_types(["text"])
-                for (line,) in cp.rows():  # rows() unescapes COPY text format
-                    fh.write(line)
-                    fh.write("\n")
-                    n += 1
-        if n:
-            out[letter] = path
-        else:
-            path.unlink()
+        for cc in ccs:
+            path = workdir / f"{letter.lower()}_{cc.lower()}.geojsonl"
+            n = 0
+            with open(path, "w", encoding="utf-8") as fh, conn.cursor() as cur:
+                with cur.copy(_letter_sql(letter, spec, universal, cc)) as cp:
+                    cp.set_types(["text"])
+                    for (line,) in cp.rows():  # rows() unescapes COPY text format
+                        fh.write(line)
+                        fh.write("\n")
+                        n += 1
+            if n:
+                out[(letter, cc)] = path
+            else:
+                path.unlink()
     return out
 
 
 def build_pmtiles(layer_files, out_path):
-    """tippecanoe → one .pmtiles, one lowercase layer per letter (coverage-provider.md §4)."""
+    """tippecanoe → one .pmtiles, one lowercase `<letter>_<cc>` layer per
+    (letter, country) so a cluster's members never straddle a national border
+    (coverage-provider.md §4)."""
     cmd = [
         "tippecanoe", "-o", str(out_path), "--force", "--quiet",
         # minzoom 6 (was 8): the region-scoping scope selector fits the map to a
@@ -169,8 +179,8 @@ def build_pmtiles(layer_files, out_path):
         "-r1",
         "--cluster-densest-as-needed",
     ]
-    for letter in sorted(layer_files):
-        cmd += ["-L", f"{letter.lower()}:{layer_files[letter]}"]
+    for (letter, cc) in sorted(layer_files):
+        cmd += ["-L", f"{letter.lower()}_{cc.lower()}:{layer_files[(letter, cc)]}"]
     subprocess.run(cmd, check=True)
 
 

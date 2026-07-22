@@ -50,23 +50,26 @@ def test_export_geojsonl_shapes(db, tmp_path):
             (ref, letter, kind, name, lon, lat, Json(tags), SRC))
     out = tiles.export_geojsonl(db, tmp_path)
 
-    # Empty-letter omission contract: exactly the letters with rows appear.
-    assert set(out) == {"C", "D", "E"}
-    assert "G" not in out
+    # Empty-letter omission contract: exactly the (letter, cc) combos with rows
+    # appear. FIXTURE_ROWS stamp no country_code, so every row buckets to the
+    # unstamped 'ZZ' pseudo-country (coverage-scope-rendering.md — per-country
+    # tile split).
+    assert set(out) == {("C", "ZZ"), ("D", "ZZ"), ("E", "ZZ")}
+    assert not any(letter == "G" for letter, _ in out)
 
-    shop = _features(out["D"])["node/900000001"]
+    shop = _features(out[("D", "ZZ")])["node/900000001"]
     assert shop["id"] == 900000001
     assert shop["geometry"]["coordinates"] == pytest.approx([4.35, 50.85])
     assert shop["properties"]["t"] == _label("D", "shop=bicycle")
     assert shop["properties"]["kind"] == "shop"
     assert shop["properties"]["n"] == "Vélodroom"
 
-    water = _features(out["C"])
+    water = _features(out[("C", "ZZ")])
     assert water["node/900000002"]["properties"]["potable"] is True
     assert "n" not in water["node/900000002"]["properties"]  # jsonb_strip_nulls
     assert water["node/900000003"]["properties"]["potable"] is False
 
-    stay = _features(out["E"])["node/900000004"]
+    stay = _features(out[("E", "ZZ")])["node/900000004"]
     assert stay["properties"]["t"] == _label("E", "tourism=camp_site")
     assert stay["properties"]["acc"] == "Wheelchair-accessible"
 
@@ -83,8 +86,8 @@ def test_export_geojsonl_shapes(db, tmp_path):
     # exported feature's key set is exactly the contract's universal props plus
     # this letter's declared extras — an undeclared column can't ship silently.
     contract = load_contract()
-    for letter, feats in (("D", _features(out["D"])), ("C", _features(out["C"])),
-                          ("E", _features(out["E"]))):
+    for letter, feats in (("D", _features(out[("D", "ZZ")])), ("C", _features(out[("C", "ZZ")])),
+                          ("E", _features(out[("E", "ZZ")]))):
         allowed = set(contract.universal_tile_props) | set(contract.letters[letter].tile_props)
         for ref, feat in feats.items():
             extra = set(feat["properties"]) - allowed
@@ -108,12 +111,39 @@ def test_export_carries_scope_tokens_when_stamped(db, tmp_path):
         ("node/900001002", "D", "shop", "Border shop", 4.36, 50.86,
          Json({"shop": "bicycle", "name": "Border shop"}), SRC, None, "BE"))
     out = tiles.export_geojsonl(db, tmp_path)
-    stamped = _features(out["D"])["node/900001001"]["properties"]
+    stamped = _features(out[("D", "BE")])["node/900001001"]["properties"]
     assert stamped["ridtok"] == "|42|"
     assert stamped["cctok"] == "|BE|"
-    ccOnly = _features(out["D"])["node/900001002"]["properties"]
+    ccOnly = _features(out[("D", "BE")])["node/900001002"]["properties"]
     assert ccOnly["ridtok"] == ""       # region-scope hides it (matches /counts)
     assert ccOnly["cctok"] == "|BE|"    # country-scope shows it
+
+
+def test_export_geojsonl_splits_by_country(db, tmp_path):
+    ensure_schema(db)
+    rows = [
+        ("node/1", "C", 4.35, 50.85, "BE"),
+        ("node/2", "C", 4.40, 50.84, "BE"),
+        ("node/3", "C", 5.10, 52.09, "NL"),
+        ("node/4", "C", 6.00, 53.00, None),   # unstamped -> zz bucket
+    ]
+    for ref, letter, lon, lat, cc in rows:
+        db.execute(
+            "INSERT INTO coverage_poi (ref, letter, geom, tags, src_region, country_code)"
+            " VALUES (%s, %s, ST_SetSRID(ST_MakePoint(%s,%s),4326), %s, %s, %s)",
+            (ref, letter, lon, lat, Json({"amenity": "drinking_water"}), SRC, cc))
+    files = tiles.export_geojsonl(db, tmp_path)
+    keys = set(files)
+    assert ("C", "BE") in keys and ("C", "NL") in keys and ("C", "ZZ") in keys
+    # each file holds only its country's rows
+    assert set(_features(files[("C", "BE")])) == {"node/1", "node/2"}
+    assert set(_features(files[("C", "NL")])) == {"node/3"}
+    assert set(_features(files[("C", "ZZ")])) == {"node/4"}
+    # cctok is single-country per file (BE file never carries |NL|)
+    be = _features(files[("C", "BE")])["node/1"]["properties"]
+    assert be["cctok"] == "|BE|"
+    zz = _features(files[("C", "ZZ")])["node/4"]["properties"]
+    assert zz["cctok"] == ""   # unstamped stays prop-less
 
 
 def _geojsonl(path, rows):
@@ -128,11 +158,11 @@ def _geojsonl(path, rows):
 @pytest.fixture()
 def built(tmp_path):
     files = {
-        "C": _geojsonl(tmp_path / "c.geojsonl", [
+        ("C", "BE"): _geojsonl(tmp_path / "c_be.geojsonl", [
             (4.35, 50.85, {"ref": "node/1", "t": "Drinking water", "potable": True}),
             (5.57, 50.63, {"ref": "node/2", "t": "Drinking water", "potable": False}),
         ]),
-        "D": _geojsonl(tmp_path / "d.geojsonl", [
+        ("D", "BE"): _geojsonl(tmp_path / "d_be.geojsonl", [
             (4.40, 50.84, {"ref": "node/3", "n": "Bike shop BXL", "t": "Bike shop", "kind": "shop"}),
         ]),
     }
@@ -146,27 +176,29 @@ def test_build_and_verify_pmtiles(built):
     # Belgium box; passing expected_bbox also exercises the bounds check and
     # the sample-tile decode (coverage-provider.md §3 step 7: bounds, tile
     # count, decode).
-    tiles.verify_pmtiles(built, expected_layers={"c", "d"},
+    tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"},
                          expected_bbox=(4.0, 50.0, 6.0, 51.5))  # must not raise
 
 
 def test_verify_pmtiles_missing_layer_raises(built):
     with pytest.raises(RuntimeError, match="missing layer"):
-        tiles.verify_pmtiles(built, expected_layers={"c", "d", "e"})
+        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be", "e_be"})
 
 
 def test_verify_pmtiles_default_layers_expect_all_contract_letters(built):
-    # expected_layers=None defaults to every contract letter lowercased; the
-    # two-layer fixture must fail, naming exactly the absent letters.
+    # expected_layers=None defaults to every contract letter lowercased (no cc
+    # suffix); the built fixture's actual layers are the letter_cc names, so
+    # NONE of the default single-letter names match — every contract letter is
+    # reported absent.
     with pytest.raises(RuntimeError, match="missing layer") as exc:
         tiles.verify_pmtiles(built)
-    absent = sorted({letter.lower() for letter in load_contract().letters} - {"c", "d"})
+    absent = sorted(letter.lower() for letter in load_contract().letters)
     assert str(absent) in str(exc.value)
 
 
 def test_verify_pmtiles_disjoint_bounds_raise(built):
     with pytest.raises(RuntimeError, match="bounds"):
-        tiles.verify_pmtiles(built, expected_layers={"c", "d"},
+        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"},
                              expected_bbox=(120.0, 10.0, 121.0, 11.0))
 
 
@@ -179,7 +211,7 @@ def test_verify_pmtiles_zero_addressed_tiles_raise(built, monkeypatch):
                       tiles._show(built))
     monkeypatch.setattr(tiles, "_show", lambda path, *flags: doctored)
     with pytest.raises(RuntimeError, match="no addressed tiles"):
-        tiles.verify_pmtiles(built, expected_layers={"c", "d"})
+        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"})
 
 
 def test_verify_pmtiles_all_sample_tiles_empty_raises(built, monkeypatch):
@@ -189,7 +221,7 @@ def test_verify_pmtiles_all_sample_tiles_empty_raises(built, monkeypatch):
     # test the decode-gate raise semantics.
     monkeypatch.setattr(tiles, "_tile_bytes", lambda *a: b"")
     with pytest.raises(RuntimeError, match="no decodable non-empty tile"):
-        tiles.verify_pmtiles(built, expected_layers={"c", "d"})
+        tiles.verify_pmtiles(built, expected_layers={"c_be", "d_be"})
 
 
 def test_verify_pmtiles_subprocess_failure_surfaces_diagnostics(tmp_path):
@@ -239,7 +271,7 @@ def test_build_command_carries_clustering_flags(tmp_path, monkeypatch):
     captured = {}
     monkeypatch.setattr(tiles.subprocess, "run",
                         lambda cmd, check=True: captured.setdefault("cmd", cmd))
-    tiles.build_pmtiles({"D": tmp_path / "d.geojsonl"}, tmp_path / "o.pmtiles")
+    tiles.build_pmtiles({("D", "BE"): tmp_path / "d.geojsonl"}, tmp_path / "o.pmtiles")
     cmd = captured["cmd"]
     assert "-r1" in cmd, "must keep every point (no rate-based dropping)"
     assert "--cluster-densest-as-needed" in cmd
@@ -272,10 +304,10 @@ def test_clustering_represents_every_point_within_one_tile_at_low_zoom(tmp_path)
              {"ref": f"node/{i}", "t": "Bike shop", "kind": "shop"})
             for i in range(n)]
     out = tmp_path / "cl.pmtiles"
-    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
 
     x, y = _tile_xy(4.35, 50.85, 6)
-    feats = _decode_layer(out, 6, x, y, "d")
+    feats = _decode_layer(out, 6, x, y, "d_be")
     assert feats, "z6 tile must contain the packed points"
     # unclustered feature = 1 point; clustered = point_count members.
     total = sum(f["properties"].get("point_count", 1) for f in feats)
@@ -297,10 +329,10 @@ def test_cluster_unions_member_region_tokens(tmp_path):
                      {"ref": f"node/{i}", "t": "Bike shop",
                       "ridtok": f"|{rid}|", "cctok": "|BE|"}))
     out = tmp_path / "u.pmtiles"
-    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
 
     x, y = _tile_xy(4.35, 50.85, 6)
-    clusters = [f for f in _decode_layer(out, 6, x, y, "d")
+    clusters = [f for f in _decode_layer(out, 6, x, y, "d_be")
                 if "point_count" in f["properties"]]
     assert clusters, "dense box must cluster at z6"
     unioned = next(f for f in clusters if f["properties"]["point_count"] > 1)
@@ -325,9 +357,9 @@ def test_cluster_tokens_survive_rid_less_members(tmp_path):
                       "ridtok": ("|7|" if stamped else ""), "cctok": "|BE|"}))
     out = tmp_path / "m.pmtiles"
     # Builds without tippecanoe's "can't happen" concat abort.
-    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
     x, y = _tile_xy(4.35, 50.85, 6)
-    clusters = [f for f in _decode_layer(out, 6, x, y, "d")
+    clusters = [f for f in _decode_layer(out, 6, x, y, "d_be")
                 if "point_count" in f["properties"]]
     assert clusters, "dense box must cluster at z6"
     ridtok = clusters[0]["properties"]["ridtok"]
@@ -343,9 +375,9 @@ def test_z11_is_still_clustered_the_cap_boundary(tmp_path):
     rows = [(4.34 + (i % 10) * 0.0002, 50.84 + (i // 10) * 0.0002,
              {"ref": f"node/{i}", "t": "Bike shop"}) for i in range(n)]
     out = tmp_path / "z11.pmtiles"
-    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
     x, y = _tile_xy(4.34, 50.84, 11)
-    feats = _decode_layer(out, 11, x, y, "d")
+    feats = _decode_layer(out, 11, x, y, "d_be")
     assert feats, "z11 tile must contain the packed points"
     assert any("point_count" in f["properties"] for f in feats), \
         "z11 is at (not above) --cluster-maxzoom=11 → must still cluster"
@@ -361,10 +393,10 @@ def test_cluster_maxzoom_leaves_high_zoom_individual(tmp_path):
              {"ref": f"node/{i}", "t": "Bike shop", "kind": "shop"})
             for i in range(15)]
     out = tmp_path / "hz.pmtiles"
-    tiles.build_pmtiles({"D": _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
+    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
 
     x, y = _tile_xy(4.351, 50.851, 12)
-    feats = _decode_layer(out, 12, x, y, "d")
+    feats = _decode_layer(out, 12, x, y, "d_be")
     assert feats, "z12 tile must contain the grouped points"
     assert all("point_count" not in f["properties"] for f in feats), \
         "z12 is above --cluster-maxzoom=11 → every feature must be individual"

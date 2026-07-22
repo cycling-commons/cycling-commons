@@ -109,7 +109,8 @@ def main(argv=None) -> int:
         build_pmtiles(layer_files, artifact)
         # expect exactly the layers we exported; letters absent from the index
         # (possible on partial fixtures) don't fail the gate
-        verify_pmtiles(artifact, expected_layers={letter.lower() for letter in layer_files})
+        verify_pmtiles(artifact, expected_layers={
+            f"{letter.lower()}_{cc.lower()}" for (letter, cc) in layer_files})
         # Manifest semantics (shape locked, coverage-provider.md §4): `counts`
         # spans the WHOLE coverage_poi table — every region's current slice,
         # matching the artifact, which is always built from the full index —

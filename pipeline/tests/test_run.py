@@ -112,7 +112,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     monkeypatch.setattr(run, "load_region", fake_load_region)
     monkeypatch.setattr(
         run, "export_geojsonl",
-        lambda conn, wd: calls.append("export") or {"C": tmp_path / "c.geojsonl"})
+        lambda conn, wd: calls.append("export") or {("C", "BE"): tmp_path / "c.geojsonl"})
     monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: calls.append("build"))
     monkeypatch.setattr(
         run, "verify_pmtiles",
