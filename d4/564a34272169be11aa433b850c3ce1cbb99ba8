@@ -1,0 +1,30 @@
+docs/specs/2026-07-22-country-onboarding-design.md
+  s_c5bcd8e7c7eb21::t_0a7ea4c96029fe 3-11
+  s_c5bcd8e7c7eb21::t_fd4f2351d4b374 114-131,143
+  s_c5bcd8e7c7eb21::t_0fa56e5669899c 200,203-207
+  s_c5bcd8e7c7eb21::t_38c28ed65a3178 132-142
+docs/specs/coverage-provider.md
+  s_c5bcd8e7c7eb21::t_e454109293f1fa 54-55
+  s_c5bcd8e7c7eb21::t_0023de049d94ae 183
+  s_c5bcd8e7c7eb21::t_6284100b60c7b9 56-61
+docs/specs/2026-07-19-region-scoping-design.md
+  s_c5bcd8e7c7eb21::t_98402540d36055 8-13
+  s_c5bcd8e7c7eb21::t_743f3a78c5657a 850-861
+  s_c5bcd8e7c7eb21::t_7fa6c871893506 862
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d4564a34272169be11aa433b850c3ce1cbb99ba8",
+  "prompts": {},
+  "sessions": {
+    "s_c5bcd8e7c7eb21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
