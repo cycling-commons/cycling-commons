@@ -566,6 +566,32 @@ region:
     label: 'Bruxelles'
   all_be:
     label: 'Toute la Belgique'
+  drenthe:
+    label: 'Drenthe'
+  flevoland:
+    label: 'Flevoland'
+  friesland:
+    label: 'Frise'
+  gelderland:
+    label: 'Gueldre'
+  groningen:
+    label: 'Groningue'
+  limburg-nl:
+    label: 'Limbourg'
+  noord-brabant:
+    label: 'Brabant-Septentrional'
+  noord-holland:
+    label: 'Hollande-Septentrionale'
+  overijssel:
+    label: 'Overijssel'
+  utrecht:
+    label: 'Utrecht'
+  zeeland:
+    label: 'Zélande'
+  zuid-holland:
+    label: 'Hollande-Méridionale'
+  all_nl:
+    label: 'Tous les Pays-Bas'
   everywhere:
     label: 'Partout'
   kicker: 'BE · Wallonie · atlas régional'

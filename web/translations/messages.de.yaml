@@ -566,6 +566,32 @@ region:
     label: 'Brüssel'
   all_be:
     label: 'Ganz Belgien'
+  drenthe:
+    label: 'Drenthe'
+  flevoland:
+    label: 'Flevoland'
+  friesland:
+    label: 'Friesland'
+  gelderland:
+    label: 'Gelderland'
+  groningen:
+    label: 'Groningen'
+  limburg-nl:
+    label: 'Limburg'
+  noord-brabant:
+    label: 'Nordbrabant'
+  noord-holland:
+    label: 'Nordholland'
+  overijssel:
+    label: 'Overijssel'
+  utrecht:
+    label: 'Utrecht'
+  zeeland:
+    label: 'Zeeland'
+  zuid-holland:
+    label: 'Südholland'
+  all_nl:
+    label: 'Gesamte Niederlande'
   everywhere:
     label: 'Überall'
   kicker: 'BE · Wallonien · Regionsatlas'
