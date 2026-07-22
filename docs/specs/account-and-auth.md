@@ -71,6 +71,14 @@ Privacy consequence (standing rule): the platform **does** hold personal data �
 email, password hash, encrypted 2FA secret, login metadata. Public copy must
 never claim otherwise; the *dataset* being non-personal is a separate claim.
 
+That separate claim is kept true deliberately, not by luck: the coverage cache
+drops OSM contact email addresses at ingest precisely because a sizeable share
+of them are private mailboxes rather than business role addresses
+([osm-data-architecture.md §5](osm-data-architecture.md),
+[coverage-provider.md §2.1](coverage-provider.md)). If a future change starts
+storing personal data in the POI dataset, this standing rule and the public copy
+both have to move with it.
+
 ## 2. Registration, email verification, password reset
 
 All built on permissive MIT libraries — `symfony/security-bundle`,

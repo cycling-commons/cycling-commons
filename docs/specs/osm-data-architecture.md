@@ -27,8 +27,14 @@ on data ingestion, the map, the contribution flow, or the public API.
    pre-harvest the planet's POIs into our canonical store; coverage comes from
    the cache/OSM. Administrative *regions* (spatial buckets for queries) are
    generated ahead of go-live.
-4. **Coverage is a narrow, well-defined subset.** We cache only the fixed set of
-   OSM tags catalogued in §5. This keeps ingestion, caching, and serving cheap.
+4. **Coverage is a narrow, well-defined subset — on both axes.** *Which objects*
+   we cache is the fixed catalogue in §5. *Which tag keys we keep on those
+   objects* is a separate, equally fixed list — the serve-set
+   ([coverage-provider.md §2.1](coverage-provider.md)) — applied at parse time.
+   Keeping both narrow is what makes ingestion, caching, and serving cheap; a
+   cache that stores every tag of every catalogued object is a bulk OSM copy by
+   omission, which principle 1 forbids.
+   **We do not cache contact email addresses** (see §5).
 5. **An OSM object only enters our canonical store when a human curates it** (§6).
 
 ## 2. The three data categories
@@ -155,6 +161,31 @@ a deliberate decision — every addition widens ingestion and the cache.
 
 Item types **B · Climbs**, **F · Hazards**, and **K · Recommended routes** are
 category-3 (our own data) and are **not** part of the OSM extract.
+
+### What we keep *on* each cached object
+
+The table above says which OSM **objects** we cache. It does not say which of
+their **tags** we keep — a separate and equally deliberate list, because
+`osmium tags-filter` selects objects, not keys, so a matching object arrives
+carrying everything OSM has attached to it.
+
+We store **27 tag keys**: the 9 selector keys above, the 14 keys the POI drawer
+displays, and 4 provisional media/reference keys. Everything else is dropped
+before it reaches our database. The full list, the rationale, and the tests that
+enforce it are in
+[coverage-provider.md §2.1](coverage-provider.md). Two consequences worth
+knowing here:
+
+- **We do not store contact email addresses** (`email`, `contact:email`). They
+  are ~99 % redundant against the website and phone we do keep, and a sizeable
+  share of them are private mailboxes rather than business role addresses.
+  Keeping personal data that no view renders is liability without benefit, and
+  the Commons dataset is meant to be non-personal. Riders reach a business via
+  its website or phone.
+- **The cache is the only OSM source at serve time.** No request path calls
+  Overpass or the OSM API — including the POI drawer, which reads
+  `coverage_poi` alone. So an untrimmed key is not "extra safety"; it is dead
+  weight, and a trimmed one cannot be recovered without a re-harvest.
 
 ### Bike services — one type, three OSM kinds
 

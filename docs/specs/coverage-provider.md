@@ -106,54 +106,10 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
 - **Narrow serving cache, not an OSM copy.** `coverage_poi` is the §5 serving
   cache of a *defined, narrow* OSM subset
   ([osm-data-architecture.md §1](osm-data-architecture.md) principle 4) — **not**
-  a bulk copy of OSM (principle 1). `tags` therefore holds only the fixed filtered
-  subset the drawer + search actually render; what *leaves* the server is trimmed
-  further (tiles carry the thin property set, coverage-provider.md §4; the detail
-  endpoint whitelists display tags, coverage-provider.md §5).
-  **Correction (2026-07-22):** an earlier "store the *full* tag set so
-  materialize-on-edit can snapshot without re-fetching OSM" rationale was wrong.
-  Materialize-on-edit ([osm-data-architecture.md §6](osm-data-architecture.md))
-  copies `{osm_ref, edit}` into the canonical store and **merges OSM data from the
-  cache/OSM at read time** — it needs no per-row full-tag snapshot. So carrying a
-  rich tag copy for all rows is the bulk-OSM duplication principle 1 forbids, and
-  at the ~4.7 M planet-wide subset it is the table's dominant cost. Target: trim
-  `tags` to the true serve-set. **Done 2026-07-23** — see the storage policy
-  below.
-- **Storage policy: store only what we serve.** `tags` holds exactly the
-  contract's `storedTagKeys`, applied at parse time
-  (`pipeline/coverage/parse.py`). This matters because `osmium tags-filter`
-  selects **objects, not keys**: a matching object arrives carrying every tag it
-  has, so without a trim a single memorial contributed 20 keys. Measured across
-  BE + NL + DE (375,078 rows) the cache held **4,220 distinct keys** of which
-  nothing read more than 27; trimming cut the tags payload **73 MB → 35 MB
-  (-51.7 %, 203 → 98 B/row)**, taking the whole row from 517 → 412 B.
-  The keep-set is three groups:
-  1. **Selector keys** (9) — classification; `tiles.py::_label_case` reads them
-     back at tile-build time.
-  2. **`TAG_WHITELIST`** (14) — exactly what the drawer displays (§5).
-  3. **Media/reference** (4) — `wikidata`, `wikipedia`, `image`,
-     `wikimedia_commons`; **provisional**, kept pending a review of whether we
-     actually use them (they cost 19 B/row, ≈ 89 MB at planet scale).
-
-  Two deliberate exclusions, both enforced by tests rather than convention:
-  `name` (promoted to the `name` column, commit `d2ce930`), and **`email` /
-  `contact:email`** — 98.6 % of rows carrying one also have a website or phone,
-  and 12.6 % of the addresses sit on free consumer providers, i.e. private
-  mailboxes. Storing personal data the drawer never renders is liability without
-  benefit, and it would undercut the "the Commons dataset is non-personal"
-  claim in the privacy copy. `addr:postcode` is out on the same
-  store-only-what-we-serve rule.
-
-  The policy is load-bearing rather than cosmetic because **the drawer has no
-  live-OSM fallback** — `/map/coverage/poi/{ref}` is served purely from
-  `coverage_poi` (§5), so a key that is not stored can never be displayed.
-  `load_contract()` therefore refuses a `storedTagKeys` that drops a selector key
-  or a key `tiles.py::_EXTRA_SQL` reads, and
-  `web/tests/Catalog/CoverageContractTest.php` asserts
-  `TAG_WHITELIST ⊆ storedTagKeys` so the two halves cannot drift.
-  **Changing the keep-set requires a re-harvest** to take effect on existing
-  rows (weekly cadence, so cheap — but decide once rather than re-harvesting
-  twice).
+  a bulk copy of OSM (principle 1). Which *objects* we cache is §5's catalogue;
+  which *tag keys* we keep on them is §2.1 below. What *leaves* the server is
+  narrower still (tiles carry the thin property set, §4; the detail endpoint
+  whitelists display tags, §5).
 - **Measured sizing (2026-07-23).** At 375,078 rows (BE + NL + DE, compacted):
   **341 B/row heap + 176 B/row indexes = 517 B/row**, and the per-row figure is
   stable across countries (tags average 205 B/row in DE, 199 in BE, 197 in NL —
@@ -178,6 +134,80 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   the schema is mirrored by a test trait (`web/tests/Coverage/CoverageSchema.php`)
   inside the DAMA transaction, because migrations never create the table.
 
+### 2.1 What `tags` holds — the serve-set
+
+**The rule: we store only what we serve.** `coverage_poi.tags` holds exactly the
+keys listed as `storedTagKeys` in the shared contract (§7), and nothing else.
+The trim happens at parse time (`pipeline/coverage/parse.py`), so unwanted keys
+never reach the database at all.
+
+**Why this needs stating.** §5 catalogues which OSM *objects* we cache. That is a
+different question from which *keys* we keep on them, and the two are easy to
+conflate: `osmium tags-filter` selects **objects, not keys**, so every matching
+object arrives carrying its full tag set. Before the trim (2026-07-23) the cache
+therefore stored **4,220 distinct keys** — a single memorial contributing 20 of
+them — while nothing in the codebase read more than **27**. That is the bulk-OSM
+duplication [osm-data-architecture.md §1](osm-data-architecture.md) principle 1
+forbids, arrived at by omission rather than by decision.
+
+The serve-set is three groups:
+
+| Group | Count | Keys | Read by |
+|---|---|---|---|
+| **Selectors** | 9 | `amenity`, `drinking_water`, `historic`, `natural`, `railway`, `shelter_type`, `shop`, `tourism`, `waterway` | Classification (letter + `serviceKind`); `tiles.py::_label_case` re-reads them at tile-build time |
+| **Display** | 14 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity` | `CoverageRepository::TAG_WHITELIST` — exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
+
+`TAG_WHITELIST` has **15** entries; `drinking_water` is counted in the selector
+row above, so the three groups sum to 9 + 14 + 4 = **27** distinct keys.
+| **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | **Nothing yet — provisional.** Kept only because re-adding them later costs a full re-harvest; pending a decision on whether we build the drawer photo / deep-link features. Cost: 19 B/row, ≈ 89 MB planet-wide |
+
+Measured impact of the trim across BE + NL + DE (375,078 rows): tags payload
+**73 MB → 35 MB (-51.7 %, 203 → 98 B/row)**, whole row **517 → 412 B/row**,
+≈ 493 MB at the ≈ 4.7 M planet subset.
+
+**What we deliberately do not store.** These are decisions, not oversights, and
+tests enforce them:
+
+- **`email` / `contact:email` — never.** 98.6 % of the rows carrying one also
+  carry a website or phone, so a rider loses no way to reach a business; and
+  12.6 % of the addresses sit on free consumer providers, i.e. **private
+  mailboxes**. Storing personal data that no view ever renders is liability
+  without benefit, and it would undercut the platform's position that the
+  Commons *dataset* is non-personal. A website plus a phone number is the
+  contact surface; anyone needing an email can find it on the website.
+- **`name`** — promoted to the dedicated `coverage_poi.name` column, so keeping
+  it in `tags` duplicated the authoritative value on every named row.
+- **`addr:postcode`** — same store-only-what-we-serve rule: a rider has the pin.
+- Everything else OSM happens to attach to a matching object: `inscription`,
+  `memorial:*`, `person:date_of_birth`, `object:*`, `building`, `source`,
+  `material`, and ~4,200 more.
+
+**Why the trim is safe — and why it must be guarded.** The drawer has **no
+live-OSM fallback**: `/map/coverage/poi/{ref}` is served purely from
+`coverage_poi` joined to `item` (§5), and nothing in the request path calls
+Overpass or the OSM API. A key that is not stored can therefore never be
+displayed, so the keep-set and the display whitelist are one contract, enforced
+from both sides:
+
+- `load_contract()` rejects a `storedTagKeys` that drops a selector key, drops a
+  key `tiles.py::_EXTRA_SQL` reads, or lists `name`.
+- `pipeline/tests/test_tiles.py` pins `contract.py::TILE_DERIVED_TAG_KEYS` to the
+  keys that SQL actually reads.
+- `web/tests/Catalog/CoverageContractTest.php` asserts
+  **`TAG_WHITELIST ⊆ storedTagKeys`** — a display key the pipeline trims away
+  would be a permanently blank drawer row.
+
+**Changing the serve-set requires a re-harvest** to affect existing rows. The
+batch runs weekly so this is cheap, but decide once rather than re-harvesting
+twice. Nothing breaks in the interim: rows harvested under an older, wider set
+simply carry keys nothing reads.
+
+*History: an earlier revision of this section justified storing the full tag set
+so materialize-on-edit could snapshot without re-fetching OSM. That was wrong —
+materialize-on-edit ([osm-data-architecture.md §6](osm-data-architecture.md))
+copies `{osm_ref, edit}` into the canonical store and merges the OSM side from
+this cache at read time, so it needs no per-row full-tag snapshot.*
+
 ## 3. The weekly batch job
 
 Per region in `COVERAGE_REGIONS`, independently:
@@ -187,8 +217,10 @@ Per region in `COVERAGE_REGIONS`, independently:
    runs — never a network dependency in tests).
 2. **Filter** to the [osm-data-architecture.md §5](osm-data-architecture.md)
    selectors with `osmium tags-filter` (a few-MB PBF remains).
-3. **Parse** with pyosmium into rows: letter(s), kind, name, centroid, tag
-   subset. `serviceKind` derives from the shared contract file
+3. **Parse** with pyosmium into rows: letter(s), kind, name, centroid, and the
+   tags **trimmed to the contract's `storedTagKeys`** (§2.1) — step 2 filtered
+   *objects*, this step filters *keys*, and it is the only place that happens.
+   `serviceKind` derives from the shared contract file
    (coverage-provider.md §7) — the same mapping as
    `App\Catalog\ServiceKind::fromOsmTags()`
    (`web/src/Catalog/ServiceKind.php`).
