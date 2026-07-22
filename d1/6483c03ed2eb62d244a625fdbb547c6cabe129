@@ -1,0 +1,23 @@
+.github/workflows/ci-app.yml
+  s_3bd3f8ccb3a560::t_34bfa16e76e031 3-6,9,12
+docs/specs/coverage-provider.md
+  s_3bd3f8ccb3a560::t_88cf25b5c1727d 633-640
+  s_3bd3f8ccb3a560::t_6164d4200cecbf 327
+  s_3bd3f8ccb3a560::t_aa9954f584c444 357-389
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d16483c03ed2eb62d244a625fdbb547c6cabe129",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
