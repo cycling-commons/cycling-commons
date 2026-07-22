@@ -146,9 +146,17 @@ final class CoverageManifest
      * an operator repoints COVERAGE_MANIFEST_URL while using a persistent
      * cache, the next request uses the new key, instead of serving the old
      * URL for up to CACHE_TTL.
+     *
+     * The `.v2` shape segment guards the widening of the cached value from a
+     * bare URL string (pre-country-split) to the whole decoded manifest array:
+     * a warm persistent cache holding a v1 string entry must never be read back
+     * into manifest(): ?array (a TypeError the catch would swallow, silently
+     * disabling coverage until the entry expired). Bumping the key retires the
+     * old-shaped entries instead of misreading them. Bump again on any future
+     * change to the cached value's shape.
      */
     private function cacheKey(): string
     {
-        return 'coverage.manifest.'.hash('xxh128', $this->manifestUrl);
+        return 'coverage.manifest.v2.'.hash('xxh128', $this->manifestUrl);
     }
 }

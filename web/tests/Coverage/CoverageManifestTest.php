@@ -131,6 +131,64 @@ final class CoverageManifestTest extends TestCase
         self::assertSame('https://maps.test/coverage/new.pmtiles', $second->currentTileUrl());
     }
 
+    public function testCountryCodesReturnsManifestArrayWhenPresent(): void
+    {
+        $http = new MockHttpClient(new JsonMockResponse([
+            'version' => 1,
+            'url' => 'https://maps.test/coverage/20260716-0400.pmtiles',
+            'country_codes' => ['BE', 'NL'],
+        ]));
+        $manifest = $this->manifest($http);
+
+        self::assertSame(['BE', 'NL'], $manifest->countryCodes());
+        // Same cached decoded manifest serves url() + countryCodes(): one fetch.
+        self::assertSame('https://maps.test/coverage/20260716-0400.pmtiles', $manifest->currentTileUrl());
+        self::assertSame(1, $http->getRequestsCount());
+    }
+
+    public function testCountryCodesIsEmptyWhenKeyAbsent(): void
+    {
+        // A pre-split manifest (url only, no country_codes): the client falls
+        // back to a single unsplit layer per letter, so [] not null.
+        $http = new MockHttpClient(new JsonMockResponse([
+            'version' => 1,
+            'url' => 'https://maps.test/coverage/20260716-0400.pmtiles',
+        ]));
+        self::assertSame([], $this->manifest($http)->countryCodes());
+    }
+
+    public function testCountryCodesIsEmptyOnNonArrayValue(): void
+    {
+        // A malformed country_codes (scalar, not a list) degrades to [], same
+        // as absent — never a TypeError.
+        $http = new MockHttpClient(new JsonMockResponse([
+            'version' => 1,
+            'url' => 'https://maps.test/coverage/20260716-0400.pmtiles',
+            'country_codes' => 'BE',
+        ]));
+        self::assertSame([], $this->manifest($http)->countryCodes());
+    }
+
+    public function testCountryCodesDropsNonStringMembers(): void
+    {
+        // Defensive is_string filter: a malformed member (number, null, nested
+        // array) is dropped, and the list is re-indexed so it stays a list<string>.
+        $http = new MockHttpClient(new JsonMockResponse([
+            'version' => 1,
+            'url' => 'https://maps.test/coverage/20260716-0400.pmtiles',
+            'country_codes' => ['BE', 42, null, 'NL', ['x']],
+        ]));
+        self::assertSame(['BE', 'NL'], $this->manifest($http)->countryCodes());
+    }
+
+    public function testCountryCodesIsEmptyWhenTilesOffWithoutFetching(): void
+    {
+        // Same degradation contract as currentTileUrl(): flag off → [] and no fetch.
+        $http = new MockHttpClient();
+        self::assertSame([], $this->manifest($http, enabled: false)->countryCodes());
+        self::assertSame(0, $http->getRequestsCount());
+    }
+
     public function testFetchBoundsIdleAndTotalTime(): void
     {
         $captured = null;
