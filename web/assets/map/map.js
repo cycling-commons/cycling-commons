@@ -114,15 +114,37 @@
       .then(r=>{ if(!r.ok) throw new Error('boundary HTTP '+r.status); return r.json(); }).then(d=>{
         const g = d && d.geometry;
         if(req!==_spotReq||!g||!map.getStyle()||map.getSource('region')) return;   // superseded or gone
-        const polys = g.type==='MultiPolygon' ? g.coordinates : [g.coordinates];
-        const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
-        const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...polys.map(p=>p[0])]}};
-        map.addSource('region-mask',{type:'geojson',data:mask});
-        map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
-        map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
-        map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
+        drawSpotlightMask(g);
       // decorative only — the map works without the boundary, but log why it's missing (W34)
       }).catch(e=>console.warn('Region boundary unavailable:', e));
+  }
+
+  // Shared mask painter: dim the world outside `g` + a dashed outline. Used by
+  // the named-region and country spotlights; the My-area circle keeps its own
+  // soft-edge variant (region-scoping-design.md §4 anti-border cue).
+  function drawSpotlightMask(g){
+    const polys = g.type==='MultiPolygon' ? g.coordinates : [g.coordinates];
+    const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
+    const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...polys.map(p=>p[0])]}};
+    map.addSource('region-mask',{type:'geojson',data:mask});
+    map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
+    map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
+    map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
+  }
+  // Country spotlight (2026-07-22-coverage-scope-rendering-design.md §B): the
+  // whole-country outline via /map/scope/boundary's ST_Union, so a country scope
+  // greys the rest of the world exactly like a single named region does.
+  function setCountrySpotlight(cc){
+    if(!map.getStyle()) return;
+    const req = ++_spotReq;
+    clearSpotlight();
+    if(!cc) return;
+    fetch(`/map/scope/boundary?cc=${encodeURIComponent(cc)}`)
+      .then(r=>{ if(r.status===204) return null; if(!r.ok) throw new Error('scope boundary HTTP '+r.status); return r.json(); })
+      .then(d=>{ const g=d&&d.geometry;
+        if(req!==_spotReq||!g||!map.getStyle()||map.getSource('region')) return;
+        drawSpotlightMask(g);
+      }).catch(e=>console.warn('Scope boundary unavailable:', e));
   }
 
   // My-area spotlight (region-scoping-design.md §4 / §9.1 Phase 4): a locally
@@ -197,6 +219,7 @@
       if(stt) stt.textContent = isMy ? myLine : ((s && s.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere') : tpl(I18N.searchIn||'Search in {area}', {area:lbl}));
     }
     if(s&&s.kind==='myArea'&&s.myArea) setCircleSpotlight(s.myArea.center, s.myArea.radiusKm);
+    else if(s&&s.kind==='country') setCountrySpotlight(s.countryCode);
     else setSpotlight(s&&s.kind==='region'&&s.regionIds.length===1 ? slugOfRegion(s.regionIds[0]) : null);
     refilterClusters(); updateConfMarkers();   // served-POI clusters follow scope (no-ops until setupConfClusters runs)
     updateHeatFilter();                         // ride-heat follows scope too (no-op until the lazy layer exists)
