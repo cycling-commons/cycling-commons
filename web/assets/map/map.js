@@ -1160,10 +1160,11 @@
   map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     // renderScopeChips() must wait until here (not right after CCScope.init near
-    // the top of the file): it reads curScope/scopeToken, both consts defined
-    // later in this same top-level script — calling it any earlier would hit
-    // the TDZ. The 'load' handler already runs the one-time initial applyScope,
-    // so it's also the natural one-time initial chip render.
+    // the top of the file): it reads `curScope`, a const declared BELOW that call
+    // site in this same top-level script, so calling it any earlier hits the TDZ.
+    // (`scopeToken` is a hoisted function declaration and would have been fine —
+    // curScope alone forces the deferral.) The 'load' handler already runs the
+    // one-time initial applyScope, so it is also the natural first chip render.
     applyScope(curScope(), {fit:false}); renderScopeChips(); setupConfClusters();
     // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
     // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a

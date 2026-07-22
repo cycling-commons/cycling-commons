@@ -51,13 +51,11 @@ final class MapController extends AbstractController
             // Region registry for the scope selector (region-scoping-design.md
             // §4 / §7 Phase 2): id/slug/cc/bbox per region, consumed by
             // window.CCScope. Display labels come from region.<slug>.label.
+            // The country rungs that used to ride here as `scope_countries` are
+            // gone: map.js renderScopeChips() now derives them client-side from
+            // CC_REGIONS (2026-07-22-scope-selector-scale-design.md §B), so the
+            // template no longer reads a server-computed list.
             'regions' => $regionRows,
-            // One "All <country>" rung per DISTINCT registry country, in
-            // registry order (07-20 review finding 6): the template must never
-            // hardcode a single country — the first non-BE region import gets
-            // its rung + region.all_<cc>.label key the same way regions get
-            // region.<slug>.label.
-            'scope_countries' => array_values(array_unique(array_column($regionRows, 'countryCode'))),
             // Rider preferences ride the page render (map-and-search.md §4.4):
             // value-lists only, [] for anonymous — map.js treats
             // empty as "no prefilter" so anonymous behaviour is unchanged.
