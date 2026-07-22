@@ -449,7 +449,14 @@
         const b = r.bbox;
         if (!b || lng < b[0] || lng > b[2] || lat < b[1] || lat > b[3]) continue;
         const cx = (b[0] + b[2]) / 2; const cy = (b[1] + b[3]) / 2;
-        const d = (cx - lng) ** 2 + (cy - lat) ** 2;
+        // Scale the longitude delta by cos(lat) before comparing. Raw squared
+        // degrees are NOT "nearest centre": a longitude degree is ~0.65 of a
+        // latitude degree at 49°N, so an unscaled metric over-weights east-west
+        // separation by 1/cos²(lat) ≈ 2.3× there — enough to pick the visually
+        // farther region when an east-west-elongated bbox overlaps a
+        // north-south-elongated one (task-4 review).
+        const kx = Math.cos(lat * Math.PI / 180);
+        const d = ((cx - lng) * kx) ** 2 + (cy - lat) ** 2;
         if (d < bestD) { bestD = d; best = r; }
       }
       return best;

@@ -556,6 +556,21 @@ test('regionOfPoint: returns the bbox-containing region, nearest centre on overl
   assert.equal(S.regionOfPoint(11.4, 49.4).slug, 'a'); // overlap: nearer a's centre (11,49) than b's (12,50)
 });
 
+// Regression for the task-4 review finding: "nearest centre" must mean nearest on
+// the ground, not nearest in raw squared degrees. A longitude degree is only
+// ~0.656 of a latitude degree at 49°N, so an unscaled metric over-weights
+// east-west separation by 1/cos²(lat) ≈ 2.3x and can pick the visually farther
+// region. Both bboxes below contain the click point; 'east' is genuinely 80 km
+// away and 'north' 100 km, so 'east' is correct — but the unscaled metric scores
+// east 1.200 vs north 0.807 and would wrongly return 'north'.
+test('regionOfPoint: nearest centre is measured on the ground, not in raw degrees', () => {
+  const S = freshScope([
+    { id: 1, slug: 'east', countryCode: 'DE', bbox: [9.5, 48.5, 12.6912, 49.5], label: 'East', countryLabel: 'All Germany' },
+    { id: 2, slug: 'north', countryCode: 'DE', bbox: [9.0, 48.9, 11.0, 50.8966], label: 'North', countryLabel: 'All Germany' },
+  ]);
+  assert.equal(S.regionOfPoint(10.0, 49.0).slug, 'east');
+});
+
 test('contextualRegions: onboarded regions of a country, label-sorted', () => {
   const S = freshScope([
     { id: 1, slug: 'z', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Zeta', countryLabel: 'All Germany' },
