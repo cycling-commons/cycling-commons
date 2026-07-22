@@ -139,8 +139,26 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                     f"(more than {DRIFT_ABORT_RATIO:.0%} drop) — aborting swap, keeping last good slice."
                 )
             cur.execute("DELETE FROM coverage_poi WHERE src_region = %s", (src_region,))
+            # UPSERT, not plain INSERT: Geofabrik regional extracts overlap at
+            # shared borders, so one OSM entity (same ref → same (ref, letter))
+            # appears in >1 extract (203 refs shared BE↔NL in the first NL run).
+            # The DELETE above only clears THIS src_region, so a border entity
+            # still owned by a neighbour would violate the global
+            # UNIQUE(ref, letter) and roll the whole slice back. ON CONFLICT
+            # takes last-writer-wins ownership; the membership recompute below
+            # then re-derives region_id/cc from geometry for the new owner. These
+            # conflicts are staging-vs-table (one row per (ref, letter) per
+            # extract), so DO UPDATE never hits "affect a row a second time"; a
+            # malformed extract with an intra-batch dup fails loud there and rolls
+            # the swap back — safe, and covered by the generic-error test.
             cur.execute(
-                f"INSERT INTO coverage_poi ({_COLUMNS}) SELECT {_COLUMNS} FROM coverage_poi_staging"
+                f"INSERT INTO coverage_poi ({_COLUMNS}) "
+                f"SELECT {_COLUMNS} FROM coverage_poi_staging "
+                f"ON CONFLICT (ref, letter) DO UPDATE SET "
+                f"kind = EXCLUDED.kind, name = EXCLUDED.name, geom = EXCLUDED.geom, "
+                f"tags = EXCLUDED.tags, osm_version = EXCLUDED.osm_version, "
+                f"osm_ts = EXCLUDED.osm_ts, src_region = EXCLUDED.src_region, "
+                f"country_code = EXCLUDED.country_code"
             )
             # Smallest-area-wins on overlap (region-scoping-design.md §3): the
             # third membership writer besides RegionResolver and
@@ -194,15 +212,20 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
             # region ⇒ cc invariant (region-scoping-design.md §8 risk 10, finding
             # 8): the controller's 24-region cap is only safe if every
             # region-stamped row also carries cc (the cc arm is the completeness
-            # net when the rid list truncates). Backfill cc from the region for
-            # any stamped row whose extract left it NULL (~10 rows in dev), so a
-            # region-stamped row can never be cc-less.
+            # net when the rid list truncates). country_code is AUTHORITATIVE from
+            # the region, not the extract: a stamped row takes its region's cc
+            # whenever they differ — this both backfills an extract NULL (~10 rows
+            # in dev) AND corrects a border entity that a neighbouring extract
+            # stamped with the wrong country (an NL-extract row that ST_Contains
+            # placed in a BE region must read BE, not NL). Guarded on
+            # r.country_code IS NOT NULL so a cc-less region never wipes a POI cc.
             cur.execute(
                 """
                 UPDATE coverage_poi SET country_code = r.country_code
                 FROM region r
                 WHERE coverage_poi.region_id = r.id
-                  AND coverage_poi.country_code IS NULL
+                  AND r.country_code IS NOT NULL
+                  AND coverage_poi.country_code IS DISTINCT FROM r.country_code
                   AND coverage_poi.src_region = %s
                 """,
                 (src_region,),

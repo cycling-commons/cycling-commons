@@ -114,6 +114,45 @@ def test_load_region_backfills_cc_from_region_when_extract_left_it_null(db):
     assert cc == "BE", "a region-stamped row must never be left cc-less"
 
 
+def test_load_region_upserts_shared_border_entity_across_regions(db):
+    """Geofabrik regional extracts overlap at borders, so the SAME OSM entity
+    (same ref) appears in two extracts (country-onboarding-design.md §2 plan
+    refinement; 203 such refs shared BE↔NL). The global UNIQUE(ref, letter) plus
+    the per-src_region swap must UPSERT a shared entity, never crash on the
+    second region's load — and a region-stamped row's country_code must equal its
+    region's, even when the neighbouring extract stamped the other country
+    (region ⇒ cc invariant, region-scoping-design.md §8 risk 10)."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES "
+        "(1, 30000, 'BE', ST_GeomFromText('MULTIPOLYGON(((3 50, 5 50, 5 51, 3 51, 3 50)))', 4326)), "
+        "(2, 20000, 'NL', ST_GeomFromText('MULTIPOLYGON(((5 50, 7 50, 7 51, 5 51, 5 50)))', 4326))"
+    )
+    db.commit()
+    # BE extract loads two border entities that ALSO fall in NL's extract buffer:
+    #   node/100 sits in NL territory (lon 6), node/200 in BE territory (lon 4).
+    load_region(db, [
+        _row("node/100", "C", lon=6.0, lat=50.5, src_region="europe/belgium", country_code="BE"),
+        _row("node/200", "C", lon=4.0, lat=50.5, src_region="europe/belgium", country_code="BE"),
+    ], "europe/belgium")
+    # NL extract re-loads the SAME shared entities — must not raise a UNIQUE
+    # violation (the pre-fix bug that rolled the whole NL slice back).
+    res = load_region(db, [
+        _row("node/100", "C", lon=6.0, lat=50.5, src_region="europe/netherlands", country_code="NL"),
+        _row("node/200", "C", lon=4.0, lat=50.5, src_region="europe/netherlands", country_code="NL"),
+    ], "europe/netherlands")
+    assert res.inserted == 2
+    rows = {ref: (rid, cc) for ref, rid, cc in db.execute(
+        "SELECT ref, region_id, country_code FROM coverage_poi ORDER BY ref"
+    ).fetchall()}
+    assert len(rows) == 2, "shared border entities upsert in place, never duplicate"
+    assert rows["node/100"] == (2, "NL"), "an entity in NL territory resolves to the NL region + cc"
+    assert rows["node/200"] == (1, "BE"), (
+        "an entity in BE territory keeps BE cc even though the NL extract loaded "
+        "it last — region ⇒ cc, not extract ⇒ cc"
+    )
+
+
 def test_load_region_smallest_area_wins_on_overlap(db):
     """Overlapping regions: the smaller-area one wins, not the lower id.
 
@@ -161,13 +200,16 @@ def test_load_region_drift_abort_keeps_last_slice(db):
 def test_load_region_generic_error_rolls_back_whole_swap(db):
     """Any mid-transaction failure — not just DriftAbort — keeps the last slice.
 
-    A duplicate (ref, letter) pair passes the drift check and the DELETE, then
-    fires coverage_poi's UNIQUE constraint on the INSERT — proving the rollback
-    covers everything after the DELETE, not only the drift guard.
+    A duplicate (ref, letter) WITHIN one extract passes the drift check and the
+    DELETE, then makes the ON CONFLICT upsert try to affect the same target row
+    twice → CardinalityViolation on the INSERT, proving the rollback covers
+    everything after the DELETE, not only the drift guard. (Cross-region
+    duplicates are handled by the upsert; only an intra-batch dup — which real
+    parsing never emits — fails here, and it fails safe.)
     """
     ensure_schema(db)
     load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
-    with pytest.raises(psycopg.errors.UniqueViolation):
+    with pytest.raises(psycopg.errors.CardinalityViolation):
         load_region(db, [
             _row(f"node/{i}", "C") for i in range(9)
         ] + [_row("node/0", "C")], "europe/belgium")   # 10 rows, node/0 twice
