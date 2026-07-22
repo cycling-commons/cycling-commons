@@ -44,4 +44,11 @@ final class ScopeBoundaryTest extends WebTestCase
         static::createClient()->request('GET', '/map/scope/boundary');
         self::assertSame(204, static::getClient()->getResponse()->getStatusCode());
     }
+
+    public function testArrayValuedRidsDegradesToEmptyScopeInsteadOf400(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/map/scope/boundary?rids[]=1&rids[]=2');
+        self::assertSame(204, $client->getResponse()->getStatusCode());
+    }
 }

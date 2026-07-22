@@ -380,7 +380,11 @@ final class MapController extends AbstractController
     #[Route('/map/scope/boundary', name: 'map_scope_boundary', methods: ['GET'])]
     public function scopeBoundary(Request $request, RegionBoundaryProvider $boundaries): Response
     {
-        $ridsRaw = \is_string($request->query->get('rids')) ? (string) $request->query->get('rids') : '';
+        // all() never throws on an array-valued param, unlike get(), so
+        // `rids[]=1` / `cc[]=BE` degrade to Everywhere instead of a 400
+        // (CoverageController::scopeParams's idiom).
+        $query = $request->query->all();
+        $ridsRaw = \is_string($query['rids'] ?? null) ? $query['rids'] : '';
         $rids = [];
         foreach (explode(',', $ridsRaw) as $part) {
             $part = trim($part);
@@ -388,10 +392,12 @@ final class MapController extends AbstractController
                 $rids[(int) $part] = (int) $part;
             }
         }
-        $cc = $request->query->get('cc');
+        $rids = array_values($rids);
+        sort($rids);
+        $cc = $query['cc'] ?? null;
         $cc = \is_string($cc) && 1 === preg_match('/^[A-Za-z]{2}$/D', $cc) ? strtoupper($cc) : null;
 
-        $json = $boundaries->unionFeatureJson(array_values($rids), $cc);
+        $json = $boundaries->unionFeatureJson($rids, $cc);
         if (null === $json) {
             return new Response('', Response::HTTP_NO_CONTENT);
         }
