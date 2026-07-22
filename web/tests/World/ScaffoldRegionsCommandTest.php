@@ -123,4 +123,51 @@ final class ScaffoldRegionsCommandTest extends KernelTestCase
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('app:world:import', $tester->getDisplay());
     }
+
+    public function testEmitsFourLocaleStubsWithExonymMarkers(): void
+    {
+        $this->seedWorld();
+        $this->runScaffold(['country' => 'NL'])->assertCommandIsSuccessful();
+
+        $yaml = (string) file_get_contents($this->out.'/nl/translations.patch.yaml');
+        foreach (['en', 'fr', 'nl', 'de'] as $locale) {
+            self::assertStringContainsString("\n{$locale}:\n", $yaml);
+        }
+        self::assertSame(4, substr_count($yaml, "  all_nl:\n"), 'every locale carries the all_<cc> country rung');
+        self::assertStringContainsString("label: 'Drenthe' # TODO exonym?", $yaml);
+        self::assertStringContainsString("label: 'All Netherlands' # TODO exonym?", $yaml);
+        // sokil db-only ships English msgids only -> NO locale is confidently
+        // localized; every label line carries the marker (design §2 refinement).
+        self::assertSame(0, substr_count($yaml, "label: 'Drenthe'\n"), 'no unmarked label lines');
+    }
+
+    public function testWarnsOnCrossCountryNameTwinAndExistingRegionSlug(): void
+    {
+        $this->seedWorld();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist((new Region())->setSlug('drenthe')->setName('Drenthe')->setCountryCode('BE'));
+        $em->flush();
+
+        $display = $this->runScaffold(['country' => 'NL'])->getDisplay();
+        self::assertStringContainsString('BE-VLI', $display, 'Limburg name twin is named');
+        self::assertStringContainsString('limburg-nl', $display, 'a -<cc> suffix is suggested');
+        self::assertStringContainsString("slug 'drenthe' already exists", $display, 'existing region row collision is fatal-worthy review info');
+    }
+
+    public function testProbeAreasFoldsBboxAndFailsLoudWhenProbeMissing(): void
+    {
+        $this->seedWorld();
+        $tester = $this->runScaffold(['country' => 'NL', '--probe-areas' => true]);
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('region-probe', $tester->getDisplay(), 'error tells you the probe command');
+
+        @mkdir($this->out.'/nl', 0777, true);
+        file_put_contents($this->out.'/nl/probe.json', (string) json_encode(
+            ['subtypes' => ['region' => ['bbox' => [3.23, 50.65, 7.32, 53.65]]]],
+        ));
+        $this->runScaffold(['country' => 'NL', '--probe-areas' => true])->assertCommandIsSuccessful();
+        $config = (string) file_get_contents($this->out.'/nl/config-block.py');
+        self::assertStringContainsString('"bbox": [3.23, 50.65, 7.32, 53.65]', $config);
+        self::assertStringNotContainsString('# TODO bbox', $config);
+    }
 }
