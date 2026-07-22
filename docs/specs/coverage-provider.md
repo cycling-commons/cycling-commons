@@ -51,8 +51,14 @@ Invariants:
   canonical with its CC-BY attribution). Coverage and canonical are merged at
   read time and deduped by ref (coverage-provider.md §5).
 - **Regions are independent.** Each Geofabrik region (`COVERAGE_REGIONS`, comma-
-  separated, v1 `europe/belgium`) refreshes as a whole on its own run; regions
-  can stagger across the week. Planet scale is config + disk, gated on a
+  separated, `europe/belgium,europe/netherlands` since 2026-07-22 —
+  `europe/netherlands` added with the NL onboarding) refreshes as a whole on its
+  own run; regions can stagger across the week. *Border caveat:* Geofabrik
+  extracts overlap in a border buffer, so one OSM entity can appear in two
+  adjacent extracts with the same `(ref, letter)`; `load_region` upserts
+  (`ON CONFLICT`, last-writer-wins) and derives `country_code` from the geometric
+  region, so a shared border entity never collides with the global
+  `UNIQUE(ref, letter)` and always reads its true country. Planet scale is config + disk, gated on a
   measured dry-run (see Open questions).
 - **Own object-storage bucket** (`cc-maps`) from day one, separate from any
   shared basemap bucket, so coverage cost stays observable. Dev mirrors it with
@@ -174,7 +180,7 @@ prod runs it as a scheduled job on the worker server (topology owned by
 [dev-environment.md §9](dev-environment.md)). Runbook:
 `developers/coverage-batch.md`. Pipeline env contract (set in
 `developers/docker/compose.yaml` / `.env.example`): `COVERAGE_REGIONS`
-(default `europe/belgium`), `COVERAGE_WORKDIR` (`/data/work`, named scratch
+(default `europe/belgium,europe/netherlands`), `COVERAGE_WORKDIR` (`/data/work`, named scratch
 volume), `COVERAGE_PBF_PATH` (optional local override), `COVERAGE_S3_ENDPOINT`,
 `COVERAGE_S3_BUCKET` (`cc-maps`), `COVERAGE_S3_KEY`, `COVERAGE_S3_SECRET`,
 `COVERAGE_S3_REGION` (signing only, default `us-east-1`),

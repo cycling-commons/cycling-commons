@@ -5,8 +5,12 @@ Status: **proposed** (2026-07-19); **Phases 1–4 executed** (2026-07-19 /
 adversarially reviewed with all findings fixed** (review round notes in §7).
 Belgium is tessellated (Wallonia/Flanders/Brussels); the map, search AND
 coverage tier are all scope-aware — the whole map filters to scope — and the
-rider base location / My-area default scope is live end-to-end. Phase 5
-(worldwide rollout) not started.
+rider base location / My-area default scope is live end-to-end. **Phase 5
+(worldwide rollout) opened 2026-07-22 with the Netherlands** (12 provinces at
+subtype=region, seeded in dev + coverage); the repeatable onboarding process and
+playbook live in
+[2026-07-22-country-onboarding-design.md](2026-07-22-country-onboarding-design.md)
+and `tools/divisions/README.md`.
 Multi-agent research + design run; all repo-structural claims below were
 adversarially verified against the codebase (4 corrections from that pass are
 folded in and marked "verified correction" where decision-relevant).
@@ -842,6 +846,19 @@ outstanding — this task only lands the client-side model + tests
   queue-health counts.
 - Per-region `active_cap` tuning; CITIES quick-picks generalised per scope;
   NULL-region noise audit as tessellation grows.
+
+**Phase 5 execution — Netherlands (2026-07-22, first rollout country).** Seeded
+via the repeatable onboarding process (`2026-07-22-country-onboarding-design.md`):
+`app:region:scaffold` scaffolded the config from the World bundle, human review
+froze the 12 province slugs (incl. `limburg-nl`, disambiguated from BE Limburg),
+the Overture export produced 12 MultiPolygon artifacts, and `app:catalog:import`
+seeded 12 `region` rows (admin_level 4, source=overture) into dev — BE's 3
+untouched. Coverage: `europe/netherlands` added to `COVERAGE_REGIONS` +
+`COUNTRY_BY_REGION`, harvested into `coverage_poi`. **NL is tessellated, so it
+does NOT hit the unsplit-country stamping gap above** — items resolve
+countryCode from their containing province row; that gap stays open only for
+future *unsplit* countries. Still deferred for NL: per-region `active_cap`
+tuning and moderator-area assignment (both optional admin follow-ups).
 
 ## 8. Risks
 

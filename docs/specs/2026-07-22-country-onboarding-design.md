@@ -1,7 +1,14 @@
 # Repeatable worldwide country/state onboarding — design (working spec)
 
-Status: **proposed** (2026-07-22). First run: **the Netherlands** (full
-onboarding — coverage + region tessellation). Generalizes the one-off
+Status: **executed** (2026-07-22) on `symfony-base` (NOT pushed). First run:
+**the Netherlands** (full onboarding — coverage + region tessellation), live
+end-to-end in dev: 12 province `region` rows seeded, `europe/netherlands`
+coverage harvested (34,751 POIs), scope selector + coverage counts + search
+verified serving NL (Noord-Holland region scope a correct subset of whole-NL;
+BE unregressed). The first non-BE coverage run surfaced a real bug —
+Geofabrik extracts overlap at borders (203 shared OSM refs BE↔NL) violating the
+global `coverage_poi` `UNIQUE(ref, letter)` — root-caused and fixed (upsert +
+authoritative region⇒cc; see `pipeline/coverage/load.py`). Generalizes the one-off
 "add a country" path in `tools/divisions/README.md` into a fixed, largely
 automated sequence that works for any country **or** a single state of a big
 country, worldwide. Supersedes the informal runbook it extends; does **not**
@@ -104,6 +111,36 @@ block into `tools/divisions/config.py`, applies the translation patch into the
 four `web/translations/messages.*.yaml` files, and fixes exonyms. This preserves
 the two human judgments and keeps a clean diff to review.
 
+**Plan refinements (2026-07-22, recorded per `coverage-provider.md` precedent —
+the implementation refined these details; the plan's refinement governs):**
+
+1. The scaffold staging dir is **`web/var/scaffold/<cc>/`** (container
+   `/app/var/scaffold/<cc>/`), not `tools/divisions/out/scaffold/`: the app
+   container only mounts `web/`, `web/var/` is gitignored and host-visible, and
+   the probe writes there too so `--probe-areas` can read `probe.json`.
+2. The Overture area probe is a **separate Python tool**
+   `tools/divisions/probe_areas.py` (`make region-probe`), not a flag on the PHP
+   command — the app container has no DuckDB. `--probe-areas` on the scaffolder
+   *reads* the probe's `probe.json` and fails loud when it is missing.
+3. sokil `php-isocodes-db-only` ships English msgids only, so **every** emitted
+   translation label line carries `# TODO exonym?` (not only non-native locales).
+4. The scaffolder reads the World bundle, which lists **18** NL level-1
+   subdivisions (12 provinces + Aruba/Curaçao/Sint Maarten + the BES islands);
+   the human review step curates to the 12 mainland provinces. The scaffolder
+   flags all four cross-country name collisions (Limburg + the three BES
+   islands) automatically — this is the review surface working as designed.
+5. **Coverage regions are NOT fully independent at borders** (contra the
+   "regions are independent" invariant): Geofabrik regional extracts overlap in
+   a border buffer, so one OSM entity appears in adjacent extracts with the same
+   `(ref, letter)`. The global `coverage_poi UNIQUE(ref, letter)` + the
+   per-`src_region` delete-then-insert meant the second bordering region to load
+   crashed on the shared entity. `load_region` now upserts
+   (`ON CONFLICT (ref, letter) DO UPDATE`, last-writer-wins) and takes
+   `country_code` authoritatively from the geometric region — so a border entity
+   the neighbouring extract mis-stamped reads its true country. Every future
+   country that borders an already-loaded one exercises this path; it is now
+   covered by `test_load_region_upserts_shared_border_entity_across_regions`.
+
 ## 3. Operating-level selection rule
 
 Codified in the playbook and surfaced by `--probe-areas`:
@@ -160,10 +197,14 @@ Translations (`web/translations/messages.{en,fr,nl,de}.yaml`), 12
 |------|-----|-----|-----|-----|
 | noord-holland | North Holland | Hollande-Septentrionale | Nordholland | Noord-Holland |
 | zuid-holland | South Holland | Hollande-Méridionale | Südholland | Zuid-Holland |
-| zeeland | Zeeland | Zélande | Seeland | Zeeland |
+| zeeland | Zeeland | Zélande | Zeeland | Zeeland |
 | noord-brabant | North Brabant | Brabant-Septentrional | Nordbrabant | Noord-Brabant |
 | friesland | Friesland | Frise | Friesland | Friesland (Fryslân) |
-| all_nl | All Netherlands | Tous les Pays-Bas | Ganze Niederlande | Heel Nederland |
+| all_nl | All Netherlands | Tous les Pays-Bas | Gesamte Niederlande | Heel Nederland |
+
+(de `Zeeland` — corrected during planning from an earlier "Seeland", which is the
+Danish exonym for Sjælland, not the German name for the Dutch province; de
+`all_nl` = `Gesamte Niederlande`. Both are what shipped in the four catalogs.)
 
 (Remaining provinces — Drenthe, Flevoland, Gelderland, Groningen, Limburg,
 Overijssel, Utrecht — are stable across the four locales.)
