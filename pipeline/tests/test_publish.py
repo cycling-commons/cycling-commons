@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 """publish.py — versioned artifact upload, manifest repoint, prune, dev bucket bootstrap."""
 import datetime
+import json
 
 import boto3
 import pytest
@@ -25,6 +26,20 @@ def _stubbed_client():
     return client, Stubber(client)
 
 
+class _JsonBodyContains:
+    """Equality matcher (same trick as botocore.stub.ANY): decodes a put_object
+    Body and checks it carries the given key/value pairs, so a Stubber
+    expected_params dict can assert on manifest JSON content instead of
+    matching Body byte-for-byte."""
+
+    def __init__(self, **expected):
+        self.expected = expected
+
+    def __eq__(self, other):
+        doc = json.loads(other)
+        return all(doc.get(k) == v for k, v in self.expected.items())
+
+
 def test_upload_versioned_artifact_and_manifest(env, tmp_path):
     art = tmp_path / "coverage.pmtiles"
     art.write_bytes(b"PMTiles-bytes")
@@ -42,6 +57,27 @@ def test_upload_versioned_artifact_and_manifest(env, tmp_path):
         url = publish.upload(art, {"counts": {"C": 2, "D": 1}, "regions": ["europe/belgium"]},
                              client=client, now=now)
     assert url == "http://localhost:9100/cc-maps/coverage/20260716-0430.pmtiles"
+    stub.assert_no_pending_responses()
+
+
+def test_manifest_carries_country_codes(env, tmp_path):
+    art = tmp_path / "coverage.pmtiles"
+    art.write_bytes(b"PMTiles-bytes")
+    client, stub = _stubbed_client()
+    now = datetime.datetime(2026, 7, 22, 10, 40, tzinfo=datetime.timezone.utc)
+    stub.add_response("put_object", {}, {
+        "Bucket": "cc-maps", "Key": "coverage/20260722-1040.pmtiles", "Body": ANY,
+        "ContentType": "application/octet-stream",
+        "CacheControl": "public, max-age=31536000, immutable"})
+    stub.add_response("put_object", {}, {
+        "Bucket": "cc-maps", "Key": "coverage/manifest.json",
+        "Body": _JsonBodyContains(country_codes=["BE", "NL"]),
+        "ContentType": "application/json",
+        "CacheControl": "public, max-age=300"})
+    with stub:
+        publish.upload(art, {"counts": {"C": 1}, "regions": ["europe/belgium"],
+                            "country_codes": ["BE", "NL"]},
+                       client=client, now=now)
     stub.assert_no_pending_responses()
 
 

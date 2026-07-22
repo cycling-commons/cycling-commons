@@ -119,7 +119,9 @@ def main(argv=None) -> int:
         counts = dict(conn.execute(
             "SELECT letter, count(*) FROM coverage_poi GROUP BY letter").fetchall())
         ensure_bucket()
-        url = upload(artifact, {"counts": counts, "regions": regions})
+        country_codes = sorted({cc for (_letter, cc) in layer_files if cc != "ZZ"})
+        url = upload(artifact, {"counts": counts, "regions": regions,
+                                "country_codes": country_codes})
         stale = prune(keep=4)
         print(f"[coverage] published {url} (pruned {len(stale)})")
     return 1 if failed else 0

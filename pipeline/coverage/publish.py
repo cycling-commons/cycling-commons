@@ -94,7 +94,8 @@ def upload(pmtiles_path, manifest, client=None, now=None):
     url = f"{os.environ['COVERAGE_PUBLIC_BASE_URL'].rstrip('/')}/{key}"
     doc = {"version": 1, "url": url,
            "built_at": now.isoformat(timespec="seconds"),
-           "counts": manifest["counts"], "regions": manifest["regions"]}
+           "counts": manifest["counts"], "regions": manifest["regions"],
+           "country_codes": manifest.get("country_codes", [])}
     client.put_object(
         Bucket=bucket, Key=MANIFEST_KEY,
         Body=json.dumps(doc, separators=(",", ":")).encode(),

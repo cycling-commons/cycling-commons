@@ -130,7 +130,8 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     assert calls.index("verify") < calls.index("upload") < calls.index("prune")
     assert calls.index("build") < calls.index("verify")
     # Manifest: table-wide counts, this run's regions (shape locked).
-    assert manifests == [{"counts": {"C": 3, "D": 2}, "regions": ["dev/bad", "dev/ok"]}]
+    assert manifests == [{"counts": {"C": 3, "D": 2}, "regions": ["dev/bad", "dev/ok"],
+                         "country_codes": ["BE"]}]
     err = capsys.readouterr().err
     assert "dev/bad: FAILED" in err and "simulated drift" in err
 
