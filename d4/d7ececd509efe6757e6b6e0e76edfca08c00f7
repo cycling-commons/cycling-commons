@@ -1,0 +1,20 @@
+docs/specs/2026-07-22-country-onboarding-design.md
+  s_c5bcd8e7c7eb21::t_4f0061c621e5b5 79-85
+  s_c5bcd8e7c7eb21::t_3237afb42a4e57 1-78,86-237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d4d7ececd509efe6757e6b6e0e76edfca08c00f7",
+  "prompts": {},
+  "sessions": {
+    "s_c5bcd8e7c7eb21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
