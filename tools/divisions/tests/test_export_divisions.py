@@ -115,3 +115,41 @@ def test_live_overture_be(tmp_path):
     assert 16000 <= wal["properties"]["area_km2"] <= 17500
     assert wal["properties"]["iso_code"] == "BE-WAL"
     assert wal["geometry"]["type"] == "MultiPolygon"
+
+
+NL = config.COUNTRY_CONFIG["NL"]
+
+
+def test_nl_config_seeds_all_12_provinces_at_region_level():
+    assert NL["subtype"] == "region"
+    assert len(NL["slugs"]) == 12
+    assert set(NL["slugs"]) == set(NL["names"])
+    assert all(iso.startswith("NL-") for iso in NL["slugs"])
+
+
+def test_nl_limburg_slug_is_disambiguated():
+    # BE also has a Limburg province; slug is GLOBAL identity
+    # (country-onboarding-design.md §4).
+    assert NL["slugs"]["NL-LI"] == "limburg-nl"
+
+
+def test_nl_feature_carries_admin_level_4_and_frozen_slug():
+    f = build_feature("NL-NH", "NL", MULTI, 2670.0, NL)
+    assert f["properties"]["slug"] == "noord-holland"
+    assert f["properties"]["admin_level"] == 4
+    assert f["properties"]["country_code"] == "NL"
+
+
+def test_slugs_are_globally_unique_across_countries():
+    all_slugs = [s for cfg in config.COUNTRY_CONFIG.values() for s in cfg["slugs"].values()]
+    assert len(all_slugs) == len(set(all_slugs))
+
+
+@pytest.mark.skipif(os.environ.get("RUN_LIVE_OVERTURE") != "1",
+                    reason="live Overture smoke (network) — set RUN_LIVE_OVERTURE=1")
+def test_live_overture_nl(tmp_path):
+    written = export_country("NL", tmp_path)
+    assert len(written) == 12
+    names = {p.name for p in written}
+    assert "region-limburg-nl.geojson" in names
+    assert "region-noord-holland.geojson" in names

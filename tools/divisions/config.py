@@ -40,4 +40,27 @@ COUNTRY_CONFIG = {
         "names": {"BE-WAL": "Wallonia", "BE-VLG": "Flanders", "BE-BRU": "Brussels"},
         "bbox": [2.5, 49.4, 6.5, 51.6],
     },
+    # Netherlands — first worldwide-rollout country
+    # (2026-07-22-country-onboarding-design.md §4). 12 official provinces,
+    # subtype=region -> ISO 3166-2. limburg-nl: BE also has a Limburg (slug is
+    # global identity). bbox = mainland; the Caribbean NL-BQ* municipalities
+    # are deliberately outside it and outside this config.
+    "NL": {
+        "subtype": "region",
+        "slugs": {
+            "NL-DR": "drenthe", "NL-FL": "flevoland", "NL-FR": "friesland",
+            "NL-GE": "gelderland", "NL-GR": "groningen", "NL-LI": "limburg-nl",
+            "NL-NB": "noord-brabant", "NL-NH": "noord-holland",
+            "NL-OV": "overijssel", "NL-UT": "utrecht",
+            "NL-ZE": "zeeland", "NL-ZH": "zuid-holland",
+        },
+        "names": {
+            "NL-DR": "Drenthe", "NL-FL": "Flevoland", "NL-FR": "Friesland",
+            "NL-GE": "Gelderland", "NL-GR": "Groningen", "NL-LI": "Limburg",
+            "NL-NB": "North Brabant", "NL-NH": "North Holland",
+            "NL-OV": "Overijssel", "NL-UT": "Utrecht",
+            "NL-ZE": "Zeeland", "NL-ZH": "South Holland",
+        },
+        "bbox": [3.2, 50.7, 7.3, 53.6],
+    },
 }
