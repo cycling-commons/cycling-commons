@@ -74,9 +74,13 @@ class _Collector(osmium.SimpleHandler):
                 name=tags.get("name"),
                 lon=lon,
                 lat=lat,
-                # Per-row copy: sibling rows of a multi-letter object must not
-                # share one mutable dict (mutating one row can't corrupt another).
-                tags=dict(tags),
+                # Per-row copy MINUS `name`: the name is promoted to the dedicated
+                # column above, and nothing reads tags->>'name' back (the detail
+                # endpoint's TAG_WHITELIST excludes it) — so storing it in tags is
+                # pure duplication of the authoritative column on every named row
+                # (coverage-provider.md §2). Each sibling still gets its own dict
+                # (mutating one row can't corrupt another).
+                tags={k: v for k, v in tags.items() if k != "name"},
                 osm_version=obj.version or None,
                 osm_ts=obj.timestamp if obj.version else None,
                 src_region=self._src_region,

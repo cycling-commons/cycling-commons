@@ -36,10 +36,14 @@ def test_letter_per_selector_and_no_selector_drops(rows):
 def test_multi_letter_object_yields_one_row_per_letter(rows):
     hotel_castle = _by_ref(rows)["node/109"]
     assert {r.letter for r in hotel_castle} == {"E", "J"}
+    # `name` is promoted to the dedicated column and STRIPPED from the stored
+    # tags subset (coverage-provider.md §2): tags->>'name' duplicated the
+    # authoritative `name` column on every named row and nothing reads it back
+    # (TAG_WHITELIST excludes it), so the coverage cache stops carrying it.
     assert all(
-        r.tags == {"tourism": "hotel", "historic": "castle", "name": "Kasteelhotel"}
-        for r in hotel_castle
+        r.tags == {"tourism": "hotel", "historic": "castle"} for r in hotel_castle
     )
+    assert all(r.name == "Kasteelhotel" for r in hotel_castle)  # still in the column
     # Sibling rows carry equal tags but never share one mutable dict — a
     # consumer mutating one row's tags must not corrupt its sibling.
     row_a, row_b = hotel_castle
@@ -64,8 +68,8 @@ def test_service_kind_only_on_d(rows):
 
 def test_name_tags_and_osm_metadata(rows):
     (shop,) = _by_ref(rows)["node/101"]
-    assert shop.name == "Vélo Namur"
-    assert shop.tags == {"shop": "bicycle", "name": "Vélo Namur"}
+    assert shop.name == "Vélo Namur"          # in the dedicated column
+    assert shop.tags == {"shop": "bicycle"}   # `name` stripped from the stored subset
     assert shop.osm_version == 3
     assert shop.osm_ts == datetime.datetime(2026, 6, 1, 12, 0, tzinfo=datetime.timezone.utc)
     (pump,) = _by_ref(rows)["node/102"]
