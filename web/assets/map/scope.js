@@ -419,7 +419,7 @@
     searchScopes(query, limit) {
       const q = (query || '').trim().toLowerCase();
       if (q.length < 1) return [];
-      const cap = limit || 8;
+      const cap = limit ?? 8;   // ?? not ||: an explicit limit of 0 must mean 0, not "unset"
       const rank = (hay) => { const h = (hay || '').toLowerCase(); const i = h.indexOf(q); return i < 0 ? Infinity : (i === 0 ? 0 : 1); };
       const out = [];
       // country rungs (one per onboarded country)
@@ -433,7 +433,10 @@
         const score = Math.min(rank(r.label), rank(r.slug));
         if (score < Infinity) out.push({ kind: 'region', slug: r.slug, cc: r.countryCode || '', label: r.label || r.slug, _s: score });
       }
-      out.sort((a, b) => (a._s - b._s) || a.label.localeCompare(b.label));
+      // Pin the collator locale: bare localeCompare() uses the runtime default,
+      // so diacritic labels (Baden-Württemberg) could tie-break differently on CI
+      // than on a dev box. Score order is numeric and unaffected either way.
+      out.sort((a, b) => (a._s - b._s) || a.label.localeCompare(b.label, 'en'));
       return out.slice(0, cap).map(({ _s, ...rest }) => rest);
     },
 
