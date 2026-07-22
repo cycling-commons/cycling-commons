@@ -103,14 +103,23 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
 
 - `ref` matches `item.source_ref` (`web/src/Catalog/Entity/Item.php`) — the
   dedupe join key of [osm-data-architecture.md §8](osm-data-architecture.md).
-- **Store rich, serve trimmed.** `tags` holds the *full* filtered tag set plus
-  `osm_version`/`osm_ts`, so materialize-on-edit
-  ([osm-data-architecture.md §6](osm-data-architecture.md), Plan 3) can
-  snapshot an object without re-fetching OSM, and the future optional hydrated
-  endpoint ([osm-data-architecture.md §7](osm-data-architecture.md), Plan 4)
-  has everything it needs. What *leaves* the server is trimmed: tiles carry
-  the thin property set (coverage-provider.md §4), the detail endpoint
-  whitelists display tags (coverage-provider.md §5).
+- **Narrow serving cache, not an OSM copy.** `coverage_poi` is the §5 serving
+  cache of a *defined, narrow* OSM subset
+  ([osm-data-architecture.md §1](osm-data-architecture.md) principle 4) — **not**
+  a bulk copy of OSM (principle 1). `tags` therefore holds only the fixed filtered
+  subset the drawer + search actually render; what *leaves* the server is trimmed
+  further (tiles carry the thin property set, coverage-provider.md §4; the detail
+  endpoint whitelists display tags, coverage-provider.md §5).
+  **Correction (2026-07-22):** an earlier "store the *full* tag set so
+  materialize-on-edit can snapshot without re-fetching OSM" rationale was wrong.
+  Materialize-on-edit ([osm-data-architecture.md §6](osm-data-architecture.md))
+  copies `{osm_ref, edit}` into the canonical store and **merges OSM data from the
+  cache/OSM at read time** — it needs no per-row full-tag snapshot. So carrying a
+  rich tag copy for all rows is the bulk-OSM duplication principle 1 forbids, and
+  at the ~4.7 M planet-wide subset it is the table's dominant cost. Target: trim
+  `tags` to the true serve-set. Redundancy to remove first — `tags->>'name'`
+  duplicates the authoritative `name` column on 100 % of named rows. Tracked in
+  the storage backlog.
 - Region membership (`region_id`, `country_code`) and provenance
   (`src_region_id`) are stamped at **load time**, so region/country-scoped
   queries never test containment at request time. `src_region_id` is the
