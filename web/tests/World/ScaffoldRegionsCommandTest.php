@@ -170,4 +170,86 @@ final class ScaffoldRegionsCommandTest extends KernelTestCase
         self::assertStringContainsString('"bbox": [3.23, 50.65, 7.32, 53.65]', $config);
         self::assertStringNotContainsString('# TODO bbox', $config);
     }
+
+    /**
+     * Fix round 1, finding 1: the `[] === $rows` emptiness guard runs BEFORE
+     * the --only filter, so a --only that trims/filters down to nothing
+     * (e.g. a bare comma) used to slip past every check and silently emit an
+     * empty config-block/translations pair. Must fail loud instead.
+     */
+    public function testOnlyRejectsBlankList(): void
+    {
+        $this->seedWorld();
+        $tester = $this->runScaffold(['country' => 'NL', '--only' => ',']);
+        self::assertSame(Command::INVALID, $tester->getStatusCode());
+        self::assertFileDoesNotExist($this->out.'/nl/config-block.py', '--only=","  must not emit an empty artifact');
+    }
+
+    /**
+     * Fix round 1, finding 2: collisionWarnings() used to resolve a twin's
+     * name back to a SINGLE ISO code via array_search, so when two
+     * subdivisions in the SAME country share a name, only the first ever got
+     * a name-twin warning. Every entry sharing the colliding name must be
+     * flagged. NL-BS is a made-up code (not a real ISO 3166-2 Dutch
+     * province) that intentionally duplicates NL-LI's "Limburg" name.
+     */
+    public function testDuplicateInCountryNamesBothGetCollisionWarnings(): void
+    {
+        $this->seedWorld();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $nl = $em->getRepository(Country::class)->findOneBy(['iso2' => 'NL']);
+        self::assertNotNull($nl);
+        $twin = $em->getRepository(Subdivision::class)->findOneBy(['code' => 'NL-BS'])
+            ?? (new Subdivision())->setCode('NL-BS')->setCountry($nl)->setLevel(1);
+        $twin->setName('Limburg');
+        $em->persist($twin);
+        $em->flush();
+
+        $display = $this->runScaffold(['country' => 'NL'])->getDisplay();
+        self::assertStringContainsString("'Limburg' (NL-LI): name also used by BE-VLI (BE)", $display, 'first duplicate still warned');
+        self::assertStringContainsString("'Limburg' (NL-BS): name also used by BE-VLI (BE)", $display, 'second duplicate must ALSO be warned, not silently dropped');
+    }
+
+    /**
+     * Fix round 1, finding 3: a non-numeric bbox element in probe.json (a
+     * malformed or hand-edited artifact) used to reach number_format() and
+     * throw an uncaught TypeError instead of the graceful $io->error() path
+     * every other bad-input case takes.
+     */
+    public function testProbeAreasNonNumericBboxFailsGracefully(): void
+    {
+        $this->seedWorld();
+        @mkdir($this->out.'/nl', 0777, true);
+        file_put_contents($this->out.'/nl/probe.json', (string) json_encode(
+            ['subtypes' => ['region' => ['bbox' => [3.23, 'not-a-number', 7.32, 53.65]]]],
+        ));
+        $tester = $this->runScaffold(['country' => 'NL', '--probe-areas' => true]);
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('bbox', $tester->getDisplay(), 'error names the problem instead of crashing');
+    }
+
+    /**
+     * Fix round 1, finding 4: configBlock()'s Python string escaping only
+     * escaped `"`, not `\` — a name ending in a backslash corrupts the
+     * emitted Python (the trailing backslash escapes the closing quote
+     * instead of being a literal character). NL-TB is a made-up code (not a
+     * real ISO 3166-2 Dutch province).
+     */
+    public function testConfigBlockEscapesBackslashInName(): void
+    {
+        $this->seedWorld();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $nl = $em->getRepository(Country::class)->findOneBy(['iso2' => 'NL']);
+        self::assertNotNull($nl);
+        $name = 'Region'.\chr(92); // trailing backslash
+        $weird = $em->getRepository(Subdivision::class)->findOneBy(['code' => 'NL-TB'])
+            ?? (new Subdivision())->setCode('NL-TB')->setCountry($nl)->setLevel(1);
+        $weird->setName($name);
+        $em->persist($weird);
+        $em->flush();
+
+        $this->runScaffold(['country' => 'NL'])->assertCommandIsSuccessful();
+        $config = (string) file_get_contents($this->out.'/nl/config-block.py');
+        self::assertStringContainsString('"NL-TB": "Region'.\chr(92).\chr(92).'",', $config, 'the backslash must be doubled, not left to swallow the closing quote');
+    }
 }

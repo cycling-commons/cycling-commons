@@ -96,6 +96,11 @@ final class ScaffoldRegionsCommand extends Command
         $only = trim((string) $input->getOption('only'));
         if ('' !== $only) {
             $wanted = array_map(strtoupper(...), array_values(array_filter(array_map(trim(...), explode(',', $only)))));
+            if ([] === $wanted) {
+                $io->error(sprintf('--only="%s" contains no codes to seed', $only));
+
+                return Command::INVALID;
+            }
             $unknown = array_diff($wanted, array_column($rows, 'code'));
             if ([] !== $unknown) {
                 $io->error(sprintf('--only codes not found at level %d for %s: %s', $level, $cc, implode(', ', $unknown)));
@@ -127,14 +132,24 @@ final class ScaffoldRegionsCommand extends Command
 
                 return Command::FAILURE;
             }
-            /** @var array{subtypes?: array<string, array{bbox?: list<float|int>}>} $probe */
+            /** @var array{subtypes?: array<string, array{bbox?: list<mixed>}>} $probe */
             $probe = json_decode((string) file_get_contents($probeFile), true, 8, \JSON_THROW_ON_ERROR);
             $bbox = $probe['subtypes'][$subtype]['bbox'] ?? null;
-            if (!\is_array($bbox) || 4 !== \count($bbox)) {
-                $io->error(sprintf('probe.json carries no bbox for subtype "%s" — re-run the probe with --subtypes %s', $subtype, $subtype));
+            $bboxIsValid = \is_array($bbox) && 4 === \count($bbox);
+            if ($bboxIsValid) {
+                foreach ($bbox as $v) {
+                    if (!\is_int($v) && !\is_float($v)) {
+                        $bboxIsValid = false;
+                        break;
+                    }
+                }
+            }
+            if (!$bboxIsValid) {
+                $io->error(sprintf('probe.json carries no valid numeric bbox for subtype "%s" — re-run the probe with --subtypes %s', $subtype, $subtype));
 
                 return Command::FAILURE;
             }
+            /* @var list<float|int> $bbox */
         }
 
         $fs = new Filesystem();
@@ -196,15 +211,22 @@ final class ScaffoldRegionsCommand extends Command
             ['cc' => $cc, 'names' => array_values($lowerNames)],
             ['names' => ArrayParameterType::STRING],
         );
+        // Group twins by lowercased name, then walk every scaffolded entry
+        // (not just the first array_search hit) so two same-country
+        // subdivisions sharing a name (e.g. a duplicate/typo'd World row)
+        // both get flagged, not only whichever comes first.
+        /** @var array<string, list<array{code: string, name: string, iso2: string}>> $twinsByName */
+        $twinsByName = [];
         foreach ($twins as $t) {
-            $iso = (string) array_search(mb_strtolower($t['name']), $lowerNames, true);
-            if (!isset($entries[$iso])) {
-                continue;
+            $twinsByName[mb_strtolower($t['name'])][] = $t;
+        }
+        foreach ($entries as $iso => $e) {
+            foreach ($twinsByName[mb_strtolower($e['name'])] ?? [] as $t) {
+                $warnings[] = sprintf(
+                    "'%s' (%s): name also used by %s (%s) — consider slug '%s-%s'",
+                    $e['name'], $iso, $t['code'], $t['iso2'], $e['slug'], strtolower($cc),
+                );
             }
-            $warnings[] = sprintf(
-                "'%s' (%s): name also used by %s (%s) — consider slug '%s-%s'",
-                $entries[$iso]['name'], $iso, $t['code'], $t['iso2'], $entries[$iso]['slug'], strtolower($cc),
-            );
         }
 
         return $warnings;
@@ -220,7 +242,7 @@ final class ScaffoldRegionsCommand extends Command
         $slugLines = $nameLines = '';
         foreach ($entries as $iso => $e) {
             $slugLines .= sprintf("            \"%s\": \"%s\",\n", $iso, $e['slug']);
-            $nameLines .= sprintf("            \"%s\": \"%s\",\n", $iso, str_replace('"', '\"', $e['name']));
+            $nameLines .= sprintf("            \"%s\": \"%s\",\n", $iso, str_replace(['\\', '"'], ['\\\\', '\"'], $e['name']));
         }
         $bboxLine = null !== $bbox
             ? sprintf("        \"bbox\": [%s],\n", implode(', ', array_map(
