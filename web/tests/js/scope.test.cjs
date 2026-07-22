@@ -411,3 +411,99 @@ test('bestOfRegionIds: single named region, myArea derived set, else null', () =
   CCScope.setMyArea();
   assert.deepEqual(CCScope.bestOfRegionIds(), [1, 24]);
 });
+
+// ---- inferHomeCountry (Task 2, 2026-07-22-scope-selector-scale-design.md §D) -
+//
+// Each of these tests needs its OWN registry (a different country mix than the
+// shared BE fixture above), so they run against a fully isolated module
+// instance rather than the shared `CCScope`/`boot()` used everywhere else:
+// fresh window/localStorage mocks + a cache-busted re-require, so no state
+// (registry, scope, __ccTz) leaks between them or back into the tests above.
+function freshScope(regionsList) {
+  const freshStore = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => (freshStore.has(k) ? freshStore.get(k) : null),
+    setItem: (k, v) => { freshStore.set(k, String(v)); },
+    removeItem: (k) => { freshStore.delete(k); },
+  };
+  globalThis.window = { dispatchEvent: () => {} };
+  globalThis.location = { href: 'http://localhost/map', search: '' };
+  globalThis.history = { replaceState: () => {} };
+  delete globalThis.__ccTz;
+  const modPath = require.resolve('../../assets/map/scope.js');
+  delete require.cache[modPath];
+  const S = require(modPath);
+  S.init(regionsList);
+  return S;
+}
+
+// Renamed from the brief's literal working title ('My-area country wins over
+// timezone') — its own assertions don't test precedence: countryCodes:['BE']
+// against a DE-only registry means BE is NOT onboarded, so the My-area branch
+// falls through and this actually exercises the timezone fallthrough. The
+// real precedence case is the next test.
+test('inferHomeCountry: falls through to timezone when the My-area country is not onboarded', () => {
+  const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
+  globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['BE'] };
+  // BE not in this registry -> falls through; DE via a DE timezone
+  globalThis.__ccTz = 'Europe/Berlin';
+  assert.equal(S.inferHomeCountry(), 'DE'); // BE not onboarded here, tz DE is
+});
+
+test('inferHomeCountry: My-area country wins over timezone when both are onboarded', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] },
+    { id: 2, slug: 'wallonia', countryCode: 'BE', bbox: [2.84, 49.45, 6.41, 50.85] },
+  ]);
+  globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['BE'] };
+  // DE is ALSO onboarded here (unlike the test above) -> My-area must still win.
+  globalThis.__ccTz = 'Europe/Berlin';
+  assert.equal(S.inferHomeCountry(), 'BE');
+});
+
+test('inferHomeCountry: anonymous circle country wins over timezone', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] },
+    { id: 2, slug: 'noord-holland', countryCode: 'NL', bbox: [4, 52, 5, 53] },
+  ]);
+  // No CC_MY_AREA payload -> falls to the anon circle, centred inside the NL bbox.
+  globalThis.localStorage.setItem('cc-my-area', JSON.stringify({ lat: 52.5, lng: 4.5, radiusKm: 40 }));
+  globalThis.__ccTz = 'Europe/Berlin'; // DE also onboarded, but the anon circle wins
+  assert.equal(S.inferHomeCountry(), 'NL');
+});
+
+test('inferHomeCountry: timezone maps to onboarded country', () => {
+  const S = freshScope([{ id: 1, slug: 'noord-holland', countryCode: 'NL', bbox: [4, 52, 5, 53] }]);
+  delete globalThis.window.CC_MY_AREA;
+  globalThis.__ccTz = 'Europe/Amsterdam';
+  assert.equal(S.inferHomeCountry(), 'NL');
+});
+
+test('inferHomeCountry: unknown/none -> null', () => {
+  const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
+  delete globalThis.window.CC_MY_AREA;
+  globalThis.__ccTz = 'America/New_York'; // US not onboarded
+  assert.equal(S.inferHomeCountry(), null);
+});
+
+test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (spec §F rule 1)', () => {
+  const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
+  globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['DE'] };
+  globalThis.__ccTz = 'Europe/Berlin';
+  let historyWrites = 0;
+  globalThis.history.replaceState = () => { historyWrites += 1; };
+  const before = new Map(freshStoreSnapshot());
+  S.inferHomeCountry();
+  assert.equal(historyWrites, 0);
+  assert.deepEqual(new Map(freshStoreSnapshot()), before);
+
+  function freshStoreSnapshot() {
+    // globalThis.localStorage is the fresh mock from freshScope(); read back
+    // via getItem for the one key this suite ever touches (cc-my-area) plus
+    // the scope key, so a stray setItem anywhere would be caught.
+    return [
+      ['cc-scope', globalThis.localStorage.getItem('cc-scope')],
+      ['cc-my-area', globalThis.localStorage.getItem('cc-my-area')],
+    ];
+  }
+});

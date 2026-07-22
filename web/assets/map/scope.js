@@ -28,6 +28,20 @@
   let bySlug = new Map();
   let byCountry = new Map();
 
+  // IANA timezone -> ISO country, for the anonymous cold-start home hint
+  // (2026-07-22-scope-selector-scale-design.md §D). Starts with the onboarded
+  // countries' common zones; extend per onboarding. Compute-only — nothing is
+  // ever stored (2026-07-22-scope-selector-scale-design.md §F rule 1).
+  const TZ_COUNTRY = {
+    'Europe/Brussels': 'BE',
+    'Europe/Amsterdam': 'NL',
+    'Europe/Berlin': 'DE', 'Europe/Busingen': 'DE',
+  };
+  const currentTimezone = () => {
+    if (typeof globalThis !== 'undefined' && globalThis.__ccTz) return globalThis.__ccTz; // test hook
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (e) { return null; }
+  };
+
   // {kind:'region'|'country'|'everywhere'|'myArea', regionIds:int[], countryCode:str|null}
   // — myArea additionally carries `myArea: {center:[lat,lng], radiusKm, place|null,
   // countryCodes:[], anon:bool}`; countryCode stays null (rid-only, never a cc arm).
@@ -320,6 +334,30 @@
 
     /** Whether a myArea source (CC_MY_AREA payload or anon circle) is available. */
     myAreaAvailable() { return myAreaScope() !== null; },
+
+    /** The onboarded home country code, from (in order) the My-area payload,
+     *  the anon circle, then the client timezone; null when none is onboarded.
+     *  Compute-only — writes nothing (2026-07-22-scope-selector-scale-design.md
+     *  §D / §F rule 1: no localStorage, no cookie, no network call, no mutation
+     *  of module state). */
+    inferHomeCountry() {
+      const onboarded = (cc) => (cc && byCountry.has(cc) ? cc : null);
+      const src = myAreaSource();
+      if (src) {
+        if (src.anon) {
+          for (const h of deriveFromBboxes(src.center, src.radiusKm)) {
+            const cc = onboarded(h.cc);
+            if (cc) return cc;
+          }
+        } else {
+          for (const cc of src.countryCodes) {
+            const hit = onboarded(cc);
+            if (hit) return hit;
+          }
+        }
+      }
+      return onboarded(TZ_COUNTRY[currentTimezone()]);
+    },
 
     /** Resolve + apply the myArea scope from its source of truth; no-op if unavailable. */
     setMyArea() {
