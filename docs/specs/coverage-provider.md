@@ -208,6 +208,51 @@ materialize-on-edit ([osm-data-architecture.md §6](osm-data-architecture.md))
 copies `{osm_ref, edit}` into the canonical store and merges the OSM side from
 this cache at read time, so it needs no per-row full-tag snapshot.*
 
+### 2.2 Backup posture: don't back this table up
+
+`coverage_poi` is **derived data**. It is rebuilt from Geofabrik extracts on the
+weekly cadence, holds nothing a human authored, and a rebuild produces *fresher*
+rows than any restore would. Its recovery path is therefore **re-harvest, not
+restore**, and routine backups should skip its contents:
+
+```
+pg_dump --exclude-table-data=coverage_poi …
+```
+
+(`--exclude-table-data`, not `--exclude-table`: the schema stays in the dump so a
+restored database comes up structurally intact, ready for the next harvest.)
+
+What genuinely needs backing up is the irreplaceable half — `item` (the curated
+additions of [osm-data-architecture.md §6](osm-data-architecture.md)), the route
+tables, submissions, and accounts. Those have no upstream to regenerate from.
+
+**The risk to manage instead is rebuild time.** "We'll just re-harvest" is only a
+credible DR story once the full planet rebuild has been measured end to end
+(download → `osmium tags-filter` → parse → load → tiles, across every configured
+extract). Until that number exists, treat it as unknown. If it proves too slow to
+sit inside an acceptable outage, the cheap warm-start is **not** a table dump —
+it is retaining the filtered PBFs and the built `coverage.pmtiles`, both already
+produced by the batch and far smaller than the table plus its indexes.
+
+**Why not partition by continent for backup granularity.** Continents are close
+to disconnected — cross-border entities that appear in two Geofabrik extracts
+(§3) almost always sit inside one continent — so a per-continent restore would be
+nearly self-consistent in a way a per-country restore is not. It still is not
+worth the structure:
+
+- Per-unit dumps already work without partitioning (`pg_dump -t coverage_poi`, or
+  `\copy (SELECT … WHERE country_code = ANY(…)) TO` for a slice).
+- "Almost always" is not an invariant: Turkey, Russia, Egypt/Sinai, Kazakhstan
+  and the Caucasus straddle the continental line and Geofabrik's extracts do not
+  split there.
+- The unit you would actually want to restore is the **refresh** unit (one
+  extract), because the natural repair is re-harvesting it — not a continent.
+- At ≈ 2.4 GB planet-wide (§2 sizing) the whole table dumps in minutes, so the
+  problem partitioning would solve is not one this table has.
+
+If `coverage_poi` is ever partitioned, the driver is the refresh/bloat story and
+the key is `src_region_id` — per-partition dumps fall out as a side effect.
+
 ## 3. The weekly batch job
 
 Per region in `COVERAGE_REGIONS`, independently:
