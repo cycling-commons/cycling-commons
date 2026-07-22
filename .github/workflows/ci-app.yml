@@ -1,11 +1,15 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 name: App CI
+# pipeline/contract/** is in scope deliberately: web/tests/Catalog/CoverageContractTest.php
+# pins that contract file (serviceKind parity + TAG_WHITELIST subset of storedTagKeys,
+# coverage-provider.md §7). Without this path the guard never runs on the change it
+# exists to catch — editing the contract alone triggered no workflow at all.
 on:
   pull_request:
-    paths: ['web/**', '.github/workflows/ci-app.yml']
+    paths: ['web/**', 'pipeline/contract/**', '.github/workflows/ci-app.yml']
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/ci-app.yml']
+    paths: ['web/**', 'pipeline/contract/**', '.github/workflows/ci-app.yml']
 jobs:
   app:
     runs-on: ubuntu-latest

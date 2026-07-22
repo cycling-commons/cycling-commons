@@ -324,7 +324,7 @@ prod runs it as a scheduled job on the worker server (topology owned by
 [dev-environment.md §9](dev-environment.md)). Runbook:
 `developers/coverage-batch.md`. Pipeline env contract (set in
 `developers/docker/compose.yaml` / `.env.example`): `COVERAGE_REGIONS`
-(default `europe/belgium,europe/netherlands`), `COVERAGE_WORKDIR` (`/data/work`, named scratch
+(default `europe/belgium,europe/netherlands,europe/germany`), `COVERAGE_WORKDIR` (`/data/work`, named scratch
 volume), `COVERAGE_PBF_PATH` (optional local override), `COVERAGE_S3_ENDPOINT`,
 `COVERAGE_S3_BUCKET` (`cc-maps`), `COVERAGE_S3_KEY`, `COVERAGE_S3_SECRET`,
 `COVERAGE_S3_REGION` (signing only, default `us-east-1`),
@@ -353,6 +353,39 @@ Partitioning by country makes clustering — and therefore
 so no POI is ever silently dropped. Full design + verified browser results
 (0 mixed clusters under both `country:NL` and `country:BE`):
 [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md).
+
+**What a rider actually sees as they zoom** (measured 2026-07-23 by decoding the
+live artifact over one spot — Schwaan, DE — at every zoom; DE layers only):
+
+| zoom | features drawn in the tile | POIs they represent |
+|---|---|---|
+| 6 | 81 | 26,429 |
+| 8 | 165 | 3,403 |
+| 10 | 53 | 148 |
+| 11 | 11 | 17 |
+| 12 | 11 | 11 |
+| 14 | 5 | 5 |
+
+Three behaviours combine here, and they are frequently mistaken for POIs
+disappearing:
+
+1. **A zoom step quarters the ground area a tile covers**, so most of a bubble's
+   members leave the viewport rather than the map. Two zoom steps ≈ 1/16 of the
+   area — a "36" bubble legitimately resolving to a handful of small bubbles on
+   screen, with the rest off to the sides.
+2. **`--cluster-distance` is in screen pixels, not metres.** 20 px is several km
+   of merging at z8 and roughly 200 m at z11, so bubbles dissolve far faster than
+   POI density changes.
+3. **Clustering stops at z11.** From z12 features carry no `point_count` at all
+   and render as individual pins with **no count badge** — the numbers do not
+   count down to 1, they stop existing. This is the step most often read as
+   "everything vanished".
+
+**Bubbles are per (letter, country), never unified.** Because each
+`<letter>_<cc>` layer clusters independently, several bubbles with different
+counts can sit almost on top of each other — they are different *categories*, not
+one aggregate, and each splits on its own schedule as you zoom. A rider looking
+at "36 / 27 / 16" in one spot is seeing three letters, not 79 POIs of one kind.
 
 | Property | Layers | Why in the tile |
 |---|---|---|
@@ -597,11 +630,14 @@ source of truth for the mapping both languages need:
   render what the pipeline stored, and there is no live-OSM fallback to cover a
   gap. The test skips (not fails) when the file is absent so `web/` stays
   runnable alone.
-  ⚠️ That skip means this guard only fires where the whole repo is checked out.
-  It is **not** currently reached on a contract-only change: `ci-app.yml` triggers
-  on `web/**` and `ci-tools.yml` on `tools/**`, so nothing under `pipeline/**`
-  triggers any workflow (the pipeline's own pytest suite does not run in CI at
-  all). Tracked in the storage backlog.
+  ⚠️ That skip means the guard only fires where the whole repo is checked out —
+  never in the dev container, which mounts `web/` alone. `ci-app.yml` now lists
+  `pipeline/contract/**` in its trigger paths (added 2026-07-23) so a
+  contract-only edit re-runs the PHP pin; before that it fired on nothing.
+  **Still open:** the pipeline's own pytest suite runs in no workflow at all
+  (`ci-tools.yml` covers `tools/**` only), so `load_contract()`'s validation and
+  the `test_tiles.py` drift pin are dev-machine-only. Tracked in the storage
+  backlog.
 - Result: the Python extractor and the Symfony serving plane cannot drift —
   one mapping, asserted from both sides.
 
