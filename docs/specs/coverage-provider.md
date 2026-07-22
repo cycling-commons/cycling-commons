@@ -75,22 +75,30 @@ migrations and `schema:validate` never touch it. The table is a **disposable
 cache** — never edited by the app or by hand.
 
 ```sql
+-- Provenance lookup: the Geofabrik extract slug is stored ONCE here, not
+-- repeated per POI. Self-fills via get-or-create in load_region (no enum DDL,
+-- no pre-seeding); smallint holds far more than Geofabrik's ~700 extracts.
+CREATE TABLE IF NOT EXISTS coverage_source (
+    id   smallint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    slug varchar(64) NOT NULL UNIQUE      -- Geofabrik extract ('europe/belgium')
+);
+
 CREATE TABLE IF NOT EXISTS coverage_poi (
-    id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ref          varchar(160) NOT NULL,   -- 'node/61146471' | 'way/…' = item.source_ref format
-    letter       char(1)      NOT NULL,   -- C D E G H I J (osm-data-architecture.md §5 catalogue)
-    kind         varchar(16),             -- serviceKind for D (shop|station|pump), NULL otherwise
-    name         varchar(255),            -- OSM name tag, NULL when unnamed
-    geom         geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
-    tags         jsonb        NOT NULL,   -- full filtered tag subset (drawer + Plans 3/4 source)
-    osm_version  int,                     -- upstream version (materialization snapshot)
-    osm_ts       timestamptz,             -- upstream last-edit timestamp
-    src_region   varchar(64)  NOT NULL,   -- Geofabrik extract ('europe/belgium')
-    country_code char(2),                 -- stamped from extract config
-    region_id    bigint,                  -- ST_Contains(region.geom, geom) at load; NULL until polygons exist
+    id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
+    letter        char(1)      NOT NULL,  -- C D E G H I J (osm-data-architecture.md §5 catalogue)
+    kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
+    name          varchar(255),           -- OSM name tag, NULL when unnamed
+    geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
+    tags          jsonb        NOT NULL,  -- full filtered tag subset (drawer + Plans 3/4 source)
+    osm_version   int,                    -- upstream version (materialization snapshot)
+    osm_ts        timestamptz,            -- upstream last-edit timestamp
+    src_region_id smallint     NOT NULL REFERENCES coverage_source(id), -- harvest extract (normalized: 2 bytes/row, not a repeated ~16-byte string — the win at the 100M+ row target)
+    country_code  char(2),                -- stamped from extract config
+    region_id     int,                    -- ST_Contains(region.geom, geom) at load; NULL until polygons exist. Soft ref to region.id (4 bytes: region count never nears int4)
     UNIQUE (ref, letter)                  -- one entity may carry two letters (item's uniq_item_source_ref_letter, source-scoped: catalog-data-model.md §3)
 );
--- Indexes: GIST(geom), (letter), (region_id), GIN(name gin_trgm_ops)
+-- Indexes: GIST(geom), (letter), (region_id), (country_code), (src_region_id), GIN(name gin_trgm_ops)
 ```
 
 - `ref` matches `item.source_ref` (`web/src/Catalog/Entity/Item.php`) — the
@@ -103,9 +111,11 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   has everything it needs. What *leaves* the server is trimmed: tiles carry
   the thin property set (coverage-provider.md §4), the detail endpoint
   whitelists display tags (coverage-provider.md §5).
-- Region membership (`region_id`, `country_code`, `src_region`) is stamped at
-  **load time**, so region/country-scoped queries never test containment at
-  request time.
+- Region membership (`region_id`, `country_code`) and provenance
+  (`src_region_id`) are stamped at **load time**, so region/country-scoped
+  queries never test containment at request time. `src_region_id` is the
+  per-region atomic-swap key (the load's previous-count / `DELETE` / membership
+  backfills all filter on it).
 - `pg_trgm` is required for name search. It joins the PostGIS extensions in the
   out-of-migration bootstrap: `developers/docker/db/init/` (dev), the Makefile
   `test-db-reset` target (test DB), and the prod bootstrap notes. In PHP tests
@@ -131,7 +141,8 @@ Per region in `COVERAGE_REGIONS`, independently:
    previous run for the same region
    (`pipeline/coverage/load.py::DRIFT_ABORT_RATIO`, value `0.4`) — a truncated
    download must never wipe a region. Then one transaction:
-   `DELETE FROM coverage_poi WHERE src_region = :r` + insert + `region_id`
+   resolve the extract slug to its `coverage_source` id (get-or-create), then
+   `DELETE FROM coverage_poi WHERE src_region_id = :sid` + insert + `region_id`
    backfill (`ST_Contains` over `region` polygons where they exist). Readers
    never see a half-loaded region; an abort keeps last week's slice serving.
 
@@ -527,7 +538,7 @@ interim clause retires):
 - **`region_id` backfill** is inert until the worldwide administrative region
   polygons exist ([osm-data-architecture.md §10](osm-data-architecture.md));
   until then the column stays NULL and scoped queries fall back to
-  `country_code`/`src_region`.
+  `country_code`.
 - **Planet scale** is unmeasured: the worldwide flip is gated on a documented
   dry-run (disk, RAM, wall-clock on worker-class hardware, procedure in
   `developers/coverage-batch.md`); no numbers exist yet. Related: worldwide

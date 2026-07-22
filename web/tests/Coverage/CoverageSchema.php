@@ -35,11 +35,12 @@ trait CoverageSchema
                 tags         jsonb        NOT NULL,
                 osm_version  int,
                 osm_ts       timestamptz,
-                src_region   varchar(64)  NOT NULL,
                 country_code char(2),
-                region_id    bigint,
+                region_id    int,
                 UNIQUE (ref, letter)
             )',
+            // src_region_id (pipeline provenance FK to coverage_source) is omitted:
+            // this is a web-facing double and no read path references it.
         );
         $db->executeStatement('CREATE INDEX IF NOT EXISTS coverage_poi_geom_idx ON coverage_poi USING GIST (geom)');
         $db->executeStatement('CREATE INDEX IF NOT EXISTS coverage_poi_letter_idx ON coverage_poi (letter)');
@@ -69,13 +70,13 @@ trait CoverageSchema
             'country_code' => 'BE',
         ];
         $db->executeStatement(
-            'INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region, country_code, region_id)
-             VALUES (:ref, :letter, :kind, :name, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), :tags::jsonb, :src, :cc, :rid)',
+            'INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, country_code, region_id)
+             VALUES (:ref, :letter, :kind, :name, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), :tags::jsonb, :cc, :rid)',
             [
                 'ref' => $row['ref'], 'letter' => $row['letter'], 'kind' => $row['kind'], 'name' => $row['name'],
                 'lng' => $row['lng'], 'lat' => $row['lat'],
                 'tags' => json_encode($row['tags'], \JSON_THROW_ON_ERROR),
-                'src' => 'europe/belgium', 'cc' => $row['country_code'], 'rid' => $row['region_id'],
+                'cc' => $row['country_code'], 'rid' => $row['region_id'],
             ],
         );
     }

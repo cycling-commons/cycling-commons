@@ -16,7 +16,13 @@ from coverage import tiles
 from coverage.contract import load_contract
 from coverage.load import ensure_schema
 
-SRC = "test/tiles"  # synthetic src_region label, never a real Geofabrik name
+SRC = "test/tiles"  # synthetic src_region slug, never a real Geofabrik name
+
+
+def _src_id(db, slug=SRC):
+    """Resolve (get-or-create) a coverage_source id for the seeders' NOT NULL FK."""
+    db.execute("INSERT INTO coverage_source (slug) VALUES (%s) ON CONFLICT (slug) DO NOTHING", (slug,))
+    return db.execute("SELECT id FROM coverage_source WHERE slug = %s", (slug,)).fetchone()[0]
 
 FIXTURE_ROWS = [
     # (ref, letter, kind, name, lon, lat, tags)
@@ -43,11 +49,12 @@ def _features(path):
 
 def test_export_geojsonl_shapes(db, tmp_path):
     ensure_schema(db)
+    sid = _src_id(db)
     for ref, letter, kind, name, lon, lat, tags in FIXTURE_ROWS:
         db.execute(
-            "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region)"
+            "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region_id)"
             " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s)",
-            (ref, letter, kind, name, lon, lat, Json(tags), SRC))
+            (ref, letter, kind, name, lon, lat, Json(tags), sid))
     out = tiles.export_geojsonl(db, tmp_path)
 
     # Empty-letter omission contract: exactly the (letter, cc) combos with rows
@@ -100,16 +107,17 @@ def test_export_carries_scope_tokens_when_stamped(db, tmp_path):
     cctok — the shape the client hides under a region scope yet shows under its
     country scope (region-scoping-design.md §6, finding 5)."""
     ensure_schema(db)
+    sid = _src_id(db)
     db.execute(
-        "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region, region_id, country_code)"
+        "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region_id, region_id, country_code)"
         " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s, %s, %s)",
         ("node/900001001", "D", "shop", "Scoped shop", 4.35, 50.85,
-         Json({"shop": "bicycle", "name": "Scoped shop"}), SRC, 42, "BE"))
+         Json({"shop": "bicycle", "name": "Scoped shop"}), sid, 42, "BE"))
     db.execute(
-        "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region, region_id, country_code)"
+        "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region_id, region_id, country_code)"
         " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s, %s, %s)",
         ("node/900001002", "D", "shop", "Border shop", 4.36, 50.86,
-         Json({"shop": "bicycle", "name": "Border shop"}), SRC, None, "BE"))
+         Json({"shop": "bicycle", "name": "Border shop"}), sid, None, "BE"))
     out = tiles.export_geojsonl(db, tmp_path)
     stamped = _features(out[("D", "BE")])["node/900001001"]["properties"]
     assert stamped["ridtok"] == "|42|"
@@ -121,6 +129,7 @@ def test_export_carries_scope_tokens_when_stamped(db, tmp_path):
 
 def test_export_geojsonl_splits_by_country(db, tmp_path):
     ensure_schema(db)
+    sid = _src_id(db)
     rows = [
         ("node/1", "C", 4.35, 50.85, "BE"),
         ("node/2", "C", 4.40, 50.84, "BE"),
@@ -129,9 +138,9 @@ def test_export_geojsonl_splits_by_country(db, tmp_path):
     ]
     for ref, letter, lon, lat, cc in rows:
         db.execute(
-            "INSERT INTO coverage_poi (ref, letter, geom, tags, src_region, country_code)"
+            "INSERT INTO coverage_poi (ref, letter, geom, tags, src_region_id, country_code)"
             " VALUES (%s, %s, ST_SetSRID(ST_MakePoint(%s,%s),4326), %s, %s, %s)",
-            (ref, letter, lon, lat, Json({"amenity": "drinking_water"}), SRC, cc))
+            (ref, letter, lon, lat, Json({"amenity": "drinking_water"}), sid, cc))
     files = tiles.export_geojsonl(db, tmp_path)
     keys = set(files)
     assert ("C", "BE") in keys and ("C", "NL") in keys and ("C", "ZZ") in keys

@@ -27,14 +27,20 @@ def test_ensure_schema_is_idempotent(db):
     ).fetchall()}
     assert cols >= {
         "id", "ref", "letter", "kind", "name", "geom", "tags",
-        "osm_version", "osm_ts", "src_region", "country_code", "region_id",
+        "osm_version", "osm_ts", "src_region_id", "country_code", "region_id",
     }
+    assert "src_region" not in cols   # normalized to the coverage_source FK
+    src_cols = {c[0] for c in db.execute(
+        "SELECT column_name FROM information_schema.columns "
+        "WHERE table_schema = 'coverage_pytest' AND table_name = 'coverage_source'"
+    ).fetchall()}
+    assert src_cols >= {"id", "slug"}
     idx = {r[0] for r in db.execute(
         "SELECT indexname FROM pg_indexes WHERE schemaname = 'coverage_pytest'"
     ).fetchall()}
     assert {"coverage_poi_geom_idx", "coverage_poi_letter_idx",
             "coverage_poi_region_id_idx", "coverage_poi_country_code_idx",
-            "coverage_poi_name_trgm_idx"} <= idx
+            "coverage_poi_name_trgm_idx", "coverage_poi_src_region_id_idx"} <= idx
 
 
 def test_load_region_inserts_and_backfills_region_id(db):
@@ -295,3 +301,42 @@ def test_same_ref_may_carry_two_letters(db):
         "SELECT letter FROM coverage_poi WHERE ref = 'node/109'"
     ).fetchall()}
     assert letters == {"E", "J"}
+
+
+def test_src_region_normalized_and_self_filled(db):
+    """Provenance is a coverage_source FK, self-filled get-or-create: each slug
+    gets exactly one row, every POI links to it, and reloading a slug reuses its
+    id rather than duplicating it — so the lookup scales worldwide with no
+    pre-seeding or enum DDL."""
+    ensure_schema(db)
+    load_region(db, [_row("node/1", "C"), _row("node/2", "C")], "europe/belgium")
+    load_region(
+        db,
+        [_row("node/3", "C", src_region="europe/netherlands", country_code="NL")],
+        "europe/netherlands",
+    )
+    slugs = {r[0]: r[1] for r in db.execute("SELECT slug, id FROM coverage_source").fetchall()}
+    assert set(slugs) == {"europe/belgium", "europe/netherlands"}
+    linked = db.execute(
+        "SELECT c.ref, s.slug FROM coverage_poi c "
+        "JOIN coverage_source s ON s.id = c.src_region_id ORDER BY c.ref"
+    ).fetchall()
+    assert linked == [
+        ("node/1", "europe/belgium"),
+        ("node/2", "europe/belgium"),
+        ("node/3", "europe/netherlands"),
+    ]
+    # reloading the same slug reuses the same id, never a second source row
+    be_id = slugs["europe/belgium"]
+    load_region(db, [_row("node/1", "C"), _row("node/2", "C")], "europe/belgium")
+    assert db.execute("SELECT count(*) FROM coverage_source").fetchone()[0] == 2
+    assert db.execute(
+        "SELECT id FROM coverage_source WHERE slug = 'europe/belgium'"
+    ).fetchone()[0] == be_id
+    # the FK column is NOT NULL — provenance is mandatory for every harvested row
+    nullable = db.execute(
+        "SELECT is_nullable FROM information_schema.columns "
+        "WHERE table_schema = 'coverage_pytest' AND table_name = 'coverage_poi' "
+        "AND column_name = 'src_region_id'"
+    ).fetchone()[0]
+    assert nullable == "NO"

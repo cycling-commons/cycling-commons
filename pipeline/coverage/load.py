@@ -28,21 +28,34 @@ DRIFT_ABORT_RATIO = 0.4
 # stays unstamped.
 BOUNDARY_SNAP_DEG = 0.01
 
-# coverage-provider.md §2 DDL, verbatim (indexes named below).
+# coverage-provider.md §2 DDL (indexes named below). Provenance is normalized:
+# the Geofabrik extract slug lives once in coverage_source and each POI carries a
+# 2-byte src_region_id FK instead of repeating a ~16-byte string per row — the
+# win that matters at the worldwide 100M+ row target. The lookup self-fills via
+# get-or-create in load_region (no enum DDL, no pre-seeding — any extract on Earth
+# gets a row the first time it's harvested); smallint holds far more than
+# Geofabrik's ~700 extracts.
+_SOURCE_DDL = """
+CREATE TABLE IF NOT EXISTS coverage_source (
+    id   smallint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    slug varchar(64) NOT NULL UNIQUE      -- Geofabrik extract ('europe/belgium')
+)
+"""
+
 _TABLE_DDL = """
 CREATE TABLE IF NOT EXISTS coverage_poi (
-    id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ref          varchar(160) NOT NULL,   -- 'node/61146471' | 'way/…' = item.source_ref format
-    letter       char(1)      NOT NULL,   -- C D E G H I J (osm-data-architecture.md §5)
-    kind         varchar(16),             -- serviceKind for D (shop|station|pump), NULL otherwise
-    name         varchar(255),            -- OSM name tag, NULL when unnamed
-    geom         geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
-    tags         jsonb        NOT NULL,   -- full filtered tag subset (drawer + Plan 3/4 source)
-    osm_version  int,                     -- upstream version (Plan 3 materialization snapshot)
-    osm_ts       timestamptz,             -- upstream last-edit timestamp
-    src_region   varchar(64)  NOT NULL,   -- Geofabrik extract ('europe/belgium')
-    country_code char(2),                 -- stamped from extract config
-    region_id    bigint,                  -- ST_Contains(region.geom, geom) at load
+    id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
+    letter        char(1)      NOT NULL,  -- C D E G H I J (osm-data-architecture.md §5)
+    kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
+    name          varchar(255),           -- OSM name tag, NULL when unnamed
+    geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
+    tags          jsonb        NOT NULL,  -- full filtered tag subset (drawer + Plan 3/4 source)
+    osm_version   int,                    -- upstream version (Plan 3 materialization snapshot)
+    osm_ts        timestamptz,            -- upstream last-edit timestamp
+    src_region_id smallint     NOT NULL REFERENCES coverage_source(id), -- harvest extract (normalized)
+    country_code  char(2),                -- stamped from extract config
+    region_id     int,                    -- ST_Contains(region.geom, geom) at load; soft ref to region.id (4 bytes: region count never nears int4, saves 4 bytes/row at scale)
     UNIQUE (ref, letter)                  -- one entity may carry two letters (matches item rule)
 )
 """
@@ -55,9 +68,14 @@ _INDEX_DDL = (
     # this table is pipeline-owned, so its index lands here, not in web/migrations.
     "CREATE INDEX IF NOT EXISTS coverage_poi_country_code_idx ON coverage_poi (country_code)",
     "CREATE INDEX IF NOT EXISTS coverage_poi_name_trgm_idx ON coverage_poi USING gin (name gin_trgm_ops)",
+    # src_region_id is the per-region atomic-swap key (previous-count / DELETE /
+    # membership backfills all filter on it), so index it for the 100M+ row target.
+    "CREATE INDEX IF NOT EXISTS coverage_poi_src_region_id_idx ON coverage_poi (src_region_id)",
 )
 
-# Same shape as coverage_poi minus the generated id and the backfilled region_id.
+# Staging carries every per-row column EXCEPT src_region_id: the whole batch
+# shares one source, so load_region resolves the id once (get-or-create) and
+# writes it as a constant on the INSERT rather than repeating it per staged row.
 _STAGING_DDL = """
 CREATE TEMP TABLE coverage_poi_staging (
     ref          varchar(160) NOT NULL,
@@ -68,12 +86,11 @@ CREATE TEMP TABLE coverage_poi_staging (
     tags         jsonb        NOT NULL,
     osm_version  int,
     osm_ts       timestamptz,
-    src_region   varchar(64)  NOT NULL,
     country_code char(2)
 ) ON COMMIT DROP
 """
 
-_COLUMNS = "ref, letter, kind, name, geom, tags, osm_version, osm_ts, src_region, country_code"
+_STAGING_COLS = "ref, letter, kind, name, geom, tags, osm_version, osm_ts, country_code"
 
 
 class DriftAbort(RuntimeError):
@@ -97,6 +114,7 @@ def ensure_schema(conn: psycopg.Connection) -> None:
             f"({exc}). Install it as a privileged role first — dev: developers/docker/db/init, "
             "prod: the DB-extensions bootstrap note in developers/docker/README.md."
         ) from exc
+    conn.execute(_SOURCE_DDL)
     conn.execute(_TABLE_DDL)
     for stmt in _INDEX_DDL:
         conn.execute(stmt)
@@ -114,16 +132,27 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
     """
     with conn.transaction():
         with conn.cursor() as cur:
-            # Rows this src_region currently owns. Cross-region border overlap
+            # Resolve the extract slug to its coverage_source id, self-filling the
+            # lookup on first sight (get-or-create). ON CONFLICT DO NOTHING keeps
+            # the id stable across weekly reloads of the same region; the SELECT
+            # then always returns it whether it was just inserted or already there.
+            cur.execute(
+                "INSERT INTO coverage_source (slug) VALUES (%s) ON CONFLICT (slug) DO NOTHING",
+                (src_region,),
+            )
+            src_id = cur.execute(
+                "SELECT id FROM coverage_source WHERE slug = %s", (src_region,)
+            ).fetchone()[0]
+            # Rows this source currently owns. Cross-region border overlap
             # (see the upsert below) lets a neighbour reclaim shared rows, so this
             # can undercount a bordering region's true last extract size by the
             # shared-row count — but only lowers the drift threshold (more
             # lenient), never triggering a spurious abort or losing data.
             previous = cur.execute(
-                "SELECT count(*) FROM coverage_poi WHERE src_region = %s", (src_region,)
+                "SELECT count(*) FROM coverage_poi WHERE src_region_id = %s", (src_id,)
             ).fetchone()[0]
             cur.execute(_STAGING_DDL)
-            with cur.copy(f"COPY coverage_poi_staging ({_COLUMNS}) FROM STDIN") as copy:
+            with cur.copy(f"COPY coverage_poi_staging ({_STAGING_COLS}) FROM STDIN") as copy:
                 for row in rows:
                     copy.write_row((
                         row.ref,
@@ -134,7 +163,6 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                         json.dumps(row.tags, ensure_ascii=False),
                         row.osm_version,
                         row.osm_ts,
-                        row.src_region,
                         row.country_code,
                     ))
             inserted = cur.execute("SELECT count(*) FROM coverage_poi_staging").fetchone()[0]
@@ -143,7 +171,7 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                     f"{src_region}: new extract has {inserted} rows vs {previous} previously "
                     f"(more than {DRIFT_ABORT_RATIO:.0%} drop) — aborting swap, keeping last good slice."
                 )
-            cur.execute("DELETE FROM coverage_poi WHERE src_region = %s", (src_region,))
+            cur.execute("DELETE FROM coverage_poi WHERE src_region_id = %s", (src_id,))
             # UPSERT, not plain INSERT: Geofabrik regional extracts overlap at
             # shared borders, so one OSM entity (same ref → same (ref, letter))
             # appears in >1 extract (203 refs shared BE↔NL in the first NL run).
@@ -163,13 +191,14 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
             # second time"; a malformed extract with an intra-batch dup fails loud
             # there and rolls the swap back — safe, covered by the generic-error test.
             cur.execute(
-                f"INSERT INTO coverage_poi ({_COLUMNS}) "
-                f"SELECT {_COLUMNS} FROM coverage_poi_staging "
+                f"INSERT INTO coverage_poi ({_STAGING_COLS}, src_region_id) "
+                f"SELECT {_STAGING_COLS}, %s FROM coverage_poi_staging "
                 f"ON CONFLICT (ref, letter) DO UPDATE SET "
                 f"kind = EXCLUDED.kind, name = EXCLUDED.name, geom = EXCLUDED.geom, "
                 f"tags = EXCLUDED.tags, osm_version = EXCLUDED.osm_version, "
-                f"osm_ts = EXCLUDED.osm_ts, src_region = EXCLUDED.src_region, "
-                f"country_code = EXCLUDED.country_code, region_id = NULL"
+                f"osm_ts = EXCLUDED.osm_ts, src_region_id = EXCLUDED.src_region_id, "
+                f"country_code = EXCLUDED.country_code, region_id = NULL",
+                (src_id,),
             )
             # Smallest-area-wins on overlap (region-scoping-design.md §3): the
             # third membership writer besides RegionResolver and
@@ -185,12 +214,12 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                     SELECT DISTINCT ON (c.id) c.id AS poi_id, r.id AS region_id
                     FROM coverage_poi c
                     JOIN region r ON ST_Contains(r.geom, c.geom)
-                    WHERE c.src_region = %s
+                    WHERE c.src_region_id = %s
                     ORDER BY c.id, r.area_km2 ASC NULLS LAST, r.id ASC
                 ) m
                 WHERE coverage_poi.id = m.poi_id
                 """,
-                (src_region,),
+                (src_id,),
             )
             # Boundary-miss rescue (region-scoping-design.md §6, finding 5): a POI
             # inside the extract but outside every region polygon — an ST_Contains
@@ -210,7 +239,7 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                     FROM coverage_poi c
                     JOIN region r ON r.country_code = c.country_code
                                  AND ST_DWithin(r.geom, c.geom, %s)
-                    WHERE c.src_region = %s
+                    WHERE c.src_region_id = %s
                       AND c.region_id IS NULL
                       AND c.country_code IS NOT NULL
                     ORDER BY c.id, ST_Distance(r.geom, c.geom),
@@ -218,7 +247,7 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                 ) m
                 WHERE coverage_poi.id = m.poi_id
                 """,
-                (BOUNDARY_SNAP_DEG, src_region),
+                (BOUNDARY_SNAP_DEG, src_id),
             )
             # region ⇒ cc invariant (region-scoping-design.md §8 risk 10, finding
             # 8): the controller's 24-region cap is only safe if every
@@ -237,8 +266,8 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                 WHERE coverage_poi.region_id = r.id
                   AND r.country_code IS NOT NULL
                   AND coverage_poi.country_code IS DISTINCT FROM r.country_code
-                  AND coverage_poi.src_region = %s
+                  AND coverage_poi.src_region_id = %s
                 """,
-                (src_region,),
+                (src_id,),
             )
     return LoadResult(inserted=inserted, previous=previous)
