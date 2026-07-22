@@ -1,0 +1,29 @@
+developers/docker/README.md
+  s_c5bcd8e7c7eb21::t_3fdd2758cdfc49 164
+pipeline/tests/test_run.py
+  s_c5bcd8e7c7eb21::t_5d4db845c784b0 136-141
+developers/docker/.env.example
+  s_c5bcd8e7c7eb21::t_2d97c959c095b6 43
+developers/coverage-batch.md
+  s_c5bcd8e7c7eb21::t_e75614ea741160 45
+pipeline/coverage/run.py
+  s_c5bcd8e7c7eb21::t_b93905c8f12c38 31
+developers/docker/compose.yaml
+  s_c5bcd8e7c7eb21::t_c63805f76b9441 88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a60212863699438437681e240faaa1a5c25d66a9",
+  "prompts": {},
+  "sessions": {
+    "s_c5bcd8e7c7eb21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42d1e61a-9a1a-41ac-a48c-fe97eaf5201c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
