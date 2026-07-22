@@ -1,10 +1,46 @@
 # Coverage scope rendering — per-country clustering + scope dim mask (design)
 
-Status: **proposed** (2026-07-22). Follow-on to
+Status: **executed** (2026-07-22, symfony-base, NOT pushed). Follow-on to
 [2026-07-22-country-onboarding-design.md](2026-07-22-country-onboarding-design.md):
 adding the Netherlands (a second country bordering Belgium) exposed two map-canvas
 issues that the Belgium-only map could not show. Both confirmed in the running app
 by instrumenting the MapLibre instance (not just the API).
+
+**Execution record.** Commit range `c9c42cd..d8e701e` (symfony-base, NOT
+pushed):
+
+- `c9c42cd` feat(coverage): per-(letter,country) tile layers so clusters never
+  cross a border
+- `8f0669a` feat(coverage): manifest advertises `country_codes` for the
+  per-country client layers
+- `bbaf3c3` + `9863fae` feat(map): `/map/scope/boundary` returns the
+  `ST_Union` of a scope's regions (+ fix: read query params via `all()` to
+  avoid a 400 on array-valued `rids`/`cc`, sort `rids`)
+- `a0ab5ce` + `1267ef5` feat(map): render coverage as per-country layers
+  driven by manifest `country_codes` (+ cache-key `.v2` shape bump +
+  `countryCodes()` tests)
+- `d8e701e` feat(map): dim mask for a country scope via `/map/scope/boundary`
+  union
+
+Re-harvest (Task 6): BE 23024 / NL 34751 rows loaded into `coverage_poi`;
+published artifact `20260722-1418.pmtiles`; manifest
+`country_codes: ["BE","NL"]`. Tiles carry per-country source-layers
+`<letter>_<cc>` (e.g. `c_be`, `c_nl`, and a `zz` bucket per letter). Border
+tile 7/65/42: 0 features mix `BE` and `NL` (of 167 total).
+
+**Browser verification (Task 7), 0 console errors:**
+
+- `country:NL` → `queryRenderedFeatures` on the visible cluster layers: 60
+  clusters, ALL NL — 0 MIXED, 0 BE.
+- `country:BE` → 133 clusters, ALL BE — 0 MIXED, 0 NL.
+- **Dim mask:** `country:NL` greys everything outside the NL union with a gold
+  dashed outline; Everywhere → no mask (`region-mask`/`region-line` layers
+  gone); a single province (North Holland) → mask outlines just that
+  province. My-area keeps its own soft circle (unchanged).
+
+Docs synced per the "Specs to update" list below: coverage-provider.md §4,
+map-and-search.md §4.5, and 2026-07-19-region-scoping-design.md §7 all
+updated 2026-07-22.
 
 ## Problem (observed, verified)
 

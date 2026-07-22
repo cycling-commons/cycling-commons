@@ -189,8 +189,26 @@ volume), `COVERAGE_PBF_PATH` (optional local override), `COVERAGE_S3_ENDPOINT`,
 ## 4. Tile artifact contract
 
 Thin tiles: enough to draw markers and run map-side filters; everything else
-comes from the detail endpoint on click. Flat scalars only (MVT rule). One tile
-layer per letter — `c d e g h i j` — feature id = numeric OSM id.
+comes from the detail endpoint on click. Flat scalars only (MVT rule).
+Feature id = numeric OSM id.
+
+**Source-layers are per-country: `<letter>_<cc>`** (lowercase; `cc` is the
+country code lowercased), one tippecanoe layer per `(letter, country_code)`
+pair — e.g. `c_be`, `c_nl` — rather than one layer per letter. Onboarding a
+second bordering country (the Netherlands, 2026-07-22) surfaced a
+client-rendering-only defect Belgium-alone couldn't show: tippecanoe clusters
+*within a layer*, so a single per-letter layer let a low-zoom bubble merge POIs
+across a border, and the bubble's unioned `ridtok`/`cctok` (the scoping tokens
+documented later in this section) then matched a scope even though its
+`point_count` and map anchor mixed both countries (measured under
+`country:NL` before the fix: 42 pure-NL, 31 mixed, 0 pure-BE rendered).
+Partitioning by country makes clustering — and therefore
+`point_count` and the anchor position — country-pure by construction; the
+`ridtok`/`cctok` token filter itself needed no change. A row with a NULL
+`country_code` (the rare unstamped boundary-miss) buckets under `<letter>_zz`
+so no POI is ever silently dropped. Full design + verified browser results
+(0 mixed clusters under both `country:NL` and `country:BE`):
+[2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md).
 
 | Property | Layers | Why in the tile |
 |---|---|---|
@@ -237,7 +255,25 @@ and reappears under its country scope.
   ([osm-data-architecture.md §5](osm-data-architecture.md)).
 - **Manifest** (stable key `coverage/manifest.json`):
   `{"version":1, "url":"<COVERAGE_PUBLIC_BASE_URL>/coverage/<YYYYMMDD-HHMM>.pmtiles",
-  "built_at":"<ISO>", "counts":{"C":n,…}, "regions":[…]}`.
+  "built_at":"<ISO>", "counts":{"C":n,…}, "regions":[…], "country_codes":[…]}`.
+  `country_codes` is the sorted list of real onboarded countries resolved via
+  `COUNTRY_BY_REGION` (`["BE","NL"]`; the `zz` bucket is excluded — it is a
+  fixed client-side fallback, not a real country) — it tells the client which
+  per-country layers to wire without probing the tile itself.
+- **Client per-country layer wiring** (`web/assets/map/map.js` `addCoverage`):
+  iterates every coverage letter × the manifest's `country_codes` plus a fixed
+  `zz` bucket, building layer ids `<key>-<cc>-cov` (unclustered icons) and
+  `<key>-<cc>-cov-cl` (cluster bubbles) bound to the matching `<letter>_<cc>`
+  source-layer; `updateCoverageScopeFilter` iterates the same product so the
+  `ridtok`/`cctok` scope filter (this section, above) applies to every
+  per-country layer pair. **`[null]` fallback:** a manifest with no
+  `country_codes` (a pre-split artifact, published before this change) falls
+  back to iterating `[null]` instead — one unsplit `<letter>-cov`/
+  `<letter>-cov-cl` layer pair per letter against the plain `<letter>`
+  source-layer, exactly the pre-split shape — so an old artifact still
+  renders (degrade, don't blank), matching this document's manifest-failure
+  convention (coverage-provider.md §4 above: `CoverageManifest` returns
+  `null` on every failure path).
 - **Server-side manifest read.** `App\Coverage\CoverageManifest`
   (`web/src/Coverage/CoverageManifest.php`) fetches the manifest server-side,
   caches the versioned URL for `CoverageManifest::CACHE_TTL` (value `3600` s,

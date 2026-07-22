@@ -256,6 +256,24 @@ the newest rung of that same ladder.
   (if available) > localStorage`. My-area wins the default scope whenever a
   base location is set, overriding a stale localStorage scope — except an
   explicit shared URL scope, which always wins.
+- **Country / multi-region scope dim mask (2026-07-22).** A country scope now
+  greys the rest of the map instead of rendering with no visual boundary at
+  all — the gap a second bordering country (the Netherlands) exposed once a
+  scope could span more than one named region. `GET /map/scope/boundary`
+  (`MapController`, new) takes the same scope params the coverage endpoints
+  use (`rids` csv and/or `cc`) and returns a single GeoJSON Feature = the
+  `ST_Union` of the matching `region.geom` rows (ETag + `max-age=3600`; 204
+  when the scope resolves to no regions). For a **country** scope, `applyScope`
+  fetches this union and draws the existing world-minus-shape dark mask +
+  dashed outline (the same `region-mask`/`region-line` layers a single-region
+  spotlight already builds). A **single named region** keeps drawing its own
+  boundary (`GET /map/region/{slug}/boundary`, unchanged). **My-area** keeps
+  its own soft ~64-vertex circle (`line-blur`) rather than switching to the
+  union mask — the deliberately fuzzy edge is itself the anti-border message
+  (map-and-search.md §4 above). **Everywhere** clears the mask entirely
+  (`setSpotlight(null)`); no mask ever draws for an empty scope. Design +
+  browser-verified results (NL union outline, single-province outline, no
+  mask for Everywhere): [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md) §B.
 
 ## 5. Layer rendering strategy
 

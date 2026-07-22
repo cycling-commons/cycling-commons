@@ -703,6 +703,30 @@ criticals, 11 warnings + 10 info, all fixed this round:
 - **Planet-scale deferrals (findings 1 + token size).** See coverage-provider.md
   "Planet-flip dry-run checklist".
 
+**Coverage-scoping follow-up — per-country tile layers + country dim mask
+(2026-07-22, EXECUTED, symfony-base `c9c42cd..d8e701e`, NOT pushed).** Onboarding
+the Netherlands (Phase 5, below) as a second country bordering Belgium exposed a
+client-rendering-only issue the Belgium-only map couldn't show: tippecanoe
+clusters *within a tile layer*, so a single per-letter layer let a low-zoom
+bubble merge POIs across the BE/NL border — the bubble's unioned
+`ridtok`/`cctok` (region-scoping-design.md §6 above) still matched a scope
+correctly, but the bubble's
+`point_count` and map anchor mixed both countries (measured under
+`country:NL` before the fix: 42 pure-NL, **31 mixed**, 0 pure-BE rendered).
+Resolved by partitioning each coverage letter's tiles by country
+(`<letter>_<cc>` source-layers, a `zz` bucket for unstamped rows, manifest
+`country_codes`) so tippecanoe clusters within one country only — the
+`ridtok`/`cctok` token filter itself needed no rework. Browser-verified after
+the fix: 0 mixed clusters under both `country:NL` (60 clusters, all NL) and
+`country:BE` (133 clusters, all BE). Separately, **a country (or other
+multi-region) scope now dims the rest of the map**: `GET /map/scope/boundary`
+returns the `ST_Union` of the scope's regions, and the client draws the
+existing world-minus-shape mask + dashed outline for it — previously only a
+single named region or a My-area circle got a visual scope boundary, so a
+country scope (e.g. all of the Netherlands) rendered with none. Full design +
+execution record:
+[2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md).
+
 **Phase 4 — Base location + My area (requirement 3).**
 
 - User columns (`base_point` coarse, `base_radius_km` 40 [10–150],
