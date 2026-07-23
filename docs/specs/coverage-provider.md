@@ -277,11 +277,19 @@ Per region in `COVERAGE_REGIONS`, independently:
    (coverage-provider.md §7) — the same mapping as
    `App\Catalog\ServiceKind::fromOsmTags()`
    (`web/src/Catalog/ServiceKind.php`).
-4. **Load — per-region atomic swap with drift guard.** `COPY` into a staging
-   table; abort if the new row count drops more than the drift ratio below the
-   previous run for the same region
+4. **Load — per-region atomic swap with an ownership filter and a drift
+   guard.** `COPY` into a staging table, then **before** the drift count: an
+   ownership filter deletes staged rows this extract does not own
+   (`2026-07-23-border-overlap-ownership-design.md §3`) — nearest-region-wins,
+   across every onboarded country, so a border row picks exactly one owner
+   regardless of which extract's cut also carries it; a row with no region
+   within `BOUNDARY_SNAP_DEG` of *any* onboarded country is dropped outright
+   (not staged at all). Abort if the post-filter row count drops more than the
+   drift ratio below the previous run for the same region
    (`pipeline/coverage/load.py::DRIFT_ABORT_RATIO`, value `0.4`) — a truncated
-   download must never wipe a region. Then one transaction:
+   download must never wipe a region, and the filter itself needs its own
+   guard: an unseeded `region` table for the extract's country raises rather
+   than silently staging zero rows. Then one transaction:
    resolve the extract slug to its `coverage_source` id (get-or-create), then
    `DELETE FROM coverage_poi WHERE src_region_id = :sid` + insert + `region_id`
    backfill (`ST_Contains` over `region` polygons where they exist). Readers

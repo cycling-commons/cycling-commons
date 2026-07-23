@@ -16,7 +16,7 @@ One fixed sequence for every country/state. ⚑ marks a human judgment.
 | 3 | ⚑ Review + merge | freeze slugs/exonyms; merge `config-block.py` into `config.py`, `translations.patch.yaml` into the 4 catalogs |
 | 4 | Export Overture geojson | `make divisions-data c="NL"` |
 | 5 | Seed `Region` rows | stage artifacts, `app:catalog:import` (see below) |
-| 6 | Coverage | add the Geofabrik region to `COVERAGE_REGIONS` **and** `COUNTRY_BY_REGION` (`pipeline/coverage/run.py`), then `make coverage-refresh regions=europe/netherlands` |
+| 6 | Coverage | add the Geofabrik region to `COVERAGE_REGIONS` **and** `COUNTRY_BY_REGION` (`pipeline/coverage/load.py`) — a missing entry now hard-fails that region's coverage run (`resolve_country`, 2026-07-23-border-overlap-ownership-design.md §3) rather than silently disabling ownership — then `make coverage-refresh regions=europe/netherlands` |
 | 7 | ⚑ Moderators | assign 2–4 region atoms per moderator (admin; `moderator_area` rows) |
 | 8 | Specs | record the rollout in `docs/specs/` (region-scoping §7, coverage-provider) |
 

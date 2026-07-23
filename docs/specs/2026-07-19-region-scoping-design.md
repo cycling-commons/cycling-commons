@@ -865,7 +865,7 @@ outstanding — this task only lands the client-side model + tests
 - Region seeding per this spec's section 5a (curator-demand-driven, curator-sized
   jurisdiction sets over official-line atoms; the ~16,900 km² band advisory only —
   adopted 2026-07-19); coverage expansion (`COVERAGE_REGIONS` env/CLI
-  default + `COUNTRY_BY_REGION` map in `pipeline/coverage/run.py` — env/config
+  default + `COUNTRY_BY_REGION` map in `pipeline/coverage/load.py` — env/config
   change plus the dict, verified) is the upper bound, not the trigger; per-country
   opt-in after disputed-territory review.
 - Unsplit-country country stamping (verified gap): country-polygon fallback in
