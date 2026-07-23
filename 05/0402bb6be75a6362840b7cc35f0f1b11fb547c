@@ -1,0 +1,38 @@
+web/src/Controller/MapController.php
+  s_3bd3f8ccb3a560::t_8212f286a53985 194-203
+web/translations/messages.nl.yaml
+  s_3bd3f8ccb3a560::t_e87a422e14e332 1042-1051
+web/assets/styles/map.css
+  s_3bd3f8ccb3a560::t_a1fbe1bcfee34e 147-171
+web/translations/messages.en.yaml
+  s_3bd3f8ccb3a560::t_52c7016eb71f30 1212-1221
+docs/specs/2026-07-22-scope-selector-scale-design.md
+  s_3bd3f8ccb3a560::t_0898d6d34b766f 65-120
+web/assets/map/map.js
+  s_3bd3f8ccb3a560::t_72e8277a919752 260,283-345
+  s_3bd3f8ccb3a560::t_39f3f01baa5c2c 360-364
+web/assets/map/scope.js
+  s_3bd3f8ccb3a560::t_7716ce83cd5f8e 581-639
+web/tests/js/scope.test.cjs
+  s_3bd3f8ccb3a560::t_f1ca4092b25002 904-1012
+web/translations/messages.fr.yaml
+  s_3bd3f8ccb3a560::t_42acdc468ab1bc 1042-1051
+web/translations/messages.de.yaml
+  s_3bd3f8ccb3a560::t_8c600ad35fab82 1042-1051
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "050402bb6be75a6362840b7cc35f0f1b11fb547c",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
