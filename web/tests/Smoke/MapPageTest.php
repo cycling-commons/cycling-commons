@@ -101,5 +101,9 @@ final class MapPageTest extends WebTestCase
         $loaderPos = strpos($html, 'map/catalog-load');
         self::assertNotFalse($loaderPos, 'catalog loader script must be present');
         self::assertLessThan($loaderPos, $tokenPos, 'window.MAPILLARY_TOKEN must be defined before the catalog loader');
+
+        $chipsPos = strpos($html, 'map/scope-chips');
+        self::assertNotFalse($chipsPos, 'scope-chips.js must be in the map shell');
+        self::assertLessThan($loaderPos, $chipsPos, 'scope-chips.js must load before catalog-load.js injects map.js');
     }
 }

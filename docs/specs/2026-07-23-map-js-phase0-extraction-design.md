@@ -2,7 +2,7 @@
 
 # map.js Phase 0 — extract the scope-chip view model — design
 
-**Status:** design, approved by the owner 2026-07-23, not executed.
+**Status:** executed 2026-07-23 (f42c6dd, b986541); live browser pass outstanding — see §8.
 **Audience:** contributors working on the map front end.
 **Scope:** a strictly behaviour-preserving refactor. No user-visible change.
 
@@ -37,6 +37,9 @@ means that change lands as a small diff on a tested surface.
 
 ## 2. What moves and what stays
 
+Line references in §1-§2 are to the pre-refactor file (`f8de3a7`); see §8 for what
+actually landed and where it lives now.
+
 **Moves** into the new module — every decision, none of them DOM-aware:
 
 | concern | today |
@@ -59,7 +62,10 @@ means that change lands as a small diff on a tested surface.
 - `button[data-scope]` binding, the `#scopeMoreBtn` → `focusSearchBox` binding, and
   active-chip marking via `scopeToken`
 
-`renderScopeChips()` drops to roughly 45 lines and contains no decisions.
+`renderScopeChips()` was predicted to drop to roughly 45 lines; it actually landed at 69
+(§8) — the estimate undercounted the DOM-binding and active-chip-marking code that stays,
+which this table's bullet list names but does not each count. It contains no decisions
+either way.
 
 ## 3. The module
 
@@ -157,6 +163,17 @@ before `map/catalog-load.js` (which injects map.js).
 - Any further map.js decomposition. This extraction is justified by the two escaped bugs
   and the incoming cross-border work; a general map.js split is not part of it.
 - `scope.js`'s public API, which does not change.
+
+`chipModel`'s interface does not need to break for the cross-border chips work: country
+scoping belongs in the implementation (`scopeApi.contextualRegions`), not the signature,
+and `input.registry` already carries the worldwide list. The return shape is expected to
+widen ADDITIVELY when that work lands — the next author should not read today's contract
+as frozen. Three things will change: `chipOf` (`scope-chips.js:30`) and the region/center
+cells must start carrying `countryCode`/`countryLabel` (that IS the country cue);
+`model.country` should stay a single home rung (two tests use exact-object `deepEqual`, so
+keep the cue on chips, not on `country`); and `model.more`'s meaning must be redefined once
+foreign regions enter the shown set. None of these fields are added now — that would put
+speculative surface into a strictly behaviour-preserving commit.
 
 ## 7. Sequencing
 

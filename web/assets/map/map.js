@@ -223,11 +223,11 @@
   }
   // Reveal + focus the sidebar feature-search box (owner fix 2's overflow
   // chip, 2026-07-23): re-queries the DOM fresh rather than closing over the
-  // `sBox` const declared far below (~L3314) — renderScopeChips() first runs
-  // long before that line executes, so capturing `sBox` here would hit the
-  // temporal-dead-zone. Reuses the same mobile 'sheet-open' reveal + <=820
-  // breakpoint the filter-sheet handle already uses (~L3573/L3590) rather than
-  // inventing a second show/hide mechanism.
+  // `sBox` const declared far below, next to the `sRes` search-results wiring
+  // — renderScopeChips() first runs long before that line executes, so
+  // capturing `sBox` here would hit the temporal-dead-zone. Reuses the same
+  // mobile 'sheet-open' reveal + <=820 breakpoint the filter-sheet handle
+  // already uses rather than inventing a second show/hide mechanism.
   function focusSearchBox(){
     if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.add('sheet-open'); }
     const el=document.getElementById('search');
@@ -237,13 +237,15 @@
   // home country's regions + its All-<country> rung, or the onboarded country
   // rungs as the cold-start fallback. Replaces the flat all-regions wall.
   // Reuses escPend (top of file) rather than a third hand-rolled escaper —
-  // it's the same house idiom the search results list (escH, ~L3204) and the
-  // drawer's pending-submission renderer (security-architecture.md §4.2) already use for building
+  // it's the same house idiom the search results list (the `escH` helper next
+  // to the search-results renderer) and the drawer's pending-submission
+  // renderer (security-architecture.md §4.2) already use for building
   // interactive lists into innerHTML: string-concat + a shared HTML-escaper +
   // one delegated/rebind pass, not a third one-off.
   function renderScopeChips(){
     const host=document.getElementById('scopeChips');
-    if(!host||!window.CCScope||!window.CCScopeChips) return;
+    if(!host||!window.CCScope) return;
+    if(!window.CCScopeChips){ console.warn('CCScopeChips missing — scope chips not rendered'); return; }
     // Every DECISION below the model call lives in scope-chips.js, where it is unit
     // tested (web/tests/js/scope-chips.test.cjs). What stays here is serialization
     // and DOM binding only — deliberately, so a chip-selection change never again
@@ -253,7 +255,7 @@
       scope: curScope(),
       isDefault: !!(window.CCScope.isDefault && window.CCScope.isDefault()),
       activeRegions: window.CCScope.regions(),
-      registry: window.CC_REGIONS||[],
+      registry: CC_REGIONS,
       inferredCountry: window.CCScope.inferHomeCountry(),
       scopeCenter: window.CCScope.scopeCenter(),
       mapCenter: c?[c.lng,c.lat]:null,

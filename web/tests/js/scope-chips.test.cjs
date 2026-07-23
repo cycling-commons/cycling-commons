@@ -248,7 +248,7 @@ test('compass: NRW fills all three rows', () => {
   assert.deepEqual(m.overflow.map((r) => r.slug), ['hamburg', 'sachsen-anhalt']);
 });
 
-test('compass: ranking ignores the My-area base (preserved asymmetry, map.js:296)', () => {
+test('compass: ranking ignores the My-area base (preserved asymmetry, the `near`/`scopeCenter` split)', () => {
   // Linear mode prefers the rider's base; compass mode anchors on the scope centre.
   // That asymmetry is TODAY'S behaviour and this extraction keeps it. Pinned so the
   // cross-border change has to be deliberate about it rather than silently altering it.
@@ -274,6 +274,37 @@ test('every cell carries the full contract, with nulls rather than undefined', (
       if (cell.kind === 'region') { assert.ok(DIRS.includes(cell.dir), `bad dir ${cell.dir}`); }
     });
   });
+});
+
+// ---- myArea scope (owner bug 1's fallback chain) -----------------------------
+
+test('myArea: the country comes off the active regions, and the mode is linear', () => {
+  const lim = bySlug('limburg-nl'); const nb = bySlug('noord-brabant');
+  const m = chipModel({
+    scope: {kind:'myArea', regionIds:[lim.id, nb.id], countryCode:null},
+    isDefault:false, activeRegions:[lim, nb], registry:REGIONS,
+    inferredCountry:'DE', scopeCenter:[5.6,51.3], mapCenter:[0,0],
+    myArea:{lat:51.3, lng:5.6},
+  }, CCScope);
+  assert.equal(m.mode, 'linear');                       // never compass, even with a centre
+  assert.deepEqual(m.country, {cc:'NL', label:'All Netherlands'});
+});
+
+test('region: a multi-id region scope also resolves to linear, never compass', () => {
+  // The compass branch requires exactly one active region (scope-chips.js's
+  // activeRegion guard); a multi-region `region` scope must fall through to the
+  // same linear path myArea takes above, not crash or silently pick one region.
+  const w = bySlug('wallonia'); const fl = bySlug('flanders');
+  const m = chipModel({
+    scope: {kind:'region', regionIds:[w.id, fl.id], countryCode:'BE'},
+    isDefault:false, activeRegions:[w, fl], registry:REGIONS,
+    inferredCountry:null, scopeCenter:[4.36,50.5], mapCenter:[0,0],
+    myArea:null,
+  }, CCScope);
+  assert.equal(m.mode, 'linear');
+  assert.deepEqual(m.chips.map((c) => c.slug), ['brussels', 'wallonia', 'flanders']);
+  assert.equal(m.more, false);
+  assert.deepEqual(m.country, {cc:'BE', label:'All Belgium'});
 });
 
 test('label falls back to slug, and the country rung falls back to "All <cc>"', () => {
