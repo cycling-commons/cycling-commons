@@ -259,7 +259,20 @@
         scope = clone(fallback);
         isDefaultScope = true; // fromUrl is falsy in this branch; fromLs (if any) was overridden, not used
       } else {
-        scope = fromUrl || fromLs || clone(fallback);
+        // Cold start with nothing explicit: open on the rider's inferred home
+        // country rather than the caller's hardcoded default
+        // (2026-07-22-scope-selector-scale-design.md §D). Before this, an
+        // incognito visitor in the Netherlands got Dutch CHIPS on a
+        // Wallonia-SCOPED map — the inference reached the chip block but never
+        // the active scope. Sits BELOW url/localStorage so no returning rider's
+        // own choice is overridden, and writes nothing: init never persists, so
+        // opening on NL is still not a stored preference (§F rule 1).
+        let home = null;
+        if (!fromUrl && !fromLs) {
+          const cc = this.inferHomeCountry();
+          if (cc) home = sanitize(countryScope(cc));
+        }
+        scope = fromUrl || fromLs || home || clone(fallback);
         isDefaultScope = !fromUrl && !fromLs;
       }
       return this.get();
@@ -338,6 +351,21 @@
         e = Math.max(e, r.bbox[2]); n = Math.max(n, r.bbox[3]);
       }
       return Number.isFinite(w) ? [w, s, e, n] : null;
+    },
+
+    /** [lng, lat] centre of the active scope, or null for Everywhere.
+     *
+     *  This is the anchor the contextual chip block ranks "closest regions"
+     *  against (2026-07-22-scope-selector-scale-design.md §B). It deliberately
+     *  does NOT come from the map: chips are rendered BEFORE applyScope fits the
+     *  viewport (the header label resolves by querying the rendered chip button),
+     *  so `map.getCenter()` there is still the OUTGOING scope's centre. Scoping
+     *  to Utrecht ranked against Germany's centroid and offered Drenthe/Groningen
+     *  while hiding adjacent Noord-Holland/Zuid-Holland. The scope's own bbox is
+     *  known synchronously and has no timing coupling at all. */
+    scopeCenter() {
+      const b = this.bbox();
+      return b ? [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2] : null;
     },
 
     /** Single region id for best-of &region= (only a single named region qualifies).

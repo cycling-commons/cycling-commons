@@ -229,8 +229,17 @@
       // `near` prefers the rider's My-area base centre (window.CC_MY_AREA,
       // logged-in home base), else the current map centre, since either is
       // "roughly where the rider is looking" with zero extra fetch.
+      // Anchor for "closest": the rider's own base when they have one, else the
+      // INCOMING scope's centre. NOT map.getCenter() — this function runs before
+      // applyScope fits the viewport, so the map is still showing the outgoing
+      // scope; anchoring there ranked Utrecht's chips against Germany's centroid
+      // and offered Drenthe/Groningen over adjacent Noord-Holland/Zuid-Holland.
+      // The map centre survives only as the Everywhere fallback, where the scope
+      // has no bbox of its own and where the map is genuinely the best hint.
       const ma=window.CC_MY_AREA;
-      const near=(ma&&ma.lat!=null&&ma.lng!=null) ? [ma.lng,ma.lat] : (()=>{ const c=map.getCenter(); return [c.lng,c.lat]; })();
+      const sc=window.CCScope.scopeCenter();
+      const near=(ma&&ma.lat!=null&&ma.lng!=null) ? [ma.lng,ma.lat]
+                : sc || (()=>{ const c=map.getCenter(); return [c.lng,c.lat]; })();
       // {limit:Infinity} is REQUIRED here: a bare contextualRegions(cc) applies
       // the same default cap of 8, so `all` and `shown` were both 8 and the
       // overflow branch below could never fire for any country (browser-verified

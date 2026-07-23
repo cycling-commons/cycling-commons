@@ -52,6 +52,14 @@ const REGIONS_NL = REGIONS.concat([
 // circle's localStorage entry, then re-run init exactly like the map page does.
 function boot({ search = '', ls = null, myArea = null, defaultScope = DEFAULT, areaLs = null, regionsList = REGIONS } = {}) {
   globalThis.location = { href: `http://localhost/map${search}`, search };
+  // Re-install the store-backed mock: freshScope() (below) swaps in its OWN
+  // localStorage, so once any freshScope test has run, `store` is no longer what
+  // the module reads and every later boot() would silently see empty storage.
+  globalThis.localStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => { store.set(k, String(v)); },
+    removeItem: (k) => { store.delete(k); },
+  };
   store.clear();
   if (ls !== null) store.set('cc-scope', ls);
   if (areaLs !== null) store.set('cc-my-area', areaLs);
@@ -703,5 +711,114 @@ test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/histo
       ['cc-scope', globalThis.localStorage.getItem('cc-scope')],
       ['cc-my-area', globalThis.localStorage.getItem('cc-my-area')],
     ];
+  }
+});
+
+// --- cold-start home country drives the ACTIVE scope, not just the chips ------
+// The first fix made renderScopeChips consult inferHomeCountry(), but left the
+// active scope on the hardcoded Wallonia default — so an incognito visitor in the
+// Netherlands got Dutch CHIPS on a Wallonia-SCOPED map. Owner reported it; the
+// inference now also resolves the opening scope, below localStorage/URL so no
+// existing visitor's choice is overridden.
+test('init: an inferred home country opens that country, not the hardcoded default', () => {
+  globalThis.__ccTz = 'Europe/Amsterdam';
+  const s = boot({ regionsList: REGIONS_NL });      // default scope = Wallonia (BE)
+  assert.equal(s.kind, 'country');
+  assert.equal(s.countryCode, 'NL');
+  delete globalThis.__ccTz;
+});
+
+test('init: an explicit stored scope still beats the inferred home', () => {
+  globalThis.__ccTz = 'Europe/Amsterdam';
+  const s = boot({ ls: 'region:flanders', regionsList: REGIONS_NL });
+  assert.deepEqual(s, { kind: 'region', regionIds: [24], countryCode: 'BE' });
+  delete globalThis.__ccTz;
+});
+
+test('init: an explicit URL scope still beats the inferred home', () => {
+  globalThis.__ccTz = 'Europe/Amsterdam';
+  const s = boot({ search: '?scope=region:brussels', regionsList: REGIONS_NL });
+  assert.deepEqual(s, { kind: 'region', regionIds: [23], countryCode: 'BE' });
+  delete globalThis.__ccTz;
+});
+
+test('init: an unmapped timezone falls back to the provided default', () => {
+  globalThis.__ccTz = 'America/New_York';
+  assert.deepEqual(boot({ regionsList: REGIONS_NL }), DEFAULT);   // Wallonia, as before
+  delete globalThis.__ccTz;
+});
+
+test('init: inferring the home country still counts as default (isDefault true)', () => {
+  globalThis.__ccTz = 'Europe/Amsterdam';
+  boot({ regionsList: REGIONS_NL });
+  assert.equal(CCScope.isDefault(), true);   // nothing the rider chose — chips may still re-infer
+  delete globalThis.__ccTz;
+});
+
+test('init: inference writes nothing (2026-07-22-scope-selector-scale-design.md §F rule 1)', () => {
+  globalThis.__ccTz = 'Europe/Amsterdam';
+  boot({ regionsList: REGIONS_NL });
+  assert.equal(store.get('cc-scope'), undefined);   // opening on NL is not a rider choice
+  assert.deepEqual(replacedUrls, []);
+  delete globalThis.__ccTz;
+});
+
+// --- scopeCenter: the anchor the chip block ranks "closest" against ----------
+// The chips used to rank against map.getCenter(), but they are rendered BEFORE
+// applyScope fits the map (deliberately — the header label resolves by querying
+// the rendered chip). So the anchor was the OUTGOING scope's centre: scoping to
+// Utrecht ranked against Germany's centroid and offered Drenthe/Groningen while
+// hiding adjacent Noord-Holland/Zuid-Holland. The scope's own bbox centre is
+// known synchronously and has no timing coupling at all.
+test('scopeCenter: a region scope anchors on its own bbox centre', () => {
+  const S = freshScope([
+    { id: 1, slug: 'utrecht', countryCode: 'NL', bbox: [4.792, 51.857, 5.627, 52.304], label: 'Utrecht', countryLabel: 'All Netherlands' },
+  ]);
+  S.setRegion('utrecht');
+  const c = S.scopeCenter();
+  assert.ok(Math.abs(c[0] - 5.2095) < 0.001, `lng ${c[0]}`);
+  assert.ok(Math.abs(c[1] - 52.0805) < 0.001, `lat ${c[1]}`);
+});
+
+test('scopeCenter: a country scope anchors on the union of its regions', () => {
+  const S = freshScope([
+    { id: 1, slug: 'utrecht', countryCode: 'NL', bbox: [4.792, 51.857, 5.627, 52.304], label: 'Utrecht', countryLabel: 'All Netherlands' },
+    { id: 2, slug: 'groningen', countryCode: 'NL', bbox: [6.167, 52.838, 7.227, 53.576], label: 'Groningen', countryLabel: 'All Netherlands' },
+  ]);
+  S.setCountry('NL');
+  assert.deepEqual(S.scopeCenter(), [(4.792 + 7.227) / 2, (51.857 + 53.576) / 2]);
+});
+
+test('scopeCenter: everywhere has no anchor (caller falls back to the map centre)', () => {
+  const S = freshScope([
+    { id: 1, slug: 'utrecht', countryCode: 'NL', bbox: [4.792, 51.857, 5.627, 52.304], label: 'Utrecht', countryLabel: 'All Netherlands' },
+  ]);
+  S.setEverywhere();
+  assert.equal(S.scopeCenter(), null);
+});
+
+test('scopeCenter anchors the chip ranking on the INCOMING scope, not the outgoing map view', () => {
+  // The exact reported bug, as a regression: real NL province bboxes, scoped to
+  // Utrecht. Ranking from Germany's centroid (the stale map centre) surfaced
+  // Drenthe/Groningen; ranking from Utrecht's own centre must not.
+  const NL = [
+    ['utrecht', 4.792, 51.857, 5.627, 52.304], ['gelderland', 4.994, 51.734, 6.833, 52.522],
+    ['zuid-holland', 3.774, 51.644, 5.031, 52.333], ['flevoland', 5.060, 52.250, 6.017, 52.844],
+    ['noord-brabant', 4.190, 51.221, 6.048, 51.831], ['noord-holland', 4.494, 52.166, 5.377, 53.189],
+    ['overijssel', 5.778, 52.118, 7.073, 52.854], ['limburg-nl', 5.566, 50.750, 6.227, 51.779],
+    ['zeeland', 3.358, 51.200, 4.277, 51.774], ['friesland', 4.849, 52.765, 6.428, 53.515],
+    ['drenthe', 6.120, 52.612, 7.093, 53.204], ['groningen', 6.167, 52.838, 7.227, 53.576],
+  ].map(([slug, x0, y0, x1, y1], i) => ({
+    id: i + 1, slug, countryCode: 'NL', bbox: [x0, y0, x1, y1], label: slug, countryLabel: 'All Netherlands',
+  }));
+  const S = freshScope(NL);
+  S.setRegion('utrecht');
+  const shown = S.contextualRegions('NL', { near: S.scopeCenter() }).map((r) => r.slug);
+  assert.equal(shown.length, 8);
+  for (const adjacent of ['utrecht', 'gelderland', 'zuid-holland', 'noord-holland', 'noord-brabant']) {
+    assert.ok(shown.includes(adjacent), `expected ${adjacent} among the 8 closest, got ${shown}`);
+  }
+  for (const distant of ['groningen', 'drenthe', 'friesland']) {
+    assert.ok(!shown.includes(distant), `${distant} is far from Utrecht but was shown: ${shown}`);
   }
 });
