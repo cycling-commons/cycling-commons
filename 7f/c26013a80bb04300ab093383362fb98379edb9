@@ -1,0 +1,25 @@
+docs/specs/coverage-provider.md
+  s_3c392b244b902c::t_25cbfd4c373734 280-288,290-292
+tools/divisions/README.md
+  s_3c392b244b902c::t_a1132eefbc75c0 19
+developers/coverage-batch.md
+  s_3c392b244b902c::t_c97aefb867442e 64-73
+docs/specs/2026-07-19-region-scoping-design.md
+  s_3c392b244b902c::t_282a569d1dfbff 868
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "7fc26013a80bb04300ab093383362fb98379edb9",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
