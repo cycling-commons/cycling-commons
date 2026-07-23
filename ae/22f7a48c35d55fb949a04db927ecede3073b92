@@ -1,0 +1,31 @@
+mkdocs.yml
+  s_f3f9c3dc9409c4::t_54cf3dd27c72f7 62-64
+docs/specs/2026-07-23-gis-primer-design.md
+  s_f3f9c3dc9409c4::t_d05a67f398f7df 33
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_756be184036dc5 206-233
+wiki/developers/gis/metres-vs-degrees.md
+  s_f3f9c3dc9409c4::t_8ab5724548a0bc 1-123,125-162
+  s_f3f9c3dc9409c4::t_fe63103ee5e728 124
+wiki/developers/gis/making-it-fast.md
+  s_f3f9c3dc9409c4::t_9ec4715d948d88 10,402
+  s_f3f9c3dc9409c4::t_e52a69fde49855 1-9,11-401,403-404
+wiki/developers/gis/routes.md
+  s_f3f9c3dc9409c4::t_ff5852d81e5f7f 1-201
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "ae22f7a48c35d55fb949a04db927ecede3073b92",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
