@@ -242,148 +242,62 @@
   // interactive lists into innerHTML: string-concat + a shared HTML-escaper +
   // one delegated/rebind pass, not a third one-off.
   function renderScopeChips(){
-    const host=document.getElementById('scopeChips'); if(!host||!window.CCScope) return;
-    const s=curScope();
-    // Which country's regions to show: normally the active scope's country
-    // first, inferred home as a fallback. But the map's hardcoded startup
-    // default (_defaultScope, above) always carries a countryCode too, so on
-    // a fresh anonymous visit that branch always won and inferHomeCountry()
-    // was never reached (owner fix 1, 2026-07-23) — a German visitor's first
-    // paint showed Wallonia/Flanders/Brussels. CCScope.isDefault() is true
-    // only until the rider (or a resolved URL/localStorage scope) actually
-    // picks one, so checking the inferred home FIRST in that window is safe:
-    // it only ever changes which chips are offered, never the active scope.
-    const isDef = !!(window.CCScope.isDefault && window.CCScope.isDefault());
-    const scopeCc = (s&&s.countryCode) || (s&&s.regionIds&&s.regionIds.length&&(window.CCScope.regions()[0]||{}).countryCode);
-    const cc = isDef ? (window.CCScope.inferHomeCountry() || scopeCc) : (scopeCc || window.CCScope.inferHomeCountry());
+    const host=document.getElementById('scopeChips');
+    if(!host||!window.CCScope||!window.CCScopeChips) return;
+    // Every DECISION below the model call lives in scope-chips.js, where it is unit
+    // tested (web/tests/js/scope-chips.test.cjs). What stays here is serialization
+    // and DOM binding only — deliberately, so a chip-selection change never again
+    // needs a browser to catch (2026-07-23-map-js-phase0-extraction-design.md).
+    const c=(map&&map.getCenter)?map.getCenter():null;
+    const m=window.CCScopeChips.chipModel({
+      scope: curScope(),
+      isDefault: !!(window.CCScope.isDefault && window.CCScope.isDefault()),
+      activeRegions: window.CCScope.regions(),
+      registry: window.CC_REGIONS||[],
+      inferredCountry: window.CCScope.inferHomeCountry(),
+      scopeCenter: window.CCScope.scopeCenter(),
+      mapCenter: c?[c.lng,c.lat]:null,
+      myArea: window.CC_MY_AREA||null,
+    }, window.CCScope);
+    // Direction word lookup stays here: the model returns semantic keys, never
+    // translated strings, so it has no opinion about the active locale.
+    const DIRK={n:'compassN',ne:'compassNe',e:'compassE',se:'compassSe',
+                s:'compassS',sw:'compassSw',w:'compassW',nw:'compassNw'};
+    const regionBtn=r=>`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label)}</button>`;
+    const countryBtn=k=>`<button data-scope="country:${escPend(k.cc)}">${escPend(k.label)}</button>`;
+    const moreBtn=()=>`<button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button>`;
     let html='';
-    let gridMode=false;
-    if(cc){
-      // Cap block (2026-07-22-scope-selector-scale-design.md §B, owner fix 2):
-      // show at most the 8 CLOSEST regions, not the first 8 alphabetically —
-      // `near` prefers the rider's My-area base centre (window.CC_MY_AREA,
-      // logged-in home base), else the current map centre, since either is
-      // "roughly where the rider is looking" with zero extra fetch.
-      // Anchor for "closest": the rider's own base when they have one, else the
-      // INCOMING scope's centre. NOT map.getCenter() — this function runs before
-      // applyScope fits the viewport, so the map is still showing the outgoing
-      // scope; anchoring there ranked Utrecht's chips against Germany's centroid
-      // and offered Drenthe/Groningen over adjacent Noord-Holland/Zuid-Holland.
-      // The map centre survives only as the Everywhere fallback, where the scope
-      // has no bbox of its own and where the map is genuinely the best hint.
-      const ma=window.CC_MY_AREA;
-      const sc=window.CCScope.scopeCenter();
-      const near=(ma&&ma.lat!=null&&ma.lng!=null) ? [ma.lng,ma.lat]
-                : sc || (()=>{ const c=map.getCenter(); return [c.lng,c.lat]; })();
-      // {limit:Infinity} is REQUIRED here: a bare contextualRegions(cc) applies
-      // the same default cap of 8, so `all` and `shown` were both 8 and the
-      // overflow branch below could never fire for any country (browser-verified
-      // dead code — Germany showed 8 of 16 with no More chip).
-      const all=window.CCScope.contextualRegions(cc,{limit:Infinity}); // uncapped — the true total + country label
-      // Compass grid (owner request: "the selected region inside the chips,
-      // surrounding regions correctly placed around it" —
-      // 2026-07-22-scope-selector-scale-design.md §B "Compass grid layout"):
-      // only meaningful when the active scope IS one named region — a country/
-      // everywhere/myArea scope has no single centre to lay a grid around, so
-      // those keep today's linear list unchanged (`sc` is null for both).
-      const activeRegion = (s.kind==='region' && s.regionIds.length===1) ? (window.CCScope.regions()[0]||null) : null;
-      if(activeRegion && sc){
-        gridMode=true;
-        // 9 nearest INCLUDING the active region itself (it is distance 0 from
-        // its own centre, so it always ranks first), then drop it — the
-        // remaining up to 8 are the neighbours the grid places around it (the
-        // owner's own arithmetic: "8 neighbours + 1 centre = exactly 9").
-        const pool=window.CCScope.contextualRegions(cc,{near:sc,limit:9})
-          .filter(r=>r.id!==activeRegion.id).slice(0,8);
-        const layout=window.CCScope.compassLayout(sc,pool);
-        // Document/tab order = visual row-major order (NW,N,NE / W,centre,E /
-        // SW,S,SE): a screen reader or keyboard tab walks the grid exactly as
-        // it reads on screen, so position never needs to be inferred visually.
-        // Grouped by row so an entirely-empty row can be dropped: empty cells are
-        // `visibility:hidden`, so they still reserve their height and a whole
-        // vacant row leaves a band of dead space above (or below) the grid.
-        // Flanders is the everyday case — Brussels and Wallonia both lie south of
-        // it, so the whole N row is vacant. Skipping the row top-aligns the grid
-        // instead. The middle row always holds the centre, so it never drops, and
-        // dropping only WHOLE rows keeps every surviving chip in its true
-        // direction relative to the centre.
-        const ROWS=[
-          [['nw','compassNw'],['n','compassN'],['ne','compassNe']],
-          [['w','compassW'],null,['e','compassE']],
-          [['sw','compassSw'],['s','compassS'],['se','compassSe']],
-        ];
-        html+=`<div class="cc-compass" role="group" aria-label="${escPend(D.compassGroup||'Nearby regions')}">`;
-        ROWS.forEach(row=>{
-          if(!row.some(entry=>entry===null||layout[entry[0]])) return;   // no centre, no regions → drop
-          row.forEach(entry=>{
-          if(entry===null){
-            html+=`<div class="cc-compass-cell cc-compass-center"><button data-scope="region:${escPend(activeRegion.slug)}">${escPend(activeRegion.label||activeRegion.slug)}</button></div>`;
-            return;
-          }
-          const [dir,dKey]=entry;
-          const r=layout[dir];
-          if(r){
-            // The direction word is spelled out in the aria-label (not conveyed
-            // by grid position alone, review requirement) via the same
-            // escPend+tpl idiom as every other interpolated string here.
-            const dirWord=D[dKey]||dir;
-            const aria=tpl(D.compassLabel||'{dir}: {region}',{dir:dirWord,region:r.label||r.slug});
-            html+=`<div class="cc-compass-cell"><button data-scope="region:${escPend(r.slug)}" aria-label="${escPend(aria)}">${escPend(r.label||r.slug)}</button></div>`;
-          } else {
-            html+='<div class="cc-compass-cell empty" aria-hidden="true"></div>';
-          }
-          });
-        });
-        html+='</div>';
-        // Regions the grid could not place WITHOUT misstating their direction
-        // (compassLayout caps displacement at one slot — see scope.js). They are
-        // still among the 8 nearest, so they must stay reachable: list them under
-        // the grid as ordinary chips rather than dropping them. Bavaria and
-        // Utrecht both hit this: a corner region's neighbours cluster on one
-        // side, so the far cells can only be filled by lying about a bearing.
-        layout.overflow.forEach(r=>{
-          html+=`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label||r.slug)}</button>`;
-        });
-        // More/All-country stay BELOW the grid in plain linear flow — neither
-        // is a geographic neighbour, so neither may occupy a compass cell.
-        const shownTotal=pool.length+1; // +1 the centre
-        if(all.length>shownTotal){
-          html+=`<div class="cc-compass-more"><button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button></div>`;
+    if(m.mode==='countries'){
+      m.countries.forEach(k=>{ html+=countryBtn(k); });
+    } else if(m.mode==='compass'){
+      html+=`<div class="cc-compass" role="group" aria-label="${escPend(D.compassGroup||'Nearby regions')}">`;
+      m.rows.forEach(row=>row.forEach(cell=>{
+        if(cell.kind==='empty'){ html+='<div class="cc-compass-cell empty" aria-hidden="true"></div>'; return; }
+        if(cell.kind==='center'){
+          html+=`<div class="cc-compass-cell cc-compass-center"><button data-scope="region:${escPend(cell.slug)}">${escPend(cell.label)}</button></div>`;
+          return;
         }
-        const cl=(all[0]||{}).countryLabel||('All '+cc);
-        html+=`<div class="cc-compass-more"><button data-scope="country:${escPend(cc)}">${escPend(cl)}</button></div>`;
-      } else {
-        const shown=window.CCScope.contextualRegions(cc,{near});         // capped at 8, nearest-first
-        shown.forEach(r=>{
-          html+=`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label||r.slug)}</button>`;
-        });
-        // Overflow affordance: more regions exist than the cap shows — a chip
-        // that opens/focuses search (rather than silently dropping them) so
-        // every onboarded region stays reachable regardless of country size.
-        if(all.length>shown.length){
-          html+=`<button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button>`;
-        }
-        const cl=(all[0]||{}).countryLabel||('All '+cc);
-        html+=`<button data-scope="country:${escPend(cc)}">${escPend(cl)}</button>`;
-      }
+        // The direction is spelled out in the aria-label, never conveyed by grid
+        // position alone (review requirement).
+        const aria=tpl(D.compassLabel||'{dir}: {region}',{dir:D[DIRK[cell.dir]]||cell.dir,region:cell.label});
+        html+=`<div class="cc-compass-cell"><button data-scope="region:${escPend(cell.slug)}" aria-label="${escPend(aria)}">${escPend(cell.label)}</button></div>`;
+      }));
+      html+='</div>';
+      m.overflow.forEach(r=>{ html+=regionBtn(r); });
+      // More/All-country stay BELOW the grid in plain linear flow — neither is a
+      // geographic neighbour, so neither may occupy a compass cell.
+      if(m.more) html+=`<div class="cc-compass-more">${moreBtn()}</div>`;
+      html+=`<div class="cc-compass-more">${countryBtn(m.country)}</div>`;
     } else {
-      // cold-start fallback: onboarded country rungs (window.CC_REGIONS-derived),
-      // label-sorted (final review MINOR 8) — CC_REGIONS' own order is
-      // area_km2 DESC, slug, so following it as-is would reshuffle this list
-      // every time a bigger/smaller region gets imported into an existing
-      // country or a new country is onboarded.
-      const seen=new Set(); const countries=[];
-      (window.CC_REGIONS||[]).forEach(r=>{ if(r.countryCode&&!seen.has(r.countryCode)){ seen.add(r.countryCode);
-        countries.push({cc:r.countryCode, label:r.countryLabel||('All '+r.countryCode)}); }});
-      countries.sort((a,b)=>a.label.localeCompare(b.label,'en'));
-      countries.forEach(({cc,label})=>{ html+=`<button data-scope="country:${escPend(cc)}">${escPend(label)}</button>`; });
+      m.chips.forEach(r=>{ html+=regionBtn(r); });
+      if(m.more) html+=moreBtn();
+      html+=countryBtn(m.country);
     }
     host.innerHTML=html;
-    // Grid mode gets its own box (a CSS-grid column of the 3x3 grid + the
-    // linear More/All-country row below it); the linear list stays
-    // `display:contents` so its buttons flex alongside My-area/Everywhere
-    // exactly as before (map.css).
-    host.classList.toggle('cc-grid', gridMode);
+    // Grid mode gets its own box (a CSS-grid column of the 3x3 grid + the linear
+    // More/All-country row below it); the linear list stays `display:contents` so its
+    // buttons flex alongside My-area/Everywhere exactly as before (map.css).
+    host.classList.toggle('cc-grid', m.mode==='compass');
     // (re)bind the freshly-rendered chips to CCScope, same contract as the static ones.
     host.querySelectorAll('button[data-scope]').forEach(b=>b.onclick=()=>{
       const tok=b.dataset.scope;
