@@ -96,10 +96,11 @@ about what actually runs today versus what's merely useful to understand.
 
 ## The chapters
 
-The ten chapter pages don't exist as links yet — this list names them so you can see the whole
-series at a glance. Each one covers one idea and ends with a slot for a hands-on exercise.
+Ten chapters. The ones that have been written are linked; the rest are named here so you can see
+the whole series at a glance, and each becomes a link as it lands. Every chapter covers one idea
+and ends with a slot for a hands-on exercise.
 
-1. **The Earth is awkward** (`coordinates.md`) — latitude and longitude, why a degree of longitude
+1. [**The Earth is awkward**](coordinates.md) — latitude and longitude, why a degree of longitude
    shrinks toward the poles, what a map projection is and what it costs, and the two coordinate
    systems this project actually uses.
 2. **The shapes** (`shapes.md`) — points, lines, and polygons; GeoJSON, the format they travel in;

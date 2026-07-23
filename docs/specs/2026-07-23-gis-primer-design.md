@@ -235,7 +235,7 @@ Filled during writing, one row per marker. Empty until the pages are drafted.
 
 | ID | Ch | Type | Concept | Why it has no anchor | Resolution |
 |----|----|------|---------|----------------------|------------|
-| _(filled during implementation)_ | | | | | |
+| U01 | 1 | general | On-the-fly reprojection (`ST_Transform`) | Everything that feeds the system already speaks EPSG:4326 (GPS, GPX, OSM, GeoJSON), so storage never leaves it and the one projection that does happen — to Web Mercator for tiles — is done by tippecanoe on a copy on the way out, not by us. Verified 2026-07-23: `grep -rn 'ST_Transform'` matches nothing outside the wiki page describing it | open — owner review |
 
 Each chapter's review step checks that every `UNANCHORED` marker in the page has a matching row
 here, and that every `type: absent` marker is accompanied by its reader-visible admonition. That
