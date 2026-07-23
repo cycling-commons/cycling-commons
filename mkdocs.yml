@@ -55,6 +55,8 @@ nav:
   - Location & privacy: location-privacy.md
   - Governance: governance.md
   - Building the Commons: building.md
+  - For developers:
+      - Start here: developers/gis/index.md
 
 markdown_extensions:
   - admonition
