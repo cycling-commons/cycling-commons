@@ -66,6 +66,7 @@ nav:
       - Tiles: developers/gis/tiles.md
       - Putting it on screen: developers/gis/on-screen.md
       - Lines that mean something: developers/gis/routes.md
+      - Pitfalls and glossary: developers/gis/pitfalls.md
 
 markdown_extensions:
   - admonition

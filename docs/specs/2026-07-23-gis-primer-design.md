@@ -247,6 +247,7 @@ Filled during writing, one row per marker. Empty until the pages are drafted.
 | U60 | 6 | absent | Ingesting OSM **relations** into `coverage_poi` | The pipeline reads nodes and ways only: `extract.py::selector_expressions()` filters on an `nw/` prefix and `parse.py`'s `_Collector` has no `relation()` handler. A castle mapped as a multipolygon relation is invisible to it. `coverage-provider.md` calls this an approved fast-follow with no scheduled plan | open — owner review |
 | U90 | 9 | general | Elevation-gain smoothing (minimum-threshold accumulation) | GPS noise inflates raw ascent, and the usual fix is a threshold before a climb counts. We surface ascent without documenting a smoothing choice | open — owner review |
 | U91 | 9 | absent | Turn-by-turn route computation (A → B) via a routing engine | Not implemented. Valhalla exists as an opt-in compose profile only; nothing in the app computes a route between two points | open — owner review |
+| U100 | 10 | general | Antimeridian / dateline wrapping | Not merely absent — it is a *named, accepted* risk. `2026-07-19-region-scoping-design.md` §8 risk 11 already identifies the exact break point (`RegionRegistryProvider`, `CCScope.bbox()` in `web/assets/map/scope.js`) for a hypothetical future country crossing 180°. No onboarded country does today | open — owner review |
 
 Each chapter's review step checks that every `UNANCHORED` marker in the page has a matching row
 here, and that every `type: absent` marker is accompanied by its reader-visible admonition. That
