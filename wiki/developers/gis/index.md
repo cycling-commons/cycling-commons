@@ -61,7 +61,7 @@ its own stop, and a single all-in-one diagram would go stale the first time any 
 
 Every concept in this series that exists in this codebase is followed by a pointer to a real file
 and the name of the thing inside it that does the work, written like this:
-`web/src/Contribution/SpatialResolver.php`, `SpatialResolver::regionFor()`. Open the file if you
+`web/src/Contribution/SpatialResolver.php`, `SpatialResolver::resolve()`. Open the file if you
 want to see it for yourself — that's the reason it's written this way instead of the code being
 pasted into the wiki.
 
