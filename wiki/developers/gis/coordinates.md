@@ -273,8 +273,9 @@ Every migration's copy of that string is generated from one place, so no table c
 different one. See `web/src/Catalog/Doctrine/GeometryType.php`,
 `GeometryType::getSQLDeclaration()` — a Doctrine custom type, registered as the DBAL type
 `geometry` in `web/config/packages/doctrine.yaml`, whose entire job is to say what a geometry column
-looks like in SQL. Every entity that stores a shape declares `#[ORM\Column(type: 'geometry')]` and
-nothing else, so the six geometry columns that exist today — `region.geom`, `item.geom`,
+looks like in SQL. Every entity that stores a shape declares `#[ORM\Column(type: 'geometry')]` —
+some add `nullable: true`, but none of them names a type or an SRID of its own — so the six geometry
+columns that exist today — `region.geom`, `item.geom`,
 `recommended_route.geom`, `heat_point.geom`, `submission.geom` and `users.base_point` — all got
 their declaration from this one method. You will find the same literal string written out in each
 of the migrations that created them; those are copies of this method's output, frozen at the moment

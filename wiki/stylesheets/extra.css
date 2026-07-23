@@ -78,11 +78,17 @@
        out 14% apart. Fixing the width at 640 for all sixteen figures makes one
        type scale correct everywhere.
 
-   (2) The rendered width is clamped, so the scale factor is a known band.
+   (2) The rendered width is clamped ABOVE but not below, so the scale factor
+       has a ceiling and a realistic worst case rather than a true floor.
        .gis-fig is capped at 21rem (= 420px, the wiki root font is 20px) and
-       fills the column below that. So the drawing renders between 328px wide
-       (a 360px phone, scale 0.5125) and 420px wide (any desktop, scale
-       0.65625). Measured, not assumed.
+       fills the column below that. On a 360px phone the drawing renders 328px
+       wide (scale 0.5125); on any desktop it renders 420px (scale 0.65625).
+       Measured, not assumed.
+       Below 360px the band keeps shrinking: a 320px viewport gives a 288px
+       column, scale 0.45, which puts 24-unit type at 10.8px — just under the
+       floor in (3). 360px is the narrowest viewport this series is designed
+       for; 320px degrades gracefully rather than being supported. Do not read
+       0.5125 as a guaranteed minimum.
 
    (3) The type scale, and the floor it exists to hold:
          text                  27 units -> 13.8px on a phone, 17.7px on desktop
@@ -157,7 +163,14 @@
   color: var(--md-default-fg-color--light);
 }
 
-/* figure ink — stroke classes (four content colours plus one for guides) */
+/* figure ink — stroke classes (four content colours plus one for guides).
+   Stroke and fill names are NOT symmetrical — check this list before adding a
+   class, or you will duplicate one that already exists under another name:
+     glacier  stroke is `gis-muted`, fill is `gis-fill-glacier`
+              (there is no `gis-glacier` — `gis-muted` IS it)
+     ochre    fill only, no stroke class
+     paper    fill only, and it is the *deep* paper tone
+   Everything else pairs as `gis-<name>` / `gis-fill-<name>`. */
 .gis-fig .gis-ink    { stroke: var(--cc-ink);     fill: none; stroke-width: 1.5; }
 .gis-fig .gis-accent { stroke: var(--cc-trail);   fill: none; stroke-width: 2; }
 .gis-fig .gis-clay   { stroke: var(--cc-clay);    fill: none; stroke-width: 2; }
