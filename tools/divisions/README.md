@@ -39,7 +39,11 @@ country onboards later, demand-driven.
   (NL example: `limburg-nl`, because BE also has a Limburg);
 - fix **exonyms** in all four locales and delete the `# TODO exonym?` markers
   (sokil ships English msgids only, so no locale is pre-localized);
-- add the `all_<cc>` country rung the map scope selector needs.
+- add the `all_<cc>` country rung the map scope selector needs;
+- add the country's IANA timezone(s) to `TZ_COUNTRY` in `web/assets/map/scope.js`
+  (2026-07-22-scope-selector-scale-design.md §D) — the cold-start home-country
+  guess silently resolves to nothing for the new country's visitors otherwise,
+  and no test catches the gap.
 
 ## What the exporter produces
 
