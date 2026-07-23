@@ -4,7 +4,10 @@
         "C": {
             "selectors": [
                 {"tag": "amenity=drinking_water", "label": "Drinking water"},
-                {"tag": "drinking_water=yes", "label": "Drinking water"}
+                {"tag": "drinking_water=yes", "label": "Drinking water"},
+                {"tag": "amenity=water_point", "label": "Water point"},
+                {"tag": "man_made=water_tap", "label": "Water tap"},
+                {"tag": "shop=bakery", "label": "Bakery"}
             ],
             "tileProps": ["potable"]
         },
@@ -32,7 +35,9 @@
         "G": {
             "selectors": [
                 {"tag": "railway=station", "label": "Train station"},
-                {"tag": "railway=halt", "label": "Train halt"}
+                {"tag": "railway=halt", "label": "Train halt"},
+                {"tag": "amenity=ferry_terminal", "label": "Ferry"},
+                {"tag": "route=ferry", "label": "Ferry"}
             ],
             "tileProps": []
         },
@@ -84,8 +89,8 @@
         "addr:city", "addr:housenumber", "addr:street",
         "amenity", "capacity", "contact:phone", "contact:website",
         "description", "drinking_water", "fee", "historic", "image",
-        "natural", "opening_hours", "operator", "phone", "railway",
-        "shelter_type", "shop", "tourism", "url", "waterway", "website",
+        "man_made", "natural", "opening_hours", "operator", "phone", "railway",
+        "route", "shelter_type", "shop", "tourism", "url", "waterway", "website",
         "wheelchair", "wikidata", "wikimedia_commons", "wikipedia"
     ]
 }

@@ -149,12 +149,12 @@ a deliberate decision — every addition widens ingestion and the cache.
 | Commons item | Kind | OSM selector | Notes |
 |--------------|------|--------------|-------|
 | A · Road surface | line | `highway=*` with `surface=*` | Corridor data, not POIs |
-| C · Water & food | point | `amenity=drinking_water`, `drinking_water=yes` | |
+| C · Water & food | point | `amenity=drinking_water`, `drinking_water=yes`, `amenity=water_point`, `man_made=water_tap`, `shop=bakery` | Water sources + the bakery (the classic resupply stop; fills the "food" half of the letter). Cafés/restaurants deliberately excluded — too dense, low per-item signal |
 | **D · Bike shop** | point | `shop=bicycle` | Staffed; real opening hours apply |
 | **D · Self-service station** | point | `amenity=bicycle_repair_station` | Unmanned; **inherently 24/7** |
 | **D · Public pump** | point | `amenity=compressed_air` | Unmanned; 24/7 |
 | E · Where to sleep | point | `tourism=hotel/hostel/guest_house/chalet/camp_site/…` | |
-| G · Getting there | point | `railway=station`, `railway=halt` | |
+| G · Getting there | point | `railway=station`, `railway=halt`, `amenity=ferry_terminal`, `route=ferry` | Ferries are route-critical crossings in this region. `route=ferry` ways reduce to the crossing midpoint (legitimately over water); the terminal is the land-side dock |
 | H · Shelter | point | `shelter_type=picnic_shelter/weather_shelter/field_shelter/lean_to/basic_hut/gazebo/pavilion/rock_shelter/sun_shelter/wildlife_hide/dugout` (typed shelters only — bare `amenity=shelter` and `shelter_type=public_transport` bus stops stay out) | |
 | I · Scenic views | point | `tourism=viewpoint`, `natural=peak`, `waterway=waterfall` | |
 | J · History & culture | point | `historic=castle/fort/ruins/monument/memorial/…` | |
@@ -169,7 +169,7 @@ their **tags** we keep — a separate and equally deliberate list, because
 `osmium tags-filter` selects objects, not keys, so a matching object arrives
 carrying everything OSM has attached to it.
 
-We store **27 tag keys**: the 9 selector keys above, the 14 keys the POI drawer
+We store **29 tag keys**: the 11 selector keys above, the 14 keys the POI drawer
 displays, and 4 provisional media/reference keys. Everything else is dropped
 before it reaches our database. The full list, the rationale, and the tests that
 enforce it are in

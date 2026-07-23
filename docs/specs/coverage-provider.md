@@ -160,7 +160,7 @@ different question from which *keys* we keep on them, and the two are easy to
 conflate: `osmium tags-filter` selects **objects, not keys**, so every matching
 object arrives carrying its full tag set. Before the trim (2026-07-23) the cache
 therefore stored **4,220 distinct keys** — a single memorial contributing 20 of
-them — while nothing in the codebase read more than **27**. That is the bulk-OSM
+them — while nothing in the codebase read more than **29**. That is the bulk-OSM
 duplication [osm-data-architecture.md §1](osm-data-architecture.md) principle 1
 forbids, arrived at by omission rather than by decision.
 
@@ -168,11 +168,11 @@ The serve-set is three groups:
 
 | Group | Count | Keys | Read by |
 |---|---|---|---|
-| **Selectors** | 9 | `amenity`, `drinking_water`, `historic`, `natural`, `railway`, `shelter_type`, `shop`, `tourism`, `waterway` | Classification (letter + `serviceKind`); `tiles.py::_label_case` re-reads them at tile-build time |
+| **Selectors** | 11 | `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`, `route`, `shelter_type`, `shop`, `tourism`, `waterway` | Classification (letter + `serviceKind`); `tiles.py::_label_case` re-reads them at tile-build time |
 | **Display** | 14 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity` | `CoverageRepository::TAG_WHITELIST` — exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
 
 `TAG_WHITELIST` has **15** entries; `drinking_water` is counted in the selector
-row above, so the three groups sum to 9 + 14 + 4 = **27** distinct keys.
+row above, so the three groups sum to 11 + 14 + 4 = **29** distinct keys.
 | **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | **Nothing yet — provisional.** Kept only because re-adding them later costs a full re-harvest; pending a decision on whether we build the drawer photo / deep-link features. Cost: 19 B/row, ≈ 89 MB planet-wide |
 
 Measured impact of the trim across BE + NL + DE (375,078 rows): tags payload
