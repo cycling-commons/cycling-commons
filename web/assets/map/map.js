@@ -265,7 +265,13 @@
     // translated strings, so it has no opinion about the active locale.
     const DIRK={n:'compassN',ne:'compassNe',e:'compassE',se:'compassSe',
                 s:'compassS',sw:'compassSw',w:'compassW',nw:'compassNw'};
-    const regionBtn=r=>`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label)}</button>`;
+    // Foreign chips (a region of another country than the active scope) show a
+    // "· NL" country cue; native chips stay bare. The cue is part of the button
+    // TEXT, so it also reaches the compass aria-label below — the country is in the
+    // accessible name, not conveyed by styling alone
+    // (2026-07-23-cross-border-chips-design.md §3.3).
+    const cueLabel=x=>escPend(x.label)+(x.foreign?' · '+escPend((x.cc||'').toUpperCase()):'');
+    const regionBtn=r=>`<button data-scope="region:${escPend(r.slug)}">${cueLabel(r)}</button>`;
     const countryBtn=k=>`<button data-scope="country:${escPend(k.cc)}">${escPend(k.label)}</button>`;
     const moreBtn=()=>`<button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button>`;
     let html='';
@@ -276,13 +282,13 @@
       m.rows.forEach(row=>row.forEach(cell=>{
         if(cell.kind==='empty'){ html+='<div class="cc-compass-cell empty" aria-hidden="true"></div>'; return; }
         if(cell.kind==='center'){
-          html+=`<div class="cc-compass-cell cc-compass-center"><button data-scope="region:${escPend(cell.slug)}">${escPend(cell.label)}</button></div>`;
+          html+=`<div class="cc-compass-cell cc-compass-center"><button data-scope="region:${escPend(cell.slug)}">${cueLabel(cell)}</button></div>`;
           return;
         }
         // The direction is spelled out in the aria-label, never conveyed by grid
         // position alone (review requirement).
-        const aria=tpl(D.compassLabel||'{dir}: {region}',{dir:D[DIRK[cell.dir]]||cell.dir,region:cell.label});
-        html+=`<div class="cc-compass-cell"><button data-scope="region:${escPend(cell.slug)}" aria-label="${escPend(aria)}">${escPend(cell.label)}</button></div>`;
+        const aria=tpl(D.compassLabel||'{dir}: {region}',{dir:D[DIRK[cell.dir]]||cell.dir,region:cell.foreign?`${cell.label} · ${(cell.cc||'').toUpperCase()}`:cell.label});
+        html+=`<div class="cc-compass-cell"><button data-scope="region:${escPend(cell.slug)}" aria-label="${escPend(aria)}">${cueLabel(cell)}</button></div>`;
       }));
       html+='</div>';
       m.overflow.forEach(r=>{ html+=regionBtn(r); });
