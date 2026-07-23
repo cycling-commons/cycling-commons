@@ -373,4 +373,36 @@ Every predicate above works by checking every row it is asked about. That is exa
 catalog with a few hundred entries and exactly ruinous on one with hundreds of thousands. Chapter 5
 is what closes that gap.
 
-<!-- EXERCISE-SLOT ch=4 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — how far along, on a real ride"
+    Ask the two questions `RideCheckService` asks about a real recommended route and a real catalog
+    item: how far off the route does it sit, and how far along the route is it. Route 27 is "Rondje
+    Super Stockeu"; item 11022 is "Cascade de Coo", the waterfall that sits right beside its start.
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog, the same ST_Distance / ST_ClosestPoint / ST_LineLocatePoint pattern RideCheckService::corridorGroups() uses -->
+    ```sql
+    SELECT
+      round(ST_Distance(i.geom::geography, r.geom::geography)::numeric, 1)      AS dist_m,
+      round(ST_LineLocatePoint(r.geom, ST_ClosestPoint(i.geom, r.geom))::numeric, 3) AS frac
+    FROM recommended_route r, item i
+    WHERE r.id = 27 AND i.id = 11022;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; stable for these two seed rows -->
+    ```text
+     dist_m | frac
+    --------+-------
+       19.4 | 0.004
+    ```
+
+    `dist_m` is the plain answer to "how far off the track" — 19.4 real metres, cast to `geography`
+    the way chapter 3 said a distance in metres should be. `frac` is the more interesting one:
+    `0.004` means the waterfall's nearest point on the route sits 0.4% of the way along it, measured
+    from the route's very first vertex — right near the start, which is exactly where a fountain
+    named after the waterfall at the start of a loop ought to land. Multiply that fraction by the
+    route's total length and you get the same "kilometre 23.4"-style figure `RideCheckService` shows
+    a rider; here it says "you'd meet this almost immediately," which anyone who knows Rondje Super
+    Stockeu can check against the ride itself. Try a different `item.id` from the same corridor and
+    watch `frac` move with it — that ordering is the entire reason this function exists instead of
+    just sorting by `i.id`.

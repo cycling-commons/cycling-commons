@@ -401,4 +401,53 @@ The fountain now has a position and a coordinate system to interpret it in. Next
 because the same column type that holds this single point also has to hold a rider's whole route and
 the outline of Wallonia.
 
-<!-- EXERCISE-SLOT ch=1 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — watch the swap go quiet"
+    Ask the dev catalog for everything within 5 km of the fountain, the right way round and then the
+    wrong way round, and watch the second answer disappear without an error. This runs against the
+    live `item` table (chapter 5, [`making-it-fast.md`](making-it-fast.md#how-to-tell), shows how to
+    open a `psql` session against it).
+
+    First, longitude before latitude — `ST_Point(lng, lat)`, exactly as PostGIS wants it:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog, correct lng-first argument order -->
+    ```sql
+    SELECT count(*) AS nearby
+    FROM item
+    WHERE ST_DWithin(geom::geography,
+                      ST_SetSRID(ST_Point(5.8792, 50.4894), 4326)::geography, 5000);
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; the exact count drifts as the catalog grows, being non-zero is the point -->
+    ```text
+     nearby
+    --------
+         81
+    (1 row)
+    ```
+
+    Now swap the two numbers into `ST_Point`, as if you had typed them in the order a human says them
+    out loud — latitude first:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog, the human lat-first order fed straight into ST_Point -->
+    ```sql
+    SELECT count(*) AS nearby
+    FROM item
+    WHERE ST_DWithin(geom::geography,
+                      ST_SetSRID(ST_Point(50.4894, 5.8792), 4326)::geography, 5000);
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; stable regardless of catalog growth, the swapped point has nothing near it on Earth's dry land -->
+    ```text
+     nearby
+    --------
+          0
+    (1 row)
+    ```
+
+    Same predicate, same radius, same fountain — the only change is which number went into which
+    argument slot. `ST_Point(50.4894, 5.8792)` is a real, valid point, about 6,400 km from here, in
+    the Indian Ocean off the coast of Somalia — the exact place the warning above named. Nothing
+    threw an error, because both numbers are plausible floats in range. The query simply came back
+    empty, and empty is precisely what a longitude-first bug looks like from the outside.

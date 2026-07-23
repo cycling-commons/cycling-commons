@@ -418,4 +418,67 @@ exists in our database — but somebody mapped that fountain in OpenStreetMap, i
 looks nothing like ours, and it had to get from there to here. Chapter 6
 ([`osm-to-database.md`](osm-to-database.md)) follows it the whole way.
 
-<!-- EXERCISE-SLOT ch=5 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — watch Seq Scan become an Index Scan, on 375,078 rows"
+    Run the naive `::geography` form of "within 250 m of this point" against `coverage_poi`, then run
+    the `ST_Intersects`-on-a-precomputed-corridor rewrite this chapter just walked through, and read
+    the two query plans side by side. Same point as chapter 1's fountain, same 250 m radius one of
+    `RideCheckService::ALLOWED_RADII` actually offers. Open a `psql` session the way this chapter
+    already showed, then run the naive form first:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev stack's coverage_poi table, the cast sits on the indexed column -->
+    ```sql
+    EXPLAIN ANALYZE
+    SELECT count(*)
+    FROM coverage_poi
+    WHERE ST_DWithin(geom::geography,
+                      ST_SetSRID(ST_Point(5.8792, 50.4894), 4326)::geography, 250);
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output, trimmed of Planning/JIT detail; exact milliseconds depend on the machine and what is cached, the scan node and row count do not -->
+    ```text
+     Finalize Aggregate (actual time=455.390..473.237 rows=1.00 loops=1)
+       ->  Gather (actual time=455.380..473.228 rows=3.00 loops=1)
+             ->  Partial Aggregate (actual time=430.431..430.432 rows=1.00 loops=3)
+                   ->  Parallel Seq Scan on coverage_poi (actual time=430.204..430.391 rows=0.33 loops=3)
+                         Filter: st_dwithin((geom)::geography, …, '250'::double precision, true)
+                         Rows Removed by Filter: 125026
+     Execution Time: 491.042 ms
+    ```
+
+    `Parallel Seq Scan on coverage_poi` — the whole table, three ways, discarding 125,026 rows per
+    worker that never had a chance of matching. Half a second for one point. Now the rewrite: buffer
+    the point once, cast back to `geometry`, and test with `ST_Intersects` against the bare indexed
+    column:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the same table, the same MATERIALIZED-corridor idiom RideCheckService::corridorGroups() uses -->
+    ```sql
+    EXPLAIN ANALYZE
+    WITH corridor AS MATERIALIZED (
+      SELECT ST_Buffer(ST_SetSRID(ST_Point(5.8792, 50.4894), 4326)::geography, 250)::geometry AS b
+    )
+    SELECT count(*)
+    FROM coverage_poi
+    WHERE ST_Intersects(geom, (SELECT b FROM corridor));
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output, trimmed of Planning detail; exact milliseconds depend on the machine, the scan node does not -->
+    ```text
+     Aggregate (actual time=0.134..0.134 rows=1.00 loops=1)
+       CTE corridor
+         ->  Result (actual time=0.000..0.001 rows=1.00 loops=1)
+       ->  Index Scan using coverage_poi_geom_idx on coverage_poi (actual time=0.121..0.131 rows=1.00 loops=1)
+             Index Cond: (geom && (InitPlan 2).col1)
+             Filter: st_intersects(geom, (InitPlan 2).col1)
+             Rows Removed by Filter: 1
+     Execution Time: 0.188 ms
+    ```
+
+    `Index Scan using coverage_poi_geom_idx` instead of a scan of the whole table, `Rows Removed by
+    Filter: 1` instead of 125,026, and half a second becomes well under a millisecond — on this
+    machine, right now, both numbers will move if you run it again, but the shape of the change will
+    not: a table scan collapsing into an index descent. Run `SELECT count(*) FROM coverage_poi;`
+    first if you want to see the 375,078 for yourself, and check both queries agree on the answer —
+    `count(*)` should come back `1` either way, because the rewrite changes the plan, never the
+    result.

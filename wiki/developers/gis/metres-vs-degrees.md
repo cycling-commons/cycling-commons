@@ -272,4 +272,53 @@ The fountain now has a position, a shape, and a unit of ground distance it can b
 What is still missing is the vocabulary for asking about it: "is it inside this region", "did a rider
 pass it", "what is nearby." Chapter 4 is that vocabulary.
 
-<!-- EXERCISE-SLOT ch=3 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — the same 'within 10 km' question, two answers"
+    Ask whether one real mapped cycleway in the dev catalog sits within 10 km of one real region
+    boundary, once the naive rule-of-thumb way this chapter opened with and once cast to
+    `geography`, and watch the two answers disagree on data already sitting in the database.
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog; item 13582 is a mapped cycleway near the German border, region nordrhein-westfalen is North Rhine-Westphalia's outline -->
+    ```sql
+    SELECT
+      ST_DWithin(i.geom, r.geom, 10.0/111.32)                 AS within_10km_naive_degrees,
+      ST_DWithin(i.geom::geography, r.geom::geography, 10000) AS within_10km_geography
+    FROM item i, region r
+    WHERE i.id = 13582 AND r.slug = 'nordrhein-westfalen';
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; stable for this seed row and this region's stored boundary -->
+    ```text
+     within_10km_naive_degrees | within_10km_geography
+    ---------------------------+------------------------
+     f                         | t
+    ```
+
+    `10.0/111.32` is exactly the rule-of-thumb conversion from the top of this chapter. That version
+    says the cycleway is *not* within 10 km of North Rhine-Westphalia. The `::geography` version says
+    it is. Ask for the real numbers behind the disagreement:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the same two rows, showing the real distance the naive threshold was compared against -->
+    ```sql
+    SELECT
+      round(ST_Distance(i.geom::geography, r.geom::geography)::numeric, 0) AS real_metres,
+      round(ST_Distance(i.geom, r.geom)::numeric, 4)                       AS naive_degrees
+    FROM item i, region r
+    WHERE i.id = 13582 AND r.slug = 'nordrhein-westfalen';
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; stable for this seed row -->
+    ```text
+     real_metres | naive_degrees
+    -------------+---------------
+            8774 |        0.1136
+    ```
+
+    The cycleway really is 8.77 km from the border — comfortably inside the 10 km ask — but that
+    distance comes out to 0.1136 degrees, bigger than the naive threshold of `10.0/111.32 ≈ 0.0898`,
+    because at this latitude a degree of longitude is only worth about 71 km (chapter 1), not the
+    111 km the naive conversion assumes everywhere. `::geography` gets the ground-truth answer right;
+    the naive comparison silently excludes ground that is genuinely in range. Neither query errors.
+    They just disagree, exactly the way this chapter's opening section said they would — on a real
+    row, not a hypothetical one.

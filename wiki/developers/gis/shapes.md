@@ -187,4 +187,54 @@ The fountain has a position, a coordinate system, and now a shape. What is still
 question: *how far away is it?* Degrees are angles, not distances, and the next chapter is about
 asking PostGIS for a real one.
 
-<!-- EXERCISE-SLOT ch=2 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — round-trip a real geometry through GeoJSON"
+    Take one catalog item's stored geometry apart into the same GeoJSON text `GeometryType` produces
+    on every read, then put it back together the way `GeometryType` does on every write, and watch
+    where the SRID has to be re-stated. This uses item 11000, the Côte de la Redoute pin from chapter
+    1's own example.
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog -->
+    ```sql
+    SELECT ST_AsGeoJSON(geom) AS geojson, ST_SRID(geom) AS srid_in_db
+    FROM item WHERE id = 11000;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; stable for this seed row -->
+    ```text
+                       geojson                       | srid_in_db
+    ----------------------------------------------------+------------
+     {"type":"Point","coordinates":[5.69924,50.49222]}   |       4326
+    (1 row)
+    ```
+
+    Look at the GeoJSON text on its own: a `type`, a pair of numbers, nothing that says which
+    coordinate system they belong to. Now chain it back through the write side of the boundary —
+    `ST_GeomFromGeoJSON` to parse it, `ST_SetSRID(…, 4326)` to re-assert the system, exactly the two
+    calls `GeometryType::convertToDatabaseValueSQL()` wraps around every value this project writes:
+
+    <!-- CODE-ILLUSTRATIVE psql query, chaining the GeoJSON text from the previous query back through the write-side conversion -->
+    ```sql
+    WITH original AS (SELECT geom, ST_AsGeoJSON(geom) AS gj FROM item WHERE id = 11000),
+         round_tripped AS (SELECT ST_SetSRID(ST_GeomFromGeoJSON(gj), 4326) AS geom2 FROM original)
+    SELECT ST_SRID(o.geom) AS srid_before, ST_SRID(r.geom2) AS srid_after,
+           ST_Equals(o.geom, r.geom2) AS same_geometry
+    FROM original o, round_tripped r;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; stable for this seed row -->
+    ```text
+     srid_before | srid_after | same_geometry
+    -------------+------------+---------------
+             4326 |       4326 | t
+    ```
+
+    The point survives the round trip unchanged — `same_geometry` is `t`, and `srid_after` matches
+    `srid_before`. But that match only holds because `ST_SetSRID(…, 4326)` said so in the query text;
+    nothing in the GeoJSON string itself carried a system. Try the same parse without it —
+    `ST_SRID(ST_GeomFromGeoJSON(gj))` alone — and on the PostGIS 3.6 running in this dev stack it
+    still happens to come back `4326`, because that function's own default already assumes WGS84 when
+    no `crs` is present. That default is exactly why the missing label is easy to forget about — and
+    exactly why `GeometryType` states it outright in the code, rather than trusting a function default
+    to hold across every PostGIS version this project will ever run on.
