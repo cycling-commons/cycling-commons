@@ -33,8 +33,17 @@ happen to be worth 111 km or 71 km apiece makes no difference to whether a point
 outline.
 
 This is exactly the question `SpatialResolver` answers — the class chapter 1 already introduced for
-its longitude-first argument order. `web/src/Contribution/SpatialResolver.php`,
-`SpatialResolver::resolve()` takes a submitted `(float $lat, float $lng)` and asks the database:
+its longitude-first argument order. Here is its actual method signature, in
+`web/src/Contribution/SpatialResolver.php` — notice the parameters are `$lat` before `$lng`, the
+human order a submitted form uses, not the `x, y` (longitude, latitude) order PostGIS itself expects:
+
+<!-- CODE-FROM web/src/Contribution/SpatialResolver.php -->
+```php
+public function resolve(float $lat, float $lng): array
+```
+
+Inside, `resolve()` swaps that human order back to PostGIS's own before it ever reaches the
+database — `ST_Point(:lng, :lat)`, longitude first — and asks:
 
 <!-- CODE-FROM web/src/Contribution/SpatialResolver.php -->
 ```sql

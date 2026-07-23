@@ -131,18 +131,45 @@ under each letter a list of exact `tag=value` rules. Counted directly from that 
 such rules (for example `tourism=hotel`, `tourism=hostel`, `tourism=camp_site`, … under letter `E`
 alone) built from 9 distinct tag keys. `extract.py::selector_expressions()` turns every rule into an
 `nw/key=value` osmium expression — `nw` for "node or way", tying back to the previous section's model
-— and de-duplicates them. One deliberate wrinkle: `osmium tags-filter` also keeps a matched way's
-member nodes even when those nodes carry no tags of their own, because without their coordinates the
-way's shape — and, as the next section covers, its centroid — could not be computed at all.
+— and de-duplicates them:
+
+<!-- CODE-FROM pipeline/coverage/extract.py -->
+```python
+def selector_expressions(contract: Contract) -> list[str]:
+    """osmium tags-filter expressions, nodes + ways (decision B1), deduped in order."""
+    exprs: list[str] = []
+    for spec in contract.letters.values():
+        for sel in spec.selectors:
+            expr = f"nw/{sel.tag}"   # Selector.tag is already "key=value"
+            if expr not in exprs:
+                exprs.append(expr)
+    return exprs
+```
+
+Read the middle of that loop literally: every selector rule becomes the string `nw/` followed by its
+own `key=value` — `nw/tourism=hotel`, `nw/amenity=drinking_water`, and so on — which is exactly the
+argument list `run_extract()` then hands straight to the `osmium tags-filter` command line. One
+deliberate wrinkle the function above says nothing about: `osmium tags-filter` also keeps a matched
+way's member nodes even when those nodes carry no tags of their own, because without their
+coordinates the way's shape — and, as the next section covers, its centroid — could not be computed
+at all.
 
 **Step two narrows *tags*.** This is a separate decision from step one, and the two are easy to
 conflate: `osmium tags-filter` selects whole objects, not individual keys, so a matched object still
 arrives carrying *every* tag it has, not just the one that got it selected. A historic monument tagged
 with a name, a Wikipedia link, a Wikidata id, an inscription, a material, a source note and half a
-dozen more arrives with all of it. `pipeline/coverage/parse.py`'s `_Collector` class trims that down:
-each object's tag dictionary is filtered to `{k: v for k, v in tags.items() if k in self._stored_keys}`,
-where `stored_keys` is the contract's `storedTagKeys` list — and nothing outside that list ever
-reaches the database.
+dozen more arrives with all of it. `pipeline/coverage/parse.py`'s `_Collector` class trims that down,
+inside the same `_emit()` method that builds every `PoiRow`:
+
+<!-- CODE-FROM pipeline/coverage/parse.py -->
+```python
+tags={k: v for k, v in tags.items() if k in self._stored_keys},
+```
+
+`tags` on the right is still the object's full dictionary — every key OSM happened to carry. The
+comprehension keeps only the ones present in `self._stored_keys`, a `frozenset` built once from the
+contract's `storedTagKeys` list, and throws the rest away before a `PoiRow` is ever constructed —
+nothing outside that list ever reaches the database.
 
 **Why keep so little.** `docs/specs/osm-data-architecture.md` §1 states the rule this trim exists to
 satisfy directly: the coverage table is meant to be *"a narrow, well-defined subset"*, on both the
@@ -222,12 +249,31 @@ idempotently at the start of every run rather than through a Doctrine migration 
 one GiST index living outside the Symfony migrations, because this whole table is owned by the Python
 pipeline, not by the application.
 
-Each row records: `ref` (`'node/61146471'` or `'way/…'`, matching `item.source_ref`'s own format —
-the join key the rest of the Commons uses to recognise the same OSM object), `letter`, `kind` (the
-`shop`/`station`/`pump` split, for letter `D` only, derived from the contract's `serviceKind` mapping),
-`name`, `geom`, the trimmed `tags` (as `jsonb`), the upstream `osm_version`/`osm_ts`, and the
-`src_region_id` and `country_code` stamps that let later chapters — and chapter 5's own index list —
-scope a query to one region or country cheaply.
+Here is the actual DDL, trimmed to the columns this chapter has been building toward:
+
+<!-- CODE-FROM pipeline/coverage/load.py -->
+```sql
+CREATE TABLE IF NOT EXISTS coverage_poi (
+    id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
+    letter        char(1)      NOT NULL,  -- C D E G H I J (osm-data-architecture.md §5)
+    kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
+    name          varchar(255),           -- OSM name tag, NULL when unnamed
+    geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
+    tags          jsonb        NOT NULL,  -- trimmed to contract storedTagKeys (parse.py), NOT the object's full tag set
+    ...
+    UNIQUE (ref, letter)                  -- one entity may carry two letters (matches item rule)
+)
+```
+
+Two columns are worth lingering on, because they are the two ideas this chapter has spent the most
+words on. `ref` is exactly `item.source_ref`'s own format — the join key the rest of the Commons uses
+to recognise the same OSM object, and the reason "we reference OSM, we don't fork it" is more than a
+slogan. `tags` says, right there in its own comment, that it is trimmed to the contract's
+`storedTagKeys` and is *not* the object's full tag set — the same trim the dict comprehension above
+performs, now visible as a constraint on the column that receives it. The rest of the row — `letter`,
+`kind`, `name`, the upstream `osm_version`/`osm_ts`, and the `src_region_id` and `country_code` stamps
+— let later chapters, and chapter 5's own index list, scope a query to one region or country cheaply.
 
 One detail worth pausing on, because it reaches back into chapter 2
 ([`shapes.md`](shapes.md)): `coverage_poi.geom` is declared `geometry(Point, 4326) NOT NULL` — always

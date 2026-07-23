@@ -163,6 +163,49 @@ Nothing in that request path is a tile server: it is a `GET` against a static fi
 headers doing the work a tile server used to do, served straight off the bucket (or through nginx's
 range proxy, per the memory-noted `cache.example.net`-style infra this project can reuse).
 
+Before any of that upload happens, `build_pmtiles()` never reads `coverage_poi` directly — tippecanoe
+takes files, not a database connection. `export_geojsonl()` bridges the two, running one `COPY`
+per `(letter, country)` pair straight off the table, and the `WHERE` clause is the whole story of
+"one layer per country" made concrete:
+
+<!-- CODE-FROM pipeline/coverage/tiles.py -->
+```python
+"COPY (SELECT jsonb_build_object("
+"'type', 'Feature', "
+...
+"'geometry', ST_AsGeoJSON(geom)::jsonb, "
+f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
+f")::text FROM coverage_poi "
+f"WHERE letter = {_lit(letter)} AND COALESCE(country_code, 'ZZ') = {_lit(cc)}) TO STDOUT"
+```
+
+Every one of the `letter × country` files this function writes is its own `COPY`, filtered down to
+exactly one letter and one country. tippecanoe never sees a query or a `WHERE` clause at all — by the
+time it runs, the split has already happened one file at a time, which is what makes "tippecanoe
+clusters within one layer" and "a layer is single-country by construction" the same fact seen from two
+angles.
+
+`build_pmtiles()` runs, and then one more step happens before any of it reaches a rider: a sanity gate
+that refuses to publish a broken archive. `verify_pmtiles()` in the same module opens the freshly built
+file with `pmtiles show` and asserts the basics a corrupt or empty build would fail:
+
+<!-- CODE-FROM pipeline/coverage/tiles.py -->
+```python
+m = re.search(r"addressed tiles(?: count)?:\s*(\d+)", show)
+if not m or int(m.group(1)) == 0:
+    raise RuntimeError(f"pmtiles verify: no addressed tiles in {path}\n{show}")
+...
+missing = expected - layers
+if missing:
+    raise RuntimeError(
+        f"pmtiles verify: missing layer(s) {sorted(missing)} in {path} (found {sorted(layers)})")
+```
+
+Zero addressed tiles, or a layer this run was supposed to produce simply missing, both raise before
+the file ever reaches `publish.py`'s upload step. The same function goes on to decode one real tile
+inside the header's bounds, so "the index says tiles exist" and "a tile actually decodes to something"
+are both checked, not just the first one.
+
 That buys something concrete: **the whole coverage layer, for the whole world eventually, is one
 artifact you can host anywhere a static file can be hosted** — no database, no application server, no
 process to keep alive, on the read path. A new build is one new file at a new versioned key; readers

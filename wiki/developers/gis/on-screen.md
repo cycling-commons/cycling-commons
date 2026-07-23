@@ -144,10 +144,32 @@ boundary use it: `drawSpotlightMask()` in `map.js` builds a `region-mask` polygo
 hole cut where the scoped region is) and a `region` polygon (the region's own outline), and adds
 both as `geojson` sources feeding a dimming fill layer and a dashed line layer.
 
+<!-- CODE-FROM web/assets/map/map.js -->
+```js
+map.addSource('region-mask',{type:'geojson',data:mask});
+map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
+```
+
+Notice what is missing compared to the coverage source above: no `url`, no tile archive, no
+`source-layer` to disambiguate — `data` is the geometry itself, computed in JavaScript a moment
+earlier and handed over whole. That is the entire difference the "tiled versus not" distinction from
+the previous section comes down to in real code.
+
 **`raster`** is a source of pre-rendered image tiles — actual pictures, not geometry. The optional
 satellite base uses it: `addSatellite()` points a `raster` source at Esri World Imagery's tile URLs.
 There is no geometry to read here at all, only images to place in a grid; this is the one source
 type this chapter's later sections on paint, layout and clicking do not really apply to.
+
+<!-- CODE-FROM web/assets/map/map.js -->
+```js
+map.addSource('satellite',{type:'raster',tileSize:256,
+  tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+```
+
+Compare that to the `geojson` source just above: no `data`, no features, just a `tiles` URL template
+and a `tileSize`. MapLibre never parses a shape out of this source at all — it just requests
+whichever `{z}/{y}/{x}` image square the viewport needs and places it, which is exactly why `raster`
+sits outside the paint/layout/click-testing story the rest of this chapter tells.
 
 **A clustered `geojson` source** is the fourth kind, and it is worth pausing on because it looks like
 the coverage source but works nothing like it. `setupConfClusters()` builds one of these per bulk-OSM
@@ -224,7 +246,21 @@ Read it like an if/else: get the feature's `potable` value, treat it as a string
 is `'yes'`, `'true'` or `'1'`, use the `water-drop` icon; otherwise fall back to `water-drop-unk` (an
 unknown-potability variant). One layer, one `icon-image` line, and every one of the thousands of
 water points in the source draws its own correct icon. The D · bike-services layer does the same
-trick on a `kind` property, picking between a shop, station and pump glyph.
+trick on a `kind` property, picking between a shop, station and pump glyph:
+
+<!-- CODE-FROM web/assets/map/map.js -->
+```js
+['match',['get','kind'],
+    'shop', miniIcon('services'),
+    'station', miniIcon('services', SERVICE_GLYPH.station, 'station'),
+    'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
+    miniIcon('services')]
+```
+
+Same shape as the water example — `match` on a tile property, one arm per value, a trailing
+catch-all — just with three named values instead of a yes/no split. One `addLayer()` call still draws
+shops, stations and pumps as three visually distinct glyphs, because the branching lives in the
+expression, not in three separate layers.
 
 ## Clicking things
 

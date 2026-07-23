@@ -74,10 +74,34 @@ And on the other side:
   explicit `'lat'` and `'lng'` keys, and the route paths beside them are arrays of `[lat, lng]`
   pairs.
 
+Here is one such entry, exactly as a person typed it:
+
+<!-- CODE-FROM web/src/Catalog/Command/SeedManualCatalogCommand.php -->
+```php
+'letter' => 'B', 'name' => 'Côte de la Redoute', 'lat' => 50.49222, 'lng' => 5.69924,
+```
+
+and here is that same pin, a few dozen lines later in the same file, on its way into a geometry:
+
+<!-- CODE-FROM web/src/Catalog/Command/SeedManualCatalogCommand.php -->
+```php
+'geom' => json_encode(['type' => 'Point', 'coordinates' => [$pin['lng'], $pin['lat']]], \JSON_THROW_ON_ERROR),
+```
+
+Human order in, longitude-first `coordinates` out — the same flip, inside a single file, that the
+next two examples show at the seam of a request and the seam of a map.
+
 You can see the flip happen at a real boundary in this codebase. `SpatialResolver` answers "which
 region contains this point?" — see `web/src/Contribution/SpatialResolver.php`,
-`SpatialResolver::resolve()`. Its PHP signature takes `(float $lat, float $lng)`, in human order,
-because that is how the calling code thinks. The SQL it builds a few lines later contains:
+`SpatialResolver::resolve()`. Its signature takes latitude before longitude, in human order, because
+that is how the calling code thinks:
+
+<!-- CODE-FROM web/src/Contribution/SpatialResolver.php -->
+```php
+public function resolve(float $lat, float $lng): array
+```
+
+The SQL it builds a few lines later flips the order:
 
 <!-- CODE-FROM web/src/Contribution/SpatialResolver.php -->
 ```sql
@@ -89,9 +113,22 @@ deliberate. Open the file: the whole class is under forty lines, and the seam is
 glance.
 
 The same flip happens on the front end. In `web/assets/map/map.js`, `setCircleSpotlight()` receives
-a `center` in human order — it reads the latitude out as `center[0]` — and then builds the ring it
-hands to MapLibre as `[lng, lat]` pairs, because that is what GeoJSON requires. One function, both
-conventions, a few lines apart.
+a `center` in human order and reads the latitude straight out of it:
+
+<!-- CODE-FROM web/assets/map/map.js -->
+```js
+const n=64, lat=center[0];
+```
+
+A few lines later, the same function builds the ring it hands to MapLibre the other way round,
+`[lng, lat]`, because that is what GeoJSON requires:
+
+<!-- CODE-FROM web/assets/map/map.js -->
+```js
+ring.push([center[1]+dLng*Math.cos(a), lat+dLat*Math.sin(a)]);
+```
+
+One function, both conventions, a few lines apart.
 
 !!! warning "How this bug shows up"
     Swapping the two numbers rarely throws an error, because both are plain floats and both are
@@ -161,10 +198,18 @@ in consistent units with itself.
 Where this project genuinely does need a rough distance in degrees, it applies the `cos(latitude)`
 correction on purpose rather than hoping it does not matter. `setCircleSpotlight()` in
 `web/assets/map/map.js` draws the "my area" circle on the map, and to do that it converts a radius
-in kilometres into a step in degrees: the latitude step is the radius over 111.32, and the longitude
-step is the radius over 111.32 times the cosine of the latitude. It also clamps that cosine to a
-small minimum, because near the poles the cosine goes to zero and the longitude step would go to
-infinity. Every idea in this section is in those four lines.
+in kilometres into a step in degrees:
+
+<!-- CODE-FROM web/assets/map/map.js -->
+```js
+const cosLat=Math.max(0.01, Math.cos(lat*Math.PI/180));
+const dLat = rkm/111.32, dLng = rkm/(111.32*cosLat);
+```
+
+The latitude step is the radius over 111.32; the longitude step is the radius over 111.32 times the
+cosine of the latitude. The line above it clamps that cosine to a small minimum, because near the
+poles the cosine goes to zero and the longitude step would go to infinity. Every idea in this
+section is in those two lines.
 
 Chapter 3 is entirely about how to ask for a real distance instead — the proper way, in the database,
 without hand-rolled trigonometry. For now, the thing to carry forward is smaller and simpler:
@@ -309,13 +354,31 @@ picks that round-trip up and explains the GeoJSON half of it.
 **So where does 3857 appear?** Only at the very end, on the way out to the browser, in the tile
 build — and even there, we do not do the projecting ourselves. `build_pmtiles()` in
 `pipeline/coverage/tiles.py` shells out to **tippecanoe**, the tile cutter, handing it our
-geometries in 4326; tippecanoe is what projects them to Web Mercator and slices the result into
-tiles. That is the moment this project's data leaves 4326, and it happens inside a third-party
-tool, on the way out, to a copy.
+geometries in 4326:
+
+<!-- CODE-FROM pipeline/coverage/tiles.py -->
+```python
+for (letter, cc) in sorted(layer_files):
+    cmd += ["-L", f"{letter.lower()}_{cc.lower()}:{layer_files[(letter, cc)]}"]
+subprocess.run(cmd, check=True)
+```
+
+tippecanoe is what projects them to Web Mercator and slices the result into tiles. That is the
+moment this project's data leaves 4326, and it happens inside a third-party tool, on the way out,
+to a copy.
 
 The Web Mercator formula is written out in our own code exactly once, a few functions further down
-the same file: `_tile_y()`, which clamps a latitude to that same ±85.05112878 limit and returns
-which tile row it falls in. It is a private helper with a single caller, `verify_pmtiles()` — the
+the same file:
+
+<!-- CODE-FROM pipeline/coverage/tiles.py -->
+```python
+def _tile_y(lat: float, n: int) -> int:
+    lat = max(min(lat, 85.05112878), -85.05112878)
+    return min(n - 1, max(0, int((1 - math.asinh(math.tan(math.radians(lat))) / math.pi) / 2 * n)))
+```
+
+`_tile_y()` clamps a latitude to that same ±85.05112878 limit and returns which tile row it falls
+in. It is a private helper with a single caller, `verify_pmtiles()` — the
 sanity gate that runs *after* the archive is built, works out which tile ought to contain the
 data's bounding box, fetches it, and checks it decodes. So `_tile_y()` is not the project
 projecting anything; it is the project checking tippecanoe's homework, and it is the only place a

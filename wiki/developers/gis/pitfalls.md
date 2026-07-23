@@ -28,6 +28,39 @@ genuinely happened somewhere in this codebase's history. Nothing here is invente
 
 <!-- UNANCHORED id=U100 type=general concept="antimeridian / dateline wrapping" -->
 
+Two of those rows — the `::geography` cast that disables an index, and the inlined CTE that
+re-parses geometry per row — are really one story: they are the same real rewrite,
+`RideCheckService::corridorGroups()`, seen from two different angles. It is worth seeing both sides
+of that one fix side by side, because the "before" is exactly the shape a reasonable-looking query
+takes if you don't already know either trap:
+
+<!-- CODE-ILLUSTRATIVE the naive shape corridorGroups()'s own comment describes, not a runnable query in this codebase -->
+```sql
+SELECT * FROM item
+WHERE ST_DWithin(geom::geography, ST_GeomFromGeoJSON(:geom)::geography, :radius)
+```
+
+Casting `geom` itself — the indexed column — means every row now pays for spheroid distance maths,
+and re-evaluating `ST_GeomFromGeoJSON(:geom)` inline means every row re-parses the same JSON string
+too. The shipped rewrite moves both costs off the per-row path:
+
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
+```php
+'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
+      corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
+ SELECT i.id, i.letter, i.name, ST_AsGeoJSON(i.geom) AS geom,
+...
+ WHERE i.letter <> \'A\'
+   AND i.state IN '.ItemState::servedSqlTuple().'
+   AND ST_Intersects(i.geom, (SELECT b FROM corridor))
+```
+
+`MATERIALIZED` forces the GeoJSON parse and the buffer to happen once, not once per row; casting the
+buffer to `::geography` and back to `::geometry` keeps the cast on the one-off corridor shape instead
+of on `i.geom`, so the comparison that actually runs per row — `ST_Intersects(i.geom, …)` — is a plain
+`geometry` test the `idx_item_geom` GiST index can serve directly. Same underlying question, "what's
+near this route", two very differently priced ways to ask it.
+
 ## I need to change X — where do I look
 
 A quick map from a task to the files that do it. These are starting points, not the only files

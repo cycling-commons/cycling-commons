@@ -25,6 +25,22 @@ recorded elevation) and often a `<time>`. This project's own parser —
 `ele` off every `<trkpt>` it finds and nothing else; it never looks at `<time>` at all, because
 nothing downstream needs it.
 
+<!-- CODE-FROM web/src/Contribution/Gpx/GpxParser.php -->
+```php
+foreach ($doc->getElementsByTagNameNS('*', 'trkpt') as $trkpt) {
+    $lat = $trkpt->getAttribute('lat');
+    $lng = $trkpt->getAttribute('lon');
+...
+            $ele = null;
+            foreach ($trkpt->getElementsByTagNameNS('*', 'ele') as $eleNode) {
+                $ele = is_numeric($eleNode->textContent) ? (float) $eleNode->textContent : null;
+```
+
+That is the entire read: one attribute for latitude, one for longitude, one nested element for
+elevation, walked once per `<trkpt>`. Everything else in `GpxParser::parse()` — the byte-size cap,
+the coordinate-range validation, the point-count cap — is about *rejecting* a bad file, never about
+reading more out of a good one.
+
 Turning that into the LineString this project stores is almost entirely a *subtraction*, not a
 transformation. `RouteProposalService::propose()` (`web/src/Contribution/RouteProposalService.php`)
 takes the parsed `[lat, lng, ele|null]` triples, keeps only the first two numbers, and flips their
@@ -126,6 +142,15 @@ metres rather than 25 degrees (chapter 3, [`metres-vs-degrees.md`](metres-vs-deg
 reason that cast has to be there at all), intersect each one with the buffered route, sum the
 intersected length per surface, and group by `attributes->>'surface'`.
 
+<!-- CODE-FROM web/src/Catalog/SurfaceProfiler.php -->
+```php
+"WITH route AS (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g)
+ SELECT i.attributes->>'surface' AS surface,
+        SUM(ST_Length(ST_Intersection(i.geom, ST_Buffer((SELECT g FROM route)::geography, :buf)::geometry)::geography)) AS metres
+ FROM item i
+ WHERE i.letter = 'A'
+```
+
 One filter matters as much as the buffer itself: rows tagged `Surface unverified` are excluded
 from that query outright, and from everything the rest of this chapter describes. A segment
 someone mapped without recording a usable surface says nothing about what is actually underfoot,
@@ -171,6 +196,23 @@ route's length, a portion can never be larger than the whole it is a portion of,
 overlapping segments contributed to the union. Duplicate mapping cannot push `covered` past 100%
 even once, because by the time the union is taken, mapping the same stretch of road twice looks
 identical to mapping it once.
+
+<!-- CODE-FROM web/src/Catalog/SurfaceProfiler.php -->
+```php
+SELECT ST_Length((SELECT g FROM route)::geography) AS route_len,
+       ST_Length(ST_Intersection(
+         (SELECT g FROM route),
+         ST_Buffer((SELECT ST_Union(g) FROM usable)::geography, :buf)::geometry
+       )::geography) AS covered_len
+```
+
+Set the two queries side by side and the contrast the prose just made is right there in the SQL: the
+`parts` query never mentions the route's own length at all — its `SUM` runs over intersected
+*segment* metres, and the fraction it feeds is segment-metres over segment-metres. The `covered`
+query's very first line is `ST_Length((SELECT g FROM route)::geography) AS route_len` — the route's
+own length, computed once, sitting in the denominator no matter how the numerator above it moves.
+That is the whole "different sides of the same buffer" claim, made structurally rather than argued
+in prose.
 
 That is the whole reason `covered` exists: it is the **"how much of this route is even mapped"**
 honesty figure, shown next to the surface estimate rather than folded into it. A route with

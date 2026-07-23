@@ -70,8 +70,14 @@ LineString, Polygon, and the permissive `Geometry` that means "any of them." Her
 project is declared as some flavour of `geometry`. Most of them use chapter 2's permissive
 `geometry(Geometry, 4326)` — every column the Symfony migrations create, `item.geom`,
 `region.geom`, `recommended_route.geom`, `heat_point.geom`, `submission.geom`, `users.base_point`.
-The pipeline-owned `coverage_poi.geom` is tighter, `geometry(Point, 4326)`
-(`pipeline/coverage/load.py:59`), because that table only ever holds points. What varies between
+The pipeline-owned `coverage_poi.geom` is tighter:
+
+<!-- CODE-FROM pipeline/coverage/load.py -->
+```sql
+geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
+```
+
+because that table only ever holds points. What varies between
 them is the shape kind. What never varies is the first word: nothing in this project's schema is
 declared `geography` anywhere.
 
@@ -101,8 +107,15 @@ Chapter 5 walks through exactly this happening in this codebase: `Catalog/RideCh
 `RideCheckService::corridorGroups()` once compared a rider's uploaded track against every catalog
 item using `ST_DWithin` with `::geography` on both sides, and PostgreSQL had no faster way to answer
 it than checking the ellipsoid maths against every single row in the table. The method's own comment
-records the result plainly: the naive `ST_DWithin(::geography)` formulation "seq-scanned with
-spheroid maths against the full track per item." The fix is chapter 5's subject, not this chapter's —
+records the result plainly:
+
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
+```php
+// ST_DWithin(::geography) formulation seq-scanned with spheroid maths
+// against the full track per item (62 s down to sub-second, dev catalog).
+```
+
+The fix is chapter 5's subject, not this chapter's —
 what belongs here is smaller: **cast to `geography` when the question is genuinely "how far apart, in
 the real world" — not by reflex, and not just because metres sound more trustworthy than degrees.**
 
@@ -200,11 +213,19 @@ costs.
 
 The ordering finishes the job. `BaseAreaResolver`'s own doc comment describes it directly:
 "ST_DWithin over region polygons, containing region always first, capped at MAX_REGIONS" — that cap
-being 8. The query sorts by `ST_Contains(r.geom, …)
-DESC` before anything else — the region that genuinely contains the rider's point always sorts to
-the top, ahead of any neighbour that merely happens to be close — then by `ST_Distance(…)` ascending,
-using the same `::geography` cast, so "nearby" means nearest in real ground distance, not nearest in
-whatever order degrees happen to fall in.
+being 8. The `ORDER BY` clause is where that priority is actually written down:
+
+<!-- CODE-FROM web/src/Service/BaseAreaResolver.php -->
+```sql
+ORDER BY ST_Contains(r.geom, ST_SetSRID(ST_Point(:lng, :lat), 4326)) DESC,
+         ST_Distance(r.geom::geography, ST_SetSRID(ST_Point(:lng, :lat), 4326)::geography) ASC,
+         r.area_km2 ASC NULLS LAST, r.id ASC
+```
+
+the region that genuinely contains the rider's point always sorts to the top, ahead of any
+neighbour that merely happens to be close — then by `ST_Distance(…)` ascending, using the same
+`::geography` cast, so "nearby" means nearest in real ground distance, not nearest in whatever order
+degrees happen to fall in.
 
 ## Rule of thumb
 
@@ -221,6 +242,16 @@ whatever order degrees happen to fall in.
   buffer itself runs in `geography` so `:radius` really is metres, and the *result* is cast straight
   back to `geometry`, because the very next thing done with it — `ST_Intersects` — is a topology
   question again, and there is no reason to pay the curved-earth cost twice.
+
+That corridor build reads, in full:
+
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
+```sql
+SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b
+```
+
+`::geography` on the way in, `::geometry` on the way straight back out — one line, both casts, each
+earning its keep.
 
 ## What to carry into chapter 4
 
