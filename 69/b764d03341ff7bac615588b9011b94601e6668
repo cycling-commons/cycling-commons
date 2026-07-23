@@ -1,0 +1,19 @@
+docs/specs/2026-07-23-gis-primer-design.md
+  s_f3f9c3dc9409c4::t_3889ec8419a965 194-216,219-220
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "69b764d03341ff7bac615588b9011b94601e6668",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
