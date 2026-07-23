@@ -630,6 +630,10 @@ region:
     label: 'All Netherlands'
   all_de:
     label: 'All Germany'
+  luxembourg:
+    label: 'Luxembourg'
+  all_lu:
+    label: 'All Luxembourg'
   everywhere:
     label: 'Everywhere'
   kicker: 'BE · Wallonia · region atlas'

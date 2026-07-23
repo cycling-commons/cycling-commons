@@ -626,6 +626,10 @@ region:
     label: 'Heel Nederland'
   all_de:
     label: 'Heel Duitsland'
+  luxembourg:
+    label: 'Luxemburg'
+  all_lu:
+    label: 'Heel Luxemburg'
   everywhere:
     label: 'Overal'
   kicker: 'BE · Wallonië · regio-atlas'

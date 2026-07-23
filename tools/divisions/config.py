@@ -20,7 +20,13 @@ OVERTURE_DIVISION_AREA = (
 
 # admin_level per Overture subtype, matching the OSM admin_level convention the
 # importer + moderation model already use (Wallonia was admin_level=4).
-SUBTYPE_ADMIN_LEVEL = {"region": 4, "county": 6, "localadmin": 8}
+# `country` (admin_level 2) is the operating level for a state too small for its
+# official subdivisions to be useful scopes: it seeds the whole country as ONE
+# region. Luxembourg (2,586 km²) is the first — its 12 cantons are all 78-343 km²,
+# an order of magnitude below the riding-size band, so a single 'Luxembourg' scope
+# serves a rider better than a choice of twelve. Still one operating level per
+# country (the tessellation invariant holds — the country is a single atom).
+SUBTYPE_ADMIN_LEVEL = {"country": 2, "region": 4, "county": 6, "localadmin": 8}
 
 # Per-country operating configuration.
 #   subtype : the Overture division_area subtype that is this country's
@@ -88,5 +94,18 @@ COUNTRY_CONFIG = {
             "DE-TH": "Thuringia",
         },
         "bbox": [5.77, 47.17, 15.14, 55.16],
+    },
+    # Luxembourg — seeded as ONE whole-country region (subtype=country ->
+    # admin_level 2), not its 12 official cantons. The cantons are all 78-343 km²
+    # (probe: web/var/scaffold/lu/areas.md), an order of magnitude below every
+    # other onboarded region and finer scope granularity than a country crossable
+    # in an hour needs. Overture's country-level division_area has region=NULL, so
+    # the slug map is keyed on the ISO 3166-1 code 'LU' (query_country COALESCEs
+    # region -> country); iso_code is therefore the 3166-1 code, not a 3166-2 one.
+    "LU": {
+        "subtype": "country",
+        "slugs": {"LU": "luxembourg"},
+        "names": {"LU": "Luxembourg"},
+        "bbox": [5.7, 49.4, 6.6, 50.2],
     },
 }

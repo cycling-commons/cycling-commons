@@ -36,6 +36,7 @@
     'Europe/Brussels': 'BE',
     'Europe/Amsterdam': 'NL',
     'Europe/Berlin': 'DE', 'Europe/Busingen': 'DE',
+    'Europe/Luxembourg': 'LU',
   };
   const currentTimezone = () => {
     if (typeof globalThis !== 'undefined' && globalThis.__ccTz) return globalThis.__ccTz; // test hook

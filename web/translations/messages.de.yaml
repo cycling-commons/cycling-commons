@@ -626,6 +626,10 @@ region:
     label: 'Gesamte Niederlande'
   all_de:
     label: 'Ganz Deutschland'
+  luxembourg:
+    label: 'Luxemburg'
+  all_lu:
+    label: 'Ganz Luxemburg'
   everywhere:
     label: 'Überall'
   kicker: 'BE · Wallonien · Regionsatlas'

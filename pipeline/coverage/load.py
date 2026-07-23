@@ -38,7 +38,10 @@ BOUNDARY_SNAP_DEG = 0.01
 # than in run.py because it is now load-time DATA SEMANTICS, not orchestration:
 # it decides which staged rows this extract OWNS
 # (2026-07-23-border-overlap-ownership-design.md §3), not merely what to stamp.
-COUNTRY_BY_REGION = {"europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE"}
+COUNTRY_BY_REGION = {
+    "europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE",
+    "europe/luxembourg": "LU",
+}
 
 
 def resolve_country(region: str) -> str | None:

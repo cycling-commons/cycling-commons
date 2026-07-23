@@ -122,8 +122,13 @@ def query_country(con, cc, cfg, release):
     """
     path = config.OVERTURE_DIVISION_AREA.format(release=release)
     where, params = build_where(cc, cfg)
+    # COALESCE(region, country): a subtype='region' land row carries its ISO 3166-2
+    # code in `region`; a subtype='country' row (a whole-country operating level,
+    # e.g. Luxembourg) has region=NULL, so we key it on the ISO 3166-1 `country`
+    # code instead. Only the country path is affected — `region` is never NULL for
+    # a subtype='region' land row.
     sql = f"""
-        SELECT region AS iso,
+        SELECT COALESCE(region, country) AS iso,
                ST_AsGeoJSON(geometry) AS geojson
         FROM read_parquet('{path}', hive_partitioning=1)
         WHERE {' AND '.join(where)}

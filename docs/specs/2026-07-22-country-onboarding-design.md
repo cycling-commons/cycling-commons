@@ -18,6 +18,20 @@ border-overlap dedup at scale (DE borders both BE and NL; shared refs reassigned
 last-writer-wins, counts stayed self-consistent). Browser-verified: All-Germany
 scope renders per-country clusters (0 cross-border mixed bubbles into NL/BE) + the
 country dim mask; 16 localized region labels (Bavaria/Saxony/… exonyms) render.
+**Third run: Luxembourg** (2026-07-23) — the first **whole-country** operating
+level. LU's 12 official cantons are all 78–343 km² (an order of magnitude below the
+riding-size band), so it is seeded as ONE `luxembourg` region at `subtype=country`
+(admin_level 2) rather than its cantons — a country crossable in an hour is one
+useful scope, not twelve. This added a country-level path to the exporter:
+Overture's country division_area has `region=NULL`, so `query_country` now
+`COALESCE(region, country)`s the key and the slug map is keyed on the ISO 3166-1
+code (`iso_code` is the 3166-1 code for this one region). The tessellation
+invariant holds — one operating level per country, the country a single atom.
+Seeded region id 54 (2,600 km², MultiPolygon); `luxembourg`/`all_lu` labels added
+in all four locales; `Europe/Luxembourg → LU` added to `TZ_COUNTRY` (scope.js) and
+`europe/luxembourg → LU` to `COUNTRY_BY_REGION` (load.py). Harvested together with
+BE/NL/DE in the single ownership-fix re-harvest (border-overlap-ownership-design.md
+decision 3 — one harvest, not two).
 This run also exposed + fixed a Geofabrik **mirror-lag** flaw in the PBF md5 check
 (a valid 4.8 GB download failed because `.md5` and `.pbf` came from mirrors at
 different sync states; `run.py::fetch_pbf` now pins the verify to the resolved

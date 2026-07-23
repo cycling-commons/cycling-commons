@@ -64,6 +64,36 @@ def test_unknown_country_raises():
         export_country("ZZ", "/tmp/does-not-matter")
 
 
+LU = config.COUNTRY_CONFIG["LU"]
+
+
+def test_lu_whole_country_feature_shape():
+    # Luxembourg is seeded as ONE region at subtype=country (admin_level 2). The
+    # slug map is keyed on the ISO 3166-1 code because Overture's country-level
+    # division_area has region=NULL.
+    f = build_feature("LU", "LU", SQUARE, 2586.0, LU)
+    assert f["properties"] == {
+        "slug": "luxembourg",
+        "name": "Luxembourg",
+        "area_km2": 2586,
+        "country_code": "LU",
+        "iso_code": "LU",
+        "admin_level": 2,
+        "source": "overture",
+    }
+    assert f["geometry"]["type"] == "MultiPolygon"
+
+
+def test_country_subtype_admin_level_is_2():
+    assert config.SUBTYPE_ADMIN_LEVEL["country"] == 2
+
+
+def test_country_where_clause_selects_country_subtype():
+    where, params = build_where("LU", LU)
+    assert "subtype = ?" in where
+    assert "LU" in params and "country" in params and "land" in params
+
+
 def test_where_filters_maritime_rows():
     # 07-20 review finding 4: coastal divisions carry a maritime twin row;
     # only class='land' geometries may become regions.
