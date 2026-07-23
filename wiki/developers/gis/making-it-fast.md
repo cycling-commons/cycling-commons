@@ -21,9 +21,11 @@ well that nothing suggests there is a problem. Then the same code meets a table 
 this project's `coverage_poi` table holds **375,078 rows** across Belgium, the Netherlands and
 Germany, of which Germany alone contributed **317,887** (see
 `docs/specs/2026-07-22-country-onboarding-design.md`), and the planet-wide target for that table is
-around 4.7 million points (`pipeline/coverage/load.py`, the sizing comment above `_TABLE_DDL`). The
-query does not change. The answer does not change. The time it takes changes by four orders of
-magnitude.
+around 4.7 million points (`pipeline/coverage/load.py`, the sizing comment above `_SOURCE_DDL`). The
+query does not change. The answer does not change. What changes is how many rows it has to touch —
+and for a query with no index to help it, that is the whole of the cost, because every row gets the
+same treatment. A freshly seeded development catalog is a few hundred rows. The planet-wide target
+is 4.7 million. That is four orders of magnitude more rows put through an identical statement.
 
 The thing that closes that gap is an index. Not the ordinary kind — the ordinary kind cannot help
 here at all — but a spatial one, and it works differently enough from a B-tree that it is worth
@@ -77,9 +79,13 @@ can be put in order. `4` is less than `7`; `"amsterdam"` sorts before `"berlin"`
 values lets the database jump straight to a range and ignore the rest.
 
 Geometry has no such order. Is a Belgian province "less than" a drinking fountain? The question is
-meaningless. So B-trees are not merely slow for shapes, they are inapplicable. GiST is PostgreSQL's
-framework for building index trees over data where "less than" makes no sense but "contains" and
-"overlaps" do, and PostGIS uses it to index geometry.
+meaningless. PostGIS does ship a B-tree operator class for geometry — `btree_geometry_ops`, which is
+why `ORDER BY geom` and `GROUP BY geom` are legal statements at all — but the ordering it imposes is
+an arbitrary tie-break, there so that sorting and grouping have *something* to work with. It does
+not put nearby shapes near each other, and it cannot answer "overlaps" or "contains". So a B-tree
+over a geometry column is not a slow spatial index; for the questions in this chapter it is not a
+spatial index at all. GiST is PostgreSQL's framework for building index trees over data where "less
+than" makes no sense but "contains" and "overlaps" do, and PostGIS uses it to index geometry.
 
 Here is what it stores, which is the whole trick: **not the shapes, the boxes.** Every row's
 geometry is reduced to its bounding box, and those boxes are grouped into a tree. Every node in the
@@ -140,11 +146,11 @@ to half-remember in a way that is wrong.
 > the bare column: `USING GIST (geom)`. So the only comparisons the index can serve are comparisons
 > whose indexed side is `geom`, exactly as it is stored.
 
-The predicates from chapter 4 are all built to cooperate with that. `ST_Intersects`, `ST_Contains`,
-`ST_Within`, `ST_Crosses` and the geometry form of `ST_DWithin` are each defined in terms of a
-bounding-box operator over their arguments, which is precisely the thing a GiST index answers. Hand
-one of them a bare indexed column and a value that does not depend on the row, and the two-phase
-machinery from the previous section is available.
+The predicates from chapter 4 are all built to cooperate with that. `ST_Intersects`, `ST_Contains`
+and the geometry form of `ST_DWithin` are each defined in terms of a bounding-box operator over
+their arguments, which is precisely the thing a GiST index answers — and so is the rest of the
+PostGIS relationship family alongside them. Hand one of them a bare indexed column and a value that
+does not depend on the row, and the two-phase machinery from the previous section is available.
 
 Two things take that away.
 
@@ -209,9 +215,10 @@ is in metres, honestly measured on the ellipsoid, which is the entire reason for
 review would pass it.
 
 And it is the shape the previous section just described. The cast sits on `item.geom`, the indexed
-column, so `idx_item_geom` cannot serve the comparison. Every row in `item` is read, and for every
-one of them the database computes an exact ellipsoid distance against the whole simplified track —
-a line with a lot of vertices in it.
+column, so `idx_item_geom` cannot serve the comparison. Every row in `item` is read — a **sequential
+scan**, `Seq Scan` in a query plan, meaning the database walks the table from the first row to the
+last because it has no better way in — and for every one of those rows it computes an exact
+ellipsoid distance against the whole simplified track, a line with a lot of vertices in it.
 
 The comment in `corridorGroups()` records what that cost, and it is not a rounding error:
 
@@ -292,8 +299,10 @@ The comment above `corridorGroups()` states both reasons in the developers' own 
 uploaded track as a JSON string and parses it into a geometry. The query then refers to `track` in
 four separate places: once to build the corridor, once inside `ST_Distance`, and twice inside the
 `ST_LineLocatePoint` / `ST_ClosestPoint` pair. If that CTE were inlined, each of those references
-would become its own parse of the entire GeoJSON text, and the two in the `SELECT` list would do it
-again for every row that comes back. `MATERIALIZED` means the string is parsed exactly once.
+would become its own parse of the entire GeoJSON text, and the three of them that sit in the
+`SELECT` list — the one inside `ST_Distance` and the two inside the `ST_LineLocatePoint` /
+`ST_ClosestPoint` pair — would do it again for every row that comes back. `MATERIALIZED` means the
+string is parsed exactly once.
 
 **Reason two: the shape of the test.** As the comment puts it, it is the *one-off* corridor that
 turns the containment question into a plain `ST_Intersects` the GiST index can serve. "One-off" is
@@ -344,15 +353,20 @@ wrapping it. Check the `WHERE` clause for `::geography` and for `ST_`-something 
 column before you look anywhere else.
 
 **The index actually being named.** A healthy plan mentions it: `Index Scan using idx_item_geom`, or
-a `Bitmap Index Scan using idx_item_geom` feeding a `Bitmap Heap Scan`. Both mean the index was
-used. Which one the planner chooses depends on how many rows it expects to get back, and neither is
-a problem.
+a `Bitmap Index Scan using idx_item_geom` feeding a `Bitmap Heap Scan`. The second form is the
+two-step one — the index scan collects the locations of all matching rows into an in-memory bitmap,
+and the heap scan then fetches them in physical table order rather than one at a time in index
+order. Both mean the index was used. Which one the planner chooses depends on how many rows it
+expects to get back, and neither is a problem.
 
-**`Rows Removed by Filter` on the node above the index scan.** That number is phase 2 doing its job:
-candidates the box test let through and the exact geometry rejected — point 2 in figure F8. A small
-number is healthy and expected. A large one means the boxes are poor stand-ins for the shapes they
-represent. The classic case is a long diagonal line: a diagonal `LineString`'s bounding box is
-mostly empty space, so it collects candidates it will then throw away.
+**`Rows Removed by Filter`.** That number is phase 2 doing its job: candidates the box test let
+through and the exact geometry rejected — point 2 in figure F8. Where it appears depends on which of
+those two shapes the plan took. On the bitmap path the recheck is the `Filter` on the `Bitmap Heap
+Scan`, the node *above* the `Bitmap Index Scan`. On a plain `Index Scan` there is no node above: the
+`Index Cond` and the `Filter` sit on the same node, and `Rows Removed by Filter` is reported there.
+Either way, a small number is healthy and expected. A large one means the boxes are poor stand-ins
+for the shapes they represent. The classic case is a long diagonal line: a diagonal `LineString`'s
+bounding box is mostly empty space, so it collects candidates it will then throw away.
 
 **Whether the CTE is computed once.** With `MATERIALIZED` you should see the CTE as its own node,
 executed once. Inlined, it will not appear as a node at all; the expression turns up inside the scan

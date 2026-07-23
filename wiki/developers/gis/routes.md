@@ -3,8 +3,8 @@
 # Lines that mean something
 
 Every chapter so far has followed one drinking-water fountain in Wallonia. It is still there, and
-it is still a Point — chapter 2 (`shapes.md`) fixed that. This chapter steps off the fountain on
-purpose, because a fountain cannot answer the question this chapter is about.
+it is still a Point — chapter 2 ([`shapes.md`](shapes.md)) fixed that. This chapter steps off the
+fountain on purpose, because a fountain cannot answer the question this chapter is about.
 
 A ride is not a point. It is a **LineString** — chapter 2 already introduced the word — running
 from wherever a rider clipped in to wherever they stopped. A line can be asked questions a point
@@ -37,9 +37,10 @@ $coords = array_map(
 );
 ```
 
-`[lat, lng]` becomes `[lng, lat]` — the same longitude-first flip chapter 1 (`coordinates.md`)
-warned about, happening in this codebase's own route intake path. The elevation comes along for
-one more calculation (below) and then it is dropped for good: `recommended_route.geom` never
+`[lat, lng]` becomes `[lng, lat]` — the same longitude-first flip chapter 1
+([`coordinates.md`](coordinates.md)) warned about, happening in this codebase's own route intake
+path. The elevation comes along for one more calculation (below) and then it is dropped for good:
+`recommended_route.geom` never
 stores an elevation, only the flattened `[lng, lat]` path. "Becoming a LineString" really is just
 "throw away everything except where it was."
 
@@ -50,14 +51,28 @@ Two numbers get attached to every proposed route before it is ever saved: `dista
 of a decision somebody made about how to calculate it, and a different decision gives a different
 number from the *same* GPS trace.
 
+Both of them are measured on the **trimmed** track, and that word means something specific here.
+Before anything is calculated or stored, `TrackProcessor::trim()` cuts between 350 and 750 metres
+off *each end* of the uploaded track — the **privacy end-trim** (route-domain.md §4.3), so that a
+stored route never reveals where its proposer actually started or finished. How much comes off is
+derived from a hash of the upload's own bytes, which makes it deterministic for a given file but not
+guessable from the result. Nothing downstream ever sees the untrimmed track; the untrimmed upload
+never reaches storage at all. Note that trimming is not the same operation as *thinning*, which
+happens later and is a different word for a different thing — the distinction matters for `ascent_m`
+below.
+
 **Distance is the easy one, and it is still a choice.** `TrackProcessor::distanceM()`
 (`web/src/Contribution/Gpx/TrackProcessor.php`) walks the trimmed track and sums the great-circle
-distance between every consecutive pair of points (the haversine formula — the proper way to get a
-real-world distance from two `[lat, lng]` pairs, which chapter 3 (`metres-vs-degrees.md`) covers in
-full; nothing here duplicates it). That sum depends on how many points the track has: a denser
-GPS trace produces a slightly longer sum than a sparser one, because more short zig-zags get
-counted individually instead of averaged away. The choice here is nearly invisible because GPS
-traces are dense enough that it barely moves the answer — but it is still a choice, made once, and
+distance between every consecutive pair of points. That per-pair distance is the **haversine
+formula**, in `TrackProcessor::haversineM()`: the standard way to get the distance between two
+`[lat, lng]` pairs measured *along the surface* of a sphere, rather than straight through it. The
+sphere it assumes is a single fixed radius, `EARTH_RADIUS_M`, 6,371,000 metres — not the ellipsoid
+that `::geography` uses in SQL (chapter 3, [`metres-vs-degrees.md`](metres-vs-degrees.md)), which is
+one more small choice made here in passing, and a defensible one at the scale of a bike ride. That
+sum depends on how many points the track has: a denser GPS trace produces a slightly longer sum
+than a sparser one, because more short zig-zags get counted individually instead of averaged away.
+The choice here is nearly invisible because GPS traces are dense enough that it barely moves the
+answer — but it is still a choice, made once, and
 baked into every stored `distance_m`.
 
 **Ascent is where the choice actually shows.** `TrackProcessor::ascentM()` does the obvious naive
@@ -75,10 +90,12 @@ require a rise to clear any minimum before it counts. GPS and barometric elevati
 noisy by several metres in either direction, point to point, even on dead-flat ground. Sum every
 uphill wobble on a noisy signal and you are, in part, counting noise as climbing — and this method
 counts every one of them, on the full-density track, because `RouteProposalService::propose()`
-calls it on the trimmed points *before* they get thinned down for serving (route-domain.md §4.2,
-step 5, ahead of the Douglas–Peucker simplification in step 6). A denser track has more wobbles to
-sum, so — like distance, but far more visibly — a different recording density can hand back a
-different `ascent_m` for a ride that climbed exactly the same hill.
+calls it on the **trimmed** points — ends cut off, every remaining point still there — *before*
+those points get **thinned** down for serving (route-domain.md §4.2, step 5, ahead of the
+Douglas–Peucker simplification in step 6). Two similar-sounding words, two different operations, and
+`ascent_m` lands between them. A denser track has more wobbles to sum, so — like distance, but far
+more visibly — a different recording density can hand back a different `ascent_m` for a ride that
+climbed exactly the same hill.
 
 <!-- UNANCHORED id=U90 type=general concept="elevation-gain smoothing (minimum-threshold accumulation)" -->
 
@@ -103,9 +120,9 @@ have the most mapped metres nearby are, most likely, the surfaces the ride actua
 read aloud: take every served, surface-tagged item on the **A layer** (`item.letter = 'A'`, "Road
 surface" — the same OpenStreetMap-derived layer this project already stores for its own reasons)
 within `ST_DWithin(…, 25)` of the route, cast everything to `::geography` so 25 means 25 real
-metres rather than 25 degrees (chapter 3, `metres-vs-degrees.md`, is the reason that cast has to be
-there at all), intersect each one with the buffered route, sum the intersected length per surface,
-and group by `attributes->>'surface'`.
+metres rather than 25 degrees (chapter 3, [`metres-vs-degrees.md`](metres-vs-degrees.md), is the
+reason that cast has to be there at all), intersect each one with the buffered route, sum the
+intersected length per surface, and group by `attributes->>'surface'`.
 
 One filter matters as much as the buffer itself: rows tagged `Surface unverified` are excluded
 from that query outright, and from everything the rest of this chapter describes. A segment
@@ -115,8 +132,9 @@ get a vote.
 
 This runs once at intake — `RouteProposalService::propose()` calls
 `SurfaceProfiler::profile()` on the freshly built geometry and, when it finds anything, stores the
-result as `attributes.surfaces` (route-domain.md §9: "derived profile object… derived, never
-user-supplied"). It also reruns wholesale whenever the underlying A-layer map data changes:
+result as `attributes.surfaces` — an attribute route-domain.md §9 lists as a profile object and
+marks "derived, never user-supplied", which is to say no rider or curator can type a value into it.
+It also reruns wholesale whenever the underlying A-layer map data changes:
 `SurfaceProfiler::recomputeAll()`, driven by `RouteSurfacesCommand` (`app:catalog:route-surfaces`)
 or automatically after a harvest import, so a route's surface estimate stays current with the map
 under it rather than freezing at the moment it was proposed. A curator desk also has the rider's
@@ -160,7 +178,7 @@ asphalt, and that little bit was 12% of the ride." Read `parts` alone and you wo
 route is confidently asphalt. Read `covered` alongside it and you know exactly how much confidence
 that "confidently" deserves.
 
-<figure class="gis-fig"><svg viewBox="0 0 640 520" role="img" aria-labelledby="f16-t f16-d" xmlns="http://www.w3.org/2000/svg"><title id="f16-t">SurfaceProfiler's two measurements, parts and covered, taken on the same route</title><desc id="f16-d">Two side-by-side panels sharing one wavy route line, drawn identically in both, with small dots marking its start and end. The left panel is labelled parts, segment-side. Along the route, two short thick stretches are coloured to represent mapped road segments: one orange labelled asphalt 55 percent, one rust-coloured labelled gravel 45 percent. Between and around these coloured stretches the route is left as a thin plain line, meaning no mapped segment was found there at all. Below the panel, two separate bracket bars sit under only the two coloured stretches, joined by a small plus sign, labelled "sum = mapped metres" — the percentages are shares of only the coloured metres; the plain gaps do not enter the sum on either side of the fraction. A small legend below identifies the orange swatch as asphalt and the rust swatch as gravel. The right panel is labelled covered, route-side. It shows the exact same route and the exact same two mapped stretches, but here they are highlighted in a single green colour rather than coloured by surface, captioned "covered = 50 percent", and the remaining stretches are left as the same thin plain line as before. Below this panel a single unbroken bracket bar spans the entire route from start to end, labelled "= whole route length". A legend identifies the green highlight as covered and a short plain line as not covered. The figure's point is the contrast between the two bracket bars: the left one only ever spans the mapped stretches, so parts is a share of what is mapped and can reach 100 percent of that; the right one always spans the whole route regardless of how much is mapped, so covered is a share of the whole route and can never be pushed past 100 percent by overlapping or duplicate mapping.</desc><text x="320" y="30" text-anchor="middle">One route, two denominators</text><text class="gis-label-sm" x="320" y="58" text-anchor="middle">the same mapped segments, counted two ways</text><text class="gis-label-mono" x="160" y="92" text-anchor="middle">parts</text><text class="gis-label-sm" x="160" y="116" text-anchor="middle">segment-side</text><text class="gis-label-mono" x="480" y="92" text-anchor="middle">covered</text><text class="gis-label-sm" x="480" y="116" text-anchor="middle">route-side</text><rect class="gis-muted" fill="none" x="20" y="136" width="280" height="260"/><rect class="gis-muted" fill="none" x="340" y="136" width="280" height="260"/><path class="gis-ink" fill="none" stroke-width="2" d="M 40 336 Q 70 186 100 196 Q 130 326 160 336 Q 190 176 220 196 Q 250 266 280 296"/><path class="gis-accent" fill="none" stroke-width="6" d="M 40 336 Q 70 186 100 196"/><path class="gis-clay" fill="none" stroke-width="6" d="M 160 336 Q 190 176 220 196"/><circle class="gis-fill-ink" cx="40" cy="336" r="5"/><circle class="gis-fill-ink" cx="280" cy="296" r="5"/><text class="gis-label-sm gis-halo" x="40" y="356" text-anchor="start">start</text><text class="gis-label-sm gis-halo" x="280" y="318" text-anchor="end">end</text><text class="gis-label-sm gis-halo" x="70" y="175" text-anchor="middle">asphalt 55%</text><text class="gis-label-sm gis-halo" x="190" y="175" text-anchor="middle">gravel 45%</text><path class="gis-ink" fill="none" stroke-width="2" d="M 360 336 Q 390 186 420 196 Q 450 326 480 336 Q 510 176 540 196 Q 570 266 600 296"/><path class="gis-spruce" fill="none" stroke-width="6" d="M 360 336 Q 390 186 420 196"/><path class="gis-spruce" fill="none" stroke-width="6" d="M 480 336 Q 510 176 540 196"/><circle class="gis-fill-ink" cx="360" cy="336" r="5"/><circle class="gis-fill-ink" cx="600" cy="296" r="5"/><text class="gis-label-sm gis-halo" x="360" y="356" text-anchor="start">start</text><text class="gis-label-sm gis-halo" x="600" y="318" text-anchor="end">end</text><text class="gis-label-sm gis-halo" x="480" y="175" text-anchor="middle">covered = 50%</text><line class="gis-ink" stroke-width="1.5" x1="40" y1="410" x2="100" y2="410"/><line class="gis-ink" stroke-width="1.5" x1="40" y1="404" x2="40" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="100" y1="404" x2="100" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="160" y1="410" x2="220" y2="410"/><line class="gis-ink" stroke-width="1.5" x1="160" y1="404" x2="160" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="220" y1="404" x2="220" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="124" y1="410" x2="136" y2="410"/><line class="gis-ink" stroke-width="1.5" x1="130" y1="404" x2="130" y2="416"/><text class="gis-label-sm" x="130" y="436" text-anchor="middle">sum = mapped metres</text><line class="gis-ink" stroke-width="1.5" x1="360" y1="410" x2="600" y2="410"/><line class="gis-ink" stroke-width="1.5" x1="360" y1="404" x2="360" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="600" y1="404" x2="600" y2="416"/><text class="gis-label-sm" x="480" y="436" text-anchor="middle">= whole route length</text><rect class="gis-ink gis-fill-accent" x="60" y="462" width="18" height="18"/><text class="gis-label-sm" x="84" y="475" text-anchor="start">asphalt</text><rect class="gis-ink gis-fill-clay" x="180" y="462" width="18" height="18"/><text class="gis-label-sm" x="204" y="475" text-anchor="start">gravel</text><rect class="gis-ink gis-fill-spruce" x="380" y="462" width="18" height="18"/><text class="gis-label-sm" x="404" y="475" text-anchor="start">covered</text><line class="gis-ink" stroke-width="2" x1="480" y1="471" x2="498" y2="471"/><text class="gis-label-sm" x="504" y="475" text-anchor="start">not covered</text></svg><figcaption>The numbers shown (55% / 45% / 50%) are illustrative, not a real route. What matters is the two bracket bars: on the left, the bracket only ever spans the coloured, mapped stretches — <code>parts</code> is a share of mapped metres. On the right, the bracket always spans the entire route, mapped or not — <code>covered</code> is a share of the whole route. Measuring on different sides like this is deliberate, so that neither figure can quietly exceed 100%, and so a route with barely anything mapped near it says so honestly through a low <code>covered</code>, rather than reporting a confident-looking surface split with no disclosed error bar.</figcaption></figure>
+<figure class="gis-fig"><svg viewBox="0 0 640 520" role="img" aria-labelledby="f16-t f16-d" xmlns="http://www.w3.org/2000/svg"><title id="f16-t">SurfaceProfiler's two measurements, parts and covered, taken on the same route</title><desc id="f16-d">Two side-by-side panels sharing one wavy route line, drawn identically in both, with small dots marking its start and end. The left panel is labelled parts, segment-side. Along the route, two short thick stretches are coloured to represent mapped road segments: one orange labelled asphalt 55 percent, one rust-coloured labelled gravel 45 percent. Between and around these coloured stretches the route is left as a thin plain line, meaning no mapped segment was found there at all. Below the panel, two separate bracket bars sit under only the two coloured stretches, joined by a small plus sign, labelled "sum = mapped metres" — the percentages are shares of only the coloured metres; the plain gaps do not enter the sum on either side of the fraction. A small legend below identifies the orange swatch as asphalt and the rust swatch as gravel. The right panel is labelled covered, route-side. It shows the exact same route and the exact same two mapped stretches, but here they are highlighted in a single green colour rather than coloured by surface, captioned "covered = 50 percent", and the remaining stretches are left as the same thin plain line as before. Below this panel a single unbroken bracket bar spans the entire route from start to end, labelled "= whole route length". A legend identifies the green highlight as covered and a short plain line as not covered. The figure's point is the contrast between the two bracket bars: the left one only ever spans the mapped stretches, so parts is a share of what is mapped and can reach 100 percent of that; the right one always spans the whole route regardless of how much is mapped, so covered is a share of the whole route and can never be pushed past 100 percent by overlapping or duplicate mapping.</desc><text x="320" y="30" text-anchor="middle">One route, two denominators</text><text class="gis-label-sm" x="320" y="58" text-anchor="middle">the same mapped segments, counted two ways</text><text class="gis-label-mono" x="160" y="92" text-anchor="middle">parts</text><text class="gis-label-sm" x="160" y="116" text-anchor="middle">segment-side</text><text class="gis-label-mono" x="480" y="92" text-anchor="middle">covered</text><text class="gis-label-sm" x="480" y="116" text-anchor="middle">route-side</text><rect class="gis-muted" x="20" y="136" width="280" height="260"/><rect class="gis-muted" x="340" y="136" width="280" height="260"/><path class="gis-ink" stroke-width="2" d="M 40 336 Q 70 186 100 196 Q 130 326 160 336 Q 190 176 220 196 Q 250 266 280 296"/><path class="gis-accent" stroke-width="6" d="M 40 336 Q 70 186 100 196"/><path class="gis-clay" stroke-width="6" d="M 160 336 Q 190 176 220 196"/><circle class="gis-fill-ink" cx="40" cy="336" r="5"/><circle class="gis-fill-ink" cx="280" cy="296" r="5"/><text class="gis-label-sm gis-halo" x="40" y="356" text-anchor="start">start</text><text class="gis-label-sm gis-halo" x="280" y="318" text-anchor="end">end</text><text class="gis-label-sm gis-halo" x="90" y="175" text-anchor="middle">asphalt 55%</text><text class="gis-label-sm gis-halo" x="226" y="175" text-anchor="middle">gravel 45%</text><path class="gis-ink" stroke-width="2" d="M 360 336 Q 390 186 420 196 Q 450 326 480 336 Q 510 176 540 196 Q 570 266 600 296"/><path class="gis-spruce" stroke-width="6" d="M 360 336 Q 390 186 420 196"/><path class="gis-spruce" stroke-width="6" d="M 480 336 Q 510 176 540 196"/><circle class="gis-fill-ink" cx="360" cy="336" r="5"/><circle class="gis-fill-ink" cx="600" cy="296" r="5"/><text class="gis-label-sm gis-halo" x="360" y="356" text-anchor="start">start</text><text class="gis-label-sm gis-halo" x="600" y="318" text-anchor="end">end</text><text class="gis-label-sm gis-halo" x="480" y="175" text-anchor="middle">covered = 50%</text><line class="gis-ink" stroke-width="1.5" x1="40" y1="410" x2="100" y2="410"/><line class="gis-ink" stroke-width="1.5" x1="40" y1="404" x2="40" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="100" y1="404" x2="100" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="160" y1="410" x2="220" y2="410"/><line class="gis-ink" stroke-width="1.5" x1="160" y1="404" x2="160" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="220" y1="404" x2="220" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="124" y1="410" x2="136" y2="410"/><line class="gis-ink" stroke-width="1.5" x1="130" y1="404" x2="130" y2="416"/><text class="gis-label-sm" x="130" y="436" text-anchor="middle">sum = mapped metres</text><line class="gis-ink" stroke-width="1.5" x1="360" y1="410" x2="600" y2="410"/><line class="gis-ink" stroke-width="1.5" x1="360" y1="404" x2="360" y2="416"/><line class="gis-ink" stroke-width="1.5" x1="600" y1="404" x2="600" y2="416"/><text class="gis-label-sm" x="480" y="436" text-anchor="middle">= whole route length</text><rect class="gis-ink gis-fill-accent" x="60" y="462" width="18" height="18"/><text class="gis-label-sm" x="84" y="475" text-anchor="start">asphalt</text><rect class="gis-ink gis-fill-clay" x="180" y="462" width="18" height="18"/><text class="gis-label-sm" x="204" y="475" text-anchor="start">gravel</text><rect class="gis-ink gis-fill-spruce" x="380" y="462" width="18" height="18"/><text class="gis-label-sm" x="404" y="475" text-anchor="start">covered</text><line class="gis-ink" stroke-width="2" x1="480" y1="471" x2="498" y2="471"/><text class="gis-label-sm" x="504" y="475" text-anchor="start">not covered</text></svg><figcaption>The numbers shown (55% / 45% / 50%) are illustrative, not a real route. What matters is the two bracket bars: on the left, the bracket only ever spans the coloured, mapped stretches — <code>parts</code> is a share of mapped metres. On the right, the bracket always spans the entire route, mapped or not — <code>covered</code> is a share of the whole route. Measuring on different sides like this is deliberate, so that neither figure can quietly exceed 100%, and so a route with barely anything mapped near it says so honestly through a low <code>covered</code>, rather than reporting a confident-looking surface split with no disclosed error bar.</figcaption></figure>
 
 ## Routing is a different problem
 
