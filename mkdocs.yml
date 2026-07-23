@@ -58,6 +58,7 @@ nav:
   - For developers:
       - Start here: developers/gis/index.md
       - The Earth is awkward: developers/gis/coordinates.md
+      - The shapes: developers/gis/shapes.md
 
 markdown_extensions:
   - admonition

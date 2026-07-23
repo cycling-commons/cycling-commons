@@ -103,7 +103,7 @@ and ends with a slot for a hands-on exercise.
 1. [**The Earth is awkward**](coordinates.md) — latitude and longitude, why a degree of longitude
    shrinks toward the poles, what a map projection is and what it costs, and the two coordinate
    systems this project actually uses.
-2. **The shapes** (`shapes.md`) — points, lines, and polygons; GeoJSON, the format they travel in;
+2. [**The shapes**](shapes.md) — points, lines, and polygons; GeoJSON, the format they travel in;
    and why the order of points around a ring matters.
 3. **Metres vs degrees** (`metres-vs-degrees.md`) — the most common beginner mistake in GIS:
    treating degrees as if they were a unit of distance, and how the database is told to measure real
