@@ -186,6 +186,7 @@ final class MapController extends AbstractController
             'rideFollows' => 'd_ride_follows', 'kmShared' => 'd_km_shared', 'alongTrackH' => 'd_along_track_h',
             'capped' => 'd_capped', 'kmOff' => 'd_km_off', 'nothingWithin' => 'd_nothing_within',
             'noMatch' => 'd_no_match', 'places' => 'd_places',
+            'scopes' => 'd_scopes', 'wholeCountry' => 'd_whole_country', 'region' => 'd_region',
             'community' => 'd_community', 'showAll' => 'd_show_all',
             'suggestedRoute' => 'd_suggested_route', 'start' => 'd_start', 'shape' => 'd_shape',
             'roundtrip' => 'd_roundtrip', 'season' => 'd_season', 'why' => 'd_why', 'note' => 'd_note',

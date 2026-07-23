@@ -3303,7 +3303,10 @@
     // inline style, same idiom sRow uses for m.color — no new CSS needed.
     // Escaped with escPend per task-6 brief (escH doesn't escape `'`, and
     // region/country labels can contain one, e.g. Val-d'Or-style names).
-    const SCOPE_COLOR='#B5532E';
+    const SCOPE_COLOR='#B5532E';   // = --clay (map.css :root) — retune both together, this file hardcodes hex throughout (no CSS-var reads at runtime)
+    // s-scope has no CSS rule (styling comes from the shared .sw/.snm/.sub
+    // classes above) — it's a DOM hook only, for Task 9's browser
+    // verification to select scope rows apart from place rows.
     const scopeRow=(m,i)=>`<li role="option"><button data-i="${i}" class="s-scope"><span class="sw" style="background:${SCOPE_COLOR};color:${txtOn(SCOPE_COLOR)}">${m.kind==='country'?'◆':'◇'}</span><span class="snm">${escPend(m.name)}</span><span class="sub">${escPend(m.kind==='country'?(D.wholeCountry||'Whole country'):(D.region||'Region'))}</span></button></li>`;
     // Any-town live place search via Photon (spec 2026-07-14 §3.2) — Photon,
     // not Nominatim: Nominatim's usage policy forbids type-ahead. Wallonia
