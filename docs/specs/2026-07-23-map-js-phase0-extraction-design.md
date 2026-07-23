@@ -152,8 +152,13 @@ untouched and still passing.
 ## 5. Wiring
 
 `web/templates/map/index.html.twig` gains one `<script>` tag for `map/scope-chips.js`,
-after `map/scope.js` (it needs `window.CCScope` to exist to pass as `scopeApi`) and
-before `map/catalog-load.js` (which injects map.js).
+placed after `map/scope.js` and before `map/catalog-load.js` (which injects map.js).
+
+The only real ordering constraint is **before `map/catalog-load.js`**. `scope-chips.js`
+has no load-time dependency on `scope.js`: at load it does nothing but assign
+`window.CCScopeChips`, and `window.CCScope` is looked up later, at call time, by
+`renderScopeChips()` in map.js — which is what passes it in as `scopeApi`. It sits next
+to `scope.js` for readability, not because the order is load-bearing.
 
 ## 6. Out of scope
 
