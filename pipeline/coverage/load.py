@@ -278,6 +278,12 @@ def load_region(
                         "onboarding step 5 (region seeding) for this country before "
                         "loading coverage (tools/divisions/README.md)."
                     )
+                # This guard only covers THIS extract's country, and deliberately so.
+                # Nearest-wins reads every onboarded country's regions, so a NEIGHBOUR
+                # whose regions are missing or mid-reseed makes this extract win border
+                # rows it would normally cede. That direction over-claims rather than
+                # drops, so nothing here can silently empty a slice — it self-corrects
+                # on the neighbour's next run once its regions are back.
                 cur.execute(
                     """
                     DELETE FROM coverage_poi_staging s
@@ -285,6 +291,15 @@ def load_region(
                         SELECT r.country_code FROM region r
                         WHERE r.geom && ST_Expand(s.geom, %(snap)s)
                           AND ST_DWithin(r.geom, s.geom, %(snap)s)
+                          -- region.country_code is NOT NULL DEFAULT '', so a
+                          -- cc-less region is possible. It must not be able to WIN
+                          -- the owner slot: COALESCE(...,'') below cannot tell ''
+                          -- apart from "no owner", so such a region would silently
+                          -- delete the row from EVERY extract. Under the previous
+                          -- `r.country_code = <cc>` predicate a cc-less region was
+                          -- inert; under nearest-wins it is not. Latent today
+                          -- (BE 3 / DE 16 / NL 12 regions, none empty).
+                          AND r.country_code <> ''
                         ORDER BY ST_Distance(r.geom, s.geom), r.area_km2 ASC NULLS LAST, r.id ASC
                         LIMIT 1
                     ), '') <> %(cc)s

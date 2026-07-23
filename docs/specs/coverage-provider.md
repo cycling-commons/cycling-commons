@@ -57,11 +57,17 @@ Invariants:
   extracts overlap in a border buffer, so one OSM entity can arrive staged in
   two adjacent extracts with the same `(ref, letter)`. Ownership is decided at
   staging, by geometry, not by write order
-  (`2026-07-23-border-overlap-ownership-design.md §3`): an extract keeps only
-  the staged rows that fall inside — or within `BOUNDARY_SNAP_DEG` of — a
-  region of its own configured country, so exactly one extract ever inserts a
-  given `(ref, letter)`, and a shared border entity never collides with the
-  global `UNIQUE(ref, letter)`. `load_region`'s `INSERT … ON CONFLICT (ref,
+  (`2026-07-23-border-overlap-ownership-design.md §3`): each staged row is
+  resolved to the **single nearest region** within `BOUNDARY_SNAP_DEG`, ordered
+  by distance then area then id, and the extract keeps the row only if that
+  region's country is its own. Because that lookup ignores which extract is
+  asking, every extract computes the same answer, so exactly one ever inserts a
+  given `(ref, letter)` and a shared border entity never collides with the
+  global `UNIQUE(ref, letter)`. *"Within `BOUNDARY_SNAP_DEG` of a region of my
+  own country" is NOT sufficient* — Geofabrik's overlap reaches ~0.10°, ten
+  times the snap, so both neighbours satisfy that weaker test and ownership
+  falls back to write order for ~1,691 rows. Nearest-wins is what makes it
+  exclusive; containment still beats proximity automatically at distance 0. `load_region`'s `INSERT … ON CONFLICT (ref,
   letter) DO UPDATE` still runs after that filter and still derives
   `country_code` from the geometric region — it is no longer how ownership is
   decided, only the safety net for a stale row a former owner hasn't deleted

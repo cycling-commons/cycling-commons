@@ -64,10 +64,41 @@ Assign every entity to exactly one extract **before** it reaches
 `coverage_poi`, by the same point-in-polygon machinery that already stamps
 `region_id` and `country_code`.
 
-**Rule:** an extract owns an entity iff the entity's location falls inside a
-region belonging to that extract's configured country. An entity in the
+**Rule:** resolve the entity to the **single nearest region** within
+`BOUNDARY_SNAP_DEG`, ordered by distance, then `area_km2`, then `id`. The extract
+owns the entity iff that region's country is the extract's own. An entity in the
 Netherlands is owned by `europe/netherlands` no matter how many extracts contain
 it, and Germany's run skips it.
+
+The lookup deliberately does **not** reference the asking extract, so every
+extract computes the same winner — that is what makes ownership exclusive rather
+than merely narrower. `region.id` is the primary key, so the ordering is a strict
+total order and a row exactly on a national border still gets one deterministic
+owner.
+
+> **Correction, 2026-07-23 (found in final review, before any harvest ran).**
+> This rule first read *"iff the entity's location falls inside a region belonging
+> to that extract's configured country"*, and was implemented — following decision
+> 2's "reuse the snap" — as `ST_DWithin(r.geom, s.geom, BOUNDARY_SNAP_DEG)` with
+> `r.country_code = <extract cc>`. **That predicate is not mutually exclusive.**
+> Geofabrik's overlap buffer reaches **0.1026°** into a neighbour's territory,
+> about ten times `BOUNDARY_SNAP_DEG` (0.01°), so the entire snap allowance sits
+> *inside* the overlap zone where both extracts carry the entity and both filters
+> accept it. Ownership then fell back to `ON CONFLICT`, i.e. the very
+> last-writer-wins this design removes. Measured on the live table: 1,691 rows had
+> two or three claimants, and **313 of the 319 mis-owned rows would have stayed
+> mis-owned** — the fix would have corrected 6.
+>
+> Nearest-wins repairs it while preserving decision 2 exactly: containment scores
+> distance 0 and always beats proximity, and a row just outside its own country's
+> region is still owned and still snapped. Validated independently three times
+> against all 375,078 live rows — 374,695 rows keep their current stamp, 3 change
+> (genuine equidistant border ambiguity, made self-consistent downstream by the
+> `region ⇒ cc` step), 380 get no owner, which is decision 1.
+>
+> Lesson worth keeping: "inside a region of my country" and "within the snap of a
+> region of my country" are not interchangeable, and the difference is invisible
+> until you measure the extract overlap against the snap tolerance.
 
 Consequences:
 

@@ -42,7 +42,7 @@ Check the result:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `COVERAGE_REGIONS` | `europe/belgium,europe/netherlands` | csv of Geofabrik regions, each swapped independently |
+| `COVERAGE_REGIONS` | `europe/belgium,europe/netherlands,europe/germany` | csv of Geofabrik regions, each swapped independently. **Keep every onboarded country here.** Since ownership is decided by geometry, a region omitted from this list stops refreshing the border rows it owns, and no neighbour re-creates them — the disappearance this design removed, reintroduced by configuration. |
 | `COVERAGE_WORKDIR` | `/data/work` | scratch dir (PBFs, GeoJSONL, pmtiles) |
 | `COVERAGE_PBF_PATH` | – | local PBF override; skips the Geofabrik download (dev/fixture runs) |
 | `COVERAGE_S3_ENDPOINT` | – | S3 endpoint (dev: `http://minio:9000`) |
@@ -166,6 +166,11 @@ file.
 3. Run the chain with the local override so no re-download happens:
    `COVERAGE_PBF_PATH=/data/work/planet-latest.osm.pbf COVERAGE_REGIONS=planet make coverage-refresh regions=planet pbf=/data/work/planet-latest.osm.pbf`
    — point it at a THROWAWAY bucket/DB, not the serving ones.
+   — **`planet` has no configured country, so `resolve_country()` HARD FAILS on it**
+     (`pipeline/coverage/load.py`). That is deliberate: an unresolvable slug must not
+     silently disable the ownership filter and revert that run to last-writer-wins.
+     For the dry-run, add a temporary `COUNTRY_BY_REGION` entry, or use a `dev/`-prefixed
+     slug, which skips the filter by design. Do not "fix" it by removing the hard fail.
 4. Record, per step, wall-clock / peak RSS / disk written (template):
 
    | Step | Wall-clock | Peak RSS | Disk written |
