@@ -80,6 +80,9 @@ nav:
           - B4 · Routing: developers/gis-beyond/routing.md
           - B5 · Elevation and terrain: developers/gis-beyond/elevation.md
           - B6 · Edge cases that bite: developers/gis-beyond/edge-cases.md
+      - Data operations:
+          - Harvesting OSM coverage: developers/data-ops/harvesting.md
+          - Onboarding a new country: developers/data-ops/onboarding-a-country.md
 
 markdown_extensions:
   - admonition
