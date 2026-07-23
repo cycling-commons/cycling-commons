@@ -24,6 +24,17 @@ the `CCScope` model, tokens, dim mask, or per-country coverage tiles from
    Bavaria/…/All Germany instead of Wallonia/Flanders/Brussels. The active
    scope, viewport, and served data are untouched — only which chips are
    *offered* changes.
+
+   **Follow-up, same day — that was only half the fix.** Owner reported an
+   incognito visit from the Netherlands still *opening* on Wallonia: the
+   inference reached the chip block but never the active scope, so the rider got
+   Dutch chips on a Wallonia-scoped map. `init()` now resolves the inferred home
+   country as an opening scope too, ranked **below the URL param and
+   localStorage** so no returning rider's own choice is ever overridden, and
+   above the caller's hardcoded default. An unmapped timezone still falls back to
+   that default. `init()` never persists, so opening on NL remains an inference
+   rather than a stored preference (§F rule 1) — browser-confirmed
+   `localStorage['cc-scope']` is still `null` after a cold start.
 2. **8-region cap + overflow.** `contextualRegions(cc)` used to return every
    region of a country unbounded (16 for DE today, 51 for a future US onboard)
    — the flat wall came back, just per-country. `contextualRegions(cc, opts)`
@@ -32,8 +43,20 @@ the `CCScope` model, tokens, dim mask, or per-country coverage tiles from
    `regionOfPoint`) from that point to each region's bbox centre, nearest
    first, then caps; without `near` it keeps the label-sort. `renderScopeChips`
    passes `near` = the rider's My-area base centre (`window.CC_MY_AREA`) when
-   set, else the current map centre (`map.getCenter()`) — both are "roughly
-   where the rider is looking" with zero extra fetch. When a country has more
+   set, else **`CCScope.scopeCenter()` — the incoming scope's own bbox centre**.
+
+   > **Not `map.getCenter()`, and this is load-bearing.** `renderScopeChips` runs
+   > *before* `applyScope` fits the viewport (deliberately — `scopeLabel()`
+   > resolves the header text by querying the rendered chip button), so the map is
+   > still showing the **outgoing** scope at that moment. Anchoring there ranked
+   > Utrecht's chips against Germany's centroid — browser-instrumented as
+   > `near=[10.454, 51.329]` — offering Drenthe/Groningen/Friesland while hiding
+   > adjacent Noord-Holland/Zuid-Holland/Noord-Brabant. The ranking maths was
+   > never wrong; the anchor was. `scopeCenter()` is synchronous and has no timing
+   > coupling. `map.getCenter()` survives only as the Everywhere fallback, where
+   > the scope has no bbox and the map view genuinely is the best hint.
+
+   When a country has more
    regions than the cap, an overflow chip (`d_scopes_more`, translated in all
    four locales) appears before the `All <country>` rung and focuses the
    sidebar search box, so every onboarded region stays reachable regardless of
