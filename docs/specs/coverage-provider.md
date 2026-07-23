@@ -54,11 +54,19 @@ Invariants:
   separated, `europe/belgium,europe/netherlands` since 2026-07-22 —
   `europe/netherlands` added with the NL onboarding) refreshes as a whole on its
   own run; regions can stagger across the week. *Border caveat:* Geofabrik
-  extracts overlap in a border buffer, so one OSM entity can appear in two
-  adjacent extracts with the same `(ref, letter)`; `load_region` upserts
-  (`ON CONFLICT`, last-writer-wins) and derives `country_code` from the geometric
-  region, so a shared border entity never collides with the global
-  `UNIQUE(ref, letter)` and always reads its true country. Planet scale is config + disk, gated on a
+  extracts overlap in a border buffer, so one OSM entity can arrive staged in
+  two adjacent extracts with the same `(ref, letter)`. Ownership is decided at
+  staging, by geometry, not by write order
+  (`2026-07-23-border-overlap-ownership-design.md §3`): an extract keeps only
+  the staged rows that fall inside — or within `BOUNDARY_SNAP_DEG` of — a
+  region of its own configured country, so exactly one extract ever inserts a
+  given `(ref, letter)`, and a shared border entity never collides with the
+  global `UNIQUE(ref, letter)`. `load_region`'s `INSERT … ON CONFLICT (ref,
+  letter) DO UPDATE` still runs after that filter and still derives
+  `country_code` from the geometric region — it is no longer how ownership is
+  decided, only the safety net for a stale row a former owner hasn't deleted
+  yet. A staged row that falls in no onboarded region at all is dropped rather
+  than kept with a NULL region. Planet scale is config + disk, gated on a
   measured dry-run (see Open questions).
 - **Own object-storage bucket** (`cc-maps`) from day one, separate from any
   shared basemap bucket, so coverage cost stays observable. Dev mirrors it with
