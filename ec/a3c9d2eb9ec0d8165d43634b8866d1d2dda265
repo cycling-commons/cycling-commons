@@ -1,0 +1,58 @@
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_8539570f67ed0e 209-210
+  s_f3f9c3dc9409c4::t_9f71cc44889f3b 43
+  s_f3f9c3dc9409c4::t_8127c357455059 135
+  s_f3f9c3dc9409c4::t_117aec0820d104 60-63
+  s_f3f9c3dc9409c4::t_873041f608d4c7 263
+  s_f3f9c3dc9409c4::t_7e222d2c461df5 215
+  s_3bd3f8ccb3a560::t_dd57ab241a325f 262,272-281,305-318
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_76328293ac61b0 112
+  s_f3f9c3dc9409c4::t_7b84bedbe35aef 61-111,113-146,155,160,163-164,167-183
+  s_f3f9c3dc9409c4::t_df426d5cae759c 184-186
+  s_e8437a642fed0a::t_7b9df17e7f8077 190
+docs/specs/2026-07-23-gis-primer-design.md
+  s_d83acb1f93c403::t_ee1c6381dd599f 238
+wiki/developers/gis/index.md
+  s_d83acb1f93c403::t_af34f7d89f0224 99-101,103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "eca3c9d2eb9ec0d8165d43634b8866d1d2dda265",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d83acb1f93c403": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-aa3cb6ab800fcece1",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_e8437a642fed0a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a078b4ba92b68bbcc",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
