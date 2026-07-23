@@ -1,0 +1,38 @@
+web/translations/messages.nl.yaml
+  s_3c392b244b902c::t_b5a6b92e8b1839 629-632
+tools/divisions/tests/test_export_divisions.py
+  s_3c392b244b902c::t_4032e7310db4b0 67-96
+web/translations/messages.fr.yaml
+  s_3c392b244b902c::t_1ce517289a7206 629-632
+web/translations/messages.de.yaml
+  s_3c392b244b902c::t_4b3ec08cfea6ea 629-632
+pipeline/coverage/load.py
+  s_3c392b244b902c::t_d47d67effe55cf 41-44
+web/translations/messages.en.yaml
+  s_3c392b244b902c::t_9361f5c0804778 633-636
+web/assets/map/scope.js
+  s_3c392b244b902c::t_f296ab76819eb1 39
+docs/specs/2026-07-22-country-onboarding-design.md
+  s_3c392b244b902c::t_31dad85b1eb470 21-34
+tools/divisions/config.py
+  s_3c392b244b902c::t_37c8728e917985 98-110
+  s_3c392b244b902c::t_986fc773af792c 23-29
+tools/divisions/export_divisions.py
+  s_3c392b244b902c::t_5ebaccd69a9fd5 125-129,131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "c55054c83f73eec57f31a625f4e5f5fdbcff28fe",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
