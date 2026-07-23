@@ -42,7 +42,11 @@ theme:
     - toc.follow
 
 extra_css:
-  - stylesheets/extra.css
+  # ?v= is a cache-buster. MkDocs fingerprints the theme's own assets but NOT
+  # extra_css, so a browser holds the previous copy after an edit and shows a
+  # stale sidebar or stale code styling — which reads as "the fix didn't work"
+  # rather than "you have an old file". Bump this when extra.css changes.
+  - stylesheets/extra.css?v=3
 
 # Ordered to match the "Start here" list on the wiki home page.
 nav:
