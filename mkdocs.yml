@@ -57,6 +57,7 @@ nav:
   - Building the Commons: building.md
   - For developers:
       - Start here: developers/gis/index.md
+      - The Earth is awkward: developers/gis/coordinates.md
 
 markdown_extensions:
   - admonition

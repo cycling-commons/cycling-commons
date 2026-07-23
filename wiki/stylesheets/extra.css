@@ -54,3 +54,56 @@
 .md-typeset a:hover { color: var(--cc-trail); }
 .md-nav__link:hover,
 .md-nav__link--active { color: var(--cc-trail); }
+
+/* ---- GIS primer figures (wiki/developers/gis/) ---------------------------
+   Inline SVG so the diagrams read the page's own custom properties and cannot
+   drift from the atlas palette. One scheme today; if a dark scheme is ever
+   added, figures built on these properties follow it for free. */
+.md-typeset .gis-fig { margin: 1.6rem 0; }
+.md-typeset .gis-fig svg {
+  display: block;
+  width: 100%;
+  max-width: 40rem;
+  height: auto;
+  margin: 0 auto;
+}
+.md-typeset .gis-fig figcaption {
+  margin-top: .6rem;
+  font-size: .72rem;
+  line-height: 1.55;
+  color: var(--md-default-fg-color--light);
+}
+
+/* figure ink — stroke classes */
+.gis-fig .gis-ink    { stroke: var(--cc-ink);     fill: none; stroke-width: 1.5; }
+.gis-fig .gis-accent { stroke: var(--cc-trail);   fill: none; stroke-width: 2; }
+.gis-fig .gis-muted  { stroke: var(--cc-glacier); fill: none; stroke-width: 1.25; }
+
+/* figure ink — fill classes */
+.gis-fig .gis-fill-paper  { fill: var(--cc-paper-deep); }
+.gis-fig .gis-fill-spruce { fill: var(--cc-spruce); }
+.gis-fig .gis-fill-accent { fill: var(--cc-trail); }
+.gis-fig .gis-fill-ochre  { fill: var(--cc-ochre); }
+
+/* figure type */
+.gis-fig text { fill: var(--cc-ink); font-size: 13px; font-family: inherit; }
+.gis-fig text.gis-label-sm { font-size: 11px; fill: var(--md-default-fg-color--light); }
+.gis-fig text.gis-label-mono { font-family: "Spline Sans Mono", monospace; font-size: 11px; }
+
+/* Two conventions the rest of the series relies on, added with chapter 1.
+
+   1. Stroke and fill classes combine. The fill rules are declared after the
+      stroke rules at equal specificity, so `class="gis-ink gis-fill-paper"`
+      gives an ink outline with a paper-deep fill — gis-fill-* wins the `fill`
+      and gis-ink keeps the `stroke`. Do not reorder these two groups.
+   2. gis-halo, below: a label that has to sit on top of figure ink needs a
+      backdrop or it becomes unreadable. paint-order draws the paper-coloured
+      stroke first, so the glyphs keep a halo without a hand-placed rectangle
+      behind every label. Later chapters reuse this rather than inventing
+      their own. */
+.gis-fig text.gis-halo {
+  paint-order: stroke;
+  stroke: var(--cc-paper);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
