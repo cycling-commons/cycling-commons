@@ -173,3 +173,23 @@ This is item 2 of four queued for the current window:
 
 Items 2 and 4 do not depend on 1, so they can run either side of the harvest window.
 Only 2 → 3 is a strict ordering.
+
+## 8. Execution notes
+
+- **2026-07-23, Task 1 (module + tests):** `web/assets/map/scope-chips.js` landed with
+  the 15 tests from section 4 above (commit `f42c6dd`). Green against real `scope.js`.
+- **2026-07-23, Task 2 (wiring):** `renderScopeChips()` in `web/assets/map/map.js`
+  rewritten to call `CCScopeChips.chipModel()` and serialize the result; the script tag
+  for `map/scope-chips.js` added to `web/templates/map/index.html.twig` per section 5.
+  155 lines dropped to 69; no decisions remain in the function. `make scope-test`
+  unaffected (100 pass / 0 fail, before and after — the module's own 15 plus the rest of
+  the suite). Commit `b986541` on `symfony-base` (not pushed).
+  The section 4 browser pass (Germany's grid, Belgium's linear list, the More chip
+  focusing `INPUT#search`, zero console errors) could **not** be run this session: the
+  shared Playwright browser profile was held by a concurrent agent session for the
+  session's full duration, confirmed by live `chrome`/`claude` processes rather than a
+  stale lock file. The parity harness referenced in the plan's pre-verification
+  (38 scope combinations, 0 HTML mismatches) still stands as evidence the serializer is
+  byte-identical to the prior implementation, but the DOM-binding/focus/`.on`-marking
+  behaviour this browser pass exists to catch remains unverified in a live browser as of
+  this commit. Follow-up: re-run the section 4 table once the browser is free.
