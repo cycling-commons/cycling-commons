@@ -601,6 +601,21 @@ test('contextualRegions: caps at 8 by default, label-sorted, for a country with 
   assert.deepEqual(r.map((x) => x.label), [...labels].sort((a, b) => a.localeCompare(b, 'en')).slice(0, 8));
 });
 
+// The chip renderer needs the UNCAPPED total to decide whether to show its
+// "More regions…" overflow chip. It first asked with a bare contextualRegions(cc),
+// which applies the same default cap of 8 — so the total and the shown list were
+// both 8 and the overflow chip was dead code for every country (Germany rendered
+// 8 of 16 with no way to reach the other 8). {limit: Infinity} is the documented
+// escape hatch; this pins it.
+test('contextualRegions: {limit: Infinity} returns every region, bypassing the default cap', () => {
+  const labels = ['Zeta', 'Yankee', 'Xray', 'Whiskey', 'Victor', 'Uniform', 'Tango', 'Sierra', 'Romeo', 'Quebec'];
+  const S = freshScope(labels.map((label, i) => ({
+    id: i + 1, slug: label.toLowerCase(), countryCode: 'DE', bbox: [10, 48, 12, 50], label, countryLabel: 'All Germany',
+  })));
+  assert.equal(S.contextualRegions('DE').length, 8);                        // default cap bites
+  assert.equal(S.contextualRegions('DE', { limit: Infinity }).length, 10);  // ...and Infinity lifts it
+});
+
 test('contextualRegions: an explicit limit overrides the default cap', () => {
   const S = freshScope([
     { id: 1, slug: 'z', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Zeta', countryLabel: 'All Germany' },

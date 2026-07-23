@@ -231,8 +231,12 @@
       // "roughly where the rider is looking" with zero extra fetch.
       const ma=window.CC_MY_AREA;
       const near=(ma&&ma.lat!=null&&ma.lng!=null) ? [ma.lng,ma.lat] : (()=>{ const c=map.getCenter(); return [c.lng,c.lat]; })();
-      const all=window.CCScope.contextualRegions(cc);           // full, label-sorted — for the total count + country label
-      const shown=window.CCScope.contextualRegions(cc,{near});  // capped at 8, nearest-first
+      // {limit:Infinity} is REQUIRED here: a bare contextualRegions(cc) applies
+      // the same default cap of 8, so `all` and `shown` were both 8 and the
+      // overflow branch below could never fire for any country (browser-verified
+      // dead code — Germany showed 8 of 16 with no More chip).
+      const all=window.CCScope.contextualRegions(cc,{limit:Infinity}); // uncapped — the true total + country label
+      const shown=window.CCScope.contextualRegions(cc,{near});         // capped at 8, nearest-first
       shown.forEach(r=>{
         html+=`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label||r.slug)}</button>`;
       });
