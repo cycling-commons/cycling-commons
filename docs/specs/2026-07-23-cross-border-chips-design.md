@@ -2,7 +2,7 @@
 
 # Cross-border scope chips — design
 
-**Status:** design, approved by the owner 2026-07-23, not executed.
+**Status:** **EXECUTED 2026-07-23** (see §8 execution notes; browser-verified).
 **Audience:** contributors working on the map front end.
 **Builds on:** the `scope-chips.js` view model extracted in
 `2026-07-23-map-js-phase0-extraction-design.md` (Phase 0). This is the "next change" that spec's
