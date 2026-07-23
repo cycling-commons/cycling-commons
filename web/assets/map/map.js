@@ -3282,6 +3282,11 @@
     function widenSearch(){ if(!window.CCScope) return; window.CCScope.widen(); runPhoton(sBox.value); runCoverageSearch(sBox.value); runS(); }
     function pickS(i){ const m=sMatches[i]; if(!m) return;
       if(m.widen){ m.go(); return; }   // widen chip: dropdown stays open, results re-query
+      // Scope row: sets the map's scope (fit + relabel via cc:scopechange,
+      // Task 3/5), not a fly-to — closeS()/blur() here (not inside go, so
+      // widen keeps its own no-close contract) mirror applyScopeRow in the
+      // task-6 brief without duplicating a second click/keydown path.
+      if(m.scope){ m.go(); closeS(); sBox.blur(); return; }
       sBox.value=m.name; closeS();
       if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.remove('sheet-open'); }  // clear the filter sheet on mobile
       m.go(); }
@@ -3289,6 +3294,17 @@
     // verified vs community reads at a glance. Towns and pending rows never do.
     const commRow=m=>!m.town && !m.pend && (m.community || m.verified===false);
     const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${escH(m.badge)}</span><span class="snm">${escH(m.name)}${commRow(m)?`<span class="scomm">${escH(D.community||'community')}</span>`:''}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
+    // Scopes section (2026-07-22-scope-selector-scale-design.md §A/§B): a
+    // scope row renders like any other search row (same <li role="option">/
+    // <button data-i> shape as sRow) so it drops into the existing sMatches/
+    // data-i/go model untouched — no new keyboard or click wiring needed,
+    // only pickS gains one branch (below) to route it through CCScope
+    // instead of a fly-to. Reuses --clay (already in map.css :root) via
+    // inline style, same idiom sRow uses for m.color — no new CSS needed.
+    // Escaped with escPend per task-6 brief (escH doesn't escape `'`, and
+    // region/country labels can contain one, e.g. Val-d'Or-style names).
+    const SCOPE_COLOR='#B5532E';
+    const scopeRow=(m,i)=>`<li role="option"><button data-i="${i}" class="s-scope"><span class="sw" style="background:${SCOPE_COLOR};color:${txtOn(SCOPE_COLOR)}">${m.kind==='country'?'◆':'◇'}</span><span class="snm">${escPend(m.name)}</span><span class="sub">${escPend(m.kind==='country'?(D.wholeCountry||'Whole country'):(D.region||'Region'))}</span></button></li>`;
     // Any-town live place search via Photon (spec 2026-07-14 §3.2) — Photon,
     // not Nominatim: Nominatim's usage policy forbids type-ahead. Wallonia
     // bbox, place types only, ≥3 chars, 350 ms debounce, one in-flight request
@@ -3402,7 +3418,19 @@
       // group, community after. Array.prototype.sort is stable (ES2019), so the
       // prefix-before-substring ranking survives within each tier.
       Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(commRow(a)?1:0)-(commRow(b)?1:0)));
-      const groups=towns.length?[{label:D.places||'Places', rows:towns}]:[];
+      // Scopes group (task-6 brief; 2026-07-22-scope-selector-scale-design.md
+      // §A): matching regions + country rungs, ranked by CCScope.searchScopes
+      // (prefix before substring; a country rung outranks its own regions on
+      // a tie), rendered above Places. Each hit becomes a row shaped exactly
+      // like every other sMatches entry — {..., go} — so it needs no bespoke
+      // click/keydown handling; only pickS's new m.scope branch (above)
+      // distinguishes "apply scope" from "fly to place".
+      const scopeHits = window.CCScope ? window.CCScope.searchScopes(sBox.value) : [];
+      const groups=scopeHits.length ? [{label:D.scopes||'Scopes', rows:scopeHits.map(s=>({
+        scope:true, kind:s.kind, name:s.label,
+        go:()=> s.kind==='country' ? window.CCScope.setCountry(s.cc) : window.CCScope.setRegion(s.slug),
+      }))}] : [];
+      if(towns.length) groups.push({label:D.places||'Places', rows:towns});
       Object.keys(byLetter).sort().forEach(L=>groups.push({label:`${L} · ${byLetter[L][0].kind}`, rows:byLetter[L]}));
       const CAP=30;
       sMatches=[]; sHL=-1;
@@ -3410,8 +3438,13 @@
       for(const g of groups){
         if(sMatches.length>=CAP) break;
         const rows=g.rows.slice(0, CAP-sMatches.length);
+        // Group headers are role="presentation" <li>s with no <button> inside
+        // (unchanged from the pre-existing Places/letter headers) — hlS's
+        // querySelectorAll('button') walk and sMatches both skip them
+        // naturally, so a header can never receive keyboard highlight. The
+        // Scopes header reuses this same convention rather than a new one.
         html+=`<li class="sgrp" role="presentation">${escH(g.label)}</li>`;
-        rows.forEach(m=>{ html+=sRow(m, sMatches.length); sMatches.push(m); });
+        rows.forEach(m=>{ html+=(m.scope?scopeRow:sRow)(m, sMatches.length); sMatches.push(m); });
       }
       sRes.hidden=false;
       // Only mutate aria-expanded on a real open/close transition: setting an
