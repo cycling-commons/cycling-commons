@@ -105,25 +105,25 @@ and ends with a slot for a hands-on exercise.
    systems this project actually uses.
 2. [**The shapes**](shapes.md) — points, lines, and polygons; GeoJSON, the format they travel in;
    and why the order of points around a ring matters.
-3. **Metres vs degrees** (`metres-vs-degrees.md`) — the most common beginner mistake in GIS:
+3. [**Metres vs degrees**](metres-vs-degrees.md) — the most common beginner mistake in GIS:
    treating degrees as if they were a unit of distance, and how the database is told to measure real
    ones instead.
-4. **Asking spatial questions** (`spatial-questions.md`) — the handful of functions that answer "is
+4. [**Asking spatial questions**](spatial-questions.md) — the handful of functions that answer "is
    this point inside that shape", "how far apart are these two things", and "what's nearby" — plus
    why searching by place name is a different kind of problem with its own answer.
-5. **Making it fast** (`making-it-fast.md`) — why spatial queries need their own kind of index, and
+5. [**Making it fast**](making-it-fast.md) — why spatial queries need their own kind of index, and
    why a query that works fine on a hundred rows can fail once the table holds hundreds of
    thousands.
-6. **From OpenStreetMap to our database** (`osm-to-database.md`) — how OpenStreetMap describes the
+6. [**From OpenStreetMap to our database**](osm-to-database.md) — how OpenStreetMap describes the
    world, and the steps that turn that raw, foreign data into rows this project owns.
-7. **Tiles** (`tiles.md`) — why a browser can't be handed hundreds of thousands of points at once,
+7. [**Tiles**](tiles.md) — why a browser can't be handed hundreds of thousands of points at once,
    and how they get cut into small, pre-built files a map can fetch instead.
-8. **Putting it on screen** (`on-screen.md`) — how the map library turns a tile into pixels, styles
+8. [**Putting it on screen**](on-screen.md) — how the map library turns a tile into pixels, styles
    them, and lets a rider click or tap on one.
-9. **Lines that mean something** (`routes.md`) — why a route is a harder problem than a single
+9. [**Lines that mean something**](routes.md) — why a route is a harder problem than a single
    point, and how this project measures things like surface coverage honestly, without overstating
    its own certainty.
-10. **Pitfalls, glossary, where to look** (`pitfalls.md`) — the mistakes that show up again and
+10. [**Pitfalls, glossary, where to look**](pitfalls.md) — the mistakes that show up again and
     again in GIS code, a glossary of every term used across this series, and a table for "I need to
     change X, start here".
 
