@@ -1,0 +1,23 @@
+docs/specs/coverage-provider.md
+  s_3c392b244b902c::t_4c871425ff2c2b 182-183
+  s_3c392b244b902c::t_89144d96509071 127-132
+docs/specs/2026-07-23-border-overlap-ownership-design.md
+  s_3c392b244b902c::t_225ba31e06b2c7 5-6
+  s_3c392b244b902c::t_0fa8d1aaf2634b 246-271
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "14a165d020e820fad7ee9b0bc4ebe00df501269d",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
