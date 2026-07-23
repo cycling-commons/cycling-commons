@@ -45,7 +45,22 @@ repos:
         files: ^wiki/.*\.md$
         pass_filenames: false
 
-      # Locale parity: a key added to one messages.*.yaml must exist in all
+      # The wiki teaches from real excerpts of this repo, which is the point —
+      # a reader can open the file and see the thing being explained. It is
+      # also the risk: nothing stops the code moving underneath the prose, so
+      # a lesson can quietly become wrong while still reading perfectly and
+      # still building clean. Every fenced block must declare whether it
+      # quotes the repo (CODE-FROM, verified line by line against the source)
+      # or is a hand-written teaching example (CODE-ILLUSTRATIVE, with a note
+      # telling the reader which it is). Runs on any staged wiki page OR any
+      # staged source file, because drift is usually introduced by the code
+      # change, not by the page.
+      - id: check-wiki-code-drift
+        name: wiki code excerpts still match the code they quote
+        entry: tools/check-wiki-code-drift.py
+        language: python
+        files: ^(wiki/.*\.md|web/.*\.(php|js)|pipeline/.*\.py)$
+        pass_filenames: false
       # four (en/fr/nl/de). Runs only when translation files are staged;
       # skips gracefully without php/vendor (CI still enforces it).
       - id: check-translations

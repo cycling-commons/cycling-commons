@@ -22,6 +22,7 @@ conversion. A degree of latitude is about 111 km, chapter 1 already established 
 about 50 / 111.32 ≈ **0.45 degrees**. Use that number as a radius, and skip straight to comparing
 coordinates:
 
+<!-- CODE-ILLUSTRATIVE naive degree-radius query, not our code -->
 ```sql
 -- Looks reasonable. It is wrong twice over.
 WHERE ST_DWithin(r.geom, ST_SetSRID(ST_Point(:lng, :lat), 4326), 0.45)
@@ -111,6 +112,7 @@ Here is the pattern this project actually uses for the question this chapter ope
 regions are within N km of this rider's base point?" — in `Service/BaseAreaResolver.php`,
 `BaseAreaResolver::resolve()`:
 
+<!-- CODE-FROM web/src/Service/BaseAreaResolver.php -->
 ```php
 public function resolve(float $lat, float $lng, int $radiusKm): array
 ```
@@ -119,6 +121,7 @@ public function resolve(float $lat, float $lng, int $radiusKm): array
 SQL it is multiplied by `1000.0` into metres, because metres are what `::geography` deals in. The
 query itself:
 
+<!-- CODE-FROM web/src/Service/BaseAreaResolver.php -->
 ```sql
 ST_DWithin(r.geom::geography, ST_SetSRID(ST_Point(:lng, :lat), 4326)::geography, :m)
 ```
@@ -144,6 +147,7 @@ metres. The rows that come back are the same rows.
 Both halves of that are checkable in a `psql` session against the dev database (chapter 5 shows how
 to open one). First the cast catalogue:
 
+<!-- CODE-ILLUSTRATIVE ad-hoc psql query against Postgres system catalogs, not our code -->
 ```sql
 SELECT castsource::regtype, casttarget::regtype, castcontext
   FROM pg_cast
@@ -156,6 +160,7 @@ SELECT castsource::regtype, casttarget::regtype, castcontext
 to be written by hand and `::geography` sometimes does not have to be. Then the behaviour that
 follows from it, on two points 0.005° of longitude apart at 50° N:
 
+<!-- CODE-ILLUSTRATIVE ad-hoc psql demo of implicit-cast behaviour, not our code -->
 ```sql
 WITH p AS (
   SELECT ST_SetSRID(ST_Point(4.0,   50.0), 4326) AS a,

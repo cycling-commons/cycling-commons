@@ -30,6 +30,7 @@ transformation. `RouteProposalService::propose()` (`web/src/Contribution/RoutePr
 takes the parsed `[lat, lng, ele|null]` triples, keeps only the first two numbers, and flips their
 order:
 
+<!-- CODE-FROM web/src/Contribution/RouteProposalService.php -->
 ```php
 $coords = array_map(
     static fn (array $p): array => [$p[1], $p[0]],
@@ -79,6 +80,7 @@ baked into every stored `distance_m`.
 thing: walk the same trimmed points in order, and for every step where elevation went up, add the
 difference to a running total.
 
+<!-- CODE-FROM web/src/Contribution/Gpx/TrackProcessor.php -->
 ```php
 if ($i > 0 && $points[$i][2] > $points[$i - 1][2]) {
     $gain += $points[$i][2] - $points[$i - 1][2];

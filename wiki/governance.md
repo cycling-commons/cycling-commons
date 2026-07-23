@@ -9,6 +9,7 @@ is structured so the answer is **no**.
 
 ## Who stewards it
 
+<!-- CODE-ILLUSTRATIVE org-structure diagram, hand-written -->
 ```
 BikeCoders            the company — open-source steward (→ independent foundation)
    │

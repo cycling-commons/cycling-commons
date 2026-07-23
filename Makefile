@@ -166,6 +166,11 @@ tools-test: ## Run the tools Python test suites (wallonia + divisions)
 pipeline-test: ## Run the pipeline Python test suite in the pipeline container (contract + batch job units)
 	@$(DOCKER_COMP) exec -T pipeline python -m pytest tests -q
 
+wiki-check: ## Verify the wiki builds strict and its code excerpts still match the code they quote
+	@.venv-wiki/bin/mkdocs build --strict
+	@tools/check-wiki-spdx.sh
+	@python3 tools/check-wiki-code-drift.py && echo "wiki: build strict OK, SPDX OK, code excerpts match source"
+
 ## —— 🧱 Coverage batch ————————————————————————————————————————————————————————
 # Whole chain against the dev DB + MinIO (see developers/coverage-batch.md).
 # Fixture run (no network): make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf

@@ -22,9 +22,10 @@ A **style** is the whole document describing what the map draws: every source, e
 background colour, all of it, together. This project does not hand-write one. Look near the top of
 `web/assets/map/map.js`, at the `new maplibregl.Map({...})` call that boots the whole thing:
 
+<!-- CODE-FROM web/assets/map/map.js -->
 ```js
 const map = new maplibregl.Map({
-  container:'map', style:'https://tiles.openfreemap.org/styles/liberty', …
+  container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
 ```
 
 That URL *is* the starting style — a ready-made document served by OpenFreeMap, containing the
@@ -49,6 +50,7 @@ data sitting there under a name; nothing stops five different layers from readin
 and drawing five different things from it. The coverage tiles are the clearest example in this
 codebase. `addCoverage()` in `map.js` adds exactly one vector source:
 
+<!-- CODE-FROM web/assets/map/map.js -->
 ```js
 map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
 ```
@@ -108,10 +110,11 @@ carries just one collection, so there is nothing to disambiguate.
 
 `addCoverage()` builds that name from the same per-`(letter, country)` split chapter 7 described:
 
+<!-- CODE-FROM web/assets/map/map.js -->
 ```js
 const srcLayer = cc ? letter+'_'+cc : letter;
-…
-map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer, …});
+...
+map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
 ```
 
 `letter` is the lowercase catalogue letter (`c` for water, `d` for bike services, and so on) and `cc`
@@ -150,9 +153,9 @@ type this chapter's later sections on paint, layout and clicking do not really a
 the coverage source but works nothing like it. `setupConfClusters()` builds one of these per bulk-OSM
 pool, for the confirmed (rider-verified) points:
 
+<!-- CODE-FROM web/assets/map/map.js -->
 ```js
-map.addSource(srcId, {type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
-  data:{type:'FeatureCollection', features: confirmed.filter(…)}});
+map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
 ```
 
 `cluster:true` tells MapLibre itself to group nearby points into bubbles, live, in the browser, as
@@ -191,9 +194,10 @@ which icons fit without overlapping — that paint changes never touch.
 `syncCoverageLayers()` in `map.js` uses both, back to back, on the very same layer, and the split
 tells you exactly what each line is doing:
 
+<!-- CODE-FROM web/assets/map/map.js -->
 ```js
-map.setLayoutProperty(id, 'visibility', show ? 'visible' : 'none');
-map.setPaintProperty(id, 'icon-opacity', dim);
+map.setLayoutProperty(id,'visibility', show?'visible':'none');
+map.setPaintProperty(id,'icon-opacity', dim);
 ```
 
 The first line is a layout change: it turns the whole layer on or off — a feature that isn't visible
@@ -211,8 +215,9 @@ needing one layer per variant.
 `addCoverage()`'s water icon is exactly that. Instead of one drop icon for every water point, it
 reads each feature's own `potable` property and picks between two icons:
 
+<!-- CODE-FROM web/assets/map/map.js -->
 ```js
-['match', ['to-string', ['get', 'potable']], ['yes', 'true', '1'], 'water-drop', 'water-drop-unk']
+['match',['to-string',['get','potable']],['yes','true','1'],'water-drop','water-drop-unk']
 ```
 
 Read it like an if/else: get the feature's `potable` value, treat it as a string, and if that string
@@ -234,11 +239,10 @@ inside the box — read straight out of what MapLibre has already drawn, with no
 `nearestImageId()` in `map.js`, which finds the Mapillary image dot nearest a click, shows the pattern
 at its plainest — a box centred on the click point, widened in three steps until something is found:
 
+<!-- CODE-FROM web/assets/map/map.js -->
 ```js
-for (const r of [8, 16, 30]) {
-  const fs = map.queryRenderedFeatures([[point.x-r, point.y-r], [point.x+r, point.y+r]], {layers:['mly-img']});
-  if (fs.length) { … }
-}
+for(const r of [8,16,30]){
+  const fs=map.queryRenderedFeatures([[point.x-r,point.y-r],[point.x+r,point.y+r]],{layers:['mly-img']});
 ```
 
 The same function backs the map's general click handler, deciding whether a click landed on *any*

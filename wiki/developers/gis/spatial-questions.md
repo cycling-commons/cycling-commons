@@ -36,6 +36,7 @@ This is exactly the question `SpatialResolver` answers — the class chapter 1 a
 its longitude-first argument order. `web/src/Contribution/SpatialResolver.php`,
 `SpatialResolver::resolve()` takes a submitted `(float $lat, float $lng)` and asks the database:
 
+<!-- CODE-FROM web/src/Contribution/SpatialResolver.php -->
 ```sql
 SELECT id, country_code FROM region
  WHERE ST_Contains(geom, ST_SetSRID(ST_Point(:lng, :lat), 4326)) LIMIT 1
@@ -68,6 +69,7 @@ index can serve directly. Nothing else here gets that for free.
 `Catalog/RideCheckService.php`, `RideCheckService::corridorGroups()` uses it twice, once for catalog
 items and once (in the sibling method `followedRoutes()`) for recommended routes:
 
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```sql
 AND ST_Intersects(i.geom, (SELECT b FROM corridor))
 ```
@@ -90,6 +92,7 @@ means real metres on the ground, in every direction, at any latitude.
 
 `BaseAreaResolver::resolve()` — chapter 3's own example — casts both sides:
 
+<!-- CODE-FROM web/src/Service/BaseAreaResolver.php -->
 ```sql
 ST_DWithin(r.geom::geography, ST_SetSRID(ST_Point(:lng, :lat), 4326)::geography, :m)
 ```
@@ -126,6 +129,7 @@ at.
 `RideCheckService::corridorGroups()` uses both `ST_Distance` and `ST_ClosestPoint` in the same query,
 but not quite on the same footing:
 
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```sql
 ST_Distance(i.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
 ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
@@ -166,6 +170,7 @@ That second case is exactly how "within 100 m of my ride" stops being a sentence
 actual shape you can test other shapes against. `RideCheckService::corridorGroups()` builds its
 corridor this way:
 
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```sql
 corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
 ```
@@ -200,6 +205,7 @@ turns "somewhere along that line" into a sortable number.
 `RideCheckService::corridorGroups()` chains it directly onto the `ST_ClosestPoint` you saw two
 sections ago:
 
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```sql
 ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
 ```
@@ -221,6 +227,7 @@ it first collapses that shape down to the single point on it nearest the track, 
 then sorts by — `ORDER BY frac, i.id` — and it is also what the PHP code turns into the kilometre
 figure a rider actually reads:
 
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```php
 'alongKm' => round((float) $row['frac'] * $rawM / 1000.0, 1),
 ```
@@ -260,6 +267,7 @@ page's own place search and the settings page's base-location field both call th
 service, **Photon**, a free, keyless, OpenStreetMap-based geocoder. `web/assets/settings/base-location.js`
 builds its request against
 
+<!-- CODE-FROM web/assets/settings/base-location.js -->
 ```js
 var PH_BASE = 'https://photon.komoot.io/api/?limit=6'
 ```

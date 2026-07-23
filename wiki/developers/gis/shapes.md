@@ -84,6 +84,7 @@ screen. Chapter 1 mentioned it in passing; this is where it earns the promise.
 
 Written as GeoJSON, the fountain is a `Point` geometry:
 
+<!-- CODE-ILLUSTRATIVE minimal GeoJSON, hand-written -->
 ```json
 {
   "type": "Point",

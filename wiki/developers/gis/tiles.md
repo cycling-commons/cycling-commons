@@ -36,6 +36,7 @@ and *each of those four* splits into four more: sixteen tiles total, each coveri
 world. Every zoom level quarters every tile from the level above it. That gives a clean rule for how
 many tiles exist at zoom level *z*:
 
+<!-- CODE-ILLUSTRATIVE formula, hand-written -->
 ```text
 number of tiles at zoom z = 4^z
 ```
@@ -198,13 +199,18 @@ in far enough to tell them apart.
 
 The actual flags, all in `pipeline/coverage/tiles.py::build_pmtiles`:
 
-```text
---minimum-zoom 6 --maximum-zoom 14
---cluster-distance 20
---cluster-maxzoom 11
--r1
---cluster-densest-as-needed
---accumulate-attribute ridtok:concat --accumulate-attribute cctok:concat
+<!-- CODE-FROM pipeline/coverage/tiles.py -->
+```python
+"--minimum-zoom", "6", "--maximum-zoom", "14",
+...
+"--cluster-distance", "20",
+...
+"--accumulate-attribute", "ridtok:concat",
+"--accumulate-attribute", "cctok:concat",
+...
+"--cluster-maxzoom", "11",
+"-r1",
+"--cluster-densest-as-needed",
 ```
 
 - **`--cluster-distance 20`** — points within 20 *screen pixels* of each other, at a given zoom, are

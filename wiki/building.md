@@ -19,6 +19,7 @@ the kind of contribution we're looking for.
 The whole stack runs in Docker — database, application, pipeline, prototype, and this wiki —
 wired together the way production runs it. You need Docker Engine with Compose v2 and GNU make:
 
+<!-- CODE-ILLUSTRATIVE shell commands to clone and boot the dev stack, not our code -->
 ```sh
 git clone https://github.com/cycling-commons/cycling-commons.git
 cd cycling-commons
@@ -40,6 +41,7 @@ The full service table, ports, and troubleshooting live in the stack's
 [`atlas/demo/`](https://github.com/cycling-commons/cycling-commons/tree/main/atlas/demo) — no build
 step, no dependencies. Serve the folder over HTTP and open the landing page:
 
+<!-- CODE-ILLUSTRATIVE shell commands to serve the static prototype, not our code -->
 ```sh
 cd cycling-commons/atlas/demo
 php -S localhost:8000          # or: python3 -m http.server 8000

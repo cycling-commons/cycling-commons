@@ -206,6 +206,7 @@ ride it appeared, so the results can be listed in the order the rider met them. 
 
 The obvious way to ask "within 250 real metres of this line" is the one chapter 3 teaches:
 
+<!-- CODE-ILLUSTRATIVE the pre-rewrite naive query, not the shipped code -->
 ```sql
 ST_DWithin(item.geom::geography, track::geography, :radius)
 ```
@@ -239,6 +240,7 @@ depend on any row.
 
 The two lines that do it:
 
+<!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```sql
 WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
      corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
@@ -337,6 +339,7 @@ by substituting a real GeoJSON `LineString` and a radius by hand.
 
 Then run it against the dev stack's database:
 
+<!-- CODE-ILLUSTRATIVE shell command to open a psql session in the dev stack -->
 ```sh
 docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons
 ```

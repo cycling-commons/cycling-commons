@@ -79,6 +79,7 @@ region contains this point?" — see `web/src/Contribution/SpatialResolver.php`,
 `SpatialResolver::resolve()`. Its PHP signature takes `(float $lat, float $lng)`, in human order,
 because that is how the calling code thinks. The SQL it builds a few lines later contains:
 
+<!-- CODE-FROM web/src/Contribution/SpatialResolver.php -->
 ```sql
 ST_Contains(geom, ST_SetSRID(ST_Point(:lng, :lat), 4326))
 ```
@@ -120,6 +121,7 @@ full-size circle around the planet, about 40,075 km, so one degree of it is 111.
 at 50° north is a much smaller circle, because it is a slice taken near the top of the sphere. All
 360 degrees of longitude still have to fit around that smaller circle, so each degree is shorter:
 
+<!-- CODE-ILLUSTRATIVE formula, hand-written -->
 ```text
 one degree of longitude ≈ 111.32 km × cos(latitude)
 ```
@@ -141,6 +143,7 @@ at 70°, it is about 11.1 km tall and 3.8 km wide — the same box in the code, 
 This has a direct effect on code you will be tempted to write. A query like this looks like it asks
 for everything within about 5 km:
 
+<!-- CODE-ILLUSTRATIVE naive fixed-degree bounding box, not our code -->
 ```sql
 -- Wrong, and wrong by a different amount depending on where you run it.
 WHERE lat BETWEEN :lat - 0.045 AND :lat + 0.045
@@ -265,6 +268,7 @@ because nothing here ever needs to leave 4326 — which is the subject of the la
 
 Every geometry column in this project is declared the same way:
 
+<!-- CODE-FROM web/src/Catalog/Doctrine/GeometryType.php -->
 ```sql
 geometry(Geometry, 4326)
 ```
