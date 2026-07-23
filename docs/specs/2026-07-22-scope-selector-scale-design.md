@@ -132,7 +132,11 @@ visitor.
 - **Point → region resolver** (client-side): bbox test over the registry, used by
   §C. No new endpoint; `/map/scope/boundary` already exists for the union
   geometry if a polygon-precise test is later wanted.
-- `scope_countries` (already injected) drives the cold-start country rungs.
+- The cold-start country rungs are derived client-side, NOT server-injected:
+  `renderScopeChips()` (`map.js`) walks the already-injected `window.CC_REGIONS`
+  registry, dedupes by `countryCode`, and label-sorts the result (a
+  `scope_countries` server variable was planned here but removed as dead code,
+  `a1bcf14` — the registry alone is sufficient).
 
 ## F. Privacy & consent posture (banner-free by construction)
 

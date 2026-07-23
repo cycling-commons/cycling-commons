@@ -532,9 +532,12 @@ audited `1cd5f44..HEAD`; 10 findings + 5 info items, all resolved:
    season facet with the scope (the two setFilter sites used to overwrite each
    other).
 6. *Single-country selector hardcoding* (LOW-MED). Fixed: one country rung per
-   distinct registry country (`scope_countries`), labels follow the per-key
-   convention `region.all_<cc>.label` (was `all_belgium`) — a country import
-   adds its key exactly like `region.<slug>.label`.
+   distinct registry country, labels follow the per-key convention
+   `region.all_<cc>.label` (was `all_belgium`) — a country import adds its key
+   exactly like `region.<slug>.label`. (As of
+   2026-07-22-scope-selector-scale-design.md §B, the rungs themselves are
+   derived client-side from `window.CC_REGIONS` — the `scope_countries` server
+   variable floated here was later dropped as dead code, `a1bcf14`.)
 7. *Empty registry blanked the header* (LOW). Fixed: `applyScope` rewrites the
    header/kicker/search-title only when the rail can label the scope; the
    server-rendered fallbacks survive a region-less install.
