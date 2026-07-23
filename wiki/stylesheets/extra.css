@@ -338,3 +338,38 @@
   padding-left: 1.85em;
   text-indent: -1.85em;
 }
+
+/* ---- code blocks wrap instead of scrolling sideways -----------------------
+   Material's default is a horizontal scrollbar on an overflowing block. For
+   this wiki that is the wrong trade: the excerpts are real lines from the
+   repo — a SQL predicate, a PHP array entry — and they are frequently wider
+   than the column. A reader should not have to drag a block sideways to find
+   out how a sentence they are being taught actually ends, and on a phone the
+   hidden half is effectively invisible.
+
+   So blocks wrap. Two details make wrapped code readable rather than mush:
+
+     - `overflow-wrap: break-word` (not `anywhere`) breaks only when a single
+       token genuinely cannot fit, so identifiers stay whole wherever there is
+       a space to break at instead.
+     - the hanging indent means a continuation line is visibly a continuation
+       and not a new statement, which is the thing that makes wrapped code
+       hard to read.
+
+   Only whitespace and wrapping are set here. Do NOT add background, colour or
+   padding to this rule — an earlier attempt to restyle `pre > code` stripped
+   the dark ground off every block and left pale tokens on pale paper. */
+.md-typeset pre > code {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  /* The hanging indent must be ADDED to the block's normal side padding, not
+     substituted for it: `padding-left: 2.2ch` alone left the first line of
+     every block flush against the dark edge. Base padding first, hang on top,
+     so line one sits comfortably inside and continuations sit 2.2ch further. */
+  padding-left: calc(1.15rem + 2.2ch);
+  text-indent: -2.2ch;
+}
+.md-typeset .highlight pre,
+.md-typeset pre { overflow-x: auto; }        /* keep as a fallback, rarely hit now */
+.md-typeset .highlight > pre { overflow-x: clip; }
