@@ -357,24 +357,58 @@ def test_a_non_owning_extract_does_not_create_the_row(db):
 
 def test_owner_dropping_the_entity_removes_it(db):
     """The week-long-disappearance case, inverted: once ownership is deterministic,
-    the OWNER's next run is the only thing that can delete the row — and it does."""
+    only the OWNER's next run can delete the row — and a non-owning extract that
+    still carries the SAME entity (Geofabrik's cuts overlap) can never resurrect
+    it, even when that non-owner runs again after the owner has dropped it
+    (2026-07-23-border-overlap-ownership-design.md §4)."""
     ensure_schema(db)
     db.execute(
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
         "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
+        "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
     db.commit()
-    row = _row("node/gone", "C", lon=3.5, lat=50.5)
+    row = _row("node/gone", "C", lon=3.5, lat=50.5)   # geometrically inside BE, not NL
 
-    load_region(db, [row], "europe/belgium", "BE")
-    assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 1
+    # Two stable placeholders (also inside BE) keep the BE load within
+    # DRIFT_ABORT_RATIO once node/gone is trimmed below — dropping 1 of 3 rows
+    # stays under the 40% guard, unrelated to ownership, so the assertions below
+    # isolate the ownership behaviour under test.
+    placeholder1 = _row("node/stays1", "C", lon=3.5, lat=50.5)
+    placeholder2 = _row("node/stays2", "C", lon=3.5, lat=50.5)
 
-    # A stable placeholder keeps this load within DRIFT_ABORT_RATIO (unrelated to
-    # ownership — a single-row region would otherwise trip that guard on ANY
-    # change) so the assertion below isolates the ownership behaviour under test.
-    placeholder = _row("node/stays", "C", lon=3.5, lat=50.5)
-    load_region(db, [placeholder], "europe/belgium", "BE")  # node/gone trimmed from the extract
-    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
-    assert refs == {"node/stays"}, "the owner's next run must delete the row it no longer carries"
+    load_region(db, [row, placeholder1, placeholder2], "europe/belgium", "BE")
+    assert db.execute(
+        "SELECT count(*) FROM coverage_poi WHERE ref = 'node/gone'"
+    ).fetchone()[0] == 1
+    db.commit()   # close out the SELECT's implicit tx so the next load_region starts fresh,
+                  # not nested as a savepoint (its TEMP staging table needs a real COMMIT to drop)
+
+    # Geofabrik's cut overlap means the NL extract ALSO carries this entity, even
+    # though it geometrically belongs to BE. A non-owning extract's run must not
+    # steal ownership or duplicate the row.
+    load_region(db, [row], "europe/netherlands", "NL")
+    owner = db.execute(
+        "SELECT s.slug FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id "
+        "WHERE p.ref = 'node/gone'"
+    ).fetchone()
+    assert owner == ("europe/belgium",), "a non-owning extract must not take ownership"
+    db.commit()
+
+    # The OWNER trims node/gone from its extract...
+    load_region(db, [placeholder1, placeholder2], "europe/belgium", "BE")
+    assert db.execute(
+        "SELECT count(*) FROM coverage_poi WHERE ref = 'node/gone'"
+    ).fetchone()[0] == 0, "the owner's next run must delete the row it no longer carries"
+    db.commit()
+
+    # ...and the non-owner, which still carries the entity, must not resurrect it
+    # on a later run — the old last-writer-wins bug this design fixes.
+    load_region(db, [row], "europe/netherlands", "NL")
+    assert db.execute(
+        "SELECT count(*) FROM coverage_poi WHERE ref = 'node/gone'"
+    ).fetchone()[0] == 0, "a non-owning extract must never resurrect a dropped row"
 
 
 def test_rows_in_no_onboarded_region_are_dropped(db):
