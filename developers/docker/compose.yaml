@@ -128,6 +128,7 @@ services:
       - ../../mkdocs.yml:/docs/mkdocs.yml:ro
       - ../../wiki:/docs/wiki:ro
       - ../../overrides:/docs/overrides:ro   # theme.custom_dir in mkdocs.yml (analytics partial; host-guarded, off in dev)
+      - ../../tools:/docs/tools:ro           # mkdocs.yml `hooks:` — without this the container aborts with a config error
 
   # ---- opt-in: routing engine (consumes a PREBUILT tile set you download) --
   valhalla:
