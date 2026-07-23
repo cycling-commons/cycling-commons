@@ -344,7 +344,7 @@
    Material keeps display:none on desktop (it opens the table of contents in
    the mobile drawer). A blanket `display: block` forced that label visible and
    the current page appeared twice in the sidebar. */
-.md-nav__item--nested > .md-nav > .md-nav__list > .md-nav__item > a.md-nav__link {
+.md-nav__item--nested .md-nav__item--nested > .md-nav > .md-nav__list > .md-nav__item > a.md-nav__link {
   display: block;
   padding-left: calc(16px + 1.85em);
   text-indent: -1.85em;
