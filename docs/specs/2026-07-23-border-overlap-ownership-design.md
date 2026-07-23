@@ -88,20 +88,97 @@ The check needs `region.geom`, which the pipeline already queries in the
 membership steps. Cost: one point-in-polygon pass over the staged rows per run,
 against the running country's regions only.
 
-### Cases to settle before coding
+### Cases settled by the owner (2026-07-23)
 
-- **An entity in no onboarded region at all** (outside every polygon, or in a
-  country we have not onboarded but whose territory the extract covers). Today it
-  is kept with `region_id NULL`. Under the new rule it has no owner — decide
-  whether the harvesting extract keeps it as an unowned row, or it is dropped.
-  380 rows are in this state today.
-- **The boundary-snap rows** (3,431). They are outside every polygon by up to
-  ~1.1 km, so a strict point-in-polygon ownership test would orphan them.
-  Ownership must use the same snap tolerance the membership step does, or these
-  rows lose their owner.
-- **Backfill.** The 319 mis-owned rows need one corrective pass; a full re-harvest
-  of all three extracts also fixes them, and one is pending anyway for the tag
-  trim (storage backlog issue 4).
+**1. An entity in no onboarded region at all → DROP at staging.**
+
+Measured before deciding: all 380 are foreign or offshore, not "in the country but
+outside every province". That case is already rescued by the 1.1 km snap; these
+survived it.
+
+| stamped | rows | nearest region | what it actually is |
+|---|---|---|---|
+| DE | 195 | `sachsen` (0.7–14.1 km) | across the Czech / Polish border |
+| DE | 122 | `bayern` (0.8–10.4 km) | across the Austrian / Czech border |
+| DE | 24 | `baden-wurttemberg` (0.9–18.6 km) | across the Swiss / French border |
+| DE | 29 | various (0.7–3.2 km) | scattered border and coast |
+| NL | 4 | `friesland` (1.0–2.7 km) | Wadden Sea |
+| NL | 1 | `noord-holland` (5.1 km) | offshore |
+| BE | 5 | `wallonia` (0.8–5.4 km) | France and Luxembourg |
+
+278 of the 380 are letter `I` (scenic views) — viewpoints just over the Czech and
+Austrian borders that Geofabrik's cut overshoots into Germany's extract.
+
+Keeping them means continuing to serve a Czech viewpoint as `country_code = 'DE'`
+under "All Germany". Dropping is reversible in the only way that matters: onboarding
+CZ/AT/PL/CH/FR/LU re-harvests them **with correct region stamps**.
+
+Rejected: keeping the row but stripping its `country_code` so it cannot appear under
+a country scope. It does not work — `scope.js`'s `coverageTileFilter()` treats a row
+with neither a region nor a country token as *prop-less*, which **renders under every
+scope** by design (so a stale tile artifact never blanks the map). A stamp-less Czech
+viewpoint would therefore appear under a Dutch region scope. Distinguishing "outside
+coverage" from "prop-less/stale" needs a new third state in the tile filter — real
+scope creep on a determinism fix.
+
+**2. The boundary-snap rows (3,431) → ownership reuses today's snap UNCHANGED**
+(`BOUNDARY_SNAP_DEG = 0.01`, ~1.1 km, same-`country_code` guard). This change does
+exactly one thing: make ownership deterministic. Nothing regresses and the diff stays
+reviewable.
+
+Distance distribution, for whoever revisits the tolerance:
+
+| outside by | rows | cumulative |
+|---|---|---|
+| ≤100 m | 1,180 | 34 % |
+| ≤200 m | 1,845 | 54 % |
+| ≤300 m | 2,291 | 67 % |
+| ≤500 m | 2,793 | 81 % |
+| 500–1,094 m | 638 | 100 % |
+
+**Known and accepted consequence:** see §3.1 — the snap's country guard is unsound,
+so a genuinely foreign entity within 1.1 km of our border keeps a wrong owner. That
+is the status quo; this change neither fixes nor worsens it.
+
+**3. Backfill → fold into the pending tag-trim re-harvest.** Land the ownership
+change first, then run ONE full re-harvest of all three extracts. That fixes the 319,
+applies the `storedTagKeys` trim (storage backlog issue 4 step 2) and rebuilds the
+coverage tiles in a single pass, with no separate corrective migration to write,
+test and review.
+
+### 3.1 Prerequisite finding: the snap's country guard is unsound
+
+Not part of this change, but it must be recorded, because §3's phrasing ("ownership
+must use the same snap tolerance") would otherwise read as an endorsement.
+
+`pipeline/coverage/load.py:247` snaps an unstamped POI to the nearest region where
+`r.country_code = c.country_code`, commented as *"Constrained to the same
+country_code so a true country-border row is never pulled across"*. But at that point
+`c.country_code` is **stamped from extract config** (`load.py:64`) — it is the
+extract's country, not the entity's. So a Danish entity in Germany's extract arrives
+as `DE`, matches a German region, snaps in, and the `region ⇒ cc` step then confirms
+`DE`. The guard compares a value that is already wrong.
+
+Evidence, self-proving because the POI names its own country:
+
+```
+way/964406030   9.4316, 54.8322   0.70 km outside schleswig-holstein
+  {"amenity":"shelter", "shelter_type":"lean_to",
+   "website":"https://udinaturen.dk/shelter/105512"}
+```
+
+`udinaturen.dk` is the Danish Nature Agency's shelter registry. 327 rows carry a
+foreign TLD under an onboarded stamp, clustering on Germany's land borders (cz 83,
+at 65, fr 55, ch 32, dk 21, lu 21, pl 21; 309 of them region-stamped). A foreign TLD
+is a signal, not proof — border businesses do use a neighbour's domain — but the
+`.dk` government-registry case is unambiguous.
+
+Fixing this properly needs real national frontiers (a DK/CZ/PL/AT/CH/FR/LU boundary
+source), so that "is this ours" stops being inferred from extract config. Tracked
+separately; **do not fold it into this change.** The measurement it needs first is
+the simplification tolerance of our own `region.geom`, without which any tightened
+snap threshold is a guess that would orphan legitimately-German rows to catch foreign
+ones.
 
 ## 4. Verification this needs
 
@@ -113,6 +190,12 @@ against the running country's regions only.
   resurrected by it.
 - Post-change query: the §1 table must show zero rows whose owning extract's
   country differs from the row's `country_code`.
+- A test that an entity in no onboarded region is **not staged** (decision 1), and
+  that a row within `BOUNDARY_SNAP_DEG` of a region of the extract's country still
+  is (decision 2) — the two decisions meet at that boundary and must not be
+  conflated.
+- Post-change count: `coverage_poi WHERE region_id IS NULL` must be **0**, down
+  from 380. This is the cheapest single check that decision 1 actually took effect.
 
 ## 5. Relationship to other work
 
