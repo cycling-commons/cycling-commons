@@ -1,0 +1,33 @@
+wiki/developers/gis/spatial-questions.md
+  s_f3f9c3dc9409c4::t_2c278d25e4631f 117-127,136-143,146-148
+  s_f3f9c3dc9409c4::t_501b4116efdcc1 144-145
+  s_f3f9c3dc9409c4::t_f3ec3a1daad7bf 207-220
+  s_f3f9c3dc9409c4::t_88c1df33c46f8b 277-278
+docs/specs/2026-07-23-gis-primer-design.md
+  s_f3f9c3dc9409c4::t_6da420da7da234 246
+wiki/developers/gis/tiles.md
+  s_f3f9c3dc9409c4::t_e7e8bc5a574465 44-47
+  s_f3f9c3dc9409c4::t_42b81a1772fe09 158-160
+  s_f3f9c3dc9409c4::t_957a23cbf7b406 211-216
+  s_f3f9c3dc9409c4::t_d4fd6bd3a31fa2 270-274
+  s_f3f9c3dc9409c4::t_affd2131ba4d54 73-74
+wiki/developers/gis/on-screen.md
+  s_f3f9c3dc9409c4::t_eddac9a3029b37 58-60
+  s_f3f9c3dc9409c4::t_3b130e160047f0 78-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "af9f84d89e633abd70ee0d87675d481098e2e5ac",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
