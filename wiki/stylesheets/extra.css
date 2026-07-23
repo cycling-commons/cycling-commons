@@ -252,8 +252,14 @@
    the sentence. Inline code now sits on a soft tint of the page's own paper,
    with ink text — still unmistakably code, but it reads as part of the prose
    instead of interrupting it. Fenced BLOCKS keep the dark spruce ground: a
-   block is meant to be a distinct object on the page, an inline span is not. */
-.md-typeset code {
+   block is meant to be a distinct object on the page, an inline span is not.
+
+   SCOPING MATTERS HERE. Select only code that is NOT inside a <pre>. An
+   earlier version styled `.md-typeset code` and then tried to undo it again
+   on `pre > code`; the undo stripped the dark background off every fenced
+   block and left pale syntax colours on pale paper — unreadable. Never reach
+   into pre from these rules. */
+.md-typeset :not(pre) > code {
   font-family: "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: .74em;
   padding: .12em .36em;
@@ -270,11 +276,6 @@
 /* headings shouldn't gain a tinted box */
 .md-typeset h1 code, .md-typeset h2 code, .md-typeset h3 code, .md-typeset h4 code {
   background: none; box-shadow: none; padding: 0; font-size: .9em;
-}
-/* a fenced block is already padded and dark — reset the inline treatment */
-.md-typeset pre > code {
-  padding: 0; font-size: .78rem; border-radius: 0;
-  background: none; box-shadow: none; color: inherit;
 }
 
 /* (2) syntax tokens on the dark spruce ground */
@@ -319,3 +320,17 @@
 .md-typeset .md-clipboard:hover, .md-typeset pre:hover .md-clipboard {
   color: var(--cc-tok-num);
 }
+
+/* ---- numbered nav entries hang correctly ---------------------------------
+   The GIS course chapters are numbered in the nav ("6 · From OpenStreetMap to
+   our database"). A long title wraps, and by default the second line starts
+   under the number, so the wrapped text reads as if it belonged to the digit
+   rather than to the title. A hanging indent puts every continuation line
+   under the first letter of the title instead. 1.85em clears "10 · ". */
+.md-nav__item .md-nav__link {
+  padding-left: 1.85em;
+  text-indent: -1.85em;
+}
+/* the section label ("For developers") and its toggle are not numbered */
+.md-nav__item--nested > .md-nav__link,
+.md-nav__title { padding-left: 0; text-indent: 0; }

@@ -37,7 +37,22 @@ fit the page is fine, but changing an identifier is not. A line consisting of
 an ellipsis (`...`, `…`, or those inside a comment) marks an elision and is
 skipped, so a quote may omit the boring middle of a function.
 
-Usage:  tools/check-wiki-code-drift.py [--list]
+Two ways to run it, because the right answer depends on who is committing:
+
+    --strict     (default) drift is an error. Used when WIKI pages are staged:
+                 you are editing the docs, so the docs must be right.
+
+    --warn-only  drift is reported loudly and exits 0. Used when SOURCE files
+                 are staged. Blocking a RideCheckService change because a wiki
+                 page quotes it is backwards — it holds business code hostage
+                 to documentation, and the predictable result is --no-verify,
+                 which kills the gate's credibility altogether. So the code
+                 change lands, and the developer is told exactly which pages
+                 just went stale while they still have the context to fix them.
+                 `make wiki-check` and CI still fail, so the wiki cannot ship
+                 stale; it just cannot block unrelated work.
+
+Usage:  tools/check-wiki-code-drift.py [--list] [--warn-only]
         --list  report every fence and its kind, then exit 0
 """
 from __future__ import annotations
@@ -113,6 +128,7 @@ def check_quote(src: Path, body: list[str]) -> list[str]:
 
 def main() -> int:
     listing = "--list" in sys.argv
+    warn_only = "--warn-only" in sys.argv
     problems, counts = [], {"from": 0, "illustrative": 0}
 
     for page in wiki_pages():
@@ -152,6 +168,21 @@ def main() -> int:
         print(f"\n{counts['from']} quoted, {counts['illustrative']} illustrative")
 
     if problems:
+        if warn_only:
+            print(
+                "\n⚠  This change makes the wiki stale — NOT blocking your commit.\n",
+                file=sys.stderr,
+            )
+            for p in problems:
+                print(f"  {p}", file=sys.stderr)
+            print(
+                "\nYour code change is fine and is being committed. The pages above now\n"
+                "quote code that no longer exists. Fix them while you still have the\n"
+                "context — `make wiki-check` and CI will fail until you do.",
+                file=sys.stderr,
+            )
+            return 0
+
         print("\nwiki code-drift check FAILED:\n", file=sys.stderr)
         for p in problems:
             print(f"  {p}", file=sys.stderr)

@@ -52,14 +52,32 @@ repos:
       # still building clean. Every fenced block must declare whether it
       # quotes the repo (CODE-FROM, verified line by line against the source)
       # or is a hand-written teaching example (CODE-ILLUSTRATIVE, with a note
-      # telling the reader which it is). Runs on any staged wiki page OR any
-      # staged source file, because drift is usually introduced by the code
-      # change, not by the page.
+      # telling the reader which it is).
+      #
+      # Split deliberately by who is committing:
+      #   editing a WIKI page  -> hard fail. You are touching the docs, so the
+      #                           docs must be right.
+      #   editing SOURCE       -> warn, never block. Holding a RideCheckService
+      #                           change hostage to a wiki page is backwards,
+      #                           and the predictable result is --no-verify,
+      #                           which kills the gate's credibility. The commit
+      #                           lands and the developer is told which pages
+      #                           just went stale, while they still have the
+      #                           context to fix them. `make wiki-check` and CI
+      #                           still fail, so the wiki cannot SHIP stale — it
+      #                           just cannot block unrelated work.
       - id: check-wiki-code-drift
         name: wiki code excerpts still match the code they quote
         entry: tools/check-wiki-code-drift.py
         language: python
-        files: ^(wiki/.*\.md|web/.*\.(php|js)|pipeline/.*\.py)$
+        files: ^wiki/.*\.md$
+        pass_filenames: false
+
+      - id: warn-wiki-code-drift
+        name: does this code change make the wiki stale? (warning only)
+        entry: tools/check-wiki-code-drift.py --warn-only
+        language: python
+        files: ^(web/.*\.(php|js)|pipeline/.*\.py)$
         pass_filenames: false
       # four (en/fr/nl/de). Runs only when translation files are staged;
       # skips gracefully without php/vendor (CI still enforces it).
