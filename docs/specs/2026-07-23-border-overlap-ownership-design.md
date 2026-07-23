@@ -1,0 +1,125 @@
+<!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
+
+# Border-overlap ownership + region_id on re-harvest — design
+
+**Status:** design, not executed. Measured against the live dev DB 2026-07-23
+(BE + NL + DE, 375,078 `coverage_poi` rows).
+**Audience:** contributors to the coverage pipeline.
+
+## 1. What is actually wrong (measured, not assumed)
+
+Geofabrik's per-country extracts **overlap at shared borders**, so one OSM entity
+arrives in more than one extract. `load_region` resolves that with
+`ON CONFLICT (ref, letter) DO UPDATE` — **last writer wins** — and the row's
+`src_region_id` becomes whichever extract ran most recently.
+
+Measured today:
+
+| owning extract | stamped country | rows |
+|---|---|---|
+| `europe/germany` | DE | 317,693 |
+| `europe/germany` | **NL** | **136** |
+| `europe/germany` | **BE** | **58** |
+| `europe/netherlands` | NL | 34,354 |
+| `europe/netherlands` | **BE** | **125** |
+| `europe/belgium` | BE | 22,712 |
+
+**319 rows are owned by an extract from the wrong country.**
+
+What is NOT wrong — worth stating, because it narrows the fix:
+
+- **`country_code` is correct on every row.** 0 rows where the stamped country
+  disagrees with the region's country. The "region ⇒ cc" step in `load_region`
+  treats the region as authoritative and actively corrects a neighbour extract's
+  wrong stamp, so a border entity reads BE even when Germany's extract wrote it.
+- **`region_id` is broadly correct.** 380 of 375,078 rows (0.1 %) carry no region
+  at all. 3,431 (0.9 %) sit in a region whose polygon does not strictly contain
+  them — but that is the deliberate `BOUNDARY_SNAP_DEG` rescue for
+  polygon-simplification gaps, not corruption.
+
+So this is **not a data-correctness bug today**. It is an ownership bug with two
+real consequences and one structural one.
+
+## 2. Why it still has to be fixed
+
+1. **A border entity can vanish for up to a week.** `load_region` deletes its
+   whole slice (`DELETE WHERE src_region_id = :sid`) and re-inserts from staging.
+   If entity X is owned by the Netherlands run but Geofabrik trims it out of the
+   NL extract, the NL run deletes X and nothing re-creates it until Belgium's run
+   comes round. X is on the map one day and gone the next, with no error.
+2. **The drift-abort guard is noisy.** `DRIFT_ABORT_RATIO` compares this run's row
+   count against the previous run *for the same `src_region_id`*. Because border
+   entities flap between owners week to week, that baseline moves for reasons
+   that have nothing to do with the extract's real content.
+3. **It blocks partitioning** (storage backlog issue 5). Partitioning
+   `coverage_poi` by `src_region_id` — the fix for the compaction/bloat story —
+   requires the unique key to include the partition key. The global
+   `UNIQUE (ref, letter)` exists precisely *because* ownership is
+   nondeterministic. Make ownership deterministic and the constraint can become
+   partition-local, which unblocks the partitioning work.
+
+## 3. The fix: decide ownership by geometry, not by write order
+
+Assign every entity to exactly one extract **before** it reaches
+`coverage_poi`, by the same point-in-polygon machinery that already stamps
+`region_id` and `country_code`.
+
+**Rule:** an extract owns an entity iff the entity's location falls inside a
+region belonging to that extract's configured country. An entity in the
+Netherlands is owned by `europe/netherlands` no matter how many extracts contain
+it, and Germany's run skips it.
+
+Consequences:
+
+- Ownership stops depending on run order, so `src_region_id` stops flapping.
+- Each entity is refreshed by exactly one extract, on that extract's schedule —
+  the week-long disappearance in §2.1 becomes impossible.
+- The drift baseline becomes stable.
+- `UNIQUE (ref, letter)` can become partition-local, because two extracts can no
+  longer produce the same `(ref, letter)`.
+
+### Where it goes
+
+The natural home is the **staging step**, not the upsert: filter the staged rows
+to those the running extract owns, before the `DELETE`/`INSERT` swap. That keeps
+one transaction and one atomic slice swap.
+
+The check needs `region.geom`, which the pipeline already queries in the
+membership steps. Cost: one point-in-polygon pass over the staged rows per run,
+against the running country's regions only.
+
+### Cases to settle before coding
+
+- **An entity in no onboarded region at all** (outside every polygon, or in a
+  country we have not onboarded but whose territory the extract covers). Today it
+  is kept with `region_id NULL`. Under the new rule it has no owner — decide
+  whether the harvesting extract keeps it as an unowned row, or it is dropped.
+  380 rows are in this state today.
+- **The boundary-snap rows** (3,431). They are outside every polygon by up to
+  ~1.1 km, so a strict point-in-polygon ownership test would orphan them.
+  Ownership must use the same snap tolerance the membership step does, or these
+  rows lose their owner.
+- **Backfill.** The 319 mis-owned rows need one corrective pass; a full re-harvest
+  of all three extracts also fixes them, and one is pending anyway for the tag
+  trim (storage backlog issue 4).
+
+## 4. Verification this needs
+
+- A pipeline test with two synthetic overlapping extracts and an entity in the
+  overlap, asserting the same extract owns it regardless of load order — run the
+  loads in both orders and assert an identical `src_region_id`.
+- A test that an entity dropped from its owner's extract disappears on that
+  owner's next run, and that an entity present in a *non-owning* extract is not
+  resurrected by it.
+- Post-change query: the §1 table must show zero rows whose owning extract's
+  country differs from the row's `country_code`.
+
+## 5. Relationship to other work
+
+- **Storage backlog issue 5** (partition `coverage_poi` by `src_region_id`) is
+  blocked on this and should follow it directly.
+- **Storage backlog issue 4** step 2 (the `storedTagKeys` trim) needs a
+  re-harvest to take effect on existing rows. Doing that re-harvest *after* this
+  change lands means one harvest instead of two.
+- `docs/specs/coverage-provider.md` §3 documents the current last-writer-wins
+  behaviour and must be updated when this ships.
