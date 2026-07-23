@@ -322,6 +322,15 @@
           }
         });
         html+='</div>';
+        // Regions the grid could not place WITHOUT misstating their direction
+        // (compassLayout caps displacement at one slot — see scope.js). They are
+        // still among the 8 nearest, so they must stay reachable: list them under
+        // the grid as ordinary chips rather than dropping them. Bavaria and
+        // Utrecht both hit this: a corner region's neighbours cluster on one
+        // side, so the far cells can only be filled by lying about a bearing.
+        layout.overflow.forEach(r=>{
+          html+=`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label||r.slug)}</button>`;
+        });
         // More/All-country stay BELOW the grid in plain linear flow — neither
         // is a geographic neighbour, so neither may occupy a compass cell.
         const shownTotal=pool.length+1; // +1 the centre

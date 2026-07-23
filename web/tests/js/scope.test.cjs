@@ -1008,5 +1008,33 @@ test('compassLayout: real Dutch province bboxes, Utrecht origin, land in plausib
   assert.equal(g.e.slug, 'gelderland');
   assert.equal(g.s.slug, 'noord-brabant');
   assert.equal(g.w.slug, 'zuid-holland');
-  assert.deepEqual(g.overflow, []);
+  // Overijssel's true bearing from Utrecht is ~61° (NE), but N/NE/E are all taken
+  // by nearer provinces (Noord-Holland, Flevoland, Gelderland) and every free cell
+  // left is more than one slot away. It overflows to the list below the grid
+  // rather than being shown in a cell that would misstate where it is — the
+  // displacement cap, deliberate. See the one-slot test above.
+  assert.deepEqual(g.overflow.map((r) => r.slug), ['overijssel']);
+});
+
+// A region must never be shown in a cell that misstates its direction. The ideal
+// cell is within 22.5° of true bearing; one slot of displacement is <= 67.5° and
+// still a fair hint, two slots is <= 112.5° and would put a WESTERN neighbour in
+// the south cell. Bavaria is the real case: as Germany's south-east corner its
+// neighbours all cluster N/NW/W, so the far cells can only be filled by lying.
+test('compassLayout: never displaces a region more than one slot — it overflows instead', () => {
+  const S = freshScope([]);
+  // Five regions all due WEST of the origin at varying distances. Only w, and its
+  // two adjacent cells (nw, sw), are within one slot of a due-west bearing — the
+  // remaining two must overflow rather than be dumped in n/s/e.
+  const west = [1, 2, 3, 4, 5].map((i) => ({
+    id: i, slug: 'w' + i, countryCode: 'XX', label: 'W' + i,
+    bbox: [-i - 0.1, 49.9, -i + 0.1, 50.1],   // due west, increasing distance
+  }));
+  const out = S.compassLayout([0, 50], west);
+  const placed = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'].filter((k) => out[k]);
+  assert.deepEqual(placed.sort(), ['nw', 'sw', 'w']);   // only the westerly cells
+  assert.equal(out.overflow.length, 2);                 // the rest are NOT mis-placed
+  assert.equal(out.n, null);
+  assert.equal(out.s, null);
+  assert.equal(out.e, null);
 });

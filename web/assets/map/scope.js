@@ -603,6 +603,9 @@
     compassLayout(origin, regionsList) {
       const SLOTS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
       const ANGLE = { n: 0, ne: 45, e: 90, se: 135, s: 180, sw: 225, w: 270, nw: 315 };
+      // Max angle a region may be moved from its true bearing to fit a free cell
+      // (one slot: 22.5° worst-case ideal offset + 45° of displacement).
+      const MAX_SLOT_DISPLACEMENT_DEG = 67.5;
       const result = { n: null, ne: null, e: null, se: null, s: null, sw: null, w: null, nw: null, overflow: [] };
       if (!origin || !Array.isArray(regionsList) || !regionsList.length) return result;
       const ox = origin[0]; const oy = origin[1];
@@ -629,6 +632,15 @@
             const wrapped = Math.min(diff, 360 - diff);
             if (wrapped < bestDiff) { bestDiff = wrapped; best = s; }
           });
+          // Displace by at most ONE slot. The ideal cell is always within 22.5°
+          // of the true bearing, so one slot over is ≤ 67.5° — still a fair hint.
+          // Two slots over is ≤ 112.5°, which puts a WESTERN neighbour in the
+          // south cell: the grid would then assert a direction that is simply
+          // wrong, which is worse than not placing it. Bavaria is the real case —
+          // as Germany's south-east corner its neighbours all cluster N/NW/W, so
+          // the far slots can only be filled by lying. Those regions fall to
+          // `overflow` and the caller lists them below the grid instead.
+          if (bestDiff > MAX_SLOT_DISPLACEMENT_DEG) { result.overflow.push(r); return; }
           slot = best;
         }
         result[slot] = r;
