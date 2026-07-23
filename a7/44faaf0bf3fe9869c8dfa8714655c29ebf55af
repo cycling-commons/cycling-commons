@@ -1,0 +1,29 @@
+wiki/developers/gis/osm-to-database.md
+  s_f3f9c3dc9409c4::t_baa589991da97c 223-224,275-276
+wiki/developers/gis/tiles.md
+  s_f3f9c3dc9409c4::t_4a6fd5655a54d4 61,63,273,276,318,321
+wiki/developers/gis/on-screen.md
+  s_f3f9c3dc9409c4::t_baa589991da97c 64-65
+wiki/developers/gis/spatial-questions.md
+  s_f3f9c3dc9409c4::t_402f267596df43 283-288
+  s_f3f9c3dc9409c4::t_30351f53638a21 170-171
+  s_f3f9c3dc9409c4::t_63659d4573d21f 276-278,280-282,289-301
+  s_f3f9c3dc9409c4::t_abe382cb1cd57a 279
+  s_f3f9c3dc9409c4::t_962c8d461f1f11 163-169,172-192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a744faaf0bf3fe9869c8dfa8714655c29ebf55af",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
