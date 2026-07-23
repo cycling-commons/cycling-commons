@@ -76,8 +76,16 @@ def norm(line: str) -> str:
 
 
 def wiki_pages() -> list[Path]:
+    # `--others --exclude-standard` includes NEW pages that are not staged yet.
+    # Without it a brand-new chapter was invisible to this check: `git ls-files`
+    # alone lists only tracked files, so `make wiki-check` passed while an
+    # unmarked or drifted fence sat in an untracked page. It happened to be
+    # caught at commit time (pre-commit stages first, which makes the file
+    # tracked), but the manual and CI-on-a-fresh-branch paths both had the hole.
+    # Ignored files stay excluded, so build output under wiki-dist/ is not read.
     out = subprocess.run(
-        ["git", "ls-files", "wiki/*.md", "wiki/**/*.md"],
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard",
+         "wiki/*.md", "wiki/**/*.md"],
         cwd=ROOT, capture_output=True, text=True, check=True,
     ).stdout.split()
     return [ROOT / p for p in sorted(set(out))]

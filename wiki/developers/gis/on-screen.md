@@ -281,4 +281,36 @@ way to answer "what's here?" except by asking somewhere else.
 - **`queryRenderedFeatures`** answers "what's under this click?" from geometry already in the
   browser — the concrete payoff of vector tiles over raster ones.
 
-<!-- EXERCISE-SLOT ch=8 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — connect a `source-layer` name to real rows"
+    `addCoverage()` reads one `coverage` source and slices it by `source-layer` — `c_be` for
+    Belgian water points, and so on. Fetch the running map page to see the URL that source actually
+    points at, then ask the database how many rows feed the `c_be` slice of it.
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's web app and Postgres -->
+    ```sh
+    curl -s http://localhost:8001/map | grep -o 'CC_COVERAGE_URL[^;]*;'
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
+    SELECT count(*) AS c_be_rows FROM coverage_poi WHERE letter='C' AND country_code='BE';
+    "
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+    CC_COVERAGE_URL = "http:\/\/localhost:9100\/cc-maps\/coverage\/20260722-2112.pmtiles";
+     c_be_rows
+    -----------
+          1369
+    (1 row)
+    ```
+
+    The first line is the exact `pmtiles://` URL `map.js` hands to `maplibregl.addProtocol` for the
+    `coverage` source — the versioned key will differ on your machine and change every time the
+    pipeline republishes, which is expected (`tiles.md` covers why). The count is the same 1,369 you
+    would find in chapter 7's `(letter, country_code)` table for `C`/`BE` — it is not a coincidence,
+    it is the same underlying rows, once counted directly and once addressed by the layer name
+    `c_be` a MapLibre `addLayer({source:'coverage', 'source-layer':'c_be', ...})` call reads. If
+    `CC_COVERAGE_URL` prints empty on your machine, the pipeline hasn't published a coverage archive
+    yet (`make coverage-refresh`) — the row count still works regardless, because it never depended
+    on the tile archive existing.

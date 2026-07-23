@@ -324,4 +324,46 @@ The fountain now has a row of its own — a Point, a handful of trimmed tags, a 
 stamp. A browser still cannot be handed that row directly: chapter 7 (`tiles.md`) is where it becomes
 part of a small file a map can actually fetch.
 
-<!-- EXERCISE-SLOT ch=6 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — apply the allow-list to a real row's tags"
+    A drinking-water fountain mapped as public art in Brussels carries 24 tags in this dev
+    database — `wikidata`, `mapillary`, `artist_name`, five `name:xx` translations, a `flow_rate`,
+    and more, the pre-narrowing set this chapter's "before this trim was added" paragraph describes.
+    Query the row and, in the same statement, filter that same tag set down to the contract's
+    27-key allow-list, to see live how few of them the narrowing step actually would keep.
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
+    SELECT
+      (SELECT jsonb_agg(k ORDER BY k) FROM jsonb_object_keys(tags) k) AS all_keys,
+      (SELECT jsonb_agg(k ORDER BY k) FROM jsonb_object_keys(tags) k
+         WHERE k = ANY(ARRAY['addr:city','addr:housenumber','addr:street','amenity','capacity',
+           'contact:phone','contact:website','description','drinking_water','fee','historic','image',
+           'natural','opening_hours','operator','phone','railway','shelter_type','shop','tourism','url',
+           'waterway','website','wheelchair','wikidata','wikimedia_commons','wikipedia'])) AS kept
+    FROM coverage_poi WHERE ref='node/8883840614';
+    "
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+                            all_keys                          |                    kept
+    ----------------------------------------------------------+---------------------------------------------
+     ["access","amenity","artist_name","artist:wikidata",      ["amenity","drinking_water","fee","tourism",
+      "artwork_type","bottle","check_date","drinking_water",    "wikidata","wikimedia_commons","wikipedia"]
+      "fee","flow_rate","fountain","maintenance","mapillary",
+      "material","name:de","name:en","name:fr","name:la",
+      "name:nl","stateofrepair","tourism","wikidata",
+      "wikimedia_commons","wikipedia"]
+    (1 row)
+    ```
+
+    24 keys in, only 7 make the allow-list — `maintenance`, `stateofrepair`, `flow_rate`, all five
+    `name:xx` variants, and more would be dropped. The `all_keys` column is this row's real, live
+    `tags` value exactly as it sits in the dev database today; the array literal in the query is the
+    same 27 keys as `pipeline/contract/coverage-contract.json`'s `storedTagKeys`, the list
+    `parse.py`'s `_stored_keys` filter checks every key against at load time. Swap in a different
+    `ref` from your own `coverage_poi` table (any row with `letter = 'C'` and a few tags is enough)
+    and the same query works on it unchanged.

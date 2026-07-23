@@ -357,4 +357,56 @@ to be fetched. Chapter 8 (`on-screen.md`) is where it actually appears: MapLibre
 source, layer and `source-layer`, and how a rider's click turns a pixel back into the same row this
 chapter started from.
 
-<!-- EXERCISE-SLOT ch=7 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — see the 21 layers before tippecanoe ever runs"
+    "Why the layers are split per country" is easiest to believe by counting the rows behind each
+    `(letter, country_code)` pair directly — that grouping is exactly what `export_geojsonl()` turns
+    into 21 separate files, and what `build_pmtiles()` hands tippecanoe as 21 separate `-L` layers.
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
+    SELECT letter, coalesce(country_code,'ZZ') AS country_code, count(*)
+    FROM coverage_poi GROUP BY letter, country_code ORDER BY letter, country_code;
+    "
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+     letter | country_code | count
+    --------+--------------+--------
+     C      | BE           |   1369
+     C      | DE           |  15894
+     C      | NL           |   3699
+     D      | BE           |   2013
+     D      | DE           |  13224
+     D      | NL           |   3039
+     E      | BE           |   6454
+     E      | DE           |  59090
+     E      | NL           |  14916
+     G      | BE           |    720
+     G      | DE           |   8709
+     G      | NL           |    624
+     H      | BE           |   1023
+     H      | DE           |  23341
+     H      | NL           |    595
+     I      | BE           |   2501
+     I      | DE           |  75359
+     I      | NL           |   2582
+     J      | BE           |   8815
+     J      | DE           | 122076
+     J      | NL           |   9035
+    (21 rows)
+    ```
+
+    Seven letters times three onboarded countries (Belgium, Germany, the Netherlands) is exactly
+    21 rows — no row mixes two countries under one letter, because `country_code` is a column on
+    the table, not something tippecanoe infers. Add the counts and they land on 375,078, the same
+    total this chapter opened with. This table *is* the reason the tile layers are named `c_be`,
+    `c_de`, `c_nl`, `d_be`, and so on rather than just `c`, `d`, `e`: each row above becomes exactly
+    one `(letter, country)` GeoJSONL file, and a cluster built from one file can never straddle a
+    border, because the other country's points were never in that file to begin with. If your dev
+    stack has run `make coverage-refresh` and published a `.pmtiles` archive, `pmtiles show
+    <path-or-url>` lists these same 21 names back to you as `vector_layers` — but the query above
+    needs nothing built, only the seeded database this course already assumes.

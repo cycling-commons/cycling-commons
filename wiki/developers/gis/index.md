@@ -122,3 +122,39 @@ Ten chapters, each covering one idea and ending with a slot for a hands-on exerc
     again in GIS code, a glossary of every term used across this series, and a table for "I need to
     change X, start here".
     *Not a stop on the journey — the page you come back to.*
+
+## Try it
+
+!!! tip "Hands-on — prove your stack is up before you start"
+    Every chapter from here on runs commands against a live dev database. Before reading chapter 1,
+    confirm your stack answers and holds the real data this whole series queries throughout.
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
+    SELECT count(*) AS items FROM item;
+    "
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
+    SELECT count(*) AS coverage_pois FROM coverage_poi;
+    "
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+     items
+    -------
+      1581
+    (1 row)
+
+     coverage_pois
+    ---------------
+            375078
+    (1 row)
+    ```
+
+    `item` holds this project's own curated rows; `coverage_poi` holds the much larger OpenStreetMap
+    cache chapter 6 explains in full. The exact counts will drift as more data lands — what matters
+    right now is that both queries return *some* number instead of a connection error. If either one
+    fails, fix that before chapter 1: every exercise later in this series assumes exactly this
+    connection works. (`developers/docker/compose.yaml` is also what every later chapter's own
+    exercises invoke — the invocation itself does not change from here on, only the SQL after `-c`.)

@@ -32,15 +32,15 @@ verified quoting as course 1.
 
 1. [**Reprojection**](reprojection.md) — why everything here stays in EPSG:4326, what `ST_Transform`
    is for, and the day you will need it.
-2. **Relations and complex shapes** (`relations.md`) — the OSM primitive our pipeline skips, and what
+2. [**Relations and complex shapes**](relations.md) — the OSM primitive our pipeline skips, and what
    it costs us today.
 3. [**Geocoding, both directions**](geocoding.md) — we search by name but never look a name back up
    from coordinates. That asymmetry is a design decision worth understanding.
-4. **Routing** (`routing.md`) — finding a way from A to B is graph search over a weighted network, not
+4. [**Routing**](routing.md) — finding a way from A to B is graph search over a weighted network, not
    a spatial query. The most commonly confused pair of ideas in this field.
-5. **Elevation and terrain** (`elevation.md`) — where ascent numbers come from, why two tools disagree
+5. [**Elevation and terrain**](elevation.md) — where ascent numbers come from, why two tools disagree
    about the same ride, and why that is not a bug.
-6. **Edge cases that bite** (`edge-cases.md`) — the antimeridian, the poles, ring winding, and the
+6. [**Edge cases that bite**](edge-cases.md) — the antimeridian, the poles, ring winding, and the
    other places round-Earth reality breaks flat-plane assumptions.
 
 Every chapter ends with a hands-on exercise you can run against the local Docker stack, the same as

@@ -75,7 +75,11 @@ nav:
       - Beyond GIS in CC:
           - Start here: developers/gis-beyond/index.md
           - B1 · Reprojection: developers/gis-beyond/reprojection.md
+          - B2 · Relations and complex shapes: developers/gis-beyond/relations.md
           - B3 · Geocoding, both directions: developers/gis-beyond/geocoding.md
+          - B4 · Routing: developers/gis-beyond/routing.md
+          - B5 · Elevation and terrain: developers/gis-beyond/elevation.md
+          - B6 · Edge cases that bite: developers/gis-beyond/edge-cases.md
 
 markdown_extensions:
   - admonition

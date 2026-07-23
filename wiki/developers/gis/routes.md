@@ -260,4 +260,34 @@ looking for the cheapest path through it. This project does not implement that s
 - Routing between two points is a graph-search problem this project hands to Valhalla, opt-in, not
   something it builds itself.
 
-<!-- EXERCISE-SLOT ch=9 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — recompute a stored route's own length"
+    `distance_m` is a choice baked in at intake, not a live fact — this chapter's whole point.
+    Recompute one real route's length straight from its stored geometry with `ST_Length(geom::geography)`
+    and compare it against the number `recommended_route.distance_m` already holds for the same row.
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
+    SELECT id, name, distance_m, round(ST_Length(geom::geography)) AS measured_m,
+           round(ST_Length(geom::geography)) - distance_m AS diff_m
+    FROM recommended_route WHERE id = 23;
+    "
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+     id |       name       | distance_m | measured_m | diff_m
+    ----+------------------+------------+------------+--------
+     23 | Spa · Sankt Vith |     125500 |     125261 |    -239
+    (1 row)
+    ```
+
+    `distance_m` was computed once at intake by `TrackProcessor::distanceM()`'s haversine sum on a
+    fixed-radius sphere; `ST_Length(geom::geography)` recomputes it now, from the stored `[lng,
+    lat]` path, on PostGIS's own ellipsoid model (chapter 3, [`metres-vs-degrees.md`](metres-vs-degrees.md)).
+    The two disagree by 239 m out of 125,500 — under 0.2% — which is the lesson made concrete: not
+    an error, just two defensible ways of measuring the same curved-earth distance landing a little
+    apart. Drop the `WHERE id = 23` and every row in `recommended_route` shows the same small,
+    one-directional-ish drift, not a wild mismatch — run it without the filter to see all twelve.

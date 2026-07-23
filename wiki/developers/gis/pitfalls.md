@@ -322,4 +322,54 @@ grid. [`tiles.md`](tiles.md)
 **Zoom level** — one level of the tile pyramid; each one covers the same whole world at four times the
 tile count, and four times the resolution, of the level before it. [`tiles.md`](tiles.md)
 
-<!-- EXERCISE-SLOT ch=10 — hands-on box goes here (spec D5); do not remove -->
+## Try it
+
+!!! tip "Hands-on — diagnose a real zero-row query"
+    Here is a query near our fountain (chapter 1's `50.4894, 5.8792`, east of Spa) that runs
+    without error and returns nothing. Work through the pitfalls table above before reading the fix
+    below it.
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres — the broken query -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
+    SELECT count(*) AS broken_count FROM coverage_poi
+    WHERE ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint(50.4894, 5.8792), 4326)::geography, 5000);
+    "
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+     broken_count
+    --------------
+                0
+    (1 row)
+    ```
+
+    Zero rows within 5 km of a real fountain, in a table that holds thousands of Belgian rows. No
+    error, no warning — exactly the shape of the **longitude before latitude** row in the table
+    above. `ST_MakePoint(x, y)` wants `(longitude, latitude)`; this
+    query hands it `(50.4894, 5.8792)`, latitude first, which `ST_MakePoint` reads as a valid point
+    roughly 50.49° east of Greenwich and 5.88° north of the equator — off the coast of west Africa,
+    nowhere near Belgium. Swap the two arguments and the same query finds real rows:
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres — the fix -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
+    SELECT count(*) AS fixed_count FROM coverage_poi
+    WHERE ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint(5.8792, 50.4894), 4326)::geography, 5000);
+    "
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+     fixed_count
+    -------------
+             127
+    (1 row)
+    ```
+
+    127 real rows within 5 km, as soon as the coordinates go in `(lng, lat)` order. Nothing else
+    about the query changed — same table, same radius, same cast to `::geography` — which is
+    exactly why this trap is so easy to miss under pressure: the query is otherwise correct, and
+    correct-looking SQL that quietly returns nothing is the signature this whole drill is meant to
+    train you to recognise.
