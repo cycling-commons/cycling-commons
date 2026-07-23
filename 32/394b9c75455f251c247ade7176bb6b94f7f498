@@ -1,0 +1,22 @@
+web/assets/map/map.js
+  s_3c392b244b902c::t_5acde524d030ed 273-277
+  s_3c392b244b902c::t_e1c7fa0e3ff53a 294
+web/assets/map/scope-chips.js
+  s_3c392b244b902c::t_67bea91a51e071 81-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "32394b9c75455f251c247ade7176bb6b94f7f498",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
