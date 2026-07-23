@@ -1,0 +1,55 @@
+wiki/developers/gis/shapes.md
+  s_f3f9c3dc9409c4::t_898f910f0d1f72 163
+  s_f3f9c3dc9409c4::t_d57e3621c91f02 149-162
+  s_f3f9c3dc9409c4::t_c800baa7426e2d 77-88
+  s_f3f9c3dc9409c4::t_f936770ec501c5 23-30
+  s_f3f9c3dc9409c4::t_78249fa21ec983 41-46
+  s_f3f9c3dc9409c4::t_34fbf7e991742c 55-60
+wiki/developers/gis/routes.md
+  s_f3f9c3dc9409c4::t_be4414ecf682d0 28-43
+  s_f3f9c3dc9409c4::t_c7cccb5ed91b2f 145-152
+  s_f3f9c3dc9409c4::t_532e2c45970ec9 200-215
+  s_f3f9c3dc9409c4::t_c3f260efa2acf8 153,216
+wiki/developers/gis/tiles.md
+  s_f3f9c3dc9409c4::t_4fc49aa17ec5e2 166-208
+wiki/developers/gis/spatial-questions.md
+  s_f3f9c3dc9409c4::t_5cbfbe5845b779 36-46
+wiki/developers/gis/on-screen.md
+  s_f3f9c3dc9409c4::t_9030cff44082b1 249-263
+  s_f3f9c3dc9409c4::t_f5efe9fc9fbc87 169-170
+  s_f3f9c3dc9409c4::t_8288b0bb9b2218 163-167,171-173
+  s_f3f9c3dc9409c4::t_7fdd644e6b21d5 147-157
+  s_f3f9c3dc9409c4::t_9551143ccf5a33 168
+wiki/developers/gis/metres-vs-degrees.md
+  s_f3f9c3dc9409c4::t_4a576e1af1ba30 110-118
+  s_f3f9c3dc9409c4::t_20e204b2936160 216-228
+  s_f3f9c3dc9409c4::t_a5831485322f95 73-80
+  s_f3f9c3dc9409c4::t_413d53fe2ad89e 246-255
+wiki/developers/gis/pitfalls.md
+  s_f3f9c3dc9409c4::t_0e24eb4de8b4dd 31-63
+wiki/developers/gis/osm-to-database.md
+  s_f3f9c3dc9409c4::t_1aeb6e26370915 161-172
+  s_f3f9c3dc9409c4::t_8079043b1eabe3 252-276
+  s_f3f9c3dc9409c4::t_ded61f2be13622 134-155
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_48a7037113cb27 201-212
+  s_f3f9c3dc9409c4::t_abdd3bc8700bbc 357,359-364,366-368,371-381
+  s_f3f9c3dc9409c4::t_898f910f0d1f72 358,365
+  s_f3f9c3dc9409c4::t_19698485ce889f 77-93,96-104,116-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "4aa8d4140f78aa367ca1f946d64cbc9779a1caea",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
