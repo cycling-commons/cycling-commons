@@ -1,0 +1,29 @@
+pipeline/contract/coverage-contract.json
+  s_3c392b244b902c::t_e7193eeebba1f2 38-40
+  s_3c392b244b902c::t_af01d5c42331f5 7-10
+  s_3c392b244b902c::t_af2c8ad2a7a88e 92-93
+docs/specs/coverage-provider.md
+  s_3c392b244b902c::t_9976aa23bab837 171
+  s_3c392b244b902c::t_6f174ce3ef9df5 163
+  s_3c392b244b902c::t_e9cf9d89e1fb4e 175
+docs/specs/osm-data-architecture.md
+  s_3c392b244b902c::t_7706c05aef48ee 152
+  s_3c392b244b902c::t_c38d0af350899e 172
+  s_3c392b244b902c::t_d18cdb8125d044 157
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d7ed8cdbcec3594ac321f72b0c0bfc3b3a44ce60",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
