@@ -46,7 +46,7 @@ extra_css:
   # extra_css, so a browser holds the previous copy after an edit and shows a
   # stale sidebar or stale code styling — which reads as "the fix didn't work"
   # rather than "you have an old file". Bump this when extra.css changes.
-  - stylesheets/extra.css?v=3
+  - stylesheets/extra.css?v=7
 
 # Ordered to match the "Start here" list on the wiki home page.
 nav:
@@ -87,3 +87,10 @@ markdown_extensions:
 
 plugins:
   - search
+
+# Build-time hook: any inline `path/to/file.ext` that exists in the repo becomes
+# a link to that file on GitHub, opening in a new tab. Nothing in the Markdown
+# changes, and a path that does not exist is left as plain code rather than
+# becoming a dead link.
+hooks:
+  - tools/mkdocs_github_links.py

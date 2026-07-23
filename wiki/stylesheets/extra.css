@@ -322,23 +322,30 @@
 }
 
 /* ---- numbered nav entries hang correctly ---------------------------------
-   The GIS course chapters are numbered in the nav ("6 · From OpenStreetMap to
-   our database"). A long title wraps, and by default the second line starts
-   under the number, so the wrapped text reads as if it belonged to the digit
-   rather than to the title. A hanging indent puts continuation lines under the
-   first letter of the title instead.
+   The GIS course chapters are numbered ("6 · From OpenStreetMap to our
+   database"). A long title wraps, and by default the second line starts under
+   the number, so the wrapped text reads as if it belonged to the digit. A
+   hanging indent puts continuation lines under the first letter instead.
 
-   SCOPING MATTERS. An earlier version used `.md-nav__item .md-nav__link`,
-   which matches EVERY link in the sidebar — every top-level page got a
-   negative text-indent too and its first line was clipped off the left edge.
-   The selector below walks the exact path to a numbered chapter link: the
-   direct children of a nested section's own list. Top-level entries (Home,
-   Manifesto, …) are not inside a nested item, so they are untouched. */
-.md-nav__item--nested > .md-nav > .md-nav__list > .md-nav__item > .md-nav__link {
-  /* ADD the hang to Material's own 16px link padding — do not replace it.
-     Replacing it put line one at x=0, so every numbered chapter sat further
-     left than the unnumbered entries above it. Line one now aligns with the
-     rest of the sidebar and only continuation lines are indented. */
+   TWO THINGS BIT ME HERE, both worth stating so they are not repeated:
+
+   (1) Material's .md-nav__link is `display: flex`. text-indent on a flex
+       container is inherited into the anonymous block around the text, which
+       then paints it left of its own edge and CLIPS it — the chapter numbers
+       vanished. Layout geometry still reported the text at +16px, so every
+       measurement said "fine" while the screen said otherwise. Forcing block
+       layout on these leaf links restores normal text-indent semantics. They
+       carry no toggle icon, so nothing needs the flex box.
+
+   (2) The hang must be ADDED to Material's own 16px link padding, never
+       substituted for it, or line one sits further left than every unnumbered
+       entry above it. */
+/* `a.` matters: the same item also holds a <label class="md-nav__link"> that
+   Material keeps display:none on desktop (it opens the table of contents in
+   the mobile drawer). A blanket `display: block` forced that label visible and
+   the current page appeared twice in the sidebar. */
+.md-nav__item--nested > .md-nav > .md-nav__list > .md-nav__item > a.md-nav__link {
+  display: block;
   padding-left: calc(16px + 1.85em);
   text-indent: -1.85em;
 }
@@ -377,3 +384,11 @@
 .md-typeset .highlight pre,
 .md-typeset pre { overflow-x: auto; }        /* keep as a fallback, rarely hit now */
 .md-typeset .highlight > pre { overflow-x: clip; }
+
+/* ---- body type, a step down --------------------------------------------
+   Material's default lands at 16px/25.6px here. These are long reference
+   chapters, so a slightly smaller setting fits more of an argument on screen
+   without crowding it. The line-height RATIO is kept at 1.6 rather than the
+   absolute value, so leading shrinks in proportion and the text keeps the
+   same colour on the page instead of looking loose at a smaller size. */
+.md-typeset { font-size: .75rem; line-height: 1.6; }

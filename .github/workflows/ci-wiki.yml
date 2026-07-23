@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+#
+# The wiki's gates, enforced server-side.
+#
+# The pre-commit hooks in .pre-commit-config.yaml are the fast local layer, but
+# they only exist in a clone. Two routes bypass them entirely:
+#
+#   - the pencil icon on every wiki page (mkdocs.yml `edit_uri`) opens GitHub's
+#     web editor, which commits without ever running a local hook;
+#   - `git commit --no-verify`, or a contributor who has not run
+#     `pre-commit install`.
+#
+# So this workflow is the actual enforcement. It runs the same three checks:
+#   1. the page builds (mkdocs --strict rejects dead internal links)
+#   2. every wiki page carries its CC-BY-SA-4.0 SPDX header
+#   3. every quoted code block still matches the code it quotes
+#
+# Check 3 is the one that needs the source tree as well as the wiki, which is
+# why the path filter below includes web/ and pipeline/: a change THERE is the
+# usual way a wiki page goes stale, and locally that case only warns.
+name: ci-wiki
+on:
+  pull_request:
+    paths:
+      - 'wiki/**'
+      - 'mkdocs.yml'
+      - 'tools/check-wiki-spdx.sh'
+      - 'tools/check-wiki-code-drift.py'
+      - '.github/workflows/ci-wiki.yml'
+      # quoted-from sources — a change here can invalidate a chapter
+      - 'web/**/*.php'
+      - 'web/**/*.js'
+      - 'pipeline/**/*.py'
+  push:
+    branches: [main]
+    paths:
+      - 'wiki/**'
+      - 'mkdocs.yml'
+      - 'tools/check-wiki-spdx.sh'
+      - 'tools/check-wiki-code-drift.py'
+      - '.github/workflows/ci-wiki.yml'
+      - 'web/**/*.php'
+      - 'web/**/*.js'
+      - 'pipeline/**/*.py'
+jobs:
+  wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r developers/docker/wiki/requirements.txt
+
+      - name: wiki builds (strict — dead internal links fail)
+        run: mkdocs build --strict
+
+      - name: wiki pages carry the CC-BY-SA-4.0 SPDX header
+        run: tools/check-wiki-spdx.sh
+
+      # Strict here, deliberately, even for a source-only change. Locally that
+      # case only warns so a code commit is never blocked by documentation —
+      # but nothing may MERGE while the wiki teaches code that no longer
+      # exists. If this fails on your PR, the fix is to update the page it
+      # names, not to relax the check.
+      - name: wiki code excerpts still match the code they quote
+        run: python3 tools/check-wiki-code-drift.py
