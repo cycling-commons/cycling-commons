@@ -126,9 +126,15 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   whitelists display tags, §5).
 - **Measured sizing (2026-07-23).** At 377,558 rows (BE + NL + DE + LU; 0 unstamped
   after the ownership fix), compacted steady-state:
-  **341 B/row heap + 176 B/row indexes = 517 B/row** (the live table bloats above this
-  right after a re-harvest's DELETE/INSERT churn until autovacuum reclaims it — the
-  per-row figure is the compacted cost, not the momentary on-disk size). The per-row
+  **341 B/row heap + 176 B/row indexes = 517 B/row** — this is the *compacted* cost
+  (post `VACUUM FULL`). The **live on-disk table sits well above it**: the harvest's
+  per-region DELETE-all-then-INSERT-all doubles the row count mid-swap, autovacuum then
+  frees the dead tuples into **reusable free space inside the file but never shrinks the
+  file** (only `VACUUM FULL`/`pg_repack` returns space to the OS). Measured post-harvest:
+  258 MB heap of which **67 % (173 MB) is reusable free space, 0 dead tuples** — a bounded
+  high-water mark (the next harvest refills it, so it does not grow unboundedly), not a
+  leak. No automatic shrink step is built; add `VACUUM FULL`/`pg_repack` after the harvest
+  only if the on-disk footprint matters (it fits in page cache regardless). The per-row
   figure is
   stable across countries (tags average 205 B/row in DE, 199 in BE, 197 in NL —
   Germany is the most exhaustively tagged country on Earth, so the worldwide
