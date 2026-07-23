@@ -48,6 +48,15 @@
   let scope = null;
   let fallback = { kind: 'everywhere', regionIds: [], countryCode: null };
 
+  // True only when the ACTIVE scope was never explicitly chosen: init() fell
+  // through to the default (neither a URL ?scope= nor a stored 'cc-scope' —
+  // see init() below), and no set()/setRegion()/setCountry()/setEverywhere()/
+  // setMyArea() has run since. renderScopeChips() (map.js) uses this to know
+  // whether it may still substitute the inferred home country for the
+  // hardcoded default's country when choosing which chips to render (owner
+  // fix 1, 2026-07-23) — the ACTIVE scope itself is never touched by this flag.
+  let isDefaultScope = false;
+
   const reindex = (list) => {
     regions = Array.isArray(list) ? list.slice() : [];
     byId = new Map();
@@ -248,8 +257,10 @@
       // silently swap in "my area").
       if (!fromUrl && fallback.kind === 'myArea') {
         scope = clone(fallback);
+        isDefaultScope = true; // fromUrl is falsy in this branch; fromLs (if any) was overridden, not used
       } else {
         scope = fromUrl || fromLs || clone(fallback);
+        isDefaultScope = !fromUrl && !fromLs;
       }
       return this.get();
     },
@@ -257,11 +268,24 @@
     /** The active scope (a copy — mutating it never changes internal state). */
     get() { return clone(scope || fallback); },
 
-    /** Replace the scope; persists + emits unless {persist:false}. */
+    /** Whether the active scope was never explicitly chosen — init() fell
+     *  through to the default (no URL ?scope=, no stored 'cc-scope') and no
+     *  setter has run since (owner fix 1, 2026-07-23). Lets renderScopeChips()
+     *  (map.js) tell "hardcoded default, never confirmed" apart from "the
+     *  rider is really scoped to their own country" without changing what the
+     *  active scope IS. */
+    isDefault() { return isDefaultScope; },
+
+    /** Replace the scope; persists + emits unless {persist:false}. Every
+     *  setter (setRegion/setCountry/setEverywhere/setMyArea/setAnonCircle)
+     *  funnels through here, so this is the one choke point that retires
+     *  isDefault() the moment the rider (or any caller) actually picks a
+     *  scope — a no-op call (sanitize fails) leaves it untouched. */
     set(next, opts) {
       const clean = sanitize(next);
       if (!clean) return this.get();
       scope = clean;
+      isDefaultScope = false;
       if (!opts || opts.persist !== false) persist(scope);
       emit();
       return this.get();
@@ -462,14 +486,40 @@
       return best;
     },
 
-    /** Onboarded regions of a country, label-sorted, for the contextual chips
-     *  (2026-07-22-scope-selector-scale-design.md §C, Tasks 5-6). */
-    contextualRegions(cc) {
-      // Pin the collator locale (consistent with searchScopes, ddb9b4a): bare
-      // localeCompare() uses the runtime default, so diacritic labels
-      // (Baden-Württemberg) could sort differently on CI than on a dev box.
-      return (byCountry.get(cc) || []).slice()
-        .sort((a, b) => (a.label || a.slug).localeCompare(b.label || b.slug, 'en'));
+    /** Onboarded regions of a country, capped at 8 by default, for the
+     *  contextual chips (2026-07-22-scope-selector-scale-design.md §C,
+     *  Tasks 5-6; cap + overflow: owner fix 2, 2026-07-23 — a country can
+     *  onboard far more than 8 regions, e.g. a future 51-state US). `opts`:
+     *  - `near: [lng, lat]` — sort by ground distance from that point to each
+     *    region's bbox centre, nearest first, then cap. Omitted -> today's
+     *    label-sort (pinned 'en' collator, consistent with searchScopes,
+     *    ddb9b4a — diacritic labels like Baden-Württemberg must not sort
+     *    differently on CI than a dev box).
+     *  - `limit` — defaults to 8; `contextualRegions(cc)` with no opts at all
+     *    stays valid (every existing caller). */
+    contextualRegions(cc, opts) {
+      const o = opts || {};
+      const cap = o.limit != null ? o.limit : 8;
+      const list = (byCountry.get(cc) || []).slice();
+      if (o.near) {
+        const [lng, lat] = o.near;
+        // Ground-distance correction (same as regionOfPoint, above): scale the
+        // longitude delta by cos(lat) before comparing. Raw squared degrees
+        // are NOT distance — a longitude degree is ~0.65 of a latitude degree
+        // at 49°N, so skipping this over-weights east-west separation enough
+        // to pick the visually farther region as "closest" (task-4 review;
+        // regression test: contextualRegions near-ordering, scope.test.cjs).
+        const kx = Math.cos(lat * Math.PI / 180);
+        const withDist = list.map((r) => {
+          const b = r.bbox;
+          const cx = b ? (b[0] + b[2]) / 2 : lng; const cy = b ? (b[1] + b[3]) / 2 : lat;
+          return { r, d: ((cx - lng) * kx) ** 2 + (cy - lat) ** 2 };
+        });
+        withDist.sort((a, b) => a.d - b.d);
+        return withDist.slice(0, cap).map((x) => x.r);
+      }
+      list.sort((a, b) => (a.label || a.slug).localeCompare(b.label || b.slug, 'en'));
+      return list.slice(0, cap);
     },
 
     /** MapLibre filter expression for the coverage TILE layers (Phase 3,

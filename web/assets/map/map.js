@@ -187,6 +187,18 @@
     const btn = document.querySelector(`#regionScope button[data-scope="${scopeToken(s)}"]`);
     return btn ? btn.textContent.trim() : '';
   }
+  // Reveal + focus the sidebar feature-search box (owner fix 2's overflow
+  // chip, 2026-07-23): re-queries the DOM fresh rather than closing over the
+  // `sBox` const declared far below (~L3314) — renderScopeChips() first runs
+  // long before that line executes, so capturing `sBox` here would hit the
+  // temporal-dead-zone. Reuses the same mobile 'sheet-open' reveal + <=820
+  // breakpoint the filter-sheet handle already uses (~L3573/L3590) rather than
+  // inventing a second show/hide mechanism.
+  function focusSearchBox(){
+    if(window.innerWidth<=820){ const ap=document.querySelector('.app'); if(ap) ap.classList.add('sheet-open'); }
+    const el=document.getElementById('search');
+    if(el){ el.scrollIntoView({block:'nearest'}); el.focus(); }
+  }
   // Contextual scope chips (2026-07-22-scope-selector-scale-design.md §B): the
   // home country's regions + its All-<country> rung, or the onboarded country
   // rungs as the cold-start fallback. Replaces the flat all-regions wall.
@@ -198,15 +210,39 @@
   function renderScopeChips(){
     const host=document.getElementById('scopeChips'); if(!host||!window.CCScope) return;
     const s=curScope();
-    // Which country's regions to show: the active scope's country, else the inferred home.
-    const cc=(s&&s.countryCode) || (s&&s.regionIds&&s.regionIds.length&&(window.CCScope.regions()[0]||{}).countryCode) || window.CCScope.inferHomeCountry();
+    // Which country's regions to show: normally the active scope's country
+    // first, inferred home as a fallback. But the map's hardcoded startup
+    // default (_defaultScope, above) always carries a countryCode too, so on
+    // a fresh anonymous visit that branch always won and inferHomeCountry()
+    // was never reached (owner fix 1, 2026-07-23) — a German visitor's first
+    // paint showed Wallonia/Flanders/Brussels. CCScope.isDefault() is true
+    // only until the rider (or a resolved URL/localStorage scope) actually
+    // picks one, so checking the inferred home FIRST in that window is safe:
+    // it only ever changes which chips are offered, never the active scope.
+    const isDef = !!(window.CCScope.isDefault && window.CCScope.isDefault());
+    const scopeCc = (s&&s.countryCode) || (s&&s.regionIds&&s.regionIds.length&&(window.CCScope.regions()[0]||{}).countryCode);
+    const cc = isDef ? (window.CCScope.inferHomeCountry() || scopeCc) : (scopeCc || window.CCScope.inferHomeCountry());
     let html='';
     if(cc){
-      const regions=window.CCScope.contextualRegions(cc);   // bound once — the brief called this twice
-      regions.forEach(r=>{
+      // Cap block (2026-07-22-scope-selector-scale-design.md §B, owner fix 2):
+      // show at most the 8 CLOSEST regions, not the first 8 alphabetically —
+      // `near` prefers the rider's My-area base centre (window.CC_MY_AREA,
+      // logged-in home base), else the current map centre, since either is
+      // "roughly where the rider is looking" with zero extra fetch.
+      const ma=window.CC_MY_AREA;
+      const near=(ma&&ma.lat!=null&&ma.lng!=null) ? [ma.lng,ma.lat] : (()=>{ const c=map.getCenter(); return [c.lng,c.lat]; })();
+      const all=window.CCScope.contextualRegions(cc);           // full, label-sorted — for the total count + country label
+      const shown=window.CCScope.contextualRegions(cc,{near});  // capped at 8, nearest-first
+      shown.forEach(r=>{
         html+=`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label||r.slug)}</button>`;
       });
-      const cl=(regions[0]||{}).countryLabel||('All '+cc);
+      // Overflow affordance: more regions exist than the cap shows — a chip
+      // that opens/focuses search (rather than silently dropping them) so
+      // every onboarded region stays reachable regardless of country size.
+      if(all.length>shown.length){
+        html+=`<button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button>`;
+      }
+      const cl=(all[0]||{}).countryLabel||('All '+cc);
       html+=`<button data-scope="country:${escPend(cc)}">${escPend(cl)}</button>`;
     } else {
       // cold-start fallback: onboarded country rungs (window.CC_REGIONS-derived),
@@ -222,15 +258,16 @@
     }
     host.innerHTML=html;
     // (re)bind the freshly-rendered chips to CCScope, same contract as the static ones.
-    host.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    host.querySelectorAll('button[data-scope]').forEach(b=>b.onclick=()=>{
       const tok=b.dataset.scope;
       if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
       else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
     });
+    { const more=document.getElementById('scopeMoreBtn'); if(more) more.onclick=focusSearchBox; }
     // Self-mark the active chip (do NOT call applyScope here — the cc:scopechange
     // handler already calls applyScope; calling it back would recurse/double-work).
     const tok=scopeToken(curScope());
-    host.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x.dataset.scope===tok));
+    host.querySelectorAll('button[data-scope]').forEach(x=>x.classList.toggle('on', x.dataset.scope===tok));
   }
   // Apply a scope: active rail button + dynamic header + spotlight (single named
   // region only) + viewport + re-render (scope-filtered from Task 7). fit:false

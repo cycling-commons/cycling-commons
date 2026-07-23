@@ -187,6 +187,10 @@ final class MapController extends AbstractController
             'capped' => 'd_capped', 'kmOff' => 'd_km_off', 'nothingWithin' => 'd_nothing_within',
             'noMatch' => 'd_no_match', 'places' => 'd_places',
             'scopes' => 'd_scopes', 'wholeCountry' => 'd_whole_country', 'region' => 'd_region',
+            // Contextual scope-chip overflow (2026-07-22-scope-selector-scale-design.md
+            // §B, owner fix 2): shown only when a country's region count exceeds
+            // the 8-closest cap; opens/focuses the sidebar search box.
+            'scopesMore' => 'd_scopes_more',
             'community' => 'd_community', 'showAll' => 'd_show_all',
             'suggestedRoute' => 'd_suggested_route', 'start' => 'd_start', 'shape' => 'd_shape',
             'roundtrip' => 'd_roundtrip', 'season' => 'd_season', 'why' => 'd_why', 'note' => 'd_note',

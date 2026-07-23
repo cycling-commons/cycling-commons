@@ -1038,6 +1038,7 @@ map:
   d_scopes: 'Gebieden'
   d_whole_country: 'Heel het land'
   d_region: 'Regio'
+  d_scopes_more: 'Meer regio''s…'
   d_suggested_route: 'Voorgestelde route'
   d_start: 'Start'
   d_shape: 'Vorm'

@@ -9,6 +9,37 @@ the `CCScope` model, tokens, dim mask, or per-country coverage tiles from
 [2026-07-19-region-scoping-design.md](2026-07-19-region-scoping-design.md) and
 [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md).
 
+**Owner fixes, 2026-07-23 (post-execution, same NOT-pushed branch):**
+
+1. **Cold-start inference now actually reaches the chips.** `_defaultScope`
+   (map.js) always carried a countryCode (Wallonia), and the old
+   `renderScopeChips` precedence checked `s.countryCode` *before*
+   `inferHomeCountry()` — since a region scope always carries a countryCode
+   (`scope.js`), the default branch always won and a fresh anonymous visitor's
+   timezone/My-area hint (§D) was never consulted. Fixed via a new
+   `CCScope.isDefault()` (true only when `init()` resolved neither from the
+   URL nor localStorage, false the instant any setter — the single `set()`
+   choke point — runs): `renderScopeChips` now checks `inferHomeCountry()`
+   first exactly in that window, so a German visitor's first paint is now
+   Bavaria/…/All Germany instead of Wallonia/Flanders/Brussels. The active
+   scope, viewport, and served data are untouched — only which chips are
+   *offered* changes.
+2. **8-region cap + overflow.** `contextualRegions(cc)` used to return every
+   region of a country unbounded (16 for DE today, 51 for a future US onboard)
+   — the flat wall came back, just per-country. `contextualRegions(cc, opts)`
+   now takes `{near: [lng, lat], limit}` (default limit 8): with `near` it
+   sorts by ground-corrected distance (the same `cos(lat)`-scaled metric as
+   `regionOfPoint`) from that point to each region's bbox centre, nearest
+   first, then caps; without `near` it keeps the label-sort. `renderScopeChips`
+   passes `near` = the rider's My-area base centre (`window.CC_MY_AREA`) when
+   set, else the current map centre (`map.getCenter()`) — both are "roughly
+   where the rider is looking" with zero extra fetch. When a country has more
+   regions than the cap, an overflow chip (`d_scopes_more`, translated in all
+   four locales) appears before the `All <country>` rung and focuses the
+   sidebar search box, so every onboarded region stays reachable regardless of
+   country size. `contextualRegions(cc)` with no `opts` stays valid for every
+   existing caller.
+
 ## Problem
 
 The map scope selector renders every region as a flat button

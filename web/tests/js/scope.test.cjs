@@ -581,6 +581,94 @@ test('contextualRegions: onboarded regions of a country, label-sorted', () => {
   assert.deepEqual(S.contextualRegions('FR'), []);
 });
 
+// ---- contextualRegions cap + near (owner fix 2, 2026-07-23) ----------------
+
+test('contextualRegions: no-opts call still label-sorts and returns all when under the cap', () => {
+  const S = freshScope([
+    { id: 1, slug: 'z', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Zeta', countryLabel: 'All Germany' },
+    { id: 2, slug: 'a', countryCode: 'DE', bbox: [11, 49, 13, 51], label: 'Alpha', countryLabel: 'All Germany' },
+  ]);
+  assert.deepEqual(S.contextualRegions('DE').map((r) => r.label), ['Alpha', 'Zeta']);
+});
+
+test('contextualRegions: caps at 8 by default, label-sorted, for a country with more', () => {
+  const labels = ['Zeta', 'Yankee', 'Xray', 'Whiskey', 'Victor', 'Uniform', 'Tango', 'Sierra', 'Romeo', 'Quebec'];
+  const S = freshScope(labels.map((label, i) => ({
+    id: i + 1, slug: label.toLowerCase(), countryCode: 'DE', bbox: [10, 48, 12, 50], label, countryLabel: 'All Germany',
+  })));
+  const r = S.contextualRegions('DE');
+  assert.equal(r.length, 8);
+  assert.deepEqual(r.map((x) => x.label), [...labels].sort((a, b) => a.localeCompare(b, 'en')).slice(0, 8));
+});
+
+test('contextualRegions: an explicit limit overrides the default cap', () => {
+  const S = freshScope([
+    { id: 1, slug: 'z', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Zeta', countryLabel: 'All Germany' },
+    { id: 2, slug: 'a', countryCode: 'DE', bbox: [11, 49, 13, 51], label: 'Alpha', countryLabel: 'All Germany' },
+    { id: 3, slug: 'm', countryCode: 'DE', bbox: [11, 49, 13, 51], label: 'Mike', countryLabel: 'All Germany' },
+  ]);
+  assert.equal(S.contextualRegions('DE', { limit: 2 }).length, 2);
+});
+
+// Regression for the same ground-distance bug fixed in regionOfPoint: 'east'
+// is genuinely closer (80 km) than 'north' (100 km) to the click point, but an
+// unscaled raw-degree metric scores 'north' as nearer (0.807 vs 1.200) and
+// would return it first — proving the cos(lat) correction is actually applied
+// here too, not just copy-pasted as a comment.
+test('contextualRegions: near ordering uses ground-distance correction, nearest first', () => {
+  const S = freshScope([
+    { id: 1, slug: 'east', countryCode: 'DE', bbox: [9.5, 48.5, 12.6912, 49.5], label: 'East', countryLabel: 'All Germany' },
+    { id: 2, slug: 'north', countryCode: 'DE', bbox: [9.0, 48.9, 11.0, 50.8966], label: 'North', countryLabel: 'All Germany' },
+  ]);
+  const r = S.contextualRegions('DE', { near: [10.0, 49.0] });
+  assert.deepEqual(r.map((x) => x.slug), ['east', 'north']);
+});
+
+test('contextualRegions: near + cap combine — nearest N regions, not the label-sorted N', () => {
+  const S = freshScope([
+    { id: 1, slug: 'far', countryCode: 'DE', bbox: [30, 48, 32, 50], label: 'Aaa-far', countryLabel: 'All Germany' },
+    { id: 2, slug: 'near', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Zzz-near', countryLabel: 'All Germany' },
+  ]);
+  // Label sort would put 'Aaa-far' first; near-sort (click right at 'near') must not.
+  const r = S.contextualRegions('DE', { near: [11, 49], limit: 1 });
+  assert.deepEqual(r.map((x) => x.slug), ['near']);
+});
+
+// ---- isDefault (owner fix 1, 2026-07-23) -----------------------------------
+//
+// _defaultScope in map.js always carries a countryCode, so renderScopeChips'
+// old `s.countryCode`-first precedence meant inferHomeCountry() was never
+// consulted on a fresh anonymous visit. isDefault() lets renderScopeChips
+// detect "this scope was never chosen" and check the inferred home first —
+// see the map.js renderScopeChips changes below. It must track ONLY how
+// init() resolved the scope (url/ls/default), then flip false the moment any
+// explicit setter succeeds.
+
+test('isDefault: true after a bare init (no URL, no storage)', () => {
+  boot();
+  assert.equal(CCScope.isDefault(), true);
+});
+
+test('isDefault: false after an explicit setRegion/setCountry', () => {
+  boot();
+  CCScope.setRegion('flanders');
+  assert.equal(CCScope.isDefault(), false);
+
+  boot();
+  CCScope.setCountry('BE');
+  assert.equal(CCScope.isDefault(), false);
+});
+
+test('isDefault: false when init resolved the scope from a URL param', () => {
+  boot({ search: '?scope=region:flanders' });
+  assert.equal(CCScope.isDefault(), false);
+});
+
+test('isDefault: false when init resolved the scope from localStorage', () => {
+  boot({ ls: 'country:BE' });
+  assert.equal(CCScope.isDefault(), false);
+});
+
 test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (2026-07-22-scope-selector-scale-design.md §F rule 1)', () => {
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['DE'] };

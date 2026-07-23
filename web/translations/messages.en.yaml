@@ -1208,6 +1208,7 @@ map:
   d_scopes: 'Scopes'
   d_whole_country: 'Whole country'
   d_region: 'Region'
+  d_scopes_more: 'More regions…'
   d_suggested_route: 'Suggested route'
   d_start: 'Start'
   d_shape: 'Shape'
