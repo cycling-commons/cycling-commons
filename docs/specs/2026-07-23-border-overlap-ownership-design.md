@@ -174,11 +174,18 @@ is a signal, not proof — border businesses do use a neighbour's domain — but
 `.dk` government-registry case is unambiguous.
 
 Fixing this properly needs real national frontiers (a DK/CZ/PL/AT/CH/FR/LU boundary
-source), so that "is this ours" stops being inferred from extract config. Tracked
-separately; **do not fold it into this change.** The measurement it needs first is
-the simplification tolerance of our own `region.geom`, without which any tightened
-snap threshold is a guess that would orphan legitimately-German rows to catch foreign
-ones.
+source), so that "is this ours" stops being inferred from extract config. The
+measurement it needs first is the simplification tolerance of our own `region.geom`,
+without which any tightened snap threshold is a guess that would orphan
+legitimately-German rows to catch foreign ones.
+
+**Owner disposition (2026-07-23): PARKED, not urgent.** *"A tiny bit of spot for a
+wrong region is not that bad. It is just a cycling map."* A handful of border POIs
+attributed to the neighbouring region is an acceptable standing cost — a rider who
+finds a shelter 700 m over the border is helped, not harmed. Do not fold this into
+the ownership change, and do not re-raise it as a defect: it is a known, accepted,
+low-severity inaccuracy. Revisit only if a country onboarding makes the frontier data
+worth importing for its own sake.
 
 ## 4. Verification this needs
 
