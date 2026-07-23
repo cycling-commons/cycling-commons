@@ -721,7 +721,13 @@
     const el=pinEl(st.layer, true, p);
     el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
     el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline);
-    el.addEventListener('click', ()=>{ openDrawer(st.layer, drawerF); flyToPin(lngLat); });
+    // stopPropagation (click-to-scope, 2026-07-22-scope-selector-scale-design.md
+    // §C): this DOM marker has no backing rendered layer at its pixel (the
+    // '<key>-conf-hit' source layer is a zero-radius circle, purely so the
+    // clustered source loads tiles) — without it the click bubbles to the map's
+    // generic click handler, which would see "no feature here" and re-scope the
+    // map right behind this pin's own drawer-open action.
+    el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(st.layer, drawerF); flyToPin(lngLat); });
     el.addEventListener('mouseenter', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
     el.addEventListener('mouseleave', hideTip);
     el.addEventListener('focus', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
@@ -748,7 +754,9 @@
             const el=clusterEl(st.layer, p.point_count_abbreviated); el.style.cursor='pointer';
             // MapLibre ≥3: getClusterExpansionZoom returns a Promise (the old
             // callback form is silently ignored — the click did nothing).
-            el.addEventListener('click', ()=>{ map.getSource(srcId).getClusterExpansionZoom(p.cluster_id).then(z=>map.easeTo({center:co, zoom:z+0.2})).catch(()=>{}); });
+            // stopPropagation: same click-to-scope note as confLeafPin above —
+            // this bubble has no rendered layer under it either.
+            el.addEventListener('click', e=>{ e.stopPropagation(); map.getSource(srcId).getClusterExpansionZoom(p.cluster_id).then(z=>map.easeTo({center:co, zoom:z+0.2})).catch(()=>{}); });
             m=new maplibregl.Marker({element:el, anchor:'center'}).setLngLat(co).addTo(map);
           } else {
             m=new maplibregl.Marker({element:confLeafPin(st, p, co), anchor:'bottom'}).setLngLat(co).addTo(map);
@@ -2420,6 +2428,45 @@
     redrawPickSegments();
     updatePickBar();
   }
+  // Click-to-scope (2026-07-22-scope-selector-scale-design.md §C): a left-click
+  // on EMPTY map scopes to the region under the point. Feature clicks (coverage
+  // POIs/clusters, CATALOG route/climb/line layers, the A-layer surface
+  // classes, curator correction previews, Mapillary) keep their own handlers —
+  // this bails if any of THEIR layers has a feature under the point, or a
+  // stretch-picking session is active.
+  //
+  // queryRenderedFeatures(e.point) with no layer filter would also match
+  // basemap polygons — a click over land would then always look "non-empty"
+  // and this would never fire — so the query is narrowed to the ids those
+  // handlers actually bind. That list is DERIVED off the same live
+  // registries the handlers themselves use (COVERAGE_KEYS/COVERAGE_CCS,
+  // boundLayerIds, surfaceClsLayerIds(), _corrLayers) rather than a second,
+  // hand-kept list that could silently drift from the real bindings — if a
+  // layer were missing here, clicking that feature would ALSO re-scope the
+  // map underneath it. cov-sel-icon/planroute(-case) have no click handler of
+  // their own but are real rendered overlays, not "empty map" — included so a
+  // click on them doesn't misread as empty either. Filtered to map.getLayer()
+  // existence: queryRenderedFeatures throws on an id absent from the current
+  // style, and boundLayerIds in particular can carry stale ids across a
+  // render() that dropped a previously-bound feature.
+  function selectableLayers(){
+    const ids=['mly-img','mly-cov','cov-sel-icon','planroute','planroute-case'];
+    COVERAGE_KEYS.forEach(([key])=>COVERAGE_CCS.forEach(cc=>{
+      const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+      ids.push(id, id+'-cl');   // icon layer + its cluster-bubble sibling
+    }));
+    boundLayerIds.forEach(id=>ids.push(id));         // drawLine/drawClimbLine: route/climb/line CATALOG layers
+    surfaceClsLayerIds().forEach(id=>ids.push(id));  // A-layer surface classes
+    _corrLayers.forEach(id=>ids.push(id));           // curator correction-segment previews
+    return ids.filter(id=>map.getLayer(id));
+  }
+  map.on('click', e=>{
+    if(_pick) return;                                    // stretch-picking owns the click
+    if(map.queryRenderedFeatures(e.point, {layers:selectableLayers()}).length) return;  // a feature layer will handle it
+    if(!window.CCScope) return;
+    const r=window.CCScope.regionOfPoint(e.lngLat.lng, e.lngLat.lat);
+    if(r) window.CCScope.setRegion(r.slug);   // cc:scopechange -> applyScope + renderScopeChips (serves items + chips)
+  });
   function redrawPickSegments(){
     _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
     _pick.segLayers=[];
