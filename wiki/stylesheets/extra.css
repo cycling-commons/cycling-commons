@@ -203,3 +203,31 @@
   stroke-width: 5px;
   stroke-linejoin: round;
 }
+
+/* ---- GIS primer: figures not yet drawn -----------------------------------
+   Chapters are being written before their figures (design D10). Where a figure
+   will go, the chapter carries a placeholder instead: what the figure must make
+   the reader see, and a drawing brief concrete enough to author from later.
+
+   Two rules keep this honest:
+     - The placeholder is VISIBLE and says plainly that nothing is drawn yet.
+       A silently missing figure reads as a page that forgot one.
+     - Every placeholder is followed by a greppable
+       `<!-- FIGURE-TODO id=F6 ch=4 -->` comment, so none can ship unreplaced:
+           grep -rn 'FIGURE-TODO' wiki/developers/gis/
+   The real <figcaption> is written NOW, not deferred — it states the point the
+   figure has to land, so it doubles as the brief's acceptance test. */
+.md-typeset .gis-fig.gis-todo {
+  border: 1px dashed var(--cc-ochre);
+  background: color-mix(in srgb, var(--cc-ochre) 6%, transparent);
+  padding: 1rem 1.1rem;
+}
+.md-typeset .gis-todo > p { margin: 0 0 .5rem; font-size: .78rem; line-height: 1.6; }
+.md-typeset .gis-todo-h {
+  font-family: "Spline Sans Mono", monospace;
+  font-size: .7rem !important;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--cc-clay);
+}
+.md-typeset .gis-todo figcaption { margin-top: .25rem; }

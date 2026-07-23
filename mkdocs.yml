@@ -59,6 +59,9 @@ nav:
       - Start here: developers/gis/index.md
       - The Earth is awkward: developers/gis/coordinates.md
       - The shapes: developers/gis/shapes.md
+      - Metres vs degrees: developers/gis/metres-vs-degrees.md
+      - Making it fast: developers/gis/making-it-fast.md
+      - Lines that mean something: developers/gis/routes.md
 
 markdown_extensions:
   - admonition
