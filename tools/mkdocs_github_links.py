@@ -39,6 +39,7 @@ PATH_RE = re.compile(r"^(?P<path>[A-Za-z0-9_.\-/]+\.[A-Za-z0-9]+)(?::(?P<line>\d
 
 _missing: set[str] = set()
 _linked: set[str] = set()
+_unverifiable: set[str] = set()
 
 
 def _url(base: str, branch: str, path: str, line: str | None) -> str:
@@ -58,9 +59,19 @@ def _link_spans(html: str, base: str, branch: str) -> str:
         path = pm.group("path")
         if not path.startswith(LINKABLE):
             return m.group(0)
-        if not (ROOT / path).is_file():
-            _missing.add(path)
-            return m.group(0)
+        # "wrong path" and "tree not checked out here" are different failures.
+        # The dev wiki container mounts only mkdocs.yml, wiki/, overrides/ and
+        # tools/, so web/ and pipeline/ genuinely are not present — treating
+        # that as a bad path silently dropped every link in dev. Verify only
+        # when the top-level tree exists; a full checkout (CI, the production
+        # build) still catches a real typo.
+        top = path.split("/", 1)[0]
+        if (ROOT / top).is_dir():
+            if not (ROOT / path).is_file():
+                _missing.add(path)
+                return m.group(0)
+        else:
+            _unverifiable.add(top)
         _linked.add(path)
         href = _url(base, branch, path, pm.group("line"))
         return (
@@ -90,6 +101,12 @@ def on_page_content(html: str, page=None, config=None, files=None) -> str:
 def on_post_build(config=None) -> None:
     if _linked:
         print(f"INFO    -  github-links: linked {len(_linked)} distinct source paths")
+    if _unverifiable:
+        print(
+            "INFO    -  github-links: linked without existence check, tree not "
+            f"present in this build context: {', '.join(sorted(_unverifiable))} "
+            "(a full checkout — CI, the production build — verifies these)"
+        )
     if _missing:
         print(
             "WARNING -  github-links: left unlinked, path not found in the repo "
