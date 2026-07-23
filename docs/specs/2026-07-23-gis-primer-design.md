@@ -24,12 +24,13 @@ Seven decisions were taken with the owner on 2026-07-23:
 |---|----------|-----------|
 | D1 | Reader has **zero GIS knowledge** | Widest usefulness; a maps-literate reader can skip chapters, a beginner cannot invent them |
 | D2 | Lives in a **new "For developers" wiki section** | Keeps the community-facing IA (manifesto, catalog, governance) clean while giving developer docs room to grow beyond this series |
-| D3 | Visuals are **hand-authored inline SVG + Mermaid** | SVG for anything with a coordinate in it; Mermaid only for the two pipeline flowcharts |
+| D3 | Visuals are **hand-authored inline SVG only** | Originally SVG plus Mermaid for the two pipeline flowcharts. Mermaid dropped 2026-07-23: Material 9.7.6 does not bundle it and lazy-loads `mermaid@11` from unpkg, which would put a third-party request on a wiki that ships no third-party JS. Two more boxes-and-arrows diagrams against fourteen already being drawn is a small cost for one visual language and no CDN |
 | D4 | **Read-only** body with real code citations | No exercise can break or drift; every claim is checkable by opening a file |
 | D5 | Exercise slots **reserved, filled later** | Each chapter ends with a marked slot so hands-on "run this against the Docker stack" boxes drop in without a rewrite |
 | D6 | Structure is **layered order, narrative spine** | Concepts must build (no tiles before coordinates), but each chapter opens on the next stop in one worked example so the reader always knows why |
 | D7 | **Short excerpts, path citations** | The wiki is CC BY-SA 4.0, the code is PolyForm Shield; citing `File.php` + symbol beats pasting functions, and it rots slower |
 | D8 | A concept with no repo anchor is **written and flagged, never cut** | An unanchored concept is a signal. Either it is general GIS knowledge this system genuinely has no counterpart for, or it is a gap the owner may want built. Cutting it destroys that signal; §10 collects them for review |
+| D9 | **No page-count or word budget** | Owner decision 2026-07-23. A chapter runs as long as the teaching needs, and the series takes as many pages as the material warrants. Completeness beats brevity here — this is reference material a developer reads once and returns to, not a landing page |
 
 ### The narrative spine
 
@@ -64,8 +65,8 @@ here.
 
 ## 4. Figures
 
-Sixteen figures. Fourteen inline SVG, two Mermaid. The split is a rule, not a preference:
-**Mermaid draws boxes and arrows; anything with a coordinate in it gets an SVG.**
+Sixteen figures, all hand-authored inline SVG (D3). Two of them (F10, F13) are pipeline
+flowcharts — plain boxes and arrows — and the rest carry spatial meaning.
 
 | ID | Ch | Kind | Shows |
 |----|----|------|-------|
@@ -78,10 +79,10 @@ Sixteen figures. Fourteen inline SVG, two Mermaid. The split is a rule, not a pr
 | F7 | 4 | SVG | `ST_LineLocatePoint` — the 0…1 fraction along a ride, and why it orders the ride-check results |
 | F8 | 5 | SVG | Bounding box vs true polygon: the index's candidate set, then the exact recheck |
 | F9 | 5 | SVG | The RideCheck rewrite, before and after: spheroid sequential scan vs buffer-then-`ST_Intersects` on GiST |
-| F10 | 6 | Mermaid | Geofabrik PBF → extract → parse → load → `coverage_poi` |
+| F10 | 6 | SVG | Geofabrik PBF → extract → parse → load → `coverage_poi` |
 | F11 | 6 | SVG | One OSM node with its tags → our normalised row, showing which keys survive and which are dropped |
 | F12 | 7 | SVG | The tile pyramid z6→z14, with one tile subdividing into four |
-| F13 | 7 | Mermaid | `coverage_poi` → per-(letter, country) GeoJSONL → tippecanoe → `.pmtiles` → range request → browser |
+| F13 | 7 | SVG | `coverage_poi` → per-(letter, country) GeoJSONL → tippecanoe → `.pmtiles` → range request → browser |
 | F14 | 7 | SVG | The same points at z9 (clustered bubbles) and z12 (individual pins) |
 | F15 | 8 | SVG | MapLibre anatomy: style → source → layer → `source-layer`, with paint and layout separated |
 | F16 | 9 | SVG | `SurfaceProfiler`'s two measurements — `parts` measured segment-side, `covered` measured route-side |
@@ -99,16 +100,10 @@ scheme is ever added, figures built on those properties follow it for free.
 
 ## 5. Mechanics
 
-1. **`mkdocs.yml`** — add a `For developers` nav section listing the eleven pages, and add the
-   `custom_fences` block to `pymdownx.superfences` that maps ` ```mermaid ` to
-   `pymdownx.superfences.fence_code_format`. Mermaid is **not currently enabled**; this is the one
-   config change the series needs. It is purely additive and cannot affect existing pages — no page
-   in `wiki/` uses a `mermaid` fence today (verified 2026-07-23).
-
-   **Cost, disclosed:** Material 9.7.6 does not bundle Mermaid. It lazy-loads
-   `https://unpkg.com/mermaid@11/dist/mermaid.min.js` from a third-party CDN, on pages containing a
-   `.mermaid` element only. That means two of the eleven pages make an outbound request to unpkg on
-   view, on a wiki that otherwise ships no third-party JS. See §8 for the alternative.
+1. **`mkdocs.yml`** — add a `For developers` nav section listing the pages. That is the whole
+   config change: no Markdown extension is added or altered. `admonition`, `attr_list`,
+   `md_in_html` and `tables` are already enabled, which covers everything the series needs, and
+   inline SVG needs no extension at all.
 2. **`wiki/developers/gis/*.md`** — eleven files, each opening with
    `<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->`. The `tools/check-wiki-spdx.sh` pre-commit gate
    globs `wiki/**/*.md`, so the nested path is already covered and a missing header fails the
@@ -130,7 +125,8 @@ These are acceptance criteria, not style suggestions.
 - **Every claim is checkable.** Each concept cites a real file and symbol. Line numbers only where
   the anchor is stable; otherwise file plus symbol name. Where no anchor exists, the concept is
   still written — see D8 and §10.
-- **Chapters stay under ~1,200 words.** A chapter that outgrows this is two chapters.
+- **No length budget** (D9). A chapter runs as long as the teaching needs. Split a chapter when it
+  covers two genuinely separate ideas, never merely because it got long.
 - **No page depends on a later page.** Forward references are links, never prerequisites.
 - **Each chapter ends with a reserved exercise slot** (an HTML comment marking where the hands-on
   box goes), per D5.
@@ -142,8 +138,7 @@ These are acceptance criteria, not style suggestions.
 - Every `file`/`file:line` citation is verified against the working tree at write time.
 - All sixteen figures render legibly against the `atlas` paper background, at both narrow (mobile)
   and wide viewports, using only the existing `--cc-*` custom properties.
-- The eleven pages appear in nav order under **For developers**.
-- No chapter exceeds ~1,200 words.
+- The pages appear in nav order under **For developers**.
 - Every `UNANCHORED` marker in the pages has a matching row in the §10 queue, and every
   `type: absent` marker carries its reader-visible admonition.
 
@@ -153,10 +148,9 @@ These are acceptance criteria, not style suggestions.
 |------|------------|
 | Code citations drift as the repo changes | Cite file + symbol over line numbers; add the series to the docs consistency sweep |
 | Licence boundary (CC BY-SA wiki quoting PolyForm Shield code) | D7: short illustrative excerpts and path citations, never whole functions |
-| Scope creep into a full GIS textbook | Chapter word cap, and the §10 review queue: an unanchored concept must earn its place by being useful to *this* reader, and it is visible in a list the owner reviews rather than buried |
+| Scope creep into a full GIS textbook | With no word budget (D9), the discipline is the §10 review queue rather than a cap: an unanchored concept must earn its place by being useful to *this* reader, and it is visible in a list the owner reviews rather than buried |
 | An unanchored concept reads as "the system does this" when it does not | The `type: absent` marker in §10 is reader-visible by rule, so the page never implies functionality that is not built |
-| Enabling Mermaid changes existing page rendering | Additive `custom_fences` only; no existing page uses a `mermaid` fence — verified 2026-07-23 |
-| Mermaid pulls third-party JS from unpkg on two pages (§5.1) | **Open for the owner.** The alternative is to drop Mermaid and hand-author F10 and F13 as SVG like the other fourteen — two more diagrams, both simple boxes-and-arrows, against fourteen already being drawn. That keeps the wiki free of third-party JS, keeps one visual language across all sixteen figures, and avoids theming Mermaid to the atlas palette. Plan Task 1 implements the Mermaid path as decided in D3; switching is a surgical change to Task 1 and to F10/F13 only |
+| Long chapters lose the reader | No cap (D9), so structure carries the load instead: clear `##` sections, a figure per major idea, and the glossary in ch 10 so no reader is stuck on a term |
 
 ## 9. Out of scope
 
