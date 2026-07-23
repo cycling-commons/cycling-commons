@@ -1,0 +1,38 @@
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_1f7bdb649513ff 266,268-270
+  s_f3f9c3dc9409c4::t_bb653b2d091f90 132-136
+  s_f3f9c3dc9409c4::t_ce5c50250bb465 87-89,95-99
+  s_f3f9c3dc9409c4::t_ab4c4e1637d87c 155-165
+  s_f3f9c3dc9409c4::t_060db0deef7bc5 77,84-85,90
+  s_f3f9c3dc9409c4::t_5de5231db6f903 211
+  s_f3f9c3dc9409c4::t_ed81a1f438241c 66-72
+  s_f3f9c3dc9409c4::t_6ba95f55815339 276
+  s_f3f9c3dc9409c4::t_c028352740b6c3 86
+docs/specs/2026-07-22-scope-selector-scale-design.md
+  s_3bd3f8ccb3a560::t_975c837704cfa6 46-59
+  s_3bd3f8ccb3a560::t_ca5ccfa1f3bf78 27-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "53595b9a6eae217463f74d5405fc070681505743",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
