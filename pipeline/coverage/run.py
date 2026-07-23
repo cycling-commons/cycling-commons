@@ -22,7 +22,7 @@ import psycopg
 
 from .contract import load_contract
 from .extract import run_extract
-from .load import COUNTRY_BY_REGION, ensure_schema, load_region
+from .load import ensure_schema, load_region, resolve_country
 from .parse import parse_pois
 from .publish import ensure_bucket, prune, upload
 from .tiles import build_pmtiles, export_geojsonl, verify_pmtiles
@@ -116,11 +116,16 @@ def main(argv=None) -> int:
         ensure_schema(conn)
         for region in regions:
             try:
+                # Resolved ONCE per region and reused for both calls below (I1): an
+                # unresolvable country is now a hard failure (raises), caught by the
+                # try/except like any other per-region failure, rather than the two
+                # call sites independently `.get()`-missing into a silent None.
+                country_code = resolve_country(region)
                 pbf = fetch_pbf(region, workdir)
                 filtered = workdir / (region.replace("/", "-") + "-filtered.osm.pbf")
                 run_extract(pbf, filtered, contract)
-                rows = parse_pois(filtered, contract, region, COUNTRY_BY_REGION.get(region))
-                result = load_region(conn, rows, region, COUNTRY_BY_REGION.get(region))
+                rows = parse_pois(filtered, contract, region, country_code)
+                result = load_region(conn, rows, region, country_code)
                 print(f"[coverage] {region}: loaded/updated {result.inserted} rows "
                       f"(previous {result.previous})")
             except Exception as exc:  # noqa: BLE001 — one region must not stop the rest (coverage-provider.md §3 failure mode)

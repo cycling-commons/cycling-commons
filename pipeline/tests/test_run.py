@@ -145,6 +145,12 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
     monkeypatch.setattr(run, "ensure_schema", lambda conn: calls.append("schema"))
+    # dev/bad and dev/ok are placeholder slugs for this orchestration test, not
+    # real countries — resolve_country only special-cases the literal
+    # "dev/fixture" (I1), so any other unconfigured slug now hard-fails. Stub it
+    # out here so this test keeps exercising failure-isolation/exit-code
+    # mechanics, not country resolution.
+    monkeypatch.setattr(run, "resolve_country", lambda region: None)
     monkeypatch.setattr(
         run, "fetch_pbf", lambda region, workdir: calls.append(f"fetch:{region}") or tmp_path / "in.pbf")
     monkeypatch.setattr(
@@ -179,5 +185,8 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
 
 def test_country_by_region_stamps_netherlands():
     """europe/netherlands is a first-class coverage region — its POIs must be
-    stamped country_code NL (country-onboarding-design.md §5)."""
-    assert run.COUNTRY_BY_REGION["europe/netherlands"] == "NL"
+    stamped country_code NL (country-onboarding-design.md §5). Resolved via
+    resolve_country (I1's longest-prefix lookup), not a bare dict read — that
+    lookup is what run.py now calls at the two country_code call sites."""
+    from coverage.load import resolve_country
+    assert resolve_country("europe/netherlands") == "NL"

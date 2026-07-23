@@ -339,6 +339,111 @@ def test_ownership_is_independent_of_load_order(db):
         "regardless of load order")
 
 
+def test_ownership_is_independent_of_load_order_in_the_border_band(db):
+    """C1 regression test. Same shape as test_ownership_is_independent_of_load_order,
+    but the shared entity sits at lon 3.995 — 0.005 deg from the BE/NL edge, INSIDE
+    BOUNDARY_SNAP_DEG (0.01) of BOTH regions, not the 0.5 deg the other tests use.
+    Geofabrik's real overlap buffer is 0.1026 deg, ten times the snap, so the whole
+    snap allowance sits inside the zone where both extracts' filters accept the row —
+    the DWithin-of-own-country predicate is not mutually exclusive there and falls
+    back to ON CONFLICT / last-writer-wins, which this design exists to remove."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
+        "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
+        "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
+    db.commit()
+    shared = _row("node/shared", "C", lon=3.995, lat=50.5)   # geometrically inside BE
+
+    # BE first, then NL
+    load_region(db, [shared], "europe/belgium", "BE")
+    load_region(db, [shared], "europe/netherlands", "NL")
+    be_first = db.execute(
+        "SELECT s.slug FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id"
+    ).fetchone()
+
+    db.execute("DELETE FROM coverage_poi")
+    db.commit()
+
+    # NL first, then BE
+    load_region(db, [shared], "europe/netherlands", "NL")
+    load_region(db, [shared], "europe/belgium", "BE")
+    nl_first = db.execute(
+        "SELECT s.slug FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id"
+    ).fetchone()
+
+    assert be_first == nl_first == ("europe/belgium",), (
+        "a shared border-band entity must be owned by the extract whose country "
+        "contains it, regardless of load order — even 0.005 deg from the edge")
+
+
+def test_ownership_tie_break_is_stable_regardless_of_load_order(db):
+    """A row roughly equidistant from two countries' regions (here: exactly ON
+    the shared BE/NL edge, distance 0 to both) must still resolve to exactly
+    ONE stable owner, using the same area/id tie-break the nearest-wins
+    ORDER BY shares with the existing smallest-area-wins membership step — not
+    an accident of which extract's load happened to run last."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
+        "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
+        "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
+    db.commit()
+    tied = _row("node/tie", "C", lon=4.0, lat=50.5)   # exactly on the shared edge
+
+    load_region(db, [tied], "europe/belgium", "BE")
+    load_region(db, [tied], "europe/netherlands", "NL")
+    be_first = db.execute(
+        "SELECT s.slug FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id"
+    ).fetchone()
+
+    db.execute("DELETE FROM coverage_poi")
+    db.commit()
+
+    load_region(db, [tied], "europe/netherlands", "NL")
+    load_region(db, [tied], "europe/belgium", "BE")
+    nl_first = db.execute(
+        "SELECT s.slug FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id"
+    ).fetchone()
+
+    assert be_first == nl_first == ("europe/belgium",), (
+        "an equidistant tie must resolve to the same owner regardless of load order "
+        "(equal area, so the id-ascending tie-break picks BE's region id=1)")
+
+
+def test_load_region_country_code_none_skips_filter_and_warns(db, capsys):
+    """dev/fixture (country_code=None) explicitly disables the ownership filter
+    and prints a warning naming the skip. Exercised incidentally by other
+    tests, but nothing pins the behaviour directly (I6 item 4)."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
+        "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.commit()
+    # Far outside every region and every country — the filter would drop this
+    # if it ran; country_code=None must skip it entirely and keep it.
+    load_region(db, [_row("node/anywhere", "C", lon=20.0, lat=60.0, country_code=None)],
+                "dev/fixture", None)
+    assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 1
+    err = capsys.readouterr().err
+    assert "no configured country" in err and "ownership filter skipped" in err
+
+
+def test_load_region_raises_when_country_has_no_regions(db):
+    """I2 guard: an unseeded/mid-reseed `region` table for the extract's
+    country would otherwise let the ownership filter silently delete every
+    staged row. With previous=0 (a brand-new extract — exactly the onboarding
+    case) nothing else catches it, so this must raise rather than exit 0."""
+    ensure_schema(db)
+    with pytest.raises(RuntimeError, match="onboarding step 5"):
+        load_region(db, [_row("node/1", "C")], "europe/belgium", "BE")
+    assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 0
+
+
 def test_a_non_owning_extract_does_not_create_the_row(db):
     """The NL extract carries a Belgian entity. It must not appear at all."""
     ensure_schema(db)

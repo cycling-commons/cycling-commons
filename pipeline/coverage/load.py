@@ -26,7 +26,12 @@ DRIFT_ABORT_RATIO = 0.4
 # still snap to the nearest region of its own country (region-scoping-design.md
 # §6, finding 5). ~0.01° ≈ 1.1 km at Belgian latitudes — wide enough for
 # polygon-simplification gaps, tight enough that a genuine outside-coverage point
-# stays unstamped.
+# stays unstamped. That 1.1 km figure is NORTH-SOUTH only, where a degree of
+# latitude is ~constant; east-west a degree of longitude shrinks with cos(lat),
+# so the same 0.01° is only ~0.70 km at 50°N and ~0.64 km at 54.8°N. Now that
+# the ownership filter (C1, 2026-07-23-border-overlap-ownership-design.md §3)
+# leans on this constant too, that anisotropy is worth naming here, not just at
+# the call sites.
 BOUNDARY_SNAP_DEG = 0.01
 
 # Which country each Geofabrik extract is configured to cover. Lives here rather
@@ -34,6 +39,40 @@ BOUNDARY_SNAP_DEG = 0.01
 # it decides which staged rows this extract OWNS
 # (2026-07-23-border-overlap-ownership-design.md §3), not merely what to stamp.
 COUNTRY_BY_REGION = {"europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE"}
+
+
+def resolve_country(region: str) -> str | None:
+    """Resolve a Geofabrik region slug to its configured country.
+
+    Longest-prefix match on the slug's `/`-separated segments, so a sub-country
+    extract (`europe/germany/bayern`, per the onboarding playbook's own advice
+    for large countries) or any other descendant of an onboarded slug resolves
+    via its ancestor, instead of a bare `COUNTRY_BY_REGION.get(region)` missing
+    it entirely (final-review finding I1).
+
+    `dev/fixture` is the only explicit skip — no configured country, ownership
+    filtering intentionally disabled, offline fixture path only. Any OTHER
+    unresolvable slug (including `planet`, which spans every country and has
+    no single owner by construction) is a HARD FAILURE, not a silent skip:
+    since C1 (2026-07-23-border-overlap-ownership-design.md §3) an unresolved
+    country no longer just costs a missing `country_code` stamp — it silently
+    reverts that whole extract to non-deterministic last-writer-wins ownership.
+    """
+    if region == "dev/fixture":
+        return None
+    parts = region.split("/")
+    for depth in range(len(parts), 0, -1):
+        cc = COUNTRY_BY_REGION.get("/".join(parts[:depth]))
+        if cc is not None:
+            return cc
+    raise RuntimeError(
+        f"{region!r} has no entry (or ancestor entry) in COUNTRY_BY_REGION "
+        "(pipeline/coverage/load.py) — add it before harvesting this region. "
+        "An unresolved country now silently disables the ownership filter for "
+        "the WHOLE extract instead of merely leaving country_code unset "
+        "(2026-07-23-border-overlap-ownership-design.md §3); dev/fixture is "
+        "the only intentional skip."
+    )
 
 # coverage-provider.md §2 DDL (indexes named below). Provenance is normalized:
 # the Geofabrik extract slug lives once in coverage_source and each POI carries a
@@ -162,11 +201,12 @@ def load_region(
             src_id = cur.execute(
                 "SELECT id FROM coverage_source WHERE slug = %s", (src_region,)
             ).fetchone()[0]
-            # Rows this source currently owns. Cross-region border overlap
-            # (see the upsert below) lets a neighbour reclaim shared rows, so this
-            # can undercount a bordering region's true last extract size by the
-            # shared-row count — but only lowers the drift threshold (more
-            # lenient), never triggering a spurious abort or losing data.
+            # Rows this source currently owns. Ownership is now decided by geometry,
+            # not by which extract ran last (2026-07-23-border-overlap-ownership-design.md
+            # §3, C1 final-review fix), so this count no longer flaps week to week from
+            # a neighbour reclaiming shared border rows — it is a stable baseline for
+            # the drift guard below, which is exactly what the design set out to fix
+            # (design §2.2).
             previous = cur.execute(
                 "SELECT count(*) FROM coverage_poi WHERE src_region_id = %s", (src_id,)
             ).fetchone()[0]
@@ -185,43 +225,78 @@ def load_region(
                         row.country_code,
                     ))
             # Ownership by geometry, not by write order
-            # (2026-07-23-border-overlap-ownership-design.md §3). This extract owns a
-            # staged row iff the row falls inside — or within BOUNDARY_SNAP_DEG of — a
-            # region of the extract's OWN country. Two classes are deleted here:
-            #   * a border entity that geometrically belongs to a NEIGHBOURING extract.
+            # (2026-07-23-border-overlap-ownership-design.md §3). Nearest-region-wins
+            # (final-review C1): find the SINGLE closest region to the row, across ALL
+            # onboarded countries, not just the extract's own — containment (distance 0)
+            # always wins, so decision 2's BOUNDARY_SNAP_DEG rescue is preserved exactly.
+            # This extract keeps the row only if that nearest region's country is its
+            # own; every other extract's run deletes it. That makes the predicate
+            # mutually exclusive: a row within the snap of BOTH its own and a
+            # neighbour's region (Geofabrik's overlap buffer is 0.1026 deg, 10x the
+            # 0.01 deg snap, so this band is not an edge case) used to pass both
+            # extracts' independent "is a region of MY country within range" checks and
+            # fall back to ON CONFLICT / last-writer-wins — the C1 defect this replaces.
+            # Two classes are deleted here:
+            #   * a border entity whose nearest region belongs to a NEIGHBOURING extract.
             #     Geofabrik's cuts overlap, so one entity arrives in several extracts;
             #     ON CONFLICT below used to hand it to whoever ran last (319 rows were
             #     mis-owned). Now exactly one extract ever stages it.
-            #   * a row in NO onboarded region at all (decision 1). All 380 were measured
-            #     as foreign or offshore — Czech/Austrian viewpoints, the Wadden Sea,
-            #     France, Luxembourg — not "in the country but outside every province",
-            #     which the snap already rescues. Onboarding those countries re-harvests
-            #     them WITH correct region stamps.
-            # BEFORE the drift count on purpose: `previous` and `inserted` then both mean
-            # "rows this extract owns", which is exactly what stops the drift baseline
-            # flapping with border ownership (design §2.2).
+            #   * a row with no region within BOUNDARY_SNAP_DEG of ANY onboarded country
+            #     (decision 1: COALESCE(..., '') never equals a real two-letter cc). All
+            #     380 measured today are foreign or offshore — Czech/Austrian viewpoints,
+            #     the Wadden Sea, France, Luxembourg — not "in the country but outside
+            #     every province", which the snap already rescues. Onboarding those
+            #     countries re-harvests them WITH correct region stamps.
+            # `r.geom && ST_Expand(s.geom, %(snap)s)` is a lossless bbox prefilter (C2):
+            # without it the 16-row `region` table is seq-scanned and ST_DWithin runs
+            # full-detail Bundesland polygon math ~7x per staged row (~17 min on
+            # Germany); the bbox makes the GiST index on region.geom usable and the
+            # bounding condition is a necessary (never over-eager) precondition of
+            # ST_DWithin, so no rows are lost.
+            # `staged` is captured BEFORE the filter and `inserted` after, so a
+            # DriftAbort (or the printed summary in run.py) can tell "the extract really
+            # shrank" apart from "the ownership filter did its job" (I3) — both used to
+            # collapse into one number, which points an operator at the wrong cause.
             # dev/fixture has no configured country; it keeps the old unfiltered
             # behaviour so the offline fixture path still works.
+            staged = cur.execute("SELECT count(*) FROM coverage_poi_staging").fetchone()[0]
             if country_code is None:
                 print(f"[coverage] {src_region}: no configured country — "
                       "ownership filter skipped", file=sys.stderr)
             else:
+                # I2 guard: an unseeded/mid-reseed `region` table for this country would
+                # otherwise make the filter below delete every staged row silently. With
+                # previous > 0 the drift guard below would catch that; with previous == 0
+                # (a brand-new extract — exactly the onboarding case) nothing else would.
+                has_regions = cur.execute(
+                    "SELECT count(*) FROM region WHERE country_code = %s", (country_code,)
+                ).fetchone()[0]
+                if has_regions == 0:
+                    raise RuntimeError(
+                        f"{src_region}: no `region` rows for country {country_code!r} — "
+                        "the ownership filter would drop every staged row. Run region "
+                        "onboarding step 5 (region seeding) for this country before "
+                        "loading coverage (tools/divisions/README.md)."
+                    )
                 cur.execute(
                     """
                     DELETE FROM coverage_poi_staging s
-                    WHERE NOT EXISTS (
-                        SELECT 1 FROM region r
-                        WHERE r.country_code = %s
-                          AND ST_DWithin(r.geom, s.geom, %s)
-                    )
+                    WHERE COALESCE((
+                        SELECT r.country_code FROM region r
+                        WHERE r.geom && ST_Expand(s.geom, %(snap)s)
+                          AND ST_DWithin(r.geom, s.geom, %(snap)s)
+                        ORDER BY ST_Distance(r.geom, s.geom), r.area_km2 ASC NULLS LAST, r.id ASC
+                        LIMIT 1
+                    ), '') <> %(cc)s
                     """,
-                    (country_code, BOUNDARY_SNAP_DEG),
+                    {"snap": BOUNDARY_SNAP_DEG, "cc": country_code},
                 )
             inserted = cur.execute("SELECT count(*) FROM coverage_poi_staging").fetchone()[0]
             if previous > 0 and inserted < previous * (1 - DRIFT_ABORT_RATIO):
                 raise DriftAbort(
-                    f"{src_region}: new extract has {inserted} rows vs {previous} previously "
-                    f"(more than {DRIFT_ABORT_RATIO:.0%} drop) — aborting swap, keeping last good slice."
+                    f"{src_region}: {staged} rows staged, {inserted} after the ownership "
+                    f"filter, vs {previous} previously (more than {DRIFT_ABORT_RATIO:.0%} "
+                    "drop) — aborting swap, keeping last good slice."
                 )
             cur.execute("DELETE FROM coverage_poi WHERE src_region_id = %s", (src_id,))
             # UPSERT, not plain INSERT: Geofabrik regional extracts overlap at
