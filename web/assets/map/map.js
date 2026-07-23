@@ -299,11 +299,23 @@
         // Document/tab order = visual row-major order (NW,N,NE / W,centre,E /
         // SW,S,SE): a screen reader or keyboard tab walks the grid exactly as
         // it reads on screen, so position never needs to be inferred visually.
-        const DIRS=[['nw','compassNw'],['n','compassN'],['ne','compassNe'],
-          ['w','compassW'],null,['e','compassE'],
-          ['sw','compassSw'],['s','compassS'],['se','compassSe']];
+        // Grouped by row so an entirely-empty row can be dropped: empty cells are
+        // `visibility:hidden`, so they still reserve their height and a whole
+        // vacant row leaves a band of dead space above (or below) the grid.
+        // Flanders is the everyday case — Brussels and Wallonia both lie south of
+        // it, so the whole N row is vacant. Skipping the row top-aligns the grid
+        // instead. The middle row always holds the centre, so it never drops, and
+        // dropping only WHOLE rows keeps every surviving chip in its true
+        // direction relative to the centre.
+        const ROWS=[
+          [['nw','compassNw'],['n','compassN'],['ne','compassNe']],
+          [['w','compassW'],null,['e','compassE']],
+          [['sw','compassSw'],['s','compassS'],['se','compassSe']],
+        ];
         html+=`<div class="cc-compass" role="group" aria-label="${escPend(D.compassGroup||'Nearby regions')}">`;
-        DIRS.forEach(entry=>{
+        ROWS.forEach(row=>{
+          if(!row.some(entry=>entry===null||layout[entry[0]])) return;   // no centre, no regions → drop
+          row.forEach(entry=>{
           if(entry===null){
             html+=`<div class="cc-compass-cell cc-compass-center"><button data-scope="region:${escPend(activeRegion.slug)}">${escPend(activeRegion.label||activeRegion.slug)}</button></div>`;
             return;
@@ -320,6 +332,7 @@
           } else {
             html+='<div class="cc-compass-cell empty" aria-hidden="true"></div>';
           }
+          });
         });
         html+='</div>';
         // Regions the grid could not place WITHOUT misstating their direction
