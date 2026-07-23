@@ -578,6 +578,65 @@
       return list.slice(0, cap);
     },
 
+    /** Assign up to 8 regions to compass slots around `origin` ([lng, lat]) by
+     *  true bearing from `origin` to each region's own bbox centre (owner
+     *  request, 2026-07-22-scope-selector-scale-design.md §B "Compass grid
+     *  layout"): the active region sits in the caller's centre cell, and each
+     *  neighbour lands in the cell matching the direction it actually lies —
+     *  north above, east right, and so on.
+     *
+     *  Ground-corrected for latitude, same `cos(lat)` scaling `regionOfPoint`/
+     *  `contextualRegions` already use: a bare degree-delta bearing is skewed
+     *  east-west away from the equator (a longitude degree is ~0.65 of a
+     *  latitude degree at 49N), so an uncorrected bearing can land a region a
+     *  full octant away from where it visually sits.
+     *
+     *  Deterministic collision resolution: regions are processed NEAREST-first
+     *  (ground distance from `origin`); when a region's ideal slot is already
+     *  taken, it takes the nearest FREE slot by angular distance to its own
+     *  bearing. Nothing is ever dropped silently — once all 8 slots fill,
+     *  every further region lands in `overflow` for the caller to fold in
+     *  (e.g. into the existing "More regions…" chip) rather than losing it.
+     *
+     *  Pure: no DOM, no storage, no mutation of the registry rows passed in.
+     *  Returns {n,ne,e,se,s,sw,w,nw: region|null, overflow: region[]}. */
+    compassLayout(origin, regionsList) {
+      const SLOTS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
+      const ANGLE = { n: 0, ne: 45, e: 90, se: 135, s: 180, sw: 225, w: 270, nw: 315 };
+      const result = { n: null, ne: null, e: null, se: null, s: null, sw: null, w: null, nw: null, overflow: [] };
+      if (!origin || !Array.isArray(regionsList) || !regionsList.length) return result;
+      const ox = origin[0]; const oy = origin[1];
+      const kx = Math.cos(oy * Math.PI / 180);
+      const withInfo = regionsList.map((r) => {
+        const b = r && r.bbox;
+        const cx = b ? (b[0] + b[2]) / 2 : ox;
+        const cy = b ? (b[1] + b[3]) / 2 : oy;
+        const dx = (cx - ox) * kx;
+        const dy = cy - oy;
+        let bearing = Math.atan2(dx, dy) * 180 / Math.PI;
+        if (bearing < 0) bearing += 360;
+        return { r, dist: dx * dx + dy * dy, bearing };
+      });
+      withInfo.sort((a, b) => a.dist - b.dist);
+      const free = new Set(SLOTS);
+      withInfo.forEach(({ r, bearing }) => {
+        if (!free.size) { result.overflow.push(r); return; }
+        let slot = SLOTS[Math.round(bearing / 45) % 8];
+        if (!free.has(slot)) {
+          let best = null; let bestDiff = Infinity;
+          free.forEach((s) => {
+            const diff = Math.abs(bearing - ANGLE[s]);
+            const wrapped = Math.min(diff, 360 - diff);
+            if (wrapped < bestDiff) { bestDiff = wrapped; best = s; }
+          });
+          slot = best;
+        }
+        result[slot] = r;
+        free.delete(slot);
+      });
+      return result;
+    },
+
     /** MapLibre filter expression for the coverage TILE layers (Phase 3,
      *  region-scoping-design.md §6/§7), or null for Everywhere (no filter). The
      *  scope keys are pipe-delimited membership TOKENS: ridtok = "|<region_id>|"

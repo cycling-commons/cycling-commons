@@ -901,3 +901,112 @@ test('label: null/kindless input resolves to null', () => {
   assert.equal(S.label(null), null);
   assert.equal(S.label({}), null);
 });
+
+// ---- compassLayout (owner request: "the selected region inside the chips,
+// surrounding regions correctly placed around it" — 2026-07-22-scope-selector-
+// scale-design.md §B "Compass grid layout"). Pure — no registry/state
+// dependency at all, so these run directly against the shared `CCScope`
+// (no freshScope() isolation needed).
+
+test('compassLayout: clearly N/E/S/W neighbours land in the matching slot', () => {
+  const origin = [0, 0]; // equator: no cos(lat) skew to reason about
+  const north = { slug: 'north', bbox: [-0.1, 4.9, 0.1, 5.1] };   // due north
+  const east = { slug: 'east', bbox: [4.9, -0.1, 5.1, 0.1] };     // due east
+  const south = { slug: 'south', bbox: [-0.1, -5.1, 0.1, -4.9] }; // due south
+  const west = { slug: 'west', bbox: [-5.1, -0.1, -4.9, 0.1] };   // due west
+  const g = CCScope.compassLayout(origin, [north, east, south, west]);
+  assert.equal(g.n.slug, 'north');
+  assert.equal(g.e.slug, 'east');
+  assert.equal(g.s.slug, 'south');
+  assert.equal(g.w.slug, 'west');
+  assert.deepEqual(g.overflow, []);
+});
+
+test('compassLayout: the cos(lat) ground correction changes the assigned slot', () => {
+  // Origin at 60N, where cos(60)=0.5 halves the longitude delta's ground
+  // weight. A region 4deg east and 1deg north of the origin: an UNCORRECTED
+  // bearing (dx=4, dy=1) is atan2(4,1)=75.96deg -> rounds to 'e' (90).
+  // The cos(lat)-CORRECTED bearing (dx=4*0.5=2, dy=1) is atan2(2,1)=63.43deg
+  // -> rounds to 'ne' (45) instead. Landing in 'ne' (not 'e') is only
+  // possible if the correction actually ran.
+  const origin = [0, 60];
+  const region = { slug: 'skewed', bbox: [3.99, 60.99, 4.01, 61.01] };
+  const g = CCScope.compassLayout(origin, [region]);
+  assert.equal(g.ne.slug, 'skewed');
+  assert.equal(g.e, null);
+});
+
+test('compassLayout: collisions resolve deterministically — nearest region keeps the slot, others bump nearest-free', () => {
+  const origin = [0, 0];
+  // All three sit at bearing exactly 45deg (dx===dy), increasing distance —
+  // all three want 'ne'.
+  const near = { slug: 'near', bbox: [0.9, 0.9, 1.1, 1.1] };
+  const mid = { slug: 'mid', bbox: [1.9, 1.9, 2.1, 2.1] };
+  const far = { slug: 'far', bbox: [2.9, 2.9, 3.1, 3.1] };
+  const g = CCScope.compassLayout(origin, [far, mid, near]); // input order shouldn't matter
+  assert.equal(g.ne.slug, 'near'); // nearest keeps the ideal slot
+  // 'n' (0deg) and 'e' (90deg) are equidistant (45deg) from a 45deg bearing;
+  // the tie is broken by SLOTS order (n before e), so mid takes 'n'.
+  assert.equal(g.n.slug, 'mid');
+  // far is bumped again: 'ne' and 'n' both taken, 'e' is the next-nearest free.
+  assert.equal(g.e.slug, 'far');
+  assert.deepEqual(g.overflow, []);
+});
+
+test('compassLayout: once all 8 slots fill, further regions report as overflow (never dropped)', () => {
+  const origin = [0, 0];
+  const canonical = [0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => {
+    const rad = deg * Math.PI / 180;
+    // unit vector at this bearing, pushed out to a distinct increasing distance
+    return { slug: `slot${i}`, bbox: [Math.sin(rad) - 0.01, Math.cos(rad) - 0.01, Math.sin(rad) + 0.01, Math.cos(rad) + 0.01] };
+  });
+  const ninth = { slug: 'leftover', bbox: [9.99, 9.99, 10.01, 10.01] }; // far away, bearing 45deg (already full)
+  const g = CCScope.compassLayout(origin, canonical.concat([ninth]));
+  for (const s of ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']) assert.ok(g[s], `slot ${s} should be filled`);
+  assert.equal(g.overflow.length, 1);
+  assert.equal(g.overflow[0].slug, 'leftover');
+});
+
+test('compassLayout: empty/missing input is total, not a throw', () => {
+  assert.deepEqual(CCScope.compassLayout(null, [{ slug: 'x', bbox: [0, 0, 1, 1] }]).overflow, []);
+  const empty = CCScope.compassLayout([0, 0], []);
+  assert.equal(empty.n, null);
+  assert.deepEqual(empty.overflow, []);
+});
+
+// Real NL province bboxes (fetched live from the dev DB, region-onboarding
+// playbook), Utrecht as origin — the exact owner-reported case (scopeCenter
+// regression test above uses the same fixture): Noord-Holland must land
+// north-ish, Gelderland east-ish, Noord-Brabant south-ish, Zuid-Holland
+// west-ish, matching how the provinces actually sit on the map.
+test('compassLayout: real Dutch province bboxes, Utrecht origin, land in plausible compass slots', () => {
+  const NL = [
+    ['drenthe', 6.1198199, 52.6121955, 7.0927397, 53.2038323],
+    ['flevoland', 5.0604281, 52.2495271, 6.0173014, 52.8439822],
+    ['friesland', 4.8492193, 52.7648052, 6.4276147, 53.5146336],
+    ['gelderland', 4.9938547, 51.7335807, 6.8328017, 52.522025],
+    ['groningen', 6.1674318, 52.8381961, 7.2274985, 53.5764233],
+    ['limburg-nl', 5.5660454, 50.7503658, 6.2267694, 51.7786273],
+    ['noord-brabant', 4.1901242, 51.2209094, 6.0481208, 51.830751],
+    ['noord-holland', 4.4936894960420215, 52.165929, 5.3772598, 53.189394435610396],
+    ['overijssel', 5.7777501, 52.1180695, 7.0727634, 52.8542149],
+    ['zeeland', 3.358384, 51.2001624, 4.2774232, 51.7737999],
+    ['zuid-holland', 3.7736754, 51.6437779, 5.0314151, 52.3325109],
+  ].map(([slug, x0, y0, x1, y1]) => ({ slug, bbox: [x0, y0, x1, y1] }));
+  const utrecht = { west: 4.7920404, south: 51.8573607, east: 5.6273145, north: 52.3036184 };
+  const origin = [(utrecht.west + utrecht.east) / 2, (utrecht.south + utrecht.north) / 2];
+  // 8 nearest neighbours by the same ground-corrected metric contextualRegions
+  // uses — the cap that makes "8 neighbours + 1 centre = 9" work.
+  const kx = Math.cos(origin[1] * Math.PI / 180);
+  const nearest8 = NL.map((r) => {
+    const cx = (r.bbox[0] + r.bbox[2]) / 2; const cy = (r.bbox[1] + r.bbox[3]) / 2;
+    const d = ((cx - origin[0]) * kx) ** 2 + (cy - origin[1]) ** 2;
+    return { r, d };
+  }).sort((a, b) => a.d - b.d).slice(0, 8).map((x) => x.r);
+  const g = CCScope.compassLayout(origin, nearest8);
+  assert.equal(g.n.slug, 'noord-holland');
+  assert.equal(g.e.slug, 'gelderland');
+  assert.equal(g.s.slug, 'noord-brabant');
+  assert.equal(g.w.slug, 'zuid-holland');
+  assert.deepEqual(g.overflow, []);
+});

@@ -62,6 +62,62 @@ the `CCScope` model, tokens, dim mask, or per-country coverage tiles from
    sidebar search box, so every onboarded region stays reachable regardless of
    country size. `contextualRegions(cc)` with no `opts` stays valid for every
    existing caller.
+3. **Compass grid layout.** Owner request: "the selected region is actually
+   inside the chips and the surrounding regions are correctly placed around
+   it." When the active scope is a **single named region**, the chip block
+   renders as a 3x3 grid instead of a wrapped linear list: the active region
+   sits in the **centre** cell, and each of up to 8 neighbours lands in the
+   cell matching the direction it actually lies from the centre (N above, E
+   right, and so on) — "8 neighbours + 1 centre = exactly 9" is what the
+   existing 8-region cap (owner fix 2, above) makes work without any new
+   limit. Country, Everywhere, and My-area scopes are unchanged (linear list)
+   — none of them has a single centre to build a grid around.
+
+   - **`CCScope.compassLayout(origin, regions)`** (`scope.js`, pure, unit-tested
+     in `scope.test.cjs`) assigns each region to one of eight compass slots by
+     the **true bearing** from `origin` to that region's own bbox centre,
+     ground-corrected for latitude with the same `cos(lat)` scaling
+     `regionOfPoint`/`contextualRegions` already use (an uncorrected bearing is
+     skewed east-west away from the equator and lands regions a full octant
+     off). Regions are processed **nearest-first**; a region whose ideal slot
+     is already taken bumps to the **nearest free slot by angular distance** —
+     deterministic, and nothing is ever silently dropped: once all 8 slots
+     fill, further regions land in `overflow` for the caller to fold in (here,
+     into the same "More regions…" chip §B(2) already renders).
+   - **`renderScopeChips()`** (`map.js`) builds the neighbour pool from
+     `contextualRegions(cc, {near: scopeCenter(), limit: 9})` with the active
+     region filtered out (the 9th slot the near-sort always gives it, being
+     distance 0 from itself), then lays the remaining ≤8 out with
+     `compassLayout()`. Document/tab order is row-major (NW,N,NE / W,**centre**,E
+     / SW,S,SE) — the same order the grid reads visually, so keyboard/
+     screen-reader traversal never diverges from what's on screen. Empty
+     compass cells render as empty, ARIA-hidden `<div>`s (not missing
+     elements), so the grid never collapses to fewer than 9 tracks. The
+     "More regions…" overflow chip and the `All <country>` rung render
+     **below** the grid in ordinary linear flow — neither is geographic, so
+     neither may occupy a compass cell.
+   - **Accessibility:** grid position alone doesn't reach a screen reader, so
+     every neighbour button carries an `aria-label` spelling out its direction
+     ("North: Noord-Holland", `d_compass_label` template + 8 `d_compass_*`
+     direction words, all four locales) in addition to its visible label; the
+     3x3 grid itself is a `role="group"` with an `aria-label`
+     (`d_compass_group`). The active/centre chip keeps the same `.on` marking
+     (and the same bold-on-active idiom `#mode button.on` already uses) as
+     every other chip — no new "you are here" convention invented.
+   - **Narrow-viewport judgement call:** the risk is not really "mobile" — the
+     `.app` rail is a **fixed 340px** column (`grid-template-columns`, not
+     viewport-responsive) at every width above the existing `≤820px` sheet
+     breakpoint, so three columns of a full region name ("Baden-Württemberg",
+     "Rhineland-Palatinate") are cramped at *every* desktop width, not just
+     small ones. Below `≤820px` the rail becomes a near-full-viewport bottom
+     sheet (usually *wider* than 340px), so the same constraint, not a worse
+     one. The fix is therefore applied unconditionally to grid mode rather
+     than gated behind a new breakpoint: smaller monospace type (`.56rem` vs
+     the linear list's `.6rem`) and **word-wrap instead of truncation** — a
+     region name wrapping to two lines inside its cell is legible; an
+     ellipsis or a shrunk-to-illegible label is not. No new breakpoint was
+     added; the existing `≤820px` filter-sheet breakpoint needed no changes
+     because it already gives the grid *more* room, not less.
 
 ## Problem
 

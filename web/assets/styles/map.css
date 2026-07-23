@@ -144,6 +144,31 @@
   .scope-toggle button{flex:1 1 auto;min-width:calc(33.3% - .35rem);background:transparent;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .3rem;border:1px solid rgba(239,230,212,.25);border-radius:6px;cursor:pointer;transition:all .18s}
   .scope-toggle button:hover{border-color:rgba(239,230,212,.5)}
   .scope-toggle button.on{background:var(--spruce-lift);border-color:var(--glacier);color:var(--paper)}
+  /* Compass grid (owner request, 2026-07-22-scope-selector-scale-design.md §B
+     "Compass grid layout"): only rendered when the active scope is a single
+     region (map.js renderScopeChips) — the selected region sits centre, each
+     neighbour in the 3x3 cell matching the direction it actually lies. This
+     overrides #scopeChips' base `display:contents` (a compound selector beats
+     the bare-ID rule regardless of source order) so the grid + the linear
+     More/All-country row below it get their OWN box instead of unboxing into
+     the parent flex row — a 3x3 grid can't be a flex-wrap item. */
+  #scopeChips.cc-grid{display:flex;flex-direction:column;gap:.5rem;flex:1 1 100%}
+  .cc-compass{display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem}
+  .cc-compass-cell{display:flex;min-height:2.5rem}
+  .cc-compass-cell.empty{visibility:hidden}
+  /* Same button skin as the linear chips (.scope-toggle button, above) — this
+     is a compound selector so it wins over the base rule without !important —
+     but smaller/wrapping type: a full region name ("Rhineland-Palatinate",
+     "Baden-Württemberg") has 3 columns of ~90px to fit inside the persistent
+     340px rail (grid-template-columns, top of this file — NOT viewport-width
+     responsive, so this is the standing constraint at every window size, not
+     just "mobile"). Wrapping to 2 lines reads fine in a compass cell (the
+     position already carries most of the meaning); truncating the name or
+     shrinking it to illegibility would not. */
+  .cc-compass-cell button{flex:1 1 auto;width:100%;min-width:0;font-size:.56rem;line-height:1.25;letter-spacing:.02em;white-space:normal;overflow-wrap:break-word;padding:.4rem .2rem}
+  .cc-compass-center button{font-weight:700} /* same "active = bold" idiom as #mode button.on, above */
+  .cc-compass-more{display:flex;flex-wrap:wrap;gap:.35rem}
+  .cc-compass-more button{flex:1 1 auto;min-width:calc(50% - .35rem)}
   /* discipline filter — compacted (visual-only chips, see markup note): smaller pad/type + tighter gap */
   #disc{gap:.3rem}
   #disc .chip{padding:.26rem .5rem;font-size:.6rem;letter-spacing:.05em}

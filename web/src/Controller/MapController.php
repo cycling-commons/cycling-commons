@@ -191,6 +191,16 @@ final class MapController extends AbstractController
             // §B, owner fix 2): shown only when a country's region count exceeds
             // the 8-closest cap; opens/focuses the sidebar search box.
             'scopesMore' => 'd_scopes_more',
+            // Compass grid (owner request, 2026-07-22-scope-selector-scale-design.md
+            // §B "Compass grid layout"): a spelled-out direction word per neighbour
+            // chip, since the cell's position alone doesn't reach a screen reader.
+            // compassLabel is the aria-label template ('{dir}: {region}');
+            // compassGroup names the whole 3x3 grid for the role="group" wrapper.
+            'compassN' => 'd_compass_n', 'compassNe' => 'd_compass_ne',
+            'compassE' => 'd_compass_e', 'compassSe' => 'd_compass_se',
+            'compassS' => 'd_compass_s', 'compassSw' => 'd_compass_sw',
+            'compassW' => 'd_compass_w', 'compassNw' => 'd_compass_nw',
+            'compassLabel' => 'd_compass_label', 'compassGroup' => 'd_compass_group',
             'community' => 'd_community', 'showAll' => 'd_show_all',
             'suggestedRoute' => 'd_suggested_route', 'start' => 'd_start', 'shape' => 'd_shape',
             'roundtrip' => 'd_roundtrip', 'season' => 'd_season', 'why' => 'd_why', 'note' => 'd_note',

@@ -257,6 +257,7 @@
     const scopeCc = (s&&s.countryCode) || (s&&s.regionIds&&s.regionIds.length&&(window.CCScope.regions()[0]||{}).countryCode);
     const cc = isDef ? (window.CCScope.inferHomeCountry() || scopeCc) : (scopeCc || window.CCScope.inferHomeCountry());
     let html='';
+    let gridMode=false;
     if(cc){
       // Cap block (2026-07-22-scope-selector-scale-design.md §B, owner fix 2):
       // show at most the 8 CLOSEST regions, not the first 8 alphabetically —
@@ -279,18 +280,70 @@
       // overflow branch below could never fire for any country (browser-verified
       // dead code — Germany showed 8 of 16 with no More chip).
       const all=window.CCScope.contextualRegions(cc,{limit:Infinity}); // uncapped — the true total + country label
-      const shown=window.CCScope.contextualRegions(cc,{near});         // capped at 8, nearest-first
-      shown.forEach(r=>{
-        html+=`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label||r.slug)}</button>`;
-      });
-      // Overflow affordance: more regions exist than the cap shows — a chip
-      // that opens/focuses search (rather than silently dropping them) so
-      // every onboarded region stays reachable regardless of country size.
-      if(all.length>shown.length){
-        html+=`<button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button>`;
+      // Compass grid (owner request: "the selected region inside the chips,
+      // surrounding regions correctly placed around it" —
+      // 2026-07-22-scope-selector-scale-design.md §B "Compass grid layout"):
+      // only meaningful when the active scope IS one named region — a country/
+      // everywhere/myArea scope has no single centre to lay a grid around, so
+      // those keep today's linear list unchanged (`sc` is null for both).
+      const activeRegion = (s.kind==='region' && s.regionIds.length===1) ? (window.CCScope.regions()[0]||null) : null;
+      if(activeRegion && sc){
+        gridMode=true;
+        // 9 nearest INCLUDING the active region itself (it is distance 0 from
+        // its own centre, so it always ranks first), then drop it — the
+        // remaining up to 8 are the neighbours the grid places around it (the
+        // owner's own arithmetic: "8 neighbours + 1 centre = exactly 9").
+        const pool=window.CCScope.contextualRegions(cc,{near:sc,limit:9})
+          .filter(r=>r.id!==activeRegion.id).slice(0,8);
+        const layout=window.CCScope.compassLayout(sc,pool);
+        // Document/tab order = visual row-major order (NW,N,NE / W,centre,E /
+        // SW,S,SE): a screen reader or keyboard tab walks the grid exactly as
+        // it reads on screen, so position never needs to be inferred visually.
+        const DIRS=[['nw','compassNw'],['n','compassN'],['ne','compassNe'],
+          ['w','compassW'],null,['e','compassE'],
+          ['sw','compassSw'],['s','compassS'],['se','compassSe']];
+        html+=`<div class="cc-compass" role="group" aria-label="${escPend(D.compassGroup||'Nearby regions')}">`;
+        DIRS.forEach(entry=>{
+          if(entry===null){
+            html+=`<div class="cc-compass-cell cc-compass-center"><button data-scope="region:${escPend(activeRegion.slug)}">${escPend(activeRegion.label||activeRegion.slug)}</button></div>`;
+            return;
+          }
+          const [dir,dKey]=entry;
+          const r=layout[dir];
+          if(r){
+            // The direction word is spelled out in the aria-label (not conveyed
+            // by grid position alone, review requirement) via the same
+            // escPend+tpl idiom as every other interpolated string here.
+            const dirWord=D[dKey]||dir;
+            const aria=tpl(D.compassLabel||'{dir}: {region}',{dir:dirWord,region:r.label||r.slug});
+            html+=`<div class="cc-compass-cell"><button data-scope="region:${escPend(r.slug)}" aria-label="${escPend(aria)}">${escPend(r.label||r.slug)}</button></div>`;
+          } else {
+            html+='<div class="cc-compass-cell empty" aria-hidden="true"></div>';
+          }
+        });
+        html+='</div>';
+        // More/All-country stay BELOW the grid in plain linear flow — neither
+        // is a geographic neighbour, so neither may occupy a compass cell.
+        const shownTotal=pool.length+1; // +1 the centre
+        if(all.length>shownTotal){
+          html+=`<div class="cc-compass-more"><button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button></div>`;
+        }
+        const cl=(all[0]||{}).countryLabel||('All '+cc);
+        html+=`<div class="cc-compass-more"><button data-scope="country:${escPend(cc)}">${escPend(cl)}</button></div>`;
+      } else {
+        const shown=window.CCScope.contextualRegions(cc,{near});         // capped at 8, nearest-first
+        shown.forEach(r=>{
+          html+=`<button data-scope="region:${escPend(r.slug)}">${escPend(r.label||r.slug)}</button>`;
+        });
+        // Overflow affordance: more regions exist than the cap shows — a chip
+        // that opens/focuses search (rather than silently dropping them) so
+        // every onboarded region stays reachable regardless of country size.
+        if(all.length>shown.length){
+          html+=`<button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button>`;
+        }
+        const cl=(all[0]||{}).countryLabel||('All '+cc);
+        html+=`<button data-scope="country:${escPend(cc)}">${escPend(cl)}</button>`;
       }
-      const cl=(all[0]||{}).countryLabel||('All '+cc);
-      html+=`<button data-scope="country:${escPend(cc)}">${escPend(cl)}</button>`;
     } else {
       // cold-start fallback: onboarded country rungs (window.CC_REGIONS-derived),
       // label-sorted (final review MINOR 8) — CC_REGIONS' own order is
@@ -304,6 +357,11 @@
       countries.forEach(({cc,label})=>{ html+=`<button data-scope="country:${escPend(cc)}">${escPend(label)}</button>`; });
     }
     host.innerHTML=html;
+    // Grid mode gets its own box (a CSS-grid column of the 3x3 grid + the
+    // linear More/All-country row below it); the linear list stays
+    // `display:contents` so its buttons flex alongside My-area/Everywhere
+    // exactly as before (map.css).
+    host.classList.toggle('cc-grid', gridMode);
     // (re)bind the freshly-rendered chips to CCScope, same contract as the static ones.
     host.querySelectorAll('button[data-scope]').forEach(b=>b.onclick=()=>{
       const tok=b.dataset.scope;
