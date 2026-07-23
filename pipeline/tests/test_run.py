@@ -131,7 +131,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
             calls.append("counts-query")
             return FakeResult()
 
-    def fake_load_region(conn, rows, region):
+    def fake_load_region(conn, rows, region, country_code):
         calls.append(f"load:{region}")
         if region == "dev/bad":
             raise DriftAbort("simulated drift: 1 row vs 100 previously")

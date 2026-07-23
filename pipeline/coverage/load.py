@@ -10,6 +10,7 @@ see a half-loaded region; a drift abort keeps last week's slice serving.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Iterable
 from dataclasses import dataclass
 
@@ -27,6 +28,12 @@ DRIFT_ABORT_RATIO = 0.4
 # polygon-simplification gaps, tight enough that a genuine outside-coverage point
 # stays unstamped.
 BOUNDARY_SNAP_DEG = 0.01
+
+# Which country each Geofabrik extract is configured to cover. Lives here rather
+# than in run.py because it is now load-time DATA SEMANTICS, not orchestration:
+# it decides which staged rows this extract OWNS
+# (2026-07-23-border-overlap-ownership-design.md §3), not merely what to stamp.
+COUNTRY_BY_REGION = {"europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE"}
 
 # coverage-provider.md §2 DDL (indexes named below). Provenance is normalized:
 # the Geofabrik extract slug lives once in coverage_source and each POI carries a
@@ -128,7 +135,12 @@ def ensure_schema(conn: psycopg.Connection) -> None:
     conn.commit()
 
 
-def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: str) -> LoadResult:
+def load_region(
+    conn: psycopg.Connection,
+    rows: Iterable[PoiRow],
+    src_region: str,
+    country_code: str | None = None,
+) -> LoadResult:
     """Atomically replace one region's slice of coverage_poi.
 
     COPY into a same-shape TEMP staging table, drift-check against the previous
@@ -172,6 +184,39 @@ def load_region(conn: psycopg.Connection, rows: Iterable[PoiRow], src_region: st
                         row.osm_ts,
                         row.country_code,
                     ))
+            # Ownership by geometry, not by write order
+            # (2026-07-23-border-overlap-ownership-design.md §3). This extract owns a
+            # staged row iff the row falls inside — or within BOUNDARY_SNAP_DEG of — a
+            # region of the extract's OWN country. Two classes are deleted here:
+            #   * a border entity that geometrically belongs to a NEIGHBOURING extract.
+            #     Geofabrik's cuts overlap, so one entity arrives in several extracts;
+            #     ON CONFLICT below used to hand it to whoever ran last (319 rows were
+            #     mis-owned). Now exactly one extract ever stages it.
+            #   * a row in NO onboarded region at all (decision 1). All 380 were measured
+            #     as foreign or offshore — Czech/Austrian viewpoints, the Wadden Sea,
+            #     France, Luxembourg — not "in the country but outside every province",
+            #     which the snap already rescues. Onboarding those countries re-harvests
+            #     them WITH correct region stamps.
+            # BEFORE the drift count on purpose: `previous` and `inserted` then both mean
+            # "rows this extract owns", which is exactly what stops the drift baseline
+            # flapping with border ownership (design §2.2).
+            # dev/fixture has no configured country; it keeps the old unfiltered
+            # behaviour so the offline fixture path still works.
+            if country_code is None:
+                print(f"[coverage] {src_region}: no configured country — "
+                      "ownership filter skipped", file=sys.stderr)
+            else:
+                cur.execute(
+                    """
+                    DELETE FROM coverage_poi_staging s
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM region r
+                        WHERE r.country_code = %s
+                          AND ST_DWithin(r.geom, s.geom, %s)
+                    )
+                    """,
+                    (country_code, BOUNDARY_SNAP_DEG),
+                )
             inserted = cur.execute("SELECT count(*) FROM coverage_poi_staging").fetchone()[0]
             if previous > 0 and inserted < previous * (1 - DRIFT_ABORT_RATIO):
                 raise DriftAbort(

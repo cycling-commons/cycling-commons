@@ -22,15 +22,12 @@ import psycopg
 
 from .contract import load_contract
 from .extract import run_extract
-from .load import ensure_schema, load_region
+from .load import COUNTRY_BY_REGION, ensure_schema, load_region
 from .parse import parse_pois
 from .publish import ensure_bucket, prune, upload
 from .tiles import build_pmtiles, export_geojsonl, verify_pmtiles
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
-# country_code stamped per extract (coverage-provider.md §2 country_code column);
-# extend per region.
-COUNTRY_BY_REGION = {"europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE"}
 
 
 def _md5(path: pathlib.Path) -> str:
@@ -123,7 +120,7 @@ def main(argv=None) -> int:
                 filtered = workdir / (region.replace("/", "-") + "-filtered.osm.pbf")
                 run_extract(pbf, filtered, contract)
                 rows = parse_pois(filtered, contract, region, COUNTRY_BY_REGION.get(region))
-                result = load_region(conn, rows, region)
+                result = load_region(conn, rows, region, COUNTRY_BY_REGION.get(region))
                 print(f"[coverage] {region}: loaded/updated {result.inserted} rows "
                       f"(previous {result.previous})")
             except Exception as exc:  # noqa: BLE001 — one region must not stop the rest (coverage-provider.md §3 failure mode)

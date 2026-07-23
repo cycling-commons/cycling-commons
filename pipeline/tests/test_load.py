@@ -303,6 +303,115 @@ def test_same_ref_may_carry_two_letters(db):
     assert letters == {"E", "J"}
 
 
+def test_ownership_is_independent_of_load_order(db):
+    """The core guarantee. Two overlapping extracts both carry one entity; whoever
+    runs last must NOT win. Ownership is decided by which country's region contains
+    it (2026-07-23-border-overlap-ownership-design.md §3)."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
+        "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
+        "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
+    db.commit()
+    shared = _row("node/shared", "C", lon=3.5, lat=50.5)   # geometrically inside BE
+
+    # BE first, then NL
+    load_region(db, [shared], "europe/belgium", "BE")
+    load_region(db, [shared], "europe/netherlands", "NL")
+    be_first = db.execute(
+        "SELECT s.slug FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id"
+    ).fetchone()
+
+    db.execute("DELETE FROM coverage_poi")
+    db.commit()
+
+    # NL first, then BE
+    load_region(db, [shared], "europe/netherlands", "NL")
+    load_region(db, [shared], "europe/belgium", "BE")
+    nl_first = db.execute(
+        "SELECT s.slug FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id"
+    ).fetchone()
+
+    assert be_first == nl_first == ("europe/belgium",), (
+        "a shared border entity must be owned by the extract whose country contains it, "
+        "regardless of load order")
+
+
+def test_a_non_owning_extract_does_not_create_the_row(db):
+    """The NL extract carries a Belgian entity. It must not appear at all."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
+        "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'NL', "
+        "ST_GeomFromText('POLYGON((4 50, 5 50, 5 51, 4 51, 4 50))', 4326))")
+    db.commit()
+
+    load_region(db, [_row("node/be", "C", lon=3.5, lat=50.5)], "europe/netherlands", "NL")
+
+    assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 0
+
+
+def test_owner_dropping_the_entity_removes_it(db):
+    """The week-long-disappearance case, inverted: once ownership is deterministic,
+    the OWNER's next run is the only thing that can delete the row — and it does."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
+        "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.commit()
+    row = _row("node/gone", "C", lon=3.5, lat=50.5)
+
+    load_region(db, [row], "europe/belgium", "BE")
+    assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 1
+
+    # A stable placeholder keeps this load within DRIFT_ABORT_RATIO (unrelated to
+    # ownership — a single-row region would otherwise trip that guard on ANY
+    # change) so the assertion below isolates the ownership behaviour under test.
+    placeholder = _row("node/stays", "C", lon=3.5, lat=50.5)
+    load_region(db, [placeholder], "europe/belgium", "BE")  # node/gone trimmed from the extract
+    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
+    assert refs == {"node/stays"}, "the owner's next run must delete the row it no longer carries"
+
+
+def test_rows_in_no_onboarded_region_are_dropped(db):
+    """Design decision 1: all 380 such rows were measured as foreign or offshore,
+    not province-less, so they are not staged at all."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
+        "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.commit()
+
+    load_region(db, [
+        _row("node/inside", "C", lon=3.5, lat=50.5),
+        _row("node/far", "C", lon=20.0, lat=60.0),      # far outside every region
+    ], "europe/belgium", "BE")
+
+    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
+    assert refs == {"node/inside"}, "a row in no onboarded region must not be staged"
+
+
+def test_boundary_snap_rows_keep_their_owner(db):
+    """Design decision 2: the snap is UNCHANGED, so a row just outside every polygon
+    but within BOUNDARY_SNAP_DEG of its own country's region is still owned and still
+    region-stamped. Decisions 1 and 2 meet at this boundary and must not be conflated."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
+        "ST_GeomFromText('POLYGON((3 50, 4 50, 4 51, 3 51, 3 50))', 4326))")
+    db.commit()
+
+    load_region(db, [_row("node/near", "C", lon=4.005, lat=50.5)], "europe/belgium", "BE")
+
+    got = db.execute("SELECT ref, region_id FROM coverage_poi").fetchall()
+    assert got == [("node/near", 1)], (
+        "a row within BOUNDARY_SNAP_DEG of its own country's region is owned and stamped")
+
+
 def test_src_region_normalized_and_self_filled(db):
     """Provenance is a coverage_source FK, self-filled get-or-create: each slug
     gets exactly one row, every POI links to it, and reloading a slug reuses its
