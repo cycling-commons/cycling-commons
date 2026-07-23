@@ -26,8 +26,7 @@
     ['sw', 's', 'se'],
   ];
 
-  const emptyCell = () => ({ kind: 'empty', slug: null, label: null, dir: null });
-  const chipOf = (r) => ({ slug: r.slug, label: r.label || r.slug });
+  const emptyCell = () => ({ kind: 'empty', slug: null, label: null, dir: null, cc: null, foreign: false });
 
   /** Build the chip view model.
    *
@@ -84,6 +83,17 @@
     const all = scopeApi.contextualRegions(cc, { limit: Infinity });
     model.country = { cc, label: (all[0] || {}).countryLabel || ('All ' + cc) };
 
+    // Country cue: a chip whose country differs from the ACTIVE scope's country is
+    // foreign and the serializer marks it "· NL" (2026-07-23-cross-border-chips-design.md §3.2).
+    const cue = (r) => ({
+      slug: r.slug, label: r.label || r.slug,
+      cc: r.countryCode || null,
+      foreign: !!(r.countryCode && r.countryCode !== cc),
+    });
+    // "More" now means "more onboarded regions exist ANYWHERE" — the shown set is
+    // cross-border, so the old active-country total is the wrong denominator.
+    const total = (i.registry || []).length;
+
     // The compass only means something when the scope IS one named region — a
     // country/everywhere/myArea scope has no single centre to lay a grid around.
     const activeRegion = (scope && scope.kind === 'region' && hasRegions
@@ -91,9 +101,8 @@
 
     if (activeRegion && i.scopeCenter) {
       model.mode = 'compass';
-      // 9 nearest INCLUDING the active region (distance 0 from its own centre, so it
-      // always ranks first), then drop it: 8 neighbours + 1 centre = exactly 9.
-      const pool = scopeApi.contextualRegions(cc, { near: i.scopeCenter, limit: 9 })
+      // Cross-border: nearest 9 across ALL countries (was contextualRegions(cc)).
+      const pool = scopeApi.regionsNear(i.scopeCenter, { limit: 9 })
         .filter((r) => r.id !== activeRegion.id).slice(0, 8);
       const layout = scopeApi.compassLayout(i.scopeCenter, pool);
       ROWS.forEach((row) => {
@@ -103,20 +112,17 @@
         if (!row.some((dir) => dir === null || layout[dir])) return;
         model.rows.push(row.map((dir) => {
           if (dir === null) {
-            return {
-              kind: 'center', slug: activeRegion.slug,
-              label: activeRegion.label || activeRegion.slug, dir: null,
-            };
+            return { kind: 'center', dir: null, ...cue(activeRegion) };
           }
           const r = layout[dir];
           if (!r) return emptyCell();
-          return { kind: 'region', slug: r.slug, label: r.label || r.slug, dir };
+          return { kind: 'region', dir, ...cue(r) };
         }));
       });
       // Regions compassLayout could not place without misstating their direction.
       // Still among the 8 nearest, so they stay reachable rather than being dropped.
-      model.overflow = layout.overflow.map(chipOf);
-      model.more = all.length > pool.length + 1;   // +1 for the centre
+      model.overflow = layout.overflow.map(cue);
+      model.more = total > pool.length + 1;   // +1 for the centre
       return model;
     }
 
@@ -128,9 +134,14 @@
     const near = (i.myArea && i.myArea.lat != null && i.myArea.lng != null)
       ? [i.myArea.lng, i.myArea.lat]
       : (i.scopeCenter || i.mapCenter || null);
-    const shown = scopeApi.contextualRegions(cc, near ? { near } : {});
-    model.chips = shown.map(chipOf);
-    model.more = all.length > shown.length;
+    // Cross-border ranking when we have an anchor; label-sorted country fallback
+    // only when there is none (an everywhere scope with no map centre — unreachable
+    // in the live app, where the map always has a centre by first render).
+    const shown = near
+      ? scopeApi.regionsNear(near, { limit: 8 })
+      : scopeApi.contextualRegions(cc, {});
+    model.chips = shown.map(cue);
+    model.more = total > shown.length;
     return model;
   }
 
