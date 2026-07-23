@@ -1,0 +1,41 @@
+web/assets/map/map.js
+  s_3bd3f8ccb3a560::t_bac0919852ebc3 232-238,240-242
+web/tests/js/scope.test.cjs
+  s_3bd3f8ccb3a560::t_b28283a6f6702d 765-824
+  s_3bd3f8ccb3a560::t_e3bf40c8a0dc1f 55-62
+  s_3bd3f8ccb3a560::t_154a9c33c024e4 716-764
+mkdocs.yml
+  s_f3f9c3dc9409c4::t_b58e59e76c2080 60
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_b9cd7fbf17f192 1-292
+web/assets/map/scope.js
+  s_3bd3f8ccb3a560::t_0e4d753ba750dd 356-370
+  s_3bd3f8ccb3a560::t_27d884a3a407fe 262-275
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_5f4522652e0ff4 57-92,104-109
+  s_f3f9c3dc9409c4::t_8d81f36c3b5c37 93-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "eeb9b36d9c0e815661dfc4fd5a8e6034394ca7b3",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
