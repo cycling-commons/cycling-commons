@@ -465,8 +465,11 @@
     /** Onboarded regions of a country, label-sorted, for the contextual chips
      *  (2026-07-22-scope-selector-scale-design.md §C, Tasks 5-6). */
     contextualRegions(cc) {
+      // Pin the collator locale (consistent with searchScopes, ddb9b4a): bare
+      // localeCompare() uses the runtime default, so diacritic labels
+      // (Baden-Württemberg) could sort differently on CI than on a dev box.
       return (byCountry.get(cc) || []).slice()
-        .sort((a, b) => (a.label || a.slug).localeCompare(b.label || b.slug));
+        .sort((a, b) => (a.label || a.slug).localeCompare(b.label || b.slug, 'en'));
     },
 
     /** MapLibre filter expression for the coverage TILE layers (Phase 3,

@@ -135,6 +135,12 @@
   /* Region scope selector (region-scoping-design.md §4): 5 options, so it wraps
      into a chip grid instead of the 2-up segmented pill .toggle assumes. */
   .scope-toggle{display:flex;flex-wrap:wrap;gap:.35rem}
+  /* #scopeChips (2026-07-22-scope-selector-scale-design.md §B) is a plain wrapper
+     map.js fills with JS-rendered region/country chips — it is NOT itself a chip,
+     so display:contents un-boxes it: its button children become direct flex items
+     of .scope-toggle above, so flex:1 1 auto and the .35rem gap apply between the
+     chips exactly as they do for the two static buttons either side of it. */
+  #scopeChips{display:contents}
   .scope-toggle button{flex:1 1 auto;min-width:calc(33.3% - .35rem);background:transparent;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .3rem;border:1px solid rgba(239,230,212,.25);border-radius:6px;cursor:pointer;transition:all .18s}
   .scope-toggle button:hover{border-color:rgba(239,230,212,.5)}
   .scope-toggle button.on{background:var(--spruce-lift);border-color:var(--glacier);color:var(--paper)}

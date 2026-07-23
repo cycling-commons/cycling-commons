@@ -192,7 +192,7 @@
   // rungs as the cold-start fallback. Replaces the flat all-regions wall.
   // Reuses escPend (top of file) rather than a third hand-rolled escaper —
   // it's the same house idiom the search results list (escH, ~L3204) and the
-  // drawer's pending-submission renderer (§13) already use for building
+  // drawer's pending-submission renderer (security-architecture.md §4.2) already use for building
   // interactive lists into innerHTML: string-concat + a shared HTML-escaper +
   // one delegated/rebind pass, not a third one-off.
   function renderScopeChips(){
@@ -209,10 +209,16 @@
       const cl=(regions[0]||{}).countryLabel||('All '+cc);
       html+=`<button data-scope="country:${escPend(cc)}">${escPend(cl)}</button>`;
     } else {
-      // cold-start fallback: onboarded country rungs (window.CC_REGIONS-derived)
-      const seen=new Set();
+      // cold-start fallback: onboarded country rungs (window.CC_REGIONS-derived),
+      // label-sorted (final review MINOR 8) — CC_REGIONS' own order is
+      // area_km2 DESC, slug, so following it as-is would reshuffle this list
+      // every time a bigger/smaller region gets imported into an existing
+      // country or a new country is onboarded.
+      const seen=new Set(); const countries=[];
       (window.CC_REGIONS||[]).forEach(r=>{ if(r.countryCode&&!seen.has(r.countryCode)){ seen.add(r.countryCode);
-        html+=`<button data-scope="country:${escPend(r.countryCode)}">${escPend(r.countryLabel||('All '+r.countryCode))}</button>`; }});
+        countries.push({cc:r.countryCode, label:r.countryLabel||('All '+r.countryCode)}); }});
+      countries.sort((a,b)=>a.label.localeCompare(b.label,'en'));
+      countries.forEach(({cc,label})=>{ html+=`<button data-scope="country:${escPend(cc)}">${escPend(label)}</button>`; });
     }
     host.innerHTML=html;
     // (re)bind the freshly-rendered chips to CCScope, same contract as the static ones.
@@ -1173,7 +1179,13 @@
     // (`scopeToken` is a hoisted function declaration and would have been fine —
     // curScope alone forces the deferral.) The 'load' handler already runs the
     // one-time initial applyScope, so it is also the natural first chip render.
-    applyScope(curScope(), {fit:false}); renderScopeChips(); setupConfClusters();
+    // Order matters (final review IMPORTANT 2): renderScopeChips() must run BEFORE
+    // applyScope() — scopeLabel() resolves by querying the rail button for the
+    // incoming scope's data-scope token, and until the chips for the active scope
+    // exist in the DOM that query is '', which makes applyScope skip the header/
+    // kicker/search-title rewrites entirely and leave the server-rendered fallback
+    // text on screen (e.g. a returning Bayern-scoped visitor sees "Wallonia" headings).
+    renderScopeChips(); applyScope(curScope(), {fit:false}); setupConfClusters();
     // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
     // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a
     // flyTo, is what made zooming/flying stutter. MapLibre repositions the existing markers smoothly on
@@ -2465,7 +2477,15 @@
     if(map.queryRenderedFeatures(e.point, {layers:selectableLayers()}).length) return;  // a feature layer will handle it
     if(!window.CCScope) return;
     const r=window.CCScope.regionOfPoint(e.lngLat.lng, e.lngLat.lat);
-    if(r) window.CCScope.setRegion(r.slug);   // cc:scopechange -> applyScope + renderScopeChips (serves items + chips)
+    if(!r) return;
+    // Same-region click is a no-op (final review CRITICAL 1): bail before setRegion
+    // so an empty-map click inside the ALREADY-active region (e.g. dismissing a
+    // tooltip at z13) doesn't re-fit the camera + re-fetch coverage counts + re-render
+    // on every stray click. Guarded here, not in CCScope.set(), so same-scope set()
+    // calls from other callers (chips, search, rail buttons) keep emitting as before.
+    const s=curScope();
+    if(s.kind==='region' && s.regionIds[0]===r.id) return;
+    window.CCScope.setRegion(r.slug);   // cc:scopechange -> applyScope + renderScopeChips (serves items + chips)
   });
   function redrawPickSegments(){
     _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
@@ -3668,7 +3688,10 @@
     else if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
     else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
   });
-  window.addEventListener('cc:scopechange', e=>{ applyScope(e.detail, {fit:true}); renderScopeChips(); });
+  // Order matters (final review IMPORTANT 2): renderScopeChips() before applyScope() —
+  // see the load-handler comment above for why applyScope needs the chip button to
+  // already exist to resolve scopeLabel().
+  window.addEventListener('cc:scopechange', e=>{ renderScopeChips(); applyScope(e.detail, {fit:true}); });
 
   // Pan-away widen nudge (region-scoping-design.md §4 "Deep links & far panning"):
   // when a My-area scope is active and the map centre drifts past 1.5× the circle
