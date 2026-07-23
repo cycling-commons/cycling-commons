@@ -78,9 +78,10 @@
       return model;
     }
 
-    // {limit: Infinity} is REQUIRED: a bare contextualRegions(cc) applies the same
-    // default cap of 8, which is what made the More chip dead code (fixed 61df4ea).
-    const all = scopeApi.contextualRegions(cc, { limit: Infinity });
+    // Only the label-sorted first region is needed: countryLabel is identical for every
+    // region of a country, and `more` now reads the global registry total instead of this
+    // list (the old {limit: Infinity} full-country fetch, from before that move, is gone).
+    const all = scopeApi.contextualRegions(cc, { limit: 1 });
     model.country = { cc, label: (all[0] || {}).countryLabel || ('All ' + cc) };
 
     // Country cue: a chip whose country differs from the ACTIVE scope's country is

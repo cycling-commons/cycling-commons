@@ -270,7 +270,11 @@
     // TEXT, so it also reaches the compass aria-label below — the country is in the
     // accessible name, not conveyed by styling alone
     // (2026-07-23-cross-border-chips-design.md §3.3).
-    const cueLabel=x=>escPend(x.label)+(x.foreign?' · '+escPend((x.cc||'').toUpperCase()):'');
+    // Raw (unescaped) cue text: "Limburg · NL" for a foreign chip, bare label otherwise.
+    // ONE source of the cue format — both the visible button text (via cueLabel, which
+    // escapes) and the compass aria-label (escaped once at attribute insertion) use it.
+    const cueText=x=>x.foreign?`${x.label} · ${(x.cc||'').toUpperCase()}`:x.label;
+    const cueLabel=x=>escPend(cueText(x));
     const regionBtn=r=>`<button data-scope="region:${escPend(r.slug)}">${cueLabel(r)}</button>`;
     const countryBtn=k=>`<button data-scope="country:${escPend(k.cc)}">${escPend(k.label)}</button>`;
     const moreBtn=()=>`<button type="button" class="cc-scope-more" id="scopeMoreBtn">${escPend(D.scopesMore||'More regions…')}</button>`;
@@ -287,7 +291,7 @@
         }
         // The direction is spelled out in the aria-label, never conveyed by grid
         // position alone (review requirement).
-        const aria=tpl(D.compassLabel||'{dir}: {region}',{dir:D[DIRK[cell.dir]]||cell.dir,region:cell.foreign?`${cell.label} · ${(cell.cc||'').toUpperCase()}`:cell.label});
+        const aria=tpl(D.compassLabel||'{dir}: {region}',{dir:D[DIRK[cell.dir]]||cell.dir,region:cueText(cell)});
         html+=`<div class="cc-compass-cell"><button data-scope="region:${escPend(cell.slug)}" aria-label="${escPend(aria)}">${cueLabel(cell)}</button></div>`;
       }));
       html+='</div>';
