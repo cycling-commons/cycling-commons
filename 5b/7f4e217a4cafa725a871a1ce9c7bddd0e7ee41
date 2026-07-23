@@ -1,0 +1,58 @@
+tools/check-wiki-code-drift.py
+  s_f3f9c3dc9409c4::t_54045467d0643e 79-85,87-88
+wiki/developers/gis-beyond/reprojection.md
+  s_f3f9c3dc9409c4::t_3fab33e6f7a9df 1-166
+wiki/developers/gis/routes.md
+  s_f3f9c3dc9409c4::t_2121cb3a691d3f 263-293
+mkdocs.yml
+  s_3c392b244b902c::t_fb6d302fa41c6a 78,80-82
+wiki/developers/gis-beyond/routing.md
+  s_f3f9c3dc9409c4::t_d237bbcfc61dda 1-177
+wiki/developers/gis-beyond/index.md
+  s_3c392b244b902c::t_fb6d302fa41c6a 35,39,41,43
+wiki/developers/gis/pitfalls.md
+  s_f3f9c3dc9409c4::t_c721da9be15b81 325-347,351-375
+  s_f3f9c3dc9409c4::t_b6f6eb20c9d951 348-350
+wiki/developers/gis/on-screen.md
+  s_f3f9c3dc9409c4::t_1f33e2e0a03b72 284-316
+wiki/developers/gis/tiles.md
+  s_f3f9c3dc9409c4::t_f27344fa0e879b 360-412
+wiki/developers/gis/index.md
+  s_f3f9c3dc9409c4::t_fea93aaf7f79a8 125-160
+wiki/developers/gis-beyond/elevation.md
+  s_f3f9c3dc9409c4::t_8c9c0fa1b80fe4 1-211
+wiki/developers/gis-beyond/edge-cases.md
+  s_f3f9c3dc9409c4::t_4d55e1128c1220 1-266
+wiki/developers/gis-beyond/geocoding.md
+  s_f3f9c3dc9409c4::t_3f7c006c796c30 1-149
+wiki/developers/gis/osm-to-database.md
+  s_f3f9c3dc9409c4::t_f424854c14e27d 327-328,335-362
+  s_f3f9c3dc9409c4::t_9cee4e6a379c34 329-334
+  s_f3f9c3dc9409c4::t_82116e7e1c61c5 363-369
+wiki/developers/gis-beyond/relations.md
+  s_f3f9c3dc9409c4::t_da52a60c91dd44 1-188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "5b7f4e217a4cafa725a871a1ce9c7bddd0e7ee41",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
