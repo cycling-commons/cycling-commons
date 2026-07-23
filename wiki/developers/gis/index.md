@@ -41,17 +41,24 @@ stop, and a single all-in-one diagram would go stale the first time any one stop
 
 Every concept in this series that exists in this codebase is followed by a pointer to a real file
 and the name of the thing inside it that does the work, written like this:
-`web/src/Contribution/SpatialResolver.php`, `SpatialResolver::resolve()`. Open the file if you
-want to see it for yourself — that's the reason it's written this way instead of the code being
-pasted into the wiki.
+`web/src/Contribution/SpatialResolver.php`, `SpatialResolver::resolve()`. Open the file and you can
+see the whole thing in its own context, which no excerpt can give you.
+
+Where an excerpt makes the point better than a description, the code is quoted directly — and those
+quotes are **checked against the source automatically**. A build gate reads every code block in this
+wiki and verifies each quoted line still exists, in order, in the file it claims to come from. If
+someone changes that code, the check fails and the page has to be brought back into line. So a
+quoted block here is the code as it actually is, not as it once was.
+
+Blocks that are *not* quotes — a deliberately naive query, a minimal hand-written example, sample
+output — are marked as such where they appear, so you always know whether you are looking at this
+project's code or at an illustration.
 
 A line number is only given when the anchor is stable enough that it won't drift — a database
 migration file, for instance, which is never edited again once it has run. Everywhere else you get
 the file and the symbol name and nothing more, because a citation pointing at line 214 of a file
 that gets refactored next month is worse than no citation at all. If the wiki and the repository
-ever disagree, the repository is right: every pointer was checked against the working tree at the
-time its chapter was written, but the tree keeps moving and the wiki doesn't always catch up the
-same day.
+ever disagree, the repository is right.
 
 ## When something has no code behind it
 
