@@ -191,9 +191,33 @@ tell the difference:
 
 The `admonition` extension is already enabled in `mkdocs.yml`, so this needs no config change.
 
+### What counts as unanchored
+
+Not every sentence without a file citation. A teaching document is mostly **background exposition** —
+what a projection is, what the EPSG registry is, why degrees are written in minutes and seconds —
+and that exists to make an anchored point comprehensible. Marking all of it would bury the queue in
+noise and destroy the thing the queue is for: surfacing gaps the owner might want closed.
+
+A marker is required when the concept names **a capability or technique a reader could reasonably
+expect this system to have**:
+
+- every `type: absent` concept, without exception; and
+- a `type: general` concept that names a specific technique a system like ours would plausibly
+  implement and we do not — antimeridian handling, on-the-fly reprojection, and the like.
+
+A marker is **not** required for definitions, history, or general theory that carries no implied
+claim about what the Commons does.
+
+> **Controller decision, 2026-07-23 — open for the owner.** Chapter 1's review found the original
+> §10 wording ("every unanchored concept, of either kind") would have required markers on ordinary
+> background exposition, and flagged the contradiction before chapter 2 was written. The rule above
+> is the resolution taken so the run could continue; it narrows §10 rather than expanding it.
+> Overturn it if you want the broader reading — the cost is retro-fitting markers to every chapter.
+
 ### The marker
 
-Every unanchored concept, of either kind, carries a greppable HTML comment at the point it appears:
+Every unanchored concept meeting the test above carries a greppable HTML comment at the point it
+appears:
 
 ```html
 <!-- UNANCHORED id=U01 type=general concept="antimeridian / dateline wrapping" -->
