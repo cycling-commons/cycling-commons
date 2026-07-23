@@ -325,12 +325,16 @@
    The GIS course chapters are numbered in the nav ("6 · From OpenStreetMap to
    our database"). A long title wraps, and by default the second line starts
    under the number, so the wrapped text reads as if it belonged to the digit
-   rather than to the title. A hanging indent puts every continuation line
-   under the first letter of the title instead. 1.85em clears "10 · ". */
-.md-nav__item .md-nav__link {
+   rather than to the title. A hanging indent puts continuation lines under the
+   first letter of the title instead.
+
+   SCOPING MATTERS. An earlier version used `.md-nav__item .md-nav__link`,
+   which matches EVERY link in the sidebar — every top-level page got a
+   negative text-indent too and its first line was clipped off the left edge.
+   The selector below walks the exact path to a numbered chapter link: the
+   direct children of a nested section's own list. Top-level entries (Home,
+   Manifesto, …) are not inside a nested item, so they are untouched. */
+.md-nav__item--nested > .md-nav > .md-nav__list > .md-nav__item > .md-nav__link {
   padding-left: 1.85em;
   text-indent: -1.85em;
 }
-/* the section label ("For developers") and its toggle are not numbered */
-.md-nav__item--nested > .md-nav__link,
-.md-nav__title { padding-left: 0; text-indent: 0; }
