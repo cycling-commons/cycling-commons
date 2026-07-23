@@ -1,0 +1,20 @@
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_f429de0636c43e 366-370
+  s_f3f9c3dc9409c4::t_f0e945a5426197 341-365,371-375
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "9350cebb5361af59174e86f253512a1fc00bfe58",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
