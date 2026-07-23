@@ -1,6 +1,9 @@
 # Scalable Scope Selector — Design
 
-Status: **design / awaiting review** (2026-07-22) on `symfony-base` (NOT pushed).
+Status: **executed** (2026-07-23) on `symfony-base` (`d16483c..9cff37d`, NOT pushed). The flat
+region-button wall is replaced by search-first scope results, contextual home-country chips, and
+click-to-scope on the map. Browser verification is a separate Task 9, not yet run as of this status
+update — treat behaviour here as implemented-and-unit-tested, not yet browser-verified.
 Supersedes the flat region-button list in the map scope group; does not change
 the `CCScope` model, tokens, dim mask, or per-country coverage tiles from
 [2026-07-19-region-scoping-design.md](2026-07-19-region-scoping-design.md) and

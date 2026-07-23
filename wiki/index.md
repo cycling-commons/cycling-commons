@@ -16,6 +16,8 @@ The reference documentation for the open cycling-data Commons. The public site
   by riders, refreshed each season. Curation, not overload.
 - **[Contributing](contributing.md)** — how to add a fact, cast a vote, and give data back to
   OpenStreetMap.
+- **[Location & privacy](location-privacy.md)** — why the map's location guessing and scope memory
+  never need a cookie/consent banner.
 - **[Governance](governance.md)** — BikeCoders as steward today, an independent foundation tomorrow,
   and how Ostrom's design principles keep a commons from being spammed, gamed, or enclosed.
 - **[Building the Commons](building.md)** — how the prototype is built and run, the stack we're
