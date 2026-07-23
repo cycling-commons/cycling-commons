@@ -153,6 +153,12 @@ the implementation refined these details; the plan's refinement governs):**
    the neighbouring extract mis-stamped reads its true country. Every future
    country that borders an already-loaded one exercises this path; it is now
    covered by `test_load_region_upserts_shared_border_entity_across_regions`.
+   **Superseded 2026-07-23:** last-writer-wins is no longer how ownership is
+   decided. An extract now owns a staged row only if it lies inside, or within
+   `BOUNDARY_SNAP_DEG` of, a region of that extract's own country; the
+   `ON CONFLICT` clause survives only as a safety net. See
+   `2026-07-23-border-overlap-ownership-design.md §3`. The rest of this bullet
+   still holds.
 
 ## 3. Operating-level selection rule
 
