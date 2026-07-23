@@ -142,3 +142,20 @@ cross-border scope (NRW) shows Dutch chips with the cue and zero console errors.
 This is item 3 of the four queued for the window; items 1 (border-overlap) and 2 (Phase 0
 extraction) are done, and the four-country harvest that gives item 3 real cross-border data to show
 has run. Item 4 (region-boundary HTTP cache + point-in-polygon click) remains and is independent.
+
+## 8. Execution notes
+
+- **2026-07-23, Task 3 (serializer):** `renderScopeChips()` in `web/assets/map/map.js` given the
+  `cueLabel` helper from section 3.3 verbatim; `regionBtn`, the compass center cell, and the
+  compass region cell (both visible text and `aria-label`) all route through it. `countryBtn`
+  untouched. Commit `51a2039` on `symfony-base` (not pushed). `make scope-test` stayed
+  109 pass / 0 fail before and after (this task does not touch the model). Browser-verified live
+  against the four-country harvest: NRW's compass shows `Gelderland · NL`, `Overijssel · NL`,
+  `Limburg · NL`, `North Brabant · NL` cued and `Lower Saxony` / `Rhineland-Palatinate` / `Hesse`
+  bare, with the overflow row surfacing `Drenthe · NL`; Bavaria's compass is entirely bare
+  (`Hesse`, `Thuringia`, `Saxony`, `Baden-Württemberg`, `Rhineland-Palatinate`); Luxembourg's
+  compass cues `Brussels · BE`, `Wallonia · BE`, `Limburg · NL`, `North Brabant · NL`,
+  `Rhineland-Palatinate · DE`, `Saarland · DE`; a foreign compass button's `aria-label` reads
+  `"Northwest: Gelderland · NL"` exactly as specified; clicking `Limburg · NL` moved the scope to
+  Limburg (URL `?scope=region:limburg-nl`, compass center relabelled bare `Limburg`); 0 console
+  errors throughout.
