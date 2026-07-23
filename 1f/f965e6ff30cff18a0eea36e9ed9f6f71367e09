@@ -1,0 +1,25 @@
+wiki/index.md
+  s_3bd3f8ccb3a560::t_604fbfca10bc02 19-20
+mkdocs.yml
+  s_3bd3f8ccb3a560::t_e040d11ceb36e6 55
+wiki/location-privacy.md
+  s_3bd3f8ccb3a560::t_6f996773493ec7 1-71
+docs/specs/2026-07-22-scope-selector-scale-design.md
+  s_3bd3f8ccb3a560::t_2b6d1feaf54a25 3-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "1ff965e6ff30cff18a0eea36e9ed9f6f71367e09",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
