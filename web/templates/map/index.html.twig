@@ -372,6 +372,14 @@
 <link rel="preload" href="{{ asset('map/map.js') }}" as="script">
 {# Scope model (window.CCScope) — must be defined before catalog-load.js injects map.js. #}
 <script src="{{ asset('map/scope.js') }}"></script>
+{# Scope header bootstrap (2026-07-23 flash fix): resolves the scope + paints
+   #regionLine/#regionCoords/#searchTitle synchronously, right here — BEFORE
+   catalog-load.js's fetch, and therefore before map.js (gated on that fetch,
+   comment above) ever runs. Without this, the browser paints the
+   server-rendered "Wallonia, Belgium" fallback above for the fetch's full
+   round trip; map.js relabelling once IT loads is real but too late to stop
+   that flash. See scope-header.js's own docstring for the full reasoning. #}
+<script src="{{ asset('map/scope-header.js') }}"></script>
 <script src="{{ asset('map/catalog-load.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/version.js') }}"></script>

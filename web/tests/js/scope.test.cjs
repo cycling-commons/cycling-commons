@@ -822,3 +822,82 @@ test('scopeCenter anchors the chip ranking on the INCOMING scope, not the outgoi
     assert.ok(!shown.includes(distant), `${distant} is far from Utrecht but was shown: ${shown}`);
   }
 });
+
+// ---- label (2026-07-23 flash fix) -------------------------------------------
+//
+// CCScope.label() replaces map.js's old `document.querySelector('#regionScope
+// button[data-scope="..."]')` lookup: a pure registry read, so map.js can write
+// the header before the rail (or the map itself) exists at all. Written
+// against fresh registries via freshScope(), same as the inferHomeCountry/
+// searchScopes suites above, since each case needs its own region mix.
+
+test('label: region scope resolves to the region label', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria', countryLabel: 'All Germany' },
+  ]);
+  S.setRegion('bayern');
+  assert.equal(S.label(S.get()), 'Bavaria');
+});
+
+test('label: region scope falls back to the slug when the registry entry has no label', () => {
+  const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]); // no label field
+  S.setRegion('bayern');
+  assert.equal(S.label(S.get()), 'bayern');
+});
+
+test('label: country scope resolves to the countryLabel', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria', countryLabel: 'All Germany' },
+  ]);
+  S.setCountry('DE');
+  assert.equal(S.label(S.get()), 'All Germany');
+});
+
+test('label: country scope falls back to the country code when no region carries a countryLabel', () => {
+  const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria' }]); // no countryLabel
+  S.setCountry('DE');
+  assert.equal(S.label(S.get()), 'DE');
+});
+
+test('label: everywhere resolves to null (map.js owns the "Everywhere" string)', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria', countryLabel: 'All Germany' },
+  ]);
+  S.setEverywhere();
+  assert.equal(S.label(S.get()), null);
+});
+
+test('label: myArea resolves to null (map.js owns the "Near {place} · {km} km" line)', () => {
+  const S = freshScope([
+    { id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria', countryLabel: 'All Germany' },
+  ]);
+  globalThis.window.CC_MY_AREA = { lat: 49, lng: 11, radiusKm: 40, place: 'Munich', regionIds: [1], countryCodes: ['DE'] };
+  S.setMyArea();
+  assert.equal(S.get().kind, 'myArea');
+  assert.equal(S.label(S.get()), null);
+  delete globalThis.window.CC_MY_AREA;
+});
+
+test('label: an empty registry resolves the active (everywhere) scope to null — the map.js header guard still holds', () => {
+  // With no regions at all, init() falls through to the caller's default
+  // ('everywhere' — this is exactly what map.js's own _defaultScope computes
+  // when CC_REGIONS is empty), so label() is asked for an everywhere scope
+  // either way; the guard (map.js writeScopeHeader()) never sees a truthy
+  // label from an unresolved region/country here, so it never wipes the
+  // server-rendered fallback text with blanks (07-20 review finding 7).
+  const S = freshScope([]);
+  assert.equal(S.get().kind, 'everywhere');
+  assert.equal(S.label(S.get()), null);
+});
+
+test('label: an empty registry cannot resolve a region or country id either', () => {
+  const S = freshScope([]);
+  assert.equal(S.label({ kind: 'region', regionIds: [1], countryCode: 'BE' }), null);
+  assert.equal(S.label({ kind: 'country', regionIds: [], countryCode: 'BE' }), 'BE'); // fallback to the bare code — deserialize() never lets a real scope reach this state (byCountry.has() gates it), but label() itself is still total
+});
+
+test('label: null/kindless input resolves to null', () => {
+  const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50], label: 'Bavaria' }]);
+  assert.equal(S.label(null), null);
+  assert.equal(S.label({}), null);
+});

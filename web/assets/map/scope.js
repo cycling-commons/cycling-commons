@@ -338,6 +338,34 @@
     /** Region registry objects currently in scope (for spotlight + labels). */
     regions() { return (scope ? scope.regionIds : []).map((id) => byId.get(id)).filter(Boolean); },
 
+    /** Display label for ANY scope object, resolved from the REGISTRY — never
+     *  the DOM (2026-07-23 flash fix). map.js's scopeLabel() used to find this
+     *  by querying the rendered rail button for the scope's data-scope token,
+     *  which only exists once renderScopeChips() has run — long after first
+     *  paint (map.on('load')), and only for the currently-shown chips at all
+     *  (a second bug: a stale header when chips re-rendered after applyScope).
+     *  Neither problem exists once the label comes straight from the registry.
+     *  `region` -> its label (fall back to its slug); `country` -> its
+     *  countryLabel (fall back to the country code); `everywhere`/`myArea` ->
+     *  null, since those strings ("Everywhere", the "Near {place} · {km} km"
+     *  My-area line) are owned by the caller, not the registry. Unknown/
+     *  unresolvable (bad id, empty registry) is also null, so a guarded caller
+     *  can tell "nothing to show" from "show this" (map.js ~L290's guard). */
+    label(s) {
+      if (!s || !s.kind) return null;
+      if (s.kind === 'region') {
+        const id = s.regionIds && s.regionIds[0];
+        const r = id != null ? byId.get(id) : null;
+        return r ? (r.label || r.slug) : null;
+      }
+      if (s.kind === 'country') {
+        if (!s.countryCode) return null;
+        const rs = byCountry.get(s.countryCode);
+        return (rs && rs[0] && rs[0].countryLabel) || s.countryCode;
+      }
+      return null; // everywhere / myArea: caller owns those strings
+    },
+
     /** Union bbox [west, south, east, north] of the scope's regions; the circle
      *  bbox for myArea; null for everywhere. */
     bbox() {

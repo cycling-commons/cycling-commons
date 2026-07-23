@@ -36,7 +36,17 @@
     const w = CC_REGIONS.find(r => r.slug === 'wallonia') || CC_REGIONS[0];
     return w ? {kind: 'region', regionIds: [w.id], countryCode: w.countryCode} : {kind: 'everywhere', regionIds: [], countryCode: null};
   })();
-  if (window.CCScope) window.CCScope.init(CC_REGIONS, _defaultScope);
+  if (window.CCScope) {
+    window.CCScope.init(CC_REGIONS, _defaultScope);
+    // Re-paint the header here too (2026-07-23 flash fix) — mostly a no-op by
+    // the time this runs, since scope-header.js already did the real (early,
+    // pre-first-paint) resolve + paint before map.js's script even started
+    // downloading (see writeScopeHeader()'s own doc comment below for why
+    // THIS call can't be the one that kills the flash: map.js only runs
+    // post-catalog-fetch). Kept as a defensive safety net for the case
+    // scope-header.js didn't run.
+    writeScopeHeader();
+  }
   // Reveal the My-area rail button once we know a source exists (Phase 4); it
   // ships hidden so a rider with no base location (and no anon circle) never
   // sees a dead control.
@@ -181,11 +191,35 @@
     const slug = slugOfRegion(s.regionIds[0]);
     return slug ? 'region:'+slug : 'everywhere';
   }
-  // Dynamic header label — reuse the matching rail button's already-localized
-  // text, so the header line can never drift from the selector's wording.
+  // Dynamic header label — resolved from the region REGISTRY (CCScope.label(),
+  // scope.js), never the rendered rail button (2026-07-23 flash fix: the old
+  // `document.querySelector('#regionScope button[data-scope=...]')` only ever
+  // found a match once renderScopeChips() had run — long after first paint —
+  // which is why every visitor briefly saw the server-rendered "Wallonia"
+  // fallback; it also meant a stale header stuck around if the chips
+  // re-rendered after applyScope). '' (not null) for everywhere/myArea/
+  // unresolvable, same contract as before: callers such as tpl()'s {area}
+  // interpolation and the header-write guard below expect a string.
   function scopeLabel(s){
-    const btn = document.querySelector(`#regionScope button[data-scope="${scopeToken(s)}"]`);
-    return btn ? btn.textContent.trim() : '';
+    return (window.CCScope && window.CCScope.label(s)) || '';
+  }
+  // Header/kicker/search-title rewrite for the active scope (2026-07-23 flash
+  // fix): extracted out of applyScope() so it can run from TWO places — once
+  // immediately after CCScope.init() below, and again from applyScope() on
+  // every later scope change. The actual paint is scope-header.js's
+  // window.CCScopeHeader.paint() (one implementation, not a copy here):
+  // map.js's own execution is gated behind the /map/catalog.json fetch
+  // (catalog-load.js) — a real network round trip — so even code at the very
+  // top of THIS script only runs once that resolves, well after the browser
+  // has already painted the server-rendered "Wallonia, Belgium" fallback
+  // (browser-verified: ~130-220ms on the dev stack). scope-header.js loads as
+  // a plain blocking <script> right after scope.js and BEFORE
+  // catalog-load.js's fetch even starts (templates/map/index.html.twig), so
+  // ITS OWN call to paint() (at the bottom of that file) is what runs the
+  // true "before first paint" fix; this call here is what keeps the header
+  // correct on every SUBSEQUENT scope change, once the map/rail exist.
+  function writeScopeHeader(){
+    if(window.CCScopeHeader) window.CCScopeHeader.paint(I18N);
   }
   // Reveal + focus the sidebar feature-search box (owner fix 2's overflow
   // chip, 2026-07-23): re-queries the DOM fresh rather than closing over the
@@ -287,32 +321,7 @@
   // on the initial paint — the map constructor already opened on the scope bbox.
   function applyScope(s, opts){
     document.querySelectorAll('#regionScope button').forEach(x=>x.classList.toggle('on', x.dataset.scope===scopeToken(s)));
-    // Header/kicker/search-title rewrites only when the rail can label the
-    // scope (07-20 review finding 7): with an empty region registry the
-    // template renders no rail, scopeLabel() is '' for every scope, and these
-    // writes would wipe the server-rendered fallback text with blanks.
-    const lbl = scopeLabel(s);
-    if(lbl){
-      // My area (region-scoping-design.md §4 / §9.1 Phase 4): the header + search
-      // line name the base place + radius, NEVER coordinates — the deliberately
-      // vague "Near X · N km" wording is the anti-border message in text form.
-      const isMy = !!(s && s.kind==='myArea' && s.myArea);
-      const myLine = isMy
-        ? (s.myArea.place ? tpl(I18N.myAreaLine||'Near {place} · {km} km', {place:s.myArea.place, km:s.myArea.radiusKm})
-                          : tpl(I18N.myAreaLinePlain||'My area · {km} km', {km:s.myArea.radiusKm}))
-        : null;
-      const rl = document.getElementById('regionLine'); if(rl) rl.textContent = myLine || lbl;
-      // Brand kicker follows the scope (retires the hardcoded "Wallonia · 50.32°N"):
-      // scope label + bbox-centre coords, or just the label for Everywhere. My
-      // area shows its line WITHOUT the coordinate suffix (no precise point leak).
-      const co = document.getElementById('regionCoords');
-      if(co){
-        if(isMy){ co.textContent = `◎ ${myLine}`; }
-        else { const b = window.CCScope && window.CCScope.bbox(); co.textContent = b ? `◎ ${lbl} · ${((b[1]+b[3])/2).toFixed(2)}°N ${((b[0]+b[2])/2).toFixed(2)}°E` : `◎ ${lbl}`; }
-      }
-      const stt = document.getElementById('searchTitle');
-      if(stt) stt.textContent = isMy ? myLine : ((s && s.kind==='everywhere') ? (I18N.searchEverywhere||'Search everywhere') : tpl(I18N.searchIn||'Search in {area}', {area:lbl}));
-    }
+    writeScopeHeader();   // header/kicker/search-title (`s` IS window.CCScope.get() here — see writeScopeHeader() above)
     if(s&&s.kind==='myArea'&&s.myArea) setCircleSpotlight(s.myArea.center, s.myArea.radiusKm);
     else if(s&&s.kind==='country') setCountrySpotlight(s.countryCode);
     else setSpotlight(s&&s.kind==='region'&&s.regionIds.length===1 ? slugOfRegion(s.regionIds[0]) : null);
@@ -1229,12 +1238,15 @@
     // (`scopeToken` is a hoisted function declaration and would have been fine —
     // curScope alone forces the deferral.) The 'load' handler already runs the
     // one-time initial applyScope, so it is also the natural first chip render.
-    // Order matters (final review IMPORTANT 2): renderScopeChips() must run BEFORE
-    // applyScope() — scopeLabel() resolves by querying the rail button for the
-    // incoming scope's data-scope token, and until the chips for the active scope
-    // exist in the DOM that query is '', which makes applyScope skip the header/
-    // kicker/search-title rewrites entirely and leave the server-rendered fallback
-    // text on screen (e.g. a returning Bayern-scoped visitor sees "Wallonia" headings).
+    // renderScopeChips()/applyScope() order (2026-07-23 flash fix): no longer
+    // coupled. scopeLabel() used to resolve by querying the rail button for the
+    // incoming scope's data-scope token, so applyScope() needed the chips already
+    // in the DOM or it would skip the header/kicker/search-title rewrites and
+    // leave the server-rendered fallback text on screen. scopeLabel() now calls
+    // CCScope.label() (registry-based, scope.js), so either function may run
+    // first — kept in this order anyway to avoid unrelated churn (the chip-anchor
+    // logic, CCScope.scopeCenter(), was deliberately made order-independent
+    // already; see its own doc comment in scope.js).
     renderScopeChips(); applyScope(curScope(), {fit:false}); setupConfClusters();
     // Reconcile cluster/leaf markers only when the map SETTLES, never on every render frame:
     // querySourceFeatures() + DOM marker diffing across all clustered layers, run per-frame during a
@@ -3738,9 +3750,9 @@
     else if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
     else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
   });
-  // Order matters (final review IMPORTANT 2): renderScopeChips() before applyScope() —
-  // see the load-handler comment above for why applyScope needs the chip button to
-  // already exist to resolve scopeLabel().
+  // renderScopeChips()/applyScope() order (2026-07-23 flash fix): no longer
+  // coupled — see the load-handler comment above. Kept in this order anyway to
+  // avoid unrelated churn.
   window.addEventListener('cc:scopechange', e=>{ renderScopeChips(); applyScope(e.detail, {fit:true}); });
 
   // Pan-away widen nudge (region-scoping-design.md §4 "Deep links & far panning"):

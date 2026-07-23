@@ -212,6 +212,15 @@ final class MapController extends AbstractController
             'searchIn' => $t->trans('map.search_in'),
             'searchEverywhere' => $t->trans('map.search_everywhere'),
             'searchWiden' => $t->trans('map.search_widen'),
+            // The "Everywhere" scope's own header/kicker label — same string as
+            // the static rail button (templates/map/index.html.twig), but map.js
+            // (and scope-header.js's early bootstrap) need their own copy:
+            // CCScope.label() (scope.js) deliberately returns null for the
+            // everywhere/myArea kinds (the caller owns those strings), and the
+            // header is now written straight after CCScope.init() resolves the
+            // scope, before first paint (2026-07-23 flash fix) — not by reading
+            // back the rendered rail button.
+            'everywhereLabel' => $t->trans('region.everywhere.label'),
             // My-area header/search line (region-scoping-design.md §4 / §9.1
             // Phase 4). {place}/{km} filled by map.js tpl(); the _plain variant
             // is used when the base location has no place name.
