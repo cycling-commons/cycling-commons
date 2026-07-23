@@ -61,39 +61,10 @@ archive, fetched once, feeds every one of those pin and cluster-bubble layers. R
 them — change a colour, swap an icon — and nothing is re-fetched. The source does not change; only
 the instruction reading it does.
 
-<figure class="gis-fig gis-todo">
-<p class="gis-todo-h">Figure F15 · not yet drawn</p>
-<p><strong>Must make the reader see:</strong> that a source is inert data under a name, and that
-several independent layer boxes can each point at that same name and draw something different from
-it — so restyling one arrow-target never touches the source box at all.</p>
-<p><strong>Drawing brief:</strong> a single box on the left labelled <code>coverage.pmtiles</code>,
-feeding one arrow into a box labelled <code>source: "coverage"</code>. From that source box, three
-arrows fan out rightward to three layer boxes stacked vertically: "pins (icon layer)", "cluster
-bubbles", "labels". Each of the three layer boxes has a short second arrow pointing further right
-into a shared "rendered map" panel, so the reader sees all three actually landing on screen together.
-Pick the top layer box ("pins") and annotate it with two extra call-outs: its
-<code>source-layer</code> name (e.g. <code>c_be</code>) written beside the arrow from the source box
-(since that is the one extra thing a vector source needs that a GeoJSON source doesn't), and a small
-two-column split below the box separating its properties into a <strong>paint</strong> group
-(e.g. <code>icon-opacity</code>) and a <strong>layout</strong> group (e.g. <code>visibility</code>,
-<code>icon-image</code>). Keep every label to two or three words per the figure convention — this is
-an anatomy diagram, not a code listing. At 640 units wide, four stations run left to right — the
-pmtiles box, the source box, the stack of three layer boxes, and the rendered-map panel — so each
-gets on the order of 150 units of width once arrows and gaps between stations are subtracted. That is
-plenty for this figure's short box labels (<code>coverage.pmtiles</code>, <code>source:
-"coverage"</code>, <code>pins (icon layer)</code>, <code>cluster bubbles</code>, <code>labels</code>,
-<code>rendered map</code>) to wrap onto one or two lines at the gis-label-sm floor, unlike ch7's F13,
-whose six boxes needed a full ~50-character prose-length label each and had to wrap to two rows to
-stay legible. The one spot in this figure that does need F13's kind of care is the paint/layout
-sub-annotation under the pins box: splitting that box's ~150 units into two side-by-side columns per
-point 4 of the stylesheet convention leaves each column only about 75 units — under half of what a
-station gets everywhere else in the figure — so keep every paint/layout entry to one word
-(<code>icon-opacity</code>, <code>visibility</code>, <code>icon-image</code>) and let it wrap onto two
-short lines inside its narrow column rather than forcing it onto one; the 24-unit gis-label-sm floor
-is about font size, not line count, so a two-line wrap inside a narrow column still clears it.</p>
+<figure class="gis-fig">
+<svg viewBox="0 0 640 940" role="img" aria-labelledby="f15-t f15-d" xmlns="http://www.w3.org/2000/svg"><title id="f15-t">One MapLibre source feeding several layers, and what one layer is made of</title><desc id="f15-d">A vertical flow. At the top a box reads: one tile archive, coverage.pmtiles. One arrow leads down from it into a second box: one source, source colon "coverage". From that single source box the flow fans out across a horizontal bar into three separate layer boxes standing side by side: pins, whose source-layer is c_be; clusters, on the same c_be; and pins on d_be. Each of the three layers then sends its own arrow down into one shared rendered-map panel, where water pins, a cluster bubble reading 12 and service pins all appear together on the same map. Below, tied to the first layer box by a dashed leader, a detail panel opens that one layer up: source-layer c_be, and its properties split into a paint group, holding icon-opacity, the only paint it sets, and a layout group, holding visibility and icon-image. Nothing about the layer boxes or the detail panel reaches back up into the source box.</desc><defs><marker id="gis-arrow-f15" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><rect class="gis-box" rx="8" x="180" y="24" width="280" height="80"/><text class="gis-label-sm" x="320" y="58" text-anchor="middle">one tile archive</text><text class="gis-label-mono" x="320" y="90" text-anchor="middle">coverage.pmtiles</text><line class="gis-accent" x1="320" y1="106" x2="320" y2="142" marker-end="url(#gis-arrow-f15)"/><rect class="gis-box" rx="8" x="166" y="144" width="308" height="80"/><text class="gis-label-sm" x="320" y="178" text-anchor="middle">one source</text><text class="gis-label-mono" x="320" y="210" text-anchor="middle">source: "coverage"</text><line class="gis-accent" x1="320" y1="226" x2="320" y2="262"/><line class="gis-accent" x1="112" y1="262" x2="528" y2="262"/><line class="gis-accent" x1="112" y1="262" x2="112" y2="300" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="320" y1="262" x2="320" y2="300" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="528" y1="262" x2="528" y2="300" marker-end="url(#gis-arrow-f15)"/><rect class="gis-box" rx="8" x="21" y="300" width="182" height="118"/><text x="112" y="338" text-anchor="middle">pins</text><text class="gis-label-sm" x="112" y="370" text-anchor="middle">source-layer</text><text class="gis-label-mono" x="112" y="400" text-anchor="middle">c_be</text><rect class="gis-box" rx="8" x="229" y="300" width="182" height="118"/><text x="320" y="352" text-anchor="middle">clusters</text><text class="gis-label-mono" x="320" y="384" text-anchor="middle">c_be</text><rect class="gis-box" rx="8" x="437" y="300" width="182" height="118"/><text x="528" y="352" text-anchor="middle">pins</text><text class="gis-label-mono" x="528" y="384" text-anchor="middle">d_be</text><line class="gis-accent" x1="112" y1="420" x2="112" y2="458" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="320" y1="420" x2="320" y2="458" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="528" y1="420" x2="528" y2="458" marker-end="url(#gis-arrow-f15)"/><rect class="gis-box" rx="8" x="21" y="460" width="598" height="210"/><text class="gis-label-sm" x="41" y="492">rendered map</text><rect class="gis-fill-glacier" fill-opacity=".22" x="41" y="506" width="558" height="144"/><path class="gis-muted" d="M 41 592 C 140 570, 220 616, 320 596 S 500 560, 599 588"/><path class="gis-muted" d="M 232 506 L 262 566 L 246 650"/><circle class="gis-ink gis-fill-accent" cx="95" cy="606" r="9"/><circle class="gis-ink gis-fill-accent" cx="150" cy="548" r="9"/><text class="gis-label-sm gis-halo" x="168" y="542">Spa</text><circle class="gis-ink gis-fill-ochre" cx="320" cy="560" r="26"/><text class="gis-label-sm gis-halo" x="320" y="569" text-anchor="middle">12</text><circle class="gis-ink gis-fill-clay" cx="505" cy="602" r="9"/><circle class="gis-ink gis-fill-clay" cx="556" cy="546" r="9"/><path class="gis-muted" stroke-dasharray="4 5" d="M 21 372 L 8 372 L 8 760 L 21 760"/><rect class="gis-box" rx="8" x="21" y="706" width="598" height="210"/><text class="gis-label-sm" x="41" y="742">inside the pins layer</text><text class="gis-label-mono" x="41" y="778">source-layer: c_be</text><line class="gis-muted" x1="21" y1="796" x2="619" y2="796"/><line class="gis-muted" x1="330" y1="796" x2="330" y2="916"/><text class="gis-label-mono" x="41" y="830">paint</text><text class="gis-label-sm" x="125" y="830">appearance</text><text class="gis-label-sm" x="41" y="864">icon-opacity</text><text class="gis-label-sm" x="41" y="894">the only paint it sets</text><text class="gis-label-mono" x="350" y="830">layout</text><text class="gis-label-sm" x="448" y="830">placement</text><text class="gis-label-sm" x="350" y="864">visibility</text><text class="gis-label-sm" x="350" y="894">icon-image</text></svg>
 <figcaption>One source, many layers — the reason a restyle needs no refetch.</figcaption>
 </figure>
-<!-- FIGURE-TODO id=F15 ch=8 -->
 
 ## `source-layer`
 

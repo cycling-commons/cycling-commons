@@ -220,26 +220,12 @@ would sit awkwardly next to this project's position that the Commons *dataset* i
 
 ## Landing it
 
-<figure class="gis-fig gis-todo">
-<p class="gis-todo-h">Figure F10 · not yet drawn</p>
-<p><strong>Must make the reader see:</strong> the whole batch is one straight, one-way chain — a
-downloaded file becomes a smaller file becomes parsed-and-trimmed rows becomes a database write, in
-that order, with no step feeding back into an earlier one — and that the whole chain runs on a
-schedule, offline, never while a rider is waiting on a request.</p>
-<p><strong>Drawing brief:</strong> five boxes in a single horizontal row, `.gis-box` style (per the
-house flowchart convention in `wiki/stylesheets/extra.css` point 8: `rx="8"`, ~56 units tall, ~14
-units of horizontal padding either side of the label), joined left to right by four `gis-accent`
-arrows using the shared `#gis-arrow-fN` marker. Box labels, kept short (640-unit viewBox, ~50
-characters per full-width line): (1) "Geofabrik .osm.pbf"; (2) "extract.py" with a small sub-label
-"osmium tags-filter"; (3) "parse.py" with sub-label "select + narrow tags"; (4) "load.py"; (5)
-"coverage_poi (PostGIS)". A small label near box 1, set apart from the row (e.g. above it), reads
-"weekly, per region" to mark the whole chain as a scheduled batch rather than a live request path.
-`viewBox="0 0 640 140"` as the general guidance suggests for a five-box row.</p>
+<figure class="gis-fig">
+<svg viewBox="0 0 640 420" role="img" aria-labelledby="f10-t f10-d" xmlns="http://www.w3.org/2000/svg"><title id="f10-t">The coverage pipeline, from Geofabrik file to database row</title><desc id="f10-d">Five stages joined by one-way arrows, wrapping onto two rows the way a line of text does. Row one, left to right: a box labelled Geofabrik .osm.pbf; an arrow into a box labelled extract.py, osmium tags-filter; an arrow into a box labelled parse.py, make rows, narrow tags. From that third box an arrow drops down and runs back left onto row two: a box labelled load.py, COPY and swap, then an arrow into a box labelled coverage_poi, PostGIS table. Every arrow points forward; not one returns to an earlier stage. Above the chain a heading reads: weekly batch, one region at a time, and below it, runs on a schedule, never on a rider's request.</desc><defs><marker id="gis-arrow-f10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="40">Weekly batch, one region at a time</text><text class="gis-label-sm" x="20" y="70">runs on a schedule, never on a rider's request</text><rect class="gis-box" rx="8" x="22" y="96" width="176" height="110"/><text class="gis-label-sm" x="110" y="143" text-anchor="middle">Geofabrik</text><text class="gis-label-mono" x="110" y="175" text-anchor="middle">.osm.pbf</text><line class="gis-accent" x1="200" y1="151" x2="230" y2="151" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="232" y="96" width="176" height="110"/><text class="gis-label-mono" x="320" y="127" text-anchor="middle">extract.py</text><text class="gis-label-sm" x="320" y="159" text-anchor="middle">osmium</text><text class="gis-label-sm" x="320" y="189" text-anchor="middle">tags-filter</text><line class="gis-accent" x1="410" y1="151" x2="440" y2="151" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="442" y="96" width="176" height="110"/><text class="gis-label-mono" x="530" y="127" text-anchor="middle">parse.py</text><text class="gis-label-sm" x="530" y="159" text-anchor="middle">make rows,</text><text class="gis-label-sm" x="530" y="189" text-anchor="middle">narrow tags</text><path class="gis-accent" d="M 530 206 L 530 246 L 165 246 L 165 286" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="77" y="286" width="176" height="110"/><text class="gis-label-mono" x="165" y="333" text-anchor="middle">load.py</text><text class="gis-label-sm" x="165" y="365" text-anchor="middle">COPY + swap</text><line class="gis-accent" x1="255" y1="341" x2="285" y2="341" marker-end="url(#gis-arrow-f10)"/><rect class="gis-box" rx="8" x="287" y="286" width="276" height="110"/><text class="gis-label-mono" x="425" y="333" text-anchor="middle">coverage_poi</text><text class="gis-label-sm" x="425" y="365" text-anchor="middle">PostGIS table</text></svg>
 <figcaption>One Geofabrik extract enters on the left; one <code>coverage_poi</code> row leaves on the
 right. Every arrow points one way, and the whole chain runs on a schedule, never while a rider is
 waiting for a page to load.</figcaption>
 </figure>
-<!-- FIGURE-TODO id=F10 ch=6 -->
 
 The parsed, tag-trimmed rows from the previous section still need somewhere to live.
 `pipeline/coverage/load.py::ensure_schema()` creates that place: a `coverage_poi` table (plus a small
@@ -286,27 +272,13 @@ pins exactly this behaviour. It is a deliberate simplification: `coverage_poi` o
 marker location for a POI, not a shape to draw, so every row — node or way alike — collapses to the
 one kind of geometry the table actually asks for.
 
-<figure class="gis-fig gis-todo">
-<p class="gis-todo-h">Figure F11 · not yet drawn</p>
-<p><strong>Must make the reader see:</strong> the tag trim from the previous section, made concrete
-on one real object instead of described in the abstract — which exact tags survive onto the stored
-row, and which are thrown away, so "narrow serve cache" stops being a phrase and becomes a picture of
-a decision.</p>
-<p><strong>Drawing brief:</strong> left side, one node (small filled circle, `gis-fill-accent`)
-labelled with a `ref` like "node/61146471", with a stacked list of tag lines beside it in
-`gis-label-mono`. Four lines kept, in ordinary `gis-ink` text: `amenity=drinking_water`,
-`drinking_water=yes`, `name=…`, `wheelchair=yes`. Three more lines, plausible but dropped, shown
-struck through or in `gis-muted`: e.g. `source=survey`, `fixme=…`, `check_date=2024-03-01`. One
-`gis-accent` arrow (shared marker convention) crosses from the node to a table-row shape on the right
-— a rectangle divided by thin `gis-muted` lines into cells labelled `ref`, `letter`, `name`, `geom`,
-`tags{…}` — carrying only the four kept tags into its final `tags` cell. The struck-through lines
-visually stop before the arrow; they do not cross it.</p>
+<figure class="gis-fig">
+<svg viewBox="0 0 640 950" role="img" aria-labelledby="f11-t f11-d" xmlns="http://www.w3.org/2000/svg"><title id="f11-t">Which of a node's tags survive into the stored row</title><desc id="f11-d">On the left, an OpenStreetMap node drawn as a filled dot and labelled node/61146471, with the seven tags it carries listed beneath it. The first four — amenity=drinking_water, drinking_water=yes, name=Source du Wayai and wheelchair=yes — are in full ink and are bracketed as kept: they are named in the contract's storedTagKeys list of 27 keys. The last three — source=survey, check_date=2024-03-01 and fixme=verify tap — are struck through and greyed, and are bracketed as dropped, not in the 27. Below the list an arrow, labelled parse.py keeps only the contract's keys, leads down into the stored coverage_poi row: ref node/61146471, letter C, name Source du Wayai, geom POINT(5.8792 50.4894), and a tags column carrying only amenity, drinking_water and wheelchair. The struck-through tags reach neither the arrow nor the row. A note underneath records that name gets a column of its own and is never a stored tag.</desc><defs><marker id="gis-arrow-f11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="40">One node, every tag OSM has</text><circle class="gis-ink gis-fill-accent" cx="34" cy="76" r="12"/><text class="gis-label-mono" x="58" y="85">node/61146471</text><text class="gis-label-mono" x="58" y="140">amenity=drinking_water</text><text class="gis-label-mono" x="58" y="180">drinking_water=yes</text><text class="gis-label-mono" x="58" y="220">name=Source du Wayai</text><text class="gis-label-mono" x="58" y="260">wheelchair=yes</text><text class="gis-label-mono gis-fill-glacier" x="58" y="304">source=survey</text><line class="gis-muted" x1="54" y1="296" x2="251" y2="296"/><text class="gis-label-mono gis-fill-glacier" x="58" y="344">check_date=2024-03-01</text><line class="gis-muted" x1="54" y1="336" x2="366" y2="336"/><text class="gis-label-mono gis-fill-glacier" x="58" y="384">fixme=verify tap</text><line class="gis-muted" x1="54" y1="376" x2="294" y2="376"/><path class="gis-accent" d="M 412 116 L 400 116 L 400 272 L 412 272"/><text class="gis-label-sm" x="424" y="172">kept:</text><text class="gis-label-sm" x="424" y="200">storedTagKeys</text><text class="gis-label-sm" x="424" y="228">27 keys</text><path class="gis-muted" d="M 412 284 L 400 284 L 400 396 L 412 396"/><text class="gis-label-sm" x="424" y="326">dropped:</text><text class="gis-label-sm" x="424" y="354">not in the 27</text><line class="gis-accent" x1="60" y1="418" x2="60" y2="492" marker-end="url(#gis-arrow-f11)"/><text class="gis-label-sm" x="88" y="462">parse.py keeps only the contract's keys</text><rect class="gis-box" rx="8" x="20" y="502" width="600" height="396"/><text class="gis-label-sm" x="40" y="538">the stored coverage_poi row</text><line class="gis-muted" x1="20" y1="556" x2="620" y2="556"/><text class="gis-label-sm" x="40" y="592">ref</text><text class="gis-label-mono" x="160" y="592">node/61146471</text><line class="gis-muted" x1="20" y1="610" x2="620" y2="610"/><text class="gis-label-sm" x="40" y="646">letter</text><text class="gis-label-mono" x="160" y="646">C</text><line class="gis-muted" x1="20" y1="664" x2="620" y2="664"/><text class="gis-label-sm" x="40" y="700">name</text><text class="gis-label-mono" x="160" y="700">Source du Wayai</text><line class="gis-muted" x1="20" y1="718" x2="620" y2="718"/><text class="gis-label-sm" x="40" y="754">geom</text><text class="gis-label-mono" x="160" y="754">POINT(5.8792 50.4894)</text><line class="gis-muted" x1="20" y1="772" x2="620" y2="772"/><text class="gis-label-sm" x="40" y="808">tags</text><text class="gis-label-mono" x="160" y="808">{"amenity": "drinking_water",</text><text class="gis-label-mono" x="160" y="840">"drinking_water": "yes",</text><text class="gis-label-mono" x="160" y="872">"wheelchair": "yes"}</text><text class="gis-label-sm" x="20" y="930">name gets a column of its own, never a stored tag</text></svg>
 <figcaption>What crosses from a node's full tag list into the stored row is a choice made once, at
 parse time — not everything OpenStreetMap happens to have attached to this object, only the keys the
 contract names. The struck-through tags were never on their way to being kept; dropping them is the
 point of this step, not an accident of it.</figcaption>
 </figure>
-<!-- FIGURE-TODO id=F11 ch=6 -->
 
 `load.py::load_region()` writes a region's rows in one transaction: `COPY` into a staging table,
 check the new row count has not collapsed suspiciously against the previous run (a truncated download

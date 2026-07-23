@@ -160,13 +160,38 @@ location through unchanged into the function that actually does the work. `BaseA
 `ST_Distance` too, the same way chapter 3 already quoted it: sorting candidate regions by real
 distance, in metres, once the containment check above has already picked a winner.
 
-<figure class="gis-fig gis-todo">
-<p class="gis-todo-h">Figure F6 · not yet drawn</p>
-<p><strong>Must make the reader see:</strong> that four differently-shaped questions — "is it inside", "do they touch", "is it within a distance", "how far exactly" — can all be asked of the very same handful of shapes, and that only one of the four answers with a number instead of a yes/no.</p>
-<p><strong>Drawing brief:</strong> One full-width panel, viewBox <code>0 0 640 H</code> (H around 420), no side-by-side sub-panels. Draw one closed region polygon (gis-ink outline, pale gis-fill-paper fill) occupying roughly the left half of the panel. Place a small filled point labelled <code>A</code> inside the region. Place a second small filled point labelled <code>B</code> outside the region, near its boundary. Draw one line (gis-accent) starting outside the region, to the right, and crossing into it once, labelled <code>track</code> with a small arrowhead at its far end. Around point <code>A</code>, draw a dashed gis-muted circle of a few dozen units' radius, labelled <code>5 km</code>, to stand for the ST_DWithin test. Draw a short tick-marked measured segment (gis-clay) from point <code>A</code> to the nearest edge of the region, labelled with a placeholder distance. Below the drawing, four short stacked gis-label-sm lines (each under 50 characters, one predicate per line, no side-by-side layout): "ST_Contains(region, point) — true for A, false for B", "ST_Intersects(region, track) — true, they cross", "ST_DWithin(A, B, 5 km) — the dashed radius above", "ST_Distance(A, edge) — the measured segment above".</p>
+<figure class="gis-fig">
+<svg viewBox="0 0 640 710" role="img" aria-labelledby="f6-t f6-d" xmlns="http://www.w3.org/2000/svg">
+  <title id="f6-t">Four spatial questions asked of one region, two points and one track</title>
+  <desc id="f6-d">A single drawing holding one region polygon, two points and one track, with four questions asked of them. The region is an irregular filled outline covering the left half of the panel. Point A sits well inside it; point B sits just outside its lower-left edge, about thirty units beyond the boundary. A dashed circle of five kilometres' radius is drawn around A, and B falls inside that circle — about four kilometres from A — so the near test passes. A short measured segment with tick marks at both ends runs from A down to the nearest point on the region's boundary, labelled 2.8 kilometres. A track enters from the right-hand edge of the panel, outside the region, and crosses the region's boundary exactly once before its arrowhead comes to rest inside; the single crossing point is marked with a dot. Below the drawing, five result lines: ST_Contains of region and A is true, ST_Contains of region and B is false, ST_Intersects of region and track is true, ST_DWithin of A and B at five kilometres is true, and ST_Distance of A and the edge is 2.8 kilometres. Only that last line answers with a number; the four above it answer yes or no.</desc>
+  <defs><marker id="gis-arrow-f6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs>
+  <text class="gis-label-sm" x="320" y="44" text-anchor="middle">Four questions, the same few shapes</text>
+  <path class="gis-ink gis-fill-paper" d="M 35 300 L 70 150 L 150 75 L 270 95 L 340 215 L 300 340 L 170 385 Z"/>
+  <circle class="gis-muted" stroke-width="1.8" stroke-dasharray="7 6" cx="200" cy="290" r="145"/>
+  <line class="gis-muted" stroke-width="1.8" stroke-dasharray="6 5" x1="200" y1="290" x2="97.5" y2="187.5"/>
+  <path class="gis-accent" stroke-width="3" marker-end="url(#gis-arrow-f6)" d="M 615 110 L 420 95 L 215 120"/>
+  <line class="gis-clay" x1="200" y1="290" x2="226.2" y2="365.6"/>
+  <line class="gis-clay" x1="192.4" y1="292.6" x2="207.6" y2="287.4"/>
+  <line class="gis-clay" x1="218.6" y1="368.2" x2="233.8" y2="363"/>
+  <circle class="gis-fill-ink" cx="279.5" cy="112.2" r="5"/>
+  <circle class="gis-ink gis-fill-accent" cx="200" cy="290" r="9"/>
+  <circle class="gis-ink gis-fill-ochre" cx="140" cy="390" r="9"/>
+  <text class="gis-halo" x="200" y="266" text-anchor="middle">A</text>
+  <text class="gis-halo" x="126" y="398" text-anchor="end">B</text>
+  <text class="gis-label-sm gis-halo" x="108" y="136">region</text>
+  <text class="gis-label-sm gis-halo" x="152" y="230">5 km</text>
+  <text class="gis-label-sm gis-halo" x="190" y="340" text-anchor="end">2.8 km</text>
+  <text class="gis-label-sm gis-halo" x="500" y="88" text-anchor="middle">track</text>
+  <text class="gis-label-sm gis-halo" x="296" y="152">crosses once</text>
+  <text class="gis-label-mono" x="30" y="492">ST_Contains(region, A) — true</text>
+  <text class="gis-label-mono" x="30" y="528">ST_Contains(region, B) — false</text>
+  <text class="gis-label-mono" x="30" y="564">ST_Intersects(region, track) — true</text>
+  <text class="gis-label-mono" x="30" y="600">ST_DWithin(A, B, 5 km) — true</text>
+  <text class="gis-label-mono" x="30" y="636">ST_Distance(A, edge) — 2.8 km</text>
+  <text class="gis-label-sm" x="30" y="678">Only the last one answers with a number.</text>
+</svg>
 <figcaption>Four questions, one region and one point apiece: <code>ST_Contains</code> and <code>ST_Intersects</code> answer yes or no; <code>ST_DWithin</code> answers yes or no about a distance; only <code>ST_Distance</code> hands back a number instead of a verdict. Same shapes, four different kinds of answer.</figcaption>
 </figure>
-<!-- FIGURE-TODO id=F6 ch=4 -->
 
 ## Grow a shape — ST_Buffer
 
@@ -248,13 +273,34 @@ whatever order they happened to be inserted into the `item` table — arbitrary,
 not the order a rider pedalled past them. With it, the list comes back in the one order that actually
 matches the ride.
 
-<figure class="gis-fig gis-todo">
-<p class="gis-todo-h">Figure F7 · not yet drawn</p>
-<p><strong>Must make the reader see:</strong> that "how far along the line" is a genuinely different question from "how far away" or "which point" — and that sorting by that one fraction is the entire mechanism behind listing ride-check results in the order a rider actually pedalled past them.</p>
-<p><strong>Drawing brief:</strong> One full-width panel, viewBox <code>0 0 640 H</code> (H around 380), single stacked block, no side-by-side panels. Draw one gently curving line (gis-accent) running left to right across most of the panel's width, labelled <code>start</code> at its left end and <code>finish</code> with a small arrowhead at its right end. Place three small filled points near the line at varied perpendicular distances above and below it, in left-to-right order, standing for three fountains — no need to label them individually beyond a generic small dot. From each of the three points, draw a short dashed gis-muted segment straight down (or up) to its nearest point on the line — a small tick mark on the line itself. Label each of the three tick marks, in left-to-right order along the line, with its fraction: <code>0.12</code>, <code>0.55</code>, <code>0.91</code>. Keep every label to a single short number, gis-label-sm, no side panels or legends beyond that.</p>
+<figure class="gis-fig">
+<svg viewBox="0 0 640 500" role="img" aria-labelledby="f7-t f7-d" xmlns="http://www.w3.org/2000/svg">
+  <title id="f7-t">Three fountains beside one ride, each located as a fraction along it</title>
+  <desc id="f7-d">A ride is drawn as one line running left to right across the panel, marked start at its left end and finish, with an arrowhead, at its right end. Three fountains sit near the line at different distances from it: the first below the line towards the left, the second above the line near the middle, the third below the line towards the right. From each fountain a dashed segment drops at a right angle to the closest point on the ride, where a small dot marks that point on the line. The three dots are labelled, in left-to-right order along the ride, 0.12, then 0.55, then 0.91 — each one the fraction of the ride's total length reached at that tick, measured from the start. Below the drawing: 0 is the start of the ride and 1 the finish; ST_LineLocatePoint of the ride and a fountain returns that fraction; sorting by it puts the three fountains in the ride's own order.</desc>
+  <defs><marker id="gis-arrow-f7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs>
+  <text class="gis-label-sm" x="320" y="44" text-anchor="middle">One ride, three fountains beside it</text>
+  <path class="gis-accent" stroke-width="3" marker-end="url(#gis-arrow-f7)" d="M 60 300 L 180 220 L 300 260 L 420 180 L 560 220"/>
+  <line class="gis-muted" stroke-width="2" stroke-dasharray="6 5" x1="153.7" y1="319.3" x2="116" y2="262.7"/>
+  <line class="gis-muted" stroke-width="2" stroke-dasharray="6 5" x1="300.8" y1="193.4" x2="331.3" y2="239.2"/>
+  <line class="gis-muted" stroke-width="2" stroke-dasharray="6 5" x1="495.6" y1="261.9" x2="511.5" y2="206.1"/>
+  <circle class="gis-fill-ink" cx="116" cy="262.7" r="5"/>
+  <circle class="gis-fill-ink" cx="331.3" cy="239.2" r="5"/>
+  <circle class="gis-fill-ink" cx="511.5" cy="206.1" r="5"/>
+  <circle class="gis-fill-ink" cx="60" cy="300" r="6"/>
+  <circle class="gis-ink gis-fill-accent" cx="153.7" cy="319.3" r="10"/>
+  <circle class="gis-ink gis-fill-accent" cx="300.8" cy="193.4" r="10"/>
+  <circle class="gis-ink gis-fill-accent" cx="495.6" cy="261.9" r="10"/>
+  <text class="gis-label-mono gis-halo" x="99" y="238" text-anchor="middle">0.12</text>
+  <text class="gis-label-mono gis-halo" x="354" y="273" text-anchor="middle">0.55</text>
+  <text class="gis-label-mono gis-halo" x="521" y="173" text-anchor="middle">0.91</text>
+  <text class="gis-label-sm gis-halo" x="40" y="332">start</text>
+  <text class="gis-label-sm gis-halo" x="560" y="256" text-anchor="middle">finish</text>
+  <text class="gis-label-sm" x="30" y="386">0 is the start of the ride, 1 the finish.</text>
+  <text class="gis-label-mono" x="30" y="428">ST_LineLocatePoint(ride, fountain)</text>
+  <text class="gis-label-sm" x="30" y="462">sorted by that fraction: the ride's own order</text>
+</svg>
 <figcaption>Each fountain's closest point on the ride sits at a fraction between 0 (the very start) and 1 (the very finish). Sorting the ride-check results by that fraction — not by the order rows happen to sit in the database — is what lets a rider see 0.12 before 0.55 before 0.91: the same order they actually pedalled past them.</figcaption>
 </figure>
-<!-- FIGURE-TODO id=F7 ch=4 -->
 
 ## Asking by name instead
 
