@@ -1,0 +1,68 @@
+wiki/developers/gis/routes.md
+  s_f3f9c3dc9409c4::t_d36e882acc46e2 33
+  s_f3f9c3dc9409c4::t_efb3b7f9d30149 83
+wiki/developers/gis/on-screen.md
+  s_f3f9c3dc9409c4::t_3fa20d27818a34 242,244-245
+  s_f3f9c3dc9409c4::t_53979929dc3162 53
+  s_f3f9c3dc9409c4::t_8f68a4fdcb1949 156,158
+  s_f3f9c3dc9409c4::t_eb9dd753bfca60 25,28
+  s_f3f9c3dc9409c4::t_ef7b70427440f4 197,199-200
+  s_f3f9c3dc9409c4::t_f8f9ad5befa03f 113,116-117
+  s_f3f9c3dc9409c4::t_e1c5b96de989b2 218,220
+.pre-commit-config.yaml
+  s_f3f9c3dc9409c4::t_6765e2cbec4f92 48-63
+wiki/developers/gis/spatial-questions.md
+  s_f3f9c3dc9409c4::t_c949ff3df017a2 208
+  s_f3f9c3dc9409c4::t_e198e250a1c04c 95
+  s_f3f9c3dc9409c4::t_786e0ba6fc1d4b 132
+  s_f3f9c3dc9409c4::t_19d8c13351b8bf 39
+  s_f3f9c3dc9409c4::t_782202011aae16 270
+  s_f3f9c3dc9409c4::t_fa256741812432 230
+  s_f3f9c3dc9409c4::t_78cf1c54634ccb 72
+  s_f3f9c3dc9409c4::t_110342d93aadd0 173
+wiki/governance.md
+  s_f3f9c3dc9409c4::t_d30eb353dd2620 12
+wiki/developers/gis/making-it-fast.md
+  s_f3f9c3dc9409c4::t_a5e5ec23e282ac 209
+  s_f3f9c3dc9409c4::t_7d171e1ae6874a 243
+  s_f3f9c3dc9409c4::t_da3431c4ed63e0 342
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_a282bce50e7e65 82
+  s_f3f9c3dc9409c4::t_41fb1c5ad73e67 146
+  s_f3f9c3dc9409c4::t_aa213a22ef14e5 271
+  s_f3f9c3dc9409c4::t_2fafb56a6f34a3 124
+wiki/developers/gis/shapes.md
+  s_f3f9c3dc9409c4::t_f802b56080f11b 87
+wiki/developers/gis/metres-vs-degrees.md
+  s_f3f9c3dc9409c4::t_3a2522b9503a10 115
+  s_f3f9c3dc9409c4::t_4a33dc2668b564 150
+  s_f3f9c3dc9409c4::t_7425133ddd0ad7 163
+  s_f3f9c3dc9409c4::t_4b7704ab99d22e 25
+  s_f3f9c3dc9409c4::t_ca842dace1460e 124
+wiki/building.md
+  s_f3f9c3dc9409c4::t_4a6644293f55cc 22
+  s_f3f9c3dc9409c4::t_a4d5643abb852d 44
+Makefile
+  s_f3f9c3dc9409c4::t_ffb51fbef62a86 169-173
+wiki/developers/gis/tiles.md
+  s_f3f9c3dc9409c4::t_9fa35482cbdf9f 39
+  s_f3f9c3dc9409c4::t_d2582595820207 202-213
+tools/check-wiki-code-drift.py
+  s_f3f9c3dc9409c4::t_9df30c4a8cd5fb 1-168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "db1e40477792fcb77cf8ad5e61f60552772c7a91",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
