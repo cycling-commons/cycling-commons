@@ -40,6 +40,12 @@ region's chip, picking a result from search, or clicking a spot on the map to sc
 that, we save which region you picked in your browser's local storage, so the map opens to it next
 time instead of asking again.
 
+One honest caveat about search: what you type into the place-search box is sent, as you type it, to
+`photon.komoot.io` — a third-party geocoding service (no API key, called directly from your browser)
+that turns your text into place matches. That's a normal, necessary part of how search-as-you-type
+works, and it's a different thing from the region choice above: the search text itself isn't something
+*we* store, but it does leave your browser to a service we don't run.
+
 That's a **first-party, functional** preference — the same category as remembering your interface
 language or your last zoom level. It isn't used to track you across sites, it isn't shared with any
 third party, it isn't linked to advertising in any way, and an inferred guess is never silently saved
