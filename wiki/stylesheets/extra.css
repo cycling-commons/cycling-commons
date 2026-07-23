@@ -335,7 +335,11 @@
    direct children of a nested section's own list. Top-level entries (Home,
    Manifesto, …) are not inside a nested item, so they are untouched. */
 .md-nav__item--nested > .md-nav > .md-nav__list > .md-nav__item > .md-nav__link {
-  padding-left: 1.85em;
+  /* ADD the hang to Material's own 16px link padding — do not replace it.
+     Replacing it put line one at x=0, so every numbered chapter sat further
+     left than the unnumbered entries above it. Line one now aligns with the
+     rest of the sidebar and only continuation lines are indented. */
+  padding-left: calc(16px + 1.85em);
   text-indent: -1.85em;
 }
 
