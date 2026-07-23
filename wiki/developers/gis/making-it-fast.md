@@ -7,7 +7,7 @@ into the map's ride-check box. The question is easy to say out loud: *which of t
 map did I actually pass?* Our fountain is one of the answers — 80 metres off the track, somewhere
 around kilometre 23.
 
-Chapter 4 (`spatial-questions.md`) already gave you everything you need to
+Chapter 4 ([`spatial-questions.md`](spatial-questions.md)) already gave you everything you need to
 express that question, and chapter 3 ([`metres-vs-degrees.md`](metres-vs-degrees.md)) gave you the
 `::geography` cast that makes "within 250 metres" mean real metres instead of degrees. Put the two
 together and you get a query that is short, readable, and correct.
@@ -399,6 +399,6 @@ The fountain now has a position, a shape, a way to be asked about, and a way to 
 quickly. What it does not yet have is an origin. Everything so far has assumed the row already
 exists in our database — but somebody mapped that fountain in OpenStreetMap, in a data model that
 looks nothing like ours, and it had to get from there to here. Chapter 6
-(`osm-to-database.md`) follows it the whole way.
+([`osm-to-database.md`](osm-to-database.md)) follows it the whole way.
 
 <!-- EXERCISE-SLOT ch=5 — hands-on box goes here (spec D5); do not remove -->

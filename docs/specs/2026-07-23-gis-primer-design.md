@@ -217,8 +217,14 @@ claim about what the Commons does.
 
 ### The marker
 
-Every unanchored concept meeting the test above carries a greppable HTML comment at the point it
-appears:
+Every unanchored concept meeting the test above carries a greppable HTML comment **immediately after
+the block it refers to** — after the paragraph for a `type: general` concept, and after the
+admonition for a `type: absent` one. The marker closes the passage rather than introducing it, so a
+reader never meets a bare comment before the thing it annotates, and the pairing check below can
+read backwards from the marker.
+
+*(Amended 2026-07-23. The rule first said "immediately above the paragraph". Four chapter authors
+independently placed it after instead, which reads better and which the verification now matches.)*
 
 ```html
 <!-- UNANCHORED id=U01 type=general concept="antimeridian / dateline wrapping" -->
@@ -237,6 +243,10 @@ Filled during writing, one row per marker. Empty until the pages are drafted.
 | ID | Ch | Type | Concept | Why it has no anchor | Resolution |
 |----|----|------|---------|----------------------|------------|
 | U01 | 1 | general | On-the-fly reprojection (`ST_Transform`) | Everything that feeds the system already speaks EPSG:4326 (GPS, GPX, OSM, GeoJSON), so storage never leaves it and the one projection that does happen — to Web Mercator for tiles — is done by tippecanoe on a copy on the way out, not by us. Verified 2026-07-23: `grep -rn 'ST_Transform'` matches nothing outside the wiki page describing it | open — owner review |
+| U40 | 4 | absent | Reverse geocoding (coordinates → place name) | We only ever forward-geocode. `base_place` is stored as its own column at the moment a rider picks a town from search, specifically so the "Near Namur · 40 km" label never needs a live reverse lookup (`2026-07-19-region-scoping-design.md` §4) | open — owner review |
+| U60 | 6 | absent | Ingesting OSM **relations** into `coverage_poi` | The pipeline reads nodes and ways only: `extract.py::selector_expressions()` filters on an `nw/` prefix and `parse.py`'s `_Collector` has no `relation()` handler. A castle mapped as a multipolygon relation is invisible to it. `coverage-provider.md` calls this an approved fast-follow with no scheduled plan | open — owner review |
+| U90 | 9 | general | Elevation-gain smoothing (minimum-threshold accumulation) | GPS noise inflates raw ascent, and the usual fix is a threshold before a climb counts. We surface ascent without documenting a smoothing choice | open — owner review |
+| U91 | 9 | absent | Turn-by-turn route computation (A → B) via a routing engine | Not implemented. Valhalla exists as an opt-in compose profile only; nothing in the app computes a route between two points | open — owner review |
 
 Each chapter's review step checks that every `UNANCHORED` marker in the page has a matching row
 here, and that every `type: absent` marker is accompanied by its reader-visible admonition. That
