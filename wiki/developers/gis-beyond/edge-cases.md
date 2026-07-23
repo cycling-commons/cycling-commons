@@ -263,4 +263,52 @@ engineering habit — round before you use a float as an identity, and compare f
 rather than `==` — applied in two different places for two different reasons, and both already
 present in this codebase before this chapter ever pointed at them.
 
-<!-- EXERCISE-SLOT ch=B6 — hands-on box goes here; do not remove -->
+## Try it
+
+!!! tip "Hands-on — run the naive union CCScope.bbox() would produce, on the seam"
+    No region this project has onboarded straddles ±180°, so there is no live `region.bbox` row that
+    actually triggers this bug today — but the arithmetic itself needs no onboarded region at all,
+    only the same two example longitudes `2026-07-19-region-scoping-design.md` §8 risk 11 and this
+    chapter's own antimeridian section both already use: a sliver running from 179.5°E to 179.7°W.
+    Run `CCScope.bbox()`'s own `Math.min`/`Math.max` union directly on those two numbers:
+
+    <!-- CODE-ILLUSTRATIVE psql query — the same Math.min/Math.max union CCScope.bbox() performs, run on the two example longitudes this chapter's antimeridian section names -->
+    ```sql
+    WITH lons(lon) AS (VALUES (179.5), (-179.7))
+    SELECT min(lon) AS naive_west, max(lon) AS naive_east, max(lon) - min(lon) AS naive_box_width_degrees
+    FROM lons;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output -->
+    ```text
+     naive_west | naive_east | naive_box_width_degrees
+    ------------+------------+-------------------------
+          -179.7 |      179.5 |                    359.2
+    ```
+
+    `359.2` degrees wide — a box claiming to cover all but eight-tenths of a degree of the entire
+    planet's longitude, to describe a sliver that is actually eight-tenths of a degree wide. Now shift
+    both numbers into the 0–360° range this chapter's own fix section named, take the same min/max,
+    and read the width back off:
+
+    <!-- CODE-ILLUSTRATIVE psql query — a longitude-normalised union, the fix this chapter's own text names -->
+    ```sql
+    WITH lons(lon) AS (VALUES (179.5), (-179.7)),
+         shifted AS (SELECT CASE WHEN lon < 0 THEN lon + 360 ELSE lon END AS lon FROM lons)
+    SELECT min(lon) AS shifted_west, max(lon) AS shifted_east, max(lon) - min(lon) AS true_box_width_degrees
+    FROM shifted;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output -->
+    ```text
+     shifted_west | shifted_east | true_box_width_degrees
+    --------------+--------------+------------------------
+            179.5 |        180.3 |                     0.8
+    ```
+
+    `0.8` degrees — the real width, recovered by refusing to treat ±180° as an ordinary number line
+    for exactly the length of one comparison. This is the precise failure `2026-07-19-region-scoping-
+    design.md` §8 risk 11 names as **required** to fix before the first region straddling the seam is
+    onboarded, and the query above is exactly `CCScope.bbox()`'s own `Math.min`/`Math.max` shape — run
+    here on two literal numbers because no onboarded region needs the fix yet, not because the
+    arithmetic itself would be any different once one does.

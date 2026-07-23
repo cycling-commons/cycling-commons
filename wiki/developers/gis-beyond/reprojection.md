@@ -163,4 +163,42 @@ once when an invoice is created rather than every time someone reads the total b
 this codebase — no query, no API response, no tile build — would need to know the source ever spoke
 a different system at all.
 
-<!-- EXERCISE-SLOT ch=B1 — hands-on box goes here; do not remove -->
+## Try it
+
+!!! tip "Hands-on — three numbers for one pair of climbs"
+    Ask PostGIS the distance between two real catalog climbs three ways: in degrees, cast to
+    `geography`, and reprojected into Belgian Lambert 72 (EPSG:31370) — the national grid this
+    chapter just introduced. The two pins are Côte de la Redoute and Cascade de Coo, the same pair
+    course 1's [`spatial-questions.md`](../gis/spatial-questions.md) exercise already uses, seeded by
+    `make course-data` and selected by `name` — row ids differ on every install, seeded names do not.
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog -->
+    ```sql
+    SELECT
+      round(ST_Distance(a.geom, b.geom)::numeric, 6)                                          AS degrees_4326,
+      round(ST_Distance(a.geom::geography, b.geom::geography)::numeric, 2)                     AS metres_geography,
+      round(ST_Distance(ST_Transform(a.geom, 31370), ST_Transform(b.geom, 31370))::numeric, 2)  AS metres_lambert72
+    FROM item a, item b
+    WHERE a.name = 'Côte de la Redoute' AND b.name = 'Cascade de Coo';
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; the coordinates are fixed by the seed, so all three numbers hold on any install -->
+    ```text
+     degrees_4326 | metres_geography | metres_lambert72
+    --------------+------------------+------------------
+         0.202974 |         16708.41 |         16707.43
+    ```
+
+    Three numbers, one pair of points. `degrees_4326` is meaningless standing alone — 0.2 what? — the
+    exact trap [`metres-vs-degrees.md`](../gis/metres-vs-degrees.md) already named. `metres_geography`
+    is that chapter's own answer: cast to the curved-earth model, no reprojection needed, 16,708.41
+    real metres. `metres_lambert72` is this chapter's addition — `ST_Transform` into Belgium's own
+    national grid, then an ordinary flat-plane `ST_Distance` on the transformed coordinates, in the
+    grid's own metre units — and it comes out at 16,707.43, **less than a metre away from the
+    `geography` answer over a 16.7 km line**. That closeness is not a coincidence: Lambert 72 is a
+    projection tuned specifically to Belgium's own borders, and both these climbs sit well inside
+    them, exactly where a national grid is built to introduce almost no distortion at all. Move the
+    same two numbers to a pair of points on opposite sides of the planet and the flat-plane maths
+    behind `metres_lambert72` would fall apart long before `metres_geography`'s curved-earth answer
+    did — which is the entire reason this project reaches for `geography`, never `ST_Transform`, for
+    every real distance it actually asks for.

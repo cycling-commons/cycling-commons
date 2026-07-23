@@ -284,33 +284,48 @@ way to answer "what's here?" except by asking somewhere else.
 ## Try it
 
 !!! tip "Hands-on — connect a `source-layer` name to real rows"
-    `addCoverage()` reads one `coverage` source and slices it by `source-layer` — `c_be` for
-    Belgian water points, and so on. Fetch the running map page to see the URL that source actually
-    points at, then ask the database how many rows feed the `c_be` slice of it.
+    `addCoverage()` reads one `coverage` source and slices it by `source-layer` — `c_be` for Belgian
+    water points, and so on. Fetch the running map page to see the URL that source actually points
+    at, then ask the database to build those layer names for you, straight from the two columns they
+    are made of.
 
     <!-- CODE-ILLUSTRATIVE shell command against the dev stack's web app and Postgres -->
     ```sh
     curl -s http://localhost:8001/map | grep -o 'CC_COVERAGE_URL[^;]*;'
     docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
-    SELECT count(*) AS c_be_rows FROM coverage_poi WHERE letter='C' AND country_code='BE';
+    SELECT lower(letter) || '_' || lower(coalesce(country_code,'ZZ')) AS source_layer, count(*)
+    FROM coverage_poi GROUP BY 1 ORDER BY 1;
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data`; the versioned tile key differs on every machine -->
     ```text
-    CC_COVERAGE_URL = "http:\/\/localhost:9100\/cc-maps\/coverage\/20260722-2112.pmtiles";
-     c_be_rows
-    -----------
-          1369
-    (1 row)
+    CC_COVERAGE_URL = "http:\/\/localhost:9100\/cc-maps\/coverage\/20260723-1429.pmtiles";
+     source_layer | count
+    --------------+-------
+     c_zz         |     1
+     d_zz         |     2
+     e_zz         |     2
+     g_zz         |     1
+     h_zz         |     1
+     i_zz         |     1
+     j_zz         |     2
+    (7 rows)
     ```
 
     The first line is the exact `pmtiles://` URL `map.js` hands to `maplibregl.addProtocol` for the
     `coverage` source — the versioned key will differ on your machine and change every time the
-    pipeline republishes, which is expected (`tiles.md` covers why). The count is the same 1,369 you
-    would find in chapter 7's `(letter, country_code)` table for `C`/`BE` — it is not a coincidence,
-    it is the same underlying rows, once counted directly and once addressed by the layer name
-    `c_be` a MapLibre `addLayer({source:'coverage', 'source-layer':'c_be', ...})` call reads. If
-    `CC_COVERAGE_URL` prints empty on your machine, the pipeline hasn't published a coverage archive
-    yet (`make coverage-refresh`) — the row count still works regardless, because it never depended
-    on the tile archive existing.
+    pipeline republishes, which is expected (`tiles.md` covers why). The second is chapter 7's
+    `(letter, country_code)` table with the two columns pasted together in exactly the order
+    `export_geojsonl()` pastes them, which is what makes it a `source-layer` name: the string
+    `c_zz` in that output is the same string a MapLibre
+    `addLayer({source:'coverage', 'source-layer':'c_zz', ...})` call would read, and the count beside
+    it is how many rows that layer holds.
+
+    On a machine that has run the full `make coverage-refresh` the same query names `c_be`, `c_de`,
+    `c_nl` and eighteen more, because `country_code` is stamped for real there; on the offline seed
+    every layer ends `_zz`, for the reason chapter 7 spells out. Either way the derivation is the
+    same, and that is the point — the layer name is not a label someone typed, it is two columns
+    joined by an underscore. If `CC_COVERAGE_URL` prints empty on your machine, no coverage archive
+    has been published yet — the row count still works regardless, because it never depended on the
+    tile archive existing.

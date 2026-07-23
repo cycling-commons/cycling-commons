@@ -325,19 +325,19 @@ tile count, and four times the resolution, of the level before it. [`tiles.md`](
 ## Try it
 
 !!! tip "Hands-on — diagnose a real zero-row query"
-    Here is a query near our fountain (chapter 1's `50.4894, 5.8792`, east of Spa) that runs
-    without error and returns nothing. Work through the pitfalls table above before reading the fix
-    below it.
+    Here is a query near Namur (`50.4700, 4.8700`, where the coverage fixture's own nodes sit) that
+    runs without error and returns nothing. Work through the pitfalls table above before reading the
+    fix below it.
 
     <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres — the broken query -->
     ```sh
     docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
     SELECT count(*) AS broken_count FROM coverage_poi
-    WHERE ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint(50.4894, 5.8792), 4326)::geography, 5000);
+    WHERE ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint(50.4700, 4.8700), 4326)::geography, 5000);
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE sample output; zero on any install, the swapped point has nothing near it on Earth's dry land -->
     ```text
      broken_count
     --------------
@@ -345,31 +345,33 @@ tile count, and four times the resolution, of the level before it. [`tiles.md`](
     (1 row)
     ```
 
-    Zero rows within 5 km of a real fountain, in a table that holds thousands of Belgian rows. No
+    Zero rows within 5 km of real mapped Belgian ground, in a table that certainly holds some. No
     error, no warning — exactly the shape of the **longitude before latitude** row in the table
-    above. `ST_MakePoint(x, y)` wants `(longitude, latitude)`; this
-    query hands it `(50.4894, 5.8792)`, latitude first, which `ST_MakePoint` reads as a valid point
-    roughly 50.49° east of Greenwich and 5.88° north of the equator — off the coast of west Africa,
+    above. `ST_MakePoint(x, y)` wants `(longitude, latitude)`; this query hands it
+    `(50.4700, 4.8700)`, latitude first, which `ST_MakePoint` reads as a valid point roughly 50.47°
+    east of Greenwich and 4.87° north of the equator — in the Indian Ocean off the Somali coast,
     nowhere near Belgium. Swap the two arguments and the same query finds real rows:
 
     <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres — the fix -->
     ```sh
     docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
     SELECT count(*) AS fixed_count FROM coverage_poi
-    WHERE ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint(5.8792, 50.4894), 4326)::geography, 5000);
+    WHERE ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint(4.8700, 50.4700), 4326)::geography, 5000);
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data`; a full `make coverage-refresh` returns 183 for the same query -->
     ```text
      fixed_count
     -------------
-             127
+               5
     (1 row)
     ```
 
-    127 real rows within 5 km, as soon as the coordinates go in `(lng, lat)` order. Nothing else
-    about the query changed — same table, same radius, same cast to `::geography` — which is
-    exactly why this trap is so easy to miss under pressure: the query is otherwise correct, and
-    correct-looking SQL that quietly returns nothing is the signature this whole drill is meant to
-    train you to recognise.
+    Real rows within 5 km, as soon as the coordinates go in `(lng, lat)` order. How many depends on
+    how much coverage your stack has loaded — five on the offline fixture, 183 once a real Belgian
+    extract is in — and that is fine, because the number is not the lesson. The transition from zero
+    to non-zero is. Nothing else about the query changed — same table, same radius, same cast to
+    `::geography` — which is exactly why this trap is so easy to miss under pressure: the query is
+    otherwise correct, and correct-looking SQL that quietly returns nothing is the signature this
+    whole drill is meant to train you to recognise.

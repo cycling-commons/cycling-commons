@@ -275,20 +275,21 @@ pass it", "what is nearby." Chapter 4 is that vocabulary.
 ## Try it
 
 !!! tip "Hands-on — the same 'within 10 km' question, two answers"
-    Ask whether one real mapped cycleway in the dev catalog sits within 10 km of one real region
-    boundary, once the naive rule-of-thumb way this chapter opened with and once cast to
-    `geography`, and watch the two answers disagree on data already sitting in the database.
+    Ask whether two real seeded pins in the Hautes Fagnes sit within 10 km of each other, once the
+    naive rule-of-thumb way this chapter opened with and once cast to `geography`, and watch the two
+    answers disagree on data already sitting in the database. Both pins come from
+    `make course-data`, and both are selected by `name` — ids are assigned per install, names are not.
 
-    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog; item 13582 is a mapped cycleway near the German border, region nordrhein-westfalen is North Rhine-Westphalia's outline -->
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog; two seeded pins on the Hautes Fagnes plateau, separated almost entirely east-west -->
     ```sql
     SELECT
-      ST_DWithin(i.geom, r.geom, 10.0/111.32)                 AS within_10km_naive_degrees,
-      ST_DWithin(i.geom::geography, r.geom::geography, 10000) AS within_10km_geography
-    FROM item i, region r
-    WHERE i.id = 13582 AND r.slug = 'nordrhein-westfalen';
+      ST_DWithin(a.geom, b.geom, 10.0/111.32)                 AS within_10km_naive_degrees,
+      ST_DWithin(a.geom::geography, b.geom::geography, 10000) AS within_10km_geography
+    FROM item a, item b
+    WHERE a.name = 'Signal de Botrange' AND b.name = 'Belvédère de la Hoëgne';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; stable for this seed row and this region's stored boundary -->
+    <!-- CODE-ILLUSTRATIVE sample output; the coordinates are fixed by the seed, so this holds on any install -->
     ```text
      within_10km_naive_degrees | within_10km_geography
     ---------------------------+------------------------
@@ -296,29 +297,35 @@ pass it", "what is nearby." Chapter 4 is that vocabulary.
     ```
 
     `10.0/111.32` is exactly the rule-of-thumb conversion from the top of this chapter. That version
-    says the cycleway is *not* within 10 km of North Rhine-Westphalia. The `::geography` version says
-    it is. Ask for the real numbers behind the disagreement:
+    says the belvedere is *not* within 10 km of Botrange. The `::geography` version says it is. Ask
+    for the real numbers behind the disagreement:
 
     <!-- CODE-ILLUSTRATIVE psql query against the same two rows, showing the real distance the naive threshold was compared against -->
     ```sql
     SELECT
-      round(ST_Distance(i.geom::geography, r.geom::geography)::numeric, 0) AS real_metres,
-      round(ST_Distance(i.geom, r.geom)::numeric, 4)                       AS naive_degrees
-    FROM item i, region r
-    WHERE i.id = 13582 AND r.slug = 'nordrhein-westfalen';
+      round(ST_Distance(a.geom::geography, b.geom::geography)::numeric, 0) AS real_metres,
+      round(ST_Distance(a.geom, b.geom)::numeric, 4)                       AS naive_degrees
+    FROM item a, item b
+    WHERE a.name = 'Signal de Botrange' AND b.name = 'Belvédère de la Hoëgne';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; stable for this seed row -->
+    <!-- CODE-ILLUSTRATIVE sample output; stable on any install, both pins have fixed seeded coordinates -->
     ```text
      real_metres | naive_degrees
     -------------+---------------
-            8774 |        0.1136
+            7698 |        0.1084
     ```
 
-    The cycleway really is 8.77 km from the border — comfortably inside the 10 km ask — but that
-    distance comes out to 0.1136 degrees, bigger than the naive threshold of `10.0/111.32 ≈ 0.0898`,
-    because at this latitude a degree of longitude is only worth about 71 km (chapter 1), not the
-    111 km the naive conversion assumes everywhere. `::geography` gets the ground-truth answer right;
-    the naive comparison silently excludes ground that is genuinely in range. Neither query errors.
-    They just disagree, exactly the way this chapter's opening section said they would — on a real
-    row, not a hypothetical one.
+    The two really are 7.70 km apart — comfortably inside the 10 km ask — but that distance comes out
+    to 0.1084 degrees, bigger than the naive threshold of `10.0/111.32 ≈ 0.0898`, because the gap
+    between them is almost entirely east–west, and at this latitude a degree of longitude is only
+    worth about 71 km (chapter 1), not the 111 km the naive conversion assumes everywhere.
+    `::geography` gets the ground-truth answer right; the naive comparison silently excludes ground
+    that is genuinely in range. Neither query errors. They just disagree, exactly the way this
+    chapter's opening section said they would — on real rows, not hypothetical ones.
+
+    The disagreement is a property of the *direction* between the two points, not of these two pins.
+    Swap in `'Shelter · Baraque Michel'` for the belvedere — 3.1 km away, well under both thresholds —
+    and the two columns agree again, `t` and `t`. The naive rule only lies in the window between
+    `0.0898°` of longitude and 10 real kilometres, which at 50°N is roughly 6.4 km to 10 km of
+    east–west separation.

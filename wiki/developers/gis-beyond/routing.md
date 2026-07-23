@@ -174,4 +174,76 @@ this project to route them anywhere. Nobody outside the curator tools ever sees 
 It answers exactly one narrow question — "what road probably connects these two points a curator
 just clicked" — and nothing broader.
 
-<!-- EXERCISE-SLOT ch=B4 — hands-on box goes here; do not remove -->
+## Try it
+
+!!! tip "Hands-on — nothing routes, and the honest reason this exercise cannot fake it"
+    First, check that no rider-reachable code calls a routing engine at all — not by trusting this
+    chapter's word for it, by grepping the tracked source directly:
+
+    <!-- CODE-ILLUSTRATIVE shell command against this repository's own tracked source -->
+    ```sh
+    git grep -ln "router.project-osrm.org\|valhalla\|osrm" -- web/src web/assets
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from this repository -->
+    ```text
+    web/src/EventSubscriber/CspSubscriber.php
+    web/assets/contribute/climb-editor.js
+    ```
+
+    Two hits, and both are already named above: `CspSubscriber.php`'s CSP allow-list entry for the
+    OSRM demo host, and `climb-editor.js`, the curator-only click-to-snap tool this chapter described
+    in full. Nothing under `web/assets/map/` — the map a rider actually uses — appears in that list.
+
+    Starting Valhalla to demonstrate an actual route would be dishonest here, and the compose file
+    says exactly why before the service is even defined:
+
+    <!-- CODE-FROM developers/docker/compose.yaml -->
+    ```yaml
+      # ---- opt-in: routing engine (consumes a PREBUILT tile set you download) --
+    ```
+
+    <!-- CODE-FROM developers/docker/compose.yaml -->
+    ```yaml
+        - ${VALHALLA_TILES:-./data/valhalla}:/custom_files   # drop the downloaded tiles here
+    ```
+
+    <!-- CODE-ILLUSTRATIVE shell command checking this checkout for the tile directory the compose file names -->
+    ```sh
+    ls developers/docker/data/valhalla
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from this checkout -->
+    ```text
+    ls: cannot access 'developers/docker/data/valhalla': No such file or directory
+    ```
+
+    No tiles have ever been downloaded into this checkout, and none arrive with `make setup` or
+    `make course-data` either — the directory is created only when you download a tile set into it.
+    Starting the `routing` profile here would bring up a routing engine with nothing to route over —
+    a container that answers every request with "no tiles loaded," which teaches nothing. So here is
+    the conceptual exercise this chapter promised instead: the one number PostGIS actually can give
+    for two real climbs, and why it is necessarily not the number a router would return.
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog; Côte de la Redoute and Mur de Huy are seeded climbs roughly 32 km apart across the Meuse valley, selected by name because ids differ per install -->
+    ```sql
+    SELECT round(ST_Distance(a.geom::geography, b.geom::geography)::numeric, 0) AS straight_line_metres
+    FROM item a, item b
+    WHERE a.name = 'Côte de la Redoute' AND b.name = 'Mur de Huy';
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; both pins have fixed seeded coordinates, so this holds on any install -->
+    ```text
+     straight_line_metres
+    ----------------------
+                    32054
+    (1 row)
+    ```
+
+    32,054 metres, straight through whatever actually lies between the two — the Meuse valley, hills,
+    buildings, the works. Course 1's [`spatial-questions.md`](../gis/spatial-questions.md) already
+    established exactly what this number is: a geometric relationship between two shapes, nothing
+    about what connects them. A bicycle router's real road distance between Côte de la Redoute and
+    Mur de Huy would necessarily come out **larger** than 32,054 m — a road bends around terrain and
+    property lines, a straight line does not — and by how much is precisely the graph-search question
+    this chapter opened with, the one this project has no code path able to answer.

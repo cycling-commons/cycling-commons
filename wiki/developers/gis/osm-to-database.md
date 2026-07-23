@@ -326,44 +326,60 @@ part of a small file a map can actually fetch.
 
 ## Try it
 
-!!! tip "Hands-on — apply the allow-list to a real row's tags"
-    A drinking-water fountain mapped as public art in Brussels carries 24 tags in this dev
-    database — `wikidata`, `mapillary`, `artist_name`, five `name:xx` translations, a `flow_rate`,
-    and more, the pre-narrowing set this chapter's "before this trim was added" paragraph describes.
-    Query the row and, in the same statement, filter that same tag set down to the contract's
-    27-key allow-list, to see live how few of them the narrowing step actually would keep.
+!!! tip "Hands-on — watch the allow-list eat a real object's tags"
+    The narrowing step this chapter describes happens at load time, so you cannot see "before" by
+    querying the database — by the time a row exists, the trim has already run. What you *can* do is
+    read the input and the output side by side, because both are in this repository. The input is
+    one node in the OSM fixture `make course-data` runs through the real pipeline. Here it is, in
+    full, eleven tags:
+
+    <!-- CODE-FROM pipeline/tests/fixtures/mini.osm -->
+    ```xml
+      <node id="105" version="4" timestamp="2026-02-11T14:00:00Z" lat="50.2200" lon="5.0000">
+        <tag k="historic" v="castle"/>
+        <tag k="name" v="Château de Vêves"/>
+        <tag k="website" v="https://chateau-veves.example"/>
+        <tag k="wheelchair" v="limited"/>
+        <tag k="wikidata" v="Q1857286"/>
+        <tag k="image" v="https://commons.example/veves.jpg"/>
+        <tag k="inscription" v="Anno 1230"/>
+        <tag k="person:date_of_birth" v="1907-04-12"/>
+        <tag k="email" v="info@chateau-veves.example"/>
+        <tag k="addr:postcode" v="5561"/>
+        <tag k="building" v="castle"/>
+      </node>
+    ```
+
+    Now ask the database what survived. Selecting by `name`, not by `ref` or `id` — a real Geofabrik
+    extract numbers its nodes differently, so `name` is the selector that keeps working when you
+    later replace this fixture with a real country:
 
     <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
     ```sh
     docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
-    SELECT
-      (SELECT jsonb_agg(k ORDER BY k) FROM jsonb_object_keys(tags) k) AS all_keys,
-      (SELECT jsonb_agg(k ORDER BY k) FROM jsonb_object_keys(tags) k
-         WHERE k = ANY(ARRAY['addr:city','addr:housenumber','addr:street','amenity','capacity',
-           'contact:phone','contact:website','description','drinking_water','fee','historic','image',
-           'natural','opening_hours','operator','phone','railway','shelter_type','shop','tourism','url',
-           'waterway','website','wheelchair','wikidata','wikimedia_commons','wikipedia'])) AS kept
-    FROM coverage_poi WHERE ref='node/8883840614';
+    SELECT letter, name,
+      (SELECT jsonb_agg(k ORDER BY k) FROM jsonb_object_keys(tags) k) AS stored_keys
+    FROM coverage_poi WHERE name = 'Château de Vêves';
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data` -->
     ```text
-                            all_keys                          |                    kept
-    ----------------------------------------------------------+---------------------------------------------
-     ["access","amenity","artist_name","artist:wikidata",      ["amenity","drinking_water","fee","tourism",
-      "artwork_type","bottle","check_date","drinking_water",    "wikidata","wikimedia_commons","wikipedia"]
-      "fee","flow_rate","fountain","maintenance","mapillary",
-      "material","name:de","name:en","name:fr","name:la",
-      "name:nl","stateofrepair","tourism","wikidata",
-      "wikimedia_commons","wikipedia"]
+     letter |       name       |                        stored_keys
+    --------+------------------+------------------------------------------------------------
+     J      | Château de Vêves | ["historic", "image", "website", "wheelchair", "wikidata"]
     (1 row)
     ```
 
-    24 keys in, only 7 make the allow-list — `maintenance`, `stateofrepair`, `flow_rate`, all five
-    `name:xx` variants, and more would be dropped. The `all_keys` column is this row's real, live
-    `tags` value exactly as it sits in the dev database today; the array literal in the query is the
-    same 27 keys as `pipeline/contract/coverage-contract.json`'s `storedTagKeys`, the list
-    `parse.py`'s `_stored_keys` filter checks every key against at load time. Swap in a different
-    `ref` from your own `coverage_poi` table (any row with `letter = 'C'` and a few tags is enough)
-    and the same query works on it unchanged.
+    Eleven tags in, five stored. `inscription`, `person:date_of_birth`, `email`, `addr:postcode` and
+    `building` are gone — none of them appears in
+    `pipeline/contract/coverage-contract.json`'s `storedTagKeys`, the 27-key list `parse.py`'s
+    `_stored_keys` filter checks every key against at load time. `name` is gone from `tags` too, but
+    for a different reason: it is promoted to its own column, so keeping it in the blob as well would
+    store it twice.
+
+    That is the whole narrowing step, on one object, end to end: the left-hand side is a file you can
+    open, the right-hand side is a row you just queried, and nothing between them is hidden. Run
+    `make coverage-refresh` (chapter 5 covers what that costs) and the same query shape works on any
+    real row — swap the name for one of your own, or drop the `WHERE` and add
+    `ORDER BY jsonb_array_length(...)` to find the tag-richest object in the table.

@@ -208,4 +208,88 @@ it was originally surveyed at. Neither is "wrong" in the way a bug is wrong. The
 different versions of "how high is this," and a tool that blends or chooses between them is making
 yet another one of the disclosed-or-undisclosed choices this whole chapter has been about.
 
-<!-- EXERCISE-SLOT ch=B5 — hands-on box goes here; do not remove -->
+## Try it
+
+!!! tip "Hands-on — the threshold IS the answer, on a real route's own stored profile"
+    "Rondje Super Stockeu" — the same route course 1's
+    [`spatial-questions.md`](../gis/spatial-questions.md) already used — carries its own display
+    elevation profile in `attributes.elev`, the array `CatalogProvider.php` forwards to the map's
+    route drawer chart. Pull it alongside the route's stored `ascent_m`, selecting by `name` because
+    `recommended_route` ids are assigned per install:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the dev catalog -->
+    ```sql
+    SELECT ascent_m, attributes->'elev' AS elev
+    FROM recommended_route WHERE name = 'Rondje Super Stockeu';
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output, elevation array truncated for the page; the values are seeded, so they hold on any install -->
+    ```text
+     ascent_m |                              elev
+    ----------+------------------------------------------------------------
+          557 | [236, 247, 266, 286, 313, 340, ... , 254, 243, 252, 245]
+    (1 row)
+    ```
+
+    `ascent_m` — 557 — is `TrackProcessor::ascentM()`'s own answer, summed earlier in this project's
+    own pipeline from the full-density GPX trace this route was originally imported from. The 51-point
+    array in `attributes.elev` is a separate, coarser profile stored only for the map's own chart, not
+    the same points `ascentM()` summed — so the two figures below are not expected to land on 557;
+    that comparison is not this exercise's point. Sum every step of this 51-point profile the naive
+    way, no smoothing at all — every uphill step between consecutive samples, added:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the same table, summing every recorded uphill step -->
+    ```sql
+    WITH e AS (
+      SELECT ordinality AS i, value::int AS m
+      FROM recommended_route, jsonb_array_elements(attributes->'elev') WITH ORDINALITY
+      WHERE name = 'Rondje Super Stockeu'
+    ),
+    d AS (SELECT m - lag(m) OVER (ORDER BY i) AS delta FROM e)
+    SELECT sum(GREATEST(delta, 0)) AS naive_ascent_m FROM d;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; computed from the seeded profile, so stable on any install -->
+    ```text
+     naive_ascent_m
+    ----------------
+                491
+    (1 row)
+    ```
+
+    491 metres, every wobble counted — the no-smoothing choice this project's routes feature actually
+    makes, by design. Now apply a minimum-threshold smoothing rule to the same 51 numbers — a rise
+    only banks once the climb since the last low point exceeds some fixed number of metres, the exact
+    rule described earlier in this chapter — at a couple of different thresholds:
+
+    <!-- CODE-ILLUSTRATIVE shell command chaining a real psql query into a short smoothing calculation; a teaching implementation of the minimum-threshold rule described above, not this project's code -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -t -A \
+      -c "SELECT attributes->'elev' FROM recommended_route WHERE name = 'Rondje Super Stockeu';" \
+      | python3 -c "
+    import json, sys
+    elev = json.load(sys.stdin)
+    def ascent(elev, threshold):
+        total, trough = 0, elev[0]
+        for v in elev[1:]:
+            if v < trough: trough = v
+            elif v - trough > threshold: total += v - trough; trough = v
+        return total
+    for t in (0, 5, 10):
+        print(f'threshold={t}m ascent={ascent(elev, t)}m')
+    "
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output -->
+    ```text
+    threshold=0m ascent=491m
+    threshold=5m ascent=481m
+    threshold=10m ascent=465m
+    ```
+
+    Same 51 elevation samples, three different answers — 491, 481, 465 — depending only on how much
+    wobble the threshold is willing to call noise rather than climbing. None of the three is the "real"
+    ascent sitting underneath the others, waiting to be uncovered. For this profile, at this
+    resolution, the threshold is not a detail obscuring the answer — it *is* the answer, exactly the
+    point this chapter's own text made contrasting routes' no-smoothing sum against the climb-editor's
+    150 m sliding window.

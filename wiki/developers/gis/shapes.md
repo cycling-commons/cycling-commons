@@ -192,20 +192,21 @@ asking PostGIS for a real one.
 !!! tip "Hands-on — round-trip a real geometry through GeoJSON"
     Take one catalog item's stored geometry apart into the same GeoJSON text `GeometryType` produces
     on every read, then put it back together the way `GeometryType` does on every write, and watch
-    where the SRID has to be re-stated. This uses item 11000, the Côte de la Redoute pin from chapter
-    1's own example.
+    where the SRID has to be re-stated. This uses the Côte de la Redoute pin from chapter 1's own
+    example — selected by `name`, because row ids are assigned per install and yours will not match
+    the ones on the machine these outputs were captured on.
 
     <!-- CODE-ILLUSTRATIVE psql query against the dev catalog -->
     ```sql
     SELECT ST_AsGeoJSON(geom) AS geojson, ST_SRID(geom) AS srid_in_db
-    FROM item WHERE id = 11000;
+    FROM item WHERE name = 'Côte de la Redoute';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; stable for this seed row -->
+    <!-- CODE-ILLUSTRATIVE sample output; the coordinates are fixed by the seed, so this is byte-for-byte identical on any install -->
     ```text
                        geojson                       | srid_in_db
-    ----------------------------------------------------+------------
-     {"type":"Point","coordinates":[5.69924,50.49222]}   |       4326
+    ---------------------------------------------------+------------
+     {"type":"Point","coordinates":[5.69924,50.49222]} |       4326
     (1 row)
     ```
 
@@ -216,18 +217,18 @@ asking PostGIS for a real one.
 
     <!-- CODE-ILLUSTRATIVE psql query, chaining the GeoJSON text from the previous query back through the write-side conversion -->
     ```sql
-    WITH original AS (SELECT geom, ST_AsGeoJSON(geom) AS gj FROM item WHERE id = 11000),
+    WITH original AS (SELECT geom, ST_AsGeoJSON(geom) AS gj FROM item WHERE name = 'Côte de la Redoute'),
          round_tripped AS (SELECT ST_SetSRID(ST_GeomFromGeoJSON(gj), 4326) AS geom2 FROM original)
     SELECT ST_SRID(o.geom) AS srid_before, ST_SRID(r.geom2) AS srid_after,
            ST_Equals(o.geom, r.geom2) AS same_geometry
     FROM original o, round_tripped r;
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; stable for this seed row -->
+    <!-- CODE-ILLUSTRATIVE sample output; stable on any install, the values are properties of the geometry, not of the row's id -->
     ```text
      srid_before | srid_after | same_geometry
     -------------+------------+---------------
-             4326 |       4326 | t
+            4326 |       4326 | t
     ```
 
     The point survives the round trip unchanged — `same_geometry` is `t`, and `srid_after` matches

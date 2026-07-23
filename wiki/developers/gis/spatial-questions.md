@@ -377,8 +377,10 @@ is what closes that gap.
 
 !!! tip "Hands-on — how far along, on a real ride"
     Ask the two questions `RideCheckService` asks about a real recommended route and a real catalog
-    item: how far off the route does it sit, and how far along the route is it. Route 27 is "Rondje
-    Super Stockeu"; item 11022 is "Cascade de Coo", the waterfall that sits right beside its start.
+    item: how far off the route does it sit, and how far along the route is it. Both come from
+    `make course-data` and both are selected by `name` — "Rondje Super Stockeu" is the route, and
+    "Cascade de Coo" is the waterfall that sits right beside its start. Ids are assigned per install
+    and will not match anyone else's; names are seeded values and do.
 
     <!-- CODE-ILLUSTRATIVE psql query against the dev catalog, the same ST_Distance / ST_ClosestPoint / ST_LineLocatePoint pattern RideCheckService::corridorGroups() uses -->
     ```sql
@@ -386,10 +388,10 @@ is what closes that gap.
       round(ST_Distance(i.geom::geography, r.geom::geography)::numeric, 1)      AS dist_m,
       round(ST_LineLocatePoint(r.geom, ST_ClosestPoint(i.geom, r.geom))::numeric, 3) AS frac
     FROM recommended_route r, item i
-    WHERE r.id = 27 AND i.id = 11022;
+    WHERE r.name = 'Rondje Super Stockeu' AND i.name = 'Cascade de Coo';
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; stable for these two seed rows -->
+    <!-- CODE-ILLUSTRATIVE sample output; both geometries are fixed by the seed, so this holds on any install -->
     ```text
      dist_m | frac
     --------+-------
@@ -403,6 +405,37 @@ is what closes that gap.
     named after the waterfall at the start of a loop ought to land. Multiply that fraction by the
     route's total length and you get the same "kilometre 23.4"-style figure `RideCheckService` shows
     a rider; here it says "you'd meet this almost immediately," which anyone who knows Rondje Super
-    Stockeu can check against the ride itself. Try a different `item.id` from the same corridor and
-    watch `frac` move with it — that ordering is the entire reason this function exists instead of
-    just sorting by `i.id`.
+    Stockeu can check against the ride itself. Now drop the single-item filter and let the corridor
+    answer for every seeded pin within 3 km of the line, ordered the way a rider would meet them:
+
+    <!-- CODE-ILLUSTRATIVE psql query against the same two tables, ordering a whole corridor by how far along the route each pin sits -->
+    ```sql
+    SELECT i.name,
+      round(ST_Distance(i.geom::geography, r.geom::geography)::numeric, 1)           AS dist_m,
+      round(ST_LineLocatePoint(r.geom, ST_ClosestPoint(i.geom, r.geom))::numeric, 3) AS frac
+    FROM recommended_route r, item i
+    WHERE r.name = 'Rondje Super Stockeu' AND i.source = 'manual'
+      AND ST_DWithin(i.geom::geography, r.geom::geography, 3000)
+    ORDER BY frac;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; every row is a seeded pin, so this ordering holds on any install -->
+    ```text
+                name             | dist_m | frac
+    -----------------------------+--------+-------
+     Cascade de Coo              |   19.4 | 0.004
+     Fontaine Nicolay · Stavelot |  153.9 | 0.216
+     Stavelot Abbey              |   18.1 | 0.273
+     Public fountain · Stavelot  |   85.3 | 0.275
+     Fountain · Stavelot centre  |   14.6 | 0.276
+     North Bike · Stavelot       |  465.6 | 0.280
+     Côte de Stockeu             |    2.8 | 0.296
+     Hockai · via RAVeL L44a     |  282.3 | 0.845
+    (8 rows)
+    ```
+
+    Read that ordering as a ride: the waterfall almost immediately, then the whole of Stavelot in a
+    tight cluster around 27% of the way round, the Côte de Stockeu climbing out of it at 30%, and the
+    long RAVeL drag near the end. `frac` is doing all of that work — sorting by `i.id` or by `dist_m`
+    would scramble it, and that ordering is the entire reason `ST_LineLocatePoint` is in this function
+    at all.

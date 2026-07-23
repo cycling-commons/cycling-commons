@@ -420,12 +420,13 @@ looks nothing like ours, and it had to get from there to here. Chapter 6
 
 ## Try it
 
-!!! tip "Hands-on — watch Seq Scan become an Index Scan, on 375,078 rows"
+!!! tip "Hands-on — watch Seq Scan become an Index Scan"
     Run the naive `::geography` form of "within 250 m of this point" against `coverage_poi`, then run
     the `ST_Intersects`-on-a-precomputed-corridor rewrite this chapter just walked through, and read
-    the two query plans side by side. Same point as chapter 1's fountain, same 250 m radius one of
-    `RideCheckService::ALLOWED_RADII` actually offers. Open a `psql` session the way this chapter
-    already showed, then run the naive form first:
+    the two query plans side by side. The point is a drinking-water node from the committed OSM
+    fixture `make course-data` loads, at the 250 m radius one of `RideCheckService::ALLOWED_RADII`
+    actually offers. Open a `psql` session the way this chapter already showed, then run the naive
+    form first:
 
     <!-- CODE-ILLUSTRATIVE psql query against the dev stack's coverage_poi table, the cast sits on the indexed column -->
     ```sql
@@ -433,22 +434,19 @@ looks nothing like ours, and it had to get from there to here. Chapter 6
     SELECT count(*)
     FROM coverage_poi
     WHERE ST_DWithin(geom::geography,
-                      ST_SetSRID(ST_Point(5.8792, 50.4894), 4326)::geography, 250);
+                      ST_SetSRID(ST_Point(4.8800, 50.4800), 4326)::geography, 250);
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output, trimmed of Planning/JIT detail; exact milliseconds depend on the machine and what is cached, the scan node and row count do not -->
+    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data`, trimmed of Planning/Buffers detail -->
     ```text
-     Finalize Aggregate (actual time=455.390..473.237 rows=1.00 loops=1)
-       ->  Gather (actual time=455.380..473.228 rows=3.00 loops=1)
-             ->  Partial Aggregate (actual time=430.431..430.432 rows=1.00 loops=3)
-                   ->  Parallel Seq Scan on coverage_poi (actual time=430.204..430.391 rows=0.33 loops=3)
-                         Filter: st_dwithin((geom)::geography, …, '250'::double precision, true)
-                         Rows Removed by Filter: 125026
-     Execution Time: 491.042 ms
+     Aggregate (actual time=7.754..7.755 rows=1.00 loops=1)
+       ->  Seq Scan on coverage_poi (actual time=7.739..7.750 rows=1.00 loops=1)
+             Filter: st_dwithin((geom)::geography, …, '250'::double precision, true)
+             Rows Removed by Filter: 9
+     Execution Time: 7.814 ms
     ```
 
-    `Parallel Seq Scan on coverage_poi` — the whole table, three ways, discarding 125,026 rows per
-    worker that never had a chance of matching. Half a second for one point. Now the rewrite: buffer
+    `Seq Scan on coverage_poi` — the whole table, every row read and tested. Now the rewrite: buffer
     the point once, cast back to `geometry`, and test with `ST_Intersects` against the bare indexed
     column:
 
@@ -456,29 +454,67 @@ looks nothing like ours, and it had to get from there to here. Chapter 6
     ```sql
     EXPLAIN ANALYZE
     WITH corridor AS MATERIALIZED (
-      SELECT ST_Buffer(ST_SetSRID(ST_Point(5.8792, 50.4894), 4326)::geography, 250)::geometry AS b
+      SELECT ST_Buffer(ST_SetSRID(ST_Point(4.8800, 50.4800), 4326)::geography, 250)::geometry AS b
     )
     SELECT count(*)
     FROM coverage_poi
     WHERE ST_Intersects(geom, (SELECT b FROM corridor));
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output, trimmed of Planning detail; exact milliseconds depend on the machine, the scan node does not -->
+    <!-- CODE-ILLUSTRATIVE sample output on the same stack, trimmed of Planning/Buffers detail -->
     ```text
-     Aggregate (actual time=0.134..0.134 rows=1.00 loops=1)
+     Aggregate (actual time=0.104..0.105 rows=1.00 loops=1)
        CTE corridor
          ->  Result (actual time=0.000..0.001 rows=1.00 loops=1)
-       ->  Index Scan using coverage_poi_geom_idx on coverage_poi (actual time=0.121..0.131 rows=1.00 loops=1)
+       ->  Index Scan using coverage_poi_geom_idx on coverage_poi (actual time=0.101..0.102 rows=1.00 loops=1)
              Index Cond: (geom && (InitPlan 2).col1)
              Filter: st_intersects(geom, (InitPlan 2).col1)
-             Rows Removed by Filter: 1
-     Execution Time: 0.188 ms
+     Execution Time: 0.157 ms
     ```
 
-    `Index Scan using coverage_poi_geom_idx` instead of a scan of the whole table, `Rows Removed by
-    Filter: 1` instead of 125,026, and half a second becomes well under a millisecond — on this
-    machine, right now, both numbers will move if you run it again, but the shape of the change will
-    not: a table scan collapsing into an index descent. Run `SELECT count(*) FROM coverage_poi;`
-    first if you want to see the 375,078 for yourself, and check both queries agree on the answer —
-    `count(*)` should come back `1` either way, because the rewrite changes the plan, never the
-    result.
+    `Index Scan using coverage_poi_geom_idx` instead of a scan of the whole table. Both queries agree
+    the answer is `1` — the rewrite changes the plan, never the result. **The scan-node names are the
+    reproducible part**; the millisecond figures are this machine, right now, and will move every run.
+
+    ??? note "What this looks like on a real coverage index, and how to get one"
+        `make course-data` loads ten `coverage_poi` rows, from an 847-byte OSM fixture committed to
+        this repo, so that the whole course runs offline. Ten rows is enough to flip the plan — you
+        just saw it — but not enough to *feel* why the flip matters, because scanning ten rows is
+        free either way.
+
+        Filling the table for real means downloading a country extract from Geofabrik, which needs
+        network and a few gigabytes of disk. It is one command, and chapter 6 explains everything it
+        does:
+
+        <!-- CODE-ILLUSTRATIVE shell command that downloads real OSM extracts; needs network, unlike the rest of this course -->
+        ```sh
+        make coverage-refresh
+        ```
+
+        On a machine that has run it for Belgium, the Netherlands and Germany — 375,078 rows — the
+        same two queries produce the same two scan nodes, with the stakes visible:
+
+        <!-- CODE-ILLUSTRATIVE sample output captured on a 375,078-row coverage index, trimmed of Planning/JIT detail; the row counts are that machine's, the scan nodes are not -->
+        ```text
+         Finalize Aggregate (actual time=455.390..473.237 rows=1.00 loops=1)
+           ->  Gather (actual time=455.380..473.228 rows=3.00 loops=1)
+                 ->  Partial Aggregate (actual time=430.431..430.432 rows=1.00 loops=3)
+                       ->  Parallel Seq Scan on coverage_poi (actual time=430.204..430.391 rows=0.33 loops=3)
+                             Filter: st_dwithin((geom)::geography, …, '250'::double precision, true)
+                             Rows Removed by Filter: 125026
+         Execution Time: 491.042 ms
+        ```
+
+        <!-- CODE-ILLUSTRATIVE sample output for the rewritten query on the same 375,078-row index -->
+        ```text
+         Aggregate (actual time=0.134..0.134 rows=1.00 loops=1)
+           ->  Index Scan using coverage_poi_geom_idx on coverage_poi (actual time=0.121..0.131 rows=1.00 loops=1)
+                 Index Cond: (geom && (InitPlan 2).col1)
+                 Rows Removed by Filter: 1
+         Execution Time: 0.188 ms
+        ```
+
+        `Rows Removed by Filter: 125026` per parallel worker, and half a second for one point,
+        against `Rows Removed by Filter: 1` and well under a millisecond. That is the number this
+        chapter is really about: not "an index is faster", but "the table scan grows with the table
+        and the index descent does not".

@@ -125,9 +125,26 @@ Ten chapters, each covering one idea and ending with a slot for a hands-on exerc
 
 ## Try it
 
-!!! tip "Hands-on — prove your stack is up before you start"
-    Every chapter from here on runs commands against a live dev database. Before reading chapter 1,
-    confirm your stack answers and holds the real data this whole series queries throughout.
+!!! tip "Hands-on — bring the stack up, then prove it holds the course data"
+    Every chapter from here on runs commands against a live dev database. Two make targets get you
+    there from a fresh clone: [`building.md`](../../building.md#run-it-locally) has the full "run it
+    locally" instructions (`make setup`), and the stack's own
+    [README](https://github.com/cycling-commons/cycling-commons/blob/main/developers/docker/README.md)
+    is the reference for ports, services and troubleshooting.
+
+    `make setup` alone is **not enough for this course**. It seeds world reference data and four
+    demo accounts and nothing else, which leaves `item`, `recommended_route` and `coverage_poi`
+    empty — and `coverage_poi` does not even exist yet, because the coverage batch creates that
+    table rather than a migration. One more target fills them, entirely from data committed to this
+    repository, with no network access and no map download:
+
+    <!-- CODE-ILLUSTRATIVE shell commands to seed the dataset the course exercises query -->
+    ```sh
+    make setup        # once per clone: build, migrate, world reference data, demo logins
+    make course-data  # once per clone: the rows every exercise in this course selects
+    ```
+
+    Now confirm both tables answer:
 
     <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
     ```sh
@@ -139,22 +156,29 @@ Ten chapters, each covering one idea and ending with a slot for a hands-on exerc
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make setup` + `make course-data` -->
     ```text
      items
     -------
-      1581
+       814
     (1 row)
 
      coverage_pois
     ---------------
-            375078
+                10
     (1 row)
     ```
 
-    `item` holds this project's own curated rows; `coverage_poi` holds the much larger OpenStreetMap
-    cache chapter 6 explains in full. The exact counts will drift as more data lands — what matters
-    right now is that both queries return *some* number instead of a connection error. If either one
-    fails, fix that before chapter 1: every exercise later in this series assumes exactly this
-    connection works. (`developers/docker/compose.yaml` is also what every later chapter's own
+    `item` holds this project's own curated rows; `coverage_poi` holds the OpenStreetMap cache
+    chapter 6 explains in full. **814 and 10 are exactly what `make course-data` produces**, so those
+    two numbers should match on any fresh clone — but they are a floor, not a fixture: import more
+    data and they only grow. What matters right now is that both queries return *some* number
+    instead of a connection error or `relation "coverage_poi" does not exist`. If either one fails,
+    fix that before chapter 1: every exercise later in this series assumes exactly this connection
+    and exactly this seed. (`developers/docker/compose.yaml` is also what every later chapter's own
     exercises invoke — the invocation itself does not change from here on, only the SQL after `-c`.)
+
+    Ten rows of coverage is a deliberately tiny cache: it comes from an 847-byte OSM fixture
+    committed to this repo, so the whole course runs offline. Two exercises want more than that and
+    say so where they stand — chapter 5 wants a big table to show an index earning its keep, and
+    chapter 7 wants several countries at once. Both name the extra command that gets you there.

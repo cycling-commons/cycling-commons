@@ -419,13 +419,16 @@ the outline of Wallonia.
                       ST_SetSRID(ST_Point(5.8792, 50.4894), 4326)::geography, 5000);
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output; the exact count drifts as the catalog grows, being non-zero is the point -->
+    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data`; the count grows as the catalog does, being non-zero is the point -->
     ```text
      nearby
     --------
-         81
+         76
     (1 row)
     ```
+
+    76 is what a clone seeded by `make course-data` holds around Spa; import more data and it only
+    goes up. The number is not the lesson — a non-zero one is.
 
     Now swap the two numbers into `ST_Point`, as if you had typed them in the order a human says them
     out loud — latitude first:

@@ -146,4 +146,48 @@ somebody happened to type in by hand.
     decision, on the record in `2026-07-19-region-scoping-design.md` §7, not a gap waiting to be
     closed.
 
-<!-- EXERCISE-SLOT ch=B3 — hands-on box goes here; do not remove -->
+## Try it
+
+!!! tip "Hands-on — one direction, called for real; the other, checked absent"
+    Call the exact Photon endpoint the settings page's base-location field builds
+    (`base-location.js`'s `PH_BASE`), then check the whole tracked codebase for anything that calls a
+    reverse endpoint at all.
+
+    **This is the one exercise in either course that needs the internet.** Everything else runs
+    against your own stack; this reaches out to `photon.komoot.io`, a third-party service this
+    project does not run. Offline, or behind a proxy that blocks it, `curl` will fail with a
+    connection or DNS error — that is the network, not a broken stack, and the second half of the
+    exercise (a `git grep` over your own checkout) still works. The point being made is that forward
+    geocoding is a *live call to somebody else's server*, so faking it locally would defeat it.
+
+    <!-- CODE-ILLUSTRATIVE shell command; the exact PH_BASE query shape base-location.js and map.js both build, called live against Photon's public API -->
+    ```sh
+    curl -s 'https://photon.komoot.io/api/?limit=6&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village&osm_tag=place:hamlet&osm_tag=place:municipality&q=Namur' \
+      | python3 -c "import json,sys; f=json.load(sys.stdin)['features'][0]; g=f['geometry']['coordinates']; print(f['properties']['name'], f['properties'].get('country'), g)"
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from a live call to Photon's public API -->
+    ```text
+    Namur België / Belgique / Belgien [4.8661892, 50.4665284]
+    ```
+
+    Name in — `Namur` — coordinates out: `[4.8661892, 50.4665284]`, `lng, lat`, in exactly the order
+    course 1's [`pitfalls.md`](../gis/pitfalls.md) already warned matters. That is the only direction
+    this project ever calls. Check that the other direction is genuinely absent from the source, not
+    merely unused by convention:
+
+    <!-- CODE-ILLUSTRATIVE shell command against this repository's own tracked source -->
+    ```sh
+    git grep -n "/reverse" -- . ':!wiki'
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from this repository; git grep prints nothing and exits non-zero when no line matches -->
+    ```text
+    (no output — no match anywhere in the tracked tree)
+    ```
+
+    Not one `/reverse` call, on Photon, Nominatim, or anything else, anywhere this project's own code
+    is tracked. Forward geocoding is a real, working call you can make right now, against a real
+    third-party service, and just did. Reverse geocoding is not a call this project has — not hidden,
+    not disabled, simply not written, exactly as the admonition above this exercise already states on
+    the record.

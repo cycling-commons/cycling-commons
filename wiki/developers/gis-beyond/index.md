@@ -46,4 +46,73 @@ verified quoting as course 1.
 Every chapter ends with a hands-on exercise you can run against the local Docker stack, the same as
 course 1.
 
-<!-- EXERCISE-SLOT ch=B0 — hands-on box goes here; do not remove -->
+## Try it
+
+!!! tip "Hands-on — confirm the stack answers, and that PostGIS ships what this course talks about"
+    This course runs against the same dev stack course 1 does, seeded the same way. If you have not
+    brought one up yet: [`building.md`](../../building.md#run-it-locally) has the "run it locally"
+    instructions (`make setup`), the stack's own
+    [README](https://github.com/cycling-commons/cycling-commons/blob/main/developers/docker/README.md)
+    is the reference for ports and troubleshooting, and `make course-data` — offline, no download —
+    seeds the rows these exercises select. Course 1's
+    [chapter 0 box](../gis/index.md#try-it) walks through both in full.
+
+    Before trusting a course that keeps saying "this function exists but we never call it," check
+    both halves of that claim yourself: that the dev stack answers at all, and that `ST_Transform`
+    and `ST_Segmentize` — the two functions chapter 1 and chapter 6 lean on most — are real,
+    callable PostGIS functions rather than something hypothetical.
+
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
+    ```sh
+    docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "SELECT 1;"
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+     ?column?
+    ----------
+            1
+    (1 row)
+    ```
+
+    The stack answers. Now check the two functions by name, in Postgres's own catalogue of installed
+    functions:
+
+    <!-- CODE-ILLUSTRATIVE psql query against Postgres system catalogs -->
+    ```sql
+    SELECT proname FROM pg_proc WHERE proname IN ('st_transform', 'st_segmentize') GROUP BY proname;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    ```text
+        proname
+    ---------------
+     st_segmentize
+     st_transform
+    (2 rows)
+    ```
+
+    Both are installed. Call each once, on a real pair of catalog coordinates, to see they actually
+    run rather than merely being registered:
+
+    <!-- CODE-ILLUSTRATIVE psql query against Postgres; the two coordinate pairs are the seeded Côte de la Redoute and Cascade de Coo pins, written as literals so this check needs no rows at all -->
+    ```sql
+    SELECT
+      ST_AsText(ST_Transform(ST_SetSRID(ST_Point(5.69924, 50.49222), 4326), 31370)) AS transformed_lambert72,
+      ST_NPoints(ST_Segmentize(ST_MakeLine(ST_Point(5.69924,50.49222), ST_Point(5.87664,50.39359))::geography, 1000)::geometry) AS segments_every_1km;
+    ```
+
+    <!-- CODE-ILLUSTRATIVE sample output; stable for these literal coordinates -->
+    ```text
+             transformed_lambert72          | segments_every_1km
+    ---------------------------------------------+--------------------
+     POINT(244402.57047243137 132115.3036512304) |                 33
+    (1 row)
+    ```
+
+    `ST_Transform` reprojected one point into Belgian Lambert 72 — chapter 1's subject. `ST_Segmentize`
+    walked the geodesic between two real climbs and cut it into 33 vertices, never more than 1 km
+    apart along the ellipsoid — the same "don't trust a straight line between two far-apart
+    endpoints" idea chapter 6 raises for great circles. Neither call reads or writes a single row of
+    this project's own tables. Both functions are exactly as real, and exactly as unused by this
+    codebase, as the rest of this course says.

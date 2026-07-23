@@ -270,24 +270,28 @@ looking for the cheapest path through it. This project does not implement that s
     <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
     ```sh
     docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
-    SELECT id, name, distance_m, round(ST_Length(geom::geography)) AS measured_m,
+    SELECT name, distance_m, round(ST_Length(geom::geography)) AS measured_m,
            round(ST_Length(geom::geography)) - distance_m AS diff_m
-    FROM recommended_route WHERE id = 23;
+    FROM recommended_route WHERE name = 'Spa · Sankt Vith';
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE sample output; both numbers are properties of the seeded row, so this holds on any install -->
     ```text
-     id |       name       | distance_m | measured_m | diff_m
-    ----+------------------+------------+------------+--------
-     23 | Spa · Sankt Vith |     125500 |     125261 |    -239
+           name       | distance_m | measured_m | diff_m
+    ------------------+------------+------------+--------
+     Spa · Sankt Vith |     125500 |     125261 |    -239
     (1 row)
     ```
+
+    The route is selected by `name`, not by `id`: `recommended_route` ids are assigned as rows are
+    inserted, so the same ride has a different id on every install.
 
     `distance_m` was computed once at intake by `TrackProcessor::distanceM()`'s haversine sum on a
     fixed-radius sphere; `ST_Length(geom::geography)` recomputes it now, from the stored `[lng,
     lat]` path, on PostGIS's own ellipsoid model (chapter 3, [`metres-vs-degrees.md`](metres-vs-degrees.md)).
     The two disagree by 239 m out of 125,500 — under 0.2% — which is the lesson made concrete: not
     an error, just two defensible ways of measuring the same curved-earth distance landing a little
-    apart. Drop the `WHERE id = 23` and every row in `recommended_route` shows the same small,
-    one-directional-ish drift, not a wild mismatch — run it without the filter to see all twelve.
+    apart. Drop the `WHERE` clause and every row in `recommended_route` shows the same small drift,
+    not a wild mismatch — eleven routes on a stack seeded by `make course-data`, and the biggest
+    disagreement among them is 321 m on a 77.5 km loop, still under half a percent.

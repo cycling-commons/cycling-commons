@@ -29,6 +29,12 @@ make setup    # builds the stack, installs deps, runs migrations, seeds world da
 # then open http://localhost:8001/map
 ```
 
+`make setup` seeds world reference data and four demo logins, which is enough to browse the app but
+leaves the catalog tables empty. If you want data in them — and you do if you are working through
+the [GIS course](developers/gis/index.md), whose exercises all query real rows — run
+`make course-data` once afterwards. It seeds ~800 catalog items, 11 routes and a small OpenStreetMap
+coverage cache entirely from files committed to this repository: no network, no map download.
+
 Day to day: `make up` / `make down` start and stop the stack, `make logs` follows it, and
 `make app-test` runs the application's test suite and static analysis. Outbound mail (registration
 confirmation, password reset, account deletion) is caught by a bundled Mailpit at

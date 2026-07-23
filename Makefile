@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh region-probe region-scaffold
+.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh region-probe region-scaffold course-data
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -36,6 +36,48 @@ setup: ## First-time dev setup: start the stack, install deps, migrate, seed wor
 	@echo "    moderator@example.test  ROLE_CURATOR (2FA preset)"
 	@echo "    user@example.test       ROLE_USER    (public profile)"
 	@echo "    anon@example.test       ROLE_USER    (private / anonymous)"
+
+# `make setup` seeds world reference data and four demo accounts, nothing more:
+# a fresh clone has zero rows in item / recommended_route / heat_point, and no
+# coverage_poi TABLE at all (the coverage batch creates it, not a migration).
+# Every runnable exercise in the GIS courses (wiki/developers/gis/ and
+# wiki/developers/gis-beyond/) therefore comes back empty on a fresh clone.
+# `course-data` fills that gap from data ALREADY COMMITTED to this repo, so it
+# needs no network and no Geofabrik download:
+#   1. app:catalog:seed-manual   — 24 hand-authored pins, letters B–J
+#   2. the committed atlas/demo fixtures (ODbL/CC-BY), exported as catalog
+#      import artifacts: 351 A surface segments, 289 C water points, 150 E
+#      stays, 11 routes, 6,602 heat points. The climbs layer is deliberately
+#      NOT exported — it resolves Wikidata Q-ids over the network and is the
+#      one part of tools/wallonia/export.py that is not offline; the five
+#      manual B pins cover climbs for the course instead.
+#   3. the committed 847-byte OSM fixture, run through the real coverage batch
+#      (`coverage-refresh regions=dev/fixture`) — 10 coverage_poi rows.
+# Two honest gaps, both documented in the course itself:
+#   * no `region` rows. Region boundaries come from Overture via
+#     `make divisions-data` (network) and land in a gitignored out/ dir, so
+#     item.region_id stays NULL and coverage rows keep country_code = NULL
+#     (`dev/fixture` has no configured country by design, see
+#     pipeline/coverage/load.py resolve_country).
+#   * coverage_poi holds 10 rows, not a real country's ~375k. The chapter-5
+#     Seq Scan → Index Scan contrast still flips at that size, but the
+#     chapter-7 per-country layer table needs a real `make coverage-refresh`.
+# NB the coverage step republishes the MinIO tile manifest. On a machine that
+# already holds a real coverage index, re-run `make coverage-refresh` after
+# this to point the manifest back at it.
+COURSE_DATA_DIR = web/var/course-data
+course-data: ## Seed the dataset the GIS course exercises query (offline; run once after `make setup`)
+	@echo "→ Seeding the hand-authored demo pins (letters B–J)…"
+	@$(DOCKER_COMP) exec -T app php bin/console app:catalog:seed-manual
+	@echo "→ Exporting the offline catalog artifacts from the committed atlas/demo fixtures…"
+	@mkdir -p $(COURSE_DATA_DIR)
+	@PYTHONPATH=tools python3 -c "import pathlib; from wallonia import export; export.OUT = pathlib.Path('$(COURSE_DATA_DIR)'); export.write('surface.json', {'layer': 'surface', 'letter': 'A', 'features': export.surface_features()}); export.write('water.json', {'layer': 'water', 'letter': 'C', 'features': export.water_features()}); export.write('stays-pivot.json', {'layer': 'stays-pivot', 'letter': 'E', 'features': export.pivot_features()}); export.write('routes.json', export.routes_payload()); export.write('heat.json', export.heat_payload())"
+	@echo "→ Importing them into the catalog…"
+	@$(DOCKER_COMP) exec -T app php bin/console app:catalog:import $(patsubst web/%,%,$(COURSE_DATA_DIR))
+	@echo "→ Building coverage_poi from the committed OSM fixture (no network)…"
+	@$(MAKE) --no-print-directory coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
+	@echo ""
+	@echo "✔ Course dataset ready — the exercises in wiki/developers/gis/ now return rows."
 
 up: ## Start the dev stack in detached mode (recreates stale containers)
 	@$(DOCKER_COMP) up --detach

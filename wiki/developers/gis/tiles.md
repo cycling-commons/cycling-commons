@@ -359,10 +359,10 @@ chapter started from.
 
 ## Try it
 
-!!! tip "Hands-on — see the 21 layers before tippecanoe ever runs"
+!!! tip "Hands-on — see the layer list before tippecanoe ever runs"
     "Why the layers are split per country" is easiest to believe by counting the rows behind each
     `(letter, country_code)` pair directly — that grouping is exactly what `export_geojsonl()` turns
-    into 21 separate files, and what `build_pmtiles()` hands tippecanoe as 21 separate `-L` layers.
+    into one file per pair, and what `build_pmtiles()` hands tippecanoe as one `-L` layer per pair.
 
     <!-- CODE-ILLUSTRATIVE shell command against the dev stack's Postgres -->
     ```sh
@@ -372,41 +372,71 @@ chapter started from.
     "
     ```
 
-    <!-- CODE-ILLUSTRATIVE sample output from the dev stack -->
+    <!-- CODE-ILLUSTRATIVE sample output on a stack seeded by `make course-data` -->
     ```text
      letter | country_code | count
-    --------+--------------+--------
-     C      | BE           |   1369
-     C      | DE           |  15894
-     C      | NL           |   3699
-     D      | BE           |   2013
-     D      | DE           |  13224
-     D      | NL           |   3039
-     E      | BE           |   6454
-     E      | DE           |  59090
-     E      | NL           |  14916
-     G      | BE           |    720
-     G      | DE           |   8709
-     G      | NL           |    624
-     H      | BE           |   1023
-     H      | DE           |  23341
-     H      | NL           |    595
-     I      | BE           |   2501
-     I      | DE           |  75359
-     I      | NL           |   2582
-     J      | BE           |   8815
-     J      | DE           | 122076
-     J      | NL           |   9035
-    (21 rows)
+    --------+--------------+-------
+     C      | ZZ           |     1
+     D      | ZZ           |     2
+     E      | ZZ           |     2
+     G      | ZZ           |     1
+     H      | ZZ           |     1
+     I      | ZZ           |     1
+     J      | ZZ           |     2
+    (7 rows)
     ```
 
-    Seven letters times three onboarded countries (Belgium, Germany, the Netherlands) is exactly
-    21 rows — no row mixes two countries under one letter, because `country_code` is a column on
-    the table, not something tippecanoe infers. Add the counts and they land on 375,078, the same
-    total this chapter opened with. This table *is* the reason the tile layers are named `c_be`,
-    `c_de`, `c_nl`, `d_be`, and so on rather than just `c`, `d`, `e`: each row above becomes exactly
-    one `(letter, country)` GeoJSONL file, and a cluster built from one file can never straddle a
-    border, because the other country's points were never in that file to begin with. If your dev
-    stack has run `make coverage-refresh` and published a `.pmtiles` archive, `pmtiles show
-    <path-or-url>` lists these same 21 names back to you as `vector_layers` — but the query above
-    needs nothing built, only the seeded database this course already assumes.
+    Seven letters, seven groups, seven layers — `c_zz`, `d_zz`, `e_zz` and so on. `ZZ` is not a
+    country: it is what `coalesce` substitutes when `country_code` is `NULL`, and the offline fixture
+    leaves it `NULL` on purpose. `country_code` is stamped from the region a row falls inside, and
+    `make course-data` loads no region boundaries (those come from a separate, network-bound
+    download), so no row gets stamped. `export_geojsonl()` buckets those rows under `ZZ` rather than
+    dropping them — an unstamped point still has to reach the map.
+
+    That is the mechanism, at the smallest size it is visible. The *point* of the mechanism only
+    shows once more than one country is loaded:
+
+    ??? note "The same query on a three-country index, and how to get one"
+        `make coverage-refresh` (chapter 5 covers what it costs — network, a Geofabrik download)
+        loads real extracts, and the region boundaries stamp `country_code` for real. On a machine
+        that has run it for Belgium, the Netherlands and Germany, the identical query returns this:
+
+        <!-- CODE-ILLUSTRATIVE sample output captured on a 375,078-row three-country coverage index; the counts are that machine's, the 7 × 3 shape is not -->
+        ```text
+         letter | country_code | count
+        --------+--------------+--------
+         C      | BE           |   1369
+         C      | DE           |  15894
+         C      | NL           |   3699
+         D      | BE           |   2013
+         D      | DE           |  13224
+         D      | NL           |   3039
+         E      | BE           |   6454
+         E      | DE           |  59090
+         E      | NL           |  14916
+         G      | BE           |    720
+         G      | DE           |   8709
+         G      | NL           |    624
+         H      | BE           |   1023
+         H      | DE           |  23341
+         H      | NL           |    595
+         I      | BE           |   2501
+         I      | DE           |  75359
+         I      | NL           |   2582
+         J      | BE           |   8815
+         J      | DE           | 122076
+         J      | NL           |   9035
+        (21 rows)
+        ```
+
+        Seven letters times three onboarded countries is exactly 21 rows — no row mixes two countries
+        under one letter, because `country_code` is a column on the table, not something tippecanoe
+        infers. Add the counts and they land on 375,078, the same total this chapter opened with.
+
+    Either way, this table *is* the reason the tile layers are named `c_be`, `c_de`, `c_nl`, `d_be`
+    and so on rather than just `c`, `d`, `e`: each row above becomes exactly one
+    `(letter, country)` GeoJSONL file, and a cluster built from one file can never straddle a border,
+    because the other country's points were never in that file to begin with. If your dev stack has
+    published a `.pmtiles` archive, `pmtiles show <path-or-url>` lists those same names back to you
+    as `vector_layers` — but the query above needs nothing built, only the seeded database this
+    course already assumes.
