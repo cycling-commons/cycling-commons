@@ -231,3 +231,72 @@
   color: var(--cc-clay);
 }
 .md-typeset .gis-todo figcaption { margin-top: .25rem; }
+
+/* ---- code: inline and block ----------------------------------------------
+   The atlas palette puts code on dark spruce. That works for a block, but two
+   things were wrong in practice:
+
+   (1) Inline code inherited the body face at body size, so a symbol like
+       `coverage_poi` sitting mid-sentence read as emphasised prose rather than
+       as code, and the dark pill crowded the glyphs. It now takes the mono
+       face explicitly and gets real padding.
+   (2) Code BLOCKS were close to unreadable: Material's default syntax colours
+       are tuned for a light code background, and on #16241b several token
+       classes (keywords, names, punctuation) landed at very low contrast.
+       The block below re-tints every token class used by the SQL, PHP, JS,
+       Python, YAML and shell samples in this wiki for a dark ground. */
+
+/* (1) inline code */
+.md-typeset code {
+  font-family: "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .82em;
+  padding: .18em .42em;
+  border-radius: 3px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+/* a fenced block is already padded by Material — do not double it up */
+.md-typeset pre > code { padding: 0; font-size: .78rem; border-radius: 0; }
+
+/* (2) syntax tokens on the dark spruce ground */
+[data-md-color-scheme="atlas"] {
+  --cc-tok-dim:#93A79A;      /* comments, punctuation */
+  --cc-tok-key:#FFB88C;      /* keywords, operators */
+  --cc-tok-str:#A9D6BC;      /* strings */
+  --cc-tok-num:#E8BC5E;      /* numbers, constants */
+  --cc-tok-fn:#F0E8D6;       /* function + class names */
+}
+.md-typeset .highlight { color: var(--md-code-fg-color); }
+.md-typeset .highlight .c, .md-typeset .highlight .c1,
+.md-typeset .highlight .cm, .md-typeset .highlight .cs,
+.md-typeset .highlight .ch, .md-typeset .highlight .cp {
+  color: var(--cc-tok-dim); font-style: italic;
+}
+.md-typeset .highlight .k, .md-typeset .highlight .kd, .md-typeset .highlight .kn,
+.md-typeset .highlight .kt, .md-typeset .highlight .kc, .md-typeset .highlight .kr,
+.md-typeset .highlight .ow, .md-typeset .highlight .o {
+  color: var(--cc-tok-key); font-weight: 600;
+}
+.md-typeset .highlight .s, .md-typeset .highlight .s1, .md-typeset .highlight .s2,
+.md-typeset .highlight .sb, .md-typeset .highlight .sd, .md-typeset .highlight .se,
+.md-typeset .highlight .sh, .md-typeset .highlight .si, .md-typeset .highlight .sx,
+.md-typeset .highlight .sr, .md-typeset .highlight .ss {
+  color: var(--cc-tok-str);
+}
+.md-typeset .highlight .m, .md-typeset .highlight .mi, .md-typeset .highlight .mf,
+.md-typeset .highlight .mh, .md-typeset .highlight .mo, .md-typeset .highlight .il,
+.md-typeset .highlight .no, .md-typeset .highlight .bp {
+  color: var(--cc-tok-num);
+}
+.md-typeset .highlight .n, .md-typeset .highlight .nf, .md-typeset .highlight .nc,
+.md-typeset .highlight .nn, .md-typeset .highlight .nb, .md-typeset .highlight .nv,
+.md-typeset .highlight .na, .md-typeset .highlight .nt, .md-typeset .highlight .nx {
+  color: var(--cc-tok-fn);
+}
+.md-typeset .highlight .p, .md-typeset .highlight .w { color: var(--cc-tok-dim); }
+.md-typeset .highlight .err { color: var(--cc-tok-key); background: transparent; }
+/* the copy button sat almost invisible against the dark block */
+.md-typeset .md-clipboard { color: rgba(231,224,207,.45); }
+.md-typeset .md-clipboard:hover, .md-typeset pre:hover .md-clipboard {
+  color: var(--cc-tok-num);
+}

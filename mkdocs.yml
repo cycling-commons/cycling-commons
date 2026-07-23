@@ -56,17 +56,17 @@ nav:
   - Governance: governance.md
   - Building the Commons: building.md
   - For developers:
-      - Start here: developers/gis/index.md
-      - The Earth is awkward: developers/gis/coordinates.md
-      - The shapes: developers/gis/shapes.md
-      - Metres vs degrees: developers/gis/metres-vs-degrees.md
-      - Asking spatial questions: developers/gis/spatial-questions.md
-      - Making it fast: developers/gis/making-it-fast.md
-      - From OpenStreetMap to our database: developers/gis/osm-to-database.md
-      - Tiles: developers/gis/tiles.md
-      - Putting it on screen: developers/gis/on-screen.md
-      - Lines that mean something: developers/gis/routes.md
-      - Pitfalls and glossary: developers/gis/pitfalls.md
+      - GIS course: developers/gis/index.md
+      - 1 · The Earth is awkward: developers/gis/coordinates.md
+      - 2 · The shapes: developers/gis/shapes.md
+      - 3 · Metres vs degrees: developers/gis/metres-vs-degrees.md
+      - 4 · Asking spatial questions: developers/gis/spatial-questions.md
+      - 5 · Making it fast: developers/gis/making-it-fast.md
+      - 6 · From OpenStreetMap to our database: developers/gis/osm-to-database.md
+      - 7 · Tiles: developers/gis/tiles.md
+      - 8 · Putting it on screen: developers/gis/on-screen.md
+      - 9 · Lines that mean something: developers/gis/routes.md
+      - 10 · Pitfalls and glossary: developers/gis/pitfalls.md
 
 markdown_extensions:
   - admonition
