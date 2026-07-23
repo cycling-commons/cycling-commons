@@ -124,8 +124,12 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   which *tag keys* we keep on them is §2.1 below. What *leaves* the server is
   narrower still (tiles carry the thin property set, §4; the detail endpoint
   whitelists display tags, §5).
-- **Measured sizing (2026-07-23).** At 375,078 rows (BE + NL + DE, compacted):
-  **341 B/row heap + 176 B/row indexes = 517 B/row**, and the per-row figure is
+- **Measured sizing (2026-07-23).** At 377,558 rows (BE + NL + DE + LU; 0 unstamped
+  after the ownership fix), compacted steady-state:
+  **341 B/row heap + 176 B/row indexes = 517 B/row** (the live table bloats above this
+  right after a re-harvest's DELETE/INSERT churn until autovacuum reclaims it — the
+  per-row figure is the compacted cost, not the momentary on-disk size). The per-row
+  figure is
   stable across countries (tags average 205 B/row in DE, 199 in BE, 197 in NL —
   Germany is the most exhaustively tagged country on Earth, so the worldwide
   average should drift down, not up; the one item that grows is the `name`
@@ -175,7 +179,8 @@ The serve-set is three groups:
 row above, so the three groups sum to 11 + 14 + 4 = **29** distinct keys.
 | **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | **Nothing yet — provisional.** Kept only because re-adding them later costs a full re-harvest; pending a decision on whether we build the drawer photo / deep-link features. Cost: 19 B/row, ≈ 89 MB planet-wide |
 
-Measured impact of the trim across BE + NL + DE (375,078 rows): tags payload
+Measured impact of the trim across BE + NL + DE (then 375,078 rows; 377,558 after
+the Luxembourg onboarding): tags payload
 **73 MB → 35 MB (-51.7 %, 203 → 98 B/row)**, whole row **517 → 412 B/row**,
 ≈ 493 MB at the ≈ 4.7 M planet subset.
 

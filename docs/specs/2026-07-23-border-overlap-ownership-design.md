@@ -2,7 +2,8 @@
 
 # Border-overlap ownership + region_id on re-harvest — design
 
-**Status:** design, not executed. Measured against the live dev DB 2026-07-23
+**Status:** **EXECUTED + harvested 2026-07-23** (nearest-region-wins; see the
+Execution note at the end). Originally measured against the live dev DB 2026-07-23
 (BE + NL + DE, 375,078 `coverage_poi` rows).
 **Audience:** contributors to the coverage pipeline.
 
@@ -242,5 +243,29 @@ worth importing for its own sake.
 - **Storage backlog issue 4** step 2 (the `storedTagKeys` trim) needs a
   re-harvest to take effect on existing rows. Doing that re-harvest *after* this
   change lands means one harvest instead of two.
-- `docs/specs/coverage-provider.md` §3 documents the current last-writer-wins
-  behaviour and must be updated when this ships.
+- `docs/specs/coverage-provider.md` §3 documented the old last-writer-wins
+  behaviour — **updated when this shipped** (now describes nearest-region-wins).
+
+## Execution note (2026-07-23)
+
+Shipped as nearest-region-wins, not the "inside a region of my country" rule this
+design first proposed — the final review found that predicate was not mutually
+exclusive (Geofabrik's overlap reaches ~0.10°, ten times `BOUNDARY_SNAP_DEG`), so it
+would have fixed 6 of 319 rows. The corrected rule resolves each staged row to the
+**single nearest region** within the snap, keeps it only if that region's country is
+the extract's own; every extract computes the same winner. See §3 "Correction".
+
+**Harvested together with Luxembourg** in one four-country run (`make coverage-refresh
+regions=europe/belgium,europe/netherlands,europe/germany,europe/luxembourg`), applying
+the ownership fix, the `storedTagKeys` trim, and LU onboarding in a single harvest
+(decision 3 — one harvest, not two). Post-harvest acceptance queries, all green:
+
+| check | before | after |
+|---|---|---|
+| rows owned by the wrong country's extract | 319 | **0** |
+| `region_id IS NULL` | 380 | **0** |
+| boundary-snap survivors (must stay ~thousands) | 3,431 | 3,306 |
+
+`coverage_poi` is now **377,558 rows** (BE 22,873 · NL 34,507 · DE 317,257 · LU 2,921),
+0 unstamped, ownership deterministic. No `DriftAbort` (worst case DE −0.18 % vs a 40 %
+threshold). Published artifact `coverage/20260723-1948.pmtiles`.
