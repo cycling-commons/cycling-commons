@@ -1,0 +1,22 @@
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_7458f14381f1e1 166-173
+  s_f3f9c3dc9409c4::t_3faf0bd51c310a 81-82,84-91
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_4d459d41937ff1 276-278
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f466f66f9d26065abb874cc805099171092d8362",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
