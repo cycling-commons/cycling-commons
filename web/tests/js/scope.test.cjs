@@ -1038,3 +1038,39 @@ test('compassLayout: never displaces a region more than one slot — it overflow
   assert.equal(out.s, null);
   assert.equal(out.e, null);
 });
+
+test('regionsNear ranks across countries by ground distance, nearest first', () => {
+  // Two countries, three regions. A point just inside the eastern (NL) box must
+  // rank the NL region first even though a BE region exists — the country-scoped
+  // contextualRegions could never do this.
+  CCScope.init([
+    { id: 1, slug: 'be-west', countryCode: 'BE', bbox: [3.0, 50.0, 4.0, 51.0] },   // centre 3.5
+    { id: 2, slug: 'nl-mid', countryCode: 'NL', bbox: [4.0, 50.0, 5.0, 51.0] },     // centre 4.5
+    { id: 3, slug: 'nl-east', countryCode: 'NL', bbox: [6.0, 50.0, 7.0, 51.0] },    // centre 6.5
+  ], { kind: 'everywhere', regionIds: [], countryCode: null });
+  const near = CCScope.regionsNear([4.6, 50.5], { limit: 3 });
+  assert.deepEqual(near.map((r) => r.slug), ['nl-mid', 'be-west', 'nl-east']);
+});
+
+test('regionsNear respects the limit and defaults to 8', () => {
+  CCScope.init([
+    { id: 1, slug: 'a', countryCode: 'BE', bbox: [2.0, 50.0, 3.0, 51.0] },
+    { id: 2, slug: 'b', countryCode: 'NL', bbox: [4.0, 50.0, 5.0, 51.0] },
+    { id: 3, slug: 'c', countryCode: 'NL', bbox: [6.0, 50.0, 7.0, 51.0] },
+  ], { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.equal(CCScope.regionsNear([4.6, 50.5], { limit: 2 }).length, 2);
+  assert.equal(CCScope.regionsNear([4.6, 50.5]).length, 3);   // default cap 8 > 3 regions
+});
+
+test('regionsNear applies the cos(lat) correction (east-west is compressed)', () => {
+  // At 60°N a longitude degree is half a latitude degree. The east region is 1.0°
+  // east; the north region is 0.8° north. Raw squared-degrees would pick the north
+  // one (0.64 < 1.0); the corrected distance picks east (1.0·cos60=0.5 -> 0.25 < 0.64).
+  CCScope.init([
+    { id: 1, slug: 'here', countryCode: 'NO', bbox: [10.0, 59.9, 10.0, 60.1] },   // centre 10, 60
+    { id: 2, slug: 'east', countryCode: 'NO', bbox: [11.0, 59.9, 11.0, 60.1] },   // +1.0 lon
+    { id: 3, slug: 'north', countryCode: 'NO', bbox: [10.0, 60.7, 10.0, 60.9] },  // +0.8 lat
+  ], { kind: 'everywhere', regionIds: [], countryCode: null });
+  const near = CCScope.regionsNear([10.0, 60.0], { limit: 3 });
+  assert.deepEqual(near.map((r) => r.slug), ['here', 'east', 'north']);
+});

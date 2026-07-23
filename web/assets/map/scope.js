@@ -240,6 +240,24 @@
     try { window.dispatchEvent(new CustomEvent(EVENT, { detail: clone(scope) })); } catch (e) { /* no window */ }
   };
 
+  // Nearest-first by ground distance from `near` to each region's bbox centre,
+  // capped at `cap`. The cos(lat) correction (a longitude degree is ~0.65 of a
+  // latitude degree at 49°N) is shared by contextualRegions and regionsNear, so a
+  // bare degree-delta never over-weights east-west separation. Pure; no mutation.
+  function rankByGroundDistance(list, near, cap) {
+    const lng = near[0]; const lat = near[1];
+    const kx = Math.cos(lat * Math.PI / 180);
+    return list
+      .map((r) => {
+        const b = r.bbox;
+        const cx = b ? (b[0] + b[2]) / 2 : lng; const cy = b ? (b[1] + b[3]) / 2 : lat;
+        return { r, d: ((cx - lng) * kx) ** 2 + (cy - lat) ** 2 };
+      })
+      .sort((a, b) => a.d - b.d)
+      .slice(0, cap)
+      .map((x) => x.r);
+  }
+
   const API = {
     EVENT,
 
@@ -559,24 +577,21 @@
       const cap = o.limit != null ? o.limit : 8;
       const list = (byCountry.get(cc) || []).slice();
       if (o.near) {
-        const [lng, lat] = o.near;
-        // Ground-distance correction (same as regionOfPoint, above): scale the
-        // longitude delta by cos(lat) before comparing. Raw squared degrees
-        // are NOT distance — a longitude degree is ~0.65 of a latitude degree
-        // at 49°N, so skipping this over-weights east-west separation enough
-        // to pick the visually farther region as "closest" (task-4 review;
-        // regression test: contextualRegions near-ordering, scope.test.cjs).
-        const kx = Math.cos(lat * Math.PI / 180);
-        const withDist = list.map((r) => {
-          const b = r.bbox;
-          const cx = b ? (b[0] + b[2]) / 2 : lng; const cy = b ? (b[1] + b[3]) / 2 : lat;
-          return { r, d: ((cx - lng) * kx) ** 2 + (cy - lat) ** 2 };
-        });
-        withDist.sort((a, b) => a.d - b.d);
-        return withDist.slice(0, cap).map((x) => x.r);
+        return rankByGroundDistance(list, o.near, cap);
       }
       list.sort((a, b) => (a.label || a.slug).localeCompare(b.label || b.slug, 'en'));
       return list.slice(0, cap);
+    },
+
+    /** All onboarded regions, nearest-first by ground distance from `near`
+     *  ([lng, lat]), capped (default 8). Country-agnostic — this is what makes the
+     *  scope chips cross-border (2026-07-23-cross-border-chips-design.md §3.1): a
+     *  rider near a border is offered the genuinely nearest regions whatever country
+     *  they are in. contextualRegions(cc) stays country-scoped for the
+     *  "All <country>" rung. Pure. */
+    regionsNear(near, opts) {
+      const cap = (opts && opts.limit != null) ? opts.limit : 8;
+      return rankByGroundDistance(regions.slice(), near, cap);
     },
 
     /** Assign up to 8 regions to compass slots around `origin` ([lng, lat]) by
