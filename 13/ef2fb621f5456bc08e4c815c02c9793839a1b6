@@ -1,0 +1,27 @@
+mkdocs.yml
+  s_f3f9c3dc9409c4::t_7f5a240b34c3bb 65,69
+  s_f3f9c3dc9409c4::t_4a48ca36fdb388 63,67-68
+docs/specs/2026-07-23-gis-primer-design.md
+  s_f3f9c3dc9409c4::t_69f88f15ef546e 31
+wiki/developers/gis/index.md
+  s_f3f9c3dc9409c4::t_dedf2b7ebfaae3 44-55,61
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_624ab3af9d1f2e 249-255,259,261-264,267-278
+  s_f3f9c3dc9409c4::t_01414c4c3c4ae8 258
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "13ef2fb621f5456bc08e4c815c02c9793839a1b6",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
