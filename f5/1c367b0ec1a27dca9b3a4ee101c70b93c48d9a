@@ -1,0 +1,34 @@
+web/templates/map/index.html.twig
+  s_3c392b244b902c::t_a9a64cec8d05f0 376-377
+web/tests/Smoke/MapPageTest.php
+  s_3c392b244b902c::t_c5d3c4196b87d4 104-107
+web/tests/js/scope-chips.test.cjs
+  s_3c392b244b902c::t_01c181180527af 251
+  s_3c392b244b902c::t_2e2b5ee7f67ef5 279-309
+docs/specs/2026-07-23-map-js-phase0-extraction-design.md
+  s_3c392b244b902c::t_c25aa1c254be42 40-42
+  s_3c392b244b902c::t_e4c8cb19625a46 65-68
+  s_3c392b244b902c::t_51b8cd3e6c927f 5
+  s_3c392b244b902c::t_859e7dc9200585 167-177
+web/assets/map/map.js
+  s_3c392b244b902c::t_0e651c062ceae4 258
+  s_3c392b244b902c::t_eabe6c93a621c7 240-242
+  s_3c392b244b902c::t_78e5ca17260050 247-248
+  s_3c392b244b902c::t_ff9825de26ae8f 226-230
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f51c367b0ec1a27dca9b3a4ee101c70b93c48d9a",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
