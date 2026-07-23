@@ -55,9 +55,9 @@ map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL
 
 and then, still inside the same function, adds one icon layer and one cluster-bubble layer for
 every catalogue letter and every country — all of them with `source:'coverage'`. One `.pmtiles`
-archive, fetched once, feeds pins, cluster bubbles, and (as you'll see below) the selected-feature
-overlay too. Restyle any one of those layers — change a colour, swap an icon — and nothing is
-re-fetched. The source does not change; only the instruction reading it does.
+archive, fetched once, feeds every one of those pin and cluster-bubble layers. Restyle any one of
+them — change a colour, swap an icon — and nothing is re-fetched. The source does not change; only
+the instruction reading it does.
 
 <figure class="gis-fig gis-todo">
 <p class="gis-todo-h">Figure F15 · not yet drawn</p>
@@ -75,7 +75,20 @@ Pick the top layer box ("pins") and annotate it with two extra call-outs: its
 two-column split below the box separating its properties into a <strong>paint</strong> group
 (e.g. <code>icon-opacity</code>) and a <strong>layout</strong> group (e.g. <code>visibility</code>,
 <code>icon-image</code>). Keep every label to two or three words per the figure convention — this is
-an anatomy diagram, not a code listing.</p>
+an anatomy diagram, not a code listing. At 640 units wide, four stations run left to right — the
+pmtiles box, the source box, the stack of three layer boxes, and the rendered-map panel — so each
+gets on the order of 150 units of width once arrows and gaps between stations are subtracted. That is
+plenty for this figure's short box labels (<code>coverage.pmtiles</code>, <code>source:
+"coverage"</code>, <code>pins (icon layer)</code>, <code>cluster bubbles</code>, <code>labels</code>,
+<code>rendered map</code>) to wrap onto one or two lines at the gis-label-sm floor, unlike ch7's F13,
+whose six boxes needed a full ~50-character prose-length label each and had to wrap to two rows to
+stay legible. The one spot in this figure that does need F13's kind of care is the paint/layout
+sub-annotation under the pins box: splitting that box's ~150 units into two side-by-side columns per
+point 4 of the stylesheet convention leaves each column only about 75 units — under half of what a
+station gets everywhere else in the figure — so keep every paint/layout entry to one word
+(<code>icon-opacity</code>, <code>visibility</code>, <code>icon-image</code>) and let it wrap onto two
+short lines inside its narrow column rather than forcing it onto one; the 24-unit gis-label-sm floor
+is about font size, not line count, so a two-line wrap inside a narrow column still clears it.</p>
 <figcaption>One source, many layers — the reason a restyle needs no refetch.</figcaption>
 </figure>
 <!-- FIGURE-TODO id=F15 ch=8 -->

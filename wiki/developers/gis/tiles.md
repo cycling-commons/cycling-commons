@@ -41,10 +41,10 @@ number of tiles at zoom z = 4^z
 ```
 
 `z=0` is 1 tile. `z=6` — the lowest zoom this project's coverage tiles are built at — is `4^6 =
-4,096` tiles. `z=14`, the highest, is `4^14`, over 4.2 *billion* tiles for the whole world. Nobody
-builds all 4.2 billion of them; a tile only gets built where a tile-cutting tool finds features to
-put in it, which is exactly why the pyramid works: the *addressing scheme* covers the whole planet
-at every zoom, but the *actual files* only exist wherever there is data.
+4,096` tiles. `z=14`, the highest, is `4^14 = 268,435,456` — about 268 *million* tiles for the whole
+world. Nobody builds all 268 million of them; a tile only gets built where a tile-cutting tool finds
+features to put in it, which is exactly why the pyramid works: the *addressing scheme* covers the
+whole planet at every zoom, but the *actual files* only exist wherever there is data.
 
 That addressing scheme has a name: every tile is identified by three numbers, written **`z/x/y`**.
 `z` is the zoom level just described. `x` and `y` are the tile's column and row inside that level's
@@ -70,8 +70,8 @@ four squares in the next row's grid that came from subdividing it — the point 
 became these four", not just "there are now more squares". Do not attempt to draw z=6 through z=14 as
 actual grids (4,096 squares does not fit); instead add a text annotation under the three drawn rows
 along the lines of "and so on — <code>4^z</code> tiles at zoom <code>z</code>", then a second line
-giving the real range this project uses, <code>z6 → z14</code> (4,096 tiles at the shallow end, over
-4.2 billion addressable at the deep end, of which this project builds only the ones with data in
+giving the real range this project uses, <code>z6 → z14</code> (4,096 tiles at the shallow end, about
+268 million addressable at the deep end, of which this project builds only the ones with data in
 them). Label each tile's address format once, e.g. write <code>z/x/y</code> next to the highlighted
 tile in row 2 pointing at one specific square.</p>
 <figcaption>Every zoom level splits every tile from the level above into four. The count grows as
@@ -155,8 +155,9 @@ This project's coverage layer is exactly that: `build_pmtiles()` in `pipeline/co
 writes one `.pmtiles` file, `pipeline/coverage/publish.py` uploads it to the `cc-maps` object storage
 bucket under a versioned key (`coverage/<YYYYMMDD-HHMM>.pmtiles`, coverage-provider.md §3 step 8), and
 the browser talks to it through the `pmtiles://` protocol handler registered in
-`web/assets/map/map.js` — `maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile)`, immediately
-followed by `map.addSource('coverage', {type: 'vector', url: 'pmtiles://' + window.CC_COVERAGE_URL})`.
+`web/assets/map/map.js` — `maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile)`, followed a
+couple of lines later (`mintWaterDrops()` runs in between, `map.js:1089-1091`) by
+`map.addSource('coverage', {type: 'vector', url: 'pmtiles://' + window.CC_COVERAGE_URL})`.
 Nothing in that request path is a tile server: it is a `GET` against a static file, with `Range:`
 headers doing the work a tile server used to do, served straight off the bucket (or through nginx's
 range proxy, per the memory-noted `cache.example.net`-style infra this project can reuse).
@@ -207,10 +208,12 @@ The actual flags, all in `pipeline/coverage/tiles.py::build_pmtiles`:
 ```
 
 - **`--cluster-distance 20`** — points within 20 *screen pixels* of each other, at a given zoom, are
-  candidates to merge into one cluster feature. (It is screen pixels, not metres — the same 20 covers
-  several kilometres of ground at zoom 8 and only a couple of hundred metres at zoom 11, which is why
-  bubbles dissolve as you zoom in far faster than the underlying density of fountains actually
-  changes; coverage-provider.md §4 walks through what a rider watching this actually sees.)
+  candidates to merge into one cluster feature. (It is screen pixels, not metres — at Belgium's
+  latitude the same 20 px works out to roughly 7-8 kilometres of ground at zoom 8 and roughly a
+  kilometre at zoom 11 (Web Mercator's ground distance per pixel halves every zoom level and also
+  shrinks with latitude), which is why bubbles dissolve as you zoom in far faster than the underlying
+  density of fountains actually changes; coverage-provider.md §4 walks through what a rider watching
+  this actually sees.)
 - **`--cluster-maxzoom 11`** — clustering only happens from zoom 6 up to zoom 11. Above that, every
   feature renders individually, with no `point_count` at all — not "the count counts down to one", the
   count simply stops existing at that point, because from zoom 12 on a rider zoomed into a town is
@@ -264,9 +267,11 @@ true at every zoom in between.</figcaption>
 
 ## Why the layers are split per country
 
-Every tile a tippecanoe run produces is organised into named **layers** — think of a layer as one
-named collection of features inside a tile, the way a source-layer maps to a MapLibre `source-layer`
-(chapter 8, `on-screen.md`). The obvious design is one layer per catalogue letter (chapter 6,
+Every tile a tippecanoe run produces is organised into named **layers** — one named collection of
+features living inside a tile, nothing to do with anything drawn on screen. Chapter 8
+(`on-screen.md`) gives this exact idea its MapLibre name, `source-layer`; for now, just picture a
+layer as a named group of features packed inside a tile. The obvious design is one layer per
+catalogue letter (chapter 6,
 `osm-to-database.md`, covers what the letters mean): `c` for water, `d` for services, and so on. That
 is what this project shipped first, and it worked, right up until a second bordering country
 (the Netherlands) was onboarded next to the first (Belgium).

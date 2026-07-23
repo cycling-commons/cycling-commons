@@ -114,12 +114,17 @@ metres — because `ST_Distance` is measuring the same underlying shapes chapter
 just returns the measurement itself instead of comparing it to a threshold.
 
 `ST_ClosestPoint(a, b)` answers a different question: not *how far*, but *where*. It returns an
-actual point — the specific point on geometry `a` that is nearest to geometry `b`. If `a` is a long,
-winding line and `b` is off to one side of it, `ST_ClosestPoint` is the one point on that line you'd
-have to walk to first before you could get any closer to `b`.
+actual point — the specific point on geometry `a` that is nearest to geometry `b`. Order matters
+here in a way it does not for `ST_Distance`: the point that comes back always lies *on `a`*, never on
+`b`. If `a` is a long, winding line and `b` is off to one side of it, `ST_ClosestPoint(a, b)` is the
+one point on that line you'd have to walk to first before you could get any closer to `b`. But if `a`
+is a Point, there is only ever one point on it — itself — so `ST_ClosestPoint` returns `a` unchanged,
+no matter where `b` is. A Point geometry has no "nearer" or "further" location to offer; asking for
+the closest point on a single point is trivially answered before the second argument is even looked
+at.
 
-`RideCheckService::corridorGroups()` uses both in the same query, on the same pair of shapes,
-answering two different questions about them:
+`RideCheckService::corridorGroups()` uses both `ST_Distance` and `ST_ClosestPoint` in the same query,
+but not quite on the same footing:
 
 ```sql
 ST_Distance(i.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
@@ -128,11 +133,19 @@ ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM
 
 `ST_Distance` is the straightforward one: how far, in real metres, does the fountain sit from the
 rider's track? That becomes `distM` in the response the rider actually sees — "80 m off the track."
-`ST_ClosestPoint` answers something else entirely: given the fountain, which single point on the
-track is nearest to it? That point is not the final answer here — it is an ingredient, handed
-straight into a third function you'll meet in two sections. `BaseAreaResolver` uses `ST_Distance` too,
-the same way chapter 3 already quoted it: sorting candidate regions by real distance, in metres,
-once the containment check above has already picked a winner.
+`ST_ClosestPoint(i.geom, (SELECT g FROM track))` puts the item first, so per the rule just above, the
+point it returns lies on `i.geom` — the fountain's own geometry — not on the track. Catalog items are
+usually, but not necessarily, Points (`item.geom` is declared `geometry(Geometry, 4326)`,
+`web/migrations/Version20260703153611.php`; nothing stops a future item from being a line or an
+area). For the ordinary case, a Point fountain, that means `ST_ClosestPoint` here just hands back the
+fountain's own coordinates, unchanged — the same trivial case called out above. It is easy to misread
+this line as "the point on the track nearest the fountain"; it is the opposite argument order from
+that. The query still works, and works correctly, but not because `ST_ClosestPoint` is projecting
+anything onto the track — that projection is `ST_LineLocatePoint`'s own job, two sections from here.
+What `ST_ClosestPoint` contributes here, for a Point item, is nothing more than passing the fountain's
+location through unchanged into the function that actually does the work. `BaseAreaResolver` uses
+`ST_Distance` too, the same way chapter 3 already quoted it: sorting candidate regions by real
+distance, in metres, once the containment check above has already picked a winner.
 
 <figure class="gis-fig gis-todo">
 <p class="gis-todo-h">Figure F6 · not yet drawn</p>
@@ -191,8 +204,20 @@ sections ago:
 ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
 ```
 
-Read inside-out: first find the point on the track closest to this item (`ST_ClosestPoint`), then ask
-how far along the track that point sits (`ST_LineLocatePoint`). The result, `frac`, is what the query
+It would be tempting to read this inside-out as "first find the point on the track closest to this
+item, then ask how far along that point sits" — but that is not quite what happens, and the previous
+section is exactly why: `ST_ClosestPoint(i.geom, track)` returns a point on `i.geom`, the item's own
+geometry, which for the ordinary Point fountain is just the fountain's own coordinates handed back
+unchanged. The projection onto the track — finding *where on the line* a given point sits nearest to
+— is done by `ST_LineLocatePoint` itself. Its second argument does not need to already lie on the
+line; `ST_LineLocatePoint(line, point)` locates the position along `line` closest to whatever `point`
+it is given, exactly the same nearest-point calculation `ST_ClosestPoint` performs, just built into
+`ST_LineLocatePoint`'s own definition instead of taken as an input. So the real reading is: hand the
+fountain's coordinates to `ST_LineLocatePoint`, and let it do its own internal closest-point
+projection onto the track, in the same step as converting that projection into a 0–1 fraction. The
+`ST_ClosestPoint` call is only load-bearing here for a non-Point item — a mapped path or area — where
+it first collapses that shape down to the single point on it nearest the track, before
+`ST_LineLocatePoint` projects that point onto the track in turn. The result, `frac`, is what the query
 then sorts by — `ORDER BY frac, i.id` — and it is also what the PHP code turns into the kilometre
 figure a rider actually reads:
 
@@ -249,7 +274,8 @@ Photon, not a request that passes through our own backend first.
 **Reverse geocoding** — coordinates in, a place name out — is the direction this project does not
 call. It would be reasonable to expect it: the map already draws a "Near Namur · 40 km" label next to
 a rider's base location, and that label looks exactly like the output of a reverse-geocode call. It
-is not. `docs/specs/2026-07-19-region-scoping-design.md` §4 records the actual decision: `base_place`
+is not. `docs/specs/2026-07-19-region-scoping-design.md` §7, "Phased implementation plan," records
+the actual decision: `base_place`
 is stored as its own column, filled in at the moment a rider picks a town from the forward-search
 results above, specifically so that showing that label later never needs "a live reverse-geocode call
 on every page load." The name travels with the pick; it is never looked up backwards afterward.
