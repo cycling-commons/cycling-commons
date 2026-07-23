@@ -141,7 +141,36 @@ cross-border scope (NRW) shows Dutch chips with the cue and zero console errors.
 
 This is item 3 of the four queued for the window; items 1 (border-overlap) and 2 (Phase 0
 extraction) are done, and the four-country harvest that gives item 3 real cross-border data to show
-has run. Item 4 (region-boundary HTTP cache + point-in-polygon click) remains and is independent.
+has run. Item 4 (region-boundary HTTP cache + point-in-polygon click) remains — and now **also owns
+the ranking-metric fix** described in §9.
+
+## 9. Known limitation: centroid ranking (owner-deferred to item 4, 2026-07-24)
+
+The ranking distance is **anchor point → each candidate region's bbox *centre***. That misses a
+large adjacent region whose centroid sits far from the shared border. Owner-reported cases
+(2026-07-24), all correct complaints:
+
+| active region | actually borders | offered today | why |
+|---|---|---|---|
+| Groningen | Lower Saxony | only `Bremen` (8th) | Lower Saxony's centroid is ~near Hannover, far east; compact Bremen's centroid wins |
+| Drenthe | Lower Saxony | only `Bremen` | same |
+| Overijssel | Lower Saxony, NRW | **nothing German** | both German neighbours' centroids are far; 8 nearer Dutch centroids fill the slots |
+| Bremen | (enclave, ~50 km from NL) | Friesland/Groningen/Drenthe (NL) | its surrounder Lower Saxony has a far centroid, so its "nearest" reaches the Dutch coast |
+
+**A bbox-*extent* metric** (anchor → nearest point of each candidate's bbox, 0 when inside) was
+prototyped and fixes all four cases (Groningen → `niedersachsen` 2nd, Overijssel → NRW 2nd,
+`niedersachsen` 5th). **Owner declined it as a stopgap** because a bounding box over-claims for
+large regions — it would add a distant German chip at the #8 slot for Utrecht and Bavaria (regions
+that do not border Germany closely). Trading one imprecision for another is not worth a second test
+re-derivation.
+
+**Decision:** fix it *properly* once item 4 ships the region boundary polygons to the client — rank
+by **true polygon-edge distance** (0 when adjacent), which is exact for both large and small,
+diagonal and blobby regions. Until then the centroid ranking stands, with this limitation known and
+accepted. Item 4's scope therefore expands: it is no longer just the boundary HTTP cache + the
+point-in-polygon *click* refinement, but also the data source for the correct cross-border *ranking*.
+When item 4 lands, revisit `rankByGroundDistance` in `scope.js` to consume polygon-edge distance and
+re-derive the pinning tests (`scope.test.cjs`, `scope-chips.test.cjs`) one final time.
 
 ## 8. Execution notes
 
