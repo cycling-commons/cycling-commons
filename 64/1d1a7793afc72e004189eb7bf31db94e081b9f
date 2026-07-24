@@ -1,0 +1,46 @@
+wiki/developers/gis/pitfalls.md
+  s_ce7d437afc19d9::t_7a4c2060caa4a9 105-108
+wiki/developers/gis/tiles.md
+  s_ce7d437afc19d9::t_77d7c43b36b45e 367-395,398-403
+  s_ce7d437afc19d9::t_27068de6801d3b 453-457
+  s_ce7d437afc19d9::t_6e95bf64047d9d 180-183
+  s_40361d3c7fbe9c::t_d2795a098cf08b 159-160
+  s_ce7d437afc19d9::t_28f9fb3e027335 539-540
+  s_ce7d437afc19d9::t_d3a08d5968bcf0 215,224-287,289-299,308,311-354
+  s_ce7d437afc19d9::t_eef980767341c7 288
+  s_40361d3c7fbe9c::t_e8bc219c0b42e5 123
+  s_ce7d437afc19d9::t_c059fa6ca66713 118-119
+  s_40361d3c7fbe9c::t_914ff4ec043b30 128-142
+  s_ce7d437afc19d9::t_1f818fbe66c918 537-538
+  s_ce7d437afc19d9::t_3205d915fde981 437-448
+wiki/developers/gis/on-screen.md
+  s_ce7d437afc19d9::t_ce58397ab9fa43 119-125
+  s_ce7d437afc19d9::t_06a607d4bc2b07 312-316
+  s_ce7d437afc19d9::t_630262903b7541 179-208
+  s_ce7d437afc19d9::t_6bcb2c9decac80 58,60,64-82,84
+  s_ce7d437afc19d9::t_e369c7db3109d5 89-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "641d1a7793afc72e004189eb7bf31db94e081b9f",
+  "prompts": {},
+  "sessions": {
+    "s_40361d3c7fbe9c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b8b7a980-37d1-450e-9c3d-400b2035e507",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_ce7d437afc19d9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f4f83357-aa74-4551-bd21-6f693445ca5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
