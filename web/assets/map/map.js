@@ -789,21 +789,6 @@
     map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
     return id;
   }
-  // Plain filled disc (layer colour + dark ring, no glyph), minted once per
-  // coverage key — the backdrop for a cluster bubble; the point_count is drawn
-  // over it as a text-field (addCoverage, Phase 3 clustering).
-  function covClusterIcon(key){
-    const id='covcl-'+key;
-    if(map.hasImage(id)) return id;
-    const color=(layerByKey[key]||{}).color||'#6b6f5e';
-    const S=2, D=30*S, R=D/2;
-    const cv=document.createElement('canvas'); cv.width=D; cv.height=D; const x=cv.getContext('2d');
-    x.beginPath(); x.arc(R,R,R-3*S,0,Math.PI*2);
-    x.fillStyle=color; x.globalAlpha=0.92; x.fill(); x.globalAlpha=1;
-    x.lineWidth=2*S; x.strokeStyle='rgba(20,22,14,.85)'; x.stroke();
-    map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
-    return id;
-  }
   // Bulk-OSM POI registry entry + confirmed-pin data (display moved to the
   // coverage tile layer, addCoverage() — this only feeds osmLayers so
   // setupConfClusters()/updateConfMarkers() keep rendering confirmed pins, and
@@ -941,9 +926,8 @@
     transit:'OpenStreetMap (railway=station / railway=halt)'
   };
   // Curated-ref dedupe (osm-data-architecture.md §8): any object already served
-  // as an item draws once, as curated — its coverage twin is filtered out. Only
-  // meaningful on INDIVIDUAL icons: a ref identifies one point, never a merged
-  // bubble, so this arm is applied to icons only (see covClusterFilter).
+  // as an item draws once, as curated — its coverage twin is filtered out. A
+  // ref identifies one point, so this arm applies cleanly to every coverage icon.
   const covDedupeFilter=()=>['!',['in',['get','ref'],['literal', Array.from(window.CC_CURATED_REFS||[])]]];
   // Region scope filter for the coverage tile layers (Phase 3,
   // region-scoping-design.md §6). Scope keys are pipe-delimited membership
@@ -981,27 +965,17 @@
   function covBaseFilter(){
     const f=['all', covDedupeFilter()]; const sc=covScopeFilter(); if(sc) f.push(sc); return f;
   }
-  // The two sublayers a coverage letter renders as (Phase 3 clustering,
-  // region-scoping-design.md §7): individual ICONS for unclustered features
-  // (tippecanoe adds `point_count` only to clusters, so `!has point_count` =
-  // an individual POI) plus any per-layer extra (stays' accessibility narrow),
-  // and count BUBBLES for clustered features (`has point_count`).
+  // The coverage icon layer's filter (no clustering —
+  // 2026-07-24-coverage-no-cluster-design.md §2): scope + curated-ref dedupe
+  // plus any per-layer extra (stays' accessibility narrow). `!has point_count`
+  // is kept as a harmless no-op — tippecanoe no longer emits clustered
+  // features, so every feature already satisfies it.
   function covIconFilter(extra){
     const f=covBaseFilter(); f.push(['!',['has','point_count']]); if(extra) f.push(extra); return f;
   }
-  // Bubbles take SCOPE ONLY — no dedupe arm. A cluster is never an exact curated
-  // twin (a curated ref is one point, not a merged blob), so the dedupe arm has
-  // no correct hit on a bubble; it could only ever MIS-hide a whole bubble whose
-  // representative ref happened to be curated (finding 4). The ±curated-count
-  // bubble overcount this leaves is negligible and the rail /counts stays exact.
-  function covClusterFilter(){
-    const f=covScopeBase(); f.push(['has','point_count']); return f;
-  }
-  // Re-apply the composed filters to every coverage layer (icon + cluster) on a
-  // scope change, so both track scope like every served layer. stays' icon
-  // layer re-composes through applyStaysAccessFilter (it owns the acc extra);
-  // the acc narrow deliberately does NOT apply to a cluster bubble (a cluster's
-  // accessibility is ambiguous — the narrow bites once it splits into icons).
+  // Re-apply the composed filter to every coverage icon layer on a scope
+  // change, so each tracks scope like every served layer. stays' icon layer
+  // re-composes through applyStaysAccessFilter (it owns the acc extra).
   function updateCoverageScopeFilter(){
     if(!COVERAGE_ON) return;
     COVERAGE_KEYS.forEach(([key])=>{
@@ -1014,7 +988,6 @@
           if(key==='stays'){ if(cc===COVERAGE_CCS[0]) applyStaysAccessFilter(); }
           else map.setFilter(id, covIconFilter());
         }
-        if(map.getLayer(id+'-cl')) map.setFilter(id+'-cl', covClusterFilter());
       });
     });
   }
@@ -1048,7 +1021,7 @@
     if(!COVERAGE_ON) return;
     COVERAGE_KEYS.forEach(([key])=>{
       // on/off + Curated dim are per-letter decisions; apply them uniformly to
-      // every per-country layer of this letter (icon + cluster).
+      // every per-country layer of this letter.
       const utility=COV_UTILITY.has(KEY_LETTER[key]);
       const show=active.has(key) && (mode==='all' || utility);
       const dim=(mode==='curated' && utility)?0.55:1;
@@ -1056,13 +1029,6 @@
         const id = cc ? key+'-'+cc+'-cov' : key+'-cov'; if(!map.getLayer(id)) return;
         map.setLayoutProperty(id,'visibility', show?'visible':'none');
         map.setPaintProperty(id,'icon-opacity', dim);
-        // Cluster bubble layer (Phase 3) tracks the same on/off + Curated dim.
-        const cl=id+'-cl';
-        if(map.getLayer(cl)){
-          map.setLayoutProperty(cl,'visibility', show?'visible':'none');
-          map.setPaintProperty(cl,'icon-opacity', dim);
-          map.setPaintProperty(cl,'text-opacity', dim);
-        }
       });
     });
   }
@@ -1072,7 +1038,7 @@
     mintWaterDrops();
     map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
     COVERAGE_KEYS.forEach(([key, letter])=>{
-      // One icon + cluster layer per (letter, country): the source-layer is
+      // One icon layer per (letter, country): the source-layer is
       // '<letter>_<cc>' (lowercase cc; 'zz' = unstamped rows), and the layer ids
       // carry the cc so scope filters / visibility toggles address each country.
       // A missing '<letter>_<cc>' source-layer (e.g. no unstamped rows) renders
@@ -1095,10 +1061,11 @@
                 'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
                 miniIcon('services')]
             : miniIcon(key);
-        // Individual-POI icons: unclustered features only (covIconFilter gates on
-        // `!has point_count`); the count bubbles below draw the clustered ones.
+        // Individual coverage icons (no clustering — 2026-07-24-coverage-no-cluster-design.md
+        // §2); scope-filtered exactly. minzoom 11 so nothing paints at overview.
         map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
-          filter:covIconFilter(),   // dedupe + scope + unclustered (Phase 3)
+          minzoom: 11,
+          filter:covIconFilter(),   // dedupe + scope
           layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
             'icon-size': key==='water'
               ? ['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]
@@ -1108,34 +1075,14 @@
         map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
         map.on('mousemove',id,e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[key]||{}).label||'Item', e.lngLat); });
         map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
-        // Cluster bubbles (Phase 3, region-scoping-design.md §7): a disc sized by
-        // point_count with the count as a label, for the clustered features
-        // tippecanoe groups at low zoom. Clicking one zooms in until it splits
-        // into individual icons — same affordance as the confirmed-pin clusters.
-        const clId=id+'-cl';
-        map.addLayer({id:clId, type:'symbol', source:'coverage', 'source-layer':srcLayer,
-          filter:covClusterFilter(),
-          layout:{visibility:'none','icon-image':covClusterIcon(key),'icon-allow-overlap':true,'text-allow-overlap':true,
-            'icon-size':['interpolate',['linear'],['get','point_count'], 2,0.55, 25,0.8, 200,1.1, 1000,1.5],
-            'text-field':['to-string',['get','point_count']],
-            'text-font':['Noto Sans Bold'],
-            'text-size':['interpolate',['linear'],['get','point_count'], 2,11, 200,13, 1000,15]},
-          paint:{'text-color':txtOn((layerByKey[key]||{}).color||'#6b6f5e'),
-            'text-halo-color':'rgba(20,22,14,.35)','text-halo-width':0.8}});
-        map.on('click',clId,e=>{ const c=e.features[0].geometry.coordinates;
-          map.easeTo({center:c, zoom:Math.min(14, map.getZoom()+2.2), duration:600}); });
-        map.on('mouseenter',clId,()=>map.getCanvas().style.cursor='pointer');
-        map.on('mousemove',clId,e=>{ const p=e.features[0].properties;
-          showTip((p.point_count||'')+' '+((layerByKey[key]||{}).label||'items'), e.lngLat); });
-        map.on('mouseleave',clId,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
       });
     });
     // Selected-POI icon overlay (fix 2026-07-22): a coverage POI's individual
-    // icon is drawn only by the tile <key>-<cc>-cov layer, which tippecanoe
-    // clusters away on zoom-out — but the selection pulse (a coord-anchored DOM
+    // icon is drawn only by the tile <key>-<cc>-cov layer, which the z11 minzoom
+    // hides on zoom-out — but the selection pulse (a coord-anchored DOM
     // marker) stays, leaving an "empty pulsing halo". This single-feature GeoJSON
-    // overlay redraws the SELECTED POI's icon on top, independent of tile
-    // clustering, so it stays visible at every zoom. Sits under the DOM pulse,
+    // overlay redraws the SELECTED POI's icon on top, independent of the tile
+    // minzoom, so it stays visible at every zoom. Sits under the DOM pulse,
     // which then rings the icon as intended. Same icon-image + size ramps as the
     // tile icon layers so there's no visual jump where the two overlap at high zoom.
     if(!map.getSource('cov-sel')){
@@ -2589,7 +2536,7 @@
     const ids=['mly-img','mly-cov','cov-sel-icon','planroute','planroute-case'];
     COVERAGE_KEYS.forEach(([key])=>COVERAGE_CCS.forEach(cc=>{
       const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
-      ids.push(id, id+'-cl');   // icon layer + its cluster-bubble sibling
+      ids.push(id);
     }));
     boundLayerIds.forEach(id=>ids.push(id));         // drawLine/drawClimbLine: route/climb/line CATALOG layers
     surfaceClsLayerIds().forEach(id=>ids.push(id));  // A-layer surface classes
