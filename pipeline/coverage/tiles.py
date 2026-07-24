@@ -135,49 +135,25 @@ def export_geojsonl(conn, workdir):
 
 
 def build_pmtiles(layer_files, out_path):
-    """tippecanoe → one .pmtiles, one lowercase `<letter>_<cc>` layer per
-    (letter, country) so a cluster's members never straddle a national border
-    (coverage-provider.md §4)."""
+    """tippecanoe -> one .pmtiles, one lowercase `<letter>_<cc>` layer per
+    (letter, country) (coverage-provider.md §4). Individual points from z11 up —
+    NO clustering: a cluster's rendered centroid can sit outside a scoped region
+    (the phantom-bubble class), and individual points are scope-filtered exactly
+    (2026-07-24-coverage-no-cluster-design.md §2). Overview coverage is conveyed
+    by the rail /counts, not by tiles."""
     cmd = [
         "tippecanoe", "-o", str(out_path), "--force", "--quiet",
-        # minzoom 6 (was 8): the region-scoping scope selector fits the map to a
-        # region/country bbox, and All Belgium lands at ~z7 — below the old z8
-        # coverage floor, so every coverage dot vanished at that overview
-        # (region-scoping-design.md §7). z6 keeps coverage visible at the zooms
-        # the selector navigates to.
-        "--minimum-zoom", "6", "--maximum-zoom", "14",
-        # Cluster nearby POIs at low zoom into a single feature carrying a
-        # `point_count` (tippecanoe-injected) instead of tippecanoe's default
-        # point-thinning, which silently dropped ~99% of the points at overview
-        # zooms (23 of 2015 D-services survived at z8) so the map looked empty
-        # while the rail said 2015/2015. The client renders clustered features
-        # (point_count present) as a count bubble that breaks into individual
-        # icons as you zoom in (region-scoping-design.md §7; mirrors the
-        # confirmed-pin clusters). A cluster carries one member's ref/n/t +
-        # point_count, but the scope tokens ridtok/cctok are UNIONed across all
-        # members by --accumulate-attribute=concat below, so a bubble is scoped
-        # by its full member set, not one member's lottery-inherited region
-        # (region-scoping-design.md §7). `-r1` keeps EVERY point (no rate-based
-        # dropping — else clustering only merged the handful that survived the
-        # drop); --cluster-densest-as-needed merges (never drops) to fit tile
-        # size, so sum(point_count) at each zoom equals the full in-scope total.
-        "--cluster-distance", "20",
-        # Union the pipe-delimited membership tokens across a cluster's members
-        # (region-scoping-design.md §7): the bubble's ridtok becomes the
-        # concatenation of every member's "|<region_id>|", so the client tests
-        # scope-set membership ('|1|' in ridtok) instead of trusting one
-        # representative's rid. concat needs the attribute present on EVERY
-        # feature — tippecanoe aborts ("can't happen") on a missing one — which
-        # is why _universal_props emits '' (not NULL) for unstamped rows.
-        "--accumulate-attribute", "ridtok:concat",
-        "--accumulate-attribute", "cctok:concat",
-        # Cluster only at the overview zooms (z6–11); z12+ shows individual
-        # icons so a rider zoomed into a town sees the actual shops, not a
-        # bubble. Without this cap tippecanoe clusters up to maxzoom, so dense
-        # city POIs never broke apart even at z14.
-        "--cluster-maxzoom", "11",
+        # z11 floor: coverage renders as individual icons from a local zoom up;
+        # below z11 no tile exists, so the overview shows no coverage dots (the
+        # rail counts carry the "how much"). This also avoids the huge all-point
+        # low-zoom tiles that clustering used to compress
+        # (2026-07-24-coverage-no-cluster-design.md §3.1).
+        "--minimum-zoom", "11", "--maximum-zoom", "14",
+        # Keep every point at the built zooms; --drop-densest-as-needed is a pure
+        # tile-size safety valve for a pathologically dense z11 tile (its dropped
+        # overflow reappears at z12+), never rate-based thinning across all zooms.
         "-r1",
-        "--cluster-densest-as-needed",
+        "--drop-densest-as-needed",
     ]
     for (letter, cc) in sorted(layer_files):
         cmd += ["-L", f"{letter.lower()}_{cc.lower()}:{layer_files[(letter, cc)]}"]

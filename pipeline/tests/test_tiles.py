@@ -245,12 +245,7 @@ def test_verify_pmtiles_subprocess_failure_surfaces_diagnostics(tmp_path):
     assert "magic number" in msg      # go-pmtiles' captured stderr
 
 
-# ---- Low-zoom clustering (region-scoping-design.md §7) ----
-# The rail shows a coverage layer's full in-scope count ("D 2015/2015"), and the
-# TILES must represent that same set at overview zooms — as point_count clusters,
-# not tippecanoe's default point-thinning (which dropped ~99%, leaving the map
-# empty under a 2015 label). These tests pin the flags AND the emergent
-# behaviour: sum(point_count) == every input point, and the maxzoom cap.
+# ---- No clustering: individual points from z11 (2026-07-24-coverage-no-cluster-design.md §2) ----
 
 def _tile_xy(lon: float, lat: float, z: int) -> tuple[int, int]:
     n = 2 ** z
@@ -262,153 +257,63 @@ def _decode_layer(path, z: int, x: int, y: int, layer: str) -> list:
     """tippecanoe-decode one tile → the features of one named vector layer.
 
     Output shape (tippecanoe-decode): a top FeatureCollection whose `features`
-    are per-layer FeatureCollections, each tagged `properties.layer`."""
-    doc = json.loads(tiles._run(
-        ["tippecanoe-decode", str(path), str(z), str(x), str(y)], text=True))
+    are per-layer FeatureCollections, each tagged `properties.layer`. A tile
+    outside the archive's zoom range (e.g. z6 below the z11 coverage floor)
+    decodes as an empty stdout, not JSON — treat that the same as "no such
+    tile", not a parse error."""
+    raw = tiles._run(["tippecanoe-decode", str(path), str(z), str(x), str(y)], text=True)
+    if not raw.strip():
+        return []
+    doc = json.loads(raw)
     for lyr in doc.get("features", []):
         if lyr.get("properties", {}).get("layer") == layer:
             return lyr.get("features", [])
     return []
 
 
-def test_build_command_carries_clustering_flags(tmp_path, monkeypatch):
-    # The overview-clustering flags are load-bearing: -r1 keeps every point,
-    # cluster-distance/maxzoom group at low zoom only, cluster-densest fits tile
-    # size by MERGING not dropping. Pin them so a future edit can't silently fall
-    # back to point-thinning (--drop-densest-as-needed), which is exactly the
-    # regression this round fixed.
+def test_build_command_has_no_clustering_and_minzoom_11(tmp_path, monkeypatch):
+    # Coverage is rendered as INDIVIDUAL points from z11 up, never clustered
+    # (2026-07-24-coverage-no-cluster-design.md §3.1): a cluster's rendered
+    # centroid can sit outside a scoped region (the phantom-bubble class), and
+    # individual points are scope-filtered exactly. So the build must carry NO
+    # cluster/accumulate flags and start at zoom 11.
     captured = {}
     monkeypatch.setattr(tiles.subprocess, "run",
                         lambda cmd, check=True: captured.setdefault("cmd", cmd))
     tiles.build_pmtiles({("D", "BE"): tmp_path / "d.geojsonl"}, tmp_path / "o.pmtiles")
     cmd = captured["cmd"]
-    assert "-r1" in cmd, "must keep every point (no rate-based dropping)"
-    assert "--cluster-densest-as-needed" in cmd
-    assert "--drop-densest-as-needed" not in cmd, "dropping must NOT return"
-    for flag, val in [("--cluster-distance", "20"), ("--cluster-maxzoom", "11"),
-                      ("--minimum-zoom", "6"), ("--maximum-zoom", "14")]:
+    for flag, val in [("--minimum-zoom", "11"), ("--maximum-zoom", "14")]:
         assert flag in cmd and cmd[cmd.index(flag) + 1] == val, f"{flag} {val}"
-    # The scope tokens MUST be unioned across a cluster's members (finding 2):
-    # without these a bubble would inherit one member's region, so a region scope
-    # admits/hides the whole bubble on a lottery.
-    assert "ridtok:concat" in cmd, "cluster bubbles must union member region tokens"
-    assert "cctok:concat" in cmd, "cluster bubbles must union member country tokens"
+    for absent in ("--cluster-distance", "--cluster-maxzoom",
+                   "--cluster-densest-as-needed", "ridtok:concat", "cctok:concat"):
+        assert absent not in cmd, f"clustering must be gone: {absent}"
+    assert "-r1" in cmd, "keep every point at the built zooms"
+    # Safety valve only: a pathologically dense z11 tile may drop its densest
+    # overflow (recovered at z12+); never rate-based thinning across all zooms.
+    assert "--drop-densest-as-needed" in cmd
 
 
-def test_clustering_represents_every_point_within_one_tile_at_low_zoom(tmp_path):
-    # 60 D-services packed into a ~0.02° box near Brussels, ALL inside one z6
-    # tile. At z6 (below the cluster-maxzoom cap) tippecanoe MUST cluster them
-    # into point_count features whose counts sum to EXACTLY 60 — proving nothing
-    # is dropped (the -r1 + cluster-densest promise).
-    #
-    # SCOPE OF THE INVARIANT: conservation is PER TILE, not global. Tippecanoe's
-    # default 5/256 feature buffer duplicates points within the seam strip into
-    # both adjacent tiles' clusters, so summing point_count across tiles that
-    # straddle a seam OVERSHOOTS the input (finding 3). The box here is chosen to
-    # sit wholly inside a single tile so no seam duplication is in play; the rail
-    # /map/coverage/counts (exact SQL, buffer-free) — not a cross-tile bubble sum
-    # — is the authoritative total the client shows.
+def test_no_clusters_individual_points_from_z11(tmp_path):
+    # 60 D-services in a ~0.02 deg box near Brussels. There must be NO z6-10
+    # tiles (minzoom 11), and at z11 every feature is an INDIVIDUAL point — no
+    # point_count cluster anywhere (2026-07-24-coverage-no-cluster-design.md §2).
     n = 60
     rows = [(4.34 + (i % 10) * 0.002, 50.84 + (i // 10) * 0.002,
              {"ref": f"node/{i}", "t": "Bike shop", "kind": "shop"})
             for i in range(n)]
-    out = tmp_path / "cl.pmtiles"
+    out = tmp_path / "nc.pmtiles"
     tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
 
-    x, y = _tile_xy(4.35, 50.85, 6)
-    feats = _decode_layer(out, 6, x, y, "d_be")
-    assert feats, "z6 tile must contain the packed points"
-    # unclustered feature = 1 point; clustered = point_count members.
-    total = sum(f["properties"].get("point_count", 1) for f in feats)
-    assert total == n, f"clustering must represent all {n} points at z6, got {total}"
-    assert any("point_count" in f["properties"] for f in feats), \
-        "such a dense box must yield at least one point_count cluster at z6"
+    # No overview tiles: z6 must be empty for this layer.
+    x6, y6 = _tile_xy(4.35, 50.85, 6)
+    assert _decode_layer(out, 6, x6, y6, "d_be") == [], "no coverage below z11"
 
-
-def test_cluster_unions_member_region_tokens(tmp_path):
-    # Finding 2: a bubble must carry the UNION of its members' region tokens, so
-    # `'|<id>|' in ridtok` answers "does any member fall in this region?" instead
-    # of trusting one lottery-chosen representative. Pack 40 points alternating
-    # region 1 / 23 (all cc BE) into one z6 tile; the cluster's ridtok must
-    # contain BOTH tokens and its cctok the country token.
-    rows = []
-    for i in range(40):
-        rid = 1 if i % 2 == 0 else 23
-        rows.append((4.34 + (i % 10) * 0.002, 50.84 + (i // 10) * 0.002,
-                     {"ref": f"node/{i}", "t": "Bike shop",
-                      "ridtok": f"|{rid}|", "cctok": "|BE|"}))
-    out = tmp_path / "u.pmtiles"
-    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
-
-    x, y = _tile_xy(4.35, 50.85, 6)
-    clusters = [f for f in _decode_layer(out, 6, x, y, "d_be")
-                if "point_count" in f["properties"]]
-    assert clusters, "dense box must cluster at z6"
-    unioned = next(f for f in clusters if f["properties"]["point_count"] > 1)
-    ridtok = unioned["properties"]["ridtok"]
-    assert "|1|" in ridtok and "|23|" in ridtok, \
-        f"bubble must union both member regions, got {ridtok!r}"
-    assert "|BE|" in unioned["properties"]["cctok"]
-    # No false positive: a region not present must NOT match.
-    assert "|99|" not in ridtok
-
-
-def test_cluster_tokens_survive_rid_less_members(tmp_path):
-    # concat aborts tippecanoe on a MISSING attribute; _universal_props emits ''
-    # (not NULL) for unstamped rows so a cluster mixing stamped + rid-less members
-    # (the 206-boundary-row shape) still builds, and the empty tokens contribute
-    # nothing to the union (finding 5 + the concat-abort guard).
-    rows = []
-    for i in range(30):
-        stamped = i % 3 != 0
-        rows.append((4.34 + (i % 6) * 0.002, 50.84 + (i // 6) * 0.002,
-                     {"ref": f"node/{i}", "t": "Bike shop",
-                      "ridtok": ("|7|" if stamped else ""), "cctok": "|BE|"}))
-    out = tmp_path / "m.pmtiles"
-    # Builds without tippecanoe's "can't happen" concat abort.
-    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
-    x, y = _tile_xy(4.35, 50.85, 6)
-    clusters = [f for f in _decode_layer(out, 6, x, y, "d_be")
-                if "point_count" in f["properties"]]
-    assert clusters, "dense box must cluster at z6"
-    ridtok = clusters[0]["properties"]["ridtok"]
-    assert "|7|" in ridtok            # stamped members present
-    assert "||" not in ridtok or ridtok.count("|") % 2 == 0  # empties add no stray delimiter
-
-
-def test_z11_is_still_clustered_the_cap_boundary(tmp_path):
-    # The cluster-maxzoom=11 boundary is inclusive: z11 still clusters, z12 does
-    # not (finding 19 — the tests pinned z6 and z12 but never the z11 edge the
-    # flag literal alone guards). 60 packed points, same box as the z6 test.
-    n = 60
-    rows = [(4.34 + (i % 10) * 0.0002, 50.84 + (i // 10) * 0.0002,
-             {"ref": f"node/{i}", "t": "Bike shop"}) for i in range(n)]
-    out = tmp_path / "z11.pmtiles"
-    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
-    x, y = _tile_xy(4.34, 50.84, 11)
-    feats = _decode_layer(out, 11, x, y, "d_be")
-    assert feats, "z11 tile must contain the packed points"
-    assert any("point_count" in f["properties"] for f in feats), \
-        "z11 is at (not above) --cluster-maxzoom=11 → must still cluster"
-
-
-def test_cluster_maxzoom_leaves_high_zoom_individual(tmp_path):
-    # Above --cluster-maxzoom=11, features render individually (no point_count),
-    # so a rider zoomed into a town sees the actual POIs, not a bubble. Few,
-    # tightly-grouped points so the z12 tile is nowhere near the size limit
-    # (cluster-densest never fires) and the ONLY reason to cluster would be the
-    # distance rule — which the maxzoom cap disables at z12.
-    rows = [(4.350 + (i % 5) * 0.001, 50.850 + (i // 5) * 0.001,
-             {"ref": f"node/{i}", "t": "Bike shop", "kind": "shop"})
-            for i in range(15)]
-    out = tmp_path / "hz.pmtiles"
-    tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
-
-    x, y = _tile_xy(4.351, 50.851, 12)
-    feats = _decode_layer(out, 12, x, y, "d_be")
-    assert feats, "z12 tile must contain the grouped points"
-    assert all("point_count" not in f["properties"] for f in feats), \
-        "z12 is above --cluster-maxzoom=11 → every feature must be individual"
+    # z11: individual points, none carrying point_count.
+    x11, y11 = _tile_xy(4.35, 50.85, 11)
+    feats = _decode_layer(out, 11, x11, y11, "d_be")
+    assert feats, "z11 tile must carry the individual points"
+    assert not any("point_count" in f["properties"] for f in feats), \
+        "no clusters — every coverage feature is an individual point"
 
 
 def test_extra_sql_tag_keys_are_pinned_to_the_contract_constant():
