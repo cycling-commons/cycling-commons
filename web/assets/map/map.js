@@ -112,33 +112,60 @@
   // race token stops a slow response repainting after a newer scope switch.
   let _spotReq = 0;
   function clearSpotlight(){
-    ['region-mask','region-line'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-    ['region-mask','region'].forEach(id=>{ if(map.getSource(id)) map.removeSource(id); });
+    ['region-mask','region-adj-mask','region-line'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    ['region-mask','region-adj-mask','region'].forEach(id=>{ if(map.getSource(id)) map.removeSource(id); });
   }
   function setSpotlight(slug){
     if(!map.getStyle()) return;
     const req = ++_spotReq;
     clearSpotlight();
     if(!slug) return;   // country / everywhere: no single-region spotlight
-    fetch(`/map/region/${encodeURIComponent(slug)}/boundary`)
-      .then(r=>{ if(!r.ok) throw new Error('boundary HTTP '+r.status); return r.json(); }).then(d=>{
+    // Three-tier spotlight (item 4 Part C, 2026-07-24-region-adjacency-and-click-refinement-design.md §8):
+    // the active region's adj neighbours (CC_REGIONS) render at a lighter mask
+    // tone than the outside world, so the regions the rider can jump to are
+    // visible. Their union comes from /map/scope/boundary?rids=<adj> (the same
+    // cached ST_Union the country spotlight uses). The adj fetch degrades to null
+    // (two-tone) on any failure so it can never lose the active spotlight.
+    const reg = CC_REGIONS.find(r=>r.slug===slug);
+    const adjIds = (reg && reg.adj) || [];
+    const adjP = adjIds.length
+      ? fetch(`/map/scope/boundary?rids=${adjIds.join(',')}`)
+          .then(r=> r.status===204||!r.ok ? null : r.json()).catch(()=>null)
+      : Promise.resolve(null);
+    Promise.all([
+      fetch(`/map/region/${encodeURIComponent(slug)}/boundary`)
+        .then(r=>{ if(!r.ok) throw new Error('boundary HTTP '+r.status); return r.json(); }),
+      adjP,
+    ]).then(([d, a])=>{
         const g = d && d.geometry;
         if(req!==_spotReq||!g||!map.getStyle()||map.getSource('region')) return;   // superseded or gone
-        drawSpotlightMask(g);
+        drawSpotlightMask(g, a && a.geometry);
       // decorative only — the map works without the boundary, but log why it's missing (W34)
       }).catch(e=>console.warn('Region boundary unavailable:', e));
   }
 
   // Shared mask painter: dim the world outside `g` + a dashed outline. Used by
   // the named-region and country spotlights; the My-area circle keeps its own
-  // soft-edge variant (region-scoping-design.md §4 anti-border cue).
-  function drawSpotlightMask(g){
-    const polys = g.type==='MultiPolygon' ? g.coordinates : [g.coordinates];
+  // soft-edge variant (region-scoping-design.md §4 anti-border cue). When
+  // `adjUnion` (the active region's adj-neighbour union geometry) is given, those
+  // neighbours are punched out of the dark mask and given a lighter middle tone —
+  // the three-tier spotlight (2026-07-24-region-adjacency-and-click-refinement-design.md §8).
+  function drawSpotlightMask(g, adjUnion){
+    const outerRings = geo => (geo.type==='MultiPolygon' ? geo.coordinates : [geo.coordinates]).map(p=>p[0]);
     const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
-    const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...polys.map(p=>p[0])]}};
+    const adjRings = adjUnion ? outerRings(adjUnion) : [];
+    // Dark mask: world with BOTH the active region and its neighbours punched out,
+    // so the outside stays fully dim while active + adjacent are clear of it.
+    const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...outerRings(g),...adjRings]}};
     map.addSource('region-mask',{type:'geojson',data:mask});
     map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
     map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
+    // Middle tone over the adjacent union ONLY (the active region is not in it, so
+    // it stays fully clear): lighter than the 0.22 outside, darker than active.
+    if(adjUnion){
+      map.addSource('region-adj-mask',{type:'geojson',data:{type:'Feature',geometry:adjUnion}});
+      map.addLayer({id:'region-adj-mask',type:'fill',source:'region-adj-mask',paint:{'fill-color':'#101E16','fill-opacity':0.10}});
+    }
     map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
   }
   // Country spotlight (2026-07-22-coverage-scope-rendering-design.md §B): the
