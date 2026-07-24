@@ -306,6 +306,18 @@ def test_full_membership_recomputes_whole_slice(db, monkeypatch):
         "COVERAGE_FULL_MEMBERSHIP=1 restamps the whole slice"
 
 
+def test_ensure_schema_gated_extension_still_builds_schema(db, monkeypatch):
+    """With COVERAGE_ENSURE_EXTENSION=0 the privileged CREATE EXTENSION step is
+    skipped (devops installs it at cluster init) yet the table + all indexes are
+    still built (design §3.6). pg_trgm already exists in public via the fixture."""
+    monkeypatch.setenv("COVERAGE_ENSURE_EXTENSION", "0")
+    ensure_schema(db)
+    idx = {r[0] for r in db.execute(
+        "SELECT indexname FROM pg_indexes WHERE schemaname = 'coverage_pytest'").fetchall()}
+    assert {"coverage_poi_geom_idx", "coverage_poi_name_trgm_idx",
+            "coverage_poi_src_region_id_idx"} <= idx
+
+
 def test_load_region_exact_drift_boundary_does_not_abort(db):
     """A drop of exactly DRIFT_ABORT_RATIO is allowed: the guard is strict <."""
     ensure_schema(db)

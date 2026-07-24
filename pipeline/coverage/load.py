@@ -148,16 +148,19 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
 """
 
 _INDEX_DDL = (
-    "CREATE INDEX IF NOT EXISTS coverage_poi_geom_idx ON coverage_poi USING gist (geom)",
-    "CREATE INDEX IF NOT EXISTS coverage_poi_letter_idx ON coverage_poi (letter)",
-    "CREATE INDEX IF NOT EXISTS coverage_poi_region_id_idx ON coverage_poi (region_id)",
+    # CONCURRENTLY so an absent index never takes a blocking lock mid-harvest on
+    # the shared prod cluster (design §3.6); requires autocommit (ensure_schema
+    # toggles it). IF NOT EXISTS keeps the bootstrap idempotent.
+    "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_geom_idx ON coverage_poi USING gist (geom)",
+    "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_letter_idx ON coverage_poi (letter)",
+    "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_region_id_idx ON coverage_poi (region_id)",
     # country_code arm of /map/coverage/search|nearby|counts (region-scoping-design.md §3, §6):
     # this table is pipeline-owned, so its index lands here, not in web/migrations.
-    "CREATE INDEX IF NOT EXISTS coverage_poi_country_code_idx ON coverage_poi (country_code)",
-    "CREATE INDEX IF NOT EXISTS coverage_poi_name_trgm_idx ON coverage_poi USING gin (name gin_trgm_ops)",
+    "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_country_code_idx ON coverage_poi (country_code)",
+    "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_name_trgm_idx ON coverage_poi USING gin (name gin_trgm_ops)",
     # src_region_id is the per-region atomic-swap key (previous-count / DELETE /
     # membership backfills all filter on it), so index it.
-    "CREATE INDEX IF NOT EXISTS coverage_poi_src_region_id_idx ON coverage_poi (src_region_id)",
+    "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_src_region_id_idx ON coverage_poi (src_region_id)",
 )
 
 # Staging carries every per-row column EXCEPT src_region_id: the whole batch
@@ -191,21 +194,37 @@ class LoadResult:
 
 
 def ensure_schema(conn: psycopg.Connection) -> None:
-    """Idempotent bootstrap: pg_trgm guard + coverage_poi table and indexes."""
-    try:
-        conn.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
-    except (psycopg.errors.InsufficientPrivilege, psycopg.errors.UndefinedFile) as exc:
-        conn.rollback()
-        raise RuntimeError(
-            "pg_trgm is required for coverage name search but could not be installed "
-            f"({exc}). Install it as a privileged role first — dev: developers/docker/db/init, "
-            "prod: the DB-extensions bootstrap note in developers/docker/README.md."
-        ) from exc
+    """Idempotent bootstrap: pg_trgm guard + coverage_poi table and indexes.
+
+    The privileged CREATE EXTENSION is gated behind COVERAGE_ENSURE_EXTENSION
+    (default on; set 0 in prod where devops creates the extension at cluster
+    init, so the harvest role needs no superuser). Indexes build CONCURRENTLY —
+    an absent index never takes a blocking lock mid-harvest — which requires
+    autocommit (CONCURRENTLY cannot run in a txn block). A failed CONCURRENTLY
+    build leaves an INVALID index to drop + rebuild; acceptable for a bootstrap
+    that only creates indexes on a brand-new cluster (design §3.6)."""
+    if os.environ.get("COVERAGE_ENSURE_EXTENSION", "1") != "0":
+        try:
+            conn.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
+        except (psycopg.errors.InsufficientPrivilege, psycopg.errors.UndefinedFile) as exc:
+            conn.rollback()
+            raise RuntimeError(
+                "pg_trgm is required for coverage name search but could not be installed "
+                f"({exc}). Install it as a privileged role first — dev: developers/docker/db/init, "
+                "prod: the DB-extensions bootstrap note in developers/docker/README.md."
+            ) from exc
     conn.execute(_SOURCE_DDL)
     conn.execute(_TABLE_DDL)
-    for stmt in _INDEX_DDL:
-        conn.execute(stmt)
     conn.commit()
+    # CREATE INDEX CONCURRENTLY cannot run inside a transaction block, so run the
+    # index loop in autocommit (each stmt its own txn) and restore after.
+    prev_autocommit = conn.autocommit
+    conn.autocommit = True
+    try:
+        for stmt in _INDEX_DDL:
+            conn.execute(stmt)
+    finally:
+        conn.autocommit = prev_autocommit
 
 
 def load_region(
