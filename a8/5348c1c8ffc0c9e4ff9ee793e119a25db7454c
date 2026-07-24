@@ -1,0 +1,34 @@
+pipeline/tests/test_load.py
+  s_682a9751eecf44::t_186fe4f641af1a 272-306
+  s_9ffa9941584642::t_2b8ae1bf54469a 307-308
+pipeline/coverage/load.py
+  s_682a9751eecf44::t_fb1edb392cca70 370-376,378-395
+  s_682a9751eecf44::t_56aa239e510a5c 412-424
+  s_682a9751eecf44::t_65af1f874f0664 457,466
+  s_682a9751eecf44::t_0fb37fbf2426df 433,439
+  s_682a9751eecf44::t_508d30bab5a63d 485,491
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "a85348c1c8ffc0c9e4ff9ee793e119a25db7454c",
+  "prompts": {},
+  "sessions": {
+    "s_682a9751eecf44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ca5d106-ef5e-44e4-a6ed-d2c075fa66b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_9ffa9941584642": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "924887d7-4051-48be-a7fc-6b4f62397130",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
