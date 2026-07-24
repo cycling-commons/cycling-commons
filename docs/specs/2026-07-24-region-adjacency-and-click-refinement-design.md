@@ -386,8 +386,9 @@ world-rectangle edge — invisible until zoomed out enough to see it. Fixed by
 forcing every mask hole clockwise (`area(ring) > 0 ? reverse : ring`).
 
 **Style (same request):** middle tone `0.10 → 0.13` (a touch darker); a fainter
-dashed outline `region-adj-line` (width 1 / opacity 0.45, vs the active
-`region-line` 2.5 / 0.95) marks the lightened neighbours.
+dashed outline `region-adj-line` (width 1.5 / opacity 0.7 / dash [2,1.5], vs the
+active `region-line` 2.5 / 0.95 — clear but subordinate) marks the lightened
+neighbours.
 
 **Per-neighbour borders (follow-up):** the union-perimeter outline hid the
 borders *between* neighbours. Now the middle-tone fill + outline come from a
