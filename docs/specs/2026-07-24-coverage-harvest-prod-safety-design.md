@@ -77,6 +77,17 @@ term that can OOM a co-tenant; capping it here is load-bearing, not tuning.
 Defaults are conservative; devops overrides via the coverage env file. Values
 pass through verbatim as PostgreSQL settings (validated by Postgres on `SET`).
 
+**The batch connection runs in autocommit** (`conn.autocommit = True` set right
+after connect). This is required for the above timeouts to be correct: the
+read-only phases (export COPYs, the manifest `counts` query) must not leave a
+transaction open across the long, non-DB tile build/verify/upload phases —
+otherwise the connection sits *idle in transaction* for minutes and
+`idle_in_transaction_session_timeout` kills it (found end-to-end on the fixture
+run, not by unit tests). In autocommit the ONLY transactions are `load_region`'s
+explicit `with conn.transaction()` swaps — exactly what the idle/statement
+timeouts should be guarding — and `load_region`'s `transaction()` behaves
+identically whether the connection is autocommit or not.
+
 ### 3.2 Advisory lock — single-run guard (gap: concurrent runs)
 
 `run.main()` takes a **session-level** `pg_try_advisory_lock(COVERAGE_LOCK_KEY)`
