@@ -408,8 +408,8 @@ the newest rung of that same ladder.
   [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md)
   §7); tile contract: [coverage-provider.md](coverage-provider.md) §4.
 - **Selected coverage POI stays visible on zoom-out:** a coverage POI's icon is
-  drawn only by its tile `<key>-<cc>-cov` layer, which the z11 minzoom hides
-  on zoom-out — so zooming out past z11 with a coverage POI selected would
+  drawn only by its tile `<key>-<cc>-cov` layer, which the z9 minzoom hides
+  on zoom-out — so zooming out past z9 with a coverage POI selected would
   leave the halo ringing empty space (the heatmap conveys density, not the
   selected feature itself, so it doesn't fill that gap). A single-feature
   GeoJSON overlay (`cov-sel` source + `cov-sel-icon` layer) redraws the

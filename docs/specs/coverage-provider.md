@@ -415,14 +415,15 @@ sample of points (`--drop-densest-as-needed`, above), and the client draws
 that sample as a **coverage-density heatmap** instead of individual icons —
 a smooth surface fills the overview zoom that the earlier z11-floor build had
 left empty, with the rail's exact `/map/coverage/counts` still carrying the
-precise "how much" alongside it. From z11 up, `-r1` keeps EVERY point (no
-rate-based thinning), so every POI in the viewport's tile renders as an
-individual icon immediately — there is no bubble step and no "features stop
-counting down" transition to explain; a POI is visible from the first zoom
-its tile can render, full stop (`2026-07-24-coverage-no-cluster-design.md`
-§2). The heatmap and the icons **cross-fade at z11** (heat layer `maxzoom
-11`, icon layer `minzoom 11`)
-(`2026-07-24-coverage-overview-heatmap-design.md` §2–§3.2). This replaces an
+precise "how much" alongside it. Individual icons render **from z9 up** (owner
+tuning 2026-07-24 lowered the handoff from z11 so the spots show at the
+region-fit landing zoom): the z9–10 icons come from the **thinned** z6–10 tile
+sample and densify to **complete** at z11–14, where `-r1` keeps every point —
+there is no bubble step and no "features stop counting down" transition to
+explain. The heatmap and the icons **cross-fade at ~z9** (heat layer `maxzoom
+9`, icon layer `minzoom 9`)
+(`2026-07-24-coverage-overview-heatmap-design.md` §2–§3.2 + its Tuning note).
+This replaces an
 earlier measured cluster zoom-table for one spot (Schwaan, DE) that
 characterised bubble-dissolution behaviour which no longer exists.
 
@@ -484,10 +485,12 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   per-country layers to wire without probing the tile itself.
 - **Client per-country layer wiring** (`web/assets/map/map.js` `addCoverage`):
   iterates every coverage letter × the manifest's `country_codes` plus a fixed
-  `zz` bucket, building one icon layer `<key>-<cc>-cov` (`minzoom: 11`,
-  belt-and-braces with the tile's own `--minimum-zoom 11`) bound to the
-  matching `<letter>_<cc>` source-layer — there is no `-cov-cl` cluster-bubble
-  sublayer to wire (`2026-07-24-coverage-no-cluster-design.md` §3.2).
+  `zz` bucket, building one icon layer `<key>-<cc>-cov` (`minzoom: 9`, so the
+  spots show from the region-fit landing zoom; the tiles themselves build from
+  `--minimum-zoom 6`) plus a `<key>-<cc>-heat` heatmap layer (`maxzoom: 9`) on
+  the same `<letter>_<cc>` source-layer — there is no `-cov-cl` cluster-bubble
+  sublayer to wire (`2026-07-24-coverage-no-cluster-design.md` §3.2,
+  `2026-07-24-coverage-overview-heatmap-design.md` §3.2).
   `updateCoverageScopeFilter` iterates the same product so the `ridtok`/`cctok`
   scope filter (this section, above) applies to every per-country layer.
   **`[null]` fallback:** a manifest with no `country_codes` (a pre-split
@@ -543,12 +546,14 @@ itemId?}`.
   the map, revealed progressively as you zoom — the client does NOT count
   viewport-rendered tiles, which would read a confusing near-zero at overview
   zooms; `map.js covShownCount`). So a coverage layer reads N/N when on,
-  0/N when toggled off or mode-hidden — matching the served layers. **Below the
-  coverage minzoom (z11) the layer reads its full N/N while nothing renders** — a
-  large country fitted below z11 (e.g. Germany ~z5.8) has no coverage geometry
-  yet; the count is honest (every POI IS in scope), the pixels arrive on
-  zoom-in (`2026-07-24-coverage-no-cluster-design.md` §2, superseding the
-  earlier z6 minzoom this line documented).
+  0/N when toggled off or mode-hidden — matching the served layers. **At an
+  overview zoom the layer reads its full N/N even though no individual icons
+  render** — the icons appear from z9 (a large country fitted below that, e.g.
+  Germany ~z5.8, shows the density **heatmap** instead, z6–~9); the count is
+  honest (every POI IS in scope), the icon pixels arrive on zoom-in
+  (`2026-07-24-coverage-no-cluster-design.md` §2 +
+  `2026-07-24-coverage-overview-heatmap-design.md` §2 with its Tuning note,
+  superseding the earlier z6/z11 minzoom this line documented).
   Params are client-sent only (the plane is anonymous + cacheable — never
   server-resolved from a user); `rids` is de-duped by numeric value (zero-padded
   duplicates collapse), sorted, overflow/garbage rejected to the empty scope, and
