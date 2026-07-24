@@ -1,6 +1,6 @@
 # Coverage rendering without clustering — design
 
-**Status:** approved 2026-07-24, not yet implemented.
+**Status:** approved 2026-07-24, executed 2026-07-24 (§9 execution notes).
 **Supersedes:** the low-zoom coverage clustering of
 [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md)
 §7 and the `minzoom 6` overview-coverage decision in `pipeline/coverage/tiles.py`.
@@ -149,3 +149,26 @@ they remain the scope-filter keys; only the cross-cluster accumulation is gone.
   trailers. Explicit pathspecs only.
 - First lines: `.py` SPDX header as in the file; `.js` SPDX first line.
 - Section refs doc-qualified (never bare `§N`).
+
+## 9. Execution notes
+
+- **Pipeline:** `build_pmtiles` now runs with `--minimum-zoom 11`, no cluster
+  or accumulate-attribute flags, `-r1` + `--drop-densest-as-needed`.
+  `pipeline/tests/test_tiles.py` 13 passed; full pipeline suite 83 passed.
+  (Commit 5588a67.)
+- **Client:** the coverage `-cl` cluster sublayer and `covClusterFilter`/
+  `covClusterIcon` are removed; the icon layer is `minzoom: 11`.
+  `make scope-test` 119/119 (unchanged — `scope.js` untouched). (Commit
+  2555460.)
+- **Re-tile:** `make coverage-refresh` published `20260724-1409.pmtiles`
+  (app serves it). Tile-level verification: `pmtiles show` reports
+  `min zoom: 11`; a z11 German shelter tile carries 21 individual features
+  with **0** `point_count`; the z7 tile is absent; bounds reach lng 15 / lat
+  55 (Germany present).
+- **Browser (0 console errors):** Hesse overview z8 shows **zero** coverage
+  dots anywhere (phantom class eliminated; rail counts carry it); Hesse z13
+  inside the region shows individual coverage icons with no bubbles; Bavaria
+  overview z7.5 shows zero dots (no spill into neighbours) — the second
+  phantom case, also clean.
+- **Prod deploy:** re-tile via `make coverage-refresh`; no DB migration, no
+  re-harvest.
