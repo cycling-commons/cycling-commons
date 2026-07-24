@@ -932,11 +932,10 @@
   // Region scope filter for the coverage tile layers (Phase 3,
   // region-scoping-design.md §6). Scope keys are pipe-delimited membership
   // TOKENS, not scalars: ridtok = "|<region_id>|" (empty when unstamped), cctok
-  // = "|<cc>|". tippecanoe UNIONs them across a cluster's members
-  // (--accumulate-attribute=concat), so a bubble's ridtok holds EVERY member's
-  // region and `'|id|' in ridtok` answers "does any member fall in scope?" — no
-  // lottery-inherited rid (finding 2). The identical test works on an individual
-  // icon (a single token), so one filter serves both sublayers.
+  // = "|<cc>|" — one token pair per feature, never unioned. Coverage renders as
+  // individual points only, no clusters (2026-07-24-coverage-no-cluster-design.md
+  // §2), so `'|id|' in ridtok` answers "is THIS point in scope?" exactly, per
+  // feature — no cluster-member aggregation to worry about (finding 2 is moot).
   //
   // DELIBERATELY the inverse of the leak-safe rule updateHeatFilter()/inScope()
   // use for served data: a PROP-LESS feature (ridtok AND cctok both empty)
@@ -955,11 +954,6 @@
   // in this IIFE. Falls back to a null filter if scope.js is somehow absent.
   function covScopeFilter(){
     return window.CCScope && window.CCScope.coverageTileFilter ? window.CCScope.coverageTileFilter() : null;
-  }
-  // A coverage layer's shared scope base (scope only). Every setFilter on a
-  // *-cov layer composes from here so no arm is ever dropped by another.
-  function covScopeBase(){
-    const f=['all']; const sc=covScopeFilter(); if(sc) f.push(sc); return f;
   }
   // Icon base = scope + the curated-ref dedupe (icons can be exact curated twins).
   function covBaseFilter(){
@@ -1163,7 +1157,7 @@
     const layer=layerByKey[key];
     const feat=p=>key==='water' ? waterDrawer(p, ll) : osmDrawer(layer, p, ll, COV_SRC[key]);
     openDrawer(layer, feat(covProps(key, tp, null)));
-    showSelectedCoverageIcon(key, tp, ll);   // keep the icon visible after openDrawer's clear, incl. when the tile clusters it away on zoom-out
+    showSelectedCoverageIcon(key, tp, ll);   // keep the icon visible after openDrawer's clear, incl. when the z11 minzoom hides it on zoom-out
     if(!tp.ref) return;
     const myReq=++_covReq;
     fetch('/map/coverage/poi/'+tp.ref, {headers:{'Accept':'application/json'}})
@@ -1194,7 +1188,7 @@
           return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
         });
         if(!drawn) revealPinAt(layer, ll);
-        else showSelectedCoverageIcon(key, {kind:d&&d.kind}, lo);   // drawn: keep the icon visible when the tile clusters it away on zoom-out (matches the drawer's unknown-potability droplet for water opened without a tile prop)
+        else showSelectedCoverageIcon(key, {kind:d&&d.kind}, lo);   // drawn: keep the icon visible when the z11 minzoom hides it on zoom-out (matches the drawer's unknown-potability droplet for water opened without a tile prop)
       };
     // Non-OSM refs (manual: rider adds, fx: seeds) have no coverage detail —
     // /map/coverage/poi serves node|way only. Open the minimal drawer with the
@@ -1895,9 +1889,10 @@
   // confirmed/clustered stays are filtered in updateConfMarkers().
   function applyStaysAccessFilter(){
     // Coverage stays' individual icons narrow on the flat `acc` tile prop
-    // (coverage-provider.md §6) — the dedupe + region-scope + unclustered arms
-    // (covIconFilter) are the base and must survive every setFilter. The acc
-    // narrow applies to icons only, not the cluster bubbles (see covIconFilter).
+    // (coverage-provider.md §6) — the dedupe + region-scope arms (covIconFilter)
+    // are the base and must survive every setFilter. The acc narrow composes
+    // over the single coverage icon layer only (no cluster bubbles exist for
+    // coverage, per 2026-07-24-coverage-no-cluster-design.md §2).
     const extra = activeAccess.size===ALL_ACCESS.size ? null
       : ['in', ['get','acc'], ['literal', Array.from(activeAccess)]];
     // stays split per country (Task 4): narrow every stays-<cc>-cov icon layer,
