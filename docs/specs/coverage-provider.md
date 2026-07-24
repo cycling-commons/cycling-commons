@@ -315,28 +315,41 @@ Per region in `COVERAGE_REGIONS`, independently:
 After all regions, once per run:
 
 5. **Export** per-letter newline-delimited GeoJSON from the full index.
-6. **Build tiles** with tippecanoe: one layer per letter, `--minimum-zoom 11 /
+6. **Build tiles** with tippecanoe: one layer per letter, `--minimum-zoom 6 /
    --maximum-zoom 14`, direct `.pmtiles` output
    (`pipeline/coverage/tiles.py::build_pmtiles`). Tiles carry **individual
-   points only — no clustering**
+   points only, z6–14 — no clustering**
    (`2026-07-24-coverage-no-cluster-design.md` §2–§3.1, which supersedes the
-   `minzoom 6` low-zoom cluster-bubble build this section used to describe).
-   `-r1` keeps EVERY point at the built zooms (no rate-based thinning);
-   `--drop-densest-as-needed` is kept only as a **tile-size safety valve** for
-   a pathologically dense z11 tile — any drop there reappears at z12+, it
-   never merges points into a `point_count` feature. There is no
-   `--cluster-distance`, `--cluster-maxzoom`, or `--accumulate-attribute`
-   flag: each feature keeps its own single `ridtok`/`cctok` token (no
-   cross-cluster union), so the scope filter (§4/§6) is **exact per point** at
-   any zoom, worldwide — a single point's token is its own region, so no
-   tile attribute can render it outside its scope. Below z11 no tiles exist
-   at all, so **overview coverage is conveyed by the rail's
-   `/map/coverage/counts`, never by the tiles** — a rider sees the region
-   spotlight + exact counts at overview zoom, and individual dots only from
-   z11 upward. (The prior cluster-bubble design rendered a cluster at the
-   *centroid* of its members, which could sit outside the scoped region —
-   the phantom-bubble class the no-cluster design eliminates; see
-   `2026-07-24-coverage-no-cluster-design.md` §1.)
+   old `minzoom 6` low-zoom cluster-bubble build this section used to
+   describe, and `2026-07-24-coverage-overview-heatmap-design.md` §3.1, which
+   put the `minzoom 6` floor back for an unrelated reason — an overview
+   density heatmap, not clusters). `-r1` keeps EVERY point at z11–14 (no
+   rate-based thinning), so those tiles stay **complete** for the individual
+   icons — a z11 tile is small enough that `--drop-densest-as-needed` never
+   fires there, so nothing drops at z11 or above. At **z6–10**,
+   `--drop-densest-as-needed` **does** fire, now as more than a safety valve:
+   where a whole-region tile would exceed the size budget it drops the
+   densest overflow proportionally, leaving a **thinned density sample**
+   rather than every point — it still never merges points into a
+   `point_count` feature, each dropped-or-kept feature stays an individual
+   point. That z6–10 sample is exactly what the client's overview heatmap
+   consumes. There is no `--cluster-distance`, `--cluster-maxzoom`, or
+   `--accumulate-attribute` flag: each feature keeps its own single
+   `ridtok`/`cctok` token (no cross-cluster union), so the scope filter
+   (§4/§6) is **exact per point** at any zoom, worldwide — a single point's
+   token is its own region, so no tile attribute can render it outside its
+   scope. A rider now sees a **coverage-density heatmap** at overview zoom
+   (z6–~11), built from that thinned sample and filtered to the same scope
+   tokens as the icons, plus the rail's exact `/map/coverage/counts`
+   alongside it as the precise "how much"; individual dots render from z11
+   upward, cross-fading with the heatmap at the handoff
+   (`2026-07-24-coverage-overview-heatmap-design.md` §2–§3.1). (The prior
+   cluster-bubble design rendered a cluster at the *centroid* of its
+   members, which could sit outside the scoped region — the phantom-bubble
+   class the no-cluster design eliminates; see
+   `2026-07-24-coverage-no-cluster-design.md` §1. The heatmap carries the
+   same per-point phantom-free guarantee, not a centroid — see
+   `2026-07-24-coverage-overview-heatmap-design.md` §4.)
 7. **Verify** with go-pmtiles (`verify_pmtiles`): header bounds, addressed tile
    count, expected layers, and a sample tile decode — a broken build never
    ships.
@@ -394,16 +407,22 @@ clustering entirely (`2026-07-24-coverage-no-cluster-design.md` §1) supersedes
 this fix rather than building on it; the per-country layer split itself is
 kept (above) for reasons unrelated to clustering.
 
-**What a rider actually sees as they zoom (no-cluster tile, 2026-07-24):** below
-z11 the coverage source has no tile at all for that spot — nothing renders, and
-the rail's `/map/coverage/counts` carries the "how much" instead. From z11 up,
-`-r1` keeps EVERY point (no rate-based thinning), so every POI in the
-viewport's tile renders as an individual icon immediately — there is no bubble
-step and no "features stop counting down" transition to explain; a POI is
-visible from the first zoom its tile can render, full stop
-(`2026-07-24-coverage-no-cluster-design.md` §2). This replaces an earlier
-measured cluster zoom-table for one spot (Schwaan, DE) that characterised
-bubble-dissolution behaviour which no longer exists.
+**What a rider actually sees as they zoom (2026-07-24):** at overview zoom
+(z6–~11) the coverage source's tiles carry a thinned, density-preserving
+sample of points (`--drop-densest-as-needed`, above), and the client draws
+that sample as a **coverage-density heatmap** instead of individual icons —
+a smooth surface fills the overview zoom that the earlier z11-floor build had
+left empty, with the rail's exact `/map/coverage/counts` still carrying the
+precise "how much" alongside it. From z11 up, `-r1` keeps EVERY point (no
+rate-based thinning), so every POI in the viewport's tile renders as an
+individual icon immediately — there is no bubble step and no "features stop
+counting down" transition to explain; a POI is visible from the first zoom
+its tile can render, full stop (`2026-07-24-coverage-no-cluster-design.md`
+§2). The heatmap and the icons **cross-fade at z11** (heat layer `maxzoom
+11`, icon layer `minzoom 11`)
+(`2026-07-24-coverage-overview-heatmap-design.md` §2–§3.2). This replaces an
+earlier measured cluster zoom-table for one spot (Schwaan, DE) that
+characterised bubble-dissolution behaviour which no longer exists.
 
 **Layers stay per (letter, country)** (`<letter>_<cc>`, unstamped rows bucket
 under `<letter>_zz`) — this split is now unrelated to clustering (there is

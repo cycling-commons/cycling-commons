@@ -70,9 +70,11 @@ in place of the count bubble.)
   the icon gets: on/off + Curated/Everything letter set) and re-apply its scope
   filter in those loops, exactly as they did for the old `-cl` layer.
 - **Rendering:** all heat layers share one **single-hue** ramp (per-letter colors
-  don't blend meaningfully in a heatmap; density from every visible letter sums
-  additively across the stacked layers into one combined "coverage density"
-  surface). Reuse the `rideheat` `heatmap-weight`/`-intensity`/`-radius`/`-opacity`
+  don't blend meaningfully in a heatmap; density from every visible letter
+  **alpha-blends** across the stacked layers into an **approximate** combined
+  "coverage density" surface — denser areas read hotter, but stacked MapLibre
+  heatmap layers compositing over each other is not a true additive density
+  sum). Reuse the `rideheat` `heatmap-weight`/`-intensity`/`-radius`/`-opacity`
   zoom ramps as the starting point, retuned for point density (the ride heatmap
   is line-dense; coverage is point-sparse) and a coverage-appropriate hue
   distinct from the ride heatmap's.
@@ -139,3 +141,25 @@ One coverage **re-tile** (`make coverage-refresh`) to rebuild the PMTiles at
 - Branch `symfony-base`. Commit per task. **Never push.** No `Co-Authored-By`.
   Explicit pathspecs only.
 - `.js` SPDX first line; Python keeps its SPDX header. Section refs doc-qualified.
+
+## 10. Execution notes
+
+- **Pipeline:** `build_pmtiles` reverted `--minimum-zoom 11` → `6`.
+  `pipeline/tests/test_tiles.py` updated (renamed/extended to
+  `..._z6_to_14`, `..._minzoom_6`); 13 passed. (Commit d4125ac.)
+- **Client:** a per-`(letter, cc)` `<letter>-<cc>-heat` heatmap layer
+  (`maxzoom: 11`, scope-only filter via `covHeatFilter()`) mirrors the icon
+  layer on the same source-layer. `make scope-test` 119/119 (unchanged —
+  `scope.js` untouched). (Commit 01f3eb3.)
+- **Re-tile:** `make coverage-refresh` published `20260724-1521.pmtiles`
+  (app serves it). `pmtiles show` reports `min zoom: 6`.
+- **Browser (0 console errors):** Gelderland at the landing zoom (z9) shows a
+  green density heatmap contained inside the region — warm at towns, a soft
+  border feather, no spill into neighbours — filling the overview that was
+  previously empty. Zooming past z11 cross-fades the heatmap out and the
+  individual icons in cleanly.
+- **Combined-surface quality verdict:** the v1 stacked per-letter surface
+  reads as a clean single-hue density, not muddy, so the §6 v2 combined
+  source-layer refinement is **not warranted** at this time.
+- **Prod deploy:** re-tile via `make coverage-refresh`; no DB migration, no
+  re-harvest.

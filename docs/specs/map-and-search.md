@@ -375,28 +375,40 @@ the newest rung of that same ladder.
   Routes get the line highlight instead of a point halo. The halo persists
   while the drawer is open; `closeDrawer()` clears halo, route highlight, and
   any corrections overlay.
-- **Coverage POI tiles render individual points only, from z11 — no
-  clustering.** A coverage POI's icon is drawn by its tile `<key>-<cc>-cov`
-  layer, which carries individual points at z11–14 and nothing below that
-  minzoom: no coverage renders at overview zoom (z6–10), where the rail's
-  exact `/map/coverage/counts` carries the "how much" instead. The scope
-  filter (`covIconFilter()`) is exact per point at any zoom, which is what
-  eliminates the phantom bubbles a prior cluster-bubble design produced at
-  region borders (a cluster rendered at its members' centroid, which could
-  sit outside the scoped region). Design:
+- **Coverage renders as a density heatmap at overview, individual icons from
+  z11 — no clustering, phantom-free at every zoom.** A coverage POI's icon is
+  drawn by its tile `<key>-<cc>-cov` layer, complete and exactly scoped at
+  z11–14. At overview zoom (z6–~11), a `<key>-<cc>-heat` heatmap layer on the
+  **same** source-layer (`maxzoom 11`) draws the region's coverage as a
+  smooth density surface, built from the tile's thinned z6–10 sample
+  (`coverage-provider.md` §4) — this fills the empty overview that the
+  no-cluster z11 floor had left, with the rail's exact
+  `/map/coverage/counts` still carrying the precise "how much" alongside it.
+  The two layers **cross-fade at z11** (heat `maxzoom 11`, icon `minzoom
+  11`). Both are scope-filtered exactly per point (`covIconFilter()` for the
+  icons, `covHeatFilter()` — scope only, no dedupe/accessibility narrow — for
+  the heat), which is what eliminates the phantom bubbles a prior
+  cluster-bubble design produced at region borders (a cluster rendered at
+  its members' centroid, which could sit outside the scoped region): a
+  heatmap has no centroid to leak, only in-scope points contribute density,
+  so a soft feather at the region edge is honest rather than a false marker.
+  Design:
+  [2026-07-24-coverage-overview-heatmap-design.md](2026-07-24-coverage-overview-heatmap-design.md)
+  (supersedes the z6–10-is-empty behaviour of
   [2026-07-24-coverage-no-cluster-design.md](2026-07-24-coverage-no-cluster-design.md)
-  §2 (supersedes
+  §2, which itself supersedes
   [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md)
   §7); tile contract: [coverage-provider.md](coverage-provider.md) §4.
 - **Selected coverage POI stays visible on zoom-out:** a coverage POI's icon is
   drawn only by its tile `<key>-<cc>-cov` layer, which the z11 minzoom hides
   on zoom-out — so zooming out past z11 with a coverage POI selected would
-  leave the halo ringing empty space. A single-feature GeoJSON overlay
-  (`cov-sel` source + `cov-sel-icon` layer) redraws the *selected* POI's icon
-  on top, independent of the tile minzoom, so it stays visible at every zoom
-  (the halo then rings it). `showSelectedCoverageIcon()` sets it on open
-  (mirroring the tile icon-image + size ramps); `openDrawer()`/`closeDrawer()`
-  clear it.
+  leave the halo ringing empty space (the heatmap conveys density, not the
+  selected feature itself, so it doesn't fill that gap). A single-feature
+  GeoJSON overlay (`cov-sel` source + `cov-sel-icon` layer) redraws the
+  *selected* POI's icon on top, independent of the tile minzoom, so it stays
+  visible at every zoom (the halo then rings it). `showSelectedCoverageIcon()`
+  sets it on open (mirroring the tile icon-image + size ramps);
+  `openDrawer()`/`closeDrawer()` clear it.
 
 ### 6.2 Registry-driven attribute rows
 
