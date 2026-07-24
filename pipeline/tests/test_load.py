@@ -247,19 +247,21 @@ def test_load_region_drift_abort_keeps_last_slice(db):
 def test_load_region_generic_error_rolls_back_whole_swap(db):
     """Any mid-transaction failure — not just DriftAbort — keeps the last slice.
 
-    A duplicate (ref, letter) WITHIN one extract passes the drift check and the
-    DELETE, then makes the ON CONFLICT upsert try to affect the same target row
-    twice → CardinalityViolation on the INSERT, proving the rollback covers
-    everything after the DELETE, not only the drift guard. (Cross-region
-    duplicates are handled by the upsert; only an intra-batch dup — which real
-    parsing never emits — fails here, and it fails safe.)
+    Two brand-new rows sharing (ref, letter) make the diff-merge upsert try to
+    affect the same just-inserted target row a second time → CardinalityViolation,
+    proving the rollback covers the whole swap, not only the drift guard. The dup
+    is a NEW ref on purpose: under the diff-merge's IS DISTINCT FROM guard a dup of
+    an ALREADY-EXISTING ref is order-dependent (the identical first touch is
+    skipped, so the "second affect" may not trigger), while two brand-new
+    same-key rows raise deterministically. (Real parsing never emits intra-batch
+    dups; this is a synthetic generic-error trigger.)
     """
     ensure_schema(db)
     load_region(db, [_row(f"node/{i}", "C") for i in range(10)], "europe/belgium")
     with pytest.raises(psycopg.errors.CardinalityViolation):
         load_region(db, [
             _row(f"node/{i}", "C") for i in range(9)
-        ] + [_row("node/0", "C")], "europe/belgium")   # 10 rows, node/0 twice
+        ] + [_row("node/dup", "C"), _row("node/dup", "C")], "europe/belgium")  # new ref, twice
     n = db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0]
     assert n == 10                                     # last good slice intact
     assert db.execute(
@@ -608,3 +610,44 @@ def test_apply_session_budget_honours_env_override(db, monkeypatch):
     monkeypatch.setenv("COVERAGE_WORK_MEM", "64MB")
     apply_session_budget(db)
     assert db.execute("SHOW work_mem").fetchone()[0] == "64MB"
+
+
+def test_diff_merge_skips_unchanged_row(db):
+    """An identical reload rewrites nothing: a region-less row's ctid is stable,
+    proving the upsert's IS DISTINCT FROM guard skipped it (no heap write, no WAL)."""
+    ensure_schema(db)
+    rows = [_row("node/1", "C", lon=20.0, lat=60.0,
+                 src_region="dev/fixture", country_code=None)]
+    load_region(db, rows, "dev/fixture", None)
+    before = db.execute("SELECT ctid::text FROM coverage_poi WHERE ref='node/1'").fetchone()[0]
+    load_region(db, rows, "dev/fixture", None)          # byte-identical reload
+    after = db.execute("SELECT ctid::text FROM coverage_poi WHERE ref='node/1'").fetchone()[0]
+    assert before == after, "an unchanged row must not be rewritten"
+
+
+def test_diff_merge_rewrites_only_the_changed_row(db):
+    ensure_schema(db)
+    r1 = _row("node/1", "C", lon=20.0, lat=60.0, src_region="dev/fixture", country_code=None)
+    r2 = _row("node/2", "C", lon=21.0, lat=61.0, src_region="dev/fixture", country_code=None)
+    load_region(db, [r1, r2], "dev/fixture", None)
+    ctid0 = dict(db.execute("SELECT ref, ctid::text FROM coverage_poi").fetchall())
+    r1b = _row("node/1", "C", lon=20.0, lat=60.0, name="RENAMED",
+               src_region="dev/fixture", country_code=None)
+    load_region(db, [r1b, r2], "dev/fixture", None)
+    ctid1 = dict(db.execute("SELECT ref, ctid::text FROM coverage_poi").fetchall())
+    assert ctid1["node/2"] == ctid0["node/2"], "unchanged sibling not rewritten"
+    assert ctid1["node/1"] != ctid0["node/1"], "changed row rewritten"
+    assert db.execute("SELECT name FROM coverage_poi WHERE ref='node/1'").fetchone()[0] == "RENAMED"
+
+
+def test_diff_merge_deletes_disappeared_row(db):
+    ensure_schema(db)
+    # Three rows so dropping one (node/3) stays under the 40% drift guard —
+    # isolating the delete-disappeared behaviour from the drift abort.
+    a = _row("node/1", "C", lon=20.0, lat=60.0, src_region="dev/fixture", country_code=None)
+    b = _row("node/2", "C", lon=21.0, lat=61.0, src_region="dev/fixture", country_code=None)
+    c = _row("node/3", "C", lon=22.0, lat=62.0, src_region="dev/fixture", country_code=None)
+    load_region(db, [a, b, c], "dev/fixture", None)
+    load_region(db, [a, b], "dev/fixture", None)        # node/3 disappears upstream
+    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
+    assert refs == {"node/1", "node/2"}, "a row gone from the extract is deleted from the slice"

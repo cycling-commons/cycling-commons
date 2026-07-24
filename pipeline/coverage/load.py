@@ -347,25 +347,26 @@ def load_region(
                     f"filter, vs {previous} previously (more than {DRIFT_ABORT_RATIO:.0%} "
                     "drop) — aborting swap, keeping last good slice."
                 )
-            cur.execute("DELETE FROM coverage_poi WHERE src_region_id = %s", (src_id,))
-            # UPSERT, not plain INSERT: Geofabrik regional extracts overlap at
-            # shared borders, so one OSM entity (same ref → same (ref, letter))
-            # appears in >1 extract (203 refs shared BE↔NL in the first NL run).
-            # The DELETE above only clears THIS src_region, so a border entity
-            # still owned by a neighbour would violate the global
-            # UNIQUE(ref, letter) and roll the whole slice back. ON CONFLICT
-            # takes last-writer-wins ownership; the membership steps below then
-            # re-derive region_id/cc for the new owner. region_id MUST be reset to
-            # NULL on conflict (as a fresh INSERT starts it): the ST_Contains
-            # recompute only SETs region_id for rows inside a polygon and never
-            # clears a stale one, and the boundary-snap is gated on
-            # region_id IS NULL — so a reclaimed boundary-miss row that kept the
-            # previous owner's region_id would skip the snap and then get its cc
-            # re-stamped from the wrong region (region ⇒ cc stays self-consistent
-            # but wrong). These conflicts are staging-vs-table (one row per
+            # Diff-merge (2026-07-24-coverage-harvest-prod-safety-design.md §3.3):
+            # write only the delta instead of DELETE-all-slice + INSERT-all-slice.
+            # OSM week-over-week churn is a few hundred–few thousand rows out of
+            # ~318k, so this collapses the per-country transaction from minutes to
+            # sub-second and stops the weekly WAL burst / autovacuum bloat (retires
+            # the VACUUM FULL question).
+            #
+            # UPSERT arm: an unchanged, same-owner row fails the IS DISTINCT FROM
+            # guard → no heap write, no WAL. A changed row or an ownership-takeover
+            # (src_region_id flip — Geofabrik extracts overlap at shared borders,
+            # 203 refs shared BE↔NL) updates and resets region_id = NULL so the
+            # membership steps below re-derive it: the ST_Contains recompute only
+            # SETs region_id for rows inside a polygon and never clears a stale one,
+            # and the boundary-snap is gated on region_id IS NULL, so a reclaimed
+            # boundary-miss row that kept the previous owner's region_id would skip
+            # the snap and get its cc re-stamped from the wrong region (region ⇒ cc
+            # self-consistent but wrong). Conflicts are staging-vs-table (one row per
             # (ref, letter) per extract), so DO UPDATE never hits "affect a row a
-            # second time"; a malformed extract with an intra-batch dup fails loud
-            # there and rolls the swap back — safe, covered by the generic-error test.
+            # second time"; an intra-batch dup fails loud and rolls the swap back —
+            # the generic-error guarantee.
             cur.execute(
                 f"INSERT INTO coverage_poi ({_STAGING_COLS}, src_region_id) "
                 f"SELECT {_STAGING_COLS}, %s FROM coverage_poi_staging "
@@ -373,7 +374,29 @@ def load_region(
                 f"kind = EXCLUDED.kind, name = EXCLUDED.name, geom = EXCLUDED.geom, "
                 f"tags = EXCLUDED.tags, osm_version = EXCLUDED.osm_version, "
                 f"osm_ts = EXCLUDED.osm_ts, src_region_id = EXCLUDED.src_region_id, "
-                f"country_code = EXCLUDED.country_code, region_id = NULL",
+                f"country_code = EXCLUDED.country_code, region_id = NULL "
+                f"WHERE coverage_poi.geom          IS DISTINCT FROM EXCLUDED.geom "
+                f"   OR coverage_poi.name          IS DISTINCT FROM EXCLUDED.name "
+                f"   OR coverage_poi.kind          IS DISTINCT FROM EXCLUDED.kind "
+                f"   OR coverage_poi.tags          IS DISTINCT FROM EXCLUDED.tags "
+                f"   OR coverage_poi.osm_version   IS DISTINCT FROM EXCLUDED.osm_version "
+                f"   OR coverage_poi.osm_ts        IS DISTINCT FROM EXCLUDED.osm_ts "
+                f"   OR coverage_poi.country_code  IS DISTINCT FROM EXCLUDED.country_code "
+                f"   OR coverage_poi.src_region_id IS DISTINCT FROM EXCLUDED.src_region_id",
+                (src_id,),
+            )
+            # Delete-disappeared arm: rows this extract owned but no longer carries.
+            # Scoped to THIS src_region's slice only (never a neighbour's), so a
+            # non-owning extract can neither delete nor resurrect another's row
+            # (2026-07-23-border-overlap-ownership-design.md §4). geom comparison
+            # above uses PostGIS's `=` operator; for POINT geometries (every
+            # coverage row) that is exact coordinate equality (a point's bbox is
+            # the point itself), and the deterministic POINT(lon lat) EWKT yields
+            # identical geometry across weeks, so an unchanged point compares equal.
+            cur.execute(
+                "DELETE FROM coverage_poi c WHERE c.src_region_id = %s "
+                "AND NOT EXISTS (SELECT 1 FROM coverage_poi_staging s "
+                "WHERE s.ref = c.ref AND s.letter = c.letter)",
                 (src_id,),
             )
             # Smallest-area-wins on overlap (region-scoping-design.md §3): the
