@@ -271,18 +271,18 @@ def _decode_layer(path, z: int, x: int, y: int, layer: str) -> list:
     return []
 
 
-def test_build_command_has_no_clustering_and_minzoom_11(tmp_path, monkeypatch):
-    # Coverage is rendered as INDIVIDUAL points from z11 up, never clustered
+def test_build_command_has_no_clustering_and_minzoom_6(tmp_path, monkeypatch):
+    # Coverage is rendered as INDIVIDUAL points from z6 up, never clustered
     # (2026-07-24-coverage-no-cluster-design.md §3.1): a cluster's rendered
     # centroid can sit outside a scoped region (the phantom-bubble class), and
     # individual points are scope-filtered exactly. So the build must carry NO
-    # cluster/accumulate flags and start at zoom 11.
+    # cluster/accumulate flags and start at zoom 6.
     captured = {}
     monkeypatch.setattr(tiles.subprocess, "run",
                         lambda cmd, check=True: captured.setdefault("cmd", cmd))
     tiles.build_pmtiles({("D", "BE"): tmp_path / "d.geojsonl"}, tmp_path / "o.pmtiles")
     cmd = captured["cmd"]
-    for flag, val in [("--minimum-zoom", "11"), ("--maximum-zoom", "14")]:
+    for flag, val in [("--minimum-zoom", "6"), ("--maximum-zoom", "14")]:
         assert flag in cmd and cmd[cmd.index(flag) + 1] == val, f"{flag} {val}"
     for absent in ("--cluster-distance", "--cluster-maxzoom",
                    "--cluster-densest-as-needed", "ridtok:concat", "cctok:concat"):
@@ -293,10 +293,11 @@ def test_build_command_has_no_clustering_and_minzoom_11(tmp_path, monkeypatch):
     assert "--drop-densest-as-needed" in cmd
 
 
-def test_no_clusters_individual_points_from_z11(tmp_path):
-    # 60 D-services in a ~0.02 deg box near Brussels. There must be NO z6-10
-    # tiles (minzoom 11), and at z11 every feature is an INDIVIDUAL point — no
-    # point_count cluster anywhere (2026-07-24-coverage-no-cluster-design.md §2).
+def test_no_clusters_individual_points_z6_to_14(tmp_path):
+    # Coverage is rendered individual (no clusters) across the whole zoom range:
+    # z6-10 thinned to fit for the overview heatmap, z11-14 complete for icons
+    # (2026-07-24-coverage-overview-heatmap-design.md §3.1). Crucially: NO feature
+    # ever carries point_count (no clustering, at any zoom).
     n = 60
     rows = [(4.34 + (i % 10) * 0.002, 50.84 + (i // 10) * 0.002,
              {"ref": f"node/{i}", "t": "Bike shop", "kind": "shop"})
@@ -304,16 +305,20 @@ def test_no_clusters_individual_points_from_z11(tmp_path):
     out = tmp_path / "nc.pmtiles"
     tiles.build_pmtiles({("D", "BE"): _geojsonl(tmp_path / "d.geojsonl", rows)}, out)
 
-    # No overview tiles: z6 must be empty for this layer.
+    # z6 tiles now EXIST (minzoom 6, for the overview heatmap) and carry
+    # individual points, none clustered.
     x6, y6 = _tile_xy(4.35, 50.85, 6)
-    assert _decode_layer(out, 6, x6, y6, "d_be") == [], "no coverage below z11"
+    feats6 = _decode_layer(out, 6, x6, y6, "d_be")
+    assert feats6, "z6 tile must carry coverage points (overview heatmap source)"
+    assert not any("point_count" in f["properties"] for f in feats6), \
+        "no clusters at z6 — individual (thinned) points only"
 
-    # z11: individual points, none carrying point_count.
+    # z11: individual points, none clustered.
     x11, y11 = _tile_xy(4.35, 50.85, 11)
-    feats = _decode_layer(out, 11, x11, y11, "d_be")
-    assert feats, "z11 tile must carry the individual points"
-    assert not any("point_count" in f["properties"] for f in feats), \
-        "no clusters — every coverage feature is an individual point"
+    feats11 = _decode_layer(out, 11, x11, y11, "d_be")
+    assert feats11, "z11 tile must carry the individual points"
+    assert not any("point_count" in f["properties"] for f in feats11), \
+        "no clusters at z11 — individual points only"
 
 
 def test_extra_sql_tag_keys_are_pinned_to_the_contract_constant():

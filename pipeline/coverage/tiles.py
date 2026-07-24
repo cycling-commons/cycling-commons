@@ -136,19 +136,19 @@ def export_geojsonl(conn, workdir):
 
 def build_pmtiles(layer_files, out_path):
     """tippecanoe -> one .pmtiles, one lowercase `<letter>_<cc>` layer per
-    (letter, country) (coverage-provider.md §4). Individual points from z11 up —
+    (letter, country) (coverage-provider.md §4). Individual points from z6 up —
     NO clustering: a cluster's rendered centroid can sit outside a scoped region
     (the phantom-bubble class), and individual points are scope-filtered exactly
     (2026-07-24-coverage-no-cluster-design.md §2). Overview coverage is conveyed
     by the rail /counts, not by tiles."""
     cmd = [
         "tippecanoe", "-o", str(out_path), "--force", "--quiet",
-        # z11 floor: coverage renders as individual icons from a local zoom up;
-        # below z11 no tile exists, so the overview shows no coverage dots (the
-        # rail counts carry the "how much"). This also avoids the huge all-point
-        # low-zoom tiles that clustering used to compress
-        # (2026-07-24-coverage-no-cluster-design.md §3.1).
-        "--minimum-zoom", "11", "--maximum-zoom", "14",
+        # z6 floor: coverage points exist z6-14 with NO clustering. z6-10 tiles are
+        # thinned to fit (--drop-densest-as-needed below) — a density SAMPLE for the
+        # overview heatmap; z11-14 tiles carry every point (they fit, nothing drops)
+        # for the individual icons. Overview reads as a heatmap, zoomed-in as icons
+        # (2026-07-24-coverage-overview-heatmap-design.md §3.1).
+        "--minimum-zoom", "6", "--maximum-zoom", "14",
         # Keep every point at the built zooms; --drop-densest-as-needed is a pure
         # tile-size safety valve for a pathologically dense z11 tile (its dropped
         # overflow reappears at z12+), never rate-based thinning across all zooms.
