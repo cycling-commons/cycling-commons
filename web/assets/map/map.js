@@ -1079,8 +1079,14 @@
         // (owner request 2026-07-24). The ramp is the same hue from transparent to
         // translucent (never toward black or white), and the low top alpha keeps
         // it a soft, see-through blur.
-        const hcH=((layerByKey[key]||{}).color||'#6b6f5e');
-        const hR=parseInt(hcH.slice(1,3),16), hG=parseInt(hcH.slice(3,5),16), hB=parseInt(hcH.slice(5,7),16);
+        // ONE clean hue for the overview density blur (owner decision 2026-07-24).
+        // A blended multi-colour heatmap is dominated by the densest letters
+        // (stays/history) and averages to mud, so category distinction comes from
+        // the coloured ICONS (which now appear from z9); the heat just answers
+        // "where is coverage dense". Every letter's heat is the SAME teal, so the
+        // stacked layers accumulate to *more teal* — never brown. Teal is distinct
+        // from the ride heatmap's warm gold; no pale top stop (a pale/white max
+        // punched white "holes" in a dense surface).
         const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
         map.addLayer({id:heatId, type:'heatmap', source:'coverage', 'source-layer':srcLayer,
           maxzoom: 9,
@@ -1090,13 +1096,13 @@
             'heatmap-weight':0.6,
             'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.9,9,1.3],
             'heatmap-radius':['interpolate',['linear'],['zoom'],6,16,9,28],
-            // more transparent than before; still fades to 0 at z9 for the crossfade
+            // semi-transparent; fades to 0 at z9 for the crossfade into the icons.
             'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.6,8,0.6,9,0],
             'heatmap-color':['interpolate',['linear'],['heatmap-density'],
-              0, `rgba(${hR},${hG},${hB},0)`,
-              0.3, `rgba(${hR},${hG},${hB},0.28)`,
-              0.65, `rgba(${hR},${hG},${hB},0.5)`,
-              1, `rgba(${hR},${hG},${hB},0.72)`]}});
+              0,'rgba(0,0,0,0)',
+              0.25,'rgba(78,163,168,0.30)',
+              0.6,'rgba(46,132,145,0.58)',
+              1,'#1C6B78']}});
         // Individual coverage icons (no clustering — 2026-07-24-coverage-no-cluster-design.md
         // §2); scope-filtered exactly. minzoom 9 so the spots are visible from the
         // region-fit zoom (z6-8 tiles are thinned, so z9-10 icons are a sample that
