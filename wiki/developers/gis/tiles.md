@@ -115,15 +115,30 @@ That single difference is what lets the client:
 
 We serve vector. Every coverage feature this project draws — the fountain included — arrives at the
 browser as geometry plus a handful of flat properties, never as a picture, which is exactly what makes
-the client-side filtering and clustering behaviour later in this chapter (and the whole of chapter 8)
-possible at all.
+the client-side filtering and rendering choices covered later in this chapter (and the whole of
+chapter 8) possible at all.
 
 ## PMTiles
 
-A tile pyramid sounds, so far, like it produces one small file per `z/x/y` address — and historically
+So far, a tile pyramid sounds like it produces one small file per `z/x/y` address — and historically
 that is exactly what it meant: a tile *server* that owns millions of tiny files (or database rows) and
 answers `GET /6/32/21.pbf` one request at a time. That is a real piece of infrastructure to run,
 scale, and keep alive.
+
+!!! note "Two different files both called `.pbf`"
+    The `.pbf` in `6/32/21.pbf` is **not** the same file as the Geofabrik `country.osm.pbf` you
+    downloaded in chapter 6. The three letters collide because both are **Protocol Buffers** —
+    Google's binary serialization format, `.pbf` — but they carry completely different things:
+
+    - **`.osm.pbf`** (Geofabrik, chapter 6) is a *source-data dump*: the raw OpenStreetMap database
+      for a whole country — every node, way, and relation with its full tags. It is not tiled and
+      not styled; it is the input the pipeline reads to build `coverage_poi` rows.
+    - **`.pbf`** here (a tile) is *one rendered tile*: the MVT geometry for a single `z/x/y` square,
+      ready for the browser to draw. It is an output, cut and packed long after the `.osm.pbf` was
+      parsed away.
+
+    Same encoding, opposite ends of the pipeline. One country's `.osm.pbf` goes in; many tile `.pbf`s
+    (bundled into the one `.pmtiles` file below) come out.
 
 **PMTiles** is a file format that packs an entire tile pyramid — every zoom, every `x`, every `y` —
 into **one single file**, together with an index of where each tile's bytes live inside it. The client
@@ -141,8 +156,8 @@ the browser talks to it through the `pmtiles://` protocol handler registered in
 couple of lines later (`mintWaterDrops()` runs in between, `map.js:1089-1091`) by
 `map.addSource('coverage', {type: 'vector', url: 'pmtiles://' + window.CC_COVERAGE_URL})`.
 Nothing in that request path is a tile server: it is a `GET` against a static file, with `Range:`
-headers doing the work a tile server used to do, served straight off the bucket (or through nginx's
-range proxy, per the memory-noted `cache.example.net`-style infra this project can reuse).
+headers doing the work a tile server used to do, served straight off the bucket (or through an
+nginx range proxy).
 
 Before any of that upload happens, `build_pmtiles()` never reads `coverage_poi` directly — tippecanoe
 takes files, not a database connection. `export_geojsonl()` bridges the two, running one `COPY`
@@ -162,9 +177,10 @@ f"WHERE letter = {_lit(letter)} AND COALESCE(country_code, 'ZZ') = {_lit(cc)}) T
 
 Every one of the `letter × country` files this function writes is its own `COPY`, filtered down to
 exactly one letter and one country. tippecanoe never sees a query or a `WHERE` clause at all — by the
-time it runs, the split has already happened one file at a time, which is what makes "tippecanoe
-clusters within one layer" and "a layer is single-country by construction" the same fact seen from two
-angles.
+time it runs, the split has already happened one file at a time, which is what makes a tile layer
+single-country **by construction**, not by a filter applied afterwards: the other country's points
+were never in the file tippecanoe read to build that layer. "Why the layers are split per country"
+below is why that still matters even with nothing left to cluster.
 
 `build_pmtiles()` runs, and then one more step happens before any of it reaches a rider: a sanity gate
 that refuses to publish a broken archive. `verify_pmtiles()` in the same module opens the freshly built
@@ -196,7 +212,7 @@ the one small, frequently-refetched pointer that says which versioned key is cur
 themselves are cached forever (`max-age=31536000, immutable`), because a versioned key's bytes are
 defined never to change.
 
-## Clustering
+## No clustering — individual points and a heatmap
 
 The pyramid, vector tiles and PMTiles together solve "get the right small piece of data to the
 browser fast". They do not solve a different problem that shows up the moment you zoom out: even one
@@ -205,21 +221,82 @@ Belgium and a single water-point layer might have to represent thousands of foun
 patch of screen a few hundred pixels wide. Drawing every one of them as its own pin is not "cluttered"
 — at that scale, dots simply stack on top of each other and stop being readable at all.
 
-The naive fix — thin the points, i.e. just draw a random subset and drop the rest — is exactly what
-this project tried first, and the result is recorded plainly in the comment above
-`build_pmtiles()`: tippecanoe's *default* point-thinning behaviour at overview zooms let only 23 of
-2,015 D-services (bike shops, repair stations, pumps) survive at zoom 8, while the on-screen count
-still read "2015/2015" because that number comes from an honest SQL count
-(`/map/coverage/counts`, coverage-provider.md §5), not from what the tile happened to keep. The map
-looked nearly empty. The rail said everything was there. Both were telling the truth about different
-things, and that mismatch is worse than either one being wrong on its own.
+This project has tried two different fixes for that before landing on the one it ships today, and both
+earlier attempts are worth knowing because each one taught a real lesson. The first was the naive one:
+let tippecanoe's own default point-thinning behaviour keep a random subset at low zoom and drop the
+rest. It was tried, and the result is recorded in the project's design history
+(`2026-07-19-region-scoping-design.md`): default thinning let only 23 of 2,015 D-services (bike shops,
+repair stations, pumps) survive at zoom 8, while the on-screen count still read "2015/2015" because
+that number comes from an honest SQL count (`/map/coverage/counts`, coverage-provider.md §5), not from
+what the tile happened to keep. The map looked nearly empty. The rail said everything was there. Both
+were telling the truth about different things, and that mismatch is worse than either one being wrong
+on its own.
 
-**Clustering is the fix, and it is a fundamentally different promise than thinning.** Instead of
-discarding points to make room, `build_pmtiles()` merges nearby points into a single feature that
-carries a **count** — `tippecanoe`'s injected `point_count` property. A "bubble" reading `48` on the
-map is not one representative fountain standing in for forty-eight others that got thrown away; it is
-a promise that all forty-eight are still there, accounted for, just drawn as one marker until you zoom
-in far enough to tell them apart.
+The second fix was clustering. Instead of discarding points to make room, tippecanoe merged nearby
+points into a single feature carrying a **count** — the injected `point_count` property. A bubble
+reading `48` on the map was not one representative fountain standing in for forty-seven others that got
+thrown away; it was a promise that all forty-eight were still there, accounted for, just drawn as one
+marker until you zoomed in far enough to tell them apart. That promise held, and it is a genuinely
+honest fix to the thinning problem above — but clustering turned out to carry two flaws of its own,
+neither of them a tuning mistake:
+
+- **Phantom bubbles.** A cluster renders at the *centroid* of its members. A cluster straddling a
+  region border sits at the centroid of whichever points tippecanoe happened to merge — which can land
+  **outside** the scoped region altogether. Investigation on 2026-07-24 found this directly: a shelter
+  bubble rendered in Thuringia carried a single Hesse `ridtok`
+  (`2026-07-24-coverage-no-cluster-design.md §1`). No tile attribute could fix it — union tokens,
+  leader tokens, a tighter `--cluster-distance`, bigger tile budgets were all tried, and none reached
+  zero phantoms, because the bug was never in which token a cluster carried; it was in *where the
+  geometry itself was drawn*.
+- **It does not scale.** "Ship a region's points to the client and cluster them" is bounded for a
+  Belgian province or a German Land (Bavaria, on the order of tens of thousands of coverage points),
+  but it breaks the moment a region the size of a US state or a Chinese province is onboarded whole —
+  California is roughly 200,000-400,000 points, Guangdong 500,000 to over 2 million
+  (`2026-07-24-coverage-no-cluster-design.md §1`). Clustering that many points was never going to be
+  the shape of a worldwide coverage layer.
+
+Both problems are artifacts of clustering itself, not of anything about the underlying data, so the fix
+is to stop clustering. **Coverage tiles carry individual points only, at zoom 6 through 14, and nothing
+is ever merged.** A single point carries exactly one `ridtok`/`cctok` token pair — its own region and
+country — so the scope filter (coverage-provider.md §4) is exact for that one point, at any zoom, in
+any country, with no cross-feature union to get wrong and no rendered position that is anything other
+than the point's own coordinate. There is no `point_count` property anywhere in the coverage tiles any
+more, and there is not meant to be one again
+(`2026-07-24-coverage-no-cluster-design.md`).
+
+Dropping clustering does not make the original overview problem disappear — a rider still lands on a
+region at roughly z7-z9 (the scope selector's own fit zoom), and thousands of individual points still
+cannot be drawn as pins at that scale. The fix this time is not to pretend the overview problem is
+gone; it is to stop asking individual pins to solve it and give the overview a different kind of
+picture instead: a **density heatmap**. `build_pmtiles()` still builds one continuous pyramid from z6
+to z14, and the *same* two tippecanoe behaviours from the naive-thinning attempt come back — `-r1` and
+`--drop-densest-as-needed` — but this time with an honest job to do. z11-14 tiles are **complete**: a
+z11 tile is small enough that `--drop-densest-as-needed` never actually fires there, so every point in
+a z11-14 tile is really present, and those are the tiles the client draws as individual **icons**. z6-10
+tiles are **thinned** — `--drop-densest-as-needed` drops the densest overflow, proportionally, wherever
+a whole-region tile would exceed the tile's byte budget — but nothing built from a z6-10 tile ever
+claims to be a complete list of points again. It feeds a heatmap instead: a smooth, density surface
+built from the thinned sample, answering "where is coverage dense" rather than "here is every
+fountain". A thinned sample is exactly what a density surface needs (relative density survives even
+heavy thinning, because the drop is proportional across the tile) and exactly what a pin list must
+never be handed — the same distinction the "23 of 2015" story above was already teaching, just applied
+correctly this time instead of ignored (`2026-07-24-coverage-overview-heatmap-design.md §3.1`).
+
+On screen (chapter 8, `on-screen.md`, covers MapLibre's side of this in full) the client mirrors every
+coverage icon layer with a heatmap layer on the same source-layer: a `<letter>-<cc>-heat` layer with
+`maxzoom: 9`, and the existing `<letter>-<cc>-cov` icon layer with `minzoom: 9`. Below z9 a rider sees
+the heatmap only — one single hue, semi-transparent, every visible letter's density stacking into
+one "how much coverage is here" surface, scope-filtered on the same exact per-point `ridtok`/`cctok`
+tokens as the icons, so the surface is phantom-free for the same reason the icons are: it is built only
+from points already inside the scoped region, never from anything aggregated across a border. From z9
+up the individual icons fade in — the z9-10 icons are drawn from the same thinned tiles the heatmap
+uses, so they are a sample too, but they densify into the complete set by z11, where every point is
+guaranteed present. The heatmap and the icons cross-fade across that z9-10 handoff, so a rider is never
+looking at a gap between "blur" and "dots"
+(`2026-07-24-coverage-overview-heatmap-design.md §2`, tuning note). The rail's `/map/coverage/counts`
+(coverage-provider.md §5) stays the one thing in this whole picture that is never a sample: an exact
+SQL count, unaffected by what any tile happened to keep — exactly the number that made the
+naive-thinning attempt's lie visible in the first place.
 
 The actual flags, all in `pipeline/coverage/tiles.py::build_pmtiles`:
 
@@ -227,53 +304,54 @@ The actual flags, all in `pipeline/coverage/tiles.py::build_pmtiles`:
 ```python
 "--minimum-zoom", "6", "--maximum-zoom", "14",
 ...
-"--cluster-distance", "20",
-...
-"--accumulate-attribute", "ridtok:concat",
-"--accumulate-attribute", "cctok:concat",
-...
-"--cluster-maxzoom", "11",
 "-r1",
-"--cluster-densest-as-needed",
+"--drop-densest-as-needed",
 ```
 
-- **`--cluster-distance 20`** — points within 20 *screen pixels* of each other, at a given zoom, are
-  candidates to merge into one cluster feature. (It is screen pixels, not metres — at Belgium's
-  latitude the same 20 px works out to roughly 7-8 kilometres of ground at zoom 8 and roughly a
-  kilometre at zoom 11 (Web Mercator's ground distance per pixel halves every zoom level and also
-  shrinks with latitude), which is why bubbles dissolve as you zoom in far faster than the underlying
-  density of fountains actually changes; coverage-provider.md §4 walks through what a rider watching
-  this actually sees.)
-- **`--cluster-maxzoom 11`** — clustering only happens from zoom 6 up to zoom 11. Above that, every
-  feature renders individually, with no `point_count` at all — not "the count counts down to one", the
-  count simply stops existing at that point, because from zoom 12 on a rider zoomed into a town is
-  meant to see the actual shops, not a bubble standing in for them.
-- **`-r1`** — turn off tippecanoe's own point-dropping ("rate") behaviour entirely, so every single
-  point survives into the tile-building process; clustering is then the *only* thing allowed to
-  combine points, never silently discard them.
-- **`--cluster-densest-as-needed`** — this is the flag that makes the "merges, does not drop" promise
-  actually hold under pressure. Every tile has a hard byte-size budget; if a tile would still be too
-  big even after ordinary clustering, this flag merges the *densest* remaining clusters further, again
-  and again, until the tile fits. It never throws a point away to make room — it makes existing bubbles
-  bigger and rarer instead. That is the distinction worth being precise about: **dropping** data and
-  **merging** data are very different promises to make to a reader. Dropping means "some of what
-  exists is not shown, and there is no number that says how much." Merging means "everything that
-  exists is shown, just grouped, and the count on the bubble tells you exactly how much is in it."
-  Nothing in this pipeline drops a coverage point once it has passed `osmium tags-filter`
-  (chapter 6, `osm-to-database.md`); from there on it is only ever counted, never silently discarded.
-- **`--accumulate-attribute ridtok:concat` / `cctok:concat`** — when tippecanoe merges several
-  features into one cluster, it has to decide what the cluster's own properties are. Left alone it
-  would just keep one arbitrary member's values. These two flags instead **union** the region-scope and
-  country-scope tokens (`ridtok`/`cctok`, coverage-provider.md §4) across every member of the cluster,
-  so a bubble's scope reflects everything inside it, not one lottery-picked member. This matters for
-  the same reason the merge-not-drop promise matters: a scope filter that trusted one representative
-  member could hide or show a whole bubble based on a coin flip about which member tippecanoe happened
-  to keep a property from.
+- **`--minimum-zoom 6` / `--maximum-zoom 14`** — the same full pyramid this project has always built
+  coverage at; what changed is what happens inside that range, not the range itself.
+- **`-r1`** — turn off tippecanoe's own point-dropping ("rate") behaviour entirely. The only thing left
+  that can ever remove a point from a tile is the next flag, and it is asked to, explicitly, rather
+  than happening as an unannounced default.
+- **`--drop-densest-as-needed`** — every tile has a hard byte-size budget; if a tile would still be too
+  big, this flag drops the densest overflowing points, proportionally, until it fits. At z11-14 a tile
+  is small enough that the budget is never actually hit, so this flag is a safety valve there in
+  theory, not something that fires in practice — the icons stay complete. At z6-10 a whole-region tile
+  genuinely does not fit the budget, so this flag fires for real there and produces exactly the thinned
+  density sample the heatmap is built from.
 
-<figure class="gis-fig"><svg viewBox="0 0 640 690" role="img" aria-labelledby="f14-t f14-d" xmlns="http://www.w3.org/2000/svg"><title id="f14-t">The same sixty-seven points, clustered at zoom 9 and individual at zoom 12</title><desc id="f14-d">Two stacked panels of the same patch of ground. The upper panel, labelled z9, holds three orange bubbles of visibly different sizes, each carrying its point_count: a large one reading 48, a middle one reading 12, and a small one reading 7. A bubble's area is proportional to its count. A note between the panels reads: clustering stops at z11, a z12 pin carries no count at all, above a dashed line. The lower panel, labelled z12, shows the same area with the bubbles resolved into individual points and no counts at all: sixty-seven small dots in three loose groups, forty-eight where the large bubble sat, twelve where the middle one sat and seven where the small one sat, each group joined to its bubble above by a thin line. Below both panels: 48 plus 12 plus 7 equals 67, nothing was thrown away.</desc><defs><marker id="gis-arrow-f14" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text class="gis-label-mono" x="20" y="46">z9</text><text class="gis-label-sm" x="70" y="46">clustered — 48 + 12 + 7</text><rect class="gis-muted" x="20" y="60" width="600" height="200"/><circle class="gis-accent gis-fill-accent" fill-opacity=".3" cx="170" cy="160" r="52.0"/><text class="gis-halo" x="170" y="170" text-anchor="middle">48</text><circle class="gis-accent gis-fill-accent" fill-opacity=".3" cx="350" cy="118" r="26.0"/><text class="gis-halo" x="350" y="128" text-anchor="middle">12</text><circle class="gis-accent gis-fill-accent" fill-opacity=".3" cx="490" cy="196" r="19.9"/><text class="gis-halo" x="490" y="206" text-anchor="middle">7</text><text class="gis-label-sm gis-halo" x="20" y="292">clustering stops at z11 — a z12 pin</text><text class="gis-label-sm gis-halo" x="20" y="322">carries no count at all</text><line class="gis-muted" stroke-dasharray="6 6" x1="20" y1="344" x2="620" y2="344"/><text class="gis-label-mono" x="20" y="384">z12</text><text class="gis-label-sm" x="86" y="384">the same 67 points, one by one</text><rect class="gis-muted" x="20" y="398" width="600" height="210"/><line class="gis-muted" x1="170" y1="212.0" x2="150" y2="420"/><line class="gis-muted" x1="350" y1="144.0" x2="370" y2="406"/><line class="gis-muted" x1="490" y1="215.9" x2="515" y2="519"/><circle class="gis-ink gis-fill-ink" cx="124.5" cy="551.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="49.1" cy="511.5" r="5"/><circle class="gis-ink gis-fill-ink" cx="147.1" cy="434.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="242.3" cy="505.9" r="5"/><circle class="gis-ink gis-fill-ink" cx="156.7" cy="488.1" r="5"/><circle class="gis-ink gis-fill-ink" cx="84.8" cy="482.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="214.1" cy="439.5" r="5"/><circle class="gis-ink gis-fill-ink" cx="141.5" cy="583.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="185.1" cy="465.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="87.2" cy="561.2" r="5"/><circle class="gis-ink gis-fill-ink" cx="167.7" cy="424.7" r="5"/><circle class="gis-ink gis-fill-ink" cx="163.1" cy="521.5" r="5"/><circle class="gis-ink gis-fill-ink" cx="169.6" cy="576.1" r="5"/><circle class="gis-ink gis-fill-ink" cx="113.2" cy="513.7" r="5"/><circle class="gis-ink gis-fill-ink" cx="162.1" cy="457.5" r="5"/><circle class="gis-ink gis-fill-ink" cx="104.5" cy="446.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="206.0" cy="482.0" r="5"/><circle class="gis-ink gis-fill-ink" cx="148.8" cy="559.2" r="5"/><circle class="gis-ink gis-fill-ink" cx="208.6" cy="564.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="60.1" cy="459.4" r="5"/><circle class="gis-ink gis-fill-ink" cx="193.2" cy="511.7" r="5"/><circle class="gis-ink gis-fill-ink" cx="82.6" cy="521.1" r="5"/><circle class="gis-ink gis-fill-ink" cx="137.2" cy="475.2" r="5"/><circle class="gis-ink gis-fill-ink" cx="221.9" cy="524.5" r="5"/><circle class="gis-ink gis-fill-ink" cx="136.4" cy="532.4" r="5"/><circle class="gis-ink gis-fill-ink" cx="127.1" cy="447.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="233.0" cy="475.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="238.3" cy="542.0" r="5"/><circle class="gis-ink gis-fill-ink" cx="183.6" cy="552.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="65.4" cy="548.0" r="5"/><circle class="gis-ink gis-fill-ink" cx="117.1" cy="490.4" r="5"/><circle class="gis-ink gis-fill-ink" cx="190.6" cy="436.9" r="5"/><circle class="gis-ink gis-fill-ink" cx="49.5" cy="489.2" r="5"/><circle class="gis-ink gis-fill-ink" cx="119.6" cy="578.2" r="5"/><circle class="gis-ink gis-fill-ink" cx="48.2" cy="533.6" r="5"/><circle class="gis-ink gis-fill-ink" cx="201.9" cy="534.5" r="5"/><circle class="gis-ink gis-fill-ink" cx="104.2" cy="534.9" r="5"/><circle class="gis-ink gis-fill-ink" cx="138.5" cy="507.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="191.7" cy="581.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="83.9" cy="455.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="216.3" cy="502.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="116.7" cy="427.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="182.7" cy="488.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="257.0" cy="486.1" r="5"/><circle class="gis-ink gis-fill-ink" cx="235.2" cy="452.0" r="5"/><circle class="gis-ink gis-fill-ink" cx="254.3" cy="524.9" r="5"/><circle class="gis-ink gis-fill-ink" cx="109.4" cy="469.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="72.1" cy="501.5" r="5"/><circle class="gis-ink gis-fill-ink" cx="330.0" cy="427.9" r="5"/><circle class="gis-ink gis-fill-ink" cx="342.1" cy="467.2" r="5"/><circle class="gis-ink gis-fill-ink" cx="370.5" cy="427.4" r="5"/><circle class="gis-ink gis-fill-ink" cx="406.3" cy="463.1" r="5"/><circle class="gis-ink gis-fill-ink" cx="390.6" cy="493.1" r="5"/><circle class="gis-ink gis-fill-ink" cx="342.6" cy="490.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="381.7" cy="462.1" r="5"/><circle class="gis-ink gis-fill-ink" cx="407.0" cy="433.6" r="5"/><circle class="gis-ink gis-fill-ink" cx="349.8" cy="410.4" r="5"/><circle class="gis-ink gis-fill-ink" cx="318.0" cy="452.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="392.7" cy="411.3" r="5"/><circle class="gis-ink gis-fill-ink" cx="361.2" cy="450.9" r="5"/><circle class="gis-ink gis-fill-ink" cx="502.3" cy="521.6" r="5"/><circle class="gis-ink gis-fill-ink" cx="514.5" cy="569.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="500.4" cy="546.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="481.8" cy="571.2" r="5"/><circle class="gis-ink gis-fill-ink" cx="538.8" cy="560.8" r="5"/><circle class="gis-ink gis-fill-ink" cx="530.8" cy="528.0" r="5"/><circle class="gis-ink gis-fill-ink" cx="474.3" cy="546.3" r="5"/><text class="gis-label-mono" x="20" y="660">48 + 12 + 7 = 67</text><text class="gis-label-sm" x="272" y="660">nothing was thrown away</text></svg><figcaption>The count on a bubble is a promise that nothing was thrown away: forty-eight water points
-merge into one marker at zoom 9 and the same forty-eight resolve into forty-eight individual pins by
-zoom 12. That is why the pipeline is built to merge rather than drop — a bubble's number has to stay
-true at every zoom in between.</figcaption></figure>
+<figure class="gis-fig gis-todo">
+<p class="gis-todo-h">Figure F14 · to be redrawn</p>
+<p><strong>Must make the reader see:</strong> that overview coverage is a smooth density surface built
+from a thinned sample of points, never discrete dots and never a count on a bubble; that it hands off
+to individual icons at z9, where those z9-10 icons are still drawn from the same thinned sample and
+only become the complete set of points at z11 and up; and that the heatmap and the icons are
+scope-filtered on the very same exact per-point tokens, so neither one can ever show anything outside
+the scoped region — there is no cluster, no centroid and no merged count left anywhere in the
+picture.</p>
+<p><strong>Drawing brief:</strong> three panels, stacked top to bottom (640 units is a large-type
+drawing at this width per the site convention, so stack rather than lay panels side by side). Top
+panel labelled <code>z6-8</code>: a soft, single-hue <code>gis-accent</code> blurred surface (a radial
+gradient or several overlapping soft-edged blobs, denser toward the middle) filling most of a region
+outline, with a visibly feathered edge that fades to nothing at the outline's border and nothing drawn
+outside it — no discrete dots, no numbers. Middle panel labelled <code>z9-10</code>: the same region,
+the heatmap fading (lower opacity) while a scattered, visibly sparse set of small
+<code>gis-ink</code> dots appears over it, concentrated where the heatmap was hottest — label this
+panel "thinned sample" so a reader does not mistake the sparseness for the true density. Bottom panel
+labelled <code>z11+</code>: the heatmap gone entirely, the same area now filled with a visibly denser,
+complete set of small dots (several times as many as the middle panel) covering the same hot area plus
+the quieter surrounding ground the middle panel's sample missed. Annotate the boundary between the top
+and middle panels "heat maxzoom 9 / icon minzoom 9 — cross-fade" and annotate the boundary between the
+middle and bottom panels "thinned sample densifies to complete by z11". A thin <code>gis-muted</code>
+connector or bracket linking the sparse dots in the middle panel to their denser counterpart in the
+bottom panel would reinforce that it is the same underlying point set becoming visible, not new data
+appearing from nowhere.</p>
+<figcaption>Below z9 coverage reads as a density heatmap built from a thinned sample of points, never
+as a count or a cluster; from z9 the same sample starts appearing as individual icons, and by z11 every
+point in the tile is present. Nothing is ever merged and nothing is ever positioned anywhere but its
+own coordinate — the phantom-bubble class of bug has no surface left to occur on.</figcaption>
+</figure>
+<!-- FIGURE-TODO id=F14 ch=7 -->
 
 ## Why the layers are split per country
 
@@ -286,30 +364,43 @@ catalogue letter (chapter 6,
 is what this project shipped first, and it worked, right up until a second bordering country
 (the Netherlands) was onboarded next to the first (Belgium).
 
-The problem is not a performance problem. It is that **tippecanoe clusters within one layer**, with no
-awareness of anything the data means — it only sees points and screen distances. A single `c` layer
-straddling the Belgian-Dutch border let a low-zoom cluster merge fountains from both countries into
-one bubble, whose `point_count` and map position then mixed the two, and whose unioned `ridtok`/
-`cctok` scope tokens could make that mixed bubble match a scope filter it should not have. The measured
-before-picture, recorded in `coverage-provider.md §4`: under a Netherlands-only scope, 42 clusters
-rendered pure-NL, 31 mixed, and 0 pure-BE.
+The problem that first forced the split was a clustering problem, from back when this project still
+clustered coverage at low zoom (the section above covers why clustering itself is gone now). Tippecanoe
+clusters *within* one layer, with no awareness of anything the data means — it only sees points and
+screen distances. A single `c` layer straddling the Belgian-Dutch border let a low-zoom cluster merge
+fountains from both countries into one bubble, whose `point_count` and map position then mixed the
+two, and whose unioned `ridtok`/`cctok` scope tokens could make that mixed bubble match a scope filter
+it should not have. The measured before-picture, recorded in `coverage-provider.md §4`: under a
+Netherlands-only scope, 42 clusters rendered pure-NL, 31 mixed, and 0 pure-BE. The fix in
+`build_pmtiles()` and `export_geojsonl()` (both in `pipeline/coverage/tiles.py`) was to give tippecanoe
+one layer per **`(letter, country_code)`** pair instead of one per letter — `c_be`, `c_nl`, and so on,
+lowercase, with unstamped rows bucketed under `<letter>_zz` so a POI that could not be matched to a
+country is never silently dropped.
 
-The fix in `build_pmtiles()` and `export_geojsonl()` (both in `pipeline/coverage/tiles.py`) is to give
-tippecanoe one layer per **`(letter, country_code)`** pair instead of one per letter — `c_be`, `c_nl`,
-and so on, lowercase, with unstamped rows bucketed under `<letter>_zz` so a POI that could not be
-matched to a country is never silently dropped. Because tippecanoe only ever clusters *within* a
-layer, and a layer is now single-country by construction, **no cluster can ever contain points from
-two countries** — not because of a filter applied afterwards, but because the two countries' points
-are never in the same layer to begin with.
+The split outlived the reason it was built for. Clustering is gone, and with it went the only mechanism
+that could ever mix two countries' points into one feature — an individual point carries exactly one
+`ridtok`/`cctok` pair of its own, so the scope filter (coverage-provider.md §4) is exact per point no
+matter which layer it sits in. **The per-point token, not the layer boundary, is now the actual
+phantom-free guarantee.** So why does the split still exist? Two live reasons, neither about clustering
+any more:
+
+- **The heatmap needs it.** Chapter 8 (`on-screen.md`) covers the client side in full, but the shape
+  matters here: the density heatmap is built by mirroring each `<letter>_<cc>` layer with its own
+  `<letter>-<cc>-heat` MapLibre layer, so "how dense is coverage in the Netherlands" and "how dense is
+  coverage in Belgium" are two surfaces the client can toggle and scope independently, rather than one
+  blended surface it would have to un-mix after the fact.
+- **A tile stays single-country by construction.** Every `(letter, country)` GeoJSONL file
+  `export_geojsonl()` writes is its own `COPY`, filtered to exactly one country, so tippecanoe never
+  sees a mixed file to begin with. That keeps "just the Netherlands" a real, checkable property of the
+  tiles themselves, not something a filter has to reconstruct at render time.
 
 That is worth pausing on, because it is a different *kind* of decision than everything else in this
-chapter. Zoom ranges, cluster distances, `-r1`, the size-budget merge — all of those are performance
-and rendering tuning. The per-country layer split is not: it exists because **a bubble straddling a
-national border would misrepresent what the data means**, not because it would be slow or oversized.
-Coverage per country is a real distinction a rider cares about — the region-scoping selector lets
-someone view "just the Netherlands", and a bubble whose count and position blended two countries would
-make that selector lie. Splitting the layers is a rendering choice driven by the meaning of the data,
-not by its size.
+chapter. Zoom ranges, `-r1`, the size-budget thinning — all of those are performance and rendering
+tuning. The per-country layer split is not: it exists because coverage per country is a real
+distinction a rider cares about — the region-scoping selector lets someone view "just the Netherlands"
+— not because a mixed layer would be slow or oversized. Splitting the layers is a rendering choice
+driven by the meaning of the data, not by its size; that it also happened to fix a clustering bug which
+no longer exists was a bonus, never the reason it stays.
 
 ## The whole path
 
@@ -343,19 +434,27 @@ chapter 8 covers in full — decodes the MVT bytes into geometry it can paint, f
   freedom.
 - **PMTiles** packs an entire pyramid into one file with an index, and the client reads it with HTTP
   **range requests** — no tile server on the request path, ever.
-- **Clustering merges, it does not drop.** `--cluster-densest-as-needed` grows bubbles to fit a tile's
-  size budget instead of discarding points; the count on a bubble is a promise that everything it
-  represents is still there.
-- The **per-country layer split** (`<letter>_<cc>`) exists so a cluster can never straddle a national
-  border — a decision driven by what the data *means*, not by how big or slow it is.
+- **No clustering, ever.** Coverage tiles carry individual points only, z6-14. Clustering's own two
+  flaws — the phantom bubble (a cluster's rendered centroid landing outside the region its members
+  scope to) and a poor fit for world-scale data — are why. `-r1` plus `--drop-densest-as-needed` still
+  thin the z6-10 tiles, but only to build a density *sample*; z11-14 tiles are always complete, and
+  nothing is ever merged into a count.
+- The **overview is a heatmap, not dots.** A single-hue density surface built from the thinned z6-10
+  points fills the gap clustering used to fill, cross-fading into individual icons from z9 up
+  (complete by z11) — without a rendered centroid that can ever leave the scoped region. The rail's
+  `/counts` stays the one exact number in the picture.
+- The **per-country layer split** (`<letter>_<cc>`) still exists — now to keep the heatmap
+  single-country and the tiles themselves single-country by construction, not to stop a cluster from
+  crossing a border, since nothing clusters any more.
 - Build time and request time are cleanly separated by the moment `coverage.pmtiles` is written:
   everything before that line runs once a week; everything after it runs per rider, per pan, with no
   server process in the path at all.
 
-The fountain is now sitting inside a tile, addressed, clustered or not depending on the zoom, waiting
-to be fetched. Chapter 8 (`on-screen.md`) is where it actually appears: MapLibre's model of style,
-source, layer and `source-layer`, and how a rider's click turns a pixel back into the same row this
-chapter started from.
+The fountain is now sitting inside a tile, addressed, waiting to be fetched — as its own point at every
+zoom from z11 up, and as one contributor to the density heatmap wherever its tile got thinned below
+that. Chapter 8 (`on-screen.md`) is where it actually appears: MapLibre's model of style, source, layer
+and `source-layer`, and how a rider's click turns a pixel back into the same row this chapter started
+from.
 
 ## Try it
 
@@ -435,8 +534,8 @@ chapter started from.
 
     Either way, this table *is* the reason the tile layers are named `c_be`, `c_de`, `c_nl`, `d_be`
     and so on rather than just `c`, `d`, `e`: each row above becomes exactly one
-    `(letter, country)` GeoJSONL file, and a cluster built from one file can never straddle a border,
-    because the other country's points were never in that file to begin with. If your dev stack has
-    published a `.pmtiles` archive, `pmtiles show <path-or-url>` lists those same names back to you
-    as `vector_layers` — but the query above needs nothing built, only the seeded database this
+    `(letter, country)` GeoJSONL file, and a tile layer built from one file can never mix two
+    countries, because the other country's points were never in that file to begin with. If your dev
+    stack has published a `.pmtiles` archive, `pmtiles show <path-or-url>` lists those same names back
+    to you as `vector_layers` — but the query above needs nothing built, only the seeded database this
     course already assumes.

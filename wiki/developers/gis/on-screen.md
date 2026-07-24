@@ -55,23 +55,42 @@ codebase. `addCoverage()` in `map.js` adds exactly one vector source:
 map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
 ```
 
-and then, still inside the same function, adds one icon layer and one cluster-bubble layer for
+and then, still inside the same function, adds one icon layer and one heatmap layer for
 every catalogue letter and every country — all of them with `source:'coverage'`. One `.pmtiles`
-archive, fetched once, feeds every one of those pin and cluster-bubble layers. Restyle any one of
+archive, fetched once, feeds every one of those icon and heatmap layers. Restyle any one of
 them — change a colour, swap an icon — and nothing is re-fetched. The source does not change; only
 the instruction reading it does.
 
-<figure class="gis-fig">
-<svg viewBox="0 0 640 940" role="img" aria-labelledby="f15-t f15-d" xmlns="http://www.w3.org/2000/svg"><title id="f15-t">One MapLibre source feeding several layers, and what one layer is made of</title><desc id="f15-d">A vertical flow. At the top a box reads: one tile archive, coverage.pmtiles. One arrow leads down from it into a second box: one source, source colon "coverage". From that single source box the flow fans out across a horizontal bar into three separate layer boxes standing side by side: pins, whose source-layer is c_be; clusters, on the same c_be; and pins on d_be. Each of the three layers then sends its own arrow down into one shared rendered-map panel, where water pins, a cluster bubble reading 12 and service pins all appear together on the same map. Below, tied to the first layer box by a dashed leader, a detail panel opens that one layer up: source-layer c_be, and its properties split into a paint group, holding icon-opacity, the only paint it sets, and a layout group, holding visibility and icon-image. Nothing about the layer boxes or the detail panel reaches back up into the source box.</desc><defs><marker id="gis-arrow-f15" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><rect class="gis-box" rx="8" x="180" y="24" width="280" height="80"/><text class="gis-label-sm" x="320" y="58" text-anchor="middle">one tile archive</text><text class="gis-label-mono" x="320" y="90" text-anchor="middle">coverage.pmtiles</text><line class="gis-accent" x1="320" y1="106" x2="320" y2="142" marker-end="url(#gis-arrow-f15)"/><rect class="gis-box" rx="8" x="166" y="144" width="308" height="80"/><text class="gis-label-sm" x="320" y="178" text-anchor="middle">one source</text><text class="gis-label-mono" x="320" y="210" text-anchor="middle">source: "coverage"</text><line class="gis-accent" x1="320" y1="226" x2="320" y2="262"/><line class="gis-accent" x1="112" y1="262" x2="528" y2="262"/><line class="gis-accent" x1="112" y1="262" x2="112" y2="300" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="320" y1="262" x2="320" y2="300" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="528" y1="262" x2="528" y2="300" marker-end="url(#gis-arrow-f15)"/><rect class="gis-box" rx="8" x="21" y="300" width="182" height="118"/><text x="112" y="338" text-anchor="middle">pins</text><text class="gis-label-sm" x="112" y="370" text-anchor="middle">source-layer</text><text class="gis-label-mono" x="112" y="400" text-anchor="middle">c_be</text><rect class="gis-box" rx="8" x="229" y="300" width="182" height="118"/><text x="320" y="352" text-anchor="middle">clusters</text><text class="gis-label-mono" x="320" y="384" text-anchor="middle">c_be</text><rect class="gis-box" rx="8" x="437" y="300" width="182" height="118"/><text x="528" y="352" text-anchor="middle">pins</text><text class="gis-label-mono" x="528" y="384" text-anchor="middle">d_be</text><line class="gis-accent" x1="112" y1="420" x2="112" y2="458" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="320" y1="420" x2="320" y2="458" marker-end="url(#gis-arrow-f15)"/><line class="gis-accent" x1="528" y1="420" x2="528" y2="458" marker-end="url(#gis-arrow-f15)"/><rect class="gis-box" rx="8" x="21" y="460" width="598" height="210"/><text class="gis-label-sm" x="41" y="492">rendered map</text><rect class="gis-fill-glacier" fill-opacity=".22" x="41" y="506" width="558" height="144"/><path class="gis-muted" d="M 41 592 C 140 570, 220 616, 320 596 S 500 560, 599 588"/><path class="gis-muted" d="M 232 506 L 262 566 L 246 650"/><circle class="gis-ink gis-fill-accent" cx="95" cy="606" r="9"/><circle class="gis-ink gis-fill-accent" cx="150" cy="548" r="9"/><text class="gis-label-sm gis-halo" x="168" y="542">Spa</text><circle class="gis-ink gis-fill-ochre" cx="320" cy="560" r="26"/><text class="gis-label-sm gis-halo" x="320" y="569" text-anchor="middle">12</text><circle class="gis-ink gis-fill-clay" cx="505" cy="602" r="9"/><circle class="gis-ink gis-fill-clay" cx="556" cy="546" r="9"/><path class="gis-muted" stroke-dasharray="4 5" d="M 21 372 L 8 372 L 8 760 L 21 760"/><rect class="gis-box" rx="8" x="21" y="706" width="598" height="210"/><text class="gis-label-sm" x="41" y="742">inside the pins layer</text><text class="gis-label-mono" x="41" y="778">source-layer: c_be</text><line class="gis-muted" x1="21" y1="796" x2="619" y2="796"/><line class="gis-muted" x1="330" y1="796" x2="330" y2="916"/><text class="gis-label-mono" x="41" y="830">paint</text><text class="gis-label-sm" x="125" y="830">appearance</text><text class="gis-label-sm" x="41" y="864">icon-opacity</text><text class="gis-label-sm" x="41" y="894">the only paint it sets</text><text class="gis-label-mono" x="350" y="830">layout</text><text class="gis-label-sm" x="448" y="830">placement</text><text class="gis-label-sm" x="350" y="864">visibility</text><text class="gis-label-sm" x="350" y="894">icon-image</text></svg>
-<figcaption>One source, many layers — the reason a restyle needs no refetch.</figcaption>
+<figure class="gis-fig gis-todo">
+<p class="gis-todo-h">Figure F15 · to be redrawn</p>
+<p><strong>Must make the reader see:</strong> that one MapLibre source (`coverage`, backed by one
+`.pmtiles` archive) feeds two different layers per catalogue letter and country — a `symbol` icon
+layer and a `heatmap` layer — never a cluster-bubble layer carrying a merged point count; and that
+restyling either layer never re-fetches the source, because both read the same already-loaded
+data.</p>
+<p><strong>Drawing brief:</strong> keep the four-tier vertical flow of the original figure — one
+tile archive (`coverage.pmtiles`) at the top, an arrow down into one source box (`source:
+"coverage"`), fanning out across a horizontal bar into three layer boxes standing side by side (for
+example `water icons` and `water heat`, both on source-layer `c_be`, plus `services icons` on
+`d_be`), each sending its own arrow down into one shared rendered-map panel. In that panel, replace
+the old cluster-bubble circle with a soft blurred patch (the heatmap) sitting under a scatter of
+small individual dot icons (the symbol layer) — no bubble, no count label anywhere in the panel.
+Below that, keep the "inside one layer" detail panel opened off the icons layer box by a dashed
+leader, showing its `paint`/`layout` split (`icon-opacity` under paint, `visibility`/`icon-image`
+under layout) exactly as the original figure did — that part does not need to change.</p>
+<figcaption>One source, many layers — now an icon layer and a heatmap layer per catalogue letter and
+country, never a cluster bubble. Restyling either needs no refetch.</figcaption>
 </figure>
+<!-- FIGURE-TODO id=F15 ch=8 -->
 
 ## `source-layer`
 
 A vector tile is not one flat bag of features. `tiles.md` showed tippecanoe building the coverage
-tiles per catalogue letter and per country, so that a symbol never clusters across a border it
-shouldn't. Inside a single `.pmtiles` archive, those splits survive as **named layers packed inside
-each tile** — several independent feature collections, sitting in the same file, each with its own
+tiles per catalogue letter and per country — a split originally built to stop a low-zoom cluster
+from merging points across a border, and kept today for two live reasons that have nothing to do
+with clustering any more (`tiles.md`'s "Why the layers are split per country" has the full story).
+Inside a single `.pmtiles` archive, those splits survive as **named layers packed inside each
+tile** — several independent feature collections, sitting in the same file, each with its own
 name.
 
 That means a MapLibre layer reading a vector source cannot just say "read the `coverage` source." It
@@ -97,10 +116,13 @@ case for an empty source-layer, it is just an empty layer.
 
 This is also where the "one source, many layers" idea from the previous section gets a second
 dimension. The very same `source` and the very same `source-layer` — `coverage` and `c_be` — feed
-*two* layers in `addCoverage()`: an icon layer for the unclustered features and a cluster-bubble
-layer for the clustered ones. What tells them apart is not the source, and not even the
-source-layer — it is each layer's `filter`, narrowing the *same* underlying features down to the
-ones that layer is allowed to draw. One pool of data, sliced twice.
+*two* layers in `addCoverage()`: a `symbol` icon layer for individual points and a `heatmap` layer
+for the overview density surface. What tells them apart is not the source, and not even the
+source-layer — it is each layer's `type`, its zoom range (`minzoom: 9` on the icons, `maxzoom: 9` on
+the heat, so the two cross-fade at z9) and its `filter` (`covIconFilter()` layers scope on top of
+the curated-ref dedupe and, for stays, the accessibility narrow; `covHeatFilter()` is scope only — a
+density surface has nothing to click, so it needs none of the rest). One pool of data, read twice,
+never merged into a cluster.
 
 ## The source types we use
 
@@ -154,21 +176,36 @@ map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZ
 `cluster:true` tells MapLibre itself to group nearby points into bubbles, live, in the browser, as
 you pan and zoom — no pre-built tile archive involved.
 
-**Build-time versus browser-time clustering, and why both exist.** `tiles.md` clusters the coverage
-source *before* it ever reaches the browser: tippecanoe groups nearby points into cluster features
-while building the `.pmtiles` archive, because that source is enormous (this project's `coverage_poi`
-table already holds a few hundred thousand rows worldwide, headed toward several million) and mostly
-static — it changes when the pipeline re-runs, not every time a rider looks at the map. Clustering it
-once, offline, and shipping the result is the only version of that job that scales.
+**Coverage used to cluster at build time too, and here is why it stopped.** Until 2026-07-24,
+`tiles.md`'s tippecanoe run grouped nearby coverage points into cluster features while building the
+`.pmtiles` archive, for the same reason the confirmed-points source below still clusters: the
+coverage pool is enormous (this project's `coverage_poi` table already holds a few hundred thousand
+rows worldwide, headed toward several million) and mostly static, so clustering it once, offline,
+looked like the only version of that job that could scale.
 
-The confirmed-points source above clusters the opposite way, live in the browser, because it is the
-opposite kind of data: small (a rider-confirmed pool, nowhere near coverage's size) and constantly
-changing (a new confirmation can land at any moment). Baking a tile archive for a pool that size
-would be wasted effort, and rebuilding it on every confirmation would be absurd. So MapLibre's own
-`cluster:true` option does the grouping instead, recomputing it for whatever is currently in view.
+It did not survive a second bordering country. A cluster renders at the *centroid of its members*,
+and that position turned out to be decoupled from any single member's own region — a shelter cluster
+was measured rendering in Thuringia while carrying a single Hesse `ridtok`, a **phantom bubble** that
+no amount of tuning (tighter cluster distance, larger tile budgets, unioning tokens differently)
+could close off (`2026-07-24-coverage-no-cluster-design.md` §1). It also did not scale the way
+tippecanoe's per-tile clustering needed to: a European state clusters fine, but a whole US state or
+Chinese province onboarded at once (California 200,000-400,000 rows, Guangdong 500,000-2,000,000+)
+breaks it. The fix was to stop clustering coverage altogether: `addCoverage()` now draws every
+in-scope point individually from z9 up, with the z6-9 overview filled by a density heatmap built
+from the same tiles' thinned point sample rather than from merged counts — a single point carries
+exactly one `ridtok`/`cctok` pair, so the scope filter stays exact no matter how far out the map is
+zoomed.
 
-Same word — **cluster** — two entirely different mechanisms, each chosen for the size and volatility
-of the data it serves. Neither is "the right way" in general; each is right for what it clusters.
+The confirmed-points source above still clusters, live in the browser, because it is the opposite
+kind of data: small (a rider-confirmed pool, nowhere near coverage's size) and constantly changing (a
+new confirmation can land at any moment). Baking a tile archive for a pool that size would be wasted
+effort, and rebuilding it on every confirmation would be absurd. So MapLibre's own `cluster:true`
+option still does the grouping there, recomputing it for whatever is currently in view — small and
+volatile enough that a centroid never has anywhere phantom to land.
+
+The lesson survives even though the coverage side of it flipped: **cluster** is the right tool only
+for data small and volatile enough that its rendered position can be trusted. The confirmed-points
+pool clears that bar; coverage's own worldwide, precisely-scoped pool no longer does.
 
 ## Paint vs layout
 
@@ -272,8 +309,11 @@ way to answer "what's here?" except by asking somewhere else.
 - Four source types, four different jobs: `vector`/`pmtiles://` for the huge static coverage pool,
   `geojson` for small one-off shapes like the region mask, `raster` for pre-rendered image tiles, and
   a clustered `geojson` source for the small, constantly-changing confirmed-points pool.
-- **Clustering happens twice, for opposite reasons**: once at build time (huge, static data) and once
-  live in the browser (small, changing data).
+- **Clustering happens once now, not twice.** Coverage no longer clusters at all — individual points
+  from z9, a density heatmap below that — because a build-time cluster's position could not be
+  trusted to stay inside its scoped region at any tuning. The confirmed-points pool is the only thing
+  left that still clusters, live in the browser, because it is small and volatile enough for that to
+  stay safe.
 - **`paint`** is cheap appearance; **`layout`** is placement and participation, and costs more to
   change.
 - A paint or layout property can be an **expression**, reading a feature's own properties — one layer

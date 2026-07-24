@@ -102,8 +102,10 @@ true match, and guaranteed to also contain some rows that are not matches at all
 length of one function call rather than changing the column itself. [`metres-vs-degrees.md`](metres-vs-degrees.md)
 
 **Cluster / clustering** — merging nearby points into one feature carrying a count, so a map stays
-readable when zoomed out; this project clusters twice, once offline at tile-build time for the huge
-coverage layer and once live in the browser for the small confirmed-points pool.
+readable when zoomed out. This project used to cluster the huge coverage layer offline at tile-build
+time too, but a cluster's rendered position couldn't be trusted to stay inside its scoped region
+(phantom bubbles), so that layer was switched to individual points plus a density heatmap instead;
+the only clustering left is live, in the browser, for the small confirmed-points pool.
 [`tiles.md`](tiles.md), [`on-screen.md`](on-screen.md)
 
 **Convention (tagging)** — the informal, voluntarily-followed agreement among OSM mappers about which
