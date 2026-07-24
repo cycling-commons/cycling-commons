@@ -1073,10 +1073,14 @@
         // heatmap (maxzoom 9), handing off to the individual icons (minzoom 9) so
         // the actual spots are visible from z9 (owner request 2026-07-24).
         // Scope-only filter → phantom-free (only in-scope points add density).
-        // Single hue across every letter (per-letter colours don't blend in a
-        // heatmap). The colour ramp runs transparent → light → DEEP green at max
-        // density: a pale/white top stop punched visible "holes" in a dense
-        // single-letter surface (e.g. stays alone), reading as a broken blur.
+        // Per-CATEGORY hue: each letter's heat carries its OWN colour (the rail
+        // colour), so the stacked layers alpha-blend into a MULTI-colour coverage
+        // density — water blue, stays orange, … mixing where categories overlap
+        // (owner request 2026-07-24). The ramp is the same hue from transparent to
+        // translucent (never toward black or white), and the low top alpha keeps
+        // it a soft, see-through blur.
+        const hcH=((layerByKey[key]||{}).color||'#6b6f5e');
+        const hR=parseInt(hcH.slice(1,3),16), hG=parseInt(hcH.slice(3,5),16), hB=parseInt(hcH.slice(5,7),16);
         const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
         map.addLayer({id:heatId, type:'heatmap', source:'coverage', 'source-layer':srcLayer,
           maxzoom: 9,
@@ -1084,18 +1088,15 @@
           layout:{visibility:'none'},
           paint:{
             'heatmap-weight':0.6,
-            'heatmap-intensity':['interpolate',['linear'],['zoom'],6,1.0,9,1.5],
-            'heatmap-radius':['interpolate',['linear'],['zoom'],6,15,9,26],
-            // fade out approaching z9 so it cross-fades into the icons
-            'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.72,8,0.72,9,0],
-            // no pale top stop — deep green at max density, so a dense surface
-            // reads as a solid blur, never white "holes".
+            'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.9,9,1.3],
+            'heatmap-radius':['interpolate',['linear'],['zoom'],6,16,9,28],
+            // more transparent than before; still fades to 0 at z9 for the crossfade
+            'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.6,8,0.6,9,0],
             'heatmap-color':['interpolate',['linear'],['heatmap-density'],
-              0,'rgba(0,0,0,0)',
-              0.2,'rgba(122,200,166,0.40)',
-              0.45,'#5FBF97',
-              0.72,'#2E9E73',
-              1,'#17663F']}});
+              0, `rgba(${hR},${hG},${hB},0)`,
+              0.3, `rgba(${hR},${hG},${hB},0.28)`,
+              0.65, `rgba(${hR},${hG},${hB},0.5)`,
+              1, `rgba(${hR},${hG},${hB},0.72)`]}});
         // Individual coverage icons (no clustering — 2026-07-24-coverage-no-cluster-design.md
         // §2); scope-filtered exactly. minzoom 9 so the spots are visible from the
         // region-fit zoom (z6-8 tiles are thinned, so z9-10 icons are a sample that
