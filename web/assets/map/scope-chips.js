@@ -102,9 +102,20 @@
 
     if (activeRegion && i.scopeCenter) {
       model.mode = 'compass';
-      // Cross-border: nearest 9 across ALL countries (was contextualRegions(cc)).
-      const pool = scopeApi.regionsNear(i.scopeCenter, { limit: 9 })
-        .filter((r) => r.id !== activeRegion.id).slice(0, 8);
+      // Adjacency gate (2026-07-24-region-adjacency-and-click-refinement-design.md
+      // §2.3 / §2.4): a FOREIGN region is offered only if it shares a border with
+      // the active region (id in activeRegion.adj). Border-neighbours are taken
+      // first (so Overijssel still reaches Lower Saxony + NRW despite far German
+      // centroids), then same-country fill by the existing centroid metric.
+      // Domestic non-neighbours never displace an adj entry; foreign non-
+      // neighbours are never eligible.
+      const activeAdj = new Set(activeRegion.adj || []);
+      const ranked = scopeApi.regionsNear(i.scopeCenter, { limit: total })
+        .filter((r) => r.id !== activeRegion.id);
+      const adjFirst = ranked.filter((r) => activeAdj.has(r.id));
+      const domesticRest = ranked.filter((r) => !activeAdj.has(r.id)
+        && r.countryCode === activeRegion.countryCode);
+      const pool = adjFirst.concat(domesticRest).slice(0, 8);
       const layout = scopeApi.compassLayout(i.scopeCenter, pool);
       ROWS.forEach((row) => {
         // Drop a WHOLE vacant row: empty cells are visibility:hidden, so they still
@@ -135,11 +146,21 @@
     const near = (i.myArea && i.myArea.lat != null && i.myArea.lng != null)
       ? [i.myArea.lng, i.myArea.lat]
       : (i.scopeCenter || i.mapCenter || null);
-    // Cross-border ranking when we have an anchor; label-sorted country fallback
-    // only when there is none (an everywhere scope with no map centre — unreachable
-    // in the live app, where the map always has a centre by first render).
+    // The anchor is a point, not a region, so it has no adj of its own: resolve it
+    // to the region it sits in (synchronous bbox regionOfPoint — chip rendering
+    // must not go async), then gate foreign chips by THAT region's adj. No region
+    // under the anchor (e.g. Everywhere centred over open sea) → ungated, today's
+    // behaviour (2026-07-24-region-adjacency-and-click-refinement-design.md §2.3).
+    // Linear keeps pure centroid order among eligible (same-country OR adj) so a
+    // Duisburg/Amsterdam anchor still surfaces the nearest region first; compass
+    // mode above uses adj-first so far-centroid border neighbours still appear.
+    const anchorRegion = near ? scopeApi.regionOfPoint(near[0], near[1]) : null;
+    const linEligible = anchorRegion
+      ? (r) => r.countryCode === anchorRegion.countryCode
+          || (anchorRegion.adj || []).indexOf(r.id) !== -1
+      : () => true;
     const shown = near
-      ? scopeApi.regionsNear(near, { limit: 8 })
+      ? scopeApi.regionsNear(near, { limit: total }).filter(linEligible).slice(0, 8)
       : scopeApi.contextualRegions(cc, {});
     model.chips = shown.map(cue);
     model.more = total > shown.length;

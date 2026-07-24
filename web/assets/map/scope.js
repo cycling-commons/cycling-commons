@@ -22,7 +22,9 @@
   const EVENT = 'cc:scopechange';
 
   // Region registry injected by the map page from the DB (CCScope.init):
-  //   { id:int, slug:str, countryCode:str, bbox:[west, south, east, north] }
+  //   { id:int, slug:str, countryCode:str, bbox:[west, south, east, north],
+  //     adj:int[] }  — adj = border-neighbour ids (cross-border chip gate,
+  //   2026-07-24-region-adjacency-and-click-refinement-design.md §2.2)
   let regions = [];
   let byId = new Map();
   let bySlug = new Map();

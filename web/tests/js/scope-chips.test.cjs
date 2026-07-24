@@ -81,6 +81,45 @@ const REGIONS = RAW.map(([countryCode, slug, bbox], i) => ({
 }));
 
 const bySlug = (s) => REGIONS.find((r) => r.slug === s);
+
+// Real border-neighbours (2026-07-24-region-adjacency-and-click-refinement-design.md
+// ground truth). Slug map here; stamped onto each region as id arrays, exactly as
+// RegionRegistryProvider ships adj in CC_REGIONS.
+const ADJ = {
+  'baden-wurttemberg': ['bayern', 'hessen', 'rheinland-pfalz'],
+  bayern: ['baden-wurttemberg', 'hessen', 'sachsen', 'thuringen'],
+  berlin: ['brandenburg'],
+  brandenburg: ['berlin', 'mecklenburg-vorpommern', 'niedersachsen', 'sachsen', 'sachsen-anhalt'],
+  bremen: ['niedersachsen'],
+  brussels: ['flanders'],
+  drenthe: ['friesland', 'groningen', 'niedersachsen', 'overijssel'],
+  flanders: ['brussels', 'limburg-nl', 'noord-brabant', 'wallonia', 'zeeland'],
+  flevoland: ['friesland', 'gelderland', 'noord-holland', 'overijssel', 'utrecht'],
+  friesland: ['drenthe', 'flevoland', 'groningen', 'noord-holland', 'overijssel'],
+  gelderland: ['flevoland', 'limburg-nl', 'noord-brabant', 'nordrhein-westfalen', 'overijssel', 'utrecht', 'zuid-holland'],
+  groningen: ['drenthe', 'friesland', 'niedersachsen'],
+  hamburg: ['niedersachsen', 'schleswig-holstein'],
+  hessen: ['baden-wurttemberg', 'bayern', 'niedersachsen', 'nordrhein-westfalen', 'rheinland-pfalz', 'thuringen'],
+  'limburg-nl': ['flanders', 'gelderland', 'noord-brabant', 'nordrhein-westfalen', 'wallonia'],
+  luxembourg: ['rheinland-pfalz', 'saarland', 'wallonia'],
+  'mecklenburg-vorpommern': ['brandenburg', 'niedersachsen', 'schleswig-holstein'],
+  niedersachsen: ['brandenburg', 'bremen', 'drenthe', 'groningen', 'hamburg', 'hessen', 'mecklenburg-vorpommern', 'nordrhein-westfalen', 'overijssel', 'sachsen-anhalt', 'schleswig-holstein', 'thuringen'],
+  'noord-brabant': ['flanders', 'gelderland', 'limburg-nl', 'zeeland', 'zuid-holland'],
+  'noord-holland': ['flevoland', 'friesland', 'utrecht', 'zuid-holland'],
+  'nordrhein-westfalen': ['gelderland', 'hessen', 'limburg-nl', 'niedersachsen', 'overijssel', 'rheinland-pfalz', 'wallonia'],
+  overijssel: ['drenthe', 'flevoland', 'friesland', 'gelderland', 'niedersachsen', 'nordrhein-westfalen'],
+  'rheinland-pfalz': ['baden-wurttemberg', 'hessen', 'luxembourg', 'nordrhein-westfalen', 'saarland', 'wallonia'],
+  saarland: ['luxembourg', 'rheinland-pfalz'],
+  sachsen: ['bayern', 'brandenburg', 'sachsen-anhalt', 'thuringen'],
+  'sachsen-anhalt': ['brandenburg', 'niedersachsen', 'sachsen', 'thuringen'],
+  'schleswig-holstein': ['hamburg', 'mecklenburg-vorpommern', 'niedersachsen'],
+  thuringen: ['bayern', 'hessen', 'niedersachsen', 'sachsen', 'sachsen-anhalt'],
+  utrecht: ['flevoland', 'gelderland', 'noord-holland', 'zuid-holland'],
+  wallonia: ['flanders', 'limburg-nl', 'luxembourg', 'nordrhein-westfalen', 'rheinland-pfalz'],
+  zeeland: ['flanders', 'noord-brabant', 'zuid-holland'],
+  'zuid-holland': ['gelderland', 'noord-brabant', 'noord-holland', 'utrecht', 'zeeland'],
+};
+REGIONS.forEach((r) => { r.adj = (ADJ[r.slug] || []).map((s) => bySlug(s).id); });
 CCScope.init(REGIONS, { kind: 'region', regionIds: [bySlug('wallonia').id], countryCode: 'BE' });
 
 const centreOf = (r) => [(r.bbox[0] + r.bbox[2]) / 2, (r.bbox[1] + r.bbox[3]) / 2];
@@ -217,13 +256,6 @@ test('compass: Utrecht offers its true neighbours, not the far north-east', () =
   assert.equal(m.more, true);
 });
 
-test('compass: Utrecht stays all-Dutch — cross-border emerges only from geography', () => {
-  const m = compassFor('utrecht');
-  const cells = m.rows.flat().filter((c) => c.kind === 'region' || c.kind === 'center');
-  assert.ok(cells.every((c) => c.cc === 'NL'), 'every Utrecht chip is Dutch');
-  assert.ok(cells.every((c) => c.foreign === false), 'no foreign cue appears');
-});
-
 test('compass: Flanders now reaches into the Netherlands (deliberate change from Phase 0)', () => {
   // Phase 0's "drops the whole empty N row" pinned an all-BE pool (Brussels/Wallonia
   // both lie south, so the country-scoped N row was vacant). Cross-border ranking
@@ -236,17 +268,83 @@ test('compass: Flanders now reaches into the Netherlands (deliberate change from
   assert.equal(m.rows.flat().find((c) => c.slug === 'zeeland').foreign, true);
 });
 
-test('compass: Groningen also drops its N row, and Bremen (DE) now fills the E slot', () => {
-  // Phase 0 pinned an all-NL overflow of five; cross-border ranking now places
-  // Bremen (Germany's nearest border region to Groningen) into the grid itself,
-  // which shortens the overflow to four — still all-Dutch, since Bremen took the
-  // slot rather than displacing one of them out to overflow.
+// ---- adjacency gate (2026-07-24-region-adjacency-and-click-refinement-design.md §2.3) ----
+
+const shownSlugs = (m) => m.rows.flat()
+  .filter((c) => c.kind === 'region' || c.kind === 'center')
+  .map((c) => c.slug)
+  .concat(m.overflow.map((r) => r.slug));
+
+test('compass: Groningen gains its true German neighbour, loses the non-adjacent one', () => {
+  const shown = shownSlugs(compassFor('groningen'));
+  assert.ok(shown.includes('niedersachsen'), 'Lower Saxony borders Groningen — offered');
+  assert.ok(!shown.includes('bremen'), 'Bremen does NOT border Groningen — excluded');
   const m = compassFor('groningen');
-  assert.equal(m.rows.length, 2);
-  const byslug = (s) => m.rows.flat().find((c) => c.slug === s);
-  assert.deepEqual({ cc: byslug('bremen').cc, foreign: byslug('bremen').foreign }, { cc: 'DE', foreign: true });
-  assert.deepEqual(m.overflow.map((r) => r.slug),
-    ['flevoland', 'gelderland', 'noord-holland', 'utrecht']);
+  const ls = m.rows.flat().find((c) => c.slug === 'niedersachsen')
+    || m.overflow.find((r) => r.slug === 'niedersachsen');
+  assert.equal(ls.foreign, true);
+  assert.equal(ls.cc, 'DE');
+});
+
+test('compass: Overijssel reaches both of its German neighbours', () => {
+  const shown = shownSlugs(compassFor('overijssel'));
+  assert.ok(shown.includes('niedersachsen') && shown.includes('nordrhein-westfalen'),
+    'both German border-neighbours are offered');
+});
+
+test('compass: Utrecht stays all-Dutch — no foreign region borders it', () => {
+  const cells = compassFor('utrecht').rows.flat()
+    .filter((c) => c.kind === 'region' || c.kind === 'center');
+  assert.ok(cells.every((c) => c.cc === 'NL'), 'every Utrecht chip is Dutch');
+  assert.ok(cells.every((c) => c.foreign === false), 'no foreign cue appears');
+});
+
+test('compass: Bayern stays all-German — the same emergence proof', () => {
+  const cells = compassFor('bayern').rows.flat()
+    .filter((c) => c.kind === 'region' || c.kind === 'center');
+  assert.ok(cells.every((c) => c.cc === 'DE' && c.foreign === false));
+});
+
+test('compass: Luxembourg (whole-country region) offers its three foreign neighbours', () => {
+  const shown = shownSlugs(compassFor('luxembourg'));
+  assert.ok(shown.includes('wallonia'), 'BE neighbour');       // BE
+  assert.ok(shown.includes('rheinland-pfalz') || shown.includes('saarland'), 'DE neighbour');
+  const wal = compassFor('luxembourg').rows.flat().find((c) => c.slug === 'wallonia')
+    || compassFor('luxembourg').overflow.find((r) => r.slug === 'wallonia');
+  assert.equal(wal.foreign, true);
+  assert.equal(wal.cc, 'BE');
+});
+
+test('a foreign region that does NOT border the active region is never shown', () => {
+  // Bremen borders only Niedersachsen. From any Dutch region, Bremen must never
+  // appear (it is foreign AND non-adjacent to every NL region).
+  ['groningen', 'drenthe', 'friesland', 'overijssel'].forEach((slug) => {
+    assert.ok(!shownSlugs(compassFor(slug)).includes('bremen'),
+      `Bremen is not adjacent to ${slug} — excluded`);
+  });
+});
+
+test('linear: anchor resolves to a region, then that region gates foreign chips', () => {
+  // Anchor inside Overijssel's bbox on a DE country scope: the gate is vs the
+  // anchor region's country/adj (not the scope's country). Bremen (DE, not in
+  // Overijssel.adj) is excluded; any non-NL chip that does appear must be in adj.
+  const ov = bySlug('overijssel');
+  const centre = [(ov.bbox[0] + ov.bbox[2]) / 2, (ov.bbox[1] + ov.bbox[3]) / 2];
+  const m = chipModel({
+    scope: { kind: 'country', regionIds: [], countryCode: 'DE' },
+    isDefault: false, activeRegions: [], registry: REGIONS,
+    inferredCountry: null, scopeCenter: null, mapCenter: centre, myArea: null,
+  }, CCScope);
+  assert.equal(m.mode, 'linear');
+  const slugs = m.chips.map((c) => c.slug);
+  assert.ok(!slugs.includes('bremen'), 'non-adjacent foreign region excluded');
+  m.chips.forEach((c) => {
+    const r = bySlug(c.slug);
+    if (r.countryCode !== ov.countryCode) {
+      assert.ok((ov.adj || []).includes(r.id),
+        `${c.slug} differs from anchor country → must be in Overijssel.adj`);
+    }
+  });
 });
 
 test('compass: Bavaria is a corner region, so far cells stay empty and overflow fills', () => {
@@ -259,40 +357,22 @@ test('compass: Bavaria is a corner region, so far cells stay empty and overflow 
   assert.deepEqual(m.country, { cc: 'DE', label: 'All Germany' });
 });
 
-test('compass: Bavaria stays all-German — the same emergence proof', () => {
-  const m = compassFor('bayern');
-  const cells = m.rows.flat().filter((c) => c.kind === 'region' || c.kind === 'center');
-  assert.ok(cells.every((c) => c.cc === 'DE' && c.foreign === false));
-});
-
 test('compass: NRW offers its true cross-border neighbours, Dutch ones cued', () => {
-  // Phase 0's country-scoped "NRW fills all three rows" pinned an all-German pool
-  // (bremen/niedersachsen/thuringen/hamburg/sachsen-anhalt). Cross-border ranking
-  // replaces most of that with NRW's genuinely nearest neighbours, which are Dutch,
-  // and NRW's compass now overflows Drenthe rather than a German region.
+  // Adjacency gate: only border-neighbours among foreign regions. Membership
+  // (not exact grid cells) pins the fix; domestic Germans may still fill slots.
   const m = compassFor('nordrhein-westfalen');
   assert.equal(m.mode, 'compass');
-  // Row-major slugs (nulls are the centre / empty cells)
-  assert.deepEqual(m.rows[0].map((c) => c.slug), ['gelderland', 'overijssel', 'niedersachsen']);
-  assert.deepEqual(m.rows[1].map((c) => c.slug), ['limburg-nl', 'nordrhein-westfalen', null]);
-  assert.deepEqual(m.rows[2].map((c) => c.slug), ['noord-brabant', 'rheinland-pfalz', 'hessen']);
-  // Dutch neighbours are foreign + cued; German ones are native
-  const byslug = (s) => m.rows.flat().find((c) => c.slug === s);
+  const shown = shownSlugs(m);
+  assert.ok(shown.includes('limburg-nl') && shown.includes('gelderland') && shown.includes('overijssel'),
+    'Dutch border-neighbours are offered');
+  assert.ok(!shown.includes('drenthe') && !shown.includes('noord-brabant'),
+    'non-adjacent Dutch regions are gated out');
+  const byslug = (s) => m.rows.flat().find((c) => c.slug === s)
+    || m.overflow.find((r) => r.slug === s);
   assert.deepEqual({ cc: byslug('limburg-nl').cc, foreign: byslug('limburg-nl').foreign }, { cc: 'NL', foreign: true });
-  assert.deepEqual({ cc: byslug('hessen').cc, foreign: byslug('hessen').foreign }, { cc: 'DE', foreign: false });
-  assert.equal(byslug('nordrhein-westfalen').foreign, false);       // the centre is never foreign
-  assert.deepEqual(m.overflow.map((r) => r.slug), ['drenthe']);
-  assert.equal(m.overflow[0].foreign, true);
-  assert.equal(m.more, true);                                        // global total (32) > 9 shown
-});
-
-test('compass: Luxembourg (whole-country region) is ringed by three foreign countries', () => {
-  const m = compassFor('luxembourg');
-  const byslug = (s) => m.rows.flat().find((c) => c.slug === s);
-  assert.equal(byslug('luxembourg').foreign, false);
-  assert.equal(byslug('wallonia').cc, 'BE');   assert.equal(byslug('wallonia').foreign, true);
-  assert.equal(byslug('limburg-nl').cc, 'NL'); assert.equal(byslug('limburg-nl').foreign, true);
-  assert.equal(byslug('rheinland-pfalz').cc, 'DE'); assert.equal(byslug('rheinland-pfalz').foreign, true);
+  assert.ok(byslug('hessen') || byslug('rheinland-pfalz') || byslug('niedersachsen'),
+    'at least one German neighbour remains');
+  assert.equal(m.more, true);
 });
 
 test('compass: ranking ignores the My-area base (preserved asymmetry, the `near`/`scopeCenter` split)', () => {
@@ -353,9 +433,9 @@ test('region: a multi-id region scope also resolves to linear, never compass', (
   // The compass branch requires exactly one active region (scope-chips.js's
   // activeRegion guard); a multi-region `region` scope must fall through to the
   // same linear path myArea takes above, not crash or silently pick one region.
-  // Cross-border: the pool now ranks all 32 regions from the scope centre, so the
-  // Belgian trio is followed by the nearest Dutch/Luxembourg regions instead of
-  // stopping at 3 (Phase 0's pinned expectation for this exact scope).
+  // Adjacency gate: anchor resolves via regionOfPoint; foreign chips must be
+  // border-neighbours of that anchor (2026-07-24-region-adjacency-and-click-
+  // refinement-design.md §2.3).
   const w = bySlug('wallonia'); const fl = bySlug('flanders');
   const m = chipModel({
     scope: {kind:'region', regionIds:[w.id, fl.id], countryCode:'BE'},
@@ -364,11 +444,10 @@ test('region: a multi-id region scope also resolves to linear, never compass', (
     myArea:null,
   }, CCScope);
   assert.equal(m.mode, 'linear');
-  assert.deepEqual(m.chips.map((c) => c.slug), [
-    'brussels', 'wallonia', 'flanders', 'zeeland', 'noord-brabant', 'limburg-nl', 'luxembourg', 'zuid-holland',
-  ]);
-  assert.deepEqual(m.chips.map((c) => c.foreign), [false, false, false, true, true, true, true, true]);
-  assert.equal(m.more, true);   // global total (32) > 8 shown
+  const slugs = m.chips.map((c) => c.slug);
+  assert.ok(slugs.includes('brussels') && slugs.includes('wallonia') && slugs.includes('flanders'));
+  assert.ok(!slugs.includes('bremen'), 'non-adjacent foreign region excluded');
+  assert.equal(m.more, true);
   assert.deepEqual(m.country, {cc:'BE', label:'All Belgium'});
 });
 
@@ -378,6 +457,7 @@ test('label falls back to slug, and the country rung falls back to "All <cc>"', 
   const stub = {
     contextualRegions: () => [{ id: 99, slug: 'no-label', countryCode: 'XX', bbox: [0, 0, 1, 1] }],
     regionsNear: () => [{ id: 99, slug: 'no-label', countryCode: 'XX', bbox: [0, 0, 1, 1] }],
+    regionOfPoint: () => null,
     compassLayout: () => ({ n: null, ne: null, e: null, se: null, s: null, sw: null, w: null, nw: null, overflow: [] }),
   };
   const m = chipModel({
