@@ -87,7 +87,7 @@ The live, always-fresh service. Response shape and access terms are owned by
 osm-data-architecture.md §7; this doc owns the **quota tiers and pricing**
 (§4). Freshness is backed by materialize-on-edit
 ([osm-data-architecture.md §6](osm-data-architecture.md)). Coverage tiles ride
-existing PMTiles/`upstream-maps` infra.
+existing PMTiles/CDN infra.
 
 ## 4. Pricing model — metered quota tiers *(proposed)*
 

@@ -25,7 +25,7 @@ committed — working docs stay local.
   export vs. metered API, pricing tiers, why commercial consumers are safe.
 - `public-api.md` — the public API endpoint contract and integration guide:
   data served, vector-tile + REST transports, auth/metering, versioning, a
-  Upstream worked example (the endpoint contract osm-data-architecture.md §7 and
+  worked consumer example (the endpoint contract osm-data-architecture.md §7 and
   api-strategy.md defer to).
 - `edit-items/` — per-type contribution/edit contracts (A–L) and the shared
   contribution contract (`edit-items/README.md`).

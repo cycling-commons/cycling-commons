@@ -63,7 +63,7 @@ Patterns that matter here:
 
 ## 2. Recommended architecture
 
-Three candidate designs were produced (admin-boundary-first / Upstream-cluster-first /
+Three candidate designs were produced (admin-boundary-first / cluster-first /
 rider-radius-first) and judged through rider-UX, moderation-ops and engineering lenses.
 **Winner: admin-boundary-first regions, grafted with the radius-derived "My area"
 rider layer.** Reconciliation:
@@ -72,7 +72,7 @@ rider layer.** Reconciliation:
 |---|---|
 | **Admin subdivisions (ISO 3166-2)** | *The region atom*: storage, moderation jurisdictions, caps, ranking facets, named scope, future browse/SEO pages. Licence-clean (Overture divisions / OSM, both ODbL); stable slug + ISO identity across re-imports. |
 | **Base location + radius** | *The rider default scope generator*, not a region model: produces a derived set of region atoms (cross-border by construction). Personal data — see section 4 privacy invariants. |
-| **Divisions clusters (`tools/regions/`)** | **Rejected** as an operational region source: synthetic names are illegible to riders and partners, Brussels (~162 km²) structurally cannot exist under the KEEP 80–150 % band (13,520 km² floor), regeneration churns jurisdictions, and the pipeline reads the private upstream-geodata schema. **Retained** as the *calibration rule*: the ~16,900 km² Wallonia band decides each country's operating level (pick the admin level whose subdivisions best fit the band; else a lower level or explicit ISO-code list), and advises per-region cap tuning. `web/assets/data/regions-data.js` stays an indicative browse visual. |
+| **Cluster tiles (`tools/regions/`)** | **Rejected** as an operational region source: synthetic names are illegible to riders and partners, Brussels (~162 km²) structurally cannot exist under the KEEP 80–150 % band (13,520 km² floor), regeneration churns jurisdictions, and the pipeline reads a private upstream schema. **Retained** as the *calibration rule*: the ~16,900 km² Wallonia band decides each country's operating level (pick the admin level whose subdivisions best fit the band; else a lower level or explicit ISO-code list), and advises per-region cap tuning. `web/assets/data/regions-data.js` stays an indicative browse visual. |
 
 Decisions:
 
@@ -278,7 +278,7 @@ consequence).
 overrides per region (read in `RouteModerationService::approve` /
 `activeCountForRegion`; surfaced in RouteQueue's active-in-region display). Cap
 changes get a `UserAdminService`-style audit note. The accepted approve-at-cap TOCTOU
-(route-domain.md §5.1) stays accepted. Tune values with the Upstream calibration band
+(route-domain.md §5.1) stays accepted. Tune values with the calibration band
 as advisory workload sizing.
 
 **Admin tooling — hard gate before worldwide.** The moderator-areas form lists ALL

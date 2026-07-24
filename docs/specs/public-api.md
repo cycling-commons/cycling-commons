@@ -9,7 +9,7 @@ model are marked *proposed* pending owner decisions (§9).
 This document owns the **technical shape** of the public read API: the data we
 serve, the two transports (data-only vector tiles and JSON/GeoJSON REST), the
 auth and metering mechanics, versioning, attribution-in-responses, and a worked
-Upstream integration. It is the endpoint contract that
+consumer integration. It is the endpoint contract that
 [api-strategy.md](api-strategy.md) ("any future endpoint contract belongs
 alongside osm-data-architecture.md §7") and
 [osm-data-architecture.md §7](osm-data-architecture.md) defer to.
@@ -27,8 +27,8 @@ It **consumes unchanged** and does not restate:
   [account-and-auth.md](account-and-auth.md).
 
 Write/contribution (routing third-party edits back through moderation) is
-**designed here but scoped phase-2** — the read API ships first; Upstream bringing
-new information in comes later.
+**designed here but scoped phase-2** — the read API ships first; consumer apps
+bringing new information in comes later.
 
 ---
 
@@ -82,7 +82,7 @@ point/line/polygon geometry plus attribute properties — and nothing about
 colour, icon, width, or z-order. "How the map looks" lives in the consumer's
 MapLibre style, which binds style layers to our source-layers and paints them
 however it wants. This is what makes the tiles reusable across consumers with
-different looks (Upstream included, §7).
+different looks (§7).
 
 **Artifacts.** `coverage.pmtiles` (coverage POIs + coverage polygons) on the
 `cc-maps` Hetzner Object Storage bucket behind CDN, served by HTTP byte-range —
@@ -187,13 +187,14 @@ enforcement is reserved case-by-case.
   deprecation window), so a consumer's bound style layers never break silently
   under them.
 
-## 7. Upstream integration — worked example
+## 7. Consumer integration — worked example
 
-Upstream runs MapLibre and already stacks a basemap, its administrative tessellation,
-and its own spots on one map. Adding the Cycling Commons layer is additive:
+A typical consumer runs MapLibre and already stacks a basemap, its own
+administrative polygons, and its own points of interest on one map. Adding the
+Cycling Commons layer is additive:
 
 1. **Get an app key** — self-serve in the Commons account shell (§3).
-2. **Add the data source** to Upstream's existing MapLibre style, beside its
+2. **Add the data source** to the consumer's existing MapLibre style, beside its
    basemap and its own sources:
 
    ```js
@@ -204,22 +205,23 @@ and its own spots on one map. Adding the Cycling Commons layer is additive:
    ```
 
    Read the TileJSON to discover source-layers and fields (§2.1).
-3. **Add style layers** binding to `coverage_poi` / `coverage_region`. Upstream
-   either authors its own look or imports the CC reference style and overrides
-   per layer:
+3. **Add style layers** binding to `coverage_poi` / `coverage_region`. The
+   consumer either authors its own look or imports the CC reference style and
+   overrides per layer:
 
    ```js
    { id: 'cc-bike-services', source: 'cc-coverage', 'source-layer': 'coverage_poi',
      filter: ['==', ['get', 'letter'], 'D'],
-     type: 'symbol', layout: { 'icon-image': 'upstream-bike-icon' } }
+     type: 'symbol', layout: { 'icon-image': 'app-bike-icon' } }
    ```
 4. **Wire REST for interaction.** On map click or search, call
-   `GET /v1/search` and `GET /v1/items/{id}` and render the result in Upstream's
-   own drawer UI — the tiles draw the ambient layer, REST hydrates the detail.
+   `GET /v1/search` and `GET /v1/items/{id}` and render the result in the
+   consumer's own drawer UI — the tiles draw the ambient layer, REST hydrates
+   the detail.
 5. **Show attribution.** Add the required Cycling Commons + OpenStreetMap
    attribution strings to the map's attribution control (§5).
-6. **(Phase-2) Contribute back.** When a Upstream user adds or edits a spot that
-   belongs in the Commons, `POST /v1/contributions` routes it into our
+6. **(Phase-2) Contribute back.** When a consumer's user adds or edits a spot
+   that belongs in the Commons, `POST /v1/contributions` routes it into our
    moderation loop (§8).
 
 ## 8. Write / contribution API — phase-2 design

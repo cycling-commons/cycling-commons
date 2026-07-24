@@ -20,7 +20,7 @@ use Symfony\Component\Intl\Countries;
 
 /**
  * Seed/refresh the World reference data: continents (static), countries
- * (symfony/intl + the upstream-derived continent map) and subdivisions
+ * (symfony/intl + a derived continent map) and subdivisions
  * (sokil/php-isocodes, ISO 3166-2). Idempotent - upserts by code, so it is
  * safe to re-run to pick up dataset updates.
  *

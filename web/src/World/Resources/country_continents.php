@@ -2,8 +2,8 @@
 
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 
-// ISO 3166-1 alpha-2 country code => continent code. Derived from the
-// upstream-geodata geographic base list; used by app:world:import to link
+// ISO 3166-1 alpha-2 country code => continent code. Derived from an
+// internal geographic base list; used by app:world:import to link
 // countries to continents (symfony/intl has no continent data).
 
 return [
