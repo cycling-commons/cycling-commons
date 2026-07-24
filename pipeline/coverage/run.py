@@ -130,6 +130,13 @@ def main(argv=None) -> int:
     failed = []
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with psycopg.connect(dsn) as conn:
+        # Autocommit so the read-only phases (export COPYs, the manifest counts
+        # query) never leave a transaction open across the long, non-DB tile
+        # build/verify/upload phases — that would sit idle-in-transaction and be
+        # killed by COVERAGE_IDLE_TXN_TIMEOUT (design §3.1). The ONLY transactions
+        # then are load_region's explicit `with conn.transaction()` swaps, which
+        # is exactly what the idle/statement timeouts should be guarding.
+        conn.autocommit = True
         apply_session_budget(conn)
         if not _acquire_run_lock(conn):
             print("[coverage] another coverage run holds the advisory lock — "
