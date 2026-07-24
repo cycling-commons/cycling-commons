@@ -28,14 +28,15 @@ final class RegionRegistryProvider
      * `countryCode` (not `cc`) matches the CCScope scope-object contract, so the
      * client can thread a registry entry straight into a scope.
      *
-     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}}>
+     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>}>
      */
     public function all(): array
     {
-        /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float}> $rows */
+        /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, slug, country_code AS cc,
-                    ST_XMin(geom) AS w, ST_YMin(geom) AS s, ST_XMax(geom) AS e, ST_YMax(geom) AS n
+                    ST_XMin(geom) AS w, ST_YMin(geom) AS s, ST_XMax(geom) AS e, ST_YMax(geom) AS n,
+                    to_json(COALESCE(adj, ARRAY[]::int[])) AS adj
              FROM region
              WHERE geom IS NOT NULL AND country_code <> \'\'
              ORDER BY area_km2 DESC, slug',
@@ -46,6 +47,7 @@ final class RegionRegistryProvider
             'slug' => (string) $r['slug'],
             'countryCode' => (string) $r['cc'],
             'bbox' => [(float) $r['w'], (float) $r['s'], (float) $r['e'], (float) $r['n']],
+            'adj' => array_map('intval', json_decode((string) $r['adj'], true, 512, \JSON_THROW_ON_ERROR)),
         ], $rows);
     }
 }

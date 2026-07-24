@@ -46,4 +46,27 @@ final class RegionRegistryProviderTest extends KernelTestCase
         self::assertEqualsWithDelta(5.0, $square['bbox'][2], 0.001);
         self::assertEqualsWithDelta(51.0, $square['bbox'][3], 0.001);
     }
+
+    public function testAllExposesAdjacencyIds(): void
+    {
+        self::bootKernel();
+
+        $dir = sys_get_temp_dir().'/region-registry-adj-'.getmypid();
+        @mkdir($dir, 0777, true);
+        copy(__DIR__.'/../fixtures/catalog/region-square.geojson', $dir.'/region-square.geojson');
+        $tester = new CommandTester((new Application(self::$kernel))->find('app:catalog:import'));
+        $tester->execute(['dir' => $dir]);
+        $tester->assertCommandIsSuccessful();
+
+        $square = null;
+        foreach (static::getContainer()->get(RegionRegistryProvider::class)->all() as $r) {
+            if ('test-square' === $r['slug']) {
+                $square = $r;
+            }
+        }
+        self::assertNotNull($square);
+        self::assertArrayHasKey('adj', $square);
+        self::assertIsArray($square['adj']);           // present + typed
+        self::assertSame([], $square['adj']);          // a lone square borders nothing
+    }
 }
