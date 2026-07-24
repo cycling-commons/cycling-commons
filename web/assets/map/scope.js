@@ -260,6 +260,30 @@
       .map((x) => x.r);
   }
 
+  // Ray-casting point-in-polygon over a GeoJSON Polygon ring array (rings[0]
+  // outer, rings[1..] holes); a point in a hole is outside. Pure; no mutation
+  // (2026-07-24-region-adjacency-and-click-refinement-design.md §3.1).
+  const pointInRing = (x, y, ring) => {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0]; const yi = ring[i][1];
+      const xj = ring[j][0]; const yj = ring[j][1];
+      const intersect = ((yi > y) !== (yj > y))
+        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  };
+  function pointInPolygon(point, rings) {
+    if (!point || !Array.isArray(rings) || !rings.length || !rings[0]) return false;
+    const x = point[0]; const y = point[1];
+    if (!pointInRing(x, y, rings[0])) return false;   // outside the outer ring
+    for (let k = 1; k < rings.length; k++) {
+      if (rings[k] && pointInRing(x, y, rings[k])) return false;   // inside a hole
+    }
+    return true;
+  }
+
   const API = {
     EVENT,
 
@@ -562,6 +586,10 @@
       }
       return best;
     },
+
+    /** Ray-casting point-in-polygon; see the module helper. `rings` is a GeoJSON
+     *  Polygon coordinate array (outer + holes). Pure. */
+    pointInPolygon(point, rings) { return pointInPolygon(point, rings); },
 
     /** Onboarded regions of a country, capped at 8 by default, for the
      *  contextual chips (2026-07-22-scope-selector-scale-design.md §C,

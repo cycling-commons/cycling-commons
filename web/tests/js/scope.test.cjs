@@ -1074,3 +1074,26 @@ test('regionsNear applies the cos(lat) correction (east-west is compressed)', ()
   const near = CCScope.regionsNear([10.0, 60.0], { limit: 3 });
   assert.deepEqual(near.map((r) => r.slug), ['here', 'east', 'north']);
 });
+
+// ---- pointInPolygon (2026-07-24-region-adjacency-and-click-refinement-design.md §3.1) ----
+
+test('pointInPolygon: inside and outside a simple square', () => {
+  const sq = [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]];
+  assert.equal(CCScope.pointInPolygon([5, 5], sq), true);
+  assert.equal(CCScope.pointInPolygon([15, 5], sq), false);
+});
+
+test('pointInPolygon: a point in a hole is outside', () => {
+  const withHole = [
+    [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]],   // outer
+    [[4, 4], [6, 4], [6, 6], [4, 6], [4, 4]],       // hole
+  ];
+  assert.equal(CCScope.pointInPolygon([5, 5], withHole), false);  // in the hole
+  assert.equal(CCScope.pointInPolygon([1, 1], withHole), true);   // in the ring, outside the hole
+});
+
+test('pointInPolygon: an empty/absent ring set is never inside', () => {
+  assert.equal(CCScope.pointInPolygon([5, 5], []), false);
+  assert.equal(CCScope.pointInPolygon([5, 5], null), false);
+});
+
