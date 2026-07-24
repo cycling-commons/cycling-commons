@@ -1,6 +1,6 @@
 # Region adjacency & click refinement — design (item 4)
 
-**Status:** approved 2026-07-24, not yet implemented.
+**Status:** **EXECUTED 2026-07-24** (see §7 execution notes; HTTP-verified registry + JS/PHP gates; visual Playwright checks deferred).
 **Supersedes:** the edge-distance ranking approach deferred in
 [2026-07-23-cross-border-chips-design.md §9](2026-07-23-cross-border-chips-design.md).
 **Related:** [2026-07-22-scope-selector-scale-design.md](2026-07-22-scope-selector-scale-design.md)
@@ -258,3 +258,20 @@ the line, and the shared-cache win outweighs vertex-exactness for a scope click.
 - Section refs doc-qualified (never bare `§N`).
 - The `region.adj` migration must run in prod before the next catalog import
   relies on it (add to the go-live migration checklist).
+
+## 7. Execution notes
+
+- **2026-07-24, Tasks 1–8 (item 4):** Implemented on `symfony-base` (not pushed). Migration
+  `Version20260724120000` adds nullable `region.adj integer[]`. `ImportCatalogCommand` runs
+  `recomputeAdjacency()` after `importRegions()` inside the same transaction (`ST_Intersects`
+  full-geometry UPDATE → empty array, never NULL, for a region touching nothing).
+  `RegionRegistryProvider::all()` ships `adj` as `list<int>` in `CC_REGIONS`. `chipModel`
+  gates foreign chips by active/anchor `adj`; `pointInPolygon` + async `regionOfPointPrecise`
+  refine ambiguous map clicks; `map.js` click handler awaits the precise resolver. Final
+  `make scope-test`: 119 pass / 0 fail. PHPUnit
+  `ImportCatalogCommandTest` + `RegionRegistryProviderTest`: exit 0 (both suites
+  green under `APP_ENV=test` / `cyclingcommons_test`). HTTP substitute on `:8001/map`:
+  Groningen adj len=3 values=[26, 28, 46]. Visual browser checks (Groningen +LS −Bremen chips, Overijssel +both German
+  neighbours, Utrecht/Bayern single-country, Flevoland/Gelderland overlap click) were **not**
+  run — Playwright profile locked by a parallel session. **Prod:** run migration
+  `Version20260724120000` before the next catalog import that relies on `adj` (design §6).
