@@ -1,0 +1,19 @@
+docs/specs/2026-07-24-region-adjacency-and-click-refinement-design.md
+  s_ce7d437afc19d9::t_fb84755289c8f2 365-386
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "560929788191f55dd05dbdc65c1c95ad996232f7",
+  "prompts": {},
+  "sessions": {
+    "s_ce7d437afc19d9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f4f83357-aa74-4551-bd21-6f693445ca5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
