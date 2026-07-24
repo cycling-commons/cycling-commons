@@ -269,6 +269,43 @@ def test_load_region_generic_error_rolls_back_whole_swap(db):
     ).fetchone()[0] == 1                               # sampled prior row survived
 
 
+def test_delta_membership_noop_reload_rewrites_nothing(db):
+    """A stamped, unchanged row is not rewritten under delta membership — the
+    ctid is stable across an identical reload (Task 3 skipped the data write;
+    Task 4 stops the whole-slice region_id rewrite that would otherwise churn it)."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (7, 100, 'BE', "
+        "ST_GeomFromText('MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))")
+    db.commit()
+    rows = [_row("node/1", "C")]                          # inside region 7, BE
+    load_region(db, rows, "europe/belgium", "BE")
+    before = db.execute("SELECT ctid::text FROM coverage_poi WHERE ref='node/1'").fetchone()[0]
+    load_region(db, rows, "europe/belgium", "BE")         # identical
+    after = db.execute("SELECT ctid::text FROM coverage_poi WHERE ref='node/1'").fetchone()[0]
+    assert before == after, "a stamped unchanged row must not be rewritten by membership"
+
+
+def test_full_membership_recomputes_whole_slice(db, monkeypatch):
+    """The invariant + escape hatch: after a region change, a delta reload does
+    NOT restamp an unchanged row, but COVERAGE_FULL_MEMBERSHIP=1 does (design §3.4)."""
+    ensure_schema(db)
+    rows = [_row("node/1", "C", lon=5.0, lat=50.5, src_region="dev/fixture", country_code=None)]
+    load_region(db, rows, "dev/fixture", None)            # no region yet → region_id NULL
+    assert db.execute("SELECT region_id FROM coverage_poi WHERE ref='node/1'").fetchone()[0] is None
+    db.execute(                                            # a region is onboarded that now contains node/1
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (7, 100, 'BE', "
+        "ST_GeomFromText('MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))")
+    db.commit()
+    load_region(db, rows, "dev/fixture", None)            # delta reload of identical rows
+    assert db.execute("SELECT region_id FROM coverage_poi WHERE ref='node/1'").fetchone()[0] is None, \
+        "delta reload must not restamp an unchanged row after a region change"
+    monkeypatch.setenv("COVERAGE_FULL_MEMBERSHIP", "1")
+    load_region(db, rows, "dev/fixture", None)            # full recompute
+    assert db.execute("SELECT region_id FROM coverage_poi WHERE ref='node/1'").fetchone()[0] == 7, \
+        "COVERAGE_FULL_MEMBERSHIP=1 restamps the whole slice"
+
+
 def test_load_region_exact_drift_boundary_does_not_abort(db):
     """A drop of exactly DRIFT_ABORT_RATIO is allowed: the guard is strict <."""
     ensure_schema(db)

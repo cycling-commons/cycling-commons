@@ -367,22 +367,32 @@ def load_region(
             # (ref, letter) per extract), so DO UPDATE never hits "affect a row a
             # second time"; an intra-batch dup fails loud and rolls the swap back —
             # the generic-error guarantee.
+            # Capture the ids the upsert touched (design §3.4) so the membership
+            # recompute below runs on the delta only, not the whole slice —
+            # otherwise the 3 membership UPDATEs would rewrite every region_id each
+            # week and undo the diff-merge's WAL savings. Postgres has no
+            # RETURNING INTO outside PL/pgSQL, so a data-modifying CTE feeds the
+            # ids into a TEMP table dropped with the transaction.
+            cur.execute("CREATE TEMP TABLE coverage_touched (id bigint) ON COMMIT DROP")
             cur.execute(
-                f"INSERT INTO coverage_poi ({_STAGING_COLS}, src_region_id) "
-                f"SELECT {_STAGING_COLS}, %s FROM coverage_poi_staging "
-                f"ON CONFLICT (ref, letter) DO UPDATE SET "
-                f"kind = EXCLUDED.kind, name = EXCLUDED.name, geom = EXCLUDED.geom, "
-                f"tags = EXCLUDED.tags, osm_version = EXCLUDED.osm_version, "
-                f"osm_ts = EXCLUDED.osm_ts, src_region_id = EXCLUDED.src_region_id, "
-                f"country_code = EXCLUDED.country_code, region_id = NULL "
-                f"WHERE coverage_poi.geom          IS DISTINCT FROM EXCLUDED.geom "
-                f"   OR coverage_poi.name          IS DISTINCT FROM EXCLUDED.name "
-                f"   OR coverage_poi.kind          IS DISTINCT FROM EXCLUDED.kind "
-                f"   OR coverage_poi.tags          IS DISTINCT FROM EXCLUDED.tags "
-                f"   OR coverage_poi.osm_version   IS DISTINCT FROM EXCLUDED.osm_version "
-                f"   OR coverage_poi.osm_ts        IS DISTINCT FROM EXCLUDED.osm_ts "
-                f"   OR coverage_poi.country_code  IS DISTINCT FROM EXCLUDED.country_code "
-                f"   OR coverage_poi.src_region_id IS DISTINCT FROM EXCLUDED.src_region_id",
+                f"WITH up AS ("
+                f"  INSERT INTO coverage_poi ({_STAGING_COLS}, src_region_id) "
+                f"  SELECT {_STAGING_COLS}, %s FROM coverage_poi_staging "
+                f"  ON CONFLICT (ref, letter) DO UPDATE SET "
+                f"  kind = EXCLUDED.kind, name = EXCLUDED.name, geom = EXCLUDED.geom, "
+                f"  tags = EXCLUDED.tags, osm_version = EXCLUDED.osm_version, "
+                f"  osm_ts = EXCLUDED.osm_ts, src_region_id = EXCLUDED.src_region_id, "
+                f"  country_code = EXCLUDED.country_code, region_id = NULL "
+                f"  WHERE coverage_poi.geom          IS DISTINCT FROM EXCLUDED.geom "
+                f"     OR coverage_poi.name          IS DISTINCT FROM EXCLUDED.name "
+                f"     OR coverage_poi.kind          IS DISTINCT FROM EXCLUDED.kind "
+                f"     OR coverage_poi.tags          IS DISTINCT FROM EXCLUDED.tags "
+                f"     OR coverage_poi.osm_version   IS DISTINCT FROM EXCLUDED.osm_version "
+                f"     OR coverage_poi.osm_ts        IS DISTINCT FROM EXCLUDED.osm_ts "
+                f"     OR coverage_poi.country_code  IS DISTINCT FROM EXCLUDED.country_code "
+                f"     OR coverage_poi.src_region_id IS DISTINCT FROM EXCLUDED.src_region_id "
+                f"  RETURNING id"
+                f") INSERT INTO coverage_touched (id) SELECT id FROM up",
                 (src_id,),
             )
             # Delete-disappeared arm: rows this extract owned but no longer carries.
@@ -399,6 +409,19 @@ def load_region(
                 "WHERE s.ref = c.ref AND s.letter = c.letter)",
                 (src_id,),
             )
+            # Delta-scoped membership (design §3.4): restrict the 3 recompute
+            # UPDATEs to rows the upsert touched, so unchanged rows keep last
+            # week's region_id/cc (correct while the `region` table is unchanged)
+            # and the diff-merge's write savings survive. COVERAGE_FULL_MEMBERSHIP=1
+            # falls back to today's whole-slice recompute — run it after a `region`
+            # change (new country / new-or-changed subdivisions), where an
+            # unchanged row's membership can legitimately shift. In full mode the
+            # injected clauses are empty, so the behaviour is byte-identical to the
+            # pre-delta code.
+            full_membership = os.environ.get("COVERAGE_FULL_MEMBERSHIP") == "1"
+            touched_c = "" if full_membership else " AND c.id IN (SELECT id FROM coverage_touched)"
+            touched_poi = ("" if full_membership
+                           else " AND coverage_poi.id IN (SELECT id FROM coverage_touched)")
             # Smallest-area-wins on overlap (region-scoping-design.md §3): the
             # third membership writer besides RegionResolver and
             # ImportCatalogCommand::recomputeMembership. DISTINCT ON keeps one
@@ -407,13 +430,13 @@ def load_region(
             # this slice's freshly-inserted rows are candidates; POIs in no
             # region keep the NULL they were inserted with.
             cur.execute(
-                """
+                f"""
                 UPDATE coverage_poi SET region_id = m.region_id
                 FROM (
                     SELECT DISTINCT ON (c.id) c.id AS poi_id, r.id AS region_id
                     FROM coverage_poi c
                     JOIN region r ON ST_Contains(r.geom, c.geom)
-                    WHERE c.src_region_id = %s
+                    WHERE c.src_region_id = %s{touched_c}
                     ORDER BY c.id, r.area_km2 ASC NULLS LAST, r.id ASC
                 ) m
                 WHERE coverage_poi.id = m.poi_id
@@ -431,7 +454,7 @@ def load_region(
             # region scope (the rail excludes region_id-NULL rows) yet the client
             # can only show it under the whole country.
             cur.execute(
-                """
+                f"""
                 UPDATE coverage_poi SET region_id = m.region_id
                 FROM (
                     SELECT DISTINCT ON (c.id) c.id AS poi_id, r.id AS region_id
@@ -440,7 +463,7 @@ def load_region(
                                  AND ST_DWithin(r.geom, c.geom, %s)
                     WHERE c.src_region_id = %s
                       AND c.region_id IS NULL
-                      AND c.country_code IS NOT NULL
+                      AND c.country_code IS NOT NULL{touched_c}
                     ORDER BY c.id, ST_Distance(r.geom, c.geom),
                              r.area_km2 ASC NULLS LAST, r.id ASC
                 ) m
@@ -459,13 +482,13 @@ def load_region(
             # placed in a BE region must read BE, not NL). Guarded on
             # r.country_code IS NOT NULL so a cc-less region never wipes a POI cc.
             cur.execute(
-                """
+                f"""
                 UPDATE coverage_poi SET country_code = r.country_code
                 FROM region r
                 WHERE coverage_poi.region_id = r.id
                   AND r.country_code IS NOT NULL
                   AND coverage_poi.country_code IS DISTINCT FROM r.country_code
-                  AND coverage_poi.src_region_id = %s
+                  AND coverage_poi.src_region_id = %s{touched_poi}
                 """,
                 (src_id,),
             )
