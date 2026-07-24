@@ -362,13 +362,25 @@ spotlight re-centres on it. Consistent with clicking a chip.
 No server, test-fixture, or `scope*.js` change — this is the untested
 map-serialization layer (like Part B Task 7), browser-verified.
 
-**Status: EXECUTED 2026-07-24** (commit on `symfony-base`, not pushed).
-`drawSpotlightMask(g, adjUnion)` punches the adjacent union out of the dark mask
-and adds a `region-adj-mask` fill at `fill-opacity 0.10` below `region-line`;
-`setSpotlight` fetches `/map/scope/boundary?rids=<adj>` alongside the active
-boundary under one `_spotReq` guard (adj fetch degrades to null → two-tone on any
-failure); `clearSpotlight` drops the new layer. Browser-verified on `:8001/map`:
-Gelderland (7 Dutch neighbours lightened, both `/boundary` requests fired) and
-Overijssel (neighbours incl. **Lower Saxony · DE** and NRW lightened across the
-national border); region switch re-centres cleanly with no stale layers; 0
-console errors. Middle-tone opacity `0.10` is a live-tunable default.
+**Status: EXECUTED 2026-07-24** (commits on `symfony-base`, not pushed).
+`drawSpotlightMask(g, adjUnion, fullUnion)` punches the **dissolved**
+`ST_Union(active + neighbours)` (`fullUnion`) out of the dark mask and adds a
+`region-adj-mask` fill at `fill-opacity 0.10` below `region-line`; `setSpotlight`
+fetches two unions off `/map/scope/boundary` — `rids=<adj>` (light fill) and
+`rids=<active,adj>` (dark holes) — alongside the active boundary under one
+`_spotReq` guard (both degrade to null → clean two-tone on any failure); the
+light fill is gated on `fullUnion` being present so it never double-darkens;
+`clearSpotlight` drops `region-adj-mask`.
+
+**Critical fix (same day):** the first cut punched the active region and each
+neighbour into the dark mask as **separate** rings. Adjacent regions share
+borders, so those holes touched, and MapLibre's earcut tessellator emitted
+triangular artifacts to the world-ring corners (dark sea spike for Groningen,
+diagonal wedges for Utrecht). Fixed by punching the single dissolved `fullUnion`
+blob instead of touching rings.
+
+Browser-verified on `:8001/map`: Gelderland (7 neighbours lightened, all three
+`/boundary` requests fired), Overijssel (**Lower Saxony · DE** + NRW lightened
+across the national border), and the two artifact cases (Groningen, Utrecht) now
+clean; region switch re-centres with no stale layers; 0 console errors.
+Middle-tone opacity `0.10` is a live-tunable default.
