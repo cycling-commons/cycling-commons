@@ -4,7 +4,13 @@
 import psycopg
 import pytest
 
-from coverage.load import DriftAbort, LoadResult, ensure_schema, load_region
+from coverage.load import (
+    DriftAbort,
+    LoadResult,
+    apply_session_budget,
+    ensure_schema,
+    load_region,
+)
 from coverage.parse import PoiRow
 
 
@@ -588,3 +594,17 @@ def test_src_region_normalized_and_self_filled(db):
         "AND column_name = 'src_region_id'"
     ).fetchone()[0]
     assert nullable == "NO"
+
+
+def test_apply_session_budget_applies_defaults(db):
+    apply_session_budget(db)
+    assert db.execute("SHOW work_mem").fetchone()[0] == "32MB"
+    assert db.execute("SHOW synchronous_commit").fetchone()[0] == "off"
+    assert db.execute("SHOW maintenance_work_mem").fetchone()[0] == "256MB"
+    assert db.execute("SHOW max_parallel_workers_per_gather").fetchone()[0] == "0"
+
+
+def test_apply_session_budget_honours_env_override(db, monkeypatch):
+    monkeypatch.setenv("COVERAGE_WORK_MEM", "64MB")
+    apply_session_budget(db)
+    assert db.execute("SHOW work_mem").fetchone()[0] == "64MB"

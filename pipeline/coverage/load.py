@@ -10,11 +10,13 @@ see a half-loaded region; a drift abort keeps last week's slice serving.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from collections.abc import Iterable
 from dataclasses import dataclass
 
 import psycopg
+from psycopg import sql
 
 from coverage.parse import PoiRow
 
@@ -42,6 +44,35 @@ COUNTRY_BY_REGION = {
     "europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE",
     "europe/luxembourg": "LU",
 }
+
+# Per-session resource budget applied to the harvest connection at startup
+# (2026-07-24-coverage-harvest-prod-safety-design.md §3.1). Every value is an
+# env knob with a conservative default; maintenance_work_mem × (1 + parallel
+# workers) is the RAM term that can OOM a co-tenant on the shared DB host, so
+# these are SET SESSION-only (never ALTER SYSTEM) and load-bearing, not tuning.
+_SESSION_BUDGET = (
+    ("statement_timeout", "COVERAGE_STATEMENT_TIMEOUT", "10min"),
+    ("lock_timeout", "COVERAGE_LOCK_TIMEOUT", "5s"),
+    ("idle_in_transaction_session_timeout", "COVERAGE_IDLE_TXN_TIMEOUT", "30s"),
+    ("synchronous_commit", "COVERAGE_SYNCHRONOUS_COMMIT", "off"),
+    ("maintenance_work_mem", "COVERAGE_MAINTENANCE_WORK_MEM", "256MB"),
+    ("work_mem", "COVERAGE_WORK_MEM", "32MB"),
+    ("max_parallel_workers_per_gather", "COVERAGE_MAX_PARALLEL", "0"),
+)
+
+
+def apply_session_budget(conn: psycopg.Connection) -> None:
+    """Apply the env-driven SET SESSION resource budget to the harvest
+    connection (design §3.1). Session-scoped only — never changes global
+    cluster config. Postgres validates each value on SET."""
+    for setting, env, default in _SESSION_BUDGET:
+        value = os.environ.get(env, default)
+        conn.execute(
+            sql.SQL("SET SESSION {} = {}").format(
+                sql.Identifier(setting), sql.Literal(value)
+            )
+        )
+    conn.commit()
 
 
 def resolve_country(region: str) -> str | None:
