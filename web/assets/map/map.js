@@ -2041,8 +2041,16 @@
   // legend count = shown/total: in Curated only confirmed/curated count; in Everything everything does
   function layerCounts(layer){
     const covTotal=(_covCounts && _covCounts[layer.letter])||0;
+    // BOTH tiers' totals are scope-aware: coverage covTotal is a server-side
+    // per-scope count, and the curated features are gated to the active scope
+    // (inScope) too — so an out-of-scope region reads 0/0, not 0/<global>. Without
+    // this the curated total is the whole in-memory set: e.g. Wallonia's 351
+    // surfaces / 15 climbs leaked into Gelderland's rail as "0/351", "0/15" even
+    // though none are in Gelderland (owner-reported 2026-07-24). Everywhere still
+    // shows the global total (inScope returns true for every rid there).
+    const curated=layer.features.filter(f=>inScope(f.rid)).length;
     const shown=layer.features.filter(f=>featureVisible(layer,f)).length + covShownCount(layer.key);
-    return {shown, total:layer.features.length+covTotal};
+    return {shown, total:curated+covTotal};
   }
   function updateCounts(){
     CATALOG.forEach(layer=>{
