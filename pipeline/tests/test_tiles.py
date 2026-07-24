@@ -288,8 +288,9 @@ def test_build_command_has_no_clustering_and_minzoom_6(tmp_path, monkeypatch):
                    "--cluster-densest-as-needed", "ridtok:concat", "cctok:concat"):
         assert absent not in cmd, f"clustering must be gone: {absent}"
     assert "-r1" in cmd, "keep every point at the built zooms"
-    # Safety valve only: a pathologically dense z11 tile may drop its densest
-    # overflow (recovered at z12+); never rate-based thinning across all zooms.
+    # z6-10 tiles are thinned to fit (the density sample for the overview
+    # heatmap); z11-14 tiles fit within budget and keep every point (complete
+    # icons) — never rate-based thinning across all zooms.
     assert "--drop-densest-as-needed" in cmd
 
 

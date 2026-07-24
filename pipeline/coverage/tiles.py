@@ -139,8 +139,10 @@ def build_pmtiles(layer_files, out_path):
     (letter, country) (coverage-provider.md §4). Individual points from z6 up —
     NO clustering: a cluster's rendered centroid can sit outside a scoped region
     (the phantom-bubble class), and individual points are scope-filtered exactly
-    (2026-07-24-coverage-no-cluster-design.md §2). Overview coverage is conveyed
-    by the rail /counts, not by tiles."""
+    (2026-07-24-coverage-no-cluster-design.md §2). Overview coverage now renders
+    as a density heatmap built from the thinned z6-10 tile points, with
+    individual icons rendering from z11 up; the rail /counts remains the exact
+    total (2026-07-24-coverage-overview-heatmap-design.md §2)."""
     cmd = [
         "tippecanoe", "-o", str(out_path), "--force", "--quiet",
         # z6 floor: coverage points exist z6-14 with NO clustering. z6-10 tiles are
@@ -149,9 +151,10 @@ def build_pmtiles(layer_files, out_path):
         # for the individual icons. Overview reads as a heatmap, zoomed-in as icons
         # (2026-07-24-coverage-overview-heatmap-design.md §3.1).
         "--minimum-zoom", "6", "--maximum-zoom", "14",
-        # Keep every point at the built zooms; --drop-densest-as-needed is a pure
-        # tile-size safety valve for a pathologically dense z11 tile (its dropped
-        # overflow reappears at z12+), never rate-based thinning across all zooms.
+        # -r1 retains every point at the built zooms; --drop-densest-as-needed
+        # thins z6-10 tiles to fit (the density sample for the overview heatmap),
+        # while z11-14 tiles fit within budget and keep every point (complete
+        # icons), never rate-based thinning across all zooms.
         "-r1",
         "--drop-densest-as-needed",
     ]
