@@ -1,0 +1,25 @@
+docs/specs/README.md
+  s_4dd92051ee11b1::t_7caa51c8e25c6b 24-29
+docs/specs/api-strategy.md
+  s_4dd92051ee11b1::t_91372ab5695ba5 195-197
+  s_4dd92051ee11b1::t_756e7377e16e63 192-194
+  s_4dd92051ee11b1::t_a540c7ced3d719 1-191
+docs/specs/public-api.md
+  s_4dd92051ee11b1::t_bddb98646f9291 1-268
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "309d071fcbc329dc748c97844fba015adce2a146",
+  "prompts": {},
+  "sessions": {
+    "s_4dd92051ee11b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d671ceb0-6b8b-4047-8353-d7c7491e8783",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
