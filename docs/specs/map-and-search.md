@@ -274,6 +274,39 @@ the newest rung of that same ladder.
   (`setSpotlight(null)`); no mask ever draws for an empty scope. Design +
   browser-verified results (NL union outline, single-province outline, no
   mask for Everywhere): [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md) §B.
+- **Cross-border scope chips rank by adjacency (2026-07-24).** The scope chips
+  offered around a region (compass grid + linear list) include a *foreign*
+  region ONLY when it shares a border with the active region — never by centroid
+  distance. So a border region is offered its true cross-border neighbours
+  (Groningen → Lower Saxony) while an interior region stays single-country
+  (Utrecht stays all-Dutch), each by construction, not tuning. Adjacency is
+  precomputed at catalog import into `region.adj` (`integer[]`, one
+  `ST_Intersects` pass across all onboarded countries) and shipped inline in
+  `CC_REGIONS`; `chipModel` (`scope-chips.js`) gates foreign chips on it, keeping
+  the existing centroid ordering *within* the eligible set. Supersedes the
+  centroid ranking of
+  [2026-07-23-cross-border-chips-design.md](2026-07-23-cross-border-chips-design.md).
+  Design: [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §2.
+- **Map-click scope refinement (2026-07-24).** A map click resolves to its region
+  by a synchronous bbox candidate pass; when 2+ region bboxes overlap the point,
+  `CCScope.regionOfPointPrecise` fetches those candidates' polygons
+  (`/map/region/{slug}/boundary`, cached) and runs a pure point-in-polygon test,
+  so the click lands in the region actually under it, not the nearest bbox
+  centre. A single candidate never fetches (the common case stays instant);
+  inside no candidate polygon it falls back to nearest-centre. Design:
+  [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §3.
+- **Three-tier region spotlight (2026-07-24).** For a single named-region scope,
+  the active region's border-neighbours (`region.adj`) render at a **middle** dim
+  tone — lighter than the fully-outside world (`0.13` vs `0.22`), darker than the
+  clear active region — each **individually** outlined with a fainter dashed line
+  than the active region's. Dark-mask holes come from the dissolved
+  `ST_Union(active + adj)` (`/map/scope/boundary?rids=<active,adj>`, one clean
+  blob so no two holes touch); the middle-tone fill + per-neighbour borders come
+  from each neighbour's own `/map/region/{slug}/boundary`. Mask hole rings are
+  forced clockwise (opposite the CCW world ring) so MapLibre never mis-classifies
+  a same-wound hole as a solid dark wedge (an intermittent, zoom-out-only
+  artifact otherwise). Country / My-area / Everywhere spotlights are unchanged.
+  Design: [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §8.
 
 ## 5. Layer rendering strategy
 
