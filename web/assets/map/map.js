@@ -967,6 +967,15 @@
   function covIconFilter(extra){
     const f=covBaseFilter(); f.push(['!',['has','point_count']]); if(extra) f.push(extra); return f;
   }
+  // The coverage HEAT layer's filter: scope ONLY
+  // (2026-07-24-coverage-overview-heatmap-design.md §3.2). No curated-ref dedupe,
+  // no stays-accessibility narrow, no `!has point_count` arm — a density surface
+  // is not a clickable/exact feature; it only needs in-scope points to contribute
+  // density. Returns the scope expression, or null (Everywhere → unfiltered, all
+  // points), which setFilter accepts.
+  function covHeatFilter(){
+    return covScopeFilter() || null;
+  }
   // Re-apply the composed filter to every coverage icon layer on a scope
   // change, so each tracks scope like every served layer. stays' icon layer
   // re-composes through applyStaysAccessFilter (it owns the acc extra).
@@ -982,6 +991,8 @@
           if(key==='stays'){ if(cc===COVERAGE_CCS[0]) applyStaysAccessFilter(); }
           else map.setFilter(id, covIconFilter());
         }
+        const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
+        if(map.getLayer(heatId)) map.setFilter(heatId, covHeatFilter());
       });
     });
   }
@@ -1023,6 +1034,8 @@
         const id = cc ? key+'-'+cc+'-cov' : key+'-cov'; if(!map.getLayer(id)) return;
         map.setLayoutProperty(id,'visibility', show?'visible':'none');
         map.setPaintProperty(id,'icon-opacity', dim);
+        const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
+        if(map.getLayer(heatId)) map.setLayoutProperty(heatId,'visibility', show?'visible':'none');
       });
     });
   }
@@ -1055,6 +1068,31 @@
                 'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
                 miniIcon('services')]
             : miniIcon(key);
+        // Overview density heatmap (2026-07-24-coverage-overview-heatmap-design.md §3.2):
+        // mirrors the icon layer on the same source-layer but renders z6-11 as a
+        // heatmap (maxzoom 11), fading out as the icons (minzoom 11) fade in.
+        // Scope-only filter → phantom-free (only in-scope points add density).
+        // Single hue across every letter (per-letter colours don't blend in a
+        // heatmap); the ride-heatmap ramps retuned for point sparsity + a coverage
+        // hue distinct from the ride heatmap's warm gold.
+        const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
+        map.addLayer({id:heatId, type:'heatmap', source:'coverage', 'source-layer':srcLayer,
+          maxzoom: 11,
+          filter: covHeatFilter(),
+          layout:{visibility:'none'},
+          paint:{
+            'heatmap-weight':0.7,
+            'heatmap-intensity':['interpolate',['linear'],['zoom'],6,1.0,11,1.6],
+            'heatmap-radius':['interpolate',['linear'],['zoom'],6,14,11,28],
+            // fade out approaching z11 so it cross-fades into the icons
+            'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.7,10,0.7,11,0],
+            'heatmap-color':['interpolate',['linear'],['heatmap-density'],
+              0,'rgba(0,0,0,0)',
+              0.15,'rgba(120,200,165,0.45)',
+              0.35,'#63C29B',
+              0.55,'#2E9E73',
+              0.78,'#1B7A55',
+              1,'#DFF3E7']}});
         // Individual coverage icons (no clustering — 2026-07-24-coverage-no-cluster-design.md
         // §2); scope-filtered exactly. minzoom 11 so nothing paints at overview.
         map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
