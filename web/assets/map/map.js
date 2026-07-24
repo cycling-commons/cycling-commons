@@ -2540,20 +2540,21 @@
     _corrLayers.forEach(id=>ids.push(id));           // curator correction-segment previews
     return ids.filter(id=>map.getLayer(id));
   }
-  map.on('click', e=>{
+  map.on('click', async e=>{
     if(_pick) return;                                    // stretch-picking owns the click
     if(map.queryRenderedFeatures(e.point, {layers:selectableLayers()}).length) return;  // a feature layer will handle it
     if(!window.CCScope) return;
-    const r=window.CCScope.regionOfPoint(e.lngLat.lng, e.lngLat.lat);
+    // Precise resolution refines an ambiguous click (2+ overlapping region bboxes)
+    // against the real polygon; deep inside one region it is synchronous-fast, no
+    // fetch (2026-07-24-region-adjacency-and-click-refinement-design.md §3.2).
+    const r=await window.CCScope.regionOfPointPrecise(e.lngLat.lng, e.lngLat.lat);
     if(!r) return;
     // Same-region click is a no-op (final review CRITICAL 1): bail before setRegion
-    // so an empty-map click inside the ALREADY-active region (e.g. dismissing a
-    // tooltip at z13) doesn't re-fit the camera + re-fetch coverage counts + re-render
-    // on every stray click. Guarded here, not in CCScope.set(), so same-scope set()
-    // calls from other callers (chips, search, rail buttons) keep emitting as before.
+    // so an empty-map click inside the ALREADY-active region doesn't re-fit the
+    // camera + re-fetch coverage counts + re-render on every stray click.
     const s=curScope();
     if(s.kind==='region' && s.regionIds[0]===r.id) return;
-    window.CCScope.setRegion(r.slug);   // cc:scopechange -> applyScope + renderScopeChips (serves items + chips)
+    window.CCScope.setRegion(r.slug);   // cc:scopechange -> applyScope + renderScopeChips
   });
   function redrawPickSegments(){
     _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
