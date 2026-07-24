@@ -1100,9 +1100,9 @@
             'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.6,8,0.6,9,0],
             'heatmap-color':['interpolate',['linear'],['heatmap-density'],
               0,'rgba(0,0,0,0)',
-              0.25,'rgba(78,163,168,0.30)',
-              0.6,'rgba(46,132,145,0.58)',
-              1,'#1C6B78']}});
+              0.25,'rgba(150,110,190,0.32)',
+              0.6,'rgba(112,72,158,0.58)',
+              1,'#5B2A86']}});
         // Individual coverage icons (no clustering — 2026-07-24-coverage-no-cluster-design.md
         // §2); scope-filtered exactly. minzoom 9 so the spots are visible from the
         // region-fit zoom (z6-8 tiles are thinned, so z9-10 icons are a sample that
