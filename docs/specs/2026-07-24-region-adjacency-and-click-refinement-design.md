@@ -129,25 +129,37 @@ world grows), so this scales worldwide. The return-type docblock and the
   (a) the **same country** as the active region, OR
   (b) in the active region's **`adj`** set (a true border-neighbour, any
   country). A foreign region NOT in `adj` is excluded.
-- **Ordering unchanged.** Eligible regions are still centroid-ranked
-  (`regionsNear` / `rankByGroundDistance`) and bearing-placed
-  (`compassLayout`), capped at 8, with the existing overflow row. The `cc` /
-  `foreign` tagging and the `· CC` serializer cue
+- **Compass ordering — adj-first, then domestic fill.** Eligibility alone is not
+  enough for the compass: under pure centroid rank among eligible regions, a
+  border-neighbour whose centroid is far (Overijssel → Lower Saxony / NRW) is
+  crowded out by eight nearer same-country centroids and never appears — which
+  defeats §1.1. Compass therefore builds the pool in two slices, each still
+  centroid-ordered internally via `regionsNear`:
+  1. **all** `adj` neighbours of the active region (any country), then
+  2. same-country regions that are **not** already in `adj`,
+  then `slice(0, 8)` and bearing-place with `compassLayout`. Domestic
+  non-neighbours never displace an adj entry; foreign non-neighbours are never
+  eligible. The `cc` / `foreign` tagging and the `· CC` serializer cue
   ([2026-07-23-cross-border-chips-design.md §3.2–3.3](2026-07-23-cross-border-chips-design.md))
   are untouched — a foreign chip that passes the gate still renders `Limburg · NL`.
+- **Linear ordering — centroid among eligible (unchanged metric).** Linear mode
+  keeps a single centroid-ranked pass filtered by the eligibility gate, so an
+  Everywhere / country anchor near Duisburg or Amsterdam still surfaces the
+  nearest region first. Adj-first is compass-only.
 - **Anchor unchanged.** Compass anchors on the active region; linear prefers the
   rider's My-area base. Cross-border still widens *which regions are candidates*,
-  never the anchor.
+  never the geographic anchor point.
 
 **Linear mode** (Everywhere / country scope) anchors on a point, not a region,
 so it has no `adj` of its own. It resolves the anchor to a region with the
 existing **synchronous** bbox `regionOfPoint`, then applies **that** region's
-`adj` gate. The bbox resolver (not Part B's polygon-confirmed one) keeps chip
-rendering synchronous; a rider's base is rarely exactly on a border, and
-adjacent regions have near-identical `adj` sets, so an occasional bbox
-mis-resolution changes at most one edge chip. If the anchor resolves to no
-region (an Everywhere scope with the map centred over open sea), the pool falls
-back to same-country-less — i.e. `regionsNear` with no gate, today's behaviour.
+`adj` gate (eligibility only — see ordering above). The bbox resolver (not
+Part B's polygon-confirmed one) keeps chip rendering synchronous; a rider's
+base is rarely exactly on a border, and adjacent regions have near-identical
+`adj` sets, so an occasional bbox mis-resolution changes at most one edge chip.
+If the anchor resolves to no region (an Everywhere scope with the map centred
+over open sea), the pool falls back to same-country-less — i.e. `regionsNear`
+with no gate, today's behaviour.
 
 ### 2.4 What changes, concretely
 
@@ -243,8 +255,10 @@ the line, and the shared-cache win outweighs vertex-exactness for a scope click.
 ## 5. Out of scope
 
 - No change to the coverage pipeline, tiles, or `coverage_poi`.
-- No change to the distance metric for **ordering** — adjacency is a *filter*
-  layered on the existing centroid ranking, not a replacement for it.
+- No replacement of centroid distance as the *within-slice* ranking metric —
+  compass uses adjacency to **prioritise** the neighbour slice (§2.3), then
+  centroid within each slice; linear uses adjacency only as a filter on a
+  single centroid-ranked list. Edge-distance ranking remains rejected (§1.1).
 - No prefetch of boundaries (fetch strictly on the ambiguous click path).
 - No new public API; both parts are site-internal map endpoints.
 
@@ -266,7 +280,9 @@ the line, and the shared-cache win outweighs vertex-exactness for a scope click.
   `recomputeAdjacency()` after `importRegions()` inside the same transaction (`ST_Intersects`
   full-geometry UPDATE → empty array, never NULL, for a region touching nothing).
   `RegionRegistryProvider::all()` ships `adj` as `list<int>` in `CC_REGIONS`. `chipModel`
-  gates foreign chips by active/anchor `adj`; `pointInPolygon` + async `regionOfPointPrecise`
+  gates foreign chips by active/anchor `adj`; compass pool is **adj-first then
+  domestic centroid fill** (§2.3 — so Overijssel still offers Lower Saxony + NRW);
+  linear keeps centroid order among eligible. `pointInPolygon` + async `regionOfPointPrecise`
   refine ambiguous map clicks; `map.js` click handler awaits the precise resolver. Final
   `make scope-test`: 119 pass / 0 fail. PHPUnit
   `ImportCatalogCommandTest` + `RegionRegistryProviderTest`: exit 0 (both suites
@@ -275,3 +291,75 @@ the line, and the shared-cache win outweighs vertex-exactness for a scope click.
   neighbours, Utrecht/Bayern single-country, Flevoland/Gelderland overlap click) were **not**
   run — Playwright profile locked by a parallel session. **Prod:** run migration
   `Version20260724120000` before the next catalog import that relies on `adj` (design §6).
+
+- **2026-07-24 (spec amend):** §2.3 / §5 updated to document compass **adj-first**
+  ordering as intentional (was implemented during Task 4 when pure
+  eligibility+centroid failed the Overijssel +both-German pinning). Linear mode
+  unchanged. No code change in this amend.
+
+---
+
+## 8. Part C — three-tier adjacency spotlight (follow-up, 2026-07-24)
+
+**Goal:** on the map, the active region's border-neighbours (the same regions
+offered as scope chips, i.e. its `adj` set) render in a **middle** dim tone —
+lighter than the fully-outside world, darker than the clear active region — so a
+rider sees where the neighbouring regions they can jump to actually lie.
+
+**Why it needs a new layer, not a tweak.** The spotlight
+(`drawSpotlightMask`, `web/assets/map/map.js`) is one dark polygon: the whole
+world with the active region punched out as a hole, filled `#101E16` at
+`fill-opacity 0.22`, plus a dashed gold outline. A fill can only *add* darkness,
+so a neighbour cannot be made *lighter* than the surrounding 0.22 by painting
+over it. The neighbours must instead be **excluded from the dark mask** and then
+given their own thinner dim.
+
+**Data source.** The active region's neighbour ids are already in
+`CC_REGIONS[activeRegion].adj` (Part A). Their union geometry comes from the
+**existing** `/map/scope/boundary?rids=<adj ids>` endpoint (the same
+`ST_Union` + `ST_SimplifyPreserveTopology`, `Cache-Control: public,
+max-age=3600` the country spotlight already uses — `MapController::scopeBoundary`
+→ `RegionBoundaryProvider::unionFeatureJson`). No new endpoint, no schema change.
+One extra fetch per region spotlight, race-guarded by the existing `_spotReq`
+token and session-cacheable by the browser.
+
+**Layering (three tiers).** For a single-region scope with a non-empty `adj`:
+1. **Dark mask** `#101E16 @ 0.22` — world with **active ∪ adjacent** punched out
+   as holes → the outside world stays fully dim; active *and* adjacent are clear
+   of it.
+2. **Light mask** `#101E16 @ ~0.10` (tunable live) — a fill over the **adjacent
+   union only** → neighbours land at the middle tone. The active region is not
+   in the adjacent union, so it stays fully clear.
+3. **Active outline** — the existing dashed gold `region-line`, unchanged, so the
+   active region keeps the only hard edge ("you are here").
+
+Adjacent regions get **tone only, no outline** — the single dashed border stays
+unambiguous. When `adj` is empty (a region bordering nothing) or the union fetch
+fails, tiers 2 collapses and the spotlight is exactly today's two-tone — a clean
+degrade.
+
+**Scope coverage.** Applies to **single-region scopes only** (the compass case,
+the only scope with one active region whose neighbours are defined). Country,
+Everywhere, and My-area spotlights are unchanged — they have no single active
+region whose `adj` to lighten.
+
+**Interaction.** No new click handling: a click on a lightly-dimmed neighbour is
+an ordinary map click, already resolved by `regionOfPointPrecise` (Part B) to
+that region and scoped to it — so the neighbour becomes active and the three-tier
+spotlight re-centres on it. Consistent with clicking a chip.
+
+**Implementation surface.** `web/assets/map/map.js` only:
+- `drawSpotlightMask(g, adjUnion)` gains an optional adjacent-union geometry: when
+  present, its rings join the dark mask's holes and a new `region-adj-mask`
+  fill layer is added below `region-line`.
+- `setSpotlight(slug)` looks up the region's `adj` ids from `CC_REGIONS`, fetches
+  `/map/scope/boundary?rids=…` alongside the active boundary, and passes the
+  union through — all under one `_spotReq` guard.
+- `clearSpotlight()` also removes `region-adj-mask` (source + layer).
+- `setCountrySpotlight` / `setCircleSpotlight` pass no adjacent union (two-tone
+  unchanged).
+
+No server, test-fixture, or `scope*.js` change — this is the untested
+map-serialization layer (like Part B Task 7), browser-verified.
+
+**Status:** approved 2026-07-24, not yet implemented.
