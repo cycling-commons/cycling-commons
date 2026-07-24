@@ -376,17 +376,21 @@ the newest rung of that same ladder.
   while the drawer is open; `closeDrawer()` clears halo, route highlight, and
   any corrections overlay.
 - **Coverage renders as a density heatmap at overview, individual icons from
-  z11 — no clustering, phantom-free at every zoom.** A coverage POI's icon is
-  drawn by its tile `<key>-<cc>-cov` layer, complete and exactly scoped at
-  z11–14. At overview zoom (z6–~11), a `<key>-<cc>-heat` heatmap layer on the
-  **same** source-layer (`maxzoom 11`) draws the region's coverage as a
-  smooth density surface, built from the tile's thinned z6–10 sample
-  (`coverage-provider.md` §4) — this fills the empty overview that the
-  no-cluster z11 floor had left, with the rail's exact
-  `/map/coverage/counts` still carrying the precise "how much" alongside it.
-  The two layers **cross-fade at z11** (heat `maxzoom 11`, icon `minzoom
-  11`). Both are scope-filtered exactly per point (`covIconFilter()` for the
-  icons, `covHeatFilter()` — scope only, no dedupe/accessibility narrow — for
+  z9 — no clustering, phantom-free at every zoom.** A coverage POI's icon is
+  drawn by its tile `<key>-<cc>-cov` layer (`minzoom 9`); the tiles carry every
+  point complete at z11–14, so the z9–10 icons are the **thinned** sample that
+  densifies to complete by z11 (the rail counts stay the exact total). At
+  overview zoom (z6–~9), a `<key>-<cc>-heat` heatmap layer on the **same**
+  source-layer (`maxzoom 9`) draws the region's coverage as a smooth density
+  surface, built from the tile's thinned z6–10 sample (`coverage-provider.md`
+  §4) — this fills the empty overview that the no-cluster z11 floor had left,
+  with the rail's exact `/map/coverage/counts` still carrying the precise "how
+  much" alongside it. The two layers **cross-fade at z9** (heat `maxzoom 9`,
+  icon `minzoom 9`) so the actual spots are visible at the region-fit landing
+  zoom. The heat colour ramp runs to a deep green at max density (a pale top
+  stop punched white "holes" in a dense single-letter surface). Both are
+  scope-filtered exactly per point (`covIconFilter()` for the icons,
+  `covHeatFilter()` — scope only, no dedupe/accessibility narrow — for
   the heat), which is what eliminates the phantom bubbles a prior
   cluster-bubble design produced at region borders (a cluster rendered at
   its members' centroid, which could sit outside the scoped region): a

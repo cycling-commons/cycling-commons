@@ -339,11 +339,13 @@ After all regions, once per run:
    (§4/§6) is **exact per point** at any zoom, worldwide — a single point's
    token is its own region, so no tile attribute can render it outside its
    scope. A rider now sees a **coverage-density heatmap** at overview zoom
-   (z6–~11), built from that thinned sample and filtered to the same scope
+   (z6–~9), built from that thinned sample and filtered to the same scope
    tokens as the icons, plus the rail's exact `/map/coverage/counts`
-   alongside it as the precise "how much"; individual dots render from z11
-   upward, cross-fading with the heatmap at the handoff
-   (`2026-07-24-coverage-overview-heatmap-design.md` §2–§3.1). (The prior
+   alongside it as the precise "how much"; individual dots render from z9
+   upward (the z9–10 dots are the thinned sample, complete by z11),
+   cross-fading with the heatmap at the ~z9 handoff
+   (`2026-07-24-coverage-overview-heatmap-design.md` §2–§3.1 + its Tuning
+   note). (The prior
    cluster-bubble design rendered a cluster at the *centroid* of its
    members, which could sit outside the scoped region — the phantom-bubble
    class the no-cluster design eliminates; see

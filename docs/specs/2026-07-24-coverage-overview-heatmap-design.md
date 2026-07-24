@@ -163,3 +163,23 @@ One coverage **re-tile** (`make coverage-refresh`) to rebuild the PMTiles at
   source-layer refinement is **not warranted** at this time.
 - **Prod deploy:** re-tile via `make coverage-refresh`; no DB migration, no
   re-harvest.
+
+### Tuning (2026-07-24, owner feedback — commit d2eb34f)
+
+Two adjustments after living with the shipped version, both `web/assets/map/map.js`
+only (no pipeline/tile change):
+
+- **Handoff lowered z11 → z9.** Heat `maxzoom: 11 → 9`, icon `minzoom: 11 → 9`,
+  and the heat intensity/radius/opacity ramps retuned for the z6–9 range. The
+  region-fit lands at ~z9, and the owner wanted the actual **spots (icons)
+  visible from z9**, not only a blur. So z6–8 is the heatmap, z9+ is icons. The
+  z9–10 icons are the **thinned** tile sample (they densify to complete at z11+,
+  where the tiles carry every point); the rail `/counts` stays the exact total.
+  So every "~z11 handoff / icons from z11" statement above now reads **~z9**.
+- **Heat colour ramp: no pale top stop.** The original ramp ended at a pale
+  `#DFF3E7`, which went near-white at max density and punched visible white
+  "holes" in a **dense single-letter** surface (e.g. Where-to-sleep alone,
+  1488 points) — the owner-reported "the blur breaks". The ramp now ends at a
+  **deep green `#17663F`**, so a dense surface reads as a solid blur. (Confirmed
+  not a functional bug: the per-letter toggle filters correctly — water-only
+  and stays-only render visibly different densities.)
