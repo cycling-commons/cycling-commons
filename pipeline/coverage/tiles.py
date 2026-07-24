@@ -80,14 +80,19 @@ def _universal_props(spec, universal: list[str]) -> list[str]:
     return [frags[k] for k in universal]
 
 
-def _letter_sql(letter: str, spec, universal: list[str], cc: str) -> str:
+def _letter_sql(letter: str, spec, universal: list[str]) -> str:
     # jsonb_strip_nulls still drops a NULL name or a NULL per-letter extra, but
     # NOT ridtok/cctok — those are empty strings, never NULL, so every feature
     # carries them (see _universal_props for why).
+    #
+    # One COPY per letter (not per letter×country): the country bucket is emitted
+    # as a leading column and rows are ordered by it, so export_geojsonl routes
+    # each row to its per-cc file client-side. This turns ~letters×countries
+    # full-table scans into ~letters (2026-07-24-coverage-harvest-prod-safety-design.md §3.5).
     props = _universal_props(spec, universal)
     props += [_EXTRA_SQL[p] for p in spec.tile_props]
     return (
-        "COPY (SELECT jsonb_build_object("
+        "COPY (SELECT COALESCE(country_code, 'ZZ'), jsonb_build_object("
         "'type', 'Feature', "
         # feature id = numeric osm id (coverage-provider.md §4). node/NNN and
         # way/NNN are independent OSM id spaces, so this strips the type and
@@ -99,7 +104,8 @@ def _letter_sql(letter: str, spec, universal: list[str], cc: str) -> str:
         "'geometry', ST_AsGeoJSON(geom)::jsonb, "
         f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
         f")::text FROM coverage_poi "
-        f"WHERE letter = {_lit(letter)} AND COALESCE(country_code, 'ZZ') = {_lit(cc)}) TO STDOUT"
+        f"WHERE letter = {_lit(letter)} "
+        f"ORDER BY COALESCE(country_code, 'ZZ')) TO STDOUT"
     )
 
 
@@ -108,29 +114,33 @@ def export_geojsonl(conn, workdir):
     index (coverage-provider.md §4). Splitting by country_code keeps tippecanoe
     from clustering across a national border — a bubble's members, count and
     scope tokens are then single-country. Unstamped rows (country_code NULL)
-    bucket under 'ZZ' so none is dropped. Returns {(LETTER, CC): Path}."""
+    bucket under 'ZZ' so none is dropped. Returns {(LETTER, CC): Path}.
+
+    One COPY per letter (ordered by country) routes rows to per-cc files
+    client-side — ~letters scans, not letters×countries
+    (2026-07-24-coverage-harvest-prod-safety-design.md §3.5). Files open lazily,
+    so only (letter, cc) pairs that actually have rows are created."""
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
     out = {}
     contract = load_contract()
     universal = contract.universal_tile_props
-    ccs = [r[0] for r in conn.execute(
-        "SELECT DISTINCT COALESCE(country_code, 'ZZ') FROM coverage_poi ORDER BY 1").fetchall()]
     for letter, spec in contract.letters.items():
-        for cc in ccs:
-            path = workdir / f"{letter.lower()}_{cc.lower()}.geojsonl"
-            n = 0
-            with open(path, "w", encoding="utf-8") as fh, conn.cursor() as cur:
-                with cur.copy(_letter_sql(letter, spec, universal, cc)) as cp:
-                    cp.set_types(["text"])
-                    for (line,) in cp.rows():  # rows() unescapes COPY text format
-                        fh.write(line)
-                        fh.write("\n")
-                        n += 1
-            if n:
-                out[(letter, cc)] = path
-            else:
-                path.unlink()
+        handles = {}
+        with conn.cursor() as cur:
+            with cur.copy(_letter_sql(letter, spec, universal)) as cp:
+                cp.set_types(["text", "text"])
+                for cc, line in cp.rows():  # rows() unescapes COPY text format
+                    fh = handles.get(cc)
+                    if fh is None:
+                        path = workdir / f"{letter.lower()}_{cc.lower()}.geojsonl"
+                        fh = open(path, "w", encoding="utf-8")
+                        handles[cc] = fh
+                        out[(letter, cc)] = path
+                    fh.write(line)
+                    fh.write("\n")
+        for fh in handles.values():
+            fh.close()
     return out
 
 
