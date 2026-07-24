@@ -84,6 +84,7 @@ final class ImportCatalogCommand extends Command
         try {
             $this->db->beginTransaction();
             $regions = $this->importRegions($dir, $io);
+            $this->recomputeAdjacency();
             $items = $this->importItemLayers($dir, $io);
             $routes = $this->importRoutes($dir, $io);
             $heat = $this->importHeat($dir, $io);
@@ -471,5 +472,27 @@ final class ImportCatalogCommand extends Command
         );
 
         return $assigned;
+    }
+
+    /**
+     * Recompute each region's border-neighbour id list (region.adj) across ALL
+     * onboarded countries — the cross-border adjacency the scope chips gate on
+     * (2026-07-24-region-adjacency-and-click-refinement-design.md §2.1). Derived,
+     * recomputed every import, never authored. ST_Intersects rides the existing
+     * idx_region_geom GiST index (bbox prefilter → exact only on truly-touching
+     * pairs), so cost scales with border count, not region count squared. Empty
+     * array (never NULL) for a region touching nothing, so the client can treat a
+     * post-import region as "known, borders none" rather than "not yet computed".
+     */
+    private function recomputeAdjacency(): void
+    {
+        $this->db->executeStatement(
+            'UPDATE region a SET adj = COALESCE((
+                SELECT array_agg(b.id ORDER BY b.id)
+                FROM region b
+                WHERE b.id <> a.id AND ST_Intersects(a.geom, b.geom)
+             ), ARRAY[]::int[])
+             WHERE a.geom IS NOT NULL'
+        );
     }
 }

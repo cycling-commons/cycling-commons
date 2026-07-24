@@ -478,4 +478,46 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertNotNull($shop);
         self::assertSame($sub->getId(), $shop->getSubdivisionId()); // prov "Brabant wallon" -> BE-WBR
     }
+
+    public function testImportComputesSymmetricAdjacency(): void
+    {
+        // Two edge-sharing squares (adjacent) + one distant square (not). After
+        // import each region's adj must list exactly its border-neighbours, both
+        // directions (2026-07-24-region-adjacency-and-click-refinement-design.md §2.1).
+        $dir = sys_get_temp_dir().'/catalog-import-region-adj-'.getmypid();
+        @mkdir($dir, 0777, true);
+        $square = static fn (string $slug, array $ring): string => json_encode([
+            'type' => 'Feature',
+            'properties' => ['slug' => $slug, 'name' => $slug, 'area_km2' => 100, 'country_code' => 'BE'],
+            'geometry' => ['type' => 'MultiPolygon', 'coordinates' => [[$ring]]],
+        ], \JSON_THROW_ON_ERROR);
+        // west = [4,50]-[5,51]; east shares the x=5 edge = [5,50]-[6,51];
+        // far is disjoint = [10,50]-[11,51].
+        file_put_contents($dir.'/region-adj-west.geojson', $square('adj-west',
+            [[4.0, 50.0], [5.0, 50.0], [5.0, 51.0], [4.0, 51.0], [4.0, 50.0]]));
+        file_put_contents($dir.'/region-adj-east.geojson', $square('adj-east',
+            [[5.0, 50.0], [6.0, 50.0], [6.0, 51.0], [5.0, 51.0], [5.0, 50.0]]));
+        file_put_contents($dir.'/region-adj-far.geojson', $square('adj-far',
+            [[10.0, 50.0], [11.0, 50.0], [11.0, 51.0], [10.0, 51.0], [10.0, 50.0]]));
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+
+        $db = $this->em->getConnection();
+        $adj = static function (string $slug) use ($db): array {
+            $raw = $db->fetchOne('SELECT adj FROM region WHERE slug = :s', ['s' => $slug]);
+            if ($raw === null) {
+                return [];
+            }
+
+            return array_map('intval', $db->fetchFirstColumn(
+                'SELECT unnest(adj) FROM region WHERE slug = :s', ['s' => $slug]
+            ));
+        };
+        $id = static fn (string $slug): int => (int) $db->fetchOne(
+            'SELECT id FROM region WHERE slug = :s', ['s' => $slug]);
+
+        self::assertSame([$id('adj-east')], $adj('adj-west'), 'west borders only east');
+        self::assertSame([$id('adj-west')], $adj('adj-east'), 'east borders only west (symmetric)');
+        self::assertSame([], $adj('adj-far'), 'the distant square borders nothing — empty array, not NULL');
+    }
 }
