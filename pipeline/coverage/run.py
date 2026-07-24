@@ -22,12 +22,29 @@ import psycopg
 
 from .contract import load_contract
 from .extract import run_extract
-from .load import ensure_schema, load_region, resolve_country
+from .load import apply_session_budget, ensure_schema, load_region, resolve_country
 from .parse import parse_pois
 from .publish import ensure_bucket, prune, upload
 from .tiles import build_pmtiles, export_geojsonl, verify_pmtiles
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
+
+# Fixed advisory-lock key for the whole coverage run (design §3.2). Any stable
+# non-zero bigint that no other advisory-lock user on the CC cluster shares; CC
+# is the only advisory-lock user there today. 0xC07E7A6E = "coverage" mnemonic.
+COVERAGE_ADVISORY_LOCK_KEY = 0xC07E7A6E
+
+
+def _acquire_run_lock(conn) -> bool:
+    """Session-level pg_try_advisory_lock for the whole run (design §3.2).
+    Returns False when another coverage run already holds it. Held until the
+    connection closes; the commit closes the implicit txn while the session
+    keeps the lock."""
+    got = conn.execute(
+        "SELECT pg_try_advisory_lock(%s)", (COVERAGE_ADVISORY_LOCK_KEY,)
+    ).fetchone()[0]
+    conn.commit()
+    return got
 
 
 def _md5(path: pathlib.Path) -> str:
@@ -113,6 +130,11 @@ def main(argv=None) -> int:
     failed = []
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with psycopg.connect(dsn) as conn:
+        apply_session_budget(conn)
+        if not _acquire_run_lock(conn):
+            print("[coverage] another coverage run holds the advisory lock — "
+                  "exiting", file=sys.stderr)
+            return 2
         ensure_schema(conn)
         for region in regions:
             try:

@@ -3,11 +3,14 @@
 main() orchestration (stage order, per-region failure isolation, exit code)."""
 import hashlib
 import io
+import os
 
+import psycopg
 import pytest
 
 from coverage import run
 from coverage.load import DriftAbort, LoadResult
+from coverage.run import COVERAGE_ADVISORY_LOCK_KEY, _acquire_run_lock
 
 
 class _Resp(io.BytesIO):
@@ -120,6 +123,9 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
         def fetchall(self):
             return [("C", 3), ("D", 2)]
 
+        def fetchone(self):
+            return (True,)   # pg_try_advisory_lock → acquired (design §3.2)
+
     class FakeConn:
         def __enter__(self):
             return self
@@ -128,8 +134,15 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
             return False
 
         def execute(self, sql, params=None):
-            calls.append("counts-query")
+            # Only the real GROUP BY counts query is recorded; the session-budget
+            # SET statements (sql.Composed) and the advisory-lock SELECT are the
+            # new run.main() preamble (design §3.1/§3.2) and are no-ops here.
+            if isinstance(sql, str) and "count(*)" in sql:
+                calls.append("counts-query")
             return FakeResult()
+
+        def commit(self):
+            pass
 
     def fake_load_region(conn, rows, region, country_code):
         calls.append(f"load:{region}")
@@ -190,3 +203,15 @@ def test_country_by_region_stamps_netherlands():
     lookup is what run.py now calls at the two country_code call sites."""
     from coverage.load import resolve_country
     assert resolve_country("europe/netherlands") == "NL"
+
+
+def test_run_lock_is_exclusive_across_sessions(db):
+    """A second session cannot take the run lock while the first holds it —
+    a staggered timer + a manual refresh can no longer overlap (design §3.2)."""
+    assert COVERAGE_ADVISORY_LOCK_KEY  # a fixed non-zero bigint
+    other = psycopg.connect(os.environ["DATABASE_DSN"])
+    try:
+        assert _acquire_run_lock(db) is True
+        assert _acquire_run_lock(other) is False
+    finally:
+        other.close()  # db releases its lock at fixture teardown (conn.close)
