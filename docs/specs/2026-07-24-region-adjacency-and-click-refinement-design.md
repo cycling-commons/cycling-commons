@@ -362,4 +362,13 @@ spotlight re-centres on it. Consistent with clicking a chip.
 No server, test-fixture, or `scope*.js` change — this is the untested
 map-serialization layer (like Part B Task 7), browser-verified.
 
-**Status:** approved 2026-07-24, not yet implemented.
+**Status: EXECUTED 2026-07-24** (commit on `symfony-base`, not pushed).
+`drawSpotlightMask(g, adjUnion)` punches the adjacent union out of the dark mask
+and adds a `region-adj-mask` fill at `fill-opacity 0.10` below `region-line`;
+`setSpotlight` fetches `/map/scope/boundary?rids=<adj>` alongside the active
+boundary under one `_spotReq` guard (adj fetch degrades to null → two-tone on any
+failure); `clearSpotlight` drops the new layer. Browser-verified on `:8001/map`:
+Gelderland (7 Dutch neighbours lightened, both `/boundary` requests fired) and
+Overijssel (neighbours incl. **Lower Saxony · DE** and NRW lightened across the
+national border); region switch re-centres cleanly with no stale layers; 0
+console errors. Middle-tone opacity `0.10` is a live-tunable default.
