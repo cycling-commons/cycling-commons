@@ -123,28 +123,35 @@
     // Three-tier spotlight (item 4 Part C, 2026-07-24-region-adjacency-and-click-refinement-design.md §8):
     // the active region's adj neighbours (CC_REGIONS) render at a lighter mask
     // tone than the outside world, so the regions the rider can jump to are
-    // visible. Two unions off the cached /map/scope/boundary endpoint:
-    //   adjUnion  = ST_Union(neighbours)         -> the lighter middle-tone fill
-    //   fullUnion = ST_Union(active + neighbours) -> the dark-mask holes
-    // fullUnion is a SINGLE dissolved blob, so the dark mask has no touching holes
-    // (active and each neighbour share borders; punching them as separate rings
-    // makes earcut emit triangular artifacts to the world corners). Both fetches
-    // degrade to null (clean two-tone) on any failure so they can never lose the
-    // active spotlight.
+    // visible. Two data sources:
+    //   fullUnion = ST_Union(active + neighbours) off /map/scope/boundary — the
+    //     dark-mask holes as ONE dissolved blob, so no two holes touch (punching
+    //     active + each neighbour as separate rings makes earcut spit artifacts).
+    //   adjFeatures = each neighbour's OWN boundary (/map/region/<slug>/boundary) —
+    //     the middle-tone fill + per-region borders, so the borders BETWEEN
+    //     neighbours show, not just the band perimeter a dissolved union would give.
+    // Every fetch degrades to null/[] (clean two-tone) on failure so it can never
+    // lose the active spotlight.
     const reg = CC_REGIONS.find(r=>r.slug===slug);
     const adjIds = (reg && reg.adj) || [];
-    const unionFetch = ids => fetch(`/map/scope/boundary?rids=${ids.join(',')}`)
-      .then(r=> r.status===204||!r.ok ? null : r.json()).catch(()=>null);
-    const adjP  = adjIds.length ? unionFetch(adjIds) : Promise.resolve(null);
-    const fullP = adjIds.length ? unionFetch([reg.id, ...adjIds]) : Promise.resolve(null);
+    const adjSlugs = adjIds.map(id=>{ const r=CC_REGIONS.find(x=>x.id===id); return r&&r.slug; }).filter(Boolean);
+    const boundaryOf = s => fetch(`/map/region/${encodeURIComponent(s)}/boundary`)
+      .then(r=> r.ok ? r.json() : null).catch(()=>null);
+    const fullP = adjIds.length
+      ? fetch(`/map/scope/boundary?rids=${[reg.id,...adjIds].join(',')}`)
+          .then(r=> r.status===204||!r.ok ? null : r.json()).catch(()=>null)
+      : Promise.resolve(null);
+    const adjP = adjSlugs.length
+      ? Promise.all(adjSlugs.map(boundaryOf)).then(fs=>fs.filter(Boolean))
+      : Promise.resolve([]);
     Promise.all([
       fetch(`/map/region/${encodeURIComponent(slug)}/boundary`)
         .then(r=>{ if(!r.ok) throw new Error('boundary HTTP '+r.status); return r.json(); }),
       adjP, fullP,
-    ]).then(([d, a, f])=>{
+    ]).then(([d, adjFeatures, f])=>{
         const g = d && d.geometry;
         if(req!==_spotReq||!g||!map.getStyle()||map.getSource('region')) return;   // superseded or gone
-        drawSpotlightMask(g, a && a.geometry, f && f.geometry);
+        drawSpotlightMask(g, adjFeatures, f && f.geometry);
       // decorative only — the map works without the boundary, but log why it's missing (W34)
       }).catch(e=>console.warn('Region boundary unavailable:', e));
   }
@@ -152,11 +159,12 @@
   // Shared mask painter: dim the world outside `g` + a dashed outline. Used by
   // the named-region and country spotlights; the My-area circle keeps its own
   // soft-edge variant (region-scoping-design.md §4 anti-border cue). When
-  // `adjUnion` + `fullUnion` are given (single-region three-tier spotlight,
-  // 2026-07-24-region-adjacency-and-click-refinement-design.md §8), the active
-  // region's neighbours are punched out of the dark mask (via the DISSOLVED
-  // fullUnion — never touching rings) and given a lighter middle tone.
-  function drawSpotlightMask(g, adjUnion, fullUnion){
+  // `adjFeatures` (each neighbour's own boundary Feature) + `fullUnion` (dissolved
+  // active+neighbours) are given (single-region three-tier spotlight,
+  // 2026-07-24-region-adjacency-and-click-refinement-design.md §8), the neighbours
+  // are punched out of the dark mask (via fullUnion — never touching rings), given
+  // a lighter middle tone, and each individually outlined.
+  function drawSpotlightMask(g, adjFeatures, fullUnion){
     const outerRings = geo => (geo.type==='MultiPolygon' ? geo.coordinates : [geo.coordinates]).map(p=>p[0]);
     // Signed ring area (shoelace); >0 is CCW. The world ring below is CCW, so every
     // hole MUST wind the opposite way (CW). MapLibre's fill classifies a ring as a
@@ -174,13 +182,16 @@
     map.addSource('region-mask',{type:'geojson',data:mask});
     map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
     map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
-    // Middle tone over the adjacent union ONLY (active is not in it, so it stays
-    // fully clear). Gated on fullUnion too: without the dark holes punched, this
-    // would double-darken adjacent instead of lightening it. A fainter dashed
-    // outline (thinner + more transparent than the active region-line below) marks
-    // where the lightened neighbours are.
-    if(adjUnion && fullUnion){
-      map.addSource('region-adj-mask',{type:'geojson',data:{type:'Feature',geometry:adjUnion}});
+    // Middle tone over the neighbours ONLY (active is not among adjFeatures, so it
+    // stays fully clear). Gated on fullUnion too: without the dark holes punched,
+    // this would double-darken the neighbours instead of lightening them. Each
+    // neighbour is a SEPARATE feature, so the fainter dashed outline traces every
+    // region's own edges — the borders BETWEEN neighbours, not just the band
+    // perimeter. Neighbours tessellate (no interior overlap), so the fill does not
+    // double up along their shared edges. Outline is thinner + more transparent
+    // than the active region-line below.
+    if(adjFeatures && adjFeatures.length && fullUnion){
+      map.addSource('region-adj-mask',{type:'geojson',data:{type:'FeatureCollection',features:adjFeatures}});
       map.addLayer({id:'region-adj-mask',type:'fill',source:'region-adj-mask',paint:{'fill-color':'#101E16','fill-opacity':0.13}});
       map.addLayer({id:'region-adj-line',type:'line',source:'region-adj-mask',paint:{'line-color':'#C8923A','line-width':1,'line-dasharray':[2,2],'line-opacity':0.45}});
     }
