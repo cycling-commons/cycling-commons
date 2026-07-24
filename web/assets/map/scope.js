@@ -30,6 +30,11 @@
   let bySlug = new Map();
   let byCountry = new Map();
 
+  // Session cache of fetched region boundary polygons (slug -> Polygon[] rings
+  // list), so a second ambiguous click in the same overlap zone fetches nothing
+  // (2026-07-24-region-adjacency-and-click-refinement-design.md §3.3).
+  const boundaryCache = new Map();
+
   // IANA timezone -> ISO country, for the anonymous cold-start home hint
   // (2026-07-22-scope-selector-scale-design.md §D). Starts with the onboarded
   // countries' common zones; extend per onboarding. Compute-only — nothing is
@@ -590,6 +595,57 @@
     /** Ray-casting point-in-polygon; see the module helper. `rings` is a GeoJSON
      *  Polygon coordinate array (outer + holes). Pure. */
     pointInPolygon(point, rings) { return pointInPolygon(point, rings); },
+
+    /** Async click refinement (2026-07-24-region-adjacency-and-click-refinement-design.md
+     *  §3.2): the synchronous bbox pass as the candidate filter, then a real
+     *  point-in-polygon test ONLY when 2+ bboxes overlap the click. 1 candidate
+     *  (or 0) never fetches. Inside no candidate polygon → nearest-centre among
+     *  the candidates (identical to regionOfPoint's tiebreak, never a regression).
+     *  Returns Promise<region|null>. regionOfPoint stays synchronous for chips. */
+    async regionOfPointPrecise(lng, lat) {
+      const cands = [];
+      for (const r of regions) {
+        const b = r.bbox;
+        if (!b || lng < b[0] || lng > b[2] || lat < b[1] || lat > b[3]) continue;
+        cands.push(r);
+      }
+      if (!cands.length) return null;
+      if (cands.length === 1) return cands[0];
+      const nearestByCentre = () => {
+        const kx = Math.cos(lat * Math.PI / 180);
+        let best = null; let bestD = Infinity;
+        for (const r of cands) {
+          const b = r.bbox;
+          const cx = (b[0] + b[2]) / 2; const cy = (b[1] + b[3]) / 2;
+          const d = ((cx - lng) * kx) ** 2 + (cy - lat) ** 2;
+          if (d < bestD) { bestD = d; best = r; }
+        }
+        return best;
+      };
+      const ringsFor = async (r) => {
+        if (boundaryCache.has(r.slug)) return boundaryCache.get(r.slug);
+        let rings = [];
+        try {
+          const resp = await fetch('/map/region/' + encodeURIComponent(r.slug) + '/boundary');
+          if (resp.ok) {
+            const d = await resp.json();
+            const g = d && d.geometry;
+            // Polygon -> [rings]; MultiPolygon -> concat each polygon's rings.
+            if (g && g.type === 'Polygon') rings = [g.coordinates];
+            else if (g && g.type === 'MultiPolygon') rings = g.coordinates;
+          }
+        } catch (e) { rings = []; }   // network/parse failure → treat as no polygon
+        boundaryCache.set(r.slug, rings);
+        return rings;
+      };
+      for (const r of cands) {
+        const polys = await ringsFor(r);     // array of Polygon ring-sets
+        for (const rings of polys) {
+          if (pointInPolygon([lng, lat], rings)) return r;
+        }
+      }
+      return nearestByCentre();
+    },
 
     /** Onboarded regions of a country, capped at 8 by default, for the
      *  contextual chips (2026-07-22-scope-selector-scale-design.md §C,

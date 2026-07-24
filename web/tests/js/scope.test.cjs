@@ -1097,3 +1097,65 @@ test('pointInPolygon: an empty/absent ring set is never inside', () => {
   assert.equal(CCScope.pointInPolygon([5, 5], null), false);
 });
 
+// ---- regionOfPointPrecise (2026-07-24-region-adjacency-and-click-refinement-design.md §3.2) ----
+
+test('regionOfPointPrecise: a single bbox candidate resolves without fetching', async () => {
+  CCScope.init([
+    { id: 1, slug: 'solo', countryCode: 'BE', bbox: [0, 0, 10, 10], adj: [] },
+  ], { kind: 'everywhere', regionIds: [], countryCode: null });
+  let fetched = 0;
+  globalThis.fetch = () => { fetched++; return Promise.reject(new Error('should not fetch')); };
+  const r = await CCScope.regionOfPointPrecise(5, 5);
+  assert.equal(r.slug, 'solo');
+  assert.equal(fetched, 0);      // one candidate — no network
+  delete globalThis.fetch;
+});
+
+test('regionOfPointPrecise: two overlapping bboxes — the containing polygon wins', async () => {
+  // Two regions whose bboxes both contain [5,5], but only B's polygon does.
+  CCScope.init([
+    { id: 1, slug: 'a', countryCode: 'NL', bbox: [0, 0, 10, 10], adj: [] },
+    { id: 2, slug: 'b', countryCode: 'NL', bbox: [4, 4, 12, 12], adj: [] },
+  ], { kind: 'everywhere', regionIds: [], countryCode: null });
+  const polys = {
+    // a's real shape excludes [5,5] (a notch); b's includes it.
+    a: [[[0, 0], [3, 0], [3, 10], [0, 10], [0, 0]]],
+    b: [[[4, 4], [12, 4], [12, 12], [4, 12], [4, 4]]],
+  };
+  globalThis.fetch = (url) => {
+    const slug = url.match(/region\/([^/]+)\/boundary/)[1];
+    return Promise.resolve({
+      ok: true, status: 200,
+      json: () => Promise.resolve({ type: 'Feature', geometry: { type: 'Polygon', coordinates: polys[slug] } }),
+    });
+  };
+  const r = await CCScope.regionOfPointPrecise(5, 5);
+  assert.equal(r.slug, 'b');     // inside b's polygon, not a's
+  delete globalThis.fetch;
+});
+
+test('regionOfPointPrecise: inside no candidate polygon — nearest-centre fallback', async () => {
+  // Distinct slugs from the prior overlap test so the session boundaryCache cannot
+  // reuse polygons that DO contain [5,5] and short-circuit the fallback path.
+  CCScope.init([
+    { id: 1, slug: 'near-a', countryCode: 'NL', bbox: [0, 0, 10, 10], adj: [] },   // centre 5,5
+    { id: 2, slug: 'far-b', countryCode: 'NL', bbox: [4, 4, 20, 20], adj: [] },   // centre 12,12
+  ], { kind: 'everywhere', regionIds: [], countryCode: null });
+  // Neither polygon contains [5,5] (both are small notches away from it); the
+  // fallback is nearest bbox centre — near-a (centre 5,5 is nearer than far-b's 12,12).
+  const away = [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]];
+  globalThis.fetch = () => Promise.resolve({
+    ok: true, status: 200,
+    json: () => Promise.resolve({ type: 'Feature', geometry: { type: 'Polygon', coordinates: away } }),
+  });
+  const r = await CCScope.regionOfPointPrecise(5, 5);
+  assert.equal(r.slug, 'near-a');     // nearest-centre among the 2 candidates
+  delete globalThis.fetch;
+});
+
+test('regionOfPointPrecise: no bbox candidate — null', async () => {
+  CCScope.init([
+    { id: 1, slug: 'a', countryCode: 'NL', bbox: [0, 0, 10, 10], adj: [] },
+  ], { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.equal(await CCScope.regionOfPointPrecise(50, 50), null);
+});
