@@ -1,0 +1,25 @@
+docs/specs/map-and-search.md
+  s_ce7d437afc19d9::t_c1a6e610a573a2 378-397,399,405-411
+docs/specs/2026-07-24-coverage-overview-heatmap-design.md
+  s_ce7d437afc19d9::t_a6c03f646ff49d 144-165
+  s_ce7d437afc19d9::t_e415cfc83fa0d0 73-77
+docs/specs/coverage-provider.md
+  s_ce7d437afc19d9::t_0e4581b4aad03b 410-425
+  s_ce7d437afc19d9::t_fc8b467bcda4cc 318,321,323-352
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2bc51e3d3a70ca9d37bfa88b7c59adb08e26aefc",
+  "prompts": {},
+  "sessions": {
+    "s_ce7d437afc19d9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f4f83357-aa74-4551-bd21-6f693445ca5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
