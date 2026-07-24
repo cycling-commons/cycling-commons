@@ -386,10 +386,20 @@ world-rectangle edge — invisible until zoomed out enough to see it. Fixed by
 forcing every mask hole clockwise (`area(ring) > 0 ? reverse : ring`).
 
 **Style (same request):** middle tone `0.10 → 0.13` (a touch darker); a fainter
-dashed outline `region-adj-line` (source `region-adj-mask`, width 1 / opacity
-0.45, vs the active `region-line` 2.5 / 0.95) marks the lightened neighbours.
-The border traces the dissolved neighbour-union perimeter, not per-neighbour
-edges.
+dashed outline `region-adj-line` (width 1 / opacity 0.45, vs the active
+`region-line` 2.5 / 0.95) marks the lightened neighbours.
+
+**Per-neighbour borders (follow-up):** the union-perimeter outline hid the
+borders *between* neighbours. Now the middle-tone fill + outline come from a
+**FeatureCollection of each neighbour's own boundary**
+(`/map/region/<slug>/boundary`, cached), so every adjacent region is outlined
+individually. The dark-mask holes still come from the dissolved `fullUnion`
+(`/map/scope/boundary?rids=<active,adj>`) to keep the no-touching-hole property;
+neighbours tessellate, so the per-feature fill does not double-darken shared
+edges. Cost: one `/map/region/<slug>/boundary` per neighbour (all cached,
+immutable, parallel) — 6 for Hesse, up to ~12 for the most-bordered regions.
+Verified on Hesse at z7 (all six neighbours filled + individually bordered, no
+wedge, no seams).
 
 Browser-verified on `:8001/map`: Gelderland (7 neighbours lightened, all three
 `/boundary` requests fired), Overijssel (**Lower Saxony · DE** + NRW lightened
