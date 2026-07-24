@@ -112,7 +112,7 @@
   // race token stops a slow response repainting after a newer scope switch.
   let _spotReq = 0;
   function clearSpotlight(){
-    ['region-mask','region-adj-mask','region-line'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+    ['region-mask','region-adj-mask','region-adj-line','region-line'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
     ['region-mask','region-adj-mask','region'].forEach(id=>{ if(map.getSource(id)) map.removeSource(id); });
   }
   function setSpotlight(slug){
@@ -158,20 +158,31 @@
   // fullUnion — never touching rings) and given a lighter middle tone.
   function drawSpotlightMask(g, adjUnion, fullUnion){
     const outerRings = geo => (geo.type==='MultiPolygon' ? geo.coordinates : [geo.coordinates]).map(p=>p[0]);
+    // Signed ring area (shoelace); >0 is CCW. The world ring below is CCW, so every
+    // hole MUST wind the opposite way (CW). MapLibre's fill classifies a ring as a
+    // hole vs a new filled shape by its winding, NOT its position: a same-wound hole
+    // is painted as a solid dark wedge reaching to the far world-rectangle edge —
+    // visible only when zoomed out enough to see it. PostGIS emits ring winding
+    // inconsistently across regions, so this triggered intermittently. Force CW.
+    const area = ring => { let a=0; for(let i=0,n=ring.length,j=n-1;i<n;j=i++){ a += ring[j][0]*ring[i][1]-ring[i][0]*ring[j][1]; } return a; };
+    const asHole = ring => area(ring) > 0 ? ring.slice().reverse() : ring;
     const world=[[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]];
     // Dark mask holes come from the dissolved active+adjacent blob (fullUnion) so
     // no two holes touch; without it, just the active region (clean two-tone).
     const holeSrc = fullUnion || g;
-    const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...outerRings(holeSrc)]}};
+    const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...outerRings(holeSrc).map(asHole)]}};
     map.addSource('region-mask',{type:'geojson',data:mask});
     map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
     map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
     // Middle tone over the adjacent union ONLY (active is not in it, so it stays
     // fully clear). Gated on fullUnion too: without the dark holes punched, this
-    // would double-darken adjacent instead of lightening it.
+    // would double-darken adjacent instead of lightening it. A fainter dashed
+    // outline (thinner + more transparent than the active region-line below) marks
+    // where the lightened neighbours are.
     if(adjUnion && fullUnion){
       map.addSource('region-adj-mask',{type:'geojson',data:{type:'Feature',geometry:adjUnion}});
-      map.addLayer({id:'region-adj-mask',type:'fill',source:'region-adj-mask',paint:{'fill-color':'#101E16','fill-opacity':0.10}});
+      map.addLayer({id:'region-adj-mask',type:'fill',source:'region-adj-mask',paint:{'fill-color':'#101E16','fill-opacity':0.13}});
+      map.addLayer({id:'region-adj-line',type:'line',source:'region-adj-mask',paint:{'line-color':'#C8923A','line-width':1,'line-dasharray':[2,2],'line-opacity':0.45}});
     }
     map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
   }
