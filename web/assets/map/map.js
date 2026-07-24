@@ -193,7 +193,7 @@
     if(adjFeatures && adjFeatures.length && fullUnion){
       map.addSource('region-adj-mask',{type:'geojson',data:{type:'FeatureCollection',features:adjFeatures}});
       map.addLayer({id:'region-adj-mask',type:'fill',source:'region-adj-mask',paint:{'fill-color':'#101E16','fill-opacity':0.13}});
-      map.addLayer({id:'region-adj-line',type:'line',source:'region-adj-mask',paint:{'line-color':'#C8923A','line-width':1,'line-dasharray':[2,2],'line-opacity':0.45}});
+      map.addLayer({id:'region-adj-line',type:'line',source:'region-adj-mask',paint:{'line-color':'#C8923A','line-width':1.5,'line-dasharray':[2,1.5],'line-opacity':0.7}});
     }
     map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
   }
