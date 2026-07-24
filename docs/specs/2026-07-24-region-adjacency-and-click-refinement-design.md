@@ -372,12 +372,24 @@ fetches two unions off `/map/scope/boundary` — `rids=<adj>` (light fill) and
 light fill is gated on `fullUnion` being present so it never double-darkens;
 `clearSpotlight` drops `region-adj-mask`.
 
-**Critical fix (same day):** the first cut punched the active region and each
-neighbour into the dark mask as **separate** rings. Adjacent regions share
-borders, so those holes touched, and MapLibre's earcut tessellator emitted
-triangular artifacts to the world-ring corners (dark sea spike for Groningen,
-diagonal wedges for Utrecht). Fixed by punching the single dissolved `fullUnion`
-blob instead of touching rings.
+**Fix 1 (same day) — touching holes:** the first cut punched the active region and
+each neighbour into the dark mask as **separate** rings. Adjacent regions share
+borders, so those holes touched, producing triangular artifacts. Fixed by
+punching the single dissolved `fullUnion` blob.
+
+**Fix 2 (same day) — ring winding (the real intermittent cause):** a dark wedge
+still appeared on some regions **only when zoomed out a lot**. MapLibre's fill
+classifies a ring as a hole vs a new filled shape by its **winding**, not its
+position; PostGIS emits region ring winding inconsistently, so a hole wound the
+same way as the (CCW) world ring was painted as a solid dark shape reaching the
+world-rectangle edge — invisible until zoomed out enough to see it. Fixed by
+forcing every mask hole clockwise (`area(ring) > 0 ? reverse : ring`).
+
+**Style (same request):** middle tone `0.10 → 0.13` (a touch darker); a fainter
+dashed outline `region-adj-line` (source `region-adj-mask`, width 1 / opacity
+0.45, vs the active `region-line` 2.5 / 0.95) marks the lightened neighbours.
+The border traces the dissolved neighbour-union perimeter, not per-neighbour
+edges.
 
 Browser-verified on `:8001/map`: Gelderland (7 neighbours lightened, all three
 `/boundary` requests fired), Overijssel (**Lower Saxony · DE** + NRW lightened
