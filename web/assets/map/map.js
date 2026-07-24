@@ -1069,34 +1069,39 @@
                 miniIcon('services')]
             : miniIcon(key);
         // Overview density heatmap (2026-07-24-coverage-overview-heatmap-design.md §3.2):
-        // mirrors the icon layer on the same source-layer but renders z6-11 as a
-        // heatmap (maxzoom 11), fading out as the icons (minzoom 11) fade in.
+        // mirrors the icon layer on the same source-layer but renders z6-9 as a
+        // heatmap (maxzoom 9), handing off to the individual icons (minzoom 9) so
+        // the actual spots are visible from z9 (owner request 2026-07-24).
         // Scope-only filter → phantom-free (only in-scope points add density).
         // Single hue across every letter (per-letter colours don't blend in a
-        // heatmap); the ride-heatmap ramps retuned for point sparsity + a coverage
-        // hue distinct from the ride heatmap's warm gold.
+        // heatmap). The colour ramp runs transparent → light → DEEP green at max
+        // density: a pale/white top stop punched visible "holes" in a dense
+        // single-letter surface (e.g. stays alone), reading as a broken blur.
         const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
         map.addLayer({id:heatId, type:'heatmap', source:'coverage', 'source-layer':srcLayer,
-          maxzoom: 11,
+          maxzoom: 9,
           filter: covHeatFilter(),
           layout:{visibility:'none'},
           paint:{
-            'heatmap-weight':0.7,
-            'heatmap-intensity':['interpolate',['linear'],['zoom'],6,1.0,11,1.6],
-            'heatmap-radius':['interpolate',['linear'],['zoom'],6,14,11,28],
-            // fade out approaching z11 so it cross-fades into the icons
-            'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.7,10,0.7,11,0],
+            'heatmap-weight':0.6,
+            'heatmap-intensity':['interpolate',['linear'],['zoom'],6,1.0,9,1.5],
+            'heatmap-radius':['interpolate',['linear'],['zoom'],6,15,9,26],
+            // fade out approaching z9 so it cross-fades into the icons
+            'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.72,8,0.72,9,0],
+            // no pale top stop — deep green at max density, so a dense surface
+            // reads as a solid blur, never white "holes".
             'heatmap-color':['interpolate',['linear'],['heatmap-density'],
               0,'rgba(0,0,0,0)',
-              0.15,'rgba(120,200,165,0.45)',
-              0.35,'#63C29B',
-              0.55,'#2E9E73',
-              0.78,'#1B7A55',
-              1,'#DFF3E7']}});
+              0.2,'rgba(122,200,166,0.40)',
+              0.45,'#5FBF97',
+              0.72,'#2E9E73',
+              1,'#17663F']}});
         // Individual coverage icons (no clustering — 2026-07-24-coverage-no-cluster-design.md
-        // §2); scope-filtered exactly. minzoom 11 so nothing paints at overview.
+        // §2); scope-filtered exactly. minzoom 9 so the spots are visible from the
+        // region-fit zoom (z6-8 tiles are thinned, so z9-10 icons are a sample that
+        // densifies to complete at z11+; the rail counts stay the exact total).
         map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
-          minzoom: 11,
+          minzoom: 9,
           filter:covIconFilter(),   // dedupe + scope
           layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
             'icon-size': key==='water'
