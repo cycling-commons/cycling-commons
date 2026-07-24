@@ -183,3 +183,27 @@ only (no pipeline/tile change):
   **deep green `#17663F`**, so a dense surface reads as a solid blur. (Confirmed
   not a functional bug: the per-letter toggle filters correctly — water-only
   and stays-only render visibly different densities.)
+
+### Colour: multi-category experiment → single hue (2026-07-24, commit 302a121)
+
+The owner asked for the heat to blend the **category colours** (blue water,
+orange stays, …) and be more transparent. Tried (187c0f1): each letter's heat
+took its own rail colour. It **failed** — and the failure is inherent, not a
+tuning miss:
+
+- A heatmap renders **one** variable's density. Stacking seven of different
+  magnitudes means the **densest** letters (stays 1488, history 2091) paint most
+  of the surface, so the blend trends **brown** regardless of per-colour tuning.
+- Sparse letters (**water 485**) drown, and the rail colours are pale (water
+  `#8FB6A8`) so they wash out; saturating them helped alone but not stacked.
+- Overlapping hues **average toward mud** — additive compositing, unfixable by a
+  parameter.
+
+**Decision: one clean hue.** Every letter's heat is the same **teal**, so the
+stacked layers accumulate to *more teal*, never brown — clean at any layer
+combination. Category distinction comes from the coloured **icons** (which now
+appear from z9), which is the right division of labour: the heat answers "where
+is coverage dense", the icons answer "which category". Teal is distinct from the
+ride heatmap's warm gold; no pale top stop. This **supersedes** §3.2's
+"per-letter colours … alpha-blend into an approximate combined surface" — that
+approach is retired; the ramp is a single teal.
