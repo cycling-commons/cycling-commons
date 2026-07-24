@@ -122,7 +122,11 @@ lazy-firewall caching gotcha — see
 
 - The rail lists the **A–K** catalog layers (letter + localized label + icon +
   colour), each individually toggleable, with a **`shown/total`** count that
-  reflects the current mode and filters (`layerCounts()`). A
+  reflects the current mode and filters (`layerCounts()`). **Both parts are
+  scope-aware:** `shown` applies mode/filters/scope, and `total` is scoped too —
+  curated features gate on `inScope()` and coverage uses the server's per-scope
+  count — so a region with no data for a letter reads `0/0`, never the global
+  total (a region's rail never shows another region's counts). A
   select-all/deselect-all toggle sits above the list. **Default: all catalog
   layers on at load.** Layer labels come from the `item_type.*.label`
   translation keys via `CC_I18N.layers`, so the rail can never drift from the
