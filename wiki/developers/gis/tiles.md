@@ -161,26 +161,31 @@ nginx range proxy).
 
 Before any of that upload happens, `build_pmtiles()` never reads `coverage_poi` directly — tippecanoe
 takes files, not a database connection. `export_geojsonl()` bridges the two, running one `COPY`
-per `(letter, country)` pair straight off the table, and the `WHERE` clause is the whole story of
-"one layer per country" made concrete:
+per letter straight off the table — the country bucket rides along as the first column and the rows
+come back ordered by it, so the function can route each row into the right per-country file as it
+streams:
 
 <!-- CODE-FROM pipeline/coverage/tiles.py -->
 ```python
-"COPY (SELECT jsonb_build_object("
+"COPY (SELECT COALESCE(country_code, 'ZZ'), jsonb_build_object("
 "'type', 'Feature', "
 ...
 "'geometry', ST_AsGeoJSON(geom)::jsonb, "
 f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
 f")::text FROM coverage_poi "
-f"WHERE letter = {_lit(letter)} AND COALESCE(country_code, 'ZZ') = {_lit(cc)}) TO STDOUT"
+f"WHERE letter = {_lit(letter)} "
+f"ORDER BY COALESCE(country_code, 'ZZ')) TO STDOUT"
 ```
 
-Every one of the `letter × country` files this function writes is its own `COPY`, filtered down to
-exactly one letter and one country. tippecanoe never sees a query or a `WHERE` clause at all — by the
-time it runs, the split has already happened one file at a time, which is what makes a tile layer
-single-country **by construction**, not by a filter applied afterwards: the other country's points
-were never in the file tippecanoe read to build that layer. "Why the layers are split per country"
-below is why that still matters even with nothing left to cluster.
+One `COPY` per letter, not one per `letter × country`: an earlier version scanned the whole table once
+for *every* (letter, country) pair — up to twenty-eight passes — which on the shared production database
+evicted the working set from the page cache on every run. Emitting the country as a column and ordering
+by it collapses that to one scan per letter, and the per-country split still happens before tippecanoe:
+each row is appended to its own `<letter>_<cc>.geojsonl` file as it arrives. tippecanoe never sees a
+mixed file — by the time it runs, the split has already happened one row at a time, which is what makes
+a tile layer single-country **by construction**, not by a filter applied afterwards: the other
+country's points were never in the file tippecanoe read to build that layer. "Why the layers are split
+per country" below is why that still matters even with nothing left to cluster.
 
 `build_pmtiles()` runs, and then one more step happens before any of it reaches a rider: a sanity gate
 that refuses to publish a broken archive. `verify_pmtiles()` in the same module opens the freshly built
@@ -389,10 +394,11 @@ any more:
   `<letter>-<cc>-heat` MapLibre layer, so "how dense is coverage in the Netherlands" and "how dense is
   coverage in Belgium" are two surfaces the client can toggle and scope independently, rather than one
   blended surface it would have to un-mix after the fact.
-- **A tile stays single-country by construction.** Every `(letter, country)` GeoJSONL file
-  `export_geojsonl()` writes is its own `COPY`, filtered to exactly one country, so tippecanoe never
-  sees a mixed file to begin with. That keeps "just the Netherlands" a real, checkable property of the
-  tiles themselves, not something a filter has to reconstruct at render time.
+- **A tile stays single-country by construction.** Each `(letter, country)` GeoJSONL file
+  `export_geojsonl()` writes is filled from a single per-letter `COPY` ordered by country and split
+  row by row, so tippecanoe never sees a mixed file to begin with. That keeps "just the Netherlands" a
+  real, checkable property of the tiles themselves, not something a filter has to reconstruct at render
+  time.
 
 That is worth pausing on, because it is a different *kind* of decision than everything else in this
 chapter. Zoom ranges, `-r1`, the size-budget thinning — all of those are performance and rendering
