@@ -1,6 +1,8 @@
 # Ride-check ∪ coverage (design)
 
-**Status:** design, 2026-07-26. Owner decisions captured below.
+**Status:** EXECUTED 2026-07-26. Backend `517dc49`; `ref` + controller-test
+provisioning `99a016f`; frontend `bb65fe6`. See §7 for what changed against this
+design during execution — §3.3's premise about the curated arm was wrong.
 **Scope:** extend the GPX ride-check corridor search to also surface open
 `coverage_poi` utility points (water/services/transport/shelter) along the
 route, deduped against curated items.
@@ -113,3 +115,36 @@ carries the `coverage` key.
 3. Frontend: render the `coverage` arm in `map.js` with the coverage icon style
    + panel section; browser-verify. (Pairs with #1 map.js split.)
 4. Sync `docs/specs/map-and-search.md` §9 to mention the coverage arm.
+
+## 7. Execution notes (2026-07-26)
+
+- **§3.3's premise was wrong, and the design changed accordingly.** It describes
+  the curated `groups` arm as "per-letter marker sets + a panel list". It is a
+  panel list only — curated items are already drawn on the map by their own
+  served layers, so the ride-check renderer never needed markers for them.
+  Coverage POIs have no equivalent guarantee, so "render coverage the same way"
+  would have meant listing points the rider cannot see. The resolution, decided
+  with the owner and specified in `2026-07-26-map-js-module-split-design.md` §7,
+  is a dedicated `ridecheck-cov` symbol overlay, independent of the coverage
+  layer's on/off state, the region scope and the view mode. Verified against
+  exactly that case: a Liège ride under an All-Netherlands scope still draws its
+  coverage icons.
+- **The arm needed `ref`, which §3.1 did not select.** As landed, the coverage
+  arm returned `cp.id` — a `coverage_poi` row id that no endpoint accepts. The
+  only lookup is `/map/coverage/poi/{ref}`, so every coverage result was
+  unopenable. `cp.ref` is now selected and carried through `groupByLetter()` as
+  an optional passthrough, leaving the curated arm's shape untouched.
+- **§5's controller test could not have passed as written.** `check()` queries
+  `coverage_poi` unconditionally, and that table is pipeline-owned DDL outside
+  Doctrine's migrations, so `RideCheckControllerTest`'s happy path was 500ing on
+  "relation coverage_poi does not exist" from `517dc49` onward. It now builds the
+  table through the same `CoverageSchema` trait the service tests use.
+- **Dev data makes the dedup look broken; it is not.** Curated fixtures carry
+  synthetic refs (`fx:water:50.64079,5.5579`) while harvested coverage rows carry
+  real OSM refs (`node/4019749189`), so `source_ref = ref` cannot match and the
+  same fountain appears in both arms on the dev stack. Prod curates by forking
+  coverage rows, which keeps the real ref, so the dedup fires there. Worth
+  knowing before anyone "fixes" it.
+- **Frontend location:** `web/assets/map/ride-check.js`, extracted from map.js as
+  part of the split rather than added to the monolith and moved later. New i18n
+  keys `d_along_track_cov_h` / `d_cov_arm_note` in all four locales.

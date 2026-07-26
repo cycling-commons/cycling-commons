@@ -686,9 +686,21 @@ requirement).
   rider already curated an OSM entity it shows once, as the curated pick, never
   in both arms. `coverage_poi` and `item` are co-located on CC's own cluster, so
   the dedup stays a local join. Same grouping/ordering/`MAX_PER_LETTER` shape as
-  the curated arm (shared `groupByLetter()`); the frontend renders coverage with
-  the smaller coverage icon so curated (bigger spot) vs open-coverage stay
-  visually distinct.
+  the curated arm (shared `groupByLetter()`). Coverage items additionally carry
+  their `ref`: `id` there is a `coverage_poi` row id and no endpoint accepts one,
+  so the `ref` is what lets a result row be opened at all
+  (`/map/coverage/poi/{ref}`). The curated arm addresses items by id and carries
+  no `ref`.
+- **Coverage rendering** (`web/assets/map/ride-check.js`) — the coverage arm gets
+  its **own `ridecheck-cov` symbol overlay** along the track, drawn with the
+  small coverage icons and the `cov-sel` size ramp, so curated (bigger spot pin)
+  vs open coverage (smaller icon) stay visually distinct. The overlay is
+  deliberately independent of the coverage tile layers' on/off state, the region
+  scope and the view mode: an uploaded ride routinely leaves the rider's scope,
+  so relying on the tiles would list refill points the rider cannot see. It is
+  torn down by Clear together with the track. In the drawer, coverage is a
+  separate section under its own heading with a provenance note, so uncurated
+  OSM never reads as a verified Commons pick; rows call `openCoverageByRef()`.
 - **Route-overlap "follows" floor:**
   `max(ROUTE_MIN_OVERLAP_BASE_M = 300, 2·radius + 100)` m of shared length —
   a fixed 300 m fails at larger radii, where a mere perpendicular crossing
