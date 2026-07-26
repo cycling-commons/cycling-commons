@@ -279,9 +279,9 @@ and the truncation note.
 
 ## 9. Execution progress (2026-07-26)
 
-`map.js` is **4,060 → 3,473 lines**, with eight modules beside it. Every commit
-below was browser-verified with the §6 sweep before the next began; the tree is
-clean and nothing is pushed.
+`map.js` is **4,060 → 2,504 lines**, with thirteen modules beside it. Every
+commit below was browser-verified with the §6 sweep before the next began; the
+tree is clean and nothing is pushed.
 
 ### Landed
 
@@ -299,13 +299,37 @@ clean and nothing is pushed.
 | `606005a` | step 4a — `spotlight.js` |
 | `8d1f10c` | step 3b — `catalog.js` |
 | `04f1618` | step 7 (early) — `mapillary.js` |
+| `c548315` | **perf** — the region spotlight paints progressively |
+| `9b22237` | step 3c — `icons.js` |
+| `e286b9c` | step 4b — `scope-ui.js` |
+| `567522f` | step 4c — `osm-pools.js` |
+| `2fe3ba1` | step 4d — `coverage.js`, **plus the `make map-refs` gate** (see below) |
+| `8eafcce` | step 5a — `item-index.js`; ride-check drops four injected deps |
 
 ### Not yet extracted
 
-`icons.js`, `scope-ui.js`, `osm-pools.js`, `coverage.js`, `item-index.js`,
 `render.js`, `drawer.js`, `community.js`, `picking.js`, `corrections.js`,
 `places.js`, `lightbox.js`, `sheet.js`, `search-ui.js`, `panels.js`,
 `planner.js`.
+
+### The scaffolding still to unwind
+
+Three modules take injected deps because their callees remain in the entry.
+Every entry disappears when its owning module lands — that is the checklist for
+"is the split actually finished", not just the file count:
+
+| module | still injected | lands with |
+|---|---|---|
+| `scope-ui.js` | `updateHeatFilter`, `render`, `refreshBestOf` | `render.js`, `panels.js` |
+| `osm-pools.js` | `openDrawer`, `osmDrawer`, `waterDrawer`, `showTip`, `hideTip`, `staysAccessible` | `drawer.js`, `sheet.js`, `render.js` |
+| `coverage.js` | `openDrawer`, `renderDrawerBody`, `osmDrawer`, `waterDrawer`, `revealPinAt`, `showTip`, `hideTip`, `updateCounts`, `applyStaysAccessFilter`, `isPicking` | `drawer.js`, `sheet.js`, `render.js`, `picking.js` |
+| `item-index.js` | `openLocalFeature`, `openStayPivot` | `places.js` |
+| `ride-check.js` | `closeDrawer`, `openRouteById`, `highlightAt`, `clearHighlight`, `resetSheet`, `invalidateAsyncDrawers` | `drawer.js`, `places.js`, `sheet.js` |
+
+Two injections are deliberately CLOSURES, not values, and must stay that way:
+`staysAccessible` reads the accessibility chip set, which is reassigned on every
+chip click, and `isPicking` reads a picking session that starts long after the
+handover. Passing either by value freezes it at boot.
 
 ### The recipe, for whoever continues
 
@@ -321,7 +345,37 @@ clean and nothing is pushed.
 4. Any `let` an importer would read becomes a getter + setter in its owner
    module. Three have needed it so far: `_styleReady` → `styleReady()`, `mode` →
    `mode()`/`setMode()`, `mlyOn` → kept private by moving its only writer in.
-5. `node --check` every file, then run the §6 sweep, then commit.
+5. `make map-refs`, then run the §6 sweep **logged in**, then commit. Both
+   matter, and neither is optional — see the gate below.
+
+### The gate, and why it exists
+
+`coverage.js` shipped a live `ReferenceError` past a fully green 13/0/3 sweep:
+`updateCoverageScopeFilter()` calls `applyStaysAccessFilter()`, which stayed in
+the entry. The sweep asserts DOM outcomes, so a scope switch that half-failed
+still looked correct; only the console disagreed. This is THE characteristic
+failure of the split — a moved function calling something left behind — and it
+is invisible to every check that only looks at the page.
+
+Three things now catch it:
+
+- **`make map-refs`** (`web/tests/browser/check-module-refs.py`) fails if any
+  module still references a binding `map.js` owns. Run it before the browser.
+  Its own first version reported "clean" on the known-bad tree, because it
+  stripped `'single quotes'` before template literals and an apostrophe inside a
+  template swallowed every declaration in between; the ordering is now fixed and
+  the reason is in its docstring.
+- **the sweep runner collects console + pageerror output** and folds it into
+  `ok`, so a red console can no longer read as a green sweep.
+- **run the sweep logged in, with a GPX uploaded.** Anonymously, three
+  checkpoints skip — including both ride-check ones. The demo rider is
+  `user@example.test` / `password1234`; `atlas/demo/media/Afternoon_Ride.gpx`
+  works. NOT `Rondje_Spa_Chevron.gpx`: at 4.5 MB / 26k trackpoints it posts with
+  an empty `$_FILES` and the rail reports "Choose a GPX file first." — a
+  pre-existing bug, reproduced on the parent commit, filed and not fixed here.
+
+Logged in the sweep is 15 passed / 0 failed / 1 skipped; the remaining skip is
+"no route lines drawn", which depends on the active scope.
 
 ### Two things the split did not cause but did surface
 
