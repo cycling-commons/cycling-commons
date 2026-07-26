@@ -1088,9 +1088,15 @@
         // from the ride heatmap's warm gold; no pale top stop (a pale/white max
         // punched white "holes" in a dense surface).
         const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
-        map.addLayer({id:heatId, type:'heatmap', source:'coverage', 'source-layer':srcLayer,
+        // covHeatFilter() is null under an Everywhere scope (unfiltered — every
+        // point contributes density). setFilter() accepts null, but addLayer()
+        // does NOT: `filter: null` fails style validation and MapLibre drops the
+        // whole layer ("layers.<id>.filter: array expected, null found"), so a
+        // first paint in Everywhere used to lose every coverage heat layer.
+        // Omit the key entirely instead — the layer spec's own default is
+        // unfiltered, which is exactly what null means here.
+        const heatSpec={id:heatId, type:'heatmap', source:'coverage', 'source-layer':srcLayer,
           maxzoom: 9,
-          filter: covHeatFilter(),
           layout:{visibility:'none'},
           paint:{
             'heatmap-weight':0.6,
@@ -1102,7 +1108,9 @@
               0,'rgba(0,0,0,0)',
               0.25,'rgba(150,110,190,0.32)',
               0.6,'rgba(112,72,158,0.58)',
-              1,'#5B2A86']}});
+              1,'#5B2A86']}};
+        { const hf=covHeatFilter(); if(hf) heatSpec.filter=hf; }
+        map.addLayer(heatSpec);
         // Individual coverage icons (no clustering — 2026-07-24-coverage-no-cluster-design.md
         // §2); scope-filtered exactly. minzoom 9 so the spots are visible from the
         // region-fit zoom (z6-8 tiles are thinned, so z9-10 icons are a sample that
