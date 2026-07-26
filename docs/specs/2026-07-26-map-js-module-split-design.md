@@ -325,9 +325,11 @@ clean and nothing is pushed.
 
 ### Two things the split did not cause but did surface
 
-- **Backlog item 10** — a single-region spotlight takes ~26 s to paint because
-  `setSpotlight` fires seven concurrent same-session boundary requests. Measured,
-  filed, untouched.
+- **Backlog item 10** — a single-region spotlight paints ~3.4 s late (seven
+  concurrent boundary requests, most of the cost client-side polygon parsing and
+  tessellation). Measured, filed, untouched. An earlier reading of ~26 s was a
+  low-power-mode artefact; the session-lock and missing-cache hypotheses it
+  produced were both tested and disproved — see the backlog entry.
 - **Ride-check duplicates on dev** — curated fixtures carry `fx:` refs while
   coverage rows carry real OSM refs, so the `(source_ref, letter)` dedup cannot
   match and the same fountain lists in both arms. Correct on prod, where curated

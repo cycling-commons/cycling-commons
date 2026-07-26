@@ -162,10 +162,10 @@ globalThis.runMapSmoke = async function runMapSmoke(opts) {
 
         // What this checkpoint actually guards is the CALL PATH: a region scope
         // must reach setSpotlight and request that region's boundary. It cannot
-        // reasonably assert on the paint, because the three-tier spotlight fires
-        // seven concurrent same-session boundary requests that serialize on the
-        // dev stack — measured 2026-07-26 at ~26 s, sometimes worse under load.
-        // That is the known "boundary HTTP cache" gap (backlog item 10), and
+        // reasonably assert on the paint: the three-tier spotlight fires seven
+        // concurrent boundary requests and the mask lands ~3.4 s later, most of
+        // that client-side polygon parsing and tessellation (backlog item 10) —
+        // and far slower on a throttled or loaded machine. Slow-but-correct, and
         // failing on it every run would bury real regressions in noise. So:
         // no request = FAIL, request but slow paint = pass with the timing noted.
         const want = '/map/region/' + r.slug + '/boundary';

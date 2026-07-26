@@ -11,10 +11,12 @@
    immediately repaints, and the three entry points already do that themselves.
 
    NOTE for whoever picks up backlog item 10: setSpotlight() issues SEVEN
-   concurrent same-session boundary requests (the region, each neighbour, the
-   dissolved union). On the dev stack they serialize — measured 2026-07-26 at
-   ~26 s to paint. That is a caching problem, not a logic one; the code below is
-   unchanged from the monolith. */
+   concurrent boundary requests (the region, each neighbour, the dissolved
+   union) and the mask lands ~3.4 s later — ~0.6 s of that server, the rest
+   spent parsing ~300 KB of polygon JSON and tessellating the mask. The requests
+   do NOT serialize and the endpoints are already ETagged, cached and simplified,
+   so neither session_write_close() nor more caching helps; progressive paint
+   would. Low priority, and the code below is unchanged from the monolith. */
 import { map } from './map-init.js';
 
 const CC_REGIONS = window.CC_REGIONS || [];
