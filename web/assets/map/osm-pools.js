@@ -17,16 +17,17 @@
    (§5 steps 5-6). initOsmPools() has no side effect of its own — it is a
    dependency handover, which is why the entry may call it early. */
 import { map, flyToPin } from './map-init.js';
+import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active } from './catalog.js';
 import { inScope } from './scope-ui.js';
 import { mintWaterDrops, pinEl, clusterEl } from './icons.js';
 import { staysAccessible } from './render.js';
 
 // Injected by initOsmPools() until their owning modules exist (see the header).
-let openDrawer, osmDrawer, waterDrawer, showTip, hideTip;
+let openDrawer, osmDrawer, waterDrawer;
 
 export function initOsmPools(deps){
-  ({openDrawer, osmDrawer, waterDrawer, showTip, hideTip} = deps);
+  ({openDrawer, osmDrawer, waterDrawer} = deps);
 }
 
 // Water POI registry entry + confirmed-pin data (display moved to the

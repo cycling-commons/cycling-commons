@@ -20,6 +20,7 @@
    their owning modules are still inside the entry (§5 steps 5-6); each becomes
    a plain import as it lands. */
 import { map, flyToPin } from './map-init.js';
+import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { curScope } from './scope-ui.js';
 import { mintWaterDrops, miniIcon, SERVICE_GLYPH, coverageIconId } from './icons.js';
@@ -28,12 +29,10 @@ import { updateCounts, applyStaysAccessFilter } from './render.js';
 // Injected by initCoverage() until their owning modules exist (see the header).
 // isPicking is a CLOSURE over the entry's live `_pick` session, not a snapshot:
 // a picking session starts and ends long after this handover.
-let openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt,
-    showTip, hideTip, isPicking;
+let openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt, isPicking;
 
 export function initCoverage(deps){
-  ({openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt,
-    showTip, hideTip, isPicking} = deps);
+  ({openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt, isPicking} = deps);
 }
 
 // ---- Coverage tiles (coverage-provider.md §6) ----

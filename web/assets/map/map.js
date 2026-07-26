@@ -19,6 +19,8 @@ import { osmLayers, OSM_BULK, addWaterOsm, addOsmDots, setupConfClusters,
          updateConfMarkers, initOsmPools } from './osm-pools.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex, nearbyItems, trimEnds,
          initItemIndex } from './item-index.js';
+import { sheet, showTip, hideTip, initSheet } from './sheet.js';
+import { openLightbox, initLightbox } from './lightbox.js';
 import { PREFS, addHeatmap, updateHeatFilter, boundLayerIds, surfaceClsLayerIds,
          highlightRoute, clearRouteHighlight, nearestOnPath, fracToLatLng, sliceByFrac,
          layerCounts, updateCounts, render, applyStaysAccessFilter, attrMatch,
@@ -36,16 +38,16 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
   initScope({refreshBestOf});
   // Bulk-OSM pools + confirmed-pin clusters (osm-pools.js): a dependency
   // handover, no side effect — the pools themselves are built on map 'load'.
-  initOsmPools({openDrawer, osmDrawer, waterDrawer, showTip, hideTip});
+  initOsmPools({openDrawer, osmDrawer, waterDrawer});
   // Coverage tiles (coverage.js): likewise a handover — addCoverage() still runs
   // from the map 'load' handler below.
   initCoverage({openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt,
-                showTip, hideTip, isPicking: () => !!_pick});
+                isPicking: () => !!_pick});
   // Searchable-item index (item-index.js): the two `go` handlers each entry
   // carries. Built later, from the sidebar-search block.
   initItemIndex({openLocalFeature, openStayPivot});
   // Render loop (render.js): drawer/tip/place hooks it still needs from here.
-  initRender({openDrawer, showTip, hideTip, openLocalFeature});
+  initRender({openDrawer, openLocalFeature});
   // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
   // bumped on every openDrawer() call so a slow response from a since-replaced
   // drawer never paints stale history over whatever is open now.
@@ -1340,7 +1342,6 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
   // live: `sheet` is declared further down, and _placeReq is a counter.
   initRideCheck({
     closeDrawer, openRouteById, highlightAt, clearHighlight,
-    resetSheet: () => sheet.reset(),
     invalidateAsyncDrawers: () => { invalidateCoverageDrawer(); _placeReq++; },
   });
 
@@ -1416,124 +1417,11 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
     clearCorrections();
     sheet.clear();                                     // drop snap classes + inline transform for the next open
   }
-  // lightbox doubles as a slideshow over a feature's photo gallery
-  let _lb={photos:[],i:0,name:''};
-  function openLightbox(photos, i, name){
-    _lb.photos = Array.isArray(photos) ? photos : [{lg:photos, credit:'', license:'', source:''}];
-    _lb.i = i||0; _lb.name = name||'';
-    renderLightbox();
-    const lb=document.getElementById('lightbox'); lb.classList.add('open'); lb.setAttribute('aria-hidden','false');
-  }
-  function renderLightbox(){
-    const lb=document.getElementById('lightbox'), p=_lb.photos[_lb.i], multi=_lb.photos.length>1;
-    lb.querySelector('img').src=p.lg;
-    lb.querySelector('.cc-lb-cap').innerHTML =
-      (_lb.name?`<b>${escPend(_lb.name)}</b> · `:'') + (p.source?photoCap(p):'') + (multi?` · ${_lb.i+1} / ${_lb.photos.length}`:'');
-    lb.querySelector('.cc-lb-prev').hidden=!multi; lb.querySelector('.cc-lb-next').hidden=!multi;
-  }
-  function lbStep(d){ const n=_lb.photos.length; if(!n) return; _lb.i=(_lb.i+d+n)%n; renderLightbox(); }
-  function closeLightbox(){
-    const lb=document.getElementById('lightbox'); lb.classList.remove('open');
-    lb.setAttribute('aria-hidden','true'); lb.querySelector('img').src='';
-  }
   document.getElementById('drawerClose').onclick=closeDrawer;
   document.getElementById('drawerScrim').onclick=closeDrawer;   // tap the dimmed area above the bottom sheet to close
-  // Mobile snap sheet (spec 2026-07-14): peek / half / full resting states.
-  // Content scrolls only at full; below full any vertical drag moves the
-  // sheet; at full, a downward drag while scrollTop===0 grabs the sheet back
-  // (Google-Maps-style hand-off). Desktop (>820px) never enters this code.
-  const sheet=(function initSnapSheet(){
-    const d=document.getElementById('drawer'), grab=document.getElementById('drawerGrab');
-    if(!d||!grab) return {reset(){}};
-    const mobile=()=>window.innerWidth<=820;
-    const rem=()=>parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
-    let snap='half', justDragged=false;
-    const setSnap=s=>{ snap=s; d.classList.toggle('s-full', s==='full'); d.classList.toggle('s-peek', s==='peek'); d.style.transform=''; if(s==='full') {} else d.scrollTop=0; };
-    // translateY offsets (px from fully-open) for each resting state
-    function offsets(){
-      const h=d.getBoundingClientRect().height;
-      return {full:0, half:Math.max(0, h-window.innerHeight*0.5), peek:Math.max(0, h-7.5*rem())};
-    }
-    let active=false, dragging=false, viaGrab=false, startY=0, startT=0, dy=0, baseOff=0;
-    d.addEventListener('touchstart', e=>{
-      if(!mobile() || e.touches.length!==1 || !d.classList.contains('open')) return;
-      viaGrab=grab.contains(e.target);
-      if(!viaGrab && snap==='full' && d.scrollTop>0) return;   // mid-scroll at full → content's gesture
-      active=true; dragging=false; startY=e.touches[0].clientY; startT=e.timeStamp; dy=0;
-      // baseOff from the sheet's ACTUAL rendered transform, not the offsets()
-      // table: the CSS half rule rests at 50svh while offsets() uses
-      // innerHeight — with a retracted URL bar those bases differ and a
-      // table-derived baseOff would jump the sheet on the first touchmove.
-      // offsets() is still fine for the release-snap targets below.
-      const tr=getComputedStyle(d).transform;
-      baseOff = (tr && tr!=='none') ? new DOMMatrixReadOnly(tr).m42 : 0;
-    }, {passive:true});
-    d.addEventListener('touchmove', e=>{
-      if(!active) return;
-      dy=e.touches[0].clientY-startY;
-      if(!dragging){
-        // At full, content owns upward drags (scroll); the sheet owns downward
-        // ones from scrollTop 0. Below full the sheet owns both directions.
-        if(!viaGrab && snap==='full' && dy<-4){ active=false; return; }
-        if(Math.abs(dy)<=4) return;                    // wait for a clear direction
-        dragging=true;
-      }
-      e.preventDefault();                              // own the gesture (passive:false)
-      d.classList.add('dragging');
-      const off=offsets();
-      d.style.transform=`translateY(${Math.min(Math.max(0, baseOff+dy), off.peek+40)}px)`;   // clamp: never above full; slight give past peek
-    }, {passive:false});
-    d.addEventListener('touchend', ()=>{
-      if(!dragging){ active=false; return; }
-      active=false; dragging=false; justDragged=true; setTimeout(()=>{ justDragged=false; }, 450);
-      d.classList.remove('dragging');
-      const off=offsets(), pos=baseOff+dy, vel=dy/Math.max(1, performance.now()-startT);   // px/ms, + = down
-      // fast flick: skip straight to the neighbouring state in the flick's direction
-      if(vel>0.5){ if(snap==='peek' || pos>off.peek+20){ dismiss(); return; } setSnap(snap==='full'?'half':'peek'); return; }
-      if(vel<-0.5){ setSnap(snap==='peek'?'half':'full'); return; }
-      if(pos>off.peek+60){ dismiss(); return; }        // dragged well past peek → close
-      // otherwise: snap to nearest resting state
-      let best='full', bestD=Infinity;
-      ['full','half','peek'].forEach(s=>{ const dd=Math.abs(pos-off[s]); if(dd<bestD){ bestD=dd; best=s; } });
-      setSnap(best);
-    });
-    d.addEventListener('touchcancel', ()=>{
-      if(!active && !dragging) return;
-      active=false; dragging=false;
-      d.classList.remove('dragging');
-      setSnap(snap);                    // re-settle on the last resting state
-    });
-    function dismiss(){
-      d.style.transform='translateY(102%)';
-      let closed=false;
-      const fin=ev=>{ if(closed||(ev&&ev.propertyName!=='transform')) return; closed=true;
-        d.removeEventListener('transitionend',fin); closeDrawer(); };
-      d.addEventListener('transitionend', fin);
-      setTimeout(fin, 320);                            // fallback if transitionend doesn't fire
-    }
-    grab.addEventListener('click', ()=>{ if(!mobile()||justDragged) return; setSnap(snap==='full'?'half':'full'); });   // Enter/Space included (button)
-    return {
-      reset(){ setSnap('half'); },                     // openDrawer lands every sheet at half
-      clear(){ d.classList.remove('s-full','s-peek'); d.style.transform=''; snap='half'; },
-    };
-  })();
-  document.querySelector('.cc-lb-prev').onclick=e=>{ e.stopPropagation(); lbStep(-1); };
-  document.querySelector('.cc-lb-next').onclick=e=>{ e.stopPropagation(); lbStep(1); };
-  document.getElementById('lightbox').addEventListener('click',e=>{ if(e.target.id==='lightbox'||e.target.classList.contains('cc-lb-x')) closeLightbox(); });
-  document.addEventListener('keydown',e=>{
-    const lbOpen=document.getElementById('lightbox').classList.contains('open');
-    if(e.key==='Escape'){ lbOpen ? closeLightbox() : closeDrawer(); }
-    else if(lbOpen && e.key==='ArrowLeft') lbStep(-1);
-    else if(lbOpen && e.key==='ArrowRight') lbStep(1);
-  });
+  initSheet({closeDrawer});       // mobile snap sheet (sheet.js)
+  initLightbox({closeDrawer, photoCap});   // lightbox chrome + Escape/arrows (lightbox.js)
 
-  const tipEl=document.getElementById('tip');
-  function showTip(text, lngLat){
-    const p=map.project(lngLat);
-    tipEl.textContent=text; tipEl.style.left=p.x+'px'; tipEl.style.top=p.y+'px'; tipEl.hidden=false;
-  }
-  function hideTip(){ tipEl.hidden=true; }
-  map.on('move', ()=>{ if(!tipEl.hidden) hideTip(); });
 
   // catalog in canonical A–K order for the rail + legend (display only; render keeps CATALOG order)
 

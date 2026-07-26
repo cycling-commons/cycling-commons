@@ -27,7 +27,13 @@ def strip(src):
     then the line-local quotes, and never across a newline."""
     src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)
     src = '\n'.join(re.sub(r'//.*', '', l) for l in src.split('\n'))
-    src = re.sub(r'`(?:\\.|[^`\\])*`', '``', src)
+    # Template literals are NOT inert text in this codebase: nearly every panel
+    # builds its HTML as `...${escPend(x)}...`, and those ${} interiors are real
+    # code. Blanking the whole literal hid a live `escPend is not defined` in
+    # lightbox.js. Keep the interiors, drop only the literal text around them.
+    def _tpl(m):
+        return ';'.join(re.findall(r'\$\{([^{}]*)\}', m.group(0)))
+    src = re.sub(r'`(?:\\.|[^`\\])*`', _tpl, src)
     src = re.sub(r"'(?:\\.|[^'\\\n])*'", "''", src)
     src = re.sub(r'"(?:\\.|[^"\\\n])*"', '""', src)
     return src

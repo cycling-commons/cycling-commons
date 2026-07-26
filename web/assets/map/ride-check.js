@@ -20,6 +20,7 @@ import { coverageIconId } from './icons.js';
 import { openCoverageByRef } from './coverage.js';
 import { itemIndex } from './item-index.js';
 import { CATALOG, layerByKey } from './catalog.js';
+import { sheet } from './sheet.js';
 
 // ---- Ride-check (spec 2026-07-14 §4.3): riders-only "what's along my GPX?" ----
 // Track overlay uses its own source/layer ids (render()'s clearDynamic never
@@ -36,7 +37,7 @@ const COV_KEY={C:'water', D:'services', G:'transit', H:'shelter'};
 export function initRideCheck(deps){
     // Injected until their owning modules exist (see the file header).
     const { closeDrawer, openRouteById, highlightAt, clearHighlight,
-            resetSheet, invalidateAsyncDrawers } = deps;
+            invalidateAsyncDrawers } = deps;
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
     const pick=document.getElementById('rcPick'), fileIn=document.getElementById('rcFile'),
           radiusSel=document.getElementById('rcRadius'), status=document.getElementById('rcStatus');
@@ -195,7 +196,7 @@ export function initRideCheck(deps){
       });
       const dr=document.getElementById('drawer'); dr.classList.add('open'); dr.setAttribute('aria-hidden','false');
       dr.focus({preventScroll:true});
-      if(window.innerWidth<=820) resetSheet();        // land at half; desktop untouched
+      if(window.innerWidth<=820) sheet.reset();        // land at half; desktop untouched
     }
     pick.onclick=()=>fileIn.click();
     fileIn.addEventListener('change',()=>{ const f=fileIn.files && fileIn.files[0]; if(!f) return;
