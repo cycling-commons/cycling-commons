@@ -9,9 +9,7 @@
    clearPlan() is the only teardown. */
 import { map } from './map-init.js';
 import { D, trVal, CC_SEASON_LABEL } from './i18n.js';
-
-// Injected by initPlanner() until drawer.js exists (§5 step 6).
-let openDrawer, closeDrawer;
+import { openDrawer, closeDrawer } from './drawer.js';
 
 // "plan from Spa" — pick the sample loop nearest the chosen distance (faked for now)
 export let planMarker=null;
@@ -51,8 +49,7 @@ export function planFromSpa(km){
 }
 
 // Distance chips (§4.2): a second click on the active chip clears the route.
-export function initPlanner(deps){
-  ({openDrawer, closeDrawer} = deps);
+export function initPlanner(){
   document.querySelectorAll('#planner .chip').forEach(c=>c.onclick=()=>{
     const wasOn=c.classList.contains('on');
     document.querySelectorAll('#planner .chip').forEach(x=>x.classList.remove('on'));

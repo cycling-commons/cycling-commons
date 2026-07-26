@@ -9,9 +9,7 @@
    initSheet() has run — the pre-init facade is a no-op rather than a crash,
    which is exactly the old `{reset(){}}` fallback for a page with no drawer. */
 import { map } from './map-init.js';
-
-// Injected by initSheet() until drawer.js exists (§5 step 6).
-let closeDrawer;
+import { closeDrawer } from './drawer.js';
 
 // Pre-init and no-drawer pages both land on this no-op, same as before.
 let _sheet = {reset(){}, clear(){}};
@@ -20,8 +18,7 @@ export const sheet = {
   clear(){ _sheet.clear(); },
 };
 
-export function initSheet(deps){
-  ({closeDrawer} = deps);
+export function initSheet(){
   _sheet = initSnapSheet();
 }
 

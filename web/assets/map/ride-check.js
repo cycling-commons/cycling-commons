@@ -6,12 +6,10 @@
    sources/layers are namespaced `ridecheck*` and are never touched by render()'s
    clearDynamic, so the track survives a repaint.
 
-   Coverage, the item index and the catalogue are plain imports now that those
-   modules exist. What still arrives through initRideCheck(deps) is only what
-   drawer.js, places.js and sheet.js own while they remain inside the entry
-   (§5 step 6); the deps object is scaffolding for the migration, not the
-   intended end state. `sheet` is declared after this module is wired, so it is
-   passed as a closure rather than a value.
+   Coverage, the item index, the catalogue, the sheet and now the drawer are
+   plain imports. What still arrives through initRideCheck(deps) is only what
+   places.js will own while it remains inside the entry (§5 step 6); the deps
+   object is scaffolding for the migration, not the intended end state.
  */
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
@@ -21,6 +19,7 @@ import { openCoverageByRef } from './coverage.js';
 import { itemIndex } from './item-index.js';
 import { CATALOG, layerByKey } from './catalog.js';
 import { sheet } from './sheet.js';
+import { closeDrawer, highlightAt, clearHighlight } from './drawer.js';
 
 // ---- Ride-check (spec 2026-07-14 §4.3): riders-only "what's along my GPX?" ----
 // Track overlay uses its own source/layer ids (render()'s clearDynamic never
@@ -35,9 +34,8 @@ import { sheet } from './sheet.js';
 const COV_KEY={C:'water', D:'services', G:'transit', H:'shelter'};
 
 export function initRideCheck(deps){
-    // Injected until their owning modules exist (see the file header).
-    const { closeDrawer, openRouteById, highlightAt, clearHighlight,
-            invalidateAsyncDrawers } = deps;
+    // Injected until places.js exists (see the file header).
+    const { openRouteById, invalidateAsyncDrawers } = deps;
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
     const pick=document.getElementById('rcPick'), fileIn=document.getElementById('rcFile'),
           radiusSel=document.getElementById('rcRadius'), status=document.getElementById('rcStatus');

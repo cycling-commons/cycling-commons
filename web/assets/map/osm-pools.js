@@ -11,24 +11,17 @@
    Cluster rendering is deliberately reconciled on moveend/idle only, never per
    render frame — see updateConfMarkers()'s call site in the entry.
 
-   Drawer, tip and stays-accessibility hooks arrive through initOsmPools(deps):
-   their owning modules (drawer.js, sheet.js, render.js) are still inside the
-   entry at this point in the split, and each becomes a plain import as it lands
-   (§5 steps 5-6). initOsmPools() has no side effect of its own — it is a
-   dependency handover, which is why the entry may call it early. */
+   Every dep this module once took injected is a plain import now that drawer.js
+   has landed (§5 steps 5-6). initOsmPools() went with them: it only ever carried
+   the handover, and this module has no side effect of its own — the pools are
+   built from the entry's map 'load' handler. */
 import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active } from './catalog.js';
 import { inScope } from './scope-ui.js';
 import { mintWaterDrops, pinEl, clusterEl } from './icons.js';
 import { staysAccessible } from './render.js';
-
-// Injected by initOsmPools() until their owning modules exist (see the header).
-let openDrawer, osmDrawer, waterDrawer;
-
-export function initOsmPools(deps){
-  ({openDrawer, osmDrawer, waterDrawer} = deps);
-}
+import { openDrawer, osmDrawer, waterDrawer } from './drawer.js';
 
 // Water POI registry entry + confirmed-pin data (display moved to the
 // coverage tile layer, addCoverage() — this only feeds osmLayers so

@@ -5,14 +5,11 @@
 
    The keydown handler is shared with the drawer — Escape closes the lightbox if
    it is open and the drawer otherwise — so it lives here (the lightbox owns the
-   "is the lightbox open" question) and takes closeDrawer injected until
-   drawer.js lands (§5 step 6). */
+   "is the lightbox open" question) and imports closeDrawer from drawer.js.
+   photoCap renders the credit/licence caption and is shared with the drawer's
+   own photo strip, so it stays where the drawer builds it. */
 import { escPend, safeHref } from './util.js';
-
-// Injected by initLightbox() until drawer.js exists (see the header).
-// photoCap renders the credit/licence caption and is shared with the drawer's
-// own photo strip, so it stays where the drawer builds it for now.
-let closeDrawer, photoCap;
+import { closeDrawer, photoCap } from './drawer.js';
 
 // lightbox doubles as a slideshow over a feature's photo gallery
 export let _lb={photos:[],i:0,name:''};
@@ -36,8 +33,7 @@ export function closeLightbox(){
 }
 
 // Lightbox chrome + the shared Escape/arrow key handling (§4.2).
-export function initLightbox(deps){
-  ({closeDrawer, photoCap} = deps);
+export function initLightbox(){
   document.querySelector('.cc-lb-prev').onclick=e=>{ e.stopPropagation(); lbStep(-1); };
   document.querySelector('.cc-lb-next').onclick=e=>{ e.stopPropagation(); lbStep(1); };
   document.getElementById('lightbox').addEventListener('click',e=>{ if(e.target.id==='lightbox'||e.target.classList.contains('cc-lb-x')) closeLightbox(); });
