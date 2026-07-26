@@ -23,16 +23,17 @@ import { map, flyToPin } from './map-init.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { curScope } from './scope-ui.js';
 import { mintWaterDrops, miniIcon, SERVICE_GLYPH, coverageIconId } from './icons.js';
+import { updateCounts, applyStaysAccessFilter } from './render.js';
 
 // Injected by initCoverage() until their owning modules exist (see the header).
 // isPicking is a CLOSURE over the entry's live `_pick` session, not a snapshot:
 // a picking session starts and ends long after this handover.
 let openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt,
-    showTip, hideTip, updateCounts, isPicking, applyStaysAccessFilter;
+    showTip, hideTip, isPicking;
 
 export function initCoverage(deps){
   ({openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt,
-    showTip, hideTip, updateCounts, isPicking, applyStaysAccessFilter} = deps);
+    showTip, hideTip, isPicking} = deps);
 }
 
 // ---- Coverage tiles (coverage-provider.md §6) ----

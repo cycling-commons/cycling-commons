@@ -8,6 +8,7 @@
    whole feature on a real token, so the entry can call initMapillary*()
    unconditionally and get a no-op on an unconfigured instance. */
 import { map } from './map-init.js';
+import { I18N } from './i18n.js';
 
 // ---------- Mapillary street-level imagery ----------
 // Public Mapillary client token (MLY|...). Replace the placeholder, preferably in config.js to enable the layer.

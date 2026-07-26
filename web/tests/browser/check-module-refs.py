@@ -38,6 +38,12 @@ for m in re.finditer(r'^  (?:function|const|let|var)\s+([A-Za-z_$][\w$]*)', entr
     owned.add(m.group(1))
 for m in re.finditer(r'^  (?:const|let|var)\s+([\w$]+)\s*=[^;\n]*,\s*([\w$]+)\s*=', entry, re.M):
     owned |= {m.group(1), m.group(2)}
+# Second class, invisible to the first: a moved function reaching for something
+# the ENTRY only had through ITS OWN imports. `styleReady` shipped exactly this
+# way — declared in map-init.js, imported by map.js, used by render.js, imported
+# by nobody there. Not entry-OWNED, so the pass above cannot see it.
+for m in re.finditer(r'import\s*\{([^}]*)\}', entry):
+    owned |= {x.strip().split(' as ')[-1] for x in m.group(1).split(',') if x.strip()}
 
 bad = {}
 for f in sorted(os.listdir(ROOT)):
@@ -45,14 +51,27 @@ for f in sorted(os.listdir(ROOT)):
         continue
     code = strip(io.open(os.path.join(ROOT, f), encoding='utf-8').read())
     local = set(re.findall(r'(?:function|const|let|var)\s+([A-Za-z_$][\w$]*)', code))
-    for m in re.finditer(r'(?:let|const|var)\s+([\w$,\s]+?);', code):      # multi-name declarations
-        local |= {n.strip() for n in m.group(1).split(',') if n.strip().isidentifier()}
+    # Multi-name declarations, with or without initialisers: `const S=2, D=24*S,
+    # R=D/2;` declares three locals, and taking only the first left D looking
+    # like a reference to the entry's D (the i18n dictionary).
+    for m in re.finditer(r'(?:let|const|var)\s+([^;\n]+)', code):
+        for part in m.group(1).split(','):
+            n = part.split('=')[0].strip()
+            if n.isidentifier():
+                local.add(n)
     for m in re.finditer(r'(?:const|let|\()\s*\{([^}]*)\}\s*=', code):      # destructured deps
         local |= {x.strip().split(':')[-1].strip() for x in m.group(1).split(',') if x.strip()}
     for m in re.finditer(r'import\s*\{([^}]*)\}', code):
         local |= {x.strip().split(' as ')[-1] for x in m.group(1).split(',') if x.strip()}
+    # Parameters shadow outer names: `export function setSpotlight(slug)` is not
+    # a reference to util.js's slug().
+    for m in re.finditer(r'function\s*[\w$]*\s*\(([^)]*)\)', code):
+        local |= {a.strip().split('=')[0].strip() for a in m.group(1).split(',')
+                  if a.strip() and a.strip().split('=')[0].strip().isidentifier()}
+    # ...and a name is only a reference when it is NOT an object-literal key or a
+    # label: `{D:'services'}` mentions D without reading anything.
     hits = sorted(n for n in owned - local
-                  if re.search(r'(?<![\w$.])' + re.escape(n) + r'(?![\w$])', code))
+                  if re.search(r'(?<![\w$.])' + re.escape(n) + r'(?![\w$])(?!\s*:)', code))
     if hits:
         bad[f] = hits
 

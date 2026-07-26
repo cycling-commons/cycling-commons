@@ -20,15 +20,13 @@ import { map, flyToPin } from './map-init.js';
 import { layerByKey, active } from './catalog.js';
 import { inScope } from './scope-ui.js';
 import { mintWaterDrops, pinEl, clusterEl } from './icons.js';
+import { staysAccessible } from './render.js';
 
 // Injected by initOsmPools() until their owning modules exist (see the header).
-// staysAccessible is a CLOSURE, not a snapshot: the entry's activeAccess set is
-// reassigned whenever the accessibility chips change (a captured Set would go
-// stale the first time a rider touches them).
-let openDrawer, osmDrawer, waterDrawer, showTip, hideTip, staysAccessible;
+let openDrawer, osmDrawer, waterDrawer, showTip, hideTip;
 
 export function initOsmPools(deps){
-  ({openDrawer, osmDrawer, waterDrawer, showTip, hideTip, staysAccessible} = deps);
+  ({openDrawer, osmDrawer, waterDrawer, showTip, hideTip} = deps);
 }
 
 // Water POI registry entry + confirmed-pin data (display moved to the
