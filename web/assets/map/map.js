@@ -10,6 +10,7 @@ import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversin
 import { map, initMapControls, addSatellite, flyToPin, styleReady, markStyleReady, initCoordPopup } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
 import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlight.js';
+import { CATALOG, CATALOG_AZ, active, layerByKey, CITIES, cityLink, LETTER_KEY, KEY_LETTER, mode, setMode } from './catalog.js';
 
   const PREFS = window.CC_PREFS || {bikes: [], styles: []};
   // Region scope (region-scoping-design.md §4 / §7 Phase 2): the area the map +
@@ -223,7 +224,7 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
       // synchronously); in Curated we render now for instant A–J + K feedback
       // while the region-ranked best-of fetch is in flight — applyBestOf
       // re-renders K when it lands.
-      if(mode==='curated') render();
+      if(mode()==='curated') render();
       refreshBestOf();                          // re-fetch best-of with the new &region= (init fetch is the standalone call below)
     } else {
       render();                                 // initial paint — climbs/routes/surface via featureVisible / renderSurfaceLayer
@@ -723,7 +724,6 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
   const COVERAGE_CCS = (Array.isArray(window.CC_COVERAGE_COUNTRIES) && window.CC_COVERAGE_COUNTRIES.length)
     ? window.CC_COVERAGE_COUNTRIES.map(c=>c.toLowerCase()).concat(['zz'])
     : [null];   // [null] = single unsplit '<letter>' layer (tiles predate the per-country split)
-  const LETTER_KEY={C:'water',D:'services',E:'stays',G:'transit',H:'shelter',I:'scenic',J:'history'};
   const COVERAGE_ON = typeof window.CC_COVERAGE_URL==='string' && !!window.CC_COVERAGE_URL && typeof pmtiles!=='undefined';
   // Per-layer OSM source notes for the drawer's Source line — same wording as
   // OSM_BULK above (water goes through waterDrawer, which owns its own string).
@@ -831,15 +831,14 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
   // priority — while experiential letters E/I/J stay Everything-only (Curated
   // remains best-of for them).
   const COV_UTILITY=new Set(['C','D','G','H']);
-  const KEY_LETTER={water:'C',services:'D',stays:'E',transit:'G',shelter:'H',scenic:'I',history:'J'};
   function syncCoverageLayers(){
     if(!COVERAGE_ON) return;
     COVERAGE_KEYS.forEach(([key])=>{
       // on/off + Curated dim are per-letter decisions; apply them uniformly to
       // every per-country layer of this letter.
       const utility=COV_UTILITY.has(KEY_LETTER[key]);
-      const show=active.has(key) && (mode==='all' || utility);
-      const dim=(mode==='curated' && utility)?0.55:1;
+      const show=active.has(key) && (mode()==='all' || utility);
+      const dim=(mode()==='curated' && utility)?0.55:1;
       COVERAGE_CCS.forEach(cc=>{
         const id = cc ? key+'-'+cc+'-cov' : key+'-cov'; if(!map.getLayer(id)) return;
         map.setLayoutProperty(id,'visibility', show?'visible':'none');
@@ -1186,68 +1185,7 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
     if(e.key==='r'||e.key==='R'){ e.preventDefault(); arm('reject'); }
   });
 
-  // One real, verified Ardennes example per catalog type (A–K). geom.ll = [lat,lng].
-  // record[] rows render in the detail drawer; omit any attribute we cannot verify.
-  const CATALOG = [
-    { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, features:[] }
-    ,{ key:'climbs', letter:'B', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, features:[] }
-    ,{ key:'water', letter:'C', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, features:[] }
-    ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, features:[] }
-    ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, features:[] }
-    // F · Hazards — features filled below from window.CC_HAZARDS (the served
-    // payload), region-stamped like every letter (region-scoping-design.md §7
-    // Task A). The hardcoded demo fixture ("Exposed crosswind · Hautes Fagnes")
-    // was retired in the 07-20 review round (rid-less client fixtures have no
-    // honest place in a scope-filtered map); it now returns as a real seeded,
-    // region-stamped SeedManualCatalogCommand row served through this path.
-    ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, features:[]}
-    ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, features:[] }
-    ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, features:[] }
-    ,{ key:'scenic', letter:'I', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, features:[] }
-    ,{ key:'history', letter:'J', label:LAYER_L10N.history||'History & culture', color:'#6E5849', icon:'🏛', kind:'point', exp:true, features:[] }
-    ,{ key:'experience', letter:'K', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, features:[] }
-  ];
 
-  const active = new Set(CATALOG.map(l => l.key));   // all layers (incl. K · Recommended routes) on by default
-  const layerByKey = Object.fromEntries(CATALOG.map(l => [l.key, l]));
-
-  // Towns referenced by routes — each links to a place on the map + a city info card.
-  // ll=[lat,lng]; info is a short blurb (in production auto-found from Wikidata/Wikipedia or user-added).
-  const CITIES = {
-    'Spa':{ll:[50.4920,5.8636], wiki:'https://en.wikipedia.org/wiki/Spa,_Belgium', info:'The thermal town that gave the word "spa" its name; start of these loops and gateway to Spa-Francorchamps.'},
-    'Stavelot':{ll:[50.3957,5.9300], wiki:'https://en.wikipedia.org/wiki/Stavelot', info:'Abbey town grown around its Benedictine abbey (651), at the foot of the Côte de Stockeu.'},
-    'Vielsalm':{ll:[50.2833,5.9167], wiki:'https://en.wikipedia.org/wiki/Vielsalm', info:'Ardennes town on the Salm river — gravel and cross-country country.'},
-    'Sankt Vith':{ll:[50.2811,6.1267], wiki:'https://en.wikipedia.org/wiki/Sankt_Vith', info:'Hub of the eastern Ardennes, in the German-speaking Community of Belgium.'},
-    'Francorchamps':{ll:[50.4350,5.9710], wiki:'https://en.wikipedia.org/wiki/Francorchamps', info:'Village beside the Spa-Francorchamps racing circuit, on the high road south of Spa.'},
-    'Coo':{ll:[50.3892,5.8847], wiki:'https://en.wikipedia.org/wiki/Coo,_Belgium', info:'Hamlet of Stavelot known for the Cascade de Coo waterfall and Plopsa Coo park.'},
-    'Sart':{ll:[50.5200,5.8800], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Sart-lez-Spa, a village of Jalhay on the plateau north of Spa.'},
-    'Jalhay':{ll:[50.5560,5.9700], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Municipality on the edge of the Hautes Fagnes, by the Gileppe dam.'},
-    'Stoumont':{ll:[50.4050,5.8000], wiki:'https://en.wikipedia.org/wiki/Stoumont', info:'Hilly Amblève-valley municipality of steep Ardennes lanes.'},
-    'Chevron':{ll:[50.4200,5.7600], wiki:'https://en.wikipedia.org/wiki/Stoumont', info:'Village of Stoumont in the Amblève valley.'},
-    'La Gleize':{ll:[50.4150,5.8500], wiki:'https://en.wikipedia.org/wiki/La_Gleize', info:'Amblève-valley village of Stoumont, known for its WWII history (a preserved King Tiger tank).'},
-    'Trois-Ponts':{ll:[50.3700,5.8730], wiki:'https://en.wikipedia.org/wiki/Trois-Ponts', info:'"Three bridges" — confluence of the Amblève and Salm, on the LBL roads.'},
-    'Tiège':{ll:[50.5300,5.8900], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Hamlet of Sart/Jalhay on the plateau above Spa.'},
-    // major Wallonia cities (t:'City') — searchable anchors to fly to; far-west ones have no Commons data nearby yet
-    'Namur':{t:'City', ll:[50.4674,4.8720], wiki:'https://en.wikipedia.org/wiki/Namur', info:'Capital of Wallonia, where the Sambre meets the Meuse beneath its citadel.'},
-    'Liège':{t:'City', ll:[50.6451,5.5736], wiki:'https://en.wikipedia.org/wiki/Li%C3%A8ge', info:'Largest city of eastern Wallonia, on the Meuse — start of Liège–Bastogne–Liège.'},
-    'Charleroi':{t:'City', ll:[50.4109,4.4447], wiki:'https://en.wikipedia.org/wiki/Charleroi', info:'Former industrial hub on the Sambre, heart of the Pays Noir.'},
-    'Mons':{t:'City', ll:[50.4542,3.9563], wiki:'https://en.wikipedia.org/wiki/Mons', info:'Capital of Hainaut, a UNESCO-listed belfry town.'},
-    'Tournai':{t:'City', ll:[50.6071,3.3892], wiki:'https://en.wikipedia.org/wiki/Tournai', info:'Among the oldest cities in Belgium, on the Scheldt near the French border.'},
-    'Arlon':{t:'City', ll:[49.6839,5.8113], wiki:'https://en.wikipedia.org/wiki/Arlon', info:'Capital of Luxembourg province, in the far south-east.'},
-    'Bastogne':{t:'City', ll:[50.0028,5.7186], wiki:'https://en.wikipedia.org/wiki/Bastogne', info:'Ardennes town famed for the WWII Battle of the Bulge, on the LBL roads.'},
-    'Dinant':{t:'City', ll:[50.2605,4.9118], wiki:'https://en.wikipedia.org/wiki/Dinant', info:'Meuse-valley town under a clifftop citadel; birthplace of Adolphe Sax.'},
-    'Verviers':{t:'City', ll:[50.5911,5.8625], wiki:'https://en.wikipedia.org/wiki/Verviers', info:'Wool-trade town on the Vesdre, gateway to the Hautes Fagnes.'},
-    'Huy':{t:'City', ll:[50.5186,5.2393], wiki:'https://en.wikipedia.org/wiki/Huy', info:'Meuse town below the Mur de Huy, the Flèche Wallonne finish.'},
-    'Marche-en-Famenne':{t:'City', ll:[50.2275,5.3450], wiki:'https://en.wikipedia.org/wiki/Marche-en-Famenne', info:'Hub of the Famenne, between the Condroz and the Ardennes.'},
-    'La Roche-en-Ardenne':{t:'City', ll:[50.1827,5.5765], wiki:'https://en.wikipedia.org/wiki/La_Roche-en-Ardenne', info:'Castle town in a bend of the Ourthe, deep in the Ardennes.'},
-    'Wavre':{t:'City', ll:[50.7173,4.6122], wiki:'https://en.wikipedia.org/wiki/Wavre', info:'Capital of Walloon Brabant, on the Dyle.'},
-    'Nivelles':{t:'City', ll:[50.5977,4.3270], wiki:'https://en.wikipedia.org/wiki/Nivelles', info:'Brabant town around its Romanesque collegiate church.'},
-    'Malmedy':{t:'City', ll:[50.4259,6.0283], wiki:'https://en.wikipedia.org/wiki/Malmedy', info:'East-cantons town below the Hautes Fagnes, near the Stavelot roads.'}
-  };
-  // Defense in depth: the name is escaped even though today's callers only
-  // pass RIDE_CITIES constants — if a payload value ever reaches this, it
-  // must not break out of the attribute or element context.
-  const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;
   // ---- Unified searchable-item index (spec 2026-07-14 §3.1) ----
   // Every curated/DB-backed item exactly once: CATALOG features (curated:
   // climbs, hazards, routes, curator-pending) then PIVOT stays. Search and
@@ -1490,7 +1428,6 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
     layerByKey['pending'] = pendingLayer;
     active.add('pending');
   }
-  let mode = 'curated';
   let markers = [];
   const dynamicIds=[];
   const boundLayerIds=new Set();   // delegated click/hover handlers are attached once per id
@@ -1656,7 +1593,7 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
   function renderSurfaceLayer(layer, visible){
     const feats=[];
     if(visible) layer.features.forEach((f,i)=>{
-      if(!((mode==='all')||!layer.exp||f.cur)) return;   // same visibility rule as featureVisible()
+      if(!((mode()==='all')||!layer.exp||f.cur)) return;   // same visibility rule as featureVisible()
       if(!inScope(f.rid)) return;                        // region scope gate (region-scoping-design.md §4)
       feats.push({type:'Feature',
         properties:{idx:i, cls:SURFACE_STYLE[f.surfaceClass]?f.surfaceClass:'other'},
@@ -1746,7 +1683,7 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
     return f.bikeTypes.some(t=>PREFS.bikes.includes(t));
   }
   function featureVisible(layer, f){
-    let show = layer.key==='experience' ? (mode==='all'||f.cur) : ((mode==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
+    let show = layer.key==='experience' ? (mode()==='all'||f.cur) : ((mode()==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
     if(show) show = inScope(f.rid);   // region scope gate (region-scoping-design.md §4)
     if(show && layer.key==='experience') show = prefMatch(f);
     if(show && layer.key==='climbs'){
@@ -2748,7 +2685,7 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
     if(!f) return false;
     openDrawer(layer,f);
     const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
-    if(!(mode==='all'||f.cur) && p) revealPinAt(layer, p);
+    if(!(mode()==='all'||f.cur) && p) revealPinAt(layer, p);
     showRouteCorrections(id);
     return true;
   }
@@ -3038,7 +2975,6 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
   map.on('move', ()=>{ if(!tipEl.hidden) hideTip(); });
 
   // catalog in canonical A–K order for the rail + legend (display only; render keeps CATALOG order)
-  const CATALOG_AZ=[...CATALOG].sort((a,b)=>a.letter<b.letter?-1:1);
 
   // build layer toggles
   const lc=document.getElementById('layers');
@@ -3409,7 +3345,7 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
 
   function updateSubtitle(){
     const sub=document.querySelector('.map-top .sub'); if(!sub) return;
-    if(mode==='all'){ sub.textContent=I18N.subEverything||'Everything · full backlog'; return; }
+    if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full backlog'; return; }
     const bike=boBike==='all' ? (I18N.allBikes||'All bikes') : (CC_BIKE_LABEL[boBike]||boBike);
     sub.textContent=`${I18N.curated||'Curated best-of'} · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
   }
@@ -3431,7 +3367,7 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
   let _bestOfReq=0;
   function refreshBestOf(){
     const req=++_bestOfReq;
-    if(mode!=='curated'){ render(); return; }
+    if(mode()!=='curated'){ render(); return; }
     // A named-region scope sends &region=<id>; My area sends its derived rid SET
     // as a CSV (&region=1,24) so best-of ranks across the whole home-base area
     // (MapController parses the CSV; region-scoping-design.md §6 / §9.1 Phase 4).
@@ -3454,9 +3390,9 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
   // mode toggle
   document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on'); mode=b.dataset.m;
+    b.classList.add('on'); setMode(b.dataset.m);
     clearRevealPin();   // decision C: mode change clears any reveal pin
-    const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode!=='curated');
+    const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated');
     updateSubtitle();
     refreshBestOf();          // Curated → fetch + filter; Everything → plain render()
   });
@@ -3534,7 +3470,7 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
 
   // Initial best-of for the default facet so Curated isn't empty on load.
   updateSubtitle();
-  { const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode!=='curated'); }
+  { const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated'); }
   refreshBestOf();
   // discipline + freshness chips (visual)
   document.querySelectorAll('#disc .chip, .grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
