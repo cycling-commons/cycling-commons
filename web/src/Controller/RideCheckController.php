@@ -46,8 +46,20 @@ final class RideCheckController extends AbstractController
         }
 
         $file = $request->files->get('gpx');
-        if (!$file instanceof UploadedFile || !$file->isValid()) {
+        if (!$file instanceof UploadedFile) {
             return $this->json(['error' => $translator->trans('ride_check.error.file_required')], 422);
+        }
+        // A file PHP itself refused is NOT "no file chosen" — the rider picked
+        // one, and telling them to pick one is a dead end that hides a size
+        // problem they could act on. UPLOAD_ERR_INI_SIZE/FORM_SIZE means the GPX
+        // exceeded upload_max_filesize (16M, web/Dockerfile); anything else here
+        // is a partial or interrupted transfer, which retrying can fix.
+        if (!$file->isValid()) {
+            $key = \in_array($file->getError(), [\UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE], true)
+                ? 'ride_check.error.file_too_large'
+                : 'ride_check.error.upload_failed';
+
+            return $this->json(['error' => $translator->trans($key)], 422);
         }
 
         if (!$rideCheckLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {

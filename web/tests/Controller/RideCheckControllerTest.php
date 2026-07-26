@@ -117,6 +117,30 @@ final class RideCheckControllerTest extends WebTestCase
         self::assertNotSame('', $body['error']);
     }
 
+    /**
+     * A file PHP itself rejected (over upload_max_filesize) is NOT "no file
+     * chosen": the rider picked one, so telling them to pick one is a dead end
+     * that hides a size problem they can act on. Reproduced from the browser
+     * with a 4.5 MB Strava export against the shipped 16 MB limit's predecessor.
+     */
+    public function testRejectedUploadReportsTheRealReason(): void
+    {
+        $client = static::createClient();
+        $client->loginUser(self::user('ride-check-toobig@test.test'));
+        $path = self::tmpUpload('.gpx', '<gpx/>');
+        // test:false keeps the UploadedFile's error code intact, so this is the
+        // exact object PHP hands the controller on UPLOAD_ERR_INI_SIZE.
+        $tooBig = new UploadedFile($path, 'ride.gpx', 'application/gpx+xml', \UPLOAD_ERR_INI_SIZE, false);
+        $client->request('POST', '/map/ride-check', ['_token' => self::token()], ['gpx' => $tooBig], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{error: string} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+
+        $nofile = static::getContainer()->get('translator')->trans('ride_check.error.file_required');
+        self::assertNotSame($nofile, $body['error'], 'an oversized upload must not be reported as "choose a file"');
+        self::assertStringContainsStringIgnoringCase('large', $body['error']);
+    }
+
     public function testInvalidRadiusIs422(): void
     {
         $client = static::createClient();

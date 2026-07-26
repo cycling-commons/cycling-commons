@@ -918,6 +918,8 @@ ride_check:
   button: 'Kies GPX'
   error:
     file_required: 'Kies eerst een GPX-bestand.'
+    file_too_large: 'Dat GPX-bestand is te groot — de limiet is 16 MB.'
+    upload_failed: 'Het bestand is niet volledig geüpload. Probeer het opnieuw.'
     length_range: 'Een rit moet tussen 500 m en 400 km lang zijn.'
     radius: 'Ongeldige zoekafstand.'
 map:

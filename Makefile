@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh region-probe region-scaffold course-data
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh region-probe region-scaffold course-data
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -81,6 +81,24 @@ course-data: ## Seed the dataset the GIS course exercises query (offline; run on
 
 up: ## Start the dev stack in detached mode (recreates stale containers)
 	@$(DOCKER_COMP) up --detach
+	@$(MAKE) --no-print-directory check-env || true
+
+# `up` deliberately does NOT --build: a transient apt failure while fetching a
+# base package would then take the whole stack down, which is a worse failure
+# than the drift below. So detect the drift instead of forcing a rebuild.
+#
+# The drift that motivated this (2026-07-26): an app image built before e8007c4
+# kept php's default upload_max_filesize=2M, while the repo declares a 15M GPX
+# limit. Every GPX over 2 MB failed, and the map said "Choose a GPX file first."
+# — a message that reads like a product bug, not a stale image. Non-fatal by
+# design: it is a warning about the environment, never a gate.
+check-env: ## Warn when the running app image no longer matches the repo's Dockerfile
+	@declared=$$(grep -oE "maxSize: '[0-9]+M'" web/src/Form/ProposeRouteType.php | grep -oE '[0-9]+' | head -1); \
+	actual=$$($(DOCKER_COMP) exec -T app php -r 'echo (int) ini_get("upload_max_filesize");' 2>/dev/null); \
+	if [ -n "$$actual" ] && [ -n "$$declared" ] && [ "$$actual" -lt "$$declared" ]; then \
+	  printf '\033[33m⚠  php upload_max_filesize is %sM but this repo declares a %sM GPX limit.\033[0m\n' "$$actual" "$$declared"; \
+	  printf '   The app image predates the Dockerfile that raises it. Run: \033[1mmake build && make up\033[0m\n'; \
+	fi
 
 down: ## Stop the stack and remove containers (keeps the data volume)
 	@$(DOCKER_COMP) down --remove-orphans

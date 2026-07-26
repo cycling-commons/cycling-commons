@@ -1088,6 +1088,8 @@ ride_check:
   button: 'Choose GPX'
   error:
     file_required: 'Choose a GPX file first.'
+    file_too_large: 'That GPX is too large — the limit is 16 MB.'
+    upload_failed: 'That file did not upload completely. Please try again.'
     length_range: 'A ride must be between 500 m and 400 km.'
     radius: 'Invalid search distance.'
 map:
