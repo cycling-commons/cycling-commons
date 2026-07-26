@@ -1,0 +1,24 @@
+docs/specs/2026-07-26-map-js-module-split-design.md
+  s_9599f84a595aa8::t_641c7662f026e8 5-6,279-334
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "1e9cabe5a1f84af767820a340ad4ad7a94376eee",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_9599f84a595aa8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ec863f78-20d6-4299-a4d3-b8b757979843",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
