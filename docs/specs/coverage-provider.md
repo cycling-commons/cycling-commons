@@ -126,16 +126,16 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   whitelists display tags, §5).
 - **Measured sizing (2026-07-23).** At 377,558 rows (BE + NL + DE + LU; 0 unstamped
   after the ownership fix), compacted steady-state:
-  **341 B/row heap + 176 B/row indexes = 517 B/row** — this is the *compacted* cost
-  (post `VACUUM FULL`). The **live on-disk table sits well above it**: the harvest's
-  per-region DELETE-all-then-INSERT-all doubles the row count mid-swap, autovacuum then
-  frees the dead tuples into **reusable free space inside the file but never shrinks the
-  file** (only `VACUUM FULL`/`pg_repack` returns space to the OS). Measured post-harvest:
-  258 MB heap of which **67 % (173 MB) is reusable free space, 0 dead tuples** — a bounded
-  high-water mark (the next harvest refills it, so it does not grow unboundedly), not a
-  leak. No automatic shrink step is built; add `VACUUM FULL`/`pg_repack` after the harvest
-  only if the on-disk footprint matters (it fits in page cache regardless). The per-row
-  figure is
+  **341 B/row heap + 176 B/row indexes = 517 B/row** — the compacted per-row cost.
+  **Superseded (2026-07-24, `2026-07-24-coverage-harvest-prod-safety-design.md`
+  §3.3):** the earlier `DELETE-all-then-INSERT-all` per-region swap doubled the row
+  count mid-swap and left a large reusable-free-space high-water mark (measured then:
+  258 MB heap, 67 % reusable free space), which needed a `VACUUM FULL`/`pg_repack` to
+  return to the OS. The load is now a **diff-merge** (upsert-changed + delete-disappeared),
+  so a weekly harvest rewrites only the OSM delta — no mid-swap doubling, dead tuples are
+  bounded by the (small) churn, and **`VACUUM FULL` is no longer needed** (it is
+  prod-unsafe on the shared host anyway; `pg_repack` remains the option if a one-off file
+  shrink is ever wanted). The per-row figure is
   stable across countries (tags average 205 B/row in DE, 199 in BE, 197 in NL —
   Germany is the most exhaustively tagged country on Earth, so the worldwide
   average should drift down, not up; the one item that grows is the `name`
@@ -307,10 +307,17 @@ Per region in `COVERAGE_REGIONS`, independently:
    download must never wipe a region, and the filter itself needs its own
    guard: an unseeded `region` table for the extract's country raises rather
    than silently staging zero rows. Then one transaction:
-   resolve the extract slug to its `coverage_source` id (get-or-create), then
-   `DELETE FROM coverage_poi WHERE src_region_id = :sid` + insert + `region_id`
-   backfill (`ST_Contains` over `region` polygons where they exist). Readers
-   never see a half-loaded region; an abort keeps last week's slice serving.
+   resolve the extract slug to its `coverage_source` id (get-or-create), then a
+   **diff-merge** swap — upsert only changed/new rows (unchanged rows skip, no
+   write) and delete the disappeared, replacing the earlier
+   DELETE-all + INSERT-all
+   (`2026-07-24-coverage-harvest-prod-safety-design.md` §3.3) — followed by a
+   **delta-scoped** `region_id` backfill (`ST_Contains` over `region` polygons
+   where they exist; `COVERAGE_FULL_MEMBERSHIP=1` recomputes the whole slice
+   after a `region` change). Readers never see a half-loaded region; an abort
+   keeps last week's slice serving. The batch runs under a per-session resource
+   budget + an advisory single-run lock on CC's own DB cluster (same design doc
+   §3.1–§3.2).
 
 After all regions, once per run:
 
