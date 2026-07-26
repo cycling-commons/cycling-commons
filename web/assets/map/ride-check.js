@@ -16,6 +16,7 @@
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn } from './util.js';
+import { coverageIconId } from './icons.js';
 
 // ---- Ride-check (spec 2026-07-14 §4.3): riders-only "what's along my GPX?" ----
 // Track overlay uses its own source/layer ids (render()'s clearDynamic never
@@ -32,7 +33,7 @@ const COV_KEY={C:'water', D:'services', G:'transit', H:'shelter'};
 export function initRideCheck(deps){
     // Injected until their owning modules exist (see the file header).
     const { closeDrawer, openRouteById, highlightAt, clearHighlight,
-            openCoverageByRef, coverageIconId, catalog, layerByKey,
+            openCoverageByRef, catalog, layerByKey,
             itemIndex, resetSheet, invalidateAsyncDrawers } = deps;
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
     const pick=document.getElementById('rcPick'), fileIn=document.getElementById('rcFile'),
