@@ -17,6 +17,8 @@ import { curScope, inScope, scopeLabel, renderScopeChips, applyScope,
          initScope, initScopeRail, initAreaNudge } from './scope-ui.js';
 import { osmLayers, OSM_BULK, addWaterOsm, addOsmDots, setupConfClusters,
          updateConfMarkers, initOsmPools } from './osm-pools.js';
+import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex, nearbyItems, trimEnds,
+         initItemIndex } from './item-index.js';
 import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverageScopeFilter,
          covScopeIsZero, covScopeQuery, syncCoverageLayers, addCoverage, openCoverageByRef,
          widenForDeepLink, openCoverageFeatureByName, fetchCoverageCounts, covShownCount,
@@ -37,6 +39,9 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
   initCoverage({openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt,
                 showTip, hideTip, updateCounts, applyStaysAccessFilter,
                 isPicking: () => !!_pick});
+  // Searchable-item index (item-index.js): the two `go` handlers each entry
+  // carries. Built later, from the sidebar-search block.
+  initItemIndex({openLocalFeature, openStayPivot});
   // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
   // bumped on every openDrawer() call so a slow response from a since-replaced
   // drawer never paints stale history over whatever is open now.
@@ -312,82 +317,6 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
   });
 
 
-  // ---- Unified searchable-item index (spec 2026-07-14 §3.1) ----
-  // Every curated/DB-backed item exactly once: CATALOG features (curated:
-  // climbs, hazards, routes, curator-pending) then PIVOT stays. Search and
-  // nearbyItems() both consume this; uncurated OSM coverage is NOT indexed
-  // here (coverage-provider.md §6) — it's looked up live via
-  // /map/coverage/search and /map/coverage/nearby (openCoverageFeatureByName(),
-  // the search box, town-card nearby groups), deduped against this index by
-  // IDX_IDS/CC_CURATED_REFS so a curated twin never lists twice.
-  // Dedup: DB-backed entries on letter+id; cross-source physical doubles
-  // (same letter + normalized name within 100 m) keep the earlier entry —
-  // build order makes that curated over pivot.
-  let ITEM_INDEX = [];
-  // letter:id keys of every DB-backed local-index entry — coverage search/
-  // nearby hits whose curated twin is already indexed must not list twice
-  // (dedupe complement to the tile-side covDedupeFilter). Filled right after
-  // buildItemIndex() runs in the sidebar-search block.
-  let IDX_IDS = new Set();
-  function buildItemIndex(){
-    const out=[], byId=new Set(), byName=new Map();   // byName: 'letter:slug' -> [ll,…]
-    function push(e){
-      if(e.id!=null){ const k=e.letter+':'+e.id; if(byId.has(k)) return; byId.add(k); }
-      if(e.name && e.ll && !e.unnamed){   // unnamed entries share a type label — never name-dedup them
-        const nk=e.letter+':'+slug(e.name), seen=byName.get(nk)||[];
-        if(seen.some(p=>haversine(p, e.ll)<=0.1)) return;   // same place, another source
-        seen.push(e.ll); byName.set(nk, seen);
-      }
-      out.push(e);
-    }
-    // hlOff = highlight-pulse offset for this entry (same rule as the
-    // drawer-open halo at openDrawer): bottom-anchored pins (CATALOG point
-    // markers, confirmed OSM/pivot icon pins) centre the pulse on the pin
-    // BODY with [0,-16]; canvas dots and line features pulse at the point.
-    CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
-      push({name:f.name, unnamed:f.unnamed, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
-        color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
-        rid:f.rid,   // region membership — search filters to scope like the map (07-20 review finding 3)
-        // 07-15 decision A: real signal only — routes carry canonical state;
-        // everything else keys on the real v (verified state / rider
-        // confirmation, emitted by CatalogProvider for climbs and surface
-        // segments too) OR the curated best-of flag. Never the demo 'c'.
-        verified: f.state ? f.state==='verified' : !!(f.v || f.cur),
-        hlOff: layer.kind==='point' ? [0,-16] : [0,0],
-        pend:f.pending?String(f.pending.id):undefined,
-        // Open the EXACT resolved feature, not a re-lookup by name — a nameless
-        // hazard shares its label with siblings, so openFeatureByName(f.name)
-        // would last-match-wins onto the wrong pin (finding 9).
-        go:()=>openLocalFeature(layer,f)});
-    }));
-    (window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties;
-      if(!p || !p.n) return; const layer=layerByKey.stays; if(!layer) return;
-      const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
-      push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
-        color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id,
-        rid:p.rid,   // pivot stays carry rid via catalog-load's property merge (finding 3)
-        verified:!!p.v,   // v = real state/confirmation signal from CatalogProvider
-        hlOff: p.v ? [0,-16] : [0,0],   // pin offset keys on the real promotion signal (c is dead, see the re-key step)
-        go:()=>openStayPivot(f)});
-    });
-    return out;
-  }
-  // Deliberately scope-EXEMPT (07-20 review finding 3, owner decision):
-  // opening a town card is an explicit location choice, so its nearby list
-  // shows what is physically there regardless of the active scope — unlike
-  // text search, which filters to scope (runS). Keep this asymmetry.
-  function nearbyItems(ll, km){
-    const out=[];
-    ITEM_INDEX.forEach(e=>{ if(!e.ll) return; const dist=haversine(ll, e.ll); if(dist<=km) out.push({e, dist}); });
-    return out.sort((a,b)=>a.dist-b.dist);
-  }
-  // privacy: drop the first & last 350–750 m of a contributed ride (kills home/start fingerprints).
-  // startM/endM in metres; haversine() returns km, so compare against m/1000.
-  function trimEnds(loop, startM, endM){
-    let i=0,d=0; while(i<loop.length-2 && d<startM/1000){ d+=haversine(loop[i],loop[i+1]); i++; }
-    let j=loop.length-1,e=0; while(j>i+1 && e<endM/1000){ e+=haversine(loop[j],loop[j-1]); j--; }
-    return loop.slice(i, j+1);
-  }
   // populate K · Recommended routes with every uploaded sample route + its cyclist-experience attributes
   // C1-T4 (W6): CC_CLIMBS' 'source' field is the free-text citation ('OSM roads ·
   // geometry handmade', etc.); srcType is the real ItemSource value. A rider-
@@ -1641,7 +1570,7 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
       const key=LETTER_KEY[g.letter], layer=key&&layerByKey[key]; if(!layer) return;
       (g.items||[]).forEach(it=>{
         if(!it || !Array.isArray(it.ll)) return;
-        if(it.itemId!=null && IDX_IDS.has(g.letter+':'+it.itemId)) return;
+        if(it.itemId!=null && idxIds().has(g.letter+':'+it.itemId)) return;
         all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
           badge:g.letter, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
           go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n)}});
@@ -1806,17 +1735,13 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
       map.fitBounds([[Math.min(a[1],b2[1]),Math.min(a[0],b2[0])],[Math.max(a[1],b2[1]),Math.max(a[0],b2[0])]],{padding:120,maxZoom:15,duration:600});
     };
   }
-  // Ride-check lives in ./ride-check.js. Its deps are injected rather than
-  // imported because drawer/places/coverage/item-index are still in this file
-  // (2026-07-26-map-js-module-split-design.md §5); each becomes a plain import
-  // in ride-check.js as its module lands. Getters/closures where the binding is
-  // live: ITEM_INDEX is reassigned, and `sheet` is declared further down, so
-  // capturing either by value here would freeze or trip over it.
+  // Ride-check lives in ./ride-check.js. Coverage, item-index and the catalogue
+  // are plain imports there now that those modules exist; what is left injected
+  // is only what drawer.js/sheet.js still own in this file
+  // (2026-07-26-map-js-module-split-design.md §5). Closures where the binding is
+  // live: `sheet` is declared further down, and _placeReq is a counter.
   initRideCheck({
     closeDrawer, openRouteById, highlightAt, clearHighlight,
-    openCoverageByRef, layerByKey,
-    catalog: () => CATALOG,
-    itemIndex: () => ITEM_INDEX,
     resetSheet: () => sheet.reset(),
     invalidateAsyncDrawers: () => { invalidateCoverageDrawer(); _placeReq++; },
   });
@@ -2075,16 +2000,15 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
     const SEARCH_IDX=[];
     Object.keys(CITIES).forEach(name=>{ const big=CITIES[name].t==='City';   // big cities stand apart from hamlets: ochre ◉ "City" vs teal ◎ "Town"
       SEARCH_IDX.push({name, key:slug(name), kind: big?(D.city||'City'):(D.town||'Town'), badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}); });
-    ITEM_INDEX = buildItemIndex();
-    IDX_IDS = new Set(ITEM_INDEX.filter(e=>e.id!=null).map(e=>e.letter+':'+e.id));
-    ITEM_INDEX.forEach(e=>{ if(!e.unnamed) SEARCH_IDX.push(e); });   // nameless POIs list in place cards, not in text search
+    rebuildItemIndex();   // ITEM_INDEX + its derived IDX_IDS, together (item-index.js)
+    itemIndex().forEach(e=>{ if(!e.unnamed) SEARCH_IDX.push(e); });   // nameless POIs list in place cards, not in text search
     // pending entries carry their submission id so hidePendingPin can drop
     // them from the index after a moderation decision (review W36) — the
     // feature disappears from the map, and a search hit that "does nothing"
     // must disappear with it. Both lists share the entry objects.
     _searchDropPending=id=>{
       for(let i=SEARCH_IDX.length-1;i>=0;i--){ if(SEARCH_IDX[i].pend===String(id)) SEARCH_IDX.splice(i,1); }
-      for(let i=ITEM_INDEX.length-1;i>=0;i--){ if(ITEM_INDEX[i].pend===String(id)) ITEM_INDEX.splice(i,1); }
+      dropPendingFromIndex(id);
     };
     let sMatches=[], sHL=-1;
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
@@ -2196,7 +2120,7 @@ import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverage
           if(ctl.signal.aborted) return;
           _covHits=(d.results||[])
             .filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll))
-            .filter(h=>!(h.itemId!=null && IDX_IDS.has(h.letter+':'+h.itemId)))   // curated twin already indexed locally
+            .filter(h=>!(h.itemId!=null && idxIds().has(h.letter+':'+h.itemId)))   // curated twin already indexed locally
             .map(h=>{ const layer=layerByKey[LETTER_KEY[h.letter]];
               return {name:h.n, key:slug(h.n), kind:layer.label, badge:h.letter, color:layer.color,
                 letter:h.letter, ll:h.ll, cov:1, community:!h.curated,

@@ -6,17 +6,20 @@
    sources/layers are namespaced `ridecheck*` and are never touched by render()'s
    clearDynamic, so the track survives a repaint.
 
-   Dependencies it cannot import yet arrive through initRideCheck(deps): drawer,
-   places, coverage and item-index are still inside the entry at this point in
-   the split. Each becomes a plain import as its module lands — the deps object
-   is scaffolding for the migration, not the intended end state. Live bindings
-   (ITEM_INDEX is reassigned; `sheet` is declared after this module is wired) are
-   passed as getters/closures for exactly that reason.
+   Coverage, the item index and the catalogue are plain imports now that those
+   modules exist. What still arrives through initRideCheck(deps) is only what
+   drawer.js, places.js and sheet.js own while they remain inside the entry
+   (§5 step 6); the deps object is scaffolding for the migration, not the
+   intended end state. `sheet` is declared after this module is wired, so it is
+   passed as a closure rather than a value.
  */
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn } from './util.js';
 import { coverageIconId } from './icons.js';
+import { openCoverageByRef } from './coverage.js';
+import { itemIndex } from './item-index.js';
+import { CATALOG, layerByKey } from './catalog.js';
 
 // ---- Ride-check (spec 2026-07-14 §4.3): riders-only "what's along my GPX?" ----
 // Track overlay uses its own source/layer ids (render()'s clearDynamic never
@@ -33,8 +36,7 @@ const COV_KEY={C:'water', D:'services', G:'transit', H:'shelter'};
 export function initRideCheck(deps){
     // Injected until their owning modules exist (see the file header).
     const { closeDrawer, openRouteById, highlightAt, clearHighlight,
-            openCoverageByRef, catalog, layerByKey,
-            itemIndex, resetSheet, invalidateAsyncDrawers } = deps;
+            resetSheet, invalidateAsyncDrawers } = deps;
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
     const pick=document.getElementById('rcPick'), fileIn=document.getElementById('rcFile'),
           radiusSel=document.getElementById('rcRadius'), status=document.getElementById('rcStatus');
@@ -143,7 +145,7 @@ export function initRideCheck(deps){
       if(d.groups.length){
         html+=`<ul class="cc-near-list">`;
         d.groups.forEach(g=>{
-          const meta=catalog().find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
+          const meta=CATALOG.find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
           html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${g.letter}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
           html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-g="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'km {a} · {b} m off', {a:it.alongKm, b:it.distM})}</em></button></li>`).join('');
         });
@@ -161,7 +163,7 @@ export function initRideCheck(deps){
       if(cov.length){
         html+=`<h4 class="cc-near-h">${D.alongTrackCovH||'Open coverage along the track'}</h4><ul class="cc-near-list">`;
         cov.forEach(g=>{
-          const meta=catalog().find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
+          const meta=CATALOG.find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
           html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${g.letter}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
           html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-c="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'km {a} · {b} m off', {a:it.alongKm, b:it.distM})}</em></button></li>`).join('');
         });

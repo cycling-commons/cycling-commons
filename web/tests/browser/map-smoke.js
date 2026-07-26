@@ -136,8 +136,14 @@ globalThis.runMapSmoke = async function runMapSmoke(opts) {
       async run() {
         if (!M()) return 'skip: no __ccMap handle (CC_DEBUG off)';
         if (!window.CC_COVERAGE_URL) return 'skip: coverage tiles off on this instance';
-        // mly-cov is the Mapillary sequence layer, not a coverage-tile layer.
-        const icons = layerIds(/-cov$/).filter(id => id !== 'mly-cov'), heat = layerIds(/-heat$/);
+        // Two other layers end in -cov and are NOT coverage tiles: mly-cov is
+        // the Mapillary sequence line, and ridecheck-cov is ride-check's own
+        // corridor overlay — which only exists after a GPX upload, so counting
+        // it made this checkpoint fail on exactly the logged-in runs that
+        // exercise the most code (36 icons vs 35 heat).
+        const NOT_COVERAGE = ['mly-cov', 'ridecheck-cov'];
+        const icons = layerIds(/-cov$/).filter(id => NOT_COVERAGE.indexOf(id) === -1),
+              heat = layerIds(/-heat$/);
         assert(icons.length, 'no coverage icon layers were added');
         // The Everywhere regression: covHeatFilter() is null there, and addLayer()
         // rejects `filter: null`, so the heat layers vanished silently.
