@@ -42,6 +42,15 @@ export const CATALOG = [
 export const active = new Set(CATALOG.map(l => l.key));   // all layers (incl. K · Recommended routes) on by default
 export const layerByKey = Object.fromEntries(CATALOG.map(l => [l.key, l]));
 
+// A route's drawn path by item id. Lives here rather than with either caller
+// because both picking.js and corrections.js need it and neither owns the
+// catalogue it reads (§9 — a deviation from §4's table, which did not place it).
+export function routePathById(id){
+  const layer=layerByKey['experience']; if(!layer) return null;
+  const f=layer.features.find(x=>String(x.id)===String(id));
+  return f && f.geom && f.geom.path ? f.geom.path : null;
+}
+
 // Towns referenced by routes — each links to a place on the map + a city info card.
 // ll=[lat,lng]; info is a short blurb (in production auto-found from Wikidata/Wikipedia or user-added).
 export const CITIES = {

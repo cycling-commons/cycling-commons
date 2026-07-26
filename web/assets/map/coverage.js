@@ -16,8 +16,10 @@
    lags the region stamping. covScopeFilter()'s own comment carries the full
    rationale.
 
-   The drawer hooks are plain imports now that drawer.js has landed; only the
-   picking session is still injected, until picking.js does (§5 step 6). */
+   Every dep this module once took injected is a plain import now that drawer.js
+   and picking.js have landed (§5 step 6). initCoverage() went with them: it only
+   ever carried the handover, and the side effect is addCoverage(), which the
+   entry still calls from its map 'load' handler. */
 import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
@@ -25,15 +27,7 @@ import { curScope } from './scope-ui.js';
 import { mintWaterDrops, miniIcon, SERVICE_GLYPH, coverageIconId } from './icons.js';
 import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
-
-// Injected by initCoverage() until picking.js exists (see the header). isPicking
-// is a CLOSURE over the entry's live `_pick` session, not a snapshot: a picking
-// session starts and ends long after this handover.
-let isPicking;
-
-export function initCoverage(deps){
-  ({isPicking} = deps);
-}
+import { isPicking } from './picking.js';
 
 // ---- Coverage tiles (coverage-provider.md §6) ----
 // Uncurated OSM coverage renders from ONE PMTiles vector source ('coverage',

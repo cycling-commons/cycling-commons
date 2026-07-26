@@ -14,11 +14,10 @@
    expected and safe (§4.1): every cross-module reference is called at runtime,
    never at module evaluation.
 
-   Three deps are still injected, because their owning modules have not landed
-   (§9): community.js's confirm/vote panels, picking.js's session and
-   corrections.js's teardown. isPicking and bumpPlaceReq are CLOSURES over the
-   entry's live state, not snapshots — a picking session starts long after the
-   handover, and _placeReq is a counter the entry still increments. */
+   Two deps are still injected, because their owning modules have not landed
+   (§9): community.js's confirm/vote panels and corrections.js's teardown.
+   bumpPlaceReq is a CLOSURE over the entry's live _placeReq counter, not a
+   snapshot. */
 import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl } from './util.js';
 import { map } from './map-init.js';
@@ -28,16 +27,16 @@ import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
 import { highlightRoute, clearRouteHighlight } from './render.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
+import { isPicking, cancelPicking } from './picking.js';
 
 // Injected by initDrawer() until their owning modules exist (see the header).
 let CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
-    hydrateItemConfirm, submitModeration, isPicking, cancelPicking, openCity,
-    clearCorrections, bumpPlaceReq;
+    hydrateItemConfirm, submitModeration, openCity, clearCorrections, bumpPlaceReq;
 
 export function initDrawer(deps){
   ({CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
-    hydrateItemConfirm, submitModeration, isPicking, cancelPicking, openCity,
-    clearCorrections, bumpPlaceReq} = deps);
+    hydrateItemConfirm, submitModeration, openCity, clearCorrections,
+    bumpPlaceReq} = deps);
 }
 
 // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —

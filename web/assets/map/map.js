@@ -10,7 +10,8 @@ import { escPend, slug, txtOn, haversine, featurePoint, currentSeason, wc } from
 import { map, initMapControls, addSatellite, flyToPin, styleReady, markStyleReady, initCoordPopup } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
 import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlight.js';
-import { CATALOG, CATALOG_AZ, active, layerByKey, CITIES, cityLink, LETTER_KEY, KEY_LETTER, mode, setMode } from './catalog.js';
+import { CATALOG, CATALOG_AZ, active, layerByKey, CITIES, cityLink, LETTER_KEY, KEY_LETTER,
+         mode, setMode, routePathById } from './catalog.js';
 import { addMapillary, initMapillaryDock, initStreetToggle } from './mapillary.js';
 import { mintWaterDrops, SERVICE_GLYPH, miniIcon, clusterEl, coverageIconId } from './icons.js';
 import { curScope, inScope, scopeLabel, renderScopeChips, applyScope,
@@ -23,26 +24,23 @@ import { sheet, showTip, hideTip, initSheet } from './sheet.js';
 import { initLightbox } from './lightbox.js';
 import { initPlanner } from './planner.js';
 import { PREFS, addHeatmap, updateHeatFilter, boundLayerIds, surfaceClsLayerIds,
-         nearestOnPath, fracToLatLng, sliceByFrac,
+         fracToLatLng, sliceByFrac,
          layerCounts, updateCounts, render, applyStaysAccessFilter, attrMatch,
          chipSet, syncFacetChips, prefFilterEnabled, setPrefFilter, staysAccessible,
          initRender } from './render.js';
 import { COVERAGE_KEYS, COVERAGE_CCS, COVERAGE_ON, covIconFilter, updateCoverageScopeFilter,
          covScopeIsZero, covScopeQuery, syncCoverageLayers, addCoverage, openCoverageByRef,
          widenForDeepLink, openCoverageFeatureByName, fetchCoverageCounts, covShownCount,
-         coverageTotal, invalidateCoverageDrawer,
-         initCoverage } from './coverage.js';
+         coverageTotal, invalidateCoverageDrawer } from './coverage.js';
 import { schemaRows, osmDrawer, mapToast, openDrawer, closeDrawer, highlightAt,
          clearHighlight, revealPinAt, clearRevealPin, initDrawer,
          initDrawerChrome } from './drawer.js';
+import { isPicking, _pickSegs, initPicking } from './picking.js';
 
   // Scope model + rail + header (scope-ui.js). The repaint callbacks are
   // injected because their owning modules are still inside this entry at
   // this point in the split; each becomes a plain import as its module lands.
   initScope({refreshBestOf});
-  // Coverage tiles (coverage.js): a dependency handover, no side effect —
-  // addCoverage() still runs from the map 'load' handler below.
-  initCoverage({isPicking: () => !!_pick});
   // Searchable-item index (item-index.js): the two `go` handlers each entry
   // carries. Built later, from the sidebar-search block.
   initItemIndex({openLocalFeature, openStayPivot});
@@ -348,7 +346,7 @@ import { schemaRows, osmDrawer, mapToast, openDrawer, closeDrawer, highlightAt,
   // a picking session starts long after this line, and _placeReq is a counter.
   initDrawer({CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
               hydrateItemConfirm, submitModeration, openCity, clearCorrections,
-              cancelPicking, isPicking: () => !!_pick, bumpPlaceReq: () => { _placeReq++; }});
+              bumpPlaceReq: () => { _placeReq++; }});
 
   function routeCommunityPanel(id, state){
     const bikeL=I18N.bikes||{};
@@ -489,45 +487,7 @@ import { schemaRows, osmDrawer, mapToast, openDrawer, closeDrawer, highlightAt,
       .catch(err=>{ box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=false); mapToast(err.message==='429'?(D.toastLimit||'Daily limit reached — try again tomorrow.'):(D.toastErr||'Could not record that — please try again.')); });
   }
 
-  // --- Located-correction picking mode (spec §16 S1). Segments captured per
-  // route id, kept until a successful "suggest" POST consumes and clears them. ---
-  const _pickSegs={};   // route id → list<{start,end}> captured for the open suggest form
-  let _pick=null;       // active picking session or null
-
-  // Delegated: the "Mark on map" button starts picking for the drawer's route.
-  document.addEventListener('click', e=>{
-    const mb=e.target.closest('[data-rc-mark]'); if(!mb) return;
-    startPicking(mb.getAttribute('data-rc-mark'));
-  });
-
-  function routePathById(id){
-    const layer=layerByKey['experience']; if(!layer) return null;
-    const f=layer.features.find(x=>String(x.id)===String(id));
-    return f && f.geom && f.geom.path ? f.geom.path : null;
-  }
-
-  function startPicking(routeId){
-    if(_pick) return;   // re-entrancy guard: don't orphan an in-progress session
-    const path=routePathById(routeId); if(!path){ mapToast(D.toastOpenRoute||'Open the route first.'); return; }
-    _pick={ routeId, path, points:[], markers:[], segLayers:[] };
-    document.querySelector('.cc-drawer')?.classList.add('cc-drawer-min');   // minimise so the map is clickable
-    map.getCanvas().style.cursor='crosshair';
-    showPickBar();
-    // click on the route line drops a snapped point
-    map.on('click', pickClick);
-  }
-  function pickClick(e){
-    if(!_pick) return;
-    const snap=nearestOnPath(_pick.path, [e.lngLat.lat, e.lngLat.lng]); if(!snap) return;
-    // ignore clicks far from the line (>~30 m in deg ≈ 3e-4)
-    if(Math.sqrt(snap.d2) > 3e-4) return;
-    _pick.points.push(snap.frac);
-    const n=_pick.points.length;
-    const el=document.createElement('div'); el.className='cc-pick-pin'; el.textContent=String(n);
-    _pick.markers.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([snap.at[1],snap.at[0]]).addTo(map));
-    redrawPickSegments();
-    updatePickBar();
-  }
+  initPicking();   // located-correction stretch picking (picking.js)
   // Click-to-scope (2026-07-22-scope-selector-scale-design.md §C): a left-click
   // on EMPTY map scopes to the region under the point. Feature clicks (coverage
   // POIs/clusters, CATALOG route/climb/line layers, the A-layer surface
@@ -561,7 +521,7 @@ import { schemaRows, osmDrawer, mapToast, openDrawer, closeDrawer, highlightAt,
     return ids.filter(id=>map.getLayer(id));
   }
   map.on('click', async e=>{
-    if(_pick) return;                                    // stretch-picking owns the click
+    if(isPicking()) return;                              // stretch-picking owns the click
     if(map.queryRenderedFeatures(e.point, {layers:selectableLayers()}).length) return;  // a feature layer will handle it
     if(!window.CCScope) return;
     // Precise resolution refines an ambiguous click (2+ overlapping region bboxes)
@@ -576,63 +536,6 @@ import { schemaRows, osmDrawer, mapToast, openDrawer, closeDrawer, highlightAt,
     if(s.kind==='region' && s.regionIds[0]===r.id) return;
     window.CCScope.setRegion(r.slug);   // cc:scopechange -> applyScope + renderScopeChips
   });
-  function redrawPickSegments(){
-    _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
-    _pick.segLayers=[];
-    const pts=_pick.points;
-    for(let i=0;i+1<pts.length;i+=2){
-      const id=`pickseg-${i}`, coords=sliceByFrac(_pick.path, pts[i], pts[i+1]).map(p=>[p[1],p[0]]);
-      map.addSource(id,{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
-      map.addLayer({id,type:'line',source:id,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#FF5A1F','line-width':8,'line-opacity':.9}});
-      _pick.segLayers.push(id);
-    }
-  }
-  function pickSegments(){ // fold the ordered points into {start,end} pairs (drop a lone trailing point)
-    // Normalize start ≤ end regardless of click order (mirrors sliceByFrac's swap) —
-    // the server rejects start > end with 422 invalid_segments.
-    const p=_pick.points, out=[]; for(let i=0;i+1<p.length;i+=2){ const a=p[i], b=p[i+1]; out.push({start:Math.min(a,b), end:Math.max(a,b)}); } return out;
-  }
-  function showPickBar(){
-    let bar=document.getElementById('cc-pickbar');
-    if(!bar){ bar=document.createElement('div'); bar.id='cc-pickbar'; bar.className='cc-pickbar'; document.body.appendChild(bar); }
-    bar.innerHTML=`<span class="cc-pickbar-t"></span>
-      <button data-pick="undo">↶ ${D.undo||'Undo'}</button><button data-pick="clear">${D.clear||'Clear'}</button><button data-pick="done" class="on">${D.done||'Done'}</button>`;
-    bar.hidden=false; updatePickBar();
-    bar.onclick=e=>{ const b=e.target.closest('[data-pick]'); if(!b) return; pickAction(b.dataset.pick); };
-  }
-  function updatePickBar(){
-    const t=document.querySelector('#cc-pickbar .cc-pickbar-t'); if(!t) return;
-    const done=Math.floor(_pick.points.length/2), pending=_pick.points.length%2;
-    t.textContent = pending
-      ? tpl(D.pointSet||'Point {n} set — click the end of this stretch', {n:_pick.points.length})
-      : tpl((done===1?D.barOne:D.barMany)||`{n} stretch${done===1?'':'es'} marked — click to start another, or Done`, {n:done});
-  }
-  function pickAction(a){
-    if(a==='undo'){ _pick.points.pop(); const m=_pick.markers.pop(); if(m) m.remove(); redrawPickSegments(); updatePickBar(); return; }
-    if(a==='clear'){ _pick.points=[]; _pick.markers.forEach(m=>m.remove()); _pick.markers=[]; redrawPickSegments(); updatePickBar(); return; }
-    if(a==='done'){ finishPicking(); }
-  }
-  function finishPicking(){
-    if(!_pick) return;
-    _pickSegs[_pick.routeId]=pickSegments();
-    map.off('click', pickClick); map.getCanvas().style.cursor='';
-    _pick.markers.forEach(m=>m.remove()); _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
-    const rid=_pick.routeId; _pick=null;
-    document.getElementById('cc-pickbar').hidden=true;
-    document.querySelector('.cc-drawer')?.classList.remove('cc-drawer-min');
-    const marks=document.querySelector(`.cc-rc[data-route="${rid}"] [data-rc-marks]`);
-    const n=(_pickSegs[rid]||[]).length; if(marks) marks.textContent = n ? tpl((n===1?D.marksOne:D.marksMany)||`· {n} stretch${n===1?'':'es'} marked`, {n}) : '';
-  }
-  // Tear down an in-progress picking session without committing it to
-  // _pickSegs (used when the drawer itself closes mid-pick — see closeDrawer).
-  function cancelPicking(){
-    if(!_pick) return;
-    map.off('click', pickClick); map.getCanvas().style.cursor='';
-    _pick.markers.forEach(m=>m.remove()); _pick.segLayers.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
-    _pick=null;
-    const bar=document.getElementById('cc-pickbar'); if(bar) bar.hidden=true;
-    document.querySelector('.cc-drawer')?.classList.remove('cc-drawer-min');
-  }
 
   // Delegated click handler for every community button (drawer is re-rendered often).
   document.addEventListener('click', e=>{
