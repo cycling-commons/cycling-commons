@@ -11,6 +11,8 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\RideCheckService;
+use App\Tests\Coverage\CoverageSchema;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -26,6 +28,22 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  */
 final class RideCheckServiceTest extends KernelTestCase
 {
+    use CoverageSchema;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        // Ride-check now reads coverage_poi on every check() (a pipeline-owned
+        // table absent from Doctrine migrations), so the whole class needs it
+        // present — the same in-transaction DDL the coverage read-path tests use.
+        self::ensureCoverageSchema($this->db());
+    }
+
+    private function db(): Connection
+    {
+        return static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+    }
+
     /** GPX 1.1 document from [lat, lng, ?ele] triples. */
     private static function gpx(array $pts): string
     {
@@ -203,5 +221,84 @@ final class RideCheckServiceTest extends KernelTestCase
         // [lat, lng] order, matching every other map payload.
         self::assertEqualsWithDelta(50.4000, $result['track'][0][0], 0.0001);
         self::assertEqualsWithDelta(5.8000, $result['track'][0][1], 0.0001);
+    }
+
+    /** @return list<string> names in the coverage arm, flattened across letters */
+    private static function coverageNames(array $result): array
+    {
+        $out = [];
+        foreach ($result['coverage'] as $group) {
+            foreach ($group['items'] as $item) {
+                $out[] = $item['name'];
+            }
+        }
+
+        return $out;
+    }
+
+    public function testFindsCoverageUtilityPointsInCorridorGroupedAndOrdered(): void
+    {
+        self::ensureCoverageSchema($this->db());
+        // Two water points ~50 m north of the track, early and late along it,
+        // plus one ~5 km north (outside every corridor).
+        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM fountain early', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/cov-early']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'D', 'name' => 'OSM bike pump late', 'lat' => 50.40045, 'lng' => 5.8250, 'ref' => 'node/cov-late']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM far fountain', 'lat' => 50.4450, 'lng' => 5.8150, 'ref' => 'node/cov-far']);
+
+        $result = $this->service()->check(self::ride(), 250);
+
+        self::assertArrayHasKey('coverage', $result);
+        $names = self::coverageNames($result);
+        self::assertContains('OSM fountain early', $names);
+        self::assertContains('OSM bike pump late', $names);
+        self::assertNotContains('OSM far fountain', $names, 'a point outside the corridor is not listed');
+
+        $letters = array_column($result['coverage'], 'letter');
+        $cGroup = $result['coverage'][array_search('C', $letters, true)];
+        $first = $cGroup['items'][0];
+        self::assertSame('OSM fountain early', $first['name']);
+        self::assertEqualsWithDelta(50.40045, $first['ll'][0], 0.0001);
+        self::assertGreaterThan(0.0, $first['alongKm']);
+        self::assertFalse($cGroup['truncated']);
+    }
+
+    public function testCoverageExcludesNonUtilityLetters(): void
+    {
+        self::ensureCoverageSchema($this->db());
+        // E-stay, I-scenic, J-history coverage points right on the track: utility-only.
+        self::insertCoveragePoi($this->db(), ['letter' => 'E', 'name' => 'OSM campsite', 'lat' => 50.4000, 'lng' => 5.8100, 'ref' => 'node/cov-e']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'I', 'name' => 'OSM viewpoint', 'lat' => 50.4000, 'lng' => 5.8150, 'ref' => 'node/cov-i']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'J', 'name' => 'OSM castle', 'lat' => 50.4000, 'lng' => 5.8200, 'ref' => 'node/cov-j']);
+
+        $names = self::coverageNames($this->service()->check(self::ride(), 250));
+        self::assertNotContains('OSM campsite', $names);
+        self::assertNotContains('OSM viewpoint', $names);
+        self::assertNotContains('OSM castle', $names);
+    }
+
+    public function testCoverageDedupsAgainstServedItemButKeepsNonServed(): void
+    {
+        self::ensureCoverageSchema($this->db());
+        // 'node/dup': a served curated item exists for the same ref+letter → the
+        // coverage POI is hidden (curated wins). 'node/keep': the only item for
+        // that ref is retired (not served) → the coverage POI still shows.
+        $this->seedItem('C', 'Curated fountain', self::point(50.40045, 5.8050), 'dup', ItemState::Unverified);
+        $this->seedItem('C', 'Retired fountain', self::point(50.40045, 5.8250), 'keep', ItemState::Retired);
+        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM dup fountain', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/dup']);
+        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM keep fountain', 'lat' => 50.40045, 'lng' => 5.8250, 'ref' => 'node/keep']);
+
+        $result = $this->service()->check(self::ride(), 250);
+        $coverageNames = self::coverageNames($result);
+        self::assertNotContains('OSM dup fountain', $coverageNames, 'a coverage POI matching a served item is deduped away');
+        self::assertContains('OSM keep fountain', $coverageNames, 'a coverage POI whose only item is non-served still shows');
+
+        // The served curated item is still in the curated groups (shown once, as curated).
+        $curatedNames = [];
+        foreach ($result['groups'] as $group) {
+            foreach ($group['items'] as $item) {
+                $curatedNames[] = $item['name'];
+            }
+        }
+        self::assertContains('Curated fountain', $curatedNames);
     }
 }

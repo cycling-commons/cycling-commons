@@ -35,6 +35,14 @@ final class RideCheckService
     public const array ALLOWED_RADII = [100, 250, 500, 1000];
     public const int DEFAULT_RADIUS = 250;
 
+    /**
+     * Utility coverage letters surfaced alongside curated items
+     * (2026-07-26-ride-check-coverage-design.md §2): water/bakery (C), bike
+     * services (D), transport — ferry/train (G), shelter (H). Experiential
+     * E-stays / I-scenic / J-history are left to the curated arm.
+     */
+    public const array COVERAGE_LETTERS = ['C', 'D', 'G', 'H'];
+
     private const int MIN_RAW_M = 500;      // shorter is a click, not a ride
     private const int MAX_RAW_M = 400_000;  // route-domain cap (spec §5.3)
     private const int MAX_PER_LETTER = 200; // payload sanity; flagged as truncated
@@ -62,6 +70,7 @@ final class RideCheckService
      *     ascentM: int|null,
      *     radiusM: int,
      *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>,
+     *     coverage: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>,
      *     routes: list<array{id: int, name: string, sharedKm: float}>
      * }
      *
@@ -94,6 +103,7 @@ final class RideCheckService
             'ascentM' => $this->processor->ascentM($track->points),
             'radiusM' => $radiusM,
             'groups' => $this->corridorGroups($geoJson, $radiusM, $rawM),
+            'coverage' => $this->corridorCoverage($geoJson, $radiusM, $rawM),
             'routes' => $this->followedRoutes($geoJson, $radiusM),
         ];
     }
@@ -124,6 +134,62 @@ final class RideCheckService
             ['geom' => $geoJson, 'radius' => $radiusM],
         );
 
+        return $this->groupByLetter($rows, $rawM);
+    }
+
+    /**
+     * Open `coverage_poi` utility points (C/D/G/H) in the same corridor
+     * (2026-07-26-ride-check-coverage-design.md §3.1), returned as a parallel
+     * arm so the frontend can render them with the smaller coverage icon while
+     * curated items keep their bigger spot icons. Deduped against SERVED curated
+     * items on (source_ref, letter): if a rider already curated this OSM entity,
+     * it is shown once, as the curated pick — never twice.
+     *
+     * Same MATERIALIZED corridor idiom as corridorGroups() (ST_Intersects rides
+     * coverage_poi_geom_idx); coverage_poi and item are co-located on CC's own
+     * cluster, so the dedup NOT EXISTS stays a local join. coverage_poi has no
+     * `state` column (a pipeline cache) — the served filter applies only to the
+     * curated item it is deduped against.
+     *
+     * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>
+     */
+    private function corridorCoverage(string $geoJson, int $radiusM, float $rawM): array
+    {
+        $letters = "'".implode("','", self::COVERAGE_LETTERS)."'";
+        /** @var list<array{id: int|string, letter: string, name: string|null, geom: string, dist_m: string|float, frac: string|float}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
+                  corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
+             SELECT cp.id, cp.letter, cp.name, ST_AsGeoJSON(cp.geom) AS geom,
+                    ST_Distance(cp.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
+                    ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(cp.geom, (SELECT g FROM track))) AS frac
+             FROM coverage_poi cp
+             WHERE cp.letter IN ('.$letters.')
+               AND ST_Intersects(cp.geom, (SELECT b FROM corridor))
+               AND NOT EXISTS (
+                   SELECT 1 FROM item d
+                   WHERE d.source_ref = cp.ref AND d.letter = cp.letter
+                     AND d.state IN '.ItemState::servedSqlTuple().'
+               )
+             ORDER BY frac, cp.id',
+            ['geom' => $geoJson, 'radius' => $radiusM],
+        );
+
+        return $this->groupByLetter($rows, $rawM);
+    }
+
+    /**
+     * Fold corridor rows (id, letter, name, geom, dist_m, frac — already ordered
+     * by along-the-ride fraction) into per-letter groups, capped at
+     * MAX_PER_LETTER with a `truncated` flag, each item anchored to a
+     * renderable [lat, lng]. Shared by the curated and coverage arms.
+     *
+     * @param list<array{id: int|string, letter: string, name: string|null, geom: string, dist_m: string|float, frac: string|float}> $rows
+     *
+     * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>
+     */
+    private function groupByLetter(array $rows, float $rawM): array
+    {
         /** @var array<string, array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}> $groups */
         $groups = [];
         foreach ($rows as $row) {
@@ -141,7 +207,7 @@ final class RideCheckService
             }
             $groups[$letter]['items'][] = [
                 'id' => (int) $row['id'],
-                'name' => $row['name'],
+                'name' => (string) ($row['name'] ?? ''),
                 'll' => $ll,
                 'distM' => (int) round((float) $row['dist_m']),
                 'alongKm' => round((float) $row['frac'] * $rawM / 1000.0, 1),

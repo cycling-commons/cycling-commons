@@ -677,6 +677,18 @@ requirement).
   `ST_Distance` (metres off-track) and
   `ST_LineLocatePoint(track, ST_ClosestPoint(…))` (fraction → km-along, the
   ordering key). Cap `MAX_PER_LETTER = 200` per letter with a `truncated` flag.
+- **Coverage arm (open POIs along the ride)** — a parallel `coverage` result
+  (`RideCheckService::corridorCoverage()`, design
+  `2026-07-26-ride-check-coverage-design.md`) runs the *same* MATERIALIZED
+  corridor over `coverage_poi`, limited to utility letters
+  `COVERAGE_LETTERS = {C, D, G, H}` (water, bike services, transport, shelter).
+  **Deduped against served curated items** on `(source_ref, letter)` — if a
+  rider already curated an OSM entity it shows once, as the curated pick, never
+  in both arms. `coverage_poi` and `item` are co-located on CC's own cluster, so
+  the dedup stays a local join. Same grouping/ordering/`MAX_PER_LETTER` shape as
+  the curated arm (shared `groupByLetter()`); the frontend renders coverage with
+  the smaller coverage icon so curated (bigger spot) vs open-coverage stay
+  visually distinct.
 - **Route-overlap "follows" floor:**
   `max(ROUTE_MIN_OVERLAP_BASE_M = 300, 2·radius + 100)` m of shared length —
   a fixed 300 m fails at larger radii, where a mere perpendicular crossing
