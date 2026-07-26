@@ -279,7 +279,7 @@ and the truncation note.
 
 ## 9. Execution progress (2026-07-26)
 
-`map.js` is **4,060 → 2,504 lines**, with thirteen modules beside it. Every
+`map.js` is **4,060 → 1,989 lines**, with sixteen modules beside it. Every
 commit below was browser-verified with the §6 sweep before the next began; the
 tree is clean and nothing is pushed.
 
@@ -305,12 +305,18 @@ tree is clean and nothing is pushed.
 | `567522f` | step 4c — `osm-pools.js` |
 | `2fe3ba1` | step 4d — `coverage.js`, **plus the `make map-refs` gate** (see below) |
 | `8eafcce` | step 5a — `item-index.js`; ride-check drops four injected deps |
+| `c7548e5` | step 5b — `render.js`, **plus two latent ReferenceErrors it exposed** |
+| `7aa1cc4` | step 6 (partial) — `sheet.js`, `lightbox.js` |
 
 ### Not yet extracted
 
-`render.js`, `drawer.js`, `community.js`, `picking.js`, `corrections.js`,
-`places.js`, `lightbox.js`, `sheet.js`, `search-ui.js`, `panels.js`,
-`planner.js`.
+`drawer.js`, `community.js`, `picking.js`, `corrections.js`, `places.js`,
+`search-ui.js`, `panels.js`, `planner.js`.
+
+`drawer.js` is the one to do next: it retires more scaffolding than any other
+remaining module (`openDrawer`, `renderDrawerBody`, `osmDrawer`, `waterDrawer`,
+`closeDrawer`, `revealPinAt`, `highlightAt`, `clearHighlight`, `photoCap` are
+injected into five modules between them).
 
 ### The scaffolding still to unwind
 
@@ -320,16 +326,27 @@ Every entry disappears when its owning module lands — that is the checklist fo
 
 | module | still injected | lands with |
 |---|---|---|
-| `scope-ui.js` | `updateHeatFilter`, `render`, `refreshBestOf` | `render.js`, `panels.js` |
-| `osm-pools.js` | `openDrawer`, `osmDrawer`, `waterDrawer`, `showTip`, `hideTip`, `staysAccessible` | `drawer.js`, `sheet.js`, `render.js` |
-| `coverage.js` | `openDrawer`, `renderDrawerBody`, `osmDrawer`, `waterDrawer`, `revealPinAt`, `showTip`, `hideTip`, `updateCounts`, `applyStaysAccessFilter`, `isPicking` | `drawer.js`, `sheet.js`, `render.js`, `picking.js` |
+| `scope-ui.js` | `refreshBestOf` | `panels.js` |
+| `osm-pools.js` | `openDrawer`, `osmDrawer`, `waterDrawer` | `drawer.js` |
+| `coverage.js` | `openDrawer`, `renderDrawerBody`, `osmDrawer`, `waterDrawer`, `revealPinAt`, `isPicking` | `drawer.js`, `picking.js` |
 | `item-index.js` | `openLocalFeature`, `openStayPivot` | `places.js` |
-| `ride-check.js` | `closeDrawer`, `openRouteById`, `highlightAt`, `clearHighlight`, `resetSheet`, `invalidateAsyncDrawers` | `drawer.js`, `places.js`, `sheet.js` |
+| `render.js` | `openDrawer`, `openLocalFeature` | `drawer.js`, `places.js` |
+| `sheet.js` | `closeDrawer` | `drawer.js` |
+| `lightbox.js` | `closeDrawer`, `photoCap` | `drawer.js` |
+| `ride-check.js` | `closeDrawer`, `openRouteById`, `highlightAt`, `clearHighlight`, `invalidateAsyncDrawers` | `drawer.js`, `places.js` |
 
-Two injections are deliberately CLOSURES, not values, and must stay that way:
-`staysAccessible` reads the accessibility chip set, which is reassigned on every
-chip click, and `isPicking` reads a picking session that starts long after the
-handover. Passing either by value freezes it at boot.
+One injection is deliberately a CLOSURE, not a value, and must stay that way:
+`isPicking` reads a picking session that starts long after the handover, so
+passing it by value freezes it at boot. `staysAccessible` used to be the second;
+it is now an exported predicate from `render.js` for the same reason — the
+accessibility chip set behind it is reassigned on every chip click, so exporting
+the Set itself would hand importers a stale snapshot.
+
+Three bindings cross module lines through setters rather than exports, because
+an ES module import is a read-only binding and the writer is on the other side:
+`render.js`'s chip facets (`syncFacetChips()`), its preference toggle
+(`prefFilterEnabled()` / `setPrefFilter()`), and `item-index.js`'s two indexes
+(`rebuildItemIndex()` / `dropPendingFromIndex()`).
 
 ### The recipe, for whoever continues
 
@@ -360,11 +377,23 @@ is invisible to every check that only looks at the page.
 Three things now catch it:
 
 - **`make map-refs`** (`web/tests/browser/check-module-refs.py`) fails if any
-  module still references a binding `map.js` owns. Run it before the browser.
-  Its own first version reported "clean" on the known-bad tree, because it
-  stripped `'single quotes'` before template literals and an apostrophe inside a
-  template swallowed every declaration in between; the ordering is now fixed and
-  the reason is in its docstring.
+  module references a binding `map.js` either owns **or imports**. Run it before
+  the browser. It took four rounds to become trustworthy, and every round was
+  paid for by a bug that reached the browser first — so treat a "clean" from it
+  as necessary, never sufficient:
+  1. it stripped `'single quotes'` before template literals, so an apostrophe
+     inside a template swallowed every declaration in between and it reported
+     clean on a tree with six live ReferenceErrors;
+  2. it compared only against bindings the entry DECLARES, missing everything
+     the entry merely IMPORTS — which is how `styleReady` (map-init.js → used by
+     render.js → imported by neither) got through;
+  3. it blanked template literals as inert text, but nearly every panel here
+     builds HTML as `` `...${escPend(x)}...` ``, so every `${}` expression in the
+     codebase was invisible to it — that shipped `escPend is not defined` in
+     lightbox.js;
+  4. object-literal keys (`{D:'services'}`), function parameters
+     (`setSpotlight(slug)`) and multi-name declarations (`const S=2, D=24*S`)
+     each produced false positives that had to be excluded.
 - **the sweep runner collects console + pageerror output** and folds it into
   `ok`, so a red console can no longer read as a green sweep.
 - **run the sweep logged in, with a GPX uploaded.** Anonymously, three
@@ -376,6 +405,23 @@ Three things now catch it:
 
 Logged in the sweep is 15 passed / 0 failed / 1 skipped; the remaining skip is
 "no route lines drawn", which depends on the active scope.
+
+### What the sweep still does not cover
+
+Worth knowing before trusting a green run. Each of these was exercised by hand
+this session, and each is a candidate checkpoint:
+
+- **the lightbox** — no checkpoint at all, despite being listed in §6. Verified
+  manually (opens from a drawer photo, closes on Escape). Arrow stepping is
+  still unverified: the reachable feature had one photo, where stepping is a
+  no-op by design.
+- **Mapillary** — no checkpoint, which is why `mapillary.js` carried an
+  unimported `I18N` from `04f1618` until this session. Any rider opening
+  street-level imagery would have hit it.
+- **the mobile snap sheet** — never entered; the sweep runs at desktop width.
+- **confirmed-pin clusters** — the pin checkpoint does not distinguish a cluster
+  leaf from a curated marker. Checked by hand under a Wallonia scope at z11 (32
+  bubbles, 41 leaf pins).
 
 ### Two things the split did not cause but did surface
 
