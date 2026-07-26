@@ -18,7 +18,10 @@
    devtools console); a green sweep with a red console is a FAILED sweep.
 
    Auth: checkpoints tagged `auth:true` need a logged-in rider (ride-check is a
-   riders-only control). Anonymously they report `skipped`, not `failed`. */
+   riders-only control). Anonymously they report `skipped`, not `failed`. On the
+   dev stack, log in as the `make setup` demo rider — user@example.test /
+   password1234, ROLE_USER with no 2FA — then upload a GPX before running the
+   sweep, since the coverage checkpoint reads an already-loaded result. */
 
 globalThis.runMapSmoke = async function runMapSmoke(opts) {
   const only = (opts && opts.only) || null;

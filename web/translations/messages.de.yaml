@@ -1188,6 +1188,8 @@ map:
   d_ride_follows: 'Deine Tour folgt'
   d_km_shared: '{n} km gemeinsam'
   d_along_track_h: 'In den Commons entlang des Tracks'
+  d_along_track_cov_h: 'Offene Daten entlang des Tracks'
+  d_cov_arm_note: 'Aus offenen Daten — noch nicht von Radfahrenden geprüft.'
   d_capped: '(begrenzt)'
   d_km_off: 'km {a} · {b} m entfernt'
   d_nothing_within: 'Noch nichts in den Commons im Umkreis von {r} dieser Tour.'

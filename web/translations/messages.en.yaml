@@ -1358,6 +1358,8 @@ map:
   d_ride_follows: 'Your ride follows'
   d_km_shared: '{n} km shared'
   d_along_track_h: 'In the Commons along the track'
+  d_along_track_cov_h: 'Open coverage along the track'
+  d_cov_arm_note: 'From open data — not yet checked by a rider.'
   d_capped: '(capped)'
   d_km_off: 'km {a} · {b} m off'
   d_nothing_within: 'Nothing in the Commons within {r} of this ride yet.'

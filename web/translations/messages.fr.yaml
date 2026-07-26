@@ -1188,6 +1188,8 @@ map:
   d_ride_follows: 'Votre parcours suit'
   d_km_shared: '{n} km en commun'
   d_along_track_h: 'Dans les Commons le long de la trace'
+  d_along_track_cov_h: 'Données ouvertes le long de la trace'
+  d_cov_arm_note: 'Issu de données ouvertes — pas encore vérifié par un cycliste.'
   d_capped: '(plafonné)'
   d_km_off: 'km {a} · à {b} m'
   d_nothing_within: 'Rien dans les Commons à moins de {r} de ce parcours pour l''instant.'

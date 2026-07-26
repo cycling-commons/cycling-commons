@@ -1188,6 +1188,8 @@ map:
   d_ride_follows: 'Je rit volgt'
   d_km_shared: '{n} km gedeeld'
   d_along_track_h: 'In de Commons langs de track'
+  d_along_track_cov_h: 'Open data langs de track'
+  d_cov_arm_note: 'Uit open data — nog niet gecontroleerd door een fietser.'
   d_capped: '(afgekapt)'
   d_km_off: 'km {a} · {b} m ernaast'
   d_nothing_within: 'Nog niets in de Commons binnen {r} van deze rit.'

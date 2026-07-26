@@ -447,6 +447,10 @@
   .cc-near-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cc-near em{font-style:normal;font-family:var(--mono);font-size:.62rem;color:rgba(239,230,212,.55);flex:none}
   .cc-near-empty{color:rgba(239,230,212,.5);font-size:.88rem;padding:.4rem 0}
+  /* provenance line under the ride-check coverage section: these rows are
+     uncurated OSM, and must not read as verified Commons picks
+     (2026-07-26-ride-check-coverage-design.md §3.3) */
+  .cc-near-note{margin-top:.5rem;color:rgba(239,230,212,.45);font-family:var(--mono);font-size:.6rem;letter-spacing:.05em}
   /* per-layer group header in the place card's nearby list (spec 2026-07-14 §3.3) */
   .cc-near-grp{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding:.25rem 0;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
   .cc-comm-tag{margin-left:.45rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.5);border:1px solid rgba(239,230,212,.22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}

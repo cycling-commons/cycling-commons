@@ -185,6 +185,8 @@ final class MapController extends AbstractController
             'alongRide' => 'd_along_ride', 'rideMeta' => 'd_ride_meta', 'clearRide' => 'd_clear_ride',
             'rideFollows' => 'd_ride_follows', 'kmShared' => 'd_km_shared', 'alongTrackH' => 'd_along_track_h',
             'capped' => 'd_capped', 'kmOff' => 'd_km_off', 'nothingWithin' => 'd_nothing_within',
+            // Ride-check coverage arm (2026-07-26-ride-check-coverage-design.md §3.3).
+            'alongTrackCovH' => 'd_along_track_cov_h', 'covArmNote' => 'd_cov_arm_note',
             'noMatch' => 'd_no_match', 'places' => 'd_places',
             'scopes' => 'd_scopes', 'wholeCountry' => 'd_whole_country', 'region' => 'd_region',
             // Contextual scope-chip overflow (2026-07-22-scope-selector-scale-design.md
