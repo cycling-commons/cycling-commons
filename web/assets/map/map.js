@@ -7,6 +7,7 @@
    the catalog fetch has populated the CC_* globals this file reads. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, DIFF_LABELS, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversine, featurePoint, currentSeason, ccUrl, wc } from './util.js';
+import { map, initMapControls, addSatellite, flyToPin, styleReady, markStyleReady, initCoordPopup } from './map-init.js';
 
   const PREFS = window.CC_PREFS || {bikes: [], styles: []};
   // Region scope (region-scoping-design.md §4 / §7 Phase 2): the area the map +
@@ -52,41 +53,8 @@ import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversin
   // bumped on every openDrawer() call so a slow response from a since-replaced
   // drawer never paints stale history over whatever is open now.
   let _historyReq = 0;
-  const _scopeBb = window.CCScope ? window.CCScope.bbox() : null;
-  const map = new maplibregl.Map({
-    container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
-    // Initial viewport = the active scope's bbox (Wallonia by default; a saved
-    // Flanders/Brussels scope reopens there). Everywhere has NO bbox (null), so
-    // it — like a missing registry — opens on the old hardcoded Wallonia
-    // literal: a deliberate anchor view, not a scope (review 07-20 info c).
-    bounds: _scopeBb ? [[_scopeBb[0],_scopeBb[1]],[_scopeBb[2],_scopeBb[3]]] : [[2.84,49.45],[6.41,50.85]],
-    fitBoundsOptions:{padding:24}, attributionControl:false
-  });
-  // Non-prod test handle. web/tests/browser/map-smoke.js (the checkpoint sweep of
-  // 2026-07-26-map-js-module-split-design.md §6) runs as a page script and has no
-  // other way to reach the MapLibre instance, so it cannot assert on layers,
-  // sources or filters — the exact things a module split can silently break.
-  // Gated on CC_DEBUG, which templates/map/index.html.twig emits only when
-  // app.environment is not 'prod', so production ships no handle at all.
-  if(window.CC_DEBUG) window.__ccMap = map;
-  map.addControl(new maplibregl.AttributionControl({customAttribution:'© OpenStreetMap contributors · ODbL'}),'bottom-right');
-  map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
-  // Live zoom readout — a MapLibre control so it stacks above the nav control
-  // (bottom-left) with the framework's own positioning, no absolute-layout
-  // guesswork. Useful context now that the scope selector fits to region/country
-  // bboxes at different zooms (e.g. All Belgium ~z7, at the coverage minzoom 6).
-  map.addControl({
-    onAdd(m){
-      const d=document.createElement('div');
-      d.className='maplibregl-ctrl zoom-badge';
-      d.setAttribute('aria-hidden','true');   // decorative; the value is not actionable AT/via keyboard
-      const upd=()=>{ d.textContent='z'+m.getZoom().toFixed(1); };
-      m.on('zoom', upd); upd();
-      this._d=d; this._upd=upd; this._m=m;
-      return d;
-    },
-    onRemove(){ this._m.off('zoom', this._upd); this._d.remove(); },
-  },'bottom-left');
+
+  initMapControls();
 
   // Region spotlight — dim everything OUTSIDE the active named region + a dashed
   // outline (region-scoping-design.md §4). Served from our own DB via the
@@ -391,14 +359,6 @@ import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversin
     } else {
       render();                                 // initial paint — climbs/routes/surface via featureVisible / renderSurfaceLayer
     }
-  }
-  // optional satellite base — Esri World Imagery (added below the data layers, hidden by default)
-  function addSatellite(){
-    if(map.getSource('satellite')) return;
-    map.addSource('satellite',{type:'raster',tileSize:256,
-      tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-      maxzoom:19, attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
-    map.addLayer({id:'satellite',type:'raster',source:'satellite',layout:{visibility:'none'}});
   }
   // seasonal ride-heatmap (illustrative — built from sample GPX rides, served as catalog.json's L layer).
   // Built LAZILY on the first heatmap-On click (review W43): ~6,600 features
@@ -1271,8 +1231,7 @@ import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversin
         openCoverageByRef(hit.ref, hit.letter, hit.ll, hit.n);
       });
   }
-  let _styleReady=false;   // flipped in the 'load' handler below; render() no-ops until then
-  map.on('load',()=>{ _styleReady=true; addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
+  map.on('load',()=>{ markStyleReady(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     // renderScopeChips() must wait until here (not right after CCScope.init near
     // the top of the file): it reads `curScope`, a const declared BELOW that call
@@ -1330,19 +1289,7 @@ import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversin
     if(rp) openRouteById(rp);
   });
 
-  // right-click anywhere → show + copy the coordinates (for defining start/end points, add-a-climb, etc.)
-  // ONE reusable popup (review W11: a new Popup per contextmenu accumulated in
-  // the DOM and repositioned on every map move for the whole session), and the
-  // label only claims "copied" when the clipboard write actually resolved
-  // (review W37: insecure context / denied permission / unfocused doc all fail).
-  let _coordPopup=null;
-  map.on('contextmenu', e=>{
-    const c = `${e.lngLat.lat.toFixed(6)}, ${e.lngLat.lng.toFixed(6)}`;
-    if(!_coordPopup) _coordPopup=new maplibregl.Popup({closeButton:true,className:'pop'});
-    const label=ok=>_coordPopup.setHTML(`<div class="pop"><div class="pop-co">Coordinates${ok?' · copied':' — select to copy'}</div>${c}</div>`);
-    label(false); _coordPopup.setLngLat(e.lngLat).addTo(map);
-    if(navigator.clipboard) navigator.clipboard.writeText(c).then(()=>label(true)).catch(()=>{});
-  });
+  initCoordPopup();
 
   // curator keyboard: A approve / R reject when a pending drawer is open — plain
   // keys only (never on Ctrl/Cmd/Alt combos, e.g. Ctrl+R reload). Pressing a key
@@ -2009,15 +1956,12 @@ import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversin
       if(el) el.textContent=`${c.shown}/${c.total}`;
     });
   }
-  function flyToPin(lngLat){   // centre + slow zoom-in on click; offset left so the drawer doesn't cover it
-    map.flyTo({center:lngLat, zoom:Math.max(map.getZoom(),14), offset:[-150,0], duration:1700, essential:true});
-  }
   function render(){
     // Style-load race (surfaced by the consolidated A-source, C3): the initial
     // best-of fetch can resolve BEFORE map 'load', and addSource/addLayer throw
     // on a not-yet-loaded style. Skip early calls — the 'load' handler runs
     // render() itself, and it sees all state mutated so far (f.cur, mode, …).
-    if(!_styleReady) return;
+    if(!styleReady()) return;
     markers.forEach(m=>m.remove()); markers=[];
     clearDynamic();
     // Community tier (07-15 decision B): utility coverage draws lightly in
