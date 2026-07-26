@@ -279,7 +279,7 @@ and the truncation note.
 
 ## 9. Execution progress (2026-07-26)
 
-`map.js` is **4,060 → 1,989 lines**, with sixteen modules beside it. Every
+`map.js` is **4,060 → 1,948 lines**, with seventeen modules beside it. Every
 commit below was browser-verified with the §6 sweep before the next began; the
 tree is clean and nothing is pushed.
 
@@ -307,16 +307,35 @@ tree is clean and nothing is pushed.
 | `8eafcce` | step 5a — `item-index.js`; ride-check drops four injected deps |
 | `c7548e5` | step 5b — `render.js`, **plus two latent ReferenceErrors it exposed** |
 | `7aa1cc4` | step 6 (partial) — `sheet.js`, `lightbox.js` |
+| `dd8fcef` | step 7 (partial) — `planner.js` |
 
 ### Not yet extracted
 
 `drawer.js`, `community.js`, `picking.js`, `corrections.js`, `places.js`,
-`search-ui.js`, `panels.js`, `planner.js`.
+`search-ui.js`, `panels.js`.
 
-`drawer.js` is the one to do next: it retires more scaffolding than any other
-remaining module (`openDrawer`, `renderDrawerBody`, `osmDrawer`, `waterDrawer`,
-`closeDrawer`, `revealPinAt`, `highlightAt`, `clearHighlight`, `photoCap` are
-injected into five modules between them).
+**`drawer.js` is next**, and it is the keystone: `openDrawer`,
+`renderDrawerBody`, `osmDrawer`, `waterDrawer`, `closeDrawer`, `revealPinAt`,
+`highlightAt`, `clearHighlight` and `photoCap` are injected into seven modules
+between them, so almost every remaining deps object empties out with it.
+
+It is also the hardest cut so far, because it is **not one contiguous range**.
+As of `dd8fcef` its parts sit at (verify the boundary lines before cutting —
+these shift with every commit):
+
+| lines | what |
+|---|---|
+| 51-54 + `schemaRows`, `osmDrawer`, `waterDrawer` | up to, but NOT including, the `_placeReq` comment block |
+| `photoList` … `loadItemHistory` | photo helpers, `buildRecord`, the item-history fetch |
+| `mapToast` | one small function, sandwiched between community and picking code |
+| `gradStrip`, `elevSvg`, `renderDrawerBody`, `openDrawer` | ends where `openPlace` begins |
+| `highlightAt` … `revealPinAt`, `closeDrawer` | the marker helpers and the teardown |
+
+Two traps in that layout. `_historyReq` and `_placeReq` are declared next to
+each other under one shared comment, but only `_historyReq` belongs to the
+drawer — `_placeReq` goes to `places.js`, exactly as `_covReq` was split out in
+`2fe3ba1`. And `closeDrawer` tears down a picking session, so it will need
+`picking.js`'s state injected until that module lands.
 
 ### The scaffolding still to unwind
 
