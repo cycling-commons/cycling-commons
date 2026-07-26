@@ -1,23 +1,13 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-  // §13: shared HTML-escaper for real (user-authored) pending-submission text —
-  // stored-XSS-in-curator-session risk now that submissions come from real users.
-  const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  // Defense-in-depth for interpolated hrefs. A stay's user-editable `web`
-  // attribute reaches r.links[].href and is interpolated into <a href="…">;
-  // the server-side Url constraint (App\Form\CatalogFieldConstraints) is the
-  // primary guard, but this also neutralises any pre-fix `javascript:`/`data:`
-  // value already persisted. Allow only http(s) and site-relative URLs, then
-  // attribute-escape; anything else collapses to '#' (review 2026-07-07, #3).
-  const safeHref = u => { const s = String(u ?? '').trim(); return (/^https?:\/\//i.test(s) || (s.startsWith('/') && !s.startsWith('//'))) ? escPend(s) : '#'; };
-  // C1-T4 (spec W6): every served feature now carries `srcType` — the item's
-  // real ItemSource enum value (osm/pivot/wikidata/auto/user/manual), from
-  // CatalogProvider. This maps it to the plain-English label shown on the
-  // drawer's "Source ·" line, so a rider-added/edited item never reads as
-  // OpenStreetMap just because it happens to live in a bulk-OSM layer.
-  // Locale bundle injected by the map shell (MapController::mapI18n via
-  // window.CC_I18N); every lookup keeps its English fallback so map.js still
-  // works standalone. `D` is the drawer namespace; tpl() fills {name} slots.
-  const I18N = window.CC_I18N || {};
+/* Map entry module. Being split into focused modules under web/assets/map/ —
+   see docs/specs/2026-07-26-map-js-module-split-design.md for the target layout
+   and the rules (§4.1 cycles, §4.2 side effects belong to the entry).
+
+   Loaded as an ES module: catalog-load.js injects it with type="module" once
+   the catalog fetch has populated the CC_* globals this file reads. */
+import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, DIFF_LABELS, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
+import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversine, featurePoint, currentSeason, ccUrl, wc } from './util.js';
+
   const PREFS = window.CC_PREFS || {bikes: [], styles: []};
   // Region scope (region-scoping-design.md §4 / §7 Phase 2): the area the map +
   // search filter to, owned by window.CCScope (scope.js). Registry injected by
@@ -58,20 +48,6 @@
   // Coverage TILES scope through covScopeFilter()/covScopeQuery() instead
   // (Phase 3) — with the inverse prop-less rule, since the tile artifact lags.
   const inScope = rid => { const s = curScope(); return !s || s.kind === 'everywhere' || s.regionIds.indexOf(rid) !== -1; };
-  const LAYER_L10N = I18N.layers || {};
-  const D = I18N.d || {};
-  const tpl = (s, vars) => String(s).replace(/\{(\w+)\}/g, (m, k) => vars[k] != null ? vars[k] : m);
-  // Canonical stored value → localized label, merged over every field's
-  // choices map (CC_FIELD_SCHEMA) — for values rendered outside schemaRows
-  // (headlines, difficulty badge, surface mix). Per-field lookups stay exact.
-  const VALUE_TR = {};
-  Object.values(window.CC_FIELD_SCHEMA || {}).forEach(fs => (fs || []).forEach(f => { if (f.choices) Object.assign(VALUE_TR, f.choices); }));
-  const trVal = v => VALUE_TR[v] || v;
-  const SOURCE_LABELS = {
-    osm:'OpenStreetMap', pivot:'Tourisme Wallonie (CC-BY)', wikidata:'Wikidata',
-    auto:D.srcAuto||'Derived by the pipeline', user:D.srcRider||'Rider-contributed', manual:D.srcRider||'Rider-contributed'
-  };
-  const sourceLabel = raw => SOURCE_LABELS[raw] || null;
   // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
   // bumped on every openDrawer() call so a slow response from a since-replaced
   // drawer never paints stale history over whatever is open now.
@@ -632,8 +608,6 @@
   // machinery (setupConfClusters/updateConfMarkers) and the per-layer drawer
   // source strings osmDrawer() falls back to.
   const osmLayers = {};
-  // Star glyphs for 1-5 ratings, shared by schemaRows' 'rating' kind.
-  const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
   // Registry-driven attribute rows (spec: 2026-07-13-registry-driven-drawer-fields).
   // CC_FIELD_SCHEMA[letter] is the server's per-type display-field list
   // [{key,label,kind}] with labels already localised. For each field: a value
@@ -1396,15 +1370,6 @@
     if(e.key==='r'||e.key==='R'){ e.preventDefault(); arm('reject'); }
   });
 
-  // Wikimedia Commons photo helper — builds sm/lg via Special:FilePath (stable, no hash needed)
-  // from a verified File name (without the "File:" prefix). user = Commons username for the profile link.
-  const wc = (file, credit, user, license) => {
-    const enc = encodeURIComponent(file), page = file.replace(/ /g,'_');
-    return { sm:`https://commons.wikimedia.org/wiki/Special:FilePath/${enc}?width=520`,
-             lg:`https://commons.wikimedia.org/wiki/Special:FilePath/${enc}?width=1400`,
-             credit, creditUrl: user ? `https://commons.wikimedia.org/wiki/User:${user.replace(/ /g,'_')}` : '',
-             license, source:`https://commons.wikimedia.org/wiki/File:${page}` };
-  };
   // One real, verified Ardennes example per catalog type (A–K). geom.ll = [lat,lng].
   // record[] rows render in the detail drawer; omit any attribute we cannot verify.
   const CATALOG = [
@@ -1467,11 +1432,6 @@
   // pass RIDE_CITIES constants — if a payload value ever reaches this, it
   // must not break out of the attribute or element context.
   const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;
-  // distance (km) between [lat,lng] points; a feature's representative point for radius search
-  function haversine(a,b){ const R=6371,d=Math.PI/180;
-    const x=Math.sin((b[0]-a[0])*d/2)**2 + Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin((b[1]-a[1])*d/2)**2;
-    return 2*R*Math.asin(Math.sqrt(x)); }
-  function featurePoint(f){ return (f.geom&&f.geom.ll) || (f.route&&f.route[0]) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
   // ---- Unified searchable-item index (spec 2026-07-14 §3.1) ----
   // Every curated/DB-backed item exactly once: CATALOG features (curated:
   // climbs, hazards, routes, curator-pending) then PIVOT stays. Search and
@@ -1725,30 +1685,6 @@
     dynamicIds.length=0;
   }
   // draw a polyline with a light casing so it stays visible over the tinted basemap
-  const gradColor=p=> p<5?'#D9A6F2':p<8?'#B25BE8':p<12?'#8A2BD0':p<16?'#5E18A0':'#3A0A66';   // purple, wide light→dark range
-  // difficulty scale 1–5 — same light→dark purple ramp as the climb gradient, so it reads as "climb-coloured"
-  const DIFF_LABELS=['','Easy','Moderate','Challenging','Hard','Very hard'].map(l=>l?trVal(l):l);
-  const DIFF_PURPLE=['','#D9A6F2','#B25BE8','#8A2BD0','#5E18A0','#3A0A66'];
-  // slug for edit-registry ids — must match the keys authored in edit-items.js (diacritics stripped)
-  const slug = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  // map a licence label to its canonical deed URL (the image source itself links separately)
-  const ccUrl = lic => ({
-    'CC0':'https://creativecommons.org/publicdomain/zero/1.0/',
-    'Public domain':'https://en.wikipedia.org/wiki/Public_domain',
-    'CC BY 4.0':'https://creativecommons.org/licenses/by/4.0/',
-    'CC BY 3.0':'https://creativecommons.org/licenses/by/3.0/',
-    'CC BY 2.0':'https://creativecommons.org/licenses/by/2.0/',
-    'CC BY-SA 4.0':'https://creativecommons.org/licenses/by-sa/4.0/',
-    'CC BY-SA 3.0':'https://creativecommons.org/licenses/by-sa/3.0/',
-    'CC BY-SA 3.0 lu':'https://creativecommons.org/licenses/by-sa/3.0/lu/',
-    'CC BY-SA 2.5':'https://creativecommons.org/licenses/by-sa/2.5/',
-    'CC BY-SA 2.0':'https://creativecommons.org/licenses/by-sa/2.0/'
-  }[lic] || 'https://commons.wikimedia.org/wiki/Commons:Licensing');
-  // readable text colour on a coloured chip: white on dark backgrounds (e.g. purple), ink on light
-  function txtOn(hex){
-    const h=hex.replace('#',''); const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
-    return (0.299*r+0.587*g+0.114*b)/255 < 0.58 ? '#fff' : '#101E16';
-  }
   // climb line coloured by gradient (line-gradient over the route)
   function drawClimbLine(id, latlngs, grad, layer, f){
     if(!map.getSource(id)) map.addSource(id,{type:'geojson',lineMetrics:true,data:{type:'Feature',properties:{},
@@ -3754,9 +3690,6 @@
   // facet, fetched from /map/best-of; the returned ids get cur:true and Curated
   // filters K routes to them. A named-region scope now sends &region= too
   // (region-scoping-design.md §6 / §7 Phase 2).
-  const CC_SEASON_LABEL=Object.assign({spring:'Spring',summer:'Summer',autumn:'Autumn',winter:'Winter'}, I18N.seasons||{});
-  const CC_BIKE_LABEL=I18N.bikes||{};
-  function currentSeason(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter'; }
   let boSeason=currentSeason(), boBike='all';
 
   function updateSubtitle(){

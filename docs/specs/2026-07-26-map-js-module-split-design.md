@@ -27,11 +27,12 @@ explicitly deferred the general split. This is that split.
 ## 2. Owner decisions (2026-07-26)
 
 - **ES modules via AssetMapper**, not the `window.CC*` IIFE idiom `scope.js` and
-  `scope-chips.js` use. Relative imports inside `assets/` are rewritten *and
-  validated* by AssetMapper (`missing_import_mode: strict`), so a mistyped
-  import is a build error rather than a runtime 404 — a check classic scripts
-  cannot give. Thirteen-plus `window.CC*` namespaces with implicit load ordering
-  would be the monolith with extra steps.
+  `scope-chips.js` use. Modules give real encapsulation and an explicit
+  dependency graph; thirteen-plus `window.CC*` namespaces with implicit load
+  ordering would be the monolith with extra steps. AssetMapper resolves each
+  relative import against the asset map and, under `missing_import_mode:
+  strict`, refuses to compile one it cannot find — see §3.1 for what it does
+  with the ones it can.
 - **Owner modules with setters, not one shared `ctx` object.** Shared mutable
   state (`mode`, `markers`, `ITEM_INDEX`, `active`, …) lives in the module that
   owns it and is mutated through exported functions. A `ctx` bag would let any
@@ -44,12 +45,13 @@ explicitly deferred the general split. This is that split.
 
 ## 3. What changes in the load model
 
-Three edits, nothing more:
+Four edits, nothing more:
 
 | file | today | after |
 |---|---|---|
 | `web/assets/map/catalog-load.js` | `s = createElement('script'); s.src = CC_MAP_SRC` | the same, plus `s.type = 'module'` |
-| `web/templates/map/index.html.twig` | `<link rel="preload" as="script">` | `<link rel="modulepreload">` |
+| `web/importmap.php` | `app`, `admin_confirm` | plus a `map` entry (**not** an entrypoint) |
+| `web/templates/map/index.html.twig` | `<link rel="preload" as="script">` | `{{ importmap([], {nonce: csp_nonce()}) }}` + `<link rel="modulepreload">` |
 | `web/assets/map/map.js` | 4,060-line body | ~130-line entry: imports + the boot sequence |
 
 Everything else stays: the catalog fetch still gates execution, `scope.js` /
@@ -57,14 +59,33 @@ Everything else stays: the catalog fetch still gates execution, `scope.js` /
 the `CC_*` globals remain the injection contract.
 
 No CSP change is needed. `script-src` is `'self' 'nonce-…' https://unpkg.com`
-(`src/EventSubscriber/CspSubscriber.php`), and module scripts served from
-`/assets/` are same-origin.
+(`src/EventSubscriber/CspSubscriber.php`); module scripts served from `/assets/`
+are same-origin, and the inline importmap block carries `csp_nonce()`.
 
-No importmap entry is needed. `importmap.php` lists entrypoints passed to the
-`importmap()` Twig function; map.js is injected by URL, and its relative imports
-are resolved by AssetMapper's import-path rewriting.
+### 3.1 Why the importmap entry is load-bearing
 
-### 3.1 Strict mode is the one real load-model risk
+AssetMapper does **not** rewrite a relative import to the digested filename.
+`JavaScriptImportPathCompiler` rewrites it to the *undigested* public path
+(`./i18n.js` → `/assets/map/i18n.js`) and registers the module as an importmap
+dependency; resolving that path to the digested file is the importmap's job. So
+without both halves — the `map` entry in `importmap.php` **and** an
+`{{ importmap() }}` call on the page — every import 404s. (Verified the hard
+way: the first extraction booted to two 404s and a dead map.)
+
+The entry is deliberately **not** `entrypoint: true`. An entrypoint makes
+`importmap()` emit `import 'map'`, which would execute the module as soon as it
+loads — before the catalog fetch has populated the `CC_*` globals map.js reads
+at module scope. Keeping it a plain entry means `importmap()` emits only the map
+and no import statement, so catalog-load.js's injection remains the one thing
+that starts execution.
+
+One consequence: `importmap()` preloads entrypoints only, so it emits nothing
+for `map`. The 2026-07-12 C5 optimisation (download in parallel with the ~1 MB
+catalog transfer instead of serialized behind it) therefore keeps its
+hand-written preload tag — now `modulepreload`, which the browser follows
+through the graph, warming the imported modules too.
+
+### 3.2 Strict mode is the other load-model risk
 
 ES modules are strict mode; the current classic script is sloppy mode. The
 behaviours that change are all errors-not-silence: assignment to an undeclared
@@ -86,8 +107,8 @@ candidate for `node --test` coverage under `web/tests/js/` alongside
 
 | module | owns | pure |
 |---|---|---|
-| `i18n.js` | `I18N`, `D`, `LAYER_L10N`, `PREFS`, `VALUE_TR`, `tpl`, `trVal`, `sourceLabel`, season/bike labels | ✅ |
-| `util.js` | `escPend`, `safeHref`, `slug`, `stars`, `txtOn`, `haversine`, `featurePoint`, `ccUrl`, `wc`, `gradColor`, difficulty scales | ✅ |
+| `i18n.js` | `I18N`, `D`, `LAYER_L10N`, `VALUE_TR`, `tpl`, `trVal`, `sourceLabel`, `DIFF_LABELS`, season/bike labels | ✅ |
+| `util.js` | `escPend`, `safeHref`, `slug`, `stars`, `txtOn`, `haversine`, `featurePoint`, `currentSeason`, `ccUrl`, `wc`, `gradColor`, `DIFF_PURPLE` | ✅ |
 | `map-init.js` | the `maplibregl.Map` instance, attribution/nav/zoom controls, `addSatellite`, style-ready flag, `flyToPin`, the coordinate context menu | |
 | `catalog.js` | `CATALOG`, `CATALOG_AZ`, `layerByKey`, `active`, `mode` + `setMode`, `CITIES`, `cityLink`, `LETTER_KEY`/`KEY_LETTER` | |
 | `scope-ui.js` | `curScope`, `inScope`, `scopeToken`, `scopeLabel`, `writeScopeHeader`, `focusSearchBox`, `renderScopeChips`, `applyScope`, the rail wiring and the area prompt | |
@@ -96,7 +117,7 @@ candidate for `node --test` coverage under `web/tests/js/` alongside
 | `osm-pools.js` | `osmLayers`, `OSM_BULK`, `addWaterOsm`, `addOsmDots`, the confirmed-pin cluster machinery | |
 | `coverage.js` | the PMTiles source, per-letter/per-country layers, every `cov*` filter, `addCoverage`, `covProps`, the coverage drawers, the `cov-sel` overlay, coverage counts | |
 | `item-index.js` | `ITEM_INDEX`, `IDX_IDS`, `buildItemIndex`, `nearbyItems`, `trimEnds` | |
-| `render.js` | `markers`, `dynamicIds`, `clearDynamic`, `drawLine`, `drawClimbLine`, the surface layer, every feature filter, `featureVisible`, `layerCounts`, `updateCounts`, `render`, route highlighting | |
+| `render.js` | `PREFS`, `markers`, `dynamicIds`, `clearDynamic`, `drawLine`, `drawClimbLine`, the surface layer, every feature filter, `featureVisible`, `layerCounts`, `updateCounts`, `render`, route highlighting | |
 | `drawer.js` | `schemaRows`, `buildRecord`, `osmDrawer`, `waterDrawer`, `renderDrawerBody`, `openDrawer`, `closeDrawer`, item history, `highlightAt`, `revealPinAt`, `mapToast` | |
 | `community.js` | route community panel, non-votable utility confirmations, `rcPost`, moderation submit | |
 | `picking.js` | the located-correction picking session | |

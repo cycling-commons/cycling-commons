@@ -20,4 +20,18 @@ return [
         'path' => './assets/admin_confirm.js',
         'entrypoint' => true,
     ],
+    // The map front end (2026-07-26-map-js-module-split-design.md §3). Listed so
+    // AssetMapper walks map.js's relative imports and emits an importmap entry
+    // for each module: JavaScriptImportPathCompiler rewrites `./i18n.js` to the
+    // UNDIGESTED public path, which only resolves because the importmap maps it
+    // to the digested file.
+    //
+    // Deliberately NOT an entrypoint. An entrypoint would make importmap() emit
+    // `import 'map'`, executing the module the moment it loads — but map.js must
+    // not run until catalog-load.js has populated the CC_* globals it reads at
+    // module scope. That gate stays: catalog-load.js injects the script itself
+    // once its fetch resolves.
+    'map' => [
+        'path' => './assets/map/map.js',
+    ],
 ];

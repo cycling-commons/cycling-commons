@@ -373,10 +373,19 @@
    DOWNLOAD must not sit serialized behind the ~1 MB catalog transfer — the
    preload puts both requests in flight together, so boot() executes map.js
    straight from cache.
-   modulepreload, not preload-as-script, since map.js became the entry of an
-   ES-module graph (2026-07-26-map-js-module-split-design.md §3). It also warms
-   the imported modules, which `as="script"` would not: the browser follows the
-   entry's static imports. #}
+   importmap() replaces the hand-written preload since map.js became the entry
+   of an ES-module graph (2026-07-26-map-js-module-split-design.md §3). It emits
+   both halves of what that graph needs:
+     - the <script type="importmap">, which is what makes the rewritten relative
+       imports resolvable — AssetMapper rewrites `./i18n.js` to the UNDIGESTED
+       public path, and only the importmap maps that to the digested file;
+     - the module URLs themselves, digested.
+   No entrypoint argument: `map` is a plain importmap entry, so nothing is
+   imported here and the catalog gate below is untouched. That also means
+   importmap() emits no preload of its own (it only preloads entrypoints), so
+   the C5 parallel download stays a hand-written modulepreload — now of a module
+   graph, which the browser walks, warming i18n.js/util.js too. #}
+{{ importmap([], {nonce: csp_nonce()}) }}
 <link rel="modulepreload" href="{{ asset('map/map.js') }}">
 {# Scope model (window.CCScope) — must be defined before catalog-load.js injects map.js. #}
 <script src="{{ asset('map/scope.js') }}"></script>
