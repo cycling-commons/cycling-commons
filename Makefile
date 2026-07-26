@@ -172,8 +172,15 @@ scope-test: ## run the map scope-model Node smoke tests (no deps — node:test s
 	node --test web/tests/js/*.test.cjs
 
 map-refs: ## check no web/assets/map module still references a binding map.js owns (split gate)
-	node --check web/assets/map/map.js
-	@for f in web/assets/map/*.js; do node --check $$f || exit 1; done
+	@# Syntax-check as ES MODULES, which is how the browser loads them. Plain
+	@# `node --check foo.js` parses a .js file as CommonJS in this repo (no
+	@# package.json), and that parse accepted a module with a duplicated
+	@# top-level `let` — so the loop reported clean on a file the browser would
+	@# have refused outright. Copying to .mjs is what forces the module parse.
+	@tmp=$$(mktemp -d) || exit 1; \
+	  for f in web/assets/map/*.js; do cp $$f $$tmp/$$(basename $$f .js).mjs || exit 1; done; \
+	  for f in $$tmp/*.mjs; do node --check $$f || { rm -rf $$tmp; exit 1; }; done; \
+	  rm -rf $$tmp; echo "clean: every map module parses as an ES module"
 	python3 web/tests/browser/check-module-refs.py
 
 app-rector: ## apply Rector refactors (advisory; review the diff before committing)
