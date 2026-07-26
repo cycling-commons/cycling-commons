@@ -22,9 +22,10 @@ import { escPend } from './util.js';
 import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlight.js';
 import { mode } from './catalog.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
+import { updateCoverageScopeFilter, fetchCoverageCounts } from './coverage.js';
 
 // Injected by initScope() until their owning modules exist (see the header).
-let updateHeatFilter, updateCoverageScopeFilter, fetchCoverageCounts, render, refreshBestOf;
+let updateHeatFilter, render, refreshBestOf;
 
 // Region scope (region-scoping-design.md §4 / §7 Phase 2): the area the map +
 // search filter to, owned by window.CCScope (scope.js). Registry injected by
@@ -227,7 +228,7 @@ export function applyScope(s, opts){
 // model and reveal the My-area rail button. Called by the entry at the point
 // these statements used to occupy, before initMapControls() (§4.2).
 export function initScope(deps){
-  ({updateHeatFilter, updateCoverageScopeFilter, fetchCoverageCounts, render, refreshBestOf} = deps);
+  ({updateHeatFilter, render, refreshBestOf} = deps);
   if (window.CCScope) {
     window.CCScope.init(CC_REGIONS, _defaultScope);
     // Re-paint the header here too (2026-07-23 flash fix) — mostly a no-op by

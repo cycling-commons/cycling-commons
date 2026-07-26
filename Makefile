@@ -153,6 +153,11 @@ app-test: ## run the app test suite + static analysis + gates
 scope-test: ## run the map scope-model Node smoke tests (no deps — node:test ships with Node ≥18)
 	node --test web/tests/js/*.test.cjs
 
+map-refs: ## check no web/assets/map module still references a binding map.js owns (split gate)
+	node --check web/assets/map/map.js
+	@for f in web/assets/map/*.js; do node --check $$f || exit 1; done
+	python3 web/tests/browser/check-module-refs.py
+
 app-rector: ## apply Rector refactors (advisory; review the diff before committing)
 	cd web && vendor/bin/rector process
 
