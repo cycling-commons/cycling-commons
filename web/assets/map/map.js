@@ -86,6 +86,13 @@
     bounds: _scopeBb ? [[_scopeBb[0],_scopeBb[1]],[_scopeBb[2],_scopeBb[3]]] : [[2.84,49.45],[6.41,50.85]],
     fitBoundsOptions:{padding:24}, attributionControl:false
   });
+  // Non-prod test handle. web/tests/browser/map-smoke.js (the checkpoint sweep of
+  // 2026-07-26-map-js-module-split-design.md §6) runs as a page script and has no
+  // other way to reach the MapLibre instance, so it cannot assert on layers,
+  // sources or filters — the exact things a module split can silently break.
+  // Gated on CC_DEBUG, which templates/map/index.html.twig emits only when
+  // app.environment is not 'prod', so production ships no handle at all.
+  if(window.CC_DEBUG) window.__ccMap = map;
   map.addControl(new maplibregl.AttributionControl({customAttribution:'© OpenStreetMap contributors · ODbL'}),'bottom-right');
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
   // Live zoom readout — a MapLibre control so it stacks above the nav control
