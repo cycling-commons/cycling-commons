@@ -1,0 +1,27 @@
+web/assets/map/spotlight.js
+  s_9599f84a595aa8::t_e3373ba9d919c5 1-9,12-27,29-80,82-154
+  s_9599f84a595aa8::t_0c5332f378af8c 10-11,28,81
+web/assets/map/map.js
+  s_9599f84a595aa8::t_0c5332f378af8c 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "606005a22b48b9a51d834a1281f0bd6d06d354dc",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_9599f84a595aa8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ec863f78-20d6-4299-a4d3-b8b757979843",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
