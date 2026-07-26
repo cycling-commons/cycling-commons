@@ -12,6 +12,12 @@
 (function () {
   function boot() {
     var s = document.createElement('script');
+    // map.js is an ES module (2026-07-26-map-js-module-split-design.md §3): it
+    // is the entry of the map/*.js module graph, and AssetMapper rewrites its
+    // relative imports to digested URLs. A dynamically inserted module script
+    // still executes as soon as its graph is fetched, so the catalog gate this
+    // function implements is unchanged — the CC_* globals are already set.
+    s.type = 'module';
     s.src = window.CC_MAP_SRC;
     document.body.appendChild(s);
   }
