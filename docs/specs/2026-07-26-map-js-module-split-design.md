@@ -2,7 +2,8 @@
 
 # map.js module split — design
 
-**Status:** design, 2026-07-26. Owner decisions captured in §2.
+**Status:** IN PROGRESS, 2026-07-26. Owner decisions in §2; what has landed
+and what has not is §9.
 **Audience:** contributors working on the map front end.
 **Scope:** a behaviour-preserving decomposition of `web/assets/map/map.js`
 (4,060 lines) into ES modules served by AssetMapper, plus one behaviour change
@@ -275,3 +276,59 @@ and the truncation note.
   `node --test` `require()` they are tested through, and would have to move
   `scope-header.js` after the catalog fetch, reintroducing the header flash
   Phase 0 §5 exists to prevent.
+
+## 9. Execution progress (2026-07-26)
+
+`map.js` is **4,060 → 3,473 lines**, with eight modules beside it. Every commit
+below was browser-verified with the §6 sweep before the next began; the tree is
+clean and nothing is pushed.
+
+### Landed
+
+| commit | what |
+|---|---|
+| `c7a46c9` | **fix** — coverage heat layers dropped under an Everywhere scope (found by the sweep's first run) |
+| `2483c89` | the §6 smoke sweep + the non-prod `window.__ccMap` handle |
+| `42fd424` | sweep: the spotlight checkpoint guards the call path, not the paint time |
+| `76436d5` | step 1 — ESM load model |
+| `f5bace5` | step 2 — `i18n.js`, `util.js` (+ the §3 correction) |
+| `23e2c0e` | step 3a — `map-init.js` |
+| `99a016f` | **backend** — `ref` on the coverage arm; `coverage_poi` provisioned in the controller test |
+| `bb65fe6` | `ride-check.js` + the coverage frontend (§7) |
+| `e84d70e` | specs synced |
+| `606005a` | step 4a — `spotlight.js` |
+| `8d1f10c` | step 3b — `catalog.js` |
+| `04f1618` | step 7 (early) — `mapillary.js` |
+
+### Not yet extracted
+
+`icons.js`, `scope-ui.js`, `osm-pools.js`, `coverage.js`, `item-index.js`,
+`render.js`, `drawer.js`, `community.js`, `picking.js`, `corrections.js`,
+`places.js`, `lightbox.js`, `sheet.js`, `search-ui.js`, `panels.js`,
+`planner.js`.
+
+### The recipe, for whoever continues
+
+1. Locate the block's exact line range and assert both boundary lines before
+   cutting — every extraction here was done by a short Python script that
+   `assert`s on the first and last line and deletes ranges **in strictly
+   descending start order**. Two bugs were caught that way before they reached
+   the file; both would have silently mangled a range.
+2. Move bodies verbatim, de-indent by two, and hand-write only the module header
+   and the `import`/`export` lines.
+3. Every side effect becomes an exported `initX()` the entry calls **at the exact
+   point the code used to occupy** (§4.2).
+4. Any `let` an importer would read becomes a getter + setter in its owner
+   module. Three have needed it so far: `_styleReady` → `styleReady()`, `mode` →
+   `mode()`/`setMode()`, `mlyOn` → kept private by moving its only writer in.
+5. `node --check` every file, then run the §6 sweep, then commit.
+
+### Two things the split did not cause but did surface
+
+- **Backlog item 10** — a single-region spotlight takes ~26 s to paint because
+  `setSpotlight` fires seven concurrent same-session boundary requests. Measured,
+  filed, untouched.
+- **Ride-check duplicates on dev** — curated fixtures carry `fx:` refs while
+  coverage rows carry real OSM refs, so the `(source_ref, letter)` dedup cannot
+  match and the same fountain lists in both arms. Correct on prod, where curated
+  items fork from coverage. See `2026-07-26-ride-check-coverage-design.md` §7.
