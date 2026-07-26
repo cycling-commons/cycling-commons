@@ -10,6 +10,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
+use App\Tests\Coverage\CoverageSchema;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -22,6 +23,8 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
  */
 final class RideCheckControllerTest extends WebTestCase
 {
+    use CoverageSchema;
+
     /** @var list<string> temp upload files to unlink after each test */
     private static array $tmpFiles = [];
 
@@ -127,6 +130,14 @@ final class RideCheckControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
+        // check() reads coverage_poi unconditionally since the coverage arm
+        // landed (2026-07-26-ride-check-coverage-design.md §3.1), and that table
+        // is pipeline-owned DDL outside Doctrine's migrations — so a controller
+        // test that does not build it gets a 500, not a payload.
+        self::ensureCoverageSchema($em->getConnection());
+        self::insertCoveragePoi($em->getConnection(), [
+            'letter' => 'C', 'name' => 'OSM fontaine', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/rc-web-cov',
+        ]);
         $item = (new Item())->setLetter('C')->setName('Fontaine du test')
             ->setGeom(json_encode(['type' => 'Point', 'coordinates' => [5.815, 50.40045]], \JSON_THROW_ON_ERROR))
             ->setCountryCode('BE')->setState(ItemState::Verified)->setSource(ItemSource::Osm)
@@ -139,7 +150,7 @@ final class RideCheckControllerTest extends WebTestCase
         $client->request('POST', '/map/ride-check', $params, $files, $server);
 
         self::assertResponseIsSuccessful();
-        /** @var array{track: list<array{0: float, 1: float}>, distanceKm: float, radiusM: int, groups: list<array{letter: string, items: list<array{name: string}>}>, routes: list<mixed>} $body */
+        /** @var array{track: list<array{0: float, 1: float}>, distanceKm: float, radiusM: int, groups: list<array{letter: string, items: list<array{name: string}>}>, coverage: list<array{letter: string, items: list<array{name: string, ref: string}>}>, routes: list<mixed>} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true);
         self::assertSame(250, $body['radiusM']);
         self::assertGreaterThan(1.5, $body['distanceKm']);
@@ -147,6 +158,14 @@ final class RideCheckControllerTest extends WebTestCase
         $letters = array_column($body['groups'], 'letter');
         self::assertContains('C', $letters);
         self::assertSame('Fontaine du test', $body['groups'][array_search('C', $letters, true)]['items'][0]['name']);
+        // The coverage arm is serialized alongside the curated one, each item
+        // carrying the `ref` the frontend needs to open it (§3.1/§3.3).
+        self::assertArrayHasKey('coverage', $body);
+        $covLetters = array_column($body['coverage'], 'letter');
+        self::assertContains('C', $covLetters);
+        $covItem = $body['coverage'][array_search('C', $covLetters, true)]['items'][0];
+        self::assertSame('OSM fontaine', $covItem['name']);
+        self::assertSame('node/rc-web-cov', $covItem['ref']);
         // Read-only: the upload must not create any DB row.
         self::assertSame(0, (int) $em->getConnection()->fetchOne("SELECT COUNT(*) FROM recommended_route WHERE source_ref LIKE 'user:%'"));
     }

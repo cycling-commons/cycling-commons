@@ -70,7 +70,7 @@ final class RideCheckService
      *     ascentM: int|null,
      *     radiusM: int,
      *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>,
-     *     coverage: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>,
+     *     coverage: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>,
      *     routes: list<array{id: int, name: string, sharedKm: float}>
      * }
      *
@@ -151,16 +151,16 @@ final class RideCheckService
      * `state` column (a pipeline cache) — the served filter applies only to the
      * curated item it is deduped against.
      *
-     * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>
+     * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>
      */
     private function corridorCoverage(string $geoJson, int $radiusM, float $rawM): array
     {
         $letters = "'".implode("','", self::COVERAGE_LETTERS)."'";
-        /** @var list<array{id: int|string, letter: string, name: string|null, geom: string, dist_m: string|float, frac: string|float}> $rows */
+        /** @var list<array{id: int|string, letter: string, name: string|null, ref: string, geom: string, dist_m: string|float, frac: string|float}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
                   corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
-             SELECT cp.id, cp.letter, cp.name, ST_AsGeoJSON(cp.geom) AS geom,
+             SELECT cp.id, cp.letter, cp.name, cp.ref, ST_AsGeoJSON(cp.geom) AS geom,
                     ST_Distance(cp.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
                     ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(cp.geom, (SELECT g FROM track))) AS frac
              FROM coverage_poi cp
@@ -184,13 +184,19 @@ final class RideCheckService
      * MAX_PER_LETTER with a `truncated` flag, each item anchored to a
      * renderable [lat, lng]. Shared by the curated and coverage arms.
      *
-     * @param list<array{id: int|string, letter: string, name: string|null, geom: string, dist_m: string|float, frac: string|float}> $rows
+     * A row's `ref` is carried through when present. Only the coverage arm
+     * selects one, and it is not decoration: `id` there is a coverage_poi row
+     * id, which no endpoint accepts, so the frontend needs the `ref` to open a
+     * coverage POI at all (/map/coverage/poi/{ref}, via openCoverageByRef).
+     * Curated rows have no `ref` and the key stays absent for them.
      *
-     * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>
+     * @param list<array{id: int|string, letter: string, name: string|null, geom: string, dist_m: string|float, frac: string|float, ref?: string|null}> $rows
+     *
+     * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref?: string}>, truncated: bool}>
      */
     private function groupByLetter(array $rows, float $rawM): array
     {
-        /** @var array<string, array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}> $groups */
+        /** @var array<string, array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref?: string}>, truncated: bool}> $groups */
         $groups = [];
         foreach ($rows as $row) {
             $letter = $row['letter'];
@@ -205,13 +211,17 @@ final class RideCheckService
             if (null === $ll) {
                 continue; // unrenderable geometry: nothing to point at
             }
-            $groups[$letter]['items'][] = [
+            $item = [
                 'id' => (int) $row['id'],
                 'name' => (string) ($row['name'] ?? ''),
                 'll' => $ll,
                 'distM' => (int) round((float) $row['dist_m']),
                 'alongKm' => round((float) $row['frac'] * $rawM / 1000.0, 1),
             ];
+            if (isset($row['ref']) && '' !== $row['ref']) {
+                $item['ref'] = (string) $row['ref'];
+            }
+            $groups[$letter]['items'][] = $item;
         }
         ksort($groups);
 

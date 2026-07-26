@@ -262,6 +262,42 @@ final class RideCheckServiceTest extends KernelTestCase
         self::assertFalse($cGroup['truncated']);
     }
 
+    public function testCoverageItemsCarryTheirRef(): void
+    {
+        self::ensureCoverageSchema($this->db());
+        self::insertCoveragePoi($this->db(), ['letter' => 'C', 'name' => 'OSM ref fountain', 'lat' => 50.40045, 'lng' => 5.8050, 'ref' => 'node/cov-ref']);
+
+        $result = $this->service()->check(self::ride(), 250);
+
+        $refs = [];
+        foreach ($result['coverage'] as $group) {
+            foreach ($group['items'] as $item) {
+                $refs[$item['name']] = $item['ref'] ?? null;
+            }
+        }
+        // `id` is a coverage_poi row id, which no endpoint accepts. Without the
+        // ref the frontend cannot open the POI at all — /map/coverage/poi/{ref}
+        // is the only lookup, so a coverage row is useless to a rider without it.
+        self::assertSame('node/cov-ref', $refs['OSM ref fountain'] ?? null);
+    }
+
+    public function testCuratedItemsCarryNoRef(): void
+    {
+        self::ensureCoverageSchema($this->db());
+        $this->seedItem('C', 'Fontaine curated', self::point(50.40045, 5.8050), 'rc-no-ref');
+
+        $result = $this->service()->check(self::ride(), 250);
+
+        $seen = 0;
+        foreach ($result['groups'] as $group) {
+            foreach ($group['items'] as $item) {
+                ++$seen;
+                self::assertArrayNotHasKey('ref', $item, 'the curated arm addresses items by id and must not grow a ref');
+            }
+        }
+        self::assertGreaterThan(0, $seen, 'the fixture must actually put a curated item in the corridor');
+    }
+
     public function testCoverageExcludesNonUtilityLetters(): void
     {
         self::ensureCoverageSchema($this->db());
