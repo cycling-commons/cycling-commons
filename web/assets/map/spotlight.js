@@ -15,8 +15,10 @@
    union) and the mask lands ~3.4 s later — ~0.6 s of that server, the rest
    spent parsing ~300 KB of polygon JSON and tessellating the mask. The requests
    do NOT serialize and the endpoints are already ETagged, cached and simplified,
-   so neither session_write_close() nor more caching helps; progressive paint
-   would. Low priority, and the code below is unchanged from the monolith. */
+   so neither session_write_close() nor more caching helps. setSpotlight() paints
+   PROGRESSIVELY instead: the active region's outline as soon as its own boundary
+   lands, the neighbour tier when the rest arrive — worth 0.4-0.7 s on a real
+   network, nothing on localhost. See the tier comments below. */
 import { map } from './map-init.js';
 
 const CC_REGIONS = window.CC_REGIONS || [];
@@ -60,16 +62,41 @@ export function setSpotlight(slug){
   const adjP = adjSlugs.length
     ? Promise.all(adjSlugs.map(boundaryOf)).then(fs=>fs.filter(Boolean))
     : Promise.resolve([]);
-  Promise.all([
-    fetch(`/map/region/${encodeURIComponent(slug)}/boundary`)
-      .then(r=>{ if(!r.ok) throw new Error('boundary HTTP '+r.status); return r.json(); }),
-    adjP, fullP,
-  ]).then(([d, adjFeatures, f])=>{
+  const mainP = fetch(`/map/region/${encodeURIComponent(slug)}/boundary`)
+    .then(r=>{ if(!r.ok) throw new Error('boundary HTTP '+r.status); return r.json(); });
+
+  // Tier 1 — paint the two-tone mask as soon as the ACTIVE region's own boundary
+  // lands, without waiting for the six that only feed the neighbour tier.
+  //
+  // This buys nothing on localhost, where every response arrives in ~4 ms, and a
+  // localhost measurement is what wrongly killed this once already. Throttled,
+  // cold cache, it is worth 0.4-0.7 s of earlier feedback on every real network
+  // (2026-07-26; active-region-only vs all-seven): fast 4G 196 vs 845 ms, slow 4G
+  // 528 vs 964 ms, slow 3G 2185 vs 2859 ms. Riders are on phones.
+  //
+  // Note this is orthogonal to backlog item 10: a scope change also blocks the
+  // main thread for ~5.4 s in applyScope, which delays BOTH tiers equally. Fixing
+  // that is a separate and larger job; this only removes the network wait.
+  mainP.then(d=>{
       const g = d && d.geometry;
-      if(req!==_spotReq||!g||!map.getStyle()||map.getSource('region')) return;   // superseded or gone
-      drawSpotlightMask(g, adjFeatures, f && f.geometry);
+      if(req!==_spotReq || !g || !map.getStyle()) return;   // superseded or gone
+      clearSpotlight();   // no-op on this pass; guards against a re-entrant repaint
+      drawSpotlightMask(g, null, null);
     // decorative only — the map works without the boundary, but log why it's missing (W34)
     }).catch(e=>console.warn('Region boundary unavailable:', e));
+
+  // Tier 2 — upgrade to the three-tier spotlight when the neighbours and the
+  // dissolved union arrive. Repaints from scratch because drawSpotlightMask adds
+  // its sources unconditionally; clearing 2-4 layers costs far less than the
+  // tessellation that follows. Bails when there is nothing to upgrade TO, leaving
+  // tier 1's two-tone standing — which is also the no-neighbours case.
+  Promise.all([mainP, adjP, fullP]).then(([d, adjFeatures, f])=>{
+      const g = d && d.geometry;
+      if(req!==_spotReq || !g || !map.getStyle()) return;
+      if(!adjFeatures.length || !f || !f.geometry) return;
+      clearSpotlight();
+      drawSpotlightMask(g, adjFeatures, f.geometry);
+    }).catch(()=>{});   // tier 1 already logged a main-boundary failure; adj/full self-degrade to null
 }
 
 // Shared mask painter: dim the world outside `g` + a dashed outline. Used by
