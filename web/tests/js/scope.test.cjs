@@ -1075,6 +1075,84 @@ test('regionsNear applies the cos(lat) correction (east-west is compressed)', ()
   assert.deepEqual(near.map((r) => r.slug), ['here', 'east', 'north']);
 });
 
+// ---- polygon-edge ranking (2026-07-27-region-edge-distance-ranking-design.md) ----
+//
+// Every region below carries `outline`: rings as flat [lng,lat,lng,lat,...],
+// exactly the shape RegionRegistryProvider ships. The three tests above keep
+// passing with NO outline at all — that is the documented bbox-centre fallback,
+// and it is asserted explicitly further down.
+
+// Two rectangles, chosen so the two metrics DISAGREE — this is the shape of the
+// owner's complaint (a Groningen anchor offered compact Bremen and never the
+// long, far-centred Lower Saxony). `wide` spans 6→11°E: its centre is 2.7° away
+// but its western edge is 0.2° away. `compact` sits nearer by centre and further
+// by edge. Centre distance ranks compact first; edge distance ranks wide first.
+const WIDE = {
+  id: 1, slug: 'wide', countryCode: 'DE', bbox: [6.0, 52.5, 11.0, 53.5],
+  outline: [[6.0, 52.5, 11.0, 52.5, 11.0, 53.5, 6.0, 53.5, 6.0, 52.5]],
+};
+const COMPACT = {
+  id: 2, slug: 'compact', countryCode: 'DE', bbox: [7.5, 53.0, 8.0, 53.6],
+  outline: [[7.5, 53.0, 8.0, 53.0, 8.0, 53.6, 7.5, 53.6, 7.5, 53.0]],
+};
+
+test('regionsNear: ranks by the nearest polygon EDGE, not the bbox centre', () => {
+  CCScope.init([WIDE, COMPACT], { kind: 'everywhere', regionIds: [], countryCode: null });
+  // Anchor west of both. By centre: compact 1.37 vs wide 2.65 -> compact first.
+  // By edge:   wide 0.014 (its 6.0°E edge) vs compact 1.03 -> wide first.
+  assert.deepEqual(CCScope.regionsNear([5.8, 53.2], { limit: 2 }).map((r) => r.slug),
+    ['wide', 'compact']);
+});
+
+test('regionsNear: an anchor inside a region scores zero distance', () => {
+  CCScope.init([COMPACT, WIDE], { kind: 'everywhere', regionIds: [], countryCode: null });
+  // Deep inside `wide` and far from `compact`: nothing can beat 0.
+  assert.deepEqual(CCScope.regionsNear([10.5, 53.0], { limit: 2 }).map((r) => r.slug),
+    ['wide', 'compact']);
+});
+
+test('regionsNear: a region with no outline still ranks, by its bbox centre', () => {
+  // Mixed registry — the fallback must not throw and must not sort NaN-first.
+  // `plain` has no outline; its centre (5.5, 53.0) is 0.18° from the anchor, so
+  // it beats wide's 0.2° edge. Both are ranked on the same corrected-degree
+  // scale, which is the point of keeping the fallback in the same units.
+  const PLAIN = { id: 3, slug: 'plain', countryCode: 'NL', bbox: [5.3, 52.8, 5.7, 53.2] };
+  CCScope.init([WIDE, PLAIN], { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.deepEqual(CCScope.regionsNear([5.62, 53.0], { limit: 2 }).map((r) => r.slug),
+    ['plain', 'wide']);
+});
+
+test('regionsNear: edge distance keeps the cos(lat) correction', () => {
+  // At 60°N a longitude degree is half a latitude degree. `east` is 1.0° east of
+  // the anchor at its nearest edge, `north` 0.8° north. Raw degrees would pick
+  // north (0.64 < 1.0); corrected picks east (0.5² = 0.25 < 0.64).
+  CCScope.init([
+    { id: 1, slug: 'east', countryCode: 'NO', bbox: [11.0, 59.9, 11.2, 60.1],
+      outline: [[11.0, 59.9, 11.2, 59.9, 11.2, 60.1, 11.0, 60.1, 11.0, 59.9]] },
+    { id: 2, slug: 'north', countryCode: 'NO', bbox: [9.9, 60.8, 10.1, 61.0],
+      outline: [[9.9, 60.8, 10.1, 60.8, 10.1, 61.0, 9.9, 61.0, 9.9, 60.8]] },
+  ], { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.deepEqual(CCScope.regionsNear([10.0, 60.0], { limit: 2 }).map((r) => r.slug),
+    ['east', 'north']);
+});
+
+test('edgeDistanceKm: the exported primitive, in kilometres', () => {
+  // 0 inside; the western edge of `wide` is 0.2° of longitude at 53.2°N away,
+  // which is 0.2 · 111.32 · cos(53.2°) ≈ 13.3 km.
+  assert.equal(CCScope.edgeDistanceKm([8.0, 53.0], WIDE), 0);
+  const d = CCScope.edgeDistanceKm([5.8, 53.2], WIDE);
+  assert.ok(d > 12 && d < 15, `expected ~13.3 km, got ${d}`);
+  // No outline -> the bbox-centre fallback, still in km.
+  const noOutline = { id: 9, slug: 'n', countryCode: 'X', bbox: [6.0, 52.5, 11.0, 53.5] };
+  assert.ok(CCScope.edgeDistanceKm([5.8, 53.2], noOutline) > 150);
+});
+
+test('edgeDistanceKm: a degenerate or missing ring never throws or returns NaN', () => {
+  const junk = { id: 9, slug: 'j', countryCode: 'X', bbox: [0, 0, 1, 1], outline: [[], [1], null] };
+  const d = CCScope.edgeDistanceKm([5, 5], junk);
+  assert.ok(Number.isFinite(d), `expected a finite fallback, got ${d}`);
+});
+
 // ---- pointInPolygon (2026-07-24-region-adjacency-and-click-refinement-design.md §3.1) ----
 
 test('pointInPolygon: inside and outside a simple square', () => {

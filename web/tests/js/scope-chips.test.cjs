@@ -120,6 +120,14 @@ const ADJ = {
   'zuid-holland': ['gelderland', 'noord-brabant', 'noord-holland', 'utrecht', 'zeeland'],
 };
 REGIONS.forEach((r) => { r.adj = (ADJ[r.slug] || []).map((s) => bySlug(s).id); });
+
+// Real simplified outlines, the ranking geometry rankByGroundDistance now sorts
+// on (2026-07-27-region-edge-distance-ranking-design.md). Generated from the
+// live DB by the statement the catalog import runs, so the ranking pinned below
+// is the ranking the browser performs. Without these every region falls back to
+// its bbox centre and the expectations here are the PRE-edge-distance ones.
+const OUTLINES = require('./fixtures/region-outlines.cjs');
+REGIONS.forEach((r) => { r.outline = OUTLINES[r.slug] || null; });
 CCScope.init(REGIONS, { kind: 'region', regionIds: [bySlug('wallonia').id], countryCode: 'BE' });
 
 const centreOf = (r) => [(r.bbox[0] + r.bbox[2]) / 2, (r.bbox[1] + r.bbox[3]) / 2];
@@ -190,15 +198,23 @@ test('linear: a Duisburg-area country scope surfaces Dutch regions by distance',
   // This REPLACES the Phase 0 "Germany caps at 8 of 16" expectation: Dutch Limburg,
   // 63 km away, could not appear at all under contextualRegions (country-scoped by
   // construction); regionsNear (Task 1) ranks across every onboarded country instead.
+  //
+  // 2026-07-27 edge-distance update: the FIRST chip is now Nordrhein-Westfalen,
+  // because Duisburg is inside it — an edge distance of 0 that centroid ranking
+  // could never see (NRW's centroid is 80 km east, so the region the rider was
+  // standing in ranked below three foreign ones). Dutch Limburg keeps the second
+  // slot, so the cross-border reach this test exists for is unchanged.
   const m = chipModel({
     scope: { kind: 'country', regionIds: [], countryCode: 'DE' },
     isDefault: false, activeRegions: [], registry: REGIONS,
     inferredCountry: null, scopeCenter: null, mapCenter: [6.76, 51.43], myArea: null,
   }, CCScope);
   assert.equal(m.mode, 'linear');
-  assert.equal(m.chips[0].slug, 'limburg-nl');
-  assert.equal(m.chips[0].foreign, true);
-  assert.equal(m.chips[0].cc, 'NL');
+  assert.equal(m.chips[0].slug, 'nordrhein-westfalen');
+  assert.equal(m.chips[0].foreign, false);          // the anchor's own region
+  assert.equal(m.chips[1].slug, 'limburg-nl');
+  assert.equal(m.chips[1].foreign, true);
+  assert.equal(m.chips[1].cc, 'NL');
   assert.deepEqual(m.country, { cc: 'DE', label: 'All Germany' });   // rung stays the active country
 });
 
@@ -242,16 +258,31 @@ test('compass: Utrecht offers its true neighbours, not the far north-east', () =
   // The anchor bug (fixed eeb9b36): ranking from map.getCenter() used the OUTGOING
   // scope, so Utrecht was ranked against Germany's centroid and offered
   // Drenthe/Groningen/Friesland over adjacent Noord-Holland/Zuid-Holland.
+  //
+  // 2026-07-27 edge-distance update: the four adjacent regions are unchanged and
+  // still hold their true cells; the four DOMESTIC FILL slots re-sort, because
+  // by ground Friesland's southern shore is 80 km from Utrecht's centre and
+  // Zeeland's nearest land is 82 km — the reverse of what their centroids said.
+  // So Friesland takes the eighth slot and fills the previously empty NW cell,
+  // and Zeeland drops out. Groningen and Drenthe — the two regions the old
+  // anchor bug really did surface over adjacent neighbours — stay out at 93 km+,
+  // which is what this test guards.
   const m = compassFor('utrecht');
   assert.equal(m.mode, 'compass');
   assert.equal(m.rows.length, 3);
   const shown = slugsOf(m);
-  ['groningen', 'drenthe', 'friesland'].forEach((s) => {
+  ['groningen', 'drenthe'].forEach((s) => {
     assert.ok(!shown.includes(s), `${s} is far NE and must not be offered from Utrecht`);
   });
-  assert.deepEqual(m.rows[0].map((c) => c.slug), [null, 'noord-holland', 'flevoland']);
+  // Still all-Dutch: edge distance orders the pool, adjacency still decides it,
+  // so the over-reach the owner rejected (NRW 58 km, Flanders 67 km — both
+  // NEARER by edge than Friesland) cannot come back.
+  shown.filter(Boolean).forEach((s) => {
+    assert.equal(bySlug(s).countryCode, 'NL', `${s} must not be offered from Utrecht`);
+  });
+  assert.deepEqual(m.rows[0].map((c) => c.slug), ['friesland', 'noord-holland', 'flevoland']);
   assert.deepEqual(m.rows[1].map((c) => c.slug), ['zuid-holland', 'utrecht', 'gelderland']);
-  assert.deepEqual(m.rows[2].map((c) => c.slug), ['zeeland', 'noord-brabant', 'limburg-nl']);
+  assert.deepEqual(m.rows[2].map((c) => c.slug), [null, 'noord-brabant', 'limburg-nl']);
   assert.deepEqual(m.overflow.map((r) => r.slug), ['overijssel']);
   assert.equal(m.more, true);
 });
@@ -349,10 +380,13 @@ test('linear: anchor resolves to a region, then that region gates foreign chips'
 
 test('compass: Bavaria is a corner region, so far cells stay empty and overflow fills', () => {
   // compassLayout caps displacement at one slot rather than lying about a bearing.
+  // 2026-07-27 edge-distance update: the third overflow entry is Niedersachsen,
+  // not Nordrhein-Westfalen — Lower Saxony's southern edge reaches nearer to
+  // Bavaria than NRW's does, which its far-north-west centroid hid.
   const m = compassFor('bayern');
   assert.equal(m.rows.length, 3);
   assert.deepEqual(m.overflow.map((r) => r.slug),
-    ['saarland', 'sachsen-anhalt', 'nordrhein-westfalen']);
+    ['saarland', 'sachsen-anhalt', 'niedersachsen']);
   assert.equal(m.more, true);
   assert.deepEqual(m.country, { cc: 'DE', label: 'All Germany' });
 });
@@ -410,7 +444,10 @@ test('every cell carries the full contract, with nulls rather than undefined', (
 });
 
 test('empty cells carry cc:null, foreign:false', () => {
-  const m = compassFor('nordrhein-westfalen');   // has one empty cell (east)
+  // Bayern, not NRW: under edge-distance ranking NRW now places all eight of its
+  // pool and has no empty cell left. Bavaria is the corner region, so its far
+  // NE/E/SE cells stay vacant (see its own test above).
+  const m = compassFor('bayern');
   const empty = m.rows.flat().find((c) => c.kind === 'empty');
   assert.deepEqual({ cc: empty.cc, foreign: empty.foreign }, { cc: null, foreign: false });
 });

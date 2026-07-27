@@ -259,6 +259,13 @@ the line, and the shared-cache win outweighs vertex-exactness for a scope click.
   compass uses adjacency to **prioritise** the neighbour slice (§2.3), then
   centroid within each slice; linear uses adjacency only as a filter on a
   single centroid-ranked list. Edge-distance ranking remains rejected (§1.1).
+  > **SUPERSEDED 2026-07-27** by
+  > [2026-07-27-region-edge-distance-ranking-design.md](2026-07-27-region-edge-distance-ranking-design.md).
+  > What §1.1 rejected was edge distance as an **eligibility** rule, and that
+  > rejection stands — Utrecht stays all-Dutch because *adjacency* decides who
+  > is eligible. Edge distance is now the **ordering** metric inside a pool
+  > adjacency has already chosen, which is a different job and cannot
+  > reintroduce the over-reach. The bbox-**extent** shortcut is still declined.
 - No prefetch of boundaries (fetch strictly on the ambiguous click path).
 - No new public API; both parts are site-internal map endpoints.
 

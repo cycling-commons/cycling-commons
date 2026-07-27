@@ -286,11 +286,23 @@ the newest rung of that same ladder.
   (Utrecht stays all-Dutch), each by construction, not tuning. Adjacency is
   precomputed at catalog import into `region.adj` (`integer[]`, one
   `ST_Intersects` pass across all onboarded countries) and shipped inline in
-  `CC_REGIONS`; `chipModel` (`scope-chips.js`) gates foreign chips on it, keeping
-  the existing centroid ordering *within* the eligible set. Supersedes the
+  `CC_REGIONS`; `chipModel` (`scope-chips.js`) gates foreign chips on it. Supersedes the
   centroid ranking of
   [2026-07-23-cross-border-chips-design.md](2026-07-23-cross-border-chips-design.md).
   Design: [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §2.
+- **…and are ORDERED by polygon-edge distance (2026-07-27).** Within the pool
+  adjacency has made eligible, regions sort by the distance from the anchor to
+  the nearest point on the region itself — 0 when the anchor is inside it —
+  rather than to its bbox centre. Centre distance misjudged anything large or
+  oddly shaped: from Groningen, the region it borders (Lower Saxony, 26 km)
+  ranked below one it does not (Bremen, 119 km), and a rider in Duisburg was
+  offered a Dutch region ahead of the German one they were standing in. The
+  geometry is a **ranking outline** precomputed at import into `region.outline`
+  (`jsonb`, exterior rings simplified to 0.05°, flat `[lng,lat,…]`, ~18 kB for 32
+  regions) and shipped inline in `CC_REGIONS`; real boundaries still come from
+  `RegionBoundaryProvider`. Eligibility is still adjacency, so Utrecht stays
+  all-Dutch. A region with no outline falls back to its bbox centre.
+  Design: [2026-07-27-region-edge-distance-ranking-design.md](2026-07-27-region-edge-distance-ranking-design.md).
 - **Map-click scope refinement (2026-07-24).** A map click resolves to its region
   by a synchronous bbox candidate pass; when 2+ region bboxes overlap the point,
   `CCScope.regionOfPointPrecise` fetches those candidates' polygons

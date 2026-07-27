@@ -85,6 +85,7 @@ final class ImportCatalogCommand extends Command
             $this->db->beginTransaction();
             $regions = $this->importRegions($dir, $io);
             $this->recomputeAdjacency();
+            $this->recomputeOutlines();
             $items = $this->importItemLayers($dir, $io);
             $routes = $this->importRoutes($dir, $io);
             $heat = $this->importHeat($dir, $io);
@@ -495,4 +496,57 @@ final class ImportCatalogCommand extends Command
              WHERE a.geom IS NOT NULL'
         );
     }
+
+    /**
+     * Recompute each region's simplified ranking outline (region.outline) — the
+     * geometry the scope chips rank against
+     * (2026-07-27-region-edge-distance-ranking-design.md §3). Derived, recomputed
+     * every import beside adj, never authored.
+     *
+     * This is a RANKING metric, not a geometry source: real boundaries still come
+     * from RegionBoundaryProvider. It ships inlined in CC_REGIONS, so the shape is
+     * chosen for bytes over fidelity — parts smaller than max(1% of the region,
+     * 5 km²) are dropped (the largest part always survives, whatever its size),
+     * exterior rings only, ST_SimplifyPreserveTopology at 0.05° (~5.5 km, well
+     * under the tens of km the ranking actually distinguishes), flat
+     * [lng,lat,lng,lat,…] per ring, 3 decimals (~110 m, so rounding never
+     * dominates simplification). 32 regions → 40 rings / 1,142 points / ~18 kB.
+     *
+     * Empty array (never NULL) when a region has no usable part, which the client
+     * reads as "no outline" and falls back to the bbox centre.
+     */
+    private function recomputeOutlines(): void
+    {
+        $this->db->executeStatement(self::OUTLINE_SQL);
+    }
+
+    /**
+     * Kept as a constant because Version20260727120000 backfills existing rows
+     * with the identical statement, and the two must not drift.
+     */
+    public const OUTLINE_SQL = <<<'SQL'
+        UPDATE region r SET outline = COALESCE((
+            SELECT json_agg(ring)
+            FROM (
+                SELECT (
+                    SELECT json_agg(round(v::numeric, 3) ORDER BY o)
+                    FROM (
+                        SELECT unnest(ARRAY[ST_X(p.geom), ST_Y(p.geom)]) AS v,
+                               (p.path[1] * 2) + generate_series(0, 1) AS o
+                        FROM ST_DumpPoints(ST_ExteriorRing(z.g)) p
+                    ) pt
+                ) AS ring
+                FROM (
+                    SELECT ST_SimplifyPreserveTopology(d.geom, 0.05) AS g,
+                           ST_Area(d.geom::geography) AS a,
+                           max(ST_Area(d.geom::geography)) OVER () AS mx
+                    FROM ST_Dump(r.geom) d
+                ) z
+                WHERE z.g IS NOT NULL
+                  AND GeometryType(z.g) = 'POLYGON'
+                  AND z.a >= LEAST(GREATEST(ST_Area(r.geom::geography) * 0.01, 5e6), z.mx)
+            ) rings
+        ), '[]'::json)::jsonb
+        WHERE r.geom IS NOT NULL
+        SQL;
 }

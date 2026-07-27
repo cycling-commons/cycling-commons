@@ -28,26 +28,41 @@ final class RegionRegistryProvider
      * `countryCode` (not `cc`) matches the CCScope scope-object contract, so the
      * client can thread a registry entry straight into a scope.
      *
-     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>}>
+     * `outline` is the simplified ranking geometry CCScope's rankByGroundDistance
+     * measures to — rings as flat [lng,lat,lng,lat,…]
+     * (2026-07-27-region-edge-distance-ranking-design.md §3). Not a boundary
+     * source: the real polygons still come from RegionBoundaryProvider. An empty
+     * list is normal (a region imported before the outline column existed); the
+     * client falls back to the bbox centre.
+     *
+     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>, outline: list<list<float>>}>
      */
     public function all(): array
     {
-        /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string}> $rows */
+        /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string, outline: ?string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, slug, country_code AS cc,
                     ST_XMin(geom) AS w, ST_YMin(geom) AS s, ST_XMax(geom) AS e, ST_YMax(geom) AS n,
-                    to_json(COALESCE(adj, ARRAY[]::int[])) AS adj
+                    to_json(COALESCE(adj, ARRAY[]::int[])) AS adj,
+                    outline
              FROM region
              WHERE geom IS NOT NULL AND country_code <> \'\'
              ORDER BY area_km2 DESC, slug',
         );
 
-        return array_map(static fn (array $r): array => [
-            'id' => (int) $r['id'],
-            'slug' => (string) $r['slug'],
-            'countryCode' => (string) $r['cc'],
-            'bbox' => [(float) $r['w'], (float) $r['s'], (float) $r['e'], (float) $r['n']],
-            'adj' => array_map('intval', json_decode((string) $r['adj'], true, 512, \JSON_THROW_ON_ERROR)),
-        ], $rows);
+        return array_map(static function (array $r): array {
+            // JSON_THROW_ON_ERROR would turn a hand-edited row into a 500 on the
+            // map page; the ranking degrades to bbox centres instead.
+            $outline = null === $r['outline'] ? null : json_decode((string) $r['outline'], true);
+
+            return [
+                'id' => (int) $r['id'],
+                'slug' => (string) $r['slug'],
+                'countryCode' => (string) $r['cc'],
+                'bbox' => [(float) $r['w'], (float) $r['s'], (float) $r['e'], (float) $r['n']],
+                'adj' => array_map('intval', json_decode((string) $r['adj'], true, 512, \JSON_THROW_ON_ERROR)),
+                'outline' => \is_array($outline) ? $outline : [],
+            ];
+        }, $rows);
     }
 }

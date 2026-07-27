@@ -247,19 +247,90 @@
     try { window.dispatchEvent(new CustomEvent(EVENT, { detail: clone(scope) })); } catch (e) { /* no window */ }
   };
 
-  // Nearest-first by ground distance from `near` to each region's bbox centre,
-  // capped at `cap`. The cos(lat) correction (a longitude degree is ~0.65 of a
-  // latitude degree at 49°N) is shared by contextualRegions and regionsNear, so a
-  // bare degree-delta never over-weights east-west separation. Pure; no mutation.
+  // ---- ground distance: anchor → the nearest point ON a region ---------------
+  //
+  // 2026-07-27-region-edge-distance-ranking-design.md. This used to measure to
+  // each region's BBOX CENTRE, which misjudges any region that is large or
+  // oddly shaped: from Groningen, Lower Saxony's centre is out near Hannover,
+  // so compact Bremen scored nearer than the region Groningen actually borders.
+  // The metric is now the distance to the nearest point on the region's own
+  // simplified outline (`r.outline`, shipped in CC_REGIONS), and 0 when the
+  // anchor is inside it.
+  //
+  // Note this is NOT the edge-DISTANCE ELIGIBILITY that was tried and rejected
+  // in 2026-07-24-region-adjacency-and-click-refinement-design.md §1.1: which
+  // foreign regions may be offered is still decided by adjacency, and still
+  // keeps Utrecht all-Dutch. Edge distance only ORDERS a pool adjacency has
+  // already chosen. The bbox-EXTENT shortcut (distance to the rectangle) was
+  // prototyped and declined by the owner; this is real polygon geometry.
+  //
+  // Units are corrected degrees squared — the same scale the centre metric
+  // used — so the no-outline fallback below stays directly comparable and a
+  // registry that mixes the two still sorts sanely.
+
+  // Squared distance from the origin to segment (ax,ay)→(bx,by), all already
+  // translated so the anchor is at 0,0 and longitudes scaled by cos(lat).
+  const segDist2 = (ax, ay, bx, by) => {
+    const dx = bx - ax; const dy = by - ay;
+    const l2 = dx * dx + dy * dy;
+    let t = l2 > 0 ? -(ax * dx + ay * dy) / l2 : 0;
+    if (t < 0) t = 0; else if (t > 1) t = 1;
+    const px = ax + t * dx; const py = ay + t * dy;
+    return px * px + py * py;
+  };
+
+  // Ray-casting containment over a FLAT [lng,lat,lng,lat,…] ring. Outlines ship
+  // exterior rings only, so a hole is not modelled: for a ranking metric,
+  // scoring an enclave's anchor as "inside its surrounder" is the right answer
+  // anyway (you are standing in it).
+  const pointInFlatRing = (x, y, f) => {
+    let inside = false;
+    const n = f.length / 2;
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+      const xi = f[i * 2]; const yi = f[i * 2 + 1];
+      const xj = f[j * 2]; const yj = f[j * 2 + 1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  };
+
+  // Squared corrected-degree distance from [lng,lat] to region `r`.
+  function groundDistance2(r, lng, lat, kx) {
+    const rings = r && r.outline;
+    const usable = Array.isArray(rings) && rings.some((f) => Array.isArray(f) && f.length >= 6);
+    if (!usable) {
+      // No outline (a region imported before the column existed, or a test
+      // fixture): fall back to the bbox centre, in the same units.
+      const b = r && r.bbox;
+      const cx = b ? (b[0] + b[2]) / 2 : lng; const cy = b ? (b[1] + b[3]) / 2 : lat;
+      return ((cx - lng) * kx) ** 2 + (cy - lat) ** 2;
+    }
+    let best = Infinity;
+    for (let k = 0; k < rings.length; k++) {
+      const f = rings[k];
+      if (!Array.isArray(f) || f.length < 6) continue;   // < 3 points is not a ring
+      if (pointInFlatRing(lng, lat, f)) return 0;
+      const n = f.length / 2;
+      let ax = (f[(n - 1) * 2] - lng) * kx; let ay = f[(n - 1) * 2 + 1] - lat;
+      for (let i = 0; i < n; i++) {
+        const bx = (f[i * 2] - lng) * kx; const by = f[i * 2 + 1] - lat;
+        const d = segDist2(ax, ay, bx, by);
+        if (d < best) best = d;
+        ax = bx; ay = by;
+      }
+    }
+    return best;
+  }
+
+  // Nearest-first by ground distance from `near` to each region, capped at `cap`.
+  // The cos(lat) correction (a longitude degree is ~0.65 of a latitude degree at
+  // 49°N) is shared by contextualRegions and regionsNear, so a bare degree-delta
+  // never over-weights east-west separation. Pure; no mutation.
   function rankByGroundDistance(list, near, cap) {
     const lng = near[0]; const lat = near[1];
     const kx = Math.cos(lat * Math.PI / 180);
     return list
-      .map((r) => {
-        const b = r.bbox;
-        const cx = b ? (b[0] + b[2]) / 2 : lng; const cy = b ? (b[1] + b[3]) / 2 : lat;
-        return { r, d: ((cx - lng) * kx) ** 2 + (cy - lat) ** 2 };
-      })
+      .map((r) => ({ r, d: groundDistance2(r, lng, lat, kx) }))
       .sort((a, b) => a.d - b.d)
       .slice(0, cap)
       .map((x) => x.r);
@@ -595,6 +666,18 @@
     /** Ray-casting point-in-polygon; see the module helper. `rings` is a GeoJSON
      *  Polygon coordinate array (outer + holes). Pure. */
     pointInPolygon(point, rings) { return pointInPolygon(point, rings); },
+
+    /** Kilometres from `near` ([lng, lat]) to the nearest point on `region`'s
+     *  simplified outline; 0 when `near` is inside it, and the bbox-centre
+     *  distance when the region carries no outline. This is the metric
+     *  rankByGroundDistance sorts on, exposed for callers that want the number
+     *  itself (2026-07-27-region-edge-distance-ranking-design.md). Pure. */
+    edgeDistanceKm(near, region) {
+      if (!near || !region) return Infinity;
+      const lat = near[1];
+      const d2 = groundDistance2(region, near[0], lat, Math.cos(lat * Math.PI / 180));
+      return Math.sqrt(d2) * 111.32;   // mean degree of latitude, km
+    },
 
     /** Async click refinement (2026-07-24-region-adjacency-and-click-refinement-design.md
      *  §3.2): the synchronous bbox pass as the candidate filter, then a real
