@@ -1,0 +1,13 @@
+# Map view-mode default (2026-07-27-map-view-mode-default-design.md §4).
+# Thresholds are config, not constants (README threshold principle).
+parameters:
+    # How much curated best-of content a region must have before a moderator is
+    # allowed to make it open in Curated mode. Counts curated items on the
+    # experiential layers (A/B/E/I/J) plus verified+voted best-of routes — see
+    # App\Catalog\CuratedReadiness.
+    #
+    # 25 is an ADVISORY STARTING VALUE chosen so a region reads as populated
+    # rather than sparse, and is flagged for owner sign-off: the design records
+    # the threshold VALUE as an owner decision, while the GATE itself is the
+    # real control. Change it here; nothing hard-codes it.
+    map.curated_default_threshold: 25

@@ -119,11 +119,18 @@
          is obvious at a glance. #}
       <div class="grp">
         <h3>{{ 'map.view_mode'|trans }}</h3>
+        {# Everything carries the server-rendered `on`, because it is the GLOBAL
+           default (2026-07-27-map-view-mode-default-design.md §2) and so the
+           common case. panels.js initViewMode() repaints this only when the
+           precedence resolves to Curated — a saved profile mode, an anonymous
+           visitor's earlier choice, or a region a moderator has flipped. #}
         <div class="toggle" id="mode">
-          <button class="on" data-m="curated">{{ 'map.curated'|trans }}</button>
-          <button data-m="all">{{ 'map.everything'|trans }}</button>
+          <button data-m="curated">{{ 'map.curated'|trans }}</button>
+          <button class="on" data-m="all">{{ 'map.everything'|trans }}</button>
         </div>
-        <div class="best-facets" id="bestFacets">
+        {# Hidden to match the Everything default above; initViewMode() reveals
+           it when the precedence opens in Curated. #}
+        <div class="best-facets" id="bestFacets" hidden>
           <label>{{ 'map.season'|trans }}
             <select id="boSeason">
               <option value="spring">{{ 'map.season_spring'|trans }}</option><option value="summer">{{ 'map.season_summer'|trans }}</option>
@@ -338,6 +345,15 @@
      every key shares one flag set. HEX-escaped "\/" and unescaped "/"
      decode to the identical JS string either way. #}
   window.CC_MY_AREA = {{ (my_area ?? {})|merge({url: path('map_my_area_set'), token: csrf_token('my-area')})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# View-mode persistence (2026-07-27-map-view-mode-default-design.md §5): a
+     logged-in rider's Curated/Everything choice is saved to their PROFILE, not
+     to localStorage, so a shared device never leaks it to the next person.
+     Riders-only block — an anonymous visitor gets no endpoint, and panels.js
+     falls back to localStorage when this is absent. #}
+  window.CC_MAP_MODE = {
+    url: {{ path('map_view_mode')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
+    token: {{ csrf_token('map-view-mode')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
+  };
 </script>
 {% endif %}
 <script nonce="{{ csp_nonce() }}">

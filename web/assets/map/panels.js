@@ -23,7 +23,8 @@
 import { I18N, D, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
 import { txtOn, currentSeason } from './util.js';
 import { map } from './map-init.js';
-import { CATALOG, CATALOG_AZ, active, layerByKey, mode, setMode } from './catalog.js';
+import { CATALOG, CATALOG_AZ, active, layerByKey, mode, setMode,
+         resolveInitialMode, MODE_LS_KEY } from './catalog.js';
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
@@ -172,6 +173,40 @@ export function refreshBestOf(){
     .catch(()=>{ if(req===_bestOfReq) applyBestOf([]); });   // on failure, Curated shows no picks rather than a stale set
 }
 
+// Record a manual Curated/Everything choice
+// (2026-07-27-map-view-mode-default-design.md §5). A logged-in rider's choice
+// goes to their PROFILE — window.CC_MAP_MODE only exists in the riders-only
+// script block — so it follows them across devices and a shared computer never
+// hands it to the next person. Anonymous visitors have no profile to hang it
+// on, so theirs stays on the device. Fire-and-forget: a failed save must never
+// block the map, and the mode is already applied locally.
+function persistMode(m){
+  const cfg = window.CC_MAP_MODE;
+  if(cfg && cfg.url){
+    const body = new URLSearchParams({mode: m, _token: cfg.token || ''});
+    fetch(cfg.url, {method:'POST', credentials:'same-origin', body}).catch(()=>{});
+    return;
+  }
+  try { localStorage.setItem(MODE_LS_KEY, m); } catch(e){ /* private mode */ }
+}
+
+// Resolve which mode the map OPENS in and paint the toggle to match
+// (2026-07-27-map-view-mode-default-design.md §5). Runs after initScope(), so
+// CCScope.get() is the resolved active scope — the region's curated_default is
+// the third rung of the precedence and cannot be read before then. The template
+// marks Everything active, which is the global default and so the common case;
+// this only repaints when the precedence says otherwise.
+export function initViewMode(){
+  const m = resolveInitialMode(
+    PREFS,
+    window.CCScope ? window.CCScope.get() : null,
+    window.CC_REGIONS || [],
+  );
+  setMode(m);
+  document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on', b.dataset.m===m));
+  const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (m!=='curated');
+}
+
 export function initBestOf(){
   // Route domain phase 4 (spec §8): Curated mode = best-of for a (season, bike)
   // facet, fetched from /map/best-of; the returned ids get cur:true and Curated
@@ -193,6 +228,7 @@ export function initBestOf(){
   document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on'); setMode(b.dataset.m);
+    persistMode(b.dataset.m);   // profile for a rider, localStorage for a visitor
     clearRevealPin();   // decision C: mode change clears any reveal pin
     const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated');
     updateSubtitle();

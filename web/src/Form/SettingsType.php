@@ -5,6 +5,7 @@
 namespace App\Form;
 
 use App\Catalog\BikeType;
+use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
 use App\Entity\User;
 use App\World\Entity\Country;
@@ -150,6 +151,17 @@ final class SettingsType extends AbstractType
                     RidingStyle::Trail => 'form.riding_trail',
                     RidingStyle::Urban => 'form.riding_urban',
                     RidingStyle::Leisure => 'form.riding_leisure',
+                },
+            ])
+            ->add('defaultMapMode', EnumType::class, [
+                'class' => MapViewMode::class,
+                'label' => 'form.label_map_mode',
+                'help' => 'form.help_map_mode',
+                'required' => true,
+                'choice_label' => static fn (MapViewMode $m): string => match ($m) {
+                    MapViewMode::Auto => 'form.map_mode_auto',
+                    MapViewMode::Everything => 'form.map_mode_everything',
+                    MapViewMode::Curated => 'form.map_mode_curated',
                 },
             ])
             ->add('publicProfile', CheckboxType::class, [

@@ -5,6 +5,7 @@
 namespace App\Entity;
 
 use App\Catalog\BikeType;
+use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
 use App\Repository\UserRepository;
 use App\World\Entity\Country;
@@ -133,6 +134,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // language switcher / browser / site default.
     #[ORM\Column(type: 'string', length: 5, nullable: true)]
     private ?string $locale = null;
+
+    // Which view mode the map opens in
+    // (2026-07-27-map-view-mode-default-design.md §2). 'auto' = let the active
+    // region decide; the other values are the rider overriding that on every
+    // device. Stored as the enum's value string and read through the
+    // enum-typed accessor, which falls back to Auto on an unknown value so a
+    // vocabulary change can never fatal the map render.
+    #[ORM\Column(type: 'string', length: 16, options: ['default' => 'auto'])]
+    private string $defaultMapMode = MapViewMode::Auto->value;
 
     #[ORM\Column(type: 'boolean')]
     private bool $emailVerified = false;
@@ -545,6 +555,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setLocale(?string $locale): static
     {
         $this->locale = $locale;
+
+        return $this;
+    }
+
+    public function getDefaultMapMode(): MapViewMode
+    {
+        return MapViewMode::tryFrom($this->defaultMapMode) ?? MapViewMode::Auto;
+    }
+
+    public function setDefaultMapMode(MapViewMode $mode): static
+    {
+        $this->defaultMapMode = $mode->value;
 
         return $this;
     }

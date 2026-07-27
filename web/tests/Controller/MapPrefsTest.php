@@ -5,6 +5,7 @@
 namespace App\Tests\Controller;
 
 use App\Catalog\BikeType;
+use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -71,7 +72,84 @@ final class MapPrefsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('window.CC_PREFS', $html);
-        self::assertStringContainsString('{"bikes":[],"styles":[]}', $html);
+        // mapMode/authed joined the payload with the view-mode default
+        // (2026-07-27-map-view-mode-default-design.md §5); the two lists are
+        // still empty, which is what this test is about.
+        self::assertStringContainsString('{"bikes":[],"styles":[],"mapMode":"auto","authed":false}', $html);
+    }
+
+    /**
+     * The view-mode default (2026-07-27-map-view-mode-default-design.md §5).
+     * 'auto' hands the decision to the region; anonymous visitors can only ever
+     * be 'auto', because there is no profile to store anything else on.
+     */
+    public function testMapModeRidesThePrefsPayload(): void
+    {
+        $client = static::createClient();
+        $plain = $this->createUser('map-mode@example.com', 'securepass12345!', 'Map Mode Rider');
+
+        // Anonymous: auto + not authed, so the client may consult localStorage.
+        $client->request('GET', '/map');
+        self::assertStringContainsString('"mapMode":"auto","authed":false', (string) $client->getResponse()->getContent());
+
+        $this->loginAs($client, 'map-mode@example.com', $plain);
+        $client->request('GET', '/map');
+        // A rider defaults to auto too, but authed:true — which is what stops
+        // the client falling through to a shared device's localStorage.
+        self::assertStringContainsString('"mapMode":"auto","authed":true', (string) $client->getResponse()->getContent());
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $em->getRepository(User::class)->findOneBy(['email' => 'map-mode@example.com']);
+        self::assertInstanceOf(User::class, $user);
+        $user->setDefaultMapMode(MapViewMode::Everything);
+        $em->flush();
+
+        $client->request('GET', '/map');
+        self::assertStringContainsString('"mapMode":"everything","authed":true', (string) $client->getResponse()->getContent());
+    }
+
+    /**
+     * The persist endpoint behind the map's own toggle. It speaks the TOGGLE's
+     * tokens ('curated' | 'all'), not the enum's values — see
+     * MapViewMode::clientToken() for why those differ.
+     */
+    public function testViewModeEndpointStoresTheRidersChoice(): void
+    {
+        $client = static::createClient();
+        $plain = $this->createUser('map-mode-post@example.com', 'securepass12345!', 'Map Mode Poster');
+
+        // Anonymous: a clean 401, never an HTML login redirect the map would
+        // try to parse as JSON.
+        $client->request('POST', '/map/view-mode', ['mode' => 'all']);
+        self::assertResponseStatusCodeSame(401);
+
+        $this->loginAs($client, 'map-mode-post@example.com', $plain);
+        $client->request('GET', '/map');
+        $html = (string) $client->getResponse()->getContent();
+        // Read the token out of the page the way the browser does, rather than
+        // minting one from the container: this app uses stateless same-origin
+        // CSRF, so a token asked for outside a request has no session to live in.
+        self::assertSame(1, preg_match('/window\.CC_MAP_MODE = \{.*?token:\s*"([^"]+)"/s', $html, $m),
+            'the riders-only block carries a view-mode token');
+        $token = $m[1];
+
+        $client->request('POST', '/map/view-mode', ['mode' => 'curated', '_token' => $token],
+            [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseIsSuccessful();
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        $user = $em->getRepository(User::class)->findOneBy(['email' => 'map-mode-post@example.com']);
+        self::assertInstanceOf(User::class, $user);
+        self::assertSame(MapViewMode::Curated, $user->getDefaultMapMode());
+
+        // An unknown token is a 422, not a silent no-op that leaves the rider
+        // thinking their choice was saved.
+        $client->request('POST', '/map/view-mode', ['mode' => 'nonsense', '_token' => $token],
+            [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(422);
     }
 
     public function testLoggedInRiderGetsSavedPrefs(): void

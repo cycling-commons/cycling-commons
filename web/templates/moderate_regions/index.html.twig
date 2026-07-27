@@ -1,0 +1,96 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .mh{padding:2rem 0 1.4rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
+  .mh .lead{color:#4a4d40;max-width:56ch;line-height:1.6}
+  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.7rem}
+
+  .rg-list{margin:1.8rem 0 3rem;display:flex;flex-direction:column;gap:.7rem}
+  .rg-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;background:var(--paper);
+    padding:1rem 1.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+  .rg-body{flex:1 1 240px;min-width:0}
+  .rg-name{font-family:var(--serif);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:.5rem}
+  .rg-cc{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#8a8d7d;border:1px solid rgba(20,22,14,.2);border-radius:3px;padding:.05rem .3rem}
+  .rg-meter{margin-top:.45rem;display:flex;align-items:center;gap:.6rem}
+  .rg-bar{flex:0 0 140px;height:6px;border-radius:3px;background:rgba(28,58,42,.16);overflow:hidden}
+  .rg-bar i{display:block;height:100%;background:var(--spruce);border-radius:3px}
+  .rg-bar.is-ready i{background:var(--trail)}
+  .rg-count{font-family:var(--mono);font-size:.66rem;color:#595c4d}
+  .rg-state{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.22rem .55rem;border-radius:30px}
+  .rg-state--on{background:var(--trail);color:var(--ink)}
+  .rg-state--off{background:rgba(20,22,14,.08);color:#595c4d}
+  .rg-act{display:flex;align-items:center;gap:.6rem}
+  .rg-locked{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;max-width:22ch;line-height:1.5}
+  .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
+  .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
+  .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
+  @media(max-width:700px){.rg-item{align-items:flex-start}.rg-bar{flex-basis:100px}}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_regions', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null} %}{% endblock %}
+
+{% block body %}
+<div class="mh">
+  <div class="wrap">
+    <div class="kicker">{{ 'moderate_regions.kicker'|trans }}</div>
+    <h1>{{ 'moderate_regions.title'|trans }}</h1>
+    <p class="lead">{{ 'moderate_regions.lead'|trans({'%threshold%': threshold}) }}</p>
+    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
+  </div>
+</div>
+
+<div class="wrap" id="main">
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  {% if regions is empty %}
+    <div class="empty-queue">
+      <div class="ic">&#9650;</div>
+      <h3>{{ 'moderate_regions.empty_heading'|trans }}</h3>
+      <p>{{ 'moderate_regions.empty_body'|trans }}</p>
+    </div>
+  {% else %}
+  <div class="rg-list">
+    {% for r in regions %}
+      <div class="rg-item">
+        <div class="rg-body">
+          <div class="rg-name">{{ r.label }} <span class="rg-cc">{{ r.countryCode }}</span></div>
+          {# The count is shown whether or not the gate is open, so a curator can
+             see how far a region still has to go — not just that it is locked. #}
+          <div class="rg-meter">
+            <span class="rg-bar {{ r.ready ? 'is-ready' : '' }}" role="img"
+                  aria-label="{{ 'moderate_regions.readiness'|trans({'%count%': r.count, '%threshold%': threshold}) }}">
+              <i style="width:{{ min(100, (r.count * 100 / threshold)|round) }}%"></i>
+            </span>
+            <span class="rg-count">{{ 'moderate_regions.readiness'|trans({'%count%': r.count, '%threshold%': threshold}) }}</span>
+          </div>
+        </div>
+        <span class="rg-state {{ r.curatedDefault ? 'rg-state--on' : 'rg-state--off' }}">
+          {{ (r.curatedDefault ? 'moderate_regions.opens_curated' : 'moderate_regions.opens_everything')|trans }}
+        </span>
+        <div class="rg-act">
+          {% if r.canToggle %}
+            <form method="post" action="{{ path('moderate_regions_curated_default') }}">
+              <input type="hidden" name="_token" value="{{ csrf_token('region-curated-default') }}">
+              <input type="hidden" name="region" value="{{ r.id }}">
+              <input type="hidden" name="enable" value="{{ r.curatedDefault ? '0' : '1' }}">
+              <button type="submit" class="btn-act btn-decide">
+                {{ (r.curatedDefault ? 'moderate_regions.action_disable' : 'moderate_regions.action_enable')|trans }}
+              </button>
+            </form>
+          {% else %}
+            <span class="rg-locked">{{ 'moderate_regions.locked'|trans({'%threshold%': threshold}) }}</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -98,6 +98,52 @@ export const LETTER_KEY={C:'water',D:'services',E:'stays',G:'transit',H:'shelter
 export const KEY_LETTER={water:'C',services:'D',stays:'E',transit:'G',shelter:'H',scenic:'I',history:'J'};
 
 // Which layers are drawn, and which of the two view modes is showing.
-let _mode = 'curated';
+//
+// The global default is 'all' (Everything), NOT 'curated'
+// (2026-07-27-map-view-mode-default-design.md §2). Curated hides every
+// non-curated item on the experiential layers, so on an under-curated region it
+// shows a near-empty map while the rail counts hundreds of stays — a real
+// new-user trap the owner hit ("Gelderland says 1488 where to sleep but I see
+// 0/1488"). The honest default for a region that has not earned a best-of is to
+// show the data. resolveInitialMode() below can still open Curated, but only
+// when someone has actually said so.
+let _mode = 'all';
 export const mode = () => _mode;
 export function setMode(m){ _mode = m; }
+
+// localStorage key for an ANONYMOUS visitor's manual choice. A logged-in
+// rider's choice goes to their profile instead (owner decision: shared devices
+// must not leak one person's default to the next), so this key is only ever
+// read when CC_PREFS says the viewer has no stored preference of their own.
+export const MODE_LS_KEY = 'cc-map-mode';
+
+/** Load-time precedence (2026-07-27-map-view-mode-default-design.md §5):
+ *   1. the logged-in rider's saved profile mode, if not 'auto';
+ *   2. an anonymous visitor's own earlier choice in localStorage;
+ *   3. the ACTIVE region's curated_default, set by a moderator once the region
+ *      passed the readiness threshold;
+ *   4. Everything.
+ * `scope` is the resolved active scope (CCScope.get()) and `registry` the
+ * CC_REGIONS rows. Pure apart from the localStorage read; returns a toggle
+ * token ('curated' | 'all'), never an enum value. */
+export function resolveInitialMode(prefs, scope, registry){
+  const p = prefs || {};
+  if(p.mapMode === 'curated') return 'curated';
+  if(p.mapMode === 'everything') return 'all';
+  // Only anonymous visitors fall through to the device: a logged-in rider on
+  // 'auto' has deliberately chosen to follow the region.
+  if(!p.mapMode || p.mapMode === 'auto'){
+    if(!p.authed){
+      let stored = null;
+      try { stored = localStorage.getItem(MODE_LS_KEY); } catch(e){ /* private mode */ }
+      if(stored === 'curated' || stored === 'all') return stored;
+    }
+  }
+  // A single named region can carry the flag; a country/Everywhere/My-area
+  // scope spans many regions with no one answer, so it stays on Everything.
+  if(scope && scope.kind === 'region' && scope.regionIds && scope.regionIds.length === 1){
+    const r = (registry || []).find(x => x.id === scope.regionIds[0]);
+    if(r && r.curatedDefault) return 'curated';
+  }
+  return 'all';
+}

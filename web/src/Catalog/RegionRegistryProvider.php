@@ -35,16 +35,21 @@ final class RegionRegistryProvider
      * list is normal (a region imported before the outline column existed); the
      * client falls back to the bbox centre.
      *
-     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>, outline: list<list<float>>}>
+     * `curatedDefault` is the moderator flag that makes the map OPEN this
+     * region in Curated mode (2026-07-27-map-view-mode-default-design.md §3);
+     * false everywhere until a region earns it, and the global default is
+     * Everything.
+     *
+     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>, outline: list<list<float>>, curatedDefault: bool}>
      */
     public function all(): array
     {
-        /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string, outline: ?string}> $rows */
+        /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string, outline: ?string, curated_default: bool}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, slug, country_code AS cc,
                     ST_XMin(geom) AS w, ST_YMin(geom) AS s, ST_XMax(geom) AS e, ST_YMax(geom) AS n,
                     to_json(COALESCE(adj, ARRAY[]::int[])) AS adj,
-                    outline
+                    outline, curated_default
              FROM region
              WHERE geom IS NOT NULL AND country_code <> \'\'
              ORDER BY area_km2 DESC, slug',
@@ -62,6 +67,7 @@ final class RegionRegistryProvider
                 'bbox' => [(float) $r['w'], (float) $r['s'], (float) $r['e'], (float) $r['n']],
                 'adj' => array_map('intval', json_decode((string) $r['adj'], true, 512, \JSON_THROW_ON_ERROR)),
                 'outline' => \is_array($outline) ? $outline : [],
+                'curatedDefault' => (bool) $r['curated_default'],
             ];
         }, $rows);
     }

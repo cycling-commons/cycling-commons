@@ -300,6 +300,16 @@
         {{ form_help(profileForm.ridingStyles) }}
         {{ form_errors(profileForm.ridingStyles) }}
       </div>
+      {# Which view mode the map opens in
+         (2026-07-27-map-view-mode-default-design.md §5). Lives on the profile,
+         not in the browser, so it follows the rider across devices and a shared
+         computer never hands one person's choice to the next. #}
+      <div class="field">
+        {{ form_label(profileForm.defaultMapMode) }}
+        {{ form_widget(profileForm.defaultMapMode) }}
+        {{ form_help(profileForm.defaultMapMode) }}
+        {{ form_errors(profileForm.defaultMapMode) }}
+      </div>
     </div>
 
     {# Section header like the other .sec headers; the toggle's old bold label

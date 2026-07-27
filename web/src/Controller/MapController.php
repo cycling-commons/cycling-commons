@@ -8,6 +8,7 @@ use App\Catalog\BikeType;
 use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
+use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
 use App\Catalog\RegionRegistryProvider;
 use App\Catalog\RidingStyle;
@@ -66,6 +67,20 @@ final class MapController extends AbstractController
                 'styles' => $user instanceof User
                     ? array_map(static fn (RidingStyle $s): string => $s->value, $user->getRidingStyles())
                     : [],
+                // Which view mode the map opens in, step 1 of the load-time
+                // precedence (2026-07-27-map-view-mode-default-design.md §5).
+                // 'auto' — the default, and the only value an anonymous visitor
+                // ever sees — hands the decision down to the active region's
+                // curatedDefault, then to the global Everything default.
+                'mapMode' => $user instanceof User
+                    ? $user->getDefaultMapMode()->value
+                    : MapViewMode::Auto->value,
+                // Whether a profile exists to hang a choice on. Only an
+                // ANONYMOUS visitor falls through to localStorage — a logged-in
+                // rider sitting on 'auto' has chosen to follow the region, and
+                // must not inherit whatever the previous person on a shared
+                // device picked.
+                'authed' => $user instanceof User,
             ],
             // "My area" base location (region-scoping-design.md §4/§6): the
             // stored coarse point + derived region/country set, or null for

@@ -40,6 +40,11 @@ final class RegionRegistryProviderTest extends KernelTestCase
         self::assertNotNull($square, 'the imported region is in the registry');
         self::assertIsInt($square['id']);
         self::assertSame('BE', $square['countryCode']);       // scope-object field name, not `cc`
+        // The view-mode flag rides the registry too
+        // (2026-07-27-map-view-mode-default-design.md §3). False on import: a
+        // region opens in Everything until a moderator earns it otherwise.
+        self::assertArrayHasKey('curatedDefault', $square);
+        self::assertFalse($square['curatedDefault']);
         // bbox [west, south, east, north] of the fixture square [4,50]-[5,51].
         self::assertEqualsWithDelta(4.0, $square['bbox'][0], 0.001);
         self::assertEqualsWithDelta(50.0, $square['bbox'][1], 0.001);

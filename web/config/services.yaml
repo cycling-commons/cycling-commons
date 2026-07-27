@@ -35,6 +35,10 @@ services:
         arguments:
             $retentionMonths: '%moderation.retention_months%'
 
+    App\Catalog\CuratedReadiness:
+        arguments:
+            $threshold: '%map.curated_default_threshold%'
+
     App\Coverage\CoverageManifest:
         arguments:
             $tilesEnabled: '%coverage.tiles_enabled%'

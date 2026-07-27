@@ -1,0 +1,166 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use App\Catalog\CuratedReadiness;
+use App\Entity\User;
+use App\Moderation\ModerationScopeProvider;
+use App\Routing\LocalePrefix;
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
+
+/**
+ * Curator Regions desk — the only place `region.curated_default` is set
+ * (2026-07-27-map-view-mode-default-design.md §4).
+ *
+ * The toggle is GATED, which is the whole point (owner decision "B"): a region
+ * cannot be made to open in Curated mode until it actually has enough curated
+ * best-of content, so the flag can never be set prematurely and recreate the
+ * empty-map trap the global default was flipped to avoid. The readiness count
+ * is shown next to the threshold whether or not the gate is open, so a curator
+ * can see how far off a region is.
+ *
+ * Scoped like every other desk: a curator sees only their assigned regions;
+ * a global curator or an admin sees all of them.
+ *
+ * @api Instantiated by Symfony's router.
+ */
+#[Route(LocalePrefix::PATHS)]
+#[IsGranted('ROLE_CURATOR')]
+final class ModerateRegionsController extends AbstractController
+{
+    private const string CSRF_TOKEN_ID = 'region-curated-default';
+
+    public function __construct(
+        private readonly Connection $db,
+        private readonly ModerationScopeProvider $scopeProvider,
+        private readonly CuratedReadiness $readiness,
+    ) {
+    }
+
+    #[Route('/moderate/regions', name: 'moderate_regions')]
+    public function index(TranslatorInterface $translator): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $rows = $this->visibleRegions($user);
+        $counts = $this->readiness->countForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
+        $threshold = $this->readiness->threshold();
+
+        $regions = array_map(static function (array $r) use ($counts, $threshold, $translator): array {
+            $n = $counts[$r['id']] ?? 0;
+
+            return [
+                'id' => $r['id'],
+                'slug' => $r['slug'],
+                'countryCode' => $r['countryCode'],
+                'label' => $translator->trans('region.'.$r['slug'].'.label'),
+                'curatedDefault' => $r['curatedDefault'],
+                'count' => $n,
+                'ready' => $n >= $threshold,
+                // A region already flipped can always be flipped back, even if
+                // its count later drops below the threshold — the gate exists to
+                // stop premature ENABLING, never to trap a region in a mode its
+                // content no longer supports.
+                'canToggle' => $r['curatedDefault'] || $n >= $threshold,
+            ];
+        }, $rows);
+
+        return $this->render('moderate_regions/index.html.twig', [
+            'page_title' => 'moderate_regions.title',
+            'page_description' => 'moderate_regions.lead',
+            'nav_active' => 'moderate',
+            'regions' => $regions,
+            'threshold' => $threshold,
+            'mod_scope_names' => $this->scopeProvider->describe($user, $this->scopeProvider->scopeFor($user)),
+        ]);
+    }
+
+    #[Route('/moderate/regions/curated-default', name: 'moderate_regions_curated_default', methods: ['POST'])]
+    public function setCuratedDefault(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+        $regionId = $request->request->getInt('region');
+        $enable = '1' === (string) $request->request->get('enable');
+
+        // Jurisdiction, then the gate. Both are re-checked here rather than
+        // trusted from the rendered form: the desk hides an unavailable toggle,
+        // but a POST is a POST.
+        if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($user), $regionId)) {
+            throw $this->createAccessDeniedException('Region outside your moderation area.');
+        }
+        if ($enable && !$this->readiness->isReady($regionId)) {
+            $this->addFlash('danger', 'moderate_regions.flash_not_ready');
+
+            return $this->redirectToRoute('moderate_regions');
+        }
+
+        $this->db->executeStatement(
+            'UPDATE region SET curated_default = :v WHERE id = :id',
+            ['v' => $enable, 'id' => $regionId],
+            // ParameterType::BOOLEAN, not PDO::PARAM_BOOL: DBAL 4 types are its
+            // own enum and an int here fatals inside ExpandArrayParameters.
+            ['v' => ParameterType::BOOLEAN],
+        );
+        $this->addFlash('success', $enable ? 'moderate_regions.flash_enabled' : 'moderate_regions.flash_disabled');
+
+        return $this->redirectToRoute('moderate_regions');
+    }
+
+    /**
+     * The regions this curator may act on, in the registry's own order.
+     *
+     * @return list<array{id: int, slug: string, countryCode: string, curatedDefault: bool}>
+     */
+    private function visibleRegions(User $user): array
+    {
+        $scope = $this->scopeProvider->scopeFor($user);
+        $sql = "SELECT id, slug, country_code AS cc, curated_default
+                  FROM region
+                 WHERE geom IS NOT NULL AND country_code <> ''";
+        $params = [];
+        $types = [];
+        if (!$scope->global) {
+            $clauses = [];
+            if ([] !== $scope->regionIds) {
+                $clauses[] = 'id IN (:rids)';
+                $params['rids'] = $scope->regionIds;
+                $types['rids'] = ArrayParameterType::INTEGER;
+            }
+            if ([] !== $scope->countryCodes) {
+                $clauses[] = 'UPPER(country_code) IN (:ccs)';
+                $params['ccs'] = $scope->countryCodes;
+                $types['ccs'] = ArrayParameterType::STRING;
+            }
+            // A limited scope with neither list is a curator assigned nothing
+            // resolvable — show no regions rather than silently showing all.
+            $sql .= ' AND ('.([] === $clauses ? 'FALSE' : implode(' OR ', $clauses)).')';
+        }
+        $sql .= ' ORDER BY area_km2 DESC, slug';
+
+        /** @var list<array{id: int|string, slug: string, cc: string, curated_default: bool}> $rows */
+        $rows = $this->db->fetchAllAssociative($sql, $params, $types);
+
+        return array_map(static fn (array $r): array => [
+            'id' => (int) $r['id'],
+            'slug' => (string) $r['slug'],
+            'countryCode' => (string) $r['cc'],
+            'curatedDefault' => (bool) $r['curated_default'],
+        ], $rows);
+    }
+}

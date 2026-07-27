@@ -27,10 +27,17 @@ import { resolveLocalFeature, openFeatureByName, openRouteById, openPendingById 
 import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
-         initChips } from './panels.js';
+         initChips, initViewMode } from './panels.js';
 
   // Scope model + rail + header (scope-ui.js).
   initScope();
+
+  // Which view mode the map OPENS in (2026-07-27-map-view-mode-default-design.md
+  // §5). Must sit exactly here: it reads the ACTIVE scope, which initScope()
+  // above has just resolved, and every later mode() reader — the map.on('load')
+  // applyScope/render and initChips()'s initial refreshBestOf() — must already
+  // see the answer.
+  initViewMode();
 
   initMapControls();
 

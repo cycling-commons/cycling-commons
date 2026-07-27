@@ -154,6 +154,21 @@ lazy-firewall caching gotcha — see
   token); on fetch failure Curated shows no picks rather than a stale set.
 - A rider with **exactly one** saved bike preselects the Bike facet; multi-bike
   riders keep the neutral `all` (the facet is single-valued).
+- **Which mode the map OPENS in (2026-07-27).** The global default is
+  **Everything**, not Curated: Curated hides every non-curated experiential item,
+  so on an under-curated region it showed a near-empty map behind a rail counting
+  hundreds of places (the owner's "1488 where to sleep, 0/1488"). A region opens
+  in Curated only once a moderator has flipped `region.curated_default`, and that
+  toggle is **gated** on a readiness count — curated items on the experiential
+  letters plus verified+voted best-of routes, against
+  `map.curated_default_threshold` — so it cannot be set prematurely. Utility
+  letters do not count towards readiness: they render in both modes. The gate
+  lives on the curator **Regions** desk (`/moderate/regions`), scoped like every
+  other desk. Load-time precedence: the rider's saved `users.default_map_mode`
+  (profile, NOT localStorage — shared devices) → an anonymous visitor's own
+  localStorage choice → the active region's flag → Everything. Resolved once at
+  load; a later scope change never re-resolves.
+  Design: [2026-07-27-map-view-mode-default-design.md](2026-07-27-map-view-mode-default-design.md).
 
 ### 4.3 Filter chips
 
