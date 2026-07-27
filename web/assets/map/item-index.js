@@ -12,17 +12,13 @@
    rebuilds BOTH: IDX_IDS is derived from ITEM_INDEX, and refreshing one without
    the other would let a coverage hit whose curated twin is indexed list twice.
 
-   openLocalFeature/openStayPivot are the entries' `go` handlers and arrive
-   through initItemIndex(deps) until places.js lands (§5 step 6). */
+   openLocalFeature/openStayPivot are the entries' `go` handlers, plain imports
+   now that places.js has landed (§5 step 6). initItemIndex() went with them: it
+   only ever carried the handover, and the index itself is built by
+   rebuildItemIndex() from the entry's sidebar-search block. */
 import { CATALOG, layerByKey } from './catalog.js';
 import { slug, haversine, featurePoint } from './util.js';
-
-// Injected by initItemIndex() until places.js exists (see the header).
-let openLocalFeature, openStayPivot;
-
-export function initItemIndex(deps){
-  ({openLocalFeature, openStayPivot} = deps);
-}
+import { openLocalFeature, openStayPivot } from './places.js';
 
 // ---- Unified searchable-item index (spec 2026-07-14 §3.1) ----
 // Every curated/DB-backed item exactly once: CATALOG features (curated:

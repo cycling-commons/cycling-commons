@@ -10,8 +10,10 @@
    the dynamic ids each pass, which is why ride-check and the coverage tiles
    deliberately namespace their own sources outside its reach.
 
-   The drawer and tip hooks are plain imports now; only the place hook still
-   arrives through initRender(deps), until places.js lands (§5 step 6). */
+   Every dep this module once took injected is gone (§5 step 6): openDrawer is a
+   plain import, and openLocalFeature turned out to be dead weight — it was
+   injected at the render.js extraction and never called. initRender() went with
+   them; it only ever carried the handover. */
 import { map, flyToPin, styleReady } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { I18N, D, LAYER_L10N, tpl, trVal, DIFF_LABELS, CC_SEASON_LABEL } from './i18n.js';
@@ -24,13 +26,6 @@ import { updateConfMarkers } from './osm-pools.js';
 import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON } from './coverage.js';
 import { openDrawer } from './drawer.js';
-
-// Injected by initRender() until places.js exists (see the header).
-let openLocalFeature;
-
-export function initRender(deps){
-  ({openLocalFeature} = deps);
-}
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
 

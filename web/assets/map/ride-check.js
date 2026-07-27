@@ -6,20 +6,22 @@
    sources/layers are namespaced `ridecheck*` and are never touched by render()'s
    clearDynamic, so the track survives a repaint.
 
-   Coverage, the item index, the catalogue, the sheet and now the drawer are
-   plain imports. What still arrives through initRideCheck(deps) is only what
-   places.js will own while it remains inside the entry (§5 step 6); the deps
-   object is scaffolding for the migration, not the intended end state.
+   Every dep this module once took injected is a plain import now that drawer.js
+   and places.js have landed (§5 step 6), so initRideCheck() takes none. The
+   drawer-generation pairing it needs — invalidate the coverage detail AND the
+   town-card nearby fetch together — is now called directly, the same two lines
+   drawer.js's openDrawer/closeDrawer run.
  */
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn } from './util.js';
 import { coverageIconId } from './icons.js';
-import { openCoverageByRef } from './coverage.js';
+import { openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
 import { itemIndex } from './item-index.js';
 import { CATALOG, layerByKey } from './catalog.js';
 import { sheet } from './sheet.js';
 import { closeDrawer, highlightAt, clearHighlight } from './drawer.js';
+import { openRouteById, bumpPlaceReq } from './places.js';
 
 // ---- Ride-check (spec 2026-07-14 §4.3): riders-only "what's along my GPX?" ----
 // Track overlay uses its own source/layer ids (render()'s clearDynamic never
@@ -33,9 +35,7 @@ import { closeDrawer, highlightAt, clearHighlight } from './drawer.js';
 // arm, where they overlap most and add corridor noise.
 const COV_KEY={C:'water', D:'services', G:'transit', H:'shelter'};
 
-export function initRideCheck(deps){
-    // Injected until places.js exists (see the file header).
-    const { openRouteById, invalidateAsyncDrawers } = deps;
+export function initRideCheck(){
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
     const pick=document.getElementById('rcPick'), fileIn=document.getElementById('rcFile'),
           radiusSel=document.getElementById('rcRadius'), status=document.getElementById('rcStatus');
@@ -169,7 +169,7 @@ export function initRideCheck(deps){
         html+=`</ul><div class="cc-near-note">${D.covArmNote||'From open data — not yet checked by a rider.'}</div>`;
       }
       const body=document.getElementById('drawerBody');
-      invalidateAsyncDrawers();   // invalidate any in-flight coverage POI detail + town-card nearby fetch — this render supersedes them
+      invalidateCoverageDrawer(); bumpPlaceReq();   // invalidate any in-flight coverage POI detail + town-card nearby fetch — this render supersedes them
       body.innerHTML=html;
       document.getElementById('rcClearBtn').onclick=clearRideCheck;
       const groupsByLetter=Object.fromEntries(d.groups.map(g=>[g.letter,g]));

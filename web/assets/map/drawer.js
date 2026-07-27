@@ -15,9 +15,7 @@
    never at module evaluation.
 
    Two deps are still injected, because their owning modules have not landed
-   (§9): community.js's confirm/vote panels and corrections.js's teardown.
-   bumpPlaceReq is a CLOSURE over the entry's live _placeReq counter, not a
-   snapshot. */
+   (§9): community.js's confirm/vote panels and corrections.js's teardown. */
 import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl } from './util.js';
 import { map } from './map-init.js';
@@ -28,15 +26,15 @@ import { openLightbox } from './lightbox.js';
 import { highlightRoute, clearRouteHighlight } from './render.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
 import { isPicking, cancelPicking } from './picking.js';
+import { openCity, bumpPlaceReq } from './places.js';
 
 // Injected by initDrawer() until their owning modules exist (see the header).
 let CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
-    hydrateItemConfirm, submitModeration, openCity, clearCorrections, bumpPlaceReq;
+    hydrateItemConfirm, submitModeration, clearCorrections;
 
 export function initDrawer(deps){
   ({CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
-    hydrateItemConfirm, submitModeration, openCity, clearCorrections,
-    bumpPlaceReq} = deps);
+    hydrateItemConfirm, submitModeration, clearCorrections} = deps);
 }
 
 // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
