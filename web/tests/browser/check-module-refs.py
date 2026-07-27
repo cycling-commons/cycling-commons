@@ -38,7 +38,55 @@ def strip(src):
     src = re.sub(r'"(?:\\.|[^"\\\n])*"', '""', src)
     return src
 
-entry = strip(io.open(os.path.join(ROOT, 'map.js'), encoding='utf-8').read())
+def read(name):
+    return io.open(os.path.join(ROOT, name), encoding='utf-8').read()
+
+
+# ---- Arm 0: every imported name must actually be EXPORTED by its module ----
+# The split retires deps by deleting an initX() and letting the importer take a
+# real import instead, and it is trivially easy to delete the export while a
+# caller still imports it. The browser answers that with
+# "SyntaxError: The requested module './x.js' does not provide an export named
+# 'y'", which kills the whole module graph — every checkpoint after it fails, so
+# the smoke sweep DOES catch it, but only after a full browser round trip, and
+# only if the sweep is run. It is a static question, so ask it statically.
+def exports_of(src):
+    names = set()
+    for m in re.finditer(r'^export\s+(?:async\s+)?(?:function|class|const|let|var)\s+([A-Za-z_$][\w$]*)', src, re.M):
+        names.add(m.group(1))
+    # `export const a = 1, b = 2;` and `export let x, y;`
+    for m in re.finditer(r'^export\s+(?:const|let|var)\s+([^;\n=]+(?:=[^;\n]*)?)', src, re.M):
+        for part in m.group(1).split(','):
+            n = part.split('=')[0].strip()
+            if n.isidentifier():
+                names.add(n)
+    for m in re.finditer(r'^export\s*\{([^}]*)\}', src, re.M):
+        names |= {x.strip().split(' as ')[-1].strip() for x in m.group(1).split(',') if x.strip()}
+    return names
+
+
+missing = {}
+for f in sorted(os.listdir(ROOT)):
+    if not f.endswith('.js') or f in (SKIP - {'map.js'}):
+        continue
+    src = read(f)
+    for m in re.finditer(r'import\s*\{([^}]*)\}\s*from\s*[\'"]\./([\w.-]+)[\'"]', src):
+        want = {x.strip().split(' as ')[0].strip() for x in m.group(1).split(',') if x.strip()}
+        target = m.group(2)
+        if not os.path.exists(os.path.join(ROOT, target)):
+            missing.setdefault(f, []).append('%s (no such module)' % target)
+            continue
+        have = exports_of(read(target))
+        for n in sorted(want - have):
+            missing.setdefault(f, []).append('%s <- %s' % (n, target))
+
+for f, names in missing.items():
+    print('%s imports names its module does not export -> %s' % (f, ', '.join(names)))
+if missing:
+    print('FAIL')
+    sys.exit(1)
+
+entry = strip(read('map.js'))
 owned = set()
 for m in re.finditer(r'^  (?:function|const|let|var)\s+([A-Za-z_$][\w$]*)', entry, re.M):
     owned.add(m.group(1))
