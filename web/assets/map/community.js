@@ -21,12 +21,7 @@ import { layerByKey } from './catalog.js';
 import { render } from './render.js';
 import { mapToast, closeDrawer } from './drawer.js';
 import { _pickSegs } from './picking.js';
-
-// Injected by initCommunity() until search-ui.js exists (§5 step 7). A CLOSURE
-// over the entry's live `_searchDropPending`, which the sidebar-search block
-// assigns long after this handover — and which is still null until it does, so
-// the closure keeps the original null guard rather than dropping it.
-let dropPendingFromSearch;
+import { dropPendingFromSearch } from './search-ui.js';
 
 // Route community loop (spec §7). One authenticated fetch on drawer-open
 // carries counts + my-state + a stateless CSRF token; the three POSTs reuse it.
@@ -210,8 +205,7 @@ export function submitModeration(btn){
     .then(res=>{ hidePendingPin(id); closeDrawer(); mapToast(tpl(D.decisionRecorded||'Decision recorded ({d}) — preview, not yet persisted · {ref}', {d:decision.replace('_',' '), ref:res.reference})); })
     .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast(D.decisionErr||'Could not record the decision — please try again.'); });
 }
-export function initCommunity(deps){
-  ({dropPendingFromSearch} = deps);
+export function initCommunity(){
     // Delegated: clicking a stance button records/switches it, then repaints.
     document.addEventListener('click', e=>{
       const btn=e.target.closest('[data-cf-act]'); if(!btn) return;
