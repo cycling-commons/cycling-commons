@@ -429,7 +429,7 @@ Every gap below was exercised BY HAND for the module that touched it, with a
 scripted probe rather than clicking. The probes live in `.playwright-mcp/`
 (gitignored): `probe-coverage.js`, `probe-gaps.js`, `probe-picking.js`,
 `probe-deeplinks.js`, `probe-community.js`, `probe-clicktoscope.js`,
-`probe-search.js`, `probe-panels.js`.
+`probe-search.js`, `probe-panels.js`, `probe-corrections.js`.
 
 | not covered | verified instead |
 |---|---|
@@ -444,7 +444,40 @@ scripted probe rather than clicking. The probes live in `.playwright-mcp/`
 | click-to-scope | empty ground re-scopes country:BE → region:1 with the header following; a feature click does not |
 | search beyond the one checkpoint | item search, keyboard highlight + Enter, Escape close, the coverage/widen rungs |
 | panels beyond one layer toggle | select-all both ways with its label cycling, satellite on/off, legend collapse, burger + Escape, both best-of facets rewriting the subtitle, pref chip, filter chip, lazy heat layer + season chip |
-| the curator corrections overlay | NOT verified end to end: the dev curator is fully 2FA-enrolled, so there is no scriptable login. What is verified is the rider path — the 403 branch clears any stale overlay and throws nothing |
+| the curator corrections overlay | VERIFIED end to end as a real curator (see the access recipe below): 3 segmented corrections draw 3 `corr-*` line layers in 3 different palette colours with 6 numbered endpoint pins, the "Pending corrections" panel lists all 4 with reason + note + stretch count, clicking one with a stretch flies to it (z14→15) while the segment-less one is a deliberate no-op, and closing the drawer tears the whole overlay down. 0 console errors |
+
+### Getting into the app from a probe — two things that cost an hour
+
+Both of these make a scripted login fail SILENTLY, which is the worst way for a
+harness to fail: the sweep runs anonymously, three checkpoints skip, and nothing
+anywhere says "you are not logged in".
+
+- **Submit with `form.requestSubmit()`, never `page.click()`.** The login form
+  carries the `cc-validate` script, which can swallow a programmatic click — the
+  POST never leaves the page. There is no error, no flash, no failed request:
+  the URL simply stays `/login`. And reach the form THROUGH its field
+  (`document.querySelector('input[name=_password]').closest('form')`), because
+  `document.querySelector('form')` is the page's first form, which is not this
+  one. `smoke-auth.js` now does both, and additionally asserts the session by
+  fetching `/profile` — a run that is not authenticated now reports `ok: false`
+  instead of quietly skipping.
+- **Log out through the account chip's POST form**, not `GET /logout` (405,
+  `enable_csrf`) and not by clearing cookies.
+
+**The curator IS scriptable**, which is how the corrections overlay finally got
+verified. `AppFixtures::makeUser(..., presetTotp: true)` presets the well-known
+seed `JBSWY3DPEHPK3PXP` on `admin@example.test` and `moderator@example.test`
+(ROLE_CURATOR), exactly so dev and demo can generate valid codes — the fixture
+comment says as much and points at `oathtool --totp -b JBSWY3DPEHPK3PXP`. From a
+probe, compute the code **in the page** with `crypto.subtle` (HMAC-SHA1 over the
+30 s counter): the MCP runner context has no `require`, no dynamic `import` and
+no WebCrypto of its own. Flow: `/login` → `/2fa` → fill `#_auth_code` → submit
+`document.getElementById('_auth_code').closest('form')`. Retry once with the next
+30 s step if the first code lands on a boundary. `probe-corrections.js` does all
+of this.
+
+Note the OTHER curator, `curator@map.test`, is NOT scriptable — its secret is a
+real encrypted one, not the fixture seed.
 
 ### Three things about the verification itself
 
