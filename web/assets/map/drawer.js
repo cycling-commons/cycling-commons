@@ -14,8 +14,8 @@
    expected and safe (§4.1): every cross-module reference is called at runtime,
    never at module evaluation.
 
-   Two deps are still injected, because their owning modules have not landed
-   (§9): community.js's confirm/vote panels and corrections.js's teardown. */
+   One dep is still injected, because its owning module has not landed (§9):
+   corrections.js's teardown, which closeDrawer calls. */
 import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl } from './util.js';
 import { map } from './map-init.js';
@@ -27,14 +27,14 @@ import { highlightRoute, clearRouteHighlight } from './render.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
+import { CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
+         hydrateItemConfirm, submitModeration } from './community.js';
 
 // Injected by initDrawer() until their owning modules exist (see the header).
-let CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
-    hydrateItemConfirm, submitModeration, clearCorrections;
+let clearCorrections;
 
 export function initDrawer(deps){
-  ({CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
-    hydrateItemConfirm, submitModeration, clearCorrections} = deps);
+  ({clearCorrections} = deps);
 }
 
 // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
