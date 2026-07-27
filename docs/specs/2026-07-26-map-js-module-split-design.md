@@ -111,8 +111,8 @@ candidate for `node --test` coverage under `web/tests/js/` alongside
 | `i18n.js` | `I18N`, `D`, `LAYER_L10N`, `VALUE_TR`, `tpl`, `trVal`, `sourceLabel`, `DIFF_LABELS`, season/bike labels | ✅ |
 | `util.js` | `escPend`, `safeHref`, `slug`, `stars`, `txtOn`, `haversine`, `featurePoint`, `currentSeason`, `ccUrl`, `wc`, `gradColor`, `DIFF_PURPLE` | ✅ |
 | `map-init.js` | the `maplibregl.Map` instance, attribution/nav/zoom controls, `addSatellite`, style-ready flag, `flyToPin`, the coordinate context menu | |
-| `catalog.js` | `CATALOG`, `CATALOG_AZ`, `layerByKey`, `active`, `mode` + `setMode`, `CITIES`, `cityLink`, `LETTER_KEY`/`KEY_LETTER` | |
-| `scope-ui.js` | `curScope`, `inScope`, `scopeToken`, `scopeLabel`, `writeScopeHeader`, `focusSearchBox`, `renderScopeChips`, `applyScope`, the rail wiring and the area prompt | |
+| `catalog.js` | `CATALOG`, `CATALOG_AZ`, `layerByKey`, `active`, `mode` + `setMode`, `CITIES`, `cityLink`, `LETTER_KEY`/`KEY_LETTER`, `routePathById` (§9) | |
+| `scope-ui.js` | `curScope`, `inScope`, `scopeToken`, `scopeLabel`, `writeScopeHeader`, `focusSearchBox`, `renderScopeChips`, `applyScope`, the rail wiring, the area prompt, and click-to-scope (§9) | |
 | `spotlight.js` | `setSpotlight`, `setCountrySpotlight`, `setCircleSpotlight`, `drawSpotlightMask`, `clearSpotlight` | |
 | `icons.js` | `mintWaterDrops`, `SERVICE_GLYPH`, `miniIcon`, `pinGlyph`, `pinEl`, `coverageIconId`, `clusterEl` | |
 | `osm-pools.js` | `osmLayers`, `OSM_BULK`, `addWaterOsm`, `addOsmDots`, the confirmed-pin cluster machinery | |
@@ -120,7 +120,7 @@ candidate for `node --test` coverage under `web/tests/js/` alongside
 | `item-index.js` | `ITEM_INDEX`, `IDX_IDS`, `buildItemIndex`, `nearbyItems`, `trimEnds` | |
 | `render.js` | `PREFS`, `markers`, `dynamicIds`, `clearDynamic`, `drawLine`, `drawClimbLine`, the surface layer, every feature filter, `featureVisible`, `layerCounts`, `updateCounts`, `render`, route highlighting | |
 | `drawer.js` | `schemaRows`, `buildRecord`, `osmDrawer`, `waterDrawer`, `renderDrawerBody`, `openDrawer`, `closeDrawer`, item history, `highlightAt`, `revealPinAt`, `mapToast` | |
-| `community.js` | route community panel, non-votable utility confirmations, `rcPost`, moderation submit | |
+| `community.js` | route community panel, non-votable utility confirmations, `rcPost`, moderation submit, the curator A/R keyboard (§9) | |
 | `picking.js` | the located-correction picking session | |
 | `corrections.js` | correction geometry, `showRouteCorrections`, the correction panel | |
 | `places.js` | `openPlace`, `renderPlaceCard`, `openCity`, `openFeatureByName`, `openLocalFeature`, `openRouteById`, `openPendingById`, `openStayPivot` | |
@@ -277,11 +277,24 @@ and the truncation note.
   `scope-header.js` after the catalog fetch, reintroducing the header flash
   Phase 0 §5 exists to prevent.
 
-## 9. Execution progress (2026-07-26)
+## 9. Execution progress — DONE (2026-07-26 / 07-27)
 
-`map.js` is **4,060 → 1,948 lines**, with seventeen modules beside it. Every
-commit below was browser-verified with the §6 sweep before the next began; the
-tree is clean and nothing is pushed.
+**The split is finished.** `map.js` is **4,060 → 304 lines**, with twenty-four
+modules beside it, and the entry is now nothing but imports, the CC_* payload
+population §4 assigns to it, the `map.on('load')` boot and an ordered list of
+`initX()` calls. Every commit was gated (below) before the next began; the tree
+is clean and **nothing is pushed**.
+
+| file | lines | | file | lines |
+|---|---|---|---|---|
+| `map.js` (entry) | 304 | | `places.js` | 250 |
+| `drawer.js` | 526 | | `mapillary.js` | 213 |
+| `coverage.js` | 482 | | `ride-check.js` | 204 |
+| `render.js` | 453 | | `spotlight.js` | 183 |
+| `scope-ui.js` | 370 | | `osm-pools.js` | 140 |
+| `panels.js` | 304 | | `picking.js` | 118 |
+| `search-ui.js` | 288 | | `icons.js` | 114 |
+| `community.js` | 262 | | the other nine | 40-113 each |
 
 ### Landed
 
@@ -303,144 +316,153 @@ tree is clean and nothing is pushed.
 | `9b22237` | step 3c — `icons.js` |
 | `e286b9c` | step 4b — `scope-ui.js` |
 | `567522f` | step 4c — `osm-pools.js` |
-| `2fe3ba1` | step 4d — `coverage.js`, **plus the `make map-refs` gate** (see below) |
+| `2fe3ba1` | step 4d — `coverage.js`, **plus the `make map-refs` gate** |
 | `8eafcce` | step 5a — `item-index.js`; ride-check drops four injected deps |
 | `c7548e5` | step 5b — `render.js`, **plus two latent ReferenceErrors it exposed** |
 | `7aa1cc4` | step 6 (partial) — `sheet.js`, `lightbox.js` |
 | `dd8fcef` | step 7 (partial) — `planner.js` |
+| `533938f` | step 6 — **`drawer.js`**, the keystone (five disjoint ranges) |
+| `daf4c36` | **gate round 5** — `map-refs` was parsing the modules as CommonJS |
+| `6916a7c` | step 6 — `picking.js`; `routePathById` → `catalog.js` |
+| `749443a` | **gate round 6** — `map-refs` now checks imports against real exports |
+| `7bbf088` | step 6 — `places.js`; three handovers deleted outright |
+| `695c6dd` | step 6 — `community.js` |
+| `1922b1b` | step 6 — `corrections.js`; click-to-scope → `scope-ui.js` |
+| `fa8e99d` | step 7 — `search-ui.js` |
+| `6e0de57` | step 7 — `panels.js`; **`map.js` is entry-only** |
 
-### Not yet extracted
+### The scaffolding is fully unwound
 
-`drawer.js`, `community.js`, `picking.js`, `corrections.js`, `places.js`,
-`search-ui.js`, `panels.js`.
+The table of injected deps is **empty**. Every `initX(deps)` became either a
+plain import or nothing at all — five init functions were deleted outright once
+their whole body was a handover: `initOsmPools`, `initCoverage`, `initItemIndex`,
+`initRender`, `initPlaces`, `initDrawer` (the chrome half survives as
+`initDrawerChrome`). `initRideCheck`, `initSheet`, `initLightbox`, `initPlanner`,
+`initCommunity` and `initScope` still exist but take no arguments, because each
+has a real side effect of its own.
 
-**`drawer.js` is next**, and it is the keystone: `openDrawer`,
-`renderDrawerBody`, `osmDrawer`, `waterDrawer`, `closeDrawer`, `revealPinAt`,
-`highlightAt`, `clearHighlight` and `photoCap` are injected into seven modules
-between them, so almost every remaining deps object empties out with it.
+What crosses module lines through an accessor rather than a binding, and why —
+this is the list to check before "just exporting the variable":
 
-It is also the hardest cut so far, because it is **not one contiguous range**.
-As of `dd8fcef` its parts sit at (verify the boundary lines before cutting —
-these shift with every commit):
+| binding | owner | accessor | why |
+|---|---|---|---|
+| `_styleReady` | `map-init.js` | `styleReady()` | reassigned on load |
+| `_mode` | `catalog.js` | `mode()` / `setMode()` | reassigned by the mode toggle |
+| `ITEM_INDEX`, `IDX_IDS` | `item-index.js` | `itemIndex()`/`idxIds()` + two mutators | rebuilt wholesale |
+| chip facets | `render.js` | `syncFacetChips()` | Sets reassigned per click |
+| preference filter | `render.js` | `prefFilterEnabled()`/`setPrefFilter()` | boolean flips |
+| accessibility Set | `render.js` | `staysAccessible()` | Set reassigned per chip click |
+| `_pick` | `picking.js` | `isPicking()` | session starts/ends long after import |
+| `_placeReq` | `places.js` | `bumpPlaceReq()` | a counter |
+| `_searchDropPending` | `search-ui.js` | `dropPendingFromSearch()` | null until `initSearchUi()` runs |
+| `_corrLayers` | `corrections.js` | `corrLayerIds()` | reassigned by `clearCorrections()` |
+| `boSeason`/`boBike`, `app`, the facet selects | `panels.js` | module-scope `let`s | read by a LATER init |
 
-| lines | what |
+Two ownership calls §4's table never made:
+
+- **`routePathById`** went to `catalog.js`. Both `picking.js` and
+  `corrections.js` need it and neither owns the catalogue it reads.
+- **click-to-scope + `selectableLayers()`** went to `scope-ui.js`, and could not
+  move until `corrections.js` owned `_corrLayers`. It had been sitting in the
+  middle of the picking block for exactly that reason.
+- **the curator A/R keyboard** went to `community.js`: it arms a moderation
+  decision, so it belongs with the moderation submit, and it was the last piece
+  of feature logic in the entry.
+
+### What the entry still contains, deliberately
+
+`map.js` is 304 lines: the import block, ~165 lines that fill
+`CATALOG[*].features` from the `CC_*` payloads, the `map.on('load')` boot, and
+the init list. The payload population stays because §4 assigns it there
+explicitly (`catalog.js`'s own header says its `features` arrays "are filled
+later, by the entry, from the CC_* payloads"). If it ever wants its own module,
+`catalog-payload.js` is the obvious name — but that is a new decision, not a
+leftover.
+
+### The gate, in its final form
+
+Three checks, in this order, every time — and the lesson of all six rounds is
+that the first two are necessary and never sufficient:
+
+1. **`make map-refs`**, which is now three arms:
+   - **imports vs exports.** Every `import { … } from './x.js'` is checked
+     against what x.js actually exports. Retiring a dep means deleting an
+     `initX()` and letting the importer take a real import, and it is trivially
+     easy to delete the export with a caller still importing it — the browser
+     answers that with `SyntaxError: does not provide an export named`, which
+     kills the whole module graph. Added in `749443a` after the sweep caught it
+     twice in one commit (`initItemIndex`, then `initRender`).
+   - **ES-module syntax.** Each module is copied to a temp `.mjs` and
+     `node --check`ed. Plain `node --check foo.js` parses these as CommonJS (no
+     `package.json` in this repo), and that parse **accepted a module with a
+     duplicated top-level `let`** — clean report, unloadable file. Fixed in
+     `daf4c36`.
+   - **no module references an entry-owned binding**, the original check, whose
+     four-round history is below.
+2. **the §6 sweep, logged in, with a GPX uploaded.** Green is
+   **15 passed / 0 failed / 1 skipped AND `consoleErrors: []`**. The remaining
+   skip is "no route lines drawn" — the dev routes are not curated, so they only
+   draw in Everything mode or under a scope that has them.
+3. **`make scope-test` (119/0) and `web/tools/check-spdx.sh`.**
+
+The ref checker took four rounds to become trustworthy before this session, and
+two more during it. Every round was paid for by a bug that reached the browser
+first:
+
+1. it stripped `'single quotes'` before template literals, so an apostrophe
+   inside a template swallowed every declaration in between and it reported
+   clean on a tree with six live ReferenceErrors;
+2. it compared only against bindings the entry DECLARES, missing everything the
+   entry merely IMPORTS — which is how `styleReady` got through;
+3. it blanked template literals as inert text, but nearly every panel builds
+   HTML as `` `...${escPend(x)}...` ``, so every `${}` expression was invisible
+   to it — that shipped `escPend is not defined` in `lightbox.js`;
+4. object-literal keys (`{D:'services'}`), function parameters
+   (`setSpotlight(slug)`) and multi-name declarations (`const S=2, D=24*S`) each
+   produced false positives that had to be excluded;
+5. it was parsing every module as CommonJS (`daf4c36`);
+6. it never compared imports against exports (`749443a`).
+
+### What the sweep still does not cover — and what was done instead
+
+Every gap below was exercised BY HAND for the module that touched it, with a
+scripted probe rather than clicking. The probes live in `.playwright-mcp/`
+(gitignored): `probe-coverage.js`, `probe-gaps.js`, `probe-picking.js`,
+`probe-deeplinks.js`, `probe-community.js`, `probe-clicktoscope.js`,
+`probe-search.js`, `probe-panels.js`.
+
+| not covered | verified instead |
 |---|---|
-| 51-54 + `schemaRows`, `osmDrawer`, `waterDrawer` | up to, but NOT including, the `_placeReq` comment block |
-| `photoList` … `loadItemHistory` | photo helpers, `buildRecord`, the item-history fetch |
-| `mapToast` | one small function, sandwiched between community and picking code |
-| `gradStrip`, `elevSvg`, `renderDrawerBody`, `openDrawer` | ends where `openPlace` begins |
-| `highlightAt` … `revealPinAt`, `closeDrawer` | the marker helpers and the teardown |
+| the coverage-icon → drawer path, whenever no coverage POI is in the viewport (the dev NL scope + the Afternoon_Ride bbox is exactly that case, so the checkpoint SKIPS there — confirmed identical on the parent commit) | `scope=BE` at Liège z13: 103 features, a click opens a real card, 0 errors |
+| the lightbox | opens from a drawer photo, caption renders the credit (so `photoCap` resolves across the drawer↔lightbox cycle), Escape closes, drawer stays open. Arrow stepping still unverified: the reachable feature has one photo, where stepping is a no-op by design |
+| Mapillary | still no checkpoint |
+| the mobile snap sheet | drawer opens at 390×820, scrim closes it; the map-ctrl and filters sheet were driven at that width too |
+| confirmed-pin clusters | Hautes Fagnes z11: leaf pins present, a click opens a drawer |
+| picking (no checkpoint at all) | full session: two snapped clicks → a pickseg line → Done → "· 1 stretch marked" in the community panel; plus both guards (openDrawer bails mid-pick, closeDrawer cancels) |
+| deep links | `?feature=<name>` opens + widens; `?feature=<nonsense>` opens nothing AND leaves the scope alone (07-20 finding 9); `?route=23` opens selected |
+| the community loop | route panel repaints "…" → "· 1 of 3 to verify"; a utility confirmation POSTs, repaints `is-mine`, 0→1, "· 1 rider confirmed", toasts |
+| click-to-scope | empty ground re-scopes country:BE → region:1 with the header following; a feature click does not |
+| search beyond the one checkpoint | item search, keyboard highlight + Enter, Escape close, the coverage/widen rungs |
+| panels beyond one layer toggle | select-all both ways with its label cycling, satellite on/off, legend collapse, burger + Escape, both best-of facets rewriting the subtitle, pref chip, filter chip, lazy heat layer + season chip |
+| the curator corrections overlay | NOT verified end to end: the dev curator is fully 2FA-enrolled, so there is no scriptable login. What is verified is the rider path — the 403 branch clears any stale overlay and throws nothing |
 
-Two traps in that layout. `_historyReq` and `_placeReq` are declared next to
-each other under one shared comment, but only `_historyReq` belongs to the
-drawer — `_placeReq` goes to `places.js`, exactly as `_covReq` was split out in
-`2fe3ba1`. And `closeDrawer` tears down a picking session, so it will need
-`picking.js`'s state injected until that module lands.
+### Three things about the verification itself
 
-### The scaffolding still to unwind
-
-Three modules take injected deps because their callees remain in the entry.
-Every entry disappears when its owning module lands — that is the checklist for
-"is the split actually finished", not just the file count:
-
-| module | still injected | lands with |
-|---|---|---|
-| `scope-ui.js` | `refreshBestOf` | `panels.js` |
-| `osm-pools.js` | `openDrawer`, `osmDrawer`, `waterDrawer` | `drawer.js` |
-| `coverage.js` | `openDrawer`, `renderDrawerBody`, `osmDrawer`, `waterDrawer`, `revealPinAt`, `isPicking` | `drawer.js`, `picking.js` |
-| `item-index.js` | `openLocalFeature`, `openStayPivot` | `places.js` |
-| `render.js` | `openDrawer`, `openLocalFeature` | `drawer.js`, `places.js` |
-| `sheet.js` | `closeDrawer` | `drawer.js` |
-| `lightbox.js` | `closeDrawer`, `photoCap` | `drawer.js` |
-| `ride-check.js` | `closeDrawer`, `openRouteById`, `highlightAt`, `clearHighlight`, `invalidateAsyncDrawers` | `drawer.js`, `places.js` |
-
-One injection is deliberately a CLOSURE, not a value, and must stay that way:
-`isPicking` reads a picking session that starts long after the handover, so
-passing it by value freezes it at boot. `staysAccessible` used to be the second;
-it is now an exported predicate from `render.js` for the same reason — the
-accessibility chip set behind it is reassigned on every chip click, so exporting
-the Set itself would hand importers a stale snapshot.
-
-Three bindings cross module lines through setters rather than exports, because
-an ES module import is a read-only binding and the writer is on the other side:
-`render.js`'s chip facets (`syncFacetChips()`), its preference toggle
-(`prefFilterEnabled()` / `setPrefFilter()`), and `item-index.js`'s two indexes
-(`rebuildItemIndex()` / `dropPendingFromIndex()`).
-
-### The recipe, for whoever continues
-
-1. Locate the block's exact line range and assert both boundary lines before
-   cutting — every extraction here was done by a short Python script that
-   `assert`s on the first and last line and deletes ranges **in strictly
-   descending start order**. Two bugs were caught that way before they reached
-   the file; both would have silently mangled a range.
-2. Move bodies verbatim, de-indent by two, and hand-write only the module header
-   and the `import`/`export` lines.
-3. Every side effect becomes an exported `initX()` the entry calls **at the exact
-   point the code used to occupy** (§4.2).
-4. Any `let` an importer would read becomes a getter + setter in its owner
-   module. Three have needed it so far: `_styleReady` → `styleReady()`, `mode` →
-   `mode()`/`setMode()`, `mlyOn` → kept private by moving its only writer in.
-5. `make map-refs`, then run the §6 sweep **logged in**, then commit. Both
-   matter, and neither is optional — see the gate below.
-
-### The gate, and why it exists
-
-`coverage.js` shipped a live `ReferenceError` past a fully green 13/0/3 sweep:
-`updateCoverageScopeFilter()` calls `applyStaysAccessFilter()`, which stayed in
-the entry. The sweep asserts DOM outcomes, so a scope switch that half-failed
-still looked correct; only the console disagreed. This is THE characteristic
-failure of the split — a moved function calling something left behind — and it
-is invisible to every check that only looks at the page.
-
-Three things now catch it:
-
-- **`make map-refs`** (`web/tests/browser/check-module-refs.py`) fails if any
-  module references a binding `map.js` either owns **or imports**. Run it before
-  the browser. It took four rounds to become trustworthy, and every round was
-  paid for by a bug that reached the browser first — so treat a "clean" from it
-  as necessary, never sufficient:
-  1. it stripped `'single quotes'` before template literals, so an apostrophe
-     inside a template swallowed every declaration in between and it reported
-     clean on a tree with six live ReferenceErrors;
-  2. it compared only against bindings the entry DECLARES, missing everything
-     the entry merely IMPORTS — which is how `styleReady` (map-init.js → used by
-     render.js → imported by neither) got through;
-  3. it blanked template literals as inert text, but nearly every panel here
-     builds HTML as `` `...${escPend(x)}...` ``, so every `${}` expression in the
-     codebase was invisible to it — that shipped `escPend is not defined` in
-     lightbox.js;
-  4. object-literal keys (`{D:'services'}`), function parameters
-     (`setSpotlight(slug)`) and multi-name declarations (`const S=2, D=24*S`)
-     each produced false positives that had to be excluded.
-- **the sweep runner collects console + pageerror output** and folds it into
-  `ok`, so a red console can no longer read as a green sweep.
-- **run the sweep logged in, with a GPX uploaded.** Anonymously, three
-  checkpoints skip — including both ride-check ones. The demo rider is
-  `user@example.test` / `password1234`; `atlas/demo/media/Afternoon_Ride.gpx`
-  works. NOT `Rondje_Spa_Chevron.gpx`: at 4.5 MB / 26k trackpoints it posts with
-  an empty `$_FILES` and the rail reports "Choose a GPX file first." — a
-  pre-existing bug, reproduced on the parent commit, filed and not fixed here.
-
-Logged in the sweep is 15 passed / 0 failed / 1 skipped; the remaining skip is
-"no route lines drawn", which depends on the active scope.
-
-### What the sweep still does not cover
-
-Worth knowing before trusting a green run. Each of these was exercised by hand
-this session, and each is a candidate checkpoint:
-
-- **the lightbox** — no checkpoint at all, despite being listed in §6. Verified
-  manually (opens from a drawer photo, closes on Escape). Arrow stepping is
-  still unverified: the reachable feature had one photo, where stepping is a
-  no-op by design.
-- **Mapillary** — no checkpoint, which is why `mapillary.js` carried an
-  unimported `I18N` from `04f1618` until this session. Any rider opening
-  street-level imagery would have hit it.
-- **the mobile snap sheet** — never entered; the sweep runs at desktop width.
-- **confirmed-pin clusters** — the pin checkpoint does not distinguish a cluster
-  leaf from a curated marker. Checked by hand under a Wallonia scope at z11 (32
-  bubbles, 41 leaf pins).
+- **The sweep's baseline is environment-dependent.** A fresh browser profile
+  reported 15/0/1; the same tree in a warmed profile reported 14/0/2 or 12/0/3,
+  the extra skips being the coverage viewport and the spotlight's 20 s boundary
+  paint (backlog item 10). Whenever a count looked off it was checked against
+  the PARENT commit with the same profile before being believed — twice that
+  showed the difference was the environment, not the extraction.
+- **The browser keeps one page across probe runs**, so a mobile probe's viewport
+  sticks. The sweeps for picking/places/community/corrections ran at 390×820
+  without anyone asking them to; all four were green there, and the cumulative
+  tree is green at 1440×900 too. Free extra coverage, but the probes now set the
+  viewport explicitly.
+- **Ride-check is rate-limited to 20 uploads/day per rider**, and the sweep
+  spends one per run. `docker compose exec app php bin/console cache:pool:clear
+  cache.ride_check_limiter` resets just that counter (its own dedicated pool) —
+  needed once in this session.
 
 ### Two things the split did not cause but did surface
 
@@ -453,3 +475,32 @@ this session, and each is a candidate checkpoint:
   coverage rows carry real OSM refs, so the `(source_ref, letter)` dedup cannot
   match and the same fountain lists in both arms. Correct on prod, where curated
   items fork from coverage. See `2026-07-26-ride-check-coverage-design.md` §7.
+- **One unexplained vendor blip**, recorded rather than explained away: in one
+  sweep out of about a dozen, three errors came from inside `maplibre-gl.js`
+  ("pt", the minified error class, three at the same millisecond during a scope
+  switch, no frame of ours in the trace). Not reproducible on an immediate re-run
+  with the identical saved scope. If it recurs, this is the prior.
+
+### The recipe, for whoever comes next
+
+Still accurate, and it survived seven more extractions:
+
+1. Locate the block's exact line range and **assert both boundary lines before
+   cutting**. Every extraction here was a short Python script that `assert`s on
+   the first and last line of every range and deletes ranges **in strictly
+   descending start order**. Several bugs were caught that way before they
+   reached a file; all of them would have silently mangled a range.
+2. Move bodies verbatim, de-indent by two, hand-write only the module header and
+   the `import`/`export` lines. Two cuts needed no re-indentation at all
+   (`search-ui.js`, `panels.js`) because the code was already inside a block —
+   those are the cleanest diffs in the whole split.
+3. Every side effect becomes an exported `initX()` the entry calls **at the exact
+   point the code used to occupy** (§4.2). When other init calls are interleaved
+   through a block, split on those seams rather than reordering — `panels.js`
+   became six inits for exactly that reason.
+4. Any `let` an importer reads OR writes becomes a getter/setter in its owner
+   module. The full list is the accessor table above.
+5. Inject live values as closures, never snapshots — and when the owning module
+   lands, the closure becomes an import.
+6. Run all three gate arms, then the sweep **logged in**, then hand-exercise
+   whatever the sweep does not reach, then commit.
