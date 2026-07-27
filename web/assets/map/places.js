@@ -26,13 +26,7 @@ import { sheet } from './sheet.js';
 import { openDrawer, osmDrawer, highlightAt, clearHighlight, revealPinAt } from './drawer.js';
 import { COVERAGE_ON, widenForDeepLink, openCoverageByRef,
          invalidateCoverageDrawer } from './coverage.js';
-
-// Injected by initPlaces() until corrections.js exists (§5 step 6).
-let showRouteCorrections;
-
-export function initPlaces(deps){
-  ({showRouteCorrections} = deps);
-}
+import { showRouteCorrections } from './corrections.js';
 
 // The town-card half of the drawer-generation convention — see the header.
 export function bumpPlaceReq(){ _placeReq++; }

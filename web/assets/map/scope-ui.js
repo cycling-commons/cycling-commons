@@ -23,7 +23,10 @@ import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlig
 import { mode } from './catalog.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { updateCoverageScopeFilter, fetchCoverageCounts } from './coverage.js';
-import { updateHeatFilter, render } from './render.js';
+import { updateHeatFilter, render, boundLayerIds, surfaceClsLayerIds } from './render.js';
+import { COVERAGE_KEYS, COVERAGE_CCS } from './coverage.js';
+import { isPicking } from './picking.js';
+import { corrLayerIds } from './corrections.js';
 
 // Injected by initScope() until their owning modules exist (see the header).
 let refreshBestOf;
@@ -312,4 +315,58 @@ export function initAreaNudge(){
     if(dist > 1.5*s.myArea.radiusKm){ if(!dismissed) show(); }
     else hide();
   });
+}
+
+// Click-to-scope, moved here with corrections.js (§9): it reads the correction
+// preview layer ids, which had no owner until that module landed. A side
+// effect, so the entry calls it where the handler used to sit (§4.2).
+export function initClickToScope(){
+    // Click-to-scope (2026-07-22-scope-selector-scale-design.md §C): a left-click
+    // on EMPTY map scopes to the region under the point. Feature clicks (coverage
+    // POIs/clusters, CATALOG route/climb/line layers, the A-layer surface
+    // classes, curator correction previews, Mapillary) keep their own handlers —
+    // this bails if any of THEIR layers has a feature under the point, or a
+    // stretch-picking session is active.
+    //
+    // queryRenderedFeatures(e.point) with no layer filter would also match
+    // basemap polygons — a click over land would then always look "non-empty"
+    // and this would never fire — so the query is narrowed to the ids those
+    // handlers actually bind. That list is DERIVED off the same live
+    // registries the handlers themselves use (COVERAGE_KEYS/COVERAGE_CCS,
+    // boundLayerIds, surfaceClsLayerIds(), _corrLayers) rather than a second,
+    // hand-kept list that could silently drift from the real bindings — if a
+    // layer were missing here, clicking that feature would ALSO re-scope the
+    // map underneath it. cov-sel-icon/planroute(-case) have no click handler of
+    // their own but are real rendered overlays, not "empty map" — included so a
+    // click on them doesn't misread as empty either. Filtered to map.getLayer()
+    // existence: queryRenderedFeatures throws on an id absent from the current
+    // style, and boundLayerIds in particular can carry stale ids across a
+    // render() that dropped a previously-bound feature.
+    function selectableLayers(){
+      const ids=['mly-img','mly-cov','cov-sel-icon','planroute','planroute-case'];
+      COVERAGE_KEYS.forEach(([key])=>COVERAGE_CCS.forEach(cc=>{
+        const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+        ids.push(id);
+      }));
+      boundLayerIds.forEach(id=>ids.push(id));         // drawLine/drawClimbLine: route/climb/line CATALOG layers
+      surfaceClsLayerIds().forEach(id=>ids.push(id));  // A-layer surface classes
+      corrLayerIds().forEach(id=>ids.push(id));           // curator correction-segment previews
+      return ids.filter(id=>map.getLayer(id));
+    }
+    map.on('click', async e=>{
+      if(isPicking()) return;                              // stretch-picking owns the click
+      if(map.queryRenderedFeatures(e.point, {layers:selectableLayers()}).length) return;  // a feature layer will handle it
+      if(!window.CCScope) return;
+      // Precise resolution refines an ambiguous click (2+ overlapping region bboxes)
+      // against the real polygon; deep inside one region it is synchronous-fast, no
+      // fetch (2026-07-24-region-adjacency-and-click-refinement-design.md §3.2).
+      const r=await window.CCScope.regionOfPointPrecise(e.lngLat.lng, e.lngLat.lat);
+      if(!r) return;
+      // Same-region click is a no-op (final review CRITICAL 1): bail before setRegion
+      // so an empty-map click inside the ALREADY-active region doesn't re-fit the
+      // camera + re-fetch coverage counts + re-render on every stray click.
+      const s=curScope();
+      if(s.kind==='region' && s.regionIds[0]===r.id) return;
+      window.CCScope.setRegion(r.slug);   // cc:scopechange -> applyScope + renderScopeChips
+    });
 }

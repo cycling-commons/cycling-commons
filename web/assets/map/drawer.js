@@ -14,8 +14,8 @@
    expected and safe (§4.1): every cross-module reference is called at runtime,
    never at module evaluation.
 
-   One dep is still injected, because its owning module has not landed (§9):
-   corrections.js's teardown, which closeDrawer calls. */
+   Nothing is injected any more: every module this one reaches into has landed,
+   so initDrawer() is gone and only initDrawerChrome() remains (§9). */
 import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl } from './util.js';
 import { map } from './map-init.js';
@@ -29,13 +29,9 @@ import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
 import { CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
          hydrateItemConfirm, submitModeration } from './community.js';
+import { clearCorrections } from './corrections.js';
 
 // Injected by initDrawer() until their owning modules exist (see the header).
-let clearCorrections;
-
-export function initDrawer(deps){
-  ({clearCorrections} = deps);
-}
 
 // C1-T3: race-guard token for the drawer's async "Recent changes" fetch —
 // bumped on every openDrawer() call so a slow response from a since-replaced
