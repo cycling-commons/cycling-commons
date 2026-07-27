@@ -5,12 +5,11 @@
 
    Loaded as an ES module: catalog-load.js injects it with type="module" once
    the catalog fetch has populated the CC_* globals this file reads. */
-import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, CC_SEASON_LABEL,
-         CC_BIKE_LABEL } from './i18n.js';
-import { txtOn, currentSeason, wc } from './util.js';
+import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel } from './i18n.js';
+import { wc } from './util.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
-import { CATALOG, CATALOG_AZ, active, layerByKey, cityLink, mode, setMode } from './catalog.js';
+import { CATALOG, active, layerByKey, cityLink, mode } from './catalog.js';
 import { addMapillary, initMapillaryDock, initStreetToggle } from './mapillary.js';
 import { curScope, scopeLabel, renderScopeChips, applyScope, initScope, initScopeRail,
          initAreaNudge, initClickToScope } from './scope-ui.js';
@@ -19,20 +18,19 @@ import { trimEnds } from './item-index.js';
 import { sheet, initSheet } from './sheet.js';
 import { initLightbox } from './lightbox.js';
 import { initPlanner } from './planner.js';
-import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
-         applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter } from './render.js';
+import { render } from './render.js';
 import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
          fetchCoverageCounts, covShownCount } from './coverage.js';
-import { schemaRows, mapToast, clearRevealPin, initDrawerChrome } from './drawer.js';
+import { schemaRows, initDrawerChrome } from './drawer.js';
 import { initPicking } from './picking.js';
 import { resolveLocalFeature, openFeatureByName, openRouteById, openPendingById } from './places.js';
-import { initCommunity } from './community.js';
+import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
+import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
+         initChips } from './panels.js';
 
-  // Scope model + rail + header (scope-ui.js). The repaint callbacks are
-  // injected because their owning modules are still inside this entry at
-  // this point in the split; each becomes a plain import as its module lands.
-  initScope({refreshBestOf});
+  // Scope model + rail + header (scope-ui.js).
+  initScope();
 
   initMapControls();
 
@@ -98,31 +96,7 @@ import { initSearchUi } from './search-ui.js';
 
   initCoordPopup();
 
-  // curator keyboard: A approve / R reject when a pending drawer is open — plain
-  // keys only (never on Ctrl/Cmd/Alt combos, e.g. Ctrl+R reload). Pressing a key
-  // ARMS the decision and focuses the note (it no longer submits instantly —
-  // the drawer used to close before a note could be typed); Enter inside the
-  // note sends the armed decision (Shift+Enter keeps inserting a newline).
-  // Mouse clicks on the buttons submit immediately, as before.
-  document.addEventListener('keydown', e=>{
-    if(e.ctrlKey||e.metaKey||e.altKey) return;
-    const t=e.target;
-    const box=document.querySelector('#drawer.open .cc-mod'); if(!box) return;
-    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)){
-      if(e.key==='Enter' && !e.shiftKey && t.classList && t.classList.contains('cc-mod-note')){
-        const armed=box.querySelector('.cc-mod-btn.armed');
-        if(armed){ e.preventDefault(); armed.click(); }
-      }
-      return;
-    }
-    const arm=cls=>{
-      const b=box.querySelector('.cc-mod-btn.'+cls); if(!b) return;
-      box.querySelectorAll('.cc-mod-btn').forEach(x=>x.classList.toggle('armed', x===b));
-      const n=box.querySelector('.cc-mod-note'); if(n) n.focus();
-    };
-    if(e.key==='a'||e.key==='A'){ e.preventDefault(); arm('approve'); }
-    if(e.key==='r'||e.key==='R'){ e.preventDefault(); arm('reject'); }
-  });
+  initCuratorKeys();   // A/R arm a moderation decision (community.js)
 
 
   // populate K · Recommended routes with every uploaded sample route + its cyclist-experience attributes
@@ -305,267 +279,21 @@ import { initSearchUi } from './search-ui.js';
   initLightbox();    // lightbox chrome + Escape/arrows (lightbox.js)
 
 
-  // catalog in canonical A–K order for the rail + legend (display only; render keeps CATALOG order)
-
-  // build layer toggles
-  const lc=document.getElementById('layers');
-  CATALOG_AZ.forEach(layer=>{
-    const el=document.createElement('div');
-    el.className='layer'; el.style.setProperty('--c',layer.color); el.style.setProperty('--ic',txtOn(layer.color));
-    el.style.setProperty('--ig', txtOn(layer.color)==='#fff' ? 'brightness(0) invert(1)' : 'brightness(0)'); el.dataset.key=layer.key;
-    if(!active.has(layer.key)) el.classList.add('off');
-    const _lc=layerCounts(layer);
-    const ct=`${_lc.shown}/${_lc.total}`;
-    el.innerHTML=`<span class="sw"><i class="sw-g">${layer.icon}</i></span><span class="nm">${layer.letter} · ${layer.label}</span><span class="ct">${ct}</span>`;
-    el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
-    lc.appendChild(el);
-  });
-  // (de)select-all toggle for the data layers
-  const layersAll=document.getElementById('layersAll');
-  function syncLayersAll(){ layersAll.textContent = CATALOG.every(l=>active.has(l.key)) ? (I18N.deselectAll||'deselect all') : (I18N.selectAll||'select all'); }
-  layersAll.onclick=()=>{
-    const allOn=CATALOG.every(l=>active.has(l.key));
-    CATALOG.forEach(l=>{ if(allOn) active.delete(l.key); else active.add(l.key); });
-    document.querySelectorAll('#layers .layer').forEach(el=>el.classList.toggle('off', !active.has(el.dataset.key)));
-    syncLayersAll(); render();
-  };
-  syncLayersAll();
-
-  // on-map base/overlay control (top-right) — Map ↔ Satellite + Street-level overlay
-  document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#baseSeg button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');
-    const sat=b.dataset.b==='satellite';
-    if(map.getLayer('satellite')) map.setLayoutProperty('satellite','visibility', sat?'visible':'none');
-    document.querySelector('.map-wrap').classList.toggle('sat', sat);
-  });
+  initLayerList();      // layer toggles, select-all, base segmented control (panels.js)
   initStreetToggle();
-  // mobile: the control collapses to a small layers icon — tap to expand, and
-  // collapse again after a choice is made
-  const mcToggle=document.getElementById('mcToggle');
-  const mapCtrl=document.querySelector('.map-ctrl');
-  if(mcToggle && mapCtrl){
-    mcToggle.onclick=()=>{
-      const open=mapCtrl.classList.toggle('open');
-      mcToggle.setAttribute('aria-expanded', open?'true':'false');
-    };
-    mapCtrl.querySelectorAll('#baseSeg button, #ovStreet').forEach(b=>b.addEventListener('click',()=>{
-      if(window.innerWidth<=760){ mapCtrl.classList.remove('open'); mcToggle.setAttribute('aria-expanded','false'); }
-    }));
-  }
+  initMapCtrl();        // collapsible on-map base/overlay control (panels.js)
 
-  // mobile: filters bottom-sheet — the rail-foot peek toggles it
-  const app=document.querySelector('.app');
+  initRailChrome();     // filters sheet, legend, burger nav, breakpoint resize (panels.js)
   initSearchUi();   // sidebar town + feature search (search-ui.js)
 
-  const sheetHandle=document.querySelector('.rail-foot .res');
-  const railFoot=document.querySelector('.rail-foot');
-  if(app && sheetHandle){
-    let _sheetSwiped=false;
-    sheetHandle.addEventListener('click',()=>{ if(_sheetSwiped) return; if(window.innerWidth<=820) app.classList.toggle('sheet-open'); });
-    const exp=document.querySelector('.rail-foot .export');
-    if(exp) exp.addEventListener('click',e=>e.stopPropagation());   // export ≠ sheet toggle
-    map.on('dragstart',()=>app.classList.remove('sheet-open'));      // collapse when panning
-    // mobile: swipe the filters handle down to close it (or up to open it) — the sheet has no ✕, only this bar
-    let fy=0, fActive=false, fMoved=0, fOpen=false;
-    railFoot.addEventListener('touchstart', e=>{
-      if(window.innerWidth>820 || e.touches.length!==1 || e.target.closest('.export')) return;
-      fActive=true; fy=e.touches[0].clientY; fMoved=0; fOpen=app.classList.contains('sheet-open');
-    }, {passive:true});
-    railFoot.addEventListener('touchmove', e=>{
-      if(!fActive) return; fMoved=e.touches[0].clientY-fy;
-      if((fOpen && fMoved>0) || (!fOpen && fMoved<0)) e.preventDefault();   // own a meaningful vertical swipe
-    }, {passive:false});
-    railFoot.addEventListener('touchend', ()=>{
-      if(!fActive) return; fActive=false;
-      if(fOpen && fMoved>45) app.classList.remove('sheet-open');            // drag down → close
-      else if(!fOpen && fMoved<-45) app.classList.add('sheet-open');        // drag up → open
-      else return;
-      _sheetSwiped=true; setTimeout(()=>{ _sheetSwiped=false; }, 450);      // suppress the swipe's synthesized click
-    });
-  }
 
-  // mobile: road-surface legend collapses to an icon (mirrors #mcToggle)
-  const lgToggle=document.getElementById('lgToggle'), legend=document.querySelector('.legend');
-  if(lgToggle && legend) lgToggle.onclick=()=>{ const o=legend.classList.toggle('open'); lgToggle.setAttribute('aria-expanded',o?'true':'false'); };
-
-  // mobile: top-bar nav hamburger -> dropdown
-  const railHead=document.querySelector('.rail-head'), railBurger=document.getElementById('railBurger');
-  if(railHead && railBurger){
-    railBurger.onclick=e=>{ e.stopPropagation(); const o=railHead.classList.toggle('nav-open'); railBurger.setAttribute('aria-expanded',o?'true':'false'); };
-    document.addEventListener('click',e=>{ if(railHead.classList.contains('nav-open') && !railHead.contains(e.target)){ railHead.classList.remove('nav-open'); railBurger.setAttribute('aria-expanded','false'); } });
-    document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ railHead.classList.remove('nav-open'); railBurger.setAttribute('aria-expanded','false'); } });
-  }
-
-  // the #map box only really changes size at the 820px layout flip → resize then
-  const _mq=window.matchMedia('(max-width:820px)');
-  const _onBP=()=>requestAnimationFrame(()=>map.resize());
-  _mq.addEventListener ? _mq.addEventListener('change',_onBP) : _mq.addListener(_onBP);
-
-  // Route domain phase 4 (spec §8): Curated mode = best-of for a (season, bike)
-  // facet, fetched from /map/best-of; the returned ids get cur:true and Curated
-  // filters K routes to them. A named-region scope now sends &region= too
-  // (region-scoping-design.md §6 / §7 Phase 2).
-  let boSeason=currentSeason(), boBike='all';
-
-  function updateSubtitle(){
-    const sub=document.querySelector('.map-top .sub'); if(!sub) return;
-    if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full backlog'; return; }
-    const bike=boBike==='all' ? (I18N.allBikes||'All bikes') : (CC_BIKE_LABEL[boBike]||boBike);
-    sub.textContent=`${I18N.curated||'Curated best-of'} · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
-  }
-
-  function applyBestOf(ids){
-    // Membership only: the endpoint returns ids in rank order (vote count, then
-    // recency), but the map surfaces best-of routes as unordered lines — Curated
-    // shows the set, Everything shows all. The server ORDER BY is latent until a
-    // ranked-list UI consumes it; don't assume order is honoured client-side.
-    const set=new Set((ids||[]).map(Number));
-    const feats=(layerByKey['experience']||{}).features||[];
-    feats.forEach(f=>{ f.cur = set.has(Number(f.id)); });
-    render();
-  }
-
-  // Race-guard token, same pattern as the drawer's _historyReq (review W5):
-  // switching Season/Bike quickly must never let a slower earlier response
-  // overwrite the newer facet's membership under a subtitle that says otherwise.
-  let _bestOfReq=0;
-  function refreshBestOf(){
-    const req=++_bestOfReq;
-    if(mode()!=='curated'){ render(); return; }
-    // A named-region scope sends &region=<id>; My area sends its derived rid SET
-    // as a CSV (&region=1,24) so best-of ranks across the whole home-base area
-    // (MapController parses the CSV; region-scoping-design.md §6 / §9.1 Phase 4).
-    // Country/Everywhere send no region — the guarded unbounded aggregate. A
-    // single named region keeps the identical single-id request as before.
-    const regionIds = window.CCScope && window.CCScope.bestOfRegionIds();
-    const regionQ = (regionIds && regionIds.length) ? `&region=${encodeURIComponent(regionIds.join(','))}` : '';
-    fetch(`/map/best-of?season=${encodeURIComponent(boSeason)}&bike=${encodeURIComponent(boBike)}${regionQ}`,
-      {credentials:'same-origin', headers:{'Accept':'application/json'}})
-      .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
-      .then(d=>{ if(req===_bestOfReq) applyBestOf(d.ids); })
-      .catch(()=>{ if(req===_bestOfReq) applyBestOf([]); });   // on failure, Curated shows no picks rather than a stale set
-  }
-
-  // Facet pickers (Curated only).
-  const boSeasonEl=document.getElementById('boSeason'), boBikeEl=document.getElementById('boBike');
-  if(boSeasonEl){ boSeasonEl.value=boSeason; boSeasonEl.onchange=()=>{ boSeason=boSeasonEl.value; updateSubtitle(); refreshBestOf(); }; }
-  if(boBikeEl){ boBikeEl.onchange=()=>{ boBike=boBikeEl.value; updateSubtitle(); refreshBestOf(); }; }
-
-  // mode toggle
-  document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on'); setMode(b.dataset.m);
-    clearRevealPin();   // decision C: mode change clears any reveal pin
-    const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated');
-    updateSubtitle();
-    refreshBestOf();          // Curated → fetch + filter; Everything → plain render()
-  });
+  initBestOf();         // Curated best-of facets + the mode toggle (panels.js)
 
   initScopeRail();   // rail buttons + the cc:scopechange -> applyScope path (scope-ui.js)
 
   initAreaNudge();   // pan-away widen prompt for a My-area scope (scope-ui.js)
 
-  // Exactly one saved bike → preselect the Curated facet (single-valued
-  // select; multi-bike riders keep the neutral 'all').
-  if(PREFS.bikes.length===1 && boBikeEl && [...boBikeEl.options].some(o=>o.value===PREFS.bikes[0])){
-    boBikeEl.value=PREFS.bikes[0]; boBike=PREFS.bikes[0];
-  }
-
-  // Initial best-of for the default facet so Curated isn't empty on load.
-  updateSubtitle();
-  { const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated'); }
-  refreshBestOf();
-  // discipline + freshness chips (visual)
-  document.querySelectorAll('#disc .chip, .grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
-  // Saved riding styles preselect the (visual-only) discipline chips.
-  if(PREFS.styles.length){
-    document.querySelectorAll('#disc .chip').forEach(c=>c.classList.toggle('on', PREFS.styles.includes(c.dataset.style)));
-  }
-  // Preference prefilter chip: later onclick assignment overrides the generic
-  // toggle-only binder above (same pattern as the climb-filter chips below).
-  (function initPrefChip(){
-    const chip=document.getElementById('prefFilter'), grp=document.getElementById('prefGrp');
-    if(!chip||!grp||!PREFS.bikes.length) return;      // anonymous / no prefs → group stays hidden
-    grp.hidden=false;
-    const sync=()=>{ const on=prefFilterEnabled(); chip.classList.toggle('on', on); chip.setAttribute('aria-pressed', on?'true':'false'); };
-    const flip=()=>{ const on=!prefFilterEnabled(); setPrefFilter(on); try{ localStorage.setItem('cc-pref-filter', on?'on':'off'); }catch(e){} sync(); render(); updateCounts(); };
-    chip.onclick=flip;
-    chip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
-    sync();
-  })();
-  // "Set my area" cold-start prompt (region-scoping-design.md §4 / §9.1 Phase 4):
-  // the pref-chip pattern — a hidden rail chip revealed only when the rider has
-  // NO My-area source yet (no base location, no anon circle) AND hasn't dismissed
-  // it. Tapping derives the base from the map centre (Komoot's suggest-home
-  // pattern): a logged-in POST to the base-location endpoint, or an anonymous
-  // localStorage-only circle. Coordinates are rounded to 2 decimals BEFORE they
-  // leave the page (request precision == stored precision — no raw point in the
-  // request or in localStorage; owner privacy invariant). MUST run after the
-  // generic '.grp .chips .chip' toggle binder above (same as initPrefChip), or
-  // that assignment clobbers this chip's onclick with a toggle-only handler.
-  (function initAreaPrompt(){
-    const row=document.getElementById('areaPromptRow');
-    const setChip=document.getElementById('areaPromptSet');
-    const xBtn=document.getElementById('areaPromptX');
-    if(!row||!setChip||!xBtn||!window.CCScope) return;
-    const DISMISS_KEY='cc-area-prompt-dismissed';
-    let dismissed=false; try{ dismissed=!!localStorage.getItem(DISMISS_KEY); }catch(e){}
-    // A My-area already exists (base location or a saved anon circle) → the prompt
-    // is moot; leave it hidden.
-    if(window.CCScope.myAreaAvailable()||dismissed) return;
-    row.hidden=false;
-    const hide=()=>{ row.hidden=true; };
-    const revealMyAreaBtn=()=>{ const mb=document.getElementById('myAreaBtn'); if(mb) mb.hidden=false; };
-    function setMyAreaFromCentre(){
-      const c=map.getCenter();
-      const lat=Math.round(c.lat*100)/100, lng=Math.round(c.lng*100)/100;   // round client-side
-      if(window.CC_MY_AREA && CC_MY_AREA.url){
-        // Logged-in: persist the coarse point server-side (the server rounds again
-        // as the invariant holder) and merge back the derived region/country set.
-        fetch(CC_MY_AREA.url,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CC_MY_AREA.token},body:JSON.stringify({lat,lng})})
-          .then(r=>r.ok?r.json():null)
-          .then(a=>{
-            if(!a) return;                                        // silent degradation — keep the chip
-            window.CC_MY_AREA=Object.assign({},window.CC_MY_AREA,a);
-            revealMyAreaBtn(); window.CCScope.setMyArea(); hide();
-            mapToast(I18N.myAreaSet||'My area saved');
-          })
-          .catch(()=>{ /* network/CSRF failure — leave the chip so the rider can retry */ });
-      } else {
-        // Anonymous: a localStorage-only circle (setAnonCircle rounds to 2dp on
-        // write); NOTHING server-side, no device-location prompt (owner decision).
-        window.CCScope.setAnonCircle(c.lat,c.lng,40);
-        revealMyAreaBtn(); hide();
-        mapToast(I18N.myAreaSetAnon||'My area set on this device');
-      }
-    }
-    setChip.onclick=setMyAreaFromCentre;
-    setChip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setMyAreaFromCentre(); } };
-    xBtn.onclick=()=>{ try{ localStorage.setItem(DISMISS_KEY,'1'); }catch(e){} hide(); };
-  })();
-  // climb surface + traffic chips actually filter the climbs layer; C2-T8 adds
-  // climb effort + stay accessibility to the same wiring (this assignment runs
-  // after the generic '.grp .chips .chip' toggle-only handler above, so it wins).
-  document.querySelectorAll('#sqf .chip, #trf .chip, #effortf .chip, #accessf .chip').forEach(c=>c.onclick=()=>{
-    c.classList.toggle('on');
-    syncFacetChips();   // the four chip facets are render.js's state (setter, not assignment)
-    applyStaysAccessFilter();
-    render();
-  });
-
-  // ride-heatmap toggle + season filter (source built on first On — W43)
-  document.querySelectorAll('#heattoggle button').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#heattoggle button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-    // addHeatmap ends with updateHeatFilter(), which honours a season chip
-    // selected before the layer existed AND the active region scope.
-    if(b.dataset.h==='on' && !map.getLayer('rideheat')) addHeatmap();
-    if(map.getLayer('rideheat')) map.setLayoutProperty('rideheat','visibility', b.dataset.h==='on'?'visible':'none');
-  });
-  document.querySelectorAll('#season .chip').forEach(c=>c.onclick=()=>{
-    document.querySelectorAll('#season .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
-    updateHeatFilter();
-  });
+  initChips();          // every chip group; MUST follow initScopeRail/initAreaNudge (panels.js)
 
   // street-level imagery (Mapillary) dock controls — the on/off toggle lives in the data-layers list
 

@@ -229,3 +229,34 @@ export function initCommunity(){
     // Clear the "must pick a bike type" warning as soon as the rider chooses one.
     document.addEventListener('change', e=>{ const s=e.target.closest('.cc-rc-invalid'); if(s) s.classList.remove('cc-rc-invalid'); });
 }
+
+// Curator keyboard: it arms a moderation decision, so it belongs with the
+// moderation submit rather than in the entry (§4.2 — the entry keeps the CALL,
+// not the handler).
+export function initCuratorKeys(){
+    // curator keyboard: A approve / R reject when a pending drawer is open — plain
+    // keys only (never on Ctrl/Cmd/Alt combos, e.g. Ctrl+R reload). Pressing a key
+    // ARMS the decision and focuses the note (it no longer submits instantly —
+    // the drawer used to close before a note could be typed); Enter inside the
+    // note sends the armed decision (Shift+Enter keeps inserting a newline).
+    // Mouse clicks on the buttons submit immediately, as before.
+    document.addEventListener('keydown', e=>{
+      if(e.ctrlKey||e.metaKey||e.altKey) return;
+      const t=e.target;
+      const box=document.querySelector('#drawer.open .cc-mod'); if(!box) return;
+      if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)){
+        if(e.key==='Enter' && !e.shiftKey && t.classList && t.classList.contains('cc-mod-note')){
+          const armed=box.querySelector('.cc-mod-btn.armed');
+          if(armed){ e.preventDefault(); armed.click(); }
+        }
+        return;
+      }
+      const arm=cls=>{
+        const b=box.querySelector('.cc-mod-btn.'+cls); if(!b) return;
+        box.querySelectorAll('.cc-mod-btn').forEach(x=>x.classList.toggle('armed', x===b));
+        const n=box.querySelector('.cc-mod-note'); if(n) n.focus();
+      };
+      if(e.key==='a'||e.key==='A'){ e.preventDefault(); arm('approve'); }
+      if(e.key==='r'||e.key==='R'){ e.preventDefault(); arm('reject'); }
+    });
+}

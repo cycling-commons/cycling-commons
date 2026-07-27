@@ -10,11 +10,11 @@
    make lives in scope-chips.js, both unit-tested under web/tests/js/. What this
    module owns is the map-side reading of that state and its DOM.
 
-   applyScope() fans out to a repaint in almost every other map subsystem. Those
-   callees still live in the entry at this point in the split, so they arrive
-   through initScope(deps) — the same scaffolding ride-check.js uses, and just
-   as temporary: each becomes a plain import as its module lands (§5 steps
-   4c-7). Cycles that creates are safe by §4.1 — nothing here is called at
+   applyScope() fans out to a repaint in almost every other map subsystem. Every
+   one of those callees is a plain import now that panels.js has landed, so
+   initScope() takes no deps — it still exists because it has a side effect of its
+   own (CCScope.init + the header paint + revealing the My-area button). The
+   cycles this creates are safe by §4.1 — nothing here is called at
    module-evaluation time. */
 import { map } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
@@ -24,12 +24,11 @@ import { mode } from './catalog.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { updateCoverageScopeFilter, fetchCoverageCounts } from './coverage.js';
 import { updateHeatFilter, render, boundLayerIds, surfaceClsLayerIds } from './render.js';
+import { refreshBestOf } from './panels.js';
 import { COVERAGE_KEYS, COVERAGE_CCS } from './coverage.js';
 import { isPicking } from './picking.js';
 import { corrLayerIds } from './corrections.js';
 
-// Injected by initScope() until their owning modules exist (see the header).
-let refreshBestOf;
 
 // Region scope (region-scoping-design.md §4 / §7 Phase 2): the area the map +
 // search filter to, owned by window.CCScope (scope.js). Registry injected by
@@ -231,8 +230,7 @@ export function applyScope(s, opts){
 // Scope boot: hand over the repaint callbacks, initialise the shared scope
 // model and reveal the My-area rail button. Called by the entry at the point
 // these statements used to occupy, before initMapControls() (§4.2).
-export function initScope(deps){
-  ({refreshBestOf} = deps);
+export function initScope(){
   if (window.CCScope) {
     window.CCScope.init(CC_REGIONS, _defaultScope);
     // Re-paint the header here too (2026-07-23 flash fix) — mostly a no-op by
