@@ -104,13 +104,26 @@ every arm, including both "fixes".
 
 The ordering of this session's work assumed the freeze might be marker churn, in
 which case defaulting the map to **Everything** (backlog #8) would make it worse
-for every new visitor. Measured on a Wallonia → Flanders scope change: both arms
-produced **388 DOM nodes and zero `.cc-pin` markers**, and 6,596 / 8,354 ms of
-long tasks — i.e. the multi-second stall occurs with **no map markers on the page
-at all**.
+for every new visitor. Measured on a Wallonia → Flanders scope change, once in
+each mode:
+
+| mode | pins / DOM nodes before | after | long tasks |
+|---|---|---|---|
+| Curated | 20 / 453 | 0 / 388 | 8,953 ms |
+| **Everything** | **21 / 456** | 0 / 388 | **7,504 ms** |
+
+Everything mode costs **one extra pin and three extra DOM nodes**, and measured
+*faster* (inside the ±45% variance, so: no difference). Both end at **zero
+`.cc-pin` markers** after the change — Flanders has no curated dev data — so the
+multi-second stall is reproducing with **no map markers on the page at all**.
 
 That is the cleanest refutation in the set, and it clears #8: whatever this is,
 it is not proportional to how many features are rendered as DOM.
+
+(First attempt at this round selected the toggle by `data-m="everything"`. The
+real values are `curated` / **`all`**, so both arms ran Curated and the
+comparison was void. Re-run with the right selector; the numbers above are the
+corrected ones.)
 
 ---
 
