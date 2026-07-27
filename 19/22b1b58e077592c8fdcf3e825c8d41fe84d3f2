@@ -1,0 +1,35 @@
+web/assets/map/map.js
+  s_8f4040fdd8abb7::t_7b92b369ae4131 18,34,37,309
+  s_8f4040fdd8abb7::t_4ee7279697c928 14,26,30,35
+web/assets/map/corrections.js
+  s_8f4040fdd8abb7::t_7b92b369ae4131 1-78
+web/assets/map/drawer.js
+  s_8f4040fdd8abb7::t_7b92b369ae4131 17-18,32
+web/assets/map/places.js
+  s_8f4040fdd8abb7::t_7b92b369ae4131 29
+web/assets/map/scope-ui.js
+  s_8f4040fdd8abb7::t_4ee7279697c928 26
+  s_8f4040fdd8abb7::t_7b92b369ae4131 27-29,319-371
+  s_8f4040fdd8abb7::t_eb4b98725aaa0c 372
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "1922b1b58e077592c8fdcf3e825c8d41fe84d3f2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_8f4040fdd8abb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ee75332-c226-49ea-ac4c-f862ecf3912e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
