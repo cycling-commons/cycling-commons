@@ -1,0 +1,96 @@
+web/migrations/Version20260727140000.php
+  s_99879bf8d59ea6::t_d4770de9bd3728 1-35
+web/translations/messages.de.yaml
+  s_99879bf8d59ea6::t_90329d976d722f 1667-1671
+  s_99879bf8d59ea6::t_8d649d8d93e643 2001-2015
+web/translations/messages.en.yaml
+  s_99879bf8d59ea6::t_8d649d8d93e643 2005-2019
+  s_99879bf8d59ea6::t_90329d976d722f 1671-1675
+web/assets/map/map.js
+  s_99879bf8d59ea6::t_d7ad3580c0580c 30,35-40
+  s_99879bf8d59ea6::t_9f86f8a23d4515 41
+docs/specs/2026-07-27-map-view-mode-default-design.md
+  s_99879bf8d59ea6::t_49a1bca8b044b6 1-184
+web/src/Form/SettingsType.php
+  s_99879bf8d59ea6::t_bab06a65fa5935 8,156-164
+  s_99879bf8d59ea6::t_5ad1e2717ba3a3 165-166
+web/src/Entity/User.php
+  s_99879bf8d59ea6::t_e46a52c0ce2450 8,138-146,562-569,572
+  s_99879bf8d59ea6::t_b2886b92ea0db0 570-571,573
+web/src/Catalog/MapViewMode.php
+  s_99879bf8d59ea6::t_4d8239936c68bc 1-54
+web/tests/Moderation/CuratedDefaultGateTest.php
+  s_99879bf8d59ea6::t_d5f6cf81521266 1-189
+web/config/packages/map_view_mode.yaml
+  s_99879bf8d59ea6::t_9ffea694e23fc5 1-13
+web/templates/map/index.html.twig
+  s_99879bf8d59ea6::t_794530465a5d41 122-126,128-129
+  s_99879bf8d59ea6::t_266003e21d2103 348-356
+  s_99879bf8d59ea6::t_fe8de72edcee5d 131-133
+web/templates/account/_shell_chrome.html.twig
+  s_99879bf8d59ea6::t_3a625677cb5c26 14,32-34
+web/templates/moderate_regions/index.html.twig
+  s_99879bf8d59ea6::t_d5d7576ec46ccc 1-96
+web/assets/map/panels.js
+  s_99879bf8d59ea6::t_488e4e63bb4d0e 176-209
+  s_99879bf8d59ea6::t_95df4cdf263f02 231
+  s_99879bf8d59ea6::t_d6c7ed39badd57 26-27
+web/src/Controller/ModerateRegionsController.php
+  s_99879bf8d59ea6::t_a33ca61c8c3ecf 15,116-118
+  s_99879bf8d59ea6::t_43e24e47161315 1-14,16-115,119-166
+web/translations/messages.nl.yaml
+  s_99879bf8d59ea6::t_90329d976d722f 1667-1671
+  s_99879bf8d59ea6::t_8d649d8d93e643 2001-2015
+web/tests/Controller/MapPrefsTest.php
+  s_99879bf8d59ea6::t_b2065d6845c9b6 8,75-129,139-149,152
+  s_99879bf8d59ea6::t_0628db195f3acf 130-132,134-138,150-151
+  s_99879bf8d59ea6::t_cb87108868a591 133
+web/templates/settings/index.html.twig
+  s_99879bf8d59ea6::t_5253644e46811f 303-312
+web/src/Catalog/CuratedReadiness.php
+  s_99879bf8d59ea6::t_0a4a0e3c038d4b 1-83,88-91,93-122
+  s_99879bf8d59ea6::t_0becf89379a65e 84-87,92
+web/src/Controller/MapController.php
+  s_99879bf8d59ea6::t_7cb431f26dc06a 70-77
+  s_99879bf8d59ea6::t_fb21cf352bb180 11
+  s_99879bf8d59ea6::t_16d7f36eb6a3cf 78-83
+web/assets/map/catalog.js
+  s_99879bf8d59ea6::t_8b7b912e8a2de8 101-110,113-149
+web/tests/Catalog/CuratedReadinessTest.php
+  s_99879bf8d59ea6::t_ce8543cc474d30 1-22,24-56,59,61-108
+  s_99879bf8d59ea6::t_94f30a3018456b 23,57-58,60
+web/src/Controller/MapViewModeController.php
+  s_99879bf8d59ea6::t_7a98db1a515aa3 1-69
+web/config/services.yaml
+  s_99879bf8d59ea6::t_01919a7b7a2244 38-41
+web/translations/messages.fr.yaml
+  s_99879bf8d59ea6::t_90329d976d722f 1667-1671
+  s_99879bf8d59ea6::t_8d649d8d93e643 2001-2015
+web/src/Catalog/RegionRegistryProvider.php
+  s_99879bf8d59ea6::t_ceb51127c015f0 38-43,47,52,70
+docs/specs/map-and-search.md
+  s_99879bf8d59ea6::t_d6171d57ca9343 157-171
+web/tests/Catalog/RegionRegistryProviderTest.php
+  s_99879bf8d59ea6::t_2d49a00dc8a7d0 43-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "888e26ade864de2b3884123ac9ae24687240765a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_99879bf8d59ea6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76665ccb-0391-4d5f-8dd8-8d4442f2c396",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
