@@ -20,7 +20,12 @@
   function injectStyles() {
     if (document.getElementById('cc-nav-style')) return;
     var css = [
-      '.cc-burger{display:none;flex-direction:column;justify-content:center;gap:5px;',
+      // flex:0 0 44px, not width alone: the burger sits in the nav's flex row,
+      // so the default flex-shrink:1 let an overfull bar CRUSH it — measured at
+      // 20px wide and pushed 20px past the viewport on a 390px phone (mobile
+      // audit 2026-07-27). It must keep its 44px target and let the bar
+      // overflow visibly instead, which is what fit() below reacts to.
+      '.cc-burger{display:none;flex:0 0 44px;flex-direction:column;justify-content:center;gap:5px;',
         'width:44px;height:44px;padding:10px;margin-left:auto;background:none;border:0;',
         'cursor:pointer;-webkit-tap-highlight-color:transparent}',
       '.cc-burger span{display:block;width:100%;height:2px;border-radius:2px;',
@@ -63,6 +68,16 @@
         'color:var(--trail,#FF5A1F)}',
       '.cc-drawer-nav a.acct.fill,.cc-drawer-nav a.nav-cta.fill{background:var(--trail,#FF5A1F);',
         'border-color:var(--trail,#FF5A1F);color:var(--ink,#101E16)}',
+      // Language section — only rendered while the inline switcher is folded
+      // away by fit()'s last tier, so the two never show at once.
+      // Column flex, like .cc-drawer-nav itself: the drawer's `a{width:100%}`
+      // only lands because the nav blockifies its DIRECT children as flex
+      // items, and these anchors are one level deeper.
+      '.cc-drawer-lang{display:flex;flex-direction:column;align-items:stretch;',
+        'margin-top:1.1rem;padding-top:.5rem;border-top:1px solid rgba(239,230,212,.18)}',
+      '.cc-drawer-lang-h{font-family:var(--mono,ui-monospace,monospace);font-size:.62rem;',
+        'letter-spacing:.14em;text-transform:uppercase;opacity:.55;margin-bottom:.1rem}',
+      '.cc-drawer-lang a[aria-current]{color:var(--trail,#FF5A1F);opacity:1}',
       // Collapse is priority-plus, driven by fit() below (not a fixed
       // breakpoint): the burger's inline display is toggled by JS. CTA blocks
       // never wrap past two lines, so "Explore the map" can't break into three.
@@ -155,6 +170,39 @@
     });
     ctas.forEach(function (c) { dnav.appendChild(c); });
 
+    // The account chip and the language switcher are <div data-nav-menu>
+    // widgets, not <a>s, so the priority-plus tiers below — built from
+    // links.querySelectorAll('a') — can never collapse them. On a logged-in
+    // phone that left ~111px of un-droppable chrome in a 335px bar: the nav
+    // overflowed, the burger was crushed and pushed 20px off-screen, and the
+    // site menu was effectively unreachable (mobile audit 2026-07-27; the
+    // 07-26 pass ran anonymously, where only the 71px language pill is
+    // present and it still fits). The LANGUAGE switcher is the one that folds:
+    // its links are cloned here first, so folding it costs no reachability.
+    // The account chip stays inline at ~40px — it is the account shell's one
+    // shared affordance on every logged-in surface.
+    var langMenu = links.querySelector('.lang-menu');
+    var drawerLang = null;
+    if (langMenu) {
+      drawerLang = document.createElement('div');
+      drawerLang.className = 'cc-drawer-lang';
+      drawerLang.style.display = 'none';
+      var langHead = document.createElement('div');
+      langHead.className = 'cc-drawer-lang-h';
+      var langToggle = langMenu.querySelector('[data-nav-toggle]');
+      // The pill already carries the translated "Language" string as its
+      // aria-label, so the heading needs no new message key.
+      langHead.textContent = (langToggle && langToggle.getAttribute('aria-label'))
+        || T('nav_language', 'Language');
+      drawerLang.appendChild(langHead);
+      Array.prototype.forEach.call(langMenu.querySelectorAll('[data-nav-dd] a'), function (a) {
+        var lc = a.cloneNode(true);
+        lc.removeAttribute('id');
+        drawerLang.appendChild(lc);
+      });
+      dnav.appendChild(drawerLang);
+    }
+
     drawer.appendChild(head);
     drawer.appendChild(dnav);
     document.body.appendChild(scrim);
@@ -170,6 +218,8 @@
     //   N links + blocks + burger     → N counts down 5,4,3,2,1,0 as width shrinks
     //   blocks + burger               → links all in the drawer
     //   burger only                   → even the blocks don't fit
+    //   language folded too           → last resort; the switcher moves into
+    //                                   the drawer section built above
     var navBar = links.parentNode;
     var inlineAnchors = Array.prototype.filter.call(
       links.querySelectorAll('a'),
@@ -182,9 +232,17 @@
       return a.classList.contains('acct') || a.classList.contains('nav-cta');
     });
     function fits() { return navBar.scrollWidth <= navBar.clientWidth + 1; }
+    // Fold the inline language switcher away and reveal its drawer section (or
+    // the reverse). Never both at once.
+    function foldLang(folded) {
+      if (!langMenu) return;
+      langMenu.style.display = folded ? 'none' : '';
+      if (drawerLang) drawerLang.style.display = folded ? '' : 'none';
+    }
     function fit() {
       inlineSub.forEach(function (a) { a.style.display = ''; });
       inlineBlocks.forEach(function (a) { a.style.display = ''; });
+      foldLang(false);
       burger.style.display = 'none';
       if (fits()) return;                                  // everything fits — no burger
       burger.style.display = 'flex';                        // need the burger now
@@ -193,6 +251,8 @@
       }
       if (fits()) return;                                  // blocks (+ any links that fit) + burger
       inlineBlocks.forEach(function (a) { a.style.display = 'none'; });  // burger-only
+      if (fits()) return;
+      foldLang(true);                                       // last resort — language → drawer
     }
     fit();
 

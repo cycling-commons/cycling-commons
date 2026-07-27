@@ -53,23 +53,31 @@
   @media(max-width:700px){.base-loc-current{margin:.5rem 0 0}}
   .radius-row{display:flex;align-items:center;gap:.9rem;max-width:26rem}
   /* green track (filled portion darker via --fill, kept current by base-location.js)
-     + orange (--trail) knob; custom appearance drops the browser's default blue */
-  .radius-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;
-    border-radius:3px;border:none;margin:0;
+     + orange (--trail) knob; custom appearance drops the browser's default blue.
+     The INPUT is 32px tall with a transparent box and the 6px bar is painted on
+     the track pseudo-elements: styling height on the input itself gave the
+     slider a 6px touch target, unusable on a phone (mobile audit 2026-07-27). */
+  .radius-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;
+    height:32px;border:none;margin:0;padding:0;background:transparent;cursor:pointer}
+  .radius-row input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;
     background:linear-gradient(to right,var(--spruce) var(--fill,20%),rgba(28,58,42,.25) var(--fill,20%))}
   .radius-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
     width:20px;height:20px;border-radius:50%;background:var(--trail);
-    border:2px solid var(--paper);box-shadow:0 1px 4px rgba(20,22,14,.35);cursor:pointer}
+    border:2px solid var(--paper);box-shadow:0 1px 4px rgba(20,22,14,.35);cursor:pointer;
+    margin-top:-7px}   /* centre the 20px knob on the 6px track */
   .radius-row input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;
     background:var(--trail);border:2px solid var(--paper);box-shadow:0 1px 4px rgba(20,22,14,.35);cursor:pointer}
   .radius-row input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(28,58,42,.25)}
   .radius-row input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--spruce)}
-  .radius-row input[type=range]:focus-visible{outline:2px solid var(--trail);outline-offset:4px}
+  .radius-row input[type=range]:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
   .radius-row output{font-family:var(--mono);font-size:.78rem;color:var(--ink);min-width:4.5em;text-align:right}
   .base-clear-row{margin-top:.7rem;display:flex;align-items:center;gap:.5rem}
+  /* min-height 32px: the label IS the target (it wraps the box), so it carries
+     the touch height the 13px checkbox can't. */
   .base-clear-row label{display:flex;align-items:center;gap:.5rem;font-family:var(--sans);
-    font-size:.85rem;color:var(--ink);text-transform:none;letter-spacing:normal;cursor:pointer}
-  .base-clear-row input{margin:0}
+    font-size:.85rem;color:var(--ink);text-transform:none;letter-spacing:normal;cursor:pointer;
+    min-height:32px}
+  .base-clear-row input{margin:0;width:18px;height:18px;flex:0 0 18px;accent-color:var(--trail)}
 
   /* bike-type/riding-style checkbox chips: same pattern as propose_route.html.twig */
   .chip-list{display:flex;flex-wrap:wrap;gap:.5rem}

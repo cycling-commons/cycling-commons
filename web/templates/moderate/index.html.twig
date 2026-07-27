@@ -12,7 +12,7 @@
 
   .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0 0 1.4rem}
   .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
-  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.35rem .5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
+  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
 
   .q-list{margin:1.8rem 0}
   .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.3rem 1.4rem;margin-bottom:1.1rem;background:var(--paper)}
@@ -41,7 +41,8 @@
   /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system) */
 
   .msg-rider{margin-top:.8rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.8rem}
-  .msg-rider summary{cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
+  .msg-rider summary{cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);
+    display:flex;align-items:center;min-height:32px;padding:.35rem 0}
   .msg-rider summary:hover{color:var(--ink)}
   .msg-rider form{margin-top:.6rem;display:flex;flex-direction:column;gap:.5rem}
   /* message + trash split over two columns; buttons back to natural size */
