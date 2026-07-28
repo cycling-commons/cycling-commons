@@ -1717,6 +1717,8 @@ admin:
     reset_requests: 'Reset requests'
     playbooks: 'Playbooks'
     playbook_email: 'Email change'
+    system: 'System'
+    system_config: 'System configuration'
   action:
     unlock: 'Unlock account'
     disarm_2fa: 'Disarm 2FA'
@@ -1754,6 +1756,10 @@ admin:
     account_removed: 'Account removed.'
     removal_cancelled: 'Pending removal cancelled.'
     areas_saved: 'Moderation areas saved.'
+    settings_saved: 'Settings saved. They apply from the next request.'
+    settings_unchanged: 'Nothing changed.'
+    settings_reset: 'Setting reset to its default.'
+    settings_invalid: 'Nothing was saved — check the values marked below.'
   areas:
     title: 'Assign moderation areas'
     help: 'Pick the regions and/or whole countries this curator moderates. The union applies; items outside every region remain visible to all curators.'
@@ -1776,6 +1782,39 @@ admin:
     s5_b: 'Notify the old address with a “this wasn’t me” contest window, delay execution 48–72 h, and record the change with an audit note on the user record.'
     rule: 'Urgency is a red flag, never a reason to skip a step — the legitimate owner survives a 48-hour delay; the attacker’s window usually doesn’t.'
     spec: 'Canonical version: docs/specs/account-and-auth.md §8 “Support playbook” — keep the two in sync.'
+  settings:
+    title: 'System configuration'
+    intro: 'The editorial numbers the site runs on. A change takes effect on the next request — no deploy, no restart. Every change is recorded in the activity log with its old and new value.'
+    infra_note: 'Infrastructure values (coverage tiles, the manifest URL, the map’s Content-Security-Policy host) are deliberately not here: they are set in the environment and changing one needs a deploy.'
+    save: 'Save settings'
+    reset: 'Reset'
+    overridden: 'Changed here'
+    default_note: 'Default: %value%'
+    range_note: 'Allowed: %min%–%max%'
+    error_range: 'Enter a whole number between %min% and %max%.'
+    group:
+      map: 'Map'
+      routes: 'Routes'
+      moderation: 'Moderation'
+    field:
+      map_curated_default_threshold:
+        label: 'Curated-mode readiness: total items'
+        help: 'How many curated items a region needs in total before a curator may open it in Curated mode by default. Lower it to unlock young regions sooner; raise it to hold the line on quality.'
+      map_curated_default_min_blocks:
+        label: 'Curated-mode readiness: kinds of thing'
+        help: 'How many different blocks (surface, climbs, stays, scenic, history, best-of routes) must each carry their own minimum. Set it to 1 to make readiness a plain total again.'
+      map_curated_default_min_per_block:
+        label: 'Curated-mode readiness: items per kind'
+        help: 'What a block needs before it counts towards the requirement above. Together these two stop one full layer from carrying a region on its own.'
+      route_region_active_cap:
+        label: 'Active routes per region'
+        help: 'How many routes a region may have live at once. A curator approving beyond the cap is blocked and asked to retire something first.'
+      route_ride_verify_threshold:
+        label: 'Rides needed to verify a route'
+        help: 'How many riders other than the proposer must mark a route as ridden before it verifies itself. Lower it for young regions where routes would otherwise never leave the queue.'
+      moderation_retention_months:
+        label: 'Retention of decided items (months)'
+        help: 'How long decided corrections and submissions are kept before the cleanup sweep deletes them. The moderation decision itself is kept regardless.'
 route:
   error:
     note_too_long: 'The note must be 2,000 characters or fewer.'

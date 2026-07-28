@@ -1713,6 +1713,8 @@ admin:
     reset_requests: 'Zurücksetzungsanfragen'
     playbooks: 'Leitfäden'
     playbook_email: 'E-Mail-Änderung'
+    system: 'System'
+    system_config: 'Systemkonfiguration'
   action:
     unlock: 'Konto entsperren'
     disarm_2fa: '2FA deaktivieren'
@@ -1750,6 +1752,10 @@ admin:
     account_removed: 'Konto entfernt.'
     removal_cancelled: 'Ausstehende Entfernung abgebrochen.'
     areas_saved: 'Moderationsgebiete gespeichert.'
+    settings_saved: 'Einstellungen gespeichert. Sie gelten ab der nächsten Anfrage.'
+    settings_unchanged: 'Nichts geändert.'
+    settings_reset: 'Einstellung auf den Standardwert zurückgesetzt.'
+    settings_invalid: 'Es wurde nichts gespeichert — prüfen Sie die unten markierten Werte.'
   areas:
     title: 'Moderationsgebiete zuweisen'
     help: 'Wähle die Regionen und/oder ganze Länder, die diese Kuratorin/dieser Kurator moderiert. Es gilt die Vereinigung; Elemente außerhalb jeder Region bleiben für alle sichtbar.'
@@ -1772,6 +1778,39 @@ admin:
     s5_b: 'Benachrichtige die alte Adresse mit einer „das war ich nicht“-Einspruchsfrist, verzögere die Ausführung um 48–72 h und protokolliere die Änderung mit einer Audit-Notiz am Nutzerkonto.'
     rule: 'Dringlichkeit ist ein Warnsignal, nie ein Grund, einen Schritt zu überspringen — der echte Eigentümer übersteht 48 Stunden Verzögerung; das Zeitfenster des Angreifers meist nicht.'
     spec: 'Kanonische Fassung: docs/specs/account-and-auth.md §8 „Support playbook“ — beide synchron halten.'
+  settings:
+    title: 'Systemkonfiguration'
+    intro: 'Die redaktionellen Zahlen, nach denen die Website arbeitet. Eine Änderung greift ab der nächsten Anfrage — ohne Deployment, ohne Neustart. Jede Änderung wird mit altem und neuem Wert im Aktivitätsprotokoll festgehalten.'
+    infra_note: 'Infrastrukturwerte (Abdeckungs-Kacheln, die Manifest-URL, der Content-Security-Policy-Host der Karte) stehen bewusst nicht hier: Sie werden in der Umgebung gesetzt, und eine Änderung erfordert ein Deployment.'
+    save: 'Einstellungen speichern'
+    reset: 'Zurücksetzen'
+    overridden: 'Hier geändert'
+    default_note: 'Standard: %value%'
+    range_note: 'Zulässig: %min%–%max%'
+    error_range: 'Geben Sie eine ganze Zahl zwischen %min% und %max% ein.'
+    group:
+      map: 'Karte'
+      routes: 'Routen'
+      moderation: 'Moderation'
+    field:
+      map_curated_default_threshold:
+        label: 'Reife für den Auswahlmodus: Gesamtzahl'
+        help: 'Wie viele kuratierte Einträge eine Region insgesamt braucht, bevor ein Kurator sie standardmäßig im Auswahlmodus öffnen darf. Niedriger, um junge Regionen früher freizugeben; höher, um den Qualitätsanspruch zu halten.'
+      map_curated_default_min_blocks:
+        label: 'Reife für den Auswahlmodus: Arten von Einträgen'
+        help: 'Wie viele verschiedene Blöcke (Belag, Anstiege, Übernachtung, Aussichten, Kultur, beste Routen) jeweils ihr eigenes Minimum erreichen müssen. Auf 1 gesetzt, zählt wieder nur die Gesamtzahl.'
+      map_curated_default_min_per_block:
+        label: 'Reife für den Auswahlmodus: Einträge je Art'
+        help: 'Was ein Block braucht, um für die Anforderung darüber zu zählen. Zusammen verhindern beide Zahlen, dass eine einzige Ebene eine Region allein trägt.'
+      route_region_active_cap:
+        label: 'Aktive Routen je Region'
+        help: 'Wie viele Routen eine Region gleichzeitig veröffentlicht haben darf. Wer über die Obergrenze hinaus freigibt, wird gestoppt und gebeten, zuerst etwas außer Dienst zu stellen.'
+      route_ride_verify_threshold:
+        label: 'Fahrten bis zur Verifizierung einer Route'
+        help: 'Wie viele Fahrende außer der einreichenden Person eine Route als gefahren markieren müssen, damit sie sich selbst verifiziert. Niedriger für junge Regionen, in denen Routen sonst nie aus der Warteschlange kämen.'
+      moderation_retention_months:
+        label: 'Aufbewahrung entschiedener Einträge (Monate)'
+        help: 'Wie lange entschiedene Korrekturen und Einreichungen aufbewahrt werden, bevor der Aufräumlauf sie löscht. Die Moderationsentscheidung selbst bleibt in jedem Fall erhalten.'
 route:
   error:
     note_too_long: 'Die Notiz ist länger als 2.000 Zeichen.'

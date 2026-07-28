@@ -1713,6 +1713,8 @@ admin:
     reset_requests: 'Demandes de réinitialisation'
     playbooks: 'Guides'
     playbook_email: 'Changement d’e-mail'
+    system: 'Système'
+    system_config: 'Configuration du système'
   action:
     unlock: 'Déverrouiller le compte'
     disarm_2fa: 'Désactiver la 2FA'
@@ -1750,6 +1752,10 @@ admin:
     account_removed: 'Compte supprimé.'
     removal_cancelled: 'Suppression en attente annulée.'
     areas_saved: 'Zones de modération enregistrées.'
+    settings_saved: 'Réglages enregistrés. Ils s’appliquent dès la requête suivante.'
+    settings_unchanged: 'Aucun changement.'
+    settings_reset: 'Réglage remis à sa valeur par défaut.'
+    settings_invalid: 'Rien n’a été enregistré — vérifiez les valeurs signalées ci-dessous.'
   areas:
     title: 'Attribuer des zones de modération'
     help: 'Choisissez les régions et/ou pays entiers que ce curateur modère. L''union s''applique ; les éléments hors de toute région restent visibles par tous les curateurs.'
@@ -1772,6 +1778,39 @@ admin:
     s5_b: 'Prévenez l’ancienne adresse avec un délai de contestation « ce n’était pas moi », différez l’exécution de 48–72 h et consignez le changement avec une note d’audit sur la fiche utilisateur.'
     rule: 'L’urgence est un signal d’alerte, jamais une raison de sauter une étape — le vrai propriétaire survit à un délai de 48 h ; la fenêtre de l’attaquant rarement.'
     spec: 'Version canonique : docs/specs/account-and-auth.md §8 « Support playbook » — garder les deux synchronisés.'
+  settings:
+    title: 'Configuration du système'
+    intro: 'Les nombres éditoriaux qui régissent le site. Un changement prend effet dès la requête suivante — sans déploiement ni redémarrage. Chaque modification est consignée dans le journal d’activité avec son ancienne et sa nouvelle valeur.'
+    infra_note: 'Les valeurs d’infrastructure (tuiles de couverture, URL du manifeste, hôte Content-Security-Policy de la carte) n’y figurent délibérément pas : elles sont définies dans l’environnement et les modifier exige un déploiement.'
+    save: 'Enregistrer les réglages'
+    reset: 'Réinitialiser'
+    overridden: 'Modifié ici'
+    default_note: 'Par défaut : %value%'
+    range_note: 'Autorisé : %min%–%max%'
+    error_range: 'Saisissez un nombre entier entre %min% et %max%.'
+    group:
+      map: 'Carte'
+      routes: 'Itinéraires'
+      moderation: 'Modération'
+    field:
+      map_curated_default_threshold:
+        label: 'Éligibilité au mode Sélection : total d’éléments'
+        help: 'Nombre total d’éléments sélectionnés qu’une région doit atteindre avant qu’un curateur puisse l’ouvrir en mode Sélection par défaut. Abaissez-le pour débloquer plus tôt les jeunes régions, augmentez-le pour maintenir le niveau d’exigence.'
+      map_curated_default_min_blocks:
+        label: 'Éligibilité au mode Sélection : types d’éléments'
+        help: 'Nombre de blocs différents (revêtement, cols, hébergements, panoramas, patrimoine, meilleurs itinéraires) devant chacun atteindre leur propre minimum. Réglez sur 1 pour revenir à un simple total.'
+      map_curated_default_min_per_block:
+        label: 'Éligibilité au mode Sélection : éléments par type'
+        help: 'Ce qu’un bloc doit contenir pour compter dans l’exigence ci-dessus. Ensemble, ces deux nombres empêchent qu’une seule couche porte une région à elle seule.'
+      route_region_active_cap:
+        label: 'Itinéraires actifs par région'
+        help: 'Nombre d’itinéraires qu’une région peut afficher simultanément. Un curateur qui approuve au-delà du plafond est bloqué et invité à en retirer un d’abord.'
+      route_ride_verify_threshold:
+        label: 'Sorties nécessaires pour vérifier un itinéraire'
+        help: 'Nombre de cyclistes, autres que l’auteur de la proposition, devant déclarer avoir parcouru l’itinéraire pour qu’il se vérifie de lui-même. Abaissez-le dans les jeunes régions où les itinéraires resteraient sinon en attente.'
+      moderation_retention_months:
+        label: 'Conservation des éléments traités (mois)'
+        help: 'Durée de conservation des corrections et contributions déjà traitées avant leur suppression par le nettoyage automatique. La décision de modération, elle, est conservée.'
 route:
   error:
     note_too_long: 'La note dépasse 2 000 caractères.'

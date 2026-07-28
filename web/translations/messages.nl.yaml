@@ -1713,6 +1713,8 @@ admin:
     reset_requests: 'Reset-verzoeken'
     playbooks: 'Draaiboeken'
     playbook_email: 'E-mailwijziging'
+    system: 'Systeem'
+    system_config: 'Systeemconfiguratie'
   action:
     unlock: 'Account ontgrendelen'
     disarm_2fa: '2FA uitschakelen'
@@ -1750,6 +1752,10 @@ admin:
     account_removed: 'Account verwijderd.'
     removal_cancelled: 'Openstaande verwijdering geannuleerd.'
     areas_saved: 'Moderatiegebieden opgeslagen.'
+    settings_saved: 'Instellingen opgeslagen. Ze gelden vanaf het volgende verzoek.'
+    settings_unchanged: 'Er is niets gewijzigd.'
+    settings_reset: 'Instelling teruggezet op de standaardwaarde.'
+    settings_invalid: 'Er is niets opgeslagen — controleer de hieronder gemarkeerde waarden.'
   areas:
     title: 'Moderatiegebieden toewijzen'
     help: 'Kies de regio''s en/of hele landen die deze curator modereert. De unie geldt; items buiten elke regio blijven zichtbaar voor alle curatoren.'
@@ -1772,6 +1778,39 @@ admin:
     s5_b: 'Informeer het oude adres met een “dit was ik niet”-bezwaartermijn, stel uitvoering 48–72 uur uit en leg de wijziging vast met een auditnotitie op de gebruiker.'
     rule: 'Urgentie is een rood signaal, nooit een reden om een stap over te slaan — de echte eigenaar overleeft 48 uur vertraging; het venster van de aanvaller meestal niet.'
     spec: 'Canonieke versie: docs/specs/account-and-auth.md §8 “Support playbook” — houd beide synchroon.'
+  settings:
+    title: 'Systeemconfiguratie'
+    intro: 'De redactionele getallen waarop de site draait. Een wijziging geldt vanaf het volgende verzoek — geen deploy, geen herstart. Elke wijziging komt met oude en nieuwe waarde in het activiteitenlogboek.'
+    infra_note: 'Infrastructuurwaarden (dekkingstegels, de manifest-URL, de Content-Security-Policy-host van de kaart) staan hier bewust niet: die worden in de omgeving gezet en wijzigen vraagt een deploy.'
+    save: 'Instellingen opslaan'
+    reset: 'Terugzetten'
+    overridden: 'Hier gewijzigd'
+    default_note: 'Standaard: %value%'
+    range_note: 'Toegestaan: %min%–%max%'
+    error_range: 'Vul een heel getal tussen %min% en %max% in.'
+    group:
+      map: 'Kaart'
+      routes: 'Routes'
+      moderation: 'Moderatie'
+    field:
+      map_curated_default_threshold:
+        label: 'Klaar voor Selectie-modus: totaal aantal items'
+        help: 'Hoeveel geselecteerde items een regio in totaal nodig heeft voordat een curator hem standaard in Selectie-modus mag openen. Verlaag het om jonge regio’s eerder vrij te geven, verhoog het om de lat hoog te houden.'
+      map_curated_default_min_blocks:
+        label: 'Klaar voor Selectie-modus: soorten items'
+        help: 'Hoeveel verschillende blokken (wegdek, klimmen, slapen, uitzichten, erfgoed, beste routes) elk hun eigen minimum moeten halen. Zet het op 1 om er weer een kaal totaal van te maken.'
+      map_curated_default_min_per_block:
+        label: 'Klaar voor Selectie-modus: items per soort'
+        help: 'Wat een blok nodig heeft om mee te tellen voor de eis hierboven. Samen voorkomen deze twee dat één volle laag een regio in zijn eentje draagt.'
+      route_region_active_cap:
+        label: 'Actieve routes per regio'
+        help: 'Hoeveel routes een regio tegelijk live mag hebben. Een curator die boven het plafond goedkeurt, wordt geblokkeerd en gevraagd eerst iets uit roulatie te nemen.'
+      route_ride_verify_threshold:
+        label: 'Ritten nodig om een route te verifiëren'
+        help: 'Hoeveel fietsers anders dan de indiener een route als gereden moeten markeren voordat hij zichzelf verifieert. Verlaag het voor jonge regio’s waar routes anders nooit uit de wachtrij komen.'
+      moderation_retention_months:
+        label: 'Bewaartermijn afgehandelde items (maanden)'
+        help: 'Hoe lang afgehandelde correcties en inzendingen bewaard blijven voordat de opruimronde ze verwijdert. Het moderatiebesluit zelf blijft hoe dan ook bewaard.'
 route:
   error:
     note_too_long: 'De notitie is langer dan 2.000 tekens.'

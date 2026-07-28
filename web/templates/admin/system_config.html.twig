@@ -1,0 +1,69 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.settings.title'|trans }}{% endblock %}
+
+{% block main %}
+    <p>{{ 'admin.settings.intro'|trans }}</p>
+    <p class="text-muted">{{ 'admin.settings.infra_note'|trans }}</p>
+
+    {# One form for everything: Save submits every field, each "reset" button
+       submits its own key. The reset branch runs before validation, so a row
+       can always be put back to its default even when a sibling field is
+       currently holding an unacceptable number. #}
+    <form method="post">
+        <input type="hidden" name="token" value="{{ csrf_token(constant('App\\Controller\\Admin\\DashboardController::SETTINGS_CSRF_TOKEN_ID')) }}">
+
+        {% for group, defs in grouped %}
+            <div class="card mb-4">
+                <div class="card-header">{{ ('admin.settings.group.' ~ group)|trans }}</div>
+                <div class="card-body">
+                    {% for def in defs %}
+                        {% set fieldId = 'setting-' ~ def.key|replace({'.': '-'}) %}
+                        {% set invalid = errors[def.key] is defined %}
+                        <div class="row align-items-start mb-3 pb-3 border-bottom">
+                            <div class="col-md-7">
+                                <label class="form-label mb-0" for="{{ fieldId }}">{{ def.labelKey|trans }}</label>
+                                <div class="text-muted small">{{ def.helpKey|trans }}</div>
+                                <div class="text-muted small"><code>{{ def.key }}</code></div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <input type="number"
+                                           class="form-control{{ invalid ? ' is-invalid' }}"
+                                           id="{{ fieldId }}"
+                                           name="settings[{{ def.key }}]"
+                                           value="{{ values[def.key] }}"
+                                           min="{{ def.min }}"
+                                           max="{{ def.max }}"
+                                           step="1"
+                                           required>
+                                    {# Disabled rather than hidden: the row keeps its shape whether or
+                                       not the key is overridden, so the column does not jump about. #}
+                                    <button type="submit" name="reset" value="{{ def.key }}"
+                                            class="btn btn-outline-secondary"
+                                            {{ overridden[def.key] ? '' : 'disabled' }}>
+                                        {{ 'admin.settings.reset'|trans }}
+                                    </button>
+                                </div>
+                                {% if invalid %}
+                                    <div class="invalid-feedback d-block">{{ errors[def.key] }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    {{ 'admin.settings.default_note'|trans({'%value%': def.default}) }}
+                                    &middot;
+                                    {{ 'admin.settings.range_note'|trans({'%min%': def.min, '%max%': def.max}) }}
+                                    {% if overridden[def.key] %}
+                                        <span class="badge bg-warning text-dark ms-1">{{ 'admin.settings.overridden'|trans }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary">{{ 'admin.settings.save'|trans }}</button>
+    </form>
+{% endblock %}
