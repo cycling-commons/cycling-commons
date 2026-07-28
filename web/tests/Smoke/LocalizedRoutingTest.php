@@ -89,6 +89,46 @@ final class LocalizedRoutingTest extends WebTestCase
         self::assertStringContainsString('to=/fr/regions', $href);
     }
 
+    /**
+     * Regression, reported 2026-07-27 as "the map does not change locale".
+     * The labels were translating fine — but the switcher regenerated the path
+     * from `_route`/`_route_params`, which do NOT carry the query string, so
+     * switching language on `/map?scope=region:niedersachsen` landed the rider
+     * on a bare `/map`, i.e. the default scope, looking at a different region.
+     * `?feature=`, `?route=` and `?pending=` deep links were lost the same way.
+     */
+    public function testSwitcherPreservesTheQueryString(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/map', ['scope' => 'region:niedersachsen', 'feature' => 'Sample']);
+        self::assertResponseIsSuccessful();
+
+        $href = $crawler->filter('.lang-dropdown a')->reduce(
+            static fn ($node) => str_contains($node->attr('href') ?? '', '/i18n/de')
+        )->attr('href');
+        self::assertIsString($href);
+        $to = [];
+        parse_str((string) parse_url($href, \PHP_URL_QUERY), $to);
+        self::assertArrayHasKey('to', $to);
+        self::assertSame('/map?scope=region%3Aniedersachsen&feature=Sample', $to['to']);
+
+        // ...and the switch actually lands there.
+        $client->request('GET', '/i18n/de', ['to' => $to['to']]);
+        self::assertResponseRedirects($to['to']);
+    }
+
+    /**
+     * The query string must not make an English-only page start advertising
+     * hreflang: `localized` compares PATHS, not paths-plus-query.
+     */
+    public function testQueryStringDoesNotMakeAnEnglishOnlyPageLookLocalized(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/map', ['scope' => 'region:niedersachsen']);
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('link[hreflang]'));
+    }
+
     public function testLocaleSwitchRedirectsToTargetPath(): void
     {
         $client = static::createClient();

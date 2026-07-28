@@ -71,6 +71,20 @@ final class LocaleExtension extends AbstractExtension
         // to non-localized routes.
         unset($params['_locale']);
 
+        // The QUERY STRING is not part of the route, so regenerating from
+        // _route/_route_params alone silently drops it — and on the map that is
+        // the whole state: switching language on
+        // `/map?scope=region:niedersachsen` landed the rider on a bare `/map`,
+        // i.e. back on the default scope, looking at a different region
+        // (reported 2026-07-27 as "the map does not change locale": the labels
+        // were translating correctly all along, the rider had just been moved
+        // somewhere else). `?feature=`, `?route=` and `?pending=` deep links
+        // were lost the same way. `_locale` is dropped because the target
+        // locale rides the router context, not the query.
+        $query = $request->query->all();
+        unset($query['_locale']);
+        $suffix = [] === $query ? '' : '?'.http_build_query($query);
+
         $context = $this->router->getContext();
         $previous = $context->getParameter('_locale');
         $urls = [];
@@ -79,7 +93,7 @@ final class LocaleExtension extends AbstractExtension
             foreach ($this->enabledLocales as $locale) {
                 $context->setParameter('_locale', $locale);
                 try {
-                    $urls[$locale] = $this->router->generate($route, $params);
+                    $urls[$locale] = $this->router->generate($route, $params).$suffix;
                 } catch (\Throwable) {
                     // Route not generatable in this locale (e.g. a required
                     // parameter is absent). Omit it rather than fail the page.
@@ -90,7 +104,13 @@ final class LocaleExtension extends AbstractExtension
         }
 
         return [
-            'localized' => \count(array_unique($urls)) > 1,
+            // Compare the PATHS, not the paths-plus-query: an identical query on
+            // every locale must not make an English-only page look localized and
+            // start emitting hreflang.
+            'localized' => \count(array_unique(array_map(
+                static fn (string $u): string => strtok($u, '?') ?: $u,
+                $urls,
+            ))) > 1,
             'urls' => $urls,
         ];
     }
