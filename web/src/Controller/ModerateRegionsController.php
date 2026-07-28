@@ -55,11 +55,26 @@ final class ModerateRegionsController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $rows = $this->visibleRegions($user);
-        $counts = $this->readiness->countForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
+        $reports = $this->readiness->reportForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
         $threshold = $this->readiness->threshold();
+        $minPerBlock = $this->readiness->minPerBlock();
 
-        $regions = array_map(static function (array $r) use ($counts, $threshold, $translator): array {
-            $n = $counts[$r['id']] ?? 0;
+        $regions = array_map(static function (array $r) use ($reports, $minPerBlock, $translator): array {
+            $rep = $reports[$r['id']];
+            // Per-BLOCK, so a moderator can see WHICH kind of content the region
+            // is short of, not just that a number is too low (owner request,
+            // 2026-07-27). `met` marks a block that already carries its share of
+            // the breadth requirement.
+            $blocks = [];
+            foreach (CuratedReadiness::BLOCKS as $letter => $labelKey) {
+                $n = $rep['blocks'][$letter];
+                $blocks[] = [
+                    'letter' => $letter,
+                    'label' => $translator->trans($labelKey),
+                    'count' => $n,
+                    'met' => $n >= $minPerBlock,
+                ];
+            }
 
             return [
                 'id' => $r['id'],
@@ -67,13 +82,17 @@ final class ModerateRegionsController extends AbstractController
                 'countryCode' => $r['countryCode'],
                 'label' => $translator->trans('region.'.$r['slug'].'.label'),
                 'curatedDefault' => $r['curatedDefault'],
-                'count' => $n,
-                'ready' => $n >= $threshold,
+                'count' => $rep['total'],
+                'blocks' => $blocks,
+                'blocksMet' => $rep['blocksMet'],
+                'shortTotal' => $rep['shortTotal'],
+                'shortBlocks' => $rep['shortBlocks'],
+                'ready' => $rep['ready'],
                 // A region already flipped can always be flipped back, even if
                 // its count later drops below the threshold — the gate exists to
                 // stop premature ENABLING, never to trap a region in a mode its
                 // content no longer supports.
-                'canToggle' => $r['curatedDefault'] || $n >= $threshold,
+                'canToggle' => $r['curatedDefault'] || $rep['ready'],
             ];
         }, $rows);
 
@@ -83,6 +102,8 @@ final class ModerateRegionsController extends AbstractController
             'nav_active' => 'moderate',
             'regions' => $regions,
             'threshold' => $threshold,
+            'min_blocks' => $this->readiness->minBlocks(),
+            'min_per_block' => $minPerBlock,
             'mod_scope_names' => $this->scopeProvider->describe($user, $this->scopeProvider->scopeFor($user)),
         ]);
     }

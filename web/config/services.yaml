@@ -38,6 +38,8 @@ services:
     App\Catalog\CuratedReadiness:
         arguments:
             $threshold: '%map.curated_default_threshold%'
+            $minBlocks: '%map.curated_default_min_blocks%'
+            $minPerBlock: '%map.curated_default_min_per_block%'
 
     App\Coverage\CoverageManifest:
         arguments:

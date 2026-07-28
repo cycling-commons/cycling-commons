@@ -1,13 +1,24 @@
 # Map view-mode default (2026-07-27-map-view-mode-default-design.md §4).
 # Thresholds are config, not constants (README threshold principle).
+#
+# Readiness is BREADTH AND DEPTH, not a bare total. A flat "25 curated items"
+# can be met by 25 scenic views and nothing else, and a rider opening that
+# region in Curated then finds nowhere to sleep, no climbs and no routes — the
+# same empty map the default was flipped to avoid, with a different hole in it.
+#
+# Breadth is "N blocks of M" rather than "every block" on purpose: regions
+# legitimately differ. A Dutch province has no climbs and never will, and must
+# still be able to qualify on stays + scenic + history + routes.
+#
+# ALL THREE NUMBERS ARE ADVISORY STARTING VALUES, FLAGGED FOR OWNER SIGN-OFF.
+# The gate itself is the real control. Setting min_blocks to 1 reverts the gate
+# to a pure total. Blocks are A surface, B climbs, E stays, I scenic,
+# J history, K best-of routes — see App\Catalog\CuratedReadiness::BLOCKS.
 parameters:
-    # How much curated best-of content a region must have before a moderator is
-    # allowed to make it open in Curated mode. Counts curated items on the
-    # experiential layers (A/B/E/I/J) plus verified+voted best-of routes — see
-    # App\Catalog\CuratedReadiness.
-    #
-    # 25 is an ADVISORY STARTING VALUE chosen so a region reads as populated
-    # rather than sparse, and is flagged for owner sign-off: the design records
-    # the threshold VALUE as an owner decision, while the GATE itself is the
-    # real control. Change it here; nothing hard-codes it.
+    # Curated best-of items the region needs in total.
     map.curated_default_threshold: 25
+    # ...spread over at least this many blocks...
+    map.curated_default_min_blocks: 3
+    # ...each carrying at least this much. 3 x 5 = 15 of the 25 must come from
+    # three different kinds of thing, so no single layer can carry a region.
+    map.curated_default_min_per_block: 5

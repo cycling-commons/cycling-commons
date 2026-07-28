@@ -62,16 +62,37 @@ final class CuratedDefaultGateTest extends WebTestCase
         return $region;
     }
 
+    /**
+     * Seeds $n curated picks SPREAD over the climb/stay/scenic blocks, because
+     * readiness is breadth as well as depth: $n items all on one letter no
+     * longer unlock the gate (2026-07-27-map-view-mode-default-design.md §4).
+     */
     private function addCuratedItems(int $regionId, int $n): void
+    {
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $letters = ['B', 'E', 'I'];
+        for ($i = 0; $i < $n; ++$i) {
+            $db->executeStatement(
+                "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
+                 VALUES (:l, 'pick', 'manual', :ref, 'verified', 'BE', '{\"cur\": true}'::jsonb, :r,
+                         ST_SetSRID(ST_MakePoint(5.0, 50.0), 4326), NOW(), NOW())",
+                ['l' => $letters[$i % 3], 'ref' => 'gate:'.$regionId.':'.$i, 'r' => $regionId],
+            );
+        }
+    }
+
+    /** $n picks all on ONE letter — meets a bare total, fails breadth. */
+    private function addLopsidedItems(int $regionId, int $n): void
     {
         /** @var Connection $db */
         $db = static::getContainer()->get(Connection::class);
         for ($i = 0; $i < $n; ++$i) {
             $db->executeStatement(
                 "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
-                 VALUES ('B', 'pick', 'manual', :ref, 'verified', 'BE', '{\"cur\": true}'::jsonb, :r,
+                 VALUES ('I', 'view', 'manual', :ref, 'verified', 'BE', '{\"cur\": true}'::jsonb, :r,
                          ST_SetSRID(ST_MakePoint(5.0, 50.0), 4326), NOW(), NOW())",
-                ['ref' => 'gate:'.$regionId.':'.$i, 'r' => $regionId],
+                ['ref' => 'lop:'.$regionId.':'.$i, 'r' => $regionId],
             );
         }
     }
@@ -112,7 +133,10 @@ final class CuratedDefaultGateTest extends WebTestCase
         // The count is surfaced whether or not the gate is open — a curator has
         // to be able to see how far off a region is, not just that it is locked.
         self::assertStringContainsString('2 of 25 curated', $html);
-        self::assertStringContainsString('Needs 25 curated picks first', $html);
+        self::assertStringContainsString('Needs 25 picks over 3 blocks of 5', $html);
+        // The per-block breakdown, so a moderator sees WHICH kind is short.
+        self::assertStringContainsString('23 more curated picks needed', $html);
+        self::assertStringContainsString('3 more block(s) need at least 5', $html);
     }
 
     public function testEnablingAnUnreadyRegionIsRefusedEvenWhenPostedDirectly(): void
@@ -155,6 +179,31 @@ final class CuratedDefaultGateTest extends WebTestCase
             '_token' => $token, 'region' => (int) $region->getId(), 'enable' => '0',
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
         self::assertFalse($this->curatedDefault((int) $region->getId()));
+    }
+
+    /**
+     * The owner's question, end to end: 25 scenic views and nothing else meets
+     * the total but must NOT unlock Curated, because a rider opening that
+     * region finds nowhere to sleep and no routes.
+     */
+    public function testATotalCarriedByOneLayerDoesNotUnlockTheGate(): void
+    {
+        $client = static::createClient();
+        $ready = $this->seedRegion('gate-spread');
+        $this->addCuratedItems((int) $ready->getId(), 30);      // spread -> unlocks, renders a form
+        $lopsided = $this->seedRegion('gate-lopsided');
+        $this->addLopsidedItems((int) $lopsided->getId(), 30);  // all scenic views
+        $curator = $this->curator('gate-lopsided@example.com', admin: true);
+        $client->loginUser($curator, 'main');
+
+        $token = $this->tokenFromDesk($client);
+        $client->request('POST', '/moderate/regions/curated-default', [
+            '_token' => $token, 'region' => (int) $lopsided->getId(), 'enable' => '1',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+
+        self::assertResponseRedirects();
+        self::assertFalse($this->curatedDefault((int) $lopsided->getId()),
+            '30 items on one layer meets the total but not the breadth requirement');
     }
 
     public function testACuratorCannotFlipARegionOutsideTheirArea(): void

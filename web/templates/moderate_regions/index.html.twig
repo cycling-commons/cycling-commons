@@ -20,6 +20,16 @@
   .rg-bar i{display:block;height:100%;background:var(--spruce);border-radius:3px}
   .rg-bar.is-ready i{background:var(--trail)}
   .rg-count{font-family:var(--mono);font-size:.66rem;color:#595c4d}
+  /* Per-block breakdown: which KIND of content the region is short of, not just
+     that a number is too low. A block that already carries its share of the
+     breadth requirement is marked. */
+  .rg-blocks{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem}
+  .rg-block{display:inline-flex;align-items:baseline;gap:.35rem;font-family:var(--mono);
+    font-size:.6rem;letter-spacing:.04em;padding:.22rem .5rem;border-radius:4px;
+    background:rgba(20,22,14,.05);border:1px solid rgba(20,22,14,.12);color:#595c4d}
+  .rg-block.is-met{background:rgba(28,58,42,.1);border-color:rgba(28,58,42,.35);color:var(--spruce)}
+  .rg-block b{font-size:.72rem;font-weight:700}
+  .rg-need{font-family:var(--mono);font-size:.6rem;color:var(--clay);margin-top:.45rem;line-height:1.6}
   .rg-state{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
     padding:.22rem .55rem;border-radius:30px}
   .rg-state--on{background:var(--trail);color:var(--ink)}
@@ -40,7 +50,7 @@
   <div class="wrap">
     <div class="kicker">{{ 'moderate_regions.kicker'|trans }}</div>
     <h1>{{ 'moderate_regions.title'|trans }}</h1>
-    <p class="lead">{{ 'moderate_regions.lead'|trans({'%threshold%': threshold}) }}</p>
+    <p class="lead">{{ 'moderate_regions.lead'|trans({'%threshold%': threshold, '%blocks%': min_blocks, '%per_block%': min_per_block}) }}</p>
     <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
   </div>
 </div>
@@ -70,6 +80,23 @@
             </span>
             <span class="rg-count">{{ 'moderate_regions.readiness'|trans({'%count%': r.count, '%threshold%': threshold}) }}</span>
           </div>
+          <div class="rg-blocks">
+            {% for b in r.blocks %}
+              <span class="rg-block {{ b.met ? 'is-met' : '' }}"
+                    title="{{ b.label }}{{ b.met ? ' — ' ~ ('moderate_regions.block_met'|trans({'%n%': min_per_block})) : '' }}">
+                {{ b.label }} <b>{{ b.count }}</b>
+              </span>
+            {% endfor %}
+          </div>
+          {# Say what is still MISSING, in words — a moderator should not have to
+             subtract two numbers to find out what to work on. #}
+          {% if not r.ready %}
+            <div class="rg-need">
+              {%- if r.shortTotal > 0 %}{{ 'moderate_regions.need_total'|trans({'%n%': r.shortTotal}) }}{% endif -%}
+              {%- if r.shortTotal > 0 and r.shortBlocks > 0 %} · {% endif -%}
+              {%- if r.shortBlocks > 0 %}{{ 'moderate_regions.need_blocks'|trans({'%n%': r.shortBlocks, '%per_block%': min_per_block}) }}{% endif -%}
+            </div>
+          {% endif %}
         </div>
         <span class="rg-state {{ r.curatedDefault ? 'rg-state--on' : 'rg-state--off' }}">
           {{ (r.curatedDefault ? 'moderate_regions.opens_curated' : 'moderate_regions.opens_everything')|trans }}
@@ -85,7 +112,7 @@
               </button>
             </form>
           {% else %}
-            <span class="rg-locked">{{ 'moderate_regions.locked'|trans({'%threshold%': threshold}) }}</span>
+            <span class="rg-locked">{{ 'moderate_regions.locked'|trans({'%threshold%': threshold, '%blocks%': min_blocks, '%per_block%': min_per_block}) }}</span>
           {% endif %}
         </div>
       </div>
