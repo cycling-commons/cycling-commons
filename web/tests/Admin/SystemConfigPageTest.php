@@ -60,6 +60,12 @@ final class SystemConfigPageTest extends WebTestCase
         return static::getContainer()->get(SystemSettings::class);
     }
 
+    /** Read the default off the registry, so tuning a YAML number never breaks a test that is not about that number. */
+    private function defaultOf(string $key): int
+    {
+        return static::getContainer()->get(SettingsRegistry::class)->get($key)->default;
+    }
+
     /**
      * The CSRF token is stateless and same-origin: minted into the template and
      * read back out of the rendered page, because getToken() outside a request
@@ -131,6 +137,7 @@ final class SystemConfigPageTest extends WebTestCase
         $crawler = $client->request('GET', $this->url());
         self::assertResponseIsSuccessful();
 
+        $default = $this->defaultOf(self::CAP);
         $form = $crawler->selectButton('Save settings')->form();
         $form['settings['.self::CAP.']'] = '42';
         $client->submit($form);
@@ -141,7 +148,7 @@ final class SystemConfigPageTest extends WebTestCase
         $logs = static::getContainer()->get(AdminActionLogRepository::class)
             ->findBy(['action' => SystemSettingsWriter::ACTION_CHANGE]);
         self::assertCount(1, $logs, 'exactly the one changed field is audited');
-        self::assertSame(self::CAP.': 30 -> 42', $logs[0]->getNote());
+        self::assertSame(sprintf('%s: %d -> 42', self::CAP, $default), $logs[0]->getNote());
     }
 
     public function testResavingAnUntouchedFormWritesNothing(): void
@@ -172,9 +179,10 @@ final class SystemConfigPageTest extends WebTestCase
         $client->loginUser($this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true));
         $token = $this->tokenFrom($client);
 
-        // A zero cap would freeze every region's queue; 3 for the ride
-        // threshold is perfectly legal and must NOT be saved either, because
-        // one bad field rejects the whole submission.
+        // A zero cap would freeze every region's queue. The 9 alongside it is
+        // a perfectly legal ride threshold and must NOT be saved either: one
+        // bad field rejects the whole submission, so the admin never ends up
+        // with half of what they typed applied.
         $client->request('POST', $this->url(), [
             'token' => $token,
             'settings' => [
@@ -185,8 +193,11 @@ final class SystemConfigPageTest extends WebTestCase
 
         self::assertResponseIsSuccessful('the form is re-rendered with the error, not redirected');
         self::assertSelectorExists('.is-invalid');
-        self::assertSame(30, $this->settings()->get(self::CAP));
-        self::assertSame(3, $this->settings()->get(SettingsRegistry::ROUTE_RIDE_VERIFY_THRESHOLD));
+        self::assertSame($this->defaultOf(self::CAP), $this->settings()->get(self::CAP));
+        self::assertSame(
+            $this->defaultOf(SettingsRegistry::ROUTE_RIDE_VERIFY_THRESHOLD),
+            $this->settings()->get(SettingsRegistry::ROUTE_RIDE_VERIFY_THRESHOLD),
+        );
     }
 
     public function testANonNumericValueIsRejectedRatherThanCastToZero(): void
@@ -201,7 +212,7 @@ final class SystemConfigPageTest extends WebTestCase
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSame(30, $this->settings()->get(self::CAP));
+        self::assertSame($this->defaultOf(self::CAP), $this->settings()->get(self::CAP));
     }
 
     public function testResetRestoresTheDefault(): void
@@ -215,7 +226,7 @@ final class SystemConfigPageTest extends WebTestCase
         $client->request('POST', $this->url(), ['token' => $token, 'reset' => self::CAP]);
 
         self::assertResponseRedirects();
-        self::assertSame(30, $this->settings()->get(self::CAP));
+        self::assertSame($this->defaultOf(self::CAP), $this->settings()->get(self::CAP));
         self::assertFalse($this->settings()->isOverridden(self::CAP));
     }
 
@@ -243,6 +254,6 @@ final class SystemConfigPageTest extends WebTestCase
         ]);
 
         self::assertResponseStatusCodeSame(403);
-        self::assertSame(30, $this->settings()->get(self::CAP));
+        self::assertSame($this->defaultOf(self::CAP), $this->settings()->get(self::CAP));
     }
 }

@@ -83,7 +83,11 @@ final class SystemSettingsTest extends KernelTestCase
 
     public function testTheShippedDefaultsAreTheSignedOffNumbers(): void
     {
-        // Owner sign-off 2026-07-29: 25 / 3 / 5 stay the starting gate.
+        // The one place literals belong (specs/README.md rule 3 asks tests to
+        // assert against config, not numbers): the fact under test IS the
+        // number. Owner sign-off 2026-07-29 kept 25 / 3 / 5 as the starting
+        // gate, and this failing is the intended alarm if someone moves a
+        // default in YAML without a new sign-off.
         self::assertSame(25, $this->settings->get(SettingsRegistry::MAP_CURATED_THRESHOLD));
         self::assertSame(3, $this->settings->get(SettingsRegistry::MAP_CURATED_MIN_BLOCKS));
         self::assertSame(5, $this->settings->get(SettingsRegistry::MAP_CURATED_MIN_PER_BLOCK));
@@ -100,7 +104,7 @@ final class SystemSettingsTest extends KernelTestCase
     public function testSetOverridesTheDefaultAndSurvivesTheCache(): void
     {
         $key = SettingsRegistry::ROUTE_REGION_ACTIVE_CAP;
-        self::assertSame(30, $this->settings->get($key), 'precondition: the YAML default');
+        self::assertSame($this->default($key), $this->settings->get($key), 'precondition: the YAML default');
 
         self::assertTrue($this->writer->set($key, 42, null));
 
@@ -181,7 +185,10 @@ final class SystemSettingsTest extends KernelTestCase
         );
         $this->settings->invalidate();
 
-        self::assertSame(25, $this->settings->get(SettingsRegistry::MAP_CURATED_THRESHOLD));
+        self::assertSame(
+            $this->default(SettingsRegistry::MAP_CURATED_THRESHOLD),
+            $this->settings->get(SettingsRegistry::MAP_CURATED_THRESHOLD),
+        );
     }
 
     // ── Audit ────────────────────────────────────────────────────────────────
@@ -191,6 +198,7 @@ final class SystemSettingsTest extends KernelTestCase
         $actor = $this->actor();
         $key = SettingsRegistry::ROUTE_REGION_ACTIVE_CAP;
 
+        $default = $this->default($key);
         $this->writer->set($key, 40, $actor);
         $this->writer->reset($key, $actor);
 
@@ -199,8 +207,8 @@ final class SystemSettingsTest extends KernelTestCase
 
         self::assertCount(2, $logs);
         self::assertSame($actor->getId(), $logs[0]->getActor()?->getId());
-        self::assertSame($key.': 30 -> 40', $logs[0]->getNote());
-        self::assertSame($key.': 40 -> 30 (default)', $logs[1]->getNote());
+        self::assertSame(sprintf('%s: %d -> 40', $key, $default), $logs[0]->getNote());
+        self::assertSame(sprintf('%s: 40 -> %d (default)', $key, $default), $logs[1]->getNote());
     }
 
     public function testAuditActionsFitTheColumn(): void
@@ -217,7 +225,7 @@ final class SystemSettingsTest extends KernelTestCase
     {
         /** @var CuratedReadiness $readiness */
         $readiness = static::getContainer()->get(CuratedReadiness::class);
-        self::assertSame(25, $readiness->threshold());
+        self::assertSame($this->default(SettingsRegistry::MAP_CURATED_THRESHOLD), $readiness->threshold());
 
         $this->writer->set(SettingsRegistry::MAP_CURATED_THRESHOLD, 10, null);
 
@@ -230,7 +238,7 @@ final class SystemSettingsTest extends KernelTestCase
     {
         /** @var RetentionService $retention */
         $retention = static::getContainer()->get(RetentionService::class);
-        self::assertSame(3, $retention->retentionMonths());
+        self::assertSame($this->default(SettingsRegistry::MODERATION_RETENTION_MONTHS), $retention->retentionMonths());
 
         $this->writer->set(SettingsRegistry::MODERATION_RETENTION_MONTHS, 12, null);
 
@@ -239,6 +247,11 @@ final class SystemSettingsTest extends KernelTestCase
             (new \DateTimeImmutable())->modify('-12 months')->format('Y-m'),
             $retention->cutoff()->format('Y-m'),
         );
+    }
+
+    private function default(string $key): int
+    {
+        return $this->registry->get($key)->default;
     }
 
     private function auditCount(string $action): int
