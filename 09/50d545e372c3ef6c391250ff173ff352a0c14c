@@ -1,0 +1,33 @@
+overrides/partials/logo.html
+  s_99879bf8d59ea6::t_12daabbd00ddd1 1-8,14-18
+  s_99879bf8d59ea6::t_5b97c1e2046134 9-13
+wiki/assets/logo-nav.svg
+  s_99879bf8d59ea6::t_12daabbd00ddd1 1-34
+mkdocs.yml
+  s_99879bf8d59ea6::t_12daabbd00ddd1 24
+  s_99879bf8d59ea6::t_1e6e7dd8f983de 67
+wiki/stylesheets/extra.css
+  s_99879bf8d59ea6::t_f5411c2a3d79d0 245-263,271-272,280,283,286,291
+  s_99879bf8d59ea6::t_1e6e7dd8f983de 523-574
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "0950d545e372c3ef6c391250ff173ff352a0c14c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_99879bf8d59ea6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76665ccb-0391-4d5f-8dd8-8d4442f2c396",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
