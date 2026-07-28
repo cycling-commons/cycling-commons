@@ -86,10 +86,17 @@ A road surface · B climbs · E where to sleep · I scenic views · J history &
 culture · K best-of routes. Utility layers are still absent for the reason
 above.
 
-All three numbers are config. **All three are advisory starting values, flagged
-for owner sign-off** — the backlog records the VALUES as an owner decision and
-the GATE as the real control. Setting `min_blocks` to 1 reverts the gate to a
-pure total; nothing hard-codes any of it.
+All three numbers are config. They were advisory starting values flagged for
+owner sign-off; **the owner signed off 25 / 3 / 5 on 2026-07-29** — the GATE is
+the real control, not the numbers. Setting `min_blocks` to 1 reverts the gate to
+a pure total; nothing hard-codes any of it.
+
+What made the sign-off low-stakes is that the numbers stopped being a deploy.
+All three are now runtime-editable from the admin system-config page and are
+read through `SettingsProviderInterface`, with the YAML parameters as the
+defaults a fresh database starts from — see
+[system-configuration.md](system-configuration.md) for the contract. Tuning the
+gate at 22:00 is an admin action with an audit entry, not a release.
 
 ### 4.2 Where the moderator sees it
 

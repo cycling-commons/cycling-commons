@@ -38,6 +38,8 @@ committed — working docs stay local.
 - `security-architecture.md` — CSP, sanitizer, CSRF, rate-limiter inventory.
 - `coverage-provider.md` — the buildable coverage-provider contract.
 - `dev-environment.md` — dev stack, platform decisions, conventions.
+- `system-configuration.md` — the runtime-editable editorial thresholds: the
+  registry, the `system_setting` table, and the admin page that writes it.
 
 ## Rules
 

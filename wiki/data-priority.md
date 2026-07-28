@@ -206,10 +206,18 @@ Breadth is *"N blocks of M"*, not *"every block"*, on purpose. A Dutch province
 has no climbs and never will, and must still be able to qualify on stays, views,
 history and routes.
 
-The exact numbers are **set in the admin**, not in code — an administrator can
-change the total, how many blocks must contribute, and how much each must carry,
-without a deploy. The Regions desk shows every region's count per block and
-states exactly what is still missing.
+The exact numbers are **set in the admin**, not in code. An administrator opens
+*System configuration* and changes the total, how many blocks must contribute,
+and how much each must carry; the new numbers apply from the next page load,
+with no deploy and no restart, and every change is recorded with its old and
+new value. The Regions desk shows every region's count per block and states
+exactly what is still missing.
+
+This is the general rule, not a special case for this one gate: the numbers the
+site runs on — this readiness gate, how many routes a region may have live at
+once, how many riders must confirm a route before it verifies itself, how long
+decided moderation items are kept — are all editorial decisions, and editorial
+decisions belong to the people making them rather than to a release cycle.
 
 ---
 
