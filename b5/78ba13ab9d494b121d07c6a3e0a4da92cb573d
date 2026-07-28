@@ -1,0 +1,26 @@
+web/tests/Smoke/LocalizedRoutingTest.php
+  s_99879bf8d59ea6::t_1083b281717192 92-131
+web/src/Twig/LocaleExtension.php
+  s_99879bf8d59ea6::t_fc3124d6427d9d 74-87,96,107-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "b578ba13ab9d494b121d07c6a3e0a4da92cb573d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_99879bf8d59ea6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76665ccb-0391-4d5f-8dd8-8d4442f2c396",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
