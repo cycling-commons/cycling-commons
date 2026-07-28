@@ -28,8 +28,12 @@
   --md-accent-fg-color: var(--cc-trail);
   --md-accent-fg-color--transparent: rgba(255,90,31,.1);
 
-  /* prose links — clay, like the site */
-  --md-typeset-a-color: var(--cc-clay);
+  /* Prose links — clay, like the site, but a DEEPER clay than the brand token.
+     --cc-clay #B5532E measures 3.99:1 on the paper ground: under WCAG AA for
+     body text. This deepens the LINK only; the brand clay itself is untouched
+     wherever it is used decoratively (eyebrows, rules, section labels), where
+     the 4.5 bar does not apply. Measured 4.90:1. */
+  --md-typeset-a-color: #A34724;
 
   /* code blocks — dark spruce */
   --md-code-bg-color: #16241b;
@@ -74,10 +78,37 @@
   --md-footer-bg-color: #0B1610;
   --md-footer-bg-color--dark: #060F0A;
 
+  /* THE TYPESET TOKENS ARE NOT OPTIONAL for a custom scheme name. Material only
+     defaults --md-typeset-* for its own built-in schemes (`default`, `slate`);
+     a scheme called something else inherits the root fallback, which is
+     rgba(0,0,0,.87) — i.e. BLACK BODY TEXT ON A NEAR-BLACK PAGE. `atlas` got
+     away with the omission because black-on-cream happens to be right; the dark
+     scheme did not, and shipped unreadable until measured. */
+  --md-typeset-color: #E7E0D0;
+  --md-typeset-mark-color: rgba(255,107,51,.28);
+  --md-typeset-del-color: rgba(226,110,110,.20);
+  --md-typeset-ins-color: rgba(107,196,150,.20);
+  --md-typeset-kbd-color: #16241B;
+  --md-typeset-kbd-accent-color: #24352B;
+  --md-typeset-kbd-border-color: #0B1610;
+
   /* Material's own surfaces (cards, admonitions, tables, search) */
   --md-typeset-table-color: rgba(231,224,208,.18);
+  --md-admonition-bg-color: #16241B;
+  --md-admonition-fg-color: #E7E0D0;
+  --md-footer-fg-color: #E7E0D0;
+  --md-footer-fg-color--light: rgba(231,224,208,.72);
+  --md-footer-fg-color--lighter: rgba(231,224,208,.45);
   --md-shadow-z1: 0 .2rem .5rem rgba(0,0,0,.4);
   --md-shadow-z2: 0 .2rem .8rem rgba(0,0,0,.5);
+}
+
+/* Same omission, stated explicitly for the light scheme rather than relying on
+   Material's root fallback happening to suit it. */
+[data-md-color-scheme="atlas"] {
+  --md-typeset-color: #101E16;
+  --md-admonition-bg-color: rgba(28,58,42,.045);
+  --md-admonition-fg-color: #101E16;
 }
 
 /* serif display headings — Fraunces, matching the site */
@@ -299,19 +330,42 @@
    on `pre > code`; the undo stripped the dark background off every fenced
    block and left pale syntax colours on pale paper — unreadable. Never reach
    into pre from these rules. */
+/* The three values below MUST be tokens, not literals. They were hardcoded to
+   the light scheme (`color:#22402F`, a dark green), so every inline symbol in
+   the dark scheme rendered dark-green-on-near-black — unreadable, and the first
+   thing a reader noticed. Each scheme sets its own pair below. */
 .md-typeset :not(pre) > code {
   font-family: "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: .74em;
   padding: .12em .36em;
   border-radius: 3px;
-  background: rgba(28,58,42,.09);
-  color: #22402F;
-  box-shadow: inset 0 0 0 1px rgba(28,58,42,.14);
+  background: var(--cc-inline-code-bg);
+  color: var(--cc-inline-code-fg);
+  box-shadow: inset 0 0 0 1px var(--cc-inline-code-edge);
   line-height: 1.4;
   word-break: break-word;
 }
+[data-md-color-scheme="atlas"] {
+  --cc-inline-code-bg: rgba(28,58,42,.09);
+  --cc-inline-code-fg: #22402F;
+  --cc-inline-code-edge: rgba(28,58,42,.14);
+  --cc-inline-code-link-bg: rgba(181,83,46,.09);
+  /* A dedicated, DARKER clay for code-in-link. The prose link colour
+     (--cc-clay #B5532E) measured 3.58:1 on the tinted pill — under AA for text
+     at this size (.74em), and the exact pill that got reported as unreadable. */
+  --cc-inline-code-link-fg: #8A3A1B;
+}
+[data-md-color-scheme="atlas-dark"] {
+  /* Lighter than the page, with paper-warm text — the mirror of the light
+     scheme's "darker than the page" tint, not an inversion of its hexes. */
+  --cc-inline-code-bg: rgba(231,224,208,.10);
+  --cc-inline-code-fg: #D6E6DC;
+  --cc-inline-code-edge: rgba(231,224,208,.18);
+  --cc-inline-code-link-bg: rgba(224,140,107,.16);
+  --cc-inline-code-link-fg: #F0A886;
+}
 /* links keep their own colour when the label is code */
-.md-typeset a > code { color: var(--cc-clay); background: rgba(181,83,46,.09); }
+.md-typeset a > code { color: var(--cc-inline-code-link-fg); background: var(--cc-inline-code-link-bg); }
 .md-typeset a:hover > code { color: var(--cc-trail); }
 /* headings shouldn't gain a tinted box */
 .md-typeset h1 code, .md-typeset h2 code, .md-typeset h3 code, .md-typeset h4 code {
