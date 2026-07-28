@@ -1,0 +1,24 @@
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_cf90f130741cee::t_ebed4d97e7fdd9 508
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "9bb3d49bb7c1d2ed902696268c708622f378713b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_cf90f130741cee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e7a2345-d231-4b9a-b374-c0d2010e5c2a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
