@@ -27,7 +27,21 @@ theme:
     text: Hanken Grotesk
     code: Spline Sans Mono
   palette:
-    scheme: atlas            # custom scheme — colours defined in stylesheets/extra.css
+    # Two schemes + a toggle. `atlas` is the warm paper original; `atlas-dark`
+    # is its night counterpart (both defined in stylesheets/extra.css). Each
+    # entry's media query means the OS preference picks the first view, and the
+    # toggle then overrides it — so a reader on a dark desktop never lands on a
+    # bright page, and can still switch.
+    - media: "(prefers-color-scheme: light)"
+      scheme: atlas
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark
+    - media: "(prefers-color-scheme: dark)"
+      scheme: atlas-dark
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light
   icon:
     repo: fontawesome/brands/github
   features:
@@ -41,12 +55,16 @@ theme:
     - search.highlight
     - toc.follow
 
+extra_javascript:
+  # Bump ?v= when diagrams.js changes — MkDocs does not fingerprint extra_*.
+  - javascripts/diagrams.js?v=3
+
 extra_css:
   # ?v= is a cache-buster. MkDocs fingerprints the theme's own assets but NOT
   # extra_css, so a browser holds the previous copy after an edit and shows a
   # stale sidebar or stale code styling — which reads as "the fix didn't work"
   # rather than "you have an old file". Bump this when extra.css changes.
-  - stylesheets/extra.css?v=9
+  - stylesheets/extra.css?v=11
 
 # Ordered to match the "Start here" list on the wiki home page.
 nav:
@@ -55,6 +73,7 @@ nav:
   - Data catalog: data-catalog.md
   - The landscape: landscape.md
   - Curation & voting: curation-and-voting.md
+  - How data earns its place: data-priority.md
   - Contributing: contributing.md
   - Location & privacy: location-privacy.md
   - Governance: governance.md
@@ -94,7 +113,16 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  # Mermaid via superfences' custom fence: Material renders ```mermaid blocks
+  # natively once the fence is registered, no extra JS include and no CDN.
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          # cc-diagram, NOT mermaid: Material's own integration claims the
+          # `mermaid` class and (9.7.6 + a floating mermaid@11) blanks every
+          # block. javascripts/diagrams.js renders these instead, pinned.
+          class: cc-diagram
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.details
 
 plugins:

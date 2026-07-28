@@ -115,7 +115,7 @@ glance.
 The same flip happens on the front end. In `web/assets/map/map.js`, `setCircleSpotlight()` receives
 a `center` in human order and reads the latitude straight out of it:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/spotlight.js -->
 ```js
 const n=64, lat=center[0];
 ```
@@ -123,7 +123,7 @@ const n=64, lat=center[0];
 A few lines later, the same function builds the ring it hands to MapLibre the other way round,
 `[lng, lat]`, because that is what GeoJSON requires:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/spotlight.js -->
 ```js
 ring.push([center[1]+dLng*Math.cos(a), lat+dLat*Math.sin(a)]);
 ```
@@ -200,7 +200,7 @@ correction on purpose rather than hoping it does not matter. `setCircleSpotlight
 `web/assets/map/map.js` draws the "my area" circle on the map, and to do that it converts a radius
 in kilometres into a step in degrees:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/spotlight.js -->
 ```js
 const cosLat=Math.max(0.01, Math.cos(lat*Math.PI/180));
 const dLat = rkm/111.32, dLng = rkm/(111.32*cosLat);

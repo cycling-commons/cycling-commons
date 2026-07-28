@@ -246,7 +246,7 @@ but using a coordinate as part of an identity key without letting floating-point
 renders of the same point into two different keys. `web/assets/map/map.js` tracks already-rendered
 map markers across re-renders by building a string key from each feature's coordinates:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/osm-pools.js -->
 ```js
 const key = p.cluster ? 'c'+p.cluster_id : 'l'+co[0].toFixed(5)+','+co[1].toFixed(5);
 ```

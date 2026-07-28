@@ -40,6 +40,46 @@
   --md-footer-bg-color--dark: #0b1610;
 }
 
+/* ── Night counterpart of `atlas`. Not an inversion: the ground is a deep
+   spruce-biased near-black (never pure #000), the paper cream becomes the text,
+   and the two accents are lifted so they still carry on a dark ground — trail
+   orange holds, but clay and spruce would go muddy at their daylight values. ── */
+[data-md-color-scheme="atlas-dark"] {
+  --cc-ink:#0B1610; --cc-paper:#E7E0D0; --cc-paper-deep:#1A2620;
+  --cc-spruce:#9BC4AC; --cc-spruce-lift:#B6D6C2; --cc-trail:#FF6B33;
+  --cc-clay:#E08C6B; --cc-glacier:#63A6B6; --cc-ochre:#DDAA55;
+
+  --md-default-bg-color: #0E1712;
+  --md-default-fg-color: #E7E0D0;
+  --md-default-fg-color--light: rgba(231,224,208,.70);
+  --md-default-fg-color--lighter: rgba(231,224,208,.42);
+  --md-default-fg-color--lightest: rgba(231,224,208,.12);
+
+  --md-primary-fg-color: #0B1610;
+  --md-primary-fg-color--light: #16241B;
+  --md-primary-fg-color--dark: #060F0A;
+  --md-primary-bg-color: #E7E0D0;
+  --md-primary-bg-color--light: rgba(231,224,208,.75);
+
+  --md-accent-fg-color: var(--cc-trail);
+  --md-accent-fg-color--transparent: rgba(255,107,51,.14);
+
+  --md-typeset-a-color: var(--cc-clay);
+
+  /* Code sits LIGHTER than the page here — a darker-than-black block would
+     disappear into the ground. */
+  --md-code-bg-color: #16241B;
+  --md-code-fg-color: #E7E0D0;
+
+  --md-footer-bg-color: #0B1610;
+  --md-footer-bg-color--dark: #060F0A;
+
+  /* Material's own surfaces (cards, admonitions, tables, search) */
+  --md-typeset-table-color: rgba(231,224,208,.18);
+  --md-shadow-z1: 0 .2rem .5rem rgba(0,0,0,.4);
+  --md-shadow-z2: 0 .2rem .8rem rgba(0,0,0,.5);
+}
+
 /* serif display headings — Fraunces, matching the site */
 .md-typeset h1,
 .md-typeset h2,
@@ -392,3 +432,19 @@
    absolute value, so leading shrinks in proportion and the text keeps the
    same colour on the page instead of looking loose at a smaller size. */
 .md-typeset { font-size: .75rem; line-height: 1.6; }
+
+/* Diagrams (javascripts/diagrams.js). The rendered SVG sits in a bordered,
+   scrollable frame so a wide flowchart never widens the page body. Until the
+   renderer runs — or if it cannot, offline — the source stays visible as a
+   plain code block, which is readable rather than an empty hole. */
+.cc-diagram-out {
+  display: flex; justify-content: center;
+  overflow-x: auto; padding: 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest); border-radius: 2px;
+  background: var(--cc-paper-deep); margin: 1.2rem 0;
+}
+.cc-diagram-out svg { max-width: 100%; height: auto; }
+pre.cc-diagram[data-diagram-error]::after {
+  content: "diagram could not be drawn: " attr(data-diagram-error);
+  display: block; margin-top: .5rem; font-size: .75rem; color: #8b1a1a;
+}

@@ -22,7 +22,7 @@ A **style** is the whole document describing what the map draws: every source, e
 background colour, all of it, together. This project does not hand-write one. Look near the top of
 `web/assets/map/map.js`, at the `new maplibregl.Map({...})` call that boots the whole thing:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/map-init.js -->
 ```js
 const map = new maplibregl.Map({
   container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
@@ -50,7 +50,7 @@ data sitting there under a name; nothing stops five different layers from readin
 and drawing five different things from it. The coverage tiles are the clearest example in this
 codebase. `addCoverage()` in `map.js` adds exactly one vector source:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
 map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
 ```
@@ -100,7 +100,7 @@ carries just one collection, so there is nothing to disambiguate.
 
 `addCoverage()` builds that name from the same per-`(letter, country)` split chapter 7 described:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
 const srcLayer = cc ? letter+'_'+cc : letter;
 ...
@@ -137,7 +137,7 @@ boundary use it: `drawSpotlightMask()` in `map.js` builds a `region-mask` polygo
 hole cut where the scoped region is) and a `region` polygon (the region's own outline), and adds
 both as `geojson` sources feeding a dimming fill layer and a dashed line layer.
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/spotlight.js -->
 ```js
 map.addSource('region-mask',{type:'geojson',data:mask});
 map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
@@ -153,7 +153,7 @@ satellite base uses it: `addSatellite()` points a `raster` source at Esri World 
 There is no geometry to read here at all, only images to place in a grid; this is the one source
 type this chapter's later sections on paint, layout and clicking do not really apply to.
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/map-init.js -->
 ```js
 map.addSource('satellite',{type:'raster',tileSize:256,
   tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
@@ -168,7 +168,7 @@ sits outside the paint/layout/click-testing story the rest of this chapter tells
 the coverage source but works nothing like it. `setupConfClusters()` builds one of these per bulk-OSM
 pool, for the confirmed (rider-verified) points:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/osm-pools.js -->
 ```js
 map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
 ```
@@ -224,7 +224,7 @@ which icons fit without overlapping — that paint changes never touch.
 `syncCoverageLayers()` in `map.js` uses both, back to back, on the very same layer, and the split
 tells you exactly what each line is doing:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
 map.setLayoutProperty(id,'visibility', show?'visible':'none');
 map.setPaintProperty(id,'icon-opacity', dim);
@@ -245,7 +245,7 @@ needing one layer per variant.
 `addCoverage()`'s water icon is exactly that. Instead of one drop icon for every water point, it
 reads each feature's own `potable` property and picks between two icons:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
 ['match',['to-string',['get','potable']],['yes','true','1'],'water-drop','water-drop-unk']
 ```
@@ -256,7 +256,7 @@ unknown-potability variant). One layer, one `icon-image` line, and every one of 
 water points in the source draws its own correct icon. The D · bike-services layer does the same
 trick on a `kind` property, picking between a shop, station and pump glyph:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
 ['match',['get','kind'],
     'shop', miniIcon('services'),
@@ -283,7 +283,7 @@ inside the box — read straight out of what MapLibre has already drawn, with no
 `nearestImageId()` in `map.js`, which finds the Mapillary image dot nearest a click, shows the pattern
 at its plainest — a box centred on the click point, widened in three steps until something is found:
 
-<!-- CODE-FROM web/assets/map/map.js -->
+<!-- CODE-FROM web/assets/map/mapillary.js -->
 ```js
 for(const r of [8,16,30]){
   const fs=map.queryRenderedFeatures([[point.x-r,point.y-r],[point.x+r,point.y+r]],{layers:['mly-img']});
