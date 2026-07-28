@@ -194,6 +194,32 @@ globalThis.runMapSmoke = async function runMapSmoke(opts) {
       },
     },
     {
+      // Reported 2026-07-27: the basemap's own place names stayed English in
+      // every locale, because OpenFreeMap's `liberty` style hardcodes
+      // ["coalesce", ["get","name_en"], ["get","name"]] on all 20 name layers.
+      // Asserting the EXPRESSION, not a rendered string, so this works in any
+      // locale (including English) and on any viewport.
+      name: 'basemap labels follow the site language',
+      async run() {
+        const m = M();
+        if (!m) return 'skip: no __ccMap handle (CC_DEBUG off)';
+        const lang = (document.documentElement.lang || 'en').slice(0, 2);
+        const sym = m.getStyle().layers.filter(
+          l => l.type === 'symbol' && l.layout && l.layout['text-field']);
+        assert(sym.length > 0, 'no symbol layers with a text-field — style did not load');
+        const stale = [];
+        for (const l of sym) {
+          const json = JSON.stringify(l.layout['text-field']);
+          // The three road-shield layers read `ref` and are none of our business.
+          if (json.indexOf('name') === -1) continue;
+          if (json.indexOf('"name:' + lang + '"') === -1) stale.push(l.id);
+        }
+        assert(stale.length === 0,
+          stale.length + ' basemap label layer(s) do not ask for name:' + lang
+          + ' (localiseBasemapLabels did not run or missed them): ' + stale.slice(0, 4).join(', '));
+      },
+    },
+    {
       name: 'coverage icon click opens a drawer',
       async run() {
         const m = M();

@@ -27,6 +27,50 @@ export const map = new maplibregl.Map({
 // app.environment is not 'prod', so production ships no handle at all.
 if(window.CC_DEBUG) window.__ccMap = map;
 
+/* Basemap place names follow the site language (reported 2026-07-27: "Lower
+   Saxony does not become Niedersachsen"). This is the BASEMAP's own labels —
+   the city/state/street names baked into the vector tiles — not our chips or
+   header, which were translating all along.
+
+   OpenFreeMap's `liberty` style hardcodes English on every name layer:
+   `["coalesce", ["get","name_en"], ["get","name"]]`. The tiles themselves carry
+   the whole set — measured on the live source, `name:de` on 396 of 400 place
+   features, `name:fr` 387, `name:nl` 380 — so nothing needs to be fetched
+   differently; the style just never asks. Lower Saxony ships as
+   name:de=Niedersachsen, name:nl=Nedersaksen, name:fr=Basse-Saxe.
+
+   Detection is "does this text-field mention name_en", not a match on the exact
+   expression: the three road-shield layers read `ref` and must keep it, and a
+   future style tweak to the name expression should still be caught. Each
+   layer's own separator is preserved — the point-label group joins the two
+   scripts with a newline and the line-label group with a space. */
+const BASEMAP_LOCALE = (document.documentElement.lang || 'en').slice(0, 2);
+export function localiseBasemapLabels(){
+  const style = map.getStyle();
+  if(!style || !style.layers) return 0;
+  const pref = ['coalesce', ['get','name:'+BASEMAP_LOCALE], ['get','name_'+BASEMAP_LOCALE]];
+  let n = 0;
+  for(const layer of style.layers){
+    if(layer.type !== 'symbol') continue;
+    const tf = layer.layout && layer.layout['text-field'];
+    if(!tf) continue;
+    const json = JSON.stringify(tf);
+    if(!json.includes('name_en')) continue;
+    const sep = json.includes('"\\n"') ? '\n' : ' ';
+    map.setLayoutProperty(layer.id, 'text-field', ['case',
+      // Non-latin script: keep the style's dual-script rendering, but prefer
+      // the reader's language over the generic latin transliteration.
+      ['has','name:nonlatin'],
+      ['concat', [...pref, ['get','name:latin']], sep, ['get','name:nonlatin']],
+      // Otherwise: the reader's language, then the LOCAL name — falling back to
+      // English here would put a German reader back where they started.
+      [...pref, ['get','name'], ['get','name:latin']],
+    ]);
+    n++;
+  }
+  return n;
+}
+
 /** Attribution, navigation and the live zoom readout. */
 export function initMapControls(){
   map.addControl(new maplibregl.AttributionControl({customAttribution:'© OpenStreetMap contributors · ODbL'}),'bottom-right');

@@ -7,7 +7,8 @@
    the catalog fetch has populated the CC_* globals this file reads. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel } from './i18n.js';
 import { wc } from './util.js';
-import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup } from './map-init.js';
+import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
+         localiseBasemapLabels } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
 import { CATALOG, active, layerByKey, cityLink, mode } from './catalog.js';
 import { addMapillary, initMapillaryDock, initStreetToggle } from './mapillary.js';
@@ -43,7 +44,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
 
 
 
-  map.on('load',()=>{ markStyleReady(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
+  map.on('load',()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     // renderScopeChips() must wait until here (not right after CCScope.init near
     // the top of the file): it reads `curScope`, a const declared BELOW that call

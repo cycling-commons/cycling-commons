@@ -170,6 +170,29 @@ lazy-firewall caching gotcha — see
   load; a later scope change never re-resolves.
   Design: [2026-07-27-map-view-mode-default-design.md](2026-07-27-map-view-mode-default-design.md).
 
+### 4.2b Basemap labels follow the site language (2026-07-27)
+
+The place names baked into the **basemap** — countries, states, cities, streets —
+are the vector tiles', not ours, and OpenFreeMap's `liberty` style hardcodes
+English on all twenty of its name layers:
+`["coalesce", ["get","name_en"], ["get","name"]]`. So a German reader saw
+*LOWER SAXONY* and *Cologne* on the map itself, while every label the app owns
+(scope chip, header, search title) was already correct.
+
+`localiseBasemapLabels()` (`web/assets/map/map-init.js`, called from the entry's
+`map.on('load')`) rewrites those layers' `text-field` to prefer the reader's
+language: `name:<loc>` → `name_<loc>` → `name` (the LOCAL name — falling back to
+English would put a German reader back where they started) → `name:latin`. The
+non-latin dual-script branch is preserved, with the language preference applied
+to its latin half.
+
+No tile change is needed: measured on the live source, `name:de` is present on
+396 of 400 place features, `name:fr` on 387, `name:nl` on 380. Layers are
+selected by *mentioning* `name`, not by matching the exact expression, so the
+three road-shield layers (which read `ref`) are left alone and a future style
+tweak is still caught. Guarded by a `map-smoke.js` checkpoint that asserts every
+name layer asks for `name:<document lang>`.
+
 ### 4.3 Filter chips
 
 - **Climb surface (`#sqf`) / traffic (`#trf`)**: legacy always-require
