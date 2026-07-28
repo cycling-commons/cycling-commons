@@ -1,0 +1,18 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#- The site's brandblock, in Material's logo slot: the full wordmark plus the
+    coordinate subline, matching web/templates/partials/_nav.html.twig rather
+    than the bare pin mark the wiki used to show. Material renders this partial
+    INSIDE the .md-logo anchor, so it is the supported place to put it — no
+    header.html fork, nothing coupled to Material's own markup.
+
+    The wordmark SVG already ships paper letters with orange accents, which is
+    what the header needs: the wiki header bar is dark in BOTH schemes.
+
+    wiki/assets/logo-nav.svg is a COPY of web/assets/brand/logo-nav.svg — MkDocs
+    can only serve files under docs_dir, so the wiki cannot reference the app's
+    asset directly. Re-copy it if the brand mark is ever redrawn. -#}
+<img src="{{ config.theme.logo | url }}" alt="{{ config.site_name }}" class="cc-wordmark">
+<span class="cc-brandsub" aria-hidden="true">
+  <span class="cc-coord">N 48.87° · E 2.29°</span>
+  <span class="cc-tagline">Open Atlas — Est. 2026</span>
+</span>

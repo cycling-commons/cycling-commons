@@ -242,7 +242,25 @@
      ochre    fill only, no stroke class
      paper    fill only, and it is the *deep* paper tone
    Everything else pairs as `gis-<name>` / `gis-fill-<name>`. */
-.gis-fig .gis-ink    { stroke: var(--cc-ink);     fill: none; stroke-width: 1.5; }
+/* ROLE tokens, not palette tokens. The figures used --cc-ink for "the drawing
+   colour" and --cc-paper for "the page behind it". Those two names describe
+   VALUES, and the dark scheme flips the values — so in dark mode the figures
+   drew near-black lines and near-black text with a LIGHT halo around them, on a
+   dark ground: embossed and illegible (reported 2026-07-28). The three tokens
+   below name the ROLE instead, and each scheme points them at whichever of its
+   own colours plays that part. */
+[data-md-color-scheme="atlas"] {
+  --gis-fg: var(--cc-ink);            /* lines, arrowheads, body text */
+  --gis-halo: var(--cc-paper);        /* the ground a label is knocked out of */
+  --gis-surface: var(--cc-paper-deep);/* filled shapes, one step off the page */
+}
+[data-md-color-scheme="atlas-dark"] {
+  --gis-fg: #E7E0D0;
+  --gis-halo: #0E1712;
+  --gis-surface: #1B2822;
+}
+
+.gis-fig .gis-ink    { stroke: var(--gis-fg);     fill: none; stroke-width: 1.5; }
 .gis-fig .gis-accent { stroke: var(--cc-trail);   fill: none; stroke-width: 2; }
 .gis-fig .gis-clay   { stroke: var(--cc-clay);    fill: none; stroke-width: 2; }
 .gis-fig .gis-spruce { stroke: var(--cc-spruce);  fill: none; stroke-width: 2; }
@@ -250,8 +268,8 @@
 
 /* figure ink — fill classes (gis-fill-paper is the *deep* paper tone, so a
    filled shape stays visible against the page's own paper background) */
-.gis-fig .gis-fill-ink     { fill: var(--cc-ink); }
-.gis-fig .gis-fill-paper   { fill: var(--cc-paper-deep); }
+.gis-fig .gis-fill-ink     { fill: var(--gis-fg); }
+.gis-fig .gis-fill-paper   { fill: var(--gis-surface); }
 .gis-fig .gis-fill-spruce  { fill: var(--cc-spruce); }
 .gis-fig .gis-fill-accent  { fill: var(--cc-trail); }
 .gis-fig .gis-fill-clay    { fill: var(--cc-clay); }
@@ -259,18 +277,18 @@
 .gis-fig .gis-fill-glacier { fill: var(--cc-glacier); }
 
 /* flowchart box — see (8) */
-.gis-fig .gis-box { fill: var(--cc-paper-deep); stroke: var(--cc-ink); stroke-width: 1.5; }
+.gis-fig .gis-box { fill: var(--gis-surface); stroke: var(--gis-fg); stroke-width: 1.5; }
 
 /* arrowhead colour — see (7); a fill class on the marker's path overrides it */
-.gis-fig marker path { fill: var(--cc-ink); stroke: none; }
+.gis-fig marker path { fill: var(--gis-fg); stroke: none; }
 
 /* figure type — see (3); sizes are user units, never set font-size inline */
-.gis-fig text { fill: var(--cc-ink); font-size: 27px; font-family: inherit; }
+.gis-fig text { fill: var(--gis-fg); font-size: 27px; font-family: inherit; }
 .gis-fig text.gis-label-sm { font-size: 24px; fill: var(--md-default-fg-color--light); }
 .gis-fig text.gis-label-mono { font-family: "Spline Sans Mono", monospace; font-size: 24px; }
 .gis-fig text.gis-halo {
   paint-order: stroke;
-  stroke: var(--cc-paper);
+  stroke: var(--gis-halo);
   stroke-width: 5px;
   stroke-linejoin: round;
 }
@@ -501,4 +519,56 @@
 pre.cc-diagram[data-diagram-error]::after {
   content: "diagram could not be drawn: " attr(data-diagram-error);
   display: block; margin-top: .5rem; font-size: .75rem; color: #8b1a1a;
+}
+
+/* ---- header brandblock (overrides/partials/logo.html) ---------------------
+   The site's wordmark + coordinate subline, in Material's logo slot, matching
+   web/templates/partials/_nav.html.twig. Material sizes .md-logo for a small
+   square mark, so the anchor has to be re-laid-out for a 6:1 wordmark with a
+   line of type under it. The header bar is dark in BOTH schemes, so these
+   colours are deliberately fixed rather than tokenised — they are painted on
+   --md-primary-fg-color, not on the page. */
+.md-header__button.md-logo {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  width: auto;
+  height: auto;
+  padding: .2rem .35rem;
+  margin: 0;
+  opacity: 1;
+}
+.md-header__button.md-logo:hover { opacity: .88; }
+.md-header__button.md-logo .cc-wordmark {
+  display: block;
+  height: 1.45rem;          /* the wordmark is ~6:1, so height drives it */
+  width: auto;
+  object-fit: contain;
+}
+.md-header__button.md-logo .cc-brandsub {
+  display: flex;
+  flex-direction: column;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
+  font-size: .42rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  line-height: 1.55;
+  white-space: nowrap;
+  color: rgba(239, 230, 212, .55);
+}
+/* The subline is decoration; below the wide breakpoint the header is tight and
+   Material hides the logo anyway, so it never competes with the search box. */
+@media screen and (max-width: 87.5em) {
+  .md-header__button.md-logo .cc-brandsub { display: none; }
+}
+/* Material hides the header logo below 76.25em; the wordmark is the site's
+   identity, so keep it — the drawer's own title covers the narrow case. */
+@media screen and (min-width: 60em) {
+  .md-header__button.md-logo { display: flex; }
+}
+/* The wordmark already reads "Cycling Commons", so the adjacent site-name topic
+   is a duplicate wherever the logo shows. Material's SECOND topic (the current
+   page title, swapped in on scroll) is left alone. */
+@media screen and (min-width: 60em) {
+  .md-header__title > .md-header__ellipsis > .md-header__topic:first-child { display: none; }
 }
