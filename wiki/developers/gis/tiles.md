@@ -152,8 +152,8 @@ This project's coverage layer is exactly that: `build_pmtiles()` in `pipeline/co
 writes one `.pmtiles` file, `pipeline/coverage/publish.py` uploads it to the `cc-maps` object storage
 bucket under a versioned key (`coverage/<YYYYMMDD-HHMM>.pmtiles`, coverage-provider.md §3 step 8), and
 the browser talks to it through the `pmtiles://` protocol handler registered in
-`web/assets/map/map.js` — `maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile)`, followed a
-couple of lines later (`mintWaterDrops()` runs in between, `map.js:1089-1091`) by
+`web/assets/map/coverage.js` — `maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile)`, followed a
+couple of lines later (`mintWaterDrops()`, which lives in `icons.js`, runs in between) by
 `map.addSource('coverage', {type: 'vector', url: 'pmtiles://' + window.CC_COVERAGE_URL})`.
 Nothing in that request path is a tile server: it is a `GET` against a static file, with `Range:`
 headers doing the work a tile server used to do, served straight off the bucket (or through an

@@ -12,15 +12,38 @@ look like a small blue drop, roughly this big, fading in above the roads but bel
 chapter is that "something": MapLibre GL JS, the library this project's map runs on, and the three
 words it uses to describe what to draw and how.
 
+!!! info "Where this code lives"
+    This chapter walks the map's client code. It used to be one 4,060-line
+    `web/assets/map/map.js`; a 2026-07 refactor split it into **24 modules** in
+    that same directory, and `map.js` is now only the import list, the `CC_*`
+    payload hand-off and the boot sequence. Nothing about *how* MapLibre works
+    changed — but when this chapter names a function, it names the module that
+    holds it, and it is worth knowing the shape before you go looking:
+
+    | Module | What it owns |
+    |---|---|
+    | `map-init.js` | the MapLibre object itself, the controls, basemap labels, the `_styleReady` flag |
+    | `render.js` | which catalogue features draw, and the shown/total counts |
+    | `coverage.js` | the PMTiles source and its per-`(letter, country)` layers |
+    | `osm-pools.js` | the clustered dot layers and their DOM markers |
+    | `spotlight.js` | the region mask, outline and "my area" circle |
+    | `picking.js`, `scope-ui.js` | click handling and click-to-scope |
+    | `drawer.js`, `sheet.js` | the detail panel and the mobile sheet |
+    | `search-ui.js`, `places.js` | the search box, Photon calls, deep links |
+    | `icons.js`, `mapillary.js`, `panels.js`, … | icon minting, street-level imagery, the rail chrome |
+
+    The full module table and the reasoning behind the split are in
+    `docs/specs/2026-07-26-map-js-module-split-design.md`.
+
 ## Style, source, layer
 
 MapLibre needs three kinds of instruction, and it uses three ordinary English words to name them —
 narrowly, in a way this reader has not met before. Get these three words straight and almost
-everything else in `map.js` reads as a combination of them.
+everything else across the map's modules reads as a combination of them.
 
 A **style** is the whole document describing what the map draws: every source, every layer, the
-background colour, all of it, together. This project does not hand-write one. Look near the top of
-`web/assets/map/map.js`, at the `new maplibregl.Map({...})` call that boots the whole thing:
+background colour, all of it, together. This project does not hand-write one. Look at the top of
+`web/assets/map/map-init.js`, at the `new maplibregl.Map({...})` call that boots the whole thing:
 
 <!-- CODE-FROM web/assets/map/map-init.js -->
 ```js
@@ -29,14 +52,14 @@ const map = new maplibregl.Map({
 ```
 
 That URL *is* the starting style — a ready-made document served by OpenFreeMap, containing the
-roads, place names and land colours you see under everything else. `map.js` never ships a second
+roads, place names and land colours you see under everything else. The map never ships a second
 style document of its own. Once that one finishes loading, it calls functions — `addSource()`,
 `addLayer()` — that reach into the already-loaded style and add to it at runtime. Every pin,
 every coverage icon, every route line you will read about below is one of those additions, made in
 JavaScript, to a style that started life as somebody else's file. (This is also why so much of the
 map's code is written to run only after that document has finished loading — `addSource`/`addLayer`
-throw if you call them before the style is ready, which is why `map.js` gates its own rendering on
-the map's `load` event; see `map-and-search.md` §2's `_styleReady` rule if you want the detail.)
+throw if you call them before the style is ready, which is why `render.js` gates its own drawing on
+the `_styleReady` flag `map-init.js` sets from the map's `load` event; see `map-and-search.md` §2's `_styleReady` rule if you want the detail.)
 
 A **source** is where data comes from. Naming a source does not draw anything by itself — it just
 tells MapLibre "here is a pool of geometry you can read from," and gives it an id to be read from.
@@ -45,10 +68,10 @@ A **layer** is one drawing instruction that reads one source. It says which sour
 that source's features, and how to turn each feature into pixels — what colour, what icon, how big.
 
 Here is the idea worth slowing down for, because it is the one that makes the rest of this chapter
-(and a good deal of `map.js`) unsurprising: **one source can feed many layers.** A source is just
+(and a good deal of the map code) unsurprising: **one source can feed many layers.** A source is just
 data sitting there under a name; nothing stops five different layers from reading the same source
 and drawing five different things from it. The coverage tiles are the clearest example in this
-codebase. `addCoverage()` in `map.js` adds exactly one vector source:
+codebase. `addCoverage()` in `web/assets/map/coverage.js` adds exactly one vector source:
 
 <!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
@@ -126,14 +149,14 @@ never merged into a cluster.
 
 ## The source types we use
 
-`map.js` uses four kinds of source, and each one exists for a different reason.
+The map uses four kinds of source, and each one exists for a different reason.
 
 **`vector` over a `pmtiles://` URL** is the coverage source you just read about —
 `addCoverage()`'s `map.addSource('coverage', {type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL})`.
 Tiled, pre-built, fetched a piece at a time.
 
 **`geojson`** is a source given a plain GeoJSON object directly, no tiling. The region mask and
-boundary use it: `drawSpotlightMask()` in `map.js` builds a `region-mask` polygon (the world with a
+boundary use it: `drawSpotlightMask()` in `web/assets/map/spotlight.js` builds a `region-mask` polygon (the world with a
 hole cut where the scoped region is) and a `region` polygon (the region's own outline), and adds
 both as `geojson` sources feeding a dimming fill layer and a dashed line layer.
 
@@ -221,7 +244,7 @@ icon or text it uses, how big, in what order features that might overlap get to 
 are more expensive, because MapLibre may have to redo the placement and collision work — deciding
 which icons fit without overlapping — that paint changes never touch.
 
-`syncCoverageLayers()` in `map.js` uses both, back to back, on the very same layer, and the split
+`syncCoverageLayers()` in `web/assets/map/coverage.js` uses both, back to back, on the very same layer, and the split
 tells you exactly what each line is doing:
 
 <!-- CODE-FROM web/assets/map/coverage.js -->
@@ -280,7 +303,7 @@ needs to ask a server. It can be answered by asking the map itself.
 `queryRenderedFeatures()` is that question, asked locally: give it a small box in screen pixels and a
 list of layer ids, and it hands back whichever already-rendered features from those layers fall
 inside the box — read straight out of what MapLibre has already drawn, with no network round trip.
-`nearestImageId()` in `map.js`, which finds the Mapillary image dot nearest a click, shows the pattern
+`nearestImageId()` in `web/assets/map/mapillary.js`, which finds the Mapillary image dot nearest a click, shows the pattern
 at its plainest — a box centred on the click point, widened in three steps until something is found:
 
 <!-- CODE-FROM web/assets/map/mapillary.js -->
@@ -290,7 +313,7 @@ for(const r of [8,16,30]){
 ```
 
 The same function backs the map's general click handler, deciding whether a click landed on *any*
-selectable feature at all before falling through to other click behaviour — `map.js` calls it
+selectable feature at all before falling through to other click behaviour — `scope-ui.js` calls it
 `selectableLayers()`, and the click handler is
 `map.queryRenderedFeatures(e.point, {layers:selectableLayers()})`.
 
@@ -353,7 +376,7 @@ way to answer "what's here?" except by asking somewhere else.
     (7 rows)
     ```
 
-    The first line is the exact `pmtiles://` URL `map.js` hands to `maplibregl.addProtocol` for the
+    The first line is the exact `pmtiles://` URL `coverage.js` hands to `maplibregl.addProtocol` for the
     `coverage` source — the versioned key will differ on your machine and change every time the
     pipeline republishes, which is expected (`tiles.md` covers why). The second is chapter 7's
     `(letter, country_code)` table with the two columns pasted together in exactly the order

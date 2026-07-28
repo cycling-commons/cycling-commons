@@ -112,7 +112,7 @@ ST_Contains(geom, ST_SetSRID(ST_Point(:lng, :lat), 4326))
 deliberate. Open the file: the whole class is under forty lines, and the seam is visible at a
 glance.
 
-The same flip happens on the front end. In `web/assets/map/map.js`, `setCircleSpotlight()` receives
+The same flip happens on the front end. In `web/assets/map/spotlight.js`, `setCircleSpotlight()` receives
 a `center` in human order and reads the latitude straight out of it:
 
 <!-- CODE-FROM web/assets/map/spotlight.js -->
@@ -197,7 +197,7 @@ in consistent units with itself.
 
 Where this project genuinely does need a rough distance in degrees, it applies the `cos(latitude)`
 correction on purpose rather than hoping it does not matter. `setCircleSpotlight()` in
-`web/assets/map/map.js` draws the "my area" circle on the map, and to do that it converts a radius
+`web/assets/map/spotlight.js` draws the "my area" circle on the map, and to do that it converts a radius
 in kilometres into a step in degrees:
 
 <!-- CODE-FROM web/assets/map/spotlight.js -->

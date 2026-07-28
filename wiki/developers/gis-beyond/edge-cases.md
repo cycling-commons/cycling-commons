@@ -243,7 +243,7 @@ the test suite asks it deliberately rather than by accident.
 
 The same idea shows up on the browser side for a different reason: not testing a computed result,
 but using a coordinate as part of an identity key without letting floating-point noise turn two
-renders of the same point into two different keys. `web/assets/map/map.js` tracks already-rendered
+renders of the same point into two different keys. `web/assets/map/osm-pools.js` tracks already-rendered
 map markers across re-renders by building a string key from each feature's coordinates:
 
 <!-- CODE-FROM web/assets/map/osm-pools.js -->

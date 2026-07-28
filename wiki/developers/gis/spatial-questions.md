@@ -328,7 +328,7 @@ var PH_BASE = 'https://photon.komoot.io/api/?limit=6'
 ```
 
 restricting the results to place-like OSM tags (city, town, village, hamlet, municipality) so a
-search for a town name does not come back full of unrelated hits. `web/assets/map/map.js`'s
+search for a town name does not come back full of unrelated hits. `web/assets/map/search-ui.js`'s
 `runPhoton()` does the equivalent for the map's own search box. Neither call needs an API key or a
 server-side proxy, which is also why `web/src/EventSubscriber/CspSubscriber.php` lists
 `https://photon.komoot.io` directly in its `connect-src` allow-list — a browser-side fetch straight to

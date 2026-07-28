@@ -160,7 +160,7 @@ somebody happened to type in by hand.
     exercise (a `git grep` over your own checkout) still works. The point being made is that forward
     geocoding is a *live call to somebody else's server*, so faking it locally would defeat it.
 
-    <!-- CODE-ILLUSTRATIVE shell command; the exact PH_BASE query shape base-location.js and map.js both build, called live against Photon's public API -->
+    <!-- CODE-ILLUSTRATIVE shell command; the exact PH_BASE query shape base-location.js and search-ui.js both build, called live against Photon's public API -->
     ```sh
     curl -s 'https://photon.komoot.io/api/?limit=6&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village&osm_tag=place:hamlet&osm_tag=place:municipality&q=Namur' \
       | python3 -c "import json,sys; f=json.load(sys.stdin)['features'][0]; g=f['geometry']['coordinates']; print(f['properties']['name'], f['properties'].get('country'), g)"
