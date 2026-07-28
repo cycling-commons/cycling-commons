@@ -1,0 +1,31 @@
+docs/specs/2026-07-27-map-view-mode-default-design.md
+  s_cf90f130741cee::t_b9c1a9be119347 89-99
+wiki/data-priority.md
+  s_cf90f130741cee::t_06e8c31a725409 209-220
+docs/specs/system-configuration.md
+  s_cf90f130741cee::t_c7a109b4695ebf 1-209,214-216
+  s_cf90f130741cee::t_0448f838d8607c 210-213
+docs/specs/README.md
+  s_cf90f130741cee::t_679cacde40c9ac 41-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "06855ff243757a364251f98cf7b522ef607bbfba",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_cf90f130741cee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e7a2345-d231-4b9a-b374-c0d2010e5c2a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
