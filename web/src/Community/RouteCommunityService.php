@@ -16,6 +16,8 @@ use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionReason;
 use App\Catalog\Season;
 use App\Entity\User;
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -38,9 +40,18 @@ final class RouteCommunityService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
-        private readonly int $rideVerifyThreshold,
+        private readonly SettingsProviderInterface $settings,
         private readonly RateLimiterFactoryInterface $routeSuggestLimiter,
     ) {
+    }
+
+    /**
+     * Independent riders who must have ridden a route before it verifies
+     * itself (admin-editable; system-configuration.md §2).
+     */
+    public function rideVerifyThreshold(): int
+    {
+        return $this->settings->get(SettingsRegistry::ROUTE_RIDE_VERIFY_THRESHOLD);
     }
 
     /**
@@ -73,7 +84,7 @@ final class RouteCommunityService
         return [
             'state' => $route->getState()->value,
             'rideCount' => $rideCount,
-            'threshold' => $this->rideVerifyThreshold,
+            'threshold' => $this->rideVerifyThreshold(),
             'iRode' => $iRode,
             'voteCount' => $voteCount,
             'iVotedThisSeason' => $iVoted,
@@ -113,7 +124,7 @@ final class RouteCommunityService
             $isProposer = null !== $route->getProposedBy() && $route->getProposedBy() === $user->getId();
             $independentAfter = $independent + ($isProposer ? 0 : 1);
 
-            if ($independentAfter >= $this->rideVerifyThreshold) {
+            if ($independentAfter >= $this->rideVerifyThreshold()) {
                 $route->setState(ItemState::Verified);
                 $this->em->persist(new RouteChangeHistory(
                     $routeId,

@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
@@ -43,7 +45,10 @@ use Doctrine\DBAL\Connection;
  * regions legitimately differ: a Dutch province has no climbs and never will,
  * and must still be able to qualify on stays + scenic + history + routes.
  *
- * All three numbers are config (README threshold principle). Setting
+ * All three numbers are config (README threshold principle) and are editable at
+ * runtime from the admin system-config page (system-configuration.md §2), so
+ * they are read through SettingsProviderInterface rather than bound as
+ * constructor scalars — tuning the gate must not need a deploy. Setting
  * `minBlocks` to 1 reverts the gate to a pure total.
  *
  * @api Consumed by the curator Regions desk and its gated toggle.
@@ -73,28 +78,26 @@ final class CuratedReadiness
 
     public function __construct(
         private readonly Connection $db,
-        private readonly int $threshold,
-        private readonly int $minBlocks,
-        private readonly int $minPerBlock,
+        private readonly SettingsProviderInterface $settings,
     ) {
     }
 
     /** The advisory total a region must reach before Curated-by-default unlocks. */
     public function threshold(): int
     {
-        return $this->threshold;
+        return $this->settings->get(SettingsRegistry::MAP_CURATED_THRESHOLD);
     }
 
     /** How many blocks must each carry at least minPerBlock(). */
     public function minBlocks(): int
     {
-        return $this->minBlocks;
+        return $this->settings->get(SettingsRegistry::MAP_CURATED_MIN_BLOCKS);
     }
 
     /** What a block must have to count towards the breadth requirement. */
     public function minPerBlock(): int
     {
-        return $this->minPerBlock;
+        return $this->settings->get(SettingsRegistry::MAP_CURATED_MIN_PER_BLOCK);
     }
 
     public function isReady(int $regionId): bool
@@ -169,17 +172,23 @@ final class CuratedReadiness
             $counts[(int) $r['region_id']]['K'] = (int) $r['n'];
         }
 
+        // Read once per batch, not once per region: the values are settings now,
+        // and every region in one report must be judged by the same numbers.
+        $threshold = $this->threshold();
+        $minBlocks = $this->minBlocks();
+        $minPerBlock = $this->minPerBlock();
+
         $out = [];
         foreach ($counts as $rid => $blocks) {
             $total = array_sum($blocks);
-            $blocksMet = \count(array_filter($blocks, fn (int $n): bool => $n >= $this->minPerBlock));
+            $blocksMet = \count(array_filter($blocks, fn (int $n): bool => $n >= $minPerBlock));
             $out[$rid] = [
                 'blocks' => $blocks,
                 'total' => $total,
                 'blocksMet' => $blocksMet,
-                'shortTotal' => max(0, $this->threshold - $total),
-                'shortBlocks' => max(0, $this->minBlocks - $blocksMet),
-                'ready' => $total >= $this->threshold && $blocksMet >= $this->minBlocks,
+                'shortTotal' => max(0, $threshold - $total),
+                'shortBlocks' => max(0, $minBlocks - $blocksMet),
+                'ready' => $total >= $threshold && $blocksMet >= $minBlocks,
             ];
         }
 

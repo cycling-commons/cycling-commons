@@ -1,5 +1,10 @@
-# Route-domain editorial config (spec §6) — thresholds are config, not
-# constants (README threshold principle).
+# Route-domain editorial config (route-domain.md §6) — thresholds are config,
+# not constants (README threshold principle).
+#
+# These are DEFAULTS, not the live values: both keys are runtime-editable from
+# the admin system-config page, and an override in `system_setting` wins
+# (system-configuration.md §2). Edit here to move the default a fresh database
+# starts from; edit in the admin to change what production is doing now.
 parameters:
     route.region_active_cap: 30
     route.ride_verify_threshold: 3

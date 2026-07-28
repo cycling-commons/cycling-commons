@@ -15,6 +15,8 @@ use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -33,7 +35,7 @@ final class RouteModerationService
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
-        private readonly int $regionActiveCap,
+        private readonly SettingsProviderInterface $settings,
         private readonly MessageService $messages,
         private readonly AdminActionLogger $adminLog,
         private readonly ModerationScopeProvider $scopeProvider,
@@ -59,7 +61,7 @@ final class RouteModerationService
             // calls at cap-1 could both pass and both commit, briefly exceeding the
             // cap. Accepted tradeoff, not a bug: few curators, soft editorial cap,
             // recoverable via retire(); not worth locking for this workflow.
-            if ($this->activeCountForRegion($route->getRegionId()) >= $this->regionActiveCap) {
+            if ($this->activeCountForRegion($route->getRegionId()) >= $this->regionCap()) {
                 throw new RegionFullException(sprintf('Region %s is at the active-route cap.', $route->getRegionId() ?? 'none'));
             }
             $this->transition($route, ItemState::Unverified, $curator);
@@ -211,10 +213,10 @@ final class RouteModerationService
         });
     }
 
-    /** The configured region active-route cap (%route.region_active_cap%). */
+    /** The configured region active-route cap (admin-editable; system-configuration.md §2). */
     public function regionCap(): int
     {
-        return $this->regionActiveCap;
+        return $this->settings->get(SettingsRegistry::ROUTE_REGION_ACTIVE_CAP);
     }
 
     /** Active routes (SERVED) in a region; NULL region counted as its own bucket. */

@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\ItemState;
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -22,7 +24,7 @@ final class RouteQueue
 {
     public function __construct(
         private readonly Connection $db,
-        private readonly int $regionActiveCap,
+        private readonly SettingsProviderInterface $settings,
     ) {
     }
 
@@ -53,6 +55,10 @@ final class RouteQueue
                 WHERE {$where}
                 ORDER BY r.created_at ASC, r.id ASC";
 
+        // Hoisted out of the row mapper: every row on one desk render must show
+        // the same cap, and the setting is read once rather than per route.
+        $cap = $this->regionCap();
+
         return array_map(fn (array $row): array => [
             'id' => (int) $row['id'],
             'name' => (string) $row['name'],
@@ -63,8 +69,14 @@ final class RouteQueue
             'who' => 'rider#'.substr(hash('crc32b', 'cc-sub-'.$row['proposed_by']), 0, 4),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'activeInRegion' => (int) $row['active_in_region'],
-            'cap' => $this->regionActiveCap,
+            'cap' => $cap,
         ], $this->db->fetchAllAssociative($sql, $params, $types));
+    }
+
+    /** The configured per-region active-route cap (admin-editable; system-configuration.md §2). */
+    public function regionCap(): int
+    {
+        return $this->settings->get(SettingsRegistry::ROUTE_REGION_ACTIVE_CAP);
     }
 
     /** @return list<array<string, mixed>> */

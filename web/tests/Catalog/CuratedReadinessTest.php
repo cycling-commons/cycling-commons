@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Tests\Catalog;
 
 use App\Catalog\CuratedReadiness;
+use App\Settings\SettingsRegistry;
+use App\Tests\Settings\FakeSettings;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -47,7 +49,14 @@ final class CuratedReadinessTest extends KernelTestCase
 
     private function readiness(int $threshold, int $minBlocks = 1, int $minPerBlock = 1): CuratedReadiness
     {
-        return new CuratedReadiness($this->db, $threshold, $minBlocks, $minPerBlock);
+        // The three numbers are settings now, not constructor scalars — see
+        // system-configuration.md §3. Seeding them explicitly keeps each case
+        // stating the gate it is testing, exactly as the old signature did.
+        return new CuratedReadiness($this->db, new FakeSettings([
+            SettingsRegistry::MAP_CURATED_THRESHOLD => $threshold,
+            SettingsRegistry::MAP_CURATED_MIN_BLOCKS => $minBlocks,
+            SettingsRegistry::MAP_CURATED_MIN_PER_BLOCK => $minPerBlock,
+        ]));
     }
 
     private function addItem(string $letter, ?string $cur): void

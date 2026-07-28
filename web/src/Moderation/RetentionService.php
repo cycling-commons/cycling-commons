@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Moderation;
 
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -38,13 +40,19 @@ final class RetentionService
         private readonly Connection $db,
         private readonly ClockInterface $clock,
         private readonly CacheInterface $cache,
-        private readonly int $retentionMonths,
+        private readonly SettingsProviderInterface $settings,
     ) {
+    }
+
+    /** How long a decided row is kept before the sweep may delete it (admin-editable; system-configuration.md §2). */
+    public function retentionMonths(): int
+    {
+        return $this->settings->get(SettingsRegistry::MODERATION_RETENTION_MONTHS);
     }
 
     public function cutoff(): \DateTimeImmutable
     {
-        return $this->clock->now()->modify(sprintf('-%d months', $this->retentionMonths));
+        return $this->clock->now()->modify(sprintf('-%d months', $this->retentionMonths()));
     }
 
     /**

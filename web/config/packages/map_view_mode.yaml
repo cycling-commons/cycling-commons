@@ -10,10 +10,16 @@
 # legitimately differ. A Dutch province has no climbs and never will, and must
 # still be able to qualify on stays + scenic + history + routes.
 #
-# ALL THREE NUMBERS ARE ADVISORY STARTING VALUES, FLAGGED FOR OWNER SIGN-OFF.
+# ALL THREE NUMBERS ARE ADVISORY STARTING VALUES (owner sign-off 2026-07-29:
+# keep 25 / 3 / 5 as the defaults and tune them at runtime).
 # The gate itself is the real control. Setting min_blocks to 1 reverts the gate
 # to a pure total. Blocks are A surface, B climbs, E stays, I scenic,
 # J history, K best-of routes — see App\Catalog\CuratedReadiness::BLOCKS.
+#
+# These are DEFAULTS, not the live values: all three are runtime-editable from
+# the admin system-config page, and an override in `system_setting` wins
+# (system-configuration.md §2). Edit here to move the default a fresh database
+# starts from; edit in the admin to change what production is doing now.
 parameters:
     # Curated best-of items the region needs in total.
     map.curated_default_threshold: 25

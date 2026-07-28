@@ -3,3 +3,13 @@ framework:
     test: true
     session:
         storage_factory_id: session.storage.factory.mock_file
+    cache:
+        # In-memory, per-kernel — NOT the filesystem pool prod uses.
+        #
+        # DAMA rolls every test's database writes back, but a filesystem cache
+        # would survive the rollback: a test that changes a system setting
+        # leaves the new value cached under `system_settings.overrides` while
+        # the row itself is gone, and the next test reads a number that exists
+        # nowhere. The array adapter dies with its container, so a rebooted
+        # kernel starts as empty as the rolled-back database.
+        app: cache.adapter.array

@@ -19,28 +19,18 @@ services:
         arguments:
             $hooks: !tagged_iterator app.user_deletion_hook
 
-    App\Moderation\RouteModerationService:
-        arguments:
-            $regionActiveCap: '%route.region_active_cap%'
+    # The six editorial thresholds are no longer bound as constructor scalars:
+    # their consumers take SettingsProviderInterface and read through it, so an
+    # admin edit takes effect on the next request instead of needing a deploy
+    # (system-configuration.md §3). The %parameters% they used to bind still
+    # exist — SettingsRegistry reads them as the defaults, which is what keeps a
+    # fresh database behaving exactly as this file used to make it behave.
+    App\Settings\SettingsProviderInterface: '@App\Settings\SystemSettings'
 
-    App\Moderation\RouteQueue:
-        arguments:
-            $regionActiveCap: '%route.region_active_cap%'
-
-    App\Community\RouteCommunityService:
-        arguments:
-            $rideVerifyThreshold: '%route.ride_verify_threshold%'
-
-    App\Moderation\RetentionService:
-        arguments:
-            $retentionMonths: '%moderation.retention_months%'
-
-    App\Catalog\CuratedReadiness:
-        arguments:
-            $threshold: '%map.curated_default_threshold%'
-            $minBlocks: '%map.curated_default_min_blocks%'
-            $minPerBlock: '%map.curated_default_min_per_block%'
-
+    # The three coverage.* values stay bound scalars on purpose. They are
+    # infrastructure — a feature flag, a bucket URL, a CSP host — and a web form
+    # that rewrites a Content-Security-Policy host is an XSS-relaxation surface.
+    # Changing these must keep needing deploy access (owner decision 2026-07-29).
     App\Coverage\CoverageManifest:
         arguments:
             $tilesEnabled: '%coverage.tiles_enabled%'

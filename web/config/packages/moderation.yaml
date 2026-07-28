@@ -1,4 +1,8 @@
 # Moderation retention config (M8 phase 1) — thresholds are config, not
 # constants (README threshold principle).
+#
+# A DEFAULT, not the live value: this key is runtime-editable from the admin
+# system-config page and an override in `system_setting` wins
+# (system-configuration.md §2).
 parameters:
     moderation.retention_months: 3
