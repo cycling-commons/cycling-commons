@@ -505,7 +505,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         $db = $this->em->getConnection();
         $adj = static function (string $slug) use ($db): array {
             $raw = $db->fetchOne('SELECT adj FROM region WHERE slug = :s', ['s' => $slug]);
-            if ($raw === null) {
+            if (null === $raw) {
                 return [];
             }
 
