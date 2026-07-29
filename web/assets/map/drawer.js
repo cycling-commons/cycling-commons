@@ -158,6 +158,11 @@ export function waterDrawer(p, ll){
     record:rec,
     source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
+  // Same photo handling as osmDrawer — waterDrawer never copied this over,
+  // so a water point's importable photo attribute (e.g. a Wikimedia Commons
+  // spring photo) silently never reached buildRecord()'s figure/lightbox.
+  let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
+  if(photo) d.photo=photo;
   return d;
 }
 
