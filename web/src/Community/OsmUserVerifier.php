@@ -19,6 +19,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * silent-degradation rule the coverage manifest and the Photon geocoder follow
  * (coverage-provider.md §6). A high changeset count is not a qualification and
  * zero is not a disqualification; it is one line of evidence among three.
+ *
+ * @api Autowired by the DI container; consumed by CuratorApplicationService;
+ *      covered directly by OsmUserVerifierTest.
  */
 final class OsmUserVerifier
 {

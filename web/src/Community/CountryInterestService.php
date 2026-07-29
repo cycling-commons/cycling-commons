@@ -18,6 +18,11 @@ use Doctrine\ORM\EntityManagerInterface;
  * numbers are small — which they will be on an empty map — and becomes worth
  * gaming, while the signal's whole value is honest input to an onboarding
  * decision.
+ *
+ * @api Autowired by the DI container; consumed by JoinCountryController.
+ *      `counts()` is the read path for the admin/public view §12.2 leaves
+ *      open — not wired to a page yet, kept ready for that one-line change;
+ *      covered directly by CountryInterestTest.
  */
 final class CountryInterestService
 {

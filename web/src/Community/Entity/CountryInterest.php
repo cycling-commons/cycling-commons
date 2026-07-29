@@ -16,6 +16,11 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * Deliberately NOT tied to a region: 245 countries have none, and requiring one
  * would make the signal impossible exactly where it matters most (§4).
+ *
+ * @api Written by CountryInterestService::record(); read today only through
+ *      its own `counts()` aggregate query (§12.2's owner-only-for-v1 counter
+ *      is not wired to a page yet). Per-row accessors are Doctrine hydration
+ *      + entity-completeness, exercised directly by CountryInterestTest.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'country_interest')]
@@ -39,9 +44,17 @@ class CountryInterest
     #[ORM\Column(type: Types::STRING, length: 280, nullable: true)]
     private ?string $note = null;
 
+    /**
+     * @psalm-suppress UnusedProperty Doctrine-mapped column; no reader yet
+     *                                (see the class docblock).
+     */
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
+    /**
+     * @psalm-suppress UnusedProperty Doctrine-mapped column; no reader yet
+     *                                (see the class docblock).
+     */
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 

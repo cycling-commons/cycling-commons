@@ -17,6 +17,15 @@ use Doctrine\ORM\Mapping as ORM;
  * Evidence is deliberately NOT copied into this row: the applicant's
  * submissions are looked up by user + country at review time, so the reviewer
  * always sees their current state rather than a snapshot taken at submit (§8).
+ *
+ * @api Written by CuratorApplicationService; the OSM/about/scope accessors
+ *      are read by admin/curator_applications.html.twig (§9) and covered
+ *      directly by CuratorApplicationTest. `decidedBy`/`decidedAt` are set by
+ *      decide() but have no reader yet — `AdminActionLogger`'s row already
+ *      carries actor + timestamp for the audit trail (§4.1/§6.2 of
+ *      account-and-auth.md), so nothing has needed to read them back off this
+ *      row; `getCreatedAt()` mirrors `Submission`'s decision-column shape and
+ *      is not yet surfaced on the review page.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'curator_application')]
@@ -57,9 +66,17 @@ class CuratorApplication
     #[ORM\Column(type: Types::STRING, length: 12, enumType: CuratorApplicationStatus::class)]
     private CuratorApplicationStatus $status = CuratorApplicationStatus::Pending;
 
+    /**
+     * @psalm-suppress UnusedProperty Set by decide(); no reader yet (see the
+     *                                class docblock).
+     */
     #[ORM\Column(name: 'decided_by', type: Types::BIGINT, nullable: true)]
     private ?int $decidedBy = null;
 
+    /**
+     * @psalm-suppress UnusedProperty Set by decide(); no reader yet (see the
+     *                                class docblock).
+     */
     #[ORM\Column(name: 'decided_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $decidedAt = null;
 

@@ -18,6 +18,10 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * 2026-07-29-country-requests-and-curator-signup-design.md §5.2, §8, §9.
+ *
+ * @api Autowired by the DI container; consumed by JoinCountryController and
+ *      Admin\DashboardController::curatorApplications(); covered directly by
+ *      CuratorApplicationTest and CuratorApplicationReviewTest.
  */
 final class CuratorApplicationService
 {

@@ -26,6 +26,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * One route, two states, chosen by whether the country has regions: a country
  * with none can only be REQUESTED, because there is nowhere to anchor a
  * submission and nothing to scope a curator to (§4).
+ *
+ * @api Instantiated by Symfony's router; linked from the map rail's
+ *      empty-scope invite (assets/map/panels.js).
  */
 final class JoinCountryController extends AbstractController
 {
@@ -73,8 +76,8 @@ final class JoinCountryController extends AbstractController
             }
 
             $limiter = $isApplication
-                ? $curatorApplicationLimiter->create('user-'.$user->getId())
-                : $countryInterestLimiter->create('user-'.$user->getId());
+                ? $curatorApplicationLimiter->create('user-'.(string) $user->getId())
+                : $countryInterestLimiter->create('user-'.(string) $user->getId());
             if (!$limiter->consume()->isAccepted()) {
                 $this->addFlash('error', $translator->trans('join.error.too_many'));
 
