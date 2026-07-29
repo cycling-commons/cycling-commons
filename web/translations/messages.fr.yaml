@@ -959,6 +959,7 @@ map:
   my_area_set_anon: 'Ma zone est définie sur cet appareil'
   outside_area: 'Hors de votre zone'
   area_dismiss: 'Fermer'
+  empty_scope_invite: 'Rien n''est encore répertorié ici — aidez à démarrer.'
   search_placeholder: 'Cherchez une côte, une ville, un point de vue…'
   search_aria: 'Rechercher dans les Commons'
   region: 'Région'

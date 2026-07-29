@@ -959,6 +959,7 @@ map:
   my_area_set_anon: 'Mein Gebiet auf diesem Gerät festgelegt'
   outside_area: 'Außerhalb deines Gebiets'
   area_dismiss: 'Schließen'
+  empty_scope_invite: 'Hier ist noch nichts kuratiert — hilf mit, damit anzufangen.'
   search_placeholder: 'Anstieg, Ort oder Aussichtspunkt suchen…'
   search_aria: 'Die Commons durchsuchen'
   region: 'Region'

@@ -959,6 +959,7 @@ map:
   my_area_set_anon: 'Mijn gebied ingesteld op dit apparaat'
   outside_area: 'Buiten je gebied'
   area_dismiss: 'Sluiten'
+  empty_scope_invite: 'Hier is nog niets samengesteld — help het op te starten.'
   search_placeholder: 'Zoek een helling, stad, uitzichtpunt…'
   search_aria: 'Zoek in de Commons'
   region: 'Regio'

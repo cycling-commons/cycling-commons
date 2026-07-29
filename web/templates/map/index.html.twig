@@ -114,6 +114,15 @@
       </div>
       {% endif %}
 
+      {# Empty-scope invite (2026-07-29-country-requests-and-curator-signup-design.md
+         §10.1): one link, never a form. panels.js initChips() reveals it only
+         when the active scope resolves to a country and the catalog shows zero
+         curated features — the page at /join/{cc} owns the form, validation
+         and four-locale copy. #}
+      <div id="emptyScopeInvite" class="rail-invite" hidden>
+        <a href="/join">{{ 'map.empty_scope_invite'|trans }}</a>
+      </div>
+
       {# View mode is the primary filter (curated best-of vs the full backlog), so it sits right
          under Region. Its active button is styled bright (#mode in the CSS) so the current mode
          is obvious at a glance. #}

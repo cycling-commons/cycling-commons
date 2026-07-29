@@ -1129,6 +1129,7 @@ map:
   my_area_set_anon: 'My area set on this device'
   outside_area: 'Outside your area'
   area_dismiss: 'Dismiss'
+  empty_scope_invite: 'Nothing curated here yet — help start it.'
   search_placeholder: 'Search a climb, town, viewpoint…'
   search_aria: 'Search the Commons'
   region: 'Region'

@@ -28,6 +28,7 @@ import { CATALOG, CATALOG_AZ, active, layerByKey, mode, setMode,
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
+import { curScope } from './scope-ui.js';
 
 // Bindings a later init reads, so they cannot stay `const` inside the init that
 // looks them up: `app` is assigned by initRailChrome(), the two facet <select>s
@@ -337,4 +338,28 @@ export function initChips(){
     document.querySelectorAll('#season .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
     updateHeatFilter();
   });
+
+  // "Nothing curated here yet" — the one line an empty map owes the visitor
+  // (2026-07-29-country-requests-and-curator-signup-design.md §10.1). A link,
+  // never a form: the page owns the form handling, validation and four-locale
+  // copy, and the map bundle stays small.
+  (function initEmptyScopeInvite(){
+    const row = document.getElementById('emptyScopeInvite');
+    if (!row) return;
+    const s = curScope() || {};
+    // Region/country scopes carry countryCode directly. A myArea scope always
+    // resolves countryCode to null (scope.js) and instead carries a derived
+    // countryCodes[] on s.myArea; window.CC_MY_AREA.countryCodes is the same
+    // data for a logged-in rider, kept as a fallback in case scope.myArea is
+    // ever absent. Mirror widen()'s "exactly one" rule rather than guess among
+    // several candidate countries.
+    const myAreaCcs = (s.myArea && s.myArea.countryCodes)
+      || (window.CC_MY_AREA && window.CC_MY_AREA.countryCodes) || [];
+    const cc = s.countryCode || (myAreaCcs.length === 1 ? myAreaCcs[0] : '');
+    const curated = CATALOG.reduce((n, l) => n + layerCounts(l).shown, 0);
+    if (curated > 0 || !cc) { row.hidden = true; return; }
+    const a = row.querySelector('a');
+    if (a) a.href = '/join/' + encodeURIComponent(cc);
+    row.hidden = false;
+  })();
 }
