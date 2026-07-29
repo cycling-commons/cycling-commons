@@ -40,5 +40,8 @@ services:
         arguments:
             $coverageCspHost: '%coverage.csp_host%'
 
-    App\Community\CountryInterestService:
-        public: true
+when@test:
+    services:
+        App\Community\CountryInterestService:
+            public: true
+            autowire: true
