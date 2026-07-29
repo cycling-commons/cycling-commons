@@ -524,6 +524,7 @@ join:
     note_link: 'Les liens ne sont pas acceptés dans ce champ.'
     note_length: 'Ce texte est trop long.'
     note_control: 'Ce texte contient des caractères que nous ne pouvons pas accepter.'
+    about_required: 'Dites-nous qui vous êtes et ce qui vous lie à cette région avant de candidater.'
 contributors:
   kicker: 'Contributeurs'
   title: 'Construit par des cyclistes.'

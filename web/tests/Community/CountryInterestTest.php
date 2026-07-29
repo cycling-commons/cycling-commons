@@ -30,6 +30,19 @@ final class CountryInterestTest extends WebTestCase
         return $u;
     }
 
+    /** Onboards a country by giving it a region, same fixture as CuratorApplicationTest. */
+    private function seedCountryRegion(string $cc, string $slug): int
+    {
+        $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES (?, ?, ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326), 1000, ?, ?, 2, 'test', NOW(), NOW())",
+            [$slug, strtoupper($slug), $cc, $cc],
+        );
+
+        return (int) $db->lastInsertId('region_id_seq');
+    }
+
     public function testRecordingTwiceUpdatesRatherThanDuplicating(): void
     {
         self::bootKernel();
@@ -138,5 +151,69 @@ final class CountryInterestTest extends WebTestCase
             ->fetchAssociative('SELECT * FROM country_interest WHERE user_id = ?', [$u->getId()]);
         self::assertIsArray($row);
         self::assertTrue((bool) $row['willing_to_curate']);
+    }
+
+    public function testOnboardedCountryOffersOnlyTheApplicationForm(): void
+    {
+        $client = static::createClient();
+        $this->seedCountryRegion('IT', 'italy-join-test');
+        $client->loginUser($this->user('join-it@example.test'), 'main');
+
+        $crawler = $client->request('GET', '/join/IT');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('form[data-form="curator-application"]')->count(),
+            'a country with regions offers the application form');
+        self::assertSame(0, $crawler->filter('form[data-form="country-interest"]')->count(),
+            'and never the interest form — someone can already apply to curate here');
+    }
+
+    public function testPostingAValidApplicationRecordsIt(): void
+    {
+        $client = static::createClient();
+        $this->seedCountryRegion('IT', 'italy-join-test');
+        $u = $this->user('join-it-apply@example.test');
+        $client->loginUser($u, 'main');
+
+        $crawler = $client->request('GET', '/join/IT');
+        $token = $crawler->filter('form[data-form="curator-application"] input[name="_token"]')->attr('value');
+
+        $client->request('POST', '/join/IT', [
+            '_token' => $token, 'about' => 'I ride these roads every weekend',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+
+        self::assertResponseRedirects('/join/IT');
+        $row = self::getContainer()->get(EntityManagerInterface::class)->getConnection()
+            ->fetchAssociative('SELECT * FROM curator_application WHERE user_id = ?', [$u->getId()]);
+        self::assertIsArray($row);
+        self::assertSame('pending', $row['status']);
+    }
+
+    /**
+     * Regression for the crafted-POST vulnerability: the branch used to be
+     * chosen by whether `about` was present, so a POST to an onboarded
+     * country with `about` omitted fell through to the interest branch and
+     * wrote a country_interest row for a country that only ever offers the
+     * application form. The branch is now decided by $onboarded alone, so
+     * the same payload must fail cleanly (page-level error) instead.
+     */
+    public function testPostingAnApplicationWithoutAboutFailsCleanlyAndSkipsInterest(): void
+    {
+        $client = static::createClient();
+        $this->seedCountryRegion('IT', 'italy-join-test');
+        $u = $this->user('join-it-empty@example.test');
+        $client->loginUser($u, 'main');
+
+        $crawler = $client->request('GET', '/join/IT');
+        $token = $crawler->filter('form[data-form="curator-application"] input[name="_token"]')->attr('value');
+
+        $client->request('POST', '/join/IT', [
+            '_token' => $token,
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+
+        self::assertResponseIsSuccessful('a missing "about" is a clean page-level error, never a 500');
+        $row = self::getContainer()->get(EntityManagerInterface::class)->getConnection()
+            ->fetchAssociative('SELECT * FROM country_interest WHERE user_id = ?', [$u->getId()]);
+        self::assertFalse($row, 'no interest row must be created for an onboarded country, regardless of payload');
     }
 }

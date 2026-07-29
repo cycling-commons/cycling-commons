@@ -61,10 +61,14 @@ final class JoinCountryController extends AbstractController
         $error = null;
 
         if ($request->isMethod('POST')) {
-            $isApplication = $onboarded && '' !== (string) $request->request->get('about', '');
+            // Server-known state alone decides the branch — never the client-
+            // supplied payload. The page only ever renders one form for a given
+            // $onboarded, and a crafted POST must not be able to pick the other
+            // one (wrong CSRF token id, wrong rate limiter, wrong service).
+            $isApplication = $onboarded;
             $tokenId = $isApplication ? 'curator-application' : 'country-interest';
 
-            if (!$this->isCsrfTokenValid($tokenId, (string) $request->request->get('_token'))) {
+            if (!$this->isCsrfTokenValid($tokenId, $request->request->getString('_token'))) {
                 throw $this->createAccessDeniedException('Invalid CSRF token.');
             }
 
@@ -79,26 +83,36 @@ final class JoinCountryController extends AbstractController
 
             try {
                 if ($isApplication) {
-                    $regionId = $request->request->get('region');
-                    $applications->submit(
-                        $user,
-                        $code,
-                        '' === (string) $regionId ? null : (int) $regionId,
-                        (string) $request->request->get('osm', ''),
-                        (string) $request->request->get('about', ''),
-                    );
-                    $this->addFlash('success', $translator->trans('join.flash.application_sent'));
+                    $about = $request->request->getString('about');
+                    if ('' === trim($about)) {
+                        // An application with no "who are you" text is not
+                        // meaningful evidence for a reviewer — reject it as a
+                        // page-level error rather than persisting an empty one.
+                        $error = $translator->trans('join.error.about_required');
+                    } else {
+                        $regionRaw = $request->request->getString('region');
+                        $applications->submit(
+                            $user,
+                            $code,
+                            '' === $regionRaw ? null : $request->request->getInt('region'),
+                            $request->request->getString('osm'),
+                            $about,
+                        );
+                        $this->addFlash('success', $translator->trans('join.flash.application_sent'));
+
+                        return $this->redirectToRoute('join_country', ['cc' => $code]);
+                    }
                 } else {
                     $interests->record(
                         $user,
                         $code,
-                        '1' === (string) $request->request->get('willing', ''),
-                        (string) $request->request->get('note', ''),
+                        '1' === $request->request->getString('willing'),
+                        $request->request->getString('note'),
                     );
                     $this->addFlash('success', $translator->trans('join.flash.interest_recorded'));
-                }
 
-                return $this->redirectToRoute('join_country', ['cc' => $code]);
+                    return $this->redirectToRoute('join_country', ['cc' => $code]);
+                }
             } catch (InvalidNoteException $e) {
                 $error = $translator->trans('join.error.note_'.$e->reason);
             } catch (\DomainException $e) {

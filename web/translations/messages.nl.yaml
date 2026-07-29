@@ -524,6 +524,7 @@ join:
     note_link: 'Links worden in dit veld niet geaccepteerd.'
     note_length: 'Die tekst is te lang.'
     note_control: 'Die tekst bevat tekens die we niet kunnen accepteren.'
+    about_required: 'Vertel ons wie je bent en wat je band is met dit gebied voordat je solliciteert.'
 contributors:
   kicker: 'Bijdragers'
   title: 'Gebouwd door fietsers.'

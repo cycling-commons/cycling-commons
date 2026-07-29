@@ -524,6 +524,7 @@ join:
     note_link: 'Links werden in diesem Feld nicht akzeptiert.'
     note_length: 'Dieser Text ist zu lang.'
     note_control: 'Dieser Text enthält Zeichen, die wir nicht akzeptieren können.'
+    about_required: 'Sag uns, wer du bist und was dich mit dieser Region verbindet, bevor du dich bewirbst.'
 contributors:
   kicker: 'Beitragende'
   title: 'Von Fahrern gebaut.'

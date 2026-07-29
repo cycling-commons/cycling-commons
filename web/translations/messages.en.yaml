@@ -524,6 +524,7 @@ join:
     note_link: 'Links are not accepted in this field.'
     note_length: 'That text is too long.'
     note_control: 'That text contains characters we cannot accept.'
+    about_required: 'Tell us who you are and what ties you to this area before applying.'
 contributors:
   kicker: 'Contributors'
   title: 'Built by riders.'
