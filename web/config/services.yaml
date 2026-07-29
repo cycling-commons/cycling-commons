@@ -45,3 +45,7 @@ when@test:
         App\Community\CountryInterestService:
             public: true
             autowire: true
+
+        App\Community\CuratorApplicationService:
+            public: true
+            autowire: true
