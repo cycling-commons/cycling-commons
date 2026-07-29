@@ -1,0 +1,28 @@
+web/src/Community/OsmUserVerifier.php
+  s_7ed0626bd6d35d::t_4e6b1955036429 87
+  s_7ed0626bd6d35d::t_1ec8499f95c184 72-86,88-118
+web/tests/Community/OsmUserVerifierTest.php
+  s_7ed0626bd6d35d::t_9a07fad26f345f 69-72,74-91,93-107
+  s_7ed0626bd6d35d::t_4e6b1955036429 73,92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "213158f4871baf2fa2ed0b467f3f109dcebfb344",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7ed0626bd6d35d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "391f6353-1129-40b7-8f31-751a1e45178a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
