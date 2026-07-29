@@ -325,7 +325,24 @@ Publishing it later is a one-line change once real numbers exist and the ones
 worth showing can be chosen. Going the other way — retracting a public number —
 is not.
 
-## 13. Out of scope
+## 13. Follow-up: the public onboarding spec
+
+Once this is built and has been through real use, the country-onboarding story
+needs a **public-facing spec** — the document a stranger reads to understand how
+a country goes from "not on the map" to "curated", and what is expected of the
+person who volunteers.
+
+Deliberately after the build, not before (owner, 2026-07-29): the honest version
+of that document is written from what actually happened — which evidence turned
+out to matter, how long a review really takes, what applicants ask that the form
+did not anticipate. Writing it first would publish a guess.
+
+It belongs in the **wiki** rather than `docs/specs/` when it lands: the wiki owns
+the public "why" (principles, taxonomy, governance) and specs own the "what/how"
+(docs/specs/README.md rule 2). The internal contract stays here; the invitation
+goes there.
+
+## 14. Out of scope
 
 - Auto-triggering onboarding from an interest threshold. The owner decides which
   country is next; the counts inform, they do not act.
