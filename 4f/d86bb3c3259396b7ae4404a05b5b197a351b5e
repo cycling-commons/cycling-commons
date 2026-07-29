@@ -1,0 +1,41 @@
+web/translations/messages.fr.yaml
+  s_7ed0626bd6d35d::t_6c3adc50cdafb7 1603-1604
+  s_7ed0626bd6d35d::t_b7030b9ee1caaa 507-526
+web/translations/messages.nl.yaml
+  s_7ed0626bd6d35d::t_740a924192c98c 507-526
+  s_7ed0626bd6d35d::t_3da8c1e3c12bd5 1603-1604
+web/tests/Community/CountryInterestTest.php
+  s_7ed0626bd6d35d::t_f3705a8c6ffc02 12,17
+  s_7ed0626bd6d35d::t_484873709b710e 99-141
+web/src/Controller/JoinCountryController.php
+  s_7ed0626bd6d35d::t_ac1d065b25da80 1-118
+web/translations/messages.en.yaml
+  s_7ed0626bd6d35d::t_a5ef40c813491b 1607-1608
+  s_7ed0626bd6d35d::t_e6f61ffd232cb4 507-526
+web/translations/messages.de.yaml
+  s_7ed0626bd6d35d::t_f9e8e7bbe1a5c5 507-526
+  s_7ed0626bd6d35d::t_6fefe3a2ce1731 1603-1604
+web/templates/pages/join_country.html.twig
+  s_7ed0626bd6d35d::t_11e7c9437b9326 1-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "4fd86bb3c3259396b7ae4404a05b5b197a351b5e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7ed0626bd6d35d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "391f6353-1129-40b7-8f31-751a1e45178a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
