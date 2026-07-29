@@ -1,0 +1,29 @@
+web/tests/Community/PublicNoteFilterTest.php
+  s_7ed0626bd6d35d::t_54878aaf74bfea 53-57,59-60
+  s_7ed0626bd6d35d::t_1481d366f545db 75-98
+  s_7ed0626bd6d35d::t_1356f6eee6d8a3 58
+web/src/Community/PublicNoteFilter.php
+  s_7ed0626bd6d35d::t_26b441bd4e46af 29-31,33
+  s_7ed0626bd6d35d::t_10ef44734eff10 39-42,44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "de3a503f3118c55e129b782640bceabef1553799",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7ed0626bd6d35d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "391f6353-1129-40b7-8f31-751a1e45178a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
