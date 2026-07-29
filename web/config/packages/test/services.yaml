@@ -2,3 +2,7 @@
 services:
     App\Tests\Auth\SpyDeletionHook:
         tags: ['app.user_deletion_hook']
+
+    # Make CountryInterestService public in tests so KernelTestCase can fetch it
+    App\Community\CountryInterestService:
+        public: true

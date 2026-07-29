@@ -40,6 +40,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Moderation/Entity'
                 prefix: 'App\Moderation\Entity'
                 alias: Moderation
+            Community:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Entity'
+                prefix: 'App\Community\Entity'
+                alias: Community
 
 when@prod:
     doctrine:
