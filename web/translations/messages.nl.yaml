@@ -1855,6 +1855,7 @@ admin:
     note_placeholder: 'Optionele notitie voor de aanvrager'
     approve: 'Goedkeuren'
     decline: 'Afwijzen'
+    already_decided: 'Die aanvraag is al door iemand anders afgehandeld — er is niets gewijzigd.'
 route:
   error:
     note_too_long: 'De notitie is langer dan 2.000 tekens.'

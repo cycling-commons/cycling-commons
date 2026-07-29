@@ -8,6 +8,7 @@ namespace App\Controller\Admin;
 
 use App\Catalog\Entity\Region;
 use App\Community\CuratorApplicationService;
+use App\Community\CuratorApplicationStatus;
 use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
 use App\Service\AdminDashboardStats;
@@ -23,6 +24,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -208,6 +210,7 @@ final class DashboardController extends AbstractDashboardController
         Request $request,
         CuratorApplicationService $applications,
         EntityManagerInterface $em,
+        TranslatorInterface $translator,
     ): Response {
         /** @var User $actor */
         $actor = $this->getUser();
@@ -220,9 +223,25 @@ final class DashboardController extends AbstractDashboardController
             if (null === $app) {
                 throw $this->createNotFoundException('No such application.');
             }
+            $decision = (string) $request->request->get('decision');
+            if (!\in_array($decision, ['approve', 'decline'], true)) {
+                throw new BadRequestHttpException('Decision must be "approve" or "decline".');
+            }
             $note = trim((string) $request->request->get('note', '')) ?: null;
 
-            if ('approve' === $request->request->get('decision')) {
+            // Guard against re-deciding here too, not just inside the
+            // service: a stale page (two admin tabs, a double-submit) must
+            // flash and no-op rather than reprocess an already-Approved or
+            // -Declined application. The service throws the same guard
+            // regardless of caller, so this is a friendlier front door on it,
+            // not the only line of defence.
+            if (CuratorApplicationStatus::Pending !== $app->getStatus()) {
+                $this->addFlash('danger', $translator->trans('admin.curator.already_decided'));
+
+                return $this->redirectToRoute('admin_curator_applications');
+            }
+
+            if ('approve' === $decision) {
                 $applications->approve($app, $actor, $note);
             } else {
                 $applications->decline($app, $actor, $note);

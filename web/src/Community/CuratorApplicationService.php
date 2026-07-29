@@ -10,6 +10,7 @@ use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Moderation\Entity\ModeratorArea;
 use App\Service\AdminActionLogger;
 use App\Service\UserAdminService;
 use Doctrine\DBAL\Connection;
@@ -88,44 +89,77 @@ final class CuratorApplicationService
      * Approval SCOPES rather than promotes: a Dutch applicant curates the
      * Netherlands. Global curator stays something granted deliberately, not a
      * side effect of a form (§9).
+     *
+     * One transaction end to end. `grantCurator()` opens its own nested
+     * `wrapInTransaction` (DBAL 4 nests by ref-count rather than starting a
+     * second real transaction — the same pattern
+     * `UserAdminService::setModeratorAreas()` relies on), so if persisting
+     * the `ModeratorArea` below hits
+     * `uniq_moderator_area(user_id, region_id, country_code)` — a second
+     * approval racing this one, or a stale retry — the role grant rolls back
+     * with it. Without this boundary a conflicting insert would leave the
+     * applicant holding ROLE_CURATOR with the application stuck Pending
+     * forever, and every retry re-hitting the same constraint.
+     *
+     * @throws \DomainException if the application was not Pending, or the applicant's account no longer exists
      */
     public function approve(CuratorApplication $app, User $actor, ?string $note): void
     {
+        $this->assertPending($app);
+
         $applicant = $this->em->getRepository(User::class)->find($app->getUserId());
         if (null === $applicant) {
             throw new \DomainException('The applicant no longer exists.');
         }
 
-        $this->users->grantCurator($applicant, $actor);
+        $this->em->wrapInTransaction(function () use ($app, $actor, $note, $applicant): void {
+            $this->users->grantCurator($applicant, $actor);
 
-        $this->db->insert('moderator_area', [
-            'user_id' => $app->getUserId(),
-            'region_id' => $app->getRequestedRegionId(),
-            'country_code' => null === $app->getRequestedRegionId() ? $app->getCountryCode() : null,
-            'created_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
-        ]);
+            $this->em->persist(new ModeratorArea(
+                $app->getUserId(),
+                $app->getRequestedRegionId(),
+                null === $app->getRequestedRegionId() ? $app->getCountryCode() : null,
+            ));
+            // Flushed here, inside the still-open transaction, so a unique-
+            // constraint violation surfaces (and rolls back the role grant
+            // above with it) rather than being deferred to the automatic
+            // flush-on-commit at the end of this closure.
+            $this->em->flush();
 
-        $app->decide(CuratorApplicationStatus::Approved, (int) $actor->getId(), $note);
-        $this->em->flush();
+            $app->decide(CuratorApplicationStatus::Approved, (int) $actor->getId(), $note);
 
-        $this->audit->log($actor, 'curator_application.approve', $applicant, $note);
-        $this->notify($app, 'join.message.approved');
-        // sendSystem() persists WITHOUT flushing (its callers normally ride a
-        // decision transaction's flush-on-commit); nothing else flushes after
-        // it here, so this call is the one that actually writes the message.
-        $this->em->flush();
+            $this->audit->log($actor, 'curator_application.approve', $applicant, $note);
+            $this->notify($app, 'join.message.approved');
+        });
     }
 
+    /** @throws \DomainException if the application was not Pending */
     public function decline(CuratorApplication $app, User $actor, ?string $note): void
     {
+        $this->assertPending($app);
+
         $applicant = $this->em->getRepository(User::class)->find($app->getUserId());
 
-        $app->decide(CuratorApplicationStatus::Declined, (int) $actor->getId(), $note);
-        $this->em->flush();
+        $this->em->wrapInTransaction(function () use ($app, $actor, $note, $applicant): void {
+            $app->decide(CuratorApplicationStatus::Declined, (int) $actor->getId(), $note);
 
-        $this->audit->log($actor, 'curator_application.decline', $applicant, $note);
-        $this->notify($app, 'join.message.declined');
-        $this->em->flush();
+            $this->audit->log($actor, 'curator_application.decline', $applicant, $note);
+            $this->notify($app, 'join.message.declined');
+        });
+    }
+
+    /**
+     * Hard guard against re-deciding, regardless of caller: the controller
+     * checks status before dispatching too, but this makes the service safe
+     * on its own (§9 — re-approving/re-declining must never re-run the
+     * side effects: a second role grant, a duplicate moderator_area row, a
+     * second notification).
+     */
+    private function assertPending(CuratorApplication $app): void
+    {
+        if (CuratorApplicationStatus::Pending !== $app->getStatus()) {
+            throw new \DomainException('already decided');
+        }
     }
 
     /** @return list<CuratorApplication> */

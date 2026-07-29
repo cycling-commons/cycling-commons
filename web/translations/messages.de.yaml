@@ -1855,6 +1855,7 @@ admin:
     note_placeholder: 'Optionale Notiz an die bewerbende Person'
     approve: 'Genehmigen'
     decline: 'Ablehnen'
+    already_decided: 'Diese Bewerbung wurde bereits von jemand anderem entschieden — es wurde nichts geändert.'
 route:
   error:
     note_too_long: 'Die Notiz ist länger als 2.000 Zeichen.'

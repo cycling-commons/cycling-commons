@@ -1855,6 +1855,7 @@ admin:
     note_placeholder: 'Note facultative pour le candidat'
     approve: 'Approuver'
     decline: 'Refuser'
+    already_decided: 'Cette candidature a déjà été traitée par quelqu’un d’autre — rien n’a été modifié.'
 route:
   error:
     note_too_long: 'La note dépasse 2 000 caractères.'

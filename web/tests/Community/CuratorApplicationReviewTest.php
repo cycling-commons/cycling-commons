@@ -124,4 +124,150 @@ final class CuratorApplicationReviewTest extends WebTestCase
         $messages = $db->fetchOne('SELECT COUNT(*) FROM user_message WHERE user_id = ?', [$applicant->getId()]);
         self::assertGreaterThan(0, (int) $messages, 'a decline that arrives as silence teaches people not to volunteer');
     }
+
+    /**
+     * approve() is one transaction end to end: grantCurator()'s role grant
+     * must not survive a moderator_area insert that hits
+     * uniq_moderator_area(user_id, region_id, country_code) — otherwise the
+     * applicant would be left holding ROLE_CURATOR with the application
+     * stuck Pending forever, and every retry re-hitting the same conflict.
+     *
+     * What this asserts, precisely: the failed approve() rolls back BOTH the
+     * role grant and the decision (still Pending, roles unchanged), and once
+     * the conflicting row is gone, the same application is still
+     * re-approvable — from a fresh EntityManager, because Doctrine closes
+     * the one that raised the flush exception (its documented behaviour;
+     * confirmed empirically here rather than assumed). A real HTTP request
+     * always gets a fresh EntityManager, so this only matters in-process
+     * inside this test.
+     */
+    public function testApprovalRollsBackEverythingWhenModeratorAreaConflicts(): void
+    {
+        self::bootKernel();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $db = $em->getConnection();
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('review-conflict', 'Conflictland', ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326), 900, 'CX', 'CX', 2, 'test', NOW(), NOW())",
+        );
+
+        $applicant = new User();
+        $applicant->setEmail('conflict-applicant@example.test');
+        $applicant->setDisplayName('Conflict Applicant');
+        $applicant->setPassword('x');
+        $applicant->setEmailVerified(true);
+        $em->persist($applicant);
+        $admin = new User();
+        $admin->setEmail('conflict-admin@example.test');
+        $admin->setDisplayName('Conflict Admin');
+        $admin->setPassword('x');
+        $admin->setEmailVerified(true);
+        $admin->setRoles(['ROLE_ADMIN']);
+        $em->persist($admin);
+        $em->flush();
+
+        $svc = self::getContainer()->get(CuratorApplicationService::class);
+        $app = $svc->submit($applicant, 'CX', null, null, 'conflict test');
+
+        // Pre-insert the row approve() is about to try to insert: same
+        // user_id, null region_id (whole-country), same country_code.
+        $db->executeStatement(
+            "INSERT INTO moderator_area (user_id, region_id, country_code, created_at) VALUES (?, NULL, 'CX', NOW())",
+            [$applicant->getId()],
+        );
+
+        $threw = false;
+        try {
+            $svc->approve($app, $admin, 'first attempt');
+        } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException) {
+            $threw = true;
+        }
+        self::assertTrue($threw, 'the conflict must propagate rather than being swallowed');
+
+        $roles = $db->fetchOne('SELECT roles FROM users WHERE id = ?', [$applicant->getId()]);
+        self::assertStringNotContainsString('ROLE_CURATOR', (string) $roles, 'the role grant rolled back with the rest of the transaction');
+
+        $areaCount = (int) $db->fetchOne('SELECT COUNT(*) FROM moderator_area WHERE user_id = ?', [$applicant->getId()]);
+        self::assertSame(1, $areaCount, 'no duplicate row was left behind; only the pre-existing conflicting one remains');
+
+        $status = $db->fetchOne('SELECT status FROM curator_application WHERE id = ?', [$app->getId()]);
+        self::assertSame('pending', $status, 'the decision itself rolled back too, so the application is still re-approvable');
+
+        // Clear the conflict and retry, from a fresh EntityManager (the one
+        // that just raised the flush exception is closed by Doctrine).
+        $db->executeStatement('DELETE FROM moderator_area WHERE user_id = ?', [$applicant->getId()]);
+
+        /** @var \Doctrine\Persistence\ManagerRegistry $registry */
+        $registry = self::getContainer()->get('doctrine');
+        $registry->resetManager();
+        $freshEm = $registry->getManager();
+        \assert($freshEm instanceof EntityManagerInterface);
+        $freshApp = $freshEm->find(\App\Community\Entity\CuratorApplication::class, $app->getId());
+        self::assertNotNull($freshApp);
+        $freshAdmin = $freshEm->find(User::class, $admin->getId());
+        self::assertNotNull($freshAdmin);
+
+        self::getContainer()->get(CuratorApplicationService::class)->approve($freshApp, $freshAdmin, 'retry after clearing the conflict');
+
+        $rolesAfterRetry = $db->fetchOne('SELECT roles FROM users WHERE id = ?', [$applicant->getId()]);
+        self::assertStringContainsString('ROLE_CURATOR', (string) $rolesAfterRetry, 'the retry succeeds once the conflict is gone');
+        $statusAfterRetry = $db->fetchOne('SELECT status FROM curator_application WHERE id = ?', [$app->getId()]);
+        self::assertSame('approved', $statusAfterRetry);
+    }
+
+    /**
+     * A stale page — two admin tabs, a double submit — must not silently
+     * re-run a decision. Approve, then attempt to decline the same
+     * application: the status and role from the first decision must be
+     * untouched, and the second request must take the flash-and-no-op path
+     * rather than reprocessing.
+     */
+    public function testRedecidingAnAlreadyDecidedApplicationIsANoOp(): void
+    {
+        $client = static::createClient();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $db = $em->getConnection();
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('review-redecide', 'Redecideland', ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326), 900, 'RD', 'RD', 2, 'test', NOW(), NOW())",
+        );
+
+        $applicant = new User();
+        $applicant->setEmail('redecide-applicant@example.test');
+        $applicant->setDisplayName('Redecide Applicant');
+        $applicant->setPassword('x');
+        $applicant->setEmailVerified(true);
+        $em->persist($applicant);
+        $em->flush();
+
+        $app = self::getContainer()->get(CuratorApplicationService::class)
+            ->submit($applicant, 'RD', null, null, 'redecide test');
+
+        $client->loginUser($this->admin($client), 'main');
+        $crawler = $client->request('GET', '/admin/curator-applications');
+        $token = $crawler->filter('input[name="_token"]')->attr('value');
+
+        $client->request('POST', '/admin/curator-applications', [
+            '_token' => $token, 'application' => $app->getId(), 'decision' => 'approve', 'note' => 'approved first',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseRedirects();
+
+        // Second request, same application, opposite decision. The CSRF
+        // token is stateless and keyed by token id rather than by row, so
+        // the same $token is still valid — and it must be reused here: the
+        // application is Approved now, so it no longer has a row (and thus
+        // no fresh token to scrape) on the page at all.
+        $client->request('POST', '/admin/curator-applications', [
+            '_token' => $token, 'application' => $app->getId(), 'decision' => 'decline', 'note' => 'too late',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseRedirects();
+        $client->followRedirect();
+        self::assertSelectorTextContains('[role="alert"]', 'already decided');
+
+        $status = $db->fetchOne('SELECT status FROM curator_application WHERE id = ?', [$app->getId()]);
+        self::assertSame('approved', $status, 'the second, conflicting decision never applied');
+
+        $roles = $db->fetchOne('SELECT roles FROM users WHERE id = ?', [$applicant->getId()]);
+        self::assertStringContainsString('ROLE_CURATOR', (string) $roles, 'the role from the first decision is untouched');
+    }
 }

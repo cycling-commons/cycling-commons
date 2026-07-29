@@ -1859,6 +1859,7 @@ admin:
     note_placeholder: 'Optional note to the applicant'
     approve: 'Approve'
     decline: 'Decline'
+    already_decided: 'That application was already decided by someone else — nothing was changed.'
 route:
   error:
     note_too_long: 'The note must be 2,000 characters or fewer.'
