@@ -9,12 +9,12 @@ namespace App\Tests\Community;
 use App\Community\CountryInterestService;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
  * 2026-07-29-country-requests-and-curator-signup-design.md §5.1.
  */
-final class CountryInterestTest extends KernelTestCase
+final class CountryInterestTest extends WebTestCase
 {
     private function user(string $email): User
     {
@@ -95,5 +95,48 @@ final class CountryInterestTest extends KernelTestCase
                 [$u->getId(), 'ES']);
         self::assertSame('legitimate note', $row['note'],
             'zero-width spaces should not erase a previously stored legitimate note');
+    }
+
+    public function testAnonymousVisitorsAreSentToLogin(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/join/ES');
+        // Decision 1: both signals require a verified account.
+        self::assertResponseRedirects();
+        self::assertStringContainsString('/login', (string) $client->getResponse()->headers->get('Location'));
+    }
+
+    public function testNotOnboardedCountryOffersTheRequestForm(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->user('join-es@example.test'), 'main');
+
+        $crawler = $client->request('GET', '/join/ES');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('form[data-form="country-interest"]')->count(),
+            'a country with no regions offers the request form');
+        self::assertSame(0, $crawler->filter('form[data-form="curator-application"]')->count(),
+            'and never the application form — there is nothing to curate yet');
+    }
+
+    public function testPostingTheRequestRecordsIt(): void
+    {
+        $client = static::createClient();
+        $u = $this->user('join-post@example.test');
+        $client->loginUser($u, 'main');
+
+        $crawler = $client->request('GET', '/join/ES');
+        $token = $crawler->filter('form[data-form="country-interest"] input[name="_token"]')->attr('value');
+
+        $client->request('POST', '/join/ES', [
+            '_token' => $token, 'willing' => '1', 'note' => 'I ride here every summer',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+
+        self::assertResponseRedirects('/join/ES');
+        $row = self::getContainer()->get(EntityManagerInterface::class)->getConnection()
+            ->fetchAssociative('SELECT * FROM country_interest WHERE user_id = ?', [$u->getId()]);
+        self::assertIsArray($row);
+        self::assertTrue((bool) $row['willing_to_curate']);
     }
 }

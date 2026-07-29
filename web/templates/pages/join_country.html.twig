@@ -1,0 +1,67 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .field{margin-bottom:1.3rem}
+  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field input[type=text],.field input:not([type]),.field textarea{width:100%;background:transparent;border:1.5px solid rgba(20,22,14,.25);border-radius:6px;font-family:var(--sans);font-size:1rem;padding:.55rem .7rem;outline:none;color:var(--ink)}
+  .field textarea{min-height:100px;resize:vertical}
+  .field select{width:100%;max-width:22rem;padding:.5rem .6rem}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--trail)}
+  .field.check label{display:flex;align-items:center;gap:.5rem;font-family:var(--sans);font-size:.95rem;letter-spacing:normal;text-transform:none;color:var(--ink)}
+  .hint{font-family:var(--sans);font-size:.85rem;color:#6b6e5c;margin:.6rem 0 1.4rem;line-height:1.5}
+  .hint a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+  .form-error,.flash-error{background:rgba(181,83,46,.12);border-left:3px solid var(--clay);color:#6b3016;padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+  .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--trail);color:#1f3a2c;padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
+</style>
+{% endblock %}
+{% block body %}
+<main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem;max-width:640px">
+  {% if onboarded %}
+    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ 'join.headline_curate'|trans({'%country%': country.name}) }}</h1>
+  {% else %}
+    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ 'join.headline_request'|trans({'%country%': country.name}) }}</h1>
+  {% endif %}
+
+  {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+
+  {% for msg in app.flashes('success') %}<p class="flash-success" role="alert">{{ msg }}</p>{% endfor %}
+  {% for msg in app.flashes('error') %}<p class="flash-error" role="alert">{{ msg }}</p>{% endfor %}
+
+  {% if not onboarded %}
+    <form method="post" data-form="country-interest">
+      <input type="hidden" name="_token" value="{{ csrf_token('country-interest') }}">
+      <div class="field">
+        <label for="note">{{ 'join.note_label'|trans }}</label>
+        <textarea id="note" name="note" maxlength="280"></textarea>
+      </div>
+      <div class="field check">
+        <label><input type="checkbox" name="willing" value="1"> {{ 'join.willing_label'|trans }}</label>
+      </div>
+      <button type="submit" class="btn btn-p">{{ 'join.submit_request'|trans }}</button>
+    </form>
+  {% else %}
+    <form method="post" data-form="curator-application">
+      <input type="hidden" name="_token" value="{{ csrf_token('curator-application') }}">
+      <div class="field">
+        <label for="region">{{ 'join.scope_label'|trans }}</label>
+        <select id="region" name="region">
+          <option value="">{{ 'join.scope_whole_country'|trans }}</option>
+          {% for r in regions %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="osm">{{ 'join.osm_label'|trans }}</label>
+        <input id="osm" name="osm" maxlength="64">
+      </div>
+      <div class="field">
+        <label for="about">{{ 'join.about_label'|trans }}</label>
+        <textarea id="about" name="about" maxlength="1200" required></textarea>
+      </div>
+      <p class="hint">{{ 'join.evidence_hint'|trans }}
+         <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
+      <button type="submit" class="btn btn-p">{{ 'join.submit_application'|trans }}</button>
+    </form>
+  {% endif %}
+</main>
+{% endblock %}

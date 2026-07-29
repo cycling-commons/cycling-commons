@@ -504,6 +504,26 @@ join:
   start_lead: 'Code, local knowledge, or a few hours of expertise — all of it moves the map forward. The door''s open.'
   start_cta_code: 'Contribute code →'
   start_cta_email: 'Email the team'
+  headline_request: "Cycling Commons isn't in %country% yet"
+  headline_curate: 'Nobody is curating %country% yet'
+  note_label: 'Anything we should know? (optional)'
+  willing_label: "I'd help curate here"
+  submit_request: 'Send'
+  scope_label: 'What would you curate?'
+  scope_whole_country: 'The whole country'
+  osm_label: 'Your OpenStreetMap username (optional)'
+  about_label: 'Who are you, and what ties you to this area?'
+  evidence_hint: 'Tell us what is wrong or missing by adding it to the map — that is what we read.'
+  evidence_link: 'Add something now'
+  submit_application: 'Apply to curate'
+  flash:
+    interest_recorded: 'Recorded — thank you.'
+    application_sent: 'Sent. We will come back to you.'
+  error:
+    too_many: 'That is enough for today — try again tomorrow.'
+    note_link: 'Links are not accepted in this field.'
+    note_length: 'That text is too long.'
+    note_control: 'That text contains characters we cannot accept.'
 contributors:
   kicker: 'Contributors'
   title: 'Built by riders.'
@@ -1584,6 +1604,8 @@ meta:
   licenses_description: 'The short version, in plain language — what you can do with Commons data, media, and code — ODbL data, CC BY-SA media, PolyForm Shield (source-available) code.'
   join_title: 'Cycling Commons — Get involved'
   join_description: 'Help build the open cycling commons — riders with local knowledge, developers, social, fundraisers, and legal. Code, knowledge, or a few hours of expertise: there''s room for you.'
+  join_country_title: 'Bring Cycling Commons here'
+  join_country_description: 'Ask for a country, or volunteer to curate one.'
   contributors_title: 'Cycling Commons — Contributors'
   contributors_description: 'Built by riders. Recognition without surveillance — we celebrate contributions to the open Commons, never personal data.'
   region_title: 'Cycling Commons — Region'
