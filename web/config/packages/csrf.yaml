@@ -12,3 +12,5 @@ framework:
             - route-community
             - ride-check
             - my-area
+            - country-interest
+            - curator-application

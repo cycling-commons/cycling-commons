@@ -13,6 +13,10 @@ framework:
                 adapter: cache.adapter.filesystem
             cache.coverage_read_limiter:
                 adapter: cache.adapter.filesystem
+            cache.country_interest_limiter:
+                adapter: cache.adapter.filesystem
+            cache.curator_application_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -48,6 +52,21 @@ framework:
             limit: 120
             interval: '1 minute'
             cache_pool: cache.coverage_read_limiter
+        # Country requests and curator signup
+        # (2026-07-29-country-requests-and-curator-signup-design.md §11). A rider
+        # may reasonably ask for a handful of countries; nobody needs 200.
+        country_interest:
+            policy: sliding_window
+            limit: 10
+            interval: '1 day'
+            cache_pool: cache.country_interest_limiter
+        # An application is a task for a human reviewer, so this is the tighter
+        # of the two.
+        curator_application:
+            policy: sliding_window
+            limit: 3
+            interval: '1 day'
+            cache_pool: cache.curator_application_limiter
 
 when@test:
     framework:
@@ -60,4 +79,8 @@ when@test:
                 cache.ride_check_limiter:
                     adapter: cache.adapter.array
                 cache.coverage_read_limiter:
+                    adapter: cache.adapter.array
+                cache.country_interest_limiter:
+                    adapter: cache.adapter.array
+                cache.curator_application_limiter:
                     adapter: cache.adapter.array
