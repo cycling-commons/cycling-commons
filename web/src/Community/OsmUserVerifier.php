@@ -69,6 +69,52 @@ final class OsmUserVerifier
             return OsmVerification::unreachable();
         }
 
-        return new OsmVerification(true, true, substr_count($body, '<changeset'));
+        $changesetCount = substr_count($body, '<changeset');
+
+        // If we're at the pagination cap (100), attempt to get the true count
+        if ($changesetCount >= 100) {
+            $changesetCount = $this->resolvePaginationCap($body, $changesetCount);
+        }
+
+        return new OsmVerification(true, true, $changesetCount);
+    }
+
+    /**
+     * Best-effort resolution of the 100-changeset pagination cap.
+     * Extracts the uid from the first changeset and fetches the user's
+     * true changeset count from /user/{uid}.
+     *
+     * @return int the resolved count, or the page count if resolution fails
+     */
+    private function resolvePaginationCap(string $changesetsXml, int $pageCount): int
+    {
+        // Extract uid from the first changeset's uid attribute
+        if (!preg_match('/<changeset[^>]+uid="(\d+)"/', $changesetsXml, $matches)) {
+            return $pageCount;
+        }
+
+        $uid = $matches[1];
+
+        try {
+            $response = $this->http->request('GET', "https://api.openstreetmap.org/api/0.6/user/{$uid}", [
+                'timeout' => self::TIMEOUT_SECONDS,
+                'headers' => ['Accept' => 'application/xml'],
+            ]);
+
+            if (200 !== $response->getStatusCode()) {
+                return $pageCount;
+            }
+
+            $body = $response->getContent();
+
+            // Extract count attribute from <changesets count="N"/>
+            if (preg_match('/<changesets\s+count="(\d+)"/', $body, $matches)) {
+                return (int) $matches[1];
+            }
+        } catch (ExceptionInterface) {
+            // Fall back to page count silently; do not degrade reachable/exists
+        }
+
+        return $pageCount;
     }
 }

@@ -66,4 +66,43 @@ final class OsmUserVerifierTest extends TestCase
         self::assertFalse($result->exists);
         self::assertNull($result->changesets);
     }
+
+    public function testResolvesPaginationCapViaUserDetailsLookup(): void
+    {
+        // Build 100 changesets with uid attribute on the first one
+        $changesets = str_repeat('<changeset id="1"/>', 99).'<changeset id="100" uid="12345"/>';
+        $changesetsXml = "<?xml version=\"1.0\"?><osm>{$changesets}</osm>";
+        $userDetailsXml = '<?xml version="1.0"?><osm><user id="12345"><changesets count="1234"/></user></osm>';
+
+        $v = new OsmUserVerifier(new MockHttpClient([
+            new MockResponse($changesetsXml, ['http_code' => 200]),
+            new MockResponse($userDetailsXml, ['http_code' => 200]),
+        ]));
+
+        $result = $v->verify('prolific_mapper');
+
+        self::assertTrue($result->reachable);
+        self::assertTrue($result->exists);
+        self::assertSame(1234, $result->changesets);
+    }
+
+    public function testFallsBackToPageCountWhenUserDetailsRequestFails(): void
+    {
+        // Build 100 changesets with uid attribute
+        $changesets = str_repeat('<changeset id="1"/>', 99).'<changeset id="100" uid="12345"/>';
+        $changesetsXml = "<?xml version=\"1.0\"?><osm>{$changesets}</osm>";
+
+        $v = new OsmUserVerifier(new MockHttpClient([
+            new MockResponse($changesetsXml, ['http_code' => 200]),
+            new MockResponse('', ['http_code' => 500]), // Follow-up fails
+        ]));
+
+        $result = $v->verify('another_mapper');
+
+        // reachable/exists remain true from the first successful request
+        self::assertTrue($result->reachable);
+        self::assertTrue($result->exists);
+        // Falls back to page count when follow-up fails
+        self::assertSame(100, $result->changesets);
+    }
 }
