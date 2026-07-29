@@ -76,18 +76,32 @@ final class PublicNoteFilterTest extends TestCase
     public function testAllowsProseWithColons(): void
     {
         $f = new PublicNoteFilter();
-        // Prose like "Warning:sharp turn ahead" and "Note:this trail is closed"
-        // must not be rejected as links. The scheme pattern now requires either
-        // '://' or a known non-'//' scheme (mailto, tel, etc.) to avoid this.
-        self::assertSame('Warning:sharp turn ahead', $f->clean('Warning:sharp turn ahead', PublicNoteFilter::MAX_NOTE));
-        self::assertSame('Note:this trail is closed', $f->clean('Note:this trail is closed', PublicNoteFilter::MAX_NOTE));
+        // Prose with colons must not be rejected, even when they look like
+        // scheme prefixes. The tel: and mailto: patterns now require actual
+        // phone/email payloads to confirm they are links, not prose.
+        $proseTests = [
+            'News:local trail closed due to flooding',
+            'Data:this is preliminary',
+            'Tel:the office is closed',
+            'Warning:sharp turn ahead',
+        ];
+        foreach ($proseTests as $prose) {
+            self::assertSame($prose, $f->clean($prose, PublicNoteFilter::MAX_NOTE));
+        }
     }
 
     public function testPinnedLinkFormsStillRejected(): void
     {
         $f = new PublicNoteFilter();
-        // Verify the four pinned link forms are still rejected after the regex fix.
-        foreach (['see https://spam.example', 'www.spam.example', 'spam.example/path', 'mailto:me@example.com'] as $bad) {
+        // Verify pinned link forms are still rejected: the original four plus tel: with digits.
+        $pinnedLinks = [
+            'see https://spam.example',
+            'www.spam.example',
+            'spam.example/path',
+            'mailto:me@example.com',
+            'tel:+3212345678',
+        ];
+        foreach ($pinnedLinks as $bad) {
             try {
                 $f->clean($bad, PublicNoteFilter::MAX_NOTE);
                 self::fail(sprintf('"%s" should have been rejected as a link', $bad));

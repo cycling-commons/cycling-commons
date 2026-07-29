@@ -37,11 +37,13 @@ final class PublicNoteFilter
      * why they know an area. Matches a scheme, a bare www., and a bare
      * domain.tld — the three forms that survive a reviewer's eye.
      *
-     * The scheme form requires either '://' (http://, https://, ftp://…) or
-     * a known non-'//' scheme (mailto:, tel:, news:, urn:, data:) to avoid
-     * false-positives on prose like "Warning:sharp" or "Note:this".
+     * The scheme form requires either '://' (http://, https://, ftp://…) or,
+     * for non-'//' schemes, a payload pattern that confirms it is actually a link:
+     * - mailto: only when followed by an @ (e.g. mailto:user@example.com)
+     * - tel: only when followed by + or digits (e.g. tel:+1234567890)
+     * This avoids false-positives on prose like "News:local closed" or "Tel:office".
      */
-    private const string LINKISH = '~(\b[a-z][a-z0-9+.-]*://[^\s]|\b(mailto|tel|news|urn|data):[^\s]|\bwww\.|\b[a-z0-9-]+\.[a-z]{2,}(/|\b))~i';
+    private const string LINKISH = '~(\b[a-z][a-z0-9+.-]*://\S|\bmailto:[^\s@]+@|\btel:[+0-9]|\bwww\.|\b[a-z0-9-]+\.[a-z]{2,}(/|\b))~i';
 
     public function clean(string $raw, int $maxLength): string
     {
