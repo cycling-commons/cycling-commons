@@ -6,11 +6,15 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Catalog\Entity\Region;
+use App\Community\CuratorApplicationService;
+use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
 use App\Service\AdminDashboardStats;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
 use App\Settings\SystemSettingsWriter;
+use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
@@ -37,6 +41,9 @@ final class DashboardController extends AbstractDashboardController
 {
     /** CSRF token id for the system-config form (stateless, same-origin). */
     public const string SETTINGS_CSRF_TOKEN_ID = 'ea-system-config';
+
+    /** CSRF token id for the curator-applications decision form (stateless, same-origin). */
+    public const string CURATOR_APPS_CSRF_TOKEN_ID = 'curator-applications';
 
     public function __construct(private readonly AdminDashboardStats $stats)
     {
@@ -76,6 +83,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.playbook_email'), 'fa fa-envelope-circle-check', 'admin_playbook_email_change');
         yield MenuItem::section(new TranslatableMessage('admin.menu.system'));
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.system_config'), 'fa fa-sliders', 'admin_system_config');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.curator_applications'), 'fa fa-user-check', 'admin_curator_applications');
     }
 
     /**
@@ -185,6 +193,61 @@ final class DashboardController extends AbstractDashboardController
             'values' => $values,
             'errors' => $errors,
             'overridden' => $overridden,
+        ]);
+    }
+
+    /**
+     * Curator applications (2026-07-29-country-requests-and-curator-signup-design.md §9).
+     *
+     * A purpose-built page rather than an EasyAdmin CRUD: the reviewer needs a
+     * person, their track record, their OSM standing and their words side by
+     * side to make one judgement — not rows to sort and delete.
+     */
+    #[AdminRoute('/curator-applications', 'curator_applications', options: ['methods' => ['GET', 'POST']])]
+    public function curatorApplications(
+        Request $request,
+        CuratorApplicationService $applications,
+        EntityManagerInterface $em,
+    ): Response {
+        /** @var User $actor */
+        $actor = $this->getUser();
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid(self::CURATOR_APPS_CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Invalid CSRF token for a curator decision.');
+            }
+            $app = $em->find(CuratorApplication::class, (int) $request->request->get('application'));
+            if (null === $app) {
+                throw $this->createNotFoundException('No such application.');
+            }
+            $note = trim((string) $request->request->get('note', '')) ?: null;
+
+            if ('approve' === $request->request->get('decision')) {
+                $applications->approve($app, $actor, $note);
+            } else {
+                $applications->decline($app, $actor, $note);
+            }
+
+            return $this->redirectToRoute('admin_curator_applications');
+        }
+
+        $rows = [];
+        foreach ($applications->pending() as $app) {
+            $regionName = null;
+            if (null !== $app->getRequestedRegionId()) {
+                $regionName = $em->getRepository(Region::class)->find($app->getRequestedRegionId())?->getName();
+            }
+            $rows[] = [
+                'app' => $app,
+                'user' => $em->getRepository(User::class)->find($app->getUserId()),
+                'evidence' => $applications->evidenceFor($app),
+                'regionName' => $regionName,
+            ];
+        }
+
+        return $this->render('admin/curator_applications.html.twig', [
+            'rows' => $rows,
+            'csrf_token_id' => self::CURATOR_APPS_CSRF_TOKEN_ID,
         ]);
     }
 }

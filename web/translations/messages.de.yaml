@@ -525,6 +525,9 @@ join:
     note_length: 'Dieser Text ist zu lang.'
     note_control: 'Dieser Text enthält Zeichen, die wir nicht akzeptieren können.'
     about_required: 'Sag uns, wer du bist und was dich mit dieser Region verbindet, bevor du dich bewirbst.'
+  message:
+    approved: 'Deine Bewerbung als Kurator für %country% wurde genehmigt. Willkommen an Bord.'
+    declined: 'Deine Bewerbung als Kurator für %country% wurde dieses Mal nicht angenommen.'
 contributors:
   kicker: 'Beitragende'
   title: 'Von Fahrern gebaut.'
@@ -1738,6 +1741,7 @@ admin:
     playbook_email: 'E-Mail-Änderung'
     system: 'System'
     system_config: 'Systemkonfiguration'
+    curator_applications: 'Kuratorbewerbungen'
   action:
     unlock: 'Konto entsperren'
     disarm_2fa: '2FA deaktivieren'
@@ -1834,6 +1838,23 @@ admin:
       moderation_retention_months:
         label: 'Aufbewahrung entschiedener Einträge (Monate)'
         help: 'Wie lange entschiedene Korrekturen und Einreichungen aufbewahrt werden, bevor der Aufräumlauf sie löscht. Die Moderationsentscheidung selbst bleibt in jedem Fall erhalten.'
+  curator:
+    title: 'Kuratorbewerbungen'
+    empty: 'Keine ausstehenden Bewerbungen.'
+    email_verified: 'E-Mail verifiziert'
+    email_unverified: 'E-Mail nicht verifiziert'
+    account_age: '%days% Tage auf der Commons'
+    evidence: '%approved% von %total% Einreichungen in diesem Land genehmigt'
+    scope_label: 'Angefragter Umfang'
+    about_label: 'Über'
+    osm_label: 'OpenStreetMap'
+    osm_unverified: 'nicht verifiziert'
+    osm_not_found: 'auf OSM nicht gefunden'
+    osm_changesets: '%count% Änderungssätze'
+    applicant_gone: 'Dieses Konto existiert nicht mehr.'
+    note_placeholder: 'Optionale Notiz an die bewerbende Person'
+    approve: 'Genehmigen'
+    decline: 'Ablehnen'
 route:
   error:
     note_too_long: 'Die Notiz ist länger als 2.000 Zeichen.'

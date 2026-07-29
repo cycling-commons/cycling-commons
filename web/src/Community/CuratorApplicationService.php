@@ -8,6 +8,10 @@ namespace App\Community;
 
 use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
+use App\Messaging\MessageService;
+use App\Messaging\UserMessageKind;
+use App\Service\AdminActionLogger;
+use App\Service\UserAdminService;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -21,6 +25,9 @@ final class CuratorApplicationService
         private readonly Connection $db,
         private readonly PublicNoteFilter $notes,
         private readonly OsmUserVerifier $osm,
+        private readonly UserAdminService $users,
+        private readonly AdminActionLogger $audit,
+        private readonly MessageService $messages,
     ) {
     }
 
@@ -75,6 +82,91 @@ final class CuratorApplicationService
         $this->em->flush();
 
         return $app;
+    }
+
+    /**
+     * Approval SCOPES rather than promotes: a Dutch applicant curates the
+     * Netherlands. Global curator stays something granted deliberately, not a
+     * side effect of a form (§9).
+     */
+    public function approve(CuratorApplication $app, User $actor, ?string $note): void
+    {
+        $applicant = $this->em->getRepository(User::class)->find($app->getUserId());
+        if (null === $applicant) {
+            throw new \DomainException('The applicant no longer exists.');
+        }
+
+        $this->users->grantCurator($applicant, $actor);
+
+        $this->db->insert('moderator_area', [
+            'user_id' => $app->getUserId(),
+            'region_id' => $app->getRequestedRegionId(),
+            'country_code' => null === $app->getRequestedRegionId() ? $app->getCountryCode() : null,
+            'created_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+        ]);
+
+        $app->decide(CuratorApplicationStatus::Approved, (int) $actor->getId(), $note);
+        $this->em->flush();
+
+        $this->audit->log($actor, 'curator_application.approve', $applicant, $note);
+        $this->notify($app, 'join.message.approved');
+        // sendSystem() persists WITHOUT flushing (its callers normally ride a
+        // decision transaction's flush-on-commit); nothing else flushes after
+        // it here, so this call is the one that actually writes the message.
+        $this->em->flush();
+    }
+
+    public function decline(CuratorApplication $app, User $actor, ?string $note): void
+    {
+        $applicant = $this->em->getRepository(User::class)->find($app->getUserId());
+
+        $app->decide(CuratorApplicationStatus::Declined, (int) $actor->getId(), $note);
+        $this->em->flush();
+
+        $this->audit->log($actor, 'curator_application.decline', $applicant, $note);
+        $this->notify($app, 'join.message.declined');
+        $this->em->flush();
+    }
+
+    /** @return list<CuratorApplication> */
+    public function pending(): array
+    {
+        return $this->em->getRepository(CuratorApplication::class)
+            ->findBy(['status' => CuratorApplicationStatus::Pending], ['createdAt' => 'ASC']);
+    }
+
+    /**
+     * Evidence read live rather than snapshotted (§8), so the reviewer always
+     * sees the applicant's current standing.
+     *
+     * @return array{total: int, approved: int}
+     */
+    public function evidenceFor(CuratorApplication $app): array
+    {
+        $row = $this->db->fetchAssociative(
+            "SELECT COUNT(*) AS total,
+                    COUNT(*) FILTER (WHERE status = 'approved') AS approved
+             FROM submission WHERE user_id = ? AND country_code = ?",
+            [$app->getUserId(), $app->getCountryCode()],
+        );
+
+        return ['total' => (int) ($row['total'] ?? 0), 'approved' => (int) ($row['approved'] ?? 0)];
+    }
+
+    private function notify(CuratorApplication $app, string $bodyKey): void
+    {
+        $this->messages->sendSystem(
+            $app->getUserId(),
+            UserMessageKind::CuratorMessage,
+            // 'curator_application' does not fit user_message.channel's
+            // varchar(12); this is the abbreviation that does.
+            'curator_app',
+            (int) $app->getId(),
+            $app->getCountryCode(),
+            $bodyKey,
+            ['%country%' => $app->getCountryCode()],
+            $app->getDecisionNote(),
+        );
     }
 
     private function countryIsOnboarded(string $cc): bool

@@ -525,6 +525,9 @@ join:
     note_length: 'That text is too long.'
     note_control: 'That text contains characters we cannot accept.'
     about_required: 'Tell us who you are and what ties you to this area before applying.'
+  message:
+    approved: 'Your application to curate %country% was approved. Welcome aboard.'
+    declined: 'Your application to curate %country% was not approved this time.'
 contributors:
   kicker: 'Contributors'
   title: 'Built by riders.'
@@ -1742,6 +1745,7 @@ admin:
     playbook_email: 'Email change'
     system: 'System'
     system_config: 'System configuration'
+    curator_applications: 'Curator applications'
   action:
     unlock: 'Unlock account'
     disarm_2fa: 'Disarm 2FA'
@@ -1838,6 +1842,23 @@ admin:
       moderation_retention_months:
         label: 'Retention of decided items (months)'
         help: 'How long decided corrections and submissions are kept before the cleanup sweep deletes them. The moderation decision itself is kept regardless.'
+  curator:
+    title: 'Curator applications'
+    empty: 'No pending applications.'
+    email_verified: 'Email verified'
+    email_unverified: 'Email not verified'
+    account_age: '%days% days on the Commons'
+    evidence: '%approved% of %total% submissions approved in this country'
+    scope_label: 'Requested scope'
+    about_label: 'About'
+    osm_label: 'OpenStreetMap'
+    osm_unverified: 'unverified'
+    osm_not_found: 'not found on OSM'
+    osm_changesets: '%count% changesets'
+    applicant_gone: 'This account no longer exists.'
+    note_placeholder: 'Optional note to the applicant'
+    approve: 'Approve'
+    decline: 'Decline'
 route:
   error:
     note_too_long: 'The note must be 2,000 characters or fewer.'

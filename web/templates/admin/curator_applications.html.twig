@@ -1,0 +1,79 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   Curator applications (2026-07-29-country-requests-and-curator-signup-design.md §9).
+   Purpose-built rather than an EasyAdmin CRUD: the reviewer needs a person,
+   their track record, their OSM standing and their words side by side to
+   make one judgement — not rows to sort and delete.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.curator.title'|trans }}{% endblock %}
+
+{% block main %}
+    <div class="col-lg-9">
+        {% if rows is empty %}
+            <p class="text-muted">{{ 'admin.curator.empty'|trans }}</p>
+        {% endif %}
+
+        {% for row in rows %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    {% if row.user %}
+                        <h5 class="card-title mb-1">{{ row.user.displayName }}</h5>
+                        <p class="text-muted small mb-2">{{ row.user.email }}</p>
+
+                        <p class="mb-1">
+                            {% if row.user.emailVerified %}
+                                <span class="badge bg-success">{{ 'admin.curator.email_verified'|trans }}</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ 'admin.curator.email_unverified'|trans }}</span>
+                            {% endif %}
+                            &middot;
+                            {{ 'admin.curator.account_age'|trans({'%days%': date().diff(row.user.createdAt).days}) }}
+                        </p>
+                    {% else %}
+                        <p class="text-danger mb-2">{{ 'admin.curator.applicant_gone'|trans }}</p>
+                    {% endif %}
+
+                    <p class="mb-1">{{ 'admin.curator.evidence'|trans({'%approved%': row.evidence.approved, '%total%': row.evidence.total}) }}</p>
+
+                    <p class="mb-1">
+                        {{ 'admin.curator.scope_label'|trans }}:
+                        {% if row.regionName %}
+                            {{ row.regionName }}
+                        {% else %}
+                            {{ 'join.scope_whole_country'|trans }}
+                        {% endif %}
+                        ({{ row.app.countryCode }})
+                    </p>
+
+                    {% if row.app.osmUsername %}
+                        <p class="mb-1">
+                            {{ 'admin.curator.osm_label'|trans }}: {{ row.app.osmUsername }} &mdash;
+                            {% if row.app.osmVerifiedAt is null %}
+                                {{ 'admin.curator.osm_unverified'|trans }}
+                            {% elseif row.app.osmExists %}
+                                {{ 'admin.curator.osm_changesets'|trans({'%count%': row.app.osmChangesetCount}) }}
+                            {% else %}
+                                {{ 'admin.curator.osm_not_found'|trans }}
+                            {% endif %}
+                        </p>
+                    {% endif %}
+
+                    <p class="mb-3">
+                        <strong>{{ 'admin.curator.about_label'|trans }}:</strong><br>
+                        <span style="white-space: pre-wrap">{{ row.app.about }}</span>
+                    </p>
+
+                    <form method="post" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+                        <input type="hidden" name="application" value="{{ row.app.id }}">
+                        <input type="text" name="note" maxlength="500" class="form-control form-control-sm" placeholder="{{ 'admin.curator.note_placeholder'|trans }}">
+                        <button name="decision" value="approve" class="btn btn-sm btn-success">{{ 'admin.curator.approve'|trans }}</button>
+                        <button name="decision" value="decline" class="btn btn-sm btn-outline-danger">{{ 'admin.curator.decline'|trans }}</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

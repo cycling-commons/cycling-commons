@@ -525,6 +525,9 @@ join:
     note_length: 'Ce texte est trop long.'
     note_control: 'Ce texte contient des caractères que nous ne pouvons pas accepter.'
     about_required: 'Dites-nous qui vous êtes et ce qui vous lie à cette région avant de candidater.'
+  message:
+    approved: 'Votre candidature pour curer %country% a été approuvée. Bienvenue.'
+    declined: 'Votre candidature pour curer %country% n’a pas été retenue cette fois-ci.'
 contributors:
   kicker: 'Contributeurs'
   title: 'Construit par des cyclistes.'
@@ -1738,6 +1741,7 @@ admin:
     playbook_email: 'Changement d’e-mail'
     system: 'Système'
     system_config: 'Configuration du système'
+    curator_applications: 'Candidatures de curateurs'
   action:
     unlock: 'Déverrouiller le compte'
     disarm_2fa: 'Désactiver la 2FA'
@@ -1834,6 +1838,23 @@ admin:
       moderation_retention_months:
         label: 'Conservation des éléments traités (mois)'
         help: 'Durée de conservation des corrections et contributions déjà traitées avant leur suppression par le nettoyage automatique. La décision de modération, elle, est conservée.'
+  curator:
+    title: 'Candidatures de curateurs'
+    empty: 'Aucune candidature en attente.'
+    email_verified: 'E-mail vérifié'
+    email_unverified: 'E-mail non vérifié'
+    account_age: '%days% jours sur la Commons'
+    evidence: '%approved% sur %total% contributions approuvées dans ce pays'
+    scope_label: 'Périmètre demandé'
+    about_label: 'À propos'
+    osm_label: 'OpenStreetMap'
+    osm_unverified: 'non vérifié'
+    osm_not_found: 'introuvable sur OSM'
+    osm_changesets: '%count% ensembles de modifications'
+    applicant_gone: 'Ce compte n’existe plus.'
+    note_placeholder: 'Note facultative pour le candidat'
+    approve: 'Approuver'
+    decline: 'Refuser'
 route:
   error:
     note_too_long: 'La note dépasse 2 000 caractères.'

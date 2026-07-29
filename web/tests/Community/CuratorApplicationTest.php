@@ -11,6 +11,9 @@ use App\Community\CuratorApplicationStatus;
 use App\Community\OsmUserVerifier;
 use App\Community\PublicNoteFilter;
 use App\Entity\User;
+use App\Messaging\MessageService;
+use App\Service\AdminActionLogger;
+use App\Service\UserAdminService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -56,9 +59,18 @@ final class CuratorApplicationTest extends KernelTestCase
      */
     private function serviceWithVerifier(OsmUserVerifier $osm): CuratorApplicationService
     {
-        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $c = self::getContainer();
+        $em = $c->get(EntityManagerInterface::class);
 
-        return new CuratorApplicationService($em, $em->getConnection(), new PublicNoteFilter(), $osm);
+        return new CuratorApplicationService(
+            $em,
+            $em->getConnection(),
+            new PublicNoteFilter(),
+            $osm,
+            $c->get(UserAdminService::class),
+            $c->get(AdminActionLogger::class),
+            $c->get(MessageService::class),
+        );
     }
 
     public function testSubmittingStoresACleanApplication(): void

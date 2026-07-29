@@ -525,6 +525,9 @@ join:
     note_length: 'Die tekst is te lang.'
     note_control: 'Die tekst bevat tekens die we niet kunnen accepteren.'
     about_required: 'Vertel ons wie je bent en wat je band is met dit gebied voordat je solliciteert.'
+  message:
+    approved: 'Je aanvraag om %country% te curateren is goedgekeurd. Welkom aan boord.'
+    declined: 'Je aanvraag om %country% te curateren is deze keer niet goedgekeurd.'
 contributors:
   kicker: 'Bijdragers'
   title: 'Gebouwd door fietsers.'
@@ -1738,6 +1741,7 @@ admin:
     playbook_email: 'E-mailwijziging'
     system: 'Systeem'
     system_config: 'Systeemconfiguratie'
+    curator_applications: 'Curatoraanvragen'
   action:
     unlock: 'Account ontgrendelen'
     disarm_2fa: '2FA uitschakelen'
@@ -1834,6 +1838,23 @@ admin:
       moderation_retention_months:
         label: 'Bewaartermijn afgehandelde items (maanden)'
         help: 'Hoe lang afgehandelde correcties en inzendingen bewaard blijven voordat de opruimronde ze verwijdert. Het moderatiebesluit zelf blijft hoe dan ook bewaard.'
+  curator:
+    title: 'Curatoraanvragen'
+    empty: 'Geen aanvragen in behandeling.'
+    email_verified: 'E-mail geverifieerd'
+    email_unverified: 'E-mail niet geverifieerd'
+    account_age: '%days% dagen op de Commons'
+    evidence: '%approved% van %total% inzendingen goedgekeurd in dit land'
+    scope_label: 'Gevraagd bereik'
+    about_label: 'Over'
+    osm_label: 'OpenStreetMap'
+    osm_unverified: 'niet geverifieerd'
+    osm_not_found: 'niet gevonden op OSM'
+    osm_changesets: '%count% wijzigingssets'
+    applicant_gone: 'Dit account bestaat niet meer.'
+    note_placeholder: 'Optionele notitie voor de aanvrager'
+    approve: 'Goedkeuren'
+    decline: 'Afwijzen'
 route:
   error:
     note_too_long: 'De notitie is langer dan 2.000 tekens.'
