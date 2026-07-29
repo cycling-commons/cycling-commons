@@ -50,6 +50,14 @@ final class PublicNoteFilterTest extends TestCase
         self::assertSame('local rider', $f->clean("local\u{200B} \u{202E}rider", PublicNoteFilter::MAX_NOTE));
     }
 
+    public function testStripsBidiIsolateCharacters(): void
+    {
+        $f = new PublicNoteFilter();
+        // U+2066 left-to-right isolate (LRI), U+2069 pop directional isolate (PDI):
+        // modern bidi controls used in Trojan-Source spoofing, must be stripped.
+        self::assertSame('local rider', $f->clean("local \u{2066}rider\u{2069}", PublicNoteFilter::MAX_NOTE));
+    }
+
     public function testNormalisesUnicodeAndCollapsesWhitespace(): void
     {
         $f = new PublicNoteFilter();
@@ -63,5 +71,29 @@ final class PublicNoteFilterTest extends TestCase
         $f = new PublicNoteFilter();
         $this->expectException(InvalidNoteException::class);
         $f->clean("bell\u{0007}here", PublicNoteFilter::MAX_NOTE);
+    }
+
+    public function testAllowsProseWithColons(): void
+    {
+        $f = new PublicNoteFilter();
+        // Prose like "Warning:sharp turn ahead" and "Note:this trail is closed"
+        // must not be rejected as links. The scheme pattern now requires either
+        // '://' or a known non-'//' scheme (mailto, tel, etc.) to avoid this.
+        self::assertSame('Warning:sharp turn ahead', $f->clean('Warning:sharp turn ahead', PublicNoteFilter::MAX_NOTE));
+        self::assertSame('Note:this trail is closed', $f->clean('Note:this trail is closed', PublicNoteFilter::MAX_NOTE));
+    }
+
+    public function testPinnedLinkFormsStillRejected(): void
+    {
+        $f = new PublicNoteFilter();
+        // Verify the four pinned link forms are still rejected after the regex fix.
+        foreach (['see https://spam.example', 'www.spam.example', 'spam.example/path', 'mailto:me@example.com'] as $bad) {
+            try {
+                $f->clean($bad, PublicNoteFilter::MAX_NOTE);
+                self::fail(sprintf('"%s" should have been rejected as a link', $bad));
+            } catch (InvalidNoteException $e) {
+                self::assertSame('link', $e->reason, sprintf('"%s" should be rejected with reason "link"', $bad));
+            }
+        }
     }
 }

@@ -26,16 +26,22 @@ final class PublicNoteFilter
 
     /**
      * Zero-width and bidirectional-override characters. Invisible on screen,
-     * so a reviewer cannot see what they are approving.
+     * so a reviewer cannot see what they are approving. Includes deprecated
+     * embedding/override controls (\x{202A}-\x{202E}) and modern isolate
+     * controls (\x{2066}-\x{2069}) to defeat Trojan-Source spoofing.
      */
-    private const string INVISIBLE = '/[\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{2064}\x{FEFF}]/u';
+    private const string INVISIBLE = '/[\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{2064}\x{2066}-\x{2069}\x{FEFF}]/u';
 
     /**
      * A link is the entire payload of most spam and nobody needs one to explain
      * why they know an area. Matches a scheme, a bare www., and a bare
      * domain.tld — the three forms that survive a reviewer's eye.
+     *
+     * The scheme form requires either '://' (http://, https://, ftp://…) or
+     * a known non-'//' scheme (mailto:, tel:, news:, urn:, data:) to avoid
+     * false-positives on prose like "Warning:sharp" or "Note:this".
      */
-    private const string LINKISH = '~(\b[a-z][a-z0-9+.-]*:(//)?[^\s]|\bwww\.|\b[a-z0-9-]+\.[a-z]{2,}(/|\b))~i';
+    private const string LINKISH = '~(\b[a-z][a-z0-9+.-]*://[^\s]|\b(mailto|tel|news|urn|data):[^\s]|\bwww\.|\b[a-z0-9-]+\.[a-z]{2,}(/|\b))~i';
 
     public function clean(string $raw, int $maxLength): string
     {
