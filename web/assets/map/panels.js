@@ -28,7 +28,7 @@ import { CATALOG, CATALOG_AZ, active, layerByKey, mode, setMode,
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
-import { curScope } from './scope-ui.js';
+import { curScope, inScope } from './scope-ui.js';
 
 // Bindings a later init reads, so they cannot stay `const` inside the init that
 // looks them up: `app` is assigned by initRailChrome(), the two facet <select>s
@@ -356,8 +356,26 @@ export function initChips(){
     const myAreaCcs = (s.myArea && s.myArea.countryCodes)
       || (window.CC_MY_AREA && window.CC_MY_AREA.countryCodes) || [];
     const cc = s.countryCode || (myAreaCcs.length === 1 ? myAreaCcs[0] : '');
-    const curated = CATALOG.reduce((n, l) => n + layerCounts(l).shown, 0);
-    if (curated > 0 || !cc) { row.hidden = true; return; }
+    // "Curated content exists" must be counted independently of the rider's
+    // CURRENT view mode (default is Everything) and must never count
+    // coverage/OSM-reference POIs — otherwise a country with only a stray
+    // hazard report or an unverified route upload (real content, but not
+    // curated) would silently suppress the invite, and the row would flip on
+    // and off as the rider merely toggles Curated/Everything. Mirrors
+    // featureVisible()'s curated-mode branch (render.js) rather than
+    // inventing a new rule: non-experiential layers (C/D/F/G/H, exp:false)
+    // show unconditionally even in Curated mode — "full coverage" utility
+    // data, per map.curated_hint — so they can never signal curation and are
+    // excluded here; only f.cur on an experiential layer (A/B/E/I/J) or a K
+    // best-of route counts, same as the rail would count `shown` if mode()
+    // were 'curated' (K's f.cur starts false — map.js — and flips once
+    // panels.js's own refreshBestOf() resolves, same eventual consistency
+    // the rest of the rail already has).
+    const curatedCount = CATALOG.reduce((n, l) => {
+      if (l.key !== 'experience' && !l.exp) return n;   // utility layers never count as curated
+      return n + l.features.filter(f => f.cur && inScope(f.rid)).length;
+    }, 0);
+    if (curatedCount > 0 || !cc) { row.hidden = true; return; }
     const a = row.querySelector('a');
     if (a) a.href = '/join/' + encodeURIComponent(cc);
     row.hidden = false;
