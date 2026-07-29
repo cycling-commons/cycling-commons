@@ -44,6 +44,10 @@ class CuratorApplication
     #[ORM\Column(name: 'osm_verified_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $osmVerifiedAt = null;
 
+    /** null = never checked or OSM was unreachable; true = found; false = checked and not found. */
+    #[ORM\Column(name: 'osm_exists', type: Types::BOOLEAN, nullable: true)]
+    private ?bool $osmExists = null;
+
     #[ORM\Column(name: 'osm_changeset_count', type: Types::INTEGER, nullable: true)]
     private ?int $osmChangesetCount = null;
 
@@ -115,6 +119,16 @@ class CuratorApplication
     public function setOsmVerifiedAt(?\DateTimeImmutable $t): void
     {
         $this->osmVerifiedAt = $t;
+    }
+
+    public function getOsmExists(): ?bool
+    {
+        return $this->osmExists;
+    }
+
+    public function setOsmExists(?bool $exists): void
+    {
+        $this->osmExists = $exists;
     }
 
     public function getOsmChangesetCount(): ?int

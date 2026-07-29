@@ -57,9 +57,18 @@ final class CuratorApplicationService
             $app->setOsmUsername(trim($osmUsername));
             $result = $this->osm->verify($osmUsername);
             if ($result->reachable) {
+                // We checked, at this time — regardless of whether the handle
+                // turned out to exist. A 404 is real evidence, not an absence
+                // of evidence, and must never render the same as "unchecked".
                 $app->setOsmVerifiedAt(new \DateTimeImmutable());
-                $app->setOsmChangesetCount($result->changesets);
+                $app->setOsmExists($result->exists);
+                if ($result->exists) {
+                    // A changeset count for a handle that doesn't exist is meaningless.
+                    $app->setOsmChangesetCount($result->changesets);
+                }
             }
+            // Unreachable: verifiedAt/exists/changesetCount all stay null —
+            // "OSM was down" must never be shown to a reviewer as "not found".
         }
 
         $this->em->persist($app);
