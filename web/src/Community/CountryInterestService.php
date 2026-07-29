@@ -42,7 +42,18 @@ final class CountryInterestService
             throw new \InvalidArgumentException(sprintf('"%s" is not a known country code.', $countryCode));
         }
 
-        $clean = '' === trim($note) ? null : $this->notes->clean($note, PublicNoteFilter::MAX_NOTE);
+        // Decide emptiness AFTER cleaning: PublicNoteFilter::clean() can reduce
+        // invisible-only strings (U+200B, etc.) to empty, which we must not treat
+        // as a legitimate note update. Only update note if cleaning produced non-empty.
+        $rawNote = trim($note);
+        $clean = null;
+        if ('' !== $rawNote) {
+            $clean = $this->notes->clean($note, PublicNoteFilter::MAX_NOTE);
+            // If cleaning reduced to empty, treat as no-change (keep existing note)
+            if ('' === $clean) {
+                $clean = null;
+            }
+        }
 
         $existing = $this->em->getRepository(CountryInterest::class)
             ->findOneBy(['userId' => (int) $user->getId(), 'countryCode' => $cc]);

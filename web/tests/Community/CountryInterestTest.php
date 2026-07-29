@@ -75,4 +75,25 @@ final class CountryInterestTest extends KernelTestCase
         $this->expectException(\InvalidArgumentException::class);
         $svc->record($this->user('bad-cc@example.test'), 'ZZ', false, '');
     }
+
+    public function testInvisibleCharactersInNoteDoNotEraseExistingNote(): void
+    {
+        self::bootKernel();
+        $svc = self::getContainer()->get(CountryInterestService::class);
+        $u = $this->user('invisible-test@example.test');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+
+        // Record with a real note
+        $svc->record($u, 'ES', false, 'legitimate note');
+
+        // Re-submit with only zero-width spaces (invisible characters that trim() does not strip)
+        $svc->record($u, 'ES', true, "\u{200B}\u{200B}");
+
+        // Verify the stored note is unchanged (not erased)
+        $row = $em->getConnection()
+            ->fetchAssociative('SELECT note FROM country_interest WHERE user_id = ? AND country_code = ?',
+                [$u->getId(), 'ES']);
+        self::assertSame('legitimate note', $row['note'],
+            'zero-width spaces should not erase a previously stored legitimate note');
+    }
 }
