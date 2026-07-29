@@ -279,18 +279,51 @@ reviewer is proportionate at this scale, and a captcha stops nobody who has
 already registered and verified an email address. Revisit only if evidence of
 real abuse appears.
 
-## 12. Open questions
+## 12. The two remaining questions, and the recommendation on each
 
-1. **Region generation depth per country.** Decision 8 settles that onboarding
-   auto-generates regions; decision 9 settles that depth varies. What decides
-   the depth for a given country — a per-country configuration, the source
-   dataset's own levels, or a default of level 2 + 4 with finer levels added on
-   demand? The USA (state → county) is the first case that forces an answer, and
-   it is out of scope here: this design only requires that **the level-2 country
-   region always exists**, because that is what makes §4 step 3 possible.
-2. **Interest visibility.** Are per-country interest counts public (motivating,
-   and shows momentum) or owner-only (no gaming, no embarrassing zeros)?
-   Recommendation: owner-only for v1; publishing is a one-line change later.
+Both are recorded as **recommendations pending the owner's confirmation**, not as
+settled decisions. Neither blocks the implementation of this design.
+
+### 12.1 Region generation depth per country
+
+Decision 8 settles that onboarding auto-generates regions; decision 9 settles
+that depth varies by country. What remains is what decides the depth.
+
+**Recommendation: onboard at levels 2 + 4 by default, and add finer levels only
+per country, on evidence.**
+
+- **Level 2 always**, because §4 step 3 depends on it: without the country
+  polygon there is nowhere to anchor a submission, and the whole evidence path
+  collapses for that country.
+- **Level 4 by default**, because it is what every onboarded country already
+  uses (BE 3, NL 12, DE 16) and it is the granularity the scope rail, the
+  cross-border chips and `ModeratorArea` are all tuned for.
+- **Level 6 and finer only when a country needs it**, driven by a per-country
+  setting in the onboarding playbook rather than by schema. The USA is the first
+  case: ~3,000 counties is a different order of magnitude from 16 Bundesländer,
+  and it lands on the coverage tiles, the chip ranking and the region-scoping
+  queries all at once. That deserves its own measured round, not a default that
+  quietly applies it everywhere.
+
+Depth therefore stays a property of the onboarding run, not of the model — which
+is exactly what §3 makes possible, since containment already resolves any mix of
+levels without a schema change.
+
+**Out of scope here.** This design needs only the guarantee that the level-2
+region exists.
+
+### 12.2 Interest visibility
+
+**Recommendation: owner-only for v1.**
+
+A public counter is motivating when the numbers are good and discouraging when
+they are not, and on a map with no data yet most numbers will be small. It also
+becomes a target: a visible ranking is worth gaming, and the whole point of the
+signal is that it is honest input to the owner's onboarding decision.
+
+Publishing it later is a one-line change once real numbers exist and the ones
+worth showing can be chosen. Going the other way — retracting a public number —
+is not.
 
 ## 13. Out of scope
 
