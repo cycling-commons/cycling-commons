@@ -8,8 +8,9 @@ This document owns the contribution intake and moderation machinery for catalog
 items: the `/improve` wizard, the `SubmissionDraft` validation boundary, the
 `submission` / `change_history` persistence contract, apply-on-approve
 semantics, the moderation surfaces and their gating, the user-messages feedback
-system (M1–M12), retention and Trash, moderator area scoping, and the utility
-confirmation loop. Sibling documents own the surrounding contracts:
+system (M1–M12), retention and Trash, moderator area scoping, the utility
+confirmation loop, and country-interest/curator-application signup. Sibling
+documents own the surrounding contracts:
 
 - [edit-items/README.md](edit-items/README.md) — per-type edit contracts, media
   & consent rules, the lifecycle/votability funnel, verification threshold (X).
@@ -510,7 +511,7 @@ corrections** (`resolved_at < cutoff`). Three runners, no scheduler yet:
    cache-throttled, never throws (a failed sweep must not break the desk).
 3. **`app:moderation:gc`** — idempotent standalone console/cron entry point.
 
-Deliberately **not** swept (open decisions, §12): rejected
+Deliberately **not** swept (open decisions, §13): rejected
 `recommended_route` rows, never-answered `needs_info` submissions, and
 approved rows.
 
@@ -619,7 +620,164 @@ panel hydrates async on drawer-open; water shows both tallies, other utilities
 a single confirm; anonymous viewers see the counts plus a "Log in to confirm"
 prompt (counts public, recording gated).
 
-## 11. Specified, pending implementation
+## 11. Curator applications — the two doors an empty map needs
+
+Every country is empty at launch, so `/join/{cc}`
+(`App\Controller\JoinCountryController`, `IS_AUTHENTICATED_FULLY`) is the one
+page both signals funnel through: "I want it here" and "I'd curate it". One
+route, two states, decided **server-side by whether the country already has
+any `region` rows** — never by the client-submitted form — because a country
+with no region has nowhere to anchor a submission and nothing to scope a
+curator to.
+
+The map rail's one-line invite (`#emptyScopeInvite`,
+`web/assets/map/panels.js`) links here with the country pre-filled whenever
+the active scope's curated count is zero. That count is a faithful reduction
+of `featureVisible()`'s curated branch (render.js): only features on
+experiential layers (`l.key === 'experience'` or `l.exp`) with `f.cur` set
+count; utility layers (C/D/F/G/H) never carry a `cur` flag and can neither
+suppress nor trigger the invite, so a stray hazard report or an unverified
+route upload never silently hides it. This holds independent of the rider's
+own Curated/Everything view toggle, and is computed once per map load.
+
+### 11.1 `CountryInterest` — the demand signal
+
+Entity `App\Community\Entity\CountryInterest`, table `country_interest`:
+
+| column | type | notes |
+|---|---|---|
+| `id` | bigint identity | |
+| `user_id` | bigint | no FK (house convention, §5.6) |
+| `country_code` | varchar(2) | ISO 3166-1 alpha-2 |
+| `willing_to_curate` | boolean, default false | the contact list for onboarding |
+| `note` | varchar(280), nullable | hardened per §11.3 |
+| `created_at` / `updated_at` | timestamp | |
+
+`UNIQUE (user_id, country_code)`. `CountryInterestService::record()` upserts:
+re-submitting for a country already on file updates `willing_to_curate`/`note`
+and bumps `updated_at` rather than creating a second row.
+
+### 11.2 `CuratorApplication` — the supply signal
+
+Entity `App\Community\Entity\CuratorApplication`, table `curator_application`:
+
+| column | type | notes |
+|---|---|---|
+| `id` | bigint identity | |
+| `user_id` | bigint | no FK |
+| `country_code` | varchar(2) | must already have `region` rows (`CuratorApplicationService::countryIsOnboarded()`) |
+| `requested_region_id` | bigint, nullable | null = whole country; set = one division, validated to belong to `country_code` |
+| `osm_username` | varchar(64), nullable | charset-checked before use (`OsmUserVerifier::isWellFormed()`) |
+| `osm_verified_at` | timestamp, nullable | set only when the OSM lookup was *reachable* — null means unchecked or unreachable, never "checked and empty" |
+| `osm_exists` | boolean, nullable — **tri-state** | null = never checked or OSM unreachable; true = handle found; false = checked and confirmed absent. Absence and unknown are deliberately two different values: collapsing them would let a fabricated handle render as verified on the review screen |
+| `osm_changeset_count` | int, nullable | set only when `osm_exists = true` — a count is meaningless for a handle that doesn't exist |
+| `about` | text | hardened per §11.3, cap 1200 chars |
+| `status` | varchar(12), enum `CuratorApplicationStatus` | `pending` / `approved` / `declined` / `withdrawn` (`withdrawn` has no UI path yet) |
+| `decided_by` / `decided_at` / `decision_note` | bigint / timestamp / text, nullable | mirrors `Submission`'s decision columns (§3.1) |
+| `created_at` | timestamp | |
+
+Partial unique index `uniq_curator_application_pending (user_id, country_code)
+WHERE status = 'pending'` is the concurrency guard for "one pending
+application per person per country" — `CuratorApplicationService::hasPending()`
+is the friendly pre-check (a clean error before a flush); the index is the
+invariant that holds under a race, since Doctrine's ORM mapping cannot express
+a partial index.
+
+**Evidence lives in the submission table, not on this row.**
+`CuratorApplicationService::evidenceFor()` counts the applicant's submissions
+by `user_id` + `country_code` **at review time** (`total`, `approved`
+`WHERE status = 'approved'`), so the review screen always reflects current
+standing — filing more submissions between applying and being reviewed changes
+what the reviewer sees. Nothing is copied or snapshotted onto
+`CuratorApplication` at submit.
+
+### 11.3 Free-text hardening — `PublicNoteFilter`
+
+Both `CountryInterest.note` (cap `PublicNoteFilter::MAX_NOTE` = 280) and
+`CuratorApplication.about` (cap `MAX_ABOUT` = 1200) pass through
+`App\Community\PublicNoteFilter::clean()` before storage. Neither field is
+ever rendered on a public page — reviewer-only, escaped on render.
+`clean()`, in order:
+
+1. Unicode-normalises (NFC) so composed/decomposed duplicates cannot evade
+   uniqueness.
+2. Strips zero-width and bidirectional-override characters — the legacy
+   embedding/override block (`\x{202A}`–`\x{202E}`) and the modern isolate
+   controls (`\x{2066}`–`\x{2069}`), closing the Trojan-Source spoofing class.
+3. Collapses whitespace runs and trims.
+4. Rejects (`InvalidNoteException`) any remaining control character.
+5. Rejects links: `scheme://…`, `mailto:` only when followed by an
+   `@`-payload, `tel:` only when followed by `+`/digits, bare `www.`, and bare
+   `domain.tld` — narrow enough that ordinary prose like "News:local closed"
+   or "word:word" survives, because the pattern requires the shape of an
+   actual link, not just a colon.
+6. Rejects a length overflow **after** cleaning, not before — so a note that
+   was invisible characters only is correctly judged empty/too-short by what
+   survives, not by its raw length.
+
+### 11.4 Review surface — `/admin/curator-applications`
+
+A purpose-built `#[AdminRoute]` page
+(`Admin\DashboardController::curatorApplications()`,
+`admin/curator_applications.html.twig`), `ROLE_ADMIN`, following the
+system-configuration.md precedent rather than an EasyAdmin CRUD: the reviewer
+needs a person, their track record, their OSM standing and their words side by
+side for one judgement, not sortable rows.
+
+Per pending application: display name/email, email-verified badge, account
+age, the evidence counts (§11.2), the requested scope (region name or "whole
+country"), the OSM line (unverified / `<n> changesets` when found / "not found
+on OSM" when `osm_exists === false` — the tri-state rendered faithfully, so a
+fabricated handle never shows as verified), and the `about` text (escaped).
+One decision form per row: `approve` or `decline`, an optional note, CSRF
+token id `curator-applications` (session-backed — [security-architecture.md](security-architecture.md)
+§5.3).
+
+### 11.5 Approve/decline lifecycle
+
+`CuratorApplicationService::approve()`/`decline()` are the only write paths,
+each gated by an `assertPending()` guard — a `\DomainException` on an
+already-decided application. The same check runs twice: the service enforces
+it regardless of caller, and the controller checks status before dispatching
+too, so a stale second tab or a double-submit flashes
+`admin.curator.already_decided` rather than reprocessing.
+
+`approve()` is **one transaction, all or nothing**
+(`EntityManagerInterface::wrapInTransaction()`):
+
+1. `UserAdminService::grantCurator()` — adds `ROLE_CURATOR`, and writes its
+   own `grant_curator` audit row. Double audit granularity is intended: the
+   role grant and the application decision are two separately meaningful
+   audit facts, not one collapsed into the other.
+2. A `ModeratorArea` is persisted via the ORM (not raw SQL), scoped to
+   `requested_region_id` when set, or to `country_code` when the request was
+   for the whole country — matching `ModeratorArea`'s CHECK constraint of
+   exactly one of the two (§9.1). Flushed **inside** the still-open
+   transaction, not deferred to commit, so a `uniq_moderator_area` collision —
+   a second approval racing this one — rolls back the role grant with it,
+   rather than leaving the applicant holding `ROLE_CURATOR` with the
+   application stuck `pending` forever.
+3. The application flips to `approved`, stamping `decided_by`/`decided_at`/
+   `decision_note`.
+4. An `AdminActionLogger` row (`curator_application.approve`).
+5. A `join.message.approved` system message.
+
+`decline()` is transactional over steps 3–5 only (no role/area writes):
+status flip, an `AdminActionLogger` row (`curator_application.decline`), and a
+`join.message.declined` message.
+
+Both messages go through `MessageService::sendSystem()` inside the
+transaction — the house pattern also used by `ModerationService::decide()`
+(§7.2) — on **channel `curator_app`**: the natural `curator_application` name
+overflows `user_message.channel`'s `varchar(12)`, so the abbreviated form is
+the value actually stored.
+
+**Approval scopes rather than promotes**: a Dutch applicant's `ModeratorArea`
+is the Netherlands, never global curator. Granting stays admin-only
+([account-and-auth.md](account-and-auth.md) §6.1), designed to extend to
+trusted moderators later, not built.
+
+## 12. Specified, pending implementation
 
 - **M7 email delivery + M8 phase-2 scheduler** (§7.8, §8) — one
   messenger/scheduler investment for both.
@@ -634,7 +792,7 @@ prompt (counts public, recording gated).
   designated machinery; the coverage-side trigger is not yet built
   ([coverage-provider.md](coverage-provider.md)).
 
-## 12. Open questions
+## 13. Open questions
 
 - **Confirmations vs the verification threshold (X):** whether
   `item_confirmation` tallies are the counter feeding the

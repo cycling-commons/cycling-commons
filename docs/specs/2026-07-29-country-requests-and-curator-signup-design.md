@@ -2,6 +2,9 @@
 
 # Country requests and curator signup — design
 
+> Consolidated into moderation-and-contribution.md, account-and-auth.md and
+> security-architecture.md (2026-07-29).
+
 **Status:** design, pending implementation · **Owner decisions:** 2026-07-29
 · **Audience:** contributors to Cycling Commons
 

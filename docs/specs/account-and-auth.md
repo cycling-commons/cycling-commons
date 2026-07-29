@@ -297,6 +297,15 @@ re-validates the token — defence in depth). Enforced by
 `moderator_areas`: a genuine intermediate form page, GET (render) + POST
 (submit, same CSRF token).
 
+**A second door onto the same grant path.** Curator applications
+([moderation-and-contribution.md](moderation-and-contribution.md) §11) let a
+rider apply to curate a country instead of an admin picking one from the User
+CRUD. Approving one calls this exact `UserAdminService::grantCurator()` — same
+method, same `grant_curator` audit row — and, in the same transaction, also
+creates the requested `ModeratorArea`. No new authority model: granting
+`ROLE_CURATOR` stays admin-only either way, and the application flow is scope
+selection glued onto the existing grant, not a parallel one.
+
 ### 6.2 Audit trail — `AdminActionLog`
 
 `App\Entity\AdminActionLog` (table `admin_action_log`): `actor` (nullable

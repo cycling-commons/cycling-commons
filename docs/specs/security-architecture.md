@@ -34,6 +34,14 @@ deliberately rendered from catalogs (security-architecture.md §3), and an
 enforced CSP so a payload that slips past both still does not execute
 (security-architecture.md §2).
 
+A third, narrower class: two reviewer-only free-text fields — the
+country-interest note and the curator-application "about" text — accept prose
+from any authenticated stranger. Neither is ever rendered on a public page, so
+their hardening (Unicode normalisation, invisible/bidi-control stripping, link
+rejection, length caps) lives with the contract that owns them
+([moderation-and-contribution.md](moderation-and-contribution.md) §11.3)
+rather than being restated here.
+
 ## 2. Content-Security-Policy contract
 
 ### 2.1 Delivery
@@ -277,7 +285,25 @@ Instances:
 *except* that it is not listed in `stateless_token_ids`, so its tokens are
 session-backed (see Open questions).
 
-### 5.2 Other token ids (session-backed, form/desk flows)
+### 5.2 Stateless CSRF outside the JSON pattern
+
+Two token ids are stateless without being an instance of §5.1's pattern — they
+guard ordinary HTML form POSTs (redirect-after-POST, flash messages), not a
+JSON API, so they skip elements 3 and 6 of that pattern (no token-over-GET
+snapshot, no JSON error body) while keeping the double-submit check
+session-free:
+
+| Token id | Controller | Endpoint | Domain doc |
+|---|---|---|---|
+| `country-interest` | `App\Controller\JoinCountryController` | `POST /join/{cc}` (country not yet onboarded) | [moderation-and-contribution.md](moderation-and-contribution.md) §11 |
+| `curator-application` | `App\Controller\JoinCountryController` | `POST /join/{cc}` (country onboarded) | [moderation-and-contribution.md](moderation-and-contribution.md) §11 |
+
+One route picks between the two ids **from server-known state alone** — whether
+the country has any `region` rows — never from the client-submitted form, so a
+crafted POST cannot select the other branch's token/limiter/service by lying
+about which form it is.
+
+### 5.3 Other token ids (session-backed, form/desk flows)
 
 These ids are validated with `isCsrfTokenValid()` in their controllers and
 use the session-backed default. Contracts live with their owners:
@@ -285,6 +311,7 @@ use the session-backed default. Contracts live with their owners:
 | Token id | Flow | Owner doc |
 |---|---|---|
 | `moderate-trash`, `message-reply`, `moderate-message` | Moderation trash + messaging | [moderation-and-contribution.md](moderation-and-contribution.md) |
+| `curator-applications` (`DashboardController::CURATOR_APPS_CSRF_TOKEN_ID`) | Curator-application approve/decline | [moderation-and-contribution.md](moderation-and-contribution.md) §11 |
 | `route_edit`, `route-suggestion`, `route-trash` | Curator route desk | [route-domain.md](route-domain.md) |
 | `delete_request`, `delete_confirm` | Account deletion | [account-and-auth.md](account-and-auth.md) |
 | `ea-user-support` (`UserCrudController::CSRF_TOKEN_ID`) | Admin support actions | [account-and-auth.md](account-and-auth.md) |
@@ -315,9 +342,12 @@ except `coverage_read`, the anonymous read plane, which is keyed **per IP**
 | `route_suggest` | sliding_window | 5 / 1 day | `user-<id>` | Route correction channel — `App\Community\RouteCommunityService::recordSuggestion()`; the suggest channel is the flood vector (each pending row is a curator task); vote/rode-it are self-bounded by UNIQUE constraints instead | `429 {"error":"rate_limited"}` (`RouteCommunityController::suggest`) |
 | `ride_check` | sliding_window | 20 / 1 day | `user-<id>` | GPX ride-check compute — `App\Controller\RideCheckController::check()`; read-only (parse + two PostGIS corridor queries, nothing persisted), hence more generous than intake | `429` JSON with translated `contribute.error.rate_limited` |
 | `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints — the app's first anonymous-read limiter, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | `429 JSON {"error":"rate_limited"}` (`CoverageController::rateLimited()`) |
+| `country_interest` | sliding_window | 10 / 1 day | `user-<id>` | Country-interest submissions — `App\Controller\JoinCountryController::index()`, country not yet onboarded ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form (`JoinCountryController`) |
+| `curator_application` | sliding_window | 3 / 1 day | `user-<id>` | Curator-application submissions — same controller, country onboarded; the tighter of the two, since an application is a task for a human reviewer, not just a counter ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form |
 
-Storage note: `route_propose`, `route_suggest` and `ride_check` use dedicated
-cache pools (`cache.<name>_limiter`, filesystem adapter) that `when@test`
+Storage note: `route_propose`, `route_suggest`, `ride_check`,
+`country_interest` and `curator_application` each use their own dedicated
+cache pool (`cache.<name>_limiter`, filesystem adapter) that `when@test`
 swaps to the array adapter — the default filesystem pool persists across
 phpunit runs while DAMA reuses user ids, which would leak limiter counters
 between runs and flake tests. A new per-user limiter should copy this
