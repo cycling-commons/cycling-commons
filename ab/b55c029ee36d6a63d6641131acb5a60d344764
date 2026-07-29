@@ -1,0 +1,38 @@
+docs/specs/2026-07-29-country-requests-and-curator-signup-design.md
+  s_7ed0626bd6d35d::t_238eab799a3ab2 5-7
+docs/specs/account-and-auth.md
+  s_7ed0626bd6d35d::t_79b79d22327112 300-307
+  s_7ed0626bd6d35d::t_fe0dafc43dd289 308
+docs/specs/security-architecture.md
+  s_7ed0626bd6d35d::t_9c82e7606d0f2c 345-346
+  s_7ed0626bd6d35d::t_474a85e24fa56d 288-306
+  s_7ed0626bd6d35d::t_55f48cbbb3b06a 314
+  s_7ed0626bd6d35d::t_0cb86494552612 37-44
+  s_7ed0626bd6d35d::t_a7a30133527b01 348-350
+docs/specs/moderation-and-contribution.md
+  s_7ed0626bd6d35d::t_7df114572db29c 11-13
+  s_7ed0626bd6d35d::t_5356ff0e4726fc 514
+  s_7ed0626bd6d35d::t_8483f5486f2085 623-780
+  s_7ed0626bd6d35d::t_b115e81e27b1fe 795
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "abb55c029ee36d6a63d6641131acb5a60d344764",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7ed0626bd6d35d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "391f6353-1129-40b7-8f31-751a1e45178a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
