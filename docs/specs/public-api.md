@@ -121,6 +121,7 @@ contract.
 | GET | `/v1/items/{id}` (`?hydrate=osm`) | single-item detail: our enrichment, provenance, verification state |
 | GET | `/v1/coverage/counts?bbox=` | per-letter counts for chips and summaries |
 | GET | `/v1/regions` · `/v1/regions/{id}` | coverage polygons + stats (the REST twin of the `coverage_region` tile layer) |
+| GET | `/v1/regions/{id}/best` | the curated best-of for a region — the public face of the rankings domain ([route-domain.md](route-domain.md)); response composition is an open decision (§9) |
 | GET | `/v1/routes?bbox=` · `/v1/routes/{id}` · `/v1/routes/{id}.gpx` | the K route domain + GPX download |
 | POST | `/v1/contributions` **(phase-2, §8)** | write path → the existing submission / moderation loop |
 
@@ -255,6 +256,10 @@ Both must not weaken moderation; the choice is deferred (§9).
   REST/GeoJSON-only until a later version.
 - **Key/URL scheme for tiles** (§3): key path segment vs. signed URL, and the
   referer-allowlist policy.
+- **Best-of response composition** (§2.2): what `/v1/regions/{id}/best`
+  returns (routes only, or routes + top-voted items per letter) and how it
+  relates to the in-app rankings pages. The endpoint itself is committed — it
+  is advertised on `/developers` (aligned 2026-07-30).
 - Pricing numbers, billable-unit definition, and bulk-export reconciliation are
   **inherited from [api-strategy.md §10](api-strategy.md)** and not reopened
   here.
