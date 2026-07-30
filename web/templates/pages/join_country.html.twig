@@ -3,7 +3,10 @@
 {% block head_styles %}
 <style>
   .field{margin-bottom:1.3rem}
-  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  /* Decorative required marker — the input's `required` attribute is what
+     assistive tech announces, so the star is aria-hidden. */
+  .field label .req{color:var(--trail);font-size:.95em;margin-left:.1rem}
   .field input[type=text],.field input:not([type]),.field textarea{width:100%;background:transparent;border:1.5px solid rgba(20,22,14,.25);border-radius:6px;font-family:var(--sans);font-size:1rem;padding:.55rem .7rem;outline:none;color:var(--ink)}
   .field textarea{min-height:100px;resize:vertical}
   .field select{width:100%;max-width:22rem;padding:.5rem .6rem}
@@ -59,7 +62,7 @@
         <input id="social" name="social" maxlength="255" inputmode="url">
       </div>
       <div class="field">
-        <label for="about">{{ 'join.about_label'|trans }}</label>
+        <label for="about">{{ 'join.about_label'|trans }} <span class="req" aria-hidden="true">*</span></label>
         <textarea id="about" name="about" maxlength="1200" required></textarea>
       </div>
       <p class="hint">{{ 'join.evidence_hint'|trans }}
