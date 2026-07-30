@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Catalog\CoverageStatsProvider;
 use App\Catalog\RegionDirectoryProvider;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\Connection;
@@ -103,12 +104,15 @@ final class PageController extends AbstractController
     }
 
     #[Route('/coverage', name: 'coverage')]
-    public function coverage(): Response
+    public function coverage(Request $request, CoverageStatsProvider $stats): Response
     {
         return $this->render('pages/coverage.html.twig', [
             'page_title' => 'meta.coverage_title',
             'page_description' => 'meta.coverage_description',
             'nav_active' => 'coverage',
+            'kpis' => $stats->kpis(),
+            'countries' => $stats->countries($request->getLocale()),
+            'thinnest' => $stats->thinnestCategories(),
         ]);
     }
 

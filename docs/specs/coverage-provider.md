@@ -749,6 +749,22 @@ interim clause retires):
   retired atlas demo and the canonical seeds (climbs, routes, surface, PIVOT);
   the coverage path never touches Overpass again.
 
+## 9.1 The public /coverage page (2026-07-30)
+
+The marketing-era `/coverage` page (hardcoded demo KPIs and an invented
+per-country percentage table) was replaced by a DB-driven page:
+`App\Catalog\CoverageStatsProvider` (raw DBAL, no cache — the
+RegionDirectoryProvider posture) serves live KPIs (POI/item/route/country
+COUNTs), a per-country volume table (operational countries only, same
+L2-exclusion predicate as the region pages, bar scaled to the largest
+country's POI base), and "biggest gaps" cards computed as the three catalog
+categories with the fewest publicly-served items. Because `coverage_poi` is
+pipeline-owned DDL (§2) and absent on a fresh contributor stack, every read
+of it in the provider is guarded by `to_regclass()` and degrades to zero
+rather than failing the page. Coverage *percentages* are deliberately gone:
+there is no honest denominator for "how complete is a country", so the page
+shows real volumes instead.
+
 ## 10. Relationship to other documents
 
 - [osm-data-architecture.md](osm-data-architecture.md) owns the policy this
