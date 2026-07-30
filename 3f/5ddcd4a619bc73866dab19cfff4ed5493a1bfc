@@ -1,0 +1,105 @@
+web/tests/Catalog/CoverageContractTest.php
+  s_190feadae0fef2::t_801e39c24de846 44-47,49
+web/assets/map/catalog-load.js
+  s_190feadae0fef2::t_f7370c7036646c 42
+web/tests/Catalog/ItemTypeTest.php
+  s_190feadae0fef2::t_75dea2549fed13 19,21-24,27,31-32,39
+web/src/Catalog/ItemType.php
+  s_190feadae0fef2::t_eb71046c9bd6fe 212
+  s_190feadae0fef2::t_e559f3235130b2 163
+  s_190feadae0fef2::t_3ea3d5ef3fbd2c 110
+  s_190feadae0fef2::t_832ddfbdef6675 91
+  s_190feadae0fef2::t_3b605f022bca5a 144
+  s_190feadae0fef2::t_67ee162b17c28d 20-23
+  s_190feadae0fef2::t_3df6140a82b69d 41
+web/templates/contribute/index.html.twig
+  s_190feadae0fef2::t_9522a8cc4905ba 62-68
+web/assets/map/osm-pools.js
+  s_190feadae0fef2::t_93ca268c9733df 139-140
+web/translations/messages.en.yaml
+  s_d30835e3caae18::t_2eb710697de243 392-393
+  s_d30835e3caae18::t_2a3d8e9578a6d8 308-357
+  s_d30835e3caae18::t_33028bd133d24b 33
+  s_190feadae0fef2::t_7182c5fc2095ae 1157
+  s_190feadae0fef2::t_e20af627ff4a84 2012-2014
+  s_190feadae0fef2::t_7c44306b16495c 2155-2158
+  s_d30835e3caae18::t_ea8b1ef7dde92c 1710-1711
+  s_190feadae0fef2::t_fcaf473b49ba28 1099-1101
+web/translations/messages.fr.yaml
+  s_d30835e3caae18::t_10772ae1e8861c 1706-1707
+  s_190feadae0fef2::t_e996fdcb01a2fa 1387-1389
+  s_190feadae0fef2::t_2d4f64b9c3b428 2151-2154
+  s_d30835e3caae18::t_b9454945fe4560 392-393
+  s_190feadae0fef2::t_a9361d23719f1d 1445
+  s_d30835e3caae18::t_16a58e35a244a1 33
+  s_d30835e3caae18::t_ea2e8c8086046f 308-357
+  s_190feadae0fef2::t_81bf3d6ae1df54 2008-2010
+web/src/Catalog/CatalogProvider.php
+  s_190feadae0fef2::t_809cc33539c24e 59-61
+pipeline/contract/coverage-contract.json
+  s_190feadae0fef2::t_95c590b89bfe68 80-85
+pipeline/coverage/contract.py
+  s_190feadae0fef2::t_b6a9682d4c883d 20
+web/src/Coverage/CoverageRepository.php
+  s_190feadae0fef2::t_d6a61f4a7cac17 321
+  s_190feadae0fef2::t_bca842c89da33f 60
+docs/specs/edit-items/README.md
+  s_190feadae0fef2::t_0806eba5a281b1 26
+  s_190feadae0fef2::t_e08578755a5a49 256,258-259
+web/translations/messages.de.yaml
+  s_d30835e3caae18::t_895c4afa49e536 1706-1707
+  s_190feadae0fef2::t_a29d069fb2ac20 1387-1389
+  s_d30835e3caae18::t_dded45a1567c67 308-357
+  s_d30835e3caae18::t_1dcb053180207d 392-393
+  s_d30835e3caae18::t_d67f46aa61ee06 33
+  s_190feadae0fef2::t_806c2d3a0fd09f 2151-2154
+  s_190feadae0fef2::t_e5a0a263113692 1445
+  s_190feadae0fef2::t_6384e3e2b1d347 2008-2010
+web/translations/messages.nl.yaml
+  s_190feadae0fef2::t_3224f3eef820d8 1387-1389
+  s_d30835e3caae18::t_d767021bb4470a 33
+  s_d30835e3caae18::t_1889da8c5574aa 392-393
+  s_190feadae0fef2::t_88069b00420cc3 1445
+  s_d30835e3caae18::t_91e0acb24d9128 1706-1707
+  s_190feadae0fef2::t_9799fad8af693d 2008-2010
+  s_190feadae0fef2::t_91912b623c70f4 2151-2154
+  s_d30835e3caae18::t_cddef92bd96369 308-357
+docs/specs/edit-items/M-public-toilets.md
+  s_190feadae0fef2::t_59c5c966c99f68 1-66
+web/src/Catalog/CatalogFormRegistry.php
+  s_190feadae0fef2::t_7b20a8378d0b44 92-107
+web/src/Controller/MapController.php
+  s_190feadae0fef2::t_5b47cedf0f88cd 142
+web/assets/map/catalog.js
+  s_190feadae0fef2::t_149aa5878d481a 100-101
+  s_190feadae0fef2::t_e25ba0d557e7c0 26-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "3f5ddcd4a619bc73866dab19cfff4ed5493a1bfc",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_190feadae0fef2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed6e4b7c-6e75-4531-a2b6-ac04eb20119f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d30835e3caae18": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2c176ff-abbd-40dd-b890-59ba0f5b9bd6",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
