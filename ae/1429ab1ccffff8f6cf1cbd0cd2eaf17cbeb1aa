@@ -1,0 +1,30 @@
+web/templates/emails/account_deletion.html.twig
+  s_bda768b13cee07::t_b9cc82946a7e7f 2-18
+web/templates/emails/_base.html.twig
+  s_bda768b13cee07::t_57a17d15cdc4f6 1-38
+web/templates/registration/confirmation_email.html.twig
+  s_bda768b13cee07::t_32213cb36bd2a4 2-5,7-8,12,14-23,25,30,34,36
+web/templates/emails/reset_password.html.twig
+  s_bda768b13cee07::t_fe2bf70819ca71 2-5,7-8,12,14-23,25,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "ae1429ab1ccffff8f6cf1cbd0cd2eaf17cbeb1aa",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bda768b13cee07": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc3484d5-25c1-442a-9655-b30ae7c5ba22",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
