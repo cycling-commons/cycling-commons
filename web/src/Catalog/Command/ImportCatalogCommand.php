@@ -47,11 +47,11 @@ final class ImportCatalogCommand extends Command
     private const array CONSUMED_KEYS = ['n', 'name', 'prov', 'source', 'ref'];
 
     /**
-     * Same-country regions overlapping by more than this fraction of the smaller
-     * one's area are rejected as a bad import (mismatched operating levels or
-     * duplicated geometry); at or below it the overlap is a digitization sliver
-     * between adjacent OSM/Overture admin boundaries and is tolerated
-     * (see assertRegionsTessellate).
+     * Same-country, same-level regions overlapping by more than this fraction
+     * of the smaller one's area are rejected as a bad import (mismatched
+     * operating levels or duplicated geometry); at or below it the overlap is
+     * a digitization sliver between adjacent OSM/Overture admin boundaries and
+     * is tolerated (see assertRegionsTessellate).
      */
     private const float REGION_OVERLAP_TOLERANCE = 0.001;
 
@@ -192,10 +192,20 @@ final class ImportCatalogCommand extends Command
     }
 
     /**
-     * @throws \InvalidArgumentException when two same-country regions overlap
+     * @throws \InvalidArgumentException when two same-country, same-level regions overlap
      */
     private function assertRegionsTessellate(): void
     {
+        // The tessellation invariant is per (country, admin_level): same-level
+        // regions must tile a country without overlapping, but cross-level
+        // pairs are EXPECTED containment (e.g. a country's admin_level=2
+        // outline containing its admin_level=4 subdivisions under the 2+4
+        // playbook) — that ambiguity is resolved deterministically by
+        // recomputeMembership's smallest-area-wins, not rejected here
+        // (2026-07-30-dynamic-region-pages-design.md §4). IS NOT DISTINCT FROM
+        // keeps the guard live for legacy NULL-level rows, so two NULL-level
+        // regions in one country still may not overlap.
+        //
         // ST_Overlaps already excludes a shared border (a line, not an area) and
         // nested containment (that is ST_Contains — handled deterministically by
         // recomputeMembership's smallest-area-wins). The area-ratio gate on top
@@ -206,6 +216,7 @@ final class ImportCatalogCommand extends Command
             "SELECT a.slug AS a, b.slug AS b
                FROM region a JOIN region b ON a.id < b.id
               WHERE a.country_code = b.country_code AND a.country_code <> ''
+                AND a.admin_level IS NOT DISTINCT FROM b.admin_level
                 AND a.geom IS NOT NULL AND b.geom IS NOT NULL
                 AND ST_Overlaps(a.geom, b.geom)
                 AND ST_Area(ST_Intersection(a.geom, b.geom))
@@ -214,7 +225,7 @@ final class ImportCatalogCommand extends Command
             ['tol' => self::REGION_OVERLAP_TOLERANCE],
         );
         if (false !== $overlap) {
-            throw new \InvalidArgumentException(sprintf('Region overlap: "%s" and "%s" share more than a boundary sliver within the same country — operating-level regions must tessellate, not overlap (region-scoping-design.md §3).', $overlap['a'], $overlap['b']));
+            throw new \InvalidArgumentException(sprintf('Region overlap: "%s" and "%s" share more than a boundary sliver at the same admin level within one country — same-level regions must tessellate, not overlap (region-scoping-design.md §3; cross-level containment is expected, 2026-07-30-dynamic-region-pages-design.md §4).', $overlap['a'], $overlap['b']));
         }
     }
 

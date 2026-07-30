@@ -520,4 +520,33 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertSame([$id('adj-west')], $adj('adj-east'), 'east borders only west (symmetric)');
         self::assertSame([], $adj('adj-far'), 'the distant square borders nothing — empty array, not NULL');
     }
+
+    public function testL2CountryOutlineOverlappingItsL4ChildImports(): void
+    {
+        // The 2+4 playbook imports a country's level-2 outline ALONGSIDE its
+        // level-4 subdivisions. Overture's L2 and L4 polygons carry independent
+        // digitisation, so a coastal L4 child can stick a sliver outside its L2
+        // parent — ST_Overlaps TRUE with a near-total overlap area. Tessellation
+        // is a SAME-LEVEL invariant: cross-level pairs are expected containment,
+        // resolved by smallest-area-wins membership
+        // (2026-07-30-dynamic-region-pages-design.md §4).
+        $dir = sys_get_temp_dir().'/catalog-import-region-l2l4-'.getmypid();
+        @mkdir($dir, 0777, true);
+        $feature = static fn (string $slug, int $level, array $ring): string => json_encode([
+            'type' => 'Feature',
+            'properties' => ['slug' => $slug, 'name' => $slug, 'area_km2' => 100, 'country_code' => 'BE', 'admin_level' => $level],
+            'geometry' => ['type' => 'MultiPolygon', 'coordinates' => [[$ring]]],
+        ], \JSON_THROW_ON_ERROR);
+        // L2 parent [4,50]-[6,52]; L4 child mostly inside but poking 0.5° east
+        // past the parent edge — a MEANINGFUL cross-level overlap (~75% of the
+        // child), which the old whole-country guard would reject.
+        file_put_contents($dir.'/region-l2-parent.geojson', $feature('l2-parent', 2,
+            [[4.0, 50.0], [6.0, 50.0], [6.0, 52.0], [4.0, 52.0], [4.0, 50.0]]));
+        file_put_contents($dir.'/region-l4-child.geojson', $feature('l4-child', 4,
+            [[4.5, 50.5], [6.5, 50.5], [6.5, 51.5], [4.5, 51.5], [4.5, 50.5]]));
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+        self::assertNotNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'l2-parent']));
+        self::assertNotNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'l4-child']));
+    }
 }
