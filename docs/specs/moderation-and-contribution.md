@@ -689,7 +689,21 @@ by `user_id` + `country_code` **at review time** (`total`, `approved`
 `WHERE status = 'approved'`), so the review screen always reflects current
 standing — filing more submissions between applying and being reviewed changes
 what the reviewer sees. Nothing is copied or snapshotted onto
-`CuratorApplication` at submit.
+`CuratorApplication` at submit. The form's `join.evidence_hint` copy states
+this contract to the applicant plainly (reviewed on evidence; contribute
+before or after applying) rather than reading as a mid-form task.
+
+**Applicant-facing status (2026-07-30).** The profile dashboard's
+Contributions pane closes with a **Curator applications** section
+(`ProfileController`, [account-and-auth.md](account-and-auth.md) dashboard
+section): the user's own applications with status pills
+(pending/approved/declined/withdrawn), requested scope (region label or
+"whole country") and the reviewer's `decision_note`; when none exist, a door
+to the regions directory. Combined with the login target-path continuity
+([account-and-auth.md](account-and-auth.md) §2 — an anonymous `/join/{cc}`
+visit survives the register→verify→login detour), "where did my application
+go?" always has an answer: either the form was reached and the profile shows
+the row, or it never was and the profile shows the door.
 
 ### 11.3 Free-text hardening — `PublicNoteFilter`
 

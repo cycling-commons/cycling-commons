@@ -48,12 +48,15 @@ database — `ST_Point(:lng, :lat)`, longitude first — and asks:
 <!-- CODE-FROM web/src/Contribution/SpatialResolver.php -->
 ```sql
 SELECT id, country_code FROM region
- WHERE ST_Contains(geom, ST_SetSRID(ST_Point(:lng, :lat), 4326)) LIMIT 1
+ WHERE ST_Contains(geom, ST_SetSRID(ST_Point(:lng, :lat), 4326))
+ ORDER BY area_km2 ASC NULLS LAST, id ASC LIMIT 1
 ```
 
-Read literally: for every region polygon, does it contain this point? The `LIMIT 1` is a small
-assumption worth naming — it only makes sense because this project's regions do not overlap each
-other, so at most one row can ever say yes.
+Read literally: for every region polygon, does it contain this point — and of those that do, take
+the smallest. The `ORDER BY` earns its keep because more than one row *can* say yes: since the 2+4
+onboarding rollout, a country's whole-country outline sits in the same table as its subdivisions,
+so a point in Bavaria is inside both `bayern` and `germany`. Smallest-area-wins makes the
+subdivision take it deterministically — the same tie-break `RegionResolver` uses for routes.
 
 You have actually already seen this predicate at work, without a name attached to it. Chapter 3
 quoted `Service/BaseAreaResolver.php`, `BaseAreaResolver::resolve()` sorting its result by

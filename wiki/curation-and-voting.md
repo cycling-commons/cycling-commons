@@ -70,3 +70,6 @@ all. The Commons *ranks* data; it never *discards* it.
   hundreds. The curated target scales with the density of genuinely good options.
 - **Provenance without identity** (Manifesto §VIII): the Commons stores that a vote was cast and when,
   never a public record of who voted for what.
+- **You can always see your own.** Your profile lists the route votes you've cast and the places
+  you've confirmed (water potability, "still here?" checks) — a private view for your eyes only, so
+  "did I already back this?" never requires guessing.

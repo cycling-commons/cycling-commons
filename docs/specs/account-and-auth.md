@@ -100,6 +100,14 @@ dependency, no code copied.
 - A verification mail is sent (verify-email bundle, signed URLs — no stored
   token). `/verify/email` validates the signature and flags
   `emailVerified`/`emailVerifiedAt`, then redirects to login.
+- **Journey continuity (verified end-to-end 2026-07-30):** the firewall's
+  saved target path survives the whole register → verify → login detour in
+  one session, because registration and verification never touch it and
+  `LoginSuccessHandler` honours it after authentication. An anonymous visit
+  to a gated page (e.g. `/join/BE`,
+  [moderation-and-contribution.md](moderation-and-contribution.md) §11)
+  therefore lands back on that page after account creation — no re-navigation
+  needed.
 
 **Password reset** (`App\Controller\ResetPasswordController`, reset-password
 bundle with its own `ResetPasswordRequest` entity):
@@ -117,6 +125,13 @@ bundle with its own `ResetPasswordRequest` entity):
 
 **Mail:** `symfony/mailer`; Mailpit in the dev docker stack, prod SMTP via the
 `MAILER_DSN` env var. Sender identity is `noreply@cyclingcommons.org`.
+All transactional emails (verification, password reset, account-deletion
+code) extend one branded shell, `templates/emails/_base.html.twig`
+(2026-07-30): email-client-safe markup only — presentation tables + inline
+styles, paper backdrop, ink header band carrying the wide wordmark
+(`assets/brand/logo-email.png`, a PNG render of the nav SVG since mail
+clients strip SVG), orange action button. Copy lives in the extending
+templates; the shell owns layout and the footer.
 
 ## 3. Login throttling and account lockout
 
@@ -462,12 +477,19 @@ lives in the shell header.
   `curator_application` rows with status pills (pending/approved/declined/
   withdrawn), or — when none exist — a door to the regions directory, so
   "where is my request?" always has an answer on the post-login landing.
-  The **Votes** pane renders the user's own `route_vote` ballots (the only
-  surface that shows *what* was voted for, voter-only —
-  [route-domain.md](route-domain.md) §6) with an honest empty state; the
-  **Saved-regions** pane says plainly that saving is not built yet and links
-  the regions directory. The former preview sample data is gone (2026-07-30):
-  every dashboard pane renders real rows only.
+  The **Votes** pane renders both kinds of backing act the platform actually
+  persists — the user's own `route_vote` ballots (the only surface that shows
+  *what* was voted for, voter-only — [route-domain.md](route-domain.md) §6)
+  and their `item_confirmation` place confirmations with stance pills
+  (potable / not potable / still there —
+  [moderation-and-contribution.md](moderation-and-contribution.md) §1.6);
+  the `/vote` category ballots are receipt-only by design and so never appear
+  here. The **Saved-regions** pane says plainly that saving is not built yet
+  and links the regions directory. The former preview sample data is gone
+  (2026-07-30): every dashboard pane renders real rows only. Empty panes use
+  the shared `.empty-state` block (`account/_shell_styles.html.twig`):
+  centred message plus a bordered door link, with `.dbody`/`.dmin` holding a
+  46vh minimum so sparse account pages keep their vertical shape.
 
 ### Settings (`App\Controller\SettingsController`, `/settings`)
 

@@ -58,7 +58,15 @@ this is how you get the role.
 The application is short: who you are (a few sentences is enough), and
 optionally your OpenStreetMap username, since a lot of curation overlaps
 with judgment calls about map data. There's no quiz and no minimum edit
-count required to apply.
+count required to apply — though what you've already fixed or added on the
+map is exactly what a reviewer looks at, so contributing (before or after
+applying) is the strongest way to support your case.
+
+Applying needs an account. If you hit the application page signed out, the
+site walks you through creating one — including the email confirmation —
+and then brings you **back to the application** to finish it. Once
+submitted, the application and its status (pending, approved, declined)
+live on your profile, alongside any note the reviewer leaves.
 
 Approval scopes a curator to a place — a whole country, or one region within
 it, whichever you asked for. A curator reviews the queue of flagged and
