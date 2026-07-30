@@ -89,4 +89,23 @@ final class RegionsPagesTest extends WebTestCase
         $client->request('GET', '/fr/region');
         self::assertResponseRedirects('/fr/regions/wallonia', 301);
     }
+
+    public function testYourCountryBlockCarriesCountryDataAndNoscriptFallback(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/regions');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('#your-country')->count());
+        $json = $crawler->filter('#cc-countries')->text();
+        $data = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        self::assertNotEmpty($data);
+        $fr = array_values(array_filter($data, static fn (array $c): bool => 'FR' === $c['code']));
+        self::assertSame('France', $fr[0]['name'] ?? null);
+        // String check, not a crawler filter: HTML parsers may expose <noscript>
+        // children as raw text, which would false-fail a node assertion.
+        self::assertMatchesRegularExpression(
+            '#<noscript>.*href="[^"]*/join".*</noscript>#s',
+            (string) $client->getResponse()->getContent(),
+        );
+    }
 }

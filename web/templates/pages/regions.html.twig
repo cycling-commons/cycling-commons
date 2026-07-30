@@ -37,6 +37,14 @@
   .reg.tier-growing .tag{background:var(--trail);color:var(--ink)}
 
   .empty{color:#7a7d6c;font-size:.9rem;padding:2rem 0}
+
+  .yourc{margin-top:2.6rem;padding:1.6rem clamp(1.1rem,3vw,1.8rem);border:1px solid rgba(20,22,14,.14);border-radius:12px;background:var(--paper-deep)}
+  .yourc h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin-bottom:.5rem}
+  .yourc p{color:#4a4d40;font-size:.92rem;line-height:1.55;margin-bottom:1rem;max-width:60ch}
+  #cc-country-q{width:100%;box-sizing:border-box;padding:.6rem .8rem;font-size:1rem;border:1px solid rgba(20,22,14,.18);border-radius:8px;background:var(--paper);color:inherit}
+  #cc-country-hits a{display:flex;justify-content:space-between;padding:.45rem .7rem;border:1px solid rgba(20,22,14,.1);border-radius:8px;margin-top:.4rem;text-decoration:none;color:inherit}
+  #cc-country-hits a:hover{border-color:var(--spruce-lift)}
+  #cc-country-hits .cc{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
 </style>
 {% endblock %}
 {% block body %}
@@ -86,5 +94,40 @@
       </div>
     </div>
   {% endfor %}
+
+  <div id="your-country" class="yourc">
+    <h2>{% trans %}regions.your_country_h{% endtrans %}</h2>
+    <p>{% trans %}regions.your_country_p{% endtrans %}</p>
+    <input type="text" id="cc-country-q" autocomplete="off"
+           placeholder="{{ 'regions.your_country_placeholder'|trans|e('html_attr') }}"
+           aria-label="{{ 'regions.your_country_h'|trans|e('html_attr') }}">
+    <div id="cc-country-hits" role="listbox"></div>
+    <noscript><p><a href="{{ path('join') }}">{% trans %}regions.your_country_noscript{% endtrans %}</a></p></noscript>
+  </div>
+  <script type="application/json" id="cc-countries" nonce="{{ csp_nonce() }}">{{ all_countries|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 </div>
+{% endblock %}
+{% block body_scripts %}
+<script nonce="{{ csp_nonce() }}">
+  /* Country typeahead: filter the baked localized country list, link to /join/{cc}.
+     Keyboard: results are plain links — Tab/Enter work natively. */
+  document.addEventListener('DOMContentLoaded', () => {
+    const data = JSON.parse(document.getElementById('cc-countries').textContent);
+    const q = document.getElementById('cc-country-q');
+    const hits = document.getElementById('cc-country-hits');
+    // 'ZZ' satisfies the route's [A-Za-z]{2} requirement at generation time and
+    // is a user-assigned ISO code no real country will ever use; the replace
+    // targets only the final path segment.
+    const joinHref = {{ path('join_country', {cc: 'ZZ'})|json_encode|raw }};
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    q.addEventListener('input', () => {
+      const needle = q.value.trim().toLowerCase();
+      if (needle.length < 2) { hits.innerHTML = ''; return; }
+      const top = data.filter(c => c.name.toLowerCase().includes(needle)).slice(0, 8);
+      hits.innerHTML = top.map(c =>
+        `<a role="option" href="${joinHref.replace(/ZZ(?=[^/]*$)/, c.code)}">${esc(c.name)} <span class="cc">${esc(c.code)}</span></a>`
+      ).join('');
+    });
+  });
+</script>
 {% endblock %}

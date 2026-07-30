@@ -6,9 +6,11 @@ namespace App\Controller;
 
 use App\Catalog\RegionDirectoryProvider;
 use App\Routing\LocalePrefix;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Intl\Countries;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -47,13 +49,25 @@ final class PageController extends AbstractController
     }
 
     #[Route('/regions', name: 'regions')]
-    public function regions(Request $request, RegionDirectoryProvider $directory): Response
+    public function regions(Request $request, RegionDirectoryProvider $directory, Connection $db): Response
     {
+        $locale = $request->getLocale();
+        $codes = $db->fetchFirstColumn('SELECT iso2 FROM world_country ORDER BY iso2');
+        $allCountries = [];
+        foreach ($codes as $code) {
+            $allCountries[] = [
+                'code' => (string) $code,
+                'name' => Countries::exists((string) $code) ? Countries::getName((string) $code, $locale) : (string) $code,
+            ];
+        }
+        usort($allCountries, static fn (array $a, array $b): int => strcoll($a['name'], $b['name']));
+
         return $this->render('pages/regions.html.twig', [
             'page_title' => 'meta.regions_title',
             'page_description' => 'meta.regions_description',
             'nav_active' => 'regions',
             'countries' => $directory->directory($request->getLocale()),
+            'all_countries' => $allCountries,
         ]);
     }
 

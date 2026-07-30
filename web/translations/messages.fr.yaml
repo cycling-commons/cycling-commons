@@ -26,6 +26,7 @@ footer:
   governance: 'Gouvernance'
   github: 'GitHub'
   get_involved: 'Participer'
+  your_region: 'Votre région'
   all_pages: 'Toutes les pages'
   privacy: 'Confidentialité'
   terms: 'Conditions'
@@ -582,6 +583,10 @@ regions:
   items_many: '%n% éléments vérifiés'
   routes_one: '%n% itinéraire'
   routes_many: '%n% itinéraires'
+  your_country_h: 'Votre pays n''y est pas ?'
+  your_country_p: 'Le Commons grandit pays par pays. Dites-nous où vous roulez — ou devenez-en le curateur bénévole.'
+  your_country_placeholder: 'Saisissez votre pays…'
+  your_country_noscript: 'Voir toutes les façons de participer'
 continent:
   af: 'Afrique'
   an: 'Antarctique'

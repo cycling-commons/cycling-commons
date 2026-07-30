@@ -26,6 +26,7 @@ footer:
   governance: 'Bestuur'
   github: 'GitHub'
   get_involved: 'Doe mee'
+  your_region: 'Jouw regio'
   all_pages: 'Alle pagina''s'
   privacy: 'Privacy'
   terms: 'Voorwaarden'
@@ -582,6 +583,10 @@ regions:
   items_many: '%n% geverifieerde items'
   routes_one: '%n% route'
   routes_many: '%n% routes'
+  your_country_h: 'Staat jouw land er niet bij?'
+  your_country_p: 'De Commons groeit land voor land. Vertel ons waar je fietst — of word er vrijwillig curator.'
+  your_country_placeholder: 'Typ je land…'
+  your_country_noscript: 'Bekijk alle manieren om mee te doen'
 continent:
   af: 'Afrika'
   an: 'Antarctica'
