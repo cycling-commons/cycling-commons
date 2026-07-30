@@ -10,7 +10,7 @@ riders and the Commons safe.
 **Please report privately first — do not open a public issue for a security problem.**
 
 - **Email:** development@cyclingcommons.org
-- **GitHub:** use [private vulnerability reporting](https://github.com/cycling-commons/cycling-commons/security/advisories/new) (Security → Report a vulnerability), if enabled.
+- **GitHub:** use [private vulnerability reporting](https://github.com/cycling-commons/cycling-commons/security/advisories/new) (Security → Report a vulnerability).
 - **Languages:** English, Nederlands, Français.
 
 This mirrors the machine-readable contact in
