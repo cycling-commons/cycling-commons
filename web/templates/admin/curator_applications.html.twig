@@ -35,11 +35,26 @@
                         <p class="text-danger mb-2">{{ 'admin.curator.applicant_gone'|trans }}</p>
                     {% endif %}
 
+                    {% if row.standingRoles is not empty %}
+                        <p class="mb-1">
+                            <span class="badge bg-info text-dark">{{ 'admin.curator.standing_label'|trans }}</span>
+                            {% for role in row.standingRoles %}{{ ('admin.curator.role_' ~ role)|trans }}{% if not loop.last %}, {% endif %}{% endfor %}
+                            &middot;
+                            {% if row.standingAreas is empty %}
+                                {{ 'admin.curator.standing_global'|trans }}
+                            {% else %}
+                                {{ 'admin.curator.standing_scoped'|trans({'%areas%': row.standingAreas|join(', ')}) }}
+                            {% endif %}
+                        </p>
+                    {% endif %}
+
                     <p class="mb-1">{{ 'admin.curator.evidence'|trans({'%approved%': row.evidence.approved, '%total%': row.evidence.total}) }}</p>
 
                     <p class="mb-1">
                         {{ 'admin.curator.scope_label'|trans }}:
-                        {% if row.regionName %}
+                        {% if row.regionGone %}
+                            <span class="text-danger">{{ 'admin.curator.region_gone'|trans }}</span>
+                        {% elseif row.regionName %}
                             {{ row.regionName }}
                         {% else %}
                             {{ 'join.scope_whole_country'|trans }}
@@ -62,7 +77,10 @@
 
                     <p class="mb-3">
                         <strong>{{ 'admin.curator.about_label'|trans }}:</strong><br>
-                        <span style="white-space: pre-wrap">{{ row.app.about }}</span>
+                        {# No white-space:pre-wrap — PublicNoteFilter::clean() collapses all
+                           runs of whitespace (including newlines) to a single space before
+                           this is ever stored, so there is never a line break to preserve. #}
+                        <span>{{ row.app.about }}</span>
                     </p>
 
                     <form method="post" class="d-flex align-items-center gap-2">

@@ -7,10 +7,12 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Catalog\Entity\Region;
+use App\Community\CuratorApplicationException;
 use App\Community\CuratorApplicationService;
 use App\Community\CuratorApplicationStatus;
 use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
+use App\Moderation\Entity\ModeratorArea;
 use App\Service\AdminDashboardStats;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
@@ -44,7 +46,7 @@ final class DashboardController extends AbstractDashboardController
     /** CSRF token id for the system-config form (stateless, same-origin). */
     public const string SETTINGS_CSRF_TOKEN_ID = 'ea-system-config';
 
-    /** CSRF token id for the curator-applications decision form (stateless, same-origin). */
+    /** CSRF token id for the curator-applications decision form (session-backed, same-origin). */
     public const string CURATOR_APPS_CSRF_TOKEN_ID = 'curator-applications';
 
     public function __construct(private readonly AdminDashboardStats $stats)
@@ -241,10 +243,27 @@ final class DashboardController extends AbstractDashboardController
                 return $this->redirectToRoute('admin_curator_applications');
             }
 
-            if ('approve' === $decision) {
-                $applications->approve($app, $actor, $note);
-            } else {
-                $applications->decline($app, $actor, $note);
+            try {
+                if ('approve' === $decision) {
+                    $applications->approve($app, $actor, $note);
+                } else {
+                    $applications->decline($app, $actor, $note);
+                }
+            } catch (CuratorApplicationException $e) {
+                // Known reasons get a translated, four-locale flash; anything
+                // else falls back to the exception's own English text rather
+                // than a 500 — a stale-page re-decide is already handled by
+                // the Pending check above, so in practice this is the region-
+                // gone and already-global-curator guards from approve().
+                $key = match ($e->reason) {
+                    'region_gone' => 'admin.curator.approve_blocked_region_gone',
+                    'already_global_curator' => 'admin.curator.approve_blocked_already_global',
+                    'applicant_gone' => 'admin.curator.applicant_gone',
+                    default => null,
+                };
+                $this->addFlash('danger', null !== $key ? $translator->trans($key) : $e->getMessage());
+
+                return $this->redirectToRoute('admin_curator_applications');
             }
 
             return $this->redirectToRoute('admin_curator_applications');
@@ -252,15 +271,58 @@ final class DashboardController extends AbstractDashboardController
 
         $rows = [];
         foreach ($applications->pending() as $app) {
+            // requested_region_id carries no FK, so a region deleted after
+            // submission does not null the column out — it dangles. That
+            // must render as its own state, not fall through to "whole
+            // country" (which approve() would then also have to guard, see
+            // CuratorApplicationService::approve()).
             $regionName = null;
+            $regionGone = false;
             if (null !== $app->getRequestedRegionId()) {
-                $regionName = $em->getRepository(Region::class)->find($app->getRequestedRegionId())?->getName();
+                $region = $em->getRepository(Region::class)->find($app->getRequestedRegionId());
+                if (null === $region) {
+                    $regionGone = true;
+                } else {
+                    $regionName = $region->getName();
+                }
             }
+
+            $user = $em->getRepository(User::class)->find($app->getUserId());
+
+            // Existing standing (§9 follow-up): approving someone who already
+            // holds ROLE_CURATOR/ROLE_MODERATOR, or is already scoped
+            // somewhere, is worth a glance before deciding — approve() itself
+            // only hard-blocks the narrowing case (global curator, zero
+            // moderator_area rows), everything else is just shown.
+            // Slugs, not raw ROLE_* constants, so the template can trans()
+            // each one directly (admin.curator.role_curator / _moderator)
+            // instead of string-surgering a role constant at render time.
+            $standingRoles = [];
+            $standingAreas = [];
+            if (null !== $user) {
+                if (\in_array('ROLE_CURATOR', $user->getRoles(), true)) {
+                    $standingRoles[] = 'curator';
+                }
+                if (\in_array('ROLE_MODERATOR', $user->getRoles(), true)) {
+                    $standingRoles[] = 'moderator';
+                }
+                foreach ($em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $user->getId()]) as $area) {
+                    if (null !== $area->getRegionId()) {
+                        $standingAreas[] = $em->getRepository(Region::class)->find($area->getRegionId())?->getName() ?? sprintf('#%d', $area->getRegionId());
+                    } else {
+                        $standingAreas[] = (string) $area->getCountryCode();
+                    }
+                }
+            }
+
             $rows[] = [
                 'app' => $app,
-                'user' => $em->getRepository(User::class)->find($app->getUserId()),
+                'user' => $user,
                 'evidence' => $applications->evidenceFor($app),
                 'regionName' => $regionName,
+                'regionGone' => $regionGone,
+                'standingRoles' => $standingRoles,
+                'standingAreas' => $standingAreas,
             ];
         }
 

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Community;
 
+use App\Community\CuratorApplicationException;
 use App\Community\CuratorApplicationService;
 use App\Community\CuratorApplicationStatus;
 use App\Community\OsmUserVerifier;
@@ -108,6 +109,33 @@ final class CuratorApplicationTest extends KernelTestCase
 
         $this->expectException(\DomainException::class);
         $svc->submit($this->user('curator-nocountry@example.test'), 'MN', null, null, 'nothing here yet');
+    }
+
+    /**
+     * osm_username is varchar(64) and the template's maxlength="64" is
+     * client-side only, so a crafted/hand-edited POST past that limit must
+     * be rejected here, not reach flush() and 500 on a column-width violation.
+     */
+    public function testAnOsmHandleLongerThan64CharsIsRejectedCleanly(): void
+    {
+        self::bootKernel();
+        $this->seedCountryRegion('LT', 'longhandle-test');
+        $svc = self::getContainer()->get(CuratorApplicationService::class);
+        $u = $this->user('curator-longhandle@example.test');
+        $handle = str_repeat('a', 65);
+
+        $threw = false;
+        try {
+            $svc->submit($u, 'LT', null, $handle, 'about me');
+        } catch (CuratorApplicationException $e) {
+            $threw = true;
+            self::assertSame('osm_handle_too_long', $e->reason);
+        }
+        self::assertTrue($threw, 'a 65-char OSM handle must be rejected server-side, not reach flush() and 500');
+
+        $row = self::getContainer()->get(EntityManagerInterface::class)->getConnection()
+            ->fetchAssociative('SELECT * FROM curator_application WHERE user_id = ?', [$u->getId()]);
+        self::assertFalse($row, 'no application row is created for a rejected submission');
     }
 
     public function testALinkInTheAboutTextIsRejected(): void

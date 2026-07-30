@@ -525,6 +525,9 @@ join:
     note_length: 'That text is too long.'
     note_control: 'That text contains characters we cannot accept.'
     about_required: 'Tell us who you are and what ties you to this area before applying.'
+    already_pending: 'You already have an application pending for this country.'
+    not_onboarded: '%country% has no regions yet, so there is nothing to curate.'
+    osm_handle_too_long: 'That OpenStreetMap username is too long.'
   message:
     approved: 'Your application to curate %country% was approved. Welcome aboard.'
     declined: 'Your application to curate %country% was not approved this time.'
@@ -1861,6 +1864,14 @@ admin:
     approve: 'Approve'
     decline: 'Decline'
     already_decided: 'That application was already decided by someone else — nothing was changed.'
+    region_gone: 'Requested region no longer exists'
+    approve_blocked_region_gone: 'Cannot approve — the region this application requested no longer exists. Decide manually.'
+    approve_blocked_already_global: 'Cannot approve — this person is already a global curator; approving would narrow their scope. Decide manually.'
+    standing_label: 'Existing standing:'
+    role_curator: 'Curator'
+    role_moderator: 'Moderator'
+    standing_global: 'global (no area restriction)'
+    standing_scoped: 'scoped to %areas%'
 route:
   error:
     note_too_long: 'The note must be 2,000 characters or fewer.'

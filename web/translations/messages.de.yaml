@@ -525,6 +525,9 @@ join:
     note_length: 'Dieser Text ist zu lang.'
     note_control: 'Dieser Text enthält Zeichen, die wir nicht akzeptieren können.'
     about_required: 'Sag uns, wer du bist und was dich mit dieser Region verbindet, bevor du dich bewirbst.'
+    already_pending: 'Du hast für dieses Land bereits eine Bewerbung in Bearbeitung.'
+    not_onboarded: '%country% hat noch keine Regionen, daher gibt es dort noch nichts zu kuratieren.'
+    osm_handle_too_long: 'Dieser OpenStreetMap-Benutzername ist zu lang.'
   message:
     approved: 'Deine Bewerbung als Kurator für %country% wurde genehmigt. Willkommen an Bord.'
     declined: 'Deine Bewerbung als Kurator für %country% wurde dieses Mal nicht angenommen.'
@@ -1857,6 +1860,14 @@ admin:
     approve: 'Genehmigen'
     decline: 'Ablehnen'
     already_decided: 'Diese Bewerbung wurde bereits von jemand anderem entschieden — es wurde nichts geändert.'
+    region_gone: 'Angefragte Region existiert nicht mehr'
+    approve_blocked_region_gone: 'Genehmigung nicht möglich — die von dieser Bewerbung angefragte Region existiert nicht mehr. Bitte manuell entscheiden.'
+    approve_blocked_already_global: 'Genehmigung nicht möglich — diese Person ist bereits globale/r Kurator/in; die Genehmigung würde den Umfang einschränken. Bitte manuell entscheiden.'
+    standing_label: 'Aktueller Status:'
+    role_curator: 'Kurator/in'
+    role_moderator: 'Moderator/in'
+    standing_global: 'global (keine Gebietsbeschränkung)'
+    standing_scoped: 'beschränkt auf %areas%'
 route:
   error:
     note_too_long: 'Die Notiz ist länger als 2.000 Zeichen.'

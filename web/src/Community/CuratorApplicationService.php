@@ -14,6 +14,7 @@ use App\Moderation\Entity\ModeratorArea;
 use App\Service\AdminActionLogger;
 use App\Service\UserAdminService;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -37,8 +38,15 @@ final class CuratorApplicationService
     }
 
     /**
-     * @throws \DomainException     when the country has no regions, or a pending application already exists
-     * @throws InvalidNoteException when the about text fails §7 hardening
+     * @throws CuratorApplicationException when the country has no regions, a
+     *                                     pending application already exists
+     *                                     (sequentially or lost to a race —
+     *                                     §8's `uniq_curator_application_pending`
+     *                                     is the invariant, this check is
+     *                                     just the friendly error before
+     *                                     it), or the OSM handle is too long
+     *                                     for the column
+     * @throws InvalidNoteException        when the about text fails §7 hardening
      */
     public function submit(
         User $user,
@@ -51,11 +59,11 @@ final class CuratorApplicationService
 
         // §4: no region means no evidence path and nothing to scope to.
         if (!$this->countryIsOnboarded($cc)) {
-            throw new \DomainException(sprintf('%s has no regions yet, so there is nothing to curate.', $cc));
+            throw new CuratorApplicationException('not_onboarded', sprintf('%s has no regions yet, so there is nothing to curate.', $cc));
         }
 
         if ($this->hasPending((int) $user->getId(), $cc)) {
-            throw new \DomainException('You already have an application pending for this country.');
+            throw new CuratorApplicationException('already_pending', 'You already have an application pending for this country.');
         }
 
         $app = new CuratorApplication((int) $user->getId(), $cc);
@@ -66,7 +74,15 @@ final class CuratorApplicationService
         }
 
         if (null !== $osmUsername && '' !== trim($osmUsername)) {
-            $app->setOsmUsername(trim($osmUsername));
+            $trimmedHandle = trim($osmUsername);
+            if (mb_strlen($trimmedHandle) > 64) {
+                // osm_username is varchar(64); the form's maxlength="64" is
+                // client-side only, so a crafted or hand-edited POST must be
+                // rejected here rather than reaching flush() and 500ing on a
+                // column-width violation.
+                throw new CuratorApplicationException('osm_handle_too_long', 'That OpenStreetMap username is too long.');
+            }
+            $app->setOsmUsername($trimmedHandle);
             $result = $this->osm->verify($osmUsername);
             if ($result->reachable) {
                 // We checked, at this time — regardless of whether the handle
@@ -84,7 +100,18 @@ final class CuratorApplicationService
         }
 
         $this->em->persist($app);
-        $this->em->flush();
+        try {
+            $this->em->flush();
+        } catch (UniqueConstraintViolationException) {
+            // hasPending() above is read-then-write: two concurrent submits
+            // for the same person + country can both pass that check and
+            // race to insert. uniq_curator_application_pending (the partial
+            // unique index from Version20260729212853) is the real guard;
+            // losing the race here means the same thing hasPending() would
+            // have reported had it run a moment later, so it gets the same
+            // error rather than a raw 500.
+            throw new CuratorApplicationException('already_pending', 'You already have an application pending for this country.');
+        }
 
         return $app;
     }
@@ -105,7 +132,21 @@ final class CuratorApplicationService
      * applicant holding ROLE_CURATOR with the application stuck Pending
      * forever, and every retry re-hitting the same constraint.
      *
-     * @throws \DomainException if the application was not Pending, or the applicant's account no longer exists
+     * @throws CuratorApplicationException if the application was not Pending,
+     *                                     the applicant's account no longer
+     *                                     exists, the requested region was
+     *                                     deleted after submission (no FK
+     *                                     backs `requested_region_id`, so
+     *                                     this would otherwise insert a
+     *                                     dangling id into `moderator_area`
+     *                                     instead of failing loudly — worse
+     *                                     than the FK-500 the sibling table
+     *                                     would raise), or the applicant is
+     *                                     already a GLOBAL curator (zero
+     *                                     `moderator_area` rows) and
+     *                                     inserting the requested scope
+     *                                     would narrow them without a human
+     *                                     deciding that on purpose
      */
     public function approve(CuratorApplication $app, User $actor, ?string $note): void
     {
@@ -113,7 +154,31 @@ final class CuratorApplicationService
 
         $applicant = $this->em->getRepository(User::class)->find($app->getUserId());
         if (null === $applicant) {
-            throw new \DomainException('The applicant no longer exists.');
+            throw new CuratorApplicationException('applicant_gone', 'The applicant no longer exists.');
+        }
+
+        // requested_region_id carries no FK (unlike moderator_area.region_id,
+        // which does — ON DELETE CASCADE). A region deleted after submission
+        // would otherwise either FK-500 below or, if that guard ever moved,
+        // insert a dangling id silently. Caught here, before the transaction
+        // opens, so a stale application never gets partway approved.
+        if (null !== $app->getRequestedRegionId()
+            && false === $this->db->fetchOne('SELECT 1 FROM region WHERE id = ?', [$app->getRequestedRegionId()])
+        ) {
+            throw new CuratorApplicationException('region_gone', 'The requested region no longer exists.');
+        }
+
+        // §9: approval SCOPES rather than promotes. Someone already holding
+        // ROLE_CURATOR with zero moderator_area rows is GLOBAL by the same
+        // convention ModeratorArea's own docblock states ("no rows =
+        // global") — inserting the newly requested (necessarily narrower)
+        // area for them would silently demote a global curator to a
+        // country/region one. That is a real decision, not a side effect of
+        // approving an unrelated application.
+        if ($this->users->hasRole($applicant, 'ROLE_CURATOR')
+            && 0 === (int) $this->db->fetchOne('SELECT COUNT(*) FROM moderator_area WHERE user_id = ?', [$applicant->getId()])
+        ) {
+            throw new CuratorApplicationException('already_global_curator', 'This applicant is already a global curator; approving would narrow their scope to this request. Decide manually.');
         }
 
         $this->em->wrapInTransaction(function () use ($app, $actor, $note, $applicant): void {
@@ -137,7 +202,7 @@ final class CuratorApplicationService
         });
     }
 
-    /** @throws \DomainException if the application was not Pending */
+    /** @throws CuratorApplicationException if the application was not Pending */
     public function decline(CuratorApplication $app, User $actor, ?string $note): void
     {
         $this->assertPending($app);
@@ -162,7 +227,7 @@ final class CuratorApplicationService
     private function assertPending(CuratorApplication $app): void
     {
         if (CuratorApplicationStatus::Pending !== $app->getStatus()) {
-            throw new \DomainException('already decided');
+            throw new CuratorApplicationException('already_decided', 'already decided');
         }
     }
 

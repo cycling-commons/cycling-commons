@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Community\CountryInterestService;
+use App\Community\CuratorApplicationException;
 use App\Community\CuratorApplicationService;
 use App\Community\InvalidNoteException;
 use App\Entity\User;
@@ -118,6 +119,20 @@ final class JoinCountryController extends AbstractController
                 }
             } catch (InvalidNoteException $e) {
                 $error = $translator->trans('join.error.note_'.$e->reason);
+            } catch (CuratorApplicationException $e) {
+                // Known reasons render a translated, four-locale message;
+                // anything else (e.g. a re-decide guard that can never fire
+                // from this controller) falls back to the exception's own
+                // English text rather than a blank or crashed page.
+                $key = match ($e->reason) {
+                    'already_pending' => 'join.error.already_pending',
+                    'not_onboarded' => 'join.error.not_onboarded',
+                    'osm_handle_too_long' => 'join.error.osm_handle_too_long',
+                    default => null,
+                };
+                $error = null !== $key
+                    ? $translator->trans($key, ['%country%' => $code])
+                    : $e->getMessage();
             } catch (\DomainException $e) {
                 $error = $e->getMessage();
             }

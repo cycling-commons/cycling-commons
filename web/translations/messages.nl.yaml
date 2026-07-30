@@ -525,6 +525,9 @@ join:
     note_length: 'Die tekst is te lang.'
     note_control: 'Die tekst bevat tekens die we niet kunnen accepteren.'
     about_required: 'Vertel ons wie je bent en wat je band is met dit gebied voordat je solliciteert.'
+    already_pending: 'Je hebt al een aanvraag in behandeling voor dit land.'
+    not_onboarded: '%country% heeft nog geen regio''s, dus er is nog niets te curateren.'
+    osm_handle_too_long: 'Die OpenStreetMap-gebruikersnaam is te lang.'
   message:
     approved: 'Je aanvraag om %country% te curateren is goedgekeurd. Welkom aan boord.'
     declined: 'Je aanvraag om %country% te curateren is deze keer niet goedgekeurd.'
@@ -1857,6 +1860,14 @@ admin:
     approve: 'Goedkeuren'
     decline: 'Afwijzen'
     already_decided: 'Die aanvraag is al door iemand anders afgehandeld — er is niets gewijzigd.'
+    region_gone: 'Gevraagde regio bestaat niet meer'
+    approve_blocked_region_gone: 'Kan niet goedkeuren — de regio die deze aanvraag vroeg bestaat niet meer. Beslis handmatig.'
+    approve_blocked_already_global: 'Kan niet goedkeuren — deze persoon is al globaal curator; goedkeuren zou het bereik versmallen. Beslis handmatig.'
+    standing_label: 'Huidige status:'
+    role_curator: 'Curator'
+    role_moderator: 'Moderator'
+    standing_global: 'globaal (geen gebiedsbeperking)'
+    standing_scoped: 'beperkt tot %areas%'
 route:
   error:
     note_too_long: 'De notitie is langer dan 2.000 tekens.'

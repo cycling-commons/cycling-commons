@@ -525,6 +525,9 @@ join:
     note_length: 'Ce texte est trop long.'
     note_control: 'Ce texte contient des caractères que nous ne pouvons pas accepter.'
     about_required: 'Dites-nous qui vous êtes et ce qui vous lie à cette région avant de candidater.'
+    already_pending: 'Vous avez déjà une candidature en attente pour ce pays.'
+    not_onboarded: '%country% n''a pas encore de régions, donc il n''y a rien à curer.'
+    osm_handle_too_long: 'Ce nom d''utilisateur OpenStreetMap est trop long.'
   message:
     approved: 'Votre candidature pour curer %country% a été approuvée. Bienvenue.'
     declined: 'Votre candidature pour curer %country% n’a pas été retenue cette fois-ci.'
@@ -1857,6 +1860,14 @@ admin:
     approve: 'Approuver'
     decline: 'Refuser'
     already_decided: 'Cette candidature a déjà été traitée par quelqu’un d’autre — rien n’a été modifié.'
+    region_gone: 'La région demandée n’existe plus'
+    approve_blocked_region_gone: 'Impossible d’approuver — la région demandée par cette candidature n’existe plus. Décidez manuellement.'
+    approve_blocked_already_global: 'Impossible d’approuver — cette personne est déjà curateur global ; approuver réduirait son périmètre. Décidez manuellement.'
+    standing_label: 'Statut actuel :'
+    role_curator: 'Curateur'
+    role_moderator: 'Modérateur'
+    standing_global: 'global (aucune restriction de périmètre)'
+    standing_scoped: 'limité à %areas%'
 route:
   error:
     note_too_long: 'La note dépasse 2 000 caractères.'

@@ -81,6 +81,12 @@
   .rail-scroll::-webkit-scrollbar-thumb:hover{background:rgba(239,230,212,.6);background-clip:padding-box}
   .grp{margin-bottom:1.7rem}
   .grp h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;color:var(--glacier);margin-bottom:.8rem;text-transform:uppercase}
+  /* Empty-scope invite (2026-07-29-country-requests-and-curator-signup-design.md
+     §10.1): same quiet single-line rail typography as .hint below, but a real
+     link — underlined, brightens to --trail on hover like the other rail links. */
+  .rail-invite{margin-bottom:1.7rem;font-size:.78rem;line-height:1.5}
+  .rail-invite a{color:rgba(239,230,212,.75);text-decoration:underline;text-underline-offset:2px;transition:color .2s}
+  .rail-invite a:hover{color:var(--trail)}
   .grp h3.dl-head{display:flex;align-items:center;gap:.6rem}
   .dl-all{margin-left:auto;background:transparent;border:1px solid rgba(239,230,212,.25);color:var(--glacier);font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .45rem;border-radius:4px;cursor:pointer;transition:all .15s}
   .dl-all:hover{border-color:var(--trail);color:var(--trail)}
