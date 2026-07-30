@@ -22,6 +22,8 @@
 <main class="wrap" style="padding-top:2.5rem;padding-bottom:3.5rem;max-width:640px">
   {% if onboarded %}
     <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ 'join.headline_curate'|trans({'%country%': country.name}) }}</h1>
+    <p class="hint">{{ 'join.evidence_hint'|trans }}
+       <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
   {% else %}
     <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem)">{{ 'join.headline_request'|trans({'%country%': country.name}) }}</h1>
   {% endif %}
@@ -65,8 +67,6 @@
         <label for="about">{{ 'join.about_label'|trans }} <span class="req" aria-hidden="true">*</span></label>
         <textarea id="about" name="about" maxlength="1200" required></textarea>
       </div>
-      <p class="hint">{{ 'join.evidence_hint'|trans }}
-         <a href="{{ path('improve') }}">{{ 'join.evidence_link'|trans }}</a></p>
       <button type="submit" class="btn btn-p">{{ 'join.submit_application'|trans }}</button>
     </form>
   {% endif %}
