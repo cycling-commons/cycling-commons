@@ -65,6 +65,16 @@ deep link carrying junk `item` + `mode=add` degrades to the add wizard, not
 the explainer (ImproveTest::testDeepLinkWithItemAndModeReturns200).
 Covered end-to-end by `AddPlaceFlowTest`.
 
+**?ref= arm — materialize-on-edit (2026-07-30, same wizard).** The coverage
+drawer's edit link for an uncurated OSM POI opens
+`/improve?ref=<node|way/id>&type=<slug>`: the add wizard with the POI's name
+prefilled and location given; submit is the `'add'` intake with `_osm_ref`
+threaded through (re-read from the query string, never a form field), which
+mints the item carrying the ref (osm-data-architecture.md §6). An
+already-SERVED ref 302s to the bound item edit; a Submitted twin is rejected
+at intake (`already_materialized`); unknown/malformed refs degrade to the
+explainer. Covered by `MaterializeFlowTest`.
+
 The mode gate in `improve.js`:
 `LOCATE = (ADD || hasCoords || RELOCATE) ? locationMode : 'off'`, where
 `RELOCATE` is `fix=location` and `hasCoords` means valid `lat`+`lng` params.

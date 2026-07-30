@@ -10,6 +10,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\ServiceKind;
+use App\Coverage\CoverageRepository;
 use App\Entity\User;
 use App\Form\AddClimbType;
 use App\Form\ImproveType;
@@ -17,6 +18,7 @@ use App\Form\VoteType;
 use App\Routing\LocalePrefix;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
+use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -130,6 +132,80 @@ final class ContributeController extends AbstractController
         ]);
     }
 
+    private function renderUnbound(): Response
+    {
+        return $this->render('contribute/improve.html.twig', [
+            'page_title' => 'meta.improve_title',
+            'page_description' => 'meta.improve_description',
+            'nav_active' => 'improve',
+            'item_type' => ItemType::default(),
+            'unbound' => true,
+            'receipt' => null,
+            'form' => null,
+        ]);
+    }
+
+    /**
+     * The ?ref= arm of /improve: mint a catalog item from a cached coverage
+     * POI. An already-SERVED materialization redirects to the plain edit of
+     * that item (never a duplicate); an unknown/mismatched ref degrades to
+     * the explainer; anything else is the add wizard with the POI's name
+     * prefilled and the ref threaded to the 'add' intake on POST.
+     */
+    private function materialize(Request $request, ItemType $type, string $ref, CoverageRepository $coverage, EntityManagerInterface $em): Response
+    {
+        $existing = $em->getRepository(Item::class)->findOneBy([
+            'sourceRef' => $ref,
+            'state' => [ItemState::Unverified, ItemState::Verified],
+        ]);
+        if (null !== $existing && $existing->getLetter() === $type->letter()) {
+            return $this->redirectToRoute('improve', ['item' => $existing->getId(), 'type' => $type->value]);
+        }
+
+        [$osmType, $osmId] = explode('/', $ref);
+        try {
+            $poi = $coverage->detail($osmType, (int) $osmId);
+        } catch (TableNotFoundException) {
+            // Fresh contributor stack: coverage_poi is pipeline-owned DDL and
+            // may not exist yet — degrade like an unknown ref, never a 500.
+            $poi = null;
+        }
+        if (null === $poi || $poi['letter'] !== $type->letter()) {
+            return $this->renderUnbound();
+        }
+
+        $form = $this->createForm(ImproveType::class, null, [
+            'catalog_type' => $type,
+            'current' => [Item::NAME_FIELD => (string) ($poi['name'] ?? '')],
+            'service_kind' => null,
+            'add_mode' => true,
+        ]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var array<string, mixed> $data */
+            $data = $form->getData();
+            /** @var User $user */
+            $user = $this->getUser();
+
+            try {
+                // The ref comes from the (re-validated) query string, never a
+                // form field — the POST posts back to the same URL.
+                $receipt = $this->contributionStub->submit('add', ['type' => $type->value, '_osm_ref' => $ref] + $data, $user);
+
+                return $this->renderAddPlace($type, receipt: $receipt);
+            } catch (TooManyRequestsHttpException) {
+                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (ValidationFailedException $e) {
+                foreach ($e->getViolations() as $violation) {
+                    $form->addError(new FormError((string) $violation->getMessage()));
+                }
+            }
+        }
+
+        return $this->renderAddPlace($type, form: $form);
+    }
+
     /** The mode=add arm of /improve: submit → 'add' intake, or re-render. */
     private function addPlace(Request $request, ItemType $type): Response
     {
@@ -179,7 +255,7 @@ final class ContributeController extends AbstractController
 
     #[Route('/improve', name: 'improve')]
     #[IsGranted('ROLE_USER')]
-    public function improve(Request $request, EntityManagerInterface $em): Response
+    public function improve(Request $request, EntityManagerInterface $em, CoverageRepository $coverage): Response
     {
         // The edit flow is bound to a real item: the map edit-bridge always
         // sends `?item=<dbId>` (docs/specs/moderation-and-contribution.md
@@ -237,16 +313,19 @@ final class ContributeController extends AbstractController
             return $this->addPlace($request, $requestedType);
         }
 
+        // Materialize-on-edit (osm-data-architecture.md §6, owner decision
+        // 2026-07-30): a coverage POI is improved like any other place — the
+        // same wizard, location and name already given — except submit
+        // CREATES the item, carrying the OSM ref for provenance + map dedup.
+        $ref = (string) $request->query->get('ref', '');
+        if (null === $item && null !== $requestedType
+            && !\in_array($requestedType, [ItemType::Climbs, ItemType::QualityRides], true)
+            && 1 === preg_match('~^(node|way)/\d{1,16}$~', $ref)) {
+            return $this->materialize($request, $requestedType, $ref, $coverage, $em);
+        }
+
         if (null === $item) {
-            return $this->render('contribute/improve.html.twig', [
-                'page_title' => 'meta.improve_title',
-                'page_description' => 'meta.improve_description',
-                'nav_active' => 'improve',
-                'item_type' => ItemType::default(),
-                'unbound' => true,
-                'receipt' => null,
-                'form' => null,
-            ]);
+            return $this->renderUnbound();
         }
 
         $type = ItemType::fromParam($item->getLetter());

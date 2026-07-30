@@ -176,12 +176,33 @@ final class CatalogContributionService implements ContributionStubInterface
             }
         }
 
+        // Materialize-on-edit (osm-data-architecture.md §6): the controller
+        // re-validated the ref against the coverage cache; here the only
+        // extra invariant is one item per OSM ref — a second materialization
+        // (double submit, or a race with another rider) must not mint a twin.
+        $osmRef = null;
+        $rawRef = $payload['_osm_ref'] ?? null;
+        if (\is_string($rawRef) && '' !== $rawRef) {
+            if (1 !== preg_match('~^(node|way)/\d{1,16}$~', $rawRef)) {
+                throw new \InvalidArgumentException('malformed OSM ref');
+            }
+            $taken = $this->em->getRepository(Item::class)->findOneBy([
+                'sourceRef' => $rawRef,
+                'state' => [ItemState::Submitted, ItemState::Unverified, ItemState::Verified],
+            ]);
+            if (null !== $taken) {
+                $this->reject('contribute.error.already_materialized', 'details');
+            }
+            $osmRef = $rawRef;
+        }
+
         $draft = new SubmissionDraft(
             type: $type,
             title: $name,
             lat: (float) $payload['lat'],
             lng: (float) $payload['lng'],
             attributes: $attributes,
+            osmRef: $osmRef,
         );
 
         $submission = $this->submitDraft($draft, SubmissionType::NewItem, $by, $payload);
@@ -336,6 +357,10 @@ final class CatalogContributionService implements ContributionStubInterface
             $this->em->flush();
 
             if (SubmissionType::NewItem === $type) {
+                // A materialized OSM object keeps its ref as source_ref
+                // (source `osm`) — honest provenance, and the coverage layer
+                // dedupes on exactly this key so the grey twin disappears
+                // the moment this item serves.
                 $item = (new Item())
                     ->setLetter($draft->type->letter())
                     ->setName($draft->title)
@@ -343,8 +368,8 @@ final class CatalogContributionService implements ContributionStubInterface
                     ->setCountryCode($geo['countryCode'])
                     ->setRegionId($geo['regionId'])
                     ->setState(ItemState::Submitted)
-                    ->setSource(ItemSource::User)
-                    ->setSourceRef('sub:'.(string) $submission->getId())
+                    ->setSource(null !== $draft->osmRef ? ItemSource::Osm : ItemSource::User)
+                    ->setSourceRef($draft->osmRef ?? 'sub:'.(string) $submission->getId())
                     ->setAttributes($draft->attributes);
                 $this->em->persist($item);
                 $this->em->flush();

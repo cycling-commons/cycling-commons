@@ -313,7 +313,14 @@ never touches Overpass again.
   extract in the `pipeline` service → `coverage_poi` (PostGIS) +
   `coverage.pmtiles` on the CC bucket
   ([coverage-provider.md](coverage-provider.md)).
-- Implement **materialize-on-edit** against the cached coverage.
+- ~~Implement **materialize-on-edit** against the cached coverage.~~ Done
+  2026-07-30 (edit arm): the coverage drawer's edit link opens
+  `/improve?ref=<node|way/id>&type=<slug>` — the same add wizard, name +
+  location prefilled from the cached POI — and submit mints the item with
+  `source_ref = <osm ref>` / `source = osm` (one item per ref, enforced at
+  intake), so the §6 lifecycle and the coverage dedupe both engage.
+  Confirmations still require the materialized item to be approved/served
+  first; a confirm-triggered materialization remains open.
 - ~~Split **D · Bike services** into `shop / station / pump` kinds.~~ Done —
   kind-selectable manual add remains deferred until an add-new flow exists (§5).
 - Add the **API-only access** rule and **scraping prohibition** to the user terms.

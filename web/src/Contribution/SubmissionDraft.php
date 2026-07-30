@@ -53,6 +53,13 @@ final readonly class SubmissionDraft
         public ?int $itemId = null,
         #[Assert\Length(max: 2000)]
         public ?string $note = null,
+        /**
+         * Materialize-on-edit (osm-data-architecture.md §6): when set, the
+         * minted item carries this OSM ref as its source_ref (source `osm`)
+         * so provenance is honest and the coverage layer dedupes the pair.
+         */
+        #[Assert\Regex(pattern: '~^(node|way)/\d{1,16}$~')]
+        public ?string $osmRef = null,
     ) {
     }
 }

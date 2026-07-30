@@ -295,6 +295,9 @@ export function covProps(key, tp, d){
   // Dutch fountain. Unstamped rows simply carry no cc (links then omitted).
   const cc=(tp.cctok||'').replace(/\|/g,'');
   if(cc) p.cc=cc.toUpperCase();
+  // OSM ref for materialize-on-edit: when no curated twin binds an item id,
+  // the drawer's edit link opens /improve?ref=… (create, not update).
+  if(tp.ref) p.ref=tp.ref;
   if(key==='services' && tp.kind) p.serviceKind=tp.kind;
   // C · water potability (coverage-provider.md §4 `potable` tile prop): the
   // pipeline pre-computes it as OSM drinking_water='yes' OR (bare

@@ -81,6 +81,9 @@ final class ImproveType extends AbstractType
             $details->add(Item::NAME_FIELD, TextType::class, [
                 'label' => 'Name',
                 'required' => true,
+                // Materialize-on-edit prefills the OSM name via `current`;
+                // the bare add flow starts blank.
+                'data' => $current[Item::NAME_FIELD] ?? null,
                 'constraints' => [
                     new NotBlank(message: 'contribute.error.name_required'),
                     new Length(max: 120, maxMessage: 'contribute.error.field_too_long'),

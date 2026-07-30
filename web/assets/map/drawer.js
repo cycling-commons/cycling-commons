@@ -124,6 +124,7 @@ export function osmDrawer(layer, p, ll, src){
     source: pivot?'Tourisme Wallonie (TW) — CC-BY 4.0 · PIVOT / Géoportail de la Wallonie'
       :(community?sourceLabel(p.srcType):(src||sourceLabel(p.srcType)||'OpenStreetMap'))};
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
+  else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit target
   if(p.desc) d.desc=p.desc;
   if(p.descTr) d.descTr=1;
   let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
@@ -172,6 +173,7 @@ export function waterDrawer(p, ll){
     record:rec,
     source: community?sourceLabel(p.srcType):'OpenStreetMap (amenity=drinking_water / drinking_water=yes)'};
   if(p.id!=null) d.id=p.id;          // real DB item id — the edit-bridge's `?item=` target
+  else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit target
   // Same photo handling as osmDrawer — waterDrawer never copied this over,
   // so a water point's importable photo attribute (e.g. a Wikimedia Commons
   // spring photo) silently never reached buildRecord()'s figure/lightbox.
@@ -270,6 +272,14 @@ function buildRecord(layer, f){
         edit += `<a class="cc-d-act fixloc" href="/improve?${editQ}&fix=location">◎ ${D.fixLocation||'Fix location'}</a>`;
       }
     }
+  } else if(f.osmRef){
+    // Materialize-on-edit (osm-data-architecture.md §6): an uncurated
+    // coverage POI is improved like any other place — the wizard opens with
+    // the OSM name + location given, and submit CREATES the item (carrying
+    // this ref, so the coverage twin dedupes away once it serves).
+    const refQ = `ref=${encodeURIComponent(f.osmRef)}&type=${layer.letter}`
+      + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
+    edit = `<a class="cc-d-act edit" href="/improve?${refQ}">✎ ${D.editItem||'Edit this item'}</a>`;
   }
   let moderate = '';
   if(layer.pendingLayer && f.pending){
