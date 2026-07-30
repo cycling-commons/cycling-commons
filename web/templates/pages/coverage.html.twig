@@ -11,7 +11,8 @@
   td{padding:.7rem .8rem;border-bottom:1px solid rgba(20,22,14,.08);font-size:.92rem;vertical-align:middle}
   td .bar{width:120px}
   td .flag{width:1.1rem;height:.8rem;vertical-align:-1px;margin-right:.45rem;border-radius:2px}
-  .tnote{font-size:.95rem;color:#4a4d40;max-width:72ch;margin-top:.5rem;line-height:1.55}
+  .tnote{font-size:.95rem;color:#4a4d40;max-width:72ch;margin-top:.5rem;line-height:1.55;padding-left:1.1rem}
+  .tnote li{margin:.3rem 0}
   .gaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1.6rem}
 </style>
 {% endblock %}
@@ -31,7 +32,11 @@
 
 <section class="pad"><div class="wrap">
   <div class="kicker">{% trans %}coverage.table_kicker{% endtrans %}</div>
-  <p class="tnote">{% trans %}coverage.terms_note{% endtrans %}</p>
+  <ul class="tnote">
+    <li>{% trans %}coverage.terms_reference{% endtrans %}</li>
+    <li>{% trans %}coverage.terms_catalog{% endtrans %}</li>
+    <li>{% trans %}coverage.terms_bars{% endtrans %}</li>
+  </ul>
   <table>
     <tr>
       <th>{% trans %}coverage.th_country{% endtrans %}</th>
