@@ -576,6 +576,7 @@ regions:
   no_regions: 'Keine Regionen geladen.'
   count_region: '%n% Region'
   count_regions: '%n% Regionen'
+  legend_title: 'Regionsstatus'
   tier_curated: 'Kuratiert'
   tier_curated_desc: 'ein Kurator pflegt diese Region — die Karte öffnet in der Kuratiert-Ansicht'
   tier_growing: 'Wachsend'

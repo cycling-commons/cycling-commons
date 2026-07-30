@@ -576,6 +576,7 @@ regions:
   no_regions: 'Aucune région chargée.'
   count_region: '%n% région'
   count_regions: '%n% régions'
+  legend_title: 'Statut des régions'
   tier_curated: 'Animée'
   tier_curated_desc: 'un curateur entretient cette région — la carte s''ouvre en vue Sélection'
   tier_growing: 'En croissance'

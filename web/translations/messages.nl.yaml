@@ -576,6 +576,7 @@ regions:
   no_regions: 'Geen regio''s geladen.'
   count_region: '%n% regio'
   count_regions: '%n% regio''s'
+  legend_title: 'Regiostatus'
   tier_curated: 'Gecureerd'
   tier_curated_desc: 'een curator onderhoudt deze regio — de kaart opent in Gecureerd-weergave'
   tier_growing: 'Groeiend'

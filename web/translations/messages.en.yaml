@@ -576,6 +576,7 @@ regions:
   no_regions: 'No regions loaded.'
   count_region: '%n% region'
   count_regions: '%n% regions'
+  legend_title: 'Region status'
   tier_curated: 'Curated'
   tier_curated_desc: 'a curator maintains this region — the map opens in Curated view'
   tier_growing: 'Growing'
