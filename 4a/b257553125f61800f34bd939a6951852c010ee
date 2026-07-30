@@ -1,0 +1,34 @@
+wiki/country-onboarding.md
+  s_bda768b13cee07::t_5c7437fd102a7b 61-69
+docs/specs/moderation-and-contribution.md
+  s_bda768b13cee07::t_e7488d2dfee72e 692-706
+wiki/curation-and-voting.md
+  s_bda768b13cee07::t_100f22f749d549 73-75
+docs/specs/account-and-auth.md
+  s_bda768b13cee07::t_daf602546569fa 103-110
+  s_bda768b13cee07::t_5610084692cb50 128-134
+  s_bda768b13cee07::t_6dc753d44eb8d4 480-492
+wiki/developers/gis/spatial-questions.md
+  s_bda768b13cee07::t_437f832caa1232 51-52,55-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "4ab257553125f61800f34bd939a6951852c010ee",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bda768b13cee07": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc3484d5-25c1-442a-9655-b30ae7c5ba22",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
