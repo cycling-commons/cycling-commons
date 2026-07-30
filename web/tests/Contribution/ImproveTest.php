@@ -346,15 +346,16 @@ final class ImproveTest extends WebTestCase
         $this->loginFreshUser($client, 'deep');
 
         // A non-numeric `item` (a stale slug-based deep link, pre-Task-4) is
-        // not a valid binding — it must degrade to the unbound explainer,
-        // never a 400/500.
+        // not a valid binding — it must never 400/500. Since the add flow's
+        // restoration (AddPlaceFlowTest), `mode=add` + a valid type wins over
+        // the junk item param: the link degrades to a fresh ADD wizard for
+        // the right type, not the dead-end explainer.
         $client->request('GET', '/improve?type=water-food&item=water-fountain&mode=add');
 
         self::assertResponseIsSuccessful();
-        // Confirm it's specifically the unbound explainer that rendered, not
-        // some other 200 (e.g. a form that silently ignored the bad item).
-        self::assertSelectorExists('[data-improve-unbound]');
-        self::assertSelectorNotExists('form[name="improve"]');
+        self::assertSelectorNotExists('[data-improve-unbound]');
+        self::assertSelectorExists('form[name="improve"]');
+        self::assertSelectorExists('input[name="improve[details][name]"]', 'the add wizard, not a bound edit');
     }
 
     // ── Authenticated POST — real edit submission ────────────────────────────

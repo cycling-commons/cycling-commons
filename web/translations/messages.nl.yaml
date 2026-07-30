@@ -1364,6 +1364,9 @@ contribute_hub:
   notice_ccbysa: 'CC BY-SA 4.0'
   notice_post: '. Herkomst wordt bijgehouden; identiteit niet.'
 contribute:
+  add:
+    title: 'Een plek toevoegen · %type%'
+    lead: 'Mist de atlas iets? Prik het vast, beschrijf het en stuur het naar de curatoren.'
   error:
     unknown_attribute: 'Een van de ingezonden velden wordt niet herkend voor dit itemtype.'
     invisible_characters: 'Deze tekst bevat onzichtbare of opmaaktekens die niet zijn toegestaan.'
@@ -1374,6 +1377,7 @@ contribute:
     rate_limited: 'Je hebt de bijdragelimiet voorlopig bereikt — probeer het straks opnieuw.'
     route_too_complex: 'Deze track heeft te veel scherpe bochten om te verwerken — vereenvoudig hem in je GPS-app en probeer het opnieuw.'
     invalid_location: 'Stel de locatie op de kaart in voordat je verzendt.'
+    name_required: 'Geef de plek een naam.'
     invalid_geometry: 'De getekende vorm kon niet worden gelezen — teken hem opnieuw en probeer het nogmaals.'
 propose_route:
   eyebrow: 'K · Aanbevolen routes'

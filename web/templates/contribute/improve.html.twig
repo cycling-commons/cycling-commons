@@ -183,8 +183,8 @@
      data-track="{{ item_type.hasTrackUpload ? '1' : '0' }}">
   <div class="ey">{{ item_type.eyebrowKey|trans }} · {{ item_type.letter }} · {{ item_type.labelKey|trans }}</div>
   {# Show the exact item being edited, persistently above every step, so it's always clear what you're editing. #}
-  <h1 class="disp">{% if edit_name is defined and edit_name %}{{ edit_name }}{% else %}{{ 'improve.title'|trans }}{% endif %}</h1>
-  <p class="sub">{{ 'improve.lead'|trans }}</p>
+  <h1 class="disp">{% if edit_name is defined and edit_name %}{{ edit_name }}{% elseif add_mode|default(false) %}{{ 'contribute.add.title'|trans({'%type%': item_type.labelKey|trans}) }}{% else %}{{ 'improve.title'|trans }}{% endif %}</h1>
+  <p class="sub">{{ (add_mode|default(false) ? 'contribute.add.lead' : 'improve.lead')|trans }}</p>
 
   {# The bound item's letter + current climb shape (route/grad/steep), for
      improve.js step 1: a climb (letter B) mounts the shared three-point

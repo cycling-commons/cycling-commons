@@ -97,7 +97,7 @@ final class CoverageStatsProvider
         foreach ($rows as $row) {
             $area = (float) $row['area_km2'];
             if ($area > 0) {
-                $maxDensity = max($maxDensity, ($pois[(string) $row['cc']] ?? 0) / $area);
+                $maxDensity = max($maxDensity, (float) ($pois[(string) $row['cc']] ?? 0) / $area);
             }
         }
 
@@ -106,7 +106,7 @@ final class CoverageStatsProvider
             $cc = (string) $row['cc'];
             $n = $pois[$cc] ?? 0;
             $area = (float) $row['area_km2'];
-            $density = $area > 0 ? $n / $area : 0.0;
+            $density = $area > 0 ? (float) $n / $area : 0.0;
             $out[] = [
                 'code' => $cc,
                 'name' => Countries::exists($cc) ? Countries::getName($cc, $locale) : $cc,
@@ -116,7 +116,7 @@ final class CoverageStatsProvider
                 'items' => (int) $row['items'],
                 'itemsVerified' => (int) $row['verified'],
                 'routes' => (int) $row['routes'],
-                'share' => $maxDensity > 0 ? (int) round(100 * $density / $maxDensity) : 0,
+                'share' => $maxDensity > 0 ? (int) round(100.0 * $density / $maxDensity) : 0,
             ];
         }
         usort($out, static fn (array $a, array $b): int => [$b['coveragePois'], $a['code']] <=> [$a['coveragePois'], $b['code']]);

@@ -174,7 +174,8 @@
   {# STEP 1 — WHERE #}
   <section class="pane on" data-s="1">
     <h2>{{ 'add_climb.step1.heading'|trans }}</h2>
-    <p class="help">{{ 'add_climb.step1.help'|trans }}</p>
+    {# |rich: the key carries <b> emphasis — plain |trans escaped it to literal tags. #}
+    <p class="help">{{ 'add_climb.step1.help'|trans|rich }}</p>
     <div class="field csearch">
       <label for="placeSearch">{{ 'add_climb.step1.search_label'|trans }}</label>
       <input id="placeSearch" type="search" autocomplete="off" placeholder="{{ 'add_climb.step1.search_placeholder'|trans }}" />

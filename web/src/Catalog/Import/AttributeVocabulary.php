@@ -26,7 +26,10 @@ final class AttributeVocabulary
     private const array COMMON = ['t', 'town', 'web', 'c', 'sim', 'r', 'desc', 'descTr', 'photo', 'photos'];
 
     private const array EXTRAS = [
-        'A' => ['cls', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense'],
+        // 'segment': the add-wizard's two drawn endpoints
+        // ({a:[lng,lat], b:[lng,lat]}, CatalogContributionService::submitAdd) —
+        // a NEW road-surface stretch has no other geometry to fall back on.
+        'A' => ['cls', 'photoFile', 'photoCredit', 'photoUser', 'photoLicense', 'segment'],
         // 'attribution' (not 'source'): the climbs export preserves the citation
         // as `attribution` since `source` is reserved for provenance
         // (App\Catalog\ItemSource).

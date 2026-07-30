@@ -8,6 +8,7 @@ namespace App\Form;
 
 use App\Catalog\CatalogField;
 use App\Catalog\CatalogFormRegistry;
+use App\Catalog\Entity\Item;
 use App\Catalog\FieldKind;
 use App\Catalog\ItemType;
 use App\Catalog\LocationMode;
@@ -21,6 +22,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
  * The type-aware improve / add-location wizard.
@@ -64,10 +67,30 @@ final class ImproveType extends AbstractType
         $fieldSet = $this->registry->for($type, $serviceKind);
         /** @var array<string, scalar|list<string>|null> $current */
         $current = $options['current'];
+        $addMode = (bool) $options['add_mode'];
 
         // ── Type-specific Details step: two panes as nested sub-forms ────────
         $details = $builder->create('details', FormType::class, ['label' => false, 'required' => false]);
+        // Add mode ("Add a new place", moderation-and-contribution.md §1.1):
+        // a new place must arrive NAMED — the moderation queue and the map
+        // both key on it — but several field sets (water & food among them)
+        // carry no name field because editing an existing item never needs
+        // one. Inject a required name first, and skip any registry-optional
+        // duplicate so the requirement cannot be bypassed.
+        if ($addMode) {
+            $details->add(Item::NAME_FIELD, TextType::class, [
+                'label' => 'Name',
+                'required' => true,
+                'constraints' => [
+                    new NotBlank(message: 'contribute.error.name_required'),
+                    new Length(max: 120, maxMessage: 'contribute.error.field_too_long'),
+                ],
+            ]);
+        }
         foreach ($fieldSet->fields as $field) {
+            if ($addMode && Item::NAME_FIELD === $field->name) {
+                continue;
+            }
             $this->addCatalogField($details, $field, $current);
         }
         $builder->add($details);
@@ -198,7 +221,7 @@ final class ImproveType extends AbstractType
                 requireTld: true,
                 tldMessage: 'contribute.error.invalid_url',
             ),
-            new \Symfony\Component\Validator\Constraints\Length(max: 500, maxMessage: 'contribute.error.field_too_long'),
+            new Length(max: 500, maxMessage: 'contribute.error.field_too_long'),
         ];
     }
 
@@ -213,9 +236,12 @@ final class ImproveType extends AbstractType
             // when the kind is unknown; CatalogFormRegistry::for() then falls
             // back to the default field set, which includes openingHours.
             'service_kind' => null,
+            // "Add a new place": no bound item, required name (see buildForm).
+            'add_mode' => false,
         ]);
         $resolver->setAllowedTypes('catalog_type', ItemType::class);
         $resolver->setAllowedTypes('current', 'array');
         $resolver->setAllowedTypes('service_kind', ['null', ServiceKind::class]);
+        $resolver->setAllowedTypes('add_mode', 'bool');
     }
 }

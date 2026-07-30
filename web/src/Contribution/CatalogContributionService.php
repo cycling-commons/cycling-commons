@@ -11,6 +11,7 @@ use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
+use App\Catalog\LocationMode;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
@@ -70,6 +71,7 @@ final class CatalogContributionService implements ContributionStubInterface
 
         return match ($kind) {
             'climb' => $this->submitClimb($payload, $by),
+            'add' => $this->submitAdd($payload, $by),
             'improve' => $this->submitImprove($payload, $by),
             // 'vote' (and any other kind) is intentionally not persisted here.
             // Voting is verification-gate machinery, not catalog intake.
@@ -119,6 +121,102 @@ final class CatalogContributionService implements ContributionStubInterface
         return new ContributionReceipt(
             'SUB-'.(string) $submission->getId(), 'climb', true, $submission->getCreatedAt(), $submission->getId(),
         );
+    }
+
+    /**
+     * "Add a new place" — the generic NewItem intake for every non-climb,
+     * non-route type (moderation-and-contribution.md §1.1 mode=add, §3.3).
+     * Mirrors submitClimb's contract: reject-don't-coerce coordinates, the
+     * form's constraints already validated field values, and submitDraft
+     * owns the rate limiter, spatial resolution, and the Submitted item row.
+     *
+     * @param array<string, mixed> $payload
+     */
+    private function submitAdd(array $payload, User $by): ContributionReceipt
+    {
+        $type = ItemType::tryFrom((string) ($payload['type'] ?? ''));
+        if (null === $type || \in_array($type, [ItemType::Climbs, ItemType::QualityRides], true)) {
+            throw new \InvalidArgumentException('add requires a non-climb, non-route catalog type');
+        }
+        if (!is_numeric($payload['lat'] ?? null) || !is_numeric($payload['lng'] ?? null)) {
+            $this->reject('contribute.error.invalid_location', 'lat');
+        }
+
+        /** @var array<string, mixed> $details */
+        $details = (array) ($payload['details'] ?? []);
+        /** @var array<string, mixed> $extras */
+        $extras = (array) ($payload['extras'] ?? []);
+        $proposed = $details + $extras;
+
+        // The name pseudo-field becomes the submission title / Item::name —
+        // never an attribute (Item::NAME_FIELD, same rule as submitImprove).
+        $name = trim((string) ($proposed[Item::NAME_FIELD] ?? ''));
+        unset($proposed[Item::NAME_FIELD]);
+        if ('' === $name) {
+            // The form's NotBlank already guards this; a hand-crafted POST
+            // must not mint an unnamed item.
+            $this->reject('contribute.error.name_required', 'details');
+        }
+
+        $attributes = [];
+        foreach ($proposed as $field => $raw) {
+            $now = self::normalizeEmpty($raw);
+            if (null !== $now) {
+                $attributes[$field] = $now;
+            }
+        }
+
+        // Segment-located types: the two drawn endpoints become a real
+        // attribute (unlike edits, where geometry changes are payload-only —
+        // a NEW segment item has no other geometry to fall back on).
+        if (LocationMode::Segment === $type->locationMode()) {
+            $rawSegment = $payload['segment'] ?? null;
+            if (\is_string($rawSegment) && '' !== $rawSegment) {
+                $attributes['segment'] = $this->decodeSegment($rawSegment);
+            }
+        }
+
+        $draft = new SubmissionDraft(
+            type: $type,
+            title: $name,
+            lat: (float) $payload['lat'],
+            lng: (float) $payload['lng'],
+            attributes: $attributes,
+        );
+
+        $submission = $this->submitDraft($draft, SubmissionType::NewItem, $by, $payload);
+
+        return new ContributionReceipt(
+            'SUB-'.(string) $submission->getId(), 'add', true, $submission->getCreatedAt(), $submission->getId(),
+        );
+    }
+
+    /**
+     * Decode + bounds-check the wizard's {"a":[lng,lat],"b":[lng,lat]} JSON.
+     *
+     * @return array{a: array{float, float}, b: array{float, float}}
+     */
+    private function decodeSegment(string $raw): array
+    {
+        $decoded = json_decode($raw, true);
+        $pair = static function (mixed $p): ?array {
+            if (!\is_array($p) || !array_is_list($p) || 2 !== \count($p)
+                || !is_numeric($p[0]) || !is_numeric($p[1])) {
+                return null;
+            }
+            $lng = (float) $p[0];
+            $lat = (float) $p[1];
+
+            return ($lng >= -180 && $lng <= 180 && $lat >= -90 && $lat <= 90) ? [$lng, $lat] : null;
+        };
+
+        $a = \is_array($decoded) ? $pair($decoded['a'] ?? null) : null;
+        $b = \is_array($decoded) ? $pair($decoded['b'] ?? null) : null;
+        if (null === $a || null === $b) {
+            $this->reject('contribute.error.invalid_geometry', 'segment');
+        }
+
+        return ['a' => $a, 'b' => $b];
     }
 
     /** @param array<string, mixed> $payload */

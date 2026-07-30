@@ -1076,6 +1076,9 @@ contribute_hub:
   notice_ccbysa: 'CC BY-SA 4.0'
   notice_post: '. Provenance is kept; identity is not.'
 contribute:
+  add:
+    title: 'Add a place · %type%'
+    lead: 'Found something the atlas is missing? Pin it, describe it, and send it to the curators.'
   error:
     unknown_attribute: 'One of the submitted fields is not recognised for this item type.'
     invisible_characters: 'This text contains invisible or formatting characters that aren’t allowed.'
@@ -1086,6 +1089,7 @@ contribute:
     rate_limited: 'You have reached the contribution limit for now — please try again in a little while.'
     route_too_complex: 'This track has too many sharp turns to process — simplify it in your GPS app and try again.'
     invalid_location: 'Set the location on the map before submitting.'
+    name_required: 'Give the place a name.'
     invalid_geometry: 'The drawn shape could not be read — redraw it and try again.'
 propose_route:
   eyebrow: 'K · Recommended routes'

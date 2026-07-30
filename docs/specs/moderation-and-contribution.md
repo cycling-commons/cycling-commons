@@ -51,6 +51,20 @@ interprets them — a real cross-file contract:
 | "◎ Fix location" | as edit + `fix=location` | **Expanded editor** directly — pin pre-placed and repositionable, search visible |
 | "Add a new place" | `mode=add` | Full locate editor (pin / two-tap segment per `LocationMode`) |
 
+**mode=add server side (restored 2026-07-30).** The unbound-explainer change
+(`a6c8cdd`) had silently killed this row's server half: the controller only
+looked for a bound `item`, so every /contribute card landed on the explainer.
+Restored as: `ContributeController::addPlace()` renders the wizard
+(`ImproveType` `add_mode: true` — which injects a **required name** into the
+details pane, since several field sets carry none) for every type except B
+(dedicated /add-climb) and K (/propose-route);
+`CatalogContributionService::submitAdd()` persists it as a NewItem submission
+(§3.3), with the two drawn endpoints of a segment-located type stored as the
+`segment` attribute (added to `AttributeVocabulary` `EXTRAS['A']`). A stale
+deep link carrying junk `item` + `mode=add` degrades to the add wizard, not
+the explainer (ImproveTest::testDeepLinkWithItemAndModeReturns200).
+Covered end-to-end by `AddPlaceFlowTest`.
+
 The mode gate in `improve.js`:
 `LOCATE = (ADD || hasCoords || RELOCATE) ? locationMode : 'off'`, where
 `RELOCATE` is `fix=location` and `hasCoords` means valid `lat`+`lng` params.

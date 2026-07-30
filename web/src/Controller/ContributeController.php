@@ -130,6 +130,53 @@ final class ContributeController extends AbstractController
         ]);
     }
 
+    /** The mode=add arm of /improve: submit → 'add' intake, or re-render. */
+    private function addPlace(Request $request, ItemType $type): Response
+    {
+        $form = $this->createForm(ImproveType::class, null, [
+            'catalog_type' => $type,
+            'current' => [],
+            'service_kind' => null,
+            'add_mode' => true,
+        ]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var array<string, mixed> $data */
+            $data = $form->getData();
+            /** @var User $user */
+            $user = $this->getUser();
+
+            try {
+                $receipt = $this->contributionStub->submit('add', ['type' => $type->value] + $data, $user);
+
+                return $this->renderAddPlace($type, receipt: $receipt);
+            } catch (TooManyRequestsHttpException) {
+                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (ValidationFailedException $e) {
+                foreach ($e->getViolations() as $violation) {
+                    $form->addError(new FormError((string) $violation->getMessage()));
+                }
+            }
+        }
+
+        return $this->renderAddPlace($type, form: $form);
+    }
+
+    private function renderAddPlace(ItemType $type, ?ContributionReceipt $receipt = null, ?FormInterface $form = null): Response
+    {
+        return $this->render('contribute/improve.html.twig', [
+            'page_title' => 'meta.improve_title',
+            'page_description' => 'meta.improve_description',
+            'nav_active' => 'improve',
+            'item_type' => $type,
+            'unbound' => false,
+            'add_mode' => true,
+            'receipt' => $receipt,
+            'form' => $form,
+        ]);
+    }
+
     #[Route('/improve', name: 'improve')]
     #[IsGranted('ROLE_USER')]
     public function improve(Request $request, EntityManagerInterface $em): Response
@@ -178,6 +225,16 @@ final class ContributeController extends AbstractController
             if (null !== $item && null !== $requestedType && $item->getLetter() !== $requestedType->letter()) {
                 $item = null;
             }
+        }
+
+        // "Add a new place" (moderation-and-contribution.md §1.1: mode=add) —
+        // the same wizard, deliberately unbound: empty form, required name,
+        // NewItem submission. Climbs keep the dedicated /add-climb flow and
+        // K routes keep /propose-route, so both fall through to the explainer.
+        if (null === $item && 'add' === (string) $request->query->get('mode', '')
+            && null !== $requestedType
+            && !\in_array($requestedType, [ItemType::Climbs, ItemType::QualityRides], true)) {
+            return $this->addPlace($request, $requestedType);
         }
 
         if (null === $item) {
