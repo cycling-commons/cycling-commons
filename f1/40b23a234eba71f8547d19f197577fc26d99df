@@ -1,0 +1,30 @@
+tools/divisions/tests/test_export_divisions.py
+  s_bda768b13cee07::t_f18ed3e7d839cb 186-219
+  s_bda768b13cee07::t_a665aad1af5404 14
+tools/divisions/config.py
+  s_bda768b13cee07::t_eb8f29533a3067 112-124
+tools/divisions/export_divisions.py
+  s_bda768b13cee07::t_c3a475922d6a8e 172-205,207-208
+  s_bda768b13cee07::t_c0687a51782051 139-159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "f140b23a234eba71f8547d19f197577fc26d99df",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bda768b13cee07": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc3484d5-25c1-442a-9655-b30ae7c5ba22",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
