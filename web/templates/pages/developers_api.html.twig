@@ -1,0 +1,52 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{# Standalone page (no base layout): the site chrome is locale-prefixed and
+   this reference is English-only — a locale switcher would link to routes
+   that don't exist. Redoc renders public/api/openapi.yaml client-side; the
+   bundle rides the unpkg + SRI pattern the map pages already use, and the
+   tiny init block is nonced per the CSP (script-src 'self' 'nonce-…'
+   https://unpkg.com, worker-src blob: for Redoc's search worker). #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>API reference — Cycling Commons</title>
+<meta name="description" content="Interactive reference for the Cycling Commons public API — the design-first OpenAPI contract we are building to." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
+<link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
+<style>
+  body{margin:0}
+  .apibar{display:flex;align-items:center;gap:1rem;background:#14160e;color:#efe6d4;
+    padding:.65rem 1.2rem;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:.85rem}
+  .apibar a{color:#efe6d4;text-decoration:none}
+  .apibar a:hover{text-decoration:underline}
+  .apibar .draft{margin-left:auto;border:1px solid rgba(239,230,212,.4);border-radius:3px;
+    padding:.15rem .5rem;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
+  {# Redoc's "powered by" badge loads its icon from cdn.redoc.ly, which our
+     CSP img-src blocks; hide the broken image, keep the text link. #}
+  #redoc img[src^="https://cdn.redoc.ly"]{display:none}
+</style>
+</head>
+<body>
+<div class="apibar">
+  <a href="{{ path('developers') }}">← Cycling Commons · Developers</a>
+  <span class="draft">Draft contract — API not live yet</span>
+</div>
+<div id="redoc"></div>
+<script src="https://unpkg.com/redoc@2.5.3/bundles/redoc.standalone.js" integrity="sha384-xiEssMQFSpSfLbzRZCGfxxIM5QDb2DTrU6vyoZdp2sV1L6pmOMy6MpTtUoLbpC96" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script nonce="{{ csp_nonce() }}">
+Redoc.init('/api/openapi.yaml', {
+  hideDownloadButton: false,
+  expandResponses: '200',
+  theme: {
+    colors: { primary: { main: '#2f4a3c' } },
+    typography: {
+      fontFamily: "'Spline Sans', system-ui, sans-serif",
+      headings: { fontFamily: "'Bricolage Grotesque', system-ui, sans-serif" }
+    }
+  }
+}, document.getElementById('redoc'));
+</script>
+</body>
+</html>

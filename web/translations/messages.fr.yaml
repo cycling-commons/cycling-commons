@@ -549,7 +549,7 @@ developers:
   kicker: 'Construisez sur le Commons'
   title: 'Des données ouvertes. Une API ouverte. Pour que tous construisent dessus.'
   lead: 'Interrogez le Commons par zone et par type, intégrez nos tuiles vectorielles dans votre propre style de carte, ou auto-hébergez l''export périodique gratuit. Les données sont ouvertes (ODbL) — c''est ce qui en fait un bien commun. L''accès est en libre-service : une clé gratuite, un palier gratuit, et des quotas payants uniquement pour un usage intensif toujours à jour.'
-  status: 'En conception — ces points de terminaison sont le contrat que nous construisons, spécifié publiquement dans la <a href="https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/public-api.md">spécification de l''API publique</a>.'
+  status: 'En conception — ces points de terminaison sont le contrat que nous construisons. Parcourez la <a href="/developers/api">référence interactive de l''API</a> (en anglais) ou la <a href="https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/public-api.md">spécification sur GitHub</a>.'
   ep_kicker: 'Points de terminaison'
   ep1_path: '/v1/search'
   ep1_desc: 'chercher la couverture par <code>bbox</code>, <code>letter</code>, <code>tier</code>'

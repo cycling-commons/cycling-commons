@@ -128,7 +128,20 @@ contract.
 **Conventions.** `bbox=minLon,minLat,maxLon,maxLat`. Collections paginate by
 opaque `cursor` (not offset), capped by `limit`. Coordinates are WGS84
 (EPSG:4326). Errors are JSON `{ error, message }` with conventional HTTP status
-codes.
+codes. Spatial collections are GeoJSON `FeatureCollection`s carrying three
+foreign members: `licence`, `attribution`, and `next_cursor` (absent on the
+last page). A hydrated response merges the cached OSM subset under each
+feature's `properties.osm`.
+
+### 2.3 Machine-readable contract
+
+The normative machine-readable form of this REST surface is the design-first
+OpenAPI 3.1 document at `web/public/api/openapi.yaml`, rendered as the
+interactive reference at `/developers/api` (Redoc, self-hosted page,
+English-only). The document is authored before the implementation — endpoint-
+or field-level changes land in both places, and
+`tests/Smoke/ApiReferenceTest.php` pins the `/developers` teaser page to the
+contract so they cannot drift.
 
 ## 3. Auth & metering — two mechanisms
 

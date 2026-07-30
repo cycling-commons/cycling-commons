@@ -549,7 +549,7 @@ developers:
   kicker: 'Bouw op de Commons'
   title: 'Open data. Een open API. Voor iedereen om op te bouwen.'
   lead: 'Bevraag de Commons per gebied en type, koppel onze vectortegels aan je eigen kaartstijl, of host zelf de gratis periodieke bulkexport. De data is open (ODbL) — dat is wat het een commons maakt. Toegang is selfservice: een gratis sleutel, een gratis tier, en betaalde quota alleen voor intensief, altijd-vers gebruik.'
-  status: 'In ontwerp — deze endpoints zijn het contract dat we bouwen, openbaar gespecificeerd in de <a href="https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/public-api.md">publieke API-specificatie</a>.'
+  status: 'In ontwerp — deze endpoints zijn het contract dat we bouwen. Bekijk de <a href="/developers/api">interactieve API-referentie</a> (Engels) of de <a href="https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/public-api.md">specificatie op GitHub</a>.'
   ep_kicker: 'Endpoints'
   ep1_path: '/v1/search'
   ep1_desc: 'vind dekking op <code>bbox</code>, <code>letter</code>, <code>tier</code>'

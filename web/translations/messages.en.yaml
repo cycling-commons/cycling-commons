@@ -549,7 +549,7 @@ developers:
   kicker: 'Build on the Commons'
   title: 'Open data. An open API. For anyone to build on.'
   lead: 'Query the Commons by area and type, bind our vector tiles into your own map style, or self-host from the free periodic bulk export. The data is open (ODbL) — that''s what makes it a commons. Access is self-serve: a free key, a free tier, and paid quotas only for heavy, always-fresh use.'
-  status: 'In design — these endpoints are the contract we''re building, specified in the open in the <a href="https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/public-api.md">public API spec</a>.'
+  status: 'In design — these endpoints are the contract we''re building. Browse the <a href="/developers/api">interactive API reference</a> or the <a href="https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/public-api.md">spec on GitHub</a>.'
   ep_kicker: 'Endpoints'
   ep1_path: '/v1/search'
   ep1_desc: 'find coverage by <code>bbox</code>, <code>letter</code>, <code>tier</code>'
