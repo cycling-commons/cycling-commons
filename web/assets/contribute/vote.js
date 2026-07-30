@@ -76,7 +76,11 @@
     b.forEach(function (nm, i) {
       var d = document.createElement('div');
       d.className = 'bitem';
+      d.draggable = b.length > 1;
+      d.dataset.idx = i;
+      if (b.length > 1) d.title = I18N.reorder;
       d.innerHTML =
+        (b.length > 1 ? '<span class="grip" aria-hidden="true">⠿</span>' : '') +
         '<span class="r">' + (i + 1) + '</span>' +
         '<span>' + escHtml(nm) + '</span>' +
         '<span class="x" data-nm="' + escAttr(nm) + '">' + escHtml(I18N.remove) + '</span>';
@@ -86,6 +90,42 @@
     el.querySelectorAll('span.x').forEach(function (span) {
       span.addEventListener('click', function () {
         toggle(span.getAttribute('data-nm'));
+      });
+    });
+
+    // Drag-and-drop reordering: rank IS the vote, so the order must be
+    // editable without remove-and-re-add round trips. HTML5 DnD (desktop);
+    // touch users keep the remove/re-add path.
+    var dragIdx = null;
+    el.querySelectorAll('.bitem').forEach(function (row) {
+      row.addEventListener('dragstart', function (e) {
+        dragIdx = +row.dataset.idx;
+        row.classList.add('dragging');
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', '');   // Firefox needs data to start a drag
+        }
+      });
+      row.addEventListener('dragend', function () {
+        row.classList.remove('dragging');
+        el.querySelectorAll('.bitem.dropover').forEach(function (r) { r.classList.remove('dropover'); });
+      });
+      row.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        if (dragIdx !== +row.dataset.idx) row.classList.add('dropover');
+      });
+      row.addEventListener('dragleave', function () {
+        row.classList.remove('dropover');
+      });
+      row.addEventListener('drop', function (e) {
+        e.preventDefault();
+        var to = +row.dataset.idx;
+        if (null === dragIdx || dragIdx === to) return;
+        var arr = ballot[curCat];
+        arr.splice(to, 0, arr.splice(dragIdx, 1)[0]);
+        dragIdx = null;
+        renderBallot();
       });
     });
 

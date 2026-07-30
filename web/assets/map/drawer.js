@@ -138,7 +138,11 @@ export function osmDrawer(layer, p, ll, src){
 // "check with the regional utility", which stays true everywhere.
 const WATER_CHECK_LINKS={
   BE:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}],
-  NL:[{label:'Drinkwaterplatform · NL',href:'https://www.drinkwaterplatform.nl'}],
+  // Owner-vetted 2026-07-30: drinkwaterkaart.nl is the moderated NL tap-point
+  // map (candidate partner). The authoritative dataset behind it is the
+  // Nationaal Georegister drinkwatertappunten record — a pipeline SOURCE,
+  // not a rider-facing link.
+  NL:[{label:'Drinkwaterkaart · NL',href:'https://www.drinkwaterkaart.nl'}],
 };
 // drawer card for a water point — shared by the droplet click handler and the confirmed pin
 export function waterDrawer(p, ll){

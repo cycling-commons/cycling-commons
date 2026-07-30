@@ -18,6 +18,10 @@
   .ballot{background:var(--paper-deep);border-radius:10px;padding:1.4rem;align-self:start;position:sticky;top:5rem}
   .ballot h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:1rem}
   .bitem{display:flex;align-items:center;gap:.7rem;padding:.55rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-size:.92rem}
+  .bitem[draggable=true]{cursor:grab}
+  .bitem.dragging{opacity:.4}
+  .bitem.dropover{box-shadow:inset 0 2px 0 var(--trail)}
+  .bitem .grip{color:#9a9d8c;font-size:.68rem;cursor:grab;flex:none}
   .bitem .r{font-family:var(--mono);color:var(--trail);font-size:.8rem;width:1.3rem}
   .bitem .x{margin-left:auto;color:var(--clay);cursor:pointer;font-family:var(--mono);font-size:.7rem}
   .bempty{color:#595c4d;font-size:.88rem;padding:1rem 0}
@@ -81,6 +85,7 @@
   onBallot: 'vote.on_ballot'|trans,
   remove: 'vote.remove'|trans,
   empty: 'vote.empty_ballot'|trans,
+  reorder: 'vote.reorder_hint'|trans,
 }|json_encode|raw }}</script>
 <script src="{{ asset('contribute/vote.js') }}"></script>
 {% endblock %}

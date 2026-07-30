@@ -857,6 +857,7 @@ vote:
   on_ballot: '✓ auf dem Stimmzettel'
   remove: 'entfernen'
   empty_ballot: 'Füge bis zu 10 Auswahlen hinzu, in deiner Reihenfolge.'
+  reorder_hint: 'Ziehen, um die Reihenfolge zu ändern'
   error:
     ballot_empty: 'Bitte füge mindestens ein Element zu deinem Stimmzettel hinzu, bevor du ihn einreichst.'
   receipt:

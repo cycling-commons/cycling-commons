@@ -857,6 +857,7 @@ vote:
   on_ballot: '✓ sur le bulletin'
   remove: 'retirer'
   empty_ballot: 'Ajoutez jusqu''à 10 choix, dans l''ordre de votre préférence.'
+  reorder_hint: 'Glissez pour modifier l''ordre'
   error:
     ballot_empty: 'Veuillez ajouter au moins un élément à votre bulletin avant de soumettre.'
   receipt:
