@@ -139,6 +139,7 @@ final class MapController extends AbstractController
             'surface' => 'item_type.road-surface.label',
             'climbs' => 'item_type.climbs.label',
             'water' => 'item_type.water-food.label',
+            'toilets' => 'item_type.public-toilets.label',
             'services' => 'item_type.bike-services.label',
             'stays' => 'item_type.where-to-sleep.label',
             'hazards' => 'item_type.hazards.label',

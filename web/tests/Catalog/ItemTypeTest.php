@@ -16,26 +16,27 @@ use PHPUnit\Framework\TestCase;
  */
 final class ItemTypeTest extends TestCase
 {
-    public function testCatalogHasElevenEditableTypes(): void
+    public function testCatalogHasTwelveEditableTypes(): void
     {
-        // A–K are the editable catalog types (L · Ride heatmap is a derived
-        // overlay, intentionally not editable — README.md).
-        self::assertCount(11, ItemType::cases());
+        // A–K plus M · Public toilets (2026-07-30) are the editable catalog
+        // types. L · Ride heatmap is a derived overlay, intentionally not
+        // editable (README.md), which is why M skips over it.
+        self::assertCount(12, ItemType::cases());
     }
 
-    public function testLettersAreUniqueAndCoverAtoK(): void
+    public function testLettersAreUniqueAndCoverAtoKPlusM(): void
     {
         $letters = array_map(static fn (ItemType $t): string => $t->letter(), ItemType::cases());
 
-        self::assertSame(range('A', 'K'), $letters);
-        self::assertCount(11, array_unique($letters));
+        self::assertSame([...range('A', 'K'), 'M'], $letters);
+        self::assertCount(12, array_unique($letters));
     }
 
     public function testSlugsAreUnique(): void
     {
         $slugs = array_map(static fn (ItemType $t): string => $t->value, ItemType::cases());
 
-        self::assertCount(11, array_unique($slugs));
+        self::assertCount(12, array_unique($slugs));
     }
 
     public function testFromParamResolvesCanonicalSlug(): void

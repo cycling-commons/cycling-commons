@@ -77,6 +77,12 @@
                 {"tag": "historic=monastery", "label": "Monastery"}
             ],
             "tileProps": []
+        },
+        "M": {
+            "selectors": [
+                {"tag": "amenity=toilets", "label": "Public toilets"}
+            ],
+            "tileProps": []
         }
     },
     "serviceKind": {

@@ -39,6 +39,7 @@
       window.CC_SCENIC_OSM = d.I;
       window.CC_HISTORY_OSM = d.J;
       window.CC_ROUTES = { routes: d.K, heat: d.L };
+      window.CC_TOILETS_OSM = d.M;
       // Coverage dedupe (coverage-provider.md §6): the set
       // of source_refs already served as items — the coverage tile layers
       // filter these out so an object never draws twice (once as a tile dot,

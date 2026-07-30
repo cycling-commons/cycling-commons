@@ -56,6 +56,9 @@ final class CatalogProvider
             'J' => $this->featureCollection('J'),
             'K' => $this->routes(),
             'L' => $this->heat(),
+            // M · Public toilets (2026-07-30) — plain served-items collection,
+            // same path as G/H utilities.
+            'M' => $this->featureCollection('M'),
             // Served OSM refs for client-side tile dedupe: map.js filters
             // coverage tile features whose ref is listed here
             // (osm-data-architecture.md §8: the object appears once, as curated).

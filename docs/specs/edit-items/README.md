@@ -23,7 +23,7 @@ These specs are the **design source of truth** for [`atlas/demo/edit-items.js`](
 
 The real, server-rendered port of this registry lives in the Symfony app:
 
-- **Catalog source of truth** — [`web/src/Catalog/`](../../../web/src/Catalog/): `ItemType` (the A–K enum
+- **Catalog source of truth** — [`web/src/Catalog/`](../../../web/src/Catalog/): `ItemType` (the A–M enum, L skipped
   carrying letter/label/icon/eyebrow, `locationMode` point/segment/none, and `isVotable()` per the funnel
   table below) and `CatalogFormRegistry` (each type's *Fix-details* + *Add-missing* fields, lifted from
   `edit-items.js` to per-type schemas). `LocationMode`, `FieldKind`, `CatalogField`, `ItemFieldSet` support them.
@@ -253,5 +253,7 @@ or low-density region −1 (seed coverage early, tighten as the community grows)
 | **J** | History & culture | [J-history-culture.md](J-history-culture.md) | pin | **votable** | yes |
 | **K** | Quality rides | [K-quality-rides.md](K-quality-rides.md) | line + GPX | **votable** (typed: season + bike type) | **no — curator-only**; riders propose / vote / rode-it / suggest |
 | **L** | Ride heatmap | — | derived overlay | — | **no** (auto/aggregate, never per-rider) |
+| **M** | Public toilets | [M-public-toilets.md](M-public-toilets.md) | pin | utility | yes (added 2026-07-30; **displayed** after C — letters are identifiers, not order) |
 
-L is intentionally not editable: it is a derived, anonymized aggregate.
+L is intentionally not editable: it is a derived, anonymized aggregate,
+which is why M · Public toilets skips over it.

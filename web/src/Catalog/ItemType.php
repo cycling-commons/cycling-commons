@@ -17,7 +17,10 @@ namespace App\Catalog;
  * here; the bulkier per-type field schemas live in {@see CatalogFormRegistry}.
  *
  * L · Ride heatmap is a derived, anonymized aggregate. It is intentionally
- * NOT an editable type, so it is not represented here.
+ * NOT an editable type, so it is not represented here — which is why
+ * M · Public toilets (added 2026-07-30) skips over L. Letters are stable
+ * storage identifiers, never display order: surfaces that list categories
+ * order them editorially (M renders next to C · Water & food).
  *
  * @api Public catalog surface consumed by the improve form, controller and
  *      templates. `@api` tells Psalm these members are entry points, not dead.
@@ -35,6 +38,7 @@ enum ItemType: string
     case ScenicViews = 'scenic-views';
     case HistoryCulture = 'history-culture';
     case QualityRides = 'quality-rides';
+    case PublicToilets = 'public-toilets';
 
     /**
      * Resolve a URL/query value to a type. Accepts a canonical slug (the nice
@@ -84,6 +88,7 @@ enum ItemType: string
             self::ScenicViews => 'I',
             self::HistoryCulture => 'J',
             self::QualityRides => 'K',
+            self::PublicToilets => 'M',
         };
     }
 
@@ -102,6 +107,7 @@ enum ItemType: string
             self::ScenicViews => 'Scenic views',
             self::HistoryCulture => 'History & culture',
             self::QualityRides => 'Recommended routes',
+            self::PublicToilets => 'Public toilets',
         };
     }
 
@@ -135,6 +141,7 @@ enum ItemType: string
             self::ScenicViews => '◬',
             self::HistoryCulture => '🏛',
             self::QualityRides => '★',
+            self::PublicToilets => '🚻',
         };
     }
 
@@ -153,6 +160,7 @@ enum ItemType: string
             self::ScenicViews => 'Improve this viewpoint',
             self::HistoryCulture => 'Improve this place',
             self::QualityRides => 'Edit this ride',
+            self::PublicToilets => 'Improve this place',
         };
     }
 
@@ -201,7 +209,7 @@ enum ItemType: string
     {
         return match ($this) {
             self::WaterFood => [ConfirmationStance::Potable, ConfirmationStance::NotPotable],
-            self::BikeServices, self::Hazards, self::GettingThere, self::Shelter => [ConfirmationStance::Exists],
+            self::BikeServices, self::Hazards, self::GettingThere, self::Shelter, self::PublicToilets => [ConfirmationStance::Exists],
             default => [],
         };
     }

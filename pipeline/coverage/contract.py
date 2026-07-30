@@ -17,7 +17,7 @@ CONTRACT_PATH = pathlib.Path(__file__).resolve().parents[1] / "contract" / "cove
 
 # osm-data-architecture.md §5 point catalogue. A (road surface) is corridor
 # data and stays out of the coverage artifact; B/F/K are category-3.
-LETTERS = frozenset("CDEGHIJ")
+LETTERS = frozenset("CDEGHIJM")
 
 # Tag keys tiles.py::_EXTRA_SQL reads back out of `tags` when it builds the
 # per-letter tile properties. They must survive the storedTagKeys trim or the

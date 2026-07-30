@@ -59,6 +59,13 @@
       <p>{{ 'contribute_hub.card_water_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_water_go'|trans }}</span>
     </a>
+    {# M sits here by display order (utilities next to water); the letter skips the reserved L. #}
+    <a class="card" href="{{ path('improve', {type: 'public-toilets', mode: 'add'}) }}">
+      <span class="co">M</span><span class="ic">🚻</span>
+      <h4>{{ 'contribute_hub.card_toilets_h'|trans }}</h4>
+      <p>{{ 'contribute_hub.card_toilets_p'|trans }}</p>
+      <span class="go">{{ 'contribute_hub.card_toilets_go'|trans }}</span>
+    </a>
     <a class="card" href="{{ path('improve', {type: 'bike-services', mode: 'add'}) }}">
       <span class="co">D</span><span class="ic">⚙</span>
       <h4>{{ 'contribute_hub.card_services_h'|trans }}</h4>

@@ -23,6 +23,9 @@ export const CATALOG = [
   { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, features:[] }
   ,{ key:'climbs', letter:'B', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, features:[] }
   ,{ key:'water', letter:'C', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, features:[] }
+  // M sits here by DISPLAY order (utilities next to water); the letter skips
+  // over the reserved L (ride heatmap) — letters are identifiers, not order.
+  ,{ key:'toilets', letter:'M', label:LAYER_L10N.toilets||'Public toilets', color:'#4E6E8C', icon:'🚻', kind:'point', exp:false, features:[] }
   ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, features:[] }
   ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, features:[] }
   // F · Hazards — features filled below from window.CC_HAZARDS (the served
@@ -94,8 +97,8 @@ export const CATALOG_AZ=[...CATALOG].sort((a,b)=>a.letter<b.letter?-1:1);
 
 // Letter <-> layer-key, both directions: coverage tiles are addressed by
 // letter, the served layers by key.
-export const LETTER_KEY={C:'water',D:'services',E:'stays',G:'transit',H:'shelter',I:'scenic',J:'history'};
-export const KEY_LETTER={water:'C',services:'D',stays:'E',transit:'G',shelter:'H',scenic:'I',history:'J'};
+export const LETTER_KEY={C:'water',D:'services',E:'stays',G:'transit',H:'shelter',I:'scenic',J:'history',M:'toilets'};
+export const KEY_LETTER={water:'C',services:'D',stays:'E',transit:'G',shelter:'H',scenic:'I',history:'J',toilets:'M'};
 
 // Which layers are drawn, and which of the two view modes is showing.
 //

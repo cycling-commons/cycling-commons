@@ -89,6 +89,22 @@ final class CatalogFormRegistry
                 ],
             ),
 
+            // M · Public toilets (2026-07-30): the utility neighbour of C —
+            // surfaces order it right after Water & food even though the
+            // letter skips over the reserved L (ride heatmap).
+            ItemType::PublicToilets => new ItemFieldSet(
+                fields: [
+                    CatalogField::select('fee', 'Fee', ['Free', 'Paid']),
+                    CatalogField::select('wheelchair', 'Wheelchair accessible?', self::UNKNOWN_YES_NO),
+                    CatalogField::text('openingHours', 'Opening hours', placeholder: 'e.g. 24/7, or Apr–Oct daylight'),
+                    CatalogField::textarea('note', 'Note for riders', 'e.g. behind the beach pavilion; code at the counter'),
+                ],
+                addFields: [
+                    CatalogField::select('changingTable', 'Baby changing table?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('shower', 'Shower available?', self::UNKNOWN_YES_NO),
+                ],
+            ),
+
             ItemType::BikeServices => new ItemFieldSet(
                 fields: [
                     CatalogField::text('name', 'Name', display: false),

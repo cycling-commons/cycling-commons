@@ -41,11 +41,12 @@ final class CoverageContractTest extends TestCase
         $contract = $this->loadContract();
 
         self::assertSame(1, $contract['version']);
-        // osm-data-architecture.md §5 point catalogue: C D E G H I J.
-        // A (road surface) is corridor data and stays out of the coverage
-        // artifact (coverage-provider.md §4);
+        // osm-data-architecture.md §5 point catalogue: C D E G H I J M
+        // (M · Public toilets added 2026-07-30; letter L stays reserved for
+        // the derived ride heatmap). A (road surface) is corridor data and
+        // stays out of the coverage artifact (coverage-provider.md §4);
         // B/F/K are category-3 (our own data, never part of the OSM extract).
-        self::assertSame(['C', 'D', 'E', 'G', 'H', 'I', 'J'], array_keys($contract['letters']));
+        self::assertSame(['C', 'D', 'E', 'G', 'H', 'I', 'J', 'M'], array_keys($contract['letters']));
 
         foreach ($contract['letters'] as $letter => $spec) {
             self::assertNotSame([], $spec['selectors'], sprintf('letter %s has no selectors', $letter));

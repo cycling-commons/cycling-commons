@@ -57,7 +57,7 @@ final class CoverageRepository
      *
      * @see docs/specs/osm-data-architecture.md §5
      */
-    private const string POI_LETTERS_SQL = "('C', 'D', 'E', 'G', 'H', 'I', 'J')";
+    private const string POI_LETTERS_SQL = "('C', 'D', 'E', 'G', 'H', 'I', 'J', 'M')";
 
     /** Community items listed per nearby letter group before the "show all" expander. */
     private const int NEARBY_COMMUNITY_CAP = 3;
@@ -318,7 +318,7 @@ final class CoverageRepository
         }
 
         $out = [];
-        foreach (str_split('CDEGHIJ') as $letter) {
+        foreach (str_split('CDEGHIJM') as $letter) {
             if (!isset($groups[$letter])) {
                 continue;
             }
