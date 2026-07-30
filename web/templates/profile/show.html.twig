@@ -52,7 +52,10 @@
     {% set sub_pill = {'approved': 'ok', 'pending': 'pend', 'needs_info': 'pend', 'rejected': 'rej'} %}
     <h2 class="sec-h">{{ 'account.contributions_title'|trans }}</h2>
     {% if contributions is empty %}
-      <p class="empty">{{ 'account.contributions_empty'|trans }}</p>
+      <div class="empty-state">
+        <p>{{ 'account.contributions_empty'|trans }}</p>
+        <a class="door" href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a>
+      </div>
     {% else %}
       {% for sub in contributions %}
         {# links only when the item is actually reachable: an edit always targets
@@ -113,21 +116,40 @@
     {% endif %}
   </section>
 
-  {# ── Votes — the user's own route ballots (route-domain.md §6): the only
-     surface that shows WHAT was voted for, and only to the voter. #}
+  {# ── Votes — the user's own backing acts: route ballots (route-domain.md §6,
+     the only surface that shows WHAT was voted for, voter-only) and place
+     confirmations (moderation-and-contribution.md §1.6). #}
   <section class="dpane" id="p-votes">
-    {% if votes is empty %}
-      <p class="empty">{{ 'account.votes_empty'|trans }} <a href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a></p>
+    {% if votes is empty and confirmations is empty %}
+      <div class="empty-state">
+        <p>{{ 'account.votes_empty'|trans }}</p>
+        <a class="door" href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a>
+      </div>
     {% else %}
-      {% for v in votes %}
-        <div class="item">
-          <span class="tag tag-route">{{ 'nav.routes'|trans }}</span>
-          <h4>{{ v.name }}</h4>
-          <span class="item-links"><a href="{{ path('map') }}?route={{ v.route_id }}">{{ 'account.link_map'|trans }}</a></span>
-          <span class="co">{{ v.season }} · {{ v.bike_type }}</span>
-          <time class="co" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|date('Y-m-d') }}</time>
-        </div>
-      {% endfor %}
+      {% if votes is not empty %}
+        <h2 class="sec-h">{{ 'account.votes_routes_h'|trans }}</h2>
+        {% for v in votes %}
+          <div class="item">
+            <span class="tag tag-route">{{ 'nav.routes'|trans }}</span>
+            <h4>{{ v.name }}</h4>
+            <span class="item-links"><a href="{{ path('map') }}?route={{ v.route_id }}">{{ 'account.link_map'|trans }}</a></span>
+            <span class="co">{{ v.season }} · {{ v.bike_type }}</span>
+            <time class="co" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|date('Y-m-d') }}</time>
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% if confirmations is not empty %}
+        <h2 class="sec-h">{{ 'account.votes_places_h'|trans }}</h2>
+        {% for c in confirmations %}
+          <div class="item">
+            <span class="tag">{{ c.typeLabelKey|trans }}</span>
+            <h4>{{ c.name }}</h4>
+            <span class="item-links"><a href="{{ path('map') }}?feature={{ c.name|url_encode }}">{{ 'account.link_map'|trans }}</a></span>
+            <time class="co" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|date('Y-m-d') }}</time>
+            <span class="pill {{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
     {% endif %}
     <div class="note">{{ 'account.votes_note'|trans|rich }}</div>
   </section>
@@ -135,8 +157,10 @@
   {# ── Saved regions — no persistence behind it yet; say so honestly and open
      the real door instead of rendering sample cards. #}
   <section class="dpane" id="p-saved">
-    <p class="empty">{{ 'account.saved_empty'|trans }}</p>
-    <p><a class="rc" style="display:inline-block" href="{{ path('regions') }}"><h4>{{ 'account.saved_browse'|trans }}</h4></a></p>
+    <div class="empty-state">
+      <p>{{ 'account.saved_empty'|trans }}</p>
+      <a class="door" href="{{ path('regions') }}">{{ 'account.saved_browse'|trans }}</a>
+    </div>
   </section>
 
 </div>

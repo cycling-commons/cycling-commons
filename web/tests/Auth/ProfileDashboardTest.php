@@ -48,7 +48,9 @@ final class ProfileDashboardTest extends WebTestCase
         // Honest empty states + the apply door instead.
         self::assertStringContainsString('Curator applications', $html);
         self::assertStringContainsString('See where curators are needed', $html);
-        self::assertStringContainsString('No route votes yet', $html);
+        self::assertStringContainsString('No votes yet', $html);
+        // Empty panes render the centred block, not a bare line.
+        self::assertStringContainsString('empty-state', $html);
     }
 
     public function testCuratorApplicationAndVoteRowsRender(): void
@@ -71,6 +73,15 @@ final class ProfileDashboardTest extends WebTestCase
             "INSERT INTO route_vote (route_id, user_id, season, bike_type, created_at) VALUES (?, ?, 'summer', 'road', NOW())",
             [$routeId, (int) $user->getId()],
         );
+        $db->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('C', 'Dash Fountain', ST_SetSRID(ST_GeomFromText('POINT(4.5 50.5)'), 4326), 'BE', 'verified', 'seed', 'dash-fountain-t', '{}', NOW(), NOW())",
+        );
+        $itemId = (int) $db->fetchOne("SELECT id FROM item WHERE source_ref = 'dash-fountain-t' AND letter = 'C'");
+        $db->executeStatement(
+            "INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (?, ?, 'potable', NOW(), NOW())",
+            [$itemId, (int) $user->getId()],
+        );
 
         $client->loginUser($user);
         $client->request('GET', '/profile');
@@ -80,6 +91,8 @@ final class ProfileDashboardTest extends WebTestCase
         self::assertStringContainsString('Pending review', $html, 'application status pill');
         self::assertStringContainsString('Whole country', $html, 'country-wide application label');
         self::assertStringContainsString('Dash Loop', $html, 'own route ballot listed');
+        self::assertStringContainsString('Dash Fountain', $html, 'own place confirmation listed');
+        self::assertStringContainsString('Potable', $html, 'confirmation stance pill');
         self::assertStringNotContainsString('See where curators are needed', $html, 'door hidden once applied');
     }
 }

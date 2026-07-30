@@ -151,7 +151,7 @@ final class MessagesPageTest extends WebTestCase
         $crawler = $client->request('GET', '/messages');
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter('.msg-row'));
-        self::assertSelectorExists('.msg-empty');
+        self::assertSelectorExists('.empty-state');
     }
 
     public function testOtherUsersMessagesAreNotShown(): void

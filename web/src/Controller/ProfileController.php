@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
+use App\Catalog\ItemType;
 use App\Catalog\SubmissionStatus;
 use App\Entity\User;
 use App\Moderation\RetentionService;
@@ -73,6 +74,7 @@ final class ProfileController extends AbstractController
                   LIMIT 50',
                 ['uid' => (int) $user->getId()],
             ),
+            'confirmations' => $this->confirmations($db, (int) $user->getId()),
             // The answer to "where is my curator request?" lives on the landing
             // pane (2026-07-29-country-requests-and-curator-signup-design.md §10).
             'curator_applications' => $db->fetchAllAssociative(
@@ -84,5 +86,29 @@ final class ProfileController extends AbstractController
                 ['uid' => (int) $user->getId()],
             ),
         ]);
+    }
+
+    /**
+     * The user's place confirmations ("still here?" / potability stances,
+     * moderation-and-contribution.md §1.6) with the item-type label key
+     * resolved from the catalog letter.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function confirmations(Connection $db, int $userId): array
+    {
+        $rows = $db->fetchAllAssociative(
+            'SELECT ic.stance, ic.created_at, i.id AS item_id, i.name, i.letter
+               FROM item_confirmation ic JOIN item i ON i.id = ic.item_id
+              WHERE ic.user_id = :uid
+              ORDER BY ic.created_at DESC, ic.id DESC
+              LIMIT 50',
+            ['uid' => $userId],
+        );
+        foreach ($rows as &$row) {
+            $row['typeLabelKey'] = ItemType::fromParam((string) $row['letter'])->labelKey();
+        }
+
+        return $rows;
     }
 }

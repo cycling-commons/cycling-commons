@@ -22,7 +22,6 @@
   .msg-map-link:hover{color:var(--trail)}
   .msg-note{font-size:.88rem;line-height:1.55;color:#4a4d40;background:var(--paper);border-left:2px solid var(--glacier);padding:.6rem .85rem;border-radius:0 5px 5px 0;margin-top:.55rem}
   .msg-from-curator{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
-  .msg-empty{color:#595c4d;font-size:.95rem}
 
   .msg-reply{margin-top:.8rem;padding-top:.7rem;border-top:1px solid rgba(20,22,14,.1);display:flex;flex-direction:column;gap:.45rem}
   .msg-reply label{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d}
@@ -37,13 +36,13 @@
 
 {% block body %}
 <h1 class="acct-id">{{ 'messages.title'|trans }} — {{ cc_user.displayName }}</h1>
-<div class="wrap">
+<div class="wrap dmin">
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
   {% if messages is empty %}
-    <p class="msg-empty">{{ 'messages.empty'|trans }}</p>
+    <div class="empty-state"><p>{{ 'messages.empty'|trans }}</p></div>
   {% else %}
     <ul class="msg-list">
       {% for m in messages %}

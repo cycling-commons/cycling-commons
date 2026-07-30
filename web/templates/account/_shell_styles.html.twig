@@ -17,6 +17,14 @@
   .dtop .lang-caret{transition:transform .2s}
   .dtop [aria-expanded="true"] .lang-caret{transform:rotate(180deg)}
   .dtop .lang-dropdown{right:0;left:auto}
+  /* Shared account-page presence: content areas keep vertical height even when
+     empty, and empty panes render a centred block with a real door — never a
+     lone floating line. */
+  .dbody,.dmin{min-height:46vh}
+  .empty-state{text-align:center;padding:4rem 1.5rem 4.5rem;color:#595c4d}
+  .empty-state p{max-width:46ch;margin:0 auto 1.3rem;font-size:.95rem;line-height:1.6}
+  .empty-state .door{display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;border:1.5px solid var(--ink);border-radius:5px;padding:.6rem 1rem;color:var(--ink);text-decoration:none;transition:background .2s}
+  .empty-state .door:hover{background:var(--trail)}
   .dtabs{display:flex;gap:.5rem;padding:0 clamp(1.25rem,4vw,2rem);background:var(--paper-deep);border-bottom:1px solid rgba(20,22,14,.12);overflow-x:auto}
   .dtabs a{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:1rem .9rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;text-decoration:none}
   /* the selected section must be unmistakable: ink text + orange underline + a
