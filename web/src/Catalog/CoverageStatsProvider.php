@@ -57,8 +57,11 @@ final class CoverageStatsProvider
 
     /**
      * Operational countries with their real volumes, biggest reference base
-     * first. `share` pre-scales the table's bar (percent of the largest
-     * country's POI count) so the template never does arithmetic.
+     * first. `share` pre-scales the table's bar as DENSITY (POIs per km² of
+     * onboarded area, percent of the densest country) — an absolute-volume
+     * bar would dwarf every small country under the biggest one forever
+     * (owner correction 2026-07-30: Luxembourg vs Germany), while density is
+     * size-fair. The printed number stays the absolute count.
      *
      * @return list<array{code:string, name:string, flag:string, regions:int,
      *                    coveragePois:int, items:int, itemsVerified:int,
@@ -70,6 +73,7 @@ final class CoverageStatsProvider
         /** @var list<array<string, int|string>> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT r.country_code AS cc, COUNT(*) AS regions,
+                    COALESCE(SUM(r.area_km2), 0) AS area_km2,
                     COALESCE(MAX(it.n), 0) AS items, COALESCE(MAX(iv.n), 0) AS verified,
                     COALESCE(MAX(rt.n), 0) AS routes
                FROM region r
@@ -89,15 +93,20 @@ final class CoverageStatsProvider
         );
 
         $pois = $this->poisByCountry();
-        $max = 0;
+        $maxDensity = 0.0;
         foreach ($rows as $row) {
-            $max = max($max, $pois[(string) $row['cc']] ?? 0);
+            $area = (float) $row['area_km2'];
+            if ($area > 0) {
+                $maxDensity = max($maxDensity, ($pois[(string) $row['cc']] ?? 0) / $area);
+            }
         }
 
         $out = [];
         foreach ($rows as $row) {
             $cc = (string) $row['cc'];
             $n = $pois[$cc] ?? 0;
+            $area = (float) $row['area_km2'];
+            $density = $area > 0 ? $n / $area : 0.0;
             $out[] = [
                 'code' => $cc,
                 'name' => Countries::exists($cc) ? Countries::getName($cc, $locale) : $cc,
@@ -107,7 +116,7 @@ final class CoverageStatsProvider
                 'items' => (int) $row['items'],
                 'itemsVerified' => (int) $row['verified'],
                 'routes' => (int) $row['routes'],
-                'share' => $max > 0 ? (int) round(100 * $n / $max) : 0,
+                'share' => $maxDensity > 0 ? (int) round(100 * $density / $maxDensity) : 0,
             ];
         }
         usort($out, static fn (array $a, array $b): int => [$b['coveragePois'], $a['code']] <=> [$a['coveragePois'], $b['code']]);

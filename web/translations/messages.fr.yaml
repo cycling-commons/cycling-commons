@@ -289,6 +289,7 @@ coverage:
   kpi_routes: 'Itinéraires recommandés'
   kpi_countries: 'Pays démarrés'
   table_kicker: 'Couverture par pays'
+  terms_note: 'Les lieux de référence sont la base issue d''OpenStreetMap que nous suivons pour chaque zone. Les éléments du catalogue sont ce que le Commons cure lui-même — des lieux contribués ou importés ici, avec leurs propres attributs, historique et confirmations. Les barres comparent la densité (lieux par km² de zone intégrée), pour qu''un petit pays se compare équitablement à un grand.'
   th_country: 'Pays'
   th_regions: 'Régions'
   th_pois: 'Lieux de référence'

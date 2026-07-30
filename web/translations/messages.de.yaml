@@ -289,6 +289,7 @@ coverage:
   kpi_routes: 'Empfohlene Routen'
   kpi_countries: 'Gestartete Länder'
   table_kicker: 'Abdeckung nach Land'
+  terms_note: 'Referenzorte sind die aus OpenStreetMap abgeleitete Basis, die wir je Gebiet verfolgen. Katalogeinträge sind das, was der Commons selbst kuratiert — hier beigetragene oder importierte Orte mit eigenen Attributen, Historie und Bestätigungen. Die Balken vergleichen Dichte (Orte pro km² angebundener Fläche), damit ein kleines Land fair neben einem großen steht.'
   th_country: 'Land'
   th_regions: 'Regionen'
   th_pois: 'Referenzorte'

@@ -289,6 +289,7 @@ coverage:
   kpi_routes: 'Aanbevolen routes'
   kpi_countries: 'Gestarte landen'
   table_kicker: 'Dekking per land'
+  terms_note: 'Referentieplekken zijn de uit OpenStreetMap afgeleide basis die we per gebied volgen. Catalogusitems zijn wat de Commons zelf cureert — plekken die hier zijn bijgedragen of geïmporteerd, met eigen kenmerken, geschiedenis en bevestigingen. De balken vergelijken dichtheid (plekken per km² aangesloten gebied), zodat een klein land eerlijk naast een groot land staat.'
   th_country: 'Land'
   th_regions: 'Regio''s'
   th_pois: 'Referentieplekken'
