@@ -511,8 +511,8 @@ join:
   scope_label: 'What would you curate?'
   scope_whole_country: 'The whole country'
   osm_label: 'Your OpenStreetMap username (optional)'
-  about_label: 'Who are you, and what ties you to this area?'
-  evidence_hint: 'Your application is reviewed on evidence: what you have fixed or added on the map speaks for you. You can contribute before or after applying.'
+  about_label: 'Who are you, why would you like to curate here, and what experience do you bring?'
+  evidence_hint: "You don't need to have added anything to the map before applying — a person reads every application, and your story is what matters most. If you have already fixed or added things here, we'll gladly take a look."
   evidence_link: 'Add or fix something on the map'
   submit_application: 'Apply to curate'
   flash:

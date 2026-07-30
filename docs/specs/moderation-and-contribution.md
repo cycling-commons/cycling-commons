@@ -689,9 +689,14 @@ by `user_id` + `country_code` **at review time** (`total`, `approved`
 `WHERE status = 'approved'`), so the review screen always reflects current
 standing — filing more submissions between applying and being reviewed changes
 what the reviewer sees. Nothing is copied or snapshotted onto
-`CuratorApplication` at submit. The form's `join.evidence_hint` copy states
-this contract to the applicant plainly (reviewed on evidence; contribute
-before or after applying) rather than reading as a mid-form task.
+`CuratorApplication` at submit. The form's `join.evidence_hint` copy
+deliberately does NOT state this mechanic (owner decision, 2026-07-30):
+telling applicants their map edits "speak for them" read as a contribution
+prerequisite, which decision 3 explicitly rejects. The copy now leads with
+"you don't need to have added anything before applying", invites motivation
+and prior experience (the `join.about_label` question), and only mentions
+that existing contributions are gladly looked at. The reviewer-side
+evidence pane is unchanged.
 
 **Applicant-facing status (2026-07-30).** The profile dashboard's
 Contributions pane closes with a **Curator applications** section

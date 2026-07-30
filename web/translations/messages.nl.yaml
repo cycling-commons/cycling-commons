@@ -511,8 +511,8 @@ join:
   scope_label: 'Wat zou je willen cureren?'
   scope_whole_country: 'Het hele land'
   osm_label: 'Je OpenStreetMap-gebruikersnaam (optioneel)'
-  about_label: 'Wie ben je, en wat is jouw band met dit gebied?'
-  evidence_hint: 'Je aanvraag wordt beoordeeld op bewijs: wat je op de kaart hebt verbeterd of toegevoegd, spreekt voor je. Bijdragen kan voor of na je aanvraag.'
+  about_label: 'Wie ben je, waarom zou je hier graag curator worden, en welke ervaring breng je mee?'
+  evidence_hint: 'Je hoeft nog niets aan de kaart te hebben toegevoegd om je aan te melden — elke aanvraag wordt door een mens gelezen, en jouw verhaal telt het zwaarst. Heb je hier al iets verbeterd of toegevoegd, dan kijken we daar graag naar.'
   evidence_link: 'Voeg iets toe of verbeter iets op de kaart'
   submit_application: 'Solliciteer als curator'
   flash:

@@ -511,8 +511,8 @@ join:
   scope_label: 'Was möchtest du kuratieren?'
   scope_whole_country: 'Das ganze Land'
   osm_label: 'Dein OpenStreetMap-Benutzername (optional)'
-  about_label: 'Wer bist du, und was verbindet dich mit dieser Region?'
-  evidence_hint: 'Deine Bewerbung wird nach Belegen beurteilt: Was du auf der Karte korrigiert oder ergänzt hast, spricht für dich. Beitragen kannst du vor oder nach der Bewerbung.'
+  about_label: 'Wer bist du, warum möchtest du hier gern Kurator werden, und welche Erfahrung bringst du mit?'
+  evidence_hint: 'Du musst noch nichts zur Karte beigetragen haben, um dich zu bewerben — jede Bewerbung wird von einem Menschen gelesen, und deine Geschichte zählt am meisten. Hast du hier schon etwas korrigiert oder ergänzt, schauen wir uns das gern an.'
   evidence_link: 'Auf der Karte ergänzen oder korrigieren'
   submit_application: 'Als Kurator bewerben'
   flash:

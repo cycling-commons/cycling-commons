@@ -511,8 +511,8 @@ join:
   scope_label: 'Que souhaitez-vous curer ?'
   scope_whole_country: 'Le pays entier'
   osm_label: 'Votre nom d''utilisateur OpenStreetMap (facultatif)'
-  about_label: 'Qui êtes-vous, et quel est votre lien avec cette région ?'
-  evidence_hint: 'Votre candidature est évaluée sur pièces : ce que vous avez corrigé ou ajouté sur la carte parle pour vous. Vous pouvez contribuer avant ou après avoir postulé.'
+  about_label: 'Qui êtes-vous, pourquoi aimeriez-vous devenir curateur ici, et quelle expérience apportez-vous ?'
+  evidence_hint: 'Pas besoin d''avoir déjà contribué à la carte pour postuler — chaque candidature est lue par une personne, et c''est votre histoire qui compte le plus. Si vous avez déjà corrigé ou ajouté des choses ici, nous y jetterons un œil avec plaisir.'
   evidence_link: 'Ajouter ou corriger sur la carte'
   submit_application: 'Candidater pour curer'
   flash:
