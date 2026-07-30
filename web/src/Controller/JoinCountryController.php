@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\OperationalRegions;
 use App\Community\CountryInterestService;
 use App\Community\CuratorApplicationException;
 use App\Community\CuratorApplicationService;
@@ -57,7 +58,9 @@ final class JoinCountryController extends AbstractController
         $onboarded = false !== $db->fetchOne('SELECT 1 FROM region WHERE country_code = ? LIMIT 1', [$code]);
         $regions = $onboarded
             ? $db->fetchAllAssociative(
-                'SELECT id, name FROM region WHERE country_code = ? ORDER BY admin_level ASC NULLS LAST, name ASC',
+                'SELECT id, name FROM region WHERE country_code = ? AND '
+                .OperationalRegions::predicate('region')
+                .' ORDER BY admin_level ASC NULLS LAST, name ASC',
                 [$code],
             )
             : [];

@@ -52,6 +52,7 @@ final class RegionRegistryProvider
                     outline, curated_default
              FROM region
              WHERE geom IS NOT NULL AND country_code <> \'\'
+               AND '.OperationalRegions::predicate('region').'
              ORDER BY area_km2 DESC, slug',
         );
 

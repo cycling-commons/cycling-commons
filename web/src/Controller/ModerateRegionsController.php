@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\CuratedReadiness;
+use App\Catalog\OperationalRegions;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
@@ -153,7 +154,8 @@ final class ModerateRegionsController extends AbstractController
         $scope = $this->scopeProvider->scopeFor($user);
         $sql = "SELECT id, slug, country_code AS cc, curated_default
                   FROM region
-                 WHERE geom IS NOT NULL AND country_code <> ''";
+                 WHERE geom IS NOT NULL AND country_code <> ''"
+            .' AND '.OperationalRegions::predicate('region');
         $params = [];
         $types = [];
         if (!$scope->global) {
