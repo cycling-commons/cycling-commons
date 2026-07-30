@@ -43,7 +43,7 @@ provider rather than republishing their data.
 
 **1.6 Our commitment.** We will keep the Commons under open, share-alike licences. We will not
 re-close it or place it behind a paywall. The Commons is intended to be handed to an independent
-foundation (a Dutch *Stichting*) that holds it in trust for the public (see Governance).
+foundation that holds it in trust for the public (see Governance).
 
 **1.7 Privacy & GDPR.** We adhere to the EU General Data Protection Regulation (GDPR): we collect
 only the personal data we need, process it lawfully and only as described in our Privacy Policy, and
