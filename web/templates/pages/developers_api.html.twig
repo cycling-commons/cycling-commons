@@ -16,16 +16,23 @@
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <style>
-  body{margin:0}
-  .apibar{display:flex;align-items:center;gap:1rem;background:#14160e;color:#efe6d4;
+  body{margin:0;background:#EFE6D4}
+  .apibar{display:flex;align-items:center;gap:1rem;background:#101E16;color:#EFE6D4;
     padding:.65rem 1.2rem;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:.85rem}
-  .apibar a{color:#efe6d4;text-decoration:none}
+  .apibar a{color:#EFE6D4;text-decoration:none}
   .apibar a:hover{text-decoration:underline}
   .apibar .draft{margin-left:auto;border:1px solid rgba(239,230,212,.4);border-radius:3px;
     padding:.15rem .5rem;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
   {# Redoc's "powered by" badge loads its icon from cdn.redoc.ly, which our
      CSP img-src blocks; hide the broken image, keep the text link. #}
   #redoc img[src^="https://cdn.redoc.ly"]{display:none}
+  {# Redoc paints the middle column white and the search input on white; pull
+     both onto the CC paper tones (styled-components classes are generated, so
+     target the stable structural hooks: the wrapper and the sidebar). #}
+  #redoc .redoc-wrap{background:#EFE6D4}
+  #redoc .menu-content{background:#E2D5BC}
+  #redoc .menu-content label{font-family:'Spline Sans',system-ui,sans-serif}
+  #redoc .api-content h1,#redoc .api-content h2{letter-spacing:-.01em}
 </style>
 </head>
 <body>
@@ -40,11 +47,29 @@ Redoc.init('/api/openapi.yaml', {
   hideDownloadButton: false,
   expandResponses: '200',
   theme: {
-    colors: { primary: { main: '#2f4a3c' } },
+    spacing: { sectionVertical: 16 },
+    colors: {
+      primary: { main: '#1C3A2A' },
+      text: { primary: '#101E16' },
+      warning: { main: '#C8923A' },
+      error: { main: '#B5532E' }
+    },
     typography: {
       fontFamily: "'Spline Sans', system-ui, sans-serif",
-      headings: { fontFamily: "'Bricolage Grotesque', system-ui, sans-serif" }
-    }
+      headings: { fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontWeight: '600' },
+      links: { color: '#B5532E', hover: '#FF5A1F' },
+      code: { fontFamily: "'Spline Sans Mono', monospace", color: '#B5532E', backgroundColor: 'rgba(28,58,42,.08)' }
+    },
+    sidebar: {
+      backgroundColor: '#E2D5BC',
+      textColor: '#101E16',
+      activeTextColor: '#1C3A2A'
+    },
+    rightPanel: {
+      backgroundColor: '#101E16',
+      textColor: '#EFE6D4'
+    },
+    codeBlock: { backgroundColor: '#0B140F' }
   }
 }, document.getElementById('redoc'));
 </script>
