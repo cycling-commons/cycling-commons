@@ -28,11 +28,13 @@
   .reg{display:inline-flex;align-items:center;gap:.5rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);
     border-radius:8px;padding:.45rem .7rem;font-size:.9rem}
   .reg .km{font-family:var(--mono);font-size:.56rem;letter-spacing:.04em;color:#7a7d6c}
-  a.reg.live{background:var(--spruce-lift);color:var(--paper);border-color:var(--spruce-lift)}
-  a.reg.live .km{color:rgba(239,230,212,.7)}
-  a.reg.live:hover{background:var(--trail);color:var(--ink)}
-  a.reg.live .tag{font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;
-    background:rgba(239,230,212,.22);padding:.1rem .3rem;border-radius:3px}
+  a.reg{text-decoration:none;color:inherit}
+  a.reg:hover{border-color:var(--spruce-lift)}
+  .reg .tag{font-family:var(--mono);font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .3rem;border-radius:3px;background:rgba(20,22,14,.08)}
+  .reg.tier-curated{background:var(--spruce-lift);color:var(--paper);border-color:var(--spruce-lift)}
+  .reg.tier-curated .km{color:rgba(239,230,212,.7)}
+  .reg.tier-curated .tag{background:rgba(239,230,212,.22)}
+  .reg.tier-growing .tag{background:var(--trail);color:var(--ink)}
 
   .empty{color:#7a7d6c;font-size:.9rem;padding:2rem 0}
 </style>
@@ -47,53 +49,42 @@
 
 <div class="rwrap">
   <div class="legend">
-    <span><b>{% trans %}regions.legend_live{% endtrans %}</b> {% trans %}regions.legend_live_desc{% endtrans %}</span>
-    <span><b>{% trans %}regions.legend_indicative{% endtrans %}</b> {% trans %}regions.legend_indicative_desc{% endtrans %}</span>
+    <span><b>{% trans %}regions.tier_curated{% endtrans %}</b> {% trans %}regions.tier_curated_desc{% endtrans %}</span>
+    <span><b>{% trans %}regions.tier_growing{% endtrans %}</b> {% trans %}regions.tier_growing_desc{% endtrans %}</span>
+    <span><b>{% trans %}regions.tier_onboarded{% endtrans %}</b> {% trans %}regions.tier_onboarded_desc{% endtrans %}</span>
   </div>
-  <div id="regions-root"><div class="empty">{% trans %}regions.loading{% endtrans %}</div></div>
-</div>
-{% endblock %}
-{% block body_scripts %}
-<script src="{{ asset('data/regions-data.js') }}" defer></script>
-<script nonce="{{ csp_nonce() }}">
-  /* Render Continent → country → regions from the baked CC_REGIONS snapshot.
-     Regions are admin divisions merged to ~Wallonia size (see the spec).
-     Wallonia links to its live atlas; the rest are indicative.
-     regions-data.js is deferred, so rendering waits for DOMContentLoaded. */
-  document.addEventListener('DOMContentLoaded', () => {
-  const T = {
-    region: "{{ 'regions.count_region'|trans|e('js') }}",
-    regions: "{{ 'regions.count_regions'|trans|e('js') }}",
-    country: "{{ 'regions.count_country'|trans|e('js') }}",
-    countries: "{{ 'regions.count_countries'|trans|e('js') }}",
-    live: "{{ 'regions.badge_live'|trans|e('js') }}"
-  };
-  const plural = (n, one, many) => (n === 1 ? one : many).replace('%n%', n);
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const root = document.getElementById('regions-root');
-  const DATA = window.CC_REGIONS || [];
 
-  if (!DATA.length) {
-    root.innerHTML = '<div class="empty">{{ 'regions.no_regions'|trans|e('js') }}</div>';
-  } else {
-    root.innerHTML = DATA.map(cont => {
-      const countries = cont.countries.map(co => {
-        const regs = co.regions.map(r => {
-          const km = r.km2 ? `<span class="km">${Number(r.km2).toLocaleString()} km²</span>` : '';
-          if (r.live) {
-            return `<a class="reg live" href="{{ path('region') }}"><span>${esc(r.name)}</span><span class="tag">${T.live}</span>${km}</a>`;
-          }
-          return `<span class="reg"><span>${esc(r.name)}</span>${km}</span>`;
-        }).join('');
-        return `<div class="country">
-            <div class="ch"><h3>${esc(co.name)}</h3><span class="cc">${esc(co.code)}</span><span class="n">${plural(co.regions.length, T.region, T.regions)}</span></div>
-            <div class="regions">${regs}</div>
-          </div>`;
-      }).join('');
-      const nC = cont.countries.length;
-      return `<h2 class="cont">${esc(cont.continent)}<span>${plural(nC, T.country, T.countries)}</span></h2>${countries}`;
-    }).join('');
-  }
-  });
-</script>
+  {% if countries is empty %}
+    <div class="empty">{% trans %}regions.no_regions{% endtrans %}</div>
+  {% endif %}
+
+  {% set continent = '' %}
+  {% for country in countries %}
+    {% if country.continentCode != continent %}
+      {% set continent = country.continentCode %}
+      <h2 class="cont">{{ ('continent.' ~ continent|lower)|trans }}</h2>
+    {% endif %}
+    <div class="country">
+      <div class="ch">
+        <img src="{{ asset(country.flag) }}" alt="" width="20" height="15">
+        <h3>{{ country.name }}</h3><span class="cc">{{ country.code }}</span>
+        <span class="n">
+          {{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}
+          · <a href="{{ path('join_country', {cc: country.code}) }}">{% trans %}regions.apply{% endtrans %}</a>
+        </span>
+      </div>
+      <div class="regions">
+        {% for reg in country.regions %}
+          <a class="reg tier-{{ reg.tier }}" href="{{ path('map') }}?scope=region:{{ reg.slug }}">
+            <span>{{ ('region.' ~ reg.slug ~ '.label')|trans }}</span>
+            <span class="tag">{{ ('regions.tier_' ~ reg.tier)|trans }}</span>
+            {% if reg.itemsVerified > 0 %}<span class="km">{{ (reg.itemsVerified == 1 ? 'regions.items_one' : 'regions.items_many')|trans({'%n%': reg.itemsVerified}) }}</span>{% endif %}
+            {% if reg.routes > 0 %}<span class="km">{{ (reg.routes == 1 ? 'regions.routes_one' : 'regions.routes_many')|trans({'%n%': reg.routes}) }}</span>{% endif %}
+            {% if reg.areaKm2 %}<span class="km">{{ reg.areaKm2|round|number_format(0, '.', ',') }} km²</span>{% endif %}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
 {% endblock %}

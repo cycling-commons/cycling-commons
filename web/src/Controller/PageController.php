@@ -4,8 +4,10 @@
 
 namespace App\Controller;
 
+use App\Catalog\RegionDirectoryProvider;
 use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -45,12 +47,13 @@ final class PageController extends AbstractController
     }
 
     #[Route('/regions', name: 'regions')]
-    public function regions(): Response
+    public function regions(Request $request, RegionDirectoryProvider $directory): Response
     {
         return $this->render('pages/regions.html.twig', [
             'page_title' => 'meta.regions_title',
             'page_description' => 'meta.regions_description',
             'nav_active' => 'regions',
+            'countries' => $directory->directory($request->getLocale()),
         ]);
     }
 
