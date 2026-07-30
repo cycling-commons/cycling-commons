@@ -33,8 +33,8 @@ start:
 
 1. **Open licence from day one** — ODbL. Already in force.
 2. **Architectural separation from day one** — independent data, accounts, API, and bulk exports.
-3. **Spin out into an independent foundation** (a Dutch *Stichting*, following established
-   open-data foundation precedents) at a defined milestone — real external contributors, or a
+3. **Spin out into an independent foundation** (following established open-data foundation
+   precedents) at a defined milestone — real external contributors, or a
    threshold of verified data.
 
 The public pre-commitment plus the open licence is what makes "we will spin it out" credible rather
@@ -53,7 +53,7 @@ resources (see [Manifesto](manifesto.md)). Each maps to a concrete part of the s
 | **4. Monitoring** | The **freshness model** — timestamps, reporter counts, confirm/decay |
 | **5. Graduated sanctions** | *(aspirational)* Escalating consequences for rule-breaking — warn → restrict → remove, sized to severity and repeat offence rather than a first-strike ban. Aimed at abuse: spam, vote-rigging, vandalism |
 | **6. Cheap conflict resolution** | A fast, low-cost way to settle *good-faith* disagreements — a contested edit, a curation call — without escalation or cost. Adjudication between members, not punishment |
-| **7. Recognised right to organise** | The community's right to self-govern is recognised from outside: the *Stichting* gives it legal standing independent of BikeCoders, and the ODbL fork/exit right means no upstream or platform can deny it |
+| **7. Recognised right to organise** | The community's right to self-govern is recognised from outside: the foundation gives it legal standing independent of BikeCoders, and the ODbL fork/exit right means no upstream or platform can deny it |
 | **8. Nested enterprises** | Self-governing regions nested under a coordinating core: rider → regional curators → core stewardship → foundation (see [Regional governance](#regional-governance-subsidiarity-not-hierarchy)) |
 
 Together these cover the common failure modes of a shared data resource — spam, gaming, and enclosure.

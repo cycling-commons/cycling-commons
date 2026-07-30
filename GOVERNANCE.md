@@ -32,7 +32,7 @@ and the Commons carries no app's branding.
    product). Already in force.
 2. **Architectural separation from day one** — the Commons keeps its own schema, accounts, API,
    and bulk exports, independent of any app built on it.
-3. **Spin-out to an independent foundation** — a Dutch *Stichting*, formalised at a defined
+3. **Spin-out to an independent foundation** — formalised at a defined
    milestone (real external contributors, or a threshold of verified data). The public
    pre-commitment plus the open licence is what makes "we will spin it out" credible rather than
    a trap.
