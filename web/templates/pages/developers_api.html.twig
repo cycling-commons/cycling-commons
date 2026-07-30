@@ -32,7 +32,11 @@
   #redoc .redoc-wrap{background:#EFE6D4}
   #redoc .menu-content{background:#E2D5BC}
   #redoc .menu-content label{font-family:'Spline Sans',system-ui,sans-serif}
-  #redoc .api-content h1,#redoc .api-content h2{letter-spacing:-.01em}
+  #redoc .api-content h1,#redoc .api-content h2{letter-spacing:-.01em;margin-bottom:.25em}
+  {# The heading and its body live in separate wrappers; the h2's bottom
+     margin plus the body's first-paragraph top margin added up to a ~29px
+     hole under every section title. #}
+  #redoc .redoc-markdown > p:first-child{margin-top:0}
 </style>
 </head>
 <body>
