@@ -19,23 +19,28 @@
   <div class="kicker" style="color:var(--trail)">{% trans %}developers.kicker{% endtrans %}</div>
   <h1 class="disp">{% trans %}developers.title{% endtrans %}</h1>
   <p class="lead" style="margin-top:1rem">{% trans %}developers.lead{% endtrans %}</p>
+  <p style="margin-top:1.2rem;font-size:.85rem;color:rgba(239,230,212,.7);border-left:2px solid var(--trail);padding-left:.9rem">{{ 'developers.status'|trans|rich }}</p>
 </div></div>
 
 <section class="pad"><div class="wrap">
   <div class="kicker">{% trans %}developers.ep_kicker{% endtrans %}</div>
   <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep1_path'|trans }}</span><span class="desc">{{ 'developers.ep1_desc'|trans|rich }}</span></div>
-  <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep2_path'|trans }}</span><span class="desc">{% trans %}developers.ep2_desc{% endtrans %}</span></div>
+  <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep2_path'|trans }}</span><span class="desc">{{ 'developers.ep2_desc'|trans|rich }}</span></div>
   <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep3_path'|trans }}</span><span class="desc">{% trans %}developers.ep3_desc{% endtrans %}</span></div>
-  <div class="ep"><span class="verb">POST</span><span class="path">{{ 'developers.ep4_path'|trans }}</span><span class="desc">{% trans %}developers.ep4_desc{% endtrans %}</span></div>
+  <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep4_path'|trans }}</span><span class="desc">{% trans %}developers.ep4_desc{% endtrans %}</span></div>
+  <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep5_path'|trans }}</span><span class="desc">{% trans %}developers.ep5_desc{% endtrans %}</span></div>
+  <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep6_path'|trans }}</span><span class="desc">{% trans %}developers.ep6_desc{% endtrans %}</span></div>
+  <div class="ep"><span class="verb">POST</span><span class="path">{{ 'developers.ep7_path'|trans }}</span><span class="desc">{% trans %}developers.ep7_desc{% endtrans %}</span></div>
 
   <div class="two" style="margin-top:2.4rem">
     <div>
       <div class="kicker">{% trans %}developers.ex_kicker{% endtrans %}</div>
-      <div class="code"><span class="c"># all drinking water in a bounding box</span><br/>curl <span class="s">"https://api.cyclingcommons.org/v1/features\<br/>&nbsp;&nbsp;?type=water&amp;bbox=5.6,50.3,6.1,50.6"</span></div>
+      <div class="code"><span class="c"># drinking water &amp; food in a bounding box</span><br/>curl <span class="s">"https://api.cyclingcommons.org/v1/search\<br/>&nbsp;&nbsp;?letter=C&amp;bbox=5.6,50.3,6.1,50.6"</span></div>
     </div>
     <div>
       <div class="kicker">{% trans %}developers.resp_kicker{% endtrans %}</div>
-      <div class="code">{<br/>&nbsp;<span class="k">"type"</span>:<span class="s">"FeatureCollection"</span>,<br/>&nbsp;<span class="k">"licence"</span>:<span class="s">"ODbL-1.0"</span>,<br/>&nbsp;<span class="k">"features"</span>:[{<br/>&nbsp;&nbsp;<span class="k">"category"</span>:<span class="s">"water"</span>,<br/>&nbsp;&nbsp;<span class="k">"name"</span>:<span class="s">"Fountain · Spa"</span>,<br/>&nbsp;&nbsp;<span class="k">"potable"</span>:true,<br/>&nbsp;&nbsp;<span class="k">"confirmed"</span>:3<br/>&nbsp;}]<br/>}</div>
+      <div class="code">{<br/>&nbsp;<span class="k">"type"</span>:<span class="s">"FeatureCollection"</span>,<br/>&nbsp;<span class="k">"licence"</span>:<span class="s">"ODbL-1.0"</span>,<br/>&nbsp;<span class="k">"features"</span>:[{<br/>&nbsp;&nbsp;<span class="k">"osm_ref"</span>:<span class="s">"node/4207030426"</span>,<br/>&nbsp;&nbsp;<span class="k">"letter"</span>:<span class="s">"C"</span>,<br/>&nbsp;&nbsp;<span class="k">"tier"</span>:<span class="s">"curated"</span>,<br/>&nbsp;&nbsp;<span class="k">"potable"</span>:true,<br/>&nbsp;&nbsp;<span class="k">"confirmed"</span>:3<br/>&nbsp;}]<br/>}</div>
+      <p style="margin-top:.6rem;font-size:.8rem;color:#595c4d">{{ 'developers.ex_hydrate'|trans|rich }}</p>
     </div>
   </div>
 </div></section>
