@@ -11,7 +11,7 @@ import os
 import pytest
 
 from divisions import config
-from divisions.export_divisions import build_feature, build_where, export_country
+from divisions.export_divisions import build_feature, build_where, export_country, l2_cfg
 
 BE = config.COUNTRY_CONFIG["BE"]
 
@@ -183,3 +183,37 @@ def test_live_overture_nl(tmp_path):
     names = {p.name for p in written}
     assert "region-limburg-nl.geojson" in names
     assert "region-noord-holland.geojson" in names
+
+
+def test_country_l2_covers_every_configured_country():
+    # Every onboardable country must have an L2 identity — a missing entry
+    # would make the always-emit-L2 branch fail loud mid-export.
+    for cc in config.COUNTRY_CONFIG:
+        assert cc in config.COUNTRY_L2, f"COUNTRY_L2 missing {cc}"
+        slug, name = config.COUNTRY_L2[cc]
+        assert slug and slug == slug.lower()
+        assert name
+
+
+def test_l2_cfg_builds_a_country_subtype_config():
+    cfg = l2_cfg("BE")
+    assert cfg["subtype"] == "country"
+    assert cfg["slugs"] == {"BE": "belgium"}
+    assert cfg["names"] == {"BE": "Belgium"}
+    # bbox carries over so the Overture scan predicate stays cheap.
+    assert cfg["bbox"] == config.COUNTRY_CONFIG["BE"]["bbox"]
+
+
+def test_l2_feature_shape_via_existing_builder():
+    # The L2 outline flows through the SAME build_feature as every region:
+    # provenance-identical rows (design §9).
+    f = build_feature("BE", "BE", MULTI, 30528.0, l2_cfg("BE"))
+    assert f["properties"] == {
+        "slug": "belgium",
+        "name": "Belgium",
+        "area_km2": 30528,
+        "country_code": "BE",
+        "iso_code": "BE",
+        "admin_level": 2,
+        "source": "overture",
+    }

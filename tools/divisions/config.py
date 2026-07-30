@@ -109,3 +109,16 @@ COUNTRY_CONFIG = {
         "bbox": [5.7, 49.4, 6.6, 50.2],
     },
 }
+
+# Level-2 country identity every onboarding run emits ALONGSIDE the operating
+# level (2026-07-30-dynamic-region-pages-design.md §9): (slug, English name).
+# slug is IDENTITY (upsert-by-slug) like every region slug — plain English
+# country name, matching the 'luxembourg' precedent. A country whose operating
+# subtype is already 'country' (LU) is not emitted twice; its entry here keeps
+# the invariant "every configured country has an L2 identity" testable.
+COUNTRY_L2 = {
+    "BE": ("belgium", "Belgium"),
+    "NL": ("netherlands", "Netherlands"),
+    "DE": ("germany", "Germany"),
+    "LU": ("luxembourg", "Luxembourg"),
+}

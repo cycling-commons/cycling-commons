@@ -136,6 +136,27 @@ def query_country(con, cc, cfg, release):
     return con.execute(sql, params).fetchall()
 
 
+def l2_cfg(cc):
+    """A synthetic COUNTRY_CONFIG block selecting a country's level-2 outline.
+
+    Reuses query_country/build_feature wholesale: subtype='country' rows carry
+    region=NULL, so the slug map is keyed on the ISO 3166-1 code (the LU
+    precedent), and SUBTYPE_ADMIN_LEVEL stamps admin_level=2.
+    """
+    if cc not in config.COUNTRY_L2:
+        raise SystemExit(
+            f"No COUNTRY_L2 entry for {cc} — every onboardable country needs "
+            "a level-2 slug/name (2026-07-30-dynamic-region-pages-design.md §9)."
+        )
+    slug, name = config.COUNTRY_L2[cc]
+    return {
+        "subtype": "country",
+        "slugs": {cc: slug},
+        "names": {cc: name},
+        "bbox": config.COUNTRY_CONFIG[cc].get("bbox"),
+    }
+
+
 def export_country(cc, out_dir, release=None, con=None):
     """Query Overture for `cc`'s operating-level regions and write region-<slug>.geojson."""
     release = release or config.OVERTURE_RELEASE
@@ -148,36 +169,44 @@ def export_country(cc, out_dir, release=None, con=None):
     con = con or _connect()
     out_dir = pathlib.Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    written, seen = [], set()
-    for iso, geojson in query_country(con, cc, cfg, release):
-        if iso not in cfg["slugs"]:
-            # A subtype='region' code Overture carries but we have not chosen to
-            # seed (worldwide guard: seed only configured regions).
-            print(f"  skip {iso}: in Overture but not in {cc} config")
-            continue
-        if iso in seen:
-            # Never last-wins-overwrite a written artifact (07-20 review
-            # finding 4): >1 land row per ISO means release/schema drift or a
-            # config mistake — a human decides which geometry is the region.
+    # Always emit the level-2 country outline alongside the operating level
+    # (2+4 default, 2026-07-30-dynamic-region-pages-design.md §9). A country
+    # operating AT level 2 (LU) already emits it as its operating level.
+    configs = [cfg]
+    if cfg["subtype"] != "country":
+        configs.append(l2_cfg(cc))
+    written = []
+    for c in configs:
+        seen = set()
+        for iso, geojson in query_country(con, cc, c, release):
+            if iso not in c["slugs"]:
+                # A subtype='region' code Overture carries but we have not chosen to
+                # seed (worldwide guard: seed only configured regions).
+                print(f"  skip {iso}: in Overture but not in {cc} config")
+                continue
+            if iso in seen:
+                # Never last-wins-overwrite a written artifact (07-20 review
+                # finding 4): >1 land row per ISO means release/schema drift or a
+                # config mistake — a human decides which geometry is the region.
+                raise SystemExit(
+                    f"Overture returned multiple land rows for {iso} in {cc} "
+                    f"(subtype={c['subtype']}, release={release}) — refusing to "
+                    f"overwrite region-{c['slugs'][iso]}.geojson; inspect the rows."
+                )
+            seen.add(iso)
+            geom = json.loads(geojson)
+            feat = build_feature(iso, cc, geom, geodesic_area_km2(geom), c)
+            path = out_dir / f"region-{feat['properties']['slug']}.geojson"
+            path.write_text(json.dumps(feat, ensure_ascii=False), encoding="utf-8")
+            p = feat["properties"]
+            print(f"  {path.name}: {p['iso_code']} {p['area_km2']} km² ({feat['geometry']['type']})")
+            written.append(path)
+        missing = set(c["slugs"]) - seen
+        if missing:
             raise SystemExit(
-                f"Overture returned multiple land rows for {iso} in {cc} "
-                f"(subtype={cfg['subtype']}, release={release}) — refusing to "
-                f"overwrite region-{cfg['slugs'][iso]}.geojson; inspect the rows."
+                f"Overture returned no rows for {sorted(missing)} in {cc} "
+                f"(subtype={c['subtype']}, release={release}) — check the config."
             )
-        seen.add(iso)
-        geom = json.loads(geojson)
-        feat = build_feature(iso, cc, geom, geodesic_area_km2(geom), cfg)
-        path = out_dir / f"region-{feat['properties']['slug']}.geojson"
-        path.write_text(json.dumps(feat, ensure_ascii=False), encoding="utf-8")
-        p = feat["properties"]
-        print(f"  {path.name}: {p['iso_code']} {p['area_km2']} km² ({feat['geometry']['type']})")
-        written.append(path)
-    missing = set(cfg["slugs"]) - seen
-    if missing:
-        raise SystemExit(
-            f"Overture returned no rows for {sorted(missing)} in {cc} "
-            f"(subtype={cfg['subtype']}, release={release}) — check the config."
-        )
     return written
 
 
