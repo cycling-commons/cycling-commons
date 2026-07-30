@@ -511,6 +511,7 @@ join:
   scope_label: 'Wat zou je willen cureren?'
   scope_whole_country: 'Het hele land'
   osm_label: 'Je OpenStreetMap-gebruikersnaam (optioneel)'
+  social_label: 'Waar kunnen we je online vinden? Een website of sociaal profiel (optioneel)'
   about_label: 'Wie ben je, waarom zou je hier graag curator worden, en welke ervaring breng je mee?'
   evidence_hint: 'Je hoeft nog niets aan de kaart te hebben toegevoegd om je aan te melden — elke aanvraag wordt door een mens gelezen, en jouw verhaal telt het zwaarst. Heb je hier al iets verbeterd of toegevoegd, dan kijken we daar graag naar.'
   evidence_link: 'Voeg iets toe of verbeter iets op de kaart'
@@ -527,6 +528,7 @@ join:
     already_pending: 'Je hebt al een aanvraag in behandeling voor dit land.'
     not_onboarded: '%country% heeft nog geen regio''s, dus er is nog niets te curateren.'
     osm_handle_too_long: 'Die OpenStreetMap-gebruikersnaam is te lang.'
+    social_url_invalid: 'Die link ziet er niet uit als een geldig webadres.'
   message:
     approved: 'Je aanvraag om %country% te curateren is goedgekeurd. Welkom aan boord.'
     declined: 'Je aanvraag om %country% te curateren is deze keer niet goedgekeurd.'
@@ -1884,6 +1886,7 @@ admin:
     osm_unverified: 'niet geverifieerd'
     osm_not_found: 'niet gevonden op OSM'
     osm_changesets: '%count% wijzigingssets'
+    social_label: 'Online'
     applicant_gone: 'Dit account bestaat niet meer.'
     note_placeholder: 'Optionele notitie voor de aanvrager'
     approve: 'Goedkeuren'

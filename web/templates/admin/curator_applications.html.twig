@@ -75,6 +75,15 @@
                         </p>
                     {% endif %}
 
+                    {% if row.app.socialUrl %}
+                        <p class="mb-1">
+                            {{ 'admin.curator.social_label'|trans }}:
+                            {# Untrusted applicant input: the service pins the scheme to
+                               http(s), and the rel keeps the reviewer tab isolated. #}
+                            <a href="{{ row.app.socialUrl }}" target="_blank" rel="noopener noreferrer nofollow">{{ row.app.socialUrl }}</a>
+                        </p>
+                    {% endif %}
+
                     <p class="mb-3">
                         <strong>{{ 'admin.curator.about_label'|trans }}:</strong><br>
                         {# No white-space:pre-wrap — PublicNoteFilter::clean() collapses all

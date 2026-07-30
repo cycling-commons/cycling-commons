@@ -511,6 +511,7 @@ join:
   scope_label: 'Que souhaitez-vous curer ?'
   scope_whole_country: 'Le pays entier'
   osm_label: 'Votre nom d''utilisateur OpenStreetMap (facultatif)'
+  social_label: 'Où peut-on vous trouver en ligne ? Un site web ou profil social (facultatif)'
   about_label: 'Qui êtes-vous, pourquoi aimeriez-vous devenir curateur ici, et quelle expérience apportez-vous ?'
   evidence_hint: 'Pas besoin d''avoir déjà contribué à la carte pour postuler — chaque candidature est lue par une personne, et c''est votre histoire qui compte le plus. Si vous avez déjà corrigé ou ajouté des choses ici, nous y jetterons un œil avec plaisir.'
   evidence_link: 'Ajouter ou corriger sur la carte'
@@ -527,6 +528,7 @@ join:
     already_pending: 'Vous avez déjà une candidature en attente pour ce pays.'
     not_onboarded: '%country% n''a pas encore de régions, donc il n''y a rien à curer.'
     osm_handle_too_long: 'Ce nom d''utilisateur OpenStreetMap est trop long.'
+    social_url_invalid: 'Ce lien ne ressemble pas à une adresse web valide.'
   message:
     approved: 'Votre candidature pour curer %country% a été approuvée. Bienvenue.'
     declined: 'Votre candidature pour curer %country% n’a pas été retenue cette fois-ci.'
@@ -1884,6 +1886,7 @@ admin:
     osm_unverified: 'non vérifié'
     osm_not_found: 'introuvable sur OSM'
     osm_changesets: '%count% ensembles de modifications'
+    social_label: 'En ligne'
     applicant_gone: 'Ce compte n’existe plus.'
     note_placeholder: 'Note facultative pour le candidat'
     approve: 'Approuver'

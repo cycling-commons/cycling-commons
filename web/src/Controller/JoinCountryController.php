@@ -104,6 +104,7 @@ final class JoinCountryController extends AbstractController
                             '' === $regionRaw ? null : $request->request->getInt('region'),
                             $request->request->getString('osm'),
                             $about,
+                            $request->request->getString('social'),
                         );
                         $this->addFlash('success', $translator->trans('join.flash.application_sent'));
 
@@ -131,6 +132,7 @@ final class JoinCountryController extends AbstractController
                     'already_pending' => 'join.error.already_pending',
                     'not_onboarded' => 'join.error.not_onboarded',
                     'osm_handle_too_long' => 'join.error.osm_handle_too_long',
+                    'social_url_invalid' => 'join.error.social_url_invalid',
                     default => null,
                 };
                 $error = null !== $key

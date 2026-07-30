@@ -223,4 +223,39 @@ final class CuratorApplicationTest extends KernelTestCase
         self::assertTrue($app->getOsmExists());
         self::assertSame(2, $app->getOsmChangesetCount());
     }
+
+    public function testSocialUrlIsStoredAndSchemeLessInputIsNormalized(): void
+    {
+        self::bootKernel();
+        $this->seedCountryRegion('CH', 'suisse-test');
+        $svc = self::getContainer()->get(CuratorApplicationService::class);
+
+        $app = $svc->submit($this->user('curator-soc1@example.test'), 'CH', null, null, 'about me', 'https://instagram.com/some.rider');
+        self::assertSame('https://instagram.com/some.rider', $app->getSocialUrl());
+
+        $app = $svc->submit($this->user('curator-soc2@example.test'), 'CH', null, null, 'about me', 'instagram.com/some.rider');
+        self::assertSame('https://instagram.com/some.rider', $app->getSocialUrl(), 'people paste links without a scheme');
+
+        $app = $svc->submit($this->user('curator-soc3@example.test'), 'CH', null, null, 'about me', '   ');
+        self::assertNull($app->getSocialUrl(), 'the field is optional');
+
+        $app = $svc->submit($this->user('curator-soc4@example.test'), 'CH', null, null, 'about me');
+        self::assertNull($app->getSocialUrl(), 'omitting the argument stays valid');
+    }
+
+    public function testSocialUrlRejectsNonWebSchemesAndGarbage(): void
+    {
+        self::bootKernel();
+        $this->seedCountryRegion('AT', 'austria-test');
+        $svc = self::getContainer()->get(CuratorApplicationService::class);
+
+        foreach (['javascript:alert(1)', 'not a url at all', 'https://'.str_repeat('a', 250).'.example'] as $bad) {
+            try {
+                $svc->submit($this->user('curator-soc-bad-'.md5($bad).'@example.test'), 'AT', null, null, 'about me', $bad);
+                self::fail(sprintf('"%s" was accepted', $bad));
+            } catch (CuratorApplicationException $e) {
+                self::assertSame('social_url_invalid', $e->reason);
+            }
+        }
+    }
 }

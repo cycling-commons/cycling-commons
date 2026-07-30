@@ -45,8 +45,9 @@ final class CuratorApplicationService
      *                                     §8's `uniq_curator_application_pending`
      *                                     is the invariant, this check is
      *                                     just the friendly error before
-     *                                     it), or the OSM handle is too long
-     *                                     for the column
+     *                                     it), the OSM handle is too long
+     *                                     for the column, or the social link
+     *                                     is not a plausible http(s) URL
      * @throws InvalidNoteException        when the about text fails §7 hardening
      */
     public function submit(
@@ -55,6 +56,7 @@ final class CuratorApplicationService
         ?int $requestedRegionId,
         ?string $osmUsername,
         string $about,
+        ?string $socialUrl = null,
     ): CuratorApplication {
         $cc = strtoupper(trim($countryCode));
 
@@ -69,6 +71,9 @@ final class CuratorApplicationService
 
         $app = new CuratorApplication((int) $user->getId(), $cc);
         $app->setAbout($this->notes->clean($about, PublicNoteFilter::MAX_ABOUT));
+        // Validated before the OSM block so a bad link never costs a live
+        // verify round-trip.
+        $app->setSocialUrl(null === $socialUrl ? null : $this->normalizeSocialUrl($socialUrl));
 
         if (null !== $requestedRegionId && $this->regionBelongsToCountry($requestedRegionId, $cc)) {
             $app->setRequestedRegionId($requestedRegionId);
@@ -115,6 +120,36 @@ final class CuratorApplicationService
         }
 
         return $app;
+    }
+
+    /**
+     * The optional "where can we find you online" link. People paste
+     * scheme-less handles ("instagram.com/rider"), so a missing scheme gets
+     * https:// prefixed before validating; any explicit non-http(s) scheme
+     * (javascript:, ftp:) is rejected rather than rewritten — the reviewer
+     * page renders this as a clickable href, so the scheme allow-list is the
+     * XSS boundary, not a nicety. Returns null for a blank field.
+     *
+     * @throws CuratorApplicationException social_url_invalid
+     */
+    private function normalizeSocialUrl(string $raw): ?string
+    {
+        $url = trim($raw);
+        if ('' === $url) {
+            return null;
+        }
+        if (null === parse_url($url, PHP_URL_SCHEME)) {
+            $url = 'https://'.$url;
+        }
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        if (mb_strlen($url) > 255
+            || !\is_string($scheme)
+            || !\in_array(strtolower($scheme), ['http', 'https'], true)
+            || false === filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new CuratorApplicationException('social_url_invalid', 'That link does not look like a valid web address.');
+        }
+
+        return $url;
     }
 
     /**

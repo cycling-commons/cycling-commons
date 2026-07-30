@@ -63,6 +63,14 @@ class CuratorApplication
     #[ORM\Column(type: Types::TEXT)]
     private string $about = '';
 
+    /**
+     * Optional "where can we find you online" link — a normalized http(s)
+     * URL, validated by CuratorApplicationService. Reviewer-only, like the
+     * OSM handle; never rendered publicly.
+     */
+    #[ORM\Column(name: 'social_url', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $socialUrl = null;
+
     #[ORM\Column(type: Types::STRING, length: 12, enumType: CuratorApplicationStatus::class)]
     private CuratorApplicationStatus $status = CuratorApplicationStatus::Pending;
 
@@ -166,6 +174,16 @@ class CuratorApplication
     public function setAbout(string $about): void
     {
         $this->about = $about;
+    }
+
+    public function getSocialUrl(): ?string
+    {
+        return $this->socialUrl;
+    }
+
+    public function setSocialUrl(?string $url): void
+    {
+        $this->socialUrl = $url;
     }
 
     public function getStatus(): CuratorApplicationStatus

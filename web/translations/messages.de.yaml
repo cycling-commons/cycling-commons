@@ -511,6 +511,7 @@ join:
   scope_label: 'Was möchtest du kuratieren?'
   scope_whole_country: 'Das ganze Land'
   osm_label: 'Dein OpenStreetMap-Benutzername (optional)'
+  social_label: 'Wo finden wir dich online? Eine Website oder ein Social-Profil (optional)'
   about_label: 'Wer bist du, warum möchtest du hier gern Kurator werden, und welche Erfahrung bringst du mit?'
   evidence_hint: 'Du musst noch nichts zur Karte beigetragen haben, um dich zu bewerben — jede Bewerbung wird von einem Menschen gelesen, und deine Geschichte zählt am meisten. Hast du hier schon etwas korrigiert oder ergänzt, schauen wir uns das gern an.'
   evidence_link: 'Auf der Karte ergänzen oder korrigieren'
@@ -527,6 +528,7 @@ join:
     already_pending: 'Du hast für dieses Land bereits eine Bewerbung in Bearbeitung.'
     not_onboarded: '%country% hat noch keine Regionen, daher gibt es dort noch nichts zu kuratieren.'
     osm_handle_too_long: 'Dieser OpenStreetMap-Benutzername ist zu lang.'
+    social_url_invalid: 'Dieser Link sieht nicht wie eine gültige Webadresse aus.'
   message:
     approved: 'Deine Bewerbung als Kurator für %country% wurde genehmigt. Willkommen an Bord.'
     declined: 'Deine Bewerbung als Kurator für %country% wurde dieses Mal nicht angenommen.'
@@ -1884,6 +1886,7 @@ admin:
     osm_unverified: 'nicht verifiziert'
     osm_not_found: 'auf OSM nicht gefunden'
     osm_changesets: '%count% Änderungssätze'
+    social_label: 'Online'
     applicant_gone: 'Dieses Konto existiert nicht mehr.'
     note_placeholder: 'Optionale Notiz an die bewerbende Person'
     approve: 'Genehmigen'

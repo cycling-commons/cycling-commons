@@ -671,7 +671,8 @@ Entity `App\Community\Entity\CuratorApplication`, table `curator_application`:
 | `osm_verified_at` | timestamp, nullable | set only when the OSM lookup was *reachable* — null means unchecked or unreachable, never "checked and empty" |
 | `osm_exists` | boolean, nullable — **tri-state** | null = never checked or OSM unreachable; true = handle found; false = checked and confirmed absent. Absence and unknown are deliberately two different values: collapsing them would let a fabricated handle render as verified on the review screen |
 | `osm_changeset_count` | int, nullable | set only when `osm_exists = true` — a count is meaningless for a handle that doesn't exist |
-| `about` | text | hardened per §11.3, cap 1200 chars |
+| `about` | text | hardened per §11.3, cap 1200 chars — the only **required** form field |
+| `social_url` | varchar(255), nullable | optional "where can we find you online" link (2026-07-30). Scheme-less input gets `https://` prefixed (people paste `instagram.com/handle`); after that the scheme must be http(s) and the whole thing a `FILTER_VALIDATE_URL`-valid URL ≤ 255 chars, else `social_url_invalid`. The allow-listed scheme is the XSS boundary: the review screen renders it as a clickable `target="_blank" rel="noopener noreferrer nofollow"` link. Reviewer-only, never public |
 | `status` | varchar(12), enum `CuratorApplicationStatus` | `pending` / `approved` / `declined` / `withdrawn` (`withdrawn` has no UI path yet) |
 | `decided_by` / `decided_at` / `decision_note` | bigint / timestamp / text, nullable | mirrors `Submission`'s decision columns (§3.1) |
 | `created_at` | timestamp | |
