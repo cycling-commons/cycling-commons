@@ -284,8 +284,13 @@ real abuse appears.
 
 ## 12. The two remaining questions, and the recommendation on each
 
-Both are recorded as **recommendations pending the owner's confirmation**, not as
-settled decisions. Neither blocks the implementation of this design.
+> **Decided by the owner (2026-07-30): both recommendations adopted as
+> written.** 12.1 — onboarding runs at levels 2 + 4 by default, finer levels
+> only per country on evidence. 12.2 — interest counts stay owner-only; no
+> public or admin counter is built for v1.
+
+Both were recorded as **recommendations pending the owner's confirmation**, not
+as settled decisions. Neither blocked the implementation of this design.
 
 ### 12.1 Region generation depth per country
 
