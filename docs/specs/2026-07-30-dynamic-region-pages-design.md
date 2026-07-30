@@ -230,3 +230,97 @@ regions pages now show at each stage.
 - HTTP/shared caching of the pages (add only if traffic demands).
 - The map module split, the chip-ranking consumer of `CC_REGIONS`, and the
   go-live gate (all standing constraints).
+
+## Execution notes (2026-07-30)
+
+Written after all eight tasks landed on `symfony-base`, from what actually
+shipped rather than from this design's intentions.
+
+**What shipped, per task.**
+
+- **Task 1** (`f140b23`) — `tools/divisions` always emits the level-2
+  country outline alongside the level-4 (or configured-level) divisions in
+  the same export run, per §9.
+- **Task 2** (`7981e94`) — `OperationalRegions::predicate()` landed
+  (§4): a region row is operational iff its `admin_level` equals the
+  deepest onboarded level for its country, `IS NOT DISTINCT FROM`-safe for
+  legacy single-row/NULL-level countries.
+- **Task 3a** (`828ded1`, inserted mid-window — see below) —
+  `ImportCatalogCommand::assertRegionsTessellate()` made per
+  `(country_code, admin_level)`.
+- **Task 3** (`1e980c8`) — the one-time BE/NL/DE backfill, plus the
+  playbook README rewritten to the 2+4 default (§9).
+- **Task 4** (`82f321d`) — `RegionDirectoryProvider` (tiers, live
+  verified-item and served-route counts, continent/country grouping).
+- **Task 5** (`ceebabd`) — `/regions` server-rendered from the provider;
+  the old `CC_REGIONS` snapshot render path retired.
+- **Task 6** (`946b57b`) — `/regions/{slug}` DB-driven detail page;
+  `/region` now 301s locale-aware to `/regions/wallonia`.
+- **Task 7** (`7986f28`) — the `/regions` "Don't see your country?"
+  typeahead over the baked `world_country` list, linking to `/join/{cc}`,
+  plus a footer door.
+- **Task 8** (this task) — `wiki/country-onboarding.md`, this section, and
+  the `docs/TODO.md` tick.
+
+**Backfill proof.** `region` row counts, dev DB, after Task 3 (verified
+again for this write-up):
+
+| Country | L2 (country outline) | L4 (operating divisions) |
+|---|---|---|
+| BE | 1 | 3 |
+| DE | 1 | 16 |
+| NL | 1 | 12 |
+| LU | 1 (unchanged — LU has no L4 tier) | — |
+
+Membership invariance held: querying `item`/`recommended_route` joined to
+the four new L2 rows returns zero rows on both sides — no item or route
+re-anchored from its L4 region (or, for LU, its existing L2 row) to the
+newly backfilled country outline. `RegionRegistryProvider`'s
+`OperationalRegions`-filtered query (the same one `/map`'s scope rail
+reads) returns no `belgium`/`germany`/`netherlands` slug, confirming §4's
+rule holds for the map surface as well as the pages this design added.
+
+**Deviations from the design as written, and why.**
+
+1. **The tessellation guard had to become per-`(country, admin_level)`**
+   (Task 3a, `828ded1`) — not anticipated by §9's plan of "one export+import
+   run for BE/NL/DE." `assertRegionsTessellate()`'s existing comment
+   assumed `ST_Overlaps()` already excludes nested containment (an L2
+   country outline fully containing its L4 children), but Overture's
+   `admin_level=2` and `admin_level=4` polygons for the same country are
+   sourced/vintaged independently: for coastal and estuary regions they
+   disagree by a small margin, so the L4 child is not quite 100%
+   `ST_Contains`-ed by its L2 parent — an overlapping sliver trips
+   `ST_Overlaps = true`, and because the intersection is nearly the whole
+   child region it easily clears the tolerance meant for genuine
+   adjacent-region border slivers. All three of BE, NL, and DE hit this
+   (coastal/estuary regions: Flanders' North Sea + Scheldt coast; NL's
+   Wadden/North Sea provinces; DE's Baltic/North Sea/Weser-estuary
+   Länder). Discovered by the backfill's first import attempt, which
+   rolled back cleanly (INSERT-only, no partial state left in the dev DB)
+   — Task 3a fixed the guard before Task 3 retried and succeeded.
+2. **Route counts use the SERVED states (unverified + verified); item
+   counts stay verified-only.** `RegionDirectoryProvider`'s own docblock
+   states the reasoning: items counted verified-only are the editorial
+   signal the tier legend promises ("Growing" = verified rider knowledge
+   accumulating), while routes counted served-only (`ItemState::servedSqlTuple()`
+   equivalent for `recommended_route.state`) match what a rider actually
+   sees on the map, where a community-proposed route serves before a
+   curator verifies it. The two counts are intentionally not on the same
+   basis.
+3. **`region.cta_vote` was kept**, not retired as §7 implied it might be —
+   `templates/contribute/index.html.twig`'s Vote card still consumes
+   it as its "go" link text, discovered while trimming region.* keys for
+   the detail-page rewrite in Task 6.
+4. **`RegionDirectoryProvider` needed a `when@test:` `services.yaml`
+   entry** ahead of Task 5 wiring its production consumer (`PageController`)
+   — Task 4's tests instantiated the provider directly, which needs the
+   test-environment service graph to resolve it. Flagged as a deliberately
+   deferred minor in the task ledger and never revisited, since Task 5's
+   controller wiring made it the provider's real (non-test) consumer
+   before it could become stale.
+5. **The `/regions` JSON data island (the baked `world_country` list for
+   the typeahead) carries a CSP nonce** (`nonce="{{ csp_nonce() }}"` on the
+   `<script type="application/json">` tag) — required because `CspTest`
+   enforces nonces on every inline `<script>` tag, JSON data islands
+   included, not only executable script blocks.
