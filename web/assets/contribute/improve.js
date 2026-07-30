@@ -130,6 +130,59 @@
     wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     wmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
 
+    /* ── Known-places overlay (ADD mode only) ────────────────────────────
+       Coverage POIs near the view — the same OSM-derived reference layer
+       as /map — so a rider placing a pin sees what the Commons already
+       knows about and doesn't submit a duplicate. Same-letter only,
+       zoom-gated, and the dots are non-interactive so pin taps pass
+       straight through them. Best-effort context: any fetch failure just
+       leaves the map bare, exactly as before. */
+    var covLetter = window.CC_ITEM && window.CC_ITEM.letter;
+    if (ADD && covLetter && 'B' !== covLetter) {
+      var covMarkers = [];
+      var covLast = null;
+      var covNote = document.getElementById('wz-known');
+      var clearCov = function () {
+        covMarkers.forEach(function (m) { m.remove(); });
+        covMarkers = [];
+        if (covNote) covNote.hidden = true;
+      };
+      var refreshCov = function () {
+        if (wmap.getZoom() < 12) { clearCov(); covLast = null; return; }
+        var c = wmap.getCenter();
+        var ne = wmap.getBounds().getNorthEast();
+        var km = Math.min(5, Math.max(0.5,
+          111 * Math.max(Math.abs(ne.lat - c.lat),
+                         Math.abs(ne.lng - c.lng) * Math.cos(c.lat * Math.PI / 180))));
+        // Skip refetching when the view barely moved — /map/coverage/nearby
+        // is per-IP rate-limited (coverage-provider.md §5).
+        if (covLast && Math.abs(covLast.lat - c.lat) * 111 < km * 0.3
+            && Math.abs(covLast.lng - c.lng) * 111 < km * 0.3
+            && Math.abs(covLast.km - km) < km * 0.3) return;
+        covLast = { lat: c.lat, lng: c.lng, km: km };
+        fetch('/map/coverage/nearby?lat=' + c.lat.toFixed(5) + '&lng=' + c.lng.toFixed(5) + '&km=' + km.toFixed(1))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            if (!data) return;
+            clearCov();
+            (data.groups || []).forEach(function (g) {
+              if (g.letter !== covLetter) return;
+              (g.items || []).forEach(function (p) {
+                var el = document.createElement('div');
+                el.className = 'cc-cov-dot';
+                el.textContent = DEFAULTS.icon;
+                covMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' })
+                  .setLngLat([p.lng, p.lat]).addTo(wmap));
+              });
+            });
+            if (covNote) covNote.hidden = 0 === covMarkers.length;
+          })
+          .catch(function () {});
+      };
+      wmap.on('load', refreshCov);
+      wmap.on('moveend', refreshCov);
+    }
+
     // Editing a climb (letter B): the map hosts the shared three-point
     // editor (foot/summit/steepest) instead of the generic single-pin
     // Locate — route/grad/steep flow through moderation + change history

@@ -46,6 +46,9 @@
   .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
   .readout #wzReset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
   .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
+  /* known-places overlay (add mode): visual context only, taps pass through */
+  .cc-cov-dot{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--paper);border:1.5px solid rgba(20,22,14,.5);font-size:.62rem;opacity:.8;pointer-events:none;box-shadow:0 1px 4px rgba(20,22,14,.25)}
+  .covnote{font-family:var(--mono);font-size:.66rem;color:#595c4d;margin-top:.5rem;line-height:1.5}
   .cc-pin span{font-size:.8rem}
   /* three-point climb editor markers (foot/summit/steepest), Task 5.
      No `position` on .cc-marker: MapLibre's .maplibregl-marker{position:absolute}
@@ -235,6 +238,10 @@
       <span id="wz-readout">{{ 'improve.step1.readout_initial'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
+    {% if add_mode|default(false) %}
+      {# Unhidden by improve.js when the known-places overlay has dots in view. #}
+      <div class="covnote" id="wz-known" hidden>{{ 'contribute.add.known_note'|trans }}</div>
+    {% endif %}
   </section>
 
   {# STEP 2 — DETAILS (type-aware: Fix-details + Add-missing panes) #}
