@@ -852,6 +852,11 @@ vote:
   submit: 'Soumettre le bulletin'
   privacy_note: 'Votre vote est privé. Le Commons enregistre que vous avez voté et quand — jamais un relevé public de ce que vous avez classé.'
   demo_notice: 'Aperçu de conception — le vote n''est pas encore actif. Le véritable scrutin saisonnier arrivera après le lancement ; rien de ce que vous envoyez ici n''est enregistré.'
+  pct_this_round: '%pct% % ce tour'
+  add: '▲ ajouter'
+  on_ballot: '✓ sur le bulletin'
+  remove: 'retirer'
+  empty_ballot: 'Ajoutez jusqu''à 10 choix, dans l''ordre de votre préférence.'
   error:
     ballot_empty: 'Veuillez ajouter au moins un élément à votre bulletin avant de soumettre.'
   receipt:

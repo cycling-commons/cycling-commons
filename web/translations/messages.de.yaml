@@ -852,6 +852,11 @@ vote:
   submit: 'Stimmzettel einreichen'
   privacy_note: 'Deine Stimme ist privat. The Commons speichert, dass du abgestimmt hast und wann — niemals ein öffentliches Protokoll darüber, was du bewertet hast.'
   demo_notice: 'Design-Vorschau — die Abstimmung ist noch nicht aktiv. Die echte Saisonwahl kommt nach dem Start; was du hier abschickst, wird nicht gespeichert.'
+  pct_this_round: '%pct% % in dieser Runde'
+  add: '▲ hinzufügen'
+  on_ballot: '✓ auf dem Stimmzettel'
+  remove: 'entfernen'
+  empty_ballot: 'Füge bis zu 10 Auswahlen hinzu, in deiner Reihenfolge.'
   error:
     ballot_empty: 'Bitte füge mindestens ein Element zu deinem Stimmzettel hinzu, bevor du ihn einreichst.'
   receipt:

@@ -72,5 +72,15 @@
 {% endif %}
 {% endblock %}
 {% block body_scripts %}
+{# Data, not executable script: type="application/json" is CSP-inert. Strings
+   the client renders (candidate rows, ballot panel) — the real vote feature
+   reuses these keys, so keep them in the vote.* catalog group. #}
+<script type="application/json" id="vote-i18n">{{ {
+  pct: 'vote.pct_this_round'|trans,
+  add: 'vote.add'|trans,
+  onBallot: 'vote.on_ballot'|trans,
+  remove: 'vote.remove'|trans,
+  empty: 'vote.empty_ballot'|trans,
+}|json_encode|raw }}</script>
 <script src="{{ asset('contribute/vote.js') }}"></script>
 {% endblock %}

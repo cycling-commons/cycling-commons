@@ -850,8 +850,13 @@ vote:
   tab_heritage: 'Erfgoed'
   ballot_heading: 'Jouw stembrief'
   submit: 'Stembrief indienen'
-  privacy_note: 'Jouw stem is privé. De Commons registreert dat je hebt gestemd en wanneer — nooit een openbaar overzicht van wat je hebt gerangschikt.'
+  privacy_note: 'Jouw stem is privé. De Commons registreert dat je hebt gestemd en wanneer — nooit een openbaar overzicht van wat je hebt gestemd.'
   demo_notice: 'Ontwerpvoorbeeld — stemmen is nog niet actief. De echte seizoensstemming komt na de lancering; wat je hier instuurt wordt niet opgeslagen.'
+  pct_this_round: '%pct%% deze ronde'
+  add: '▲ toevoegen'
+  on_ballot: '✓ op stembrief'
+  remove: 'verwijderen'
+  empty_ballot: 'Voeg tot 10 keuzes toe, in de volgorde die jij aanhoudt.'
   error:
     ballot_empty: 'Voeg ten minste één item toe aan je stembrief voordat je hem indient.'
   receipt:

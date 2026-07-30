@@ -856,6 +856,11 @@ vote:
   submit: 'Submit ballot'
   privacy_note: 'Your vote is private. The Commons records that you voted and when — never a public record of what you ranked.'
   demo_notice: 'Design preview — voting is not live yet. The real seasonal ballot arrives after launch; nothing you submit here is recorded.'
+  pct_this_round: '%pct%% this round'
+  add: '▲ add'
+  on_ballot: '✓ on ballot'
+  remove: 'remove'
+  empty_ballot: 'Add up to 10 picks, in the order you rate them.'
   error:
     ballot_empty: 'Please add at least one item to your ballot before submitting.'
   receipt:
