@@ -1,0 +1,65 @@
+web/tests/Community/CuratorApplicationTest.php
+  s_7ed0626bd6d35d::t_80a2b82226344d 114-140
+  s_7ed0626bd6d35d::t_fb40428e11effc 9
+web/translations/messages.en.yaml
+  s_7ed0626bd6d35d::t_70327b9eecc299 528-530
+  s_7ed0626bd6d35d::t_bcbf59012b645e 1867-1874
+web/src/Controller/Admin/DashboardController.php
+  s_7ed0626bd6d35d::t_b3842b3eccf1ed 246-266
+  s_7ed0626bd6d35d::t_178c79c0028c1d 297-299,303-308
+  s_7ed0626bd6d35d::t_1e513f7f24837f 49
+  s_7ed0626bd6d35d::t_940b0ab91f3c34 10,15
+  s_7ed0626bd6d35d::t_e263cee1da4898 274-278,280,282-296,300-302,309-315,317,320,323-325
+web/src/Community/CuratorApplicationService.php
+  s_7ed0626bd6d35d::t_e7fb4fb3d79aa5 42-48,136-149
+  s_7ed0626bd6d35d::t_b8c5a66284a1ec 17
+  s_7ed0626bd6d35d::t_aea026156dc379 135,157-181
+  s_7ed0626bd6d35d::t_7aded061e7ae73 205
+  s_7ed0626bd6d35d::t_2936ccb223b4f3 230
+  s_7ed0626bd6d35d::t_5306ee3b9564ef 41,49,62,66,77-85,103-114
+web/src/Community/CuratorApplicationException.php
+  s_7ed0626bd6d35d::t_806061b76203b7 1-23
+web/tests/Community/CuratorApplicationReviewTest.php
+  s_7ed0626bd6d35d::t_311176b0dae223 257-261
+  s_7ed0626bd6d35d::t_49811d0e5ccca1 275-378
+  s_7ed0626bd6d35d::t_db53ec95a0c622 9
+web/translations/messages.nl.yaml
+  s_7ed0626bd6d35d::t_dfd70206619726 1863-1870
+  s_7ed0626bd6d35d::t_6bfd4592b8381e 528-530
+web/translations/messages.de.yaml
+  s_7ed0626bd6d35d::t_e4a58004e3e33c 1863-1870
+  s_7ed0626bd6d35d::t_0757ad44edb8e1 528-530
+web/translations/messages.fr.yaml
+  s_7ed0626bd6d35d::t_f59513dfa2b18d 528-530
+  s_7ed0626bd6d35d::t_db19a638bc3ffc 1863-1870
+web/assets/styles/map.css
+  s_7ed0626bd6d35d::t_c06bbec49ef17e 84-89
+web/src/Controller/JoinCountryController.php
+  s_7ed0626bd6d35d::t_898b8f4a959f2b 10
+  s_7ed0626bd6d35d::t_655fbce2a39f7d 122-135
+web/templates/admin/curator_applications.html.twig
+  s_7ed0626bd6d35d::t_83b3f3f8495aba 41
+  s_7ed0626bd6d35d::t_b4bf0e784d49f4 38-40,42-50,55-57
+  s_7ed0626bd6d35d::t_ac095c638344f3 80-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "ad1e9408415eaef21655f3b4072cac7273afaf6e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7ed0626bd6d35d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "391f6353-1129-40b7-8f31-751a1e45178a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
