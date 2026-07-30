@@ -1,0 +1,27 @@
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_bda768b13cee07::t_c2d7bb1f909b00 195,199-208,219,228
+  s_bda768b13cee07::t_daded92223207c 50-54
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_bda768b13cee07::t_3e5af9cf677e29 523-551
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "828ded11b0082dfd41db6428b9377a1f14650cfa",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bda768b13cee07": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc3484d5-25c1-442a-9655-b30ae7c5ba22",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
