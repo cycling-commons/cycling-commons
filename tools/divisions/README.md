@@ -5,6 +5,13 @@ Region source for the Symfony catalog importer (`app:catalog:import`), from the
 makes onboarding a new country or state a repeatable process
 (`docs/specs/2026-07-22-country-onboarding-design.md`).
 
+Every onboarding run seeds **levels 2 + 4 by default**: the Overture
+`admin_level=2` country outline alongside the configured operating level
+(L4 unless a country's `COUNTRY_CONFIG` says otherwise). This is the owner's
+2026-07-29-country-requests-and-curator-signup-design.md §12.1 decision — see
+"Operational vs infrastructure rows" below for why the L2 row exists and
+where it must never appear.
+
 ## Onboarding a country or state (the playbook)
 
 One fixed sequence for every country/state. ⚑ marks a human judgment.
@@ -14,8 +21,8 @@ One fixed sequence for every country/state. ⚑ marks a human judgment.
 | 1 | ⚑ Choose the operating level | `make region-probe c="NL"` → read `web/var/scaffold/nl/areas.md` |
 | 2 | Scaffold config + label stubs | `make region-scaffold c="NL" flags="--probe-areas"` |
 | 3 | ⚑ Review + merge | freeze slugs/exonyms; merge `config-block.py` into `config.py`, `translations.patch.yaml` into the 4 catalogs |
-| 4 | Export Overture geojson | `make divisions-data c="NL"` |
-| 5 | Seed `Region` rows | stage artifacts, `app:catalog:import` (see below) |
+| 4 | Export Overture geojson (levels 2 + 4) | `make divisions-data c="NL"` — always emits the L2 country outline alongside the operating-level divisions, same run, same command |
+| 5 | Seed `Region` rows | stage artifacts (including the L2 outline), `app:catalog:import` (see below) — upsert-by-slug, so re-running is safe |
 | 6 | Coverage | add the Geofabrik region to `COVERAGE_REGIONS` **and** `COUNTRY_BY_REGION` (`pipeline/coverage/load.py`) — a missing entry now hard-fails that region's coverage run (`resolve_country`, 2026-07-23-border-overlap-ownership-design.md §3) rather than silently disabling ownership — then `make coverage-refresh regions=europe/netherlands` |
 | 7 | ⚑ Moderators | assign 2–4 region atoms per moderator (admin; `moderator_area` rows) |
 | 8 | Specs | record the rollout in `docs/specs/` (region-scoping §7, coverage-provider) |
@@ -45,14 +52,55 @@ country onboards later, demand-driven.
   guess silently resolves to nothing for the new country's visitors otherwise,
   and no test catches the gap.
 
+## Operational vs infrastructure rows
+
+Every onboarded country now carries at least two `region` rows for the same
+country: the L2 country outline and the L4 (or configured) operating-level
+divisions. Only one set is meant to be operational at a time.
+
+**The rule (2026-07-30-dynamic-region-pages-design.md §4): a region row is
+*operational* iff its `admin_level` equals the deepest onboarded level for its
+country.** For BE/NL/DE the L4 rows are operational; the L2 country outline is
+**infrastructure only** — it anchors pre-onboarding evidence submissions and
+provides the country polygon, but it must never appear on a public or
+moderation listing surface (map scope selector, `/regions`, moderation area
+pickers, curated-readiness reports, …). The rule is enforced centrally by
+`web/src/Catalog/OperationalRegions.php`, which every region-listing consumer
+must call or be an explicitly documented exemption from. Two readers are
+exempt by design: the catalog importer's membership recompute (containment
+across mixed levels — smallest-area-wins — is the point) and `RegionResolver`
+(L2 must stay matchable so evidence in not-yet-subdivided countries anchors
+somewhere).
+
+The rule is **derived**, never stored: no flag, no playbook step, nothing to
+go stale. When a country later onboards a finer level (see below), its
+previous operating level demotes to infrastructure automatically the moment
+the finer rows land.
+
+**Finer levels (6+) stay a per-country decision, on evidence.** Levels 2 and 4
+are the default for every country; going deeper (e.g. ~3,000 US counties) is a
+separate, per-country `COUNTRY_CONFIG` setting made only when a country's
+scale or shape demands it, not a default applied everywhere
+(2026-07-29-country-requests-and-curator-signup-design.md §12.1).
+
 ## What the exporter produces
 
-One `region-<slug>.geojson` per seeded subdivision, each a single GeoJSON
-`Feature` whose `properties` carry the provenance the importer requires:
+One `region-<slug>.geojson` per seeded subdivision **plus** one for the L2
+country outline, each a single GeoJSON `Feature` whose `properties` carry the
+provenance the importer requires:
 
 ```json
 { "slug": "flanders", "name": "Flanders", "area_km2": 13522,
   "country_code": "BE", "iso_code": "BE-VLG", "admin_level": 4,
+  "source": "overture" }
+```
+
+The L2 country-outline artifact looks the same, just at the country level and
+with the plain-English country slug (`belgium`, matching LU's `luxembourg`):
+
+```json
+{ "slug": "belgium", "name": "Belgium", "area_km2": 30669,
+  "country_code": "BE", "iso_code": "BE", "admin_level": 2,
   "source": "overture" }
 ```
 
