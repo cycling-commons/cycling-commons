@@ -457,9 +457,17 @@ lives in the shell header.
   renders, see [moderation-and-contribution.md](moderation-and-contribution.md))
   and route proposals, 50 each (`ProfileController`), in the shared `.item`
   row style (type/route tag, date, status pill, decision-note sub-line); empty
-  state is the `account.contributions_empty` key. The **Votes** and
-  **Saved-regions** panes deliberately keep preview sample data (marked as
-  such in the template) until a real data source exists.
+  state is the `account.contributions_empty` key. The pane closes with a
+  **Curator applications** section (2026-07-30): the user's own
+  `curator_application` rows with status pills (pending/approved/declined/
+  withdrawn), or — when none exist — a door to the regions directory, so
+  "where is my request?" always has an answer on the post-login landing.
+  The **Votes** pane renders the user's own `route_vote` ballots (the only
+  surface that shows *what* was voted for, voter-only —
+  [route-domain.md](route-domain.md) §6) with an honest empty state; the
+  **Saved-regions** pane says plainly that saving is not built yet and links
+  the regions directory. The former preview sample data is gone (2026-07-30):
+  every dashboard pane renders real rows only.
 
 ### Settings (`App\Controller\SettingsController`, `/settings`)
 

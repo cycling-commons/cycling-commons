@@ -1,9 +1,8 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {# Account dashboard — the logged-in "user environment" (post-login landing).
-   Uses the shared account shell (partials/account/_shell_*). The contribution /
-   vote / saved-region figures are PREVIEW sample data behind the Demo banner
-   (persistence is stubbed); the data-API (Plan 5) feeds these panes real rows.
-   Real bits: identity + sign-out (shell) and the moderation gate below. #}
+   Uses the shared account shell (account/_shell_*). Every pane renders REAL
+   rows only: submissions + route proposals, the user's own route ballots, and
+   their curator applications. Saved regions has no backend yet and says so. #}
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
@@ -93,23 +92,51 @@
       </div>
     {% endfor %}
     {% endif %}
+
+    {# ── Curator applications — the "where is my request?" answer lives on the
+       landing pane (2026-07-29-country-requests-and-curator-signup-design.md §10). #}
+    <h2 class="sec-h">{{ 'account.curating_title'|trans }}</h2>
+    {% if curator_applications is empty %}
+      <p class="empty">{{ 'account.curating_none'|trans }}
+        <a href="{{ path('regions') }}">{{ 'account.curating_apply'|trans }}</a></p>
+    {% else %}
+      {% set app_pill = {'pending': 'pend', 'approved': 'ok', 'declined': 'rej', 'withdrawn': 'ret'} %}
+      {% for app in curator_applications %}
+        <div class="item">
+          <span class="tag">{{ app.country_code }}</span>
+          <h4>{% if app.region_slug %}{{ ('region.' ~ app.region_slug ~ '.label')|trans }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h4>
+          <time class="co" datetime="{{ app.created_at|date('c') }}">{{ app.created_at|date('Y-m-d') }}</time>
+          <span class="pill {{ app_pill[app.status] ?? 'pend' }}">{{ ('account.app_status_' ~ app.status)|trans }}</span>
+          {% if app.decision_note %}<p class="item-note">{{ app.decision_note }}</p>{% endif %}
+        </div>
+      {% endfor %}
+    {% endif %}
   </section>
 
-  {# ── Votes (PREVIEW) ── #}
+  {# ── Votes — the user's own route ballots (route-domain.md §6): the only
+     surface that shows WHAT was voted for, and only to the voter. #}
   <section class="dpane" id="p-votes">
-    <div class="rounding">◷ {{ 'account.vote_round'|trans }}</div>
-    <div class="item"><span class="tag" style="background:var(--spruce);color:#fff">region</span><h4>Wallonia — best climbs</h4><span class="co">4 / 10 ranked</span><span class="pill conf">{{ 'account.status_voting'|trans }}</span></div>
-    <div class="item"><span class="tag" style="background:var(--spruce);color:#fff">region</span><h4>Dolomites — best views</h4><span class="co">7 / 10 ranked</span><span class="pill conf">{{ 'account.status_voting'|trans }}</span></div>
+    {% if votes is empty %}
+      <p class="empty">{{ 'account.votes_empty'|trans }} <a href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a></p>
+    {% else %}
+      {% for v in votes %}
+        <div class="item">
+          <span class="tag tag-route">{{ 'nav.routes'|trans }}</span>
+          <h4>{{ v.name }}</h4>
+          <span class="item-links"><a href="{{ path('map') }}?route={{ v.route_id }}">{{ 'account.link_map'|trans }}</a></span>
+          <span class="co">{{ v.season }} · {{ v.bike_type }}</span>
+          <time class="co" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|date('Y-m-d') }}</time>
+        </div>
+      {% endfor %}
+    {% endif %}
     <div class="note">{{ 'account.votes_note'|trans|rich }}</div>
   </section>
 
-  {# ── Saved regions (PREVIEW) ── #}
+  {# ── Saved regions — no persistence behind it yet; say so honestly and open
+     the real door instead of rendering sample cards. #}
   <section class="dpane" id="p-saved">
-    <div class="cards">
-      <a class="rc" href="{{ path('regions') }}"><h4>Wallonia</h4><div class="co">BE · 18 climbs · 42 water</div></a>
-      <a class="rc" href="{{ path('regions') }}"><h4>Dolomites</h4><div class="co">IT · 31 climbs · 12 views</div></a>
-      <a class="rc" href="{{ path('regions') }}"><h4>Peak District</h4><div class="co">UK · gravel · 9 stays</div></a>
-    </div>
+    <p class="empty">{{ 'account.saved_empty'|trans }}</p>
+    <p><a class="rc" style="display:inline-block" href="{{ path('regions') }}"><h4>{{ 'account.saved_browse'|trans }}</h4></a></p>
   </section>
 
 </div>

@@ -10,6 +10,7 @@ use App\Catalog\SubmissionStatus;
 use App\Entity\User;
 use App\Moderation\RetentionService;
 use App\Routing\LocalePrefix;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,7 +28,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class ProfileController extends AbstractController
 {
     #[Route('/profile', name: 'profile')]
-    public function show(EntityManagerInterface $em, RetentionService $retention): Response
+    public function show(EntityManagerInterface $em, RetentionService $retention, Connection $db): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -60,6 +61,27 @@ final class ProfileController extends AbstractController
                 ['proposedBy' => (int) $user->getId()],
                 ['createdAt' => 'DESC', 'id' => 'DESC'],
                 50,
+            ),
+            // Route ballots are private to the voter (route-domain.md §6): this
+            // page is the only surface that shows WHAT was voted for, and only
+            // to the account that cast it.
+            'votes' => $db->fetchAllAssociative(
+                'SELECT rv.season, rv.bike_type, rv.created_at, rr.id AS route_id, rr.name
+                   FROM route_vote rv JOIN recommended_route rr ON rr.id = rv.route_id
+                  WHERE rv.user_id = :uid
+                  ORDER BY rv.created_at DESC, rv.id DESC
+                  LIMIT 50',
+                ['uid' => (int) $user->getId()],
+            ),
+            // The answer to "where is my curator request?" lives on the landing
+            // pane (2026-07-29-country-requests-and-curator-signup-design.md §10).
+            'curator_applications' => $db->fetchAllAssociative(
+                'SELECT ca.country_code, ca.status, ca.created_at, ca.decision_note, r.slug AS region_slug
+                   FROM curator_application ca
+                   LEFT JOIN region r ON r.id = ca.requested_region_id
+                  WHERE ca.user_id = :uid
+                  ORDER BY ca.created_at DESC, ca.id DESC',
+                ['uid' => (int) $user->getId()],
             ),
         ]);
     }
