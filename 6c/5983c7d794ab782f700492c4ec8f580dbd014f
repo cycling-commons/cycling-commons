@@ -1,0 +1,45 @@
+web/tests/Controller/ContributorsPageTest.php
+  s_190feadae0fef2::t_f1f426d390bd8d 1-74
+web/templates/pages/join_country.html.twig
+  s_190feadae0fef2::t_2119696a745d6f 15
+web/translations/messages.fr.yaml
+  s_190feadae0fef2::t_89a002c5c5a1b7 530-532,535-536,538-542
+web/src/Controller/PageController.php
+  s_190feadae0fef2::t_3044890b941753 151,153-158,163-165
+  s_190feadae0fef2::t_0152eb558771f4 7
+web/templates/pages/contributors.html.twig
+  s_190feadae0fef2::t_2579107f6f1151 11-12
+  s_190feadae0fef2::t_07eb5fa47a8161 36,39-52,55-57,60-62
+  s_190feadae0fef2::t_4e1359e7bf2b0a 67,69-70,88
+web/translations/messages.nl.yaml
+  s_190feadae0fef2::t_bee9593a898f8a 530-532,535-536,538-542
+web/translations/messages.de.yaml
+  s_190feadae0fef2::t_80cccdae725e75 530-532,535-536,538-542
+web/src/Catalog/ContributorWallProvider.php
+  s_190feadae0fef2::t_506116c5d86f83 1-104
+docs/specs/account-and-auth.md
+  s_190feadae0fef2::t_be054f6651f3d3 430-438
+web/translations/messages.en.yaml
+  s_190feadae0fef2::t_61f5e063d6b1c7 530-532,535-536,538-542
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "6c5983c7d794ab782f700492c4ec8f580dbd014f",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_190feadae0fef2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed6e4b7c-6e75-4531-a2b6-ac04eb20119f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
