@@ -49,10 +49,3 @@ when@test:
         App\Community\CuratorApplicationService:
             public: true
             autowire: true
-
-        # Not yet wired into a controller (Tasks 5-7 of
-        # 2026-07-30-dynamic-region-pages); without a consumer, the container
-        # would prune it as unused and the test container couldn't resolve it.
-        App\Catalog\RegionDirectoryProvider:
-            public: true
-            autowire: true

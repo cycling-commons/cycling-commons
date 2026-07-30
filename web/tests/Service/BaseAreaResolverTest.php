@@ -46,12 +46,14 @@ final class BaseAreaResolverTest extends KernelTestCase
         float $e,
         float $n,
         ?float $area = null,
+        ?int $adminLevel = null,
     ): Region {
         $region = new Region();
         $region->setSlug('base-area-test-'.bin2hex(random_bytes(4)))
             ->setName(\sprintf('Base area test box (%s)', '' === $cc ? 'no-cc' : $cc))
             ->setCountryCode($cc)
             ->setAreaKm2($area)
+            ->setAdminLevel($adminLevel)
             ->setGeom(\sprintf(
                 '{"type":"MultiPolygon","coordinates":[[[[%1$F,%2$F],[%3$F,%2$F],[%3$F,%4$F],[%1$F,%4$F],[%1$F,%2$F]]]]}',
                 $w,
@@ -182,6 +184,37 @@ final class BaseAreaResolverTest extends KernelTestCase
 
         $em->remove($a);
         $em->remove($d);
+        $em->flush();
+    }
+
+    /**
+     * region-scoping-design.md §3 / 2026-07-30-dynamic-region-pages-design.md
+     * §4: the L2 "infrastructure" country outline the 2+4 playbook seeds
+     * must never occupy one of the 8 My-area slots — it always contains the
+     * operational L4 region beneath it, so an unfiltered ST_DWithin query
+     * wastes slots on dead rows (live repro: the Aachen tripoint returned
+     * germany/netherlands/belgium L2 ids alongside the real regions).
+     */
+    public function testInfrastructureL2RegionIsExcludedEvenWhenItContainsTheProbe(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $resolver = static::getContainer()->get(BaseAreaResolver::class);
+
+        // The operational L4 region, and an L2 "country outline" that
+        // contains it entirely (same country) — the fixture stand-in for
+        // e.g. `germany` containing `bayern`.
+        $l4 = $this->makeRegion($em, 'BE', -45.40, 0.30, -45.00, 0.60, adminLevel: 4);
+        $l2 = $this->makeRegion($em, 'BE', -46.00, 0.00, -44.00, 1.00, adminLevel: 2);
+        $em->flush();
+
+        $r = $resolver->resolve(0.45, -45.15, 40);
+
+        self::assertContains($l4->getId(), $r['regionIds']);
+        self::assertNotContains($l2->getId(), $r['regionIds'], 'the infrastructure-only L2 row must never occupy a My-area slot');
+
+        $em->remove($l4);
+        $em->remove($l2);
         $em->flush();
     }
 

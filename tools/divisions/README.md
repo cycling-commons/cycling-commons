@@ -77,6 +77,13 @@ go stale. When a country later onboards a finer level (see below), its
 previous operating level demotes to infrastructure automatically the moment
 the finer rows land.
 
+A country whose **only** `region` row is its L2 outline is thereby
+operational by the same rule (the LU precedent) and will appear on
+`/regions` — so importing the L2 outline alone for a not-yet-onboarded
+country makes that country public. Import the L2 outline only as part of a
+full onboarding run (step 4 above), or together with its subdivisions —
+never on its own ahead of the rest of the playbook.
+
 **Finer levels (6+) stay a per-country decision, on evidence.** Levels 2 and 4
 are the default for every country; going deeper (e.g. ~3,000 US counties) is a
 separate, per-country `COUNTRY_CONFIG` setting made only when a country's

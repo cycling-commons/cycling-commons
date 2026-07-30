@@ -72,8 +72,23 @@ final class RegionDirectoryProvider
 
         // Stable order: continent name, then the LOCALIZED country name (the
         // SQL ordered by the English name; FR/NL/DE readers sort their own).
+        // Collator applies the request locale's actual collation rules
+        // (accented names sort correctly); a plain <=> comparison of the PHP
+        // strings sorts by raw byte order, which misplaces accents. The
+        // constructor (not the ::create() factory) is used like
+        // SubmissionQueue's collator: it never fails even for a garbage
+        // locale string (ICU falls back to root collation), so there is no
+        // failure mode to guard against.
+        $collator = new \Collator($locale);
         $list = array_values($countries);
-        usort($list, static fn (array $a, array $b): int => [$a['continentName'], $a['name']] <=> [$b['continentName'], $b['name']]);
+        usort($list, static function (array $a, array $b) use ($collator): int {
+            $continentCmp = $collator->compare($a['continentName'], $b['continentName']);
+            if (0 !== $continentCmp) {
+                return $continentCmp;
+            }
+
+            return $collator->compare($a['name'], $b['name']);
+        });
 
         return $list;
     }

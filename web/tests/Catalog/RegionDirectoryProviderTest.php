@@ -88,4 +88,34 @@ final class RegionDirectoryProviderTest extends KernelTestCase
         self::assertNull($provider->region('belgium-t', 'en'), 'infrastructure rows have no page');
         self::assertNull($provider->region('nope', 'en'));
     }
+
+    /**
+     * strcoll sorts by raw byte order under the process locale and misplaces
+     * accented names to the end (e.g. "Éthiopie", "Île-de-France" landing
+     * after "Zambie"); \Collator::compare() sorts by the request locale's
+     * actual collation rules instead.
+     */
+    public function testDirectoryOrdersLocalizedCountryNamesByCollationNotByteOrder(): void
+    {
+        self::bootKernel();
+        // Both African, so they land in the same continent group. In French,
+        // "Éthiopie" collates before "Zambie" alphabetically; under raw
+        // byte-order strcoll, the accented name sorts after every
+        // plain-ASCII name instead — the opposite order.
+        $this->seedRegion('ethiopia-collate-t', 'ET', 4);
+        $this->seedRegion('zambia-collate-t', 'ZM', 4);
+
+        $provider = static::getContainer()->get(RegionDirectoryProvider::class);
+        $countries = $provider->directory('fr');
+        $africa = array_values(array_filter($countries, static fn (array $c): bool => 'Africa' === $c['continentName']));
+        $names = array_column($africa, 'name');
+
+        self::assertContains('Éthiopie', $names);
+        self::assertContains('Zambie', $names);
+        self::assertLessThan(
+            array_search('Zambie', $names, true),
+            array_search('Éthiopie', $names, true),
+            'proper collation must place "Éthiopie" before "Zambie", not after it as byte-order strcoll would',
+        );
+    }
 }

@@ -60,7 +60,15 @@ final class PageController extends AbstractController
                 'name' => Countries::exists((string) $code) ? Countries::getName((string) $code, $locale) : (string) $code,
             ];
         }
-        usort($allCountries, static fn (array $a, array $b): int => strcoll($a['name'], $b['name']));
+        // Collator sorts by the request locale's actual collation rules (so
+        // accented names sort correctly for FR/NL/DE readers); strcoll sorts
+        // by raw byte order under the process locale, which misplaces
+        // accents. The constructor (not the ::create() factory) is used like
+        // SubmissionQueue's collator: it never fails even for a garbage
+        // locale string (ICU falls back to root collation), so there is no
+        // failure mode to guard against.
+        $collator = new \Collator($locale);
+        usort($allCountries, static fn (array $a, array $b): int => $collator->compare($a['name'], $b['name']));
 
         return $this->render('pages/regions.html.twig', [
             'page_title' => 'meta.regions_title',

@@ -24,10 +24,15 @@ final class SpatialResolver
     /** @return array{regionId: ?int, countryCode: string} */
     public function resolve(float $lat, float $lng): array
     {
+        // Smallest-area-wins tie-break, mirroring RegionResolver verbatim
+        // (2026-07-30-dynamic-region-pages-design.md §4): without it, a point
+        // inside both an operational L4 region and its containing
+        // infrastructure-only L2 country outline could anchor to the L2 row.
         /** @var array{id: int|string, country_code: string}|false $row */
         $row = $this->db->fetchAssociative(
             'SELECT id, country_code FROM region
-             WHERE ST_Contains(geom, ST_SetSRID(ST_Point(:lng, :lat), 4326)) LIMIT 1',
+             WHERE ST_Contains(geom, ST_SetSRID(ST_Point(:lng, :lat), 4326))
+             ORDER BY area_km2 ASC NULLS LAST, id ASC LIMIT 1',
             ['lng' => $lng, 'lat' => $lat],
         );
 

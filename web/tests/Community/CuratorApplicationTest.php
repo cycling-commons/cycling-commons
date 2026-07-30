@@ -41,11 +41,16 @@ final class CuratorApplicationTest extends KernelTestCase
 
     private function seedCountryRegion(string $cc, string $slug): int
     {
+        return $this->seedRegionAtLevel($cc, $slug, 2);
+    }
+
+    private function seedRegionAtLevel(string $cc, string $slug, int $adminLevel): int
+    {
         $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
         $db->executeStatement(
             "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
-             VALUES (?, ?, ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326), 1000, ?, ?, 2, 'test', NOW(), NOW())",
-            [$slug, strtoupper($slug), $cc, $cc],
+             VALUES (?, ?, ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326), 1000, ?, ?, ?, 'test', NOW(), NOW())",
+            [$slug, strtoupper($slug), $cc, $cc, $adminLevel],
         );
 
         return (int) $db->lastInsertId('region_id_seq');
@@ -98,6 +103,27 @@ final class CuratorApplicationTest extends KernelTestCase
 
         $this->expectException(\DomainException::class);
         $svc->submit($u, 'GR', null, null, 'second');
+    }
+
+    /**
+     * 2026-07-30-dynamic-region-pages-design.md §4: the L2 "infrastructure"
+     * country outline must never be assignable as a curator's requested
+     * scope, exactly as a region from the wrong country is silently ignored
+     * rather than assigned. The country carries two rows here — an
+     * operational L4 (deepest level, so operational by the rule) and the L2
+     * outline — so this exercises the operational filter, not just
+     * "the only row happens to be L2" (which stays operational, per LU).
+     */
+    public function testRequestingTheInfrastructureL2RegionIsIgnoredLikeAWrongCountryRegion(): void
+    {
+        self::bootKernel();
+        $this->seedRegionAtLevel('FI', 'finland-region-test', 4);
+        $l2 = $this->seedRegionAtLevel('FI', 'finland-test', 2);
+        $svc = self::getContainer()->get(CuratorApplicationService::class);
+
+        $app = $svc->submit($this->user('curator-l2-request@example.test'), 'FI', $l2, null, 'about me');
+
+        self::assertNull($app->getRequestedRegionId(), 'the infrastructure L2 row must not be assignable as a requested scope');
     }
 
     public function testACountryWithNoRegionCannotBeAppliedFor(): void

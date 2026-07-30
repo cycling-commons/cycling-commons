@@ -327,6 +327,66 @@ final class CuratorApplicationReviewTest extends WebTestCase
     }
 
     /**
+     * 2026-07-30-dynamic-region-pages-design.md §4: a region requested while
+     * operational can become infrastructure-only between submission and
+     * approval — a country onboarding a deeper level demotes its previous
+     * operating level the moment the finer rows land. approve() must treat
+     * that the same as a deleted region (`region_gone`) rather than granting
+     * a scope that can never appear on any public or moderation surface.
+     */
+    public function testApprovingARegionThatBecameInfrastructureSinceSubmissionIsBlockedCleanly(): void
+    {
+        self::bootKernel();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $db = $em->getConnection();
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('review-demoted', 'Demotedland', ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326), 900, 'ZK', 'ZK', 4, 'test', NOW(), NOW())",
+        );
+        $regionId = (int) $db->lastInsertId('region_id_seq');
+
+        $applicant = new User();
+        $applicant->setEmail('demoted-applicant@example.test');
+        $applicant->setDisplayName('Demoted Applicant');
+        $applicant->setPassword('x');
+        $applicant->setEmailVerified(true);
+        $em->persist($applicant);
+        $admin = new User();
+        $admin->setEmail('demoted-admin@example.test');
+        $admin->setDisplayName('Demoted Admin');
+        $admin->setPassword('x');
+        $admin->setEmailVerified(true);
+        $admin->setRoles(['ROLE_ADMIN']);
+        $em->persist($admin);
+        $em->flush();
+
+        $svc = self::getContainer()->get(CuratorApplicationService::class);
+        // At submission time, admin_level=4 is the deepest ZK row, so it is
+        // operational and the request is accepted.
+        $app = $svc->submit($applicant, 'ZK', $regionId, null, 'I curate this one region');
+        self::assertSame($regionId, $app->getRequestedRegionId(), 'operational at submission time, so the request is accepted');
+
+        // A deeper level lands for the same country, demoting the requested
+        // region to infrastructure — no schema change, purely derived.
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('review-demoted-deeper', 'Demotedland deeper', ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326), 100, 'ZK', 'ZK-DEEP', 6, 'test', NOW(), NOW())",
+        );
+
+        $threw = false;
+        try {
+            $svc->approve($app, $admin, null);
+        } catch (CuratorApplicationException $e) {
+            $threw = true;
+            self::assertSame('region_gone', $e->reason);
+        }
+        self::assertTrue($threw, 'approve() must refuse a region that is no longer operational, same as a deleted one');
+
+        self::assertSame('pending', $db->fetchOne('SELECT status FROM curator_application WHERE id = ?', [$app->getId()]), 'the application is still re-decidable');
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM moderator_area WHERE user_id = ?', [$applicant->getId()]), 'no area row was inserted for a scope that could never appear anywhere');
+    }
+
+    /**
      * §9: approval SCOPES rather than promotes. Someone already holding
      * ROLE_CURATOR with zero moderator_area rows is GLOBAL (ModeratorArea's
      * own docblock: "no rows = global") — approving an unrelated,

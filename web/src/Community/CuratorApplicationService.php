@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Community;
 
+use App\Catalog\OperationalRegions;
 use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
 use App\Messaging\MessageService;
@@ -161,9 +162,18 @@ final class CuratorApplicationService
         // which does — ON DELETE CASCADE). A region deleted after submission
         // would otherwise either FK-500 below or, if that guard ever moved,
         // insert a dangling id silently. Caught here, before the transaction
-        // opens, so a stale application never gets partway approved.
+        // opens, so a stale application never gets partway approved. The same
+        // check also catches a region that is still present but has been
+        // demoted to infrastructure since submission
+        // (2026-07-30-dynamic-region-pages-design.md §4 — a country onboarding
+        // a deeper level demotes its previous operating level the moment the
+        // finer rows land): granting that scope would be a `moderator_area`
+        // row for a region no public or moderation surface ever shows.
         if (null !== $app->getRequestedRegionId()
-            && false === $this->db->fetchOne('SELECT 1 FROM region WHERE id = ?', [$app->getRequestedRegionId()])
+            && false === $this->db->fetchOne(
+                'SELECT 1 FROM region WHERE id = ? AND '.OperationalRegions::predicate(),
+                [$app->getRequestedRegionId()],
+            )
         ) {
             throw new CuratorApplicationException('region_gone', 'The requested region no longer exists.');
         }
@@ -277,10 +287,16 @@ final class CuratorApplicationService
         return false !== $this->db->fetchOne('SELECT 1 FROM region WHERE country_code = ? LIMIT 1', [$cc]);
     }
 
+    /**
+     * The infrastructure-only L2 country outline
+     * (2026-07-30-dynamic-region-pages-design.md §4) must not be assignable
+     * as a curator's requested scope any more than a region from the wrong
+     * country is — a crafted or hand-edited POST could otherwise request it.
+     */
     private function regionBelongsToCountry(int $regionId, string $cc): bool
     {
         return false !== $this->db->fetchOne(
-            'SELECT 1 FROM region WHERE id = ? AND country_code = ? LIMIT 1',
+            'SELECT 1 FROM region WHERE id = ? AND country_code = ? AND '.OperationalRegions::predicate().' LIMIT 1',
             [$regionId, $cc],
         );
     }

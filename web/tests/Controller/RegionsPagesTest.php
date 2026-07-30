@@ -108,4 +108,27 @@ final class RegionsPagesTest extends WebTestCase
             (string) $client->getResponse()->getContent(),
         );
     }
+
+    /**
+     * The "your country" picker's country list is sorted with \Collator, not
+     * strcoll — strcoll sorts by raw byte order and misplaces accented names
+     * (e.g. "Éthiopie" would sort after every plain-ASCII name instead of
+     * taking its alphabetic place before "Zambie").
+     */
+    public function testYourCountryBlockOrdersLocalizedNamesByCollationNotByteOrder(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/fr/regions');
+        self::assertResponseIsSuccessful();
+
+        $json = $crawler->filter('#cc-countries')->text();
+        $data = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $names = array_column($data, 'name');
+
+        $ethIndex = array_search('Éthiopie', $names, true);
+        $zmIndex = array_search('Zambie', $names, true);
+        self::assertNotFalse($ethIndex);
+        self::assertNotFalse($zmIndex);
+        self::assertLessThan($zmIndex, $ethIndex, 'proper collation must place "Éthiopie" before "Zambie", not after it as byte-order strcoll would');
+    }
 }

@@ -6,13 +6,17 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Catalog\OperationalRegions;
 use Doctrine\DBAL\Connection;
 
 /**
  * Derives the rider's My-area region set from a coarse base point + radius:
  * ST_DWithin over region polygons, containing region always first, capped at
  * MAX_REGIONS (region-scoping-design.md §3 "User base location").
- * Raw DBAL like SpatialResolver/RegionResolver.
+ * Raw DBAL like SpatialResolver/RegionResolver. Operational-only
+ * (2026-07-30-dynamic-region-pages-design.md §4): a lister of regions, so the
+ * infrastructure-only L2 country outline (which always contains its
+ * operational L4 subdivisions) must never occupy one of the 8 slots.
  *
  * @api Autowired by the DI container; consumed by BaseLocationService's
  *      apply()/rederiveAll() (settings save, the map "Set my area" endpoint,
@@ -34,6 +38,7 @@ final class BaseAreaResolver
                FROM region r
               WHERE r.geom IS NOT NULL
                 AND ST_DWithin(r.geom::geography, ST_SetSRID(ST_Point(:lng, :lat), 4326)::geography, :m)
+                AND '.OperationalRegions::predicate('r').'
               ORDER BY ST_Contains(r.geom, ST_SetSRID(ST_Point(:lng, :lat), 4326)) DESC,
                        ST_Distance(r.geom::geography, ST_SetSRID(ST_Point(:lng, :lat), 4326)::geography) ASC,
                        r.area_km2 ASC NULLS LAST, r.id ASC
