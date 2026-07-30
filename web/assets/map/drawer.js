@@ -130,6 +130,16 @@ export function osmDrawer(layer, p, ll, src){
   if(photo) d.photo=photo;
   return d;
 }
+// Per-country tap-water verification references for the water drawer's
+// Verify row. Keyed by the POI's country (covProps' cc, off the tile scope
+// token) — the pre-multi-country build hardcoded the Walloon pair for every
+// fountain, which showed SWDE to riders in the Netherlands. Countries
+// without a vetted reference get NO links; the row copy already says
+// "check with the regional utility", which stays true everywhere.
+const WATER_CHECK_LINKS={
+  BE:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}],
+  NL:[{label:'Drinkwaterplatform · NL',href:'https://www.drinkwaterplatform.nl'}],
+};
 // drawer card for a water point — shared by the droplet click handler and the confirmed pin
 export function waterDrawer(p, ll){
   // C2-T7 (spec §W2): 'potable'/'type' are WaterFood registry fields
@@ -150,7 +160,7 @@ export function waterDrawer(p, ll){
   // C1-T4 (W6): see osmDrawer — a rider-added/edited water point isn't OSM.
   const community = p.srcType==='user' || p.srcType==='manual';
   const rec=[{label:D.type||'Type', value:(p.type||p.t) ? trVal(p.type||p.t) : (D.drinkingWater||'Drinking water'), method: p.type?undefined:'OSM'}, potable,
-    {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:[{label:'SWDE · Wallonia',href:'https://www.swde.be'},{label:'eaupotable.info',href:'https://eaupotable.info/nl/be-belgie'}]}];
+    {label:D.verify||'Verify', value:D.verifyWater||'Cross-check tap-water quality with the regional utility / fountain directory', links:WATER_CHECK_LINKS[p.cc]||[]}];
   // Registry-driven rows for the remaining WaterFood fields (seasonal/note/
   // bottleFill/cost). 'type' and 'potable' are rendered structurally above.
   rec.push(...schemaRows('C', p, p.id, {skip:['type','potable']}));

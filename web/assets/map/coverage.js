@@ -290,6 +290,11 @@ export function covProps(key, tp, d){
   const p={ srcType:'osm' };
   if(tp.t) p.t=tp.t;
   if(tp.n) p.n=tp.n;
+  // Country off the scope token ("|nl|" → NL): the water drawer picks its
+  // verify links per country — Walloon utilities must not render for a
+  // Dutch fountain. Unstamped rows simply carry no cc (links then omitted).
+  const cc=(tp.cctok||'').replace(/\|/g,'');
+  if(cc) p.cc=cc.toUpperCase();
   if(key==='services' && tp.kind) p.serviceKind=tp.kind;
   // C · water potability (coverage-provider.md §4 `potable` tile prop): the
   // pipeline pre-computes it as OSM drinking_water='yes' OR (bare
