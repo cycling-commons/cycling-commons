@@ -15,7 +15,7 @@
     <div class="card">
       <p class="auth-heading">{{ 'security.check_email.heading'|trans }}</p>
 
-      <div class="check-icon" aria-hidden="true">✉️</div>
+      {% include 'security/_check_inbox_icon.html.twig' %}
 
       <p>{{ 'security.check_email.body'|trans }}</p>
       <p style="margin-top:1rem;font-size:.9rem;color:#5a5d4d">

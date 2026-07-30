@@ -702,7 +702,7 @@ security:
     panel_p: 'Ein kostenloses Konto, um Anstiege, Orte und Korrekturen beizutragen — offene Daten, die dir gehören.'
     panel_bot: 'KOSTENLOS · OFFEN · KEINE TOURDATEN'
     heading: 'Kostenloses Konto erstellen'
-    agree_terms: 'Ich stimme den <a href="%url%">Nutzungsbedingungen</a> zu'
+    agree_terms: 'Ich stimme den <a href="%url%" target="_blank" rel="noopener">Nutzungsbedingungen</a> zu'
     submit: 'Konto erstellen'
     already_account: 'Bereits ein Konto?'
     sign_in_link: 'Anmelden'

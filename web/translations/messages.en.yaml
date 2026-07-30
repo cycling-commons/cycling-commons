@@ -706,7 +706,7 @@ security:
     panel_p: 'A free account to contribute climbs, places and fixes — open data, yours to keep.'
     panel_bot: 'FREE · OPEN · NO RIDE DATA'
     heading: 'Create a free account'
-    agree_terms: 'I agree to the <a href="%url%">terms of service</a>'
+    agree_terms: 'I agree to the <a href="%url%" target="_blank" rel="noopener">terms of service</a>'
     submit: 'Create account'
     already_account: 'Already have an account?'
     sign_in_link: 'Sign in'

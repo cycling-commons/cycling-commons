@@ -702,7 +702,7 @@ security:
     panel_p: 'Un compte gratuit pour contribuer des cols, des lieux et des corrections — données ouvertes, à vous pour toujours.'
     panel_bot: 'GRATUIT · OUVERT · PAS DE DONNÉES DE PARCOURS'
     heading: 'Créer un compte gratuit'
-    agree_terms: 'J''accepte les <a href="%url%">conditions d''utilisation</a>'
+    agree_terms: 'J''accepte les <a href="%url%" target="_blank" rel="noopener">conditions d''utilisation</a>'
     submit: 'Créer un compte'
     already_account: 'Vous avez déjà un compte ?'
     sign_in_link: 'Se connecter'

@@ -702,7 +702,7 @@ security:
     panel_p: 'Een gratis account om klimmen, plaatsen en verbeteringen bij te dragen — open data, voor altijd van jou.'
     panel_bot: 'GRATIS · OPEN · GEEN ROUTEDATA'
     heading: 'Maak een gratis account aan'
-    agree_terms: 'Ik ga akkoord met de <a href="%url%">gebruiksvoorwaarden</a>'
+    agree_terms: 'Ik ga akkoord met de <a href="%url%" target="_blank" rel="noopener">gebruiksvoorwaarden</a>'
     submit: 'Account aanmaken'
     already_account: 'Heb je al een account?'
     sign_in_link: 'Inloggen'
