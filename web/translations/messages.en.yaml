@@ -151,7 +151,7 @@ privacy:
 terms:
   kicker: 'Terms of Use'
   title: 'The deal, in plain language.'
-  lead: 'These terms cover using the Cycling Commons website and account. They''re short, readable, and built around the same open principles as the rest of the project.'
+  lead: 'These terms cover using the Cycling Commons website and account, in plain language.'
   prototype_bold: 'This is a prototype — a first draft of our intentions, not final or binding policy.'
   prototype_body: 'It sets out how we intend the Cycling Commons to work. It will change before launch.'
   last_updated: 'Last updated 22 June 2026 · draft v0.1'
@@ -283,7 +283,7 @@ licenses:
 coverage:
   kicker: 'State of the Atlas'
   title: 'How complete is the map?'
-  lead: 'Transparency is part of the deal — anyone can see what''s covered, what''s thin, and where to help. Open monitoring, made public.'
+  lead: 'What''s covered, what''s thin, and where help is needed — live numbers, straight from the database.'
   kpi_pois: 'Reference places on file'
   kpi_items: 'Catalog items'
   kpi_routes: 'Recommended routes'
@@ -528,7 +528,7 @@ join:
 contributors:
   kicker: 'Contributors'
   title: 'Built by riders.'
-  lead: 'Recognition on your terms. Riders who switch on a <b>public profile</b> appear here under their chosen name — everyone else contributes just as fully, uncredited by design. Provenance is kept; identity is yours to share.'
+  lead: 'Riders who turn on a <b>public profile</b> appear here under their chosen name. Everyone else contributes just as much, uncredited — that''s a setting, not a status.'
   active_kicker: 'The acknowledgment wall · with thanks'
   search_note: 'No ranking — contributors are listed alphabetically, never by volume. Search by name, or filter to a country.'
   search_placeholder: 'Search by name…'

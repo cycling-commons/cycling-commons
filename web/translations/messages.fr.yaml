@@ -151,7 +151,7 @@ privacy:
 terms:
   kicker: 'Conditions d''utilisation'
   title: 'L''accord, en langage clair.'
-  lead: 'Ces conditions régissent l''utilisation du site web et du compte Cycling Commons. Elles sont courtes, lisibles, et fondées sur les mêmes principes ouverts que le reste du projet.'
+  lead: 'Ces conditions régissent l''utilisation du site web et du compte Cycling Commons, en langage clair.'
   prototype_bold: 'Ceci est un prototype — une première ébauche de nos intentions, pas une politique finale ou contraignante.'
   prototype_body: 'Il décrit comment nous entendons que Cycling Commons fonctionne. Il changera avant le lancement.'
   last_updated: 'Dernière mise à jour le 22 juin 2026 · brouillon v0.1'
@@ -283,7 +283,7 @@ licenses:
 coverage:
   kicker: 'État de l''Atlas'
   title: 'La carte est-elle complète ?'
-  lead: 'La transparence fait partie de l''accord — tout le monde peut voir ce qui est couvert, ce qui est lacunaire, et où aider. Suivi ouvert, rendu public.'
+  lead: 'Ce qui est couvert, ce qui est lacunaire, et où l''aide est la bienvenue — des chiffres en direct, tirés de la base de données.'
   kpi_pois: 'Lieux de référence recensés'
   kpi_items: 'Éléments du catalogue'
   kpi_routes: 'Itinéraires recommandés'
@@ -528,7 +528,7 @@ join:
 contributors:
   kicker: 'Contributeurs'
   title: 'Construit par des cyclistes.'
-  lead: 'La reconnaissance selon vos conditions. Les cyclistes qui activent un <b>profil public</b> apparaissent ici sous le nom qu''ils ont choisi — les autres contribuent tout autant, sans mention, par principe. La provenance est conservée ; l''identité vous appartient.'
+  lead: 'Les cyclistes qui activent un <b>profil public</b> apparaissent ici sous le nom qu''ils ont choisi. Les autres contribuent tout autant, sans mention — c''est un réglage, pas un statut.'
   active_kicker: 'Le mur des remerciements'
   search_note: 'Pas de classement — les contributeurs sont listés par ordre alphabétique, jamais par volume. Recherchez par nom ou filtrez par pays.'
   search_placeholder: 'Rechercher par nom…'

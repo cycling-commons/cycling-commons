@@ -151,7 +151,7 @@ privacy:
 terms:
   kicker: 'Gebruiksvoorwaarden'
   title: 'De afspraak, in gewone taal.'
-  lead: 'Deze voorwaarden gelden voor het gebruik van de Cycling Commons-website en -account. Ze zijn kort, leesbaar en gebaseerd op dezelfde open principes als de rest van het project.'
+  lead: 'Deze voorwaarden gelden voor het gebruik van de Cycling Commons-website en -account, in gewone taal.'
   prototype_bold: 'Dit is een prototype — een eerste schets van onze intenties, geen definitief of bindend beleid.'
   prototype_body: 'Het beschrijft hoe we de Cycling Commons willen laten werken. Dit verandert nog vóór de lancering.'
   last_updated: 'Laatst bijgewerkt 22 juni 2026 · concept v0.1'
@@ -283,7 +283,7 @@ licenses:
 coverage:
   kicker: 'Stand van de Atlas'
   title: 'Hoe compleet is de kaart?'
-  lead: 'Transparantie is onderdeel van de afspraak — iedereen kan zien wat gedekt is, wat dun is, en waar je kunt helpen. Open monitoring, openbaar gemaakt.'
+  lead: 'Wat gedekt is, wat dun is, en waar hulp welkom is — live cijfers, rechtstreeks uit de database.'
   kpi_pois: 'Referentieplekken in beeld'
   kpi_items: 'Catalogusitems'
   kpi_routes: 'Aanbevolen routes'
@@ -528,7 +528,7 @@ join:
 contributors:
   kicker: 'Bijdragers'
   title: 'Gebouwd door fietsers.'
-  lead: 'Erkenning op jouw voorwaarden. Fietsers die een <b>openbaar profiel</b> aanzetten, verschijnen hier onder hun gekozen naam — alle anderen dragen net zo volwaardig bij, bewust zonder vermelding. Herkomst wordt bijgehouden; je identiteit is aan jou.'
+  lead: 'Fietsers die een <b>openbaar profiel</b> aanzetten, verschijnen hier onder hun gekozen naam. Alle anderen dragen net zoveel bij, zonder vermelding — dat is een instelling, geen status.'
   active_kicker: 'De muur van dank'
   search_note: 'Geen rangschikking — bijdragers staan alfabetisch, nooit op volume. Zoek op naam, of filter op land.'
   search_placeholder: 'Zoek op naam…'

@@ -151,7 +151,7 @@ privacy:
 terms:
   kicker: 'Nutzungsbedingungen'
   title: 'Die Vereinbarung, in klarer Sprache.'
-  lead: 'Diese Bedingungen regeln die Nutzung der Cycling-Commons-Website und des Kontos. Sie sind kurz, lesbar und auf denselben offenen Prinzipien aufgebaut wie der Rest des Projekts.'
+  lead: 'Diese Bedingungen regeln die Nutzung der Cycling-Commons-Website und des Kontos, in klarer Sprache.'
   prototype_bold: 'Dies ist ein Prototyp — ein erster Entwurf unserer Absichten, keine endgültige oder verbindliche Richtlinie.'
   prototype_body: 'Es legt dar, wie wir beabsichtigen, dass Cycling Commons funktioniert. Es wird sich vor dem Start ändern.'
   last_updated: 'Zuletzt aktualisiert 22. Juni 2026 · Entwurf v0.1'
@@ -283,7 +283,7 @@ licenses:
 coverage:
   kicker: 'Stand des Atlas'
   title: 'Wie vollständig ist die Karte?'
-  lead: 'Transparenz ist Teil der Vereinbarung — jeder kann sehen, was abgedeckt ist, was dünn ist und wo er helfen kann. Offenes Monitoring, öffentlich zugänglich.'
+  lead: 'Was abgedeckt ist, was dünn ist und wo Hilfe gebraucht wird — Live-Zahlen, direkt aus der Datenbank.'
   kpi_pois: 'Erfasste Referenzorte'
   kpi_items: 'Katalogeinträge'
   kpi_routes: 'Empfohlene Routen'
@@ -528,7 +528,7 @@ join:
 contributors:
   kicker: 'Beitragende'
   title: 'Von Fahrern gebaut.'
-  lead: 'Anerkennung zu deinen Bedingungen. Fahrer, die ein <b>öffentliches Profil</b> einschalten, erscheinen hier unter ihrem gewählten Namen — alle anderen tragen genauso vollwertig bei, bewusst ohne Nennung. Provenienz wird festgehalten; deine Identität gehört dir.'
+  lead: 'Fahrer, die ein <b>öffentliches Profil</b> einschalten, erscheinen hier unter ihrem gewählten Namen. Alle anderen tragen genauso viel bei, ohne Nennung — das ist eine Einstellung, kein Status.'
   active_kicker: 'Die Wand des Dankes'
   search_note: 'Keine Rangfolge — Beitragende sind alphabetisch aufgelistet, nie nach Volumen. Suche nach Name oder filtere nach Land.'
   search_placeholder: 'Nach Name suchen…'
