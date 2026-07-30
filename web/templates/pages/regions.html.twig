@@ -75,7 +75,7 @@
       </div>
       <div class="regions">
         {% for reg in country.regions %}
-          <a class="reg tier-{{ reg.tier }}" href="{{ path('map') }}?scope=region:{{ reg.slug }}">
+          <a class="reg tier-{{ reg.tier }}" href="{{ path('region_detail', {slug: reg.slug}) }}">
             <span>{{ ('region.' ~ reg.slug ~ '.label')|trans }}</span>
             <span class="tag">{{ ('regions.tier_' ~ reg.tier)|trans }}</span>
             {% if reg.itemsVerified > 0 %}<span class="km">{{ (reg.itemsVerified == 1 ? 'regions.items_one' : 'regions.items_many')|trans({'%n%': reg.itemsVerified}) }}</span>{% endif %}

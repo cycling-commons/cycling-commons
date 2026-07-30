@@ -107,13 +107,14 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'An open API');
     }
 
-    public function testRegionRenders(): void
+    public function testRegionRedirectsToDetailPage(): void
     {
+        // /region is the pre-DB showcase URL; it now permanently redirects
+        // into the DB-driven /regions/{slug} detail page (RegionsPagesTest
+        // covers that page's own rendering against seeded data).
         $client = static::createClient();
         $client->request('GET', '/region');
-        self::assertResponseIsSuccessful();
-        self::assertSelectorExists('footer.foot');
-        self::assertSelectorTextContains('h1', 'Wallonia');
+        self::assertResponseRedirects('/regions/wallonia', 301);
     }
 
     public function testRegionsRenders(): void

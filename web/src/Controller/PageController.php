@@ -57,6 +57,29 @@ final class PageController extends AbstractController
         ]);
     }
 
+    /** The pre-DB showcase URL; permanent because the old path was linked externally. */
+    #[Route('/region', name: 'region')]
+    public function region(): Response
+    {
+        return $this->redirectToRoute('region_detail', ['slug' => 'wallonia'], Response::HTTP_MOVED_PERMANENTLY);
+    }
+
+    #[Route('/regions/{slug}', name: 'region_detail', requirements: ['slug' => '[a-z0-9-]+'])]
+    public function regionDetail(string $slug, Request $request, RegionDirectoryProvider $directory): Response
+    {
+        $region = $directory->region($slug, $request->getLocale());
+        if (null === $region) {
+            throw $this->createNotFoundException(sprintf('No region "%s".', $slug));
+        }
+
+        return $this->render('pages/region.html.twig', [
+            'page_title' => 'meta.region_title',
+            'page_description' => 'meta.region_description',
+            'nav_active' => 'regions',
+            'region' => $region,
+        ]);
+    }
+
     #[Route('/coverage', name: 'coverage')]
     public function coverage(): Response
     {
@@ -104,16 +127,6 @@ final class PageController extends AbstractController
             'page_title' => 'meta.contributors_title',
             'page_description' => 'meta.contributors_description',
             'nav_active' => '',
-        ]);
-    }
-
-    #[Route('/region', name: 'region')]
-    public function region(): Response
-    {
-        return $this->render('pages/region.html.twig', [
-            'page_title' => 'meta.region_title',
-            'page_description' => 'meta.region_description',
-            'nav_active' => 'regions',
         ]);
     }
 
