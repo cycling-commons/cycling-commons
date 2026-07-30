@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
 use App\Catalog\RegionDirectoryProvider;
 use App\Routing\LocalePrefix;
@@ -147,12 +148,21 @@ final class PageController extends AbstractController
     }
 
     #[Route('/contributors', name: 'contributors')]
-    public function contributors(): Response
+    public function contributors(ContributorWallProvider $wallProvider): Response
     {
+        $wall = $wallProvider->wall();
+        // Country filter options come from the wall itself, so the dropdown
+        // never advertises a country with zero visible contributors.
+        $countries = array_values(array_unique(array_filter(array_column($wall, 'country'))));
+        sort($countries);
+
         return $this->render('pages/contributors.html.twig', [
             'page_title' => 'meta.contributors_title',
             'page_description' => 'meta.contributors_description',
             'nav_active' => '',
+            'wall' => $wall,
+            'wall_countries' => $countries,
+            'stats' => $wallProvider->stats(),
         ]);
     }
 

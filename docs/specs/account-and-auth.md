@@ -427,6 +427,15 @@ Mechanism when built: idempotent scheduled command; localized notices via
   hard-deleted accounts all 404 identically. Opt-in public posture: profiles
   are public contributors only — no private/anonymous profile pages;
   provenance is kept, identity is opt-in.
+- **The /contributors wall rides on the same toggle (2026-07-30).**
+  `App\Catalog\ContributorWallProvider` lists riders with `publicProfile`
+  ON **and** ≥1 public contribution (approved submissions + served route
+  proposals), alphabetical/non-ranked, each row linking `rider_profile`;
+  per-row counts are the same figures the profile page already exposes.
+  Riders without the toggle never appear regardless of volume. The page's
+  three stat cards are aggregate site totals over ALL contributors
+  (opt-in or not) — aggregates credit the crowd without identifying anyone.
+  This replaced the demo's fake sample-handle wall.
 - **"View as others see it" is the real page**: settings links the rider's own
   public URL (`target="_blank"`) with **zero owner special-casing** — what the
   owner sees is byte-for-byte what others get. When the toggle is OFF the link

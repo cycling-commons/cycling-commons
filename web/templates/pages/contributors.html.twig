@@ -8,7 +8,8 @@
   .ack .row{display:flex;align-items:center;gap:.85rem;padding:.6rem .2rem;border-bottom:1px solid rgba(20,22,14,.08)}
   .ack .row[hidden]{display:none}
   .ack .av{width:32px;height:32px;border-radius:50%;background:var(--spruce);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.62rem;flex:none}
-  .ack .nm{font-family:var(--mono);font-size:.9rem}
+  .ack .nm{font-family:var(--mono);font-size:.9rem;color:var(--ink);text-decoration:none}
+  .ack a.nm:hover{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
   .ack .rg{color:#7a7d6c;font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:30px;padding:.18rem .5rem}
   .ack .st{margin-left:auto;font-family:var(--mono);font-size:.7rem;color:#595c4d;text-align:right;white-space:nowrap}
   .ack .st b{font-family:var(--serif);font-size:1.05rem;color:var(--ink);margin-right:.35rem}
@@ -32,47 +33,46 @@
 
   <div class="kicker">{% trans %}contributors.active_kicker{% endtrans %}</div>
   <p class="rec-note">{% trans %}contributors.search_note{% endtrans %}</p>
+  {% if wall is not empty %}
   <div class="ack-bar">
     <input class="ack-q" type="search" placeholder="{{ 'contributors.search_placeholder'|trans }}" aria-label="{{ 'contributors.search_aria'|trans }}" />
-    <select class="ack-rg" aria-label="{{ 'contributors.region_aria'|trans }}"><option value="">{% trans %}contributors.region_all{% endtrans %}</option></select>
+    <select class="ack-rg" aria-label="{{ 'contributors.region_aria'|trans }}">
+      <option value="">{% trans %}contributors.region_all{% endtrans %}</option>
+      {% for c in wall_countries %}<option>{{ c }}</option>{% endfor %}
+    </select>
   </div>
-  <div class="ack" id="ack"></div>
+  <div class="ack" id="ack">
+    {% for c in wall %}
+    <div class="row" data-name="{{ c.name }}" data-region="{{ c.country ?? '' }}">
+      <span class="av">{{ c.initials }}</span>
+      <a class="nm" href="{{ path('rider_profile', {uuid: c.uuid}) }}">{{ c.name }}</a>
+      {% if c.country %}<span class="rg">{{ c.country }}</span>{% endif %}
+      <span class="st">{{ 'contributors.row_stats'|trans({'%facts%': c.facts|number_format(0, '.', ','), '%routes%': c.routes}) }}</span>
+    </div>
+    {% endfor %}
+  </div>
   <p class="ack-empty" id="ack-empty" hidden>{% trans %}contributors.no_match{% endtrans %}</p>
+  {% else %}
+  <p class="ack-empty">{% trans %}contributors.wall_empty{% endtrans %}</p>
+  {% endif %}
 
   <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-top:2.4rem">
-    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">312k</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_facts{% endtrans %}</div></div>
-    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">9.4k</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_contributors{% endtrans %}</div></div>
-    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">1,840</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_osm{% endtrans %}</div></div>
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.facts|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_facts{% endtrans %}</div></div>
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.contributors|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_contributors{% endtrans %}</div></div>
+    <div class="card"><b style="font-family:var(--serif);font-size:1.6rem">{{ stats.routes|number_format(0, '.', ',') }}</b><div class="co" style="margin-top:.3rem">{% trans %}contributors.stat_routes{% endtrans %}</div></div>
   </div>
 </div></section>
 {% endblock %}
 {% block body_scripts %}
+{% if wall is not empty %}
 <script nonce="{{ csp_nonce() }}">
-/* Contributor acknowledgment wall — non-ranked, alphabetical, filterable by
-   name or region. Sample (non-personal) handles; identity is never stored. */
+/* Filter for the server-rendered acknowledgment wall — non-ranked,
+   alphabetical; rows are real opt-in public profiles. */
 (function(){
-  const C=[
-    {h:'rider#0c7d',r:'Wallonia',f:1204,o:18},        {h:'rider#1ab8',r:'Flanders',f:2140,o:41},
-    {h:'rider#2e55',r:'Wallonia',f:1090,o:19},        {h:'rider#3f90',r:'Hauts-de-France',f:430,o:7},
-    {h:'rider#4f2a',r:'Wallonia',f:1873,o:36},        {h:'rider#5b12',r:'Limburg (NL)',f:660,o:11},
-    {h:'rider#6a4e',r:'Flanders',f:884,o:13},         {h:'rider#72c1',r:'Rheinland',f:512,o:9},
-    {h:'rider#7d88',r:'Wallonia',f:1320,o:24},        {h:'rider#88fa',r:'Hauts-de-France',f:902,o:14},
-    {h:'rider#9c01',r:'Flanders',f:1402,o:28},        {h:'rider#a3e7',r:'Wallonia',f:745,o:12},
-    {h:'rider#b5d2',r:'Limburg (NL)',f:1560,o:30},    {h:'rider#c019',r:'Rheinland',f:388,o:5},
-    {h:'rider#d4aa',r:'Wallonia',f:2210,o:44},        {h:'rider#e6f3',r:'Flanders',f:970,o:16}
-  ].sort((a,b)=>a.h.localeCompare(b.h));
-  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  // Row stats: translated format string + page locale for number formatting
-  // (toLocaleString would otherwise follow the browser, not the page).
-  const LOC="{{ app.request.locale|e('js') }}";
-  const STATS="{{ 'contributors.row_stats'|trans|e('js') }}";
-  const stats=c=>STATS.replace('%facts%',`<b>${c.f.toLocaleString(LOC)}</b>`).replace('%osm%',c.o);
   const wall=document.getElementById('ack');
   const q=document.querySelector('.ack-q');
   const rg=document.querySelector('.ack-rg');
   const empty=document.getElementById('ack-empty');
-  [...new Set(C.map(c=>c.r))].sort().forEach(r=>{const o=document.createElement('option');o.textContent=r;rg.appendChild(o);});
-  wall.innerHTML=C.map(c=>`<div class="row" data-name="${esc(c.h)}" data-region="${esc(c.r)}"><span class="av">${esc(c.h.slice(6,8).toUpperCase())}</span><span class="nm">${esc(c.h)}</span><span class="rg">${esc(c.r)}</span><span class="st">${stats(c)}</span></div>`).join('');
   const chips=[...wall.children];
   function apply(){
     const t=q.value.trim().toLowerCase(), reg=rg.value; let n=0;
@@ -85,4 +85,5 @@
   q.addEventListener('input',apply); rg.addEventListener('change',apply);
 })();
 </script>
+{% endif %}
 {% endblock %}
