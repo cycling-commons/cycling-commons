@@ -112,7 +112,9 @@ function renderPlaceCard(name, meta, near, covGroups){
       if(it.itemId!=null && idxIds().has(g.letter+':'+it.itemId)) return;
       all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
         badge:g.letter, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
-        go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n)}});
+        // it.itemId (curated rows only) routes through the served item's own
+        // attributes instead of the OSM-tile fallback — see openCoverageByRef's header.
+        go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n, it.itemId)}});
     });
   });
   // group rows by letter, keeping the global nearest-first order inside each group

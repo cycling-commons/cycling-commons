@@ -167,7 +167,10 @@ export function initSearchUi(){
             .map(h=>{ const layer=layerByKey[LETTER_KEY[h.letter]];
               return {name:h.n, key:slug(h.n), kind:layer.label, badge:h.letter, color:layer.color,
                 letter:h.letter, ll:h.ll, cov:1, community:!h.curated,
-                go:()=>openCoverageByRef(h.ref, h.letter, h.ll, h.n)}; });
+                // h.itemId (curated hits only) routes through the served
+                // item's own attributes instead of the OSM-tile fallback —
+                // see openCoverageByRef's header.
+                go:()=>openCoverageByRef(h.ref, h.letter, h.ll, h.n, h.itemId)}; });
           _covSQ=slug(q);
           if(!sRes.hidden) runS();   // merge into the open dropdown
         })

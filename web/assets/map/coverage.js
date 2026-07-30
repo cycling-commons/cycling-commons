@@ -28,6 +28,7 @@ import { mintWaterDrops, miniIcon, SERVICE_GLYPH, coverageIconId } from './icons
 import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
+import { osmLayers } from './osm-pools.js';
 
 // ---- Coverage tiles (coverage-provider.md §6) ----
 // Uncurated OSM coverage renders from ONE PMTiles vector source ('coverage',
@@ -352,9 +353,36 @@ export function openCoverageDrawer(key, tp, ll){
 // Open a coverage POI with NO rendered tile feature at hand (search pick,
 // town-card row, ?feature= fallback): fly, fetch the detail, open the drawer.
 // Fetch failure still opens a minimal drawer — the pick must never no-op.
-export function openCoverageByRef(ref, letter, ll, name){
+//
+// itemId (optional): CoverageRepository's search()/nearby() curated arm
+// already resolves these picks to a served `item` row and hands back its id
+// — a manual/user-added point (source_ref like "manual:…") has no
+// /map/coverage/poi entry at all (that endpoint only knows OSM node|way
+// refs), so without this the drawer fell back to bare tile props and
+// silently dropped every attribute the item actually carries (type,
+// potable, photo, …). When itemId resolves to a feature already sitting in
+// the served pool (osmLayers — the same data confLeafPin's confirmed-pin
+// click reads), open THAT record directly instead of the tile-derived path
+// below, so a search/town-card/deep-link pick shows exactly what clicking
+// the pin itself shows.
+export function openCoverageByRef(ref, letter, ll, name, itemId){
   const key=LETTER_KEY[letter]; if(!key) return;
   flyToPin([ll[1],ll[0]]);
+  if(itemId!=null){
+    const pool=osmLayers[key];
+    const f=pool && pool.data && pool.data.features.find(x=>x.properties && x.properties.id===itemId);
+    if(f){
+      const layer=layerByKey[key], lo={lng:ll[1], lat:ll[0]}, p=f.properties;
+      openDrawer(layer, key==='water' ? waterDrawer(p, lo) : osmDrawer(layer, p, lo, COV_SRC[key]));
+      const drawn = COVERAGE_CCS.some(cc=>{
+        const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+        return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
+      });
+      if(!drawn) revealPinAt(layer, ll);
+      else showSelectedCoverageIcon(key, {kind:p.serviceKind}, lo);
+      return;
+    }
+  }
   const myReq=++_covReq;
   const paint=(d)=>{ if(myReq!==_covReq) return;
       const layer=layerByKey[key], lo={lng:ll[1], lat:ll[0]};
@@ -411,7 +439,7 @@ export function openCoverageFeatureByName(name){
       // the target has actually resolved (the F9 gate below only covers the
       // synchronous local/pending/route resolvers; this is the async arm).
       widenForDeepLink();
-      openCoverageByRef(hit.ref, hit.letter, hit.ll, hit.n);
+      openCoverageByRef(hit.ref, hit.letter, hit.ll, hit.n, hit.itemId);
     });
 }
 
