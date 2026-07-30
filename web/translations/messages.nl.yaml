@@ -851,6 +851,7 @@ vote:
   ballot_heading: 'Jouw stembrief'
   submit: 'Stembrief indienen'
   privacy_note: 'Jouw stem is privé. De Commons registreert dat je hebt gestemd en wanneer — nooit een openbaar overzicht van wat je hebt gerangschikt.'
+  demo_notice: 'Ontwerpvoorbeeld — stemmen is nog niet actief. De echte seizoensstemming komt na de lancering; wat je hier instuurt wordt niet opgeslagen.'
   error:
     ballot_empty: 'Voeg ten minste één item toe aan je stembrief voordat je hem indient.'
   receipt:
@@ -1367,6 +1368,7 @@ contribute:
   add:
     title: 'Een plek toevoegen · %type%'
     lead: 'Mist de atlas iets? Prik het vast, beschrijf het en stuur het naar de curatoren.'
+    known_note: 'Kleine stippen zijn plekken van dit type die al in beeld zijn — controleer of die van jou er niet al tussen staat.'
   error:
     unknown_attribute: 'Een van de ingezonden velden wordt niet herkend voor dit itemtype.'
     invisible_characters: 'Deze tekst bevat onzichtbare of opmaaktekens die niet zijn toegestaan.'

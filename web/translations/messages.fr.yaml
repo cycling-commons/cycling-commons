@@ -851,6 +851,7 @@ vote:
   ballot_heading: 'Votre bulletin'
   submit: 'Soumettre le bulletin'
   privacy_note: 'Votre vote est privé. Le Commons enregistre que vous avez voté et quand — jamais un relevé public de ce que vous avez classé.'
+  demo_notice: 'Aperçu de conception — le vote n''est pas encore actif. Le véritable scrutin saisonnier arrivera après le lancement ; rien de ce que vous envoyez ici n''est enregistré.'
   error:
     ballot_empty: 'Veuillez ajouter au moins un élément à votre bulletin avant de soumettre.'
   receipt:
@@ -1367,6 +1368,7 @@ contribute:
   add:
     title: 'Ajouter un lieu · %type%'
     lead: 'L''atlas manque quelque chose ? Épinglez-le, décrivez-le et envoyez-le aux curateurs.'
+    known_note: 'Les petits points sont des lieux de ce type déjà recensés — vérifiez que le vôtre n''en fait pas partie.'
   error:
     unknown_attribute: 'Un des champs soumis n''est pas reconnu pour ce type d''élément.'
     invisible_characters: 'Ce texte contient des caractères invisibles ou de formatage qui ne sont pas autorisés.'

@@ -22,6 +22,7 @@
   .bitem .x{margin-left:auto;color:var(--clay);cursor:pointer;font-family:var(--mono);font-size:.7rem}
   .bempty{color:#595c4d;font-size:.88rem;padding:1rem 0}
   .vnote{font-size:.78rem;color:#595c4d;margin-top:1rem;line-height:1.5;border-left:2px solid var(--glacier);padding-left:.7rem}
+  .vdemo{font-size:.85rem;color:#6b5320;background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:6px;padding:.6rem 1rem;margin:1.6rem auto 0;max-width:900px;line-height:1.5}
   .receipt{text-align:center;padding:4rem 1rem}
   .receipt h2{font-family:var(--serif);font-size:1.8rem;margin:.5rem 0}
   .receipt .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin-top:.5rem}
@@ -54,6 +55,7 @@
 </div></div>
 
 <div class="wrap" id="main">
+  <p class="vdemo">{{ 'vote.demo_notice'|trans }}</p>
   {{ form_start(form, {attr: {id: 'vote-form'}}) }}
   {{ form_widget(form.ballot) }}
   <div class="vgrid">

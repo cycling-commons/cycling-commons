@@ -851,6 +851,7 @@ vote:
   ballot_heading: 'Deine Stimme'
   submit: 'Stimmzettel einreichen'
   privacy_note: 'Deine Stimme ist privat. The Commons speichert, dass du abgestimmt hast und wann — niemals ein öffentliches Protokoll darüber, was du bewertet hast.'
+  demo_notice: 'Design-Vorschau — die Abstimmung ist noch nicht aktiv. Die echte Saisonwahl kommt nach dem Start; was du hier abschickst, wird nicht gespeichert.'
   error:
     ballot_empty: 'Bitte füge mindestens ein Element zu deinem Stimmzettel hinzu, bevor du ihn einreichst.'
   receipt:
@@ -1367,6 +1368,7 @@ contribute:
   add:
     title: 'Ort hinzufügen · %type%'
     lead: 'Fehlt etwas im Atlas? Setze den Pin, beschreibe es und schicke es an die Kuratoren.'
+    known_note: 'Kleine Punkte sind Orte dieser Art, die bereits erfasst sind — prüfe, ob deiner schon dabei ist.'
   error:
     unknown_attribute: 'Eines der übermittelten Felder ist für diesen Elementtyp nicht bekannt.'
     invisible_characters: 'Dieser Text enthält unsichtbare oder Formatierungszeichen, die nicht erlaubt sind.'
