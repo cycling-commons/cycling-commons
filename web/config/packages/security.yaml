@@ -60,6 +60,12 @@ security:
         # login). Explicit PUBLIC_ACCESS for the same lazy-firewall reason as the
         # map endpoints above.
         - { path: '^/items/\d+/confirmations$', roles: PUBLIC_ACCESS }
+        # The target of the attribution link embedded in every stored photo
+        # (docs/specs/photo-uploads.md §5d). Explicit PUBLIC_ACCESS for the same
+        # scheb lazy-firewall cacheability reason as /map/catalog.json above —
+        # and because a reuser following a link out of an image file must never
+        # be asked to sign in.
+        - { path: '^/photo/[0-9a-fA-F-]{36}$', roles: PUBLIC_ACCESS }
         # Coverage query plane (coverage-provider.md §5):
         # anonymous cacheable JSON over the coverage_poi cache — explicit
         # PUBLIC_ACCESS for the same scheb lazy-firewall cacheability reason

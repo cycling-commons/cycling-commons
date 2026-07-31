@@ -1450,6 +1450,19 @@ contribute:
     invalid_geometry: 'La forme dessinée n’a pas pu être lue — redessinez-la et réessayez.'
     media_invalid: 'Une des photos jointes n''a pas pu être utilisée — retirez-la et réessayez.'
 media:
+  page:
+    title: 'Une photo du Commons'
+    description: 'Une photo contribuée par un cycliste, sous licence CC BY-SA 4.0.'
+    alt: 'Une photo contribuée par un cycliste'
+    by: 'Photographiée par'
+    by_anonymous: 'Photographiée par un cycliste anonyme'
+    licensed_under: 'Sous licence'
+    reuse_hint: 'Pour la réutiliser, créditez cette page : <code>%url%</code>'
+    download_original: 'Télécharger l''original en pleine résolution'
+    see_place: 'Voir %name% sur la carte'
+    unpublished_title: 'Cette photo n''est pas publiée'
+    unpublished_body: 'Elle attend peut-être une relecture, ou elle ne fait plus partie du Commons.'
+    to_map: 'Aller à la carte'
   consent:
     title: 'Avant d''ajouter une photo'
     intro: 'Votre photo rejoint le Commons ouvert pour que chaque cycliste puisse l''utiliser. Cela ne fonctionne que si elle est réellement libre de partage.'

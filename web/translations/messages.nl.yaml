@@ -1450,6 +1450,19 @@ contribute:
     invalid_geometry: 'De getekende vorm kon niet worden gelezen — teken hem opnieuw en probeer het nogmaals.'
     media_invalid: 'Een van de bijgevoegde foto''s kon niet worden gebruikt — verwijder hem en probeer het opnieuw.'
 media:
+  page:
+    title: 'Een foto uit de Commons'
+    description: 'Een door een fietser bijgedragen foto, onder CC BY-SA 4.0.'
+    alt: 'Een door een fietser bijgedragen foto'
+    by: 'Gefotografeerd door'
+    by_anonymous: 'Gefotografeerd door een anonieme fietser'
+    licensed_under: 'Onder licentie'
+    reuse_hint: 'Om hem te hergebruiken, vermeld deze pagina: <code>%url%</code>'
+    download_original: 'Download het origineel op volledige resolutie'
+    see_place: 'Bekijk %name% op de kaart'
+    unpublished_title: 'Deze foto is niet gepubliceerd'
+    unpublished_body: 'Misschien wacht hij op beoordeling, of hij maakt geen deel meer uit van de Commons.'
+    to_map: 'Naar de kaart'
   consent:
     title: 'Voordat je een foto toevoegt'
     intro: 'Je foto komt in de open Commons zodat elke fietser hem kan gebruiken. Dat werkt alleen als hij echt vrij te delen is.'

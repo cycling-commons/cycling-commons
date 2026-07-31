@@ -1450,6 +1450,19 @@ contribute:
     invalid_geometry: 'Die gezeichnete Form konnte nicht gelesen werden — zeichne sie neu und versuche es erneut.'
     media_invalid: 'Eines der angehängten Fotos konnte nicht verwendet werden — entferne es und versuche es erneut.'
 media:
+  page:
+    title: 'Ein Foto aus dem Commons'
+    description: 'Ein von Radfahrenden beigetragenes Foto, lizenziert unter CC BY-SA 4.0.'
+    alt: 'Ein von Radfahrenden beigetragenes Foto'
+    by: 'Fotografiert von'
+    by_anonymous: 'Fotografiert von einer anonymen Radfahrerin oder einem anonymen Radfahrer'
+    licensed_under: 'Lizenziert unter'
+    reuse_hint: 'Zur Weiterverwendung bitte diese Seite angeben: <code>%url%</code>'
+    download_original: 'Original in voller Auflösung herunterladen'
+    see_place: '%name% auf der Karte ansehen'
+    unpublished_title: 'Dieses Foto ist nicht veröffentlicht'
+    unpublished_body: 'Es wartet vielleicht auf eine Prüfung, oder es gehört nicht mehr zum Commons.'
+    to_map: 'Zur Karte'
   consent:
     title: 'Bevor du ein Foto hinzufügst'
     intro: 'Dein Foto wird Teil des offenen Commons, damit jede Radfahrerin und jeder Radfahrer es nutzen kann. Das geht nur, wenn es wirklich frei teilbar ist.'

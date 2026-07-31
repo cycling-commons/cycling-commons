@@ -1158,6 +1158,19 @@ contribute:
     invalid_geometry: 'The drawn shape could not be read — redraw it and try again.'
     media_invalid: 'One of the attached photos could not be used — remove it and try again.'
 media:
+  page:
+    title: 'A photo from the Commons'
+    description: 'A rider-contributed photo, licensed CC BY-SA 4.0.'
+    alt: 'A rider-contributed photo'
+    by: 'Photographed by'
+    by_anonymous: 'Photographed by an anonymous rider'
+    licensed_under: 'Licensed under'
+    reuse_hint: 'To reuse it, credit this page: <code>%url%</code>'
+    download_original: 'Download the full-resolution original'
+    see_place: 'See %name% on the map'
+    unpublished_title: 'This photo is not published'
+    unpublished_body: 'It may be awaiting review, or it may no longer be part of the Commons.'
+    to_map: 'Go to the map'
   consent:
     title: 'Before you add a photo'
     intro: 'Your photo joins the open Commons so every rider can use it. That only works if it is genuinely free to share.'
