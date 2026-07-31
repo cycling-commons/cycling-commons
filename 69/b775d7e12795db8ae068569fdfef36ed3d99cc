@@ -1,0 +1,53 @@
+docs/specs/coverage-provider.md
+  s_190feadae0fef2::t_035c08bdeb0e98 129
+  s_190feadae0fef2::t_225dc30dbf04bf 126,170,418,694,751
+  s_190feadae0fef2::t_e715dc4d8bbb83 54
+docs/specs/edit-items/D-bike-services.md
+  s_190feadae0fef2::t_b971827b6d2813 71,99
+docs/specs/map-and-search.md
+  s_190feadae0fef2::t_225dc30dbf04bf 248,297
+  s_190feadae0fef2::t_d84f489ec1c7c2 157,173,285,301,319,331,344,352,840
+docs/specs/account-and-auth.md
+  s_190feadae0fef2::t_640914bcccfb99 130,351,405,430,485
+  s_190feadae0fef2::t_44f6de3e004243 103,498
+docs/specs/edit-items/M-public-toilets.md
+  s_190feadae0fef2::t_046ce1c265a8c3 19-21
+  s_190feadae0fef2::t_bad18641d3c748 30,53
+  s_190feadae0fef2::t_b971827b6d2813 7
+docs/specs/system-configuration.md
+  s_190feadae0fef2::t_b971827b6d2813 88
+docs/specs/osm-data-architecture.md
+  s_190feadae0fef2::t_b971827b6d2813 81
+  s_190feadae0fef2::t_8e937d4cd83692 299
+docs/specs/photo-uploads.md
+  s_190feadae0fef2::t_b971827b6d2813 16,213
+docs/specs/edit-items/README.md
+  s_190feadae0fef2::t_b971827b6d2813 256
+docs/specs/moderation-and-contribution.md
+  s_190feadae0fef2::t_db10fc10863f40 696,715,723
+  s_190feadae0fef2::t_b971827b6d2813 65
+  s_190feadae0fef2::t_13be9146dbe3eb 54
+docs/specs/route-domain.md
+  s_190feadae0fef2::t_b971827b6d2813 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "69b775d7e12795db8ae068569fdfef36ed3d99cc",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_190feadae0fef2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed6e4b7c-6e75-4531-a2b6-ac04eb20119f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
