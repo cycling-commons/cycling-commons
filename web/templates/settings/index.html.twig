@@ -413,6 +413,19 @@
           <input type="text" id="deletion_code" name="deletion_code" maxlength="8" autocomplete="off"
                  placeholder="XXXXXXXX" style="letter-spacing:.16em;text-transform:uppercase">
         </div>
+        {% if has_approved_photos %}
+          {# docs/specs/photo-uploads.md §6. Offered only to a rider who actually
+             has approved photos AND a public profile — anyone else would be
+             answering a question that means nothing for them. Unticked by
+             default: anonymize is what happens if they say nothing. #}
+          <div class="field" style="margin-bottom:.8rem">
+            <label style="display:flex;gap:.5rem;align-items:flex-start">
+              <input type="checkbox" name="keep_media_credit" value="1">
+              <span>{{ 'settings.delete.keep_media_credit'|trans }}</span>
+            </label>
+            <p class="fhelp">{{ 'settings.delete.keep_media_credit_help'|trans }}</p>
+          </div>
+        {% endif %}
         <button type="submit" class="btn-danger">{{ 'settings.submit_delete_confirm'|trans }}</button>
       </form>
     </details>

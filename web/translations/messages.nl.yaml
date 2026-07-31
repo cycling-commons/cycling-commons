@@ -864,6 +864,9 @@ profile:
   public_pending_one: '%count% voorgestelde route wacht op verificatie'
   public_pending_many: '%count% voorgestelde routes wachten op verificatie'
 settings:
+  delete:
+    keep_media_credit: 'Mijn naam op mijn bijgedragen foto''s houden'
+    keep_media_credit_help: 'Je goedgekeurde foto''s blijven hoe dan ook in de Commons — ze staan onder CC BY-SA 4.0. Dit bepaalt alleen of ze je naam blijven vermelden. Laat het vinkje uit en ze worden vanaf dan toegeschreven aan een anonieme fietser, ook in kopieën die mensen al hebben gedownload.'
   eyebrow: 'Jouw profiel'
   heading: 'Instellingen'
   tab_profile: 'Profiel'

@@ -864,6 +864,9 @@ profile:
   public_pending_one: '%count% itinéraire proposé en attente de vérification'
   public_pending_many: '%count% itinéraires proposés en attente de vérification'
 settings:
+  delete:
+    keep_media_credit: 'Garder mon nom sur les photos que j''ai contribuées'
+    keep_media_credit_help: 'Vos photos approuvées restent dans le Commons dans tous les cas — elles sont sous licence CC BY-SA 4.0. Ceci décide seulement si elles continuent de vous nommer. Laissez la case décochée et elles seront attribuées à un cycliste anonyme à partir de là, y compris dans les copies déjà téléchargées.'
   eyebrow: 'Votre profil'
   heading: 'Paramètres'
   tab_profile: 'Profil'

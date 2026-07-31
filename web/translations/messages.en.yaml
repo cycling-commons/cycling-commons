@@ -868,6 +868,9 @@ profile:
   public_pending_one: '%count% proposed route awaiting verification'
   public_pending_many: '%count% proposed routes awaiting verification'
 settings:
+  delete:
+    keep_media_credit: 'Keep my name on the photos I contributed'
+    keep_media_credit_help: 'Your approved photos stay in the Commons either way — they are licensed CC BY-SA 4.0. This only decides whether they keep naming you. Leave it unticked and they are credited to an anonymous rider from then on, including in copies people have already downloaded.'
   eyebrow: 'Your profile'
   heading: 'Settings'
   tab_profile: 'Profile'

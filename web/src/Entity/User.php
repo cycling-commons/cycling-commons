@@ -196,6 +196,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $deletionRequestedAt = null;
 
+    /**
+     * What happens to the credit on this rider's approved photos when the
+     * account goes (docs/specs/photo-uploads.md §6). False — anonymize — is the
+     * default and is what happens if they say nothing. Meaningful only because
+     * stored files carry a link rather than a name: either way, the answer
+     * reaches every copy that ever left this site.
+     */
+    #[ORM\Column(name: 'keep_media_credit', type: 'boolean', options: ['default' => false])]
+    private bool $keepMediaCredit = false;
+
     #[ORM\Column(type: 'boolean')]
     private bool $publicProfile = false;
 
@@ -702,6 +712,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDeletionCode(?string $deletionCode): static
     {
         $this->deletionCode = $deletionCode;
+
+        return $this;
+    }
+
+    public function isKeepMediaCredit(): bool
+    {
+        return $this->keepMediaCredit;
+    }
+
+    public function setKeepMediaCredit(bool $keep): static
+    {
+        $this->keepMediaCredit = $keep;
 
         return $this;
     }

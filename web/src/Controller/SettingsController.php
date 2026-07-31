@@ -163,6 +163,10 @@ final class SettingsController extends AbstractController
             'passwordForm' => $passwordForm,
             'active_tab' => $activeTab,
             'base_region_slugs' => $baseRegionSlugs,
+            // Whether to offer the credit choice at all
+            // (docs/specs/photo-uploads.md §6): a rider with no approved photos,
+            // or one who has never been named on them, has nothing to decide.
+            'has_approved_photos' => $user->isPublicProfile() && $this->hasApprovedPhotos($user),
         ]);
     }
 
@@ -204,6 +208,11 @@ final class SettingsController extends AbstractController
 
         $code = (string) $request->request->get('deletion_code', '');
 
+        // Recorded BEFORE the purge runs: MediaDeletionHook reads it off the
+        // entity during confirmDeletion() (docs/specs/photo-uploads.md §6).
+        $user->setKeepMediaCredit($request->request->getBoolean('keep_media_credit'));
+        $this->em->flush();
+
         if (!$this->deletionService->confirmDeletion($user, $code)) {
             $this->addFlash('error', 'flash.deletion_code_invalid');
 
@@ -215,5 +224,18 @@ final class SettingsController extends AbstractController
         $this->addFlash('success', 'flash.account_deleted');
 
         return $this->redirectToRoute('home');
+    }
+
+    /**
+     * Does this rider have at least one approved photo? Read straight off
+     * media_upload rather than through the ORM: the answer is one boolean for
+     * one page render (docs/specs/photo-uploads.md §6).
+     */
+    private function hasApprovedPhotos(User $user): bool
+    {
+        return (bool) $this->db->fetchOne(
+            "SELECT 1 FROM media_upload WHERE user_id = ? AND status = 'approved' LIMIT 1",
+            [(int) $user->getId()],
+        );
     }
 }

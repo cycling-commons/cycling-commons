@@ -14,6 +14,7 @@ use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Media\MediaDecisionService;
+use App\Media\MediaDisposalService;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
@@ -38,6 +39,7 @@ final class ModerationService
         private readonly AdminActionLogger $adminLog,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly MediaDecisionService $mediaDecisions,
+        private readonly MediaDisposalService $mediaDisposal,
     ) {
     }
 
@@ -150,6 +152,11 @@ final class ModerationService
             }
 
             $this->adminLog->log($curator, TrashActions::TrashSubmission, null, sprintf('SUB-%d · type=%s', $id, $submission->getType()->value));
+            // Trash means no content survives — the photos go with the words,
+            // immediately and with no retention window
+            // (docs/specs/photo-uploads.md §6). The content-free audit row above
+            // is the only trace either leaves.
+            $this->mediaDisposal->purgeForSubmission($id);
             $this->em->remove($submission);
         });
     }

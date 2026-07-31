@@ -864,6 +864,9 @@ profile:
   public_pending_one: '%count% vorgeschlagene Route wartet auf Verifizierung'
   public_pending_many: '%count% vorgeschlagene Routen warten auf Verifizierung'
 settings:
+  delete:
+    keep_media_credit: 'Meinen Namen auf meinen Fotos behalten'
+    keep_media_credit_help: 'Deine freigegebenen Fotos bleiben ohnehin im Commons — sie stehen unter CC BY-SA 4.0. Dies entscheidet nur, ob sie dich weiterhin nennen. Lässt du das Häkchen weg, werden sie ab dann einer anonymen Radfahrerin oder einem anonymen Radfahrer zugeschrieben, auch in bereits heruntergeladenen Kopien.'
   eyebrow: 'Dein Profil'
   heading: 'Einstellungen'
   tab_profile: 'Profil'
