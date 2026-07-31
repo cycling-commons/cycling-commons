@@ -41,8 +41,8 @@ is enforced at the serialization boundary: public responses are built from
 dedicated public DTOs that carry no personal data, not from internal entities —
 and below that, at the database itself: the API reads through a dedicated
 Postgres role that has no grant on any account table
-([personal-data-boundary.md](personal-data-boundary.md) owns the full
-enforcement stack).
+([public-api-personal-data-boundary.md](public-api-personal-data-boundary.md)
+owns the full enforcement stack).
 
 | Product | Content | Category | Default response |
 |---------|---------|----------|------------------|

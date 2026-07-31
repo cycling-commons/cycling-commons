@@ -115,7 +115,7 @@ Doctrine migration:
   hand — same convention as `02-pg-trgm.sql`):
 
   ```sql
-  -- Public data-API read role: personal-data-boundary.md §2.
+  -- Public data-API read role: public-api-personal-data-boundary.md §2.
   -- LOGIN only; no create, no inherit; password is dev-only.
   DO $$ BEGIN
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cc_api_read') THEN
@@ -300,7 +300,7 @@ a fixed list mirroring §1:
   (SQLSTATE `42501`) for every §1.3 table — `users` first;
 - a schema sweep: any table in `information_schema.tables` that is in
   **neither** list fails the test with "classify me in
-  personal-data-boundary.md §1" — new tables cannot silently skip
+  public-api-personal-data-boundary.md §1" — new tables cannot silently skip
   classification. Extension-owned tables (`spatial_ref_sys`, the `topology`
   schema) are excluded from the sweep.
 
