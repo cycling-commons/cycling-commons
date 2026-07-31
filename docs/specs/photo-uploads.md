@@ -17,10 +17,17 @@ context). Media licensing context lives in the site licences
 
 1. **Photos only.** The video drop zone AND the video link row are removed
    from the wizard (honest UI); video returns as its own feature someday.
-2. **CC bucket behind a proxy host.** Files live in a dedicated Cycling
-   Commons object-storage bucket; riders' browsers fetch them from a
-   first-party caching proxy host **the owner runs** (the same pattern the
-   coverage tiles use). The app only knows `MEDIA_PUBLIC_BASE`.
+2. **CC buckets behind a proxy host — one bucket per continent (owner
+   decision 2026-07-31).** Files live in dedicated Cycling Commons
+   object-storage buckets, sharded by continent; riders' browsers fetch them
+   from a first-party caching proxy host **the owner runs** (the same
+   pattern the coverage tiles use), which routes by the URL's continent
+   segment (`<MEDIA_PUBLIC_BASE>/eu/…`, `/na/…`). The app resolves each
+   upload's continent from the wizard's pin coordinates (world reference
+   data: country → continent), stores the code on the row, and routes
+   writes through a per-continent storage map; unresolvable coordinates
+   (or none yet) fall back to `MEDIA_DEFAULT_CONTINENT` (EU). Adding a
+   continent is one bucket + one config entry — no code.
 3. **Keep a stripped original — capped at 4K.** The stored "original" is
    re-encoded with all embedded metadata removed and downscaled to at most
    **3840 px on the longest side**. Nothing larger is ever stored.
@@ -42,9 +49,13 @@ context). Media licensing context lives in the site licences
 
 ## 2. Storage plumbing
 
-- **Flysystem** with an S3 adapter (prod) — env: `MEDIA_S3_ENDPOINT`,
-  `MEDIA_S3_BUCKET`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`, `MEDIA_S3_REGION` —
-  and `MEDIA_PUBLIC_BASE` (the proxy host base URL riders fetch from).
+- **Flysystem** with S3 adapters (prod), **one storage per continent**:
+  `MEDIA_S3_ENDPOINT`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`, `MEDIA_S3_REGION`
+  (shared credentials) + `MEDIA_S3_BUCKET_EU` (and later `_NA`, `_AS`, … as
+  continents onboard; unset = continent falls back to
+  `MEDIA_DEFAULT_CONTINENT`'s storage) — and `MEDIA_PUBLIC_BASE` (the proxy
+  host base URL riders fetch from; the continent code is the first path
+  segment after it).
 - `MEDIA_PUBLIC_BASE`'s host is added to the CSP `img-src` the same
   env-backed way as `coverage.csp_host` (never admin-editable — a writable
   CSP host is an XSS surface, system-configuration.md rationale).
@@ -52,15 +63,23 @@ context). Media licensing context lives in the site licences
   `MEDIA_PUBLIC_BASE=/media-dev` — the contributor stack works with zero
   bucket credentials; tests use the in-memory adapter.
 - Object layout, unguessable by construction:
-  `photos/<uuid>/orig.webp | lg.webp | sm.webp`. "Public" before approval
-  means *unlinked*, not listed; the moderation queue is the only place a
-  pending URL appears.
+  `photos/<uuid>/orig.webp | lg.webp | sm.webp` **inside the continent's
+  bucket**; the public URL prepends the continent:
+  `<MEDIA_PUBLIC_BASE>/<cont>/photos/<uuid>/<variant>.webp` (dev/test: one
+  local adapter, the continent is just a path prefix). "Public" before
+  approval means *unlinked*, not listed; the moderation queue is the only
+  place a pending URL appears.
 
 ## 3. Upload endpoint
 
 `POST /media/photos` — ROLE_USER (in-controller 401, JSON API posture),
 CSRF (`media-upload` intention), rate-limited (`media_upload`,
-sliding window, 30/day per user). One photo per request, multipart.
+sliding window, 30/day per user). One photo per request, multipart; the
+wizard sends its current pin `lat`/`lng` alongside (step 1 precedes step 3).
+The storage continent resolves in order (owner decision 2026-07-31): the
+**pin coordinates** when present, else the photo's **EXIF GPS** (harvested
+in §3 step 1 anyway), else `MEDIA_DEFAULT_CONTINENT`. The resolved code is
+stored on the row (`continent CHAR(2)`).
 
 Validation (server-side, content-sniffed via finfo — never the extension):
 - Formats in: JPEG, PNG, WebP, HEIC. HEIC is accepted **only when** the
@@ -82,7 +101,8 @@ Processing (synchronous, Imagick + ext-exif):
    (q80). Never upscale — a 900 px upload gets orig=lg=900 px, sm=520 px.
 
 Persistence: a `media_upload` row —
-`id (uuid) · user_id · status (pending|approved|rejected) · width · height ·
+`id (uuid) · user_id · status (pending|approved|rejected) · continent
+(CHAR(2), the storage shard) · width · height ·
 bytes · taken_at (nullable) · camera (nullable) · gps_lat/gps_lng (nullable,
 PRIVATE — cleared at intake) · gps_distance_m (nullable, computed at intake)
 · consented_at · created_at · submission_id (nullable, set at submit)`.
