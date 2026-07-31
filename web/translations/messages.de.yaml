@@ -1446,6 +1446,19 @@ contribute:
     name_required: 'Gib dem Ort einen Namen.'
     already_materialized: 'Dieser Ort ist bereits im Commons — öffne ihn auf der Karte und bearbeite ihn dort.'
     invalid_geometry: 'Die gezeichnete Form konnte nicht gelesen werden — zeichne sie neu und versuche es erneut.'
+media:
+  consent:
+    title: 'Bevor du ein Foto hinzufügst'
+    intro: 'Dein Foto wird Teil des offenen Commons, damit jede Radfahrerin und jeder Radfahrer es nutzen kann. Das geht nur, wenn es wirklich frei teilbar ist.'
+    contract: 'Medien stehen unter CC BY-SA 4.0. Lade oder verlinke nur Fotos, die du selbst aufgenommen hast.'
+    keep_ownership: 'Du behältst das Eigentum — das Commons erhält nur eine Lizenz zum Teilen.'
+    accept: 'Ich spende es'
+    cancel: 'Abbrechen'
+    error: 'Wir konnten deine Zustimmung nicht speichern. Es wurde nichts hochgeladen — bitte versuche es erneut.'
+    standing: 'Du spendest deine Fotos unter CC BY-SA 4.0; freigegebene Fotos werden zu den Bedingungen des Commons veröffentlicht.'
+    consented_on: 'Zugestimmt am %date%'
+    read_contract: 'Vertrag lesen'
+    site_terms: 'Nutzungsbedingungen'
 propose_route:
   eyebrow: 'K · Empfohlene Routen'
   title: 'Route vorschlagen'

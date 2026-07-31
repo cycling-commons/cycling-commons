@@ -1158,6 +1158,21 @@ contribute:
     name_required: 'Give the place a name.'
     already_materialized: 'This place is already in the Commons — open it on the map and edit it there.'
     invalid_geometry: 'The drawn shape could not be read — redraw it and try again.'
+media:
+  consent:
+    title: 'Before you add a photo'
+    intro: 'Your photo joins the open Commons so every rider can use it. That only works if it is genuinely free to share.'
+    # The binding sentence. Its exact wording is hashed onto the consent record,
+    # so changing it means bumping MediaConsent::VERSION (docs/specs/photo-uploads.md §4).
+    contract: 'Media is licensed CC BY-SA 4.0. Only upload or link photos you took yourself.'
+    keep_ownership: 'You keep ownership — the Commons only gets a licence to share it.'
+    accept: 'Donate it'
+    cancel: 'Cancel'
+    error: 'We could not record your consent. Nothing was uploaded — please try again.'
+    standing: 'You donate your photos under CC BY-SA 4.0; approved photos are published under the Commons'' terms.'
+    consented_on: 'Consented %date%'
+    read_contract: 'Read the contract'
+    site_terms: 'Site terms'
 propose_route:
   eyebrow: 'K · Recommended routes'
   title: 'Propose a route'

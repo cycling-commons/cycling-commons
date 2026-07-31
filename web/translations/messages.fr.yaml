@@ -1446,6 +1446,19 @@ contribute:
     name_required: 'Donnez un nom à ce lieu.'
     already_materialized: 'Ce lieu est déjà dans le Commons — ouvrez-le sur la carte et modifiez-le là-bas.'
     invalid_geometry: 'La forme dessinée n’a pas pu être lue — redessinez-la et réessayez.'
+media:
+  consent:
+    title: 'Avant d''ajouter une photo'
+    intro: 'Votre photo rejoint le Commons ouvert pour que chaque cycliste puisse l''utiliser. Cela ne fonctionne que si elle est réellement libre de partage.'
+    contract: 'Les médias sont sous licence CC BY-SA 4.0. N''envoyez ou ne liez que des photos que vous avez prises vous-même.'
+    keep_ownership: 'Vous en gardez la propriété — le Commons ne reçoit qu''une licence de partage.'
+    accept: 'Je la donne'
+    cancel: 'Annuler'
+    error: 'Nous n''avons pas pu enregistrer votre consentement. Rien n''a été envoyé — réessayez.'
+    standing: 'Vous donnez vos photos sous licence CC BY-SA 4.0 ; les photos approuvées sont publiées selon les conditions du Commons.'
+    consented_on: 'Consenti le %date%'
+    read_contract: 'Lire le contrat'
+    site_terms: 'Conditions du site'
 propose_route:
   eyebrow: 'K · Itinéraires recommandés'
   title: 'Proposer un itinéraire'
