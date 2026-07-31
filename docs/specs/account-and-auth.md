@@ -50,7 +50,7 @@ roles.
 
 | Group | Fields | Notes |
 |---|---|---|
-| Identity | `id` (int PK), `uuid` (UUIDv7, table-level unique constraint `uniq_users_uuid`), `email` (unique), `displayName` + `displayNameCanonical` (§9), `country` (nullable FK, `SET NULL`), `locale` (nullable; null = follow switcher/browser) | `uuid` is assigned in the `PrePersist` callback and is the only identifier ever exposed publicly (§7) |
+| Identity | `id` (int PK), `uuid` (UUIDv7, table-level unique constraint `uniq_users_uuid`), `email` (unique), `displayName` (§9 — deliberately **not** unique), `country` (nullable FK, `SET NULL`), `locale` (nullable; null = follow switcher/browser) | `uuid` is assigned in the `PrePersist` callback and is the only identifier ever exposed publicly (§7) |
 | Auth | `password` (hash, `auto` hasher), `roles` (json) | |
 | Email verification | `emailVerified`, `emailVerifiedAt` | token flow is signed-URL (§2), no stored token column |
 | 2FA | `twoFaEnabled`, `totpSecret` (encrypted at rest, §4), `backupCodes` (json, keyed hashes) | |
@@ -63,9 +63,9 @@ roles.
 
 The entity implements `UserInterface`, `PasswordAuthenticatedUserInterface`,
 scheb's `TwoFactorInterface` (TOTP) and `BackupCodeInterface`. Validation
-(email format/length, display-name uniqueness) sits **on the entity**, not on
-individual forms, so every write path — registration form, settings form,
-console commands, admin CRUD, fixtures — is covered.
+(email format/length and uniqueness, display-name format — §9) sits **on the
+entity**, not on individual forms, so every write path — registration form,
+settings form, console commands, admin CRUD, fixtures — is covered.
 
 Privacy consequence (standing rule): the platform **does** hold personal data —
 email, password hash, encrypted 2FA secret, login metadata. Public copy must
@@ -574,23 +574,51 @@ usually doesn't.
 
 ## 9. Display-name identity and rider preferences
 
-### Case-insensitive unique display names — shadow canonical column
+### Display names are labels, not identifiers
 
-- Uniqueness is **case-insensitive** (`Xander`/`xander` collide); leading and
-  trailing whitespace is trimmed; inner-whitespace variants stay distinct.
-- Implementation: shadow column `users.display_name_canonical`
-  (`mb_strtolower(trim(...))`, unique constraint
-  `uniq_users_display_name_canonical`), maintained **inside
-  `User::setDisplayName()`** so every write path is covered automatically —
-  registration, settings, console commands, admin CRUD, fixtures.
-- **Empty display names canonicalize to `NULL`**, which both the Postgres
-  unique index and `UniqueEntity` ignore — unnamed rows (tests, partial flows)
-  never collide. Load-bearing; do not "fix" to empty string.
-- Shadow column chosen over a `LOWER()` functional index: Doctrine-native (no
-  DBAL schema-diff drift) and stock `UniqueEntity` works with zero custom
-  validator. Validation is on the **entity**
-  (`fields: ['displayNameCanonical'], errorPath: 'displayName'`) so all write
-  paths validate, not just one form.
+**Display names are NOT unique.** Two riders may both be called John Doe,
+because two riders genuinely are. Refusing the second amounts to telling
+somebody their own name is a stranger's property, and a name is exactly the
+field a rider is most likely to want their real one in. The `uuid` is the
+identity, and always was.
+
+- No uniqueness constraint, no `UniqueEntity`, no canonical shadow column.
+  They were removed together: keeping a canonicalized copy around would keep
+  implying that names identify accounts.
+- Nothing looks a rider up by name. Display names are read for display and
+  never used as a key, so non-uniqueness costs no lookup anywhere.
+- **Disambiguation is the `uuid`'s job, and every surface already uses it.**
+  The public profile is `/riders/{uuid}`; the attribution link embedded in
+  contributed photos points at a uuid-keyed page
+  ([photo-uploads.md](photo-uploads.md) §1.3c, §5d); moderation is pseudonymous
+  and never shows a curator's name at all. Admin lists that show a name show
+  the email beside it.
+- A name is **stored exactly as typed** — `setDisplayName()` does no
+  normalization of any kind.
+
+### What a display name may look like
+
+Not being an identifier does not make the field a free-for-all: it renders in
+photo credits, on public profiles and in admin lists. Four rules, and **all of
+them live on the `User` entity**, not on the two form types, so admin CRUD,
+console commands and fixtures are held to them too — a rule only a form
+enforces is a rule an administrator walks straight past.
+
+| rule | constraint | rejects |
+|---|---|---|
+| length ceiling | `Assert\Length(max: 100)` | over-long names |
+| no confusables | `Assert\NoSuspiciousCharacters` (en/fr/nl/de) | mixed-script lookalikes (`Jоhn` with a Cyrillic о) |
+| no invisibles | `Assert\Regex('/\p{Cf}/u', match: false)` | zero-width and other format characters |
+| plain spelling | `App\Validator\PlainDisplayName` | non-U+0020 whitespace (non-breaking, ideographic), doubled or edge spaces, and Unicode compatibility forms (fullwidth) |
+
+`PlainDisplayName` is a constraint class rather than another regex because its
+compatibility check is NFKC idempotence, which no pattern can express.
+
+**`NotBlank` and the two-character floor stay on the forms**, deliberately.
+Requiring a name is a rule about humans filling in a form; unnamed rows are a
+supported state that fixtures and partial flows rely on. Symfony's
+`LengthValidator` skips `null` but not `''`, which is why the minimum cannot
+live on the entity beside the maximum.
 
 ### Preference vocabularies
 
