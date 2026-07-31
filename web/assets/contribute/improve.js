@@ -452,10 +452,23 @@
     var rb = document.getElementById('reviewBody');
     if (!rb) return;
 
-    var locTxt = !WZ.loc ? '—'
-      : WZ.loc.type === 'point' ? '◎ ' + WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E'
-      : WZ.loc.type === 'segment' ? WZ.loc.a[1].toFixed(4) + '°N ' + WZ.loc.a[0].toFixed(4) + '°E → ' + WZ.loc.b[1].toFixed(4) + '°N ' + WZ.loc.b[0].toFixed(4) + '°E'
-      : '◎ foot ' + WZ.loc.start[1].toFixed(4) + '°N ' + WZ.loc.start[0].toFixed(4) + '°E → summit ' + WZ.loc.summit[1].toFixed(4) + '°N ' + WZ.loc.summit[0].toFixed(4) + '°E';
+    // 'none' is a real state, not a missing one: editing an existing item skips
+    // the locate step entirely (LOCATE === 'off' sets {type:'none'}). The old
+    // ternary chain had no branch for it, fell through to the climb arm and
+    // threw on WZ.loc.start — which left the ENTIRE review card blank on the
+    // commonest contribution path there is. Each arm now checks the shape it
+    // is about to read, so a malformed location costs its own row and nothing
+    // else.
+    var locTxt = '';
+    if (WZ.loc && WZ.loc.type === 'point' && isFinite(WZ.loc.lat) && isFinite(WZ.loc.lng)) {
+      locTxt = '◎ ' + WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E';
+    } else if (WZ.loc && WZ.loc.type === 'segment' && WZ.loc.a && WZ.loc.b) {
+      locTxt = WZ.loc.a[1].toFixed(4) + '°N ' + WZ.loc.a[0].toFixed(4) + '°E → '
+        + WZ.loc.b[1].toFixed(4) + '°N ' + WZ.loc.b[0].toFixed(4) + '°E';
+    } else if (WZ.loc && WZ.loc.start && WZ.loc.summit) {
+      locTxt = '◎ foot ' + WZ.loc.start[1].toFixed(4) + '°N ' + WZ.loc.start[0].toFixed(4) + '°E → summit '
+        + WZ.loc.summit[1].toFixed(4) + '°N ' + WZ.loc.summit[0].toFixed(4) + '°E';
+    }
 
     // Echo every detail/extra field the rider actually filled in (step 2), so the
     // review faithfully mirrors what will be submitted — not just Type/Location/Media.
@@ -471,7 +484,12 @@
         val = ctrl.value;
       }
       val = (val || '').trim();
-      if (!val) return;
+      // An untouched select still reports its placeholder option's text, which
+      // is an em dash — so the review used to list "Potable? —", "Cost —" and
+      // friends as though the rider were submitting them. A field the rider
+      // did not answer belongs nowhere on a page whose whole job is showing
+      // what is about to be sent.
+      if (!val || val === '—' || val === '-') return;
       var labelEl = fieldEl.querySelector('label');
       var label = labelEl ? labelEl.textContent.trim() : ctrl.name;
       fieldRows += '<div class="kv"><span>' + escHtml(label) + '</span><span>'
@@ -480,9 +498,15 @@
 
     var media = WZ.media.length ? WZ.media.join(' · ') : 'none added';
 
+    // No Location row when this submission does not touch the location: an edit
+    // leaves the pin where it is, and "Location —" would read as a missing
+    // answer rather than an untouched one.
+    var locRow = locTxt
+      ? '<div class="kv"><span>Location</span><span>' + escHtml(locTxt) + '</span></div>'
+      : '';
     rb.innerHTML =
       '<div class="kv"><span>Type</span><span>' + escHtml(typeName) + '</span></div>' +
-      '<div class="kv"><span>Location</span><span>' + escHtml(locTxt) + '</span></div>' +
+      locRow +
       fieldRows +
       '<div class="kv"><span>Media</span><span>' + escHtml(media) + '</span></div>';
   }
