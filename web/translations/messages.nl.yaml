@@ -1308,6 +1308,7 @@ map:
   d_nothing_within: 'Nog niets in de Commons binnen {r} van deze rit.'
   d_no_match: 'Nog geen resultaat in de Wallonië-demo.'
   d_community: 'community'
+  d_needs_check: 'nog niet bevestigd — check het als je langsrijdt'
   d_show_all: 'alle {n} tonen'
   mly_none: 'Geen straatbeeld hier.'
   mly_zoom: 'Zoom in en klik op een groene stip om straatbeeld te openen.'

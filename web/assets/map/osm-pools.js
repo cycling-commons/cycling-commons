@@ -17,6 +17,7 @@
    built from the entry's map 'load' handler. */
 import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
+import { D } from './i18n.js';
 import { layerByKey, active } from './catalog.js';
 import { inScope } from './scope-ui.js';
 import { mintWaterDrops, pinEl, clusterEl } from './icons.js';
@@ -50,14 +51,24 @@ export const confState = {};   // srcId -> {key, layer, info, onScreen:{}}
 export function setupConfClusters(){
   Object.keys(osmLayers).forEach(key=>{
     const info=osmLayers[key]; if(!info || !info.data) return;
-    const confirmed = info.data.features.filter(f=>f.properties.v);
+    // EVERY curated item in the pool earns our pin, not only the confirmed
+    // ones. These payloads (catalog.json's C/D/E/G/H/I/J/M) are the CURATED
+    // set — every feature carries a real DB item id; the OSM reference data
+    // lives in the coverage tiles instead. Filtering on `v` here meant an
+    // approved rider contribution had no marker at all until somebody
+    // confirmed it, so the map showed an OSM droplet where a Commons item
+    // stood (docs/specs/photo-uploads.md §5, owner call 2026-07-31).
+    //
+    // The verified/unverified distinction survives in the pin's styling, not
+    // in whether it exists: see confLeafPin.
+    const curated = info.data.features;
     const srcId=key+'-conf';
-    if(!confirmed.length || map.getSource(srcId)) return;
+    if(!curated.length || map.getSource(srcId)) return;
     map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13,
-      data:{type:'FeatureCollection', features:confirmed.filter(f=>inScope(f.properties.rid))}});
+      data:{type:'FeatureCollection', features:curated.filter(f=>inScope(f.properties.rid))}});
     // invisible layer so the clustered source loads tiles (querySourceFeatures needs rendered tiles)
     map.addLayer({id:srcId+'-hit', type:'circle', source:srcId, paint:{'circle-radius':0,'circle-opacity':0}});
-    confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}, confirmed};
+    confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}, confirmed:curated};
   });
 }
 // Region scope changed → rebuild each cluster source from its full confirmed
@@ -73,9 +84,19 @@ export function refilterClusters(){
 export function confLeafPin(st, p, co){
   const lngLat=[co[0],co[1]], llo={lat:co[1],lng:co[0]};
   const drawerF = st.info.water ? waterDrawer(p, llo) : osmDrawer(st.layer, p, llo, st.info.src);
-  const el=pinEl(st.layer, true, p);
+  // Three states, one vocabulary. A confirmed item gets the curated mark; an
+  // approved-but-unconfirmed one gets the dashed, faded `community` pin the
+  // app already uses wherever `verified === false` (search rows, the reveal
+  // pin) — which reads as "this is ours, nobody has checked it yet". That is
+  // the invitation: ride past it and confirm it.
+  const verified = !!p.v;
+  const el=pinEl(st.layer, verified, p);
+  if(!verified) el.classList.add('community');
   el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
-  el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline);
+  const tip = drawerF.name+' · '+drawerF.headline
+    + (verified ? '' : ' · '+(D.needsCheck||'not confirmed yet — check it if you ride past'));
+  el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline
+    + (verified ? '' : ' — '+(D.needsCheck||'not confirmed yet')));
   // stopPropagation (click-to-scope, map-and-search.md §4.5
   // §C): this DOM marker has no backing rendered layer at its pixel (the
   // '<key>-conf-hit' source layer is a zero-radius circle, purely so the
@@ -83,9 +104,9 @@ export function confLeafPin(st, p, co){
   // generic click handler, which would see "no feature here" and re-scope the
   // map right behind this pin's own drawer-open action.
   el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(st.layer, drawerF); flyToPin(lngLat); });
-  el.addEventListener('mouseenter', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
+  el.addEventListener('mouseenter', ()=>showTip(tip, lngLat));
   el.addEventListener('mouseleave', hideTip);
-  el.addEventListener('focus', ()=>showTip(drawerF.name+' · '+drawerF.headline, lngLat));
+  el.addEventListener('focus', ()=>showTip(tip, lngLat));
   el.addEventListener('blur', hideTip);
   return el;
 }
