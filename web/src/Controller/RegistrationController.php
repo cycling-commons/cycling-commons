@@ -58,6 +58,9 @@ final class RegistrationController extends AbstractController
             );
             $user->setRoles(['ROLE_USER']);
             $user->setEmailVerified(false);
+            // Record that the declaration was made, for accountability
+            // (GDPR Art. 5(2)). The form already refused without it.
+            $user->confirmAge(new \DateTimeImmutable());
 
             try {
                 $entityManager->persist($user);

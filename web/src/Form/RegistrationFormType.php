@@ -58,6 +58,20 @@ final class RegistrationFormType extends AbstractType
                 ],
                 'invalid_message' => 'The password fields must match.',
             ])
+            // The age gate (GDPR Art. 8). Self-declared, and deliberately not a
+            // date of birth: one yes/no question does not need a birthday on
+            // file, and Art. 8(2) asks for reasonable efforts given available
+            // technology — for a service like this one, that is a declaration.
+            // Flat 16 for everyone: it is the Art. 8 ceiling, so it never sits
+            // below any member state's own floor (owner decision 2026-08-01).
+            ->add('confirmAge', CheckboxType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'form.label_confirm_age',
+                'constraints' => [
+                    new IsTrue(message: 'You must be 16 or older to create an account.'),
+                ],
+            ])
             ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
                 'required' => false,

@@ -51,6 +51,14 @@
         </div>
 
         <div class="field-check">
+          {{ form_widget(registrationForm.confirmAge) }}
+          <label for="{{ registrationForm.confirmAge.vars.id }}">
+            {{ 'security.register.confirm_age'|trans }}
+          </label>
+        </div>
+        {{ form_errors(registrationForm.confirmAge) }}
+
+        <div class="field-check">
           {{ form_widget(registrationForm.agreeTerms) }}
           <label for="{{ registrationForm.agreeTerms.vars.id }}">
             {{ 'security.register.agree_terms'|trans({'%url%': path('terms')})|rich }}

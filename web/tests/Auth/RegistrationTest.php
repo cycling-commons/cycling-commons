@@ -68,6 +68,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => 'New Rider',
             'registration_form[plainPassword][first]' => 'securepass12345!',
             'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);
@@ -109,6 +110,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => 'Verify Rider',
             'registration_form[plainPassword][first]' => 'securepass12345!',
             'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);
@@ -154,6 +156,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => 'Login Rider',
             'registration_form[plainPassword][first]' => 'securepass12345!',
             'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);
@@ -189,6 +192,61 @@ final class RegistrationTest extends WebTestCase
         self::assertStringNotContainsString('/login', (string) $client->getRequest()->getUri());
     }
 
+    /**
+     * The age gate (GDPR Art. 8, owner decision 2026-08-01: flat 16 for
+     * everyone). Self-declared and required — an unticked box creates nothing,
+     * and a ticked one is recorded so the declaration can be evidenced later
+     * (Art. 5(2)) without ever storing a date of birth (Art. 5(1)(c)).
+     */
+    public function testRegistrationWithoutTheAgeDeclarationCreatesNoAccount(): void
+    {
+        $client = static::createClient();
+
+        $crawler = $client->request('GET', '/register');
+        $form = $crawler->selectButton('Create account')->form([
+            'registration_form[email]' => 'tooyoung@example.com',
+            'registration_form[displayName]' => 'Young Rider',
+            'registration_form[plainPassword][first]' => 'securepass12345!',
+            'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[agreeTerms]' => true,
+        ]);
+        $client->submit($form);
+
+        self::assertSelectorTextContains('body', '16 or older');
+        /** @var UserRepository $userRepo */
+        $userRepo = static::getContainer()->get(UserRepository::class);
+        self::assertNull(
+            $userRepo->findOneBy(['email' => 'tooyoung@example.com']),
+            'an account is never created without the declaration',
+        );
+    }
+
+    public function testTheAgeDeclarationIsRecordedWithoutADateOfBirth(): void
+    {
+        $client = static::createClient();
+
+        $crawler = $client->request('GET', '/register');
+        $form = $crawler->selectButton('Create account')->form([
+            'registration_form[email]' => 'oldenough@example.com',
+            'registration_form[displayName]' => 'Old Enough',
+            'registration_form[plainPassword][first]' => 'securepass12345!',
+            'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
+            'registration_form[agreeTerms]' => true,
+        ]);
+        $client->submit($form);
+
+        /** @var UserRepository $userRepo */
+        $userRepo = static::getContainer()->get(UserRepository::class);
+        $user = $userRepo->findOneBy(['email' => 'oldenough@example.com']);
+        self::assertNotNull($user);
+        self::assertNotNull($user->getAgeConfirmedAt(), 'the declaration is evidenced');
+        self::assertFalse(
+            method_exists($user, 'getDateOfBirth'),
+            'a yes/no question must not put a birthday on file',
+        );
+    }
+
     public function testDuplicateEmailShowsError(): void
     {
         $client = static::createClient();
@@ -200,6 +258,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => 'First Rider',
             'registration_form[plainPassword][first]' => 'securepass12345!',
             'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);
@@ -212,6 +271,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => 'Second Rider',
             'registration_form[plainPassword][first]' => 'securepass12345!',
             'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);
@@ -233,6 +293,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => 'Bad Email',
             'registration_form[plainPassword][first]' => 'securepass12345!',
             'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);
@@ -258,6 +319,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => 'Long Email',
             'registration_form[plainPassword][first]' => 'securepass12345!',
             'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);
@@ -277,6 +339,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => "Bad\u{200B}Name", // zero-width space
             'registration_form[plainPassword][first]' => 'securepass12345!',
             'registration_form[plainPassword][second]' => 'securepass12345!',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);
@@ -298,6 +361,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[displayName]' => 'Short Pass',
             'registration_form[plainPassword][first]' => 'short',
             'registration_form[plainPassword][second]' => 'short',
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]);
         $client->submit($form);

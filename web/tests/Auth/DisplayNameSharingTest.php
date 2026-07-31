@@ -104,6 +104,7 @@ final class DisplayNameSharingTest extends WebTestCase
             'registration_form[displayName]' => 'John Doe',
             'registration_form[plainPassword][first]' => self::PASSWORD,
             'registration_form[plainPassword][second]' => self::PASSWORD,
+            'registration_form[confirmAge]' => true,
             'registration_form[agreeTerms]' => true,
         ]));
 

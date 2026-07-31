@@ -197,6 +197,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private ?\DateTimeImmutable $deletionRequestedAt = null;
 
     /**
+     * When the rider declared they were 16 or older, at registration.
+     *
+     * The declaration is stored, not a date of birth: answering one yes/no
+     * question does not need a birthday on file (GDPR Art. 5(1)(c) data
+     * minimisation), and a self-declared gate is the proportionate reading of
+     * Art. 8(2)'s "reasonable efforts … taking into consideration available
+     * technology" for a service like this one. Null on accounts created before
+     * the gate existed, and on accounts made by admin or console paths.
+     *
+     * @see docs/specs/account-and-auth.md
+     */
+    #[ORM\Column(name: 'age_confirmed_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $ageConfirmedAt = null;
+
+    /**
      * What happens to the credit on this rider's approved photos when the
      * account goes (docs/specs/photo-uploads.md §6). False — anonymize — is the
      * default and is what happens if they say nothing. Meaningful only because
@@ -712,6 +727,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDeletionCode(?string $deletionCode): static
     {
         $this->deletionCode = $deletionCode;
+
+        return $this;
+    }
+
+    public function getAgeConfirmedAt(): ?\DateTimeImmutable
+    {
+        return $this->ageConfirmedAt;
+    }
+
+    public function confirmAge(\DateTimeImmutable $at): static
+    {
+        $this->ageConfirmedAt = $at;
 
         return $this;
     }
