@@ -294,7 +294,7 @@ the Trash action itself (no window means no sweep).
   same reasoning as anonymized ballots) but the credit falls back to
   anonymous.
 
-## 7. Caps & formats summary
+## 7. Limits & formats summary
 
 | thing | value |
 |---|---|
