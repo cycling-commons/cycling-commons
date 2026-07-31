@@ -159,6 +159,17 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   the server independently rejects any upload without a valid consent
   record belonging to the caller (the UI gate is sequencing, the server
   check is the guarantee).
+- **From then on, the given consent is always shown.** Once a consent
+  record exists for the current wording version, the photo step renders a
+  standing notice instead of locked controls — "✓ You donate your photos
+  under CC BY-SA 4.0 · consented <date>" with the contract text one tap
+  away — on this and every later visit (the wizard bootstraps via
+  `GET /media/consent/current`, which returns the caller's latest record
+  for the current `kind` + `version`). The review step repeats the notice
+  beside the queued photos, so what the rider is about to submit and the
+  licence they granted are visible together. The modal only ever returns
+  when the consent **wording version changes** — a new version means a new
+  consent act, never a silent carry-over.
 - Submitted media ids travel in the form (hidden field, JSON list) and land
   in the submission payload as `mediaIds`; intake validates each id exists,
   is `pending`, and **belongs to the submitting user**, then stamps
