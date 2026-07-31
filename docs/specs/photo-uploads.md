@@ -83,23 +83,41 @@ context). Media licensing context lives in the site licences
 
 ## 2. Storage plumbing
 
-- **Flysystem** with S3 adapters (prod), **one storage per continent**:
+- **Flysystem** with S3 adapters, **one storage per continent**:
   `MEDIA_S3_ENDPOINT`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`, `MEDIA_S3_REGION`
   (shared credentials) + `MEDIA_S3_BUCKET_EU` (and later `_NA`, `_AS`, … as
   continents onboard; unset = continent falls back to
-  `MEDIA_DEFAULT_CONTINENT`'s storage) — and `MEDIA_PUBLIC_BASE` (the proxy
-  host base URL riders fetch from; the continent code is the first path
-  segment after it).
+  `MEDIA_DEFAULT_CONTINENT`'s storage).
+- **Configured by environment variables, not by `when@` blocks** — the
+  coverage precedent (`pipeline/coverage/publish.py`, whose own comment notes
+  that the signing region is "ignored by MinIO, accepted by Hetzner"). One
+  code path runs in **dev, staging and prod**; only `when@test` differs, using
+  the in-memory adapter. This is deliberate and load-bearing: this project has
+  a real staging environment but **no `when@staging` block anywhere in
+  `config/`**, so anything gated on `when@prod` silently falls back to the
+  base configuration on staging. Env-driven configuration has no such gap, and
+  it means development exercises the same S3 path production does rather than
+  a local-filesystem adapter that fails differently.
+- **Dev** points at the dev stack's MinIO (compose profile `storage`), with
+  the committed defaults in `web/.env` — the contributor stack still needs no
+  real credentials, exactly as the coverage pipeline already works. Buckets
+  are created on demand by a dev bootstrap, mirroring
+  `publish.py::ensure_bucket`. Note the two hostnames: the app writes
+  server-side to `http://minio:9000`, the browser reads from
+  `http://localhost:9100`.
 - `MEDIA_PUBLIC_BASE`'s host is added to the **C**ontent-**S**ecurity-**P**olicy (CSP) `img-src` the same
   env-backed way as `coverage.csp_host` (never admin-editable — a writable
   CSP host is an XSS surface, system-configuration.md rationale).
-- **Dev/test**: local Flysystem adapter under `public/media-dev` with
-  `MEDIA_PUBLIC_BASE=/media-dev` — the contributor stack works with zero
-  bucket credentials; tests use the in-memory adapter.
 - Object layout: `photos/<uuid>/orig.webp | lg.webp | sm.webp` **inside the
   continent's bucket**; the public URL prepends the continent:
-  `<MEDIA_PUBLIC_BASE>/<cont>/photos/<uuid>/<variant>.webp` (dev/test: one
-  local adapter, the continent is just a path prefix).
+  `<MEDIA_PUBLIC_BASE>/<cont>/photos/<uuid>/<variant>.webp`.
+- **Public base is resolved per continent, not by string-concatenating a
+  single base.** In production the continent is a path segment the owner-run
+  proxy routes on; against raw MinIO in development it is part of the bucket
+  name, and no single base URL can express both. So the continent map holds a
+  storage **and** a public base per continent, and `MediaStorage::url()` reads
+  the pair. `MEDIA_PUBLIC_BASE` remains the default for continents that do not
+  override it.
 - **Honest threat framing:** these paths are *guessing-infeasible*, not
   unguessable — a UUIDv4 carries ~122 random bits, so blind enumeration is
   impractical, but it is still only a secret in a URL. And the variant
