@@ -103,28 +103,34 @@ it varies by type:
 
 **Report a problem** always includes an **Other** option (free-text) alongside the type-specific reasons.
 
-**Media.**
-- **Add photos** — several at once: JPG · PNG · WebP · HEIC (iPhone), CC BY-SA 4.0.
-- **Add video** — MP4 · MOV · HEVC (iPhone), short clips, CC BY-SA 4.0.
-- **First-time consent/donation gate:** the first time a rider adds a photo (and separately, the first
-  time a video) they must explicitly confirm they own it and are **donating** it under CC BY-SA 4.0
-  before the action enables; on accept they get a big thanks (and, in the demo, a "nothing is actually
-  uploaded" note). Consent is remembered thereafter. Uploads simulate into a visible queue.
-- **Link instead of upload:** paste a media URL — **known sources** (Wikimedia, Flickr, Unsplash,
-  YouTube, Vimeo) have their rights-holder & licence read and validated automatically; **unknown
-  sources** require the contributor to confirm rights-holder & licence manually. First-time rules
-  consent applies here too. **Multiple links** are supported — the input clears after each so you can
-  add as many as you like; all collect in the queue.
-- Every upload/link gives **visible feedback** (a toast) and lands in a visible queue — even after the
-  first-time consent is remembered, so the action always confirms ("added to your upload queue · demo,
-  nothing is actually uploaded").
-- Photo credits link **both** the licence deed and the image source (the Wikimedia Commons file page),
-  and link the author to their Wikimedia user profile.
+**Media.** Uploads are real — the full contract is
+[photo-uploads.md](../photo-uploads.md); this is the rider-facing summary.
+- **Add photos** — several at once (six per submission): JPG · PNG · WebP · HEIC (iPhone),
+  CC BY-SA 4.0. Format is decided by decoding the bytes, never by the filename.
+- **Video is gone from the wizard** and deferred as its own future feature. Nothing in the
+  contribution flow accepts video, and nothing pretends to.
+- **Consent gate:** the upload controls stay disabled until the SERVER has stored a consent record —
+  the rider confirms they own the photo and are **donating** it under CC BY-SA 4.0. The gate is
+  fail-closed: a failed or ambiguous consent leaves the controls locked, and nothing is remembered in
+  the browser. Once consent exists it is shown as a standing notice with its date on every later
+  visit, and repeated beside the queued photos on the review step, rather than re-asking.
+- **Real per-file progress**, driven by actual uploaded bytes, becoming a thumbnail on success and a
+  named error on failure ("that photo is over 15 MB", "that file type cannot be used", …).
+- **Link instead of upload:** paste a photo URL — **known sources** (Wikimedia, Flickr, Unsplash)
+  have their rights-holder & licence read and validated automatically; **unknown sources** require the
+  contributor to confirm rights-holder & licence manually. A link is reviewer context, never an
+  upload: it is marked distinctly (🔗) and is not gated by the upload consent.
+- Photo credits link the licence deed, and for imported photos the image source (the Wikimedia
+  Commons file page) and the author's Wikimedia profile. A rider upload has neither: it is credited to
+  the photographer's Commons profile when public, and to "an anonymous rider" otherwise.
 - **Drawer galleries** support **multiple photos** per feature (main image + thumbnail strip), opened as
-  a **slideshow** in the lightbox (‹ › buttons + ←/→ keys, per-photo credit, N/M counter).
-- **Location metadata is stripped.** On real upload, photos and video have their embedded location
-  metadata (EXIF GPS, and the equivalent in video) removed server-side before storage or publishing —
-  the Commons maps places, not riders. (Also stated on the public privacy page.)
+  a **slideshow** in the lightbox (‹ › buttons + ←/→ keys, per-photo credit, N/M counter). Photos are
+  served responsively — the device picks the variant.
+- **Location metadata is stripped.** Every inherited profile — EXIF including GPS, IPTC, XMP, ICC — is
+  destroyed before storage. The coordinates are used exactly once, at intake, to record how far the
+  shot was taken from the pin, and are then deleted; the Commons maps places, not riders. (Also
+  stated on the public privacy page.) The one thing written back is the licence and a link to the
+  photo's own page — never a name, so the credit stays revocable.
 
 ## Provenance tags
 - `[OSM]` — already lives in OpenStreetMap (ODbL); we mirror/enrich it.

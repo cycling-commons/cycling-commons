@@ -2,8 +2,8 @@
 
 # Photo Uploads — contribution media storage
 
-**Status:** canonical reference (design final 2026-07-31; implementation
-planned, not yet built) · **Audience:** contributors to Cycling Commons
+**Status:** canonical reference (design final 2026-07-31; EXECUTED
+2026-07-31) · **Audience:** contributors to Cycling Commons
 
 This document is the contract for rider photo uploads, end to end: rider
 device → processed object storage → moderation → the item's `photos[]`
@@ -186,6 +186,16 @@ PRIVATE — cleared at intake) · gps_distance_m (nullable, computed at intake)
 · consent_record_id (FK, NOT NULL — see below) · created_at ·
 submission_id (nullable, set at submit)`.
 
+Four further columns exist, each forced by a rule §6 states rather than by a
+design preference of its own:
+
+| column | why §6 requires it |
+|---|---|
+| `decided_at` (nullable) | §6 retains rejected media for `moderation.retention_months`; that window has to measure from a rejection timestamp |
+| `objects_deleted_at` (nullable) | the tombstone marker — without it the sweep would retry a row whose objects are already gone, forever |
+| `item_id` (nullable) | the deletion hook must find the approved photo's item to anonymize its credit, and walking `submission_id → submission → item_id` breaks once retention purges the submission |
+| `credit_frozen` (nullable) | once the account is gone there is no profile left to resolve a credit from, so §6's departing-rider choice is frozen onto the row (`''` = anonymous, `null` = the account still exists) |
+
 **Consent ledger.** Consent is a first-class, append-only record:
 `consent_record` —
 `id (uuid) · user_id · kind ('media-cc-by-sa') · version (tag of the
@@ -319,7 +329,14 @@ Nothing public until approved — the rule everywhere else, applied here:
   messaging system. A curator questioning a photo ("is this your own
   shot?") sends a normal submission message that may reference the photo's
   id; the thread renders the referenced photo's `sm` thumb inline, and the
-  rider replies in the same thread. Photo-referencing messages are the
+  rider replies in the same thread. Concretely, the reference is a nullable
+  `user_message.media_id` column with `ON DELETE SET NULL` — a column on the
+  existing message rather than a table of its own, because the reference is a
+  *detail of an ordinary message*, and SET NULL because disposing of a photo
+  must never delete the conversation about it. Only a photo of that very
+  submission may be referenced; anything else is dropped rather than refused,
+  since the message is still worth delivering and a dangling reference would
+  be worse than none. Photo-referencing messages are the
   discussion history; decisions with notes land in the event log too, so
   the complete story of a photo = its event log + the submission thread.
 
@@ -379,7 +396,11 @@ objects, plus the one media-only class:
 
 - **Orphans (media-only class)** — `pending` rows with no `submission_id`
   older than **7 days** (nothing to moderate ever arrived) → objects + row
-  deleted.
+  deleted, **and the event log with them**. §5b's "events survive garbage
+  collection" covers the rejected tombstone, whose row is kept precisely so
+  its history has something to hang on; an orphan was never moderated, so a
+  log with no row would be litter rather than history. Trash was already the
+  other stated exception.
 - **Rejected** — follows the standard retention window
   (`moderation.retention_months`); when it lapses, the bucket objects are
   deleted and the row is kept as a tombstone (audit).
@@ -463,3 +484,26 @@ the Trash action itself (no window means no sweep).
   second encoded set per photo plus format negotiation — a serving-side
   optimization touching no stored data; WebP-only is the deliberate v1.
   (Responsive `srcset` serving IS in scope — §5.)
+
+## 10. Execution notes
+
+Built 2026-07-31. Two deviations from what a reader of §1–§9 might assume, both
+deliberate:
+
+- **EXIF is read through ImageMagick's property bridge**
+  (`Imagick::getImageProperty('exif:DateTimeOriginal' | 'exif:GPSLatitude' | …)`),
+  not through `ext-exif`. One code path then covers JPEG and HEIC alike, and
+  `ext-exif` is not a deployment requirement. GPS arrives as three rationals
+  (`'50/1,29/1,3000/100'`) and is converted here; a partial or malformed block
+  yields nulls rather than an exception, because a broken EXIF header must
+  never cost a rider their upload.
+- **The add-climb wizard's photo drop zone was removed, not wired.** It was
+  decoration (`onclick="return false"`) over a wizard with no media queue at
+  all. Honest UI (§1.1) means removing the pretence; climb photos have a real
+  path through `/improve?item=…&add=photo` once the climb exists, and the
+  wizard now says so.
+
+One thing worth knowing for deployment: files written from the upload endpoint
+onward embed a `/photo/<uuid>` URL, so this feature must not ship without §5d's
+page — every photo uploaded in between would carry a dead attribution link.
+

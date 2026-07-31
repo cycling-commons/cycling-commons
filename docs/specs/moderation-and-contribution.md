@@ -34,7 +34,7 @@ documents own the surrounding contracts:
 
 `/improve` is a single-column 4-step wizard (`web/templates/contribute/improve.html.twig`,
 `web/assets/contribute/improve.js`) for adding and editing items: **1 Locate →
-2 Details → 3 Photos & video → 4 Review & submit**. Step 2 renders the type's
+2 Details → 3 Photos → 4 Review & submit**. Step 2 renders the type's
 *Fix-details* + *Add-missing* registry fields (`App\Form\ImproveType` over
 `CatalogFormRegistry`); step 3's media/consent contract is owned by
 [edit-items/README.md](edit-items/README.md).
@@ -357,6 +357,16 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
   [edit-items/README.md](edit-items/README.md)).
 - All submission-derived strings are HTML-escaped client-side in the drawer
   (first user-authored content rendered to other users).
+- **Photos ride this same decision** ([photo-uploads.md §5](photo-uploads.md)).
+  A submission's pending photos render in the drawer's moderation panel with
+  the facts harvested from each file — capture month, and how far the shot was
+  taken from the pin — each with a keep/drop tick that defaults to *keep*.
+  The unticked ids travel as one more field on the SAME decide POST; there is
+  no second endpoint and no second mechanism. Approving approves every photo
+  except the unticked ones; rejecting rejects all of them with no per-photo
+  escape; needs-info leaves them pending, because the rider is still being
+  asked. The `/moderate` list shows the same thumbs as review context, and
+  keeps routing the decision to the map.
 
 ### 5.5 Map layer vs queue visibility
 
@@ -835,9 +845,9 @@ trusted moderators later, not built.
 - **M7 email delivery + M8 phase-2 scheduler** (§7.8, §8) — one
   messenger/scheduler investment for both.
 - **M12 account lock/ban** — separate admin-desk work; recorded, unbuilt.
-- **Hazard / photo intake UI** — `SubmissionType::Hazard`/`Photo` are
-  queue-renderable but have no intake flow (photo needs file storage);
-  `ModerationService` refuses to approve them until an apply path exists.
+- **Hazard intake UI** — `SubmissionType::Hazard` is queue-renderable but has
+  no intake flow; `ModerationService` refuses to approve it until an apply path
+  exists. (Photo intake is **built** — see below.)
 - **Pending route proposals on the curator map** — routes are decided on the
   detail page only (§5.1); serving them onto the map like item submissions is
   an accepted follow-up.
