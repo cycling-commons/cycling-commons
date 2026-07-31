@@ -159,6 +159,13 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   the server independently rejects any upload without a valid consent
   record belonging to the caller (the UI gate is sequencing, the server
   check is the guarantee).
+- **Consent is fail-closed — negative until proven positive.** No layer may
+  ever hold a default-true consent state: the client's consent id starts
+  `null` and is set only from the server's acknowledgement; the server
+  derives consent exclusively from an existing `consent_record` row that
+  belongs to the caller and matches the current kind + version — never from
+  a boolean flag, a cache, or an assumption. Any error, timeout, or
+  ambiguity resolves to *no consent* (controls locked, upload rejected).
 - **From then on, the given consent is always shown.** Once a consent
   record exists for the current wording version, the photo step renders a
   standing notice instead of locked controls — "✓ You donate your photos
