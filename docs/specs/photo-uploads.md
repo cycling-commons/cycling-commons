@@ -119,7 +119,20 @@ Persistence: a `media_upload` row —
 (CHAR(2), the storage shard) · width · height ·
 bytes · taken_at (nullable) · gps_lat/gps_lng (nullable,
 PRIVATE — cleared at intake) · gps_distance_m (nullable, computed at intake)
-· consented_at · created_at · submission_id (nullable, set at submit)`.
+· consent_record_id (FK, NOT NULL — see below) · created_at ·
+submission_id (nullable, set at submit)`.
+
+**Consent ledger (owner decision 2026-07-31).** A timestamp alone proves
+*when*, not *what* was consented to, so consent is a first-class,
+append-only record: `consent_record` —
+`id (uuid) · user_id · kind ('media-cc-by-sa') · version (tag of the
+consent wording) · text_hash (sha256 of the exact text shown) ·
+consented_at`. One row per consent act (each modal tick); the uploads made
+under it reference it. Rows are immutable and are never deleted — the
+licence grant survives the account (account deletion keeps the record, the
+same reasoning that keeps approved photos in the commons). `kind` leaves
+room for future consent flows (terms, other donations) without a generic
+framework being built now.
 At intake (claim), the distance photo-GPS → submission pin is computed into
 `gps_distance_m` and the raw coordinates are **nulled in the same
 transaction**; an unclaimed upload's coordinates disappear with it at orphan
@@ -137,9 +150,11 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   is GC'd, §6).
 - The **consent modal becomes enforcing**: the first upload in a session
   requires ticking the exact contract — *"Media is licensed CC BY-SA 4.0.
-  Only upload or link photos you took yourself."* The consent rides the
-  upload POST and is stamped on every `media_upload` row (`consented_at`).
-  No consent, no upload — the POST rejects without it.
+  Only upload or link photos you took yourself."* The tick creates a
+  `consent_record` (kind `media-cc-by-sa`, current version + text hash);
+  its id rides the session's upload POSTs and every `media_upload` row
+  references it. No valid consent record belonging to the caller, no
+  upload — the POST rejects without it.
 - Submitted media ids travel in the form (hidden field, JSON list) and land
   in the submission payload as `mediaIds`; intake validates each id exists,
   is `pending`, and **belongs to the submitting user**, then stamps
@@ -163,11 +178,49 @@ Nothing public until approved — the rule everywhere else, applied here:
   so the map needs zero changes. Credit follows the existing uploader rule:
   the rider's display name when their profile is public, anonymous
   otherwise.
+- **Per-photo decisions (owner decision 2026-07-31).** The queue decides
+  photos individually, defaulting to the submission's decision: approving a
+  submission approves its photos unless the curator unticks one; a single
+  photo can be rejected while the submission's facts are approved (and vice
+  versa a rejected submission rejects all its photos). `media_upload.status`
+  is always the *current* state; history lives in the event log below.
 - **Reject** → status `rejected`; objects are deleted after the standard
   **3-month** dispute-retention window (osm-data-architecture.md §6
   precedent).
 - Photo-URL *links* keep working exactly as today: reviewer context in the
   payload, never auto-attached.
+
+### 5b. Full moderation history + discussion (owner decision 2026-07-31)
+
+- **Append-only event log** `media_moderation_event`, modelled on the
+  item-side precedent — items already have exactly this in
+  `change_history` (`App\Catalog\Entity\ChangeHistory`, written by
+  `ModerationService` on every applied change, user-visible per W5) — same
+  conventions, media-scoped subject:
+  `id · media_id (FK) · actor_id (nullable — null = system) · action
+  (uploaded | claimed | approved | rejected | credit_anonymized |
+  objects_deleted) · note (nullable) · created_at`, indexed
+  `(media_id, created_at)` like `idx_history_item_time`. Every lifecycle
+  transition writes an event — upload, intake claim, each curator decision
+  (with the curator's optional note), the deletion hook's credit
+  anonymization, and GC's object deletion. The row's `status` answers "what
+  is it now"; the log answers "how did it get here", forever (events
+  survive GC — GC deletes objects, tombstones the row, never the log).
+- **The item side needs no new machinery:** approving photos changes the
+  item's `photos[]` attribute through the normal moderation path, so the
+  existing `change_history` row records the attachment on the item — the
+  rider-visible item history stays the single item-side surface, and
+  `media_moderation_event` covers the pre-attachment lifecycle the item
+  cannot see.
+- **Discussion rides the existing moderation-messages loop**
+  ([moderation-and-contribution.md](moderation-and-contribution.md)
+  messages/needs-info, executed 2026-07-13) — deliberately NOT a second
+  messaging system. A curator questioning a photo ("is this your own
+  shot?") sends a normal submission message that may reference the photo's
+  id; the thread renders the referenced photo's `sm` thumb inline, and the
+  rider replies in the same thread. Photo-referencing messages are the
+  discussion history; decisions with notes land in the event log too, so
+  the complete story of a photo = its event log + the submission thread.
 
 ## 6. Garbage collection
 
