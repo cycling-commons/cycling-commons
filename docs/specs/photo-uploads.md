@@ -63,13 +63,22 @@ context). Media licensing context lives in the site licences
 - **Dev/test**: local Flysystem adapter under `public/media-dev` with
   `MEDIA_PUBLIC_BASE=/media-dev` — the contributor stack works with zero
   bucket credentials; tests use the in-memory adapter.
-- Object layout, unguessable by construction:
-  `photos/<uuid>/orig.webp | lg.webp | sm.webp` **inside the continent's
-  bucket**; the public URL prepends the continent:
+- Object layout: `photos/<uuid>/orig.webp | lg.webp | sm.webp` **inside the
+  continent's bucket**; the public URL prepends the continent:
   `<MEDIA_PUBLIC_BASE>/<cont>/photos/<uuid>/<variant>.webp` (dev/test: one
-  local adapter, the continent is just a path prefix). "Public" before
-  approval means *unlinked*, not listed; the moderation queue is the only
-  place a pending URL appears.
+  local adapter, the continent is just a path prefix).
+- **Honest threat framing:** these paths are *guessing-infeasible*, not
+  unguessable — a UUIDv4 carries ~122 random bits, so blind enumeration is
+  impractical, but it is still only a secret in a URL. And the variant
+  names are fixed, so anyone holding one variant's URL can derive its
+  siblings, including the full-resolution `orig`. Both are accepted for v1:
+  every variant of a photo is the same CC BY-SA work at different sizes
+  (deriving `orig` from `sm` leaks nothing new), and "public" before
+  approval means *unlinked* — the moderation queue is the only place a
+  pending URL appears, buckets are never listable, and the proxy must not
+  serve directory indexes. If pending media ever needs real access
+  control, that is the app-proxied model this design explicitly traded
+  away (decision §1.2), revisited then.
 
 ## 3. Upload endpoint
 
