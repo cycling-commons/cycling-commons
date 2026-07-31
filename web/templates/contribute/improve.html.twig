@@ -116,7 +116,11 @@
   /* real uploads (docs/specs/photo-uploads.md §4) */
   .drop.locked{opacity:.5;cursor:not-allowed}
   .drop.over{border-color:var(--trail);background:var(--paper-deep)}
-  .consent-gate{margin:.5rem 0 .75rem}
+  /* The gate reads top-down — why, then the action — instead of a button with
+     a paragraph welded to its right-hand side. */
+  .consent-gate{margin:.6rem 0 1rem}
+  .consent-gate .consent-hint{font-size:.9rem;line-height:1.55;color:#4a4d40;margin:0 0 .7rem;max-width:52ch}
+  .consent-gate .btn{display:inline-block}
   .consent-ok{font-size:.86rem;line-height:1.5;color:#3f6b3f}
   .consent-when{font-family:var(--mono);font-size:.68rem;color:#595c4d}
   .consent-more{display:inline-block;margin-left:.35rem}
@@ -136,8 +140,12 @@
   .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.8rem 1rem;font-size:.82rem;color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1rem;line-height:1.5}
 
   /* review card */
-  .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.4rem}
-  .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.38rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  /* A summary to read, not a control to press: the filled panel read as one
+     large button. Same paper as the page, a hairline rule instead of a raised
+     block, and the last row keeps no dangling border. */
+  .card{background:transparent;border:none;border-top:1px solid rgba(20,22,14,.14);border-radius:0;padding:.4rem 0 0}
+  .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.45rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  .kv:last-child{border-bottom:none}
   .kv span:first-child{color:#595c4d}
   .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
 
@@ -232,6 +240,7 @@
       contract: 'media.consent.contract'|trans,
       keepOwnership: 'media.consent.keep_ownership'|trans,
       accept: 'media.consent.accept'|trans,
+      unlock: 'media.consent.unlock'|trans,
       cancel: 'media.consent.cancel'|trans,
       consentError: 'media.consent.error'|trans,
       standing: 'media.consent.standing'|trans,
@@ -306,7 +315,11 @@
     {# No pane heading here: the stepper's active step already says DETAILS in
        bold, so an "The details" H2 directly under it was the same word twice,
        and its lead line said nothing the fields below do not. #}
-    <h3 class="subhead">{{ 'improve.step2.fix_heading'|trans }}</h3>
+    {# One list of fields, not two. The registry's fix-details / add-missing
+       split is a fact about the DATA, not about the rider's task: on a default
+       OSM spot everything is missing, so "Fix the current details" headed a
+       group of empty fields and "Add missing details" headed the rest. The
+       rider fills in what they know either way. #}
     <div class="fgrid">
     {% for child in form.details %}
       <div class="field">
@@ -314,25 +327,21 @@
         {{ form_widget(child) }}
       </div>
     {% endfor %}
-    </div>
-
-    {% if form.extras|length > 0 %}
-      <h3 class="subhead">{{ 'improve.step2.add_heading'|trans }}</h3>
-      <div class="fgrid">
-      {% for child in form.extras %}
-        <div class="field">
-          {{ form_label(child) }}
-          {{ form_widget(child) }}
-        </div>
-      {% endfor %}
+    {% for child in form.extras %}
+      <div class="field">
+        {{ form_label(child) }}
+        {{ form_widget(child) }}
       </div>
-    {% endif %}
+    {% endfor %}
+    </div>
   </section>
 
   {# STEP 3 — PHOTOS & VIDEO #}
   <section class="pane" data-s="3" id="w-media">
-    <h2>{{ 'improve.step3.heading'|trans }}</h2>
-    <p class="help">{{ 'improve.step3.help'|trans }}</p>
+    {# No pane heading: the stepper's active step already reads PHOTOS, the
+       field below already says "Add a photo — optional", and the licence
+       notice at the foot of this step states the terms in full. Three of the
+       same sentence is not emphasis, it is clutter. #}
 
     {# C5: show the item's EXISTING photo(s) — a rider editing an item should
        see what's already there, not just an empty "add a photo" prompt.

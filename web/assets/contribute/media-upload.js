@@ -69,11 +69,17 @@
       if (reviewNoticeEl) reviewNoticeEl.innerHTML = html;
     }
 
+    /* The gate before any upload control is usable. The button used to be
+       labelled "Donate it" — the CONFIRM label from inside the modal, which
+       says nothing here about what pressing it does. Nothing is donated by
+       opening a dialog. It now names its own action, with the reason on its
+       own line above rather than as a paragraph welded to the button's side. */
     function renderConsentPrompt() {
       if (!noticeEl) return;
-      noticeEl.innerHTML = '<button type="button" class="btn btn-p" id="media-consent-btn">' +
-        esc(t('accept', 'Donate it')) + '</button> <span class="consent-hint">' +
-        esc(t('intro', '')) + '</span>';
+      noticeEl.innerHTML =
+        '<p class="consent-hint">' + esc(t('intro', '')) + '</p>' +
+        '<button type="button" class="btn btn-p" id="media-consent-btn">' +
+        esc(t('unlock', 'Agree to the photo licence')) + '</button>';
       var btn = document.getElementById('media-consent-btn');
       if (btn) btn.addEventListener('click', openConsentModal);
       if (reviewNoticeEl) reviewNoticeEl.innerHTML = '';

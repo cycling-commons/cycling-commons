@@ -1033,16 +1033,12 @@ improve:
     reset: 'Reset'
   step2:
     label: 'Details'
-    fix_heading: 'Fix the current details'
-    add_heading: 'Add missing details'
     what_changed_label: 'What are you adding or changing?'
     what_changed_placeholder: 'Describe the spot, fix the details, or note what is wrong…'
     note_label: 'Extra note for riders — optional'
     note_placeholder: 'Anything else riders should know?'
   step3:
     label: 'Photos'
-    heading: 'Photos'
-    help: 'Optional, but a photo helps riders trust the spot. Your own photos only — they join the Commons under CC BY-SA 4.0.'
     current_label: 'Current photo(s)'
     current_alt: 'Photo of %name%'
     photo_label: 'Add a photo — optional'
@@ -1176,6 +1172,7 @@ media:
     # so changing it means bumping MediaConsent::VERSION (docs/specs/photo-uploads.md §4).
     contract: 'Media is licensed CC BY-SA 4.0. Only upload or link photos you took yourself.'
     keep_ownership: 'You keep ownership — the Commons only gets a licence to share it.'
+    unlock: 'Agree to the photo licence'
     accept: 'Donate it'
     cancel: 'Cancel'
     error: 'We could not record your consent. Nothing was uploaded — please try again.'
