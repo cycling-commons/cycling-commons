@@ -147,13 +147,18 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
 - Cap **6 photos per submission** (client-enforced, server re-checked at
   intake). Removing a chip forgets the id (the object becomes an orphan and
   is GC'd, §6).
-- The **consent modal becomes enforcing**: the first upload in a session
-  requires ticking the exact contract — *"Media is licensed CC BY-SA 4.0.
-  Only upload or link photos you took yourself."* The tick creates a
-  `consent_record` (kind `media-cc-by-sa`, current version + text hash);
-  its id rides the session's upload POSTs and every `media_upload` row
-  references it. No valid consent record belonging to the caller, no
-  upload — the POST rejects without it.
+- The **consent modal becomes enforcing, and consent is stored BEFORE any
+  upload is possible**: the upload controls (file input, drop zone) start
+  disabled. Ticking the exact contract — *"Media is licensed CC BY-SA 4.0.
+  Only upload or link photos you took yourself."* — POSTs the consent; only
+  the server's acknowledgement (the stored `consent_record`'s id, kind
+  `media-cc-by-sa`, current version + text hash) unlocks the upload
+  controls. A failed consent POST keeps them locked and shows the error in
+  the modal — there is no optimistic unlock. The returned id rides every
+  upload POST of the session and every `media_upload` row references it;
+  the server independently rejects any upload without a valid consent
+  record belonging to the caller (the UI gate is sequencing, the server
+  check is the guarantee).
 - Submitted media ids travel in the form (hidden field, JSON list) and land
   in the submission payload as `mediaIds`; intake validates each id exists,
   is `pending`, and **belongs to the submitting user**, then stamps
