@@ -139,8 +139,11 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
 
 - The drop zone becomes a real `<input type="file"
   accept="image/jpeg,image/png,image/webp,image/heic" multiple>` + drag/drop;
-  each file POSTs immediately; the queue chip shows the real `sm` thumbnail,
-  with per-file success/error state. The fake `IMG_1003.jpg` generator dies.
+  each file POSTs immediately with a **per-file upload progress bar** on its
+  queue chip (XHR upload progress — real bytes, not a spinner; indeterminate
+  pulse when the browser can't compute length), then the chip shows the real
+  `sm` thumbnail, with per-file success/error state. The fake `IMG_1003.jpg`
+  generator dies.
 - Cap **6 photos per submission** (client-enforced, server re-checked at
   intake). Removing a chip forgets the id (the object becomes an orphan and
   is GC'd, §6).
