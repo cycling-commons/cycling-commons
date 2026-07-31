@@ -45,6 +45,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Community/Entity'
                 prefix: 'App\Community\Entity'
                 alias: Community
+            Media:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Media/Entity'
+                prefix: 'App\Media\Entity'
+                alias: Media
 
 when@prod:
     doctrine:
