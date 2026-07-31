@@ -206,7 +206,11 @@ final class PhotoProcessor
         return round($degrees, 6);
     }
 
-    /** A property the file does not carry reads back empty, or throws. Both mean "absent". */
+    /**
+     * A property the file does not carry reads back as an empty string — or, in
+     * ext-imagick's actual behaviour rather than its stub's, as false. It can
+     * also throw. All three mean the same thing: absent.
+     */
     private static function property(\Imagick $image, string $name): ?string
     {
         try {
@@ -215,6 +219,6 @@ final class PhotoProcessor
             return null;
         }
 
-        return '' !== $value ? $value : null;
+        return $value ?: null;
     }
 }
