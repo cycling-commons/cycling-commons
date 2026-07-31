@@ -21,15 +21,27 @@ export function openLightbox(photos, i, name){
 }
 export function renderLightbox(){
   const lb=document.getElementById('lightbox'), p=_lb.photos[_lb.i], multi=_lb.photos.length>1;
-  lb.querySelector('img').src=p.lg;
+  const img = lb.querySelector('img');
+  img.src=p.lg;
+  // Full-viewport display: let the device choose, but never offer `orig`
+  // (docs/specs/photo-uploads.md §5).
+  if(p.sm && p.lg){ img.srcset = `${p.sm} 520w, ${p.lg} 1400w`; img.sizes = '100vw'; }
+  else { img.removeAttribute('srcset'); img.removeAttribute('sizes'); }
+  // The caption used to be gated on p.source, which every rider upload lacks —
+  // that would have silently dropped the licence and credit for exactly the
+  // photos whose licence most needs stating. photoCap() now renders each part
+  // only when it exists, so it is safe to always call.
   lb.querySelector('.cc-lb-cap').innerHTML =
-    (_lb.name?`<b>${escPend(_lb.name)}</b> · `:'') + (p.source?photoCap(p):'') + (multi?` · ${_lb.i+1} / ${_lb.photos.length}`:'');
+    (_lb.name?`<b>${escPend(_lb.name)}</b> · `:'') + photoCap(p) + (multi?` · ${_lb.i+1} / ${_lb.photos.length}`:'');
   lb.querySelector('.cc-lb-prev').hidden=!multi; lb.querySelector('.cc-lb-next').hidden=!multi;
 }
 export function lbStep(d){ const n=_lb.photos.length; if(!n) return; _lb.i=(_lb.i+d+n)%n; renderLightbox(); }
 export function closeLightbox(){
   const lb=document.getElementById('lightbox'); lb.classList.remove('open');
-  lb.setAttribute('aria-hidden','true'); lb.querySelector('img').src='';
+  lb.setAttribute('aria-hidden','true');
+  // Clear srcset alongside src, or a stale candidate flashes on the next open.
+  const img = lb.querySelector('img');
+  img.src=''; img.removeAttribute('srcset'); img.removeAttribute('sizes');
 }
 
 // Lightbox chrome + the shared Escape/arrow key handling (§4.2).

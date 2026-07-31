@@ -1220,6 +1220,7 @@ map:
   d_photo_distance: 'ongeveer {m} m van de speld'
   d_photo_no_gps: 'geen locatie in het bestand'
   d_photo_keep: 'Behouden'
+  anon_credit: 'Anonieme fietser'
   d_decision_recorded: 'Beslissing vastgelegd ({d}) — preview, nog niet opgeslagen · {ref}'
   d_rode_this: 'Ik heb dit gereden'
   d_bike_type_ph: 'Fietstype…'

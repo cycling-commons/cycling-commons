@@ -337,7 +337,10 @@
     {# C5: show the item's EXISTING photo(s) — a rider editing an item should
        see what's already there, not just an empty "add a photo" prompt.
        `current.photos` (plural gallery) wins over the singular `current.photo`,
-       mirroring map.js's own photoList(f) = f.photos || [f.photo]. Read-only:
+       mirroring map.js's own photoList(f) = f.photos || [f.photo]. Read-only
+       display at thumbnail size: `sm` is already the right variant, so no
+       srcset here — offering `lg` would only cost the rider bytes
+       (docs/specs/photo-uploads.md §5).
        no delete/replace here, this is display only (see improve.js for the add flow). #}
     {% set currentPhotos = [] %}
     {% if current is defined and current.photos is defined and current.photos is iterable %}

@@ -176,6 +176,10 @@ final class MapController extends AbstractController
             // %m%-parameterised moderate.media.distance instead.
             'photoAlt' => 'd_photo_alt', 'photoDistance' => 'd_photo_distance',
             'photoNoGps' => 'd_photo_no_gps', 'photoKeep' => 'd_photo_keep',
+            // How a photo with no credit is captioned: an anonymous rider's
+            // upload has an empty credit by design (the uploader rule), and a
+            // bare "©" would read as a bug (docs/specs/photo-uploads.md §5).
+            'anonCredit' => 'anon_credit',
             'rodeThis' => 'd_rode_this', 'bikeTypePh' => 'd_bike_type_ph', 'recommend' => 'd_recommend',
             'vote' => 'd_vote', 'suggestCorrection' => 'd_suggest_correction', 'optionalDetail' => 'd_optional_detail',
             'markParts' => 'd_mark_parts', 'send' => 'd_send', 'loginRate' => 'd_login_rate',

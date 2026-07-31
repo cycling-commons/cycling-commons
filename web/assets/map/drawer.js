@@ -183,12 +183,47 @@ export function waterDrawer(p, ll){
 }
 
 function photoList(f){ return f.photos || (f.photo ? [f.photo] : []); }
+
+// Let the device pick the variant instead of hard-wiring one
+// (docs/specs/photo-uploads.md §5). Uploads and imported photos share the
+// 520/1400 width convention, so this one helper upgrades every photo on the
+// site. `orig` is deliberately absent: it is the reuse asset, not a display
+// candidate.
+export function srcsetAttrs(p, sizes){
+  if(!p || !p.sm || !p.lg) return '';
+  return `srcset="${safeHref(p.sm)} 520w, ${safeHref(p.lg)} 1400w" sizes="${sizes}"`;
+}
+
+// 'YYYY-MM' → a localized month, falling back to the raw value if anything
+// about it is unexpected. Never a precise date: the day is deliberately not
+// published.
+function monthLabel(takenAt){
+  const m = /^(\d{4})-(\d{2})$/.exec(String(takenAt||''));
+  if(!m) return String(takenAt||'');
+  try{
+    return new Date(Number(m[1]), Number(m[2])-1, 1)
+      .toLocaleDateString(document.documentElement.lang||undefined, {year:'numeric', month:'short'});
+  }catch(e){ return String(takenAt); }
+}
+
 // p.photo is parsed straight from the importable photo attribute (review W1):
 // credit/license/source text goes through escPend, and creditUrl/source
 // through safeHref — same hardening r.links[].href already has.
+//
+// Two shapes share this caption. An imported photo has a credit and a Commons
+// file page; a rider upload has neither guaranteed — an anonymous
+// contributor's photo has an empty credit by design (the uploader rule), and
+// no upload has a source page at all. Each part therefore renders only when it
+// exists, so no caption ever claims a Wikimedia origin a photo does not have.
 export function photoCap(p){
-  const credit = p.creditUrl ? `<a href="${safeHref(p.creditUrl)}" target="_blank" rel="noopener">${escPend(p.credit)}</a>` : escPend(p.credit);
-  return `© ${credit} · <a href="${ccUrl(p.license)}" target="_blank" rel="noopener">${escPend(p.license)}</a> · <a href="${safeHref(p.source)}" target="_blank" rel="noopener">Wikimedia Commons ↗</a>`;
+  const name = p.credit ? escPend(p.credit) : escPend(D.anonCredit||'Anonymous rider');
+  const credit = p.creditUrl ? `<a href="${safeHref(p.creditUrl)}" target="_blank" rel="noopener">${name}</a>` : name;
+  const license = p.license ? ` · <a href="${ccUrl(p.license)}" target="_blank" rel="noopener">${escPend(p.license)}</a>` : '';
+  const source = p.source ? ` · <a href="${safeHref(p.source)}" target="_blank" rel="noopener">Wikimedia Commons ↗</a>` : '';
+  // Month-granular capture date — public seasonal context
+  // (docs/specs/photo-uploads.md §5).
+  const taken = p.takenAt ? ` · ${escPend(monthLabel(p.takenAt))}` : '';
+  return `© ${credit}${license}${source}${taken}`;
 }
 function buildRecord(layer, f){
   const cur = f.cur ? `<div class="cc-d-cur">▲ ${I18N.curated||'Curated best-of'}</div>` : '';
@@ -204,8 +239,10 @@ function buildRecord(layer, f){
     <span class="cc-ap-b">＋ ${D.addPhoto||'Add the first photo'}</span>
   </a>` : '';
   const photo = pl.length ? `<figure class="cc-d-photo">
-    <img src="${safeHref(pl[0].sm)}" alt="${escPend(f.name)}" data-i="0" />
+    <img src="${safeHref(pl[0].sm)}" ${srcsetAttrs(pl[0], '(max-width: 560px) 100vw, 480px')} alt="${escPend(f.name)}" data-i="0" />
     <figcaption id="cc-d-cap">${photoCap(pl[0])}</figcaption>
+    ${/* Thumbs render ~64px: sm is already the right choice, and a srcset here
+          would only invite the browser to download lg for nothing. */''}
     ${pl.length>1 ? `<div class="cc-d-thumbs">${pl.map((p,i)=>`<img class="cc-d-thumb${i===0?' on':''}" src="${safeHref(p.sm)}" data-i="${i}" alt="${escPend(f.name)} — photo ${i+1}" />`).join('')}</div>` : ''}
   </figure>` : addPhoto;
   let recs = f.record || [];
@@ -464,7 +501,11 @@ export function renderDrawerBody(layer, f){
   const mainImg = document.querySelector('#drawerBody .cc-d-photo > img');
   const cap = document.getElementById('cc-d-cap');
   let cur = 0;
-  function show(i){ cur=i; if(mainImg) mainImg.src=pl[i].sm; if(cap) cap.innerHTML=photoCap(pl[i]);
+  function show(i){ cur=i;
+    if(mainImg){ mainImg.src=pl[i].sm;
+      if(pl[i].lg){ mainImg.srcset = `${pl[i].sm} 520w, ${pl[i].lg} 1400w`; mainImg.sizes = '(max-width: 560px) 100vw, 480px'; }
+      else { mainImg.removeAttribute('srcset'); mainImg.removeAttribute('sizes'); } }
+    if(cap) cap.innerHTML=photoCap(pl[i]);
     document.querySelectorAll('#drawerBody .cc-d-thumb').forEach((t,k)=>t.classList.toggle('on',k===i)); }
   if(mainImg && pl.length) mainImg.addEventListener('click', ()=>openLightbox(pl, cur, f.name));
   document.querySelectorAll('#drawerBody .cc-d-thumb').forEach(t=>t.addEventListener('click', ()=>show(+t.dataset.i)));

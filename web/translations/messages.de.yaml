@@ -1220,6 +1220,7 @@ map:
   d_photo_distance: 'etwa {m} m vom Punkt entfernt'
   d_photo_no_gps: 'keine Ortsangabe in der Datei'
   d_photo_keep: 'Behalten'
+  anon_credit: 'Anonyme:r Radfahrende:r'
   d_decision_recorded: 'Entscheidung erfasst ({d}) — Vorschau, noch nicht gespeichert · {ref}'
   d_rode_this: 'Bin ich gefahren'
   d_bike_type_ph: 'Radtyp…'

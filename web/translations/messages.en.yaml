@@ -1435,6 +1435,7 @@ map:
   d_photo_distance: 'about {m} m from the pin'
   d_photo_no_gps: 'no location in the file'
   d_photo_keep: 'Keep'
+  anon_credit: 'Anonymous rider'
   d_decision_recorded: 'Decision recorded ({d}) — preview, not yet persisted · {ref}'
   d_rode_this: 'I rode this'
   d_bike_type_ph: 'Bike type…'
