@@ -1331,8 +1331,6 @@ improve:
     reset: 'Réinitialiser'
   step2:
     label: 'Détails'
-    heading: 'Les détails'
-    help: 'Dites aux cyclistes ce que vous savez.'
     fix_heading: 'Corriger les détails actuels'
     add_heading: 'Ajouter les informations manquantes'
     what_changed_label: 'Qu''ajoutez-vous ou modifiez-vous ?'

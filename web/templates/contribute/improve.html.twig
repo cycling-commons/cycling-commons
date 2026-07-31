@@ -15,7 +15,7 @@
   .stepper li::before{content:counter(step);counter-increment:step;display:inline-flex;align-items:center;justify-content:center;width:1.4rem;height:1.4rem;border-radius:50%;border:1.5px solid rgba(20,22,14,.25);font-size:.62rem;color:#595c4d}
   .stepper{counter-reset:step}
   .stepper li.done{color:#5a5d4d}.stepper li.done::before{background:var(--spruce);border-color:var(--spruce);color:var(--paper);content:"✓"}
-  .stepper li.on{color:var(--ink)}.stepper li.on::before{border-color:var(--trail);color:var(--ink)}
+  .stepper li.on{color:var(--ink);font-weight:700}.stepper li.on::before{border-color:var(--trail);color:var(--ink)}
 
   /* panes */
   .pane{display:none}.pane.on{display:block;animation:fade .4s ease}
@@ -303,9 +303,9 @@
 
   {# STEP 2 — DETAILS (type-aware: Fix-details + Add-missing panes) #}
   <section class="pane" data-s="2" id="w-details">
-    <h2>{{ 'improve.step2.heading'|trans }}</h2>
-    <p class="help">{{ 'improve.step2.help'|trans }}</p>
-
+    {# No pane heading here: the stepper's active step already says DETAILS in
+       bold, so an "The details" H2 directly under it was the same word twice,
+       and its lead line said nothing the fields below do not. #}
     <h3 class="subhead">{{ 'improve.step2.fix_heading'|trans }}</h3>
     <div class="fgrid">
     {% for child in form.details %}

@@ -1033,8 +1033,6 @@ improve:
     reset: 'Reset'
   step2:
     label: 'Details'
-    heading: 'The details'
-    help: 'Tell riders what you know.'
     fix_heading: 'Fix the current details'
     add_heading: 'Add missing details'
     what_changed_label: 'What are you adding or changing?'

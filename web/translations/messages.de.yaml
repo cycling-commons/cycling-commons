@@ -1331,8 +1331,6 @@ improve:
     reset: 'Zurücksetzen'
   step2:
     label: 'Details'
-    heading: 'Die Details'
-    help: 'Sag Fahrern, was du weißt.'
     fix_heading: 'Aktuelle Angaben korrigieren'
     add_heading: 'Fehlende Angaben ergänzen'
     what_changed_label: 'Was fügst du hinzu oder änderst du?'
