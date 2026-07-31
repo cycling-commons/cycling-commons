@@ -15,7 +15,11 @@
   .legal a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
   .legal a:hover{color:var(--trail)}
   .banner{background:var(--spruce);color:var(--paper);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;font-size:.96rem;line-height:1.6}
-  .banner b{color:var(--trail)}
+  /* --trail on spruce is 3.99:1 — under the 4.5:1 AA floor for text this size,
+     and in a safety notice the emphasised word is the one that must not be the
+     hardest to read. A lifted trail keeps the warning colour at 5.35:1, and the
+     emphasis carries in <b>'s weight as well, so it never rests on hue alone. */
+  .banner b{color:#FF8A5B}
   .disc{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin:0 0 1.4rem}
   .upd{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin:0 0 2rem}
 </style>

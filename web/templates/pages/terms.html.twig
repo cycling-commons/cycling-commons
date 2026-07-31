@@ -15,7 +15,11 @@
   .legal a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
   .legal a:hover{color:var(--trail)}
   .banner{background:var(--spruce);color:var(--paper);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;font-size:.96rem;line-height:1.6}
-  .banner b{color:var(--trail)}
+  /* --trail on spruce is 3.99:1 — under the 4.5:1 AA floor for text this size,
+     and in a safety notice the emphasised word is the one that must not be the
+     hardest to read. A lifted trail keeps the warning colour at 5.35:1, and the
+     emphasis carries in <b>'s weight as well, so it never rests on hue alone. */
+  .banner b{color:#FF8A5B}
   .disc{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin:0 0 1.4rem}
   .upd{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin:0 0 2rem}
 </style>
@@ -29,7 +33,6 @@
 
 <section class="pad"><div class="wrap">
   <div class="legal">
-    <div class="disc"><b>{% trans %}terms.prototype_bold{% endtrans %}</b> {% trans %}terms.prototype_body{% endtrans %}</div>
     <p class="upd">{% trans %}terms.last_updated{% endtrans %}</p>
 
     <h2><span class="n">1</span>{% trans %}terms.h1_accepting{% endtrans %}</h2>
@@ -52,6 +55,9 @@
       <li>{{ 'terms.using_no_personal'|trans|rich }}</li>
       <li>{% trans %}terms.using_no_reidentify_pre{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}terms.using_no_reidentify_link{% endtrans %}</a>{% trans %}terms.using_no_reidentify_post{% endtrans %}</li>
       <li>{% trans %}terms.using_no_scrape_pre{% endtrans %} <a href="{{ path('developers') }}">{% trans %}terms.using_no_scrape_link{% endtrans %}</a>{% trans %}terms.using_no_scrape_post{% endtrans %}</li>
+      {# Kept as its own rule: disruption was bundled into the scraping line, and
+         the blunter scraping wording must not quietly drop a separate prohibition. #}
+      <li>{% trans %}terms.using_no_disrupt{% endtrans %}</li>
     </ul>
 
     <h2><span class="n">5</span>{% trans %}terms.h5_contributions{% endtrans %}</h2>
@@ -65,7 +71,7 @@
     <p>{{ 'terms.code_pre'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.code_link{% endtrans %}</a>{% trans %}terms.code_post{% endtrans %}</p>
 
     <h2><span class="n">8</span>{% trans %}terms.h8_preview{% endtrans %}</h2>
-    <div class="banner"><b>{% trans %}terms.preview_bold{% endtrans %}</b> {{ 'terms.preview_body'|trans|rich }}</div>
+    <div class="banner">{{ 'terms.preview_body'|trans|rich }}</div>
 
     <h2><span class="n">9</span>{% trans %}terms.h9_warranty{% endtrans %}</h2>
     <p>{{ 'terms.warranty_body'|trans|rich }}</p>
