@@ -1,15 +1,17 @@
 <!-- SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 -->
 
-# Photo Uploads — real storage for contribution media (design)
+# Photo Uploads — contribution media storage
 
-**Status:** working spec, approved design · **Date:** 2026-07-31 ·
-**Branch:** `symfony-base`
+**Status:** canonical reference (design final 2026-07-31; implementation
+planned, not yet built) · **Audience:** contributors to Cycling Commons
 
-The wizard's photo step is currently a mock: the drop zone appends invented
-filename chips and no byte ever leaves the browser; only the photo-URL link
-field is real (reviewer context in the submission payload). This spec makes
-photo uploads real, end to end: rider device → processed object storage →
-moderation → the item's `photos[]` attribute the drawer already renders.
+This document is the contract for rider photo uploads, end to end: rider
+device → processed object storage → moderation → the item's `photos[]`
+attribute the map drawer renders. It supersedes the wizard's mock photo step
+(which uploads nothing and only records photo-URL *links* as reviewer
+context). Media licensing context lives in the site licences
+(media = CC BY-SA 4.0); the moderation machinery this rides on is
+[moderation-and-contribution.md](moderation-and-contribution.md).
 
 ## 1. Decisions (owner-approved 2026-07-31)
 
