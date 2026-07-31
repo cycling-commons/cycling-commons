@@ -1170,9 +1170,9 @@ media:
     intro: 'Your photo joins the open Commons so every rider can use it. That only works if it is genuinely free to share.'
     # The binding sentence. Its exact wording is hashed onto the consent record,
     # so changing it means bumping MediaConsent::VERSION (docs/specs/photo-uploads.md §4).
-    contract: 'Media is licensed CC BY-SA 4.0. Only upload or link photos you took yourself.'
+    contract: 'I agree to license my photos under CC BY-SA 4.0, and I confirm I took them myself.'
+    read_licence: 'Read the licence'
     keep_ownership: 'You keep ownership — the Commons only gets a licence to share it.'
-    unlock: 'Agree to the photo licence'
     accept: 'Donate it'
     cancel: 'Cancel'
     error: 'We could not record your consent. Nothing was uploaded — please try again.'

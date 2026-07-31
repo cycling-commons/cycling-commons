@@ -109,11 +109,14 @@ it varies by type:
   CC BY-SA 4.0. Format is decided by decoding the bytes, never by the filename.
 - **Video is gone from the wizard** and deferred as its own future feature. Nothing in the
   contribution flow accepts video, and nothing pretends to.
-- **Consent gate:** the upload controls stay disabled until the SERVER has stored a consent record —
-  the rider confirms they own the photo and are **donating** it under CC BY-SA 4.0. The gate is
-  fail-closed: a failed or ambiguous consent leaves the controls locked, and nothing is remembered in
-  the browser. Once consent exists it is shown as a standing notice with its date on every later
-  visit, and repeated beside the queued photos on the review step, rather than re-asking.
+- **Consent is asked when a photo is dropped**, about that photo — not as a gate in front of a drop
+  zone nobody can use yet. The rider ticks that they license their photos under CC BY-SA 4.0 and took
+  them themselves, with the licence one click away so they can read what they are agreeing to. The
+  photos they picked wait while they decide: agreeing uploads them, dismissing discards them. The
+  gate is fail-closed — nothing is uploaded until the SERVER has stored a consent record, a failed or
+  ambiguous consent uploads nothing, and nothing is remembered in the browser. Once consent exists it
+  is shown as a standing notice with its date on every later visit, and repeated beside the queued
+  photos on the review step, rather than re-asking.
 - **Real per-file progress**, driven by actual uploaded bytes, becoming a thumbnail on success and a
   named error on failure ("that photo is over 15 MB", "that file type cannot be used", …).
 - **Link instead of upload:** paste a photo URL — **known sources** (Wikimedia, Flickr, Unsplash)

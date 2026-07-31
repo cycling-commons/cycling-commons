@@ -1466,9 +1466,9 @@ media:
   consent:
     title: 'Bevor du ein Foto hinzufügst'
     intro: 'Dein Foto wird Teil des offenen Commons, damit jede Radfahrerin und jeder Radfahrer es nutzen kann. Das geht nur, wenn es wirklich frei teilbar ist.'
-    contract: 'Medien stehen unter CC BY-SA 4.0. Lade oder verlinke nur Fotos, die du selbst aufgenommen hast.'
+    contract: 'Ich stimme zu, meine Fotos unter CC BY-SA 4.0 zu lizenzieren, und bestätige, dass ich sie selbst aufgenommen habe.'
+    read_licence: 'Lizenz lesen'
     keep_ownership: 'Du behältst das Eigentum — das Commons erhält nur eine Lizenz zum Teilen.'
-    unlock: 'Der Fotolizenz zustimmen'
     accept: 'Ich spende es'
     cancel: 'Abbrechen'
     error: 'Wir konnten deine Zustimmung nicht speichern. Es wurde nichts hochgeladen — bitte versuche es erneut.'

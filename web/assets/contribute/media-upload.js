@@ -39,11 +39,10 @@
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function setLocked(locked) {
-      input.disabled = locked;
-      zone.classList.toggle('locked', locked);
-      zone.setAttribute('aria-disabled', locked ? 'true' : 'false');
-    }
+    /* Files a rider chose before consent existed. They are held here across
+       the modal so agreeing uploads what they already picked, instead of
+       throwing their choice away and making them find the photo twice. */
+    var awaitingConsent = [];
 
     function fmtDate(iso) {
       if (!iso) return '';
@@ -69,19 +68,14 @@
       if (reviewNoticeEl) reviewNoticeEl.innerHTML = html;
     }
 
-    /* The gate before any upload control is usable. The button used to be
-       labelled "Donate it" — the CONFIRM label from inside the modal, which
-       says nothing here about what pressing it does. Nothing is donated by
-       opening a dialog. It now names its own action, with the reason on its
-       own line above rather than as a paragraph welded to the button's side. */
+    /* Before consent exists there is nothing to show here. The rider drops a
+       photo; the contract is put to them at that moment, about that photo,
+       which is when it means something — rather than as a toll gate in front
+       of a drop zone they cannot use yet. The licence terms are stated in
+       full on this step regardless (the notice below the drop zone), so
+       nothing is sprung on anyone. */
     function renderConsentPrompt() {
-      if (!noticeEl) return;
-      noticeEl.innerHTML =
-        '<p class="consent-hint">' + esc(t('intro', '')) + '</p>' +
-        '<button type="button" class="btn btn-p" id="media-consent-btn">' +
-        esc(t('unlock', 'Agree to the photo licence')) + '</button>';
-      var btn = document.getElementById('media-consent-btn');
-      if (btn) btn.addEventListener('click', openConsentModal);
+      if (noticeEl) noticeEl.innerHTML = '';
       if (reviewNoticeEl) reviewNoticeEl.innerHTML = '';
     }
 
@@ -95,8 +89,16 @@
         '<h3>' + esc(t('title', '')) + '</h3>' +
         '<p>' + esc(t('intro', '')) + '</p>' +
         '<div class="rules">' + esc(t('keepOwnership', '')) + '</div>' +
+        // The acknowledgement, with the licence one click away: a rider is
+        // agreeing to a specific licence, so its text has to be reachable
+        // before they tick — not merely named.
         '<label class="ok-check"><input type="checkbox" id="ok-check" />' +
-        '<span>' + esc(t('contract', '')) + '</span></label>' +
+        '<span>' + esc(t('contract', '')) +
+        (cfg.licenceUrl
+          ? ' <a href="' + esc(cfg.licenceUrl) + '" target="_blank" rel="noopener license">'
+            + esc(t('readLicence', 'Read the licence')) + ' \u2197</a>'
+          : '') +
+        '</span></label>' +
         '<div class="consent-err" id="consent-err" hidden></div>' +
         '<div class="mrow"><button type="button" class="b-cancel" id="modal-cancel">' +
         esc(t('cancel', 'Cancel')) + '</button>' +
@@ -107,13 +109,20 @@
       var ok = document.getElementById('ok-btn');
       var cancel = document.getElementById('modal-cancel');
       if (check && ok) check.addEventListener('change', function () { ok.disabled = !check.checked; });
-      if (cancel) cancel.addEventListener('click', closeModal);
+      if (cancel) cancel.addEventListener('click', cancelConsent);
       if (ok) ok.addEventListener('click', function () { submitConsent(ok); });
     }
 
     function closeModal() {
       var modal = document.getElementById('modal');
       if (modal) modal.classList.remove('open');
+    }
+
+    /* Dismissing the contract is a refusal, so whatever was waiting on it is
+       dropped rather than queued behind a decision the rider declined. */
+    function cancelConsent() {
+      awaitingConsent = [];
+      closeModal();
     }
 
     function consentError(message) {
@@ -140,9 +149,11 @@
           // The ONLY place consentId is ever set to a non-null value.
           if (!data || !data.consentId) throw new Error('consent');
           consentId = data.consentId;
-          setLocked(false);
           renderConsent(data.consentedAt);
           closeModal();
+          var held = awaitingConsent;
+          awaitingConsent = [];
+          if (held.length) accept(held);
         })
         .catch(function () {
           // Still locked. Still no consentId. That is the correct outcome.
@@ -161,7 +172,6 @@
         .then(function (data) {
           if (data && data.consentId) {
             consentId = data.consentId;
-            setLocked(false);
             renderConsent(data.consentedAt);
           } else {
             renderConsentPrompt();
@@ -308,8 +318,11 @@
     }
 
     function accept(fileList) {
-      if (!consentId) { openConsentModal(); return; }
       var files = Array.prototype.slice.call(fileList || []);
+      if (!files.length) return;
+      // FAIL-CLOSED still: nothing is uploaded until the server has stored a
+      // consent record. The files simply wait here while the rider decides.
+      if (!consentId) { awaitingConsent = files; openConsentModal(); return; }
       for (var i = 0; i < files.length; i++) {
         if (items.length >= MAX) {
           var full = document.createElement('span');
@@ -327,14 +340,10 @@
 
     /* ---------- wiring ---------- */
 
-    setLocked(true);
     renderConsentPrompt();
     bootstrapConsent();
 
-    zone.addEventListener('click', function () {
-      if (!consentId) { openConsentModal(); return; }
-      input.click();
-    });
+    zone.addEventListener('click', function () { input.click(); });
     zone.addEventListener('keydown', function (e) {
       if ('Enter' === e.key || ' ' === e.key) { e.preventDefault(); zone.click(); }
     });

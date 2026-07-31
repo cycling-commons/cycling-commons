@@ -114,13 +114,11 @@
   .drop:hover{border-color:var(--trail);color:var(--ink)}
   .drop .ic{font-size:1.6rem;display:block;margin-bottom:.5rem}
   /* real uploads (docs/specs/photo-uploads.md §4) */
-  .drop.locked{opacity:.5;cursor:not-allowed}
   .drop.over{border-color:var(--trail);background:var(--paper-deep)}
-  /* The gate reads top-down — why, then the action — instead of a button with
-     a paragraph welded to its right-hand side. */
+  /* Empty until consent exists — the contract is put to the rider when they
+     drop a photo, not as a gate in front of the drop zone. */
   .consent-gate{margin:.6rem 0 1rem}
-  .consent-gate .consent-hint{font-size:.9rem;line-height:1.55;color:#4a4d40;margin:0 0 .7rem;max-width:52ch}
-  .consent-gate .btn{display:inline-block}
+  .consent-gate:empty{margin:0}
   .consent-ok{font-size:.86rem;line-height:1.5;color:#3f6b3f}
   .consent-when{font-family:var(--mono);font-size:.68rem;color:#595c4d}
   .consent-more{display:inline-block;margin-left:.35rem}
@@ -233,6 +231,7 @@
     consentUrl: path('media_consent'),
     consentCurrentUrl: path('media_consent_current'),
     termsUrl: path('terms'),
+    licenceUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
     max: 6,
     i18n: {
       title: 'media.consent.title'|trans,
@@ -240,11 +239,11 @@
       contract: 'media.consent.contract'|trans,
       keepOwnership: 'media.consent.keep_ownership'|trans,
       accept: 'media.consent.accept'|trans,
-      unlock: 'media.consent.unlock'|trans,
       cancel: 'media.consent.cancel'|trans,
       consentError: 'media.consent.error'|trans,
       standing: 'media.consent.standing'|trans,
       readContract: 'media.consent.read_contract'|trans,
+      readLicence: 'media.consent.read_licence'|trans,
       siteTerms: 'media.consent.site_terms'|trans,
       remove: 'improve.step3.remove_photo'|trans,
       tooMany: 'improve.step3.too_many_photos'|trans,

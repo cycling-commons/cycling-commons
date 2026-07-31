@@ -1466,9 +1466,9 @@ media:
   consent:
     title: 'Voordat je een foto toevoegt'
     intro: 'Je foto komt in de open Commons zodat elke fietser hem kan gebruiken. Dat werkt alleen als hij echt vrij te delen is.'
-    contract: 'Media staan onder de CC BY-SA 4.0-licentie. Upload of link alleen foto''s die je zelf hebt gemaakt.'
+    contract: 'Ik ga ermee akkoord mijn foto''s onder CC BY-SA 4.0 te licentiëren en bevestig dat ik ze zelf heb gemaakt.'
+    read_licence: 'Lees de licentie'
     keep_ownership: 'Je blijft eigenaar — de Commons krijgt alleen een licentie om te delen.'
-    unlock: 'Ga akkoord met de fotolicentie'
     accept: 'Doneer hem'
     cancel: 'Annuleren'
     error: 'We konden je toestemming niet vastleggen. Er is niets geüpload — probeer het opnieuw.'

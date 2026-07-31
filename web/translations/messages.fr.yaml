@@ -1466,9 +1466,9 @@ media:
   consent:
     title: 'Avant d''ajouter une photo'
     intro: 'Votre photo rejoint le Commons ouvert pour que chaque cycliste puisse l''utiliser. Cela ne fonctionne que si elle est réellement libre de partage.'
-    contract: 'Les médias sont sous licence CC BY-SA 4.0. N''envoyez ou ne liez que des photos que vous avez prises vous-même.'
+    contract: 'J''accepte de placer mes photos sous licence CC BY-SA 4.0 et je confirme les avoir prises moi-même.'
+    read_licence: 'Lire la licence'
     keep_ownership: 'Vous en gardez la propriété — le Commons ne reçoit qu''une licence de partage.'
-    unlock: 'Accepter la licence photo'
     accept: 'Je la donne'
     cancel: 'Annuler'
     error: 'Nous n''avons pas pu enregistrer votre consentement. Rien n''a été envoyé — réessayez.'

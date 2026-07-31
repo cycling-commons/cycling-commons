@@ -225,27 +225,33 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   intake). Removing a chip forgets the id (the object becomes an orphan and
   is GC'd, §6).
 - The **consent modal becomes enforcing, and consent is stored BEFORE any
-  upload is possible**: the upload controls (file input, drop zone) start
-  disabled. Ticking the exact contract — *"Media is licensed CC BY-SA 4.0.
-  Only upload or link photos you took yourself."* — POSTs the consent; only
-  the server's acknowledgement (the stored `consent_record`'s id, kind
-  `media-cc-by-sa`, current version + text hash) unlocks the upload
-  controls. A failed consent POST keeps them locked and shows the error in
-  the modal — there is no optimistic unlock. The returned id rides every
-  upload POST of the session and every `media_upload` row references it;
-  the server independently rejects any upload without a valid consent
-  record belonging to the caller (the UI gate is sequencing, the server
-  check is the guarantee).
+  upload is possible** — but it is put to the rider **at the moment they drop
+  or choose a photo**, about that photo, rather than as a toll gate in front
+  of a drop zone they cannot yet use (owner decision 2026-07-31). The files
+  they picked are held client-side while they decide, so agreeing uploads what
+  they already chose instead of making them find it twice; dismissing the
+  contract is a refusal and discards them. Ticking the acknowledgement — *"I
+  agree to license my photos under CC BY-SA 4.0, and I confirm I took them
+  myself."*, with the licence deed one click away, because a rider agreeing to
+  a specific licence must be able to read it before ticking — POSTs the
+  consent. Only the server's acknowledgement (the stored `consent_record`'s
+  id, kind `media-cc-by-sa`, current version + text hash) releases the held
+  files; a failed consent POST uploads nothing and shows the error in the
+  modal. There is no optimistic unlock. The returned id rides every upload
+  POST of the session and every `media_upload` row references it; the server
+  independently rejects any upload without a valid consent record belonging to
+  the caller (the UI sequencing is a courtesy, the server check is the
+  guarantee).
 - **Consent is fail-closed — negative until proven positive.** No layer may
   ever hold a default-true consent state: the client's consent id starts
   `null` and is set only from the server's acknowledgement; the server
   derives consent exclusively from an existing `consent_record` row that
   belongs to the caller and matches the current kind + version — never from
   a boolean flag, a cache, or an assumption. Any error, timeout, or
-  ambiguity resolves to *no consent* (controls locked, upload rejected).
+  ambiguity resolves to *no consent* (nothing uploaded, upload rejected).
 - **From then on, the given consent is always shown.** Once a consent
   record exists for the current wording version, the photo step renders a
-  standing notice instead of locked controls — "✓ You donate your photos
+  standing notice instead of asking again — "✓ You donate your photos
   under CC BY-SA 4.0; approved photos are **published under the Commons'
   terms** · consented <date>" — with the contract text and the site terms
   each one tap away — on this and every later visit (the wizard bootstraps

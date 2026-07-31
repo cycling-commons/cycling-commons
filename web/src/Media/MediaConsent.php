@@ -22,7 +22,12 @@ namespace App\Media;
 final class MediaConsent
 {
     public const string KIND = 'media-cc-by-sa';
-    public const string VERSION = 'v1';
+    // v2 (2026-07-31): the contract became a first-person acknowledgement — "I
+    // agree to license my photos…" rather than a statement of fact about the
+    // licence — and now links the licence deed. Different words mean a
+    // different agreement, so every rider is asked again rather than having
+    // v1's hash silently stand for wording they never saw.
+    public const string VERSION = 'v2';
     public const string TEXT_KEY = 'media.consent.contract';
 
     public static function hash(string $text): string
