@@ -1,0 +1,24 @@
+docs/specs/photo-uploads.md
+  s_8f9941cdcf9eca::t_f2880a3bf9050d 86,90-107,113-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "5158f8b6fa6abf632e4e8b84cd9d8b81da68e4ed",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_8f9941cdcf9eca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "be8228a9-eb05-456e-bed2-ccf9fe1d7437",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
