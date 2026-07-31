@@ -26,7 +26,12 @@
   .subhead:first-of-type{margin-top:.3rem}
 
   .field{margin-bottom:1.3rem}
-  .field label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+  /* Details step: two columns on wide screens — the stacked full-width fields
+     wasted half the pane. Textareas and checkbox groups span both columns. */
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 2.4rem}
+  @media(max-width:720px){.fgrid{grid-template-columns:1fr}}
+  .fgrid .field:has(textarea),.fgrid .field:has(input[type=checkbox]){grid-column:1/-1}
   .field input,.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
   .field select{width:100%;max-width:22rem}  /* look is global (atlas.css) */
   .field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:80px;resize:vertical}
@@ -250,21 +255,25 @@
     <p class="help">{{ 'improve.step2.help'|trans }}</p>
 
     <h3 class="subhead">{{ 'improve.step2.fix_heading'|trans }}</h3>
+    <div class="fgrid">
     {% for child in form.details %}
       <div class="field">
         {{ form_label(child) }}
         {{ form_widget(child) }}
       </div>
     {% endfor %}
+    </div>
 
     {% if form.extras|length > 0 %}
       <h3 class="subhead">{{ 'improve.step2.add_heading'|trans }}</h3>
+      <div class="fgrid">
       {% for child in form.extras %}
         <div class="field">
           {{ form_label(child) }}
           {{ form_widget(child) }}
         </div>
       {% endfor %}
+      </div>
     {% endif %}
   </section>
 
