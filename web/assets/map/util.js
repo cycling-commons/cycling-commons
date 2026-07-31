@@ -52,3 +52,28 @@ export const wc = (file, credit, user, license) => {
            credit, creditUrl: user ? `https://commons.wikimedia.org/wiki/User:${user.replace(/ /g,'_')}` : '',
            license, source:`https://commons.wikimedia.org/wiki/File:${page}` };
 };
+
+/* Carry a served feature's photo attributes onto its drawer object
+   (docs/specs/photo-uploads.md §5).
+
+   Two shapes exist and both must survive. `photos` is the gallery an approved
+   rider upload produces — MediaDecisionService appends to it, and it is what
+   the drawer's photoList() prefers. `photo` is the legacy singular an imported
+   Wikimedia record still uses. Either may arrive as a JSON *string*, because
+   these are importable item attributes; an unparseable one is dropped rather
+   than handed to the <img> sink.
+
+   The pool drawers (osmDrawer/waterDrawer) build their objects field by field
+   instead of passing the raw properties through, so without this they silently
+   drop `photos` — which is every rider upload on letters C/D/E/G/H/I/J/M. */
+export function attachPhotos(target, props){
+  const parsed = raw => {
+    if(typeof raw !== 'string') return raw;
+    try{ return JSON.parse(raw); }catch(e){ return null; }
+  };
+  const photos = parsed(props.photos);
+  if(Array.isArray(photos) && photos.length) target.photos = photos;
+  const photo = parsed(props.photo);
+  if(photo && !Array.isArray(photo)) target.photo = photo;
+  return target;
+}

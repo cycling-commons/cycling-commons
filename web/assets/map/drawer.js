@@ -17,7 +17,7 @@
    Nothing is injected any more: every module this one reaches into has landed,
    so initDrawer() is gone and only initDrawerChrome() remains (§9). */
 import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
-import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl } from './util.js';
+import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos } from './util.js';
 import { map } from './map-init.js';
 import { CITIES } from './catalog.js';
 import { pinEl } from './icons.js';
@@ -127,8 +127,7 @@ export function osmDrawer(layer, p, ll, src){
   else if(p.ref) d.osmRef=p.ref;     // uncurated coverage POI — materialize-on-edit target
   if(p.desc) d.desc=p.desc;
   if(p.descTr) d.descTr=1;
-  let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
-  if(photo) d.photo=photo;
+  attachPhotos(d, p);
   return d;
 }
 // Per-country tap-water verification references for the water drawer's
@@ -177,8 +176,7 @@ export function waterDrawer(p, ll){
   // Same photo handling as osmDrawer — waterDrawer never copied this over,
   // so a water point's importable photo attribute (e.g. a Wikimedia Commons
   // spring photo) silently never reached buildRecord()'s figure/lightbox.
-  let photo=p.photo; if(typeof photo==='string'){ try{ photo=JSON.parse(photo); }catch(e){ photo=null; } }
-  if(photo) d.photo=photo;
+  attachPhotos(d, p);
   return d;
 }
 
