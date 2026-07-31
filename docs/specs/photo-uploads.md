@@ -98,13 +98,21 @@ context). Media licensing context lives in the site licences
   base configuration on staging. Env-driven configuration has no such gap, and
   it means development exercises the same S3 path production does rather than
   a local-filesystem adapter that fails differently.
-- **Dev** points at the dev stack's MinIO (compose profile `storage`), with
-  the committed defaults in `web/.env` — the contributor stack still needs no
-  real credentials, exactly as the coverage pipeline already works. Buckets
-  are created on demand by a dev bootstrap, mirroring
-  `publish.py::ensure_bucket`. Note the two hostnames: the app writes
-  server-side to `http://minio:9000`, the browser reads from
+- **Dev** points at the dev stack's MinIO (compose profile `storage`) by
+  default — a contributor needs no credentials of their own, exactly as the
+  coverage pipeline already works. Buckets are created on demand by a dev
+  bootstrap, mirroring `publish.py::ensure_bucket`. Note the two hostnames:
+  the app writes server-side to `http://minio:9000`, the browser reads from
   `http://localhost:9100`.
+- **A developer may point media at their own MinIO instead** — one shared
+  instance across projects rather than one per project. Setting `MEDIA_S3_*`
+  in `developers/docker/.env` overrides the bundled defaults, and the
+  `storage` profile is simply not started. This mirrors the existing
+  `MAILER_DSN` → host-Mailpit override. Credentials are **never** committed:
+  `web/.env` carries empty placeholders and compose supplies the values.
+  They must be set at the **compose** layer, not in `web/.env.dev.local` — a
+  real environment variable overrides every Symfony `.env*` file, so an
+  override placed there has no effect.
 - `MEDIA_PUBLIC_BASE`'s host is added to the **C**ontent-**S**ecurity-**P**olicy (CSP) `img-src` the same
   env-backed way as `coverage.csp_host` (never admin-editable — a writable
   CSP host is an XSS surface, system-configuration.md rationale).
