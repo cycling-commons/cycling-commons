@@ -77,8 +77,10 @@ context). Media licensing context lives in the site licences
   approval means *unlinked* — the moderation queue is the only place a
   pending URL appears, buckets are never listable, and the proxy must not
   serve directory indexes. If pending media ever needs real access
-  control, that is the app-proxied model this design explicitly traded
-  away (decision §1.2), revisited then.
+  control, that means serving those objects through an authorizing layer
+  (the app, or auth at the proxy) — an option considered during design and
+  not chosen for v1; decision §1.2 itself only chose the owner-run proxy
+  host over direct bucket URLs.
 
 ## 3. Upload endpoint
 
