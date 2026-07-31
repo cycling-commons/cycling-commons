@@ -38,7 +38,11 @@ The API exposes the **Commons layer only**. The account layer — email, IP logs
 password hashes, moderation internals — is **never** reachable through any
 endpoint or tile ([osm-data-architecture.md §8](osm-data-architecture.md)). This
 is enforced at the serialization boundary: public responses are built from
-dedicated public DTOs that carry no personal data, not from internal entities.
+dedicated public DTOs that carry no personal data, not from internal entities —
+and below that, at the database itself: the API reads through a dedicated
+Postgres role that has no grant on any account table
+([personal-data-boundary.md](personal-data-boundary.md) owns the full
+enforcement stack).
 
 | Product | Content | Category | Default response |
 |---------|---------|----------|------------------|

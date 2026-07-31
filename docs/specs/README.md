@@ -36,6 +36,9 @@ committed — working docs stay local.
   (delegated to by osm-data-architecture.md §8).
 - `account-and-auth.md` — identity, roles, 2FA, admin desk, profiles.
 - `security-architecture.md` — CSP, sanitizer, CSRF, rate-limiter inventory.
+- `personal-data-boundary.md` — how the public API is kept away from account
+  data: Postgres role/grants, dedicated connection, deptrac fence, contract
+  tests.
 - `coverage-provider.md` — the buildable coverage-provider contract.
 - `dev-environment.md` — dev stack, platform decisions, conventions.
 - `system-configuration.md` — the runtime-editable editorial thresholds: the

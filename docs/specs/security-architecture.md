@@ -19,6 +19,10 @@ domain doc and is cross-linked, not restated:
   endpoints, GPX intake validation.
 - [coverage-provider.md](coverage-provider.md) — the coverage read endpoints
   and their (pending) anonymous limiter.
+- [personal-data-boundary.md](personal-data-boundary.md) — the data-access
+  counterpart to this doc: how the public API is structurally kept away from
+  account data (Postgres role/grants, dedicated connection, deptrac, contract
+  tests).
 
 ---
 
