@@ -55,8 +55,42 @@ services:
               accessKeySecret: '%env(MEDIA_S3_SECRET)%'
               pathStyleEndpoint: true
 
+    # Continent code -> its Flysystem storage AND its browser-facing base URL.
+    # This map IS the shard routing table; onboarding a continent adds one line
+    # here and one storage in flysystem.yaml (docs/specs/photo-uploads.md §1.2).
+    #
+    # The base URL is per continent, not a single base with the continent
+    # concatenated on: in production the continent is a path segment the proxy
+    # routes on, while against raw MinIO in dev it is part of the bucket name.
+    # No single string can express both, so the map carries the pair.
+    App\Media\MediaStorage:
+        arguments:
+            $storages:
+                EU: '@media.storage.eu'
+            $publicBases:
+                EU: '%env(MEDIA_PUBLIC_BASE)%/cc-media-eu'
+            $publicBase: '%media.public_base%'
+            $defaultContinent: '%media.default_continent%'
+
 when@test:
     services:
+        # Fetched directly by the media tests. Repeated in full rather than
+        # patched with `public: true`, because a second definition of the same
+        # id REPLACES the first — it does not merge into it.
+        App\Media\MediaStorage:
+            public: true
+            arguments:
+                $storages:
+                    EU: '@media.storage.eu'
+                $publicBases:
+                    EU: '%env(MEDIA_PUBLIC_BASE)%/cc-media-eu'
+                $publicBase: '%media.public_base%'
+                $defaultContinent: '%media.default_continent%'
+
+        App\Media\ContinentResolver:
+            public: true
+            autowire: true
+
         App\Community\CountryInterestService:
             public: true
             autowire: true

@@ -186,7 +186,7 @@ services:
     ports:
       - "${MAILPIT_UI_PORT:-8025}:8025"
 
-  # ---- opt-in: S3-compatible object storage for PMTiles --------------------
+  # ---- opt-in: S3-compatible object storage for PMTiles + rider media ------
   minio:
     profiles: ["storage"]
     image: minio/minio:latest
@@ -199,6 +199,33 @@ services:
       - "${MINIO_CONSOLE_PORT:-9101}:9001"
     volumes:
       - cc_minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # One-shot: create the rider-media bucket with the anonymous-read policy the
+  # browser needs, so a contributor running `make up-storage` never has to open
+  # the MinIO console (docs/specs/photo-uploads.md §2). The coverage bucket is
+  # not created here — pipeline/coverage/publish.py::ensure_bucket already does
+  # that for itself, and duplicating it would give two owners for one bucket.
+  #
+  # Exits immediately after; `mb --ignore-existing` makes reruns free. Skipped
+  # entirely when the storage profile is off, which is exactly the topology
+  # where MEDIA_S3_* points at a MinIO the developer already runs and manages.
+  minio-media-bucket:
+    profiles: ["storage"]
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      mc alias set cc http://minio:9000 '${MINIO_ROOT_USER:-ccadmin}' '${MINIO_ROOT_PASSWORD:-ccadminsecret}' &&
+      mc mb --ignore-existing cc/${MEDIA_S3_BUCKET_EU:-cc-media-eu} &&
+      mc anonymous set download cc/${MEDIA_S3_BUCKET_EU:-cc-media-eu}
+      "
 
 volumes:
   cc_pgdata:
