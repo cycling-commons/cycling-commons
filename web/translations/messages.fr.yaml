@@ -911,6 +911,8 @@ vote:
   remove: 'retirer'
   empty_ballot: 'Ajoutez jusqu''à 10 choix, dans l''ordre de votre préférence.'
   reorder_hint: 'Glissez pour modifier l''ordre'
+  move_up: 'Monter'
+  move_down: 'Descendre'
   error:
     ballot_empty: 'Veuillez ajouter au moins un élément à votre bulletin avant de soumettre.'
   receipt:

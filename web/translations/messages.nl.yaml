@@ -911,6 +911,8 @@ vote:
   remove: 'verwijderen'
   empty_ballot: 'Voeg tot 10 keuzes toe, in de volgorde die jij aanhoudt.'
   reorder_hint: 'Sleep om de volgorde te wijzigen'
+  move_up: 'Omhoog'
+  move_down: 'Omlaag'
   error:
     ballot_empty: 'Voeg ten minste één item toe aan je stembrief voordat je hem indient.'
   receipt:

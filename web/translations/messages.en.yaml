@@ -915,6 +915,8 @@ vote:
   remove: 'remove'
   empty_ballot: 'Add up to 10 picks, in the order you rate them.'
   reorder_hint: 'Drag to change the order'
+  move_up: 'Move up'
+  move_down: 'Move down'
   error:
     ballot_empty: 'Please add at least one item to your ballot before submitting.'
   receipt:
