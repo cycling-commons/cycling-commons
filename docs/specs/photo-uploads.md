@@ -222,6 +222,20 @@ Nothing public until approved — the rule everywhere else, applied here:
   discussion history; decisions with notes land in the event log too, so
   the complete story of a photo = its event log + the submission thread.
 
+### 5c. Principle: one way to moderate, regardless of content type
+(owner principle 2026-07-31)
+
+Photos deliberately add **zero new moderation mechanics**: the same queue,
+the same approve/reject decision on the same submission, the same message
+thread for discussion, the same append-only history idiom
+(`change_history` for items, the same shape for media). A curator who can
+moderate a fact edit can moderate a photo without learning anything new.
+Any future content type (video, tracks, …) must hold to this — it may add
+*what* is being judged, never *how* judging works. (The route domain's
+purpose-built pipeline predates this principle by deliberate decision,
+[route-domain.md](route-domain.md) §1; reconciling the two is out of scope
+here and would be its own owner decision.)
+
 ## 6. Garbage collection
 
 One console command (`app:media:gc`, cron-able, ResetPasswordCleanup shape):
