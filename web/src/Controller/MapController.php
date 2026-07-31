@@ -234,7 +234,7 @@ final class MapController extends AbstractController
             'compassLabel' => 'd_compass_label', 'compassGroup' => 'd_compass_group',
             'community' => 'd_community', 'showAll' => 'd_show_all',
             // The invitation on an approved-but-unconfirmed curated pin.
-            'needsCheck' => 'd_needs_check',
+            'needsCheck' => 'd_needs_check', 'youConfirmed' => 'd_you_confirmed',
             'suggestedRoute' => 'd_suggested_route', 'start' => 'd_start', 'shape' => 'd_shape',
             'roundtrip' => 'd_roundtrip', 'season' => 'd_season', 'why' => 'd_why', 'note' => 'd_note',
             'popularSeason' => 'd_popular_season', 'fakedNote' => 'd_faked_note', 'fakedSrc' => 'd_faked_src',

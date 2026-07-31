@@ -108,11 +108,18 @@ export function hydrateItemConfirm(id){
   const box=document.querySelector(`.cc-cf[data-item="${id}"]`); if(!box) return;
   fetch(`/items/${id}/confirmations`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
     .then(r=>{ if(!r.ok) throw new Error('confirm'); return r.json(); })
-    .then(s=>{ if(s.token) _cfTokens[id]=s.token; paintItemConfirm(box, s); })
+    .then(s=>paintItemConfirm(box, s))
     .catch(()=>{});   // enhancement only — never blocks the drawer
 }
 function paintItemConfirm(box, s){
-  const authed=!!s.token;
+  // Only the GET snapshot carries a token; the POST reply does not. Deriving
+  // "is this rider signed in" from THIS payload alone therefore told a rider
+  // who had just successfully confirmed to log in — with their own
+  // confirmation already counted on screen. A cached token means the server
+  // has already told us they may post.
+  const id=box.getAttribute('data-item');
+  if(s.token) _cfTokens[id]=s.token;
+  const authed=!!_cfTokens[id];
   const defs=CC_CF_STANCES[s.stanceKind]||CC_CF_STANCES.existence;
   const heading = s.stanceKind==='potability'
     ? (D.waterQ||'Is the water drinkable?') : (D.hereQ||'Is this still here?');
@@ -122,8 +129,16 @@ function paintItemConfirm(box, s){
     return `<button class="cc-cf-btn${mine}" data-cf-act="${v}"${authed?'':' disabled'}>${l} <span class="cc-cf-n">${n}</span></button>`;
   }).join('');
   const total = s.total ? `<span class="cc-cf-total">· ${tpl((s.total===1?D.confirmedOne:D.confirmedMany)||`{n} rider${s.total===1?'':'s'} confirmed`, {n:s.total})}</span>` : '';
+  // Once a rider HAS answered, stop rendering a question at them. The buttons
+  // stay so they can change their mind; the line above says where they stand.
+  const mineLabel = s.mine
+    ? (defs.find(([v])=>v===s.mine)||[])[1] || s.mine
+    : '';
+  const yours = s.mine
+    ? `<div class="cc-cf-yours">${tpl(D.youConfirmed||'You answered: {a}', {a:mineLabel})}</div>`
+    : '';
   box.querySelector('[data-cf-body]').innerHTML =
-    `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>`;
+    `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>${yours}`;
   box.querySelector('.cc-cf-login').hidden = authed;
 }
 
@@ -224,7 +239,7 @@ export function initCommunity(){
       fetch(`/items/${id}/confirm`, {method:'POST', credentials:'same-origin',
         headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:body.toString()})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
-        .then(s=>{ paintItemConfirm(box, s); mapToast(D.toastThanks||'Thanks — recorded.'); })
+        .then(s=>{ paintItemConfirm(box, s); mapToast(D.toastThanks||'Thanks — recorded.', {center:true}); })
         .catch(()=>{ box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false); mapToast(D.toastErr||'Could not record that — please try again.'); });
     });
     // Delegated click handler for every community button (drawer is re-rendered often).

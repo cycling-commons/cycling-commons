@@ -1524,6 +1524,7 @@ map:
   d_no_match: 'No match in the Wallonia demo yet.'
   d_community: 'community'
   d_needs_check: 'not confirmed yet — check it if you ride past'
+  d_you_confirmed: 'You answered: {a}'
   d_show_all: 'show all {n}'
   mly_none: 'No street-level imagery here.'
   mly_zoom: 'Zoom in and click a green dot to open street-level here.'

@@ -467,10 +467,16 @@ function loadItemHistory(itemId){
     });
 }
 
-export function mapToast(msg){
+/* `opts.center` lifts the toast to the middle of the screen. Reserved for
+   moments that are worth a beat — a rider's confirmation being recorded — so
+   the acknowledgement is somewhere their eyes already are, instead of a
+   footnote at the bottom of a full-screen map. Routine chatter stays low. */
+export function mapToast(msg, opts){
   let t=document.getElementById('cc-toast');
   if(!t){ t=document.createElement('div'); t.id='cc-toast'; t.className='cc-toast'; document.body.appendChild(t); }
-  t.textContent=msg; t.classList.add('show');
+  t.textContent=msg;
+  t.classList.toggle('center', !!(opts && opts.center));
+  t.classList.add('show');
   clearTimeout(mapToast._t); mapToast._t=setTimeout(()=>t.classList.remove('show'),3200);
 }
 

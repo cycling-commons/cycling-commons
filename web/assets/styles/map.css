@@ -208,7 +208,15 @@
      !important: MapLibre's Marker._updateOpacity() sets an inline style.opacity on every
      marker element on each position update (occlusion-fade machinery), which otherwise
      silently beats this class rule — confirmed live, the dashed border alone rendered. */
-  .cc-pin.community{opacity:.62 !important;border-style:dashed}
+  /* Curated but nobody has checked it yet (docs/specs/photo-uploads.md §5).
+     It must read as OURS first — same colour, glyph and teardrop as any
+     Commons pin — and provisional second, so it stays legible instead of
+     fading into the basemap: a dashed ochre edge plus a small "?" where a
+     verified pin wears its curated dot. The invitation is in the tooltip. */
+  .cc-pin.community{opacity:.95 !important;border-style:dashed;border-color:var(--ochre)}
+  .cc-pin.community::after{content:"?";position:absolute;width:13px;height:13px;top:-5px;right:-5px;
+    background:var(--ochre);color:#14160E;border-radius:50%;font-family:var(--mono);font-size:9px;
+    font-weight:700;line-height:13px;text-align:center;box-shadow:0 1px 3px rgba(20,22,14,.5)}
   /* one-off reveal pin (decision C): community look + the selection pulse */
   .cc-pin.reveal::before{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(255,90,31,.6);animation:cc-pulse 1.25s infinite}
   .cc-mod{margin-top:1rem;border:1px solid rgba(217,45,32,.4);border-left:3px solid #D92D20;border-radius:0 8px 8px 0;padding:.9rem 1rem;background:rgba(217,45,32,.05)}
@@ -243,6 +251,10 @@
   .cc-mod-preview{font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.55);margin-top:.5rem}
   .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
   .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* A confirmation recorded is worth a beat in the middle of the screen, not a
+     footnote at the bottom of a full-screen map. */
+  .cc-toast.center{top:50%;bottom:auto;font-size:1rem;padding:1rem 1.6rem;transform:translate(-50%,calc(-50% + 1rem))}
+  .cc-toast.center.show{transform:translate(-50%,-50%)}
   /* "Set my area" cold-start prompt (map-and-search.md §4.5 Phase 4):
      a dismissible chip in the Region rail group; the ✕ matches the rail's muted
      control language. */
@@ -426,6 +438,7 @@
   /* Community confirmation panel (water potability / "still here?"). */
   .cc-cf{margin-top:.7rem}
   .cc-cf-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.8);margin-bottom:.45rem}
+  .cc-cf-yours{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;color:var(--glacier);margin-top:.45rem}
   .cc-cf-total{color:var(--glacier);text-transform:none;letter-spacing:0}
   .cc-cf-row{display:flex;flex-wrap:wrap;gap:.5rem}
   .cc-cf-btn{flex:none;padding:.45rem .8rem;border-radius:5px;border:1px solid var(--trail);background:transparent;
