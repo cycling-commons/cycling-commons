@@ -13,7 +13,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from coverage.contract import load_contract  # noqa: E402
 
-LETTERS = ["C", "D", "E", "G", "H", "I", "J"]
+# M · Public toilets (added 2026-07-30) skips over L, which stays reserved.
+LETTERS = ["C", "D", "E", "G", "H", "I", "J", "M"]
 RAW_PATH = pathlib.Path(__file__).resolve().parents[1] / "contract" / "coverage-contract.json"
 
 
