@@ -1459,6 +1459,15 @@ media:
     consented_on: 'Toestemming gegeven op %date%'
     read_contract: 'Lees het contract'
     site_terms: 'Sitevoorwaarden'
+  error:
+    consent_required: 'Ga eerst akkoord met de fotolicentie — daarna kun je foto''s toevoegen.'
+    missing_file: 'Er kwam geen foto binnen. Kies een bestand en probeer het opnieuw.'
+    photo_too_large: 'Die foto is groter dan 15 MB. Gebruik een kleinere versie.'
+    photo_format: 'Dat bestandstype kan niet worden gebruikt. Foto''s mogen JPEG, PNG, WebP of HEIC zijn.'
+    photo_unreadable: 'Dat bestand kon niet als foto worden gelezen.'
+    photo_too_small: 'Die foto is te klein — de kortste zijde moet minstens 200 pixels zijn.'
+    rate_limited: 'Daglimiet voor uploads bereikt — ga morgen verder.'
+    unknown: 'Het uploaden is mislukt. Probeer het opnieuw.'
 propose_route:
   eyebrow: 'K · Aanbevolen routes'
   title: 'Stel een route voor'

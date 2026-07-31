@@ -7,15 +7,28 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Media\ConsentMissing;
 use App\Media\ConsentService;
+use App\Media\ContinentResolver;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaAction;
 use App\Media\MediaConsent;
+use App\Media\MediaEventLog;
+use App\Media\MediaStorage;
+use App\Media\PhotoProcessor;
+use App\Media\PhotoRejected;
+use App\Media\XmpRights;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * The rider media API (docs/specs/photo-uploads.md §3, §4): consent first, then
@@ -37,6 +50,12 @@ final class MediaController extends AbstractController
 
     public function __construct(
         private readonly ConsentService $consent,
+        private readonly PhotoProcessor $processor,
+        private readonly MediaStorage $storage,
+        private readonly ContinentResolver $continents,
+        private readonly XmpRights $rights,
+        private readonly MediaEventLog $events,
+        private readonly EntityManagerInterface $em,
     ) {
     }
 
@@ -79,6 +98,101 @@ final class MediaController extends AbstractController
             'consentId' => $record->getId()->toRfc4122(),
             'consentedAt' => $record->getConsentedAt()->format(\DATE_ATOM),
         ]);
+    }
+
+    /**
+     * One photo per request. The order of the checks is deliberate: identity,
+     * then token, then consent, then the cheap byte-count gate, then the
+     * limiter, and only then the expensive decode — so an abusive caller never
+     * gets the server to spend an Imagick decode on their behalf.
+     */
+    #[Route('/media/photos', name: 'media_photos_upload', methods: ['POST'])]
+    public function upload(Request $request, RateLimiterFactoryInterface $mediaUploadLimiter): JsonResponse
+    {
+        $user = $this->requireUser();
+        $this->requireCsrf($request);
+
+        try {
+            $consent = $this->consent->assertValid($user, $request->request->get('consentId'));
+        } catch (ConsentMissing) {
+            // Fail-closed: no valid record, no upload — whatever the UI believes.
+            return $this->json(['error' => 'consent_required'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $file = $request->files->get('photo');
+        if (!$file instanceof UploadedFile) {
+            return $this->json(['error' => 'missing_file'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        // A file that blew past PHP's own ini/form limit arrives as an error
+        // rather than as bytes. That is still "too large" and must be said so:
+        // telling a rider no photo arrived when a 30 MB one did is a lie the
+        // rider cannot act on.
+        if (\in_array($file->getError(), [\UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE], true)
+            || $file->getSize() > PhotoProcessor::MAX_BYTES
+        ) {
+            return $this->json(['error' => 'photo_too_large'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        if (!$file->isValid()) {
+            return $this->json(['error' => 'missing_file'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        if (!$mediaUploadLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
+            return $this->json(['error' => 'rate_limited'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        // The id exists before the bytes do: the rights packet names the
+        // photo's own page, so the uuid has to be minted first
+        // (docs/specs/photo-uploads.md §1.3c).
+        $mediaId = Uuid::v4();
+
+        try {
+            $processed = $this->processor->process(
+                (string) file_get_contents($file->getPathname()),
+                $this->rights->forPhoto($mediaId),
+            );
+        } catch (PhotoRejected $rejected) {
+            return $this->json(['error' => $rejected->reason], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Shard resolution (docs/specs/photo-uploads.md §3): the wizard's pin
+        // wins, because it is where the rider says the place IS; the photo's own
+        // coordinates are the fallback; then the configured default.
+        $pinLat = $this->coordinate($request, 'lat');
+        $pinLng = $this->coordinate($request, 'lng');
+        $continent = (null !== $pinLat && null !== $pinLng)
+            ? $this->continents->resolve($pinLat, $pinLng)
+            : $this->continents->resolve($processed->gpsLat, $processed->gpsLng);
+
+        $upload = new MediaUpload(
+            $mediaId,
+            (int) $user->getId(),
+            $consent->getId(),
+            $continent,
+            $processed->width,
+            $processed->height,
+            \strlen($processed->orig),
+            $processed->takenAt,
+            $processed->gpsLat,
+            $processed->gpsLng,
+        );
+
+        $this->storage->store($continent, $upload->getPathPrefix(), $processed);
+        $this->em->persist($upload);
+        $this->events->append($upload->getId(), (int) $user->getId(), MediaAction::Uploaded);
+        $this->em->flush();
+
+        return $this->json([
+            'id' => $upload->getId()->toRfc4122(),
+            'sm' => $this->storage->url($continent, $upload->getPathPrefix(), 'sm'),
+            'lg' => $this->storage->url($continent, $upload->getPathPrefix(), 'lg'),
+        ]);
+    }
+
+    private function coordinate(Request $request, string $key): ?float
+    {
+        $raw = $request->request->get($key);
+
+        return is_numeric($raw) ? (float) $raw : null;
     }
 
     /**

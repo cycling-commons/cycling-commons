@@ -1459,6 +1459,15 @@ media:
     consented_on: 'Zugestimmt am %date%'
     read_contract: 'Vertrag lesen'
     site_terms: 'Nutzungsbedingungen'
+  error:
+    consent_required: 'Stimme zuerst der Fotolizenz zu — danach kannst du Fotos hinzufügen.'
+    missing_file: 'Es ist kein Foto angekommen. Bitte wähle eine Datei und versuche es erneut.'
+    photo_too_large: 'Dieses Foto ist größer als 15 MB. Bitte nutze eine kleinere Version.'
+    photo_format: 'Dieser Dateityp lässt sich nicht verwenden. Fotos dürfen JPEG, PNG, WebP oder HEIC sein.'
+    photo_unreadable: 'Diese Datei konnte nicht als Foto gelesen werden.'
+    photo_too_small: 'Dieses Foto ist zu klein — die kürzere Seite muss mindestens 200 Pixel haben.'
+    rate_limited: 'Tageslimit für Uploads erreicht — bitte morgen weitermachen.'
+    unknown: 'Der Upload ist fehlgeschlagen. Bitte versuche es erneut.'
 propose_route:
   eyebrow: 'K · Empfohlene Routen'
   title: 'Route vorschlagen'

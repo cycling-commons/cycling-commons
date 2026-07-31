@@ -1459,6 +1459,15 @@ media:
     consented_on: 'Consenti le %date%'
     read_contract: 'Lire le contrat'
     site_terms: 'Conditions du site'
+  error:
+    consent_required: 'Acceptez d''abord la licence photo — vous pourrez ensuite ajouter des photos.'
+    missing_file: 'Aucune photo reçue. Choisissez un fichier et réessayez.'
+    photo_too_large: 'Cette photo dépasse 15 Mo. Utilisez une version plus légère.'
+    photo_format: 'Ce type de fichier n''est pas utilisable. Les photos peuvent être en JPEG, PNG, WebP ou HEIC.'
+    photo_unreadable: 'Ce fichier n''a pas pu être lu comme une photo.'
+    photo_too_small: 'Cette photo est trop petite — le côté le plus court doit faire au moins 200 pixels.'
+    rate_limited: 'Limite d''envois quotidienne atteinte — continuez demain.'
+    unknown: 'L''envoi a échoué. Réessayez.'
 propose_route:
   eyebrow: 'K · Itinéraires recommandés'
   title: 'Proposer un itinéraire'
