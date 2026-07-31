@@ -33,7 +33,8 @@ context). Media licensing context lives in the site licences
    **3840 px on the longest side**. Nothing larger is ever stored.
 3b. **Harvest **E**xchangeable **I**mage **F**ile format (EXIF) metadata
    before stripping — the data is valuable.**
-   Stored *files* carry no metadata (no XMP author fields, no serials, no
+   Stored *files* carry no *inherited* metadata (no
+   **E**xtensible **M**etadata **P**latform (XMP) author fields, no serials, no
    coordinates), but two facts are extracted first as structured data:
    **capture date** (`taken_at` — public seasonal context: an autumn view
    reads differently from a summer one) and the
@@ -42,6 +43,38 @@ context). Media licensing context lives in the site licences
    submission pin is computed and surfaced to the curator ("taken ~340 m
    from the pin"), then the raw coordinates are discarded. Only the distance
    survives; nothing location-bearing is ever published or kept raw.
+3c. **Write back one rights block we author ourselves — licence in the file,
+   attribution by link, never a name.**
+   Stripping is not the last step. After every inherited profile is destroyed,
+   a small XMP packet the app composes is written into the stored file. This is
+   not a softening of decision 3b: nothing from the rider's camera survives,
+   and the packet contains only fields chosen here. Without it, a downloaded
+   photo carries no machine-readable trace of either its licence or its
+   photographer — a real gap for a **share-alike** licence, whose whole point
+   is that the obligation travels with the work.
+   The packet is exactly:
+   `xmpRights:Marked` (True) · `xmpRights:WebStatement` and
+   `cc:attributionURL` (both the photo's page, §5d) · `xmpRights:UsageTerms`
+   and `cc:license` (CC BY-SA 4.0) · `dc:rights`
+   ("© the photographer. Licensed CC BY-SA 4.0.").
+   **No `dc:creator`, no `cc:attributionName`, no display name, ever** — three
+   reasons, each sufficient. A name in a file cannot be withdrawn once the file
+   is downloaded, so embedding one would quietly break §6's promise that
+   deletion anonymizes the credit. Display names **are not unique and are not
+   meant to be** ([account-and-auth.md](account-and-auth.md) §9): two riders may
+   both be called John Doe, so a baked-in name does not say which one took the
+   photo — and because names can be changed, one baked in today may match
+   somebody else entirely tomorrow. And a display name is self-chosen and
+   unverified, so it identifies no one in the first place. A
+   **U**niversally **U**nique **ID**entifier (UUID) link has none of these
+   failure modes: it is stable across renames, it always resolves to exactly
+   one rider, and what it resolves to stays under that rider's control forever.
+   **The honest limit:** the licence itself survives us — it is literal text in
+   the file, readable whether or not this site exists. Only the *identity*
+   behind the attribution resolves through us, so an owner can be recollected
+   from a photo for exactly as long as Cycling Commons is online. That is the
+   correct half to make dependent: the revocable part is the part that must be
+   revocable.
 4. **Everything stored as WebP.** Original and both derivatives re-encode to
    WebP (best compression; universally supported). Input formats
    JPEG/PNG/WebP/HEIC all normalize to WebP output.
@@ -113,6 +146,11 @@ Processing (synchronous, Imagick + ext-exif):
 4. Downscale to ≤ 3840 px longest side → `orig.webp` (quality ~85).
 5. Derivatives: 1400 px wide → `lg.webp` (q82), 520 px wide → `sm.webp`
    (q80). Never upscale — a 900 px upload gets orig=lg=900 px, sm=520 px.
+6. **Write the authored rights packet** (§1.3c) into `orig` and `lg` — the two
+   variants a reuser plausibly saves. Not into `sm`: the packet is ~1.1 KB and
+   a 520 px thumbnail encodes to well under a kilobyte, so it would more than
+   triple the file for a variant nobody redistributes. WebP carries XMP
+   natively in its container, so this costs no format compromise.
 
 Persistence: a `media_upload` row —
 `id (uuid) · user_id · status (pending|approved|rejected) · continent
@@ -269,6 +307,31 @@ purpose-built pipeline predates this principle by deliberate decision,
 [route-domain.md](route-domain.md) §1; reconciling the two is out of scope
 here and would be its own owner decision.)
 
+### 5d. The photo page — where the embedded link lands
+
+`GET /photo/<media-uuid>` is a small public page, and it is the target of both
+`xmpRights:WebStatement` and `cc:attributionURL` in every stored file
+(§1.3c). A reuser holding nothing but the file needs somewhere to land that
+tells them what they may do and whom to credit; that is precisely what a web
+statement is for.
+
+It renders, for an **approved** photo only: the photo, the licence with its
+deed link, the attribution line, and a link to the full-resolution `orig` as
+the reuse asset. A pending, rejected or disposed uuid renders a plain "this
+photo is not published" — the queue is still the only place a pending photo is
+linked from, and the page must not become a second way to find one.
+
+The attribution line is resolved **at render time, never baked**:
+
+- public profile → the rider's display name, linked to `/riders/<uuid>`;
+- private profile → "an anonymous rider";
+- deleted account → whatever §6's deletion choice recorded.
+
+That is the whole reason the file carries a link instead of a name. The rider's
+identity is stated in exactly one place, under their control, and changing it
+is retroactive across every copy of the file that has ever been downloaded or
+mirrored.
+
 ## 6. Disposal & garbage collection
 
 The disposal *classes* are owned by
@@ -300,8 +363,24 @@ the Trash action itself (no window means no sweep).
 - Account deletion: the existing deletion-hook chain gains a media hook —
   pending/rejected uploads are deleted outright; approved photos on served
   items stay (they are CC BY-SA-licensed contributions to the commons —
-  same reasoning as anonymized ballots) but the credit falls back to
-  anonymous.
+  same reasoning as anonymized ballots).
+  **The credit is the rider's call, made at deletion time**, because that is
+  when they actually know what they want. One choice on the delete-account
+  confirmation, default **anonymize**:
+  - *anonymize* — every surface stops naming them: the item's `photos[]`
+    credit, the photo page (§5d), and therefore the attribution reached from
+    every file already downloaded or mirrored;
+  - *keep my name on my photos* — the display name is frozen onto the
+    approved rows and keeps rendering after the account is gone. Offered only
+    to a rider whose profile is public, and enforced server-side, not merely
+    hidden in the form: deletion may **preserve** a credit that was already
+    visible, never **create** one. A private rider has never been named on
+    their photos, and their departure is not the moment to start.
+
+  This choice is meaningful only because the file carries a link rather than a
+  name (§1.3c): it reaches copies that left this site years ago. It is also the
+  reason no name is embedded — an embedded one would make the anonymize option
+  a promise we could not keep.
 
 ## 7. Limits & formats summary
 
@@ -312,17 +391,27 @@ the Trash action itself (no window means no sweep).
 | max upload | 15 MB |
 | stored original | ≤ 3840 px longest side, metadata-stripped, q85 |
 | derivatives | 1400 px q82 · 520 px q80 (never upscaled) |
+| embedded rights block | `orig` + `lg` only (~1.1 KB XMP); never `sm` |
+| embedded author name | never — attribution is a UUID link (§1.3c) |
 | min input | 200 px shortest side |
 | per submission | 6 photos |
 | rate limit | 30 uploads/day/user |
 
 ## 8. Testing
 
-- **Unit (processor):** fixture images — GPS-EXIF JPEG (assert metadata
-  gone from every stored output AND `taken_at`/GPS extracted
-  correctly), EXIF-rotated image (assert pixels oriented), oversized
+- **Unit (processor):** fixture images — GPS-EXIF JPEG (assert every
+  *inherited* profile is gone from all three outputs AND `taken_at`/GPS
+  extracted correctly), EXIF-rotated image (assert pixels oriented), oversized
   image (assert 3840 cap), small image (assert no upscale), PNG/WebP inputs
   (assert WebP out), corrupt file (assert typed rejection).
+- **Unit (rights block, §1.3c):** `orig` and `lg` carry exactly one XMP
+  profile and `sm` carries none; the packet contains the licence, the photo
+  page URL and no `dc:creator` / `cc:attributionName` — a regression here
+  would embed a name, which is the one thing that cannot be undone.
+- **Functional (photo page, §5d):** an approved uuid renders licence and
+  attribution; a pending, rejected or unknown uuid renders "not published";
+  the attribution follows profile visibility and the deletion choice rather
+  than any stored copy of the name.
 - **Functional:** upload auth/CSRF/rate-limit/size/format paths; consent
   required; wizard submit carries `mediaIds` and intake stamps rows
   (foreign/consumed ids rejected); approve attaches `photos[]` with the
