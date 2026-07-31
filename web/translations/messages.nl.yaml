@@ -1538,6 +1538,8 @@ moderate:
   overview:
     showing: '%shown% van %total% in behandeling'
   msg:
+    about_photo: 'Over een foto'
+    no_photo: '— de bijdrage zelf'
     summary: 'Stuur de fietser een bericht'
     placeholder: 'Je bericht — vraag om meer informatie of voeg een persoonlijke notitie toe…'
     send: 'Bericht versturen'
@@ -1693,6 +1695,7 @@ account:
   route_state_retired: 'teruggetrokken'
 
 messages:
+  photo_alt: 'De foto waar dit bericht over gaat'
   title: 'Jouw berichten'
   empty: 'Nog geen berichten — beslissingen over je bijdragen verschijnen hier.'
   from_curator: 'Van een curator'

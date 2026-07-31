@@ -18,6 +18,8 @@
   .msg-meta{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;white-space:nowrap}
   .msg-ref{font-family:var(--mono);font-size:.68rem;color:#595c4d;margin-bottom:.5rem}
   .msg-body{font-size:.9rem;line-height:1.55;color:var(--ink)}
+  .msg-photo{margin:.4rem 0}
+  .msg-photo img{width:120px;height:90px;object-fit:cover;border-radius:5px;display:block}
   .msg-map-link{display:inline-block;margin-top:.45rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .msg-map-link:hover{color:var(--trail)}
   .msg-note{font-size:.88rem;line-height:1.55;color:#4a4d40;background:var(--paper);border-left:2px solid var(--glacier);padding:.6rem .85rem;border-radius:0 5px 5px 0;margin-top:.55rem}
@@ -53,6 +55,12 @@
           </div>
           <div class="msg-ref">{{ m.refLabel }}</div>
           <div class="msg-body">
+            {% if m.mediaId and message_photos[m.mediaId|trim] is defined %}
+              {# The photo this message is about (docs/specs/photo-uploads.md §5b). #}
+              <figure class="msg-photo">
+                <img src="{{ message_photos[m.mediaId|trim] }}" alt="{{ 'messages.photo_alt'|trans }}" loading="lazy" width="120" height="90">
+              </figure>
+            {% endif %}
             {% if m.bodyKey %}{{ m.bodyKey|trans(m.bodyParams ?? {}) }}{% endif %}
             {% if m.bodyText %}<p class="msg-note">{{ m.bodyText }}</p>{% endif %}
             {# link to the item — only for kinds whose subject is publicly on the

@@ -7,6 +7,8 @@ namespace App\Controller;
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionStatus;
 use App\Entity\User;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaStorage;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
@@ -34,6 +36,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 final class MessagesController extends AbstractController
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly MediaStorage $mediaStorage,
+    ) {
+    }
+
     #[Route('/messages', name: 'messages')]
     public function index(MessageService $messages, Connection $db): Response
     {
@@ -69,6 +77,7 @@ final class MessagesController extends AbstractController
             'cc_user' => $user,
             'messages' => $list,
             'replyable_submission_ids' => $replyableSubmissionIds,
+            'message_photos' => $this->messagePhotos($list),
         ]);
     }
 
@@ -138,5 +147,41 @@ final class MessagesController extends AbstractController
         $this->addFlash('success', 'messages.reply_sent');
 
         return $this->redirectToRoute('messages');
+    }
+
+    /**
+     * Thumbnail URL per referenced photo, keyed by uuid string
+     * (docs/specs/photo-uploads.md §5b). Built here rather than in the template
+     * so the storage router stays the only thing that knows how a photo is
+     * addressed. Rows whose photo has since been disposed of simply do not
+     * appear, and the message renders without a thumb.
+     *
+     * @param list<UserMessage> $messages
+     *
+     * @return array<string, string>
+     */
+    private function messagePhotos(array $messages): array
+    {
+        $ids = [];
+        foreach ($messages as $message) {
+            $mediaId = $message->getMediaId();
+            if (null !== $mediaId) {
+                $ids[] = $mediaId;
+            }
+        }
+        if ([] === $ids) {
+            return [];
+        }
+
+        $urls = [];
+        foreach ($this->em->getRepository(MediaUpload::class)->findBy(['id' => $ids]) as $upload) {
+            $urls[$upload->getId()->toRfc4122()] = $this->mediaStorage->url(
+                $upload->getContinent(),
+                $upload->getPathPrefix(),
+                'sm',
+            );
+        }
+
+        return $urls;
     }
 }

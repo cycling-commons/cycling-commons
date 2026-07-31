@@ -61,6 +61,19 @@
         <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
         <input type="hidden" name="channel" value="submission">
         <input type="hidden" name="id" value="{{ item.id }}">
+        {% if item.photos|length > 0 %}
+          {# A message may be about one specific photo (docs/specs/photo-uploads.md §5b).
+             Same thread, same form — the reference is a detail of an ordinary
+             message, not a second messaging system. #}
+          <label class="msg-photo-ref">{{ 'moderate.msg.about_photo'|trans }}
+            <select name="mediaId">
+              <option value="">{{ 'moderate.msg.no_photo'|trans }}</option>
+              {% for p in item.photos %}
+                <option value="{{ p.id }}">{{ loop.index }}{% if p.takenAt %} &middot; {{ p.takenAt }}{% endif %}</option>
+              {% endfor %}
+            </select>
+          </label>
+        {% endif %}
         <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
         <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
       </form>

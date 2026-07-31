@@ -10,6 +10,7 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\Entity\Submission;
 use App\Entity\User;
+use App\Media\Entity\MediaUpload;
 use App\Messaging\MessageService;
 use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
@@ -19,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * One endpoint for a curator to send a rider a free-form personal message
@@ -72,6 +74,19 @@ final class ModerateMessageController extends AbstractController
 
         [$recipientId, $refLabel, $regionId] = $recipient;
 
+        // Only a photo of THIS submission may be referenced. Anything else is
+        // dropped rather than refused: the curator's message is still worth
+        // delivering, and a dangling reference would be worse than none
+        // (docs/specs/photo-uploads.md §5b).
+        $mediaId = null;
+        $rawMediaId = (string) $request->request->get('mediaId', '');
+        if ('submission' === $channel && '' !== $rawMediaId && Uuid::isValid($rawMediaId)) {
+            $upload = $this->em->find(MediaUpload::class, Uuid::fromString($rawMediaId));
+            if (null !== $upload && $upload->getSubmissionId() === $id) {
+                $mediaId = $upload->getId();
+            }
+        }
+
         /** @var User $curator */
         $curator = $this->getUser();
 
@@ -80,7 +95,7 @@ final class ModerateMessageController extends AbstractController
         }
 
         try {
-            $sent = $this->messages->sendCurator($recipientId, (int) $curator->getId(), $channel, $id, $refLabel, $body);
+            $sent = $this->messages->sendCurator($recipientId, (int) $curator->getId(), $channel, $id, $refLabel, $body, $mediaId);
             if (null === $sent) {
                 // The referenced row's author/proposer id is a no-FK column
                 // (submission.user_id / route_suggestion.user_id /

@@ -9,6 +9,7 @@ namespace App\Messaging\Entity;
 use App\Messaging\UserMessageKind;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * A dashboard message delivered to a rider or curator: a decision outcome
@@ -68,6 +69,15 @@ class UserMessage
     #[ORM\Column(name: 'read_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $readAt = null;
 
+    /**
+     * Optional reference to one of the submission's photos
+     * (docs/specs/photo-uploads.md §5b). A detail of an ordinary message, not a
+     * second messaging system — and SET NULL on delete, because disposing of a
+     * photo must never delete the conversation about it.
+     */
+    #[ORM\Column(name: 'media_id', type: 'uuid', nullable: true)]
+    private ?Uuid $mediaId;
+
     /** @param array<string, mixed>|null $bodyParams */
     public function __construct(
         int $userId,
@@ -80,6 +90,7 @@ class UserMessage
         ?string $bodyKey,
         ?array $bodyParams,
         ?string $bodyText,
+        ?Uuid $mediaId = null,
     ) {
         $this->userId = $userId;
         $this->kind = $kind;
@@ -91,6 +102,7 @@ class UserMessage
         $this->bodyKey = $bodyKey;
         $this->bodyParams = $bodyParams;
         $this->bodyText = $bodyText;
+        $this->mediaId = $mediaId;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -114,6 +126,11 @@ class UserMessage
     public function getUserId(): int
     {
         return $this->userId;
+    }
+
+    public function getMediaId(): ?Uuid
+    {
+        return $this->mediaId;
     }
 
     public function getKind(): UserMessageKind

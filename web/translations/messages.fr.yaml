@@ -1538,6 +1538,8 @@ moderate:
   overview:
     showing: '%shown% sur %total% en attente'
   msg:
+    about_photo: 'À propos d''une photo'
+    no_photo: '— la contribution elle-même'
     summary: 'Envoyer un message au cycliste'
     placeholder: 'Votre message — demandez plus d''informations ou ajoutez une note personnelle…'
     send: 'Envoyer le message'
@@ -1693,6 +1695,7 @@ account:
   route_state_retired: 'retiré'
 
 messages:
+  photo_alt: 'La photo dont parle ce message'
   title: 'Vos messages'
   empty: 'Pas encore de message — les décisions sur vos contributions apparaîtront ici.'
   from_curator: 'D''un curateur'

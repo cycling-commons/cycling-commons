@@ -1538,6 +1538,8 @@ moderate:
   overview:
     showing: '%shown% von %total% ausstehend'
   msg:
+    about_photo: 'Zu einem Foto'
+    no_photo: '— der Beitrag selbst'
     summary: 'Nachricht an den Fahrer'
     placeholder: 'Deine Nachricht — frage nach weiteren Informationen oder füge eine persönliche Notiz hinzu…'
     send: 'Nachricht senden'
@@ -1693,6 +1695,7 @@ account:
   route_state_retired: 'zurückgezogen'
 
 messages:
+  photo_alt: 'Das Foto, um das es in dieser Nachricht geht'
   title: 'Deine Nachrichten'
   empty: 'Noch keine Nachrichten — Entscheidungen zu deinen Beiträgen erscheinen hier.'
   from_curator: 'Von einem Kurator'

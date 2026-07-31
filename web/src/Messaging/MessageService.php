@@ -9,6 +9,7 @@ namespace App\Messaging;
 use App\Messaging\Entity\UserMessage;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * The single owner of message writes and reads: system decision outcomes,
@@ -104,7 +105,7 @@ final class MessageService
      *
      * @throws \InvalidArgumentException if the trimmed body is empty or exceeds 2000 characters
      */
-    public function sendCurator(int $userId, int $curatorId, string $channel, int $refId, string $refLabel, string $bodyText): ?UserMessage
+    public function sendCurator(int $userId, int $curatorId, string $channel, int $refId, string $refLabel, string $bodyText, ?Uuid $mediaId = null): ?UserMessage
     {
         $body = $this->normalizeBody($bodyText, false);
 
@@ -112,7 +113,7 @@ final class MessageService
             return null;
         }
 
-        $message = new UserMessage($userId, UserMessageKind::CuratorMessage, 'curator', $curatorId, $channel, $refId, $refLabel, null, null, $body);
+        $message = new UserMessage($userId, UserMessageKind::CuratorMessage, 'curator', $curatorId, $channel, $refId, $refLabel, null, null, $body, $mediaId);
         $this->em->persist($message);
         $this->em->flush();
 
@@ -135,7 +136,7 @@ final class MessageService
      *
      * @throws \InvalidArgumentException if the trimmed body is empty or exceeds 2000 characters
      */
-    public function sendRiderReply(int $recipientCuratorId, int $riderId, string $channel, int $refId, string $refLabel, string $bodyText): ?UserMessage
+    public function sendRiderReply(int $recipientCuratorId, int $riderId, string $channel, int $refId, string $refLabel, string $bodyText, ?Uuid $mediaId = null): ?UserMessage
     {
         $body = $this->normalizeBody($bodyText, false);
 
@@ -143,7 +144,7 @@ final class MessageService
             return null;
         }
 
-        $message = new UserMessage($recipientCuratorId, UserMessageKind::RiderReply, 'rider', $riderId, $channel, $refId, $refLabel, null, null, $body);
+        $message = new UserMessage($recipientCuratorId, UserMessageKind::RiderReply, 'rider', $riderId, $channel, $refId, $refLabel, null, null, $body, $mediaId);
         $this->em->persist($message);
         $this->em->flush();
 

@@ -1544,6 +1544,8 @@ moderate:
   overview:
     showing: 'showing %shown% of %total% pending'
   msg:
+    about_photo: 'About a photo'
+    no_photo: '— the submission itself'
     summary: 'Message the rider'
     placeholder: 'Your message — request more information, or add a personal note…'
     send: 'Send message'
@@ -1699,6 +1701,7 @@ account:
   route_state_retired: 'retired'
 
 messages:
+  photo_alt: 'The photo this message is about'
   title: 'Your messages'
   empty: 'No messages yet — decisions on your contributions will appear here.'
   from_curator: 'From a curator'
