@@ -33,6 +33,10 @@ final class CspSubscriber implements EventSubscriberInterface
         // (dev: minio:9000 vs localhost:9100). Empty string means no coverage
         // host is added to the policy.
         private readonly string $coverageCspHost = '',
+        // Browser-facing origin of the rider-photo proxy (env MEDIA_CSP_HOST).
+        // Env-backed and never admin-editable: a writable CSP host would be an
+        // XSS-relaxation surface (docs/specs/photo-uploads.md §2).
+        private readonly string $mediaCspHost = '',
     ) {
     }
 
@@ -81,11 +85,26 @@ final class CspSubscriber implements EventSubscriberInterface
             $connectSrc[] = $this->coverageCspHost;
         }
 
+        $imgSrc = [
+            "'self'",
+            'data:',
+            'blob:',
+            'https://commons.wikimedia.org',
+            'https://upload.wikimedia.org',
+            'https://*.mapillary.com',
+            'https://*.fbcdn.net',
+        ];
+        if ('' !== $this->mediaCspHost) {
+            // Rider photos are fetched from the media proxy host
+            // (docs/specs/photo-uploads.md §2).
+            $imgSrc[] = $this->mediaCspHost;
+        }
+
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
             $scriptSrc,
             "style-src 'self' 'unsafe-inline' https://unpkg.com",
-            "img-src 'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net",
+            'img-src '.implode(' ', $imgSrc),
             "font-src 'self'",
             'connect-src '.implode(' ', $connectSrc),
             'worker-src blob:',

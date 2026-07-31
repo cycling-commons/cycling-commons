@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# Rider-media parameters (photo-uploads.md §2, §7).
+#
+# media.public_base is the browser-facing base URL: the owner-run proxy host in
+# production, the dev stack's published MinIO port locally. The continent code
+# is the first path segment after it.
+#
+# media.csp_host joins the Content-Security-Policy img-src exactly the way
+# coverage.csp_host joins connect-src — env-backed by design, never
+# admin-editable: a writable CSP host is an XSS-relaxation surface
+# (system-configuration.md rationale).
+#
+# media.default_continent catches uploads whose location cannot be resolved
+# (no pin yet, no EXIF GPS, or a point outside every onboarded region).
+parameters:
+    media.public_base: '%env(MEDIA_PUBLIC_BASE)%'
+    media.csp_host: '%env(MEDIA_CSP_HOST)%'
+    media.default_continent: '%env(MEDIA_DEFAULT_CONTINENT)%'

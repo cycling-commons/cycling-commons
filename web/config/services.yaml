@@ -39,6 +39,21 @@ services:
     App\EventSubscriber\CspSubscriber:
         arguments:
             $coverageCspHost: '%coverage.csp_host%'
+            $mediaCspHost: '%media.csp_host%'
+
+    # S3 client shared by every continent's storage: one set of credentials, one
+    # endpoint, many buckets (photo-uploads.md §2). Dev points it at the dev
+    # stack's MinIO, production at the Cycling Commons buckets — the signing
+    # region is ignored by MinIO and accepted by Hetzner, which is what lets one
+    # code path serve both (see pipeline/coverage/publish.py).
+    media.s3_client:
+        class: AsyncAws\S3\S3Client
+        arguments:
+            - endpoint: '%env(MEDIA_S3_ENDPOINT)%'
+              region: '%env(MEDIA_S3_REGION)%'
+              accessKeyId: '%env(MEDIA_S3_KEY)%'
+              accessKeySecret: '%env(MEDIA_S3_SECRET)%'
+              pathStyleEndpoint: true
 
 when@test:
     services:

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+# Rider photo storage, one storage per continent (photo-uploads.md §1.2, §2).
+#
+# Every environment except test talks S3 through media.s3_client: dev points it
+# at the dev stack's MinIO, staging and production at their own Cycling Commons
+# buckets. One code path, endpoint and credentials supplied by the environment —
+# the same arrangement pipeline/coverage/publish.py already uses. Riders'
+# browsers never address the bucket directly; they fetch from MEDIA_PUBLIC_BASE,
+# which in production is the owner-run caching proxy routing on the first path
+# segment (the continent code).
+#
+# There is deliberately no when@prod and no when@dev block. This project runs a
+# real staging environment and has no when@staging block anywhere in config/
+# (`grep -rho 'when@[a-z]*' config/ | sort -u` returns only dev, prod, test), so
+# anything gated on when@prod silently falls through to the base configuration
+# on staging — which for storage would mean writing rider photos onto a staging
+# box's local disk. Env-driven configuration cannot have that gap.
+#
+# when@test is the one exception: the in-memory adapter keeps suites hermetic.
+#
+# Onboarding a continent: add a bucket, add a storage here, add one line to the
+# App\Media\MediaStorage $storages map in services.yaml. No code changes.
+flysystem:
+    storages:
+        media.storage.eu:
+            adapter: 'asyncaws'
+            options:
+                client: 'media.s3_client'
+                bucket: '%env(MEDIA_S3_BUCKET_EU)%'
+
+when@test:
+    flysystem:
+        storages:
+            media.storage.eu:
+                adapter: 'memory'

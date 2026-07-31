@@ -17,6 +17,8 @@ framework:
                 adapter: cache.adapter.filesystem
             cache.curator_application_limiter:
                 adapter: cache.adapter.filesystem
+            cache.media_upload_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -67,6 +69,15 @@ framework:
             limit: 3
             interval: '1 day'
             cache_pool: cache.curator_application_limiter
+        # Photo uploads (photo-uploads.md §7): generous for a real day of
+        # contributing, bounded against bulk abuse. Each accepted upload costs
+        # an Imagick decode plus three encodes, so this is a compute gate as
+        # much as a storage one.
+        media_upload:
+            policy: sliding_window
+            limit: 30
+            interval: '1 day'
+            cache_pool: cache.media_upload_limiter
 
 when@test:
     framework:
@@ -83,4 +94,6 @@ when@test:
                 cache.country_interest_limiter:
                     adapter: cache.adapter.array
                 cache.curator_application_limiter:
+                    adapter: cache.adapter.array
+                cache.media_upload_limiter:
                     adapter: cache.adapter.array

@@ -5,9 +5,23 @@ FROM php:8.4-fpm
 # pdo_pgsql for PostgreSQL/PostGIS; gettext for sokil/php-isocodes translations
 # (app:world:import); intl (needs libicu-dev) for EasyAdmin date/time formatting
 # and locale-aware i18n; git+unzip for composer.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq-dev libicu-dev git unzip \
+#
+# imagick decodes and re-encodes rider photos (docs/specs/photo-uploads.md §3).
+# libwebp-dev is mandatory — WebP is the ONLY stored format. libheif-dev is what
+# makes HEIC (the iPhone default) readable; PhotoProcessor feature-detects the
+# delegate at runtime, so a build without it degrades to a clear photo_format
+# error rather than a crash.
+#
+# Acquire::Retries is not decoration: deb.debian.org's index for trixie is a
+# 13 MB file and a flaky link drops the connection part-way, which fails the
+# whole build with a bare "Some index files failed to download".
+RUN apt-get -o Acquire::Retries=15 update \
+    && apt-get install -y --no-install-recommends \
+        libpq-dev libicu-dev git unzip \
+        libmagickwand-dev libwebp-dev libheif-dev \
     && docker-php-ext-install pdo_pgsql gettext intl \
+    && pecl install imagick \
+    && docker-php-ext-enable imagick \
     && rm -rf /var/lib/apt/lists/*
 
 # Route GPX proposals can be up to 15 MB (spec §5.3/§15) — the php defaults

@@ -48,6 +48,34 @@ services:
       COVERAGE_TILES: "${COVERAGE_TILES:-1}"
       COVERAGE_MANIFEST_URL: "${COVERAGE_MANIFEST_URL:-}"
       COVERAGE_CSP_HOST: "${COVERAGE_CSP_HOST:-}"
+      # Rider media (photo-uploads.md §2). The credentials deliberately derive
+      # from MINIO_ROOT_USER/PASSWORD — the same two variables the minio service
+      # itself uses, set in developers/docker/.env from .env.example — so there
+      # is exactly one place to change them and nothing to keep in sync.
+      # Staging and production supply MEDIA_S3_* directly and never reach these
+      # defaults.
+      #
+      # To use a MinIO running on the host instead of the bundled one (and skip
+      # the `storage` profile entirely), override in developers/docker/.env,
+      # following the MAILER_DSN precedent above:
+      #   MEDIA_S3_ENDPOINT=http://host.docker.internal:9000
+      #   MEDIA_S3_KEY=…  MEDIA_S3_SECRET=…  MEDIA_S3_BUCKET_EU=cc-media-eu
+      #   MEDIA_PUBLIC_BASE=http://localhost:9000
+      #   MEDIA_CSP_HOST=http://localhost:9000
+      # Those belong HERE, not in web/.env.dev.local: compose injects them as
+      # real process environment variables, which beat every Symfony .env* file.
+      #
+      # Two hostnames, not interchangeable: the app writes server-side over the
+      # compose network (minio:9000) while the browser reads from the published
+      # port (localhost:9100).
+      MEDIA_S3_ENDPOINT: "${MEDIA_S3_ENDPOINT:-http://minio:9000}"
+      MEDIA_S3_REGION: "${MEDIA_S3_REGION:-us-east-1}"
+      MEDIA_S3_KEY: "${MEDIA_S3_KEY:-${MINIO_ROOT_USER:-ccadmin}}"
+      MEDIA_S3_SECRET: "${MEDIA_S3_SECRET:-${MINIO_ROOT_PASSWORD:-ccadminsecret}}"
+      MEDIA_S3_BUCKET_EU: "${MEDIA_S3_BUCKET_EU:-cc-media-eu}"
+      MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9100}"
+      MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9100}"
+      MEDIA_DEFAULT_CONTINENT: "${MEDIA_DEFAULT_CONTINENT:-EU}"
     volumes:
       - ../../web:/app
       - cc_api_vendor:/app/vendor   # keep built vendor/ from being shadowed by the bind mount
