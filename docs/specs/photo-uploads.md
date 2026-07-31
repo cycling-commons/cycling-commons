@@ -34,10 +34,10 @@ context). Media licensing context lives in the site licences
 3b. **Harvest **E**xchangeable **I**mage **F**ile format (EXIF) metadata
    before stripping — the data is valuable (owner decision 2026-07-31).**
    Stored *files* carry no metadata (no XMP author fields, no serials, no
-   coordinates), but three facts are extracted first as structured data:
+   coordinates), but two facts are extracted first as structured data:
    **capture date** (`taken_at` — public seasonal context: an autumn view
-   reads differently from a summer one), **camera model** (curator
-   context), and the **G**lobal **P**ositioning **S**ystem (GPS)
+   reads differently from a summer one) and the
+   **G**lobal **P**ositioning **S**ystem (GPS)
    coordinates — used once to *confirm the photo's location*: at intake the distance between the photo's coordinates and the
    submission pin is computed and surfaced to the curator ("taken ~340 m
    from the pin"), then the raw coordinates are discarded. Only the distance
@@ -79,8 +79,7 @@ context). Media licensing context lives in the site licences
   serve directory indexes. If pending media ever needs real access
   control, that means serving those objects through an authorizing layer
   (the app, or auth at the proxy) — an option considered during design and
-  not chosen for v1; decision §1.2 itself only chose the owner-run proxy
-  host over direct bucket URLs.
+  not chosen for v1.
 
 ## 3. Upload endpoint
 
@@ -104,8 +103,10 @@ Validation (server-side, content-sniffed via finfo — never the extension):
 
 Processing (synchronous, Imagick + ext-exif):
 1. **Extract** from the original bytes (spec §1.3b): `taken_at`
-   (DateTimeOriginal), `camera` (Make/Model), and the GPS coordinates —
-   held privately on the row until intake.
+   (DateTimeOriginal) and the GPS coordinates —
+   held privately on the row until intake. (Camera make/model is
+   deliberately NOT harvested — no real use, and device model is a
+   fingerprinting crumb; owner decision 2026-07-31.)
 2. Auto-orient (bake the EXIF orientation into pixels).
 3. **Strip all metadata from the stored files** — EXIF (incl. GPS), IPTC,
    XMP, ICC beyond sRGB.
@@ -116,7 +117,7 @@ Processing (synchronous, Imagick + ext-exif):
 Persistence: a `media_upload` row —
 `id (uuid) · user_id · status (pending|approved|rejected) · continent
 (CHAR(2), the storage shard) · width · height ·
-bytes · taken_at (nullable) · camera (nullable) · gps_lat/gps_lng (nullable,
+bytes · taken_at (nullable) · gps_lat/gps_lng (nullable,
 PRIVATE — cleared at intake) · gps_distance_m (nullable, computed at intake)
 · consented_at · created_at · submission_id (nullable, set at submit)`.
 At intake (claim), the distance photo-GPS → submission pin is computed into
@@ -150,7 +151,7 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
 
 Nothing public until approved — the rule everywhere else, applied here:
 - The moderation queue renders the submission's pending photos inline
-  (`sm` URLs) with their harvested context — capture date, camera, and the
+  (`sm` URLs) with their harvested context — capture date and the
   GPS-to-pin distance when the photo carried coordinates ("taken ~340 m
   from the pin") — so the curator judges the photo with the facts.
 - **Approve** → uploads flip to `approved`, and the item's `photos[]`
@@ -197,7 +198,7 @@ One console command (`app:media:gc`, cron-able, ResetPasswordCleanup shape):
 ## 8. Testing
 
 - **Unit (processor):** fixture images — GPS-EXIF JPEG (assert metadata
-  gone from every stored output AND `taken_at`/`camera`/GPS extracted
+  gone from every stored output AND `taken_at`/GPS extracted
   correctly), EXIF-rotated image (assert pixels oriented), oversized
   image (assert 3840 cap), small image (assert no upscale), PNG/WebP inputs
   (assert WebP out), corrupt file (assert typed rejection).
