@@ -31,20 +31,22 @@ production database. The nine measured gaps are catalogued in
 
 ## 2. Deployment context (why the code target is "fit a fixed budget")
 
-Production is the upstream platform Hetzner cluster: LB, 2× web, **1× DB/Redis
-host**, 1× messenger/valhalla worker. Per the accepted infra decision, CC moves
-to its **own Postgres cluster on that same DB host** (a second `postgres`
-process — separate port, data dir, `shared_buffers`, WAL, autovacuum — *not* a
-second database in Upstream's instance). Upstream keeps the original cluster.
+Production is a shared Hetzner cluster: LB, 2× web, **1× DB/Redis host**,
+1× messenger/valhalla worker — infrastructure CC shares with an unrelated
+sibling application. Per the accepted infra decision, CC runs its **own
+Postgres cluster on that same DB host** (a second `postgres` process —
+separate port, data dir, `shared_buffers`, WAL, autovacuum — *not* a second
+database in the sibling's instance). The sibling app keeps the original
+cluster.
 
 Consequence for this code:
 
 - **Logical isolation is free** (separate xmin horizon, buffers, WAL) — CC's
-  harvest can no longer stall Upstream's autovacuum or evict Upstream's buffers.
+  harvest can no longer stall the sibling's autovacuum or evict its buffers.
 - **Physical RAM is shared** and the Linux OOM killer ignores cluster
   boundaries. So bounding the harvest's memory footprint is what stops CC's
-  harvest from OOM-killing Upstream. **This is the reframing of issue #9: keep
-  the harvest inside a fixed memory budget.**
+  harvest from OOM-killing its neighbour. **This is the reframing of issue
+  #9: keep the harvest inside a fixed memory budget.**
 - `coverage_poi` and `region` are co-located on CC's cluster, so every spatial
   join in `load_region` stays local and unchanged; the app keeps its single
   `DATABASE_URL` (now CC's cluster). The pipeline points `DATABASE_DSN` at the

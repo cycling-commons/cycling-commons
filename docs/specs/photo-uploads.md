@@ -19,11 +19,21 @@ context). Media licensing context lives in the site licences
    from the wizard (honest UI); video returns as its own feature someday.
 2. **CC bucket behind a proxy host.** Files live in a dedicated Cycling
    Commons object-storage bucket; riders' browsers fetch them from a
-   first-party proxy host **the owner runs** (cache.example.net-style). The app
-   only knows `MEDIA_PUBLIC_BASE`.
+   first-party caching proxy host **the owner runs** (the same pattern the
+   coverage tiles use). The app only knows `MEDIA_PUBLIC_BASE`.
 3. **Keep a stripped original — capped at 4K.** The stored "original" is
-   re-encoded with EXIF/GPS removed and downscaled to at most **3840 px on
-   the longest side**. Nothing larger is ever stored.
+   re-encoded with all embedded metadata removed and downscaled to at most
+   **3840 px on the longest side**. Nothing larger is ever stored.
+3b. **Harvest EXIF before stripping — the data is valuable (owner decision
+   2026-07-31).** Stored *files* carry no metadata (no XMP author fields, no
+   serials, no coordinates), but three facts are extracted first as
+   structured data: **capture date** (`taken_at` — public seasonal context:
+   an autumn view reads differently from a summer one), **camera model**
+   (curator context), and **GPS** — used once to *confirm the photo's
+   location*: at intake the distance between the photo's coordinates and the
+   submission pin is computed and surfaced to the curator ("taken ~340 m
+   from the pin"), then the raw coordinates are discarded. Only the distance
+   survives; nothing location-bearing is ever published or kept raw.
 4. **Everything stored as WebP.** Original and both derivatives re-encode to
    WebP (best compression; universally supported). Input formats
    JPEG/PNG/WebP/HEIC all normalize to WebP output.
@@ -60,17 +70,26 @@ Validation (server-side, content-sniffed via finfo — never the extension):
 - ≤ 15 MB (the GPX-cap precedent); shortest side ≥ 200 px.
 - Corrupt/undecodable files reject with `photo_unreadable`.
 
-Processing (synchronous, Imagick):
-1. Auto-orient (bake the EXIF orientation into pixels).
-2. **Strip all metadata** — EXIF (incl. GPS), IPTC, XMP, ICC beyond sRGB.
-3. Downscale to ≤ 3840 px longest side → `orig.webp` (quality ~85).
-4. Derivatives: 1400 px wide → `lg.webp` (q82), 520 px wide → `sm.webp`
+Processing (synchronous, Imagick + ext-exif):
+1. **Extract** from the original bytes (spec §1.3b): `taken_at`
+   (DateTimeOriginal), `camera` (Make/Model), and the GPS coordinates —
+   held privately on the row until intake.
+2. Auto-orient (bake the EXIF orientation into pixels).
+3. **Strip all metadata from the stored files** — EXIF (incl. GPS), IPTC,
+   XMP, ICC beyond sRGB.
+4. Downscale to ≤ 3840 px longest side → `orig.webp` (quality ~85).
+5. Derivatives: 1400 px wide → `lg.webp` (q82), 520 px wide → `sm.webp`
    (q80). Never upscale — a 900 px upload gets orig=lg=900 px, sm=520 px.
 
 Persistence: a `media_upload` row —
 `id (uuid) · user_id · status (pending|approved|rejected) · width · height ·
-bytes · consented_at · created_at · submission_id (nullable, set at submit)`.
-Response: `{id, sm, lg}` URLs (under `MEDIA_PUBLIC_BASE`).
+bytes · taken_at (nullable) · camera (nullable) · gps_lat/gps_lng (nullable,
+PRIVATE — cleared at intake) · gps_distance_m (nullable, computed at intake)
+· consented_at · created_at · submission_id (nullable, set at submit)`.
+At intake (claim), the distance photo-GPS → submission pin is computed into
+`gps_distance_m` and the raw coordinates are **nulled in the same
+transaction**; an unclaimed upload's coordinates disappear with it at orphan
+GC. Response: `{id, sm, lg}` URLs (under `MEDIA_PUBLIC_BASE`).
 
 ## 4. Wizard integration
 
@@ -97,9 +116,14 @@ Response: `{id, sm, lg}` URLs (under `MEDIA_PUBLIC_BASE`).
 
 Nothing public until approved — the rule everywhere else, applied here:
 - The moderation queue renders the submission's pending photos inline
-  (`sm` URLs), so the curator judges the photo with the facts.
+  (`sm` URLs) with their harvested context — capture date, camera, and the
+  GPS-to-pin distance when the photo carried coordinates ("taken ~340 m
+  from the pin") — so the curator judges the photo with the facts.
 - **Approve** → uploads flip to `approved`, and the item's `photos[]`
-  attribute gains `{sm, lg, credit, license: 'CC BY-SA 4.0'}` per photo —
+  attribute gains
+  `{sm, lg, credit, license: 'CC BY-SA 4.0', takenAt?: 'YYYY-MM'}` per
+  photo (`takenAt` month-granular — public seasonal context, never a
+  precise timestamp) —
   the exact shape the drawer/lightbox already render (photoList/photoCap),
   so the map needs zero changes. Credit follows the existing uploader rule:
   the rider's display name when their profile is public, anonymous
@@ -139,7 +163,8 @@ One console command (`app:media:gc`, cron-able, ResetPasswordCleanup shape):
 ## 8. Testing
 
 - **Unit (processor):** fixture images — GPS-EXIF JPEG (assert metadata
-  gone from output), EXIF-rotated image (assert pixels oriented), oversized
+  gone from every stored output AND `taken_at`/`camera`/GPS extracted
+  correctly), EXIF-rotated image (assert pixels oriented), oversized
   image (assert 3840 cap), small image (assert no upscale), PNG/WebP inputs
   (assert WebP out), corrupt file (assert typed rejection).
 - **Functional:** upload auth/CSRF/rate-limit/size/format paths; consent
