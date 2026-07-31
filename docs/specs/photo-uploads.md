@@ -17,8 +17,8 @@ context). Media licensing context lives in the site licences
 
 1. **Photos only.** The video drop zone AND the video link row are removed
    from the wizard (honest UI); video returns as its own feature someday.
-2. **CC buckets behind a proxy host — one bucket per continent (owner
-   decision 2026-07-31).** Files live in dedicated Cycling Commons
+2. **CC buckets behind a proxy host — one bucket per continent.**
+   Files live in dedicated Cycling Commons
    object-storage buckets, sharded by continent; riders' browsers fetch them
    from a first-party caching proxy host **the owner runs** (the same
    pattern the coverage tiles use), which routes by the URL's continent
@@ -32,7 +32,7 @@ context). Media licensing context lives in the site licences
    re-encoded with all embedded metadata removed and downscaled to at most
    **3840 px on the longest side**. Nothing larger is ever stored.
 3b. **Harvest **E**xchangeable **I**mage **F**ile format (EXIF) metadata
-   before stripping — the data is valuable (owner decision 2026-07-31).**
+   before stripping — the data is valuable.**
    Stored *files* carry no metadata (no XMP author fields, no serials, no
    coordinates), but two facts are extracted first as structured data:
    **capture date** (`taken_at` — public seasonal context: an autumn view
@@ -88,7 +88,7 @@ context). Media licensing context lives in the site licences
 (`media-upload` intention), rate-limited (`media_upload`,
 sliding window, 30/day per user). One photo per request, multipart; the
 wizard sends its current pin `lat`/`lng` alongside (step 1 precedes step 3).
-The storage continent resolves in order (owner decision 2026-07-31): the
+The storage continent resolves in order: the
 **pin coordinates** when present, else the photo's **EXIF GPS** (harvested
 in §3 step 1 anyway), else `MEDIA_DEFAULT_CONTINENT`. The resolved code is
 stored on the row (`continent CHAR(2)`).
@@ -106,7 +106,7 @@ Processing (synchronous, Imagick + ext-exif):
    (DateTimeOriginal) and the GPS coordinates —
    held privately on the row until intake. (Camera make/model is
    deliberately NOT harvested — no real use, and device model is a
-   fingerprinting crumb; owner decision 2026-07-31.)
+   fingerprinting crumb.)
 2. Auto-orient (bake the EXIF orientation into pixels).
 3. **Strip all metadata from the stored files** — EXIF (incl. GPS), IPTC,
    XMP, ICC beyond sRGB.
@@ -122,17 +122,13 @@ PRIVATE — cleared at intake) · gps_distance_m (nullable, computed at intake)
 · consent_record_id (FK, NOT NULL — see below) · created_at ·
 submission_id (nullable, set at submit)`.
 
-**Consent ledger (owner decision 2026-07-31).** A timestamp alone proves
-*when*, not *what* was consented to, so consent is a first-class,
-append-only record: `consent_record` —
+**Consent ledger.** Consent is a first-class, append-only record:
+`consent_record` —
 `id (uuid) · user_id · kind ('media-cc-by-sa') · version (tag of the
 consent wording) · text_hash (sha256 of the exact text shown) ·
 consented_at`. One row per consent act (each modal tick); the uploads made
 under it reference it. Rows are immutable and are never deleted — the
-licence grant survives the account (account deletion keeps the record, the
-same reasoning that keeps approved photos in the commons). `kind` leaves
-room for future consent flows (terms, other donations) without a generic
-framework being built now.
+licence grant survives the account.
 At intake (claim), the distance photo-GPS → submission pin is computed into
 `gps_distance_m` and the raw coordinates are **nulled in the same
 transaction**; an unclaimed upload's coordinates disappear with it at orphan
@@ -178,7 +174,7 @@ Nothing public until approved — the rule everywhere else, applied here:
   so the map needs zero changes. Credit follows the existing uploader rule:
   the rider's display name when their profile is public, anonymous
   otherwise.
-- **Per-photo decisions (owner decision 2026-07-31).** The queue decides
+- **Per-photo decisions.** The queue decides
   photos individually, defaulting to the submission's decision: approving a
   submission approves its photos unless the curator unticks one; a single
   photo can be rejected while the submission's facts are approved (and vice
@@ -190,7 +186,7 @@ Nothing public until approved — the rule everywhere else, applied here:
 - Photo-URL *links* keep working exactly as today: reviewer context in the
   payload, never auto-attached.
 
-### 5b. Full moderation history + discussion (owner decision 2026-07-31)
+### 5b. Full moderation history + discussion
 
 - **Append-only event log** `media_moderation_event`, modelled on the
   item-side precedent — items already have exactly this in
@@ -223,7 +219,6 @@ Nothing public until approved — the rule everywhere else, applied here:
   the complete story of a photo = its event log + the submission thread.
 
 ### 5c. Principle: one way to moderate, regardless of content type
-(owner principle 2026-07-31)
 
 Photos deliberately add **zero new moderation mechanics**: the same queue,
 the same approve/reject decision on the same submission, the same message
