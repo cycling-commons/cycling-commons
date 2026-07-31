@@ -197,8 +197,17 @@ Nothing public until approved — the rule everywhere else, applied here:
   `{sm, lg, credit, license: 'CC BY-SA 4.0', takenAt?: 'YYYY-MM'}` per
   photo (`takenAt` month-granular — public seasonal context, never a
   precise timestamp) —
-  the exact shape the drawer/lightbox already render (photoList/photoCap),
-  so the map needs zero changes. Credit follows the existing uploader rule:
+  the exact shape the drawer/lightbox already render (photoList/photoCap).
+  **Responsive serving:** every photo `<img>` on rider-facing surfaces (map
+  drawer, lightbox, wizard current-photos strip, moderation-queue thumbs)
+  carries `srcset="{sm} 520w, {lg} 1400w"` with a fitting `sizes`
+  attribute, so each device downloads the best-sized variant automatically
+  instead of a hard-wired choice; the full-resolution `orig` stays out of
+  `srcset` (it is the reuse/download asset, not a display candidate).
+  This applies uniformly to existing (Wikimedia-sourced) photos too — they
+  carry the same sm/lg pair by convention, so the one srcset change in the
+  shared render helpers upgrades every photo on the site at once.
+  Credit follows the existing uploader rule:
   the rider's display name when their profile is public, anonymous
   otherwise.
 - **Per-photo decisions.** The queue decides
@@ -326,4 +335,8 @@ the Trash action itself (no window means no sweep).
 - Video (removed from UI; future feature).
 - Backfilling Wikimedia-photo items — untouched, same attribute shape.
 - The proxy host itself (owner-run infrastructure).
-- Serving additional image formats or letting browsers pick sizes: the newer **AV**1 **I**mage **F**ile format (AVIF) compresses ~20-30 % better than WebP but would mean a second encoded set per photo plus format negotiation; responsive `srcset` markup would let each device auto-select the best-sized variant instead of the hard-wired sm/lg choice. Both are serving-side optimizations that touch no stored data — WebP-only with fixed variants is the deliberate v1.
+- Serving additional image formats: the newer **AV**1 **I**mage **F**ile
+  format (AVIF) compresses ~20-30 % better than WebP but would mean a
+  second encoded set per photo plus format negotiation — a serving-side
+  optimization touching no stored data; WebP-only is the deliberate v1.
+  (Responsive `srcset` serving IS in scope — §5.)
