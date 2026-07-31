@@ -162,10 +162,11 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
 - **From then on, the given consent is always shown.** Once a consent
   record exists for the current wording version, the photo step renders a
   standing notice instead of locked controls — "✓ You donate your photos
-  under CC BY-SA 4.0 · consented <date>" with the contract text one tap
-  away — on this and every later visit (the wizard bootstraps via
-  `GET /media/consent/current`, which returns the caller's latest record
-  for the current `kind` + `version`). The review step repeats the notice
+  under CC BY-SA 4.0; approved photos are **published under the Commons'
+  terms** · consented <date>" — with the contract text and the site terms
+  each one tap away — on this and every later visit (the wizard bootstraps
+  via `GET /media/consent/current`, which returns the caller's latest
+  record for the current `kind` + `version`). The review step repeats the notice
   beside the queued photos, so what the rider is about to submit and the
   licence they granted are visible together. The modal only ever returns
   when the consent **wording version changes** — a new version means a new
