@@ -1794,6 +1794,8 @@ form:
   ph_code: '123456'
   help_public_profile: 'Als dit uit staat, is je profiel verborgen en blijven bijdragen anoniem.'
   error_display_name_taken: 'Deze weergavenaam is al in gebruik.'
+  error_display_name_spacing: 'Gebruik enkele, gewone spaties in je weergavenaam.'
+  error_display_name_compatibility: 'Gebruik gewone letters in je weergavenaam.'
   label_bike_types: 'Jouw fietsen'
   help_bike_types: 'Vink alles aan wat van toepassing is.'
   label_riding_styles: 'Soort ritten'

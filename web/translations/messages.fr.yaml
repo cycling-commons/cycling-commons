@@ -1794,6 +1794,8 @@ form:
   ph_code: '123456'
   help_public_profile: 'Désactivé, votre profil est masqué et vos contributions restent anonymes.'
   error_display_name_taken: 'Ce nom d''affichage est déjà pris.'
+  error_display_name_spacing: 'Utilisez des espaces simples et ordinaires dans votre nom d''affichage.'
+  error_display_name_compatibility: 'Utilisez des lettres ordinaires dans votre nom d''affichage.'
   label_bike_types: 'Vos vélos'
   help_bike_types: 'Cochez tout ce qui s''applique.'
   label_riding_styles: 'Type de pratique'
