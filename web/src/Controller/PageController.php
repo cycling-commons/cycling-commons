@@ -137,6 +137,16 @@ final class PageController extends AbstractController
         ]);
     }
 
+    #[Route('/credits', name: 'credits')]
+    public function credits(): Response
+    {
+        return $this->render('pages/credits.html.twig', [
+            'page_title' => 'meta.credits_title',
+            'page_description' => 'meta.credits_description',
+            'nav_active' => '',
+        ]);
+    }
+
     #[Route('/join', name: 'join')]
     public function join(): Response
     {

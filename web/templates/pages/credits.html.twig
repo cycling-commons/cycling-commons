@@ -1,0 +1,136 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .chero{background:var(--ink);color:var(--paper);padding:3rem 0}
+  .cgroup{margin-top:2.6rem}
+  .cgroup:first-child{margin-top:0}
+  .cgroup h3{font-family:var(--serif);font-weight:600;font-size:1.45rem}
+  .cgroup .gsub{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin:.2rem 0 .4rem}
+  .crow{display:grid;grid-template-columns:minmax(190px,250px) 1fr;gap:.4rem 1.4rem;padding:1rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+  .crow:last-child{border-bottom:0}
+  .crow .who a{font-weight:600;text-decoration:none;border-bottom:1px solid var(--trail)}
+  .crow .who .lic{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-top:.3rem}
+  .crow p{font-size:.92rem;color:#3a3d30;margin:0}
+  @media(max-width:640px){.crow{grid-template-columns:1fr;gap:.3rem}}
+  .cnote{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin-top:2.4rem}
+</style>
+{% endblock %}
+{% block body %}
+<div class="chero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}credits.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}credits.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}credits.lead{% endtrans %}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+
+  <div class="cgroup">
+    <h3>{% trans %}credits.data_h{% endtrans %}</h3>
+    <div class="gsub">{% trans %}credits.data_sub{% endtrans %}</div>
+    <div class="crow">
+      <div class="who"><a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a><span class="lic">ODbL 1.0 · © OpenStreetMap contributors</span></div>
+      <p>{% trans %}credits.osm_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://geoportail.wallonie.be/">Géoportail de la Wallonie · PIVOT</a><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
+      <p>{% trans %}credits.wallonia_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://www.nationaalgeoregister.nl/">Nationaal Georegister (NL)</a><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
+      <p>{% trans %}credits.georegister_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://www.geofabrik.de/">Geofabrik</a><span class="lic">{% trans %}credits.lic_osm_extracts{% endtrans %}</span></div>
+      <p>{% trans %}credits.geofabrik_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://www.drinkwaterkaart.nl/">Drinkwaterkaart.nl</a><span class="lic">{% trans %}credits.lic_linked{% endtrans %}</span></div>
+      <p>{% trans %}credits.drinkwater_p{% endtrans %}</p>
+    </div>
+  </div>
+
+  <div class="cgroup">
+    <h3>{% trans %}credits.map_h{% endtrans %}</h3>
+    <div class="gsub">{% trans %}credits.map_sub{% endtrans %}</div>
+    <div class="crow">
+      <div class="who"><a href="https://maplibre.org/">MapLibre GL JS</a><span class="lic">BSD-3-Clause</span></div>
+      <p>{% trans %}credits.maplibre_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://openfreemap.org/">OpenFreeMap</a><span class="lic">{% trans %}credits.lic_free_tiles{% endtrans %}</span></div>
+      <p>{% trans %}credits.openfreemap_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://protomaps.com/">Protomaps · PMTiles</a><span class="lic">BSD-3-Clause</span></div>
+      <p>{% trans %}credits.protomaps_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://nominatim.org/">Nominatim</a><span class="lic">GPL-2.0</span></div>
+      <p>{% trans %}credits.nominatim_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://github.com/komoot/photon">Photon</a><span class="lic">Apache-2.0</span></div>
+      <p>{% trans %}credits.photon_p{% endtrans %}</p>
+    </div>
+  </div>
+
+  <div class="cgroup">
+    <h3>{% trans %}credits.software_h{% endtrans %}</h3>
+    <div class="gsub">{% trans %}credits.software_sub{% endtrans %}</div>
+    <div class="crow">
+      <div class="who"><a href="https://symfony.com/">Symfony</a><span class="lic">MIT</span></div>
+      <p>{% trans %}credits.symfony_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://postgis.net/">PostgreSQL + PostGIS</a><span class="lic">PostgreSQL License · GPL-2.0</span></div>
+      <p>{% trans %}credits.postgis_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://github.com/sokil/php-isocodes">sokil/php-isocodes</a><span class="lic">MIT</span></div>
+      <p>{% trans %}credits.isocodes_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://github.com/cycling-commons/cycling-commons">{% trans %}credits.oss_more_who{% endtrans %}</a><span class="lic">{% trans %}credits.lic_various{% endtrans %}</span></div>
+      <p>{% trans %}credits.oss_more_p{% endtrans %}</p>
+    </div>
+  </div>
+
+  <div class="cgroup">
+    <h3>{% trans %}credits.design_h{% endtrans %}</h3>
+    <div class="gsub">{% trans %}credits.design_sub{% endtrans %}</div>
+    <div class="crow">
+      <div class="who"><a href="https://fonts.google.com/specimen/Bricolage+Grotesque">Bricolage Grotesque</a><span class="lic">SIL OFL 1.1</span></div>
+      <p>{% trans %}credits.bricolage_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://fonts.google.com/specimen/Spline+Sans">Spline Sans &amp; Spline Sans Mono</a><span class="lic">SIL OFL 1.1</span></div>
+      <p>{% trans %}credits.splinesans_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://github.com/lipis/flag-icons">flag-icons</a><span class="lic">MIT · {% trans %}credits.lic_flags_pd{% endtrans %}</span></div>
+      <p>{% trans %}credits.flags_p{% endtrans %}</p>
+    </div>
+  </div>
+
+  <div class="cgroup">
+    <h3>{% trans %}credits.people_h{% endtrans %}</h3>
+    <div class="gsub">{% trans %}credits.people_sub{% endtrans %}</div>
+    <div class="crow">
+      <div class="who"><a href="{{ path('contributors') }}">{% trans %}credits.people_contributors_who{% endtrans %}</a></div>
+      <p>{% trans %}credits.people_contributors_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://www.openstreetmap.org/">{% trans %}credits.people_osm_who{% endtrans %}</a></div>
+      <p>{% trans %}credits.people_osm_p{% endtrans %}</p>
+    </div>
+    <div class="crow">
+      <div class="who"><a href="https://bikecoders.life">BikeCoders</a></div>
+      <p>{% trans %}credits.people_steward_p{% endtrans %}</p>
+    </div>
+  </div>
+
+  <div class="cnote"><b>{% trans %}credits.note_b{% endtrans %}</b> {% trans %}credits.note_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/issues">{% trans %}credits.note_link{% endtrans %}</a>{% trans %}credits.note_post{% endtrans %}</div>
+
+</div></section>
+{% endblock %}

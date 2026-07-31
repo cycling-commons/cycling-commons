@@ -45,6 +45,16 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'The short version');
     }
 
+    public function testCreditsRenders(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/credits');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('footer.foot');
+        self::assertSelectorTextContains('h1', 'Credits');
+        self::assertSelectorTextContains('body', 'OpenStreetMap');
+    }
+
     public function testCoverageRenders(): void
     {
         $client = static::createClient();
