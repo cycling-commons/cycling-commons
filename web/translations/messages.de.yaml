@@ -1441,6 +1441,7 @@ contribute:
     name_required: 'Gib dem Ort einen Namen.'
     already_materialized: 'Dieser Ort ist bereits im Commons — öffne ihn auf der Karte und bearbeite ihn dort.'
     invalid_geometry: 'Die gezeichnete Form konnte nicht gelesen werden — zeichne sie neu und versuche es erneut.'
+    media_invalid: 'Eines der angehängten Fotos konnte nicht verwendet werden — entferne es und versuche es erneut.'
 media:
   consent:
     title: 'Bevor du ein Foto hinzufügst'

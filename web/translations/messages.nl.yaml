@@ -1441,6 +1441,7 @@ contribute:
     name_required: 'Geef de plek een naam.'
     already_materialized: 'Deze plek staat al in de Commons — open die op de kaart en bewerk die daar.'
     invalid_geometry: 'De getekende vorm kon niet worden gelezen — teken hem opnieuw en probeer het nogmaals.'
+    media_invalid: 'Een van de bijgevoegde foto''s kon niet worden gebruikt — verwijder hem en probeer het opnieuw.'
 media:
   consent:
     title: 'Voordat je een foto toevoegt'

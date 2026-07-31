@@ -15,6 +15,7 @@ use App\Catalog\LocationMode;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Media\MediaClaimService;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -59,6 +60,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly ValidatorInterface $validator,
         private readonly SpatialResolver $resolver,
         private readonly RateLimiterFactoryInterface $contributionSubmitLimiter,
+        private readonly MediaClaimService $mediaClaims,
     ) {
     }
 
@@ -376,6 +378,17 @@ final class CatalogContributionService implements ContributionStubInterface
                 $submission->setItemId($item->getId());
                 $this->em->flush();
             }
+
+            // Photos ride the same intake transaction as the facts
+            // (docs/specs/photo-uploads.md §4): a rejected photo list rolls the
+            // whole submission back rather than leaving a half-attached
+            // contribution.
+            try {
+                $this->mediaClaims->claim($rawPayload['mediaIds'] ?? null, $by, $submission);
+            } catch (\InvalidArgumentException) {
+                $this->reject('contribute.error.media_invalid', 'mediaIds');
+            }
+            $this->em->flush();
 
             return $submission;
         });

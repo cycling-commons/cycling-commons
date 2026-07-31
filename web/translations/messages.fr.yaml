@@ -1441,6 +1441,7 @@ contribute:
     name_required: 'Donnez un nom à ce lieu.'
     already_materialized: 'Ce lieu est déjà dans le Commons — ouvrez-le sur la carte et modifiez-le là-bas.'
     invalid_geometry: 'La forme dessinée n’a pas pu être lue — redessinez-la et réessayez.'
+    media_invalid: 'Une des photos jointes n''a pas pu être utilisée — retirez-la et réessayez.'
 media:
   consent:
     title: 'Avant d''ajouter une photo'
