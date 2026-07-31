@@ -445,7 +445,7 @@ final class ImproveTest extends WebTestCase
     }
 
     /**
-     * #12: photoUrl/videoUrl are shared media fields whose value is persisted
+     * #12: photoUrl is a shared media field whose value is persisted
      * into the submission payload for later review/render. A non-http(s)
      * scheme (javascript:) must be rejected by validation — never persisted.
      */

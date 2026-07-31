@@ -253,13 +253,13 @@
       <label for="{{ form.fNote.vars.id }}">{{ 'add_climb.step3.note_label'|trans }}</label>
       {{ form_widget(form.fNote, {attr: {placeholder: 'add_climb.step3.note_placeholder'|trans}}) }}
     </div>
+    {# This drop zone used to be decoration — onclick="return false", and
+       add-climb.js has no media queue at all. Honest UI (docs/specs/photo-uploads.md
+       §1.1) means removing it rather than faking it: climb photos arrive
+       through /improve?item=…&add=photo once the climb exists. #}
     <div class="field">
       <label>{{ 'add_climb.step3.photo_label'|trans }}</label>
-      <div class="drop" onclick="return false">
-        <span class="ic">◳</span>{{ 'add_climb.step3.photo_drop'|trans }}<br/>
-        <small>{{ 'add_climb.step3.photo_types'|trans }}</small>
-      </div>
-      <div class="notice"><b>{{ 'add_climb.step3.photo_notice_b'|trans }}</b> {{ 'add_climb.step3.photo_notice'|trans }}</div>
+      <p class="fhelp">{{ 'add_climb.step3.photo_after'|trans }}</p>
     </div>
     <div class="field">
       <label for="{{ form.fOsm.vars.id }}">{{ 'add_climb.step3.osm_label'|trans }}</label>

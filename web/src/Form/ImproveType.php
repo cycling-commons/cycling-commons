@@ -120,12 +120,13 @@ final class ImproveType extends AbstractType
                 // never reach the submission payload.
                 'constraints' => self::mediaUrlConstraints(),
             ])
-            ->add('videoUrl', UrlType::class, [
-                'label' => false,
-                'required' => false,
-                'default_protocol' => null,
-                'constraints' => self::mediaUrlConstraints(),
-            ])
+            // The uuids of this submission's real uploads
+            // (docs/specs/photo-uploads.md §4), filled by
+            // assets/contribute/media-upload.js as a JSON list. Nothing here is
+            // trusted: intake re-validates that each id exists, is still
+            // pending, is unclaimed, and belongs to the submitter
+            // (MediaClaimService).
+            ->add('mediaIds', HiddenType::class, ['required' => false])
             ->add('lat', HiddenType::class, ['required' => false])
             ->add('lng', HiddenType::class, ['required' => false])
             ->add('place', HiddenType::class, ['required' => false])

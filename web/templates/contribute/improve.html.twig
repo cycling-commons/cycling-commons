@@ -113,6 +113,26 @@
   .drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:2rem;text-align:center;color:#595c4d;cursor:pointer}
   .drop:hover{border-color:var(--trail);color:var(--ink)}
   .drop .ic{font-size:1.6rem;display:block;margin-bottom:.5rem}
+  /* real uploads (docs/specs/photo-uploads.md §4) */
+  .drop.locked{opacity:.5;cursor:not-allowed}
+  .drop.over{border-color:var(--trail);background:var(--paper-deep)}
+  .consent-gate{margin:.5rem 0 .75rem}
+  .consent-ok{font-size:.86rem;line-height:1.5;color:#3f6b3f}
+  .consent-when{font-family:var(--mono);font-size:.68rem;color:#595c4d}
+  .consent-more{display:inline-block;margin-left:.35rem}
+  .consent-more summary{cursor:pointer;font-size:.78rem;color:var(--clay)}
+  .consent-err{color:#a3342b;font-size:.85rem;margin:.5rem 0}
+  .ulq .chip.up{display:inline-flex;align-items:center;gap:.45rem;max-width:100%}
+  .chip-thumb img{width:34px;height:34px;object-fit:cover;border-radius:4px;display:block}
+  .chip-name{max-width:12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip-bar{position:relative;width:78px;height:4px;border-radius:2px;background:rgba(20,22,14,.15);overflow:hidden}
+  .chip-bar i{position:absolute;inset:0 auto 0 0;display:block;background:var(--trail);transition:width .15s linear}
+  .chip.indeterminate .chip-bar i{width:40%!important;animation:chip-pulse 1.1s ease-in-out infinite}
+  @keyframes chip-pulse{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+  .chip.failed{border-color:#a3342b;color:#a3342b}
+  .chip-err{font-size:.72rem}
+  .chip-x{border:0;background:none;cursor:pointer;font-size:1rem;line-height:1;color:#595c4d}
+  @media(prefers-reduced-motion:reduce){.chip.indeterminate .chip-bar i{animation:none}}
   .notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.8rem 1rem;font-size:.82rem;color:#4a4d40;border-radius:0 6px 6px 0;margin-top:1rem;line-height:1.5}
 
   /* review card */
@@ -199,6 +219,38 @@
      editor instead of the single-pin Locate (Task 5). Only emitted here —
      the unbound branch above never reaches this template region. #}
   <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_MEDIA = {{ {
+    tokenUrl: path('media_token'),
+    uploadUrl: path('media_photos_upload'),
+    consentUrl: path('media_consent'),
+    consentCurrentUrl: path('media_consent_current'),
+    termsUrl: path('terms'),
+    max: 6,
+    i18n: {
+      title: 'media.consent.title'|trans,
+      intro: 'media.consent.intro'|trans,
+      contract: 'media.consent.contract'|trans,
+      keepOwnership: 'media.consent.keep_ownership'|trans,
+      accept: 'media.consent.accept'|trans,
+      cancel: 'media.consent.cancel'|trans,
+      consentError: 'media.consent.error'|trans,
+      standing: 'media.consent.standing'|trans,
+      readContract: 'media.consent.read_contract'|trans,
+      siteTerms: 'media.consent.site_terms'|trans,
+      remove: 'improve.step3.remove_photo'|trans,
+      tooMany: 'improve.step3.too_many_photos'|trans,
+      errors: {
+        consent_required: 'media.error.consent_required'|trans,
+        missing_file: 'media.error.missing_file'|trans,
+        photo_too_large: 'media.error.photo_too_large'|trans,
+        photo_format: 'media.error.photo_format'|trans,
+        photo_unreadable: 'media.error.photo_unreadable'|trans,
+        photo_too_small: 'media.error.photo_too_small'|trans,
+        rate_limited: 'media.error.rate_limited'|trans,
+        unknown: 'media.error.unknown'|trans
+      }
+    }
+  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
   <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 
@@ -310,8 +362,14 @@
     {% endif %}
 
     <div class="field">
-      <label>{{ 'improve.step3.photo_label'|trans }}</label>
-      <div class="drop" id="drop-photo">
+      <label for="file-photo">{{ 'improve.step3.photo_label'|trans }}</label>
+      {# Consent gate (docs/specs/photo-uploads.md §4): filled by
+         media-upload.js — either the "agree" button, or the standing notice
+         once a record exists. The upload controls below stay disabled until the
+         SERVER acknowledges. #}
+      <div class="consent-gate" id="media-consent"></div>
+      <input type="file" id="file-photo" accept="image/jpeg,image/png,image/webp,image/heic" multiple hidden>
+      <div class="drop" id="drop-photo" role="button" tabindex="0" aria-controls="file-photo">
         <span class="ic">◳</span>{{ 'improve.step3.photo_drop'|trans }}<br/>
         <small>{{ 'improve.step3.photo_types'|trans }}</small>
       </div>
@@ -321,19 +379,7 @@
         <button class="btn btn-p" type="button" id="btn-link-photo">{{ 'improve.step3.link_btn'|trans }}</button>
       </div>
       <div class="src-note" id="srcn-photo"></div>
-    </div>
-    <div class="field">
-      <label>{{ 'improve.step3.video_label'|trans }}</label>
-      <div class="drop" id="drop-video">
-        <span class="ic">▷</span>{{ 'improve.step3.video_drop'|trans }}<br/>
-        <small>{{ 'improve.step3.video_types'|trans }}</small>
-      </div>
-      <div class="ulq" id="q-video"></div>
-      <div class="linkrow">
-        {{ form_widget(form.videoUrl, {attr: {id: 'lnk-video', placeholder: 'improve.step3.video_url_placeholder'|trans}}) }}
-        <button class="btn btn-p" type="button" id="btn-link-video">{{ 'improve.step3.link_btn'|trans }}</button>
-      </div>
-      <div class="src-note" id="srcn-video"></div>
+      {{ form_widget(form.mediaIds) }}
     </div>
     <div class="notice"><b>{{ 'improve.step3.notice_b'|trans }}</b> {{ 'improve.step3.notice'|trans }}</div>
   </section>
@@ -342,6 +388,9 @@
   <section class="pane" data-s="4" id="w-review">
     <h2>{{ 'improve.step4.heading'|trans }}</h2>
     <p class="help">{{ 'improve.step4.help'|trans }}</p>
+    {# The licence granted and the photos about to be submitted, visible
+       together (docs/specs/photo-uploads.md §4). #}
+    <div class="consent-gate" id="media-consent-review"></div>
     <div class="card" id="reviewBody"></div>
 
     {# Votability / lifecycle context — where this suggestion goes next #}
@@ -376,5 +425,8 @@
    Harmless no-op include for non-climb items — the scripts only attach to window.Cc. #}
 <script src="{{ asset('contribute/climb-elevation.js') }}"></script>
 <script src="{{ asset('contribute/climb-editor.js') }}"></script>
+{# media-upload.js registers window.Cc.mountMediaUploads, which improve.js
+   calls at mount time — so it has to be defined first. #}
+<script src="{{ asset('contribute/media-upload.js') }}"></script>
 <script src="{{ asset('contribute/improve.js') }}"></script>
 {% endblock %}

@@ -41,8 +41,7 @@
 
   // Wizard state
   var WZ = { cur: 1, last: 4, loc: null, media: [] };
-  var queues = { photo: [], video: [] };
-  var _pendingDone = null;
+  // Uploads are owned by media-upload.js; nothing here queues anything.
 
   // Update subject hidden field with the item id
   var subjectEl = document.querySelector('[name="improve[subject]"]');
@@ -494,13 +493,12 @@
     if (form) { form.submit(); return; }
   }
 
-  /* ---------- media: consent + queue ---------- */
-  var RULES = {
-    photo: { noun: 'photo', rule: 'Only photos you took, or are licensed to share — never images scraped or re-hosted from another site.' },
-    video: { noun: 'video', rule: 'Only clips you filmed yourself — no copyrighted music or footage.' }
-  };
-
-  var consented = function (k) { return localStorage.getItem('cc_consent_' + k) === '1'; };
+  /* ---------- media ----------
+     Real uploads live in media-upload.js (docs/specs/photo-uploads.md §4),
+     which owns the drop zone, the file input, the server-backed consent gate
+     and the per-file progress bars. What stays here is the photo *link* row:
+     a link is reviewer context, never an upload, and is not gated by the
+     upload consent. */
 
   function openModal() { var m = document.getElementById('modal'); if (m) m.classList.add('open'); }
   function closeModal() { var m = document.getElementById('modal'); if (m) m.classList.remove('open'); }
@@ -520,56 +518,15 @@
     _toastT = setTimeout(function () { t.classList.remove('show'); }, 2800);
   }
 
-  function queueAdd(kind, name) {
-    queues[kind].push(name);
-    var qEl = document.getElementById('q-' + kind);
-    if (qEl) {
-      qEl.innerHTML = queues[kind].map(function (n) {
-        return '<span class="chip"><span class="dot"></span>' + escHtml(n) + ' · queued</span>';
-      }).join('');
-    }
-    toast(name + ' → added to your upload queue · demo, nothing is actually uploaded');
-    WZ.media = queues.photo.map(function (n) { return '📷 ' + n; }).concat(queues.video.map(function (n) { return '🎬 ' + n; }));
-  }
-
-  function openConsent(kind, onDone) {
-    _pendingDone = onDone;
-    var r = RULES[kind];
-    var box = document.getElementById('modal-box');
-    if (!box) return;
-    box.innerHTML =
-      '<h3>Before you add a ' + r.noun + '</h3>' +
-      '<p>Your ' + r.noun + ' joins the <b>open Commons</b> so every rider can use it. That only works if it\'s genuinely free to share.</p>' +
-      '<div class="rules"><b>The rules.</b> ' + r.rule + ' You keep ownership — the Commons just gets a licence to share it.</div>' +
-      '<label class="ok-check"><input type="checkbox" id="ok-check" /><span>I took / own this ' + r.noun + ' and I\'m <b>donating</b> it to the Commons under <b>CC BY-SA 4.0</b>.</span></label>' +
-      '<div class="mrow"><button class="b-cancel" id="modal-cancel">Cancel</button><button class="b-ok" id="ok-btn" disabled>Donate it</button></div>';
-    var okCheck = document.getElementById('ok-check');
-    var okBtn = document.getElementById('ok-btn');
-    var cancelBtn = document.getElementById('modal-cancel');
-    if (okCheck && okBtn) okCheck.onchange = function (e) { okBtn.disabled = !e.target.checked; };
-    if (okBtn) okBtn.onclick = function () { acceptConsent(kind); };
-    if (cancelBtn) cancelBtn.onclick = closeModal;
-    openModal();
-  }
-
-  function acceptConsent(kind) {
-    localStorage.setItem('cc_consent_' + kind, '1');
-    var box = document.getElementById('modal-box');
-    if (!box) return;
-    box.innerHTML =
-      '<div class="thanks-big"><div class="ic">🙏</div><h3>Thank you!</h3>' +
-      '<p>You just made the map better for everyone who rides here.</p>' +
-      '<div class="demo-note">This is a demo — nothing is actually uploaded.</div>' +
-      '<div class="mrow" style="justify-content:center;margin-top:1.1rem"><button class="b-ok" id="finish-consent">Nice</button></div></div>';
-    var finBtn = document.getElementById('finish-consent');
-    if (finBtn) finBtn.onclick = function () { closeModal(); var d = _pendingDone; _pendingDone = null; if (d) d(); };
-  }
-
-  function upload(kind) {
-    var run = function () {
-      queueAdd(kind, kind === 'photo' ? 'IMG_' + (1000 + queues.photo.length) + '.jpg' : 'CLIP_' + (1 + queues.video.length) + '.mp4');
-    };
-    consented(kind) ? run() : openConsent(kind, run);
+  /* A linked photo is not an upload and must not look like one: no progress
+     bar, no thumbnail, a distinct 🔗 mark. */
+  function noteLink(label) {
+    var chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = '🔗 ' + label;
+    var host = document.getElementById('q-photo');
+    if (host) host.appendChild(chip);
+    WZ.media.push('🔗 ' + label);
   }
 
   var KNOWN_SOURCES = {
@@ -595,28 +552,33 @@
       if (key) {
         var s = KNOWN_SOURCES[key];
         if (note) { note.className = 'src-note ok'; note.innerHTML = '✓ <b>' + s.name + '</b> recognised — ' + s.note + '.'; }
-        queueAdd(kind, host + ' link');
+        noteLink(host + ' link');
       } else {
         if (note) { note.className = 'src-note manual'; note.innerHTML = '⚠ Unknown source — you\'ll need to confirm the rights-holder and licence yourself before this can go public.'; }
-        queueAdd(kind, (host || 'link') + ' · needs licence');
+        noteLink((host || 'link') + ' · needs licence');
       }
       inputEl.value = '';
       inputEl.focus();
     };
-    consented(kind) ? run() : openConsent(kind, run);
+    run();
   }
 
-  // Wire up media drop zones
-  var dropPhoto = document.getElementById('drop-photo');
-  if (dropPhoto) dropPhoto.addEventListener('click', function () { upload('photo'); });
-  var dropVideo = document.getElementById('drop-video');
-  if (dropVideo) dropVideo.addEventListener('click', function () { upload('video'); });
+  // Real uploads (docs/specs/photo-uploads.md §4). The module owns the drop
+  // zone, the file input, the consent gate and the per-file progress bars; the
+  // wizard only needs the names for its review step.
+  var mediaField = fld('mediaIds');
+  if (mediaField && window.Cc && window.Cc.mountMediaUploads) {
+    window.Cc.mountMediaUploads({
+      hidden: mediaField,
+      onChange: function (names) {
+        WZ.media = names.map(function (n) { return '📷 ' + n; });
+      }
+    });
+  }
 
-  // Wire up link buttons
+  // Wire up the photo link button
   var btnLinkPhoto = document.getElementById('btn-link-photo');
   if (btnLinkPhoto) btnLinkPhoto.addEventListener('click', function () { linkMedia('photo'); });
-  var btnLinkVideo = document.getElementById('btn-link-video');
-  if (btnLinkVideo) btnLinkVideo.addEventListener('click', function () { linkMedia('video'); });
 
   // If not in add mode, step 1 has no map gate — allow immediate Next.
   if (LOCATE === 'off') {
