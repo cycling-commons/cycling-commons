@@ -1797,7 +1797,6 @@ form:
   ph_language: 'Site default (browser language)'
   ph_code: '123456'
   help_public_profile: 'When off, your profile is hidden and contributions stay anonymous.'
-  error_display_name_taken: 'This display name is already taken.'
   error_display_name_spacing: 'Please use single, ordinary spaces in your display name.'
   error_display_name_compatibility: 'Please use ordinary letters in your display name.'
   label_bike_types: 'Bikes you ride'

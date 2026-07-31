@@ -15,50 +15,27 @@ use PHPUnit\Framework\TestCase;
  */
 final class UserEntityTest extends TestCase
 {
-    // ── displayNameCanonical ────────────────────────────────────────────────
+    // ── displayName ─────────────────────────────────────────────────────────
 
-    public function testSetDisplayNameMaintainsLowercasedCanonical(): void
+    /**
+     * Stored verbatim. The setter used to maintain a lowercased shadow copy
+     * for a uniqueness constraint; both are gone (account-and-auth.md §9) —
+     * names are labels, the uuid is the identity — so what the rider typed is
+     * what everyone sees.
+     */
+    public function testTheDisplayNameIsKeptExactlyAsTyped(): void
     {
         $user = new User();
         $user->setDisplayName('Hanne V');
-
         self::assertSame('Hanne V', $user->getDisplayName());
-        self::assertSame('hanne v', $user->getDisplayNameCanonical());
-    }
 
-    public function testCanonicalTrimsSurroundingWhitespace(): void
-    {
-        $user = new User();
-        $user->setDisplayName("  Hanne V\t");
-
-        self::assertSame('hanne v', $user->getDisplayNameCanonical());
-    }
-
-    public function testCanonicalLowercasesMultibyteCharacters(): void
-    {
-        $user = new User();
         $user->setDisplayName('ÉLISE ØSTERGÅRD');
-
-        self::assertSame('élise østergård', $user->getDisplayNameCanonical());
+        self::assertSame('ÉLISE ØSTERGÅRD', $user->getDisplayName());
     }
 
-    public function testEmptyOrWhitespaceDisplayNameYieldsNullCanonical(): void
+    public function testANewUserStartsWithoutAName(): void
     {
-        // An empty name means "no name yet": it must canonicalize to NULL so
-        // unnamed rows (test fixtures, partial flows) never collide on the
-        // unique index — Postgres ignores NULLs, and UniqueEntity's default
-        // ignoreNull skips them too.
-        self::assertNull((new User())->getDisplayNameCanonical());
-
-        $user = new User();
-        $user->setDisplayName('   ');
-        self::assertNull($user->getDisplayNameCanonical());
-
-        $user->setDisplayName('X');
-        self::assertSame('x', $user->getDisplayNameCanonical());
-
-        $user->setDisplayName('');
-        self::assertNull($user->getDisplayNameCanonical());
+        self::assertSame('', (new User())->getDisplayName());
     }
 
     // ── bikeTypes / ridingStyles ────────────────────────────────────────────

@@ -35,11 +35,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
-#[ORM\UniqueConstraint(name: 'uniq_users_display_name_canonical', columns: ['display_name_canonical'])]
 #[ORM\UniqueConstraint(name: 'uniq_users_uuid', columns: ['uuid'])]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['email'], message: 'This email address is already registered.')]
-#[UniqueEntity(fields: ['displayNameCanonical'], errorPath: 'displayName', message: 'form.error_display_name_taken')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface, BackupCodeInterface
 {
     #[ORM\Id]
@@ -94,19 +92,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // NoSuspiciousCharacters' CHECK_INVISIBLE only fires on *repeated identical*
     // combining marks, not a lone Cf format character (U+200B and friends).
     #[Assert\Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters')]
+    // NOT unique, by decision (account-and-auth.md §9). Two riders may both be
+    // called John Doe; refusing the second would be telling someone their own
+    // name belongs to a stranger. $uuid is the identity, and it is what every
+    // public surface keys on — the rider profile route, and therefore the
+    // attribution link embedded in contributed photos.
     #[PlainDisplayName]
     #[ORM\Column(type: 'string', length: 100)]
     private string $displayName = '';
-
-    // Lowercased+trimmed shadow copy of displayName, maintained by
-    // setDisplayName() so EVERY write path (registration, settings, console,
-    // admin CRUD, fixtures) keeps it in sync. A plain unique constraint on
-    // this column gives case-insensitive display-name uniqueness without a
-    // functional index Doctrine can't model. An empty name canonicalizes to
-    // NULL so unnamed rows (tests, partial flows) never collide; NULL is
-    // ignored by both the Postgres unique index and UniqueEntity (ignoreNull).
-    #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    private ?string $displayNameCanonical = null;
 
     // Rider preferences (docs/specs/account-and-auth.md §9): which bikes
     // they ride and what kind of riding they do. Stored as enum value
@@ -375,15 +368,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDisplayName(string $displayName): static
     {
         $this->displayName = $displayName;
-        $canonical = mb_strtolower(trim($displayName));
-        $this->displayNameCanonical = '' === $canonical ? null : $canonical;
 
         return $this;
-    }
-
-    public function getDisplayNameCanonical(): ?string
-    {
-        return $this->displayNameCanonical;
     }
 
     /** @return list<BikeType> */

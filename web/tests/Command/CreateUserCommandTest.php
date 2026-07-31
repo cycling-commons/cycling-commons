@@ -40,28 +40,50 @@ final class CreateUserCommandTest extends KernelTestCase
         return $tester;
     }
 
-    public function testDisplayNameCollisionFromEmailLocalPartFailsWithFriendlyError(): void
+    /**
+     * Two addresses with the same local part both default to the same display
+     * name — and that is fine now. Display names stopped being unique by
+     * decision (account-and-auth.md §9): the uuid is the identity, so
+     * `curator@foo.org` and `curator@bar.org` are simply two accounts that
+     * happen to be called "curator".
+     */
+    public function testTwoAccountsMayShareTheDefaultDisplayName(): void
     {
         $this->runCreate([
             'email' => 'curator@foo.org',
             'password' => 'securepass12345!',
         ])->assertCommandIsSuccessful();
 
-        $tester = $this->runCreate([
+        $this->runCreate([
             'email' => 'curator@bar.org',
             'password' => 'securepass12345!',
-        ]);
-
-        self::assertSame(1, $tester->getStatusCode(), 'a colliding default display name must fail, not crash');
-        self::assertStringContainsString('already taken', $tester->getDisplay());
-        self::assertStringContainsString('--display-name', $tester->getDisplay());
+        ])->assertCommandIsSuccessful();
 
         /** @var UserRepository $repo */
         $repo = static::getContainer()->get(UserRepository::class);
-        self::assertNull(
-            $repo->findOneBy(['email' => 'curator@bar.org']),
-            'the failed second user must not have been persisted',
-        );
+
+        foreach (['curator@foo.org', 'curator@bar.org'] as $email) {
+            $user = $repo->findOneBy(['email' => $email]);
+            self::assertNotNull($user, $email.' was created');
+            self::assertSame('curator', $user->getDisplayName());
+        }
+    }
+
+    /** Email is the one uniqueness rule left, and it still reports itself clearly. */
+    public function testADuplicateEmailFailsWithAFriendlyError(): void
+    {
+        $this->runCreate([
+            'email' => 'twice@example.org',
+            'password' => 'securepass12345!',
+        ])->assertCommandIsSuccessful();
+
+        $tester = $this->runCreate([
+            'email' => 'twice@example.org',
+            'password' => 'securepass12345!',
+        ]);
+
+        self::assertSame(1, $tester->getStatusCode(), 'a duplicate email must fail, not crash');
+        self::assertStringContainsString('already exists', $tester->getDisplay());
     }
 
     public function testDistinctDisplayNameOptionAvoidsTheCollision(): void

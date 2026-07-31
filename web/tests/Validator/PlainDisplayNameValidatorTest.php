@@ -68,8 +68,8 @@ final class PlainDisplayNameValidatorTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function rejectedNames(): iterable
     {
-        yield 'double space' => ["John  Doe"];
-        yield 'triple space' => ["John   Doe"];
+        yield 'double space' => ['John  Doe'];
+        yield 'triple space' => ['John   Doe'];
         yield 'non-breaking space' => ["John\u{00A0}Doe"];
         yield 'trailing non-breaking space' => ["John Doe\u{00A0}"];
         yield 'ideographic space' => ["John\u{3000}Doe"];
@@ -118,6 +118,6 @@ final class PlainDisplayNameValidatorTest extends TestCase
     /** One violation per name, not one per offending character. */
     public function testAViolationIsReportedOnce(): void
     {
-        self::assertCount(1, $this->messages("John  Doe  Smith"));
+        self::assertCount(1, $this->messages('John  Doe  Smith'));
     }
 }

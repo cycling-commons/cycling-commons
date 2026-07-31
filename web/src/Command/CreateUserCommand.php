@@ -89,14 +89,11 @@ final class CreateUserCommand extends Command
             $this->em->persist($user);
             $this->em->flush();
         } catch (UniqueConstraintViolationException) {
-            // The unique canonical-display-name index rejected this insert,
-            // most likely because the default name (the email's local part)
-            // collides with an existing user. Show a friendly message
-            // instead of the raw DBAL error.
-            $io->error(sprintf(
-                'Display name "%s" is already taken. Pass --display-name to choose a different one.',
-                $user->getDisplayName(),
-            ));
+            // Email is the only unique column a caller of this command can
+            // trip. Display names stopped being unique deliberately
+            // (account-and-auth.md §9): two riders may share one, so the
+            // email local part being taken is no longer a reason to refuse.
+            $io->error(sprintf('An account with email "%s" already exists.', $email));
 
             return Command::FAILURE;
         }
