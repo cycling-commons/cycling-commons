@@ -326,4 +326,4 @@ the Trash action itself (no window means no sweep).
 - Video (removed from UI; future feature).
 - Backfilling Wikimedia-photo items — untouched, same attribute shape.
 - The proxy host itself (owner-run infrastructure).
-- Serving AVIF or responsive srcsets — WebP-only is deliberate v1.
+- Serving additional image formats or letting browsers pick sizes: the newer **AV**1 **I**mage **F**ile format (AVIF) compresses ~20-30 % better than WebP but would mean a second encoded set per photo plus format negotiation; responsive `srcset` markup would let each device auto-select the best-sized variant instead of the hard-wired sm/lg choice. Both are serving-side optimizations that touch no stored data — WebP-only with fixed variants is the deliberate v1.
