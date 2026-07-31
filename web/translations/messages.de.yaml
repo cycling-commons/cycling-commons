@@ -1520,7 +1520,10 @@ moderate:
   trash:
     button: 'Löschen'
     confirm_head: 'Das dauerhaft als Spam löschen?'
-    confirm_rest: 'Das kann nicht rückgängig gemacht werden und es wird keine Nachricht gesendet.'
+    confirm_rest: 'Der Inhalt — einschließlich Fotos und deren Verlauf — wird sofort und endgültig gelöscht; nur ein inhaltsfreier Nachweis der Handlung bleibt erhalten. Es wird keine Nachricht gesendet.'
+    rulebook_link: 'Moderatoren-Regelwerk ↗'
+    type_label: 'Tippe DELETE zur Bestätigung:'
+    confirm_required: 'Löschen erfordert die getippte DELETE-Bestätigung — nichts wurde gelöscht.'
     done: 'Gelöscht — dauerhaft entfernt.'
     blocked: 'Nur eingereichte oder abgelehnte Vorschläge können gelöscht werden.'
     error: 'Konnte das nicht löschen — es ist möglicherweise bereits weg.'

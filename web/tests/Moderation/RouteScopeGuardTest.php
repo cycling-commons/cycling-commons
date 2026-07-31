@@ -179,6 +179,7 @@ final class RouteScopeGuardTest extends WebTestCase
 
         $client->request('POST', '/moderate/routes/trash', [
             'kind' => 'proposal',
+            'confirm' => 'DELETE',
             'id' => (string) $routeB->getId(),
             '_token' => $token,
         ]);

@@ -170,6 +170,21 @@ final class ModerateController extends AbstractController
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
+        // Typed confirmation (moderator rulebook): Trash is irreversible, so
+        // the moderator must literally type DELETE. The desk's input enforces
+        // this natively (pattern+required); this is the server-side re-check.
+        // A cancelled/incomplete Trash never reaches here — no record is
+        // written for a Trash that wasn't confirmed.
+        if ('DELETE' !== $request->request->get('confirm')) {
+            $this->addFlash('danger', 'moderate.trash.confirm_required');
+
+            return $this->redirectToRoute('moderate', array_filter([
+                'country' => $request->query->getString('country'),
+                'region' => $request->query->getString('region'),
+                'type' => $request->query->getString('type'),
+            ]));
+        }
+
         $kind = (string) $request->request->get('kind');
         $id = (int) $request->request->get('id');
         /** @var User $curator */

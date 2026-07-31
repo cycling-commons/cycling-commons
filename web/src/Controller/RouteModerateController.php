@@ -257,6 +257,16 @@ final class RouteModerateController extends AbstractController
     {
         $this->validateCsrf($request, 'route-trash');
 
+        // Typed confirmation (moderator rulebook, same guard as the item
+        // desk): Trash is irreversible — the desk requires the literal word,
+        // this is the server-side re-check. An unconfirmed Trash writes
+        // nothing.
+        if ('DELETE' !== $request->request->get('confirm')) {
+            $this->addFlash('danger', 'moderate.trash.confirm_required');
+
+            return $this->redirectToRoute('moderate_routes');
+        }
+
         $kind = (string) $request->request->get('kind');
         $id = (int) $request->request->get('id');
         /** @var User $curator */

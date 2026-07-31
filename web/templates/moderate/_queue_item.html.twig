@@ -56,7 +56,15 @@
         <input type="hidden" name="_token" value="{{ csrf_token('moderate-trash') }}">
         <input type="hidden" name="kind" value="submission">
         <input type="hidden" name="id" value="{{ item.id }}">
-        <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong> {{ 'moderate.trash.confirm_rest'|trans }}</p>
+        <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong> {{ 'moderate.trash.confirm_rest'|trans }}
+           <a href="https://wiki.cyclingcommons.org/moderator-rulebook/" target="_blank" rel="noopener">{{ 'moderate.trash.rulebook_link'|trans }}</a></p>
+        {# Typed confirmation (moderator rulebook): native pattern validation
+           blocks the POST unless the literal word is typed; the server
+           re-checks. Closing the panel/cancelling sends nothing — no record
+           is written for an uncompleted Trash. #}
+        <label class="trash-type-label">{{ 'moderate.trash.type_label'|trans }}
+          <input type="text" name="confirm" required pattern="DELETE" autocomplete="off" spellcheck="false" placeholder="DELETE" class="trash-type-input">
+        </label>
         <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
       </form>
     </details>

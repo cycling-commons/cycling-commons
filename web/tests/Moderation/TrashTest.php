@@ -305,6 +305,7 @@ final class TrashTest extends WebTestCase
 
         $client->request('POST', '/moderate/trash', [
             'kind' => 'submission',
+            'confirm' => 'DELETE',
             'id' => (string) $sub->getId(),
             '_token' => $token,
         ]);
@@ -327,6 +328,7 @@ final class TrashTest extends WebTestCase
         $client->loginUser($rider);
         $client->request('POST', '/moderate/trash', [
             'kind' => 'submission',
+            'confirm' => 'DELETE',
             'id' => (string) $sub->getId(),
             '_token' => 'irrelevant',
         ]);
@@ -345,6 +347,7 @@ final class TrashTest extends WebTestCase
         $client->loginUser($this->curator());
         $client->request('POST', '/moderate/trash', [
             'kind' => 'submission',
+            'confirm' => 'DELETE',
             'id' => (string) $sub->getId(),
             '_token' => 'not-a-real-token',
         ]);
@@ -366,6 +369,7 @@ final class TrashTest extends WebTestCase
 
         $client->request('POST', '/moderate/routes/trash', [
             'kind' => 'correction',
+            'confirm' => 'DELETE',
             'id' => (string) $s->getId(),
             '_token' => $token,
         ]);
@@ -388,6 +392,7 @@ final class TrashTest extends WebTestCase
 
         $client->request('POST', '/moderate/routes/trash', [
             'kind' => 'proposal',
+            'confirm' => 'DELETE',
             'id' => (string) $route->getId(),
             '_token' => $token,
         ]);
@@ -419,6 +424,7 @@ final class TrashTest extends WebTestCase
 
         $client->request('POST', '/moderate/routes/trash', [
             'kind' => 'proposal',
+            'confirm' => 'DELETE',
             'id' => (string) $active->getId(),
             '_token' => $token,
         ]);
@@ -440,6 +446,7 @@ final class TrashTest extends WebTestCase
         $client->loginUser($rider);
         $client->request('POST', '/moderate/routes/trash', [
             'kind' => 'proposal',
+            'confirm' => 'DELETE',
             'id' => (string) $route->getId(),
             '_token' => 'irrelevant',
         ]);
@@ -457,10 +464,57 @@ final class TrashTest extends WebTestCase
         $client->loginUser($this->curator());
         $client->request('POST', '/moderate/routes/trash', [
             'kind' => 'proposal',
+            'confirm' => 'DELETE',
             'id' => (string) $route->getId(),
             '_token' => 'not-a-real-token',
         ]);
         self::assertResponseStatusCodeSame(403);
+
+        $this->em()->clear();
+        self::assertNotNull($this->em()->find(RecommendedRoute::class, $route->getId()));
+    }
+
+    /**
+     * Moderator-rulebook guard: Trash requires the literal typed DELETE.
+     * Without it nothing is deleted and no trash record is written — a
+     * cancelled/unconfirmed Trash leaves zero trace.
+     */
+    public function testTrashWithoutTypedConfirmationDeletesNothing(): void
+    {
+        $client = static::createClient();
+        $rider = $this->rider('http-noconfirm');
+        $sub = $this->seedSubmission((int) $rider->getId());
+
+        $client->loginUser($this->curator());
+        $token = $this->submissionTrashToken($client);
+
+        foreach (['', 'delete', 'DELET', null] as $bad) {
+            $post = ['kind' => 'submission', 'id' => (string) $sub->getId(), '_token' => $token];
+            if (null !== $bad) {
+                $post['confirm'] = $bad;
+            }
+            $client->request('POST', '/moderate/trash', $post);
+            self::assertResponseRedirects();
+        }
+
+        $this->em()->clear();
+        self::assertNotNull($this->em()->find(Submission::class, $sub->getId()), 'submission survives every unconfirmed attempt');
+    }
+
+    public function testRouteTrashWithoutTypedConfirmationDeletesNothing(): void
+    {
+        $client = static::createClient();
+        $route = $this->route(ItemState::Submitted);
+
+        $client->loginUser($this->curator());
+        $token = $this->proposalTrashToken($client, (int) $route->getId());
+
+        $client->request('POST', '/moderate/routes/trash', [
+            'kind' => 'proposal',
+            'id' => (string) $route->getId(),
+            '_token' => $token,
+        ]);
+        self::assertResponseRedirects();
 
         $this->em()->clear();
         self::assertNotNull($this->em()->find(RecommendedRoute::class, $route->getId()));

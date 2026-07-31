@@ -1520,7 +1520,10 @@ moderate:
   trash:
     button: 'Supprimer'
     confirm_head: 'Supprimer définitivement ceci comme spam ?'
-    confirm_rest: 'Action irréversible, aucun message n''est envoyé.'
+    confirm_rest: 'Le contenu — photos et historique compris — est supprimé immédiatement et définitivement ; seul un relevé de l''action, sans contenu, est conservé. Aucun message n''est envoyé.'
+    rulebook_link: 'Règlement des modérateurs ↗'
+    type_label: 'Tapez DELETE pour confirmer :'
+    confirm_required: 'La suppression exige la confirmation DELETE tapée — rien n''a été supprimé.'
     done: 'Supprimé définitivement.'
     blocked: 'Seules les propositions soumises ou rejetées peuvent être supprimées.'
     error: 'Impossible de supprimer cet élément — il a peut-être déjà disparu.'

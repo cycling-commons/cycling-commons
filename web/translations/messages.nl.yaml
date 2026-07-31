@@ -1520,7 +1520,10 @@ moderate:
   trash:
     button: 'Weggooien'
     confirm_head: 'Dit permanent verwijderen als spam?'
-    confirm_rest: 'Dit kan niet ongedaan worden gemaakt en er wordt geen bericht verstuurd.'
+    confirm_rest: 'De inhoud — inclusief foto''s en hun geschiedenis — wordt onmiddellijk en definitief verwijderd; alleen een inhoudsloos verslag van de handeling blijft bewaard. Er wordt geen bericht verstuurd.'
+    rulebook_link: 'Moderatorenreglement ↗'
+    type_label: 'Typ DELETE om te bevestigen:'
+    confirm_required: 'Verwijderen vereist de getypte DELETE-bevestiging — er is niets verwijderd.'
     done: 'Weggegooid — permanent verwijderd.'
     blocked: 'Alleen ingediende of afgewezen voorstellen kunnen worden weggegooid.'
     error: 'Kon dit niet weggooien — het is mogelijk al verdwenen.'

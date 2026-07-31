@@ -259,6 +259,7 @@ final class ModerateScopeGuardTest extends WebTestCase
 
         $client->request('POST', '/moderate/trash', [
             'kind' => 'submission',
+            'confirm' => 'DELETE',
             'id' => (string) $subB->getId(),
             '_token' => $token,
         ]);

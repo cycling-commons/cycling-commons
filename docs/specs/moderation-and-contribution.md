@@ -386,6 +386,18 @@ cascade. The single documented exception is `user_message` (§7.6).
 - No retention window; Trash exists precisely because policy-violating content
   must not be kept 3 months (also the "policy violation" edge in
   osm-data-architecture.md §6).
+- **Typed confirmation, both desks.** Trash is irreversible, so the desk
+  requires the moderator to literally type `DELETE` (native
+  `pattern="DELETE" required` input; the item and route trash endpoints
+  both re-check server-side and refuse with
+  `moderate.trash.confirm_required` otherwise). **A cancelled or
+  unconfirmed Trash writes nothing** — no audit row exists for a Trash
+  that didn't happen. The confirmation panel links the moderator rulebook.
+- **Keep the record, never the content** is the moderator-facing summary of
+  this section; it lives in the **Moderator rulebook**
+  (`wiki/moderator-rulebook.md`, published on the wiki, linked from every
+  Trash panel) — the rulebook is the operating summary, this spec is the
+  binding contract, and on any disagreement this spec wins.
 
 ## 7. Messages — the moderation feedback system (M1–M12)
 
