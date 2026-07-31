@@ -228,7 +228,9 @@ Nothing public until approved — the rule everywhere else, applied here:
   (with the curator's optional note), the deletion hook's credit
   anonymization, and GC's object deletion. The row's `status` answers "what
   is it now"; the log answers "how did it get here", forever (events
-  survive GC — GC deletes objects, tombstones the row, never the log).
+  survive GC — GC deletes objects, tombstones the row, never the log; the
+  single exception is Trash, §6, whose content-free principle deletes
+  everything).
 - **The item side needs no new machinery:** approving photos changes the
   item's `photos[]` attribute through the normal moderation path, so the
   existing `change_history` row records the attachment on the item — the
@@ -258,13 +260,34 @@ purpose-built pipeline predates this principle by deliberate decision,
 [route-domain.md](route-domain.md) §1; reconciling the two is out of scope
 here and would be its own owner decision.)
 
-## 6. Garbage collection
+## 6. Disposal & garbage collection
 
-One console command (`app:media:gc`, cron-able, ResetPasswordCleanup shape):
-- **Orphans** — `pending` rows with no `submission_id` older than **7
-  days** → objects + row deleted.
-- **Rejected** — older than **3 months** → objects deleted, row kept as a
-  tombstone (audit).
+The disposal *classes* are owned by
+[moderation-and-contribution.md](moderation-and-contribution.md) — one
+source of truth: **rejected** content is retained
+`moderation.retention_months` (M8) and **Trash** is the immediate,
+no-retention hard delete for spam/abuse/policy-violating (incl. illegal)
+content, with only a content-free audit row (§6/M9). This document does not
+restate that machinery; it defines only what those classes MEAN for media
+objects, plus the one media-only class:
+
+- **Orphans (media-only class)** — `pending` rows with no `submission_id`
+  older than **7 days** (nothing to moderate ever arrived) → objects + row
+  deleted.
+- **Rejected** — follows the standard retention window
+  (`moderation.retention_months`); when it lapses, the bucket objects are
+  deleted and the row is kept as a tombstone (audit).
+- **Trashed** — when a submission is Trashed, its photos follow Trash
+  semantics *exactly*: bucket objects, `media_upload` rows, AND their
+  `media_moderation_event` rows are hard-deleted **immediately** — no
+  retention window, and no content survives, consistent with Trash's
+  content-free principle (the submission's content-free Trash audit row is
+  the only trace). This is the deliberate exception to §5b's
+  "events survive forever".
+
+One console command (`app:media:gc`, cron-able, ResetPasswordCleanup
+shape) sweeps the first two classes; Trash deletion is synchronous with
+the Trash action itself (no window means no sweep).
 - Account deletion: the existing deletion-hook chain gains a media hook —
   pending/rejected uploads are deleted outright; approved photos on served
   items stay (they are CC BY-SA-licensed contributions to the commons —
