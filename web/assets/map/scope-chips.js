@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 //
-// Scope-chip VIEW model — docs/specs/2026-07-23-map-js-phase0-extraction-design.md.
+// Scope-chip VIEW model — the map.js phase-0 extraction.
 //
 // Answers "which scope chips should be offered, and where do they sit", and nothing
 // else. Extracted from map.js's renderScopeChips(), where the same decisions sat
@@ -85,7 +85,7 @@
     model.country = { cc, label: (all[0] || {}).countryLabel || ('All ' + cc) };
 
     // Country cue: a chip whose country differs from the ACTIVE scope's country is
-    // foreign and the serializer marks it "· NL" (2026-07-23-cross-border-chips-design.md §3.2).
+    // foreign and the serializer marks it "· NL".
     const cue = (r) => ({
       slug: r.slug, label: r.label || r.slug,
       cc: r.countryCode || null,
@@ -102,7 +102,7 @@
 
     if (activeRegion && i.scopeCenter) {
       model.mode = 'compass';
-      // Adjacency gate (2026-07-24-region-adjacency-and-click-refinement-design.md
+      // Adjacency gate (map-and-search.md §4.5
       // §2.3 / §2.4): a FOREIGN region is offered only if it shares a border with
       // the active region (id in activeRegion.adj). Border-neighbours are taken
       // first (so Overijssel still reaches Lower Saxony + NRW despite far German
@@ -150,7 +150,7 @@
     // to the region it sits in (synchronous bbox regionOfPoint — chip rendering
     // must not go async), then gate foreign chips by THAT region's adj. No region
     // under the anchor (e.g. Everywhere centred over open sea) → ungated, today's
-    // behaviour (2026-07-24-region-adjacency-and-click-refinement-design.md §2.3).
+    // behaviour.
     // Linear keeps pure centroid order among eligible (same-country OR adj) so a
     // Duisburg/Amsterdam anchor still surfaces the nearest region first; compass
     // mode above uses adj-first so far-centroid border neighbours still appear.

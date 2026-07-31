@@ -17,7 +17,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * "Set my area" write path (region-scoping-design.md §4/§6): a rider picks a
+ * "Set my area" write path (map-and-search.md §4.5): a rider picks a
  * town or drops a pin and this is where the base point lands. Stateless JSON
  * API in the ride-check/best-of mould — no locale prefix, `my-area` CSRF
  * token id carried in the X-CSRF-Token header. BaseLocationService owns the
@@ -57,7 +57,7 @@ final class MyAreaController extends AbstractController
 
         $lat = $body['lat'] ?? null;
         $lng = $body['lng'] ?? null;
-        // Reject before touching the entity (region-scoping-design.md §4):
+        // Reject before touching the entity (map-and-search.md §4.5):
         // malformed input must never reach BaseLocationService::apply().
         if (!\is_numeric($lat) || !\is_numeric($lng) || abs((float) $lat) > 90.0 || abs((float) $lng) > 180.0) {
             return new JsonResponse(['error' => 'bad_coords'], 400);

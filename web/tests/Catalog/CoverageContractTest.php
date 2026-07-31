@@ -104,7 +104,7 @@ final class CoverageContractTest extends TestCase
     public function testUniversalTilePropsCarryTheScopeKeys(): void
     {
         // ref/n/t identity + the ridtok/cctok region-scoping tokens
-        // (region-scoping-design.md §7 Phase 3 review round: pipe-delimited
+        // (map-and-search.md §4.5 Phase 3 review round: pipe-delimited
         // tokens so cluster bubbles can union them) are emitted on EVERY tile
         // layer by pipeline tiles.py::_letter_sql; per-letter tileProps stay
         // extras-only.

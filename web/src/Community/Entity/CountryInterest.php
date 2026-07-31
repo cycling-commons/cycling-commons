@@ -11,8 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * "I want Cycling Commons here" — a tick against a country code, existing to be
- * counted so the next country to onboard is chosen from evidence
- * (2026-07-29-country-requests-and-curator-signup-design.md §5.1).
+ * counted so the next country to onboard is chosen from evidence.
  *
  * Deliberately NOT tied to a region: 245 countries have none, and requiring one
  * would make the signal impossible exactly where it matters most (§4).

@@ -15,7 +15,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * 2026-07-29-country-requests-and-curator-signup-design.md §9.
+ * moderation-and-contribution.md.
  */
 final class CuratorApplicationReviewTest extends WebTestCase
 {
@@ -327,7 +327,7 @@ final class CuratorApplicationReviewTest extends WebTestCase
     }
 
     /**
-     * 2026-07-30-dynamic-region-pages-design.md §4: a region requested while
+     * map-and-search.md §4.5: a region requested while
      * operational can become infrastructure-only between submission and
      * approval — a country onboarding a deeper level demotes its previous
      * operating level the moment the finer rows land. approve() must treat

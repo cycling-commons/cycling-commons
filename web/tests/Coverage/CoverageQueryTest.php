@@ -319,7 +319,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testSearchScopesToRidsAndCc(): void
     {
-        // Region scope (region-scoping-design.md §6/§7 Phase 3): rids filters
+        // Region scope (map-and-search.md §4.5 Phase 3): rids filters
         // community + curated rows to the region; cc catches unsplit rows.
         $client = static::createClient();
         $db = $this->db();
@@ -349,7 +349,7 @@ final class CoverageQueryTest extends WebTestCase
     {
         // A country scope sends rids (its stamped regions) AND cc; the OR arm
         // must admit an unsplit BE row (region_id NULL, cc='BE') the id list
-        // can't match (region-scoping-design.md §6).
+        // can't match (map-and-search.md §4.5).
         $client = static::createClient();
         $db = $this->db();
         self::ensureCoverageSchema($db);
@@ -445,7 +445,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testCountsScopeToRids(): void
     {
-        // Rail totals become scope-aware (region-scoping-design.md §7 Phase 3),
+        // Rail totals become scope-aware (map-and-search.md §4.5 Phase 3),
         // so "total" matches the scope-filtered "shown" dots the client renders.
         $client = static::createClient();
         $db = $this->db();
@@ -479,7 +479,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testScopeParamsAreCappedAndSanitised(): void
     {
-        // Garbage rids are dropped; the id set is capped (region-scoping-design.md
+        // Garbage rids are dropped; the id set is capped (map-and-search.md §4.5
         // §8 risk 10). A too-long list still answers (never a 500), scoped to
         // whatever survived the cap — here region 1 is within the first 24.
         $client = static::createClient();

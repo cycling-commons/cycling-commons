@@ -9,7 +9,7 @@ namespace App\Catalog;
 use Doctrine\DBAL\Connection;
 
 /**
- * The client-side region registry (region-scoping-design.md §4 / §7 Phase 2):
+ * The client-side region registry (map-and-search.md §4.5 Phase 2):
  * every region's id, slug, country code and bounding box, handed to the map page
  * so window.CCScope can resolve the scope selector, compute scope viewport
  * bounds, and know a country's region set for the "All <country>" scope. Display
@@ -29,14 +29,14 @@ final class RegionRegistryProvider
      * client can thread a registry entry straight into a scope.
      *
      * `outline` is the simplified ranking geometry CCScope's rankByGroundDistance
-     * measures to — rings as flat [lng,lat,lng,lat,…]
-     * (2026-07-27-region-edge-distance-ranking-design.md §3). Not a boundary
+     * measures to — rings as flat [lng,lat,lng,lat,…].
+     * Not a boundary
      * source: the real polygons still come from RegionBoundaryProvider. An empty
      * list is normal (a region imported before the outline column existed); the
      * client falls back to the bbox centre.
      *
      * `curatedDefault` is the moderator flag that makes the map OPEN this
-     * region in Curated mode (2026-07-27-map-view-mode-default-design.md §3);
+     * region in Curated mode;
      * false everywhere until a region earns it, and the global default is
      * Everything.
      *

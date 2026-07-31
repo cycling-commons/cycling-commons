@@ -4,7 +4,7 @@
    mobile filters sheet and burger nav, the breakpoint resize, the Curated
    best-of facets, and all the chip groups (discipline, preference prefilter,
    "set my area" prompt, climb/stay filters, heat toggle, season).
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5 step 7 —
+   Extracted from map.js by the module split —
    the last extraction, which leaves map.js as imports plus the boot sequence.
 
    Six inits rather than one, because six calls the entry already made sit
@@ -162,7 +162,7 @@ export function refreshBestOf(){
   if(mode()!=='curated'){ render(); return; }
   // A named-region scope sends &region=<id>; My area sends its derived rid SET
   // as a CSV (&region=1,24) so best-of ranks across the whole home-base area
-  // (MapController parses the CSV; region-scoping-design.md §6 / §9.1 Phase 4).
+  // (MapController parses the CSV; map-and-search.md §4.5 Phase 4).
   // Country/Everywhere send no region — the guarded unbounded aggregate. A
   // single named region keeps the identical single-id request as before.
   const regionIds = window.CCScope && window.CCScope.bestOfRegionIds();
@@ -174,8 +174,8 @@ export function refreshBestOf(){
     .catch(()=>{ if(req===_bestOfReq) applyBestOf([]); });   // on failure, Curated shows no picks rather than a stale set
 }
 
-// Record a manual Curated/Everything choice
-// (2026-07-27-map-view-mode-default-design.md §5). A logged-in rider's choice
+// Record a manual Curated/Everything choice.
+// A logged-in rider's choice
 // goes to their PROFILE — window.CC_MAP_MODE only exists in the riders-only
 // script block — so it follows them across devices and a shared computer never
 // hands it to the next person. Anonymous visitors have no profile to hang it
@@ -191,8 +191,8 @@ function persistMode(m){
   try { localStorage.setItem(MODE_LS_KEY, m); } catch(e){ /* private mode */ }
 }
 
-// Resolve which mode the map OPENS in and paint the toggle to match
-// (2026-07-27-map-view-mode-default-design.md §5). Runs after initScope(), so
+// Resolve which mode the map OPENS in and paint the toggle to match.
+// Runs after initScope(), so
 // CCScope.get() is the resolved active scope — the region's curated_default is
 // the third rung of the precedence and cannot be read before then. The template
 // marks Everything active, which is the global default and so the common case;
@@ -212,7 +212,7 @@ export function initBestOf(){
   // Route domain phase 4 (spec §8): Curated mode = best-of for a (season, bike)
   // facet, fetched from /map/best-of; the returned ids get cur:true and Curated
   // filters K routes to them. A named-region scope now sends &region= too
-  // (region-scoping-design.md §6 / §7 Phase 2).
+  // (map-and-search.md §4.5 Phase 2).
 
 
 
@@ -266,7 +266,7 @@ export function initChips(){
     chip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
     sync();
   })();
-  // "Set my area" cold-start prompt (region-scoping-design.md §4 / §9.1 Phase 4):
+  // "Set my area" cold-start prompt (map-and-search.md §4.5 Phase 4):
   // the pref-chip pattern — a hidden rail chip revealed only when the rider has
   // NO My-area source yet (no base location, no anon circle) AND hasn't dismissed
   // it. Tapping derives the base from the map centre (Komoot's suggest-home
@@ -339,8 +339,8 @@ export function initChips(){
     updateHeatFilter();
   });
 
-  // "Nothing curated here yet" — the one line an empty map owes the visitor
-  // (2026-07-29-country-requests-and-curator-signup-design.md §10.1). A link,
+  // "Nothing curated here yet" — the one line an empty map owes the visitor.
+  // A link,
   // never a form: the page owns the form handling, validation and four-locale
   // copy, and the map bundle stays small.
   (function initEmptyScopeInvite(){

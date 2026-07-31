@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 //
 // Simplified region outlines — the ranking geometry `rankByGroundDistance`
-// consumes (2026-07-27-region-edge-distance-ranking-design.md). Generated from
+// consumes. Generated from
 // the live 32-region dev DB by the SAME statement the catalog import runs
 // (ImportCatalogCommand::recomputeOutlines), so what these tests rank is what
 // the browser ranks:

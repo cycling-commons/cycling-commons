@@ -45,7 +45,7 @@ def db():
     conn.execute("CREATE SCHEMA coverage_pytest")
     conn.execute("SET search_path TO coverage_pytest, public")
     # area_km2 mirrors public.region: load_region's smallest-area-wins tie-break
-    # (region-scoping-design.md §3) orders overlapping matches by it. country_code
+    # (map-and-search.md §4.5) orders overlapping matches by it. country_code
     # mirrors public.region too — load_region's boundary-snap constrains to a
     # POI's own country and backfills cc from the region (finding 5 / finding 8).
     conn.execute(

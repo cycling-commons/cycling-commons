@@ -21,7 +21,7 @@ use Symfony\Component\Intl\Countries;
  * guarded by to_regclass() and degrades to zero rather than 500ing the page.
  *
  * Per-request raw DBAL, deliberately no cache — the same posture as
- * RegionDirectoryProvider (2026-07-30-dynamic-region-pages-design.md §2.2);
+ * RegionDirectoryProvider;
  * the biggest COUNT (coverage_poi, ~430k rows) is still milliseconds.
  *
  * @api Consumed by PageController::coverage.

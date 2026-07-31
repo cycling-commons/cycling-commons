@@ -70,7 +70,7 @@ final class CoverageRepository
     }
 
     /**
-     * SQL filter arm for the active region scope (region-scoping-design.md §6),
+     * SQL filter arm for the active region scope (map-and-search.md §4.5),
      * or '' for the Everywhere scope (no params). `rids` (region ids) compiles
      * to `<alias>.region_id IN (:rids)`; `cc` to `<alias>.country_code = :cc`;
      * a country scope sends both, ORed, so a stamped-region row OR an unsplit
@@ -171,7 +171,7 @@ final class CoverageRepository
      * untouched legacy row lists as community, matching its tile.
      *
      * `rids`/`cc` scope the results to the active region scope
-     * (region-scoping-design.md §6), so the sidebar mirrors the scope-filtered
+     * (map-and-search.md §4.5), so the sidebar mirrors the scope-filtered
      * tiles; absent = every row (backward compatible).
      *
      * @see docs/specs/coverage-provider.md §5
@@ -252,7 +252,7 @@ final class CoverageRepository
      * untouched legacy row lists as community, matching its tile.
      *
      * `rids`/`cc` scope the groups to the active region scope
-     * (region-scoping-design.md §6); absent = every row.
+     * (map-and-search.md §4.5); absent = every row.
      *
      * @see docs/specs/coverage-provider.md §5
      *
@@ -341,7 +341,7 @@ final class CoverageRepository
      * rule as search()/nearby()), so a confirmed item's coverage twin is
      * never counted twice.
      *
-     * `rids`/`cc` make the totals scope-aware (region-scoping-design.md §6/§7):
+     * `rids`/`cc` make the totals scope-aware (map-and-search.md §4.5):
      * the rail badge's "total" side then matches the scope-filtered "shown"
      * dots the client renders from the tile props; absent = global totals.
      *

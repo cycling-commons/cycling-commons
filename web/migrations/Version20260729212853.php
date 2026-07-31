@@ -11,7 +11,7 @@ use Doctrine\Migrations\AbstractMigration;
 
 /**
  * Create curator_application table for country-scoped curator signup
- * (2026-07-29-country-requests-and-curator-signup-design.md §5.2, §8).
+ * (moderation-and-contribution.md).
  *
  * The partial unique index is the concurrency guard for "one pending
  * application per person per country" — the service's own hasPending() check

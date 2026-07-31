@@ -21,7 +21,7 @@ use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
 /**
- * 2026-07-29-country-requests-and-curator-signup-design.md §5.2.
+ * moderation-and-contribution.md.
  */
 final class CuratorApplicationTest extends KernelTestCase
 {
@@ -106,7 +106,7 @@ final class CuratorApplicationTest extends KernelTestCase
     }
 
     /**
-     * 2026-07-30-dynamic-region-pages-design.md §4: the L2 "infrastructure"
+     * map-and-search.md §4.5: the L2 "infrastructure"
      * country outline must never be assignable as a curator's requested
      * scope, exactly as a region from the wrong country is silently ignored
      * rather than assigned. The country carries two rows here — an

@@ -15,7 +15,7 @@ use Doctrine\DBAL\Connection;
  * dims outside the shape and draws a dashed outline, so vertex-exact fidelity
  * is wasted bytes. Replaces the map's Nominatim boundary fetch, which was both
  * an external dependency and a Nominatim usage-policy problem in production
- * (region-scoping-design.md §4 spotlight, §7 Phase 1). Reads only; raw DBAL
+ * (map-and-search.md §4.5 spotlight, §7 Phase 1). Reads only; raw DBAL
  * like CatalogProvider / RouteRankingService.
  *
  * @api Serving entry point for the map's region spotlight (MapController::regionBoundary).
@@ -58,7 +58,7 @@ final class RegionBoundaryProvider
     /**
      * GeoJSON Feature (JSON string) for the UNION of the regions in a scope —
      * an explicit id list and/or every region of a country — for the map's
-     * country/multi-region dim mask (2026-07-22-coverage-scope-rendering-design.md
+     * country/multi-region dim mask (coverage-provider.md §4
      * §B). Null when nothing matches (Everywhere / empty scope).
      *
      * @param list<int> $rids

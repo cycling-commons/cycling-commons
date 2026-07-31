@@ -2,7 +2,7 @@
 /* The illustrative "plan from Spa" chip: pick whichever sample loop is nearest
    the chosen distance and draw it. Explicitly faked — the drawer says so — and
    kept only as a placeholder for the real planner.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    Its source/layer ids (`planroute`, `planroute-case`) are its own and are not
    touched by render()'s clearDynamic, so a repaint leaves the drawn loop alone;

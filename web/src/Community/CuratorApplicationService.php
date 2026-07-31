@@ -19,7 +19,7 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * 2026-07-29-country-requests-and-curator-signup-design.md §5.2, §8, §9.
+ * moderation-and-contribution.md.
  *
  * @api Autowired by the DI container; consumed by JoinCountryController and
  *      Admin\DashboardController::curatorApplications(); covered directly by
@@ -200,7 +200,7 @@ final class CuratorApplicationService
         // opens, so a stale application never gets partway approved. The same
         // check also catches a region that is still present but has been
         // demoted to infrastructure since submission
-        // (2026-07-30-dynamic-region-pages-design.md §4 — a country onboarding
+        // (map-and-search.md §4.5 — a country onboarding
         // a deeper level demotes its previous operating level the moment the
         // finer rows land): granting that scope would be a `moderator_area`
         // row for a region no public or moderation surface ever shows.
@@ -324,7 +324,7 @@ final class CuratorApplicationService
 
     /**
      * The infrastructure-only L2 country outline
-     * (2026-07-30-dynamic-region-pages-design.md §4) must not be assignable
+     * must not be assignable
      * as a curator's requested scope any more than a region from the wrong
      * country is — a crafted or hand-edited POST could otherwise request it.
      */

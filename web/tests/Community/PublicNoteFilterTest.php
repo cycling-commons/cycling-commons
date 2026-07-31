@@ -11,8 +11,7 @@ use App\Community\PublicNoteFilter;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The only two stranger-writable free-text fields in this feature
- * (2026-07-29-country-requests-and-curator-signup-design.md §7).
+ * The only two stranger-writable free-text fields in this feature.
  */
 final class PublicNoteFilterTest extends TestCase
 {

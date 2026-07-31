@@ -25,28 +25,28 @@ from coverage.parse import PoiRow
 DRIFT_ABORT_RATIO = 0.4
 
 # Degrees (SRID 4326) a region-less POI may sit outside every region polygon and
-# still snap to the nearest region of its own country (region-scoping-design.md
+# still snap to the nearest region of its own country (map-and-search.md §4.5
 # §6, finding 5). ~0.01° ≈ 1.1 km at Belgian latitudes — wide enough for
 # polygon-simplification gaps, tight enough that a genuine outside-coverage point
 # stays unstamped. That 1.1 km figure is NORTH-SOUTH only, where a degree of
 # latitude is ~constant; east-west a degree of longitude shrinks with cos(lat),
 # so the same 0.01° is only ~0.70 km at 50°N and ~0.64 km at 54.8°N. Now that
-# the ownership filter (C1, 2026-07-23-border-overlap-ownership-design.md §3)
+# the ownership filter (C1, coverage-provider.md §1)
 # leans on this constant too, that anisotropy is worth naming here, not just at
 # the call sites.
 BOUNDARY_SNAP_DEG = 0.01
 
 # Which country each Geofabrik extract is configured to cover. Lives here rather
 # than in run.py because it is now load-time DATA SEMANTICS, not orchestration:
-# it decides which staged rows this extract OWNS
-# (2026-07-23-border-overlap-ownership-design.md §3), not merely what to stamp.
+# it decides which staged rows this extract OWNS,
+# not merely what to stamp.
 COUNTRY_BY_REGION = {
     "europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE",
     "europe/luxembourg": "LU",
 }
 
-# Per-session resource budget applied to the harvest connection at startup
-# (2026-07-24-coverage-harvest-prod-safety-design.md §3.1). Every value is an
+# Per-session resource budget applied to the harvest connection at startup.
+# Every value is an
 # env knob with a conservative default; maintenance_work_mem × (1 + parallel
 # workers) is the RAM term that can OOM a co-tenant on the shared DB host, so
 # these are SET SESSION-only (never ALTER SYSTEM) and load-bearing, not tuning.
@@ -88,7 +88,7 @@ def resolve_country(region: str) -> str | None:
     filtering intentionally disabled, offline fixture path only. Any OTHER
     unresolvable slug (including `planet`, which spans every country and has
     no single owner by construction) is a HARD FAILURE, not a silent skip:
-    since C1 (2026-07-23-border-overlap-ownership-design.md §3) an unresolved
+    since C1 an unresolved
     country no longer just costs a missing `country_code` stamp — it silently
     reverts that whole extract to non-deterministic last-writer-wins ownership.
     """
@@ -104,7 +104,7 @@ def resolve_country(region: str) -> str | None:
         "(pipeline/coverage/load.py) — add it before harvesting this region. "
         "An unresolved country now silently disables the ownership filter for "
         "the WHOLE extract instead of merely leaving country_code unset "
-        "(2026-07-23-border-overlap-ownership-design.md §3); dev/fixture is "
+        "; dev/fixture is "
         "the only intentional skip."
     )
 
@@ -154,7 +154,7 @@ _INDEX_DDL = (
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_geom_idx ON coverage_poi USING gist (geom)",
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_letter_idx ON coverage_poi (letter)",
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_region_id_idx ON coverage_poi (region_id)",
-    # country_code arm of /map/coverage/search|nearby|counts (region-scoping-design.md §3, §6):
+    # country_code arm of /map/coverage/search|nearby|counts (map-and-search.md §4.5):
     # this table is pipeline-owned, so its index lands here, not in web/migrations.
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_country_code_idx ON coverage_poi (country_code)",
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_name_trgm_idx ON coverage_poi USING gin (name gin_trgm_ops)",
@@ -255,7 +255,7 @@ def load_region(
                 "SELECT id FROM coverage_source WHERE slug = %s", (src_region,)
             ).fetchone()[0]
             # Rows this source currently owns. Ownership is now decided by geometry,
-            # not by which extract ran last (2026-07-23-border-overlap-ownership-design.md
+            # not by which extract ran last (coverage-provider.md §1
             # §3, C1 final-review fix), so this count no longer flaps week to week from
             # a neighbour reclaiming shared border rows — it is a stable baseline for
             # the drift guard below, which is exactly what the design set out to fix
@@ -277,8 +277,8 @@ def load_region(
                         row.osm_ts,
                         row.country_code,
                     ))
-            # Ownership by geometry, not by write order
-            # (2026-07-23-border-overlap-ownership-design.md §3). Nearest-region-wins
+            # Ownership by geometry, not by write order.
+            # Nearest-region-wins
             # (final-review C1): find the SINGLE closest region to the row, across ALL
             # onboarded countries, not just the extract's own — containment (distance 0)
             # always wins, so decision 2's BOUNDARY_SNAP_DEG rescue is preserved exactly.
@@ -366,7 +366,7 @@ def load_region(
                     f"filter, vs {previous} previously (more than {DRIFT_ABORT_RATIO:.0%} "
                     "drop) — aborting swap, keeping last good slice."
                 )
-            # Diff-merge (2026-07-24-coverage-harvest-prod-safety-design.md §3.3):
+            # Diff-merge:
             # write only the delta instead of DELETE-all-slice + INSERT-all-slice.
             # OSM week-over-week churn is a few hundred–few thousand rows out of
             # ~318k, so this collapses the per-country transaction from minutes to
@@ -416,8 +416,8 @@ def load_region(
             )
             # Delete-disappeared arm: rows this extract owned but no longer carries.
             # Scoped to THIS src_region's slice only (never a neighbour's), so a
-            # non-owning extract can neither delete nor resurrect another's row
-            # (2026-07-23-border-overlap-ownership-design.md §4). geom comparison
+            # non-owning extract can neither delete nor resurrect another's row.
+            # geom comparison
             # above uses PostGIS's `=` operator; for POINT geometries (every
             # coverage row) that is exact coordinate equality (a point's bbox is
             # the point itself), and the deterministic POINT(lon lat) EWKT yields
@@ -441,7 +441,7 @@ def load_region(
             touched_c = "" if full_membership else " AND c.id IN (SELECT id FROM coverage_touched)"
             touched_poi = ("" if full_membership
                            else " AND coverage_poi.id IN (SELECT id FROM coverage_touched)")
-            # Smallest-area-wins on overlap (region-scoping-design.md §3): the
+            # Smallest-area-wins on overlap (map-and-search.md §4.5): the
             # third membership writer besides RegionResolver and
             # ImportCatalogCommand::recomputeMembership. DISTINCT ON keeps one
             # region per POI, ordered by area then id, so the stamp is
@@ -462,7 +462,7 @@ def load_region(
                 """,
                 (src_id,),
             )
-            # Boundary-miss rescue (region-scoping-design.md §6, finding 5): a POI
+            # Boundary-miss rescue (map-and-search.md §4.5, finding 5): a POI
             # inside the extract but outside every region polygon — an ST_Contains
             # gap from polygon simplification, ~206 rows in dev Belgium — snaps to
             # the NEAREST region of its OWN country within BOUNDARY_SNAP_DEG,
@@ -490,7 +490,7 @@ def load_region(
                 """,
                 (BOUNDARY_SNAP_DEG, src_id),
             )
-            # region ⇒ cc invariant (region-scoping-design.md §8 risk 10, finding
+            # region ⇒ cc invariant (map-and-search.md §4.5 risk 10, finding
             # 8): the controller's 24-region cap is only safe if every
             # region-stamped row also carries cc (the cc arm is the completeness
             # net when the rid list truncates). country_code is AUTHORITATIVE from

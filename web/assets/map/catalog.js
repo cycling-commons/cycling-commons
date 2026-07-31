@@ -2,7 +2,7 @@
 /* The catalogue: the A-K layer table every other module reads, the derived
    lookups, the towns index, and the two pieces of view state that key off it
    (which layers are active, and which view mode is showing).
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    CATALOG is built at module scope — the second exception §4.2 allows, for the
    same reason as `map`: every module needs it before any init() runs, and the
@@ -29,7 +29,7 @@ export const CATALOG = [
   ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, features:[] }
   ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, features:[] }
   // F · Hazards — features filled below from window.CC_HAZARDS (the served
-  // payload), region-stamped like every letter (region-scoping-design.md §7
+  // payload), region-stamped like every letter (map-and-search.md §4.5
   // Task A). The hardcoded demo fixture ("Exposed crosswind · Hautes Fagnes")
   // was retired in the 07-20 review round (rid-less client fixtures have no
   // honest place in a scope-filtered map); it now returns as a real seeded,
@@ -102,8 +102,8 @@ export const KEY_LETTER={water:'C',services:'D',stays:'E',transit:'G',shelter:'H
 
 // Which layers are drawn, and which of the two view modes is showing.
 //
-// The global default is 'all' (Everything), NOT 'curated'
-// (2026-07-27-map-view-mode-default-design.md §2). Curated hides every
+// The global default is 'all' (Everything), NOT 'curated'.
+// Curated hides every
 // non-curated item on the experiential layers, so on an under-curated region it
 // shows a near-empty map while the rail counts hundreds of stays — a real
 // new-user trap the owner hit ("Gelderland says 1488 where to sleep but I see
@@ -120,7 +120,7 @@ export function setMode(m){ _mode = m; }
 // read when CC_PREFS says the viewer has no stored preference of their own.
 export const MODE_LS_KEY = 'cc-map-mode';
 
-/** Load-time precedence (2026-07-27-map-view-mode-default-design.md §5):
+/** Load-time precedence:
  *   1. the logged-in rider's saved profile mode, if not 'auto';
  *   2. an anonymous visitor's own earlier choice in localStorage;
  *   3. the ACTIVE region's curated_default, set by a moderator once the region

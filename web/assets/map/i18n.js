@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Locale bundle + value translation for the map front end
-   (2026-07-26-map-js-module-split-design.md §4).
+.
 
    A leaf: imports nothing, so it evaluates before every other map module.
    Everything here is a pure read of the injected globals plus lookup helpers —

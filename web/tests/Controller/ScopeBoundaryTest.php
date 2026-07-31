@@ -11,7 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * 2026-07-22-coverage-scope-rendering-design.md §B: the scope dim mask needs a
+ * coverage-provider.md §4: the scope dim mask needs a
  * single unioned boundary for a whole country (or an explicit region set), so
  * the map can grey everything outside a country scope, not just a named region.
  */

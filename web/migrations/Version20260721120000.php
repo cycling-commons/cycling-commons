@@ -14,7 +14,7 @@ use Doctrine\Migrations\AbstractMigration;
  * filters client-side on the active scope like every other served layer, so
  * each heat point carries its region membership. Nullable — a point in no
  * region stays NULL and is hidden in any named-region/country scope, the same
- * leak-safe default every rid-less served row gets (region-scoping-design.md §4).
+ * leak-safe default every rid-less served row gets (map-and-search.md §4.5).
  *
  * Backfills existing rows with the identical smallest-area-wins rule
  * ImportCatalogCommand::recomputeMembership() applies on every import, so

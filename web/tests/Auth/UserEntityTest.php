@@ -10,8 +10,8 @@ use App\Entity\User;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pure unit tests for the User entity's canonical display name and
- * riding-preference accessors — no kernel, no database.
+ * Pure unit tests for the User entity's display-name and riding-preference
+ * accessors — no kernel, no database.
  */
 final class UserEntityTest extends TestCase
 {
@@ -90,7 +90,7 @@ final class UserEntityTest extends TestCase
         self::assertSame([RidingStyle::Urban], $user->getRidingStyles());
     }
 
-    // ── base location (region-scoping-design.md §3) ─────────────────────────
+    // ── base location (map-and-search.md §4.5) ─────────────────────────
 
     public function testBaseLocationIsCoarsenedAtWrite(): void
     {

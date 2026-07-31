@@ -36,8 +36,8 @@ final class RideCheckService
     public const int DEFAULT_RADIUS = 250;
 
     /**
-     * Utility coverage letters surfaced alongside curated items
-     * (2026-07-26-ride-check-coverage-design.md §2): water/bakery (C), bike
+     * Utility coverage letters surfaced alongside curated items:
+     * water/bakery (C), bike
      * services (D), transport — ferry/train (G), shelter (H). Experiential
      * E-stays / I-scenic / J-history are left to the curated arm.
      */
@@ -138,8 +138,8 @@ final class RideCheckService
     }
 
     /**
-     * Open `coverage_poi` utility points (C/D/G/H) in the same corridor
-     * (2026-07-26-ride-check-coverage-design.md §3.1), returned as a parallel
+     * Open `coverage_poi` utility points (C/D/G/H) in the same corridor,
+     * returned as a parallel
      * arm so the frontend can render them with the smaller coverage icon while
      * curated items keep their bigger spot icons. Deduped against SERVED curated
      * items on (source_ref, letter): if a rider already curated this OSM entity,

@@ -495,7 +495,7 @@ Accepted, documented tradeoffs — re-visit when the triggering condition
 arrives:
 
 1. ~~**Best-of has no LIMIT without a region filter.**~~ **Resolved
-   (region-scoping-design.md §7 Phase 1, 2026-07-19):**
+   (map-and-search.md §4.5 Phase 1, 2026-07-19):**
    `RouteRankingService::bestOf` now applies a hard
    `LIMIT RouteRankingService::MAX_RESULTS` (200). The Everywhere/no-region
    facet is bounded; region-scoped facets (≤ the active cap) are never

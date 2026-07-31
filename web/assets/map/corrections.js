@@ -2,7 +2,7 @@
 /* The curator-only pending-corrections overlay (route-domain spec §16 S3/S5):
    one colour per correction, numbered stretch endpoints, and the bottom-left
    side list that zooms to a stretch.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5 step 6.
+   Extracted from map.js by the module split.
 
    /routes/{id}/corrections 403s for non-curators, and that is treated as "no
    corrections" — renderCorrections never runs, so nothing leaks. The 403 shows

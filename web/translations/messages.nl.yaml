@@ -656,7 +656,7 @@ continent:
 region:
   # Map scope-selector + dynamic header labels (region.<slug>.label). Display
   # names live here, not on the World Subdivision link (English-only msgids).
-  # docs/specs/2026-07-19-region-scoping-design.md §3.
+  # map-and-search.md §4.5
   my_area:
     label: 'Mijn gebied'
   wallonia:

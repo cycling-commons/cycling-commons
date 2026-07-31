@@ -52,7 +52,7 @@ trait CoverageSchema
     /**
      * Insert one coverage row (defaults form a valid Belgian water node).
      * `region_id`/`country_code` default to NULL/BE; pass them to exercise the
-     * region-scope arms (region-scoping-design.md §6).
+     * region-scope arms (map-and-search.md §4.5).
      *
      * @param array<string, mixed> $overrides ref|letter|kind|name|lat|lng|tags|region_id|country_code
      */

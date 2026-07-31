@@ -92,7 +92,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 | `CC_PREFS` | `{bikes:[], styles:[]}` value-lists; `[]/[]` for anonymous (§4.4) | all |
 | `MAPILLARY_TOKEN` | from `%env(MAPILLARY_TOKEN)%` via `twig.yaml` (§10) | all |
 | `CC_RIDECHECK` | `{url, token}` — ride-check endpoint + stateless CSRF token | `ROLE_USER` block only |
-| `CC_MY_AREA` | `{lat, lng, place, radiusKm, regionIds, countryCodes}` (any field may be `null`/empty when no base location is set) plus `{url, token}` for `POST /map/my-area` — feeds `scope.js`'s `myArea` kind (§4.5, region-scoping-design.md §7 Phase 4) | `ROLE_USER` block only |
+| `CC_MY_AREA` | `{lat, lng, place, radiusKm, regionIds, countryCodes}` (any field may be `null`/empty when no base location is set) plus `{url, token}` for `POST /map/my-area` — feeds `scope.js`'s `myArea` kind (§4.5, map-and-search.md §4.5 Phase 4) | `ROLE_USER` block only |
 | `CC_IS_CURATOR`, `CC_PENDING`, `CC_MOD_TOKEN` | pending-submission layer + decision CSRF token | curators with completed 2FA only (`MapController::map()` gates on `TwoFactorPolicy::requiresSetup()`) |
 
 - **No preferences endpoint:** rider preferences and i18n ride the page render;
@@ -168,7 +168,6 @@ lazy-firewall caching gotcha — see
   (profile, NOT localStorage — shared devices) → an anonymous visitor's own
   localStorage choice → the active region's flag → Everything. Resolved once at
   load; a later scope change never re-resolves.
-  Design: [2026-07-27-map-view-mode-default-design.md](2026-07-27-map-view-mode-default-design.md).
 
 ### 4.2b Basemap labels follow the site language
 
@@ -227,8 +226,8 @@ name layer asks for `name:<document lang>`.
 
 The rail's Region group (a per-registry list of named regions/countries plus
 Everywhere) and its `scope.js` (`window.CCScope`) client model are the full
-region-scoping design owned by region-scoping-design.md — this subsection
-covers only the `myArea` scope kind (region-scoping-design.md §7 Phase 4),
+region-scoping design owned by map-and-search.md §4.5 — this subsection
+covers only the `myArea` scope kind (map-and-search.md §4.5 Phase 4),
 the newest rung of that same ladder.
 
 - **`myArea` scope kind.** A rider with a base location gets a **My-area**
@@ -266,7 +265,7 @@ the newest rung of that same ladder.
   `rids: null` — so `map.js`'s `fetchCoverageCounts()`/`runCoverageSearch()`
   skip the request instead of building an unscoped query that would silently
   fall back to GLOBAL results (the leak-safe-hide rule of
-  region-scoping-design.md §4/§9.1, extended to this client-side seam).
+  map-and-search.md §4.5, extended to this client-side seam).
 - **Widen ladder:** myArea → the single registry-known country among the
   derived `countryCodes` (exactly one such country, else straight to
   Everywhere — an ambiguous/border myArea has no single "wider" country) →
@@ -294,7 +293,7 @@ the newest rung of that same ladder.
   whole map is leak-safe-hidden. Bbox containment is the deliberate
   approximation: an inside-bbox town already renders its surroundings, so no
   widen is needed there. Applies to every scope kind, not just myArea.
-- **Default precedence (region-scoping-design.md §9.1):** on load, `URL scope > myArea
+- **Default precedence (map-and-search.md §4.5):** on load, `URL scope > myArea
   (if available) > localStorage`. My-area wins the default scope whenever a
   base location is set, overriding a stale localStorage scope — except an
   explicit shared URL scope, which always wins.
@@ -315,7 +314,7 @@ the newest rung of that same ladder.
   (map-and-search.md §4 above). **Everywhere** clears the mask entirely
   (`setSpotlight(null)`); no mask ever draws for an empty scope. Design +
   browser-verified results (NL union outline, single-province outline, no
-  mask for Everywhere): [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md) §B.
+  mask for Everywhere).
 - **Cross-border scope chips rank by adjacency.** The scope chips
   offered around a region (compass grid + linear list) include a *foreign*
   region ONLY when it shares a border with the active region — never by centroid
@@ -324,10 +323,8 @@ the newest rung of that same ladder.
   (Utrecht stays all-Dutch), each by construction, not tuning. Adjacency is
   precomputed at catalog import into `region.adj` (`integer[]`, one
   `ST_Intersects` pass across all onboarded countries) and shipped inline in
-  `CC_REGIONS`; `chipModel` (`scope-chips.js`) gates foreign chips on it. Supersedes the
-  centroid ranking of
-  [2026-07-23-cross-border-chips-design.md](2026-07-23-cross-border-chips-design.md).
-  Design: [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §2.
+  `CC_REGIONS`; `chipModel` (`scope-chips.js`) gates foreign chips on it.
+  Supersedes an earlier centroid-distance ranking.
 - **…and are ORDERED by polygon-edge distance.** Within the pool
   adjacency has made eligible, regions sort by the distance from the anchor to
   the nearest point on the region itself — 0 when the anchor is inside it —
@@ -340,15 +337,13 @@ the newest rung of that same ladder.
   regions) and shipped inline in `CC_REGIONS`; real boundaries still come from
   `RegionBoundaryProvider`. Eligibility is still adjacency, so Utrecht stays
   all-Dutch. A region with no outline falls back to its bbox centre.
-  Design: [2026-07-27-region-edge-distance-ranking-design.md](2026-07-27-region-edge-distance-ranking-design.md).
 - **Map-click scope refinement.** A map click resolves to its region
   by a synchronous bbox candidate pass; when 2+ region bboxes overlap the point,
   `CCScope.regionOfPointPrecise` fetches those candidates' polygons
   (`/map/region/{slug}/boundary`, cached) and runs a pure point-in-polygon test,
   so the click lands in the region actually under it, not the nearest bbox
   centre. A single candidate never fetches (the common case stays instant);
-  inside no candidate polygon it falls back to nearest-centre. Design:
-  [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §3.
+  inside no candidate polygon it falls back to nearest-centre.
 - **Three-tier region spotlight.** For a single named-region scope,
   the active region's border-neighbours (`region.adj`) render at a **middle** dim
   tone — lighter than the fully-outside world (`0.13` vs `0.22`), darker than the
@@ -360,7 +355,6 @@ the newest rung of that same ladder.
   forced clockwise (opposite the CCW world ring) so MapLibre never mis-classifies
   a same-wound hole as a solid dark wedge (an intermittent, zoom-out-only
   artifact otherwise). Country / My-area / Everywhere spotlights are unchanged.
-  Design: [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §8.
 
 ## 5. Layer rendering strategy
 
@@ -450,13 +444,8 @@ the newest rung of that same ladder.
   its members' centroid, which could sit outside the scoped region): a
   heatmap has no centroid to leak, only in-scope points contribute density,
   so a soft feather at the region edge is honest rather than a false marker.
-  Design:
-  [2026-07-24-coverage-overview-heatmap-design.md](2026-07-24-coverage-overview-heatmap-design.md)
-  (supersedes the z6–10-is-empty behaviour of
-  [2026-07-24-coverage-no-cluster-design.md](2026-07-24-coverage-no-cluster-design.md)
-  §2, which itself supersedes
-  [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md)
-  §7); tile contract: [coverage-provider.md](coverage-provider.md) §4.
+  The heatmap supersedes a z6–10-is-empty stage, which itself replaced the
+  cluster bubbles; tile contract: [coverage-provider.md](coverage-provider.md) §4.
 - **Selected coverage POI stays visible on zoom-out:** a coverage POI's icon is
   drawn only by its tile `<key>-<cc>-cov` layer, which the z9 minzoom hides
   on zoom-out — so zooming out past z9 with a coverage POI selected would
@@ -728,8 +717,7 @@ requirement).
   `ST_LineLocatePoint(track, ST_ClosestPoint(…))` (fraction → km-along, the
   ordering key). Cap `MAX_PER_LETTER = 200` per letter with a `truncated` flag.
 - **Coverage arm (open POIs along the ride)** — a parallel `coverage` result
-  (`RideCheckService::corridorCoverage()`, design
-  `2026-07-26-ride-check-coverage-design.md`) runs the *same* MATERIALIZED
+  (`RideCheckService::corridorCoverage()`) runs the *same* MATERIALIZED
   corridor over `coverage_poi`, limited to utility letters
   `COVERAGE_LETTERS = {C, D, G, H}` (water, bike services, transport, shelter).
   **Deduped against served curated items** on `(source_ref, letter)` — if a

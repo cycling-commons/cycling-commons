@@ -22,8 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Curator Regions desk — the only place `region.curated_default` is set
- * (2026-07-27-map-view-mode-default-design.md §4).
+ * Curator Regions desk — the only place `region.curated_default` is set.
  *
  * The toggle is GATED, which is the whole point (owner decision "B"): a region
  * cannot be made to open in Curated mode until it actually has enough curated

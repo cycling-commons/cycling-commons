@@ -53,7 +53,7 @@ def test_letter_specific_tile_props():
 
 def test_universal_tile_props_carry_the_scope_keys():
     # ref/n/t identity + the ridtok/cctok region-scoping tokens are emitted on
-    # EVERY layer (region-scoping-design.md §6): pipe-delimited membership tokens
+    # EVERY layer (map-and-search.md §4.5): pipe-delimited membership tokens
     # so tippecanoe can union them across a cluster (finding 2). Per-letter
     # tileProps stay extras-only.
     contract = load_contract()

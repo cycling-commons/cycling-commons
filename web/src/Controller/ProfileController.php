@@ -76,7 +76,7 @@ final class ProfileController extends AbstractController
             ),
             'confirmations' => $this->confirmations($db, (int) $user->getId()),
             // The answer to "where is my curator request?" lives on the landing
-            // pane (2026-07-29-country-requests-and-curator-signup-design.md §10).
+            // pane.
             'curator_applications' => $db->fetchAllAssociative(
                 'SELECT ca.country_code, ca.status, ca.created_at, ca.decision_note, r.slug AS region_slug
                    FROM curator_application ca

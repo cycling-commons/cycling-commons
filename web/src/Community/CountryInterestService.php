@@ -12,7 +12,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * 2026-07-29-country-requests-and-curator-signup-design.md §5.1.
+ * moderation-and-contribution.md.
  *
  * Counts stay owner-only for v1 (§12.2): a public counter discourages when the
  * numbers are small — which they will be on an empty map — and becomes worth

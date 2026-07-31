@@ -159,7 +159,7 @@ def test_nl_config_seeds_all_12_provinces_at_region_level():
 
 def test_nl_limburg_slug_is_disambiguated():
     # BE also has a Limburg province; slug is GLOBAL identity
-    # (country-onboarding-design.md §4).
+    # (tools/divisions/README.md).
     assert NL["slugs"]["NL-LI"] == "limburg-nl"
 
 
@@ -173,7 +173,7 @@ def test_nl_feature_carries_admin_level_4_and_frozen_slug():
 def test_slugs_are_globally_unique_across_countries():
     all_slugs = [s for cfg in config.COUNTRY_CONFIG.values() for s in cfg["slugs"].values()]
     # Every onboarded country also carries an L2 country-outline slug
-    # (2026-07-30-dynamic-region-pages-design.md §4), except when the
+    #, except when the
     # primary config already IS the L2 row (LU: subtype "country") —
     # export_country only appends l2_cfg() on top when the primary subtype
     # differs, so including LU's COUNTRY_L2 entry here would flag its own

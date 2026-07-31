@@ -2,7 +2,7 @@
 /* The MapLibre instance and everything that belongs to the map object itself:
    controls, the satellite base, the style-ready flag, the fly-to-pin camera
    move and the right-click coordinate popup
-   (2026-07-26-map-js-module-split-design.md §4).
+.
 
    `map` is constructed at module scope — one of the two exceptions §4.2 allows.
    Every other module needs it before any init() runs, it is assigned once, and
@@ -20,7 +20,7 @@ export const map = new maplibregl.Map({
   fitBoundsOptions:{padding:24}, attributionControl:false
 });
 // Non-prod test handle. web/tests/browser/map-smoke.js (the checkpoint sweep of
-// 2026-07-26-map-js-module-split-design.md §6) runs as a page script and has no
+// map-and-search.md §2) runs as a page script and has no
 // other way to reach the MapLibre instance, so it cannot assert on layers,
 // sources or filters — the exact things a module split can silently break.
 // Gated on CC_DEBUG, which templates/map/index.html.twig emits only when

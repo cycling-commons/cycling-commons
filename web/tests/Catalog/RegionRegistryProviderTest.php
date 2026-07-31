@@ -12,7 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * The client-side region registry (region-scoping-design.md §4 / §7 Phase 2):
+ * The client-side region registry (map-and-search.md §4.5 Phase 2):
  * id/slug/countryCode/bbox per region, fed to window.CCScope. `countryCode`
  * (not `cc`) matches the scope-object contract.
  */
@@ -40,8 +40,8 @@ final class RegionRegistryProviderTest extends KernelTestCase
         self::assertNotNull($square, 'the imported region is in the registry');
         self::assertIsInt($square['id']);
         self::assertSame('BE', $square['countryCode']);       // scope-object field name, not `cc`
-        // The view-mode flag rides the registry too
-        // (2026-07-27-map-view-mode-default-design.md §3). False on import: a
+        // The view-mode flag rides the registry too.
+        // False on import: a
         // region opens in Everything until a moderator earns it otherwise.
         self::assertArrayHasKey('curatedDefault', $square);
         self::assertFalse($square['curatedDefault']);
@@ -76,8 +76,8 @@ final class RegionRegistryProviderTest extends KernelTestCase
     }
 
     /**
-     * The simplified ranking outline CCScope.rankByGroundDistance measures to
-     * (2026-07-27-region-edge-distance-ranking-design.md §3). Shape, not
+     * The simplified ranking outline CCScope.rankByGroundDistance measures to.
+     * Shape, not
      * fidelity: rings as FLAT [lng,lat,lng,lat,…], which is what the client
      * walks — a nested [[lng,lat],…] would silently rank everything as
      * "no outline" and fall back to bbox centres with nothing failing.

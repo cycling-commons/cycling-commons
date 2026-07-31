@@ -2,8 +2,7 @@
 
 # Tiles
 
-Germany alone contributes **317,887** rows to `coverage_poi`
-(`docs/specs/2026-07-22-country-onboarding-design.md`) — bike shops, water fountains, viewpoints,
+Germany alone contributes **317,887** rows to `coverage_poi` — bike shops, water fountains, viewpoints,
 shelters, ruins, one country's worth of the fountain's neighbours. Add Belgium and the Netherlands
 and the table holds 375,078 rows today (chapter 5, [`making-it-fast.md`](making-it-fast.md)), and the
 planet-wide target for the same table is about 4.7 million (the sizing comment above `_TABLE_DDL` in
@@ -229,8 +228,7 @@ patch of screen a few hundred pixels wide. Drawing every one of them as its own 
 This project has tried two different fixes for that before landing on the one it ships today, and both
 earlier attempts are worth knowing because each one taught a real lesson. The first was the naive one:
 let tippecanoe's own default point-thinning behaviour keep a random subset at low zoom and drop the
-rest. It was tried, and the result is recorded in the project's design history
-(`2026-07-19-region-scoping-design.md`): default thinning let only 23 of 2,015 D-services (bike shops,
+rest. It was tried, and the result is recorded in the project's design history: default thinning let only 23 of 2,015 D-services (bike shops,
 repair stations, pumps) survive at zoom 8, while the on-screen count still read "2015/2015" because
 that number comes from an honest SQL count (`/map/coverage/counts`, coverage-provider.md §5), not from
 what the tile happened to keep. The map looked nearly empty. The rail said everything was there. Both
@@ -248,16 +246,14 @@ neither of them a tuning mistake:
 - **Phantom bubbles.** A cluster renders at the *centroid* of its members. A cluster straddling a
   region border sits at the centroid of whichever points tippecanoe happened to merge — which can land
   **outside** the scoped region altogether. Investigation on 2026-07-24 found this directly: a shelter
-  bubble rendered in Thuringia carried a single Hesse `ridtok`
-  (`2026-07-24-coverage-no-cluster-design.md §1`). No tile attribute could fix it — union tokens,
+  bubble rendered in Thuringia carried a single Hesse `ridtok`. No tile attribute could fix it — union tokens,
   leader tokens, a tighter `--cluster-distance`, bigger tile budgets were all tried, and none reached
   zero phantoms, because the bug was never in which token a cluster carried; it was in *where the
   geometry itself was drawn*.
 - **It does not scale.** "Ship a region's points to the client and cluster them" is bounded for a
   Belgian province or a German Land (Bavaria, on the order of tens of thousands of coverage points),
   but it breaks the moment a region the size of a US state or a Chinese province is onboarded whole —
-  California is roughly 200,000-400,000 points, Guangdong 500,000 to over 2 million
-  (`2026-07-24-coverage-no-cluster-design.md §1`). Clustering that many points was never going to be
+  California is roughly 200,000-400,000 points, Guangdong 500,000 to over 2 million. Clustering that many points was never going to be
   the shape of a worldwide coverage layer.
 
 Both problems are artifacts of clustering itself, not of anything about the underlying data, so the fix
@@ -266,8 +262,7 @@ is ever merged.** A single point carries exactly one `ridtok`/`cctok` token pair
 country — so the scope filter (coverage-provider.md §4) is exact for that one point, at any zoom, in
 any country, with no cross-feature union to get wrong and no rendered position that is anything other
 than the point's own coordinate. There is no `point_count` property anywhere in the coverage tiles any
-more, and there is not meant to be one again
-(`2026-07-24-coverage-no-cluster-design.md`).
+more, and there is not meant to be one again.
 
 Dropping clustering does not make the original overview problem disappear — a rider still lands on a
 region at roughly z7-z9 (the scope selector's own fit zoom), and thousands of individual points still
@@ -285,7 +280,7 @@ built from the thinned sample, answering "where is coverage dense" rather than "
 fountain". A thinned sample is exactly what a density surface needs (relative density survives even
 heavy thinning, because the drop is proportional across the tile) and exactly what a pin list must
 never be handed — the same distinction the "23 of 2015" story above was already teaching, just applied
-correctly this time instead of ignored (`2026-07-24-coverage-overview-heatmap-design.md §3.1`).
+correctly this time instead of ignored.
 
 On screen (chapter 8, `on-screen.md`, covers MapLibre's side of this in full) the client mirrors every
 coverage icon layer with a heatmap layer on the same source-layer: a `<letter>-<cc>-heat` layer with
@@ -298,7 +293,7 @@ up the individual icons fade in — the z9-10 icons are drawn from the same thin
 uses, so they are a sample too, but they densify into the complete set by z11, where every point is
 guaranteed present. The heatmap and the icons cross-fade across that z9-10 handoff, so a rider is never
 looking at a gap between "blur" and "dots"
-(`2026-07-24-coverage-overview-heatmap-design.md §2`, tuning note). The rail's `/map/coverage/counts`
+. The rail's `/map/coverage/counts`
 (coverage-provider.md §5) stays the one thing in this whole picture that is never a sample: an exact
 SQL count, unaffected by what any tile happened to keep — exactly the number that made the
 naive-thinning attempt's lie visible in the first place.

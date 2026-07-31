@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-// Settings "base location" field (region-scoping-design.md §4): a plain-text
+// Settings "base location" field (map-and-search.md §4.5): a plain-text
 // Photon town typeahead + radius slider live-output. Deliberately map-free —
 // no MapLibre/PMTiles here; the pin-drop path lives on the map page's own
 // "Set my area" control, which calls the same BaseLocationService.

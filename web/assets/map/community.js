@@ -10,7 +10,7 @@
 
    Plus the curator's moderation submit, which lives here because it is the same
    pattern again — a token, a POST, a repaint.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5 step 6.
+   Extracted from map.js by the module split.
 
    All three delegated listeners are registered by initCommunity() rather than at
    module scope (§4.2). They were three separate top-level registrations in the

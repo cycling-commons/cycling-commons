@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Mapillary street-level imagery: the sequence tile layer, the lazily injected
    viewer, the bottom dock and its resize/fullscreen behaviour.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    Self-contained by construction: nothing outside reads a Mapillary binding,
    and the only outward dependency is the map itself. MLY_ENABLED gates the

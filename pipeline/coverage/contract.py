@@ -47,7 +47,7 @@ class Contract:
     letters: dict[str, LetterSpec]
     service_kind: dict[str, str]  # "key=value" rule -> shop|station|pump (D only)
     # Props carried on EVERY tile layer (ref/n/t identity + t label, plus the
-    # rid/cc region-scoping keys — region-scoping-design.md §6). Per-letter
+    # rid/cc region-scoping keys — map-and-search.md §4.5). Per-letter
     # extras live in LetterSpec.tile_props; these are implicit and universal,
     # emitted by tiles.py::_letter_sql for every letter.
     universal_tile_props: list[str]

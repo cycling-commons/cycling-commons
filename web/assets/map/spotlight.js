@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Region / country / My-area spotlight: dim the world outside the active scope
-   and outline it (region-scoping-design.md §4, three-tier neighbours per
-   2026-07-24-region-adjacency-and-click-refinement-design.md §8).
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   and outline it (map-and-search.md §4.5, three-tier neighbours per
+   map-and-search.md §4.5).
+   Extracted from map.js by the module split.
 
    All three entry points share the `_spotReq` race token and the
    region-mask / region-adj-mask / region source+layer ids, so a scope switch
@@ -24,7 +24,7 @@ import { map } from './map-init.js';
 const CC_REGIONS = window.CC_REGIONS || [];
 
 // Region spotlight — dim everything OUTSIDE the active named region + a dashed
-// outline (region-scoping-design.md §4). Served from our own DB via the
+// outline (map-and-search.md §4.5). Served from our own DB via the
 // cacheable boundary endpoint (replaced the old Nominatim fetch). Re-callable:
 // clears the previous spotlight first, so it follows the scope selector; a
 // race token stops a slow response repainting after a newer scope switch.
@@ -38,7 +38,7 @@ export function setSpotlight(slug){
   const req = ++_spotReq;
   clearSpotlight();
   if(!slug) return;   // country / everywhere: no single-region spotlight
-  // Three-tier spotlight (item 4 Part C, 2026-07-24-region-adjacency-and-click-refinement-design.md §8):
+  // Three-tier spotlight (item 4 Part C, map-and-search.md §4.5):
   // the active region's adj neighbours (CC_REGIONS) render at a lighter mask
   // tone than the outside world, so the regions the rider can jump to are
   // visible. Two data sources:
@@ -101,10 +101,10 @@ export function setSpotlight(slug){
 
 // Shared mask painter: dim the world outside `g` + a dashed outline. Used by
 // the named-region and country spotlights; the My-area circle keeps its own
-// soft-edge variant (region-scoping-design.md §4 anti-border cue). When
+// soft-edge variant (map-and-search.md §4.5 anti-border cue). When
 // `adjFeatures` (each neighbour's own boundary Feature) + `fullUnion` (dissolved
 // active+neighbours) are given (single-region three-tier spotlight,
-// 2026-07-24-region-adjacency-and-click-refinement-design.md §8), the neighbours
+// map-and-search.md §4.5), the neighbours
 // are punched out of the dark mask (via fullUnion — never touching rings), given
 // a lighter middle tone, and each individually outlined.
 function drawSpotlightMask(g, adjFeatures, fullUnion){
@@ -140,7 +140,7 @@ function drawSpotlightMask(g, adjFeatures, fullUnion){
   }
   map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
 }
-// Country spotlight (2026-07-22-coverage-scope-rendering-design.md §B): the
+// Country spotlight (coverage-provider.md §4): the
 // whole-country outline via /map/scope/boundary's ST_Union, so a country scope
 // greys the rest of the world exactly like a single named region does.
 export function setCountrySpotlight(cc){
@@ -156,7 +156,7 @@ export function setCountrySpotlight(cc){
     }).catch(e=>console.warn('Scope boundary unavailable:', e));
 }
 
-// My-area spotlight (region-scoping-design.md §4 / §9.1 Phase 4): a locally
+// My-area spotlight (map-and-search.md §4.5 Phase 4): a locally
 // computed soft circle — zero fetch, unlike the named-region boundary. The
 // deliberately fuzzy edge (line-blur) is §4's anti-border message made visible.
 // Reuses the SAME source/layer ids as setSpotlight so clearSpotlight() and the
@@ -169,7 +169,7 @@ export function setCircleSpotlight(center, rkm){
   clearSpotlight();
   if(!center || !rkm) return;
   const n=64, lat=center[0];
-  // Pole safety (region-scoping-design.md §4): cos(lat) -> 0 near +/-90 would blow dLng up to Infinity/NaN.
+  // Pole safety (map-and-search.md §4.5): cos(lat) -> 0 near +/-90 would blow dLng up to Infinity/NaN.
   const cosLat=Math.max(0.01, Math.cos(lat*Math.PI/180));
   const dLat = rkm/111.32, dLng = rkm/(111.32*cosLat);
   const ring=[];

@@ -99,8 +99,8 @@ Ownership is decided by **geometry, not by which extract ran last**: each staged
 the single nearest region within a small snap tolerance, and an extract keeps the row only if that
 region's country is its own. This is what makes `src_region_id` deterministic (and what unblocks
 partitioning). The full rationale, the measured data, and the nearest-region-wins rule are in
-[the border-overlap design](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/2026-07-23-border-overlap-ownership-design.md) and
-[coverage-provider.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/coverage-provider.md).
+[coverage-provider.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/coverage-provider.md)
+(§1 for the ownership rule, §3 for the staging step that applies it).
 
 ## Safety rails
 

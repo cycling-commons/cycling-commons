@@ -46,7 +46,7 @@ across that one seam:
 
 This project has an exact, named, verified answer for where this would actually break, because it
 was already looked for and written down rather than discovered by accident later.
-`docs/specs/2026-07-19-region-scoping-design.md` §8 risk 11 names both break points precisely:
+The region-scoping work's risk register named both break points precisely:
 
 <!-- CODE-FROM web/assets/map/scope.js -->
 ```js
@@ -268,7 +268,7 @@ present in this codebase before this chapter ever pointed at them.
 !!! tip "Hands-on — run the naive union CCScope.bbox() would produce, on the seam"
     No region this project has onboarded straddles ±180°, so there is no live `region.bbox` row that
     actually triggers this bug today — but the arithmetic itself needs no onboarded region at all,
-    only the same two example longitudes `2026-07-19-region-scoping-design.md` §8 risk 11 and this
+    only the same two example longitudes that risk register and this
     chapter's own antimeridian section both already use: a sliver running from 179.5°E to 179.7°W.
     Run `CCScope.bbox()`'s own `Math.min`/`Math.max` union directly on those two numbers:
 
@@ -307,8 +307,8 @@ present in this codebase before this chapter ever pointed at them.
     ```
 
     `0.8` degrees — the real width, recovered by refusing to treat ±180° as an ordinary number line
-    for exactly the length of one comparison. This is the precise failure `2026-07-19-region-scoping-
-    design.md` §8 risk 11 names as **required** to fix before the first region straddling the seam is
+    for exactly the length of one comparison. This is the precise failure the region-scoping risk
+    register names as **required** to fix before the first region straddling the seam is
     onboarded, and the query above is exactly `CCScope.bbox()`'s own `Math.min`/`Math.max` shape — run
     here on two literal numbers because no onboarded region needs the fix yet, not because the
     arithmetic itself would be any different once one does.

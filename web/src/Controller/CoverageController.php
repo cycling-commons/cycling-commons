@@ -36,7 +36,7 @@ final class CoverageController extends AbstractController
 
     /**
      * Hard cap on the region-id set a `rids` scope param may carry
-     * (region-scoping-design.md §8 risk 10): a small, sorted id set keeps the
+     * (map-and-search.md §4.5 risk 10): a small, sorted id set keeps the
      * shared HTTP-cache keyspace bounded. A country scope always sends `cc`
      * alongside, whose OR arm covers every row even if the id list is capped,
      * so the cap is safe (never under-inclusive for a country). Real scopes
@@ -126,7 +126,7 @@ final class CoverageController extends AbstractController
     }
 
     /**
-     * Parse the region-scope query params (region-scoping-design.md §6): `rids`
+     * Parse the region-scope query params (map-and-search.md §4.5): `rids`
      * a csv of region ids compiled to a `region_id IN (…)` arm, `cc` a 2-letter
      * country code. Both are always client-sent, never server-resolved from a
      * user (the coverage plane is anonymous + cacheable — §6 cacheability

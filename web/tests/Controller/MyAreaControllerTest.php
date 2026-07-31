@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
- * POST /map/my-area (region-scoping-design.md §4/§6): the rider "set my area"
+ * POST /map/my-area (map-and-search.md §4.5): the rider "set my area"
  * write path. Coarsens+clamps+derives via BaseLocationService (never echoes
  * raw input — response carries the re-read STORED values only, per §4's
  * request-precision-equals-stored-precision invariant), stateless CSRF

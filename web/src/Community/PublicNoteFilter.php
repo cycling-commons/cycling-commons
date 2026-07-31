@@ -7,8 +7,7 @@ declare(strict_types=1);
 namespace App\Community;
 
 /**
- * Hardening for the two stranger-writable free-text fields
- * (2026-07-29-country-requests-and-curator-signup-design.md §7).
+ * Hardening for the two stranger-writable free-text fields.
  *
  * Both fields are reviewer-only and never rendered on a public page, which
  * bounds the blast radius to the reviewer's own screen. This filter is the

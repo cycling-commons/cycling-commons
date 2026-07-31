@@ -52,8 +52,8 @@ framework:
             limit: 120
             interval: '1 minute'
             cache_pool: cache.coverage_read_limiter
-        # Country requests and curator signup
-        # (2026-07-29-country-requests-and-curator-signup-design.md §11). A rider
+        # Country requests and curator signup.
+        # A rider
         # may reasonably ask for a handful of countries; nobody needs 200.
         country_interest:
             policy: sliding_window

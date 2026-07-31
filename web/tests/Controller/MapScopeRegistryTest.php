@@ -11,7 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * 2026-07-22-scope-selector-scale-design.md §E: the injected region registry
+ * map-and-search.md §4.5: the injected region registry
  * (window.CC_REGIONS) must carry a localized `label` + `countryLabel` so the
  * client can search and render scope chips without re-fetching or re-translating.
  */

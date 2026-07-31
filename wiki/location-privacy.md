@@ -73,5 +73,5 @@ of that is used by, or shared with, the location feature described here.
 ## For the curious
 
 The full engineering design — including the exact rules that keep this feature banner-free — lives in
-the project's internal design docs, `2026-07-22-scope-selector-scale-design.md §F`. This page is the
-plain-language notice that stands in for a consent banner, as that spec calls for.
+the project's internal design notes. This page is the
+plain-language notice that stands in for a consent banner, as that design calls for.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 //
-// Map scope model (docs/specs/2026-07-19-region-scoping-design.md §4 / §7
+// Map scope model (map-and-search.md §4.5
 // Phase 2): the single source of truth for "what area am I looking at" —
 // a named region, a whole country, or everywhere. Persisted in localStorage
 // + the URL (?scope=), and broadcast as a `cc:scopechange` window event that
@@ -9,7 +9,7 @@
 // This is a focused module extracted from map.js (a 3000-line classic script);
 // map.js consumes window.CCScope. The scope uses `kind`, NOT `mode` — map.js
 // already owns `mode` for the Curated/Everything view toggle (verified name
-// collision, region-scoping-design.md §4). The `myArea` kind (Phase 4, §9.1)
+// collision, map-and-search.md §4.5). The `myArea` kind (Phase 4, §9.1)
 // derives from the logged-in home base (window.CC_MY_AREA, Task 6) or an
 // anonymous circle (localStorage 'cc-my-area'), never from the URL/'cc-scope'
 // token — those only ever carry the bare literal 'myarea', no coordinates.
@@ -24,21 +24,20 @@
   // Region registry injected by the map page from the DB (CCScope.init):
   //   { id:int, slug:str, countryCode:str, bbox:[west, south, east, north],
   //     adj:int[] }  — adj = border-neighbour ids (cross-border chip gate,
-  //   2026-07-24-region-adjacency-and-click-refinement-design.md §2.2)
+  //   map-and-search.md §4.5)
   let regions = [];
   let byId = new Map();
   let bySlug = new Map();
   let byCountry = new Map();
 
   // Session cache of fetched region boundary polygons (slug -> Polygon[] rings
-  // list), so a second ambiguous click in the same overlap zone fetches nothing
-  // (2026-07-24-region-adjacency-and-click-refinement-design.md §3.3).
+  // list), so a second ambiguous click in the same overlap zone fetches nothing.
   const boundaryCache = new Map();
 
   // IANA timezone -> ISO country, for the anonymous cold-start home hint
-  // (2026-07-22-scope-selector-scale-design.md §D). Starts with the onboarded
+  // (map-and-search.md §4.5). Starts with the onboarded
   // countries' common zones; extend per onboarding. Compute-only — nothing is
-  // ever stored (2026-07-22-scope-selector-scale-design.md §F rule 1).
+  // ever stored (map-and-search.md §4.5 rule 1).
   const TZ_COUNTRY = {
     'Europe/Brussels': 'BE',
     'Europe/Amsterdam': 'NL',
@@ -98,7 +97,7 @@
   const countryScope = (cc) => ({ kind: 'country', regionIds: (byCountry.get(cc) || []).map((r) => r.id), countryCode: cc });
   const everywhereScope = () => ({ kind: 'everywhere', regionIds: [], countryCode: null });
 
-  // --- myArea (Phase 4, region-scoping-design.md §9.1): "what's near my home
+  // --- myArea (Phase 4, map-and-search.md §4.5): "what's near my home
   // base" for logged-in users (window.CC_MY_AREA, Task 6) or an anonymous
   // circle (localStorage). The circle itself never leaves this module — the
   // URL/'cc-scope' token is the bare literal 'myarea', and the derived scope
@@ -249,7 +248,7 @@
 
   // ---- ground distance: anchor → the nearest point ON a region ---------------
   //
-  // 2026-07-27-region-edge-distance-ranking-design.md. This used to measure to
+  // map-and-search.md §4.5. This used to measure to
   // each region's BBOX CENTRE, which misjudges any region that is large or
   // oddly shaped: from Groningen, Lower Saxony's centre is out near Hannover,
   // so compact Bremen scored nearer than the region Groningen actually borders.
@@ -258,7 +257,7 @@
   // anchor is inside it.
   //
   // Note this is NOT the edge-DISTANCE ELIGIBILITY that was tried and rejected
-  // in 2026-07-24-region-adjacency-and-click-refinement-design.md §1.1: which
+  // in map-and-search.md §4.5: which
   // foreign regions may be offered is still decided by adjacency, and still
   // keeps Utrecht all-Dutch. Edge distance only ORDERS a pool adjacency has
   // already chosen. The bbox-EXTENT shortcut (distance to the rectangle) was
@@ -337,8 +336,7 @@
   }
 
   // Ray-casting point-in-polygon over a GeoJSON Polygon ring array (rings[0]
-  // outer, rings[1..] holes); a point in a hole is outside. Pure; no mutation
-  // (2026-07-24-region-adjacency-and-click-refinement-design.md §3.1).
+  // outer, rings[1..] holes); a point in a hole is outside. Pure; no mutation.
   const pointInRing = (x, y, ring) => {
     let inside = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -372,7 +370,7 @@
       try { fromUrl = deserialize(new URLSearchParams(location.search).get(URL_PARAM)); } catch (e) { /* noop */ }
       let fromLs = null;
       try { fromLs = deserialize(localStorage.getItem(LS_KEY)); } catch (e) { /* noop */ }
-      // Phase 4 (region-scoping-design.md §9.1, owner decision): My area wins
+      // Phase 4 (map-and-search.md §4.5, owner decision): My area wins
       // whenever a base location is set — EXCEPT an explicit URL scope, which
       // always wins (a shared deep link must reproduce what was shared, not
       // silently swap in "my area").
@@ -382,7 +380,7 @@
       } else {
         // Cold start with nothing explicit: open on the rider's inferred home
         // country rather than the caller's hardcoded default
-        // (2026-07-22-scope-selector-scale-design.md §D). Before this, an
+        // (map-and-search.md §4.5). Before this, an
         // incognito visitor in the Netherlands got Dutch CHIPS on a
         // Wallonia-SCOPED map — the inference reached the chip block but never
         // the active scope. Sits BELOW url/localStorage so no returning rider's
@@ -505,7 +503,7 @@
     /** [lng, lat] centre of the active scope, or null for Everywhere.
      *
      *  This is the anchor the contextual chip block ranks "closest regions"
-     *  against (2026-07-22-scope-selector-scale-design.md §B). It deliberately
+     *  against (map-and-search.md §4.5). It deliberately
      *  does NOT come from the map: chips are rendered BEFORE applyScope fits the
      *  viewport (the header label resolves by querying the rendered chip button),
      *  so `map.getCenter()` there is still the OUTGOING scope's centre. Scoping
@@ -538,7 +536,7 @@
 
     /** The onboarded home country code, from (in order) the My-area payload,
      *  the anon circle, then the client timezone; null when none is onboarded.
-     *  Compute-only — writes nothing (2026-07-22-scope-selector-scale-design.md
+     *  Compute-only — writes nothing (map-and-search.md §4.5
      *  §D / §F rule 1: no localStorage, no cookie, no network call, no mutation
      *  of module state). */
     inferHomeCountry() {
@@ -595,7 +593,7 @@
     },
 
     /** Coverage endpoint params {rids, cc} for the active scope (Phase 3,
-     *  region-scoping-design.md §6). A region sends its ids only; a country
+     *  map-and-search.md §4.5). A region sends its ids only; a country
      *  sends its ids AND cc (the server ORs them, so an unsplit country row
      *  region_id NULL still matches on cc); Everywhere sends neither. rids are
      *  sorted so the shared HTTP-cache key is order-independent (§8 risk 10).
@@ -613,7 +611,7 @@
     },
 
     /** Scope search results for the unified search box
-     *  (2026-07-22-scope-selector-scale-design.md §A): matching country rungs +
+     *  (map-and-search.md §4.5): matching country rungs +
      *  regions, prefix-before-substring, country rungs first on a country hit.
      *  Pure/compute-only — reads the registry only, never touches storage,
      *  module state, or the scopechange event. */
@@ -643,7 +641,7 @@
 
     /** The region whose bbox contains [lng,lat]; nearest-centre on overlap;
      *  null outside every region (a no-op click). Always a region, never a
-     *  country (2026-07-22-scope-selector-scale-design.md §C). */
+     *  country (map-and-search.md §4.5). */
     regionOfPoint(lng, lat) {
       let best = null; let bestD = Infinity;
       for (const r of regions) {
@@ -671,7 +669,7 @@
      *  simplified outline; 0 when `near` is inside it, and the bbox-centre
      *  distance when the region carries no outline. This is the metric
      *  rankByGroundDistance sorts on, exposed for callers that want the number
-     *  itself (2026-07-27-region-edge-distance-ranking-design.md). Pure. */
+     *  itself. Pure. */
     edgeDistanceKm(near, region) {
       if (!near || !region) return Infinity;
       const lat = near[1];
@@ -679,8 +677,8 @@
       return Math.sqrt(d2) * 111.32;   // mean degree of latitude, km
     },
 
-    /** Async click refinement (2026-07-24-region-adjacency-and-click-refinement-design.md
-     *  §3.2): the synchronous bbox pass as the candidate filter, then a real
+    /** Async click refinement:
+     * the synchronous bbox pass as the candidate filter, then a real
      *  point-in-polygon test ONLY when 2+ bboxes overlap the click. 1 candidate
      *  (or 0) never fetches. Inside no candidate polygon → nearest-centre among
      *  the candidates (identical to regionOfPoint's tiebreak, never a regression).
@@ -731,7 +729,7 @@
     },
 
     /** Onboarded regions of a country, capped at 8 by default, for the
-     *  contextual chips (2026-07-22-scope-selector-scale-design.md §C,
+     *  contextual chips (map-and-search.md §4.5,
      *  Tasks 5-6; cap + overflow: owner fix 2, 2026-07-23 — a country can
      *  onboard far more than 8 regions, e.g. a future 51-state US). `opts`:
      *  - `near: [lng, lat]` — sort by ground distance from that point to each
@@ -754,7 +752,7 @@
 
     /** All onboarded regions, nearest-first by ground distance from `near`
      *  ([lng, lat]), capped (default 8). Country-agnostic — this is what makes the
-     *  scope chips cross-border (2026-07-23-cross-border-chips-design.md §3.1): a
+     *  scope chips cross-border: a
      *  rider near a border is offered the genuinely nearest regions whatever country
      *  they are in. contextualRegions(cc) stays country-scoped for the
      *  "All <country>" rung. Pure. */
@@ -765,7 +763,7 @@
 
     /** Assign up to 8 regions to compass slots around `origin` ([lng, lat]) by
      *  true bearing from `origin` to each region's own bbox centre (owner
-     *  request, 2026-07-22-scope-selector-scale-design.md §B "Compass grid
+     *  request, map-and-search.md §4.5 "Compass grid
      *  layout"): the active region sits in the caller's centre cell, and each
      *  neighbour lands in the cell matching the direction it actually lies —
      *  north above, east right, and so on.
@@ -835,7 +833,7 @@
     },
 
     /** MapLibre filter expression for the coverage TILE layers (Phase 3,
-     *  region-scoping-design.md §6/§7), or null for Everywhere (no filter). The
+     *  map-and-search.md §4.5), or null for Everywhere (no filter). The
      *  scope keys are pipe-delimited membership TOKENS: ridtok = "|<region_id>|"
      *  (empty when unstamped), cctok = "|<cc>|", UNIONed across a cluster's
      *  members by tippecanoe (--accumulate-attribute=concat). Testing

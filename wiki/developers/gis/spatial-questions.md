@@ -340,7 +340,7 @@ Photon, not a request that passes through our own backend first.
 **Reverse geocoding** — coordinates in, a place name out — is the direction this project does not
 call. It would be reasonable to expect it: the map already draws a "Near Namur · 40 km" label next to
 a rider's base location, and that label looks exactly like the output of a reverse-geocode call. It
-is not. `docs/specs/2026-07-19-region-scoping-design.md` §7, "Phased implementation plan," records
+is not. The region-scoping work's phased implementation plan records
 the actual decision: `base_place`
 is stored as its own column, filled in at the moment a rider picks a town from the forward-search
 results above, specifically so that showing that label later never needs "a live reverse-geocode call

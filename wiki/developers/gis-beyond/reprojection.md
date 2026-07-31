@@ -29,7 +29,7 @@ You can check the central claim of this chapter yourself. It is one command:
 
 <!-- CODE-ILLUSTRATIVE a command you can run yourself against this repository, not a stored result -->
 ```sh
-git grep -n "ST_Transform" -- . ':!wiki' ':!docs/specs/2026-07-23-gis-primer-design.md'
+git grep -n "ST_Transform" -- . ':!wiki'
 ```
 
 Run today, against this tree, it returns nothing. Every remaining hit lives in the wiki pages that

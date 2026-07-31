@@ -35,7 +35,7 @@
     const I18N = strings || {};
     const tpl = (s, vars) => String(s).replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? vars[k] : m));
     const s = window.CCScope.get();
-    // My area (region-scoping-design.md §4 / §9.1 Phase 4): the header + search
+    // My area (map-and-search.md §4.5 Phase 4): the header + search
     // line name the base place + radius, NEVER coordinates — the deliberately
     // vague "Near X · N km" wording is the anti-border message in text form.
     const isMy = !!(s && s.kind === 'myArea' && s.myArea);
@@ -69,7 +69,7 @@
   // Early bootstrap: resolve the active scope, then paint immediately — before
   // catalog-load.js's fetch even starts. Mirrors map.js's own _defaultScope
   // fallback (My area first, else the hardcoded 'wallonia' region, else
-  // Everywhere; region-scoping-design.md §4 / §9.1 Phase 4 owner decision).
+  // Everywhere; map-and-search.md §4.5 Phase 4 owner decision).
   // map.js recomputes the same fallback and re-calls CCScope.init() itself too
   // — harmless, since init() purely re-resolves the same URL/localStorage/
   // registry inputs — as a safety net for the (currently hypothetical) case

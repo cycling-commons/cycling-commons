@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Probe Overture division_area for a country's candidate operating levels.
 
-Onboarding step 1 (country-onboarding-design.md §1): BEFORE seeding, report
+Onboarding step 1 (tools/divisions/README.md): BEFORE seeding, report
 each candidate subtype's subdivisions and geodesic areas against the ~17k km²
-calibration band (ADVISORY — region-scoping-design.md §2; Brussels sits far
+calibration band (ADVISORY — map-and-search.md §4.5; Brussels sits far
 below it deliberately), and derive a bbox for COUNTRY_CONFIG predicate
 pushdown. Emits, per country:
 
@@ -24,7 +24,7 @@ import pathlib
 from . import config
 from .export_divisions import _connect, geodesic_area_km2
 
-# KEEP 80-150 % of Wallonia's ~16.9k km² (region-scoping-design.md §2) — advisory.
+# KEEP 80-150 % of Wallonia's ~16.9k km² (map-and-search.md §4.5) — advisory.
 BAND_KM2 = (13_520, 25_350)
 BBOX_PAD_DEG = 0.1
 
@@ -55,7 +55,7 @@ def candidate_report(cc, per_subtype):
         f"# {cc} — Overture subdivision area probe",
         "",
         f"Calibration band (ADVISORY): {BAND_KM2[0]:,}–{BAND_KM2[1]:,} km² "
-        "(region-scoping-design.md §2; Brussels deliberately sits far below it).",
+        "(map-and-search.md §4.5; Brussels deliberately sits far below it).",
         "",
     ]
     for subtype, rows in per_subtype.items():
@@ -72,7 +72,7 @@ def candidate_report(cc, per_subtype):
         "preferring legibility + stable ISO identity over an exact band match. Small",
         "official regions are fine — moderation composes upward, one moderator holds",
         "2–4 atoms. Group into synthetic macro-regions ONLY when no official level",
-        "fits (country-onboarding-design.md §3).",
+        "fits (tools/divisions/README.md).",
     ]
     return "\n".join(lines) + "\n"
 

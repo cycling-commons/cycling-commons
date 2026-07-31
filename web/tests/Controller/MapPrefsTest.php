@@ -72,14 +72,14 @@ final class MapPrefsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('window.CC_PREFS', $html);
-        // mapMode/authed joined the payload with the view-mode default
-        // (2026-07-27-map-view-mode-default-design.md §5); the two lists are
+        // mapMode/authed joined the payload with the view-mode default;
+        // the two lists are
         // still empty, which is what this test is about.
         self::assertStringContainsString('{"bikes":[],"styles":[],"mapMode":"auto","authed":false}', $html);
     }
 
     /**
-     * The view-mode default (2026-07-27-map-view-mode-default-design.md §5).
+     * The view-mode default.
      * 'auto' hands the decision to the region; anonymous visitors can only ever
      * be 'auto', because there is no profile to store anything else on.
      */

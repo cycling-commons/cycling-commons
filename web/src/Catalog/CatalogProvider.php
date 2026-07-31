@@ -46,7 +46,7 @@ final class CatalogProvider
             ],
             // F (hazards & conditions): served items with no coverage-tile
             // layer and no OSM bulk pool — they render as CATALOG point
-            // features client-side (region-scoping-design.md §7 Task A). Region
+            // features client-side (map-and-search.md §4.5 Task A). Region
             // stamping is automatic (item rows; recomputeMembership), so the
             // rid flows through the map's scope gate like every other letter.
             'F' => $this->featureCollection('F'),
@@ -172,7 +172,7 @@ final class CatalogProvider
             // encodes as a JSON object, never `[]` (GeoJSON requires an
             // object; an empty array would encode as `[]` instead).
             $props['id'] = (int) $row['id'];
-            // Region membership for map.js scope filtering (region-scoping-design.md
+            // Region membership for map.js scope filtering (map-and-search.md §4.5
             // §4 / §7 Phase 2). Absent for rows outside every region (byte-stable).
             if (null !== $row['region_id']) {
                 $props['rid'] = (int) $row['region_id'];
@@ -278,7 +278,7 @@ final class CatalogProvider
             // Raw ItemState value so the map can badge unverified ("proposed")
             // routes distinct from verified ones.
             $route['state'] = (string) $row['state'];
-            // Region membership for map.js scope filtering (region-scoping-design.md
+            // Region membership for map.js scope filtering (map-and-search.md §4.5
             // §4 / §7 Phase 2). Absent for routes outside every region.
             if (null !== $row['region_id']) {
                 $route['rid'] = (int) $row['region_id'];
@@ -340,7 +340,7 @@ final class CatalogProvider
      * CC_ROUTES.heat shape: [[lat, lng, season, rid], …] in import order.
      * rid = region_id (07-20 review finding 5): the heat layer scope-filters
      * client-side like every served layer; null renders only in Everywhere
-     * (the leak-safe rid-less default, region-scoping-design.md §4).
+     * (the leak-safe rid-less default, map-and-search.md §4.5).
      *
      * @return list<array{0: float, 1: float, 2: string|null, 3: int|null}>
      */

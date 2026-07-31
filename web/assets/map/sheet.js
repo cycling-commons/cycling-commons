@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* The mobile snap sheet (peek / half / full) and the map hover tip.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    The sheet is built by an IIFE that binds drag handlers, so constructing it is
    a side effect and belongs to the entry (§4.2): initSheet() runs it, and the

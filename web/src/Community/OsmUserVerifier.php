@@ -11,8 +11,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Optional evidence: a public, checkable track record of exactly the kind of
- * work being volunteered for
- * (2026-07-29-country-requests-and-curator-signup-design.md §6).
+ * work being volunteered for.
  *
  * Best-effort by design. If OSM is slow, rate-limits us or is down, the
  * application still submits and the reviewer sees "unverified" — the same

@@ -12,7 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * 2026-07-29-country-requests-and-curator-signup-design.md §5.1.
+ * moderation-and-contribution.md.
  */
 final class CountryInterestTest extends WebTestCase
 {

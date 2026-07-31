@@ -2,9 +2,9 @@
 """Configuration for the Overture divisions exporter.
 
 A country is seeded at ONE operating level (the tessellation invariant,
-region-scoping-design.md §5a). Belgium: subtype=region -> ISO 3166-2
+map-and-search.md §4.5a). Belgium: subtype=region -> ISO 3166-2
 BE-WAL / BE-VLG / BE-BRU. Worldwide rollout adds a config block per country as
-its first curator appears (region-scoping-design.md §5a demand-driven seeding).
+its first curator appears (map-and-search.md §4.5a demand-driven seeding).
 """
 
 # Overture Maps release to pin. Regeneration hits the public Overture S3 bucket
@@ -36,7 +36,7 @@ SUBTYPE_ADMIN_LEVEL = {"country": 2, "region": 4, "county": 6, "localadmin": 8}
 #             region row is orphaned. `wallonia` keeps its existing slug.
 #   names   : English placeholder labels. Display labels come from the messages
 #             translations domain (region.<slug>.label, 4 locales) — Overture's
-#             names.primary is localized/bilingual (region-scoping-design.md §3).
+#             names.primary is localized/bilingual (map-and-search.md §4.5).
 #   bbox    : optional [xmin, ymin, xmax, ymax] for Overture bbox predicate
 #             pushdown (fast reads). Omit for a slower country-only scan.
 COUNTRY_CONFIG = {
@@ -47,7 +47,7 @@ COUNTRY_CONFIG = {
         "bbox": [2.5, 49.4, 6.5, 51.6],
     },
     # Netherlands — first worldwide-rollout country
-    # (2026-07-22-country-onboarding-design.md §4). 12 official provinces,
+    #. 12 official provinces,
     # subtype=region -> ISO 3166-2. limburg-nl: BE also has a Limburg (slug is
     # global identity). bbox = mainland; the Caribbean NL-BQ* municipalities
     # are deliberately outside it and outside this config.
@@ -111,7 +111,7 @@ COUNTRY_CONFIG = {
 }
 
 # Level-2 country identity every onboarding run emits ALONGSIDE the operating
-# level (2026-07-30-dynamic-region-pages-design.md §9): (slug, English name).
+# level: (slug, English name).
 # slug is IDENTITY (upsert-by-slug) like every region slug — plain English
 # country name, matching the 'luxembourg' precedent. A country whose operating
 # subtype is already 'country' (LU) is not emitted twice; its entry here keeps

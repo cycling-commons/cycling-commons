@@ -55,7 +55,7 @@ final class SettingsController extends AbstractController
         $profileForm->handleRequest($request);
 
         if ($profileForm->isSubmitted() && $profileForm->isValid()) {
-            // Base location (region-scoping-design.md §4): unmapped fields, handled
+            // Base location (map-and-search.md §4.5): unmapped fields, handled
             // here before flush so the derived region/country set can never drift
             // from the stored point. The pin-drop path lives on the map page's
             // "Set my area"; this form only takes a Photon town pick + radius.
@@ -134,13 +134,13 @@ final class SettingsController extends AbstractController
             || ($passwordForm->isSubmitted() && !$passwordForm->isValid())
             ? 'security' : 'profile';
 
-        // Current derived area (region-scoping-design.md §4): slugs for the
+        // Current derived area (map-and-search.md §4.5): slugs for the
         // template, which renders each through the existing region.<slug>.label
         // keys — the same convention the map's scope selector uses.
         $baseRegionSlugs = [];
         if ([] !== $user->getBaseRegionIds()) {
             // Keep the DERIVED order (containing region first, then by
-            // distance — region-scoping-design.md §3), not alphabetical: the
+            // distance — map-and-search.md §4.5), not alphabetical: the
             // first label the rider reads should be where they actually live.
             $rows = $this->db->fetchAllKeyValue(
                 'SELECT id, slug FROM region WHERE id IN (:ids)',

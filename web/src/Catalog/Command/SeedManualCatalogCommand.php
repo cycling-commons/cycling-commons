@@ -220,7 +220,7 @@ final class SeedManualCatalogCommand extends Command
                 ],
             ],
             // F · Hazards & conditions. Served end-to-end since
-            // region-scoping-design.md §7 Task A (CatalogProvider 'F' key ->
+            // map-and-search.md §4.5 Task A (CatalogProvider 'F' key ->
             // window.CC_HAZARDS -> map.js CATALOG features). This row is the
             // retired map.js demo hazard, re-homed as real region-stamped data:
             // recomputeMembership stamps its region_id (Hautes Fagnes = Wallonia)
@@ -416,7 +416,7 @@ final class SeedManualCatalogCommand extends Command
         // other membership writers use (ImportCatalogCommand::recomputeMembership,
         // RegionResolver, pipeline/coverage/load.py), so a manual pin can never
         // land in a different region than an identically-located imported item
-        // (region-scoping-design.md §3, catalog-data-model.md §6). Scoped to
+        // (map-and-search.md §4.5, catalog-data-model.md §6). Scoped to
         // source='manual', contained pins only — a pin outside every region
         // keeps whatever it had, unchanged from before.
         $this->db->executeStatement(

@@ -13,7 +13,7 @@
 //
 // 2026-07-23 cross-border update: chipModel's pool now comes from regionsNear (ALL
 // countries), not contextualRegions(cc) (one country) — docs/specs/2026-07-23-
-// cross-border-chips-design.md. Phase 0's country-scoped pinning tests below (e.g.
+// map-and-search.md §4.5. Phase 0's country-scoped pinning tests below (e.g.
 // "Germany caps at 8 of 16", "Flanders -> only Brussels+Wallonia") are DELIBERATELY
 // rewritten to the new cross-border ground truth, not preserved as a regression.
 'use strict';
@@ -82,7 +82,7 @@ const REGIONS = RAW.map(([countryCode, slug, bbox], i) => ({
 
 const bySlug = (s) => REGIONS.find((r) => r.slug === s);
 
-// Real border-neighbours (2026-07-24-region-adjacency-and-click-refinement-design.md
+// Real border-neighbours (map-and-search.md §4.5
 // ground truth). Slug map here; stamped onto each region as id arrays, exactly as
 // RegionRegistryProvider ships adj in CC_REGIONS.
 const ADJ = {
@@ -122,7 +122,7 @@ const ADJ = {
 REGIONS.forEach((r) => { r.adj = (ADJ[r.slug] || []).map((s) => bySlug(s).id); });
 
 // Real simplified outlines, the ranking geometry rankByGroundDistance now sorts
-// on (2026-07-27-region-edge-distance-ranking-design.md). Generated from the
+// on. Generated from the
 // live DB by the statement the catalog import runs, so the ranking pinned below
 // is the ranking the browser performs. Without these every region falls back to
 // its bbox centre and the expectations here are the PRE-edge-distance ones.
@@ -299,7 +299,7 @@ test('compass: Flanders now reaches into the Netherlands (deliberate change from
   assert.equal(m.rows.flat().find((c) => c.slug === 'zeeland').foreign, true);
 });
 
-// ---- adjacency gate (2026-07-24-region-adjacency-and-click-refinement-design.md §2.3) ----
+// ---- adjacency gate ----
 
 const shownSlugs = (m) => m.rows.flat()
   .filter((c) => c.kind === 'region' || c.kind === 'center')
@@ -471,8 +471,7 @@ test('region: a multi-id region scope also resolves to linear, never compass', (
   // activeRegion guard); a multi-region `region` scope must fall through to the
   // same linear path myArea takes above, not crash or silently pick one region.
   // Adjacency gate: anchor resolves via regionOfPoint; foreign chips must be
-  // border-neighbours of that anchor (2026-07-24-region-adjacency-and-click-
-  // refinement-design.md §2.3).
+  // border-neighbours of that anchor .
   const w = bySlug('wallonia'); const fl = bySlug('flanders');
   const m = chipModel({
     scope: {kind:'region', regionIds:[w.id, fl.id], countryCode:'BE'},

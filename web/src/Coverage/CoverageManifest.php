@@ -24,7 +24,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * Failures are cached briefly, so a broken bucket costs one bounded fetch
  * per holdoff window, not one per /map render.
  *
- * @see docs/specs/coverage-provider.md §4
+ * @see coverage-provider.md §4
  *
  * @api Injected into MapController::map().
  */
@@ -65,7 +65,7 @@ final class CoverageManifest
 
     /**
      * The country codes the current tile artifact was built for
-     * (2026-07-22-coverage-scope-rendering-design.md §D), e.g. ['BE', 'NL'] —
+     * (coverage-provider.md §4), e.g. ['BE', 'NL'] —
      * the map client turns each into a per-country coverage layer. Empty when
      * coverage is off, the manifest is unreachable, or a pre-split manifest
      * carries no `country_codes` key (the client then falls back to a single

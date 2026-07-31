@@ -12,13 +12,13 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * region: iso_code / admin_level / source / active_cap — the Phase 1
  * foundation-hardening columns the region-scoping design needs before region
- * rows may multiply beyond the Wallonia seed (region-scoping-design.md §3 and
+ * rows may multiply beyond the Wallonia seed (map-and-search.md §4.5 and
  * §7 "Phase 1"). All nullable:
  *  - iso_code joins the World bundle's Subdivision.code (e.g. BE-WAL);
  *  - admin_level / source carry import provenance (osm|overture, level 4…);
- *  - active_cap overrides route.region_active_cap per region (region-scoping-design.md §5).
+ *  - active_cap overrides route.region_active_cap per region (map-and-search.md §4.5).
  *
- * The coverage_poi.country_code index (region-scoping-design.md §3 "New index")
+ * The coverage_poi.country_code index (map-and-search.md §4.5 "New index")
  * is deliberately NOT added here: coverage_poi is a pipeline-owned disposable
  * cache created outside Doctrine (pipeline/coverage/load.py ensure_schema), so
  * its index lands pipeline-side.

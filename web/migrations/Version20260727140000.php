@@ -13,7 +13,7 @@ final class Version20260727140000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'map view-mode default: region.curated_default (moderator flag, threshold-gated) + users.default_map_mode (rider preference) — 2026-07-27-map-view-mode-default-design.md §3';
+        return 'map view-mode default: region.curated_default (moderator flag, threshold-gated) + users.default_map_mode (rider preference) — map-and-search.md §4.2';
     }
 
     public function up(Schema $schema): void

@@ -11,7 +11,7 @@ use Doctrine\DBAL\Connection;
 
 /**
  * Owns every base-location write so the derived set can never drift from the
- * point (region-scoping-design.md §3): settings save + the map "Set my area"
+ * point (map-and-search.md §4.5): settings save + the map "Set my area"
  * endpoint call apply()/clear(); ImportCatalogCommand calls rederiveAll()
  * inside its import transaction after recomputeMembership() - there is no
  * queue in this app, so re-derivation is transactional-inline by design.
@@ -33,7 +33,7 @@ final class BaseLocationService
         $user->setBaseLocation($lat, $lng, $place);
         $user->setBaseRadiusKm($radiusKm);
         // Derive from the STORED (coarse, clamped) values - never the raw input
-        // (request precision == stored precision, region-scoping-design.md §4).
+        // (request precision == stored precision, map-and-search.md §4.5).
         $derived = $this->resolver->resolve(
             $user->getBaseLat() ?? $lat,
             $user->getBaseLng() ?? $lng,
@@ -49,7 +49,7 @@ final class BaseLocationService
     }
 
     /**
-     * Mass re-derivation after region geometry changes (region-scoping-design.md
+     * Mass re-derivation after region geometry changes (map-and-search.md §4.5
      * §3): every rider with a base point gets a fresh region/country set from
      * BaseAreaResolver, in the same id ASC order the resolver's own query uses
      * for its tie-breaks. Runs inside the caller's transaction (ImportCatalogCommand,

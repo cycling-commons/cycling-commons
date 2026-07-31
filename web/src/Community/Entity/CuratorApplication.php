@@ -11,8 +11,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * "I'd like to curate here"
- * (2026-07-29-country-requests-and-curator-signup-design.md §5.2).
+ * "I'd like to curate here".
  *
  * Evidence is deliberately NOT copied into this row: the applicant's
  * submissions are looked up by user + country at review time, so the reviewer

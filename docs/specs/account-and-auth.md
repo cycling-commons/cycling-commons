@@ -58,7 +58,7 @@ roles.
 | Deletion | `deletionCode`, `deletionRequestedAt` | §10 |
 | Governance | `publicProfile` (bool, opt-in, default false) | §7 |
 | Preferences | `bikeTypes` (json), `ridingStyles` (json) | §9 |
-| Base location (optional, account-private) | `basePoint` (geometry GeoJSON Point, coords rounded to 2dp at write — ~1 km precision), `basePlace` (varchar(120), town-level label for the scope line), `baseRadiusKm` (smallint, default 40, clamped [10,150]), `baseRegionIds`/`baseCountryCodes` (json, derived — `App\Service\BaseAreaResolver`, cap 8) | region-scoping-design.md §7 Phase 4; **never** exposed on the public profile (§7 below); no GIST index (nothing queries users spatially) |
+| Base location (optional, account-private) | `basePoint` (geometry GeoJSON Point, coords rounded to 2dp at write — ~1 km precision), `basePlace` (varchar(120), town-level label for the scope line), `baseRadiusKm` (smallint, default 40, clamped [10,150]), `baseRegionIds`/`baseCountryCodes` (json, derived — `App\Service\BaseAreaResolver`, cap 8) | map-and-search.md §4.5 Phase 4; **never** exposed on the public profile (§7 below); no GIST index (nothing queries users spatially) |
 | Audit | `createdAt`, `updatedAt` (lifecycle callbacks) | there is **no** `lastActiveAt` — required by the unbuilt inactivity lifecycle (§6.6) |
 
 The entity implements `UserInterface`, `PasswordAuthenticatedUserInterface`,
@@ -453,7 +453,7 @@ Mechanism when built: idempotent scheduled command; localized notices via
 - **Never shown:** email, IPs, locale, roles, 2FA state, base location (point,
   place, radius, derived region/country sets), or anything account-internal.
   Pinned by `RiderProfileTest::testBaseLocationNeverExposedOnPublicProfile`
-  (region-scoping-design.md §4 "frozen exposure list").
+  (map-and-search.md §4.5 "frozen exposure list").
 - No caching contract in v1: the page is `PUBLIC_ACCESS` (lazy-firewall
   cacheability rationale, §5) but renders per-request.
 - Renders in the public site chrome (`profile/public.html.twig`), not the

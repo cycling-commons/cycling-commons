@@ -32,8 +32,8 @@ words it uses to describe what to draw and how.
     | `search-ui.js`, `places.js` | the search box, Photon calls, deep links |
     | `icons.js`, `mapillary.js`, `panels.js`, … | icon minting, street-level imagery, the rail chrome |
 
-    The full module table and the reasoning behind the split are in
-    `docs/specs/2026-07-26-map-js-module-split-design.md`.
+    The map shell and its boot contract are in
+    `docs/specs/map-and-search.md`, §2.
 
 ## Style, source, layer
 
@@ -210,7 +210,7 @@ It did not survive a second bordering country. A cluster renders at the *centroi
 and that position turned out to be decoupled from any single member's own region — a shelter cluster
 was measured rendering in Thuringia while carrying a single Hesse `ridtok`, a **phantom bubble** that
 no amount of tuning (tighter cluster distance, larger tile budgets, unioning tokens differently)
-could close off (`2026-07-24-coverage-no-cluster-design.md` §1). It also did not scale the way
+could close off. It also did not scale the way
 tippecanoe's per-tile clustering needed to: a European state clusters fine, but a whole US state or
 Chinese province onboarded at once (California 200,000-400,000 rows, Guangdong 500,000-2,000,000+)
 breaks it. The fix was to stop clustering coverage altogether: `addCoverage()` now draws every

@@ -59,7 +59,7 @@ def test_export_geojsonl_shapes(db, tmp_path):
 
     # Empty-letter omission contract: exactly the (letter, cc) combos with rows
     # appear. FIXTURE_ROWS stamp no country_code, so every row buckets to the
-    # unstamped 'ZZ' pseudo-country (coverage-scope-rendering.md — per-country
+    # unstamped 'ZZ' pseudo-country (coverage-provider.md §4 — per-country
     # tile split).
     assert set(out) == {("C", "ZZ"), ("D", "ZZ"), ("E", "ZZ")}
     assert not any(letter == "G" for letter, _ in out)
@@ -80,7 +80,7 @@ def test_export_geojsonl_shapes(db, tmp_path):
     assert stay["properties"]["t"] == _label("E", "tourism=camp_site")
     assert stay["properties"]["acc"] == "Wheelchair-accessible"
 
-    # ridtok/cctok are the region-scoping keys (region-scoping-design.md §6) as
+    # ridtok/cctok are the region-scoping keys (map-and-search.md §4.5) as
     # pipe-delimited membership tokens. They are ALWAYS emitted (never
     # NULL-stripped): an unstamped row gets the empty string, which the client
     # reads as prop-less and renders unfiltered (the §8 risk-2 fallback until the
@@ -105,7 +105,7 @@ def test_export_carries_scope_tokens_when_stamped(db, tmp_path):
     """A region-stamped row emits ridtok="|<region_id>|" + cctok="|<cc>|"; a
     cc-only boundary row (region_id NULL) emits an EMPTY ridtok but a non-empty
     cctok — the shape the client hides under a region scope yet shows under its
-    country scope (region-scoping-design.md §6, finding 5)."""
+    country scope (map-and-search.md §4.5, finding 5)."""
     ensure_schema(db)
     sid = _src_id(db)
     db.execute(
@@ -245,7 +245,7 @@ def test_verify_pmtiles_subprocess_failure_surfaces_diagnostics(tmp_path):
     assert "magic number" in msg      # go-pmtiles' captured stderr
 
 
-# ---- No clustering: individual points from z11 (2026-07-24-coverage-no-cluster-design.md §2) ----
+# ---- No clustering: individual points from z11 ----
 
 def _tile_xy(lon: float, lat: float, z: int) -> tuple[int, int]:
     n = 2 ** z
@@ -272,8 +272,8 @@ def _decode_layer(path, z: int, x: int, y: int, layer: str) -> list:
 
 
 def test_build_command_has_no_clustering_and_minzoom_6(tmp_path, monkeypatch):
-    # Coverage is rendered as INDIVIDUAL points from z6 up, never clustered
-    # (2026-07-24-coverage-no-cluster-design.md §3.1): a cluster's rendered
+    # Coverage is rendered as INDIVIDUAL points from z6 up, never clustered:
+    # a cluster's rendered
     # centroid can sit outside a scoped region (the phantom-bubble class), and
     # individual points are scope-filtered exactly. So the build must carry NO
     # cluster/accumulate flags and start at zoom 6.
@@ -296,8 +296,8 @@ def test_build_command_has_no_clustering_and_minzoom_6(tmp_path, monkeypatch):
 
 def test_no_clusters_individual_points_z6_to_14(tmp_path):
     # Coverage is rendered individual (no clusters) across the whole zoom range:
-    # z6-10 thinned to fit for the overview heatmap, z11-14 complete for icons
-    # (2026-07-24-coverage-overview-heatmap-design.md §3.1). Crucially: NO feature
+    # z6-10 thinned to fit for the overview heatmap, z11-14 complete for icons.
+    # Crucially: NO feature
     # ever carries point_count (no clustering, at any zoom).
     n = 60
     rows = [(4.34 + (i % 10) * 0.002, 50.84 + (i // 10) * 0.002,

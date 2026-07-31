@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * The operational-region rule (2026-07-30-dynamic-region-pages-design.md §4):
+ * The operational-region rule:
  * a region row is OPERATIONAL iff its admin_level equals the deepest onboarded
  * level for its country. The level-2 country outlines the 2+4 playbook emits
  * are infrastructure — submission anchoring and the country polygon — and must

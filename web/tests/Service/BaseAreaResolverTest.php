@@ -12,7 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * region-scoping-design.md §3 "User base location": deriving the My-area
+ * map-and-search.md §4.5 "User base location": deriving the My-area
  * region set from a coarse base point + radius. Fixture idiom follows
  * RegionResolverTest (box MultiPolygon GeoJSON, randomised slugs, explicit
  * teardown) — including placing every fixture in the open mid-Atlantic near
@@ -188,7 +188,7 @@ final class BaseAreaResolverTest extends KernelTestCase
     }
 
     /**
-     * region-scoping-design.md §3 / 2026-07-30-dynamic-region-pages-design.md
+     * map-and-search.md §4.5 / map-and-search.md §4.5
      * §4: the L2 "infrastructure" country outline the 2+4 playbook seeds
      * must never occupy one of the 8 My-area slots — it always contains the
      * operational L4 region beneath it, so an unfiltered ST_DWithin query

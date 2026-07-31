@@ -12,9 +12,9 @@ use Doctrine\DBAL\Connection;
 /**
  * Derives the rider's My-area region set from a coarse base point + radius:
  * ST_DWithin over region polygons, containing region always first, capped at
- * MAX_REGIONS (region-scoping-design.md §3 "User base location").
- * Raw DBAL like SpatialResolver/RegionResolver. Operational-only
- * (2026-07-30-dynamic-region-pages-design.md §4): a lister of regions, so the
+ * MAX_REGIONS (map-and-search.md §4.5 "User base location").
+ * Raw DBAL like SpatialResolver/RegionResolver. Operational-only:
+ * a lister of regions, so the
  * infrastructure-only L2 country outline (which always contains its
  * operational L4 subdivisions) must never occupy one of the 8 slots.
  *

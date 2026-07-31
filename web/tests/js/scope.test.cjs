@@ -261,7 +261,7 @@ test('regions() resolves the active scope to registry objects', () => {
   assert.deepEqual(CCScope.regions().map((r) => r.slug), ['wallonia', 'flanders', 'brussels']);
 });
 
-// ---- myArea kind (Phase 4, region-scoping-design.md §9.1) -----------------
+// ---- myArea kind (Phase 4, map-and-search.md §4.5) -----------------
 
 test('myArea resolves from CC_MY_AREA and serializes as bare token', () => {
   boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, place: 'Namur', regionIds: [1, 24], countryCodes: ['BE'] } });
@@ -420,7 +420,7 @@ test('bestOfRegionIds: single named region, myArea derived set, else null', () =
   assert.deepEqual(CCScope.bestOfRegionIds(), [1, 24]);
 });
 
-// ---- inferHomeCountry (Task 2, 2026-07-22-scope-selector-scale-design.md §D) -
+// ---- inferHomeCountry (Task 2, map-and-search.md §4.5) -
 //
 // Each of these tests needs its OWN registry (a different country mix than the
 // shared BE fixture above), so they run against a fully isolated module
@@ -494,7 +494,7 @@ test('inferHomeCountry: unknown/none -> null', () => {
   assert.equal(S.inferHomeCountry(), null);
 });
 
-// ---- searchScopes (Task 3, 2026-07-22-scope-selector-scale-design.md §A) --
+// ---- searchScopes (Task 3, map-and-search.md §4.5) --
 
 test('searchScopes: matches region by label and slug', () => {
   const S = freshScope([
@@ -552,7 +552,7 @@ test('searchScopes: limit caps the result count to the top-ranked entries', () =
   assert.deepEqual(capped[0], full[0]); // the cap keeps the highest-ranked entry, not an arbitrary one
 });
 
-// ---- regionOfPoint / contextualRegions (Task 4, 2026-07-22-scope-selector-scale-design.md §C) --
+// ---- regionOfPoint / contextualRegions (Task 4, map-and-search.md §4.5) --
 
 test('regionOfPoint: returns the bbox-containing region, nearest centre on overlap', () => {
   const S = freshScope([
@@ -692,7 +692,7 @@ test('isDefault: false when init resolved the scope from localStorage', () => {
   assert.equal(CCScope.isDefault(), false);
 });
 
-test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (2026-07-22-scope-selector-scale-design.md §F rule 1)', () => {
+test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (map-and-search.md §4.5 rule 1)', () => {
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['DE'] };
   globalThis.__ccTz = 'Europe/Berlin';
@@ -755,7 +755,7 @@ test('init: inferring the home country still counts as default (isDefault true)'
   delete globalThis.__ccTz;
 });
 
-test('init: inference writes nothing (2026-07-22-scope-selector-scale-design.md §F rule 1)', () => {
+test('init: inference writes nothing (map-and-search.md §4.5 rule 1)', () => {
   globalThis.__ccTz = 'Europe/Amsterdam';
   boot({ regionsList: REGIONS_NL });
   assert.equal(store.get('cc-scope'), undefined);   // opening on NL is not a rider choice
@@ -903,8 +903,7 @@ test('label: null/kindless input resolves to null', () => {
 });
 
 // ---- compassLayout (owner request: "the selected region inside the chips,
-// surrounding regions correctly placed around it" — 2026-07-22-scope-selector-
-// scale-design.md §B "Compass grid layout"). Pure — no registry/state
+// surrounding regions correctly placed around it" — the compass grid layout). Pure — no registry/state
 // dependency at all, so these run directly against the shared `CCScope`
 // (no freshScope() isolation needed).
 
@@ -1075,7 +1074,7 @@ test('regionsNear applies the cos(lat) correction (east-west is compressed)', ()
   assert.deepEqual(near.map((r) => r.slug), ['here', 'east', 'north']);
 });
 
-// ---- polygon-edge ranking (2026-07-27-region-edge-distance-ranking-design.md) ----
+// ---- polygon-edge ranking ----
 //
 // Every region below carries `outline`: rings as flat [lng,lat,lng,lat,...],
 // exactly the shape RegionRegistryProvider ships. The three tests above keep
@@ -1153,7 +1152,7 @@ test('edgeDistanceKm: a degenerate or missing ring never throws or returns NaN',
   assert.ok(Number.isFinite(d), `expected a finite fallback, got ${d}`);
 });
 
-// ---- pointInPolygon (2026-07-24-region-adjacency-and-click-refinement-design.md §3.1) ----
+// ---- pointInPolygon ----
 
 test('pointInPolygon: inside and outside a simple square', () => {
   const sq = [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]];
@@ -1175,7 +1174,7 @@ test('pointInPolygon: an empty/absent ring set is never inside', () => {
   assert.equal(CCScope.pointInPolygon([5, 5], null), false);
 });
 
-// ---- regionOfPointPrecise (2026-07-24-region-adjacency-and-click-refinement-design.md §3.2) ----
+// ---- regionOfPointPrecise ----
 
 test('regionOfPointPrecise: a single bbox candidate resolves without fetching', async () => {
   CCScope.init([

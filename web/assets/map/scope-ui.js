@@ -3,7 +3,7 @@
    (curScope/inScope/scopeToken/scopeLabel), the contextual chip rail, the
    dynamic header, applyScope — the ONE visual update path a scope change takes
    — and the pan-away widen prompt.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    The scope STATE itself is not here: it lives in window.CCScope (scope.js, a
    classic script loaded before this module graph) and every decision the chips
@@ -30,7 +30,7 @@ import { isPicking } from './picking.js';
 import { corrLayerIds } from './corrections.js';
 
 
-// Region scope (region-scoping-design.md §4 / §7 Phase 2): the area the map +
+// Region scope (map-and-search.md §4.5 Phase 2): the area the map +
 // search filter to, owned by window.CCScope (scope.js). Registry injected by
 // the shell (window.CC_REGIONS: id/slug/cc/bbox); display labels are the rail
 // buttons' own text. Default scope = today's Wallonia behaviour.
@@ -38,7 +38,7 @@ const CC_REGIONS = window.CC_REGIONS || [];
 const _regionById = new Map(CC_REGIONS.map(r => [r.id, r]));
 const slugOfRegion = id => { const r = _regionById.get(id); return r ? r.slug : null; };
 const _defaultScope = (() => {
-  // My area wins whenever a base location is set (region-scoping-design.md §4 /
+  // My area wins whenever a base location is set (map-and-search.md §4.5 /
   // §9.1 Phase 4, owner decision) — an explicit ?scope= URL still beats it
   // (CCScope.init handles that precedence). myAreaAvailable() reads the source
   // (CC_MY_AREA payload / anon 'cc-my-area' circle) directly, not the registry,
@@ -106,7 +106,7 @@ function focusSearchBox(){
   const el=document.getElementById('search');
   if(el){ el.scrollIntoView({block:'nearest'}); el.focus(); }
 }
-// Contextual scope chips (2026-07-22-scope-selector-scale-design.md §B): the
+// Contextual scope chips (map-and-search.md §4.5): the
 // home country's regions + its All-<country> rung, or the onboarded country
 // rungs as the cold-start fallback. Replaces the flat all-regions wall.
 // Reuses escPend (top of file) rather than a third hand-rolled escaper —
@@ -122,7 +122,7 @@ export function renderScopeChips(){
   // Every DECISION below the model call lives in scope-chips.js, where it is unit
   // tested (web/tests/js/scope-chips.test.cjs). What stays here is serialization
   // and DOM binding only — deliberately, so a chip-selection change never again
-  // needs a browser to catch (2026-07-23-map-js-phase0-extraction-design.md).
+  // needs a browser to catch.
   const c=(map&&map.getCenter)?map.getCenter():null;
   const m=window.CCScopeChips.chipModel({
     scope: curScope(),
@@ -141,8 +141,7 @@ export function renderScopeChips(){
   // Foreign chips (a region of another country than the active scope) show a
   // "· NL" country cue; native chips stay bare. The cue is part of the button
   // TEXT, so it also reaches the compass aria-label below — the country is in the
-  // accessible name, not conveyed by styling alone
-  // (2026-07-23-cross-border-chips-design.md §3.3).
+  // accessible name, not conveyed by styling alone.
   // Raw (unescaped) cue text: "Limburg · NL" for a foreign chip, bare label otherwise.
   // ONE source of the cue format — both the visible button text (via cueLabel, which
   // escapes) and the compass aria-label (escaped once at attribute insertion) use it.
@@ -208,7 +207,7 @@ export function applyScope(s, opts){
   updateHeatFilter();                         // ride-heat follows scope too (no-op until the lazy layer exists)
   updateCoverageScopeFilter();                // coverage tile dots follow scope (Phase 3; no-op until addCoverage runs)
   if(!opts||opts.fit!==false){                // a user scope change, not the initial paint
-    // Coverage rail totals become scope-aware (Phase 3, region-scoping-design.md
+    // Coverage rail totals become scope-aware (Phase 3, map-and-search.md §4.5
     // §7 counts decision): re-fetch with the new rids/cc so the legend's
     // 'total' side matches the now scope-filtered 'shown' dots. Init doesn't
     // need this call — the standalone fetchCoverageCounts() below runs once
@@ -249,11 +248,11 @@ export function initScope(){
 }
 
 export function initScopeRail(){
-  // Region scope selector (region-scoping-design.md §4 / §7 Phase 2): buttons
+  // Region scope selector (map-and-search.md §4.5 Phase 2): buttons
   // call window.CCScope; its cc:scopechange event drives the single visual
   // update path (applyScope), which also persists to localStorage + URL.
   // Narrowed to the two STATIC buttons (myarea/everywhere) — the region/country
-  // chips are JS-rendered now (2026-07-22-scope-selector-scale-design.md §B) and
+  // chips are JS-rendered now (map-and-search.md §4.5) and
   // bind themselves inside renderScopeChips(); a wildcard #regionScope selector
   // here would double-bind them.
   document.querySelectorAll('#regionScope > button').forEach(b=>b.onclick=()=>{
@@ -270,7 +269,7 @@ export function initScopeRail(){
   window.addEventListener('cc:scopechange', e=>{ renderScopeChips(); applyScope(e.detail, {fit:true}); });
 }
 
-// Pan-away widen nudge (region-scoping-design.md §4 "Deep links & far panning"):
+// Pan-away widen nudge (map-and-search.md §4.5 "Deep links & far panning"):
 // when a My-area scope is active and the map centre drifts past 1.5× the circle
 // radius, surface a one-tap widen prompt — NEVER auto-widen, the rider taps. It
 // hides again once the centre comes back inside; once dismissed or acted on it
@@ -319,7 +318,7 @@ export function initAreaNudge(){
 // preview layer ids, which had no owner until that module landed. A side
 // effect, so the entry calls it where the handler used to sit (§4.2).
 export function initClickToScope(){
-    // Click-to-scope (2026-07-22-scope-selector-scale-design.md §C): a left-click
+    // Click-to-scope (map-and-search.md §4.5): a left-click
     // on EMPTY map scopes to the region under the point. Feature clicks (coverage
     // POIs/clusters, CATALOG route/climb/line layers, the A-layer surface
     // classes, curator correction previews, Mapillary) keep their own handlers —
@@ -357,7 +356,7 @@ export function initClickToScope(){
       if(!window.CCScope) return;
       // Precise resolution refines an ambiguous click (2+ overlapping region bboxes)
       // against the real polygon; deep inside one region it is synchronous-fast, no
-      // fetch (2026-07-24-region-adjacency-and-click-refinement-design.md §3.2).
+      // fetch.
       const r=await window.CCScope.regionOfPointPrecise(e.lngLat.lng, e.lngLat.lat);
       if(!r) return;
       // Same-region click is a no-op (final review CRITICAL 1): bail before setRegion

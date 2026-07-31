@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Map entry module. Being split into focused modules under web/assets/map/ —
-   see docs/specs/2026-07-26-map-js-module-split-design.md for the target layout
+   see map-and-search.md §2 for the module layout
    and the rules (§4.1 cycles, §4.2 side effects belong to the entry).
 
    Loaded as an ES module: catalog-load.js injects it with type="module" once
@@ -33,8 +33,8 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
   // Scope model + rail + header (scope-ui.js).
   initScope();
 
-  // Which view mode the map OPENS in (2026-07-27-map-view-mode-default-design.md
-  // §5). Must sit exactly here: it reads the ACTIVE scope, which initScope()
+  // Which view mode the map OPENS in.
+  // Must sit exactly here: it reads the ACTIVE scope, which initScope()
   // above has just resolved, and every later mode() reader — the map.on('load')
   // applyScope/render and initChips()'s initial refreshBestOf() — must already
   // see the answer.
@@ -76,7 +76,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
     if(COVERAGE_ON) fetchCoverageCounts();
     render();
     // Deep links (?feature/?pending/?route) point at a specific object a narrow
-    // scope might filter out (region-scoping-design.md §4): widen to Everywhere
+    // scope might filter out (map-and-search.md §4.5): widen to Everywhere
     // so the target always renders. Transient — the saved scope returns on the
     // next plain load; the handlers below flyTo the target. ONLY when the target
     // actually resolves (07-20 review finding 9): a stale or mistyped id must
@@ -210,7 +210,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
       };
     });
   }
-  // F · Hazards & conditions — served items (region-scoping-design.md §7 Task A).
+  // F · Hazards & conditions — served items (map-and-search.md §4.5 Task A).
   // Hazards have no coverage tile layer and no OSM bulk pool, so they render as
   // CATALOG point features (like climbs), sourced from the served payload
   // (CatalogProvider 'F' key -> window.CC_HAZARDS). Region stamping is automatic

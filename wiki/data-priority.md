@@ -255,5 +255,4 @@ flowchart TD
 **Where this is specified.** The lifecycle and the X tiers:
 `docs/specs/edit-items/README.md`. Provenance and deduplication:
 `docs/specs/osm-data-architecture.md`. What the map shows:
-`docs/specs/map-and-search.md`. The Curated-by-default gate:
-`docs/specs/2026-07-27-map-view-mode-default-design.md`.
+`docs/specs/map-and-search.md`, §4.2 for the Curated-by-default gate.

@@ -3,7 +3,7 @@
    heat layer per (catalogue letter, country), every cov* filter that composes
    scope with the curated-ref dedupe, the coverage drawers, the selected-icon
    overlay and the scope-aware rail totals.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    The whole feature is gated on COVERAGE_ON — a real CC_COVERAGE_URL plus a
    loaded pmtiles protocol lib. Absent either, every export here is a no-op and
@@ -39,7 +39,7 @@ import { osmLayers } from './osm-pools.js';
 // map keeps today's pool-only behaviour (Photon-style silent degradation).
 export const COVERAGE_KEYS=[['water','c'],['services','d'],['stays','e'],['transit','g'],['shelter','h'],['scenic','i'],['history','j']];
 // Coverage tiles split their source-layers per country (Task 1:
-// 2026-07-22-coverage-scope-rendering-design.md §A): a letter's rows live in
+// coverage-provider.md §4): a letter's rows live in
 // '<letter>_<cc>' (lowercase cc), with unstamped rows in the 'zz' bucket. The
 // published manifest (window.CC_COVERAGE_COUNTRIES, §D) lists the real
 // countries; we always append 'zz' so unstamped rows still render. Each
@@ -65,11 +65,11 @@ export const COV_SRC={
 // ref identifies one point, so this arm applies cleanly to every coverage icon.
 export const covDedupeFilter=()=>['!',['in',['get','ref'],['literal', Array.from(window.CC_CURATED_REFS||[])]]];
 // Region scope filter for the coverage tile layers (Phase 3,
-// region-scoping-design.md §6). Scope keys are pipe-delimited membership
+// map-and-search.md §4.5). Scope keys are pipe-delimited membership
 // TOKENS, not scalars: ridtok = "|<region_id>|" (empty when unstamped), cctok
 // = "|<cc>|" — one token pair per feature, never unioned. Coverage renders as
-// individual points only, no clusters (2026-07-24-coverage-no-cluster-design.md
-// §2), so `'|id|' in ridtok` answers "is THIS point in scope?" exactly, per
+// individual points only, no clusters,
+// so `'|id|' in ridtok` answers "is THIS point in scope?" exactly, per
 // feature — no cluster-member aggregation to worry about (finding 2 is moot).
 //
 // DELIBERATELY the inverse of the leak-safe rule updateHeatFilter()/inScope()
@@ -95,15 +95,15 @@ export function covBaseFilter(){
   const f=['all', covDedupeFilter()]; const sc=covScopeFilter(); if(sc) f.push(sc); return f;
 }
 // The coverage icon layer's filter (no clustering —
-// 2026-07-24-coverage-no-cluster-design.md §2): scope + curated-ref dedupe
+// coverage-provider.md §4): scope + curated-ref dedupe
 // plus any per-layer extra (stays' accessibility narrow). `!has point_count`
 // is kept as a harmless no-op — tippecanoe no longer emits clustered
 // features, so every feature already satisfies it.
 export function covIconFilter(extra){
   const f=covBaseFilter(); f.push(['!',['has','point_count']]); if(extra) f.push(extra); return f;
 }
-// The coverage HEAT layer's filter: scope ONLY
-// (2026-07-24-coverage-overview-heatmap-design.md §3.2). No curated-ref dedupe,
+// The coverage HEAT layer's filter: scope ONLY.
+// No curated-ref dedupe,
 // no stays-accessibility narrow, no `!has point_count` arm — a density surface
 // is not a clickable/exact feature; it only needs in-scope points to contribute
 // density. Returns the scope expression, or null (Everywhere → unfiltered, all
@@ -141,7 +141,7 @@ export function covScopeIsZero(){
   return !!(p && Array.isArray(p.rids) && !p.rids.length);
 }
 // Active-scope coverage params (rids/cc) as a query fragment
-// (region-scoping-design.md §6); '' for Everywhere so the URL — and the
+// (map-and-search.md §4.5); '' for Everywhere so the URL — and the
 // shared HTTP-cache key — stays scope-free. Callers prepend '?' or '&'.
 export function covScopeQuery(){
   if(!window.CCScope) return '';
@@ -202,7 +202,7 @@ export function addCoverage(){
               'pump', miniIcon('services', SERVICE_GLYPH.pump, 'pump'),
               miniIcon('services')]
           : miniIcon(key);
-      // Overview density heatmap (2026-07-24-coverage-overview-heatmap-design.md §3.2):
+      // Overview density heatmap:
       // mirrors the icon layer on the same source-layer but renders z6-9 as a
       // heatmap (maxzoom 9), handing off to the individual icons (minzoom 9) so
       // the actual spots are visible from z9 (owner request 2026-07-24).
@@ -245,7 +245,7 @@ export function addCoverage(){
             1,'#5B2A86']}};
       { const hf=covHeatFilter(); if(hf) heatSpec.filter=hf; }
       map.addLayer(heatSpec);
-      // Individual coverage icons (no clustering — 2026-07-24-coverage-no-cluster-design.md
+      // Individual coverage icons (no clustering — coverage-provider.md §4
       // §2); scope-filtered exactly. minzoom 9 so the spots are visible from the
       // region-fit zoom (z6-8 tiles are thinned, so z9-10 icons are a sample that
       // densifies to complete at z11+; the rail counts stay the exact total).
@@ -418,7 +418,7 @@ export function openCoverageByRef(ref, letter, ll, name, itemId){
     .then(paint);
 }
 // Transiently widen the scope to Everywhere so a resolved deep-link target
-// always renders, then return (region-scoping-design.md §4). persist:false —
+// always renders, then return (map-and-search.md §4.5). persist:false —
 // the saved scope returns on the next plain load. Only ever called AFTER a
 // target actually resolves (07-20 review finding 9), so it never flips the
 // map with nothing to show. No-op when already Everywhere.
@@ -453,7 +453,7 @@ export function openCoverageFeatureByName(name){
 
 // Rail totals (coverage-provider.md §5):
 // per-letter coverage counts from /map/coverage/counts, re-fetched on each
-// scope change (Phase 3: scope-aware, region-scoping-design.md §7). This one
+// scope change (Phase 3: scope-aware, map-and-search.md §4.5). This one
 // scoped count drives BOTH the 'shown' and 'total' sides for a coverage layer
 // (see covShownCount).
 let _covCounts=null, _covCountReq=0;

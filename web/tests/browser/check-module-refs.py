@@ -8,7 +8,7 @@ sweep's assertions may not walk, so it shows up only as a console error. This
 catches it statically, before the browser does.
 
 Run from the repo root: `make map-refs` (or `python3 web/tests/browser/check-module-refs.py`).
-Written for 2026-07-26-map-js-module-split-design.md §6, after the coverage.js
+Written for map-and-search.md §2, after the coverage.js
 extraction shipped exactly this bug past a fully green sweep.
 """
 import io, re, os, sys

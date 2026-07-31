@@ -20,7 +20,7 @@ return [
         'path' => './assets/admin_confirm.js',
         'entrypoint' => true,
     ],
-    // The map front end (2026-07-26-map-js-module-split-design.md §3). Listed so
+    // The map front end. Listed so
     // AssetMapper walks map.js's relative imports and emits an importmap entry
     // for each module: JavaScriptImportPathCompiler rewrites `./i18n.js` to the
     // UNDIGESTED public path, which only resolves because the importmap maps it

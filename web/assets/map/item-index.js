@@ -2,7 +2,7 @@
 /* The unified searchable-item index: every curated/DB-backed item exactly once,
    plus the two readers built on it (nearbyItems, and trimEnds for contributed
    ride geometry).
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    ITEM_INDEX and IDX_IDS are REASSIGNED (rebuild) and MUTATED (a moderation
    decision drops a pending entry), and an ES module import is a read-only live

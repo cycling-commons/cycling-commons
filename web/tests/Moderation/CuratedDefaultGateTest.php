@@ -16,8 +16,8 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * The Regions desk and its GATE
- * (2026-07-27-map-view-mode-default-design.md §4). The desk hides the toggle on
+ * The Regions desk and its GATE.
+ * The desk hides the toggle on
  * a region that has not reached the threshold — but a POST is a POST, so the
  * controller must re-check rather than trust the rendered form. Jurisdiction is
  * enforced the same way, matching every other moderation write.
@@ -65,7 +65,7 @@ final class CuratedDefaultGateTest extends WebTestCase
     /**
      * Seeds $n curated picks SPREAD over the climb/stay/scenic blocks, because
      * readiness is breadth as well as depth: $n items all on one letter no
-     * longer unlock the gate (2026-07-27-map-view-mode-default-design.md §4).
+     * longer unlock the gate.
      */
     private function addCuratedItems(int $regionId, int $n): void
     {

@@ -12,7 +12,7 @@ use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
 /**
- * 2026-07-29-country-requests-and-curator-signup-design.md §6.
+ * moderation-and-contribution.md.
  */
 final class OsmUserVerifierTest extends TestCase
 {

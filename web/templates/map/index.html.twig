@@ -82,7 +82,7 @@
       </div>
       {% endif %}
 
-      {# Region scope selector (region-scoping-design.md §4 / §7 Phase 2): the area
+      {# Region scope selector (map-and-search.md §4.5 Phase 2): the area
          the map + search filter to. Sits directly above View mode. Buttons carry a
          data-scope token (region:<slug> / country:<cc> / everywhere) that map.js
          hands to window.CCScope; labels come from region.<slug>.label. #}
@@ -90,18 +90,18 @@
       <div class="grp">
         <h3>{{ 'map.region'|trans }}</h3>
         <div class="scope-toggle" id="regionScope">
-          {# My area (region-scoping-design.md §4 / §9.1 Phase 4): the rider's home-base
+          {# My area (map-and-search.md §4.5 Phase 4): the rider's home-base
              circle, FIRST in the group. Revealed by map.js only when CCScope has a
              My-area source (logged-in base location or anonymous circle); the token is
              the bare literal 'myarea' — never coordinates. #}
           <button type="button" data-scope="myarea" id="myAreaBtn" hidden>{{ 'region.my_area.label'|trans }}</button>
           {# Region + country chips are rendered by map.js renderScopeChips() from
-             the contextual home country (2026-07-22-scope-selector-scale-design.md §B);
+             the contextual home country (map-and-search.md §4.5);
              the flat all-regions wall is gone. #}
           <div id="scopeChips"></div>
           <button data-scope="everywhere">{{ 'region.everywhere.label'|trans }}</button>
         </div>
-        {# "Set my area" cold-start prompt (region-scoping-design.md §4 / §9.1
+        {# "Set my area" cold-start prompt (map-and-search.md §4.5
            Phase 4): the pref-chip pattern — hidden here, revealed by map.js only
            when the rider has NO My-area source yet (no base location, no anon
            circle) and hasn't dismissed it. Tapping derives the base from the map
@@ -114,7 +114,7 @@
       </div>
       {% endif %}
 
-      {# Empty-scope invite (2026-07-29-country-requests-and-curator-signup-design.md
+      {# Empty-scope invite (moderation-and-contribution.md
          §10.1): one link, never a form. panels.js initChips() reveals it only
          when the active scope resolves to a country and the catalog shows zero
          curated features — the page at /join/{cc} owns the form, validation
@@ -129,7 +129,7 @@
       <div class="grp">
         <h3>{{ 'map.view_mode'|trans }}</h3>
         {# Everything carries the server-rendered `on`, because it is the GLOBAL
-           default (2026-07-27-map-view-mode-default-design.md §2) and so the
+           default and so the
            common case. panels.js initViewMode() repaints this only when the
            precedence resolves to Curated — a saved profile mode, an anonymous
            visitor's earlier choice, or a region a moderator has flipped. #}
@@ -343,7 +343,7 @@
     url: {{ path('map_ride_check')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
     token: {{ csrf_token('ride-check')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
   };
-  {# "My area" base location (region-scoping-design.md §4/§6): the stored
+  {# "My area" base location (map-and-search.md §4.5): the stored
      coarse point + derived region/country set from MapController::map's
      `my_area` param, merged with the set-my-area endpoint + stateless CSRF
      token. null lat/lng/place and empty arrays when no base location is
@@ -354,7 +354,7 @@
      every key shares one flag set. HEX-escaped "\/" and unescaped "/"
      decode to the identical JS string either way. #}
   window.CC_MY_AREA = {{ (my_area ?? {})|merge({url: path('map_my_area_set'), token: csrf_token('my-area')})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {# View-mode persistence (2026-07-27-map-view-mode-default-design.md §5): a
+  {# View-mode persistence: a
      logged-in rider's Curated/Everything choice is saved to their PROFILE, not
      to localStorage, so a shared device never leaks it to the next person.
      Riders-only block — an anonymous visitor gets no endpoint, and panels.js
@@ -377,7 +377,7 @@
      drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
   window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_PREFS = {{ rider_prefs|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {# Region registry (region-scoping-design.md §4 / §7 Phase 2): id/slug/cc/bbox
+  {# Region registry (map-and-search.md §4.5 Phase 2): id/slug/cc/bbox
      per region, consumed by window.CCScope for the scope selector + viewport. #}
   window.CC_REGIONS = {{ regions|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {% if coverage_url %}
@@ -386,8 +386,7 @@
      manifest resolved; map.js keys the whole coverage source on its presence.
      HEX-escaped like MAPILLARY_TOKEN: the value originates outside the app. #}
   window.CC_COVERAGE_URL = {{ coverage_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {# Country codes the tile artifact was built for (2026-07-22-coverage-scope-
-     rendering-design.md §D): map.js turns each into a per-(letter, country)
+  {# Country codes the tile artifact was built for: map.js turns each into a per-(letter, country)
      coverage layer; an empty/absent array falls back to one unsplit layer per
      letter, so an old manifest still renders. #}
   window.CC_COVERAGE_COUNTRIES = {{ coverage_countries|default([])|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
@@ -399,7 +398,7 @@
    preload puts both requests in flight together, so boot() executes map.js
    straight from cache.
    importmap() replaces the hand-written preload since map.js became the entry
-   of an ES-module graph (2026-07-26-map-js-module-split-design.md §3). It emits
+   of an ES-module graph. It emits
    both halves of what that graph needs:
      - the <script type="importmap">, which is what makes the rewritten relative
        imports resolvable — AssetMapper rewrites `./i18n.js` to the UNDIGESTED
@@ -415,7 +414,7 @@
 {# Scope model (window.CCScope) — must be defined before catalog-load.js injects map.js. #}
 <script src="{{ asset('map/scope.js') }}"></script>
 {# Scope-chip view model (window.CCScopeChips) — pure, unit-tested decision logic
-   for the chip set (2026-07-23-map-js-phase0-extraction-design.md). Must load
+   for the chip set. Must load
    before catalog-load.js, which injects map.js. #}
 <script src="{{ asset('map/scope-chips.js') }}"></script>
 {# Scope header bootstrap (2026-07-23 flash fix): resolves the scope + paints

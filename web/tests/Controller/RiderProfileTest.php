@@ -168,7 +168,7 @@ final class RiderProfileTest extends WebTestCase
     }
 
     /**
-     * Privacy invariant fence (region-scoping-design.md §4 "frozen exposure
+     * Privacy invariant fence (map-and-search.md §4.5 "frozen exposure
      * list"): a rider's base location (point/place/radius/derived sets) is
      * account-private, never rendered on the public profile — even when the
      * profile is opted in and the rider has a base area set.

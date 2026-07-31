@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Pure helpers for the map front end
-   (2026-07-26-map-js-module-split-design.md §4): escaping, colour, geometry,
+: escaping, colour, geometry,
    licence and Wikimedia URL building.
 
    A leaf: imports nothing — not even i18n.js — so it evaluates first and can be

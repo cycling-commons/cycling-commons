@@ -15,7 +15,7 @@ use Doctrine\DBAL\Connection;
  * contains the route's point-on-surface. When overlapping regions contain the
  * point, the smallest by area wins — a deterministic tie-break so membership
  * never depends on row order once regions multiply beyond the single Wallonia
- * seed (region-scoping-design.md §3). NULL when no region matches, so a
+ * seed (map-and-search.md §4.5). NULL when no region matches, so a
  * proposal outside every region is still reviewable.
  *
  * @api Region assignment at route intake (docs/specs/route-domain.md §4.2); consumed by

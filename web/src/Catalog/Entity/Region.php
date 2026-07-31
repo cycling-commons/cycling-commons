@@ -52,14 +52,14 @@ class Region
     #[ORM\Column(type: 'smallint', nullable: true)]
     private ?int $adminLevel = null;
 
-    /** Polygon provenance: 'osm' | 'overture' (region-scoping-design.md §3). */
+    /** Polygon provenance: 'osm' | 'overture' (map-and-search.md §4.5). */
     #[ORM\Column(type: 'string', length: 32, nullable: true)]
     private ?string $source = null;
 
     /**
      * Per-region override of route.region_active_cap (route_domain.yaml); NULL
      * falls back to the global default. Brussels and Flanders cannot share a
-     * cap (region-scoping-design.md §5). Set via admin, never by the importer.
+     * cap (map-and-search.md §4.5). Set via admin, never by the importer.
      */
     #[ORM\Column(type: 'smallint', nullable: true)]
     private ?int $activeCap = null;

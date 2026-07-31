@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* The photo lightbox: a slideshow over one feature's gallery, plus its arrow
    and Escape key handling.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    The keydown handler is shared with the drawer — Escape closes the lightbox if
    it is open and the drawer otherwise — so it lives here (the lightbox owns the

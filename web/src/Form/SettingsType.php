@@ -62,7 +62,7 @@ final class SettingsType extends AbstractType
                     ->orderBy('c.name', 'ASC'),
                 'attr' => ['autocomplete' => 'country-name'],
             ])
-            // Base location (region-scoping-design.md §4): town pick + radius,
+            // Base location (map-and-search.md §4.5): town pick + radius,
             // unmapped — the controller reads these raw and calls
             // BaseLocationService::apply()/clear() before flush. baseLat/baseLng/
             // basePlace are filled by base-location.js from a Photon pick; the

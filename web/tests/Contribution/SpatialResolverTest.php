@@ -12,7 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * 2026-07-30-dynamic-region-pages-design.md §4: SpatialResolver is the
+ * map-and-search.md §4.5: SpatialResolver is the
  * item-submission twin of RegionResolver and must apply the same
  * smallest-area tie-break, otherwise a point inside both an operational L4
  * region and its containing infrastructure-only L2 country outline can

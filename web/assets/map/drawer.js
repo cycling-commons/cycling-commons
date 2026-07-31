@@ -3,7 +3,7 @@
    builders, the record HTML, the async change-history section, the toast, the
    elevation/gradient strips, and the open/close lifecycle with its selection
    halo and reveal pin.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5 step 6.
+   Extracted from map.js by the module split.
 
    This is the keystone of the split: nine of these functions were injected into
    seven other modules while it lived in the entry, so most of those deps

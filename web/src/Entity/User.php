@@ -127,7 +127,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     /**
      * Optional rider base location, COARSE ONLY: coordinates are rounded to
      * 2 decimals (~1 km) at write time; the raw pick is never persisted
-     * (region-scoping-design.md §4 privacy invariants). GeoJSON Point.
+     * (map-and-search.md §4.5 privacy invariants). GeoJSON Point.
      */
     #[ORM\Column(type: 'geometry', nullable: true)]
     private ?string $basePoint = null;
@@ -157,8 +157,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'string', length: 5, nullable: true)]
     private ?string $locale = null;
 
-    // Which view mode the map opens in
-    // (2026-07-27-map-view-mode-default-design.md §2). 'auto' = let the active
+    // Which view mode the map opens in.
+    // 'auto' = let the active
     // region decide; the other values are the rider overriding that on every
     // device. Stored as the enum's value string and read through the
     // enum-typed accessor, which falls back to Auto on an unknown value so a

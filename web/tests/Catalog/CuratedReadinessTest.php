@@ -13,8 +13,8 @@ use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * The gate behind Curated-by-default
- * (2026-07-27-map-view-mode-default-design.md §4). What it counts is the point:
+ * The gate behind Curated-by-default.
+ * What it counts is the point:
  * only content Curated mode would actually SHOW, so a region full of utility
  * POIs can never unlock a mode that hides them.
  */

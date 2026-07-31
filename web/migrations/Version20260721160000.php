@@ -13,7 +13,7 @@ final class Version20260721160000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'users: optional coarse base location (point/place/radius) + derived region/country sets (region-scoping-design.md §3)';
+        return 'users: optional coarse base location (point/place/radius) + derived region/country sets (map-and-search.md §4.5)';
     }
 
     public function up(Schema $schema): void

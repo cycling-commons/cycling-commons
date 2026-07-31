@@ -101,7 +101,7 @@ sees their scope described on the map as something like "Near Namur · 40 km." T
 my coordinates, look up the nearest named place, and print it" — the textbook definition of reverse
 geocoding.
 
-It is not that. `docs/specs/2026-07-19-region-scoping-design.md` §7, "Phased implementation plan,"
+It is not that. The region-scoping work's phased implementation plan
 records the actual decision: alongside the coarse coordinate and the search radius, the settings
 form stores a fifth column, `base_place`, filled in once, at the exact moment a rider picks a town
 from the forward-search results Photon already returned. The name was never looked up backwards —
@@ -143,7 +143,7 @@ somebody happened to type in by hand.
     Cycling Commons never calls a reverse-geocoding service, anywhere. Every place name shown next
     to a coordinate in this project was captured once, from a rider's own forward search, at the
     moment they picked it — never derived backwards from the coordinate afterward. This is a design
-    decision, on the record in `2026-07-19-region-scoping-design.md` §7, not a gap waiting to be
+    decision taken deliberately and recorded at the time, not a gap waiting to be
     closed.
 
 ## Try it

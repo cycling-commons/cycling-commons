@@ -3,7 +3,7 @@
    per-category mini discs) and every DOM marker element (cluster bubbles,
    pins), plus the coverage-tile icon-id lookup that mirrors the icon-image
    match expressions of the <key>-<cc>-cov layers.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    Pure minting only — nothing here reads scope, mode or the catalogue's
    `active` set, and nothing adds a layer. `map` is a dependency solely because

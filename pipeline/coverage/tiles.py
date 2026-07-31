@@ -4,7 +4,7 @@
 One tile layer per osm-data-architecture.md §5 letter, split further by
 country_code (lowercase `<letter>_<cc>`, unstamped rows bucket under 'zz') so
 tippecanoe never clusters point features across a national border
-(2026-07-22-coverage-scope-rendering-design.md §A). Thin properties only
+(coverage-provider.md §4). Thin properties only
 (coverage-provider.md §4 tile artifact contract): ref/n/t everywhere plus the
 per-letter extras declared in coverage-contract.json tileProps. The 't' label
 is the contract selector's label, first matching selector wins — the same
@@ -53,13 +53,13 @@ def _universal_props(spec, universal: list[str]) -> list[str]:
     """The contract.universalTileProps SQL fragments, in the contract's order.
 
     ref/n/t are identity; ridtok/cctok are the region-scoping filter keys
-    (region-scoping-design.md §6) as pipe-delimited membership tokens
+    (map-and-search.md §4.5) as pipe-delimited membership tokens
     ("|<region_id>|" / "|<cc>|"). They are ALWAYS emitted — an unstamped row
     gets the empty string, never NULL/absent — for two reasons: (1) so
     --accumulate-attribute=concat can union them across a cluster's members
     without tippecanoe's missing-attribute abort, giving each bubble the full
     member set the client scope filter tests against (no lottery-inherited rid,
-    region-scoping-design.md §7); (2) so "prop-less" is the explicit empty-token
+    map-and-search.md §4.5); (2) so "prop-less" is the explicit empty-token
     state (ridtok='' AND cctok=''), which the client renders unfiltered as the
     transition/unsplit fallback (§8 risk 2), while a cc-bearing rid-less row
     (cctok non-empty) is correctly scoped, not fallback-rendered.
@@ -88,7 +88,7 @@ def _letter_sql(letter: str, spec, universal: list[str]) -> str:
     # One COPY per letter (not per letter×country): the country bucket is emitted
     # as a leading column and rows are ordered by it, so export_geojsonl routes
     # each row to its per-cc file client-side. This turns ~letters×countries
-    # full-table scans into ~letters (2026-07-24-coverage-harvest-prod-safety-design.md §3.5).
+    # full-table scans into ~letters.
     props = _universal_props(spec, universal)
     props += [_EXTRA_SQL[p] for p in spec.tile_props]
     return (
@@ -118,7 +118,7 @@ def export_geojsonl(conn, workdir):
 
     One COPY per letter (ordered by country) routes rows to per-cc files
     client-side — ~letters scans, not letters×countries
-    (2026-07-24-coverage-harvest-prod-safety-design.md §3.5). Files open lazily,
+. Files open lazily,
     so only (letter, cc) pairs that actually have rows are created."""
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
@@ -149,18 +149,17 @@ def build_pmtiles(layer_files, out_path):
     (letter, country) (coverage-provider.md §4). Individual points from z6 up —
     NO clustering: a cluster's rendered centroid can sit outside a scoped region
     (the phantom-bubble class), and individual points are scope-filtered exactly
-    (2026-07-24-coverage-no-cluster-design.md §2). Overview coverage now renders
+. Overview coverage now renders
     as a density heatmap built from the thinned z6-10 tile points, with
     individual icons rendering from z9 up (the z9-10 icons are the thinned
     sample, complete by z11); the rail /counts remains the exact total
-    (2026-07-24-coverage-overview-heatmap-design.md §2 + its Tuning note)."""
+    (coverage-provider.md §4 + its Tuning note)."""
     cmd = [
         "tippecanoe", "-o", str(out_path), "--force", "--quiet",
         # z6 floor: coverage points exist z6-14 with NO clustering. z6-10 tiles are
         # thinned to fit (--drop-densest-as-needed below) — a density SAMPLE for the
         # overview heatmap; z11-14 tiles carry every point (they fit, nothing drops)
-        # for the individual icons. Overview reads as a heatmap, zoomed-in as icons
-        # (2026-07-24-coverage-overview-heatmap-design.md §3.1).
+        # for the individual icons. Overview reads as a heatmap, zoomed-in as icons.
         "--minimum-zoom", "6", "--maximum-zoom", "14",
         # -r1 retains every point at the built zooms; --drop-densest-as-needed
         # thins z6-10 tiles to fit (the density sample for the overview heatmap),

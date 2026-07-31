@@ -13,7 +13,7 @@ final class Version20260724120000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'region: precomputed border-neighbour ids (adj) for adjacency-gated cross-border scope chips (2026-07-24-region-adjacency-and-click-refinement-design.md §2.1)';
+        return 'region: precomputed border-neighbour ids (adj) for adjacency-gated cross-border scope chips';
     }
 
     public function up(Schema $schema): void

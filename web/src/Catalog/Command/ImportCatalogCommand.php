@@ -94,7 +94,7 @@ final class ImportCatalogCommand extends Command
             // just changed - re-derive every rider's set inside the same
             // transaction so it never drifts from what was just imported (no
             // queue in this app, so re-derivation is transactional-inline by
-            // design, region-scoping-design.md §3).
+            // design, map-and-search.md §4.5).
             $rederived = $this->baseLocations->rederiveAll();
             $io->text(sprintf('Re-derived base areas for %d rider(s).', $rederived));
             // Derived surfaces depend on the freshly-upserted A-layer + routes,
@@ -124,11 +124,11 @@ final class ImportCatalogCommand extends Command
             $props = $feature['properties'];
             [$countryCode, $isoCode, $adminLevel, $source] = $this->regionProvenance($props, $file);
             // Stamp country_code / iso_code / admin_level / source from the
-            // artifact (region-scoping-design.md §3, §7 Phase 1). country_code is
+            // artifact (map-and-search.md §4.5 Phase 1). country_code is
             // required and validated at the door: a region row with no country is
             // a SILENT moderation-jurisdiction hole — country-scoped curators
             // match on region.country_code (ModerationScope), so an unstamped
-            // region is invisible to them (region-scoping-design.md §8 risk 1).
+            // region is invisible to them (map-and-search.md §4.5 risk 1).
             // The four columns join the change-detection tuple so a re-import
             // that only changes provenance still bumps updated_at.
             $this->db->executeStatement(
@@ -160,7 +160,7 @@ final class ImportCatalogCommand extends Command
         // duplicated geometry). Reject it here so the transaction rolls back —
         // the import check PREVENTS the ambiguity, while the smallest-area-wins
         // ordering in recomputeMembership SURVIVES one that slips through
-        // (region-scoping-design.md §3).
+        // (map-and-search.md §4.5).
         $this->assertRegionsTessellate();
 
         return $count;
@@ -179,7 +179,7 @@ final class ImportCatalogCommand extends Command
     {
         $rawCc = \is_string($props['country_code'] ?? null) ? strtoupper(trim($props['country_code'])) : '';
         if (1 !== preg_match('/^[A-Z]{2}$/', $rawCc)) {
-            throw new \InvalidArgumentException(sprintf('%s: region artifact missing required 2-letter country_code (got %s) — an unstamped region is a silent moderation-jurisdiction hole (region-scoping-design.md §3).', basename($file), '' === $rawCc ? '<missing>' : sprintf('"%s"', $rawCc)));
+            throw new \InvalidArgumentException(sprintf('%s: region artifact missing required 2-letter country_code (got %s) — an unstamped region is a silent moderation-jurisdiction hole (map-and-search.md §4.5).', basename($file), '' === $rawCc ? '<missing>' : sprintf('"%s"', $rawCc)));
         }
 
         $iso = \is_string($props['iso_code'] ?? null) && '' !== trim($props['iso_code'])
@@ -201,8 +201,8 @@ final class ImportCatalogCommand extends Command
         // pairs are EXPECTED containment (e.g. a country's admin_level=2
         // outline containing its admin_level=4 subdivisions under the 2+4
         // playbook) — that ambiguity is resolved deterministically by
-        // recomputeMembership's smallest-area-wins, not rejected here
-        // (2026-07-30-dynamic-region-pages-design.md §4). IS NOT DISTINCT FROM
+        // recomputeMembership's smallest-area-wins, not rejected here.
+        // IS NOT DISTINCT FROM
         // keeps the guard live for legacy NULL-level rows, so two NULL-level
         // regions in one country still may not overlap.
         //
@@ -225,7 +225,7 @@ final class ImportCatalogCommand extends Command
             ['tol' => self::REGION_OVERLAP_TOLERANCE],
         );
         if (false !== $overlap) {
-            throw new \InvalidArgumentException(sprintf('Region overlap: "%s" and "%s" share more than a boundary sliver at the same admin level within one country — same-level regions must tessellate, not overlap (region-scoping-design.md §3; cross-level containment is expected, 2026-07-30-dynamic-region-pages-design.md §4).', $overlap['a'], $overlap['b']));
+            throw new \InvalidArgumentException(sprintf('Region overlap: "%s" and "%s" share more than a boundary sliver at the same admin level within one country — same-level regions must tessellate, not overlap (map-and-search.md §4.5; cross-level containment is expected, map-and-search.md §4.5).', $overlap['a'], $overlap['b']));
         }
     }
 
@@ -450,7 +450,7 @@ final class ImportCatalogCommand extends Command
         // Smallest-area-wins on overlap: DISTINCT ON keeps exactly one region
         // per row, ordered by area then id, so membership is deterministic
         // regardless of region row order once regions multiply past the single
-        // Wallonia seed (region-scoping-design.md §3). Rows in no region stay
+        // Wallonia seed (map-and-search.md §4.5). Rows in no region stay
         // NULL (the reset above is never overwritten for them).
         $this->db->executeStatement('UPDATE item SET region_id = NULL');
         $assigned = (int) $this->db->executeStatement(
@@ -488,8 +488,8 @@ final class ImportCatalogCommand extends Command
 
     /**
      * Recompute each region's border-neighbour id list (region.adj) across ALL
-     * onboarded countries — the cross-border adjacency the scope chips gate on
-     * (2026-07-24-region-adjacency-and-click-refinement-design.md §2.1). Derived,
+     * onboarded countries — the cross-border adjacency the scope chips gate on.
+     * Derived,
      * recomputed every import, never authored. ST_Intersects rides the existing
      * idx_region_geom GiST index (bbox prefilter → exact only on truly-touching
      * pairs), so cost scales with border count, not region count squared. Empty
@@ -510,8 +510,8 @@ final class ImportCatalogCommand extends Command
 
     /**
      * Recompute each region's simplified ranking outline (region.outline) — the
-     * geometry the scope chips rank against
-     * (2026-07-27-region-edge-distance-ranking-design.md §3). Derived, recomputed
+     * geometry the scope chips rank against.
+     * Derived, recomputed
      * every import beside adj, never authored.
      *
      * This is a RANKING metric, not a geometry source: real boundaries still come

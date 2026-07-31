@@ -55,8 +55,7 @@ Invariants:
   own run; regions can stagger across the week. *Border caveat:* Geofabrik
   extracts overlap in a border buffer, so one OSM entity can arrive staged in
   two adjacent extracts with the same `(ref, letter)`. Ownership is decided at
-  staging, by geometry, not by write order
-  (`2026-07-23-border-overlap-ownership-design.md §3`): each staged row is
+  staging, by geometry, not by write order: each staged row is
   resolved to the **single nearest region** within `BOUNDARY_SNAP_DEG`, ordered
   by distance then area then id, and the extract keeps the row only if that
   region's country is its own. Because that lookup ignores which extract is
@@ -126,8 +125,7 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
 - **Measured sizing.** At 377,558 rows (BE + NL + DE + LU; 0 unstamped
   after the ownership fix), compacted steady-state:
   **341 B/row heap + 176 B/row indexes = 517 B/row** — the compacted per-row cost.
-  **Superseded (`2026-07-24-coverage-harvest-prod-safety-design.md`
-  §3.3):** the earlier `DELETE-all-then-INSERT-all` per-region swap doubled the row
+  **Superseded:** the earlier `DELETE-all-then-INSERT-all` per-region swap doubled the row
   count mid-swap and left a large reusable-free-space high-water mark (measured then:
   258 MB heap, 67 % reusable free space), which needed a `VACUUM FULL`/`pg_repack` to
   return to the OS. The load is now a **diff-merge** (upsert-changed + delete-disappeared),
@@ -295,8 +293,7 @@ Per region in `COVERAGE_REGIONS`, independently:
    (`web/src/Catalog/ServiceKind.php`).
 4. **Load — per-region atomic swap with an ownership filter and a drift
    guard.** `COPY` into a staging table, then **before** the drift count: an
-   ownership filter deletes staged rows this extract does not own
-   (`2026-07-23-border-overlap-ownership-design.md §3`) — nearest-region-wins,
+   ownership filter deletes staged rows this extract does not own — nearest-region-wins,
    across every onboarded country, so a border row picks exactly one owner
    regardless of which extract's cut also carries it; a row with no region
    within `BOUNDARY_SNAP_DEG` of *any* onboarded country is dropped outright
@@ -309,8 +306,7 @@ Per region in `COVERAGE_REGIONS`, independently:
    resolve the extract slug to its `coverage_source` id (get-or-create), then a
    **diff-merge** swap — upsert only changed/new rows (unchanged rows skip, no
    write) and delete the disappeared, replacing the earlier
-   DELETE-all + INSERT-all
-   (`2026-07-24-coverage-harvest-prod-safety-design.md` §3.3) — followed by a
+   DELETE-all + INSERT-all — followed by a
    **delta-scoped** `region_id` backfill (`ST_Contains` over `region` polygons
    where they exist; `COVERAGE_FULL_MEMBERSHIP=1` recomputes the whole slice
    after a `region` change). Readers never see a half-loaded region; an abort
@@ -324,12 +320,10 @@ After all regions, once per run:
 6. **Build tiles** with tippecanoe: one layer per letter, `--minimum-zoom 6 /
    --maximum-zoom 14`, direct `.pmtiles` output
    (`pipeline/coverage/tiles.py::build_pmtiles`). Tiles carry **individual
-   points only, z6–14 — no clustering**
-   (`2026-07-24-coverage-no-cluster-design.md` §2–§3.1, which supersedes the
-   old `minzoom 6` low-zoom cluster-bubble build this section used to
-   describe, and `2026-07-24-coverage-overview-heatmap-design.md` §3.1, which
-   put the `minzoom 6` floor back for an unrelated reason — an overview
-   density heatmap, not clusters). `-r1` keeps EVERY point at z11–14 (no
+   points only, z6–14 — no clustering** (this supersedes the old `minzoom 6`
+   low-zoom cluster-bubble build this section used to describe; the `minzoom 6`
+   floor came back afterwards for an unrelated reason — the overview density
+   heatmap of §4, not clusters). `-r1` keeps EVERY point at z11–14 (no
    rate-based thinning), so those tiles stay **complete** for the individual
    icons — a z11 tile is small enough that `--drop-densest-as-needed` never
    fires there, so nothing drops at z11 or above. At **z6–10**,
@@ -349,15 +343,12 @@ After all regions, once per run:
    tokens as the icons, plus the rail's exact `/map/coverage/counts`
    alongside it as the precise "how much"; individual dots render from z9
    upward (the z9–10 dots are the thinned sample, complete by z11),
-   cross-fading with the heatmap at the ~z9 handoff
-   (`2026-07-24-coverage-overview-heatmap-design.md` §2–§3.1 + its Tuning
-   note). (The prior
+   cross-fading with the heatmap at the ~z9 handoff. (The prior
    cluster-bubble design rendered a cluster at the *centroid* of its
    members, which could sit outside the scoped region — the phantom-bubble
-   class the no-cluster design eliminates; see
-   `2026-07-24-coverage-no-cluster-design.md` §1. The heatmap carries the
-   same per-point phantom-free guarantee, not a centroid — see
-   `2026-07-24-coverage-overview-heatmap-design.md` §4.)
+   class that removing clustering eliminates. The heatmap carries the
+   same per-point phantom-free guarantee, not a centroid: it bins the points
+   themselves, so nothing is ever drawn where no POI is.)
 7. **Verify** with go-pmtiles (`verify_pmtiles`): header bounds, addressed tile
    count, expected layers, and a sample tile decode — a broken build never
    ships.
@@ -406,12 +397,11 @@ Partitioning by country made clustering — and therefore `point_count` and the
 anchor position — country-pure by construction; the `ridtok`/`cctok` token
 filter itself needed no change. A row with a NULL `country_code` (the rare
 unstamped boundary-miss) buckets under `<letter>_zz` so no POI is ever
-silently dropped. Full design + verified browser results (0 mixed clusters
-under both `country:NL` and `country:BE`):
-[2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md).
+silently dropped. Verified in the browser at the time: 0 mixed clusters under
+both `country:NL` and `country:BE`.
 This border-mixing defect was one instance of the broader phantom-bubble class
 that clustering could not be made safe against at any tuning — removing
-clustering entirely (`2026-07-24-coverage-no-cluster-design.md` §1) supersedes
+clustering entirely supersedes
 this fix rather than building on it; the per-country layer split itself is
 kept (above) for reasons unrelated to clustering.
 
@@ -427,9 +417,7 @@ region-fit landing zoom): the z9–10 icons come from the **thinned** z6–10 ti
 sample and densify to **complete** at z11–14, where `-r1` keeps every point —
 there is no bubble step and no "features stop counting down" transition to
 explain. The heatmap and the icons **cross-fade at ~z9** (heat layer `maxzoom
-9`, icon layer `minzoom 9`)
-(`2026-07-24-coverage-overview-heatmap-design.md` §2–§3.2 + its Tuning note).
-This replaces an
+9`, icon layer `minzoom 9`). This replaces an
 earlier measured cluster zoom-table for one spot (Schwaan, DE) that
 characterised bubble-dissolution behaviour which no longer exists.
 
@@ -443,8 +431,8 @@ manifest's `country_codes`-based client wiring (below).
 | `ref` | all | join key: drawer detail fetch, curated dedupe, deep links |
 | `n` | all (when named) | labels, search-pick highlight |
 | `t` | all | type label (existing marker/drawer vocabulary) |
-| `ridtok` | all (always; `""` when unstamped) | region scope filter — `"|<region_id>|"` (region-scoping-design.md §6, Phase 3) |
-| `cctok` | all (always; `""` when unstamped) | country scope filter — `"|<cc>|"` (region-scoping-design.md §6, Phase 3) |
+| `ridtok` | all (always; `""` when unstamped) | region scope filter — `"|<region_id>|"` (map-and-search.md §4.5, Phase 3) |
+| `cctok` | all (always; `""` when unstamped) | country scope filter — `"|<cc>|"` (map-and-search.md §4.5, Phase 3) |
 | `kind` | D | shop/station/pump icon match |
 | `potable` | C | water marker variant, derived from OSM `drinking_water` tags |
 | `acc` | E | stays accessibility filter |
@@ -454,8 +442,7 @@ as `universalTileProps` in `coverage-contract.json`, consumed by
 `tiles.py::_universal_props` and pinned by both language contract suites);
 `kind`/`potable`/`acc` are per-letter extras (`tileProps`). **No cluster props
 exist:** tippecanoe never injects `point_count`/`clustered`/`sqrt_point_count`/
-`point_count_abbreviated` because nothing clusters
-(`2026-07-24-coverage-no-cluster-design.md` §2–§3.1). There is a single icon
+`point_count_abbreviated` because nothing clusters. There is a single icon
 layer per `(letter, country)`, `{key}-{cc}-cov`; the former `{key}-{cc}-cov-cl`
 cluster-bubble sublayer and `covClusterFilter()` are retired. Icons compose the
 dedupe + region-scope arms (`covIconFilter`) — the `!has point_count` arm in
@@ -466,12 +453,11 @@ carries `point_count`; left in place as optional cleanup, not a bug).
 `'|<id>|' in ridtok` is a delimiter-safe set test, and ALWAYS emitted (empty
 string when unstamped, never NULL-stripped). Each feature carries **its own
 single token** — there is no `--accumulate-attribute` and no cross-feature
-union now that tiles carry individual points only
-(`2026-07-24-coverage-no-cluster-design.md` §3.1); the scope filter tests one
+union now that tiles carry individual points only; the scope filter tests one
 point's own region/country, never a merged member set. "Prop-less" is the
 explicit both-tokens-empty state (a row outside every region with no cc, or a
 tile built before this change): the client renders it **unfiltered**
-(region-scoping-design.md §8 risk 2 fallback — the artifact lags the DB by up
+(map-and-search.md §4.5 risk 2 fallback — the artifact lags the DB by up
 to a weekly rebuild, so hiding-all would blank the map), the inverse of the
 leak-safe default for served data. A cc-bearing rid-less row (cctok
 non-empty) is NOT prop-less — it hides under a region scope (matching
@@ -495,8 +481,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   spots show from the region-fit landing zoom; the tiles themselves build from
   `--minimum-zoom 6`) plus a `<key>-<cc>-heat` heatmap layer (`maxzoom: 9`) on
   the same `<letter>_<cc>` source-layer — there is no `-cov-cl` cluster-bubble
-  sublayer to wire (`2026-07-24-coverage-no-cluster-design.md` §3.2,
-  `2026-07-24-coverage-overview-heatmap-design.md` §3.2).
+  sublayer to wire.
   `updateCoverageScopeFilter` iterates the same product so the `ridtok`/`cctok`
   scope filter (this section, above) applies to every per-country layer.
   **`[null]` fallback:** a manifest with no `country_codes` (a pre-split
@@ -538,7 +523,7 @@ itemId?}`.
 | `GET /map/coverage/counts` | rail totals | `{"counts": {"C": n, …}, "attribution"}`; **scope-aware** (Phase 3); `max-age=3600` |
 | `GET /map/coverage/poi/{osmType}/{osmId}` | new: drawer detail for tile POIs | `{ref, letter, name, kind, ll, tags, curated, attribution}` — `tags` filtered to `CoverageRepository::TAG_WHITELIST` (store rich, serve trimmed); `curated` = `{itemId, state, fields, confirmations}` or `null`; `osmType ∈ {node, way}`; 404 when the ref is not cached; ETag + `max-age=300` |
 
-- **Region scope params (Phase 3, region-scoping-design.md §6).** `search`,
+- **Region scope params (Phase 3, map-and-search.md §4.5).** `search`,
   `nearby` and `counts` accept optional `rids` (csv region ids →
   `region_id IN (…)`) and `cc` (2-letter country → `country_code = :cc`). The
   **community (`coverage_poi`) arm** takes both, ORed, so an unsplit-country row
@@ -557,14 +542,12 @@ itemId?}`.
   render** — the icons appear from z9 (a large country fitted below that, e.g.
   Germany ~z5.8, shows the density **heatmap** instead, z6–~9); the count is
   honest (every POI IS in scope), the icon pixels arrive on zoom-in
-  (`2026-07-24-coverage-no-cluster-design.md` §2 +
-  `2026-07-24-coverage-overview-heatmap-design.md` §2 with its Tuning note,
-  superseding the earlier z6/z11 minzoom this line documented).
+  (superseding the earlier z6/z11 minzoom this line documented).
   Params are client-sent only (the plane is anonymous + cacheable — never
   server-resolved from a user); `rids` is de-duped by numeric value (zero-padded
   duplicates collapse), sorted, overflow/garbage rejected to the empty scope, and
   capped at `CoverageController::MAX_SCOPE_REGIONS` (value `24`) to bound the SQL
-  IN-list (region-scoping-design.md §8 risk 10) — the cap is safe because a
+  IN-list (map-and-search.md §4.5 risk 10) — the cap is safe because a
   country scope's `cc` arm is the complete fallback (guaranteed by the pipeline's
   region ⇒ cc invariant), and it logs when it actually truncates. The HTTP-cache
   key is the raw client query string, which `covScopeQuery` already canonicalises
@@ -812,8 +795,7 @@ shows real volumes instead.
 
 ### Planet-flip dry-run checklist (pipeline, not reachable with Belgium data)
 
-**Superseded 2026-07-24:** coverage no longer clusters at all
-(`2026-07-24-coverage-no-cluster-design.md`), so neither risk below is
+**Superseded 2026-07-24:** coverage no longer clusters at all, so neither risk below is
 reachable any more — clustering not scaling worldwide was itself one of the
 two problems that motivated removing it (design doc §1). Retained as the
 historical record of the clustering-era planet-flip risk, not a live gate;
@@ -822,7 +804,7 @@ across a planet-wide extract) is unmeasured and has no checklist yet.
 
 Two clustering behaviours were safe for Belgium but would have needed
 verifying before a worldwide flip under the old clustered design
-(region-scoping-design.md §7 Phase 5):
+(map-and-search.md §4.5 Phase 5):
 
 - **tippecanoe segfault on an oversized above-cap tile.** With the pinned combo
   (`--cluster-maxzoom=11 --cluster-densest-as-needed -r1`), a single z12–14 tile

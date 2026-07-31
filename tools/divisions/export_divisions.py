@@ -3,7 +3,7 @@
 r"""Export official administrative subdivisions from Overture Maps `division_area`
 as region-<slug>.geojson artifacts for App\Catalog\Command\ImportCatalogCommand.
 
-Worldwide-ready region export (region-scoping-design.md §3, §7 Phase 2). A country
+Worldwide-ready region export (map-and-search.md §4.5 Phase 2). A country
 is seeded at ONE operating level (Belgium: subtype=region -> ISO 3166-2
 BE-WAL/BE-VLG/BE-BRU). Provenance: source="overture" (Overture divisions theme,
 ODbL — conflates OSM + geoBoundaries, carries ISO 3166-1/-2 and a normalised
@@ -11,7 +11,7 @@ per-country admin level).
 
 Each artifact carries the props the importer REQUIRES (country_code) plus
 iso_code / admin_level / source — an unstamped region is a silent
-moderation-jurisdiction hole (region-scoping-design.md §3, §8 risk 1).
+moderation-jurisdiction hole (map-and-search.md §4.5 risk 1).
 
 Requires duckdb with httpfs + spatial (see requirements.txt). Regeneration hits
 the public Overture S3 bucket anonymously — a network step, like the OSM harvest.
@@ -146,7 +146,7 @@ def l2_cfg(cc):
     if cc not in config.COUNTRY_L2:
         raise SystemExit(
             f"No COUNTRY_L2 entry for {cc} — every onboardable country needs "
-            "a level-2 slug/name (2026-07-30-dynamic-region-pages-design.md §9)."
+            "a level-2 slug/name."
         )
     slug, name = config.COUNTRY_L2[cc]
     return {
@@ -164,13 +164,13 @@ def export_country(cc, out_dir, release=None, con=None):
     if cfg is None:
         raise SystemExit(
             f"No COUNTRY_CONFIG for {cc} — add its operating level + ISO->slug map "
-            "(region-scoping-design.md §5a)."
+            "(map-and-search.md §4.5a)."
         )
     con = con or _connect()
     out_dir = pathlib.Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     # Always emit the level-2 country outline alongside the operating level
-    # (2+4 default, 2026-07-30-dynamic-region-pages-design.md §9). A country
+    # (2+4 default). A country
     # operating AT level 2 (LU) already emits it as its operating level.
     configs = [cfg]
     if cfg["subtype"] != "country":

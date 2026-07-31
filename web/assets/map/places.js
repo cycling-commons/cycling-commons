@@ -2,7 +2,7 @@
 /* Places and openers: the town/city info card with its "in the Commons nearby"
    list, and every by-name / by-id way into a drawer — a deep link, a search hit,
    a place-card row, the curator queue.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5 step 6.
+   Extracted from map.js by the module split.
 
    `_placeReq` is the town-card half of the shared drawer-generation convention
    (its coverage half is coverage.js's invalidateCoverageDrawer). It stays

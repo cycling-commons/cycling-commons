@@ -26,7 +26,7 @@ final class RouteRankingService
      * (route-domain.md §12, item 1). Region-scoped facets hold ≤ the active cap,
      * far below this, so the cap only ever bounds the Everywhere facet and never
      * truncates a real region list. Landed in Phase 1, before any widening UI
-     * exists (region-scoping-design.md §6, §7 Phase 1).
+     * exists (map-and-search.md §4.5 Phase 1).
      */
     public const int MAX_RESULTS = 200;
 
@@ -39,7 +39,7 @@ final class RouteRankingService
      * means "all bikes" (aggregate across bike types). `$regionIds === []`
      * means Everywhere (unbounded, subject to MAX_RESULTS); a non-empty set
      * merges votes across every listed region in one ranking, the My-area
-     * derived scope (region-scoping-design.md §7 Phase 4). Only routes with
+     * derived scope (map-and-search.md §4.5 Phase 4). Only routes with
      * ≥1 matching vote are returned; the four specialty bike types are
      * additionally gated by declared suitability (docs/specs/route-domain.md §8.3).
      *

@@ -4,9 +4,10 @@
 
 Adding a country to the map is a fixed sequence: seed its **regions** (the scope-selector areas and
 moderation jurisdictions), wire them up, then let the [harvest](harvesting.md) fill them with POIs.
-This page is the practical walk-through; the authoritative design is
-[country-onboarding-design.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/2026-07-22-country-onboarding-design.md) and the
-tool reference is [`tools/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/tools/divisions/README.md).
+This page is the practical walk-through; the tool reference is
+[`tools/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/tools/divisions/README.md),
+and the coverage side of what onboarding feeds is
+[coverage-provider.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/coverage-provider.md).
 
 The regions come from the **Overture Maps `divisions` theme** (ODbL — it conflates OSM and
 geoBoundaries and carries ISO 3166 codes), not from the OSM harvest. Two different data sources for
@@ -29,8 +30,7 @@ One sequence for every country. ⚑ marks a human judgment call.
 
 ## Step 1 — the operating-level decision
 
-The rule (from [country-onboarding-design.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/2026-07-22-country-onboarding-design.md)):
-seed at the **official administrative level whose subdivisions are a reasonable riding size**,
+The rule: seed at the **official administrative level whose subdivisions are a reasonable riding size**,
 preferring a stable ISO 3166-2 identity. Small official regions are fine — moderation composes
 upward, one moderator can hold several. Only invent synthetic macro-regions when *no* official level
 fits.
@@ -141,5 +141,5 @@ tiles.
 
 - [`tools/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/tools/divisions/README.md) — the exporter, the scaffolder,
   Overture provenance, and the full command reference.
-- [country-onboarding-design.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/2026-07-22-country-onboarding-design.md) — the
-  operating-level rule, the tessellation invariant, and the BE/NL/DE/LU rollout notes.
+- This page — the operating-level rule, the tessellation invariant, and the
+  BE/NL/DE/LU rollout notes.

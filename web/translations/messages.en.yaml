@@ -656,7 +656,7 @@ continent:
 region:
   # Map scope-selector + dynamic header labels (region.<slug>.label). Display
   # names live here, not on the World Subdivision link (English-only msgids).
-  # docs/specs/2026-07-19-region-scoping-design.md §3.
+  # map-and-search.md §4.5
   # Country rungs follow the same convention: region.all_<cc>.label per
   # distinct registry country (07-20 review finding 6) — importing a new
   # country's regions means adding its all_<cc> key here in all four locales,

@@ -8,7 +8,7 @@ namespace App\Catalog;
 
 /**
  * A rider's stored preference for which view mode the map opens in
- * (2026-07-27-map-view-mode-default-design.md §2; pre-spec:
+ * (map-and-search.md §4.2; pre-spec:
  * docs/plans/github-issues-backlog.md #8).
  *
  * `Auto` is the default and means "let the region decide": the map opens in

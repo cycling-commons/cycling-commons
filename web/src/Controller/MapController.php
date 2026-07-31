@@ -49,12 +49,12 @@ final class MapController extends AbstractController
         $params = [
             'field_schema' => $schema->all(),
             'map_i18n' => $this->mapI18n($translator),
-            // Region registry for the scope selector (region-scoping-design.md
+            // Region registry for the scope selector (map-and-search.md §4.5
             // §4 / §7 Phase 2): id/slug/cc/bbox per region, consumed by
             // window.CCScope. Display labels come from region.<slug>.label.
             // The country rungs that used to ride here as `scope_countries` are
             // gone: map.js renderScopeChips() now derives them client-side from
-            // CC_REGIONS (2026-07-22-scope-selector-scale-design.md §B), so the
+            // CC_REGIONS (map-and-search.md §4.5), so the
             // template no longer reads a server-computed list.
             'regions' => $regionRows,
             // Rider preferences ride the page render (map-and-search.md §4.4):
@@ -68,7 +68,7 @@ final class MapController extends AbstractController
                     ? array_map(static fn (RidingStyle $s): string => $s->value, $user->getRidingStyles())
                     : [],
                 // Which view mode the map opens in, step 1 of the load-time
-                // precedence (2026-07-27-map-view-mode-default-design.md §5).
+                // precedence.
                 // 'auto' — the default, and the only value an anonymous visitor
                 // ever sees — hands the decision down to the active region's
                 // curatedDefault, then to the global Everything default.
@@ -82,7 +82,7 @@ final class MapController extends AbstractController
                 // device picked.
                 'authed' => $user instanceof User,
             ],
-            // "My area" base location (region-scoping-design.md §4/§6): the
+            // "My area" base location (map-and-search.md §4.5): the
             // stored coarse point + derived region/country set, or null for
             // anonymous. Anonymous-safe to compute (null, not omitted) — the
             // template only ever emits window.CC_MY_AREA inside the
@@ -101,7 +101,7 @@ final class MapController extends AbstractController
             // unreachable — the template only emits CC_COVERAGE_URL when set.
             'coverage_url' => $coverage->currentTileUrl(),
             // Country codes the tile artifact was built for
-            // (2026-07-22-coverage-scope-rendering-design.md §D): the map turns
+            // (coverage-provider.md §4): the map turns
             // each into a per-country coverage layer (source-layers <letter>_<cc>);
             // [] falls the client back to a single unsplit layer per letter.
             'coverage_countries' => $coverage->countryCodes(),
@@ -201,15 +201,15 @@ final class MapController extends AbstractController
             'alongRide' => 'd_along_ride', 'rideMeta' => 'd_ride_meta', 'clearRide' => 'd_clear_ride',
             'rideFollows' => 'd_ride_follows', 'kmShared' => 'd_km_shared', 'alongTrackH' => 'd_along_track_h',
             'capped' => 'd_capped', 'kmOff' => 'd_km_off', 'nothingWithin' => 'd_nothing_within',
-            // Ride-check coverage arm (2026-07-26-ride-check-coverage-design.md §3.3).
+            // Ride-check coverage arm.
             'alongTrackCovH' => 'd_along_track_cov_h', 'covArmNote' => 'd_cov_arm_note',
             'noMatch' => 'd_no_match', 'places' => 'd_places',
             'scopes' => 'd_scopes', 'wholeCountry' => 'd_whole_country', 'region' => 'd_region',
-            // Contextual scope-chip overflow (2026-07-22-scope-selector-scale-design.md
+            // Contextual scope-chip overflow (map-and-search.md §4.5
             // §B, owner fix 2): shown only when a country's region count exceeds
             // the 8-closest cap; opens/focuses the sidebar search box.
             'scopesMore' => 'd_scopes_more',
-            // Compass grid (owner request, 2026-07-22-scope-selector-scale-design.md
+            // Compass grid (owner request, map-and-search.md §4.5
             // §B "Compass grid layout"): a spelled-out direction word per neighbour
             // chip, since the cell's position alone doesn't reach a screen reader.
             // compassLabel is the aria-label template ('{dir}: {region}');
@@ -234,7 +234,7 @@ final class MapController extends AbstractController
             'allBikes' => $t->trans('map.all_bikes'),
             'pendingReview' => $t->trans('map.pending_review'),
             'login' => $t->trans('nav.login'),
-            // Search scope widening (region-scoping-design.md §4 / §7 Phase 2):
+            // Search scope widening (map-and-search.md §4.5 Phase 2):
             // dynamic search title + the one-tap widen chip. {area} is filled by
             // map.js tpl().
             'searchIn' => $t->trans('map.search_in'),
@@ -249,13 +249,13 @@ final class MapController extends AbstractController
             // scope, before first paint (2026-07-23 flash fix) — not by reading
             // back the rendered rail button.
             'everywhereLabel' => $t->trans('region.everywhere.label'),
-            // My-area header/search line (region-scoping-design.md §4 / §9.1
+            // My-area header/search line (map-and-search.md §4.5
             // Phase 4). {place}/{km} filled by map.js tpl(); the _plain variant
             // is used when the base location has no place name.
             'myAreaLine' => $t->trans('map.my_area_line'),
             'myAreaLinePlain' => $t->trans('map.my_area_line_plain'),
             // Cold-start "Set my area" prompt + pan-away widen nudge
-            // (region-scoping-design.md §4 / §9.1 Phase 4): rendered by map.js.
+            // (map-and-search.md §4.5 Phase 4): rendered by map.js.
             // Note: the chip's own label ('map.set_my_area') is twig-rendered
             // (templates/map/index.html.twig), not read from this payload —
             // map.js never touches I18N.setMyArea.
@@ -339,7 +339,7 @@ final class MapController extends AbstractController
      * Best-of ranking for the map's Curated mode (route-domain.md §8): ranked
      * verified-route ids for a (season, bike, region-set?) facet. Public +
      * cacheable like catalog.json; the map flags these ids `cur` and filters
-     * Curated to them. `region` accepts a CSV of ids (region-scoping-design.md
+     * Curated to them. `region` accepts a CSV of ids (map-and-search.md §4.5
      * §7 Phase 4) so a My-area derived scope can rank across several regions
      * at once; a bare single id stays valid. The response body (and so the
      * ETag, which hashes it) already varies with the resolved `ids`, which
@@ -351,7 +351,7 @@ final class MapController extends AbstractController
         $season = Season::tryFrom((string) $request->query->get('season')) ?? Season::current(new \DateTimeImmutable());
         $bikeParam = (string) $request->query->get('bike', 'all');
         $bike = 'all' === $bikeParam ? null : BikeType::tryFrom($bikeParam);
-        // CSV of region ids (region-scoping-design.md §7 Phase 4): a My-area
+        // CSV of region ids (map-and-search.md §4.5 Phase 4): a My-area
         // derived scope sends up to BaseAreaResolver::MAX_REGIONS ids, e.g.
         // `region=1,24,23`; a bare `region=3` stays valid (single-element
         // set). Mirrors CoverageController::scopeParams's rids idiom:
@@ -392,7 +392,7 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Region spotlight polygon (region-scoping-design.md §4): the simplified DB
+     * Region spotlight polygon (map-and-search.md §4.5): the simplified DB
      * boundary the map dims around, served cacheably to retire the map's
      * Nominatim fetch (an external dependency and a Nominatim usage-policy
      * problem in production). Public + cacheable like catalog.json; unknown
@@ -419,7 +419,7 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Scope-union boundary (2026-07-22-coverage-scope-rendering-design.md §B):
+     * Scope-union boundary (coverage-provider.md §4):
      * the ST_Union of a scope's regions — an explicit `rids` id list and/or
      * every region of a `cc` country — so the map's dim mask can grey
      * everything outside a whole-country scope, not just a single named

@@ -107,7 +107,7 @@ tables) are owned by route-domain.md.
 varchar(8) nullable (the ride-heat layer's filter facet) · `region_id` bigint
 nullable (region membership for the map's scope filter — stamped by
 `recomputeMembership` on every import, backfilled by `Version20260721120000`;
-region-scoping-design.md §7 Phase-2 review finding 5) · `computed_at`.
+map-and-search.md §4.5 Phase-2 review finding 5) · `computed_at`.
 First candidate for partitioning and tile/aggregation serving when real rides
 feed it.
 
@@ -129,7 +129,7 @@ Regions are the day-one operational unit: moderator areas, region-scoped
 voting/rankings, and the per-region route cap all anchor to `region.id`
 (owned by moderation-and-contribution.md and route-domain.md respectively).
 
-**Invariants (region-scoping-design.md §3, review-enforced):**
+**Invariants (map-and-search.md §4.5, review-enforced):**
 
 - **Never delete a region row.** `moderator_area.region_id` is
   `ON DELETE CASCADE` (`Version20260714210000`), so deleting a region silently
@@ -140,13 +140,13 @@ voting/rankings, and the per-region route cap all anchor to `region.id`
 - **`country_code` is required at import.** A region with no country is
   invisible to country-scoped curators (`ModerationScope` matches on
   `region.country_code`) — a silent jurisdiction hole. `importRegions` rejects
-  an artifact that lacks it (region-scoping-design.md §8 risk 1).
+  an artifact that lacks it (map-and-search.md §4.5 risk 1).
 - **Operating-level regions tessellate, never overlap.** The importer rejects
   an `ST_Overlaps` pair within one country; membership additionally resolves
   any overlap smallest-area-wins, so a bad row that slips through is still
   deterministic (catalog-data-model.md §6).
 
-**Seeding playbook (region-scoping-design.md §5a — curator-demand-driven):**
+**Seeding playbook (map-and-search.md §4.5a — curator-demand-driven):**
 countries start **unsplit** (zero region rows; rider scope still works via
 My-area / country / Everywhere). When a curator volunteers, seed that country's
 subdivisions at the granularity of the smallest jurisdiction anyone there wants
@@ -244,7 +244,7 @@ every import run** (`ImportCatalogCommand::recomputeMembership()`): null out
 `region_id` on `item` and `recommended_route`, then assign the containing
 region — **smallest by `area_km2` first when regions overlap**, so membership
 never depends on row order once regions multiply past the Wallonia seed
-(region-scoping-design.md §3):
+(map-and-search.md §4.5):
 
 ```sql
 UPDATE item SET region_id = m.region_id FROM (
@@ -259,7 +259,7 @@ The **same smallest-area-wins rule is shared by all four membership writers** �
 `SeedManualCatalogCommand::recomputeMembership` (the `manual` hero pins,
 catalog-data-model.md §5), and `pipeline/coverage/load.py` (the `coverage_poi`
 stamp) — so a manual pin can never land in a different region than an
-identically-located imported item (region-scoping-design.md §3). `ST_PointOnSurface` is guaranteed
+identically-located imported item (map-and-search.md §4.5). `ST_PointOnSurface` is guaranteed
 on-geometry for points *and* lines, so a border-crossing segment gets exactly
 one home region (the map still finds it from neighboring viewports via the GiST
 index). Because membership is a recompute, regions can split/merge later without
@@ -267,14 +267,14 @@ touching item schema. Rider route proposals never pass the importer; intake
 resolves `region_id` with the same rule (route-domain.md). `heat_point` carries
 `region_id` too — never for moderation or voting (heat stays unmoderated), but
 because the ride-heat layer scope-filters client-side like every served layer
-(region-scoping-design.md §7, Phase-2 review finding 5); points are stamped in
+(map-and-search.md §4.5, Phase-2 review finding 5); points are stamped in
 the same `recomputeMembership` pass, `ST_Contains` on the point directly.
 
 Ad-hoc spatial queries ("all items in an arbitrary polygon") need no region
 row — GiST + `ST_Intersects` works day one.
 
 **Rider base-area re-derivation rides the same import transaction
-(region-scoping-design.md §7 Phase 4).** `ImportCatalogCommand` calls
+(map-and-search.md §4.5 Phase 4).** `ImportCatalogCommand` calls
 `App\Service\BaseLocationService::rederiveAll()` immediately after
 `recomputeMembership()`, inside the same transaction: every rider with a
 stored base point (`users.base_point`) gets a fresh `base_region_ids`/

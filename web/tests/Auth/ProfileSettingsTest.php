@@ -344,7 +344,7 @@ final class ProfileSettingsTest extends WebTestCase
         self::assertSame('BE', $user->getCountry()?->getIso2());
     }
 
-    // ── Base-location tests (region-scoping-design.md §4) ────────────────────
+    // ── Base-location tests (map-and-search.md §4.5) ────────────────────
 
     /**
      * Region fixture in the open mid-Atlantic (BaseAreaResolverTest's box

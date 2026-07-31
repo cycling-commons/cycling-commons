@@ -111,7 +111,7 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
-     * F · Hazards & conditions (region-scoping-design.md §7 Task A): served as a
+     * F · Hazards & conditions (map-and-search.md §4.5 Task A): served as a
      * plain FeatureCollection like the other point letters, so map.js can render
      * it as CATALOG features. The manual hazard is not an untouched-osm row, so
      * the coverage-retirement predicate never drops it; its attributes reach the
@@ -422,7 +422,7 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
-     * Phase 2 (region-scoping-design.md §4 / §7): every served feature carries
+     * Phase 2 (map-and-search.md §4.5): every served feature carries
      * its region_id as `rid` so map.js `featureVisible` can filter by scope.
      * Rows outside every region carry no rid (byte-stable for null-region rows).
      */

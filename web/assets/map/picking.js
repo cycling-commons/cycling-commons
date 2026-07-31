@@ -3,7 +3,7 @@
    stretches of a route a correction applies to, by clicking the line twice per
    stretch. Captured fractions are held per route id in _pickSegs until a
    successful "suggest" POST consumes them (community.js).
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5 step 6.
+   Extracted from map.js by the module split.
 
    The session itself (`_pick`) stays private: an importer would get a read-only
    binding of a value that is reassigned on every start/finish, so it is read

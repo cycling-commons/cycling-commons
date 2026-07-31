@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Map smoke sweep — the checkpoint list from
-   docs/specs/2026-07-26-map-js-module-split-design.md §6, as code.
+   map-and-search.md §2, as code.
 
    Not a Playwright project: this repo has no package.json and the split design
    deliberately does not add one. This file is a single function evaluated in

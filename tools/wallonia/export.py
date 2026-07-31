@@ -27,7 +27,7 @@ OUT = pathlib.Path(__file__).resolve().parent / "out"
 
 # Region boundary artifacts (region-<slug>.geojson) are no longer produced here.
 # They moved to tools/divisions/ (Overture division_area, worldwide-ready) —
-# region-scoping-design.md §3 / §7 Phase 2. This module still emits the POI /
+# map-and-search.md §4.5 Phase 2. This module still emits the POI /
 # fixture catalog layers below.
 
 LETTERS = {"services": "D", "scenic": "I", "history": "J",

@@ -198,7 +198,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
 
 def test_country_by_region_stamps_netherlands():
     """europe/netherlands is a first-class coverage region — its POIs must be
-    stamped country_code NL (country-onboarding-design.md §5). Resolved via
+    stamped country_code NL (tools/divisions/README.md). Resolved via
     resolve_country (I1's longest-prefix lookup), not a bare dict read — that
     lookup is what run.py now calls at the two country_code call sites."""
     from coverage.load import resolve_country

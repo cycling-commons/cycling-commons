@@ -128,12 +128,12 @@ def test_load_region_backfills_cc_from_region_when_extract_left_it_null(db):
 
 def test_load_region_upserts_shared_border_entity_across_regions(db):
     """Geofabrik regional extracts overlap at borders, so the SAME OSM entity
-    (same ref) appears in two extracts (country-onboarding-design.md §2 plan
+    (same ref) appears in two extracts (tools/divisions/README.md plan
     refinement; 203 such refs shared BE↔NL). The global UNIQUE(ref, letter) plus
     the per-src_region swap must UPSERT a shared entity, never crash on the
     second region's load — and a region-stamped row's country_code must equal its
     region's, even when the neighbouring extract stamped the other country
-    (region ⇒ cc invariant, region-scoping-design.md §8 risk 10)."""
+    (region ⇒ cc invariant, map-and-search.md §4.5 risk 10)."""
     ensure_schema(db)
     db.execute(
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES "
@@ -204,7 +204,7 @@ def test_load_region_smallest_area_wins_on_overlap(db):
     """Overlapping regions: the smaller-area one wins, not the lower id.
 
     The third membership writer must agree with RegionResolver /
-    recomputeMembership (region-scoping-design.md §3). Region 101 (area 400)
+    recomputeMembership (map-and-search.md §4.5). Region 101 (area 400)
     has the LOWER id but the BIGGER area; region 102 (area 4) must win.
     """
     ensure_schema(db)
@@ -363,7 +363,7 @@ def test_same_ref_may_carry_two_letters(db):
 def test_ownership_is_independent_of_load_order(db):
     """The core guarantee. Two overlapping extracts both carry one entity; whoever
     runs last must NOT win. Ownership is decided by which country's region contains
-    it (2026-07-23-border-overlap-ownership-design.md §3)."""
+    it."""
     ensure_schema(db)
     db.execute(
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "
@@ -522,7 +522,7 @@ def test_owner_dropping_the_entity_removes_it(db):
     only the OWNER's next run can delete the row — and a non-owning extract that
     still carries the SAME entity (Geofabrik's cuts overlap) can never resurrect
     it, even when that non-owner runs again after the owner has dropped it
-    (2026-07-23-border-overlap-ownership-design.md §4)."""
+."""
     ensure_schema(db)
     db.execute(
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'BE', "

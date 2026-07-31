@@ -53,7 +53,7 @@ final class RegionResolverTest extends KernelTestCase
 
         // Two overlapping boxes in the empty mid-Atlantic. The BIG one is
         // persisted first (lower id), so a lower-id-wins ordering would pick it;
-        // area_km2 must decide instead (region-scoping-design.md §3).
+        // area_km2 must decide instead (map-and-search.md §4.5).
         $suffix = bin2hex(random_bytes(4));
         $big = (new Region())->setSlug('overlap-big-'.$suffix)->setName('Big')->setAreaKm2(400.0)
             ->setGeom('{"type":"MultiPolygon","coordinates":[[[[-32.0,-2.0],[-28.0,-2.0],[-28.0,2.0],[-32.0,2.0],[-32.0,-2.0]]]]}');

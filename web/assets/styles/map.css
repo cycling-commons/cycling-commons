@@ -81,7 +81,7 @@
   .rail-scroll::-webkit-scrollbar-thumb:hover{background:rgba(239,230,212,.6);background-clip:padding-box}
   .grp{margin-bottom:1.7rem}
   .grp h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;color:var(--glacier);margin-bottom:.8rem;text-transform:uppercase}
-  /* Empty-scope invite (2026-07-29-country-requests-and-curator-signup-design.md
+  /* Empty-scope invite (moderation-and-contribution.md
      §10.1): same quiet single-line rail typography as .hint below, but a real
      link — underlined, brightens to --trail on hover like the other rail links. */
   .rail-invite{margin-bottom:1.7rem;font-size:.78rem;line-height:1.5}
@@ -113,7 +113,7 @@
   .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45)}
   .search-res .scomm{margin-left:.45rem;font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45);border:1px solid rgba(239,230,212,.22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
   .search-empty{padding:.6rem .55rem;font-size:.8rem;color:rgba(239,230,212,.5)}
-  /* Widen chip (region-scoping-design.md §4): the one-tap "search wider" ladder,
+  /* Widen chip (map-and-search.md §4.5): the one-tap "search wider" ladder,
      visually set apart from result rows (top border, glacier accent, mono). */
   .search-widen{border-top:1px solid rgba(239,230,212,.16)}
   .search-widen button{width:100%;display:flex;align-items:center;gap:.4rem;background:none;border:none;color:var(--glacier);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer;transition:background .12s}
@@ -138,10 +138,10 @@
   .toggle{display:flex;border:1px solid rgba(239,230,212,.25);border-radius:6px;overflow:hidden}
   .toggle button{flex:1;background:transparent;color:var(--paper);font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem;border:none;cursor:pointer;transition:all .18s}
   .toggle button.on{background:var(--spruce-lift)}
-  /* Region scope selector (region-scoping-design.md §4): 5 options, so it wraps
+  /* Region scope selector (map-and-search.md §4.5): 5 options, so it wraps
      into a chip grid instead of the 2-up segmented pill .toggle assumes. */
   .scope-toggle{display:flex;flex-wrap:wrap;gap:.35rem}
-  /* #scopeChips (2026-07-22-scope-selector-scale-design.md §B) is a plain wrapper
+  /* #scopeChips (map-and-search.md §4.5) is a plain wrapper
      map.js fills with JS-rendered region/country chips — it is NOT itself a chip,
      so display:contents un-boxes it: its button children become direct flex items
      of .scope-toggle above, so flex:1 1 auto and the .35rem gap apply between the
@@ -150,7 +150,7 @@
   .scope-toggle button{flex:1 1 auto;min-width:calc(33.3% - .35rem);background:transparent;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .3rem;border:1px solid rgba(239,230,212,.25);border-radius:6px;cursor:pointer;transition:all .18s}
   .scope-toggle button:hover{border-color:rgba(239,230,212,.5)}
   .scope-toggle button.on{background:var(--spruce-lift);border-color:var(--glacier);color:var(--paper)}
-  /* Compass grid (owner request, 2026-07-22-scope-selector-scale-design.md §B
+  /* Compass grid (owner request, map-and-search.md §4.5
      "Compass grid layout"): only rendered when the active scope is a single
      region (map.js renderScopeChips) — the selected region sits centre, each
      neighbour in the 3x3 cell matching the direction it actually lies. This
@@ -237,13 +237,13 @@
   .cc-mod-preview{font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.55);margin-top:.5rem}
   .cc-toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:90vw;text-align:center;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:3000}
   .cc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  /* "Set my area" cold-start prompt (region-scoping-design.md §4 / §9.1 Phase 4):
+  /* "Set my area" cold-start prompt (map-and-search.md §4.5 Phase 4):
      a dismissible chip in the Region rail group; the ✕ matches the rail's muted
      control language. */
   .cc-area-prompt{margin-top:.55rem;align-items:center}
   .cc-area-x{background:transparent;border:none;color:var(--paper);opacity:.55;cursor:pointer;font-size:.8rem;line-height:1;padding:.2rem .3rem;transition:opacity .15s}
   .cc-area-x:hover{opacity:1}
-  /* Pan-away widen nudge (region-scoping-design.md §4 "Deep links & far panning"):
+  /* Pan-away widen nudge (map-and-search.md §4.5 "Deep links & far panning"):
      a floating one-tap widen prompt over the map, styled like the toast + a
      chip-orange action. */
   .cc-area-nudge{position:absolute;top:1.2rem;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.55rem;background:var(--ink);color:var(--paper);padding:.4rem .5rem .4rem .85rem;border-radius:30px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);z-index:1100;max-width:92vw}
@@ -455,7 +455,7 @@
   .cc-near-empty{color:rgba(239,230,212,.5);font-size:.88rem;padding:.4rem 0}
   /* provenance line under the ride-check coverage section: these rows are
      uncurated OSM, and must not read as verified Commons picks
-     (2026-07-26-ride-check-coverage-design.md §3.3) */
+ */
   .cc-near-note{margin-top:.5rem;color:rgba(239,230,212,.45);font-family:var(--mono);font-size:.6rem;letter-spacing:.05em}
   /* per-layer group header in the place card's nearby list (spec 2026-07-14 §3.3) */
   .cc-near-grp{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding:.25rem 0;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}

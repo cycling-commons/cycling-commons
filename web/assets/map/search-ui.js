@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* The sidebar search: one box over towns, the unified item index, and the live
    coverage lookup, with keyboard navigation and the out-of-scope widen prompt.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5 step 7.
+   Extracted from map.js by the module split.
 
    The whole thing was already wrapped in `if(sBox && sRes)`, so it became
    initSearchUi()'s body verbatim — not one line was re-indented.
@@ -63,7 +63,7 @@ export function initSearchUi(){
     // Widen one rung, then re-run all three result sources against the wider
     // scope: Photon (wider bbox), the local index (runS re-gates on inScope),
     // and coverage — which since Phase 3 is scope-filtered at the source
-    // (region-scoping-design.md §6), so the wider rung's rows only appear once
+    // (map-and-search.md §4.5), so the wider rung's rows only appear once
     // runCoverageSearch re-fetches with the new rids/cc. runS runs last so it
     // renders the freshly-updated Photon + (imminently) coverage hits.
     function widenSearch(){ if(!window.CCScope) return; window.CCScope.widen(); runPhoton(sBox.value); runCoverageSearch(sBox.value); runS(); }
@@ -81,7 +81,7 @@ export function initSearchUi(){
     // verified vs community reads at a glance. Towns and pending rows never do.
     const commRow=m=>!m.town && !m.pend && (m.community || m.verified===false);
     const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${escH(m.badge)}</span><span class="snm">${escH(m.name)}${commRow(m)?`<span class="scomm">${escH(D.community||'community')}</span>`:''}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
-    // Scopes section (2026-07-22-scope-selector-scale-design.md §A/§B): a
+    // Scopes section (map-and-search.md §4.5): a
     // scope row renders like any other search row (same <li role="option">/
     // <button data-i> shape as sRow) so it drops into the existing sMatches/
     // data-i/go model untouched — no new keyboard or click wiring needed,
@@ -153,7 +153,7 @@ export function initSearchUi(){
         return;
       }
       const ctl=new AbortController(); _covAbort=ctl;
-      // Scope the search to the active region (Phase 3, region-scoping-design.md
+      // Scope the search to the active region (Phase 3, map-and-search.md §4.5
       // §6): the server returns only in-scope rows, so the coverage results
       // mirror the scope-filtered tiles. Everywhere adds no params.
       const sq=covScopeQuery();
@@ -181,7 +181,7 @@ export function initSearchUi(){
       if(!q){ closeS(); return; }
       const starts=[], has=[];                                  // prefix matches rank above substring matches
       for(const it of SEARCH_IDX){
-        // Scope-first search (region-scoping-design.md §4, 07-20 review
+        // Scope-first search (map-and-search.md §4.5, 07-20 review
         // finding 3): served rows filter to the active scope with exactly the
         // map's gate — a hidden pin must not resurface as a search row that
         // opens a drawer over an empty spot. Out-of-scope rows come back via
@@ -202,7 +202,7 @@ export function initSearchUi(){
       // Coverage matches slot into the same letter groups, behind local rows
       // (same freshness handshake as Photon's _phQ: only merge results that
       // answer THIS query). Scope-filtered at the SOURCE (Phase 3,
-      // region-scoping-design.md §6/§7): runCoverageSearch sends the active
+      // map-and-search.md §4.5): runCoverageSearch sends the active
       // scope's rids/cc, so _covHits already mirror the scope-filtered tiles —
       // the widen chip re-runs the fetch rung by rung. (The served local rows
       // above are gated client-side by inScope() since they aren't re-fetched.)
@@ -211,7 +211,7 @@ export function initSearchUi(){
       // group, community after. Array.prototype.sort is stable (ES2019), so the
       // prefix-before-substring ranking survives within each tier.
       Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(commRow(a)?1:0)-(commRow(b)?1:0)));
-      // Scopes group (task-6 brief; 2026-07-22-scope-selector-scale-design.md
+      // Scopes group (task-6 brief; map-and-search.md §4.5
       // §A): matching regions + country rungs, ranked by CCScope.searchScopes
       // (prefix before substring; a country rung outranks its own regions on
       // a tie), rendered above Places. Each hit becomes a row shaped exactly
@@ -245,7 +245,7 @@ export function initSearchUi(){
       // Android Chrome, re-anchoring the caret at 0 — typed text comes out
       // reversed ("spa" → "aps").
       if(sBox.getAttribute('aria-expanded')!=='true') sBox.setAttribute('aria-expanded','true');
-      // Widen chip (region-scoping-design.md §4, the Craigslist lesson): a
+      // Widen chip (map-and-search.md §4.5, the Craigslist lesson): a
       // one-tap ladder to the next-wider scope, always offered while the scope
       // can widen. It sits under the results, so it auto-surfaces exactly when
       // they are sparse — no settings dig. It is a REAL option (07-20 review

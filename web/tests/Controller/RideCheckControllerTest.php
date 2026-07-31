@@ -155,7 +155,7 @@ final class RideCheckControllerTest extends WebTestCase
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
         // check() reads coverage_poi unconditionally since the coverage arm
-        // landed (2026-07-26-ride-check-coverage-design.md §3.1), and that table
+        // landed, and that table
         // is pipeline-owned DDL outside Doctrine's migrations — so a controller
         // test that does not build it gets a 500, not a payload.
         self::ensureCoverageSchema($em->getConnection());

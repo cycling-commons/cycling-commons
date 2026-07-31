@@ -65,7 +65,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         $region = $this->em->getRepository(Region::class)->findOneBy(['slug' => 'test-square']);
         self::assertNotNull($region);
         // Phase 1 gate: provenance stamped from artifact properties
-        // (region-scoping-design.md §3). country_code is the load-bearing one —
+        // (map-and-search.md §4.5). country_code is the load-bearing one —
         // country-scoped curators match on it, so an unstamped region is a
         // silent moderation hole.
         self::assertSame('BE', $region->getCountryCode());
@@ -205,7 +205,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         // Phase 1 gate: a region artifact with no country_code must fail loudly
         // at import, never insert an unstamped row — country-scoped curators
         // match on region.country_code, so an unstamped region is a silent
-        // moderation-jurisdiction hole (region-scoping-design.md §3/§8 risk 1).
+        // moderation-jurisdiction hole (map-and-search.md §4.5 risk 1).
         $dir = sys_get_temp_dir().'/catalog-import-region-nocc-'.getmypid();
         @mkdir($dir, 0777, true);
         file_put_contents($dir.'/region-nocc.geojson', json_encode([
@@ -224,7 +224,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
     {
         // Operating-level regions must tessellate, not overlap: an ST_Overlaps
         // pair within one country is a bad import and must roll the whole
-        // transaction back (region-scoping-design.md §3).
+        // transaction back (map-and-search.md §4.5).
         $dir = sys_get_temp_dir().'/catalog-import-region-overlap-'.getmypid();
         @mkdir($dir, 0777, true);
         $square = static fn (string $slug, array $ring): string => json_encode([
@@ -252,7 +252,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         // overlap by << 0.1% of the smaller area must IMPORT — only a MEANINGFUL
         // overlap trips (testOverlappingRegionsInSameCountryFail). This pins the
         // real-data gate for importing adjacent Flanders/Wallonia/Brussels
-        // boundaries (region-scoping-design.md §3, §7 Phase 2).
+        // boundaries (map-and-search.md §4.5 Phase 2).
         $dir = sys_get_temp_dir().'/catalog-import-region-sliver-'.getmypid();
         @mkdir($dir, 0777, true);
         $square = static fn (string $slug, array $ring): string => json_encode([
@@ -277,7 +277,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
 
     public function testRealBelgiumRegionsTessellate(): void
     {
-        // Real-data gate (region-scoping-design.md §7 Phase 2): the ACTUAL Overture
+        // Real-data gate (map-and-search.md §4.5 Phase 2): the ACTUAL Overture
         // Belgium boundaries (Wallonia/Flanders/Brussels) must pass the
         // tessellation guard through real PostGIS — adjacent admin polygons carry
         // digitisation slivers the tolerance is designed to absorb. Consumes the
@@ -308,7 +308,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         // Nested regions (outer contains inner) are NOT an ST_Overlaps overlap,
         // so the import is accepted — and recomputeMembership must give an item
         // inside both the SMALLER (inner) region, deterministically by area not
-        // row order (region-scoping-design.md §3). Files are named so the OUTER
+        // row order (map-and-search.md §4.5). Files are named so the OUTER
         // (bigger) region imports first and takes the LOWER id: an id-ordered
         // bug would pick it, an area-ordered rule picks the inner.
         $dir = sys_get_temp_dir().'/catalog-import-nested-'.getmypid();
@@ -435,7 +435,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
 
     /**
      * BaseLocationService::rederiveAll() runs inside the import transaction,
-     * right after recomputeMembership() (region-scoping-design.md §3, §4): a
+     * right after recomputeMembership() (map-and-search.md §4.5): a
      * rider whose base point sits inside a freshly-imported region must come
      * out of the very same `app:catalog:import` run with that region in their
      * derived set, proving the hook actually fires in the import flow.
@@ -483,7 +483,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
     {
         // Two edge-sharing squares (adjacent) + one distant square (not). After
         // import each region's adj must list exactly its border-neighbours, both
-        // directions (2026-07-24-region-adjacency-and-click-refinement-design.md §2.1).
+        // directions.
         $dir = sys_get_temp_dir().'/catalog-import-region-adj-'.getmypid();
         @mkdir($dir, 0777, true);
         $square = static fn (string $slug, array $ring): string => json_encode([
@@ -528,8 +528,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         // digitisation, so a coastal L4 child can stick a sliver outside its L2
         // parent — ST_Overlaps TRUE with a near-total overlap area. Tessellation
         // is a SAME-LEVEL invariant: cross-level pairs are expected containment,
-        // resolved by smallest-area-wins membership
-        // (2026-07-30-dynamic-region-pages-design.md §4).
+        // resolved by smallest-area-wins membership.
         $dir = sys_get_temp_dir().'/catalog-import-region-l2l4-'.getmypid();
         @mkdir($dir, 0777, true);
         $feature = static fn (string $slug, int $level, array $ring): string => json_encode([

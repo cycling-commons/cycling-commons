@@ -50,7 +50,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $tester->assertCommandIsSuccessful();
 
         $items = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]);
-        // Hazards (F) now have a real serving path (region-scoping-design.md §7
+        // Hazards (F) now have a real serving path (map-and-search.md §4.5
         // Task A), so the retired Hautes Fagnes crosswind demo returns as one
         // seeded manual F row: 23 -> 24.
         self::assertCount(24, $items, 'expected exactly the hand-authored demo pins (incl. the F hazard)');

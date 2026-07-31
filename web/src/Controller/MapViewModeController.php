@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Persists a logged-in rider's manual Curated/Everything choice to their
- * profile (2026-07-27-map-view-mode-default-design.md §5). The owner chose the
+ * profile. The owner chose the
  * profile over localStorage deliberately: people share computers, and a
  * device-scoped default leaks one person's choice to the next.
  *

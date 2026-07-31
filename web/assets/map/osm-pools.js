@@ -6,7 +6,7 @@
    map still reads off them: the confirmed (validated/simulated) subset, which
    renders as clustered DOM pins, and the per-layer OSM source strings the
    drawer falls back to.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    Cluster rendering is deliberately reconciled on moveend/idle only, never per
    render frame — see updateConfMarkers()'s call site in the entry.
@@ -62,7 +62,7 @@ export function setupConfClusters(){
 }
 // Region scope changed → rebuild each cluster source from its full confirmed
 // set, keeping only in-scope features, so cluster counts + leaf pins match the
-// scope (region-scoping-design.md §4). updateConfMarkers repaints on the
+// scope (map-and-search.md §4.5). updateConfMarkers repaints on the
 // resulting sourcedata/idle.
 export function refilterClusters(){
   Object.keys(confState).forEach(srcId=>{
@@ -76,7 +76,7 @@ export function confLeafPin(st, p, co){
   const el=pinEl(st.layer, true, p);
   el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
   el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline);
-  // stopPropagation (click-to-scope, 2026-07-22-scope-selector-scale-design.md
+  // stopPropagation (click-to-scope, map-and-search.md §4.5
   // §C): this DOM marker has no backing rendered layer at its pixel (the
   // '<key>-conf-hit' source layer is a zero-radius circle, purely so the
   // clustered source loads tiles) — without it the click bubbles to the map's

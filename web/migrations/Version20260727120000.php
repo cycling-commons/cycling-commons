@@ -14,7 +14,7 @@ final class Version20260727120000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'region: simplified ranking outline (outline) so scope chips rank by polygon-edge distance instead of bbox centre (2026-07-27-region-edge-distance-ranking-design.md §3)';
+        return 'region: simplified ranking outline (outline) so scope chips rank by polygon-edge distance instead of bbox centre';
     }
 
     public function up(Schema $schema): void

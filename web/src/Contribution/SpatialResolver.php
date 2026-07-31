@@ -24,8 +24,8 @@ final class SpatialResolver
     /** @return array{regionId: ?int, countryCode: string} */
     public function resolve(float $lat, float $lng): array
     {
-        // Smallest-area-wins tie-break, mirroring RegionResolver verbatim
-        // (2026-07-30-dynamic-region-pages-design.md §4): without it, a point
+        // Smallest-area-wins tie-break, mirroring RegionResolver verbatim:
+        // without it, a point
         // inside both an operational L4 region and its containing
         // infrastructure-only L2 country outline could anchor to the L2 row.
         /** @var array{id: int|string, country_code: string}|false $row */

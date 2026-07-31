@@ -20,7 +20,7 @@ perfectly on a freshly seeded development database with a few hundred catalog it
 well that nothing suggests there is a problem. Then the same code meets a table that has grown:
 this project's `coverage_poi` table holds **375,078 rows** across Belgium, the Netherlands and
 Germany, of which Germany alone contributed **317,887** (see
-`docs/specs/2026-07-22-country-onboarding-design.md`), and the planet-wide target for that table is
+`tools/divisions/README.md` for the onboarding that produced them), and the planet-wide target for that table is
 around 4.7 million points (`pipeline/coverage/load.py`, the sizing comment above `_SOURCE_DDL`). The
 query does not change. The answer does not change. What changes is how many rows it has to touch —
 and for a query with no index to help it, that is the whole of the cost, because every row gets the

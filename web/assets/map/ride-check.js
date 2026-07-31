@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 /* Ride-check: "what is along my GPX?"
-   (map-and-search.md §9; coverage arm: 2026-07-26-ride-check-coverage-design.md).
+   (map-and-search.md §9; coverage arm: map-and-search.md §9).
 
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5. Its own
+   Extracted from map.js by the module split. Its own
    sources/layers are namespaced `ridecheck*` and are never touched by render()'s
    clearDynamic, so the track survives a repaint.
 
@@ -57,7 +57,7 @@ export function initRideCheck(){
       clearHighlight();
     }
     /* Corridor coverage POIs as their OWN small-icon overlay
-       (2026-07-26-ride-check-coverage-design.md §3.3, refined by the split
+       (map-and-search.md §9, refined by the split
        design §7). Not a panel-only list, and deliberately not the coverage tile
        layers: an uploaded ride routinely leaves the rider's region scope, the
        coverage layer may be toggled off, and Curated mode hides the
@@ -153,7 +153,7 @@ export function initRideCheck(){
         html+=`<div class="cc-near-empty">${tpl(D.nothingWithin||'Nothing in the Commons within {r} of this ride yet.', {r:radius})}</div>`;
       }
       /* Open coverage, as its own section under its own heading
-         (2026-07-26-ride-check-coverage-design.md §3.3). Deliberately distinct
+. Deliberately distinct
          from "In the Commons along the track": these are uncurated OSM points,
          C/D/G/H only, already deduped server-side against the served items
          above, so nothing is listed twice. Rows carry `ref` rather than the

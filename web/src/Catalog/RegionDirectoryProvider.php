@@ -10,8 +10,8 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\Intl\Countries;
 
 /**
- * Read side of the DB-driven region pages
- * (2026-07-30-dynamic-region-pages-design.md §5): operational regions grouped
+ * Read side of the DB-driven region pages:
+ * operational regions grouped
  * by country/continent with the public status tier and modest live stats.
  * Per-request raw DBAL like RegionRegistryProvider — ~32 regions, indexed
  * COUNTs; deliberately no cache (owner decision §2.2).

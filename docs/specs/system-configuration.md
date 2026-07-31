@@ -17,8 +17,8 @@ when they do.
 
 The numbers themselves — what each one *means* — are owned by the spec of the
 feature it belongs to:
-[2026-07-27-map-view-mode-default-design.md §4](2026-07-27-map-view-mode-default-design.md)
-for the Curated readiness gate, [route-domain.md](route-domain.md) for the
+[map-and-search.md](map-and-search.md) §4.2 for the Curated readiness gate,
+[route-domain.md](route-domain.md) for the
 route cap and the ride threshold,
 [moderation-and-contribution.md](moderation-and-contribution.md) for retention.
 This document owns the *mechanism*.

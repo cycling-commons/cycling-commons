@@ -3,7 +3,7 @@
    dynamic-layer bookkeeping, line and climb drawing, the surface layer, the
    route highlight, every feature filter (mode, scope, preferences, chip
    facets), the legend counts, and the lazily-built ride heatmap.
-   Extracted from map.js by 2026-07-26-map-js-module-split-design.md §5.
+   Extracted from map.js by the module split.
 
    render() is the one function that repaints served features; every scope,
    mode, layer-toggle and facet change funnels into it. It clears and rebuilds
@@ -237,7 +237,7 @@ export function renderSurfaceLayer(layer, visible){
   const feats=[];
   if(visible) layer.features.forEach((f,i)=>{
     if(!((mode()==='all')||!layer.exp||f.cur)) return;   // same visibility rule as featureVisible()
-    if(!inScope(f.rid)) return;                        // region scope gate (region-scoping-design.md §4)
+    if(!inScope(f.rid)) return;                        // region scope gate (map-and-search.md §4.5)
     feats.push({type:'Feature',
       properties:{idx:i, cls:SURFACE_STYLE[f.surfaceClass]?f.surfaceClass:'other'},
       geometry:{type:'LineString',coordinates:f.geom.path.map(p=>[p[1],p[0]])}});
@@ -304,7 +304,7 @@ export function applyStaysAccessFilter(){
   // (coverage-provider.md §6) — the dedupe + region-scope arms (covIconFilter)
   // are the base and must survive every setFilter. The acc narrow composes
   // over the single coverage icon layer only (no cluster bubbles exist for
-  // coverage, per 2026-07-24-coverage-no-cluster-design.md §2).
+  // coverage, per coverage-provider.md §4).
   const extra = activeAccess.size===ALL_ACCESS.size ? null
     : ['in', ['get','acc'], ['literal', Array.from(activeAccess)]];
   // stays split per country (Task 4): narrow every stays-<cc>-cov icon layer,
@@ -328,7 +328,7 @@ export function prefMatch(f){
 }
 export function featureVisible(layer, f){
   let show = layer.key==='experience' ? (mode()==='all'||f.cur) : ((mode()==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
-  if(show) show = inScope(f.rid);   // region scope gate (region-scoping-design.md §4)
+  if(show) show = inScope(f.rid);   // region scope gate (map-and-search.md §4.5)
   if(show && layer.key==='experience') show = prefMatch(f);
   if(show && layer.key==='climbs'){
     show = activeSurface.has(f.sq) && activeTraffic.has(f.tr);

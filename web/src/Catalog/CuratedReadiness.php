@@ -14,7 +14,7 @@ use Doctrine\DBAL\Connection;
 /**
  * How much curated best-of content a region actually has, **per block**, and
  * therefore whether a moderator may flip it to open in Curated mode
- * (2026-07-27-map-view-mode-default-design.md §4; owner decision "B", the GATED
+ * (map-and-search.md §4.2; owner decision "B", the GATED
  * option: the flag cannot be set prematurely).
  *
  * The count deliberately mirrors what Curated mode would SHOW, because that is

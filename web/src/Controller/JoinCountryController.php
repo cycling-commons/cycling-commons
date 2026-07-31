@@ -22,8 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * The two doors an empty map needs
- * (2026-07-29-country-requests-and-curator-signup-design.md §10.2).
+ * The two doors an empty map needs.
  *
  * One route, two states, chosen by whether the country has regions: a country
  * with none can only be REQUESTED, because there is nowhere to anchor a

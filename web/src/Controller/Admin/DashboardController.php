@@ -201,7 +201,7 @@ final class DashboardController extends AbstractDashboardController
     }
 
     /**
-     * Curator applications (2026-07-29-country-requests-and-curator-signup-design.md §9).
+     * Curator applications.
      *
      * A purpose-built page rather than an EasyAdmin CRUD: the reviewer needs a
      * person, their track record, their OSM standing and their words side by

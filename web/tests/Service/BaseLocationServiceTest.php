@@ -13,7 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * region-scoping-design.md §3/§4: BaseLocationService owns every base-location
+ * map-and-search.md §4.5: BaseLocationService owns every base-location
  * write so the derived region/country set can never drift from the stored
  * (coarse) point. Region fixture follows BaseAreaResolverTest's box idiom
  * (open mid-Atlantic geometry, never real Belgian coordinates — seeded region
@@ -65,7 +65,7 @@ final class BaseLocationServiceTest extends KernelTestCase
     public function testApplyDoesNotFlush(): void
     {
         // apply() mutates the entity only — the caller owns the flush/transaction
-        // (region-scoping-design.md §4).
+        // (map-and-search.md §4.5).
         $u = $this->makeUser();
         $svc = static::getContainer()->get(BaseLocationService::class);
         $svc->apply($u, 0.451234, -45.851234, 'Namur', 55);
