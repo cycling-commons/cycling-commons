@@ -1,0 +1,27 @@
+docs/specs/photo-uploads.md
+  s_190feadae0fef2::t_761904f86675dc 125-126,131
+  s_190feadae0fef2::t_f95fab34e9ca30 20-21
+  s_190feadae0fef2::t_568fac4de06e24 35
+  s_190feadae0fef2::t_1eefe3321f27fc 91,109,177,189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "be3fae2d85d172693f0591c79d682828bac431f3",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_190feadae0fef2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed6e4b7c-6e75-4531-a2b6-ac04eb20119f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
