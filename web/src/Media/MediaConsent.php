@@ -22,12 +22,14 @@ namespace App\Media;
 final class MediaConsent
 {
     public const string KIND = 'media-cc-by-sa';
-    // v2 (2026-07-31): the contract became a first-person acknowledgement — "I
-    // agree to license my photos…" rather than a statement of fact about the
-    // licence — and now links the licence deed. Different words mean a
-    // different agreement, so every rider is asked again rather than having
-    // v1's hash silently stand for wording they never saw.
-    public const string VERSION = 'v2';
+    // v3 (2026-07-31): the contract became a first-person acknowledgement — "I
+    // agree to license my photo(s)…" rather than a statement of fact about the
+    // licence — and the licence deed is now linked beside it. Every wording
+    // change bumps this, without exception and however small it looks: the
+    // stored text_hash is evidence of the exact words a rider agreed to, and
+    // leaving it pointing at a version whose text has since moved would make
+    // that evidence a lie.
+    public const string VERSION = 'v3';
     public const string TEXT_KEY = 'media.consent.contract';
 
     public static function hash(string $text): string

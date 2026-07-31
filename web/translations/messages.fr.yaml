@@ -1465,8 +1465,8 @@ media:
     to_map: 'Aller à la carte'
   consent:
     title: 'Avant d''ajouter une photo'
-    intro: 'Votre photo rejoint le Commons ouvert pour que chaque cycliste puisse l''utiliser. Cela ne fonctionne que si elle est réellement libre de partage.'
-    contract: 'J''accepte de placer mes photos sous licence CC BY-SA 4.0 et je confirme les avoir prises moi-même.'
+    intro: 'Vos photo(s) rejoignent le Commons ouvert pour que chaque cycliste puisse les utiliser. Cela ne fonctionne que si elles sont réellement libres de partage.'
+    contract: 'J''accepte de placer ma/mes photo(s) sous licence CC BY-SA 4.0 et je confirme les avoir prises moi-même.'
     read_licence: 'Lire la licence'
     keep_ownership: 'Vous en gardez la propriété — le Commons ne reçoit qu''une licence de partage.'
     accept: 'Je la donne'

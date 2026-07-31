@@ -1465,8 +1465,8 @@ media:
     to_map: 'Naar de kaart'
   consent:
     title: 'Voordat je een foto toevoegt'
-    intro: 'Je foto komt in de open Commons zodat elke fietser hem kan gebruiken. Dat werkt alleen als hij echt vrij te delen is.'
-    contract: 'Ik ga ermee akkoord mijn foto''s onder CC BY-SA 4.0 te licentiëren en bevestig dat ik ze zelf heb gemaakt.'
+    intro: 'Je foto(''s) komen in de open Commons zodat elke fietser ze kan gebruiken. Dat werkt alleen als ze echt vrij te delen zijn.'
+    contract: 'Ik ga ermee akkoord mijn foto(''s) onder CC BY-SA 4.0 te licentiëren en bevestig dat ik ze zelf heb gemaakt.'
     read_licence: 'Lees de licentie'
     keep_ownership: 'Je blijft eigenaar — de Commons krijgt alleen een licentie om te delen.'
     accept: 'Doneer hem'

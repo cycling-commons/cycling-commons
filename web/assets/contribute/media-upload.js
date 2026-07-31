@@ -89,16 +89,18 @@
         '<h3>' + esc(t('title', '')) + '</h3>' +
         '<p>' + esc(t('intro', '')) + '</p>' +
         '<div class="rules">' + esc(t('keepOwnership', '')) + '</div>' +
-        // The acknowledgement, with the licence one click away: a rider is
-        // agreeing to a specific licence, so its text has to be reachable
-        // before they tick — not merely named.
+        // The acknowledgement, with the licence on its own line beneath it: a
+        // rider agreeing to a specific licence has to be able to read it
+        // before ticking, not merely see it named. The link sits OUTSIDE the
+        // label on purpose — inside it, clicking through to the licence would
+        // also toggle the checkbox the rider had not decided on yet.
         '<label class="ok-check"><input type="checkbox" id="ok-check" />' +
-        '<span>' + esc(t('contract', '')) +
+        '<span>' + esc(t('contract', '')) + '</span></label>' +
         (cfg.licenceUrl
-          ? ' <a href="' + esc(cfg.licenceUrl) + '" target="_blank" rel="noopener license">'
-            + esc(t('readLicence', 'Read the licence')) + ' \u2197</a>'
+          ? '<p class="consent-licence"><a href="' + esc(cfg.licenceUrl)
+            + '" target="_blank" rel="noopener license">'
+            + esc(t('readLicence', 'Read the licence')) + ' \u2197</a></p>'
           : '') +
-        '</span></label>' +
         '<div class="consent-err" id="consent-err" hidden></div>' +
         '<div class="mrow"><button type="button" class="b-cancel" id="modal-cancel">' +
         esc(t('cancel', 'Cancel')) + '</button>' +

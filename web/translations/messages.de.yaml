@@ -1465,8 +1465,8 @@ media:
     to_map: 'Zur Karte'
   consent:
     title: 'Bevor du ein Foto hinzufügst'
-    intro: 'Dein Foto wird Teil des offenen Commons, damit jede Radfahrerin und jeder Radfahrer es nutzen kann. Das geht nur, wenn es wirklich frei teilbar ist.'
-    contract: 'Ich stimme zu, meine Fotos unter CC BY-SA 4.0 zu lizenzieren, und bestätige, dass ich sie selbst aufgenommen habe.'
+    intro: 'Dein(e) Foto(s) werden Teil des offenen Commons, damit alle Radfahrenden sie nutzen können. Das geht nur, wenn sie wirklich frei teilbar sind.'
+    contract: 'Ich stimme zu, mein(e) Foto(s) unter CC BY-SA 4.0 zu lizenzieren, und bestätige, dass ich sie selbst aufgenommen habe.'
     read_licence: 'Lizenz lesen'
     keep_ownership: 'Du behältst das Eigentum — das Commons erhält nur eine Lizenz zum Teilen.'
     accept: 'Ich spende es'

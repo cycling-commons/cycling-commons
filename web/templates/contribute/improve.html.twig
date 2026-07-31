@@ -100,7 +100,10 @@
   .modal h3{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin-bottom:.6rem}
   .modal p{font-size:.9rem;color:#4a4d40;line-height:1.55;margin-bottom:.8rem}
   .modal .rules{background:var(--paper-deep);border-radius:8px;padding:.8rem 1rem;font-size:.84rem;line-height:1.55;margin-bottom:1rem}
-  .modal label.ok-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;cursor:pointer;margin-bottom:1.1rem}
+  .modal label.ok-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;cursor:pointer;margin-bottom:.5rem}
+  /* Outside the label, on its own line: reading the licence must not tick the box. */
+  .modal .consent-licence{margin:0 0 1.1rem;padding-left:1.55rem;font-size:.84rem}
+  .modal .consent-licence a{color:var(--clay);text-decoration:underline}
   .modal .mrow{display:flex;gap:.7rem;justify-content:flex-end}
   .modal .mrow button{font-family:var(--sans);font-weight:700;font-size:.92rem;padding:.6rem 1.2rem;border-radius:6px;cursor:pointer;border:1.5px solid transparent}
   .modal .b-ok{background:var(--trail);color:var(--ink)}.modal .b-ok[disabled]{opacity:.45;cursor:not-allowed}

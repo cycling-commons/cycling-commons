@@ -231,9 +231,10 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   they picked are held client-side while they decide, so agreeing uploads what
   they already chose instead of making them find it twice; dismissing the
   contract is a refusal and discards them. Ticking the acknowledgement — *"I
-  agree to license my photos under CC BY-SA 4.0, and I confirm I took them
-  myself."*, with the licence deed one click away, because a rider agreeing to
-  a specific licence must be able to read it before ticking — POSTs the
+  agree to license my photo(s) under CC BY-SA 4.0, and I confirm I took them
+  myself."*, with the licence deed linked on its own line beneath it — outside
+  the label, so following the link cannot tick the box — because a rider
+  agreeing to a specific licence must be able to read it first — POSTs the
   consent. Only the server's acknowledgement (the stored `consent_record`'s
   id, kind `media-cc-by-sa`, current version + text hash) releases the held
   files; a failed consent POST uploads nothing and shows the error in the

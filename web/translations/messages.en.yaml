@@ -1167,10 +1167,10 @@ media:
     to_map: 'Go to the map'
   consent:
     title: 'Before you add a photo'
-    intro: 'Your photo joins the open Commons so every rider can use it. That only works if it is genuinely free to share.'
+    intro: 'Your photo(s) join the open Commons so every rider can use them. That only works if they are genuinely free to share.'
     # The binding sentence. Its exact wording is hashed onto the consent record,
     # so changing it means bumping MediaConsent::VERSION (docs/specs/photo-uploads.md §4).
-    contract: 'I agree to license my photos under CC BY-SA 4.0, and I confirm I took them myself.'
+    contract: 'I agree to license my photo(s) under CC BY-SA 4.0, and I confirm I took them myself.'
     read_licence: 'Read the licence'
     keep_ownership: 'You keep ownership — the Commons only gets a licence to share it.'
     accept: 'Donate it'
