@@ -53,6 +53,11 @@ final class ModerationDecisionType extends AbstractType
                     new Length(max: 2000, maxMessage: 'moderate.error.note_too_long'),
                 ],
             ])
+            // Uuids of pending photos the curator unticked
+            // (docs/specs/photo-uploads.md §5). A JSON list, filled by
+            // assets/map/community.js from the drawer's per-photo checkboxes.
+            // Empty means "the submission's decision applies to every photo".
+            ->add('media_reject', HiddenType::class, ['required' => false])
         ;
     }
 

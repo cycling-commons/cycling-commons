@@ -88,12 +88,12 @@ final class MediaClaimService
             return null;
         }
 
-        $latRad = deg2rad($pinLat - $photoLat);
-        $lngRad = deg2rad($pinLng - $photoLng);
-        $a = \sin($latRad / 2) ** 2
-            + \cos(deg2rad($photoLat)) * \cos(deg2rad($pinLat)) * \sin($lngRad / 2) ** 2;
+        $halfLat = \sin(deg2rad($pinLat - $photoLat) / 2.0);
+        $halfLng = \sin(deg2rad($pinLng - $photoLng) / 2.0);
+        $a = $halfLat * $halfLat
+            + \cos(deg2rad($photoLat)) * \cos(deg2rad($pinLat)) * $halfLng * $halfLng;
 
-        return (int) round(2 * self::EARTH_RADIUS_M * \asin(min(1.0, \sqrt($a))));
+        return (int) round(2.0 * (float) self::EARTH_RADIUS_M * \asin(min(1.0, \sqrt($a))));
     }
 
     /** @return list<Uuid> */

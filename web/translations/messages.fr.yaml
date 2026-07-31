@@ -1213,6 +1213,10 @@ map:
   d_reject: 'Rejeter'
   d_mod_keys: 'Touches : A approuver · R rejeter — prépare la décision ; ajoutez une note, Entrée envoie.'
   d_decision_err: 'Impossible d''enregistrer la décision — veuillez réessayer.'
+  d_photo_alt: 'Photo soumise'
+  d_photo_distance: 'à environ {m} m du point'
+  d_photo_no_gps: 'aucune localisation dans le fichier'
+  d_photo_keep: 'Garder'
   d_decision_recorded: 'Décision enregistrée ({d}) — aperçu, pas encore persisté · {ref}'
   d_rode_this: 'Je l''ai roulé'
   d_bike_type_ph: 'Type de vélo…'
@@ -1500,6 +1504,10 @@ moderate:
   kicker: 'File de modération'
   title: 'Examinez les soumissions en attente.'
   role_label: 'Curateur'
+  media:
+    alt: 'Photo soumise'
+    distance: 'à environ %m% m du point'
+    no_gps: 'aucune localisation dans le fichier'
   type:
     new: 'Nouveau lieu'
     edit: 'Modification'

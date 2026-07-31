@@ -190,12 +190,19 @@ export function submitModeration(btn){
   const box=btn.closest('.cc-mod'); if(!box) return;
   const id=box.dataset.id, decision=btn.dataset.decision;
   const note=(box.querySelector('.cc-mod-note')||{}).value||'';
+  // Per-photo decisions ride the SAME decide POST — no second endpoint, no
+  // second mechanism (docs/specs/photo-uploads.md §5c).
+  const rejected = Array.prototype.slice
+    .call(box.querySelectorAll('.cc-mod-photo-cb'))
+    .filter(cb => !cb.checked)
+    .map(cb => cb.dataset.media);
   box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=true);
   moderationToken().then(token=>{
     const body=new URLSearchParams();
     body.set('moderation_decision[submission_id]', id);
     body.set('moderation_decision[decision]', decision);
     body.set('moderation_decision[note]', note);
+    body.set('moderation_decision[media_reject]', JSON.stringify(rejected));
     body.set('moderation_decision[_token]', token);
     return fetch('/moderate/decide', { method:'POST', credentials:'same-origin',
       headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'},

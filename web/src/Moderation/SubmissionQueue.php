@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\RiderPseudonym;
+use App\Media\MediaStorage;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Clock\ClockInterface;
 
@@ -26,10 +28,11 @@ final class SubmissionQueue
     public function __construct(
         private readonly Connection $db,
         private readonly ClockInterface $clock,
+        private readonly MediaStorage $mediaStorage,
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,takenAt:?string,distanceM:?int}>}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type): array
     {
         $where = ["s.status IN ('pending', 'needs_info')"];
@@ -53,7 +56,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: strictly pending (needs-info pins are hidden until answered).
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,takenAt:?string,distanceM:?int}>}>
      */
     public function pendingForMap(ModerationScope $scope): array
     {
@@ -98,7 +101,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,takenAt:?string,distanceM:?int}>}>
      *
      * The returned row is a deliberate shared view-model: the SAME shape is
      * consumed by both moderate/index.html.twig AND map.js (as JSON). The
@@ -132,8 +135,12 @@ final class SubmissionQueue
             $frag['types'],
         );
         $now = $this->clock->now();
+        $photosBySubmission = $this->pendingPhotos(array_map(
+            static fn (array $r): int => (int) $r['id'],
+            $rows,
+        ));
 
-        return array_map(function (array $r) use ($now): array {
+        return array_map(function (array $r) use ($now, $photosBySubmission): array {
             /** @var array<string, array{was: mixed, now: mixed}> $changes */
             $changes = json_decode((string) $r['changes'], true) ?: [];
             $was = [];
@@ -161,8 +168,53 @@ final class SubmissionQueue
                 'was' => implode(' · ', $was),
                 'now' => implode(' · ', $new),
                 'riderReply' => null !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
+                'photos' => $photosBySubmission[(int) $r['id']] ?? [],
             ];
         }, $rows);
+    }
+
+    /**
+     * Pending photos per submission, with the facts harvested from each file:
+     * the capture month and how far the shot was taken from the pin. The
+     * curator judges the photo with the facts
+     * (docs/specs/photo-uploads.md §5).
+     *
+     * One query for the whole page rather than one per row.
+     *
+     * @param list<int> $submissionIds
+     *
+     * @return array<int, list<array{id:string,sm:string,takenAt:?string,distanceM:?int}>>
+     */
+    private function pendingPhotos(array $submissionIds): array
+    {
+        if ([] === $submissionIds) {
+            return [];
+        }
+
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT id, submission_id, continent, taken_at, gps_distance_m
+             FROM media_upload
+             WHERE status = 'pending' AND submission_id IN (:ids)
+             ORDER BY created_at ASC, id ASC",
+            ['ids' => $submissionIds],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
+        $bySubmission = [];
+        foreach ($rows as $row) {
+            $id = (string) $row['id'];
+            $takenAt = null !== $row['taken_at']
+                ? (new \DateTimeImmutable((string) $row['taken_at']))->format('Y-m')
+                : null;
+            $bySubmission[(int) $row['submission_id']][] = [
+                'id' => $id,
+                'sm' => $this->mediaStorage->url((string) $row['continent'], 'photos/'.$id, 'sm'),
+                'takenAt' => $takenAt,
+                'distanceM' => null !== $row['gps_distance_m'] ? (int) $row['gps_distance_m'] : null,
+            ];
+        }
+
+        return $bySubmission;
     }
 
     private function scalar(mixed $v): string

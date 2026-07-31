@@ -1213,6 +1213,10 @@ map:
   d_reject: 'Ablehnen'
   d_mod_keys: 'Tasten: A genehmigen · R ablehnen — merkt die Entscheidung vor; Notiz hinzufügen, Enter sendet.'
   d_decision_err: 'Die Entscheidung konnte nicht erfasst werden — bitte erneut versuchen.'
+  d_photo_alt: 'Eingereichtes Foto'
+  d_photo_distance: 'etwa {m} m vom Punkt entfernt'
+  d_photo_no_gps: 'keine Ortsangabe in der Datei'
+  d_photo_keep: 'Behalten'
   d_decision_recorded: 'Entscheidung erfasst ({d}) — Vorschau, noch nicht gespeichert · {ref}'
   d_rode_this: 'Bin ich gefahren'
   d_bike_type_ph: 'Radtyp…'
@@ -1500,6 +1504,10 @@ moderate:
   kicker: 'Moderationswarteschlange'
   title: 'Ausstehende Einreichungen prüfen.'
   role_label: 'Kurator'
+  media:
+    alt: 'Eingereichtes Foto'
+    distance: 'etwa %m% m vom Punkt entfernt'
+    no_gps: 'keine Ortsangabe in der Datei'
   type:
     new: 'Neuer Ort'
     edit: 'Bearbeitung'

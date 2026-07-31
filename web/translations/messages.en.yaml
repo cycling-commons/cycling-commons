@@ -1415,6 +1415,10 @@ map:
   d_reject: 'Reject'
   d_mod_keys: 'Keys: A approve · R reject — arms the decision; add a note, Enter sends it.'
   d_decision_err: 'Could not record the decision — please try again.'
+  d_photo_alt: 'Submitted photo'
+  d_photo_distance: 'about {m} m from the pin'
+  d_photo_no_gps: 'no location in the file'
+  d_photo_keep: 'Keep'
   d_decision_recorded: 'Decision recorded ({d}) — preview, not yet persisted · {ref}'
   d_rode_this: 'I rode this'
   d_bike_type_ph: 'Bike type…'
@@ -1506,6 +1510,10 @@ moderate:
   kicker: 'Moderation queue'
   title: 'Review pending submissions.'
   role_label: 'Curator'
+  media:
+    alt: 'Submitted photo'
+    distance: 'about %m% m from the pin'
+    no_gps: 'no location in the file'
   type:
     new: 'New place'
     edit: 'Edit'

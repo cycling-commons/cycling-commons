@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Curator moderation queue — review pending submissions and record decisions.
@@ -106,13 +107,19 @@ final class ModerateController extends AbstractController
             || \in_array('application/json', $request->getAcceptableContentTypes(), true);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array{submission_id: string|int, decision: string, note: ?string} $data */
+            /** @var array{submission_id: string|int, decision: string, note: ?string, media_reject: ?string} $data */
             $data = $form->getData();
             /** @var User $user */
             $user = $this->getUser();
 
             try {
-                $submission = $this->moderation->decide((int) $data['submission_id'], (string) $data['decision'], $user, $data['note'] ?? null);
+                $submission = $this->moderation->decide(
+                    (int) $data['submission_id'],
+                    (string) $data['decision'],
+                    $user,
+                    $data['note'] ?? null,
+                    self::parseMediaReject($data['media_reject'] ?? null),
+                );
             } catch (OutOfScopeException) {
                 throw $this->createAccessDeniedException('Out of moderation scope.');
             } catch (AlreadyDecidedException|\InvalidArgumentException|\LogicException) {
@@ -209,5 +216,29 @@ final class ModerateController extends AbstractController
             'region' => $request->query->getString('region'),
             'type' => $request->query->getString('type'),
         ], static fn (string $v): bool => '' !== $v));
+    }
+
+    /**
+     * The unticked-photo list, defensively parsed: anything that is not a list
+     * of uuid strings is treated as an empty list, which means the submission's
+     * own decision applies to every photo — the safe reading either way
+     * (docs/specs/photo-uploads.md §5).
+     *
+     * @return list<string>
+     */
+    private static function parseMediaReject(?string $raw): array
+    {
+        if (null === $raw || '' === trim($raw)) {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+        if (!\is_array($decoded)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $decoded,
+            static fn (mixed $v): bool => \is_string($v) && Uuid::isValid($v),
+        ));
     }
 }

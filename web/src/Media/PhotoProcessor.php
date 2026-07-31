@@ -195,10 +195,12 @@ final class PhotoProcessor
             if (1 !== preg_match('#^(-?\d+)/(\d+)$#', $part, $matches) || '0' === $matches[2]) {
                 return null;
             }
-            $components[] = (int) $matches[1] / (int) $matches[2];
+            // Cast to float explicitly: an exact division of two ints is an int
+            // in PHP, and degrees/minutes/seconds must stay one numeric type.
+            $components[] = (float) ((int) $matches[1] / (int) $matches[2]);
         }
 
-        $degrees = $components[0] + $components[1] / 60 + $components[2] / 3600;
+        $degrees = $components[0] + $components[1] / 60.0 + $components[2] / 3600.0;
         if (null !== $ref && strtoupper($ref) === $negativeRef) {
             $degrees = -$degrees;
         }

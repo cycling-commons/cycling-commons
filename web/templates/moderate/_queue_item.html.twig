@@ -24,6 +24,22 @@
       <div class="q-now">{{ item.now }}</div>
     </div>
   {% endif %}
+  {% if item.photos|length > 0 %}
+    {# Pending photos with their harvested context (docs/specs/photo-uploads.md §5).
+       The DECISION is still made on the map, where the curator sees the place;
+       this is the same review context the rest of the row is. #}
+    <div class="q-photos">
+      {% for p in item.photos %}
+        <figure class="q-photo">
+          <img src="{{ p.sm }}" alt="{{ 'moderate.media.alt'|trans }}" loading="lazy" width="110" height="82">
+          <figcaption>
+            {%- if p.distanceM is not null %}{{ 'moderate.media.distance'|trans({'%m%': p.distanceM}) }}{% else %}{{ 'moderate.media.no_gps'|trans }}{% endif -%}
+            {%- if p.takenAt %} &middot; {{ p.takenAt }}{% endif -%}
+          </figcaption>
+        </figure>
+      {% endfor %}
+    </div>
+  {% endif %}
   {% if item.riderReply %}
     <p class="q-rider-reply"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ item.riderReply }}</p>
   {% endif %}

@@ -313,11 +313,24 @@ function buildRecord(layer, f){
     // change_history the normal item drawer shows (C1-T3), via openDrawer
     // below — reusing loadItemHistory/renderHistoryList so both views stay
     // in sync. escPend covers every interpolated value (see historyRow).
+    // Pending photos with their harvested facts, each with a keep/drop tick
+    // (docs/specs/photo-uploads.md §5). Default is ticked: approving the
+    // submission approves its photos unless the curator says otherwise.
+    const photos = Array.isArray(s.photos) ? s.photos : [];
+    const modPhotos = photos.length ? `<div class="cc-mod-photos">${photos.map(p => `
+      <label class="cc-mod-photo">
+        <img src="${safeHref(p.sm)}" alt="${escPend(D.photoAlt||'Submitted photo')}" loading="lazy" />
+        <span class="cc-mod-photo-meta">${escPend(
+          (p.distanceM != null ? (D.photoDistance||'~{m} m from the pin').replace('{m}', String(p.distanceM)) : (D.photoNoGps||'No location in the file'))
+          + (p.takenAt ? ' \u00b7 ' + p.takenAt : '')
+        )}</span>
+        <span class="cc-mod-photo-keep"><input type="checkbox" class="cc-mod-photo-cb" data-media="${escPend(p.id)}" checked /> ${escPend(D.photoKeep||'Keep')}</span>
+      </label>`).join('')}</div>` : '';
     const modHist = 'new' === s.type
       ? `<div class="cc-d-hist cc-d-hist-initial"><h4 class="cc-d-hist-h">${D.history||'History'}</h4><p class="cc-mod-initial">${D.initialEntry||'Initial entry — new item'}</p></div>`
       : (s.itemId != null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${s.itemId}"></div>` : '');
     moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
-      <div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>${body}${diff}
+      <div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>${body}${diff}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       <div class="cc-mod-acts">
         <button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>

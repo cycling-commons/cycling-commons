@@ -170,6 +170,12 @@ final class MapController extends AbstractController
             'recentChanges' => 'd_recent_changes', 'modNotePh' => 'd_mod_note_ph', 'approve' => 'd_approve',
             'needsInfo' => 'd_needs_info', 'reject' => 'd_reject', 'modKeys' => 'd_mod_keys',
             'decisionErr' => 'd_decision_err', 'decisionRecorded' => 'd_decision_recorded',
+            // Pending rider photos in the moderation panel
+            // (docs/specs/photo-uploads.md §5). The distance string carries a
+            // literal {m} the drawer substitutes — the Twig desk list uses the
+            // %m%-parameterised moderate.media.distance instead.
+            'photoAlt' => 'd_photo_alt', 'photoDistance' => 'd_photo_distance',
+            'photoNoGps' => 'd_photo_no_gps', 'photoKeep' => 'd_photo_keep',
             'rodeThis' => 'd_rode_this', 'bikeTypePh' => 'd_bike_type_ph', 'recommend' => 'd_recommend',
             'vote' => 'd_vote', 'suggestCorrection' => 'd_suggest_correction', 'optionalDetail' => 'd_optional_detail',
             'markParts' => 'd_mark_parts', 'send' => 'd_send', 'loginRate' => 'd_login_rate',

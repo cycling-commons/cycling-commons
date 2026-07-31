@@ -13,6 +13,7 @@ use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Media\MediaDecisionService;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
@@ -36,16 +37,22 @@ final class ModerationService
         private readonly MessageService $messages,
         private readonly AdminActionLogger $adminLog,
         private readonly ModerationScopeProvider $scopeProvider,
+        private readonly MediaDecisionService $mediaDecisions,
     ) {
     }
 
-    public function decide(int $submissionId, string $decision, User $curator, ?string $note): Submission
+    /**
+     * @param list<string> $rejectMediaIds uuids of pending photos the curator
+     *                                     unticked; only meaningful on approve
+     *                                     (docs/specs/photo-uploads.md §5)
+     */
+    public function decide(int $submissionId, string $decision, User $curator, ?string $note, array $rejectMediaIds = []): Submission
     {
         if (!\in_array($decision, ['approve', 'reject', 'needs_info'], true)) {
             throw new \InvalidArgumentException(sprintf('Unknown decision "%s"', $decision));
         }
 
-        return $this->em->wrapInTransaction(function () use ($submissionId, $decision, $curator, $note): Submission {
+        return $this->em->wrapInTransaction(function () use ($submissionId, $decision, $curator, $note, $rejectMediaIds): Submission {
             // Pessimistic row lock: two curators deciding the same submission
             // concurrently would otherwise both read it as pending and both
             // apply. The second now blocks until the first commits, then sees
@@ -90,6 +97,14 @@ final class ModerationService
                 case 'needs_info':
                     $submission->setStatus(SubmissionStatus::NeedsInfo);
                     break;
+            }
+
+            // Photos ride the same decision, in the same transaction, and the
+            // item-side record is the same change_history row every other
+            // applied change gets (docs/specs/photo-uploads.md §5, §5b).
+            $photoChange = $this->mediaDecisions->apply($submission, $item, $decision, $curator, $note, $rejectMediaIds);
+            if (null !== $photoChange && null !== $item) {
+                $this->history($item, $submission, $curator, 'photos', $photoChange['old'], $photoChange['new']);
             }
 
             $submission->setDecisionNote($note)

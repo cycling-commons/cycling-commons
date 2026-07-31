@@ -1213,6 +1213,10 @@ map:
   d_reject: 'Afwijzen'
   d_mod_keys: 'Toetsen: A goedkeuren · R afwijzen — zet de keuze klaar; voeg een notitie toe, Enter verstuurt.'
   d_decision_err: 'Kon de beslissing niet vastleggen — probeer opnieuw.'
+  d_photo_alt: 'Ingezonden foto'
+  d_photo_distance: 'ongeveer {m} m van de speld'
+  d_photo_no_gps: 'geen locatie in het bestand'
+  d_photo_keep: 'Behouden'
   d_decision_recorded: 'Beslissing vastgelegd ({d}) — preview, nog niet opgeslagen · {ref}'
   d_rode_this: 'Ik heb dit gereden'
   d_bike_type_ph: 'Fietstype…'
@@ -1500,6 +1504,10 @@ moderate:
   kicker: 'Moderatiewachtrij'
   title: 'Beoordeel ingediende bijdragen.'
   role_label: 'Curator'
+  media:
+    alt: 'Ingezonden foto'
+    distance: 'ongeveer %m% m van de speld'
+    no_gps: 'geen locatie in het bestand'
   type:
     new: 'Nieuwe plek'
     edit: 'Bewerking'
