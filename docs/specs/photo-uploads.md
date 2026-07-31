@@ -184,7 +184,10 @@ submission_id (nullable, set at submit)`.
 consent wording) · text_hash (sha256 of the exact text shown) ·
 consented_at`. One row per consent act (each modal tick); the uploads made
 under it reference it. Rows are immutable and are never deleted — the
-licence grant survives the account.
+licence grant survives the account. When the phase-2 write API lands,
+external consent rows are keyed `api_app_id` + `external_author_ref` instead
+of `user_id` ([public-api.md §8](public-api.md)): the partner app presents
+the same contract wording and asserts the version its user ticked in-app.
 At intake (claim), the distance photo-GPS → submission pin is computed into
 `gps_distance_m` and the raw coordinates are **nulled in the same
 transaction**; an unclaimed upload's coordinates disappear with it at orphan
@@ -343,7 +346,12 @@ The attribution line is resolved **at render time, never baked**:
 
 - public profile → the rider's display name, linked to `/riders/<uuid>`;
 - private profile → "an anonymous rider";
-- deleted account → whatever §6's deletion choice recorded.
+- deleted account → whatever §6's deletion choice recorded;
+- external contribution with a shared name ([public-api.md
+  §8](public-api.md)) → the shared name, "via app X" — no rider link, there
+  is no profile;
+- external contribution without a name (or whose name was since withdrawn
+  through the partner app) → "a rider, via app X".
 
 That is the whole reason the file carries a link instead of a name. The rider's
 identity is stated in exactly one place, under their control, and changing it

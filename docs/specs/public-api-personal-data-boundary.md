@@ -86,6 +86,13 @@ Notes on the less obvious rows:
 - **`submission`** is moderation-internal ([moderation-and-contribution.md
   §4](moderation-and-contribution.md)): drafts, rejected content, and
   author linkage. Published outcomes live in `item`, which the API serves.
+  Phase-2 external submissions add `api_app_id` + `external_author_ref` +
+  `external_author_name` ([public-api.md §8](public-api.md)): the ref is
+  pseudonymous by construction — only the partner app can resolve it, so
+  even a full read of our database identifies nobody — and the name is
+  publish-by-consent attribution. All three stay behind this fence with the
+  rest of the table; what the public sees is the render-time attribution
+  line, not a table read.
 - **`curator_application`** and **`country_interest`** carry free-text
   motivation (`about`, `note`), OSM usernames, and social URLs — applicant
   data, never dataset.

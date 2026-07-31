@@ -255,20 +255,55 @@ or an edit to an existing `osm_ref` / item id) and opens a submission exactly as
 the in-app improve form does, subject to the same materialize-on-edit and
 moderation rules ([osm-data-architecture.md §6](osm-data-architecture.md)).
 
-**Open — write-auth model** (§9). A contribution must be attributable to an
-account for moderation. Two candidate models:
+**Decided — write-auth model (2026-07-31): per-app key + app-scoped author
+reference.** The end user of a consuming app never needs a Commons account;
+the app is the authenticated, accountable party. This extends the account
+layer's identity model ([account-and-auth.md §9](account-and-auth.md) — the
+stable opaque identifier *is* the identity; the display name is a non-unique
+label) across the API boundary. It supersedes both models previously listed
+here: OAuth user-delegation demanded a Commons account we explicitly do not
+want to require, and a single per-app pseudo-author had no per-author
+provenance — the app-scoped reference below restores exactly that.
 
-- **User delegation (OAuth-style).** The end user authorizes the consuming app
-  against their own Commons account; submissions are attributed to that real
-  account. Cleaner provenance, more integration work for the consumer.
-- **Per-app pseudo-author.** The consuming app submits under a single
-  "via app X" identity. Lower friction, weaker provenance and abuse controls.
-
-Both must not weaken moderation; the choice is deferred (§9).
+- **The app authenticates.** Writes require a write-scoped key issued only to
+  **registered partner apps** (an `api_app` registry: name, key hash, scopes,
+  status) under a partner agreement covering consent enforcement,
+  takedown/attribution-change relay, and moderation cooperation.
+- **The author is an app-scoped reference.** Every contribution carries
+  `author_ref` — an opaque, stable, per-user token the app generates (e.g. an
+  HMAC of its internal user id). We cannot resolve it to a person and the app
+  never sends us who it is; but it gives moderation continuity ("this
+  author's 3rd contribution, 2 approved"), per-author rate limits, and
+  per-author blocking without blocking the whole app.
+- **The name is optional and non-unique.** `author_name` is a display string
+  the end user chose to share, sanitized like any stranger-authored free text
+  ([security-architecture.md §4](security-architecture.md)); absent, the
+  contribution renders anonymous.
+- **Consent travels with the call.** The app presents the same consent
+  contract the site enforces (own work · CC BY-SA 4.0 for media
+  ([photo-uploads.md §4](photo-uploads.md)); ODbL for data) and asserts it
+  with the contract version in the request; the consent record is stored
+  keyed to `api_app_id` + `author_ref`. The partner agreement is what makes
+  that assertion binding.
+- **Storage: a second origin, not a second lifecycle.** `submission`, media
+  and consent rows gain `api_app_id` + `external_author_ref` +
+  `external_author_name`; `user_id` becomes nullable with an
+  exactly-one-origin CHECK (Commons user XOR partner app). Same queue, same
+  retention, same materialize-on-edit rules; moderators see "via app X ·
+  author #a1b2 (2 approved before)" plus the optional shared name. The
+  external author fields sit behind the personal-data fence like the rest of
+  the table ([public-api-personal-data-boundary.md
+  §1.3](public-api-personal-data-boundary.md)).
+- **Attribution resolves at render time, so it stays revocable**
+  ([photo-uploads.md §5d](photo-uploads.md)): a user who deletes their
+  account in the partner app has the app relay it; we blank the stored name
+  and every already-downloaded copy of a file retroactively resolves
+  anonymous — the same deletion promise Commons accounts get.
+- **Abuse controls, outermost first:** per-app quotas → per-`author_ref`
+  limiters → the moderation queue itself → key suspension as the big hammer.
 
 ## 9. Open decisions (pending owner)
 
-- **Write-auth model** (§8): OAuth user-delegation vs. per-app pseudo-author.
 - **Route tiles at v1** (§2.1): ship `routes.pmtiles` in v1, or keep routes
   REST/GeoJSON-only until a later version.
 - **Key/URL scheme for tiles** (§3): key path segment vs. signed URL, and the
