@@ -411,10 +411,24 @@ function buildRecord(layer, f){
 // are server-derived but still passed through escPend for defense in depth)
 // — same stored-XSS concern the §13 pending-submission fix addressed, so
 // ALL FIVE fields go through escPend before hitting innerHTML.
+// A gallery field's history value is a COUNT, not the gallery
+// (docs/specs/photo-uploads.md §5 — ChangeHistoryView summarises it server-side,
+// so the URLs never travel). "0 → 1" would read as a bug, so say what changed:
+// "no photos → 1 photo".
+function photoCount(n){
+  const c = Number(n) || 0;
+  if(c === 0) return D.photosNone || 'no photos';
+  return c === 1 ? (D.photosOne || '1 photo')
+                 : (D.photosMany || '{n} photos').replace('{n}', String(c));
+}
+
 function historyRow(h){
   const isEmpty = v => v===null || v===undefined || v==='';
-  const ov = isEmpty(h.oldValue) ? '—' : escPend(h.oldValue);
-  const nv = isEmpty(h.newValue) ? '—' : escPend(h.newValue);
+  const isPhotoField = h.field === 'photos' || h.field === 'photo';
+  const ov = isPhotoField ? escPend(photoCount(h.oldValue))
+    : (isEmpty(h.oldValue) ? '—' : escPend(h.oldValue));
+  const nv = isPhotoField ? escPend(photoCount(h.newValue))
+    : (isEmpty(h.newValue) ? '—' : escPend(h.newValue));
   return `<li class="cc-h-row">
     <span class="cc-h-field">${escPend(h.field)}</span>
     <span class="cc-h-diff">${ov} → ${nv}</span>

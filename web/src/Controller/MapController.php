@@ -180,6 +180,9 @@ final class MapController extends AbstractController
             // upload has an empty credit by design (the uploader rule), and a
             // bare "©" would read as a bug (docs/specs/photo-uploads.md §5).
             'anonCredit' => 'anon_credit',
+            // The item history reports a gallery as a count, never as its URLs.
+            'photosNone' => 'd_photos_none', 'photosOne' => 'd_photos_one',
+            'photosMany' => 'd_photos_many',
             'rodeThis' => 'd_rode_this', 'bikeTypePh' => 'd_bike_type_ph', 'recommend' => 'd_recommend',
             'vote' => 'd_vote', 'suggestCorrection' => 'd_suggest_correction', 'optionalDetail' => 'd_optional_detail',
             'markParts' => 'd_mark_parts', 'send' => 'd_send', 'loginRate' => 'd_login_rate',

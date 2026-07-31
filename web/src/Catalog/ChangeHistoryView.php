@@ -22,6 +22,9 @@ use Symfony\Component\Clock\ClockInterface;
  */
 final class ChangeHistoryView
 {
+    /** Fields whose value is a photo gallery, reported as a count rather than dumped. */
+    private const array PHOTO_FIELDS = ['photos' => true, 'photo' => true];
+
     public function __construct(
         private readonly Connection $db,
         private readonly ClockInterface $clock,
@@ -45,10 +48,12 @@ final class ChangeHistoryView
         return array_map(function (array $r) use ($now): array {
             $changedAt = new \DateTimeImmutable((string) $r['changed_at']);
 
+            $field = (string) $r['field'];
+
             return [
-                'field' => (string) $r['field'],
-                'oldValue' => $this->decode($r['old_value']),
-                'newValue' => $this->decode($r['new_value']),
+                'field' => $field,
+                'oldValue' => $this->decode($r['old_value'], $field),
+                'newValue' => $this->decode($r['new_value'], $field),
                 'who' => RiderPseudonym::for($r['changed_by']),
                 'when' => RelativeTime::ago($changedAt, $now),
                 'changedAt' => $changedAt->format(\DateTimeInterface::ATOM),
@@ -56,12 +61,22 @@ final class ChangeHistoryView
         }, $rows);
     }
 
-    private function decode(?string $json): mixed
+    private function decode(?string $json, string $field = ''): mixed
     {
         if (null === $json) {
-            return null;
+            // "no photos yet" is a count of zero, not an absent value.
+            return isset(self::PHOTO_FIELDS[$field]) ? 0 : null;
         }
         $v = json_decode($json, true);
+
+        // A gallery attribute's raw value is a list of objects full of URLs.
+        // Dumping that into the rider-visible item history is noise, not
+        // history (docs/specs/photo-uploads.md §5) — what changed is how many
+        // photos the item carries, so that is what the history reports. The
+        // client renders the count; the URLs never need to travel.
+        if (isset(self::PHOTO_FIELDS[$field])) {
+            return \is_array($v) ? \count($v) : (null === $v ? 0 : 1);
+        }
 
         return \is_scalar($v) ? $v : (json_encode($v, \JSON_UNESCAPED_UNICODE) ?: '');
     }
