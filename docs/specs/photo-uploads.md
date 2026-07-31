@@ -31,13 +31,14 @@ context). Media licensing context lives in the site licences
 3. **Keep a stripped original — capped at 4K.** The stored "original" is
    re-encoded with all embedded metadata removed and downscaled to at most
    **3840 px on the longest side**. Nothing larger is ever stored.
-3b. **Harvest EXIF before stripping — the data is valuable (owner decision
-   2026-07-31).** Stored *files* carry no metadata (no XMP author fields, no
-   serials, no coordinates), but three facts are extracted first as
-   structured data: **capture date** (`taken_at` — public seasonal context:
-   an autumn view reads differently from a summer one), **camera model**
-   (curator context), and **GPS** — used once to *confirm the photo's
-   location*: at intake the distance between the photo's coordinates and the
+3b. **Harvest **E**xchangeable **I**mage **F**ile format (EXIF) metadata
+   before stripping — the data is valuable (owner decision 2026-07-31).**
+   Stored *files* carry no metadata (no XMP author fields, no serials, no
+   coordinates), but three facts are extracted first as structured data:
+   **capture date** (`taken_at` — public seasonal context: an autumn view
+   reads differently from a summer one), **camera model** (curator
+   context), and the **G**lobal **P**ositioning **S**ystem (GPS)
+   coordinates — used once to *confirm the photo's location*: at intake the distance between the photo's coordinates and the
    submission pin is computed and surfaced to the curator ("taken ~340 m
    from the pin"), then the raw coordinates are discarded. Only the distance
    survives; nothing location-bearing is ever published or kept raw.
@@ -56,7 +57,7 @@ context). Media licensing context lives in the site licences
   `MEDIA_DEFAULT_CONTINENT`'s storage) — and `MEDIA_PUBLIC_BASE` (the proxy
   host base URL riders fetch from; the continent code is the first path
   segment after it).
-- `MEDIA_PUBLIC_BASE`'s host is added to the CSP `img-src` the same
+- `MEDIA_PUBLIC_BASE`'s host is added to the **C**ontent-**S**ecurity-**P**olicy (CSP) `img-src` the same
   env-backed way as `coverage.csp_host` (never admin-editable — a writable
   CSP host is an XSS surface, system-configuration.md rationale).
 - **Dev/test**: local Flysystem adapter under `public/media-dev` with
@@ -73,7 +74,8 @@ context). Media licensing context lives in the site licences
 ## 3. Upload endpoint
 
 `POST /media/photos` — ROLE_USER (in-controller 401, JSON API posture),
-CSRF (`media-upload` intention), rate-limited (`media_upload`,
+**c**ross-**s**ite **r**equest **f**orgery (CSRF) protected
+(`media-upload` intention), rate-limited (`media_upload`,
 sliding window, 30/day per user). One photo per request, multipart; the
 wizard sends its current pin `lat`/`lng` alongside (step 1 precedes step 3).
 The storage continent resolves in order (owner decision 2026-07-31): the
@@ -109,7 +111,8 @@ PRIVATE — cleared at intake) · gps_distance_m (nullable, computed at intake)
 At intake (claim), the distance photo-GPS → submission pin is computed into
 `gps_distance_m` and the raw coordinates are **nulled in the same
 transaction**; an unclaimed upload's coordinates disappear with it at orphan
-GC. Response: `{id, sm, lg}` URLs (under `MEDIA_PUBLIC_BASE`).
+**g**arbage **c**ollection (GC). Response: `{id, sm, lg}` URLs (under
+`MEDIA_PUBLIC_BASE`).
 
 ## 4. Wizard integration
 
