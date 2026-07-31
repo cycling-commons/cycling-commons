@@ -13,7 +13,7 @@ context). Media licensing context lives in the site licences
 (media = CC BY-SA 4.0); the moderation machinery this rides on is
 [moderation-and-contribution.md](moderation-and-contribution.md).
 
-## 1. Decisions (owner-approved 2026-07-31)
+## 1. Decisions
 
 1. **Photos only.** The video drop zone AND the video link row are removed
    from the wizard (honest UI); video returns as its own feature someday.
@@ -210,7 +210,7 @@ Nothing public until approved — the rule everywhere else, applied here:
   cannot see.
 - **Discussion rides the existing moderation-messages loop**
   ([moderation-and-contribution.md](moderation-and-contribution.md)
-  messages/needs-info, executed 2026-07-13) — deliberately NOT a second
+  messages/needs-info) — deliberately NOT a second
   messaging system. A curator questioning a photo ("is this your own
   shot?") sends a normal submission message that may reference the photo's
   id; the thread renders the referenced photo's `sm` thumb inline, and the

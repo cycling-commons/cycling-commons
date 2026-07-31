@@ -28,7 +28,7 @@ carve-out from the generic item funnel is described in
    `Submission`/`ModerationService` pipeline. Proposals are `RecommendedRoute`
    rows in state `submitted` (no separate proposal entity); moderation,
    history, votes, rides, and suggestions have their own tables and services.
-   *Sidenote (2026-07-31):* this deliberately predates — and stands in
+   *Sidenote:* this deliberately predates — and stands in
    tension with — the later owner principle "one way to moderate regardless
    of content type" ([photo-uploads.md](photo-uploads.md) §5c). Reconciling
    the two is an open owner decision for whenever route moderation is next

@@ -154,7 +154,7 @@ lazy-firewall caching gotcha — see
   token); on fetch failure Curated shows no picks rather than a stale set.
 - A rider with **exactly one** saved bike preselects the Bike facet; multi-bike
   riders keep the neutral `all` (the facet is single-valued).
-- **Which mode the map OPENS in (2026-07-27).** The global default is
+- **Which mode the map OPENS in.** The global default is
   **Everything**, not Curated: Curated hides every non-curated experiential item,
   so on an under-curated region it showed a near-empty map behind a rail counting
   hundreds of places (the owner's "1488 where to sleep, 0/1488"). A region opens
@@ -170,7 +170,7 @@ lazy-firewall caching gotcha — see
   load; a later scope change never re-resolves.
   Design: [2026-07-27-map-view-mode-default-design.md](2026-07-27-map-view-mode-default-design.md).
 
-### 4.2b Basemap labels follow the site language (2026-07-27)
+### 4.2b Basemap labels follow the site language
 
 The place names baked into the **basemap** — countries, states, cities, streets —
 are the vector tiles', not ours, and OpenFreeMap's `liberty` style hardcodes
@@ -245,7 +245,7 @@ the newest rung of that same ladder.
   (server-stored coarse point, §2). Logged out: an anonymous circle
   `{lat, lng, radiusKm}` (2 decimals, ~1 km) in `localStorage['cc-my-area']`,
   written by the map-centre "Set my area" pin drop (cold-start chip, below) — never a
-  device-location prompt (owner decision). Anonymous region-set derivation is
+  device-location prompt. Anonymous region-set derivation is
   a registry-bbox ∩ circle-bbox intersection, nearest-centre-first, capped at
   8, computed client-side (no round trip).
 - **Viewport/search framing uses the circle, not a region union.** `bbox()`
@@ -282,7 +282,7 @@ the newest rung of that same ladder.
   "Outside your area" nudge (`map.outside_area`) with a widen action
   (`CCScope.widen()`); it never auto-widens the map itself, and fires **once
   per page load** (re-dismissing doesn't re-arm until reload).
-- **Out-of-scope town opens transiently widen (owner decision 2026-07-21):**
+- **Out-of-scope town opens transiently widen:**
   town search is scope-exempt (a place is an explicit location choice), so
   opening a town whose coordinates fall **outside the current scope's bbox**
   transiently widens to Everywhere via the deep-link mechanism
@@ -294,11 +294,11 @@ the newest rung of that same ladder.
   whole map is leak-safe-hidden. Bbox containment is the deliberate
   approximation: an inside-bbox town already renders its surroundings, so no
   widen is needed there. Applies to every scope kind, not just myArea.
-- **Default precedence (owner decision, region-scoping-design.md §9.1):** on load, `URL scope > myArea
+- **Default precedence (region-scoping-design.md §9.1):** on load, `URL scope > myArea
   (if available) > localStorage`. My-area wins the default scope whenever a
   base location is set, overriding a stale localStorage scope — except an
   explicit shared URL scope, which always wins.
-- **Country / multi-region scope dim mask (2026-07-22).** A country scope now
+- **Country / multi-region scope dim mask.** A country scope now
   greys the rest of the map instead of rendering with no visual boundary at
   all — the gap a second bordering country (the Netherlands) exposed once a
   scope could span more than one named region. `GET /map/scope/boundary`
@@ -316,7 +316,7 @@ the newest rung of that same ladder.
   (`setSpotlight(null)`); no mask ever draws for an empty scope. Design +
   browser-verified results (NL union outline, single-province outline, no
   mask for Everywhere): [2026-07-22-coverage-scope-rendering-design.md](2026-07-22-coverage-scope-rendering-design.md) §B.
-- **Cross-border scope chips rank by adjacency (2026-07-24).** The scope chips
+- **Cross-border scope chips rank by adjacency.** The scope chips
   offered around a region (compass grid + linear list) include a *foreign*
   region ONLY when it shares a border with the active region — never by centroid
   distance. So a border region is offered its true cross-border neighbours
@@ -328,7 +328,7 @@ the newest rung of that same ladder.
   centroid ranking of
   [2026-07-23-cross-border-chips-design.md](2026-07-23-cross-border-chips-design.md).
   Design: [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §2.
-- **…and are ORDERED by polygon-edge distance (2026-07-27).** Within the pool
+- **…and are ORDERED by polygon-edge distance.** Within the pool
   adjacency has made eligible, regions sort by the distance from the anchor to
   the nearest point on the region itself — 0 when the anchor is inside it —
   rather than to its bbox centre. Centre distance misjudged anything large or
@@ -341,7 +341,7 @@ the newest rung of that same ladder.
   `RegionBoundaryProvider`. Eligibility is still adjacency, so Utrecht stays
   all-Dutch. A region with no outline falls back to its bbox centre.
   Design: [2026-07-27-region-edge-distance-ranking-design.md](2026-07-27-region-edge-distance-ranking-design.md).
-- **Map-click scope refinement (2026-07-24).** A map click resolves to its region
+- **Map-click scope refinement.** A map click resolves to its region
   by a synchronous bbox candidate pass; when 2+ region bboxes overlap the point,
   `CCScope.regionOfPointPrecise` fetches those candidates' polygons
   (`/map/region/{slug}/boundary`, cached) and runs a pure point-in-polygon test,
@@ -349,7 +349,7 @@ the newest rung of that same ladder.
   centre. A single candidate never fetches (the common case stays instant);
   inside no candidate polygon it falls back to nearest-centre. Design:
   [2026-07-24-region-adjacency-and-click-refinement-design.md](2026-07-24-region-adjacency-and-click-refinement-design.md) §3.
-- **Three-tier region spotlight (2026-07-24).** For a single named-region scope,
+- **Three-tier region spotlight.** For a single named-region scope,
   the active region's border-neighbours (`region.adj`) render at a **middle** dim
   tone — lighter than the fully-outside world (`0.13` vs `0.22`), darker than the
   clear active region — each **individually** outlined with a fainter dashed line
@@ -837,7 +837,7 @@ Approved 2026-07-15; implemented via
 onto the tile/endpoint data source; the `verified` flag derives from real
 canonical state — `CatalogProvider`'s `v:1`: verified state, a rider
 confirmation, or official-registry provenance (Tourisme Wallonie PIVOT rows
-count as verified — owner decision 2026-07-17) — never the simulated `c`
+count as verified) — never the simulated `c`
 attribute).
 
 - **1.** Search and the town card always read the full Commons; every index

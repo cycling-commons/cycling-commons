@@ -78,7 +78,7 @@ Cycling Commons publishes under:
 - **Data:** Open Database License 1.0 (ODbL) + Database Contents License 1.0 (DbCL).
 - **Media (photos):** CC BY-SA 4.0.
 - **Wiki prose** (`wiki/`, wiki.cyclingcommons.org): CC BY-SA 4.0 — per-page
-  SPDX headers, pre-commit enforced (decision 2026-07-17).
+  SPDX headers, pre-commit enforced.
 - **Code:** PolyForm Shield 1.0.0 (source-available, non-compete).
 
 Consequences for OSM handling:
@@ -296,8 +296,7 @@ The initial Wallonia dataset harvested uncurated OSM into the `item` table and
 inlined it for the map. That single-region harvest is **superseded** by this
 architecture: uncurated OSM is cached coverage (§5), not canonical rows, and
 enters the canonical store only via materialize-on-edit (§6). The interim
-clause that let the harvest stand in for the coverage provider is **retired
-(2026-07-16)** — the pre-extract pipeline, the `coverage_poi` index, and the
+clause that let the harvest stand in for the coverage provider is **retired** — the pre-extract pipeline, the `coverage_poi` index, and the
 PMTiles artifact are live and are the only serving path for uncurated OSM.
 Harvested `item` rows no human ever touched are removed by
 `app:coverage:retire-legacy` (dry-run report first; the destructive run is

@@ -4,7 +4,7 @@
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-- **Catalog layer:** M · Public toilets (added 2026-07-30)
+- **Catalog layer:** M · Public toilets
 - **Map depiction:** 🚻 pin, colour #4E6E8C
 - **Editable:** yes · full wizard (add / improve / materialize-on-edit)
 - **Lifecycle:** *utility* — never votable; riders confirm with a plain
@@ -16,9 +16,9 @@
 Letter **L is reserved** for the derived, anonymized ride heatmap (see
 `ItemType`'s class doc), so this type takes **M**. Letters are stable storage
 identifiers, never display order: every surface that lists categories orders
-this one editorially **right after C · Water & food** (owner decision
-2026-07-30) — the contribute hub card, the map layer rail (`CATALOG` array
-order in `web/assets/map/catalog.js`), and any future legend.
+this one editorially **right after C · Water & food** — the contribute hub
+card, the map layer rail (`CATALOG` array order in
+`web/assets/map/catalog.js`), and any future legend.
 
 ## What it is
 
@@ -27,7 +27,7 @@ water on a long ride. OSM's `amenity=toilets` is the reference base
 (coverage contract letter `M`); riders add what OSM misses and confirm what
 exists.
 
-## Data sources (Netherlands note, owner guidance 2026-07-30)
+## Data sources (Netherlands note)
 
 Start with **OSM** (`amenity=toilets`) — the Dutch commercial app HogeNood
 (hogenood.nl) has the richest NL dataset but **no open data**; treat it as a
@@ -50,7 +50,7 @@ sourcing rule (Warmshowers/WTMG precedent).
 | `changingTable` | select | Unknown · Yes · No |
 | `shower` | select | Unknown · Yes · No |
 
-## Wiring (all landed 2026-07-30)
+## Wiring
 
 - `ItemType::PublicToilets` (`public-toilets`, letter M, 🚻, existence
   confirmations) + `CatalogFormRegistry` field set above.

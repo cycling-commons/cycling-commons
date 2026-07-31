@@ -85,7 +85,7 @@ something that sneaks in behind a generic `mixed`.
 ### 2.1 What is deliberately NOT configurable
 
 `coverage.tiles_enabled`, `coverage.manifest_url` and `coverage.csp_host` stay
-bound scalars in `web/config/services.yaml` (**owner decision, 2026-07-29**).
+bound scalars in `web/config/services.yaml` (deliberate design boundary).
 
 They are infrastructure, not editorial: a feature flag, a bucket URL and a
 Content-Security-Policy host. A web form that rewrites a CSP host is an

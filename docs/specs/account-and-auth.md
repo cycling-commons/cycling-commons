@@ -100,7 +100,7 @@ dependency, no code copied.
 - A verification mail is sent (verify-email bundle, signed URLs — no stored
   token). `/verify/email` validates the signature and flags
   `emailVerified`/`emailVerifiedAt`, then redirects to login.
-- **Journey continuity (verified end-to-end 2026-07-30):** the firewall's
+- **Journey continuity (verified end-to-end):** the firewall's
   saved target path survives the whole register → verify → login detour in
   one session, because registration and verification never touch it and
   `LoginSuccessHandler` honours it after authentication. An anonymous visit
@@ -127,7 +127,7 @@ bundle with its own `ResetPasswordRequest` entity):
 `MAILER_DSN` env var. Sender identity is `noreply@cyclingcommons.org`.
 All transactional emails (verification, password reset, account-deletion
 code) extend one branded shell, `templates/emails/_base.html.twig`
-(2026-07-30): email-client-safe markup only — presentation tables + inline
+Email templates use email-client-safe markup only — presentation tables + inline
 styles, paper backdrop, ink header band carrying the wide wordmark
 (`assets/brand/logo-email.png`, a PNG render of the nav SVG since mail
 clients strip SVG), orange action button. Copy lives in the extending
@@ -348,7 +348,7 @@ with an account**. Removal targets personal data only.
   `UserDeletionService::purge()`: run every `UserDeletionHookInterface`
   pre-delete hook, then remove the `User` row.
 - **One hook implementation exists**: `App\Service\ResetPasswordCleanupHook`
-  (added 2026-07-22, closing the former known gap) — purges the user's
+  — purges the user's
   `reset_password_request` rows via the bundle's `removeRequests()` before
   the row delete. `reset_password_request.user_id` is a plain restrictive FK
   (no `ON DELETE` action — `Version20260628225933`), so without the hook
@@ -402,7 +402,7 @@ source is real.
 
 ### 6.6 Inactivity lifecycle — **Specified, pending implementation**
 
-Confirmed design (2026-07-01), not built; requires a `lastActiveAt` column
+Designed, not built; requires a `lastActiveAt` column
 that does not exist yet:
 
 | Inactivity | Event |
@@ -427,7 +427,7 @@ Mechanism when built: idempotent scheduled command; localized notices via
   hard-deleted accounts all 404 identically. Opt-in public posture: profiles
   are public contributors only — no private/anonymous profile pages;
   provenance is kept, identity is opt-in.
-- **The /contributors wall rides on the same toggle (2026-07-30).**
+- **The /contributors wall rides on the same toggle.**
   `App\Catalog\ContributorWallProvider` lists riders with `publicProfile`
   ON **and** ≥1 public contribution (approved submissions + served route
   proposals), alphabetical/non-ranked, each row linking `rider_profile`;
@@ -482,7 +482,7 @@ lives in the shell header.
   and route proposals, 50 each (`ProfileController`), in the shared `.item`
   row style (type/route tag, date, status pill, decision-note sub-line); empty
   state is the `account.contributions_empty` key. The pane closes with a
-  **Curator applications** section (2026-07-30): the user's own
+  **Curator applications** section: the user's own
   `curator_application` rows with status pills (pending/approved/declined/
   withdrawn), or — when none exist — a door to the regions directory, so
   "where is my request?" always has an answer on the post-login landing.
@@ -495,7 +495,7 @@ lives in the shell header.
   the `/vote` category ballots are receipt-only by design and so never appear
   here. The **Saved-regions** pane says plainly that saving is not built yet
   and links the regions directory. The former preview sample data is gone
-  (2026-07-30): every dashboard pane renders real rows only. Empty panes use
+  Every dashboard pane renders real rows only. Empty panes use
   the shared `.empty-state` block (`account/_shell_styles.html.twig`):
   centred message plus a bordered door link, with `.dbody`/`.dmin` holding a
   46vh minimum so sparse account pages keep their vertical shape.

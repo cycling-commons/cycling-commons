@@ -68,7 +68,7 @@ confirmed/curated DOM pins.
 | Tools available | input | `[edit]` |
 | Anything to correct? | textarea | `[edit]` |
 
-> **Opening hours — why a 3-option select, not free text** (2026-07-15): specific
+> **Opening hours — why a 3-option select, not free text:** specific
 > weekly hours change without notice and we can't verify them, so the Commons only
 > records what stays true — `24/7`, or `See website` (point riders at the source) —
 > and defaults to `Unknown`. Migration `Version20260715120000` reset every
@@ -96,5 +96,5 @@ Location metadata (EXIF GPS) is stripped from uploaded photos before storage —
   ([../osm-data-architecture.md](../osm-data-architecture.md) §5) + materialize-on-edit
   curation (§6).
 
-## Change note (2026-07-14)
+## Change note
 Added a **Website** field (`web`, url) to the Fix-details form — a shop/repair place usually has its own site. Keyed `web` to reuse the shared "Website" drawer row (same as Stays).

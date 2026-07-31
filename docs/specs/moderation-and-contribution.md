@@ -51,10 +51,7 @@ interprets them — a real cross-file contract:
 | "◎ Fix location" | as edit + `fix=location` | **Expanded editor** directly — pin pre-placed and repositionable, search visible |
 | "Add a new place" | `mode=add` | Full locate editor (pin / two-tap segment per `LocationMode`) |
 
-**mode=add server side (restored 2026-07-30).** The unbound-explainer change
-(`a6c8cdd`) had silently killed this row's server half: the controller only
-looked for a bound `item`, so every /contribute card landed on the explainer.
-Restored as: `ContributeController::addPlace()` renders the wizard
+**mode=add server side.** `ContributeController::addPlace()` renders the wizard
 (`ImproveType` `add_mode: true` — which injects a **required name** into the
 details pane, since several field sets carry none) for every type except B
 (dedicated /add-climb) and K (/propose-route);
@@ -65,7 +62,7 @@ deep link carrying junk `item` + `mode=add` degrades to the add wizard, not
 the explainer (ImproveTest::testDeepLinkWithItemAndModeReturns200).
 Covered end-to-end by `AddPlaceFlowTest`.
 
-**?ref= arm — materialize-on-edit (2026-07-30, same wizard).** The coverage
+**?ref= arm — materialize-on-edit (same wizard).** The coverage
 drawer's edit link for an uncurated OSM POI opens
 `/improve?ref=<node|way/id>&type=<slug>`: the add wizard with the POI's name
 prefilled and location given; submit is the `'add'` intake with `_osm_ref`
@@ -696,7 +693,7 @@ Entity `App\Community\Entity\CuratorApplication`, table `curator_application`:
 | `osm_exists` | boolean, nullable — **tri-state** | null = never checked or OSM unreachable; true = handle found; false = checked and confirmed absent. Absence and unknown are deliberately two different values: collapsing them would let a fabricated handle render as verified on the review screen |
 | `osm_changeset_count` | int, nullable | set only when `osm_exists = true` — a count is meaningless for a handle that doesn't exist |
 | `about` | text | hardened per §11.3, cap 1200 chars — the only **required** form field |
-| `social_url` | varchar(255), nullable | optional "where can we find you online" link (2026-07-30). Scheme-less input gets `https://` prefixed (people paste `instagram.com/handle`); after that the scheme must be http(s) and the whole thing a `FILTER_VALIDATE_URL`-valid URL ≤ 255 chars, else `social_url_invalid`. The allow-listed scheme is the XSS boundary: the review screen renders it as a clickable `target="_blank" rel="noopener noreferrer nofollow"` link. Reviewer-only, never public |
+| `social_url` | varchar(255), nullable | optional "where can we find you online" link. Scheme-less input gets `https://` prefixed (people paste `instagram.com/handle`); after that the scheme must be http(s) and the whole thing a `FILTER_VALIDATE_URL`-valid URL ≤ 255 chars, else `social_url_invalid`. The allow-listed scheme is the XSS boundary: the review screen renders it as a clickable `target="_blank" rel="noopener noreferrer nofollow"` link. Reviewer-only, never public |
 | `status` | varchar(12), enum `CuratorApplicationStatus` | `pending` / `approved` / `declined` / `withdrawn` (`withdrawn` has no UI path yet) |
 | `decided_by` / `decided_at` / `decision_note` | bigint / timestamp / text, nullable | mirrors `Submission`'s decision columns (§3.1) |
 | `created_at` | timestamp | |
@@ -715,7 +712,7 @@ by `user_id` + `country_code` **at review time** (`total`, `approved`
 standing — filing more submissions between applying and being reviewed changes
 what the reviewer sees. Nothing is copied or snapshotted onto
 `CuratorApplication` at submit. The form's `join.evidence_hint` copy
-deliberately does NOT state this mechanic (owner decision, 2026-07-30):
+deliberately does NOT state this mechanic:
 telling applicants their map edits "speak for them" read as a contribution
 prerequisite, which decision 3 explicitly rejects. The copy now leads with
 "you don't need to have added anything before applying", invites motivation
@@ -723,7 +720,7 @@ and prior experience (the `join.about_label` question), and only mentions
 that existing contributions are gladly looked at. The reviewer-side
 evidence pane is unchanged.
 
-**Applicant-facing status (2026-07-30).** The profile dashboard's
+**Applicant-facing status.** The profile dashboard's
 Contributions pane closes with a **Curator applications** section
 (`ProfileController`, [account-and-auth.md](account-and-auth.md) dashboard
 section): the user's own applications with status pills

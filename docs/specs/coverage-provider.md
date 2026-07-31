@@ -51,8 +51,7 @@ Invariants:
   canonical with its CC-BY attribution). Coverage and canonical are merged at
   read time and deduped by ref (coverage-provider.md §5).
 - **Regions are independent.** Each Geofabrik region (`COVERAGE_REGIONS`, comma-
-  separated, `europe/belgium,europe/netherlands` since 2026-07-22 —
-  `europe/netherlands` added with the NL onboarding) refreshes as a whole on its
+  separated, e.g. `europe/belgium,europe/netherlands`) refreshes as a whole on its
   own run; regions can stagger across the week. *Border caveat:* Geofabrik
   extracts overlap in a border buffer, so one OSM entity can arrive staged in
   two adjacent extracts with the same `(ref, letter)`. Ownership is decided at
@@ -124,10 +123,10 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   which *tag keys* we keep on them is §2.1 below. What *leaves* the server is
   narrower still (tiles carry the thin property set, §4; the detail endpoint
   whitelists display tags, §5).
-- **Measured sizing (2026-07-23).** At 377,558 rows (BE + NL + DE + LU; 0 unstamped
+- **Measured sizing.** At 377,558 rows (BE + NL + DE + LU; 0 unstamped
   after the ownership fix), compacted steady-state:
   **341 B/row heap + 176 B/row indexes = 517 B/row** — the compacted per-row cost.
-  **Superseded (2026-07-24, `2026-07-24-coverage-harvest-prod-safety-design.md`
+  **Superseded (`2026-07-24-coverage-harvest-prod-safety-design.md`
   §3.3):** the earlier `DELETE-all-then-INSERT-all` per-region swap doubled the row
   count mid-swap and left a large reusable-free-space high-water mark (measured then:
   258 MB heap, 67 % reusable free space), which needed a `VACUUM FULL`/`pg_repack` to
@@ -168,7 +167,7 @@ never reach the database at all.
 **Why this needs stating.** §5 catalogues which OSM *objects* we cache. That is a
 different question from which *keys* we keep on them, and the two are easy to
 conflate: `osmium tags-filter` selects **objects, not keys**, so every matching
-object arrives carrying its full tag set. Before the trim (2026-07-23) the cache
+object arrives carrying its full tag set. Before the trim the cache
 therefore stored **4,220 distinct keys** — a single memorial contributing 20 of
 them — while nothing in the codebase read more than **29**. That is the bulk-OSM
 duplication [osm-data-architecture.md §1](osm-data-architecture.md) principle 1
@@ -416,7 +415,7 @@ clustering entirely (`2026-07-24-coverage-no-cluster-design.md` §1) supersedes
 this fix rather than building on it; the per-country layer split itself is
 kept (above) for reasons unrelated to clustering.
 
-**What a rider actually sees as they zoom (2026-07-24):** at overview zoom
+**What a rider actually sees as they zoom:** at overview zoom
 (z6–~11) the coverage source's tiles carry a thinned, density-preserving
 sample of points (`--drop-densest-as-needed`, above), and the client draws
 that sample as a **coverage-density heatmap** instead of individual icons —
@@ -692,7 +691,7 @@ source of truth for the mapping both languages need:
   runnable alone.
   ⚠️ That skip means the guard only fires where the whole repo is checked out —
   never in the dev container, which mounts `web/` alone. `ci-app.yml` now lists
-  `pipeline/contract/**` in its trigger paths (added 2026-07-23) so a
+  `pipeline/contract/**` in its trigger paths so a
   contract-only edit re-runs the PHP pin; before that it fired on nothing.
   **Still open:** the pipeline's own pytest suite runs in no workflow at all
   (`ci-tools.yml` covers `tools/**` only), so `load_contract()`'s validation and
@@ -749,7 +748,7 @@ interim clause retires):
   retired atlas demo and the canonical seeds (climbs, routes, surface, PIVOT);
   the coverage path never touches Overpass again.
 
-## 9.1 The public /coverage page (2026-07-30)
+## 9.1 The public /coverage page
 
 The marketing-era `/coverage` page (hardcoded demo KPIs and an invented
 per-country percentage table) was replaced by a DB-driven page:
