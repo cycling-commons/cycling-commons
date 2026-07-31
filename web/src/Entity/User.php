@@ -7,7 +7,9 @@ namespace App\Entity;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
+use App\Form\CatalogFieldConstraints;
 use App\Repository\UserRepository;
+use App\Validator\PlainDisplayName;
 use App\World\Entity\Country;
 use Doctrine\ORM\Mapping as ORM;
 use Scheb\TwoFactorBundle\Model\BackupCodeInterface;
@@ -66,6 +68,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'json')]
     private array $roles = [];
 
+    // Format rules live HERE, not only on RegistrationFormType/SettingsType, so
+    // every write path validates them — admin CRUD (UserCrudController exposes
+    // this field), console commands and fixtures included. A rule only a form
+    // enforces is a rule an administrator walks straight past.
+    //
+    // The split is deliberate. This entity says what a name must LOOK like once
+    // one exists; the forms say that a human filling them in must PROVIDE one
+    // (NotBlank + a 2-character floor). Unnamed rows are a supported state —
+    // tests and partial flows rely on it, and the canonical column is nullable
+    // precisely for them — so nothing here may fire on an empty string.
+    // Symfony's LengthValidator only skips null, not '', which is why the
+    // minimum lives with NotBlank on the forms and only the maximum is here.
+    #[Assert\Length(
+        max: 100,
+        maxMessage: 'Display name may not exceed {{ limit }} characters.',
+    )]
+    #[Assert\NoSuspiciousCharacters(
+        locales: CatalogFieldConstraints::LOCALES,
+        restrictionLevelMessage: 'contribute.error.suspicious_characters',
+        invisibleMessage: 'contribute.error.suspicious_characters',
+        mixedNumbersMessage: 'contribute.error.suspicious_characters',
+        hiddenOverlayMessage: 'contribute.error.suspicious_characters',
+    )]
+    // NoSuspiciousCharacters' CHECK_INVISIBLE only fires on *repeated identical*
+    // combining marks, not a lone Cf format character (U+200B and friends).
+    #[Assert\Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters')]
+    #[PlainDisplayName]
     #[ORM\Column(type: 'string', length: 100)]
     private string $displayName = '';
 

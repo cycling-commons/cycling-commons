@@ -16,7 +16,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\Regex;
 
 final class RegistrationFormType extends AbstractType
 {
@@ -32,13 +31,14 @@ final class RegistrationFormType extends AbstractType
             ->add('displayName', TextType::class, [
                 'label' => 'form.label_display_name',
                 'attr' => ['autocomplete' => 'nickname', 'placeholder' => 'form.ph_display_name_register'],
+                // Only the "a human must supply one" half lives here. What a
+                // name may LOOK like (length ceiling, no confusables, no
+                // invisibles, plain spacing) is on the User entity, so admin
+                // CRUD and console paths are held to it too — see
+                // account-and-auth.md §9.
                 'constraints' => [
                     new NotBlank(message: 'Please enter a display name.'),
-                    new Length(min: 2, max: 100, minMessage: 'Display name must be at least {{ limit }} characters.', maxMessage: 'contribute.error.field_too_long'),
-                    // Same invisible-character guard applied to every user text
-                    // field (a lone U+200B etc. passes NoSuspiciousCharacters).
-                    CatalogFieldConstraints::noSuspiciousCharacters(),
-                    new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters'),
+                    new Length(min: 2, minMessage: 'Display name must be at least {{ limit }} characters.'),
                 ],
             ])
             ->add('plainPassword', RepeatedType::class, [
