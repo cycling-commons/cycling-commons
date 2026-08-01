@@ -1,0 +1,60 @@
+web/templates/settings/index.html.twig
+  s_41dce4bb9e0e72::t_6e62f96cd3f897 152
+  s_41dce4bb9e0e72::t_17b3a37b2bc0ba 392-409
+web/translations/messages.fr.yaml
+  s_41dce4bb9e0e72::t_7d6b1447e8e592 901-960
+  s_41dce4bb9e0e72::t_865f9c2456f762 1878
+  s_41dce4bb9e0e72::t_5a611e8265f827 888-892,895
+web/tests/Account/DataExportTest.php
+  s_41dce4bb9e0e72::t_92886fb574d0be 171,180,191,205,217,260,287,315,349
+  s_41dce4bb9e0e72::t_40dbf4b40e0a9e 334-347,350-364,366-368
+  s_41dce4bb9e0e72::t_0551c0265b314b 269
+  s_41dce4bb9e0e72::t_ab1709dbdca677 1-39,57-127,138-144,147,152,154,156-170,172-179,181-190,192-204,206-216,218-259,261-268,270-286,288-298,300-304,306-314,316-333,348,365,369-374
+  s_41dce4bb9e0e72::t_33a0cee4e294d7 40-56
+  s_41dce4bb9e0e72::t_e3d9ee403ca1aa 128-137,145-146,148-151,153,155
+  s_41dce4bb9e0e72::t_f174d29a5b05f3 299,305
+web/translations/messages.en.yaml
+  s_41dce4bb9e0e72::t_0c4d0e53acbf0a 892-896,899
+  s_41dce4bb9e0e72::t_6501d723e0e1bc 905-959
+  s_41dce4bb9e0e72::t_4a3ed0fdc41a49 1879
+web/translations/messages.de.yaml
+  s_41dce4bb9e0e72::t_7fb5bae3181735 888-892,895
+  s_41dce4bb9e0e72::t_03d1396d88a04d 901-963
+  s_41dce4bb9e0e72::t_f8dd3a7e7b7e5c 1881
+web/src/Media/MediaStorage.php
+  s_41dce4bb9e0e72::t_f964a769984256 81-106
+web/src/Account/DataExportService.php
+  s_41dce4bb9e0e72::t_305785df78c7cd 115
+  s_41dce4bb9e0e72::t_665b9d38dcb090 1-114,116-360
+web/translations/messages.nl.yaml
+  s_41dce4bb9e0e72::t_5b9f3e0c6be885 888-892,895
+  s_41dce4bb9e0e72::t_43dc59ca3ddb65 1878
+  s_41dce4bb9e0e72::t_7e5ce6c7dea0bf 901-960
+web/config/packages/rate_limiter.yaml
+  s_41dce4bb9e0e72::t_bb4cfec688d11a 83-93
+  s_41dce4bb9e0e72::t_356ea0594a5a76 113-114
+  s_41dce4bb9e0e72::t_0856e4639be7b2 22-23
+web/src/Controller/DataExportController.php
+  s_41dce4bb9e0e72::t_e5a545a4eee213 1-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "8bac0966e69ab8f93106c5354130d1781d544482",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_41dce4bb9e0e72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875a3a0-dbdb-41af-af97-755463d87f2d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
