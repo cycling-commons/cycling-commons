@@ -168,6 +168,24 @@ lazy-firewall caching gotcha — see
   (profile, NOT localStorage — shared devices) → an anonymous visitor's own
   localStorage choice → the active region's flag → Everything. Resolved once at
   load; a later scope change never re-resolves.
+- **What `/regions` says about a region — two axes, never one.** The public
+  directory reports **maturity** (`growing` once anything is verified there,
+  else `onboarded`) and **stewardship** (`curated` with its own curator,
+  `countrywide` when only a country-scoped moderator covers it, else `none`)
+  as separate facts, plus `curated_default` as a third, rarer badge.
+
+  They were a single ladder derived from `curated_default`, and the legend then
+  glossed it as "a curator maintains this region" — which that flag does not
+  mean. The conflation makes true things unsayable in both directions: a busy
+  region with nobody looking after it, and a curated region with nothing in it
+  yet. Wallonia is the worked example — a curator **and** growing.
+
+  Country-scoped cover is reported as cover, not as nothing: one moderator for
+  NL really does look after all twelve provinces. It is reported as *distinct*
+  from local cover, because a region can have its own curators alongside the
+  country's and somebody who rides there sees what a country-wide view never
+  will. Same three-state model as the profile page's curating invitation
+  ([account-and-auth.md](account-and-auth.md) §9).
 
 ### 4.2b Basemap labels follow the site language
 

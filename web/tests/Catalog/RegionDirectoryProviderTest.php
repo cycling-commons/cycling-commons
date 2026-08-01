@@ -8,6 +8,8 @@ namespace App\Tests\Catalog;
 
 use App\Catalog\Entity\Region;
 use App\Catalog\RegionDirectoryProvider;
+use App\Entity\User;
+use App\Moderation\Entity\ModeratorArea;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -60,10 +62,62 @@ final class RegionDirectoryProviderTest extends KernelTestCase
 
         $bySlug = array_column($be[0]['regions'], null, 'slug');
         self::assertArrayNotHasKey('belgium-t', $bySlug);
-        self::assertSame('curated', $bySlug['wallonia-t']['tier']);
+
+        // Maturity is about CONTENT and nothing else. curated_default used to
+        // outrank it, so a region with verified items reported "curated" and
+        // its growth was unsayable.
+        self::assertSame('growing', $bySlug['wallonia-t']['tier']);
         self::assertSame(1, $bySlug['wallonia-t']['itemsVerified'], 'unverified items must not count');
         self::assertSame('growing', $bySlug['flanders-t']['tier']);
-        self::assertSame('onboarded', $bySlug['empty-t']['tier'], 'no curated flag, no verified items');
+        self::assertSame('onboarded', $bySlug['empty-t']['tier'], 'no verified items');
+
+        // curated_default is its own fact — a curator's map-view decision, not
+        // a rung on the maturity ladder.
+        self::assertTrue($bySlug['wallonia-t']['curatedView']);
+        self::assertFalse($bySlug['flanders-t']['curatedView']);
+
+        // And nobody curates any of them, whatever the map-view flag says.
+        foreach (['wallonia-t', 'flanders-t', 'empty-t'] as $slug) {
+            self::assertSame('none', $bySlug[$slug]['stewardship'], $slug);
+        }
+    }
+
+    /**
+     * Stewardship is the OTHER axis: who looks after the region. Local cover
+     * outranks national — a region with its own curator is not merely inside a
+     * country somebody watches — and a country-scoped moderator is real cover
+     * for every region in it, not nothing.
+     */
+    public function testStewardshipDistinguishesLocalFromCountryWide(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $wal = $this->seedRegion('wallonia-t', 'BE', 4);
+        $this->seedRegion('flanders-t', 'BE', 4);
+        $this->seedRegion('utrecht-t', 'NL', 4);
+
+        $curator = (new User())->setEmail('steward-t@example.test');
+        $curator->setPassword('x');
+        $curator->setDisplayName('Steward');
+        $em->persist($curator);
+        $em->flush();
+        $uid = (int) $curator->getId();
+
+        $em->persist(new ModeratorArea($uid, $wal, null));      // one region
+        $em->persist(new ModeratorArea($uid, null, 'NL'));      // a whole country
+        $em->flush();
+
+        $provider = static::getContainer()->get(RegionDirectoryProvider::class);
+        $bySlug = [];
+        foreach ($provider->directory('en') as $country) {
+            foreach ($country['regions'] as $region) {
+                $bySlug[$region['slug']] = $region;
+            }
+        }
+
+        self::assertSame('curated', $bySlug['wallonia-t']['stewardship']);
+        self::assertSame('none', $bySlug['flanders-t']['stewardship'], 'same country, no BE-wide moderator');
+        self::assertSame('countrywide', $bySlug['utrecht-t']['stewardship']);
     }
 
     public function testDetailByKindAndOperationalGate(): void

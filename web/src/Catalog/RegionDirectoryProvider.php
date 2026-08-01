@@ -16,9 +16,24 @@ use Symfony\Component\Intl\Countries;
  * Per-request raw DBAL like RegionRegistryProvider — ~32 regions, indexed
  * COUNTs; deliberately no cache (owner decision §2.2).
  *
- * Tier is the PUBLIC simplification: curated (curator flag), growing (any
- * verified item), onboarded. CuratedReadiness (25/3/5) stays a curator-desk
- * signal and is not consulted here.
+ * A region's public status is TWO independent facts, not one ladder:
+ *
+ *  - **maturity** — `growing` once anything is verified there, else `onboarded`.
+ *    How much rider knowledge the region holds.
+ *  - **stewardship** — `curated` when it has its own curator, `countrywide`
+ *    when only a country-scoped moderator covers it, else `none`. Who is
+ *    looking after it.
+ *
+ * They were one field, derived from `curated_default`, and the legend then
+ * described it as "a curator maintains this region" — which that flag does not
+ * mean. A busy region can have nobody looking after it and a curated one can be
+ * empty; collapsing the two makes both unsayable.
+ *
+ * `curated_default` remains its own flag: a curator's decision that the map
+ * should OPEN in Curated view there (map-and-search.md §4.2), which is a
+ * stronger statement than merely having a curator.
+ *
+ * CuratedReadiness (25/3/5) stays a curator-desk signal and is not consulted here.
  *
  * Counts: items are VERIFIED-only (the editorial signal); routes are the
  * SERVED states (unverified+verified) — what a rider actually sees on the
@@ -34,6 +49,8 @@ final class RegionDirectoryProvider
 
     private const BASE_SELECT = '
         SELECT r.id, r.slug, r.area_km2, r.country_code, r.curated_default,
+               EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.region_id = r.id)              AS curator_local,
+               EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = r.country_code) AS curator_national,
                COALESCE(iv.n, 0) AS items_verified,
                COALESCE(rt.n, 0) AS routes,
                wc.name AS country_name_en, COALESCE(cont.name, \'\') AS continent_name,
@@ -128,7 +145,7 @@ final class RegionDirectoryProvider
     }
 
     /** @param array<string, mixed> $row
-     * @return array{slug: string, areaKm2: ?float, tier: string, itemsVerified: int, routes: int} */
+     * @return array{slug: string, areaKm2: ?float, tier: string, stewardship: string, curatedView: bool, itemsVerified: int, routes: int} */
     private function shape(array $row): array
     {
         $verified = (int) $row['items_verified'];
@@ -136,7 +153,15 @@ final class RegionDirectoryProvider
         return [
             'slug' => (string) $row['slug'],
             'areaKm2' => null === $row['area_km2'] ? null : (float) $row['area_km2'],
-            'tier' => (bool) $row['curated_default'] ? 'curated' : ($verified > 0 ? 'growing' : 'onboarded'),
+            'tier' => $verified > 0 ? 'growing' : 'onboarded',
+            // Local cover wins over national: a region with its own curator is
+            // not merely "inside a country somebody watches".
+            'stewardship' => match (true) {
+                (bool) $row['curator_local'] => 'curated',
+                (bool) $row['curator_national'] => 'countrywide',
+                default => 'none',
+            },
+            'curatedView' => (bool) $row['curated_default'],
             'itemsVerified' => $verified,
             'routes' => (int) $row['routes'],
         ];
