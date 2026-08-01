@@ -1,0 +1,84 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The third-party photo report form (docs/specs/photo-uploads.md §6c) — for
+  somebody who is IN a photo another rider uploaded, with or without an
+  account.
+
+  Deliberately uuid-blind: no thumbnail, no lookup, no hint whether the uuid
+  exists. The photo page is where a photo is shown; this page is where a claim
+  is made. Rendering anything photo-specific here would make the form an
+  existence oracle.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<style nonce="{{ csp_nonce() }}">
+  .report-page{max-width:640px;margin:0 auto}
+  .report-page h1{font-family:var(--serif);font-size:1.6rem}
+  .report-page p{font-size:.92rem;line-height:1.65;color:#4a4d40;margin:.8rem 0}
+  .report-page fieldset{border:0;padding:0;margin:1.2rem 0}
+  .report-page legend{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .report-page label.cat{display:block;padding:.45rem 0;font-size:.92rem;cursor:pointer}
+  .report-page label.cat input{margin-right:.55rem}
+  .report-page textarea{width:100%;min-height:7rem;font-family:inherit;font-size:.92rem;padding:.6rem;
+    border:1px solid rgba(20,22,14,.2);border-radius:5px;background:var(--paper)}
+  .report-page input[type="email"]{width:100%;font-family:inherit;font-size:.92rem;padding:.55rem .6rem;
+    border:1px solid rgba(20,22,14,.2);border-radius:5px;background:var(--paper)}
+  .report-note{padding:1rem 1.2rem;background:var(--paper-deep);border-left:2px solid var(--ochre);
+    border-radius:0 8px 8px 0;font-size:.88rem;line-height:1.6;margin:1.2rem 0}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="wrap dmin report-page" style="padding-top:2.5rem;padding-bottom:3rem">
+  {% if sent %}
+    <h1>{{ 'media.report.sent_title'|trans }}</h1>
+    {# The same acknowledgement for every outcome — it promises a look and an
+       answer window, never an action (no oracle, no heckler's veto). #}
+    <p>{{ 'media.report.sent_body'|trans }}</p>
+    <p>{{ 'media.report.sent_contact_note'|trans }}</p>
+    <p><a href="{{ path('map') }}">{{ 'media.page.to_map'|trans }}</a></p>
+  {% else %}
+    <h1>{{ 'media.report.title'|trans }}</h1>
+    <p>{{ 'media.report.intro'|trans }}</p>
+
+    {% if error is defined %}
+      <div class="report-note" role="alert">{{ error|trans }}</div>
+    {% endif %}
+
+    <form method="post" action="{{ path('photo_report_submit', {uuid: photo_uuid}) }}">
+      <input type="hidden" name="_token" value="{{ csrf_token('photo_report') }}">
+
+      <fieldset>
+        <legend>{{ 'media.report.legend_category'|trans }}</legend>
+        {% for category in categories %}
+          <label class="cat">
+            <input type="radio" name="category" value="{{ category }}" required>
+            {{ ('media.report.category.' ~ category)|trans }}
+          </label>
+        {% endfor %}
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ 'media.report.legend_reason'|trans }}</legend>
+        <textarea name="reason" maxlength="2000" required
+                  placeholder="{{ 'media.report.placeholder_reason'|trans }}"></textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ 'media.report.legend_contact'|trans }}</legend>
+        <input type="email" name="contact" maxlength="320"
+               placeholder="{{ 'media.report.placeholder_contact'|trans }}">
+        <p>{{ 'media.report.contact_note'|trans }}</p>
+      </fieldset>
+
+      <div class="report-note">
+        <p>{{ 'media.report.process_note'|trans }}</p>
+        <p>{{ 'media.report.urgent_note'|trans }}</p>
+      </div>
+
+      <p><button type="submit" class="btn">{{ 'media.report.submit'|trans }}</button></p>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

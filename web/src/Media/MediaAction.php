@@ -25,6 +25,13 @@ final class MediaAction
     public const string ObjectsDeleted = 'objects_deleted';
     /** The uploader asked for it to come down (docs/specs/photo-uploads.md §6b). */
     public const string TakedownRequested = 'takedown_requested';
+    /**
+     * A third party reported it (docs/specs/photo-uploads.md §6c). The note
+     * carries the category, with an "(auto-withheld)" suffix when the
+     * intimate-imagery/child lever fired — the log is the audit trail for
+     * every use of that lever.
+     */
+    public const string ThirdPartyReported = 'third_party_reported';
     public const string TakedownGranted = 'takedown_granted';
     public const string TakedownDeclined = 'takedown_declined';
 }

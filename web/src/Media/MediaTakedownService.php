@@ -12,6 +12,7 @@ use App\Media\Entity\MediaUpload;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * "That photo is of me — take it down" (docs/specs/photo-uploads.md §6b).
@@ -57,6 +58,8 @@ final class MediaTakedownService
         private readonly MediaDisposalService $disposal,
         private readonly MediaDecisionService $decisions,
         private readonly MessageService $messages,
+        #[Autowire('%kernel.secret%')]
+        private readonly string $secret,
     ) {
     }
 
@@ -86,6 +89,68 @@ final class MediaTakedownService
     }
 
     /**
+     * A third party reports the photo (docs/specs/photo-uploads.md §6c). The
+     * caller has already validated the inputs; what this decides is whether the
+     * report CHANGES anything, and the answer is deliberately "almost never":
+     *
+     * - An ineligible photo (unknown handled by the caller, unapproved,
+     *   tombstoned, already awaiting a decision) or an already-decided category
+     *   is swallowed silently. The reporter sees the same acknowledgement
+     *   either way — anything else turns the form into an existence oracle.
+     * - An eligible report queues for a curator and the photo STAYS UP. The
+     *   single exception is the intimate-imagery/child category, which
+     *   withholds on the spot; its use is individually logged, because abusing
+     *   the emergency lever is itself a moderation matter.
+     */
+    public function report(MediaUpload $upload, string $category, string $reason, ?string $contact, string $reporterIp): void
+    {
+        if (!MediaTakedownCategory::isValid($category)) {
+            throw new \InvalidArgumentException('media.report.error.category');
+        }
+        $reason = trim($reason);
+        if ('' === $reason) {
+            throw new \InvalidArgumentException('media.takedown.error.reason_required');
+        }
+        if (mb_strlen($reason) > self::REASON_MAX) {
+            throw new \InvalidArgumentException('media.takedown.error.reason_too_long');
+        }
+
+        if (MediaStatus::Approved !== $upload->getStatus()
+            || null !== $upload->getObjectsDeletedAt()
+            || $upload->isTakedownPending()
+            || $upload->hasDecidedTakedown($category)
+        ) {
+            return;
+        }
+
+        $upload->reportThirdParty($category, $reason, $contact, $this->hashReporter($reporterIp));
+        $withheld = MediaTakedownCategory::autoWithholds($category);
+        if ($withheld) {
+            $this->detach($upload);
+        }
+        // Anonymous actor: null is honest — there may be no account behind
+        // this report at all. The note carries the category (and whether the
+        // emergency lever fired) so the log answers "who used auto-withhold"
+        // without a join.
+        $this->events->append(
+            $upload->getId(),
+            null,
+            MediaAction::ThirdPartyReported,
+            $category.($withheld ? ' (auto-withheld)' : ''),
+        );
+        $this->em->flush();
+    }
+
+    /**
+     * One hash per reporter IP, salted with the kernel secret: answers "is one
+     * person reporting forty photos" without keeping raw IPs anywhere.
+     */
+    private function hashReporter(string $ip): string
+    {
+        return hash('sha256', $this->secret.'|'.$ip);
+    }
+
+    /**
      * Granted: the objects go, the row and its history stay.
      *
      * deleteObjects() rather than purge(). What is being erased is the image,
@@ -100,24 +165,73 @@ final class MediaTakedownService
             return;
         }
 
+        $thirdParty = MediaTakedownSource::ThirdParty === $upload->getTakedownSource();
+        // A queued third-party report never detached — the photo stayed up by
+        // design — so granting is the moment it leaves the gallery. Idempotent
+        // for the paths that already withheld at request time.
+        $this->detach($upload);
+        $upload->resolveTakedown();
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownGranted, $note);
         $this->disposal->deleteObjects($upload);
-        $this->notify($upload, UserMessageKind::MediaTakedownGranted, 'messages.body.media_takedown_granted', $note);
+        // The uploader is told either way, but not the same thing: "your
+        // request is granted" and "your photo was removed after a report"
+        // are different messages, and the second must not hint at who asked.
+        $this->notify(
+            $upload,
+            $thirdParty ? UserMessageKind::MediaRemovedOnReport : UserMessageKind::MediaTakedownGranted,
+            $thirdParty ? 'messages.body.media_removed_on_report' : 'messages.body.media_takedown_granted',
+            $note,
+        );
         $this->em->flush();
     }
 
-    /** Declined: the marker goes, the photo is published again, the reason stays on the row. */
+    /**
+     * Declined: the marker goes, the photo is published again (reattach is a
+     * no-op when it never left), the reason stays on the row. A third-party
+     * decline is FINAL for its category (docs/specs/photo-uploads.md §6c) and
+     * tells the uploader nothing — nothing changed for them, and "somebody
+     * reported you" is exactly the anxiety the single-response rule exists to
+     * avoid spreading.
+     */
     public function decline(MediaUpload $upload, User $curator, ?string $note = null): void
     {
         if (!$upload->isTakedownPending()) {
             return;
         }
 
+        $thirdParty = MediaTakedownSource::ThirdParty === $upload->getTakedownSource();
         $upload->declineTakedown();
         $this->reattach($upload);
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownDeclined, $note);
-        $this->notify($upload, UserMessageKind::MediaTakedownDeclined, 'messages.body.media_takedown_declined', $note);
+        if (!$thirdParty) {
+            $this->notify($upload, UserMessageKind::MediaTakedownDeclined, 'messages.body.media_takedown_declined', $note);
+        }
         $this->em->flush();
+    }
+
+    /**
+     * Art. 5(1)(e): the reply address has no purpose once the month to answer
+     * (Art. 12(3)) is long past. Swept by media:gc alongside the other two
+     * retention windows (docs/specs/photo-uploads.md §6c).
+     *
+     * @return int rows cleared
+     */
+    public function purgeExpiredContacts(\DateTimeImmutable $now): int
+    {
+        $cutoff = $now->modify('-90 days');
+
+        /** @var list<MediaUpload> $rows */
+        $rows = $this->em->createQuery(
+            'SELECT m FROM '.MediaUpload::class.' m
+             WHERE m.takedownContact IS NOT NULL AND m.takedownResolvedAt < :cutoff',
+        )->setParameter('cutoff', $cutoff)->getResult();
+
+        foreach ($rows as $upload) {
+            $upload->clearTakedownContact();
+        }
+        $this->em->flush();
+
+        return \count($rows);
     }
 
     /** @return list<MediaUpload> oldest first — a rights request waits for nobody's convenience */
@@ -138,7 +252,7 @@ final class MediaTakedownService
      * the submission queue. A rights request is not editorial work to be
      * shared out by jurisdiction; whoever is on duty should see it.
      *
-     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string}>
+     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, source: string, category: ?string, contact: ?string, withheld: bool}>
      */
     public function pendingCards(): array
     {
@@ -154,6 +268,13 @@ final class MediaTakedownService
                 'reason' => $upload->getTakedownReason() ?? '',
                 'requestedAt' => $requestedAt,
                 'itemName' => $this->item($upload)?->getName() ?? '',
+                'source' => $upload->getTakedownSource() ?? MediaTakedownSource::Uploader,
+                'category' => $upload->getTakedownCategory(),
+                // The reply address is shown to the curator ONLY — they are
+                // the controller answering the request. It never appears in
+                // any message to the uploader.
+                'contact' => $upload->getTakedownContact(),
+                'withheld' => $upload->isTakedownWithheld(),
             ];
         }
 

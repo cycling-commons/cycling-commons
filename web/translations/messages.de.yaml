@@ -1611,6 +1611,34 @@ media:
     error:
       reason_required: 'Sag uns, was mit dem Foto nicht stimmt — ein Kurator muss wissen, worum es geht.'
       reason_too_long: 'Diese Nachricht ist zu lang. Bitte bleib unter 2000 Zeichen.'
+  # Der Weg für Dritte (docs/specs/photo-uploads.md §6c): jemand, der AUF dem
+  # Foto ist, mit oder ohne Konto.
+  report:
+    link: 'Dieses Foto zeigt mich — melden'
+    title: 'Ein Foto melden'
+    intro: 'Bist du auf einem Foto der Cycling Commons erkennbar — oder meldest du eines, das nicht öffentlich sein sollte — dann sag es uns hier. Du brauchst kein Konto und musst nicht beweisen, wer du bist.'
+    legend_category: 'Was stimmt nicht?'
+    category:
+      identifiable_self: 'Ich bin auf diesem Foto erkennbar'
+      identifiable_other: 'Jemand anderes ist erkennbar und hat nicht zugestimmt'
+      intimate_or_child: 'Intime Aufnahme, oder ein Kind ist abgebildet'
+      private_property: 'Es zeigt Privatgelände oder etwas, das nicht öffentlich sein sollte'
+      other: 'Etwas anderes'
+    legend_reason: 'Sag uns, was nicht stimmt'
+    placeholder_reason: 'Was sollte ein Kurator wissen — wo bist du im Bild?'
+    legend_contact: 'Antwortadresse (optional)'
+    placeholder_contact: 'du@beispiel.org'
+    contact_note: 'Wird nur zur Beantwortung dieser Meldung verwendet und 90 Tage nach der Entscheidung gelöscht. Auch ohne Adresse wird die Meldung geprüft.'
+    process_note: 'Ein Kurator liest jede Meldung, und wenn du eine Adresse hinterlassen hast, antworten wir innerhalb eines Monats. Das Foto bleibt online, solange die Meldung wartet — eine Meldung ist eine Bitte, keine Entfernung.'
+    urgent_note: 'Die Ausnahme: Eine Meldung intimer Aufnahmen oder eines Kindes nimmt das Foto sofort offline, noch vor der Prüfung.'
+    submit: 'Meldung senden'
+    sent_title: 'Meldung eingegangen'
+    sent_body: 'Ein Kurator sieht sie sich an. Jede Meldung wird von einem Menschen entschieden — nichts wird automatisch entfernt oder behalten.'
+    sent_contact_note: 'Hast du eine Antwortadresse hinterlassen, hörst du innerhalb eines Monats von uns.'
+    error:
+      category: 'Wähle aus, was nicht stimmt.'
+      contact: 'Diese Antwortadresse sieht nicht wie eine E-Mail-Adresse aus.'
+      rate_limited: 'Zu viele Meldungen von deiner Verbindung heute. Wenn es dringend ist, schreib an info@cyclingcommons.org.'
 propose_route:
   eyebrow: 'K · Empfohlene Routen'
   title: 'Route vorschlagen'
@@ -1653,10 +1681,15 @@ moderate:
     no_gps: 'keine Ortsangabe in der Datei'
   takedown:
     heading: 'Anträge auf Foto-Entfernung'
-    lead: 'Eine fahrende Person hat um die Entfernung ihres eigenen Fotos gebeten. Es ist bereits von der Karte. Gib dem statt, wenn das Foto sie zeigt oder etwas anderes Persönliches, das sie nicht veröffentlichen wollte — das ist ihr Recht, und die Lizenz setzt sich darüber nicht hinweg. Lehne ab, wenn es ein Sinneswandel über das Beitragen ist, den die CC-BY-SA-Lizenz nicht zurücknehmen lässt.'
+    lead: 'Jemand hat um die Entfernung eines Fotos gebeten. Der Antrag der hochladenden Person ist bereits von der Karte; eine Meldung von Dritten bleibt online, bis du entscheidest (die Karte zeigt es an). Der Test für eine Meldung von Dritten: Zeigt das Foto auf den ersten Blick eine erkennbare Person, und ist die Angabe plausibel? Wenn ja, entferne es — im Zweifel entfernen. Lehne nur ab, was klar keine Rechtefrage ist: ein Sinneswandel der hochladenden Person über das Beitragen, niemand erkennbar, oder eine Beschwerde über den Ort statt über eine Person.'
     alt: 'Das Foto, für das die Entfernung beantragt wurde'
     no_item: 'Keinem Ort zugeordnet'
     asked: 'Beantragt am %when%'
+    source_uploader: 'Von der hochladenden Person beantragt'
+    source_third_party: 'Meldung von Dritten'
+    state_withheld: 'Foto zurückgehalten'
+    state_published: 'Foto noch veröffentlicht'
+    reply_to: 'Antwort an %email% über das Projektpostfach, innerhalb eines Monats.'
     note_placeholder: 'Nachricht an die Person (optional)'
     grant: 'Foto entfernen'
     decline: 'Ablehnen und wieder veröffentlichen'
@@ -1872,6 +1905,7 @@ messages:
   kind_rider_reply: 'Antwort des Fahrers'
   kind_media_takedown_granted: 'Dein Foto wurde entfernt'
   kind_media_takedown_declined: 'Dein Antrag auf Foto-Entfernung wurde abgelehnt'
+  kind_media_removed_on_report: 'Eines deiner Fotos wurde entfernt'
   body:
     submission_approved: 'Dein Beitrag %title% wurde angenommen und ist jetzt live auf der Karte. Danke, dass du den Commons verbesserst!'
     submission_rejected: 'Dein Beitrag %title% wurde nicht angenommen.'
@@ -1883,6 +1917,7 @@ messages:
     correction_dismissed: 'Deine Korrektur an %name% wurde verworfen.'
     media_takedown_granted: 'Dein Foto wurde aus The Commons entfernt und unsere Kopien davon sind gelöscht. Kopien, die andere unter der Lizenz heruntergeladen haben, können wir nicht erreichen, aber die Seite, die dich genannt hat, nennt niemanden mehr.'
     media_takedown_declined: 'Ein Kurator hat deinen Antrag auf Entfernung geprüft und darin keinen datenschutzrechtlichen Grund gefunden, also ist das Foto wieder veröffentlicht. Falls wir dich falsch verstanden haben — besonders wenn du selbst auf dem Foto bist — antworte auf diese Nachricht oder schreib an info@cyclingcommons.org, dann sehen wir es uns erneut an.'
+    media_removed_on_report: 'Eines deiner Fotos wurde nach einer Meldung entfernt, dass es eine erkennbare Person zeigt, die der Veröffentlichung nicht zugestimmt hat. Es geht um dieses eine Bild, nicht um deinen Beitrag — danke dafür. Wer gemeldet hat, können wir nicht sagen, in keine Richtung: Die Person hat auch nicht erfahren, wer hochgeladen hat. Hältst du die Entfernung für falsch, antworte auf diese Nachricht; ein Kurator liest sie.'
   reply_label: 'Deine Antwort'
   reply_send: 'Antwort senden'
   reply_sent: 'Antwort gesendet — dein Beitrag ist wieder in der Prüfwarteschlange.'

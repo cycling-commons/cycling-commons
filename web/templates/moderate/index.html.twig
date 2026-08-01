@@ -117,11 +117,13 @@
     <noscript><button type="submit" class="btn-act btn-needs-info">{{ 'moderate.filter.apply'|trans }}</button></noscript>
   </form>
 
-  {# ── Photo takedown requests (docs/specs/photo-uploads.md §6b) ──
-     Above the queue, unfiltered, and shown to every curator: a rider has asked
-     for their own photo to come down and the clock on that is a legal one, not
+  {# ── Photo takedown requests (docs/specs/photo-uploads.md §6b/§6c) ──
+     Above the queue, unfiltered, and shown to every curator: somebody has
+     asked for a photo to come down and the clock on that is a legal one, not
      a workload one. Deliberately NOT a second desk — same page, same two verbs
-     the rest of moderation uses. #}
+     the rest of moderation uses. Two sources share the cards: the uploader
+     (withheld the moment they asked) and a third party who says they are in
+     the picture (photo still up unless the urgent category fired). #}
   {% if takedowns is not empty %}
   <section class="q-takedowns">
     <h2>{{ 'moderate.takedown.heading'|trans }}</h2>
@@ -132,8 +134,23 @@
           <img src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}">
           <div>
             <b>{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}</b>
+            <p class="td-meta">
+              {% if t.source == 'third_party' %}
+                {{ 'moderate.takedown.source_third_party'|trans }}
+                · {{ ('media.report.category.' ~ t.category)|trans }}
+                · {{ (t.withheld ? 'moderate.takedown.state_withheld' : 'moderate.takedown.state_published')|trans }}
+              {% else %}
+                {{ 'moderate.takedown.source_uploader'|trans }}
+              {% endif %}
+            </p>
             <p class="td-reason">{{ t.reason }}</p>
             <p class="td-meta">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|cc_datetime}) }}</p>
+            {% if t.contact %}
+              {# Curator-only: the address to answer within the month
+                 (Art. 12(3)), through the project mailbox — never shown to,
+                 or shared with, the uploader. #}
+              <p class="td-meta">{{ 'moderate.takedown.reply_to'|trans({'%email%': t.contact}) }}</p>
+            {% endif %}
           </div>
         </div>
         <form method="post" action="{{ path('moderate_takedown') }}" class="td-actions">

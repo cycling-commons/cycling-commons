@@ -1308,6 +1308,36 @@ media:
     error:
       reason_required: 'Please tell us what is wrong with the photo — a curator needs to know what is being asked.'
       reason_too_long: 'That message is too long. Please keep it under 2000 characters.'
+  # The third-party route (docs/specs/photo-uploads.md §6c): somebody who is IN
+  # the photo, with or without an account. The copy must promise a look and an
+  # answer window — never an action, because a report deliberately removes
+  # nothing (except the urgent category, which says so).
+  report:
+    link: 'This photo shows me — report it'
+    title: 'Report a photo'
+    intro: 'If you are identifiable in a photo on the Cycling Commons — or you are reporting one that should not be public — tell us here. You do not need an account, and you do not need to prove who you are.'
+    legend_category: 'What is wrong?'
+    category:
+      identifiable_self: 'I am identifiable in this photo'
+      identifiable_other: 'Someone else is identifiable and has not agreed'
+      intimate_or_child: 'Intimate imagery, or a child is depicted'
+      private_property: 'It shows private property or something that should not be public'
+      other: 'Something else'
+    legend_reason: 'Tell us what is wrong'
+    placeholder_reason: 'What should a curator know — where are you in the picture?'
+    legend_contact: 'Reply address (optional)'
+    placeholder_contact: 'you@example.org'
+    contact_note: 'Used only to answer this report, and deleted 90 days after it is decided. Leave it empty and the report is still reviewed.'
+    process_note: 'A curator reads every report, and if you left an address we answer within one month. The photo stays up while the report waits — a report is a request, not a removal.'
+    urgent_note: 'The exception: a report of intimate imagery, or of a child, takes the photo offline immediately, before review.'
+    submit: 'Send report'
+    sent_title: 'Report received'
+    sent_body: 'A curator will look at it. Every report is decided by a person — nothing is removed, or kept, automatically.'
+    sent_contact_note: 'If you left a reply address, you will hear from us within one month.'
+    error:
+      category: 'Pick what is wrong.'
+      contact: 'That reply address does not look like an email address.'
+      rate_limited: 'Too many reports from your connection today. If it is urgent, email info@cyclingcommons.org.'
 propose_route:
   eyebrow: 'K · Recommended routes'
   title: 'Propose a route'
@@ -1651,10 +1681,15 @@ moderate:
     no_gps: 'no location in the file'
   takedown:
     heading: 'Photo removal requests'
-    lead: 'A rider has asked for their own photo to come down. It is already off the map. Grant it if the photo shows them, or anything else personal they did not mean to publish — that is their right and the licence does not override it. Decline it if this is a change of mind about contributing, which the CC BY-SA licence does not allow to be taken back.'
+    lead: 'Somebody has asked for a photo to come down. An uploader''s own request is already off the map; a third-party report stays up until you decide (the card says which). The test for a third-party claim: does the photo, on its face, show an identifiable person, and is the claim plausible? If yes, remove — when unsure, remove. Decline only what is clearly not a rights claim: an uploader''s change of mind about contributing, nobody visible at all, or a complaint about the place rather than a person.'
     alt: 'The photo a removal was requested for'
     no_item: 'Not attached to a place'
     asked: 'Asked %when%'
+    source_uploader: 'Asked by the uploader'
+    source_third_party: 'Third-party report'
+    state_withheld: 'photo withheld'
+    state_published: 'photo still published'
+    reply_to: 'Reply to %email% via the project mailbox, within one month.'
     note_placeholder: 'Note to the rider (optional)'
     grant: 'Remove the photo'
     decline: 'Decline and republish'
@@ -1870,6 +1905,7 @@ messages:
   kind_rider_reply: 'Reply from the rider'
   kind_media_takedown_granted: 'Your photo has been removed'
   kind_media_takedown_declined: 'Your photo removal request was declined'
+  kind_media_removed_on_report: 'One of your photos has been removed'
   body:
     submission_approved: 'Your contribution %title% was approved and is now live on the map. Thank you for improving the Commons!'
     submission_rejected: 'Your contribution %title% was not accepted.'
@@ -1881,6 +1917,7 @@ messages:
     correction_dismissed: 'Your correction on %name% was dismissed.'
     media_takedown_granted: 'Your photo has been removed from the Commons and our copies of it are deleted. Copies other people downloaded under the licence are not something we can reach, but the page that credited you no longer names anyone.'
     media_takedown_declined: 'A curator has looked at your removal request and did not find a personal-data reason to act on, so the photo is published again. If we have misread you — especially if you are in the photo — reply to this message or email info@cyclingcommons.org and we will look again.'
+    media_removed_on_report: 'One of your photos has been removed after a report that it shows an identifiable person who did not agree to be published. This is about that one image, not your contribution — thank you for it. We cannot tell you who reported it, in either direction: they were not told who uploaded it. If you think the removal is wrong, reply to this message and a curator will read it.'
   reply_label: 'Your reply'
   reply_send: 'Send reply'
   reply_sent: 'Reply sent — your contribution is back in the review queue.'

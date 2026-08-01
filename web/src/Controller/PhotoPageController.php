@@ -60,11 +60,14 @@ final class PhotoPageController extends AbstractController
         // pending one is linked from the moderation queue and nowhere else;
         // a rejected or tombstoned one has no public existence at all; and one
         // whose uploader has asked for it to come down is withheld from the
-        // moment they ask (docs/specs/photo-uploads.md §6b).
+        // moment they ask (docs/specs/photo-uploads.md §6b). Withheld, not
+        // merely reported: a queued third-party report deliberately changes
+        // nothing here (§6c) — hiding the page on an anonymous report would
+        // hand strangers a lever the design exists to deny them.
         if (null === $upload
             || MediaStatus::Approved !== $upload->getStatus()
             || null !== $upload->getObjectsDeletedAt()
-            || $upload->isTakedownPending()
+            || $upload->isTakedownWithheld()
         ) {
             return $this->render('media/photo.html.twig', [
                 'page_title' => 'media.page.unpublished_title',

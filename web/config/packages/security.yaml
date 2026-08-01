@@ -66,6 +66,10 @@ security:
         # and because a reuser following a link out of an image file must never
         # be asked to sign in.
         - { path: '^/photo/[0-9a-fA-F-]{36}$', roles: PUBLIC_ACCESS }
+        # The third-party report route (docs/specs/photo-uploads.md §6c): the
+        # people it protects mostly have no account, and GDPR Art. 17 does not
+        # require one. Explicitly public so nobody is ever bounced to login.
+        - { path: '^/photo/[0-9a-fA-F-]{36}/report$', roles: PUBLIC_ACCESS }
         # Coverage query plane (coverage-provider.md §5):
         # anonymous cacheable JSON over the coverage_poi cache — explicit
         # PUBLIC_ACCESS for the same scheb lazy-firewall cacheability reason

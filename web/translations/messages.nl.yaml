@@ -1608,6 +1608,34 @@ media:
     error:
       reason_required: 'Vertel ons wat er mis is met de foto — een curator moet weten waar het om gaat.'
       reason_too_long: 'Dat bericht is te lang. Houd het onder 2000 tekens.'
+  # De route voor derden (docs/specs/photo-uploads.md §6c): iemand die OP de
+  # foto staat, met of zonder account.
+  report:
+    link: 'Op deze foto sta ik — melden'
+    title: 'Een foto melden'
+    intro: 'Sta je herkenbaar op een foto op de Cycling Commons — of meld je een foto die niet openbaar zou moeten zijn — dan kun je dat hier doorgeven. Je hebt geen account nodig en hoeft niet te bewijzen wie je bent.'
+    legend_category: 'Wat is er mis?'
+    category:
+      identifiable_self: 'Ik ben herkenbaar op deze foto'
+      identifiable_other: 'Iemand anders is herkenbaar en heeft daar niet mee ingestemd'
+      intimate_or_child: 'Intiem beeldmateriaal, of er staat een kind op'
+      private_property: 'De foto toont privéterrein of iets dat niet openbaar hoort te zijn'
+      other: 'Iets anders'
+    legend_reason: 'Vertel ons wat er mis is'
+    placeholder_reason: 'Wat moet een curator weten — waar sta je op de foto?'
+    legend_contact: 'Antwoordadres (optioneel)'
+    placeholder_contact: 'jij@voorbeeld.org'
+    contact_note: 'Alleen gebruikt om deze melding te beantwoorden en 90 dagen na de beslissing verwijderd. Laat je het leeg, dan wordt de melding evengoed beoordeeld.'
+    process_note: 'Een curator leest elke melding, en als je een adres achterliet antwoorden we binnen een maand. De foto blijft online zolang de melding wacht — een melding is een verzoek, geen verwijdering.'
+    urgent_note: 'De uitzondering: een melding van intiem beeldmateriaal, of van een kind, haalt de foto onmiddellijk offline, nog vóór de beoordeling.'
+    submit: 'Melding versturen'
+    sent_title: 'Melding ontvangen'
+    sent_body: 'Een curator gaat ernaar kijken. Elke melding wordt door een mens beslist — er wordt niets automatisch verwijderd of behouden.'
+    sent_contact_note: 'Liet je een antwoordadres achter, dan hoor je binnen een maand van ons.'
+    error:
+      category: 'Kies wat er mis is.'
+      contact: 'Dat antwoordadres ziet er niet uit als een e-mailadres.'
+      rate_limited: 'Te veel meldingen vanaf jouw verbinding vandaag. Is het dringend, mail dan info@cyclingcommons.org.'
 propose_route:
   eyebrow: 'K · Aanbevolen routes'
   title: 'Stel een route voor'
@@ -1650,10 +1678,15 @@ moderate:
     no_gps: 'geen locatie in het bestand'
   takedown:
     heading: 'Verzoeken om foto''s te verwijderen'
-    lead: 'Een fietser heeft gevraagd zijn eigen foto te verwijderen. Hij staat al niet meer op de kaart. Toewijzen als de foto hem toont, of iets anders persoonlijks dat hij niet wilde publiceren — dat is zijn recht en de licentie gaat daar niet boven. Afwijzen als dit een bedenking over het bijdragen is, wat de CC BY-SA-licentie niet laat terugnemen.'
+    lead: 'Iemand heeft gevraagd een foto te verwijderen. Het verzoek van een uploader is al van de kaart; een melding van een derde blijft online tot jij beslist (de kaart zegt welke het is). De toets voor een melding van een derde: toont de foto, op het eerste gezicht, een herkenbare persoon, en is de claim aannemelijk? Zo ja, verwijder — bij twijfel, verwijder. Wijs alleen af wat duidelijk geen rechtenkwestie is: een bedenking van de uploader over het bijdragen, niemand zichtbaar, of een klacht over de plek in plaats van over een persoon.'
     alt: 'De foto waarvoor verwijdering is gevraagd'
     no_item: 'Niet aan een plek gekoppeld'
     asked: 'Gevraagd op %when%'
+    source_uploader: 'Gevraagd door de uploader'
+    source_third_party: 'Melding van een derde'
+    state_withheld: 'foto offline gehouden'
+    state_published: 'foto nog gepubliceerd'
+    reply_to: 'Antwoord naar %email% via de projectmailbox, binnen een maand.'
     note_placeholder: 'Bericht aan de fietser (optioneel)'
     grant: 'Foto verwijderen'
     decline: 'Afwijzen en opnieuw publiceren'
@@ -1869,6 +1902,7 @@ messages:
   kind_rider_reply: 'Antwoord van de fietser'
   kind_media_takedown_granted: 'Je foto is verwijderd'
   kind_media_takedown_declined: 'Je verzoek om een foto te verwijderen is afgewezen'
+  kind_media_removed_on_report: 'Een van je foto''s is verwijderd'
   body:
     submission_approved: 'Jouw bijdrage %title% is goedgekeurd en staat nu live op de kaart. Bedankt voor het verbeteren van de Commons!'
     submission_rejected: 'Jouw bijdrage %title% is niet aanvaard.'
@@ -1880,6 +1914,7 @@ messages:
     correction_dismissed: 'Jouw correctie op %name% is afgewezen.'
     media_takedown_granted: 'Je foto is uit de Commons gehaald en onze kopieën ervan zijn verwijderd. Kopieën die anderen onder de licentie hebben gedownload kunnen wij niet bereiken, maar de pagina die jou vermeldde noemt niemand meer.'
     media_takedown_declined: 'Een curator heeft je verwijderverzoek bekeken en er geen reden in gevonden die met persoonsgegevens te maken heeft, dus de foto is weer gepubliceerd. Als we je verkeerd hebben begrepen — zeker als je zelf op de foto staat — reageer dan op dit bericht of mail info@cyclingcommons.org, dan kijken we opnieuw.'
+    media_removed_on_report: 'Een van je foto''s is verwijderd na een melding dat er een herkenbare persoon op staat die niet met publicatie heeft ingestemd. Dit gaat over dat ene beeld, niet over je bijdrage — dank daarvoor. We kunnen niet zeggen wie de melding deed, in geen van beide richtingen: die persoon weet ook niet wie de foto uploadde. Vind je de verwijdering onterecht, reageer dan op dit bericht; een curator leest het.'
   reply_label: 'Jouw antwoord'
   reply_send: 'Antwoord versturen'
   reply_sent: 'Antwoord verstuurd — jouw bijdrage staat weer in de beoordelingswachtrij.'

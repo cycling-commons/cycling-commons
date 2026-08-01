@@ -1608,6 +1608,34 @@ media:
     error:
       reason_required: 'Dites-nous ce qui ne va pas avec la photo — un curateur doit savoir ce qui est demandé.'
       reason_too_long: 'Ce message est trop long. Merci de rester sous 2000 caractères.'
+  # La voie tierce (docs/specs/photo-uploads.md §6c) : quelqu'un qui figure SUR
+  # la photo, avec ou sans compte.
+  report:
+    link: 'Cette photo me montre — la signaler'
+    title: 'Signaler une photo'
+    intro: 'Si vous êtes reconnaissable sur une photo du Cycling Commons — ou si vous signalez une photo qui ne devrait pas être publique — dites-le-nous ici. Pas besoin de compte, ni de prouver qui vous êtes.'
+    legend_category: 'Quel est le problème ?'
+    category:
+      identifiable_self: 'Je suis reconnaissable sur cette photo'
+      identifiable_other: 'Quelqu''un d''autre est reconnaissable et n''a pas donné son accord'
+      intimate_or_child: 'Image intime, ou un enfant est représenté'
+      private_property: 'Elle montre une propriété privée ou quelque chose qui ne devrait pas être public'
+      other: 'Autre chose'
+    legend_reason: 'Dites-nous ce qui ne va pas'
+    placeholder_reason: 'Que doit savoir le curateur — où êtes-vous sur l''image ?'
+    legend_contact: 'Adresse de réponse (facultative)'
+    placeholder_contact: 'vous@exemple.org'
+    contact_note: 'Utilisée uniquement pour répondre à ce signalement, puis supprimée 90 jours après la décision. Sans adresse, le signalement est tout de même examiné.'
+    process_note: 'Un curateur lit chaque signalement, et si vous avez laissé une adresse nous répondons sous un mois. La photo reste en ligne pendant l''examen — un signalement est une demande, pas un retrait.'
+    urgent_note: 'L''exception : un signalement d''image intime, ou représentant un enfant, met la photo hors ligne immédiatement, avant examen.'
+    submit: 'Envoyer le signalement'
+    sent_title: 'Signalement reçu'
+    sent_body: 'Un curateur va l''examiner. Chaque signalement est tranché par une personne — rien n''est retiré, ni conservé, automatiquement.'
+    sent_contact_note: 'Si vous avez laissé une adresse de réponse, vous aurez de nos nouvelles sous un mois.'
+    error:
+      category: 'Choisissez ce qui ne va pas.'
+      contact: 'Cette adresse de réponse ne ressemble pas à une adresse e-mail.'
+      rate_limited: 'Trop de signalements depuis votre connexion aujourd''hui. Si c''est urgent, écrivez à info@cyclingcommons.org.'
 propose_route:
   eyebrow: 'K · Itinéraires recommandés'
   title: 'Proposer un itinéraire'
@@ -1650,10 +1678,15 @@ moderate:
     no_gps: 'aucune localisation dans le fichier'
   takedown:
     heading: 'Demandes de retrait de photo'
-    lead: 'Un cycliste a demandé le retrait de sa propre photo. Elle est déjà hors de la carte. Accordez si la photo le montre, ou montre autre chose de personnel qu''il ne voulait pas publier — c''est son droit et la licence ne le supplante pas. Refusez s''il s''agit d''un changement d''avis sur la contribution, ce que la licence CC BY-SA ne permet pas de reprendre.'
+    lead: 'Quelqu''un a demandé le retrait d''une photo. La demande d''un téléverseur est déjà hors de la carte ; un signalement tiers reste en ligne jusqu''à votre décision (la carte l''indique). Le test pour un signalement tiers : la photo montre-t-elle, à première vue, une personne identifiable, et l''affirmation est-elle plausible ? Si oui, retirez — dans le doute, retirez. Ne refusez que ce qui n''est clairement pas une question de droits : un changement d''avis du téléverseur, personne de visible, ou une plainte sur le lieu plutôt que sur une personne.'
     alt: 'La photo dont le retrait est demandé'
     no_item: 'Non rattachée à un lieu'
     asked: 'Demandé le %when%'
+    source_uploader: 'Demandé par le téléverseur'
+    source_third_party: 'Signalement tiers'
+    state_withheld: 'photo retenue'
+    state_published: 'photo toujours publiée'
+    reply_to: 'Répondre à %email% via la boîte du projet, sous un mois.'
     note_placeholder: 'Note au cycliste (facultatif)'
     grant: 'Retirer la photo'
     decline: 'Refuser et republier'
@@ -1869,6 +1902,7 @@ messages:
   kind_rider_reply: 'Réponse du cycliste'
   kind_media_takedown_granted: 'Votre photo a été retirée'
   kind_media_takedown_declined: 'Votre demande de retrait de photo a été refusée'
+  kind_media_removed_on_report: 'Une de vos photos a été retirée'
   body:
     submission_approved: 'Votre contribution %title% a été approuvée et est désormais visible sur la carte. Merci d''améliorer le Commons !'
     submission_rejected: 'Votre contribution %title% n''a pas été retenue.'
@@ -1880,6 +1914,7 @@ messages:
     correction_dismissed: 'Votre correction sur %name% a été rejetée.'
     media_takedown_granted: 'Votre photo a été retirée du Commons et nos copies en sont supprimées. Les copies téléchargées par d''autres sous la licence ne sont pas quelque chose que nous pouvons atteindre, mais la page qui vous créditait ne nomme plus personne.'
     media_takedown_declined: 'Un curateur a examiné votre demande de retrait et n''y a pas trouvé de motif lié aux données personnelles, la photo est donc de nouveau publiée. Si nous vous avons mal compris — surtout si vous figurez sur la photo — répondez à ce message ou écrivez à info@cyclingcommons.org et nous réexaminerons.'
+    media_removed_on_report: 'Une de vos photos a été retirée après un signalement indiquant qu''elle montre une personne identifiable qui n''a pas consenti à être publiée. Cela concerne cette seule image, pas votre contribution — merci pour elle. Nous ne pouvons pas dire qui a signalé, dans aucun sens : cette personne n''a pas su non plus qui avait téléversé. Si vous pensez que le retrait est une erreur, répondez à ce message et un curateur le lira.'
   reply_label: 'Votre réponse'
   reply_send: 'Envoyer la réponse'
   reply_sent: 'Réponse envoyée — votre contribution est de retour dans la file de relecture.'

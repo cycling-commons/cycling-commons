@@ -21,6 +21,10 @@ framework:
                 adapter: cache.adapter.filesystem
             cache.data_export_limiter:
                 adapter: cache.adapter.filesystem
+            cache.media_report_limiter:
+                adapter: cache.adapter.filesystem
+            cache.media_report_urgent_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -91,6 +95,22 @@ framework:
             limit: 3
             interval: '1 day'
             cache_pool: cache.data_export_limiter
+        # Third-party photo reports (photo-uploads.md §6c): anonymous, per-IP.
+        # Five genuine complaints in a day is already an unusual day; fifty is
+        # a campaign. Deliberately NO CAPTCHA — a standing product decision —
+        # so the limiter and the queue-not-withhold design are the abuse story.
+        media_report:
+            policy: sliding_window
+            limit: 5
+            interval: '1 day'
+            cache_pool: cache.media_report_limiter
+        # The auto-withholding category is the one lever an anonymous visitor
+        # has that changes anything, so its budget is one pull per IP per day.
+        media_report_urgent:
+            policy: sliding_window
+            limit: 1
+            interval: '1 day'
+            cache_pool: cache.media_report_urgent_limiter
 
 when@test:
     framework:
@@ -111,4 +131,8 @@ when@test:
                 cache.media_upload_limiter:
                     adapter: cache.adapter.array
                 cache.data_export_limiter:
+                    adapter: cache.adapter.array
+                cache.media_report_limiter:
+                    adapter: cache.adapter.array
+                cache.media_report_urgent_limiter:
                     adapter: cache.adapter.array

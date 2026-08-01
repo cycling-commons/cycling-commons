@@ -30,6 +30,13 @@ enum UserMessageKind: string
     /** Outcomes of a photo takedown request (docs/specs/photo-uploads.md §6b). */
     case MediaTakedownGranted = 'media_takedown_granted';
     case MediaTakedownDeclined = 'media_takedown_declined';
+    /**
+     * A third party's report was granted and the uploader's photo removed
+     * (docs/specs/photo-uploads.md §6c). Its own kind because "your request
+     * was granted" would be a lie to somebody who asked for nothing — and the
+     * body must not hint at who reported it.
+     */
+    case MediaRemovedOnReport = 'media_removed_on_report';
 
     /** @return list<string> @api */
     public static function values(): array

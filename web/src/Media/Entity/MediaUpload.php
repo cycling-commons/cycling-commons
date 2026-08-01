@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Media\Entity;
 
 use App\Media\MediaStatus;
+use App\Media\MediaTakedownCategory;
 use App\Media\MediaTakedownSource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -425,9 +426,26 @@ class MediaUpload
         return $this->takedownReason;
     }
 
-    /** Withheld from publication: asked about, and not yet decided. */
+    /** A curator has an undecided request — of either source — for this photo. */
     public function isTakedownPending(): bool
     {
         return null !== $this->takedownRequestedAt && null === $this->objectsDeletedAt;
+    }
+
+    /**
+     * Withheld from publication while the request waits. The uploader's own
+     * request always withholds (they own the row; the worst case is somebody
+     * hiding their own contribution). A third party's withholds ONLY in the
+     * intimate-imagery/child category — anything else queuing invisible would
+     * be a heckler's veto (docs/specs/photo-uploads.md §6c).
+     */
+    public function isTakedownWithheld(): bool
+    {
+        if (!$this->isTakedownPending()) {
+            return false;
+        }
+
+        return MediaTakedownSource::ThirdParty !== $this->takedownSource
+            || (null !== $this->takedownCategory && MediaTakedownCategory::autoWithholds($this->takedownCategory));
     }
 }
