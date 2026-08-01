@@ -1029,7 +1029,6 @@ add_climb:
     label: 'Révision'
     heading: 'Révisez votre col'
     help: 'Vérifiez les informations avant de les envoyer aux curateurs.'
-    prov: 'Votre col est envoyé dans la file de révision d''un curateur. Les faits approuvés rejoignent le Commons sous <b>ODbL</b> (données) / <b>CC BY-SA 4.0</b> (médias). La provenance est conservée ; l''identité ne l''est pas.'
   step5:
     label: 'Soumis'
     heading: 'Il est dans la file.'

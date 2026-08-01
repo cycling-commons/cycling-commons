@@ -1029,7 +1029,6 @@ add_climb:
     label: 'Controleren'
     heading: 'Controleer je klim'
     help: 'Controleer de gegevens voordat je ze naar de curators stuurt.'
-    prov: 'Je klim gaat naar de beoordelingswachtrij van een curator. Goedgekeurde feiten komen in de Commons terecht onder <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Herkomst wordt bijgehouden; identiteit niet.'
   step5:
     label: 'Ingediend'
     heading: 'Hij staat in de wachtrij.'

@@ -1028,7 +1028,6 @@ add_climb:
     label: 'Review'
     heading: 'Review your climb'
     help: 'Check the facts before sending it to the curators.'
-    prov: 'Your climb goes to a curator''s review queue. Approved facts join the Commons under <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Provenance is kept; identity is not.'
   step5:
     label: 'Submitted'
     heading: 'It''s in the queue.'

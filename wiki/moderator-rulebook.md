@@ -22,6 +22,40 @@ Because Trash is irreversible, the desk asks you to **type `DELETE`** to
 confirm. Cancelling leaves no trace at all — no record is written for a
 Trash you didn't complete.
 
+## Photo takedown requests
+
+A rider can ask for a photo they uploaded to be removed. The photo comes off
+the map **the moment they ask**, before you see it — you are not deciding
+whether it stays up meanwhile, only what happens next.
+
+You are answering one question: **which kind of request is this?**
+
+| Their words say | Decide |
+|---|---|
+| The photo shows them, or something personal they did not mean to publish | **Remove the photo.** That is their right, and the CC BY-SA licence does not override it |
+| They have changed their mind about contributing | **Decline and republish.** The licence cannot be taken back — if it could, the Commons would only ever be on loan |
+
+- **Do lean towards removing** when you are unsure. Losing one photo of a
+  fountain costs the Commons almost nothing; refusing a genuine claim about
+  somebody's own image is a rights violation.
+- **Do write a note either way** — on a decline especially. Say they can reply
+  if you have misread them, because sometimes you will have.
+- **Don't ask them to prove it.** Demanding identity documents to settle
+  "that's me in the reflection" collects more personal data than the complaint
+  is about. If the photo plausibly shows them, that is enough.
+- **Don't treat a removal as a black mark.** It is not a rejection and it is
+  not misconduct; it is somebody exercising a right.
+
+Removing deletes the image files. The record that a photo existed, that its
+subject asked, and that we did as asked is kept on purpose — it is how the
+Commons can show it honoured the request.
+
+**Someone who is in a photo they did not upload** has no self-service route
+yet: they email `info@cyclingcommons.org`, which reaches the site owner rather
+than this desk. If such a case reaches you, point them there rather than
+improvising — and tell the owner, because the volume is what decides when that
+route gets built.
+
 ## Do
 
 - **Do use Reject for disagreement, Trash only for bad faith.** A wrong
@@ -66,7 +100,11 @@ Trash you didn't complete.
   public profile; the desk may show you more than the public ever sees —
   treat everything on the desk as confidential.
 - Consent records (the CC BY-SA donation a rider granted) are permanent and
-  none of your concern to manage — the system enforces them.
+  none of your concern to manage — the system enforces them. They are disclosed
+  on the privacy notice, so a rider asking "what do you keep after I leave?"
+  can be pointed at that page rather than answered from memory.
+- **A takedown reason is confidential.** It often says something personal about
+  the rider — that is the whole point of it. It stays on the desk.
 
 ## Where the deep rules live
 
