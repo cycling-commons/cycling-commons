@@ -1,0 +1,76 @@
+web/src/Account/DateFormat.php
+  s_41dce4bb9e0e72::t_6ace7f21f11994 1-80
+web/templates/base.html.twig
+  s_41dce4bb9e0e72::t_321bc5174c1bbd 36-37
+  s_41dce4bb9e0e72::t_915c18263f87bf 22-30
+web/src/Entity/User.php
+  s_41dce4bb9e0e72::t_6424b1b6b5915c 170-177
+  s_41dce4bb9e0e72::t_abe283fa11794b 7
+  s_41dce4bb9e0e72::t_1d7b50fdacf9f4 623-634
+web/src/Twig/DateDisplayExtension.php
+  s_41dce4bb9e0e72::t_8fa39534106a55 1-14,16-54,66-168
+  s_41dce4bb9e0e72::t_938cae9741a3f8 15
+  s_41dce4bb9e0e72::t_83c8ce9d9a8b7b 55-65
+web/templates/profile/show.html.twig
+  s_41dce4bb9e0e72::t_7f0e2b95efbd3b 74,93,111,137,148
+web/translations/messages.nl.yaml
+  s_41dce4bb9e0e72::t_d1fad5da5c07aa 1760
+  s_41dce4bb9e0e72::t_55260370bfb87d 1936-1942
+web/templates/admin/dashboard.html.twig
+  s_41dce4bb9e0e72::t_7f0e2b95efbd3b 42
+web/translations/messages.de.yaml
+  s_41dce4bb9e0e72::t_d1fad5da5c07aa 1763
+  s_41dce4bb9e0e72::t_55260370bfb87d 1939-1945
+web/translations/messages.fr.yaml
+  s_41dce4bb9e0e72::t_d1fad5da5c07aa 1760
+  s_41dce4bb9e0e72::t_55260370bfb87d 1936-1942
+web/migrations/Version20260801160000.php
+  s_41dce4bb9e0e72::t_d4464d11c8d42e 1-23,25-39
+  s_41dce4bb9e0e72::t_b416166e963b72 24
+web/src/Form/SettingsType.php
+  s_41dce4bb9e0e72::t_59142e3b0015cb 7
+  s_41dce4bb9e0e72::t_06a3b93b87c7f4 114-123
+web/templates/messages/index.html.twig
+  s_41dce4bb9e0e72::t_7f0e2b95efbd3b 54
+web/assets/js/cc-dates.js
+  s_41dce4bb9e0e72::t_75edd926060572 1-60
+web/assets/contribute/media-upload.js
+  s_41dce4bb9e0e72::t_0bb83efee5bdc4 47-49,52
+web/assets/map/drawer.js
+  s_41dce4bb9e0e72::t_c210c0a9fbf8e8 201-204,206
+web/templates/moderate/index.html.twig
+  s_41dce4bb9e0e72::t_7f0e2b95efbd3b 136
+web/translations/messages.en.yaml
+  s_41dce4bb9e0e72::t_d1fad5da5c07aa 1761
+  s_41dce4bb9e0e72::t_55260370bfb87d 1937-1943
+web/templates/profile/public.html.twig
+  s_41dce4bb9e0e72::t_7f0e2b95efbd3b 27
+docs/specs/account-and-auth.md
+  s_41dce4bb9e0e72::t_eb9189dc0a5156 643-679
+web/templates/settings/index.html.twig
+  s_41dce4bb9e0e72::t_46abe6d7a9c9f1 314-321
+web/tests/Twig/DateDisplayExtensionTest.php
+  s_41dce4bb9e0e72::t_e3c88e85627470 30-33
+  s_41dce4bb9e0e72::t_ab7b41c7d0d1f1 1-29,34-127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "ca457946b544ff1c7e70a7dd4c01bdb8e2358183",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_41dce4bb9e0e72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875a3a0-dbdb-41af-af97-755463d87f2d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
