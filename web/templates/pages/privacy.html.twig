@@ -89,6 +89,11 @@
       <li>{{ 'privacy.retention_account'|trans|rich }}</li>
       <li>{{ 'privacy.retention_logs'|trans|rich }}</li>
       <li>{{ 'privacy.retention_contributions'|trans|rich }}</li>
+      {# GDPR Art. 13(2)(a) requires the retention period to be STATED, and the
+         consent ledger is the one store the app keeps indefinitely on purpose
+         (docs/specs/photo-uploads.md §4). Leaving it undisclosed while the
+         erasure bullet promised "permanent" was the actual gap. #}
+      <li>{{ 'privacy.retention_consent'|trans|rich }}</li>
     </ul>
 
     <h2>{% trans %}privacy.h_rights{% endtrans %}</h2>
