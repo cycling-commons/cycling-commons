@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Media\Entity;
 
 use App\Media\MediaStatus;
+use App\Media\MediaTakedownSource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -35,6 +36,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Index(name: 'idx_media_gc', columns: ['status', 'created_at'])]
 #[ORM\Index(name: 'idx_media_user', columns: ['user_id'])]
 #[ORM\Index(name: 'idx_media_submission', columns: ['submission_id'])]
+#[ORM\Index(name: 'idx_media_takedown_reporter', columns: ['takedown_reporter_hash'], options: ['where' => 'takedown_reporter_hash IS NOT NULL'])]
 #[ORM\Index(name: 'idx_media_item', columns: ['item_id'])]
 class MediaUpload
 {
@@ -121,6 +123,45 @@ class MediaUpload
     /** The rider's own words, which is what tells a rights claim from a change of mind. */
     #[ORM\Column(name: 'takedown_reason', type: Types::TEXT, nullable: true)]
     private ?string $takedownReason = null;
+
+    /** MediaTakedownSource: uploader (withholds on the spot) or third_party (queues). Null = never asked. */
+    #[ORM\Column(name: 'takedown_source', type: Types::STRING, length: 16, nullable: true)]
+    private ?string $takedownSource = null;
+
+    /** MediaTakedownCategory — third-party requests only; the uploader route has no category. */
+    #[ORM\Column(name: 'takedown_category', type: Types::STRING, length: 32, nullable: true)]
+    private ?string $takedownCategory = null;
+
+    /**
+     * The reporter's optional reply address — the only identity they are ever
+     * asked for, and only if they want an answer. Deleted 90 days after the
+     * decision (Art. 5(1)(e)); MediaGcCommand sweeps it.
+     */
+    #[ORM\Column(name: 'takedown_contact', type: Types::STRING, length: 320, nullable: true)]
+    private ?string $takedownContact = null;
+
+    /**
+     * Salted hash of the reporter's IP: answers "is one person reporting forty
+     * photos" without keeping a log of who read what. Never reversible, never
+     * shown.
+     */
+    #[ORM\Column(name: 'takedown_reporter_hash', type: Types::STRING, length: 64, nullable: true)]
+    private ?string $takedownReporterHash = null;
+
+    /** When a curator decided (grant or decline). The 90-day contact retention measures from here. */
+    #[ORM\Column(name: 'takedown_resolved_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $takedownResolvedAt = null;
+
+    /**
+     * Categories a curator has already decided for this photo. One decided
+     * report per photo per category is FINAL: a later identical report matches
+     * here and does not re-open the case, so a photo cannot be kept withheld —
+     * or a curator kept busy — by a stream of fresh copies of the same claim.
+     *
+     * @var list<string>
+     */
+    #[ORM\Column(name: 'takedown_decided_categories', type: Types::JSON)]
+    private array $takedownDecidedCategories = [];
 
     public function __construct(
         Uuid $id,
@@ -295,17 +336,83 @@ class MediaUpload
     {
         $this->takedownRequestedAt = new \DateTimeImmutable();
         $this->takedownReason = $reason;
+        $this->takedownSource = MediaTakedownSource::Uploader;
+        $this->takedownResolvedAt = null;
+    }
+
+    /**
+     * A third party — somebody who may be IN the photo, with or without an
+     * account — reports it (docs/specs/photo-uploads.md §6c). Unlike the
+     * uploader route this records and changes nothing else: whether the photo
+     * is withheld is MediaTakedownService's call, not the row's.
+     */
+    public function reportThirdParty(string $category, string $reason, ?string $contact, string $reporterHash): void
+    {
+        $this->takedownRequestedAt = new \DateTimeImmutable();
+        $this->takedownReason = $reason;
+        $this->takedownSource = MediaTakedownSource::ThirdParty;
+        $this->takedownCategory = $category;
+        $this->takedownContact = $contact;
+        $this->takedownReporterHash = $reporterHash;
+        $this->takedownResolvedAt = null;
     }
 
     /**
      * A curator has decided the request is not a rights claim
      * (docs/specs/photo-uploads.md §6b). The marker goes so the photo is
      * published again; the reason STAYS, because the next curator to look at
-     * this upload should be able to see it was asked about before.
+     * this upload should be able to see it was asked about before. A declined
+     * third-party category joins the decided list and is final (§6c).
      */
     public function declineTakedown(): void
     {
+        if (null !== $this->takedownCategory && !\in_array($this->takedownCategory, $this->takedownDecidedCategories, true)) {
+            $this->takedownDecidedCategories[] = $this->takedownCategory;
+        }
         $this->takedownRequestedAt = null;
+        $this->takedownResolvedAt = new \DateTimeImmutable();
+    }
+
+    /** Grant-side bookkeeping: the disposal itself is MediaDisposalService's job. */
+    public function resolveTakedown(): void
+    {
+        $this->takedownResolvedAt = new \DateTimeImmutable();
+    }
+
+    public function hasDecidedTakedown(string $category): bool
+    {
+        return \in_array($category, $this->takedownDecidedCategories, true);
+    }
+
+    /** The 90-day retention sweep (docs/specs/photo-uploads.md §6c); MediaGcCommand calls it. */
+    public function clearTakedownContact(): void
+    {
+        $this->takedownContact = null;
+    }
+
+    public function getTakedownSource(): ?string
+    {
+        return $this->takedownSource;
+    }
+
+    public function getTakedownCategory(): ?string
+    {
+        return $this->takedownCategory;
+    }
+
+    public function getTakedownContact(): ?string
+    {
+        return $this->takedownContact;
+    }
+
+    public function getTakedownReporterHash(): ?string
+    {
+        return $this->takedownReporterHash;
+    }
+
+    public function getTakedownResolvedAt(): ?\DateTimeImmutable
+    {
+        return $this->takedownResolvedAt;
     }
 
     public function getTakedownRequestedAt(): ?\DateTimeImmutable
