@@ -1401,6 +1401,27 @@ improve:
     map_aria: 'Kaart — tik om de locatie in te stellen'
     readout_initial: '◎ Tik op de kaart om de locatie in te stellen'
     reset: 'Opnieuw'
+    # De meldingen die improve.js zelf toont. Ze bereiken het bestand via
+    # window.CC_IMPROVE_I18N als TEKST, nooit als opmaak
+    # (docs/plans/2026-08-01-improve-js-i18n.md).
+    readout_point_set: '✓ ◎ %coords% — sleep de speld of tik opnieuw om ze te verplaatsen'
+    readout_confirm: '✓ ◎ locatie ingesteld — controleer of ze klopt'
+    readout_expanded: '✓ ◎ locatie ingesteld — tik op de kaart of sleep de speld om ze te verplaatsen'
+    readout_segment_start: '◎ Tik op het begin van het segment'
+    readout_segment_end: '◎ Tik nu op het einde van het segment'
+    readout_climb_foot: '◎ Tik op de kaart om de voet van de klim in te stellen'
+    readout_climb_summit: '◎ Voet ingesteld — tik nu op de top'
+    readout_climb_set: '✓ Klim ingesteld'
+    climb_length: '%km% km'
+    climb_measuring: 'meten…'
+    climb_route_error: 'kon niet op het wegennet worden vastgeklikt, rechte lijn getoond'
+    climb_profile_error: 'hellingsprofiel niet beschikbaar'
+    climb_drag_hint: 'sleep een marker om het te corrigeren'
+    toast_pin_moved: 'Speld verplaatst naar %coords% — dien in om het vast te leggen'
+    toast_segment_moved: 'Segment bijgewerkt — dien in om het vast te leggen'
+    search_no_matches: 'Geen resultaten'
+    search_unavailable: 'Zoeken niet beschikbaar — tik in plaats daarvan op de kaart'
+    search_result: 'Resultaat'
   step2:
     label: 'Details'
     what_changed_label: 'Wat voeg je toe of wijzig je?'
@@ -1416,6 +1437,20 @@ improve:
     photo_types: 'JPG · PNG · WebP · HEIC · alleen jouw eigen foto''s'
     photo_url_placeholder: '…of plak een foto-URL (Flickr, Wikimedia, jouw site)'
     link_btn: 'Koppelen'
+    # De bronnotitie onder het URL-veld, door improve.js opgebouwd uit de
+    # geplakte host. %source% is de sitenaam en wordt benadrukt in een eigen
+    # element — de tekst zelf bevat nooit opmaak.
+    link_recognised: '%source% herkend — %note%.'
+    link_unknown_note: 'Onbekende bron — je moet de rechthebbende en de licentie zelf bevestigen voordat dit openbaar kan worden.'
+    link_note_wikimedia: 'auteur & licentie worden van de Commons-bestandspagina gelezen en automatisch gecontroleerd'
+    link_note_wikipedia: 'auteur & licentie worden van Wikimedia gelezen en automatisch gecontroleerd'
+    link_note_flickr: 'rechthebbende & licentie worden van Flickr gelezen en automatisch gecontroleerd'
+    link_note_unsplash: 'Unsplash-licentie automatisch herkend'
+    link_note_youtube: 'kanaal & licentie worden van YouTube gelezen — alleen Creative Commons-clips'
+    link_note_vimeo: 'maker & licentie worden van Vimeo gelezen — alleen Creative Commons-clips'
+    chip_link: '%host%-link'
+    chip_needs_licence: '%host% · licentie nodig'
+    chip_host_fallback: 'link'
     remove_photo: 'Deze foto verwijderen'
     too_many_photos: 'Zes foto''s per bijdrage — verwijder er eerst één.'
     notice_b: 'Foto''s staan onder de CC BY-SA 4.0-licentie.'
@@ -1426,6 +1461,11 @@ improve:
     help: 'Controleer het even voordat je het verstuurt.'
     media_heading: 'Foto''s'
     prov: 'Wat je verstuurt wordt deel van de open Commons — de feiten onder <b>ODbL</b>, de foto''s onder <b>CC BY-SA 4.0</b>. We noteren van welk account elk feit komt; je naam is alleen zichtbaar als je een openbaar profiel hebt aangezet.'
+  # De controlekaart wordt volledig door improve.js / review-card.js opgebouwd,
+  # dus komen de labels uit de berichtenzak in plaats van uit de template.
+  review:
+    label_location: 'Locatie'
+    loc_climb: '◎ voet %foot% → top %summit%'
   locate:
     change: 'Locatie wijzigen'
     confirm:
@@ -1438,6 +1478,7 @@ improve:
   nav:
     back: 'Terug'
     next: 'Volgende'
+    submit: 'Indienen ter controle'
   receipt:
     heading: 'Suggestie ingediend.'
     body: 'Jouw suggestie staat in de wachtrij van de curators. Er verschijnt niets op de kaart totdat een curator ernaar heeft gekeken.'

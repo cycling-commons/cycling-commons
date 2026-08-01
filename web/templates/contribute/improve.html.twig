@@ -280,6 +280,50 @@
       }
     }
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  {# Every string improve.js renders itself (docs/plans/2026-08-01-improve-js-i18n.md).
+     Serialised with all four JSON_HEX_* flags like the bags above — JSON_HEX_TAG
+     is the one that matters here, because it turns `<`/`>` into </> so
+     a catalogue string containing `</script>` cannot close this block.
+
+     Everything in this bag is TEXT. improve.js sets it with textContent and
+     never with innerHTML; copy that needs markup stays in this template, where
+     |rich sanitises it. #}
+  <script nonce="{{ csp_nonce() }}">window.CC_IMPROVE_I18N = {{ {
+    nav_next: 'improve.nav.next'|trans,
+    nav_submit: 'improve.nav.submit'|trans,
+    readout_initial: 'improve.step1.readout_initial'|trans,
+    readout_point_set: 'improve.step1.readout_point_set'|trans,
+    readout_confirm: 'improve.step1.readout_confirm'|trans,
+    readout_expanded: 'improve.step1.readout_expanded'|trans,
+    readout_segment_start: 'improve.step1.readout_segment_start'|trans,
+    readout_segment_end: 'improve.step1.readout_segment_end'|trans,
+    readout_climb_foot: 'improve.step1.readout_climb_foot'|trans,
+    readout_climb_summit: 'improve.step1.readout_climb_summit'|trans,
+    readout_climb_set: 'improve.step1.readout_climb_set'|trans,
+    climb_length: 'improve.step1.climb_length'|trans,
+    climb_measuring: 'improve.step1.climb_measuring'|trans,
+    climb_route_error: 'improve.step1.climb_route_error'|trans,
+    climb_profile_error: 'improve.step1.climb_profile_error'|trans,
+    climb_drag_hint: 'improve.step1.climb_drag_hint'|trans,
+    toast_pin_moved: 'improve.step1.toast_pin_moved'|trans,
+    toast_segment_moved: 'improve.step1.toast_segment_moved'|trans,
+    search_no_matches: 'improve.step1.search_no_matches'|trans,
+    search_unavailable: 'improve.step1.search_unavailable'|trans,
+    search_result: 'improve.step1.search_result'|trans,
+    label_location: 'improve.review.label_location'|trans,
+    loc_climb: 'improve.review.loc_climb'|trans,
+    link_recognised: 'improve.step3.link_recognised'|trans,
+    link_unknown_note: 'improve.step3.link_unknown_note'|trans,
+    link_note_wikimedia: 'improve.step3.link_note_wikimedia'|trans,
+    link_note_wikipedia: 'improve.step3.link_note_wikipedia'|trans,
+    link_note_flickr: 'improve.step3.link_note_flickr'|trans,
+    link_note_unsplash: 'improve.step3.link_note_unsplash'|trans,
+    link_note_youtube: 'improve.step3.link_note_youtube'|trans,
+    link_note_vimeo: 'improve.step3.link_note_vimeo'|trans,
+    chip_link: 'improve.step3.chip_link'|trans,
+    chip_needs_licence: 'improve.step3.chip_needs_licence'|trans,
+    chip_host_fallback: 'improve.step3.chip_host_fallback'|trans
+  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
   <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 
@@ -407,7 +451,12 @@
       </div>
       <div class="ulq" id="q-photo"></div>
       <div class="linkrow">
-        {{ form_widget(form.photoUrl, {attr: {id: 'lnk-photo', placeholder: 'improve.step3.photo_url_placeholder'|trans}}) }}
+        {# `id` is a form-view variable, not an attribute: passing it inside
+           `attr` is silently dropped, so this input rendered as
+           #improve_photoUrl and improve.js's getElementById('lnk-photo') found
+           nothing — the Link button did nothing at all, and the source note
+           under it never appeared. #}
+        {{ form_widget(form.photoUrl, {id: 'lnk-photo', attr: {placeholder: 'improve.step3.photo_url_placeholder'|trans}}) }}
         <button class="btn btn-p" type="button" id="btn-link-photo">{{ 'improve.step3.link_btn'|trans }}</button>
       </div>
       <div class="src-note" id="srcn-photo"></div>
@@ -469,5 +518,9 @@
 {# media-upload.js registers window.Cc.mountMediaUploads, which improve.js
    calls at mount time — so it has to be defined first. #}
 <script src="{{ asset('contribute/media-upload.js') }}"></script>
+{# review-card.js registers window.Cc.reviewCard — the review step's DOM
+   builders, which improve.js requires (it has no innerHTML fallback and no
+   escaper of its own), so it has to be defined first. #}
+<script src="{{ asset('contribute/review-card.js') }}"></script>
 <script src="{{ asset('contribute/improve.js') }}"></script>
 {% endblock %}

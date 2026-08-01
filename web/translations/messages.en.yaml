@@ -1099,6 +1099,27 @@ improve:
     map_aria: 'Map — tap to set the location'
     readout_initial: '◎ Tap the map to set the location'
     reset: 'Reset'
+    # The readouts, toasts and search notes improve.js renders itself. They
+    # reach it through window.CC_IMPROVE_I18N as TEXT and are set with
+    # textContent — never markup (docs/plans/2026-08-01-improve-js-i18n.md).
+    readout_point_set: '✓ ◎ %coords% — drag the pin or tap again to move it'
+    readout_confirm: '✓ ◎ location set — check it looks right'
+    readout_expanded: '✓ ◎ location set — tap the map or drag the pin to move it'
+    readout_segment_start: '◎ Tap the start of the segment'
+    readout_segment_end: '◎ Now tap the end of the segment'
+    readout_climb_foot: '◎ Tap the map to set the foot of the climb'
+    readout_climb_summit: '◎ Foot set — now tap the summit'
+    readout_climb_set: '✓ Climb set'
+    climb_length: '%km% km'
+    climb_measuring: 'measuring…'
+    climb_route_error: 'could not snap to the road network, showing a straight line'
+    climb_profile_error: 'gradient profile unavailable'
+    climb_drag_hint: 'drag a marker to correct it'
+    toast_pin_moved: 'Pin moved to %coords% — submit to record it'
+    toast_segment_moved: 'Segment updated — submit to record it'
+    search_no_matches: 'No matches'
+    search_unavailable: 'Search unavailable — tap the map instead'
+    search_result: 'Result'
   step2:
     label: 'Details'
     what_changed_label: 'What are you adding or changing?'
@@ -1114,6 +1135,20 @@ improve:
     photo_types: 'JPG · PNG · WebP · HEIC · your own photos only'
     photo_url_placeholder: '…or paste a photo URL (Flickr, Wikimedia, your site)'
     link_btn: 'Link'
+    # The source note under the photo-URL field, built by improve.js from the
+    # pasted host. %source% is the site name and is emphasised by putting it in
+    # its own element — the string itself never carries markup.
+    link_recognised: '%source% recognised — %note%.'
+    link_unknown_note: 'Unknown source — you’ll need to confirm the rights-holder and licence yourself before this can go public.'
+    link_note_wikimedia: 'author & licence read from the Commons file page and validated automatically'
+    link_note_wikipedia: 'author & licence read from Wikimedia and validated automatically'
+    link_note_flickr: 'rights-holder & licence read from Flickr and validated automatically'
+    link_note_unsplash: 'Unsplash licence detected automatically'
+    link_note_youtube: 'channel & licence read from YouTube — Creative Commons clips only'
+    link_note_vimeo: 'creator & licence read from Vimeo — Creative Commons clips only'
+    chip_link: '%host% link'
+    chip_needs_licence: '%host% · needs licence'
+    chip_host_fallback: 'link'
     remove_photo: 'Remove this photo'
     too_many_photos: 'Six photos per submission — remove one first.'
     notice_b: 'Photos are licensed CC BY-SA 4.0.'
@@ -1124,6 +1159,11 @@ improve:
     help: 'Check it over before you send it.'
     media_heading: 'Photos'
     prov: 'What you send becomes part of the open Commons — the facts under <b>ODbL</b>, the photos under <b>CC BY-SA 4.0</b>. We record which account each fact came from; your name is only shown if you have turned on a public profile.'
+  # The review card is built entirely by improve.js/review-card.js, so its
+  # labels come through the message bag rather than the template.
+  review:
+    label_location: 'Location'
+    loc_climb: '◎ foot %foot% → summit %summit%'
   locate:
     change: 'Change location'
     confirm:
@@ -1136,6 +1176,7 @@ improve:
   nav:
     back: 'Back'
     next: 'Next'
+    submit: 'Submit for review'
   receipt:
     heading: 'Suggestion submitted.'
     body: 'Your suggestion is in the curator queue. Nothing appears on the map until a curator has looked at it.'

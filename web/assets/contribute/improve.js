@@ -1,4 +1,25 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+/* The contribute wizard (docs/plans/2026-08-01-improve-js-i18n.md).
+
+   Two rules hold this file together, and both exist because the strings it
+   renders are a mix of rider-entered text and catalogue copy that a curator
+   later reads back:
+
+   1. **No innerHTML.** Every node is built with createElement + textContent,
+      or by review-card.js, which does the same. textContent cannot produce an
+      element, so neither a rider's `<img src=x onerror=…>` nor a translation
+      containing markup can become anything but visible characters. There is no
+      escaping helper here on purpose — an escaper is something you can forget
+      to call, and this file gives you nothing to forget.
+   2. **Strings crossing into JS are text; markup stays in Twig.** Copy that
+      genuinely needs a `<b>` is server-rendered in improve.html.twig, where
+      |rich sanitises it. The one exception — the source note built from a
+      pasted URL, which cannot be server-rendered — uses reviewCard.emphasised(),
+      which splits the translated template on its placeholder and puts the value
+      in its own element as text.
+
+   The CSP has no 'unsafe-inline', but that is a backstop rather than the
+   control: an injected onerror attribute needs no inline <script> tag. */
 (function () {
   'use strict';
 
@@ -59,11 +80,26 @@
     return document.querySelector('[name="improve[' + sfName + ']"]');
   }
 
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  /* ---------- strings ----------
+     The bag is emitted by improve.html.twig with all four JSON_HEX_* flags, so
+     a catalogue string containing `</script>` cannot close the block it is
+     printed in. A missing key resolves to empty rather than to its own name: a
+     rider should never be shown `improve.step1.readout_initial`, and
+     tools/check-translations.sh is what stops a key going missing at all. */
+  var BAG = window.CC_IMPROVE_I18N || {};
+
+  function t(key, vars) {
+    var s = typeof BAG[key] === 'string' ? BAG[key] : '';
+    if (vars) {
+      for (var p in vars) {
+        if (Object.prototype.hasOwnProperty.call(vars, p)) s = s.split(p).join(vars[p]);
+      }
+    }
+    return s;
   }
+
+  // The review step's DOM builders (assets/contribute/review-card.js).
+  var RC = (window.Cc && window.Cc.reviewCard) || null;
 
   /* ---------- step navigation ---------- */
   function step(n) {
@@ -80,7 +116,7 @@
     if (backBtn) backBtn.style.visibility = n > (LOCATE === 'off' ? 2 : 1) ? 'visible' : 'hidden';
     var nextBtn = document.getElementById('nextBtn');
     if (nextBtn) {
-      nextBtn.textContent = n === WZ.last ? 'Submit for review →' : 'Next →';
+      nextBtn.textContent = (n === WZ.last ? t('nav_submit') : t('nav_next')) + ' →';
     }
     if (n === WZ.last) renderReview();
     refreshGate();
@@ -114,7 +150,9 @@
   function mkPin() {
     var el = document.createElement('div');
     el.className = 'cc-pin';
-    el.innerHTML = '<span>◎</span>';
+    var glyph = document.createElement('span');
+    glyph.textContent = '◎';
+    el.appendChild(glyph);
     return el;
   }
 
@@ -208,16 +246,17 @@
           if (st.start && st.summit) {
             WZ.loc = { type: 'climb', start: st.start, summit: st.summit };
             if (ro) {
-              var txt = '✓ Climb set' + (st.lengthKm ? ' · ' + st.lengthKm.toFixed(1) + ' km' : '');
-              if (st.routing || st.profiling) txt += ' · measuring…';
-              else if (st.routeError) txt += ' — could not snap to the road network, showing a straight line';
-              else if (st.profileError) txt += ' — gradient profile unavailable';
-              else txt += ' — drag a marker to correct it';
+              var txt = t('readout_climb_set');
+              if (st.lengthKm) txt += ' · ' + t('climb_length', { '%km%': st.lengthKm.toFixed(1) });
+              if (st.routing || st.profiling) txt += ' · ' + t('climb_measuring');
+              else if (st.routeError) txt += ' — ' + t('climb_route_error');
+              else if (st.profileError) txt += ' — ' + t('climb_profile_error');
+              else txt += ' — ' + t('climb_drag_hint');
               ro.textContent = txt;
             }
           } else {
             WZ.loc = null;
-            if (ro) ro.textContent = st.start ? '◎ Foot set — now tap the summit' : '◎ Tap the map to set the foot of the climb';
+            if (ro) ro.textContent = st.start ? t('readout_climb_summit') : t('readout_climb_foot');
           }
           refreshGate();
         }
@@ -258,7 +297,7 @@
         placed.forEach(function (m) { m.getElement().classList.remove('glow'); });
         placed.forEach(function (m) { if (m.setDraggable) m.setDraggable(true); });
         if (locHelp) locHelp.textContent = origHelp;
-        if (ro) ro.textContent = '✓ ◎ location set — tap the map or drag the pin to move it';
+        if (ro) ro.textContent = t('readout_expanded');
         if (wmap) wmap.resize();
       }
 
@@ -286,7 +325,7 @@
           if (placed.length < 2) {
             WZ.loc = null;
             if (fSeg) fSeg.value = '';
-            if (ro) ro.textContent = placed.length === 1 ? '◎ Now tap the end of the segment' : '◎ Tap the start of the segment';
+            if (ro) ro.textContent = placed.length === 1 ? t('readout_segment_end') : t('readout_segment_start');
           } else {
             WZ.loc = { type: 'segment', a: placed[0].getLngLat().toArray(), b: placed[1].getLngLat().toArray() };
             if (fSeg) fSeg.value = JSON.stringify({ a: WZ.loc.a, b: WZ.loc.b });
@@ -303,14 +342,14 @@
             if (fLng) fLng.value = '';
             var fPlace = fld('place');
             if (fPlace) fPlace.value = '';
-            if (ro) ro.textContent = '◎ Tap the map to set the location';
+            if (ro) ro.textContent = t('readout_initial');
           } else {
             var ll = placed[0].getLngLat();
             WZ.loc = { type: 'point', lng: ll.lng, lat: ll.lat };
             // update hidden lat/lng fields
             if (fLat) fLat.value = ll.lat;
             if (fLng) fLng.value = ll.lng;
-            if (ro) ro.textContent = '✓ ◎ ' + fmt(ll) + ' — drag the pin or tap again to move it';
+            if (ro) ro.textContent = t('readout_point_set', { '%coords%': fmt(ll) });
           }
         }
         refreshGate();
@@ -320,9 +359,11 @@
       // has already written it to the hidden lat/lng fields the form submits.
       var announceMove = function () {
         if (WZ.loc && WZ.loc.type === 'point') {
-          toast('Pin moved to ' + WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E — submit to record it');
+          toast(t('toast_pin_moved', {
+            '%coords%': WZ.loc.lat.toFixed(4) + '°N ' + WZ.loc.lng.toFixed(4) + '°E'
+          }));
         } else if (WZ.loc && WZ.loc.type === 'segment') {
-          toast('Segment updated — submit to record it');
+          toast(t('toast_segment_moved'));
         }
       };
 
@@ -360,7 +401,7 @@
           m.on('dragend', function () { syncLoc(); announceMove(); });
           placed.push(m);
           syncLoc();
-          if (CONFIRM && ro) ro.textContent = '✓ ◎ location set — check it looks right';
+          if (CONFIRM && ro) ro.textContent = t('readout_confirm');
         });
       }
 
@@ -382,30 +423,50 @@
     var resultsEl = document.getElementById('wz-results');
     var searchT = null;
 
+    // A one-line note in the results list ("No matches", "Search unavailable").
+    function resultNote(text) {
+      var el = document.createElement('div');
+      el.className = 'res empty';
+      el.textContent = text;
+      return el;
+    }
+
+    /* Photon's response is third-party text, so it is built as nodes like
+       everything else here — a place name is a name, never markup. */
     function renderResults(list) {
       if (!resultsEl) return;
-      if (!list) { resultsEl.hidden = true; resultsEl.innerHTML = ''; return; }
-      if (!list.length) { resultsEl.innerHTML = '<div class="res empty">No matches</div>'; resultsEl.hidden = false; return; }
-      resultsEl.innerHTML = list.map(function (f) {
-        var p = f.properties || {}, c = f.geometry.coordinates;
-        // Coerce before interpolating into the attribute — API strings never reach the markup raw.
+      RC.clear(resultsEl);
+      if (!list) { resultsEl.hidden = true; return; }
+      var shown = 0;
+      list.forEach(function (f) {
+        var p = f.properties || {};
+        var c = (f.geometry && f.geometry.coordinates) || [];
         var lng = +c[0], lat = +c[1];
-        if (!isFinite(lng) || !isFinite(lat)) return '';
-        var main = p.name || p.street || p.city || 'Result';
+        if (!isFinite(lng) || !isFinite(lat)) return;
+        var main = p.name || p.street || p.city || t('search_result');
         var sub = [p.name ? p.street : '', p.city, p.county, p.state, p.country].filter(Boolean).join(', ');
-        return '<div class="res" data-lng="' + lng + '" data-lat="' + lat + '"><b>' + escHtml(main) + '</b><small>' + escHtml(sub) + '</small></div>';
-      }).join('');
-      resultsEl.hidden = false;
-      resultsEl.querySelectorAll('.res[data-lat]').forEach(function (el) {
-        el.addEventListener('click', function () {
-          if (wmap) wmap.flyTo({ center: [+el.dataset.lng, +el.dataset.lat], zoom: 14 });
-          if (searchEl) searchEl.value = el.querySelector('b').textContent;
+
+        var row = document.createElement('div');
+        row.className = 'res';
+        var b = document.createElement('b');
+        b.textContent = main;
+        var small = document.createElement('small');
+        small.textContent = sub;
+        row.appendChild(b);
+        row.appendChild(small);
+        row.addEventListener('click', function () {
+          if (wmap) wmap.flyTo({ center: [lng, lat], zoom: 14 });
+          if (searchEl) searchEl.value = main;
           // update place hidden field
           var fPlace = fld('place');
-          if (fPlace) fPlace.value = el.querySelector('b').textContent;
+          if (fPlace) fPlace.value = main;
           resultsEl.hidden = true;
         });
+        resultsEl.appendChild(row);
+        shown++;
       });
+      if (!shown) resultsEl.appendChild(resultNote(t('search_no_matches')));
+      resultsEl.hidden = false;
     }
 
     var searchSeq = 0;
@@ -422,7 +483,8 @@
         .catch(function () {
           if (seq !== searchSeq) return;
           if (resultsEl) {
-            resultsEl.innerHTML = '<div class="res empty">Search unavailable — tap the map instead</div>';
+            RC.clear(resultsEl);
+            resultsEl.appendChild(resultNote(t('search_unavailable')));
             resultsEl.hidden = false;
           }
         });
@@ -469,13 +531,15 @@
       locTxt = WZ.loc.a[1].toFixed(4) + '°N ' + WZ.loc.a[0].toFixed(4) + '°E → '
         + WZ.loc.b[1].toFixed(4) + '°N ' + WZ.loc.b[0].toFixed(4) + '°E';
     } else if (WZ.loc && WZ.loc.start && WZ.loc.summit) {
-      locTxt = '◎ foot ' + WZ.loc.start[1].toFixed(4) + '°N ' + WZ.loc.start[0].toFixed(4) + '°E → summit '
-        + WZ.loc.summit[1].toFixed(4) + '°N ' + WZ.loc.summit[0].toFixed(4) + '°E';
+      locTxt = t('loc_climb', {
+        '%foot%': WZ.loc.start[1].toFixed(4) + '°N ' + WZ.loc.start[0].toFixed(4) + '°E',
+        '%summit%': WZ.loc.summit[1].toFixed(4) + '°N ' + WZ.loc.summit[0].toFixed(4) + '°E'
+      });
     }
 
     // Echo every detail/extra field the rider actually filled in (step 2), so the
     // review faithfully mirrors what will be submitted — not just Type/Location/Media.
-    var fieldRows = '';
+    var fieldRows = [];
     document.querySelectorAll('#w-details .field').forEach(function (fieldEl) {
       var ctrl = fieldEl.querySelector('input:not([type="hidden"]), select, textarea');
       if (!ctrl) return;
@@ -495,22 +559,21 @@
       if (!val || val === '—' || val === '-') return;
       var labelEl = fieldEl.querySelector('label');
       var label = labelEl ? labelEl.textContent.trim() : ctrl.name;
-      fieldRows += '<div class="kv"><span>' + escHtml(label) + '</span><span>'
-        + escHtml(val.length > 120 ? val.slice(0, 120) + '…' : val) + '</span></div>';
+      fieldRows.push(RC.kvRow(label, val.length > 120 ? val.slice(0, 120) + '…' : val));
     });
 
     // No Location row when this submission does not touch the location: an edit
     // leaves the pin where it is, and "Location —" would read as a missing
     // answer rather than an untouched one.
-    var locRow = locTxt
-      ? '<div class="kv"><span>Location</span><span>' + escHtml(locTxt) + '</span></div>'
-      : '';
-    // No category row. It said the same thing as the eyebrow at the top of
-    // every step ("C · Water & food"), and it printed the raw enum value while
-    // doing it — but the real problem was that several types have a "Type"
-    // detail field of their own, so the card showed two rows labelled Type
-    // meaning different things, side by side once it went two-column.
-    rb.innerHTML = locRow + fieldRows;
+    //
+    // No category row either. It said the same thing as the eyebrow at the top
+    // of every step ("C · Water & food"), and it printed the raw enum value
+    // while doing it — but the real problem was that several types have a
+    // "Type" detail field of their own, so the card showed two rows labelled
+    // Type meaning different things, side by side once it went two-column.
+    RC.clear(rb);
+    if (locTxt) rb.appendChild(RC.kvRow(t('label_location'), locTxt));
+    fieldRows.forEach(function (row) { rb.appendChild(row); });
 
     // Photos are shown, not listed. A filename tells a rider nothing about
     // whether they picked the right shot; the thumbnail is the only version of
@@ -522,14 +585,8 @@
     if (!block || !list) return;
     var all = WZ.media.concat(WZ.links);
     block.hidden = !all.length;
-    list.innerHTML = all.map(function (m) {
-      var name = typeof m === 'string' ? m : m.name;
-      var sm = typeof m === 'string' ? null : m.sm;
-      return sm
-        ? '<figure class="rm-item"><img src="' + escHtml(sm) + '" alt="' + escHtml(name)
-          + '" loading="lazy"><figcaption>' + escHtml(name) + '</figcaption></figure>'
-        : '<figure class="rm-item is-link"><figcaption>' + escHtml(name) + '</figcaption></figure>';
-    }).join('');
+    RC.clear(list);
+    all.forEach(function (m) { list.appendChild(RC.mediaFigure(m)); });
   }
 
   /* ---------- submit (real form POST) ---------- */
@@ -569,19 +626,37 @@
     var chip = document.createElement('span');
     chip.className = 'chip';
     chip.textContent = '🔗 ' + label;
+    // WZ.links carries the same text into the review strip, where
+    // reviewCard.mediaFigure() renders it as a caption.
     var host = document.getElementById('q-photo');
     if (host) host.appendChild(chip);
     WZ.links.push('🔗 ' + label);
   }
 
+  /* The hosts we can read rights from automatically. The site NAMES are proper
+     nouns and stay here as data; the note explaining what we read from each is
+     copy, so it lives in the catalogue (`improve.step3.link_note_*`) and
+     arrives as text — the `&amp;` these notes used to carry was an artefact of
+     being written straight into innerHTML. */
   var KNOWN_SOURCES = {
-    'commons.wikimedia.org': { name: 'Wikimedia Commons', note: 'author &amp; licence read from the Commons file page and validated automatically' },
-    'wikipedia.org': { name: 'Wikipedia', note: 'author &amp; licence read from Wikimedia and validated automatically' },
-    'flickr.com': { name: 'Flickr', note: 'rights-holder &amp; licence read from Flickr and validated automatically' },
-    'unsplash.com': { name: 'Unsplash', note: 'Unsplash licence detected automatically' },
-    'youtube.com': { name: 'YouTube', note: 'channel &amp; licence read from YouTube — Creative Commons clips only' },
-    'vimeo.com': { name: 'Vimeo', note: 'creator &amp; licence read from Vimeo — Creative Commons clips only' }
+    'commons.wikimedia.org': { name: 'Wikimedia Commons', note: 'link_note_wikimedia' },
+    'wikipedia.org': { name: 'Wikipedia', note: 'link_note_wikipedia' },
+    'flickr.com': { name: 'Flickr', note: 'link_note_flickr' },
+    'unsplash.com': { name: 'Unsplash', note: 'link_note_unsplash' },
+    'youtube.com': { name: 'YouTube', note: 'link_note_youtube' },
+    'vimeo.com': { name: 'Vimeo', note: 'link_note_vimeo' }
   };
+
+  /* The ✓ / ⚠ that opens a source note. Its own element, deliberately: a glyph
+     glued onto the front of a translated sentence is one more thing a
+     catalogue edit can lose, and one more reason for a string to look like it
+     may contain markup. */
+  function srcMark(glyph) {
+    var el = document.createElement('span');
+    el.className = 'mark';
+    el.textContent = glyph + ' ';
+    return el;
+  }
 
   function linkMedia(kind) {
     var inputEl = document.getElementById('lnk-' + kind);
@@ -596,11 +671,28 @@
       var key = Object.keys(KNOWN_SOURCES).find(function (k) { return host === k || host.endsWith('.' + k); });
       if (key) {
         var s = KNOWN_SOURCES[key];
-        if (note) { note.className = 'src-note ok'; note.innerHTML = '✓ <b>' + s.name + '</b> recognised — ' + s.note + '.'; }
-        noteLink(host + ' link');
+        if (note) {
+          note.className = 'src-note ok';
+          RC.clear(note);
+          note.appendChild(srcMark('✓'));
+          // The source name is emphasised without any string carrying markup:
+          // the translated sentence is split on %source% and the name goes into
+          // its own <b> as text.
+          note.appendChild(RC.emphasised(
+            t('link_recognised', { '%note%': t(s.note) }), '%source%', s.name
+          ));
+        }
+        noteLink(t('chip_link', { '%host%': host }));
       } else {
-        if (note) { note.className = 'src-note manual'; note.innerHTML = '⚠ Unknown source — you\'ll need to confirm the rights-holder and licence yourself before this can go public.'; }
-        noteLink((host || 'link') + ' · needs licence');
+        if (note) {
+          note.className = 'src-note manual';
+          RC.clear(note);
+          note.appendChild(srcMark('⚠'));
+          var warn = document.createElement('span');
+          warn.textContent = t('link_unknown_note');
+          note.appendChild(warn);
+        }
+        noteLink(t('chip_needs_licence', { '%host%': host || t('chip_host_fallback') }));
       }
       inputEl.value = '';
       inputEl.focus();

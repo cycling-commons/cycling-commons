@@ -1404,6 +1404,27 @@ improve:
     map_aria: 'Karte — tippen, um den Ort zu setzen'
     readout_initial: '◎ Tippe auf die Karte, um den Ort zu setzen'
     reset: 'Zurücksetzen'
+    # Die Meldungen, die improve.js selbst rendert. Sie erreichen die Datei über
+    # window.CC_IMPROVE_I18N als TEXT, nie als Markup
+    # (docs/plans/2026-08-01-improve-js-i18n.md).
+    readout_point_set: '✓ ◎ %coords% — ziehe die Markierung oder tippe erneut, um sie zu verschieben'
+    readout_confirm: '✓ ◎ Ort gesetzt — prüfe, ob er stimmt'
+    readout_expanded: '✓ ◎ Ort gesetzt — tippe auf die Karte oder ziehe die Markierung, um ihn zu verschieben'
+    readout_segment_start: '◎ Tippe auf den Anfang des Abschnitts'
+    readout_segment_end: '◎ Tippe jetzt auf das Ende des Abschnitts'
+    readout_climb_foot: '◎ Tippe auf die Karte, um den Fuß des Anstiegs zu setzen'
+    readout_climb_summit: '◎ Fuß gesetzt — tippe jetzt auf den Gipfel'
+    readout_climb_set: '✓ Anstieg gesetzt'
+    climb_length: '%km% km'
+    climb_measuring: 'wird gemessen…'
+    climb_route_error: 'konnte nicht am Straßennetz ausgerichtet werden, gerade Linie angezeigt'
+    climb_profile_error: 'Steigungsprofil nicht verfügbar'
+    climb_drag_hint: 'ziehe eine Markierung, um es zu korrigieren'
+    toast_pin_moved: 'Markierung auf %coords% verschoben — zum Festhalten einreichen'
+    toast_segment_moved: 'Abschnitt aktualisiert — zum Festhalten einreichen'
+    search_no_matches: 'Keine Treffer'
+    search_unavailable: 'Suche nicht verfügbar — tippe stattdessen auf die Karte'
+    search_result: 'Treffer'
   step2:
     label: 'Details'
     what_changed_label: 'Was fügst du hinzu oder änderst du?'
@@ -1419,6 +1440,20 @@ improve:
     photo_types: 'JPG · PNG · WebP · HEIC · nur deine eigenen Fotos'
     photo_url_placeholder: '…oder eine Foto-URL einfügen (Flickr, Wikimedia, deine Seite)'
     link_btn: 'Verknüpfen'
+    # Der Quellenhinweis unter dem URL-Feld, den improve.js aus dem eingefügten
+    # Host baut. %source% ist der Seitenname und wird in einem eigenen Element
+    # hervorgehoben — der Text selbst enthält nie Markup.
+    link_recognised: '%source% erkannt — %note%.'
+    link_unknown_note: 'Unbekannte Quelle — du musst Rechteinhaber und Lizenz selbst bestätigen, bevor das veröffentlicht werden kann.'
+    link_note_wikimedia: 'Urheber & Lizenz werden von der Commons-Dateiseite gelesen und automatisch geprüft'
+    link_note_wikipedia: 'Urheber & Lizenz werden von Wikimedia gelesen und automatisch geprüft'
+    link_note_flickr: 'Rechteinhaber & Lizenz werden von Flickr gelesen und automatisch geprüft'
+    link_note_unsplash: 'Unsplash-Lizenz automatisch erkannt'
+    link_note_youtube: 'Kanal & Lizenz werden von YouTube gelesen — nur Creative-Commons-Clips'
+    link_note_vimeo: 'Urheber & Lizenz werden von Vimeo gelesen — nur Creative-Commons-Clips'
+    chip_link: '%host%-Link'
+    chip_needs_licence: '%host% · Lizenz nötig'
+    chip_host_fallback: 'Link'
     remove_photo: 'Dieses Foto entfernen'
     too_many_photos: 'Sechs Fotos pro Beitrag — entferne zuerst eines.'
     notice_b: 'Fotos stehen unter CC BY-SA 4.0.'
@@ -1429,6 +1464,11 @@ improve:
     help: 'Sieh es dir kurz an, bevor du es abschickst.'
     media_heading: 'Fotos'
     prov: 'Was du schickst, wird Teil des offenen Commons — die Fakten unter <b>ODbL</b>, die Fotos unter <b>CC BY-SA 4.0</b>. Wir halten fest, von welchem Konto jeder Fakt stammt; dein Name erscheint nur, wenn du ein öffentliches Profil aktiviert hast.'
+  # Die Prüfkarte baut improve.js / review-card.js vollständig selbst, ihre
+  # Beschriftungen kommen daher aus dem Nachrichtenpaket statt aus dem Template.
+  review:
+    label_location: 'Ort'
+    loc_climb: '◎ Fuß %foot% → Gipfel %summit%'
   locate:
     change: 'Standort ändern'
     confirm:
@@ -1441,6 +1481,7 @@ improve:
   nav:
     back: 'Zurück'
     next: 'Weiter'
+    submit: 'Zur Prüfung einreichen'
   receipt:
     heading: 'Vorschlag eingereicht.'
     body: 'Dein Vorschlag ist in der Kuratoren-Warteschlange. Auf der Karte erscheint nichts, bevor ein Kurator es angesehen hat.'
