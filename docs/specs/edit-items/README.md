@@ -31,7 +31,14 @@ The real, server-rendered port of this registry lives in the Symfony app:
   `/improve` refuses `type=K` ([route-domain.md](../route-domain.md) §1).
 - **Type-aware form** — [`web/src/Form/ImproveType.php`](../../../web/src/Form/ImproveType.php) builds the
   Details step from the registry; [`web/templates/contribute/improve.html.twig`](../../../web/templates/contribute/improve.html.twig)
-  renders it and surfaces this **votability/lifecycle context** in the review step.
+  renders it and surfaces this **votability/lifecycle context** in the review step —
+  **translated out of this document's vocabulary on the way**. `votable`, `utility`,
+  `unverified`, `verified`, "the funnel", "verified for coverage" and the per-fact
+  provenance tags exist so curators and this spec can be precise with each other; a
+  rider adding a drinking fountain has no use for any of them, and the review step
+  said all seven at them. It now describes what happens instead — a curator reads it,
+  it appears as a small dot others can confirm, a few confirmations make it a full pin.
+  **When a term is added here, it does not follow that it appears on a rider's screen.**
 - **Reachability** — the contribute hub deep-links each card with `?type=<slug>`; the map drawer's Edit/Add-photo
   links use `?type=<letter>` (`ItemType::fromParam()` resolves either) — **except K**: the route drawer offers
   vote / "I rode this" / GPX download / suggest-a-correction instead of an edit link.

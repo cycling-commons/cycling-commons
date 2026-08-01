@@ -57,7 +57,9 @@ roles.
 | Lockout | `failedLoginAttempts`, `lockedUntil`, `isLocked()` | §3 |
 | Deletion | `deletionCode`, `deletionRequestedAt` | §10 |
 | Governance | `publicProfile` (bool, opt-in, default false) | §7 |
-| Preferences | `bikeTypes` (json), `ridingStyles` (json) | §9 |
+| Preferences | `bikeTypes` (json), `ridingStyles` (json), `defaultMapMode` (string, default `auto`), `dateFormat`/`timeFormat` (string, default `auto`) | §9 |
+| Age (GDPR Art. 8) | `ageConfirmedAt` (nullable datetime — when they declared 16+; NULL = predates the gate, or created by an admin/console path) | §2; deliberately **not** a date of birth |
+| Media | `keepMediaCredit` (bool) — the departing rider's credit choice, read at deletion | photo-uploads.md §6 |
 | Base location (optional, account-private) | `basePoint` (geometry GeoJSON Point, coords rounded to 2dp at write — ~1 km precision), `basePlace` (varchar(120), town-level label for the scope line), `baseRadiusKm` (smallint, default 40, clamped [10,150]), `baseRegionIds`/`baseCountryCodes` (json, derived — `App\Service\BaseAreaResolver`, cap 8) | map-and-search.md §4.5 Phase 4; **never** exposed on the public profile (§7 below); no GIST index (nothing queries users spatially) |
 | Audit | `createdAt`, `updatedAt` (lifecycle callbacks) | there is **no** `lastActiveAt` — required by the unbuilt inactivity lifecycle (§6.6) |
 
@@ -91,8 +93,29 @@ dependency, no code copied.
 
 - Fields: email, display name (2–100 chars, `RegistrationFormType`), repeated
   password (**min 12 chars**, `Length(min: 12)` in
-  `web/src/Form/RegistrationFormType.php`), agree-terms checkbox. Preferences
-  are *not* asked at registration — friction-free by design (§9).
+  `web/src/Form/RegistrationFormType.php`), an **age declaration** and an
+  agree-terms checkbox. Preferences are *not* asked at registration —
+  friction-free by design (§9).
+
+**The age gate (GDPR Art. 8).** Art. 8 gates consent-based processing of a
+child's data at 16, which member states may lower to 13. The Commons uses a
+**flat 16 for everyone** (owner decision 2026-08-01): 16 is the Article's
+ceiling, so it never sits below any member state's own floor, and one rule
+avoids inferring a rider's country in order to decide which rule applies to
+them.
+
+It is **self-declared, and deliberately not a date of birth**. Art. 8(2) asks
+for *reasonable efforts* given available technology, and for a service like
+this one that is a declaration; collecting a birthday to answer a yes/no
+question would store more personal data than the question is worth
+(Art. 5(1)(c)). The declaration is stored as `users.age_confirmed_at` — a
+timestamp, because null/not-null already carries the boolean and the *when* is
+the part worth keeping.
+
+Enforced by an unmapped `IsTrue` constraint on the form, so an unticked box is
+a 422 with the rest of the input preserved. **Existing accounts keep NULL**:
+they registered before the gate existed, and back-filling a declaration nobody
+made would be a record of something that never happened.
 - New accounts get `['ROLE_USER']` and `emailVerified = false`.
 - Duplicate email is caught twice: `UniqueEntity` on the entity, and a
   TOCTOU catch of `UniqueConstraintViolationException` at flush that re-renders
