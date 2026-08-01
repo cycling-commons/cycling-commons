@@ -1908,6 +1908,7 @@ meta:
   propose_route_title: 'Cycling Commons — Stel een route voor'
   propose_route_description: 'Deel een aanbevolen rit: upload je GPX, een curator beoordeelt hem, de community verifieert en stemt.'
 flash:
+  already_signed_in: 'Je bent al ingelogd — hier is de atlas.'
   email_verified: 'Je e-mailadres is bevestigd. Je kunt nu inloggen.'
   password_reset: 'Je wachtwoord is opnieuw ingesteld. Je kunt nu inloggen met je nieuwe wachtwoord.'
   profile_saved: 'Profielinstellingen opgeslagen.'

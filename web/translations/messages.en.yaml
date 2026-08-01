@@ -1909,6 +1909,7 @@ meta:
   propose_route_title: 'Cycling Commons — Propose a route'
   propose_route_description: 'Share a recommended ride: upload your GPX, a curator reviews it, the community verifies and votes.'
 flash:
+  already_signed_in: 'You are already signed in — here is the atlas.'
   email_verified: 'Your email has been verified. You can now sign in.'
   password_reset: 'Your password has been reset. You can now sign in with your new password.'
   profile_saved: 'Profile settings saved.'

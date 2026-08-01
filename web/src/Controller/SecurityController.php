@@ -23,7 +23,12 @@ final class SecurityController extends AbstractController
     ], name: 'login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        // Say why. A signed-in visitor who types /login (or follows a stale
+        // bookmark) landed on the homepage with no explanation, which reads as
+        // a broken link rather than an answered request.
         if ($this->getUser()) {
+            $this->addFlash('notice', 'flash.already_signed_in');
+
             return $this->redirectToRoute('home');
         }
 

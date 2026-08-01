@@ -7,6 +7,14 @@
 </head>
 <body>
 {% block chrome %}{% include 'partials/_nav.html.twig' %}{% endblock %}
+{# Site-wide notices, for controllers that redirect somewhere they cannot know
+   the template of. Deliberately its OWN flash type: `success`/`error` are
+   rendered by individual pages, and a global renderer sharing those types
+   would print them twice wherever both exist. Nothing else uses `notice`, so
+   nothing else can double up. #}
+{% for msg in app.flashes('notice') %}
+  <div class="cc-notice" role="status"><div class="wrap">{{ msg|trans }}</div></div>
+{% endfor %}
 {% block body %}{% endblock %}
 {% block footer %}{% include 'partials/_footer.html.twig' %}{% endblock %}
 <script nonce="{{ csp_nonce() }}">

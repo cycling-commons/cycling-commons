@@ -41,7 +41,11 @@ final class RegistrationController extends AbstractController
         UserPasswordHasherInterface $userPasswordHasher,
         EntityManagerInterface $entityManager,
     ): Response {
+        // Same as the login route: an unexplained bounce to the homepage looks
+        // like a broken link.
         if ($this->getUser()) {
+            $this->addFlash('notice', 'flash.already_signed_in');
+
             return $this->redirectToRoute('home');
         }
 

@@ -1911,6 +1911,7 @@ meta:
   propose_route_title: 'Cycling Commons — Route vorschlagen'
   propose_route_description: 'Teile eine empfohlene Fahrt: Lade dein GPX hoch, ein Kurator prüft es, die Community verifiziert und stimmt ab.'
 flash:
+  already_signed_in: 'Du bist bereits angemeldet — hier ist der Atlas.'
   email_verified: 'Deine E-Mail-Adresse wurde bestätigt. Du kannst dich jetzt anmelden.'
   password_reset: 'Dein Passwort wurde zurückgesetzt. Du kannst dich jetzt mit deinem neuen Passwort anmelden.'
   profile_saved: 'Profileinstellungen gespeichert.'
