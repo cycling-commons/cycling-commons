@@ -71,7 +71,7 @@
               <a href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
             </span>
           {% endif %}
-          <time class="co" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|date('Y-m-d') }}</time>
+          <time class="co" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_date }}</time>
           <span class="pill {{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
           {% if sub.decisionNote %}<p class="item-note">{{ sub.decisionNote }}</p>{% endif %}
         </div>
@@ -90,7 +90,7 @@
             <a href="{{ path('map') }}?route={{ p.id }}">{{ 'account.link_map'|trans }}</a>
           </span>
         {% endif %}
-        <time class="co" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|date('Y-m-d') }}</time>
+        <time class="co" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_date }}</time>
         <span class="pill {{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
       </div>
     {% endfor %}
@@ -108,7 +108,7 @@
         <div class="item">
           <span class="tag">{{ app.country_code }}</span>
           <h4>{% if app.region_slug %}{{ ('region.' ~ app.region_slug ~ '.label')|trans }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h4>
-          <time class="co" datetime="{{ app.created_at|date('c') }}">{{ app.created_at|date('Y-m-d') }}</time>
+          <time class="co" datetime="{{ app.created_at|date('c') }}">{{ app.created_at|cc_date }}</time>
           <span class="pill {{ app_pill[app.status] ?? 'pend' }}">{{ ('account.app_status_' ~ app.status)|trans }}</span>
           {% if app.decision_note %}<p class="item-note">{{ app.decision_note }}</p>{% endif %}
         </div>
@@ -134,7 +134,7 @@
             <h4>{{ v.name }}</h4>
             <span class="item-links"><a href="{{ path('map') }}?route={{ v.route_id }}">{{ 'account.link_map'|trans }}</a></span>
             <span class="co">{{ v.season }} · {{ v.bike_type }}</span>
-            <time class="co" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|date('Y-m-d') }}</time>
+            <time class="co" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|cc_date }}</time>
           </div>
         {% endfor %}
       {% endif %}
@@ -145,7 +145,7 @@
             <span class="tag">{{ c.typeLabelKey|trans }}</span>
             <h4>{{ c.name }}</h4>
             <span class="item-links"><a href="{{ path('map') }}?feature={{ c.name|url_encode }}">{{ 'account.link_map'|trans }}</a></span>
-            <time class="co" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|date('Y-m-d') }}</time>
+            <time class="co" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time>
             <span class="pill {{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
           </div>
         {% endfor %}

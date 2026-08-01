@@ -39,7 +39,7 @@
                 <tr>
                     <td>{{ u.displayName }} &middot; <span class="text-muted">{{ u.email }}</span></td>
                     <td>{{ u.country ? u.country.name : '—' }}</td>
-                    <td>{{ u.createdAt ? u.createdAt|date('Y-m-d H:i') : '—' }}</td>
+                    <td>{{ u.createdAt ? u.createdAt|cc_datetime : '—' }}</td>
                 </tr>
             {% else %}
                 <tr><td colspan="3" class="text-muted">{{ 'admin.dashboard.no_recent'|trans }}</td></tr>

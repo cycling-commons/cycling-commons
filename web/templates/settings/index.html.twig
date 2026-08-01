@@ -311,6 +311,14 @@
         {{ form_help(profileForm.defaultMapMode) }}
         {{ form_errors(profileForm.defaultMapMode) }}
       </div>
+      {# Separate from the language choice on purpose: reading the site in
+         English says nothing about wanting 2026-08-01 over 01-08-2026. #}
+      <div class="field">
+        {{ form_label(profileForm.dateFormat) }}
+        {{ form_widget(profileForm.dateFormat) }}
+        {{ form_help(profileForm.dateFormat) }}
+        {{ form_errors(profileForm.dateFormat) }}
+      </div>
     </div>
 
     {# Section header like the other .sec headers; the toggle's old bold label

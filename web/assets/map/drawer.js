@@ -198,9 +198,12 @@ export function srcsetAttrs(p, sizes){
 function monthLabel(takenAt){
   const m = /^(\d{4})-(\d{2})$/.exec(String(takenAt||''));
   if(!m) return String(takenAt||'');
+  const d = new Date(Number(m[1]), Number(m[2])-1, 1);
+  // Shared formatter, so a capture month in the drawer matches every other date
+  // the rider sees (account-and-auth.md §9).
+  if(window.ccMonth) return window.ccMonth(d);
   try{
-    return new Date(Number(m[1]), Number(m[2])-1, 1)
-      .toLocaleDateString(document.documentElement.lang||undefined, {year:'numeric', month:'short'});
+    return d.toLocaleDateString(document.documentElement.lang||undefined, {year:'numeric', month:'short'});
   }catch(e){ return String(takenAt); }
 }
 

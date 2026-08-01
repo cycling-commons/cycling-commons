@@ -51,7 +51,7 @@
         <li class="msg-row {{ m.isRead ? '' : 'msg-new' }}">
           <div class="msg-head">
             <span class="msg-kind">{{ ('messages.kind_' ~ m.kind.value)|trans }}</span>
-            <time class="msg-meta" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|date('Y-m-d H:i') }}</time>
+            <time class="msg-meta" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|cc_datetime }}</time>
           </div>
           <div class="msg-ref">{{ m.refLabel }}</div>
           <div class="msg-body">

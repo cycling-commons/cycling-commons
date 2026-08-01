@@ -4,6 +4,7 @@
 
 namespace App\Form;
 
+use App\Account\DateFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
@@ -109,6 +110,16 @@ final class SettingsType extends AbstractType
                     'Deutsch' => 'de',
                 ],
                 'choice_translation_domain' => false,
+            ])
+            // Its own field rather than a consequence of `locale`: reading the
+            // site in English says nothing about wanting 2026-08-01 over
+            // 01-08-2026 (account-and-auth.md §9).
+            ->add('dateFormat', EnumType::class, [
+                'class' => DateFormat::class,
+                'label' => 'form.label_date_format',
+                'help' => 'form.help_date_format',
+                'required' => true,
+                'choice_label' => static fn (DateFormat $f): string => $f->labelKey(),
             ])
             // Rider preferences (account-and-auth.md §9). EnumType hands the
             // entity setters real enum instances. Bike-type labels reuse the

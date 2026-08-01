@@ -44,8 +44,12 @@
        throwing their choice away and making them find the photo twice. */
     var awaitingConsent = [];
 
+    /* Through the shared formatter so a rider who asked for 01-08-2026 gets it
+       here too (account-and-auth.md §9). Falls back to the old locale-long form
+       if cc-dates.js somehow did not load, rather than printing nothing. */
     function fmtDate(iso) {
       if (!iso) return '';
+      if (window.ccDate) return window.ccDate(iso);
       var d = new Date(iso);
       if (isNaN(d.getTime())) return '';
       try {

@@ -640,6 +640,43 @@ live on the entity beside the maximum.
   Map prefiltering reads these values — contract in
   [map-and-search.md](map-and-search.md).
 
+### Date notation
+
+`App\Account\DateFormat` — `auto | ymd | dmy | mdy | long`, stored on
+`users.date_format`, default `auto`.
+
+**A separate preference from language, deliberately.** The two are genuinely
+independent: plenty of people read a site in English and still expect
+`01-08-2026`, and `2026-08-01` reads as a filename to most of Europe. Deriving
+the format from the interface language would give those riders no way to say
+so. `auto` is the default and means "whatever suits the language I am reading";
+the other four are explicit and mean the same thing in every locale — the
+pattern is fixed, only month **names** localise.
+
+The time convention travels with the date order: 24-hour everywhere except
+`mdy`, where somebody who picked `08/01/2026` is almost certainly expecting
+`2:30 PM`. That is the reader telling us about themselves, and it would be
+strange to take half the message.
+
+**Every human-readable date goes through one filter.** `App\Twig\
+DateDisplayExtension` provides `cc_date`, `cc_datetime` and `cc_month`, and no
+template calls `|date()` for display any more. A preference is only worth
+having if it is honoured everywhere — a dropdown that fixes eight dates and
+misses the ninth is worse than no dropdown, because the rider now believes the
+site listens. `|date('c')` **stays** wherever it feeds a `<time datetime="">`
+attribute: HTML defines that as ISO 8601, and it has nothing to do with what a
+person reads.
+
+Formatting goes through ICU rather than PHP's `date()`, because month names
+have to come out in the page's language — the *page's*, not the rider's stored
+locale, since a Dutch rider following a German link is reading a German page.
+
+The client half is `assets/js/cc-dates.js` (`window.ccDate`, `window.ccMonth`),
+driven by the same value handed over as `window.CC_DATE` in `base.html.twig`.
+Without it, JS-rendered dates (the photo drawer's capture month, the consent
+notice's agreement date) would disagree with server-rendered ones on the same
+page, which is exactly the failure the preference exists to prevent.
+
 ## 10. Self-service account deletion (GDPR Art. 17)
 
 Two-step flow in `SettingsController` (danger zone, Security tab), both steps

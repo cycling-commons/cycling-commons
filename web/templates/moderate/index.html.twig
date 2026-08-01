@@ -133,7 +133,7 @@
           <div>
             <b>{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}</b>
             <p class="td-reason">{{ t.reason }}</p>
-            <p class="td-meta">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|date('Y-m-d H:i')}) }}</p>
+            <p class="td-meta">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|cc_datetime}) }}</p>
           </div>
         </div>
         <form method="post" action="{{ path('moderate_takedown') }}" class="td-actions">

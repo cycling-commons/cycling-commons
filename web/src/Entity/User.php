@@ -4,6 +4,7 @@
 
 namespace App\Entity;
 
+use App\Account\DateFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
@@ -165,6 +166,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // vocabulary change can never fatal the map render.
     #[ORM\Column(type: 'string', length: 16, options: ['default' => 'auto'])]
     private string $defaultMapMode = MapViewMode::Auto->value;
+
+    // How dates are written for this rider. Deliberately independent of
+    // `locale`: reading the site in English says nothing about expecting
+    // 2026-08-01 rather than 01-08-2026. Same tolerant accessor as the map
+    // mode — an unknown stored value falls back to Auto rather than fatalling
+    // a page whose only job was to print a date.
+    #[ORM\Column(name: 'date_format', type: 'string', length: 10, options: ['default' => 'auto'])]
+    private string $dateFormat = DateFormat::Auto->value;
 
     #[ORM\Column(type: 'boolean')]
     private bool $emailVerified = false;
@@ -607,6 +616,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDefaultMapMode(MapViewMode $mode): static
     {
         $this->defaultMapMode = $mode->value;
+
+        return $this;
+    }
+
+    public function getDateFormat(): DateFormat
+    {
+        return DateFormat::tryFrom($this->dateFormat) ?? DateFormat::Auto;
+    }
+
+    public function setDateFormat(DateFormat $format): static
+    {
+        $this->dateFormat = $format->value;
 
         return $this;
     }

@@ -19,11 +19,22 @@ window.CC_I18N = {{ {
   build: 'js.build'|trans
 }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 window.ccT = function (k, fb, vars) { var s = (window.CC_I18N && window.CC_I18N[k]) || fb; if (vars) { for (var p in vars) { s = s.replace('%' + p + '%', vars[p]); } } return s; };
+{# The rider's date preference, and one formatter for every client-rendered
+   date (account-and-auth.md §9). Server-rendered dates go through the cc_date
+   Twig filters; without this the two would disagree on the same page, which is
+   the failure a preference is supposed to prevent. Anonymous visitors get
+   'auto', which is what the filters give them too. #}
+window.CC_DATE = {{ {
+  format: cc_user_date_format(),
+  locale: app.request.locale|default('en')
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {# races.js paints the live event coordinate into every .cc-coord brandsub
    (topnav + account shell); not deferred — the homepage hero reads window.CC
    from an inline script. Idempotent, no-ops when .cc-coord is absent. #}
 <script src="{{ asset('data/races.js') }}"></script>
+{# Not deferred: drawer.js and media-upload.js call window.ccDate synchronously. #}
+<script src="{{ asset('js/cc-dates.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/nav.js') }}" defer></script>
 <script src="{{ asset('js/nav-menus.js') }}" defer></script>
