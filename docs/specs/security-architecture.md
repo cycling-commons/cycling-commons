@@ -236,7 +236,40 @@ interpolation into `innerHTML`. Its contract:
 
 The CSP (security-architecture.md §2) is the backstop for this layer: a
 payload that slips past `escPend()` lands as un-nonced inline script and does
-not execute.
+not execute. It is a backstop and **not** the control: an injected `onerror`
+attribute needs no inline `<script>` tag, so attribute-level payloads are the
+realistic shape and escaping is what actually stops them.
+
+### 4.3 Node-built (the contribute wizard) — the direction of travel
+
+`web/assets/contribute/improve.js` and `web/assets/contribute/review-card.js`
+build **no** markup: every node comes from `createElement` +
+`textContent`, so neither a rider's field value nor a catalogue string can
+become an element. There is no escaper in either file, deliberately — an
+escaper is something a later edit can forget to call, and these files leave
+nothing to forget. `review-card.js` also runs an `img src` through the same
+http(s)/root-relative rule as `safeHref()`.
+
+Two rules follow from that and apply to any JS given a message bag:
+
+- **Strings crossing into JS are text; markup stays in Twig**, where `|rich`
+  sanitises it. Copy that must be emphasised and cannot be server-rendered
+  (the photo-link source note, built from a pasted URL) uses
+  `reviewCard.emphasised()`: the translated sentence is split on its
+  placeholder and the value goes into its own element as text.
+- **A message bag is serialised with the full `JSON_HEX` set**
+  (security-architecture.md §4.1) — `window.CC_IMPROVE_I18N` in
+  `web/templates/contribute/improve.html.twig`.
+
+`web/tests/js/improve-review.test.cjs` is the regression net: a rider value of
+`<img src=x onerror=…>` and a translation value of `</script><script>` must
+each produce zero elements. Its document shim parses assigned `innerHTML` into
+real children, so the assertions fail rather than pass vacuously if the
+builders are ever rewritten on `innerHTML`.
+
+`add_climb.js` and the map modules still follow §4.2 and want the same sweep;
+that is a separate change, because mixing it with this one makes the
+security-relevant diff unreviewable.
 
 ## 5. CSRF model
 

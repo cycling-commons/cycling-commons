@@ -101,6 +101,14 @@ The mode gate in `improve.js`:
   from `improve.js`), debounced **320 ms**. Mandatory offline fallback: on
   fetch failure the results dropdown shows "Search unavailable — tap the map
   instead" and map-tap keeps working — the geocoder is never load-bearing.
+- **Every string the wizard renders itself is translated**, through
+  `window.CC_IMPROVE_I18N` (`improve.step1.*`, `improve.step3.link_*`,
+  `improve.review.*`, `improve.nav.submit`) — the readouts, the toasts, the
+  climb states, the search notes, the review card and the photo-link source
+  notes. The strings are text and are set with `textContent`; the wizard
+  builds no markup at all (security-architecture.md §4.3). A missing key
+  renders empty rather than printing its own name at a rider, and
+  `tools/check-translations.sh` is what stops one going missing.
 - The Back/Next bar is a sticky bottom row (`.navrow`, `position: sticky`) so
   the confirm control stays reachable under a tall map.
 
