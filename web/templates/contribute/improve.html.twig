@@ -18,8 +18,9 @@
   .stepper li.on{color:var(--ink);font-weight:700}.stepper li.on::before{border-color:var(--trail);color:var(--ink)}
 
   /* panes */
-  .pane{display:none}.pane.on{display:block;animation:fade .4s ease}
-  @keyframes fade{from{opacity:0}to{opacity:1}}
+  /* No entrance animation. A wizard step is a page you read, and fading each
+     one in delays the thing the rider came to look at for no information. */
+  .pane{display:none}.pane.on{display:block}
   .pane h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin-bottom:.3rem}
   .pane .help{color:#595c4d;font-size:.9rem;margin-bottom:1.3rem}
   .subhead{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:1.6rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid rgba(20,22,14,.12)}
@@ -143,23 +144,38 @@
   /* review card */
   /* A summary to read, not a control to press: the filled panel read as one
      large button. Same paper as the page, a hairline rule instead of a raised
-     block, and the last row keeps no dangling border. */
+     block, no shadow, no hover, no transition. Two columns once there is room —
+     a submission is a dozen short answers, and one long ladder of them makes
+     the rider scroll past the thing they wanted to check. */
   .card{background:transparent;border:none;border-top:1px solid rgba(20,22,14,.14);border-radius:0;padding:.4rem 0 0}
   .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.45rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
   .kv:last-child{border-bottom:none}
   .kv span:first-child{color:#595c4d}
+  @media(min-width:720px){
+    .card{display:grid;grid-template-columns:1fr 1fr;column-gap:2.2rem}
+    /* Every row keeps its rule in two columns: "last child" is only the last
+       of the whole list, which in a grid is not the bottom of both columns. */
+    .kv:last-child{border-bottom:1px solid rgba(20,22,14,.08)}
+  }
   .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
 
-  /* votability / lifecycle context */
+  /* the photos, on review — shown rather than listed as filenames */
+  .review-media{margin-top:1.2rem}
+  .review-media[hidden]{display:none}
+  .rm-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:.5rem}
+  .rm-list{display:flex;flex-wrap:wrap;gap:.7rem}
+  .rm-item{margin:0;width:118px}
+  .rm-item img{display:block;width:118px;height:88px;object-fit:cover;border-radius:5px;background:var(--paper-deep)}
+  .rm-item figcaption{font-family:var(--mono);font-size:.58rem;letter-spacing:.04em;color:#595c4d;margin-top:.25rem;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rm-item.is-link{width:auto}
+  .rm-item.is-link figcaption{font-size:.72rem;letter-spacing:0;white-space:normal;color:#3f4234}
+
+  /* what happens next */
   .lifecycle{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-left:2px solid var(--spruce);border-radius:0 8px 8px 0;padding:1.1rem 1.3rem;margin-top:1.3rem}
   .lifecycle .lc-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-bottom:.7rem}
   .lifecycle .lc-funnel{font-size:.86rem;color:#3f4234;line-height:1.6;margin-bottom:.6rem}
-  .lifecycle .lc-funnel b{white-space:nowrap}
-  .lifecycle .lc-verdict{font-size:.9rem;line-height:1.6;color:var(--ink);margin-bottom:.6rem}
-  .lifecycle .lc-verdict.is-votable{border-left:2px solid var(--trail);padding-left:.7rem}
-  .lifecycle .lc-verdict.is-utility{border-left:2px solid var(--glacier);padding-left:.7rem}
-  .lifecycle .lc-prov{font-size:.76rem;color:#595c4d;line-height:1.6}
-  .lifecycle .lc-prov code{font-family:var(--mono);font-size:.72rem;background:rgba(20,22,14,.06);padding:.05rem .3rem;border-radius:3px}
+  .lifecycle .lc-verdict{font-size:.9rem;line-height:1.6;color:var(--ink);margin:0}
 
   /* nav row */
   .navrow{position:sticky;bottom:0;display:flex;align-items:center;gap:1rem;margin-top:2rem;padding:1rem 0;border-top:1px solid rgba(20,22,14,.12);background:linear-gradient(to top,var(--paper) 70%,rgba(239,230,212,0))}
@@ -174,7 +190,6 @@
   .receipt{text-align:center;padding:4rem 1rem}
   .receipt h2{font-family:var(--serif);font-size:1.8rem;margin:.5rem 0}
   .receipt .ref{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin-top:.5rem}
-  .receipt .stub-note{display:inline-block;margin-top:1.2rem;font-size:.82rem;color:#6b5320;background:rgba(200,146,58,.13);border:1px solid rgba(200,146,58,.4);border-radius:6px;padding:.5rem 1rem;max-width:520px;line-height:1.5}
 
   .btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
   .btn-p:disabled,.btn-p[disabled]{background:var(--paper-deep);color:#9a9d8c;cursor:not-allowed}
@@ -204,8 +219,11 @@
     <div style="font-size:2.4rem">◬</div>
     <h2>{{ 'improve.receipt.heading'|trans }}</h2>
     <p>{{ 'improve.receipt.body'|trans }}</p>
+    {# One statement of what happens next, not two. The amber note under this
+       repeated the line above it and also claimed suggestions were "not yet
+       persisted", which stopped being true once the moderation queue went in —
+       the reference above is a real submission id. #}
     <p class="ref">{{ 'improve.receipt.reference'|trans }} {{ receipt.reference }}</p>
-    <p class="stub-note">{{ 'improve.receipt.stub_note'|trans }}</p>
     <div style="margin-top:2rem">
       <a class="btn btn-g" href="{{ path('map') }}">{{ 'improve.receipt.cta'|trans }}</a>
     </div>
@@ -407,14 +425,23 @@
     <div class="consent-gate" id="media-consent-review"></div>
     <div class="card" id="reviewBody"></div>
 
-    {# Votability / lifecycle context — where this suggestion goes next #}
+    {# The photos themselves, not their filenames. The heading is rendered here
+       rather than in improve.js so it stays translated — that file has no
+       message bag of its own. #}
+    <div class="review-media" id="reviewMedia" hidden>
+      <div class="rm-h">{{ 'improve.step4.media_heading'|trans }}</div>
+      <div class="rm-list" id="reviewMediaList"></div>
+    </div>
+
+    {# Where this suggestion goes next. The ONE place the wizard explains the
+       review process: step4.help used to say it too, and the receipt says it
+       again after submitting, which made three tellings of one fact. #}
     <div class="lifecycle">
       <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
       <p class="lc-funnel">{{ 'improve.lifecycle.funnel'|trans|rich }}</p>
-      <p class="lc-verdict {{ item_type.isVotable ? 'is-votable' : 'is-utility' }}">
+      <p class="lc-verdict">
         {{ (item_type.isVotable ? 'improve.lifecycle.votable_note' : 'improve.lifecycle.utility_note')|trans({'%type%': item_type.labelKey|trans})|rich }}
       </p>
-      <p class="lc-prov">{{ 'improve.lifecycle.provenance'|trans|rich }}</p>
     </div>
 
     <p class="prov">{{ 'improve.step4.prov'|trans|rich }}</p>

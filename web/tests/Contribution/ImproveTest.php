@@ -307,12 +307,13 @@ final class ImproveTest extends WebTestCase
         $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
-        // Climbs (B) are a votable type — the wizard says so, tying into the
-        // verification→votable→best-of funnel from the edit-items spec.
-        self::assertSelectorTextContains('.lc-verdict', 'votable');
+        // Climbs (B) can be voted on, and the wizard says so. Asserted on what
+        // a rider is actually told — "vote" — rather than on the word "votable",
+        // which is the schema's vocabulary and was never meant to reach the page.
+        self::assertSelectorTextContains('.lc-verdict', 'vote on these');
     }
 
-    public function testUtilityTypeShowsCoverageContext(): void
+    public function testUtilityTypeSaysItIsNeverVotedOn(): void
     {
         $client = static::createClient();
         $this->loginFreshUser($client, 'utility');
@@ -321,8 +322,11 @@ final class ImproveTest extends WebTestCase
         $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
-        // Water & food (C) is a utility type — verified for coverage, never ranked.
-        self::assertSelectorTextContains('.lc-verdict', 'utility');
+        // Water & food (C) is a utility type. The rider is told what that MEANS
+        // for them — nobody votes on it, a few confirmations are enough — and
+        // never the word "utility" or "coverage", which are ours, not theirs.
+        self::assertSelectorTextContains('.lc-verdict', 'never vote on these');
+        self::assertSelectorTextNotContains('.lc-verdict', 'coverage');
     }
 
     public function testBoundItemLetterResolvesType(): void
@@ -382,8 +386,11 @@ final class ImproveTest extends WebTestCase
         // Real receipt: an Edit submission was persisted (SUB-<id>), still
         // pending curator review — never live instantly.
         self::assertSelectorTextContains('.receipt h2', 'Suggestion submitted.');
-        self::assertSelectorTextContains('.receipt .stub-note', 'not yet persisted');
+        self::assertSelectorTextContains('.receipt p', 'curator queue');
         self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+        // The old amber note said suggestions were "not yet persisted" while
+        // this very assertion reads the persisted row's id off the page.
+        self::assertSelectorNotExists('.receipt .stub-note');
     }
 
     /**

@@ -26,7 +26,6 @@
   // controller resolves ?type= into ItemType and renders these on #wiz).
   var _type = wiz.dataset.type || '';
   var _locMode = wiz.dataset.locationMode || 'point';
-  var typeName = wiz.dataset.type ? wiz.dataset.type.replace(/-/g, ' ') : 'place';
 
   // Registry defaults (item coords when editing, else a generic Wallonia centre)
   var DEFAULTS = {
@@ -40,7 +39,11 @@
   var LOCATE = (ADD || hasCoords || RELOCATE) ? _locMode : 'off';
 
   // Wizard state
-  var WZ = { cur: 1, last: 4, loc: null, media: [] };
+  // media = uploaded photos, owned wholesale by media-upload.js's onChange.
+  // links = photo LINKS, which this file owns. Two arrays because onChange
+  // replaces its list every time: a link pushed into the same array vanished
+  // the moment the next photo finished uploading.
+  var WZ = { cur: 1, last: 4, loc: null, media: [], links: [] };
   // Uploads are owned by media-upload.js; nothing here queues anything.
 
   // Update subject hidden field with the item id
@@ -496,19 +499,37 @@
         + escHtml(val.length > 120 ? val.slice(0, 120) + '…' : val) + '</span></div>';
     });
 
-    var media = WZ.media.length ? WZ.media.join(' · ') : 'none added';
-
     // No Location row when this submission does not touch the location: an edit
     // leaves the pin where it is, and "Location —" would read as a missing
     // answer rather than an untouched one.
     var locRow = locTxt
       ? '<div class="kv"><span>Location</span><span>' + escHtml(locTxt) + '</span></div>'
       : '';
-    rb.innerHTML =
-      '<div class="kv"><span>Type</span><span>' + escHtml(typeName) + '</span></div>' +
-      locRow +
-      fieldRows +
-      '<div class="kv"><span>Media</span><span>' + escHtml(media) + '</span></div>';
+    // No category row. It said the same thing as the eyebrow at the top of
+    // every step ("C · Water & food"), and it printed the raw enum value while
+    // doing it — but the real problem was that several types have a "Type"
+    // detail field of their own, so the card showed two rows labelled Type
+    // meaning different things, side by side once it went two-column.
+    rb.innerHTML = locRow + fieldRows;
+
+    // Photos are shown, not listed. A filename tells a rider nothing about
+    // whether they picked the right shot; the thumbnail is the only version of
+    // this row worth reading. Links have no thumbnail, so they keep their text.
+    // The heading is server-rendered so it stays translated — this file has no
+    // message bag of its own.
+    var block = document.getElementById('reviewMedia');
+    var list = document.getElementById('reviewMediaList');
+    if (!block || !list) return;
+    var all = WZ.media.concat(WZ.links);
+    block.hidden = !all.length;
+    list.innerHTML = all.map(function (m) {
+      var name = typeof m === 'string' ? m : m.name;
+      var sm = typeof m === 'string' ? null : m.sm;
+      return sm
+        ? '<figure class="rm-item"><img src="' + escHtml(sm) + '" alt="' + escHtml(name)
+          + '" loading="lazy"><figcaption>' + escHtml(name) + '</figcaption></figure>'
+        : '<figure class="rm-item is-link"><figcaption>' + escHtml(name) + '</figcaption></figure>';
+    }).join('');
   }
 
   /* ---------- submit (real form POST) ---------- */
@@ -550,7 +571,7 @@
     chip.textContent = '🔗 ' + label;
     var host = document.getElementById('q-photo');
     if (host) host.appendChild(chip);
-    WZ.media.push('🔗 ' + label);
+    WZ.links.push('🔗 ' + label);
   }
 
   var KNOWN_SOURCES = {
@@ -594,9 +615,7 @@
   if (mediaField && window.Cc && window.Cc.mountMediaUploads) {
     window.Cc.mountMediaUploads({
       hidden: mediaField,
-      onChange: function (names) {
-        WZ.media = names.map(function (n) { return '📷 ' + n; });
-      }
+      onChange: function (photos) { WZ.media = photos; }
     });
   }
 

@@ -1412,26 +1412,25 @@ improve:
   step4:
     label: 'Révision'
     heading: 'Réviser & soumettre'
-    help: 'Vérifiez. Votre suggestion est envoyée dans la file de révision d''un curateur avant de rejoindre le Commons.'
-    prov: 'Les faits approuvés rejoignent le Commons ouvert sous <b>ODbL</b> (données) / <b>CC BY-SA 4.0</b> (médias). La provenance est conservée ; l''identité ne l''est pas.'
+    help: 'Vérifiez avant d''envoyer.'
+    media_heading: 'Photos'
+    prov: 'Ce que vous envoyez rejoint le Commons ouvert — les faits sous <b>ODbL</b>, les photos sous <b>CC BY-SA 4.0</b>. Nous notons de quel compte provient chaque fait ; votre nom n''apparaît que si vous avez activé un profil public.'
   locate:
     change: 'Modifier l''emplacement'
     confirm:
       help: 'Cet emplacement est déjà défini — vérifiez qu''il est correct, ou modifiez-le.'
   lifecycle:
     heading: 'Ce qu''il advient de votre suggestion'
-    funnel: 'Rien n''est publié instantanément. Chaque suggestion suit le même entonnoir : <b>contrôle du curateur</b> → <b>non vérifié</b> (un point « à confirmer » sur la carte) → <b>vérifié</b> (une épingle complète, une fois confirmée par quelques cyclistes).'
-    votable_note: '<b>%type%</b> est un type <b>votable</b> — une fois vérifié, les cyclistes le font monter dans l''entonnoir vers la carte <b>best-of</b>.'
-    utility_note: '<b>%type%</b> est un type <b>utilitaire</b> — vérifié pour la couverture dès que quelques cyclistes le confirment, et toujours affiché ; jamais classé ni voté.'
-    provenance: 'La provenance est conservée par fait : <code>[tap]</code> une confirmation en un geste · <code>[edit]</code> une modification plus riche comme celle-ci · <code>[OSM]</code> repris d''OpenStreetMap · <code>[auto]</code> dérivé par le pipeline.'
+    funnel: 'Rien n''apparaît sur la carte immédiatement. Un curateur le lit d''abord. Une fois validé, cela s''affiche comme un petit point que d''autres cyclistes peuvent confirmer — et après que quelques-uns d''entre eux ont confirmé que c''est bien là, cela devient une épingle complète.'
+    votable_note: '<b>%type%</b> — les cyclistes peuvent aussi voter pour ces lieux, et ceux qu''ils apprécient le plus se retrouvent sur la carte best-of.'
+    utility_note: '<b>%type%</b> — un arrêt pratique. Les cyclistes ne votent jamais pour ces lieux ; il suffit que quelques-uns confirment qu''il est bien là, et il reste ensuite sur la carte pour tout le monde.'
   nav:
     back: 'Précédent'
     next: 'Suivant'
   receipt:
     heading: 'Suggestion soumise.'
-    body: 'Votre suggestion a été mise en file d''attente pour la révision du curateur. Rien n''est en ligne pour l''instant — le Commons est encore en aperçu.'
+    body: 'Votre suggestion est dans la file des curateurs. Rien n''apparaît sur la carte tant qu''un curateur ne l''a pas examinée.'
     reference: 'Référence :'
-    stub_note: 'Note : il s''agit d''un aperçu — les suggestions sont mises en file d''attente pour révision et ne sont pas encore persistées. Lancement en 2026.'
     cta: '← Retour à la carte'
   error:
     what_changed_required: 'Veuillez décrire ce que vous ajoutez ou modifiez.'
@@ -1533,9 +1532,9 @@ media:
     accept: 'Je la donne'
     cancel: 'Annuler'
     error: 'Nous n''avons pas pu enregistrer votre consentement. Rien n''a été envoyé — réessayez.'
-    standing: 'Vous donnez vos photos sous licence CC BY-SA 4.0 ; les photos approuvées sont publiées selon les conditions du Commons.'
+    standing: 'Vous avez accepté la licence photo le %date%. Vos photos rejoignent le Commons sous CC BY-SA 4.0.'
     consented_on: 'Consenti le %date%'
-    read_contract: 'Lire le contrat'
+    read_contract: 'Voir exactement ce que vous avez accepté'
     site_terms: 'Conditions du site'
   error:
     consent_required: 'Acceptez d''abord la licence photo — vous pourrez ensuite ajouter des photos.'

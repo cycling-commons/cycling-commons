@@ -1415,26 +1415,25 @@ improve:
   step4:
     label: 'Prüfen'
     heading: 'Prüfen &amp; einreichen'
-    help: 'Überprüfe es noch einmal. Dein Vorschlag kommt in die Prüfwarteschlange eines Kurators, bevor er The Commons beitritt.'
-    prov: 'Genehmigte Fakten treten dem offenen Commons unter <b>ODbL</b> (Daten) / <b>CC BY-SA 4.0</b> (Medien) bei. Provenienz wird festgehalten; Identität nicht.'
+    help: 'Sieh es dir kurz an, bevor du es abschickst.'
+    media_heading: 'Fotos'
+    prov: 'Was du schickst, wird Teil des offenen Commons — die Fakten unter <b>ODbL</b>, die Fotos unter <b>CC BY-SA 4.0</b>. Wir halten fest, von welchem Konto jeder Fakt stammt; dein Name erscheint nur, wenn du ein öffentliches Profil aktiviert hast.'
   locate:
     change: 'Standort ändern'
     confirm:
       help: 'Dieser Standort ist bereits gesetzt — prüfe, ob er stimmt, oder ändere ihn.'
   lifecycle:
     heading: 'Was mit deinem Vorschlag geschieht'
-    funnel: 'Nichts geht sofort live. Jeder Vorschlag durchläuft denselben Trichter: <b>Kuratoren-Prüfung</b> → <b>unbestätigt</b> (ein „Bitte bestätigen“-Punkt auf der Karte) → <b>bestätigt</b> (eine vollständige Markierung, sobald einige Fahrer sie bestätigen).'
-    votable_note: '<b>%type%</b> ist ein <b>abstimmbarer</b> Typ — einmal bestätigt, stimmen Fahrer ihn im Trichter hoch zur <b>Best-of</b>-Karte.'
-    utility_note: '<b>%type%</b> ist ein <b>Nutz</b>typ — er wird zur Abdeckung bestätigt, sobald einige Fahrer ihn bestätigen, und immer angezeigt; er wird nie eingestuft oder gewählt.'
-    provenance: 'Die Herkunft wird pro Fakt festgehalten: <code>[tap]</code> eine Ein-Tipp-Bestätigung · <code>[edit]</code> eine reichere Bearbeitung wie diese · <code>[OSM]</code> aus OpenStreetMap übernommen · <code>[auto]</code> von der Pipeline abgeleitet.'
+    funnel: 'Es erscheint nichts sofort auf der Karte. Zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, den andere Fahrende bestätigen können — und nachdem einige von ihnen bestätigt haben, dass es wirklich da ist, wird daraus eine vollständige Markierung.'
+    votable_note: '<b>%type%</b> — darüber können Fahrende auch abstimmen, und die bestbewerteten landen auf der Best-of-Karte.'
+    utility_note: '<b>%type%</b> — ein praktischer Halt. Darüber stimmen Fahrende nie ab; es reicht, wenn einige bestätigen, dass es ihn wirklich gibt, danach bleibt er für alle auf der Karte.'
   nav:
     back: 'Zurück'
     next: 'Weiter'
   receipt:
     heading: 'Vorschlag eingereicht.'
-    body: 'Dein Vorschlag wurde zur Kuratorenprüfung eingereiht. Noch ist nichts live — The Commons befindet sich noch in der Vorschau.'
+    body: 'Dein Vorschlag ist in der Kuratoren-Warteschlange. Auf der Karte erscheint nichts, bevor ein Kurator es angesehen hat.'
     reference: 'Referenz:'
-    stub_note: 'Hinweis: Dies ist eine Vorschau — Vorschläge werden zur Prüfung eingereiht und noch nicht dauerhaft gespeichert. Start 2026.'
     cta: '← Zurück zur Karte'
   error:
     what_changed_required: 'Bitte beschreibe, was du hinzufügst oder änderst.'
@@ -1536,9 +1535,9 @@ media:
     accept: 'Ich spende es'
     cancel: 'Abbrechen'
     error: 'Wir konnten deine Zustimmung nicht speichern. Es wurde nichts hochgeladen — bitte versuche es erneut.'
-    standing: 'Du spendest deine Fotos unter CC BY-SA 4.0; freigegebene Fotos werden zu den Bedingungen des Commons veröffentlicht.'
+    standing: 'Du hast der Fotolizenz am %date% zugestimmt. Deine Fotos kommen unter CC BY-SA 4.0 in The Commons.'
     consented_on: 'Zugestimmt am %date%'
-    read_contract: 'Vertrag lesen'
+    read_contract: 'Genau ansehen, wozu du zugestimmt hast'
     site_terms: 'Nutzungsbedingungen'
   error:
     consent_required: 'Stimme zuerst der Fotolizenz zu — danach kannst du Fotos hinzufügen.'

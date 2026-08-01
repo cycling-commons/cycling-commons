@@ -55,13 +55,19 @@
     }
 
     /* The standing notice (§4): once consent exists it is shown on every later
-       visit, on the photo step AND beside the queued photos on review. */
+       visit, on the photo step AND beside the queued photos on review.
+       The date is inside the sentence, not a bare number after it: "agreed on
+       31 July 2026" says what the timestamp is FOR, where a loose date beside
+       a restatement of the licence read as two ways of saying one thing. The
+       disclosure below is then unambiguously the exact wording that was
+       agreed, rather than a second paraphrase of it. */
     function renderConsent(consentedAt) {
       var terms = cfg.termsUrl
         ? ' <a href="' + esc(cfg.termsUrl) + '">' + esc(t('siteTerms', 'Site terms')) + '</a>'
         : '';
-      var html = '<div class="consent-ok">✓ ' + esc(t('standing', '')) +
-        ' <span class="consent-when">' + esc(fmtDate(consentedAt)) + '</span>' +
+      var standing = esc(t('standing', '')).replace('%date%',
+        '<span class="consent-when">' + esc(fmtDate(consentedAt)) + '</span>');
+      var html = '<div class="consent-ok">✓ ' + standing +
         ' <details class="consent-more"><summary>' + esc(t('readContract', 'Read the contract')) +
         '</summary><p>' + esc(t('contract', '')) + '</p></details>' + terms + '</div>';
       if (noticeEl) noticeEl.innerHTML = html;
@@ -199,7 +205,10 @@
     function syncHidden() {
       var ids = items.filter(function (i) { return i.id; }).map(function (i) { return i.id; });
       hidden.value = ids.length ? JSON.stringify(ids) : '';
-      onChange(items.map(function (i) { return i.name; }));
+      // Name AND thumbnail: the review step shows the photos themselves, and a
+      // rider checking their submission over should be looking at the pictures
+      // rather than at a list of filenames.
+      onChange(items.map(function (i) { return { name: i.name, sm: i.sm || null }; }));
     }
 
     function addRow(name) {
@@ -236,6 +245,7 @@
 
     function succeed(item, data) {
       item.id = data.id;
+      item.sm = data.sm;
       item.state = 'done';
       item.row.classList.remove('indeterminate');
       item.row.classList.add('done');

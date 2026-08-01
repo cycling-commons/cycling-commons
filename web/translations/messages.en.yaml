@@ -1110,26 +1110,25 @@ improve:
   step4:
     label: 'Review'
     heading: 'Review & submit'
-    help: 'Check it over. Your suggestion goes to a curator''s review queue before it joins the Commons.'
-    prov: 'Approved facts join the open Commons under <b>ODbL</b> (data) / <b>CC BY-SA 4.0</b> (media). Provenance is kept; identity is not.'
+    help: 'Check it over before you send it.'
+    media_heading: 'Photos'
+    prov: 'What you send becomes part of the open Commons — the facts under <b>ODbL</b>, the photos under <b>CC BY-SA 4.0</b>. We record which account each fact came from; your name is only shown if you have turned on a public profile.'
   locate:
     change: 'Change location'
     confirm:
       help: 'This location is already set — check it looks right, or change it.'
   lifecycle:
     heading: 'What happens to your suggestion'
-    funnel: 'Nothing goes live instantly. Every suggestion moves through the same funnel: <b>curator check</b> → <b>unverified</b> (a help-confirm dot on the map) → <b>verified</b> (a full pin, once a few riders confirm it).'
-    votable_note: '<b>%type%</b> is a <b>votable</b> type — once it is verified, riders vote it up the funnel toward the <b>best-of</b> map.'
-    utility_note: '<b>%type%</b> is a <b>utility</b> type — it is verified for coverage once a few riders confirm it, and always shown; it is never ranked or voted.'
-    provenance: 'Provenance is kept per fact: <code>[tap]</code> a one-tap confirmation · <code>[edit]</code> a richer edit like this one · <code>[OSM]</code> mirrored from OpenStreetMap · <code>[auto]</code> derived by the pipeline.'
+    funnel: 'Nothing appears on the map straight away. A curator reads it first. Once it passes, it shows up as a small dot that other riders can confirm — and after a few of them agree it is really there, it becomes a full pin.'
+    votable_note: '<b>%type%</b> — riders can also vote on these, and the ones they rate highest end up on the best-of map.'
+    utility_note: '<b>%type%</b> — a practical stop. Riders never vote on these; a few just need to confirm it is really there, and then it stays on the map for everyone.'
   nav:
     back: 'Back'
     next: 'Next'
   receipt:
     heading: 'Suggestion submitted.'
-    body: 'Your suggestion has been queued for curator review. Nothing is live yet — the Commons is still in preview.'
+    body: 'Your suggestion is in the curator queue. Nothing appears on the map until a curator has looked at it.'
     reference: 'Reference:'
-    stub_note: 'Note: this is a preview — suggestions are queued for review and not yet persisted. Launching 2026.'
     cta: '← Back to the map'
   error:
     what_changed_required: 'Please describe what you are adding or changing.'
@@ -1233,9 +1232,9 @@ media:
     accept: 'Donate it'
     cancel: 'Cancel'
     error: 'We could not record your consent. Nothing was uploaded — please try again.'
-    standing: 'You donate your photos under CC BY-SA 4.0; approved photos are published under the Commons'' terms.'
+    standing: 'You agreed to the photo licence on %date%. Your photos join the Commons under CC BY-SA 4.0.'
     consented_on: 'Consented %date%'
-    read_contract: 'Read the contract'
+    read_contract: 'See exactly what you agreed to'
     site_terms: 'Site terms'
   error:
     consent_required: 'Agree to the photo licence first — then you can add photos.'
