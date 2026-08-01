@@ -39,7 +39,14 @@
       </ul>
       <h5>{% trans %}licenses.must_h{% endtrans %}</h5>
       <ul class="must">
-        <li><span class="m">⚑</span> <b>{% trans %}licenses.data_must1_b{% endtrans %}</b> {% trans %}licenses.data_must1_body{% endtrans %}</li>
+        {# The upstream list is not OSM alone — imported partner datasets (the
+           Walloon PIVOT accommodation registry today, more later) carry their
+           own attribution requirement, and naming only OSM here would tell a
+           reuser they had discharged an obligation they had not. The credits
+           page is the live list, so this points there rather than trying to
+           stay in sync with it. #}
+        <li><span class="m">⚑</span> <b>{% trans %}licenses.data_must1_b{% endtrans %}</b>
+          {{ 'licenses.data_must1_body'|trans({'%url%': path('credits')})|rich }}</li>
         <li><span class="m">⚑</span> <b>{% trans %}licenses.data_must2_b{% endtrans %}</b> {% trans %}licenses.data_must2_body{% endtrans %}</li>
         <li><span class="m">⚑</span> <b>{% trans %}licenses.data_must3_b{% endtrans %}</b> {% trans %}licenses.data_must3_body{% endtrans %}</li>
       </ul>

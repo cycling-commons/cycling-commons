@@ -233,7 +233,7 @@ licenses:
   data_can2: 'Anpassen und darauf aufbauen'
   data_can3: 'Kommerziell nutzen'
   data_must1_b: 'Attribution'
-  data_must1_body: '— Cycling Commons + OpenStreetMap nennen'
+  data_must1_body: '— Cycling Commons nennen und die Quelle, aus der die Daten stammen: OpenStreetMap und die weiteren offenen Datensätze, die wir importieren, jeweils <a href="%url%">mit ihrer Lizenz aufgeführt</a>.'
   data_must2_b: 'Share-alike'
   data_must2_body: '— angepasste Datenbank unter ODbL veröffentlichen'
   data_must3_b: 'Offen halten'
