@@ -63,20 +63,17 @@ final class RegionDirectoryProviderTest extends KernelTestCase
         $bySlug = array_column($be[0]['regions'], null, 'slug');
         self::assertArrayNotHasKey('belgium-t', $bySlug);
 
-        // Maturity is about CONTENT and nothing else. curated_default used to
-        // outrank it, so a region with verified items reported "curated" and
-        // its growth was unsayable.
-        self::assertSame('growing', $bySlug['wallonia-t']['tier']);
+        // Maturity is about CONTENT: onboarded → growing → established, the top
+        // rung being curated_default, which the desk only lets a moderator set
+        // once the region passes a readiness count. So it is earned by riders,
+        // which is why it belongs on this ladder and not beside it.
+        self::assertSame('established', $bySlug['wallonia-t']['tier']);
         self::assertSame(1, $bySlug['wallonia-t']['itemsVerified'], 'unverified items must not count');
         self::assertSame('growing', $bySlug['flanders-t']['tier']);
         self::assertSame('onboarded', $bySlug['empty-t']['tier'], 'no verified items');
 
-        // curated_default is its own fact — a curator's map-view decision, not
-        // a rung on the maturity ladder.
-        self::assertTrue($bySlug['wallonia-t']['curatedView']);
-        self::assertFalse($bySlug['flanders-t']['curatedView']);
-
-        // And nobody curates any of them, whatever the map-view flag says.
+        // None of which says anything about who looks after them — that is the
+        // other axis, and the flag on Wallonia does not put a curator there.
         foreach (['wallonia-t', 'flanders-t', 'empty-t'] as $slug) {
             self::assertSame('none', $bySlug[$slug]['stewardship'], $slug);
         }

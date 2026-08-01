@@ -12,7 +12,13 @@
   .rwrap{max-width:1000px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,3rem) 3rem}
 
   .legend-lead{font-size:.85rem;color:#4a4d40;margin:0 0 .7rem;max-width:64ch;line-height:1.5}
-  .legend{display:flex;flex-direction:column;gap:.45rem;margin-bottom:1.6rem;font-size:.82rem;color:#4a4d40}
+  /* Two columns because they are two questions: what the region holds, and who
+     looks after it. Stacked below 640px, where side-by-side would leave each
+     description two words wide. */
+  .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:1.1rem 2.4rem;
+    margin-bottom:1.6rem;font-size:.82rem;color:#4a4d40}
+  .lcol{display:flex;flex-direction:column;gap:.45rem}
+  .lcol .lh{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay)}
   .legend b{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase}
 
   h2.cont{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:2.2rem 0 1rem;padding-bottom:.55rem;
@@ -45,8 +51,8 @@
      is coloured for must not be the least readable thing on it. */
   .reg.has-curator .tag-curated{background:var(--paper);color:var(--spruce)}
   .reg.tier-growing .tag-tier{background:var(--trail);color:var(--ink)}
+  .reg.tier-established .tag-tier{background:var(--ochre);color:#14160E}
   .reg .tag-countrywide{background:rgba(122,155,168,.28)}
-  .reg .tag-view{background:var(--ochre);color:#14160E}
 
   .empty{color:#7a7d6c;font-size:.9rem;padding:2rem 0}
 
@@ -74,11 +80,20 @@
      other's words ("a curator maintains this region"). #}
   <p class="legend-lead">{% trans %}regions.legend_lead{% endtrans %}</p>
   <div class="legend">
-    <span><b>{% trans %}regions.tier_onboarded{% endtrans %}</b> {% trans %}regions.tier_onboarded_desc{% endtrans %}</span>
-    <span><b>{% trans %}regions.tier_growing{% endtrans %}</b> {% trans %}regions.tier_growing_desc{% endtrans %}</span>
-    <span><b>{% trans %}regions.status_curated{% endtrans %}</b> {% trans %}regions.status_curated_desc{% endtrans %}</span>
-    <span><b>{% trans %}regions.status_countrywide{% endtrans %}</b> {% trans %}regions.status_countrywide_desc{% endtrans %}</span>
-    <span><b>{% trans %}regions.status_curated_view{% endtrans %}</b> {% trans %}regions.status_curated_view_desc{% endtrans %}</span>
+    {# Left: the ladder a region climbs, and riders climb it — the top rung is
+       gated on verified places and rider-backed routes, not declared. #}
+    <div class="lcol">
+      <div class="lh">{% trans %}regions.legend_col_maturity{% endtrans %}</div>
+      <span><b>{% trans %}regions.tier_onboarded{% endtrans %}</b> {% trans %}regions.tier_onboarded_desc{% endtrans %}</span>
+      <span><b>{% trans %}regions.tier_growing{% endtrans %}</b> {% trans %}regions.tier_growing_desc{% endtrans %}</span>
+      <span><b>{% trans %}regions.tier_established{% endtrans %}</b> {% trans %}regions.tier_established_desc{% endtrans %}</span>
+    </div>
+    {# Right: who is looking after it. Independent of the left column. #}
+    <div class="lcol">
+      <div class="lh">{% trans %}regions.legend_col_stewardship{% endtrans %}</div>
+      <span><b>{% trans %}regions.status_curated{% endtrans %}</b> {% trans %}regions.status_curated_desc{% endtrans %}</span>
+      <span><b>{% trans %}regions.status_countrywide{% endtrans %}</b> {% trans %}regions.status_countrywide_desc{% endtrans %}</span>
+    </div>
   </div>
 
   {% if countries is empty %}
@@ -109,7 +124,6 @@
             {% if reg.stewardship != 'none' %}
               <span class="tag tag-{{ reg.stewardship }}">{{ ('regions.status_' ~ reg.stewardship)|trans }}</span>
             {% endif %}
-            {% if reg.curatedView %}<span class="tag tag-view">{{ 'regions.status_curated_view'|trans }}</span>{% endif %}
             {% if reg.itemsVerified > 0 %}<span class="km">{{ (reg.itemsVerified == 1 ? 'regions.items_one' : 'regions.items_many')|trans({'%n%': reg.itemsVerified}) }}</span>{% endif %}
             {% if reg.routes > 0 %}<span class="km">{{ (reg.routes == 1 ? 'regions.routes_one' : 'regions.routes_many')|trans({'%n%': reg.routes}) }}</span>{% endif %}
             {% if reg.areaKm2 %}<span class="km">{{ reg.areaKm2|round|number_format(0, '.', ',') }} km²</span>{% endif %}

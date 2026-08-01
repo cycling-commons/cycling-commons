@@ -20,7 +20,6 @@
     <span>{{ region.countryName }}</span>
     <span>· {{ ('regions.tier_' ~ region.tier)|trans }}</span>
     {% if region.stewardship != 'none' %}<span>· {{ ('regions.status_' ~ region.stewardship)|trans }}</span>{% endif %}
-    {% if region.curatedView %}<span>· {{ 'regions.status_curated_view'|trans }}</span>{% endif %}
   </div>
   <h1 class="disp">{{ ('region.' ~ region.slug ~ '.label')|trans }}</h1>
   <div class="rstats">

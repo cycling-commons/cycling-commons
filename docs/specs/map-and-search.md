@@ -169,16 +169,21 @@ lazy-firewall caching gotcha — see
   localStorage choice → the active region's flag → Everything. Resolved once at
   load; a later scope change never re-resolves.
 - **What `/regions` says about a region — two axes, never one.** The public
-  directory reports **maturity** (`growing` once anything is verified there,
-  else `onboarded`) and **stewardship** (`curated` with its own curator,
-  `countrywide` when only a country-scoped moderator covers it, else `none`)
-  as separate facts, plus `curated_default` as a third, rarer badge.
+  directory answers two questions side by side, in two legend columns:
 
-  They were a single ladder derived from `curated_default`, and the legend then
-  glossed it as "a curator maintains this region" — which that flag does not
-  mean. The conflation makes true things unsayable in both directions: a busy
-  region with nobody looking after it, and a curated region with nothing in it
-  yet. Wallonia is the worked example — a curator **and** growing.
+  - **How much it holds** — `onboarded` → `growing` (anything verified) →
+    `established` (`curated_default`). The top rung belongs on this ladder
+    because riders climb it: the desk only lets a moderator set the flag once
+    the region passes the readiness count above, so it is earned rather than
+    declared.
+  - **Who looks after it** — `curated` with its own curator, `countrywide`
+    when only a country-scoped moderator covers it, else nothing.
+
+  These were a single ladder derived from `curated_default`, and the legend
+  then glossed it as "a curator maintains this region" — which that flag does
+  not mean. The conflation makes true things unsayable in both directions: a
+  busy region with nobody looking after it, and a curated region with nothing
+  in it yet. Wallonia is the worked example — growing **and** curated.
 
   Country-scoped cover is reported as cover, not as nothing: one moderator for
   NL really does look after all twelve provinces. It is reported as *distinct*
