@@ -308,7 +308,12 @@
     <h2>{{ 'home.cta_band_h2'|trans }}</h2>
     <div class="btn-row">
       <a class="btn btn-primary" href="{{ path('map') }}">{{ 'home.cta_band_map'|trans }} <span class="arw">→</span></a>
-      <a class="btn btn-ghost" href="{{ path('login') }}">{{ 'home.cta_band_account'|trans }}</a>
+      {# Offered only to people who do not have one. It pointed at /login,
+         which bounces a signed-in visitor to this very page with no
+         explanation — a button that silently does nothing. #}
+      {% if not app.user %}
+        <a class="btn btn-ghost" href="{{ path('register') }}">{{ 'home.cta_band_account'|trans }}</a>
+      {% endif %}
     </div>
   </div>
 </div>

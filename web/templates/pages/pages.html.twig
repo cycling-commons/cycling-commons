@@ -28,7 +28,11 @@
     <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_addclimb_h{% endtrans %}</h4><p>{% trans %}pages.card_addclimb_p{% endtrans %}</p></div></a>
     <a href="{{ path('vote') }}"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_vote_h{% endtrans %}</h4><p>{% trans %}pages.card_vote_p{% endtrans %}</p></div></a>
     <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_contributor{% endtrans %}</div><h4>{% trans %}pages.card_improve_h{% endtrans %}</h4><p>{% trans %}pages.card_improve_p{% endtrans %}</p></div></a>
-    <a href="{{ path('login') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_login_h{% endtrans %}</h4><p>{% trans %}pages.card_login_p{% endtrans %}</p></div></a>
+    {# A site directory entry, so it stays for everyone — but pointed where the
+       reader can actually go. /login sends a signed-in visitor to the homepage
+       with no explanation, which in a list of destinations is the one thing a
+       link must not do. #}
+    <a href="{{ app.user ? path('profile') : path('login') }}"><div class="card"><div class="lab">{% trans %}pages.lab_account{% endtrans %}</div><h4>{% trans %}pages.card_login_h{% endtrans %}</h4><p>{% trans %}pages.card_login_p{% endtrans %}</p></div></a>
     <a href="#"><div class="card"><div class="lab">{% trans %}pages.lab_curator{% endtrans %}</div><h4>{% trans %}pages.card_moderate_h{% endtrans %}</h4><p>{% trans %}pages.card_moderate_p{% endtrans %}</p></div></a>
     <a href="{{ path('developers') }}"><div class="card"><div class="lab">{% trans %}pages.lab_opendata{% endtrans %}</div><h4>{% trans %}pages.card_developers_h{% endtrans %}</h4><p>{% trans %}pages.card_developers_p{% endtrans %}</p></div></a>
     <a href="{{ path('licenses') }}"><div class="card"><div class="lab">{% trans %}pages.lab_opendata{% endtrans %}</div><h4>{% trans %}pages.card_licenses_h{% endtrans %}</h4><p>{% trans %}pages.card_licenses_p{% endtrans %}</p></div></a>

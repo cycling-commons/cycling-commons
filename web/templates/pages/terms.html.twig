@@ -80,8 +80,7 @@
     <p>{% trans %}terms.liability_body{% endtrans %}</p>
 
     <h2><span class="n">11</span>{% trans %}terms.h11_suspension{% endtrans %}</h2>
-    {# TODO: point at path('settings') once that route exists (Plan 3) #}
-    <p>{% trans %}terms.suspension_pre{% endtrans %} <a href="{{ path('login') }}">{% trans %}terms.suspension_link{% endtrans %}</a>{% trans %}terms.suspension_post{% endtrans %}</p>
+    <p>{% trans %}terms.suspension_pre{% endtrans %} <a href="{{ path('settings') }}">{% trans %}terms.suspension_link{% endtrans %}</a>{% trans %}terms.suspension_post{% endtrans %}</p>
     <p>{{ 'terms.suspension_p2'|trans|rich }}</p>
 
     <h2><span class="n">12</span>{% trans %}terms.h12_governing{% endtrans %}</h2>

@@ -53,8 +53,7 @@
     <ul>
       <li>{{ 'privacy.collect_contribute_items'|trans|rich }}</li>
       <li>{{ 'privacy.collect_contribute_media'|trans|rich }}</li>
-      {# TODO: point at path('settings') once that route exists (Plan 3) #}
-      <li>{% trans %}privacy.collect_contribute_profile{% endtrans %} <a href="{{ path('login') }}">{% trans %}privacy.collect_contribute_profile_link{% endtrans %}</a>{% trans %}privacy.collect_contribute_profile_post{% endtrans %}</li>
+      <li>{% trans %}privacy.collect_contribute_profile{% endtrans %} <a href="{{ path('settings') }}">{% trans %}privacy.collect_contribute_profile_link{% endtrans %}</a>{% trans %}privacy.collect_contribute_profile_post{% endtrans %}</li>
     </ul>
     <h3>{% trans %}privacy.h3_auto{% endtrans %}</h3>
     <ul>
@@ -65,8 +64,7 @@
     <h2>{% trans %}privacy.h_why{% endtrans %}</h2>
     <ul>
       <li>{{ 'privacy.why_contract'|trans|rich }}</li>
-      {# TODO: point at path('settings') once that route exists (Plan 3) #}
-      <li>{{ 'privacy.why_consent'|trans|rich }} <a href="{{ path('login') }}">{% trans %}privacy.why_consent_link{% endtrans %}</a>{% trans %}privacy.why_consent_post{% endtrans %}</li>
+      <li>{{ 'privacy.why_consent'|trans|rich }} <a href="{{ path('settings') }}">{% trans %}privacy.why_consent_link{% endtrans %}</a>{% trans %}privacy.why_consent_post{% endtrans %}</li>
       <li>{{ 'privacy.why_legitimate'|trans|rich }}</li>
       <li>{{ 'privacy.why_legal'|trans|rich }}</li>
     </ul>
