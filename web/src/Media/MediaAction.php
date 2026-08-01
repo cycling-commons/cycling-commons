@@ -23,4 +23,8 @@ final class MediaAction
     public const string Rejected = 'rejected';
     public const string CreditAnonymized = 'credit_anonymized';
     public const string ObjectsDeleted = 'objects_deleted';
+    /** The uploader asked for it to come down (docs/specs/photo-uploads.md §6b). */
+    public const string TakedownRequested = 'takedown_requested';
+    public const string TakedownGranted = 'takedown_granted';
+    public const string TakedownDeclined = 'takedown_declined';
 }

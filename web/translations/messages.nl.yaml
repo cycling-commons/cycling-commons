@@ -1546,6 +1546,17 @@ media:
     photo_too_small: 'Die foto is te klein — de kortste zijde moet minstens 200 pixels zijn.'
     rate_limited: 'Daglimiet voor uploads bereikt — ga morgen verder.'
     unknown: 'Het uploaden is mislukt. Probeer het opnieuw.'
+  takedown:
+    summary: 'Vraag om deze foto te verwijderen'
+    intro: 'Als deze foto jou toont, of iets anders over jou dat je niet wilde publiceren, halen we hem weg. Vertel ons wat het is: hij verdwijnt meteen van de kaart terwijl een curator je bericht leest.'
+    licence_note: 'Eén ding voor de duidelijkheid: dit is geen manier om een bijdrage terug te trekken. De CC BY-SA-licentie die je verleende kan niet worden ingetrokken, en kopieën die mensen al downloadden blijven van hen. Wat we wél kunnen: onze kopie verwijderen en stoppen met publiceren — en als de foto van jou is, is dat je recht en doen we dat.'
+    label_reason: 'Wat is er mis met deze foto?'
+    placeholder_reason: 'Bijvoorbeeld: ik ben herkenbaar op deze foto en dat wil ik liever niet.'
+    submit: 'Verzoek versturen'
+    pending_body: 'We hebben je verwijderverzoek. Deze foto is al van de kaart, en een curator leest je bericht binnenkort.'
+    error:
+      reason_required: 'Vertel ons wat er mis is met de foto — een curator moet weten waar het om gaat.'
+      reason_too_long: 'Dat bericht is te lang. Houd het onder 2000 tekens.'
 propose_route:
   eyebrow: 'K · Aanbevolen routes'
   title: 'Stel een route voor'
@@ -1586,6 +1597,17 @@ moderate:
     alt: 'Ingezonden foto'
     distance: 'ongeveer %m% m van de speld'
     no_gps: 'geen locatie in het bestand'
+  takedown:
+    heading: 'Verzoeken om foto''s te verwijderen'
+    lead: 'Een fietser heeft gevraagd zijn eigen foto te verwijderen. Hij staat al niet meer op de kaart. Toewijzen als de foto hem toont, of iets anders persoonlijks dat hij niet wilde publiceren — dat is zijn recht en de licentie gaat daar niet boven. Afwijzen als dit een bedenking over het bijdragen is, wat de CC BY-SA-licentie niet laat terugnemen.'
+    alt: 'De foto waarvoor verwijdering is gevraagd'
+    no_item: 'Niet aan een plek gekoppeld'
+    asked: 'Gevraagd op %when%'
+    note_placeholder: 'Bericht aan de fietser (optioneel)'
+    grant: 'Foto verwijderen'
+    decline: 'Afwijzen en opnieuw publiceren'
+    granted: 'De foto is verwijderd en de fietser is op de hoogte gebracht.'
+    declined: 'Het verzoek is afgewezen en de foto is weer gepubliceerd.'
   type:
     new: 'Nieuwe plek'
     edit: 'Bewerking'
@@ -1788,6 +1810,8 @@ messages:
   kind_correction_dismissed: 'Correctie afgewezen'
   kind_curator_message: 'Bericht van een curator'
   kind_rider_reply: 'Antwoord van de fietser'
+  kind_media_takedown_granted: 'Je foto is verwijderd'
+  kind_media_takedown_declined: 'Je verzoek om een foto te verwijderen is afgewezen'
   body:
     submission_approved: 'Jouw bijdrage %title% is goedgekeurd en staat nu live op de kaart. Bedankt voor het verbeteren van de Commons!'
     submission_rejected: 'Jouw bijdrage %title% is niet aanvaard.'
@@ -1797,6 +1821,8 @@ messages:
     route_retired: 'Jouw route %name% is van de kaart teruggetrokken.'
     correction_done: 'Jouw correctie op %name% is verwerkt. Bedankt voor het eerlijk houden van de kaart!'
     correction_dismissed: 'Jouw correctie op %name% is afgewezen.'
+    media_takedown_granted: 'Je foto is uit de Commons gehaald en onze kopieën ervan zijn verwijderd. Kopieën die anderen onder de licentie hebben gedownload kunnen wij niet bereiken, maar de pagina die jou vermeldde noemt niemand meer.'
+    media_takedown_declined: 'Een curator heeft je verwijderverzoek bekeken en er geen reden in gevonden die met persoonsgegevens te maken heeft, dus de foto is weer gepubliceerd. Als we je verkeerd hebben begrepen — zeker als je zelf op de foto staat — reageer dan op dit bericht of mail info@cyclingcommons.org, dan kijken we opnieuw.'
   reply_label: 'Jouw antwoord'
   reply_send: 'Antwoord versturen'
   reply_sent: 'Antwoord verstuurd — jouw bijdrage staat weer in de beoordelingswachtrij.'
@@ -1876,6 +1902,7 @@ flash:
   deletion_code_invalid: 'Ongeldige of verlopen verwijdercode.'
   account_deleted: 'Je account is definitief verwijderd.'
   export_rate_limited: 'Je hebt je gegevens vandaag al een paar keer opgevraagd. Probeer het morgen opnieuw.'
+  takedown_requested: 'Bedankt — de foto is al van de kaart, en een curator leest je bericht binnenkort.'
 form:
   label_email: 'E-mail'
   label_email_address: 'E-mailadres'

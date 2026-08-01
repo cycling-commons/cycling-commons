@@ -58,16 +58,27 @@ final class PhotoPageController extends AbstractController
 
         // Nothing but an approved, still-stored photo is published here. A
         // pending one is linked from the moderation queue and nowhere else;
-        // a rejected or tombstoned one has no public existence at all.
+        // a rejected or tombstoned one has no public existence at all; and one
+        // whose uploader has asked for it to come down is withheld from the
+        // moment they ask (docs/specs/photo-uploads.md §6b).
         if (null === $upload
             || MediaStatus::Approved !== $upload->getStatus()
             || null !== $upload->getObjectsDeletedAt()
+            || $upload->isTakedownPending()
         ) {
             return $this->render('media/photo.html.twig', [
                 'page_title' => 'media.page.unpublished_title',
                 'page_description' => 'media.page.unpublished_title',
                 'nav_active' => '',
                 'photo' => null,
+                // The one thing the uploader may still learn from this page:
+                // that their own request is in hand. Anyone else sees the
+                // ordinary "not published" page and no hint that a request
+                // exists — who asked for a photo to come down is their business.
+                'takedown_pending' => null !== $upload
+                    && $upload->isTakedownPending()
+                    && $this->isUploader($upload),
+                'can_request_takedown' => false,
             ], new Response('', Response::HTTP_NOT_FOUND));
         }
 
@@ -79,6 +90,9 @@ final class PhotoPageController extends AbstractController
             'page_title' => 'media.page.title',
             'page_description' => 'media.page.description',
             'nav_active' => '',
+            'takedown_pending' => false,
+            'can_request_takedown' => $this->isUploader($upload),
+            'photo_uuid' => $upload->getId()->toRfc4122(),
             'photo' => [
                 'sm' => $this->storage->url($continent, $prefix, 'sm'),
                 'lg' => $this->storage->url($continent, $prefix, 'lg'),
@@ -121,6 +135,21 @@ final class PhotoPageController extends AbstractController
         }
 
         return new PhotoAttribution($user->getDisplayName(), $user->getUuid()?->toRfc4122());
+    }
+
+    /**
+     * Is the person reading this the person who uploaded it? Only they are
+     * offered the takedown request (docs/specs/photo-uploads.md §6b) — a
+     * request from anyone else is a different claim with a different route,
+     * and the page must not invite it.
+     */
+    private function isUploader(MediaUpload $upload): bool
+    {
+        $viewer = $this->getUser();
+
+        return $viewer instanceof User
+            && null !== $upload->getUserId()
+            && (int) $viewer->getId() === $upload->getUserId();
     }
 
     /** @return array{id: int, name: string}|null */

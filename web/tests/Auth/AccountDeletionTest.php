@@ -261,8 +261,11 @@ final class AccountDeletionTest extends WebTestCase
         $crawler = $client->request('GET', '/settings');
         self::assertResponseIsSuccessful();
 
-        // Extract CSRF token from the form
-        $token = $crawler->filter('input[name="_token"]')->first()->attr('value');
+        // Extract the CSRF token from THIS form, not from whichever form the
+        // settings page happens to render first — the page carries several,
+        // each with its own token id, and picking by document order breaks
+        // silently the next time one is added above it.
+        $token = $crawler->filter('form[action$="/settings/delete-request"] input[name="_token"]')->attr('value');
 
         $client->request('POST', '/settings/delete-request', ['_token' => $token]);
 
@@ -302,10 +305,9 @@ final class AccountDeletionTest extends WebTestCase
         $crawler = $client->request('GET', '/settings');
         self::assertResponseIsSuccessful();
 
-        // The second form has a second _token hidden input (confirm form)
-        $tokens = $crawler->filter('input[name="_token"]');
-        // The confirm form is the second form with _token
-        $confirmToken = $tokens->last()->attr('value');
+        // Selected by the form's own action, not by position among the page's
+        // several _token inputs: document order is not a contract.
+        $confirmToken = $crawler->filter('form[action$="/settings/delete-confirm"] input[name="_token"]')->attr('value');
 
         $client->request('POST', '/settings/delete-confirm', [
             '_token' => $confirmToken,

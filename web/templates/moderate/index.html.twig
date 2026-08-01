@@ -59,6 +59,18 @@
   .trash-type-input{display:block;margin-top:.3rem;font-family:var(--mono);font-size:.85rem;padding:.35rem .5rem;border:1.5px solid #8b1a1a;border-radius:5px;background:transparent;max-width:11rem}
   .msg-rider textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
 
+  /* photo takedown requests (docs/specs/photo-uploads.md §6b) */
+  .q-takedowns{margin:0 0 2rem;padding:1.2rem;border:1px solid var(--clay);border-radius:8px;background:rgba(181,83,46,.05)}
+  .q-takedowns h2{font-family:var(--serif);font-size:1.15rem;margin:0}
+  .td-lead{font-size:.86rem;color:#4a4d40;margin:.3rem 0 1rem;line-height:1.5}
+  .td-card{border-top:1px solid rgba(20,22,14,.12);padding:.9rem 0}
+  .td-body{display:flex;gap:.9rem;align-items:flex-start}
+  .td-body img{width:110px;height:82px;object-fit:cover;border-radius:5px;flex:0 0 auto}
+  .td-reason{font-size:.9rem;line-height:1.5;margin:.3rem 0;white-space:pre-wrap}
+  .td-meta{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:#595c4d;margin:0}
+  .td-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.7rem}
+  .td-actions input[type=text]{flex:1 1 14rem;font-family:inherit;font-size:.85rem;padding:.4rem .6rem;
+    border:1px solid rgba(20,22,14,.2);border-radius:5px}
   .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
   .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
   .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
@@ -104,6 +116,37 @@
     </label>
     <noscript><button type="submit" class="btn-act btn-needs-info">{{ 'moderate.filter.apply'|trans }}</button></noscript>
   </form>
+
+  {# ── Photo takedown requests (docs/specs/photo-uploads.md §6b) ──
+     Above the queue, unfiltered, and shown to every curator: a rider has asked
+     for their own photo to come down and the clock on that is a legal one, not
+     a workload one. Deliberately NOT a second desk — same page, same two verbs
+     the rest of moderation uses. #}
+  {% if takedowns is not empty %}
+  <section class="q-takedowns">
+    <h2>{{ 'moderate.takedown.heading'|trans }}</h2>
+    <p class="td-lead">{{ 'moderate.takedown.lead'|trans }}</p>
+    {% for t in takedowns %}
+      <article class="td-card">
+        <div class="td-body">
+          <img src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}">
+          <div>
+            <b>{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}</b>
+            <p class="td-reason">{{ t.reason }}</p>
+            <p class="td-meta">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|date('Y-m-d H:i')}) }}</p>
+          </div>
+        </div>
+        <form method="post" action="{{ path('moderate_takedown') }}" class="td-actions">
+          <input type="hidden" name="_token" value="{{ csrf_token('moderate_takedown') }}">
+          <input type="hidden" name="media" value="{{ t.uuid }}">
+          <input type="text" name="note" maxlength="2000" placeholder="{{ 'moderate.takedown.note_placeholder'|trans }}">
+          <button type="submit" name="decision" value="grant" class="btn-act btn-approve">{{ 'moderate.takedown.grant'|trans }}</button>
+          <button type="submit" name="decision" value="decline" class="btn-act btn-reject">{{ 'moderate.takedown.decline'|trans }}</button>
+        </form>
+      </article>
+    {% endfor %}
+  </section>
+  {% endif %}
 
   {% if items is empty %}
   <div class="empty-queue">

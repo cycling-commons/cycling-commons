@@ -101,8 +101,17 @@ final class MediaDecisionService
         return ['old' => $old, 'new' => $attributes['photos']];
     }
 
-    /** @return array<string, mixed> */
-    private function describe(MediaUpload $upload): array
+    /**
+     * The gallery entry an item carries for one photo. Public because a
+     * declined takedown has to put the photo back exactly as approval first
+     * put it there (docs/specs/photo-uploads.md §6b) — re-deriving that shape
+     * in a second place is how the two drift apart.
+     *
+     * @return array<string, mixed>
+     *
+     * @api Called by MediaTakedownService.
+     */
+    public function describe(MediaUpload $upload): array
     {
         $prefix = $upload->getPathPrefix();
         $continent = $upload->getContinent();

@@ -1546,6 +1546,17 @@ media:
     photo_too_small: 'Cette photo est trop petite — le côté le plus court doit faire au moins 200 pixels.'
     rate_limited: 'Limite d''envois quotidienne atteinte — continuez demain.'
     unknown: 'L''envoi a échoué. Réessayez.'
+  takedown:
+    summary: 'Demander le retrait de cette photo'
+    intro: 'Si cette photo vous montre, ou montre autre chose vous concernant que vous ne vouliez pas publier, nous la retirerons. Dites-nous ce dont il s''agit : elle disparaît immédiatement de la carte pendant qu''un curateur lit votre message.'
+    licence_note: 'Une précision : ce n''est pas un moyen de retirer une contribution. La licence CC BY-SA que vous avez accordée ne peut pas être révoquée, et les copies déjà téléchargées restent celles de leurs détenteurs. Ce que nous pouvons faire, c''est supprimer notre copie et cesser de la publier — et si la photo est de vous, c''est votre droit et nous le ferons.'
+    label_reason: 'Qu''est-ce qui ne va pas avec cette photo ?'
+    placeholder_reason: 'Par exemple : je suis reconnaissable sur cette photo et je préférerais ne pas l''être.'
+    submit: 'Envoyer la demande'
+    pending_body: 'Nous avons votre demande de retrait. Cette photo est déjà retirée de la carte, et un curateur lira votre message sous peu.'
+    error:
+      reason_required: 'Dites-nous ce qui ne va pas avec la photo — un curateur doit savoir ce qui est demandé.'
+      reason_too_long: 'Ce message est trop long. Merci de rester sous 2000 caractères.'
 propose_route:
   eyebrow: 'K · Itinéraires recommandés'
   title: 'Proposer un itinéraire'
@@ -1586,6 +1597,17 @@ moderate:
     alt: 'Photo soumise'
     distance: 'à environ %m% m du point'
     no_gps: 'aucune localisation dans le fichier'
+  takedown:
+    heading: 'Demandes de retrait de photo'
+    lead: 'Un cycliste a demandé le retrait de sa propre photo. Elle est déjà hors de la carte. Accordez si la photo le montre, ou montre autre chose de personnel qu''il ne voulait pas publier — c''est son droit et la licence ne le supplante pas. Refusez s''il s''agit d''un changement d''avis sur la contribution, ce que la licence CC BY-SA ne permet pas de reprendre.'
+    alt: 'La photo dont le retrait est demandé'
+    no_item: 'Non rattachée à un lieu'
+    asked: 'Demandé le %when%'
+    note_placeholder: 'Note au cycliste (facultatif)'
+    grant: 'Retirer la photo'
+    decline: 'Refuser et republier'
+    granted: 'La photo a été retirée et le cycliste prévenu.'
+    declined: 'La demande a été refusée et la photo est de nouveau publiée.'
   type:
     new: 'Nouveau lieu'
     edit: 'Modification'
@@ -1788,6 +1810,8 @@ messages:
   kind_correction_dismissed: 'Correction rejetée'
   kind_curator_message: 'Message d''un curateur'
   kind_rider_reply: 'Réponse du cycliste'
+  kind_media_takedown_granted: 'Votre photo a été retirée'
+  kind_media_takedown_declined: 'Votre demande de retrait de photo a été refusée'
   body:
     submission_approved: 'Votre contribution %title% a été approuvée et est désormais visible sur la carte. Merci d''améliorer le Commons !'
     submission_rejected: 'Votre contribution %title% n''a pas été retenue.'
@@ -1797,6 +1821,8 @@ messages:
     route_retired: 'Votre itinéraire %name% a été retiré de la carte.'
     correction_done: 'Votre correction sur %name% a été traitée. Merci de garder la carte fiable !'
     correction_dismissed: 'Votre correction sur %name% a été rejetée.'
+    media_takedown_granted: 'Votre photo a été retirée du Commons et nos copies en sont supprimées. Les copies téléchargées par d''autres sous la licence ne sont pas quelque chose que nous pouvons atteindre, mais la page qui vous créditait ne nomme plus personne.'
+    media_takedown_declined: 'Un curateur a examiné votre demande de retrait et n''y a pas trouvé de motif lié aux données personnelles, la photo est donc de nouveau publiée. Si nous vous avons mal compris — surtout si vous figurez sur la photo — répondez à ce message ou écrivez à info@cyclingcommons.org et nous réexaminerons.'
   reply_label: 'Votre réponse'
   reply_send: 'Envoyer la réponse'
   reply_sent: 'Réponse envoyée — votre contribution est de retour dans la file de relecture.'
@@ -1876,6 +1902,7 @@ flash:
   deletion_code_invalid: 'Code de suppression invalide ou expiré.'
   account_deleted: 'Votre compte a été définitivement supprimé.'
   export_rate_limited: 'Vous avez déjà demandé vos données plusieurs fois aujourd''hui. Réessayez demain.'
+  takedown_requested: 'Merci — la photo est déjà hors de la carte, et un curateur lira votre message sous peu.'
 form:
   label_email: 'E-mail'
   label_email_address: 'Adresse e-mail'

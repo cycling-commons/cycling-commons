@@ -1549,6 +1549,17 @@ media:
     photo_too_small: 'Dieses Foto ist zu klein — die kürzere Seite muss mindestens 200 Pixel haben.'
     rate_limited: 'Tageslimit für Uploads erreicht — bitte morgen weitermachen.'
     unknown: 'Der Upload ist fehlgeschlagen. Bitte versuche es erneut.'
+  takedown:
+    summary: 'Entfernung dieses Fotos beantragen'
+    intro: 'Wenn dieses Foto dich zeigt oder etwas anderes über dich, das du nicht veröffentlichen wolltest, nehmen wir es herunter. Sag uns, worum es geht: Es verschwindet sofort von der Karte, während ein Kurator deine Nachricht liest.'
+    licence_note: 'Eines zur Klarheit: Das ist kein Weg, einen Beitrag zurückzuziehen. Die CC-BY-SA-Lizenz, die du erteilt hast, kann nicht widerrufen werden, und bereits heruntergeladene Kopien bleiben bei ihren Inhabern. Was wir tun können: unsere Kopie löschen und die Veröffentlichung beenden — und wenn du auf dem Foto bist, ist das dein Recht und wir tun es.'
+    label_reason: 'Was stimmt mit diesem Foto nicht?'
+    placeholder_reason: 'Zum Beispiel: Ich bin auf diesem Foto erkennbar und möchte das lieber nicht.'
+    submit: 'Antrag senden'
+    pending_body: 'Wir haben deinen Antrag auf Entfernung. Dieses Foto ist bereits von der Karte, und ein Kurator liest deine Nachricht in Kürze.'
+    error:
+      reason_required: 'Sag uns, was mit dem Foto nicht stimmt — ein Kurator muss wissen, worum es geht.'
+      reason_too_long: 'Diese Nachricht ist zu lang. Bitte bleib unter 2000 Zeichen.'
 propose_route:
   eyebrow: 'K · Empfohlene Routen'
   title: 'Route vorschlagen'
@@ -1589,6 +1600,17 @@ moderate:
     alt: 'Eingereichtes Foto'
     distance: 'etwa %m% m vom Punkt entfernt'
     no_gps: 'keine Ortsangabe in der Datei'
+  takedown:
+    heading: 'Anträge auf Foto-Entfernung'
+    lead: 'Eine fahrende Person hat um die Entfernung ihres eigenen Fotos gebeten. Es ist bereits von der Karte. Gib dem statt, wenn das Foto sie zeigt oder etwas anderes Persönliches, das sie nicht veröffentlichen wollte — das ist ihr Recht, und die Lizenz setzt sich darüber nicht hinweg. Lehne ab, wenn es ein Sinneswandel über das Beitragen ist, den die CC-BY-SA-Lizenz nicht zurücknehmen lässt.'
+    alt: 'Das Foto, für das die Entfernung beantragt wurde'
+    no_item: 'Keinem Ort zugeordnet'
+    asked: 'Beantragt am %when%'
+    note_placeholder: 'Nachricht an die Person (optional)'
+    grant: 'Foto entfernen'
+    decline: 'Ablehnen und wieder veröffentlichen'
+    granted: 'Das Foto wurde entfernt und die Person benachrichtigt.'
+    declined: 'Der Antrag wurde abgelehnt und das Foto ist wieder veröffentlicht.'
   type:
     new: 'Neuer Ort'
     edit: 'Bearbeitung'
@@ -1791,6 +1813,8 @@ messages:
   kind_correction_dismissed: 'Korrektur verworfen'
   kind_curator_message: 'Nachricht von einem Kurator'
   kind_rider_reply: 'Antwort des Fahrers'
+  kind_media_takedown_granted: 'Dein Foto wurde entfernt'
+  kind_media_takedown_declined: 'Dein Antrag auf Foto-Entfernung wurde abgelehnt'
   body:
     submission_approved: 'Dein Beitrag %title% wurde angenommen und ist jetzt live auf der Karte. Danke, dass du den Commons verbesserst!'
     submission_rejected: 'Dein Beitrag %title% wurde nicht angenommen.'
@@ -1800,6 +1824,8 @@ messages:
     route_retired: 'Deine Route %name% wurde von der Karte zurückgezogen.'
     correction_done: 'Deine Korrektur an %name% wurde bearbeitet. Danke, dass du die Karte ehrlich hältst!'
     correction_dismissed: 'Deine Korrektur an %name% wurde verworfen.'
+    media_takedown_granted: 'Dein Foto wurde aus The Commons entfernt und unsere Kopien davon sind gelöscht. Kopien, die andere unter der Lizenz heruntergeladen haben, können wir nicht erreichen, aber die Seite, die dich genannt hat, nennt niemanden mehr.'
+    media_takedown_declined: 'Ein Kurator hat deinen Antrag auf Entfernung geprüft und darin keinen datenschutzrechtlichen Grund gefunden, also ist das Foto wieder veröffentlicht. Falls wir dich falsch verstanden haben — besonders wenn du selbst auf dem Foto bist — antworte auf diese Nachricht oder schreib an info@cyclingcommons.org, dann sehen wir es uns erneut an.'
   reply_label: 'Deine Antwort'
   reply_send: 'Antwort senden'
   reply_sent: 'Antwort gesendet — dein Beitrag ist wieder in der Prüfwarteschlange.'
@@ -1879,6 +1905,7 @@ flash:
   deletion_code_invalid: 'Ungültiger oder abgelaufener Löschcode.'
   account_deleted: 'Dein Konto wurde dauerhaft gelöscht.'
   export_rate_limited: 'Du hast deine Daten heute schon einige Male angefordert. Bitte versuch es morgen erneut.'
+  takedown_requested: 'Danke — das Foto ist bereits von der Karte, und ein Kurator liest deine Nachricht in Kürze.'
 form:
   label_email: 'E-Mail'
   label_email_address: 'E-Mail-Adresse'

@@ -27,6 +27,9 @@ enum UserMessageKind: string
     case CorrectionDismissed = 'correction_dismissed';
     case CuratorMessage = 'curator_message';
     case RiderReply = 'rider_reply';
+    /** Outcomes of a photo takedown request (docs/specs/photo-uploads.md §6b). */
+    case MediaTakedownGranted = 'media_takedown_granted';
+    case MediaTakedownDeclined = 'media_takedown_declined';
 
     /** @return list<string> @api */
     public static function values(): array

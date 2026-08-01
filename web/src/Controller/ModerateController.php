@@ -9,6 +9,8 @@ namespace App\Controller;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaTakedownService;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
@@ -17,6 +19,7 @@ use App\Moderation\RetentionService;
 use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
 use App\Routing\LocalePrefix;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,6 +49,8 @@ final class ModerateController extends AbstractController
         private readonly RetentionService $retention,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly RouteQueue $routeQueue,
+        private readonly MediaTakedownService $takedowns,
+        private readonly EntityManagerInterface $em,
     ) {
     }
 
@@ -94,6 +99,11 @@ final class ModerateController extends AbstractController
             // Both tab badges show the open count in the moderator's jurisdiction.
             'mod_submission_count' => $this->queue->total($scope),
             'mod_route_count' => $this->routeQueue->total($scope) + $this->routeQueue->pendingSuggestionCount($scope),
+            // Not scoped and not filtered (docs/specs/photo-uploads.md §6b):
+            // a rider asking for their own photo to come down is a rights
+            // request on a legal clock, not editorial work to be shared out by
+            // jurisdiction.
+            'takedowns' => $this->takedowns->pendingCards(),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
     }
 
@@ -216,6 +226,46 @@ final class ModerateController extends AbstractController
             'region' => $request->query->getString('region'),
             'type' => $request->query->getString('type'),
         ], static fn (string $v): bool => '' !== $v));
+    }
+
+    /**
+     * A photo takedown request, granted or declined
+     * (docs/specs/photo-uploads.md §6b).
+     *
+     * The two verbs the rest of this desk already uses, and the curator is
+     * answering one question with them: is this a rights claim ("that photo is
+     * of me") or a change of mind about contributing? The first must be
+     * honoured; the second must not be, or every approved photo in the commons
+     * is only on loan. Nothing but the rider's own words tells them apart,
+     * which is the entire reason a human is in this loop.
+     */
+    #[Route('/moderate/takedown', name: 'moderate_takedown', methods: ['POST'])]
+    public function takedown(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('moderate_takedown', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $raw = (string) $request->request->get('media', '');
+        $upload = Uuid::isValid($raw) ? $this->em->find(MediaUpload::class, Uuid::fromString($raw)) : null;
+        $note = trim((string) $request->request->get('note', '')) ?: null;
+
+        // Idempotent by omission: a request somebody else has already decided
+        // is simply no longer here, and a curator who double-submits gets the
+        // refreshed desk rather than an error about a race they did not cause.
+        if (null !== $upload && $upload->isTakedownPending()) {
+            if ('grant' === $request->request->get('decision')) {
+                $this->takedowns->grant($upload, $curator, $note);
+                $this->addFlash('success', 'moderate.takedown.granted');
+            } else {
+                $this->takedowns->decline($upload, $curator, $note);
+                $this->addFlash('success', 'moderate.takedown.declined');
+            }
+        }
+
+        return $this->redirectToRoute('moderate');
     }
 
     /**

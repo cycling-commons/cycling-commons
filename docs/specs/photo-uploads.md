@@ -444,6 +444,61 @@ the Trash action itself (no window means no sweep).
   reason no name is embedded — an embedded one would make the anonymize option
   a promise we could not keep.
 
+### 6b. Photo takedown — when the image is *of* the uploader
+
+§6's account-deletion answer covers most of what **General Data Protection
+Regulation (GDPR)** Art. 17 asks of this domain. An approved photo is a
+CC BY-SA-licensed contribution; the personal data in it is the *link* to a
+person; severing the link leaves erasure nothing to reach. The licence itself
+is irrevocable (CC BY-SA 4.0 §2(a)(1)) and neither side can undo it.
+
+One case that reasoning does not cover: **the image depicts the uploader**.
+Then the image is itself their personal data, a copyright licence does not
+waive data-protection rights, and the objects have to actually go.
+
+**The request.** Offered on the photo page (§5d) to the uploader and to nobody
+else — a claim from anyone *else* pictured is a different claim with a
+different route, and this page must not invite it. A reason is required and
+stored: it is the only thing that distinguishes the two requests below.
+
+**Withheld immediately, before any curator looks.** Requesting detaches the
+photo from the item's `photos[]` and makes the photo page 404 for everyone.
+Art. 18 makes restriction available *while* a request is verified, and if the
+claim is true then leaving the image up until somebody gets round to it is the
+one outcome with a real cost. Only the uploader sees why the page is empty;
+everyone else gets the ordinary "not published" page, because who asked for a
+photo to come down is their business.
+
+**Why a curator is in the loop at all**, when the law leaves little discretion:
+two different requests arrive through one door.
+
+- *"This is a photo of me"* — must be honoured.
+- *"I have changed my mind about contributing"* — must not be, or the commons
+  is only on loan and every approved photo is provisional.
+
+Nothing but the rider's own words tells them apart, so a human reads them. The
+curator is deciding **which request this is**, not whether to feel like
+granting it.
+
+**Granted** deletes the bucket objects and keeps the row and its event log —
+`deleteObjects()`, not `purge()`. What is being erased is the *image*; the
+surviving row holds no image, and records that a photo existed, that its
+subject asked for it, and that we did as asked. Erasing our own evidence of an
+erasure request would leave us unable to show we honoured it, which is exactly
+what Art. 5(2) accountability is for.
+
+**Declined** clears the marker, republishes the photo in the shape approval
+originally gave it, and keeps the reason on the row so the next curator to
+look knows it was asked about before. Either way the rider gets a message.
+
+Requests surface on the existing moderation desk with the same two verbs the
+rest of moderation uses — §5c holds. They are deliberately **not** region-scoped
+like the submission queue: a rights request is on a legal clock, not editorial
+work to be shared out by jurisdiction.
+
+Not covered here, and worth its own route later: a photo that depicts **third
+parties**, whose rights do not depend on the uploader's account at all.
+
 ## 7. Limits & formats summary
 
 | thing | value |

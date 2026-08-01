@@ -1246,6 +1246,17 @@ media:
     photo_too_small: 'That photo is too small — the shortest side must be at least 200 pixels.'
     rate_limited: 'Daily upload limit reached — please continue tomorrow.'
     unknown: 'The upload failed. Please try again.'
+  takedown:
+    summary: 'Ask for this photo to be removed'
+    intro: 'If this photo shows you, or anything else about you that you did not mean to publish, we will take it down. Tell us what it is and it comes off the map straight away, while a curator reads your message.'
+    licence_note: 'One thing to be clear about: this is not a way to withdraw a contribution. The CC BY-SA licence you granted cannot be revoked, and copies people already downloaded stay theirs. What we can do is remove our copy and stop publishing it — and if the photo is of you, that is your right and we will.'
+    label_reason: 'What is wrong with this photo?'
+    placeholder_reason: 'For example: I am recognisable in this photo and I would rather not be.'
+    submit: 'Send the request'
+    pending_body: 'We have your removal request. This photo is already off the map, and a curator will read your message shortly.'
+    error:
+      reason_required: 'Please tell us what is wrong with the photo — a curator needs to know what is being asked.'
+      reason_too_long: 'That message is too long. Please keep it under 2000 characters.'
 propose_route:
   eyebrow: 'K · Recommended routes'
   title: 'Propose a route'
@@ -1587,6 +1598,17 @@ moderate:
     alt: 'Submitted photo'
     distance: 'about %m% m from the pin'
     no_gps: 'no location in the file'
+  takedown:
+    heading: 'Photo removal requests'
+    lead: 'A rider has asked for their own photo to come down. It is already off the map. Grant it if the photo shows them, or anything else personal they did not mean to publish — that is their right and the licence does not override it. Decline it if this is a change of mind about contributing, which the CC BY-SA licence does not allow to be taken back.'
+    alt: 'The photo a removal was requested for'
+    no_item: 'Not attached to a place'
+    asked: 'Asked %when%'
+    note_placeholder: 'Note to the rider (optional)'
+    grant: 'Remove the photo'
+    decline: 'Decline and republish'
+    granted: 'The photo has been removed and the rider told.'
+    declined: 'The request was declined and the photo is published again.'
   type:
     new: 'New place'
     edit: 'Edit'
@@ -1789,6 +1811,8 @@ messages:
   kind_correction_dismissed: 'Correction dismissed'
   kind_curator_message: 'Message from a curator'
   kind_rider_reply: 'Reply from the rider'
+  kind_media_takedown_granted: 'Your photo has been removed'
+  kind_media_takedown_declined: 'Your photo removal request was declined'
   body:
     submission_approved: 'Your contribution %title% was approved and is now live on the map. Thank you for improving the Commons!'
     submission_rejected: 'Your contribution %title% was not accepted.'
@@ -1798,6 +1822,8 @@ messages:
     route_retired: 'Your route %name% was retired from the map.'
     correction_done: 'Your correction on %name% was actioned. Thank you for keeping the map honest!'
     correction_dismissed: 'Your correction on %name% was dismissed.'
+    media_takedown_granted: 'Your photo has been removed from the Commons and our copies of it are deleted. Copies other people downloaded under the licence are not something we can reach, but the page that credited you no longer names anyone.'
+    media_takedown_declined: 'A curator has looked at your removal request and did not find a personal-data reason to act on, so the photo is published again. If we have misread you — especially if you are in the photo — reply to this message or email info@cyclingcommons.org and we will look again.'
   reply_label: 'Your reply'
   reply_send: 'Send reply'
   reply_sent: 'Reply sent — your contribution is back in the review queue.'
@@ -1877,6 +1903,7 @@ flash:
   deletion_code_invalid: 'Invalid or expired deletion code.'
   account_deleted: 'Your account has been permanently deleted.'
   export_rate_limited: 'You have already requested your data a few times today. Please try again tomorrow.'
+  takedown_requested: 'Thank you — the photo is off the map already, and a curator will read your message shortly.'
 form:
   label_email: 'Email'
   label_email_address: 'Email address'

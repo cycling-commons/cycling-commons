@@ -107,6 +107,21 @@ class MediaUpload
     #[ORM\Column(name: 'credit_frozen', type: Types::STRING, length: 120, nullable: true)]
     private ?string $creditFrozen = null;
 
+    /**
+     * The uploader has asked for this photo to come down
+     * (docs/specs/photo-uploads.md §6b). Non-null withholds it from publication
+     * from that instant, before any curator looks: if the claim is "that photo
+     * is of me", leaving it up while somebody gets round to it is the wrong
+     * default, and GDPR Art. 18 is explicit that restriction is available while
+     * a request is being verified.
+     */
+    #[ORM\Column(name: 'takedown_requested_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $takedownRequestedAt = null;
+
+    /** The rider's own words, which is what tells a rights claim from a change of mind. */
+    #[ORM\Column(name: 'takedown_reason', type: Types::TEXT, nullable: true)]
+    private ?string $takedownReason = null;
+
     public function __construct(
         Uuid $id,
         int $userId,
@@ -274,5 +289,38 @@ class MediaUpload
     public function getCreditFrozen(): ?string
     {
         return $this->creditFrozen;
+    }
+
+    public function requestTakedown(string $reason): void
+    {
+        $this->takedownRequestedAt = new \DateTimeImmutable();
+        $this->takedownReason = $reason;
+    }
+
+    /**
+     * A curator has decided the request is not a rights claim
+     * (docs/specs/photo-uploads.md §6b). The marker goes so the photo is
+     * published again; the reason STAYS, because the next curator to look at
+     * this upload should be able to see it was asked about before.
+     */
+    public function declineTakedown(): void
+    {
+        $this->takedownRequestedAt = null;
+    }
+
+    public function getTakedownRequestedAt(): ?\DateTimeImmutable
+    {
+        return $this->takedownRequestedAt;
+    }
+
+    public function getTakedownReason(): ?string
+    {
+        return $this->takedownReason;
+    }
+
+    /** Withheld from publication: asked about, and not yet decided. */
+    public function isTakedownPending(): bool
+    {
+        return null !== $this->takedownRequestedAt && null === $this->objectsDeletedAt;
     }
 }

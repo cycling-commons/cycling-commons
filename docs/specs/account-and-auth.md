@@ -658,15 +658,55 @@ A pending self-request is what arms the admin **Execute account removal** /
 **Cancel pending removal** actions (§6.1) — an admin path through the same
 `purge()` seam, with audit.
 
-**Data export (Art. 20) is an acknowledged open follow-up** — no export
-endpoint exists (see Open questions).
+What survives deletion, and why, is stated on the privacy notice rather than
+left implicit: the contributions given to the open map (with provenance), and
+the consent ledger — the evidence that a CC BY-SA licence was granted, kept
+under Art. 17(3)(e) and disclosed under Art. 13(2)(a). Neither identifies the
+person once the `users` row is gone.
+
+---
+
+## 11. Data export (GDPR Art. 15 + Art. 20)
+
+`POST /settings/export` → one ZIP, built by `App\Account\DataExportService`.
+
+**One export, not two.** Art. 20 portability strictly covers only what the
+subject *provided*, while Art. 15 access is broader. Making a rider choose
+between two downloads would be a worse answer to both, so this is the superset
+and the README inside says which part is which.
+
+**What it holds.** `account.json`, `contributions.json` (submissions plus the
+`change_history` rows they produced), `community.json` (confirmations, route
+votes, rides, correction suggestions, country requests, curator applications,
+moderator areas), `messages.json`, `consent.json`, and `photos/` — the stored
+originals as files, plus an `index.json` describing each one.
+
+**What it does not, by construction.** Every query names its columns; none is
+`SELECT *`. That is the mechanism, not a filter someone has to remember to
+maintain: the password hash, the TOTP secret and the backup-code hashes cannot
+appear, and a future column cannot silently end up in riders' downloads. On the
+other side, curators' identities are absent for the same reason: what was
+decided about a rider's submission is theirs, notes included, but *who* decided
+it is the curator's.
+
+**Access.** POST, CSRF, and the **current password** re-checked. This one
+request assembles everything the app knows about a rider, which makes it worth
+more to somebody on a borrowed session than any page it draws from, because it
+removes the work of collecting them. The rate limiter is consumed *before* the
+password check, so the endpoint is not an unmetered password oracle. Three a
+day (`data_export`): Art. 12(5) allows refusing repetitive requests, and this
+is the heaviest read the app offers.
+
+**Delivery.** Built to a temp file and returned as a `BinaryFileResponse` with
+`deleteFileAfterSend()`, `Cache-Control: no-store, private`. Photo binaries are
+staged as temp files that `ZipArchive` reads at `close()`, so a rider with a
+hundred photos costs disk rather than memory. A tombstoned upload is still
+listed, with `"file": null` — hiding the row would hide a fact about them.
 
 ---
 
 ## Open questions
 
-- **GDPR Art. 20 data export** — decided as a near-term follow-up in the
-  migration design; still unbuilt and unscheduled. No endpoint exists.
 - **Inactivity lifecycle** (§6.6) — design confirmed 2026-07-01 but pending
   implementation; blocked on a `lastActiveAt` schema addition and a scheduler.
 - **Anonymize-in-place hooks** — the `UserDeletionHookInterface` seam exists
