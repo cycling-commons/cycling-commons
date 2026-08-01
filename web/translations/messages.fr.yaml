@@ -70,6 +70,7 @@ about:
   steward_lead: 'BikeCoders amorce et gère le Commons aujourd''hui. Mais l''engagement est public dès le premier jour : licence ouverte, données et comptes séparés, et une voie pour devenir une fondation indépendante une fois qu''une communauté sera là pour la gouverner. La licence ouverte et la propriété séparée rendent une clôture ultérieure difficile à faire discrètement.'
   steward_cta_map: 'Explorer la carte →'
   steward_cta_account: 'Créer un compte gratuit'
+  steward_cta_contribute: 'Ajoutez ce que vous connaissez'
 privacy:
   kicker: 'Confidentialité'
   title: 'Ce que nous collectons, et pourquoi.'

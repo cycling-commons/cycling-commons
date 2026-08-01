@@ -70,6 +70,7 @@ about:
   steward_lead: 'BikeCoders seeds and stewards the Commons today. But the commitment is public from day one: open licence, separate data and accounts, and a path to spin out into an independent foundation once there''s a community to govern it. The open licence and separate ownership make later enclosure hard to do quietly.'
   steward_cta_map: 'Explore the map →'
   steward_cta_account: 'Create a free account'
+  steward_cta_contribute: 'Add something you know'
 privacy:
   kicker: 'Privacy'
   title: 'What we collect, and why.'

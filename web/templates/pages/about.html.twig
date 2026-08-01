@@ -49,7 +49,15 @@
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:1rem">{% trans %}about.steward_lead{% endtrans %}</p>
   <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
     <a class="btn btn-p" href="{{ path('map') }}">{% trans %}about.steward_cta_map{% endtrans %}</a>
-    <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('login') }}">{% trans %}about.steward_cta_account{% endtrans %}</a>
+    {# "Create a free account" pointed at /login, and /login bounces a
+       signed-in visitor to the homepage — so the button did nothing for the
+       people most likely to press it. /register bounces them too, which is why
+       this asks who is reading before deciding what to offer. #}
+    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+      <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('contribute') }}">{% trans %}about.steward_cta_contribute{% endtrans %}</a>
+    {% else %}
+      <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('register') }}">{% trans %}about.steward_cta_account{% endtrans %}</a>
+    {% endif %}
   </div>
 </div></section>
 {% endblock %}
