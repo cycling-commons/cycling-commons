@@ -1,0 +1,61 @@
+web/translations/messages.nl.yaml
+  s_41dce4bb9e0e72::t_455de1803e044d 1432
+  s_41dce4bb9e0e72::t_8c889b6f016c00 1415-1417,1424,1535,1537
+  s_41dce4bb9e0e72::t_8fab3c3a2764d5 1425-1426
+web/translations/messages.de.yaml
+  s_41dce4bb9e0e72::t_c6a15c4195d776 1418-1420
+  s_41dce4bb9e0e72::t_455de1803e044d 1435
+  s_41dce4bb9e0e72::t_8fab3c3a2764d5 1428-1429
+  s_41dce4bb9e0e72::t_8c889b6f016c00 1427,1538,1540
+web/translations/messages.fr.yaml
+  s_41dce4bb9e0e72::t_8fab3c3a2764d5 1425-1426
+  s_41dce4bb9e0e72::t_8c889b6f016c00 1415-1417,1424,1535,1537
+  s_41dce4bb9e0e72::t_455de1803e044d 1432
+web/tests/Contribution/ImproveTest.php
+  s_41dce4bb9e0e72::t_a8bb5485c61ad1 310-313
+  s_41dce4bb9e0e72::t_199c072b4e15c7 316,325-329,389,391-393
+web/assets/contribute/media-upload.js
+  s_41dce4bb9e0e72::t_8e72d7294c111c 208-211
+  s_41dce4bb9e0e72::t_6d864a4137910d 248
+  s_41dce4bb9e0e72::t_e23ff74289afba 58-63,68-70
+web/assets/contribute/improve.js
+  s_41dce4bb9e0e72::t_d41d9ae7e3c8e1 574
+  s_41dce4bb9e0e72::t_b132aa71f5e5ac 508-513
+  s_41dce4bb9e0e72::t_e654f8502cb3e2 523-525
+  s_41dce4bb9e0e72::t_895a2cc6cd6ecd 42-46
+  s_41dce4bb9e0e72::t_5e771647c25bd5 514-517
+  s_41dce4bb9e0e72::t_e12aadb517fb0f 618
+  s_41dce4bb9e0e72::t_8bec5dc6b626bc 518-522,526-532
+web/templates/contribute/improve.html.twig
+  s_41dce4bb9e0e72::t_a3c6f89b92893a 21-23
+  s_41dce4bb9e0e72::t_b17eb685efa78e 428-438,442
+  s_41dce4bb9e0e72::t_5cea718a93214c 222-225
+  s_41dce4bb9e0e72::t_d76d806b25a2fd 147-149,154-159,162-174,178
+web/translations/messages.en.yaml
+  s_41dce4bb9e0e72::t_455de1803e044d 1130
+  s_41dce4bb9e0e72::t_8fab3c3a2764d5 1123-1124
+  s_41dce4bb9e0e72::t_5ece655ec32ee5 1113-1115
+  s_41dce4bb9e0e72::t_4ae1f65c0609bc 1122
+  s_41dce4bb9e0e72::t_4fe0fc86744820 1235,1237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "8864a7aa010283f83b2ef72598d0c85b2c9605a0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_41dce4bb9e0e72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875a3a0-dbdb-41af-af97-755463d87f2d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
