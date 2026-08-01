@@ -133,6 +133,7 @@ privacy:
   rights_portability: '<b>Portabilité des données (Art. 20)</b> — téléchargez tout ce que nous détenons à votre sujet dans un seul fichier ZIP, à tout moment, depuis les paramètres de votre compte. Il contient les détails de votre compte, vos contributions, vos messages, vos consentements de licence et vos photos sous forme de fichiers.'
   rights_restrict: '<b>Limitation et opposition (Arts. 18–21)</b> — limiter ou s''opposer à certains traitements.'
   rights_withdraw: '<b>Retirer votre consentement</b> à tout moment (par exemple en désactivant votre profil public) — cela n''affecte pas les traitements déjà effectués.'
+  rights_third_party_photo: '<b>Pas de compte ?</b> Ces droits ne dépendent pas d''un compte. Si vous êtes reconnaissable sur une photo de notre carte, chaque page de photo porte un lien <b>« cette photo me montre »</b> — signalez-la là, sans compte ni pièce d''identité, et un curateur répond sous un mois.'
   rights_contact_pre: 'Pour exercer l''un de ces droits, écrivez à'
   rights_contact_mid: '. Nous répondrons dans un délai d''un mois. Si vous n''êtes pas satisfait de notre réponse, vous pouvez vous plaindre auprès de la'
   rights_contact_ap: 'Autoriteit Persoonsgegevens'

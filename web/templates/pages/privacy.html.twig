@@ -103,6 +103,9 @@
       <li>{{ 'privacy.rights_portability'|trans|rich }}</li>
       <li>{{ 'privacy.rights_restrict'|trans|rich }}</li>
       <li>{{ 'privacy.rights_withdraw'|trans|rich }}</li>
+      {# The non-user route (docs/specs/photo-uploads.md §6c): Art. 17 does not
+         depend on having an account, and this page must not imply it does. #}
+      <li>{{ 'privacy.rights_third_party_photo'|trans|rich }}</li>
     </ul>
     <p>{% trans %}privacy.rights_contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a>{% trans %}privacy.rights_contact_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.rights_contact_ap{% endtrans %}</a>{% trans %}privacy.rights_contact_post{% endtrans %}</p>
 

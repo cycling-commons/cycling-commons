@@ -133,6 +133,7 @@ privacy:
   rights_portability: '<b>Data portability (Art. 20)</b> — download everything we hold about you as a single ZIP file, any time, from your account settings. It holds your account details, your contributions, your messages, your licence consents, and your photos as files.'
   rights_restrict: '<b>Restriction and objection (Arts. 18–21)</b> — restrict or object to certain processing.'
   rights_withdraw: '<b>Withdraw consent</b> at any time (e.g. by turning off your public profile) — this doesn''t affect processing already done.'
+  rights_third_party_photo: '<b>Not a user?</b> These rights don''t depend on having an account. If you are recognisable in a photo on our map, every photo page carries a <b>"this photo shows me"</b> link — report it there, no account and no ID required, and a curator answers within one month.'
   rights_contact_pre: 'To exercise any of these, email'
   rights_contact_mid: '. We''ll respond within one month. If you''re unhappy with our response, you can complain to the'
   rights_contact_ap: 'Autoriteit Persoonsgegevens'

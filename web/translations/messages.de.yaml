@@ -133,6 +133,7 @@ privacy:
   rights_portability: '<b>Datenübertragbarkeit (Art. 20)</b> — lade alles, was wir über dich gespeichert haben, jederzeit als eine einzige ZIP-Datei in deinen Kontoeinstellungen herunter. Sie enthält deine Kontodaten, deine Beiträge, deine Nachrichten, deine Lizenz-Einwilligungen und deine Fotos als Dateien.'
   rights_restrict: '<b>Einschränkung und Widerspruch (Art. 18–21)</b> — schränke bestimmte Verarbeitungen ein oder widerspreche ihnen.'
   rights_withdraw: '<b>Einwilligung widerrufen</b> jederzeit (z. B. durch Deaktivierung deines öffentlichen Profils) — dies hat keinen Einfluss auf bereits erfolgte Verarbeitungen.'
+  rights_third_party_photo: '<b>Kein Konto?</b> Diese Rechte hängen nicht von einem Konto ab. Bist du auf einem Foto unserer Karte erkennbar, trägt jede Fotoseite einen Link <b>„Dieses Foto zeigt mich"</b> — melde es dort, ohne Konto und ohne Ausweis, und ein Kurator antwortet innerhalb eines Monats.'
   rights_contact_pre: 'Um eines dieser Rechte wahrzunehmen, schreib'
   rights_contact_mid: '. Wir antworten innerhalb eines Monats. Wenn du mit unserer Antwort unzufrieden bist, kannst du dich bei der'
   rights_contact_ap: 'Autoriteit Persoonsgegevens'

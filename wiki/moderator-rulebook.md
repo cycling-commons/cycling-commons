@@ -50,11 +50,29 @@ Removing deletes the image files. The record that a photo existed, that its
 subject asked, and that we did as asked is kept on purpose — it is how the
 Commons can show it honoured the request.
 
-**Someone who is in a photo they did not upload** has no self-service route
-yet: they email `info@cyclingcommons.org`, which reaches the site owner rather
-than this desk. If such a case reaches you, point them there rather than
-improvising — and tell the owner, because the volume is what decides when that
-route gets built.
+**Someone who is in a photo they did not upload** has their own route: the
+"this photo shows me" link on every photo page, open to people without
+accounts. Their card lands on this same desk marked **Third-party report**,
+with a category — and unlike an uploader's request, **the photo is still on
+the map** while you decide (the card says so). The one exception withholds
+before you look: a report of intimate imagery or of a child.
+
+For these cards the question is different, because you usually cannot know
+who is really in the picture and you must not ask for papers to find out:
+
+**Does the photo, on its face, show an identifiable person — and is the claim
+plausible?** If yes, remove. When you are unsure, remove: one photo of a
+fountain is cheap, a refused genuine claim is a rights violation.
+
+Decline only what is clearly not a rights claim: nobody visible at all, or a
+complaint about the *place* rather than a person (that is a map correction —
+say so in your note and point at the correction flow).
+
+Three things never to do on a third-party card: don't tell the reporter who
+uploaded, don't tell the uploader who reported, and don't copy the reporter's
+reply address anywhere — if they left one, answer them through the project
+mailbox within the month. A declined claim is final for its category: an
+identical report later will not reappear here, and that is by design.
 
 ## Do
 

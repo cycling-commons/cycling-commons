@@ -496,8 +496,79 @@ rest of moderation uses — §5c holds. They are deliberately **not** region-sco
 like the submission queue: a rights request is on a legal clock, not editorial
 work to be shared out by jurisdiction.
 
-Not covered here, and worth its own route later: a photo that depicts **third
-parties**, whose rights do not depend on the uploader's account at all.
+A photo that depicts **third parties** — whose rights do not depend on the
+uploader's account at all — has its own route: §6c.
+
+### 6c. Third-party reports — when the person in the photo is not the uploader
+
+The commoner depicts-me case: recognisable in a photo *somebody else* took,
+quite possibly with no account. Art. 17 does not require one, so the route is
+open to everyone; today it is built, not a mailbox.
+
+**The asymmetry that shapes everything.** The uploader's request (§6b)
+withholds on the spot because they own the row — the worst case is somebody
+hiding their own contribution. A stranger's request **queues and changes
+nothing**: instant withholding on an anonymous POST would be a heckler's veto
+over the whole map. The one narrow exception is the category *intimate
+imagery, or a child is depicted*, where the cost of a day online dwarfs a
+wrongful removal: it withholds immediately, its limiter is one pull per IP
+per day, and every use is logged in `media_moderation_event`
+(`third_party_reported`, note suffixed `(auto-withheld)`).
+
+**The form** (`GET|POST /photo/{uuid}/report`, linked from every published
+photo page): category (the five in `MediaTakedownCategory`) · what is wrong
+(free text, ≤2000) · an **optional** reply email. Nothing else — no name, no
+ID documents (Art. 5(1)(c); Art. 12(6) allows demanding more only where
+identity is genuinely in doubt, and for "that is me in the background" it is
+not). The page states the month to respond (Art. 12(3)), that the photo stays
+up meanwhile except for the urgent category, and what happens to the address.
+
+**Not an existence oracle.** The form is uuid-blind (no thumbnail, no lookup
+on GET) and a POST acknowledges identically whether the uuid exists, is
+unpublished, is already reported, or was already decided —
+`MediaReportEndpointTest` asserts the responses are byte-identical after
+normalising uuid and CSRF token. Validation errors (bad category, empty
+reason, malformed email) do surface: they reveal nothing about any photo.
+
+**Storage** reuses §6b's columns on `media_upload` plus: `takedown_source`
+(`uploader` | `third_party`), `takedown_category`, `takedown_contact`
+(reply address, swept by `app:media:gc` **90 days after
+`takedown_resolved_at`** — Art. 5(1)(e)), `takedown_reporter_hash` (salted
+IP hash — answers "is one person reporting forty photos" without keeping raw
+IPs), and `takedown_decided_categories`, the finality ledger. One live
+request per photo at a time, either source; an undecided report occupies the
+slot and a later filer is silently acknowledged. **One decided report per
+photo per category is final** — a repeat of a declined claim matches the
+ledger and does not re-open, so a stream of fresh copies cannot keep a photo
+down or a curator busy.
+
+**Abuse hardening**: `media_report` limiter 5/IP/day, `media_report_urgent`
+1/IP/day ([security-architecture.md §7](security-architecture.md)); **no
+CAPTCHA** (standing owner decision — the limiter and queue-not-withhold ARE
+the abuse story); the desk card and the finality ledger do the rest.
+
+**What the curator decides** — not "is this person really in the photo"
+(usually unknowable without collecting the documents this route refuses to
+collect) but: **does the photo, on its face, show an identifiable person,
+and is the claim plausible?** If yes, remove — when unsure, remove; the bias
+is deliberate and written in the rulebook. Decline the
+clearly-not-a-rights-claim cases: nobody visible, or a complaint about the
+*place* (an ordinary map correction — say so and point at the correction
+flow).
+
+**Who learns what.** The reporter is never told who uploaded; the uploader is
+never told who reported; neither ever sees the other's contact detail. On
+grant the uploader gets its own message kind (`media_removed_on_report` —
+"your request was granted" would be a lie to somebody who asked for nothing);
+on decline the uploader hears nothing, because nothing changed for them. A
+reporter who left an address is answered by a curator through the project
+mailbox within the month; the desk card shows the address to the curator
+only.
+
+**Out of scope, deliberately**: automated face detection (biometric
+processing of the whole corpus — an Art. 9-sized cure worse than the
+disease); blurring instead of removal (worth revisiting; v1 removes); a
+formal uploader appeal (they can reply to the message; evidence first).
 
 ## 7. Limits & formats summary
 
