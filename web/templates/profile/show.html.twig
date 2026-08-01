@@ -96,13 +96,29 @@
     {% endfor %}
     {% endif %}
 
-    {# ── Curator applications — the "where is my request?" answer lives on the
-       landing pane. #}
-    <h2 class="sec-h">{{ 'account.curating_title'|trans }}</h2>
+    {# ── Curating.
+       With an application in flight this is the "where is my request?" answer.
+       Without one, the reader is a rider, not a curator — telling them they
+       have no application in progress states the obvious in somebody else's
+       vocabulary. What is worth their while is whether their OWN area has
+       anyone looking after it, and an invitation either way. #}
     {% if curator_applications is empty %}
-      <p class="empty">{{ 'account.curating_none'|trans }}
-        <a href="{{ path('regions') }}">{{ 'account.curating_apply'|trans }}</a></p>
+      <h2 class="sec-h">{{ 'account.curating_invite_title'|trans }}</h2>
+      <p class="empty">
+        {% if home_region is null %}
+          {{ 'account.curating_no_area'|trans }}
+        {% elseif home_region.covered %}
+          {{ 'account.curating_covered'|trans({'%region%': ('region.' ~ home_region.slug ~ '.label')|trans}) }}
+        {% else %}
+          {{ 'account.curating_uncovered'|trans({'%region%': ('region.' ~ home_region.slug ~ '.label')|trans}) }}
+        {% endif %}
+        {# A way in, always — whether or not their own region already has
+           somebody. There is more to do than curating, and the regions page is
+           where the real state of it lives. #}
+        <a href="{{ path('regions') }}">{{ 'account.curating_apply'|trans }}</a>
+      </p>
     {% else %}
+      <h2 class="sec-h">{{ 'account.curating_title'|trans }}</h2>
       {% set app_pill = {'pending': 'pend', 'approved': 'ok', 'declined': 'rej', 'withdrawn': 'ret'} %}
       {% for app in curator_applications %}
         <div class="item">

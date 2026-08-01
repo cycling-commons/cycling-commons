@@ -47,19 +47,6 @@ enum DateFormat: string
         };
     }
 
-    /**
-     * How the time half is written when a date carries one.
-     *
-     * 24-hour everywhere except month-first, where a reader picking 08/01/2026
-     * is almost certainly expecting 2:30 PM rather than 14:30. The convention
-     * travels with the date order because that is what the reader is actually
-     * telling us about themselves.
-     */
-    public function timePattern(): string
-    {
-        return self::Mdy === $this ? 'h:mm a' : 'HH:mm';
-    }
-
     /** ICU's own date style, for the two cases that defer to the locale. */
     public function localeDateStyle(): int
     {

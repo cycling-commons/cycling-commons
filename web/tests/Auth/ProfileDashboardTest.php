@@ -45,8 +45,11 @@ final class ProfileDashboardTest extends WebTestCase
         self::assertStringNotContainsString('Peak District', $html);
         self::assertStringNotContainsString('47 days', $html);
 
-        // Honest empty states + the apply door instead.
-        self::assertStringContainsString('Curator applications', $html);
+        // Honest empty states + the apply door instead. "Curator applications"
+        // is the heading only once there IS one; a rider who has never applied
+        // gets an invitation written for them, not a curator's empty list.
+        self::assertStringNotContainsString('Curator applications', $html);
+        self::assertStringContainsString('Curating', $html);
         self::assertStringContainsString('See where curators are needed', $html);
         self::assertStringContainsString('No votes yet', $html);
         // Empty panes render the centred block, not a bare line.

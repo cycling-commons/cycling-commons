@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Twig;
 
 use App\Account\DateFormat;
+use App\Account\TimeFormat;
 use App\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -60,6 +61,7 @@ final class DateDisplayExtension extends AbstractExtension
             // client so JS-rendered dates cannot disagree with server-rendered
             // ones on the same page.
             new TwigFunction('cc_user_date_format', fn (): string => $this->preference()->value),
+            new TwigFunction('cc_user_time_format', fn (): string => $this->timePreference()->value),
         ];
     }
 
@@ -78,7 +80,7 @@ final class DateDisplayExtension extends AbstractExtension
             ->format($when) ?: '';
     }
 
-    /** A date with the time of day appended, in the notation that format implies. */
+    /** A date with the time of day appended, each in the notation the rider chose. */
     public function dateTime(\DateTimeInterface|string|int|null $value): string
     {
         $when = self::coerce($value);
@@ -86,18 +88,30 @@ final class DateDisplayExtension extends AbstractExtension
             return '';
         }
 
-        $format = $this->preference();
-        $pattern = $format->pattern();
+        $date = $this->preference();
+        $time = $this->timePreference();
+        $datePattern = $date->pattern();
+        $timePattern = $time->pattern();
 
-        // With an explicit date pattern the time pattern joins it directly. With
-        // a locale-following one there is no pattern to append to, so ICU's own
-        // SHORT time style is used — which is already 24- or 12-hour according
-        // to the locale, and is a better answer than anything hand-assembled.
-        $formatter = null !== $pattern
-            ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $pattern.' '.$format->timePattern())
-            : $this->formatter($format->localeDateStyle(), \IntlDateFormatter::SHORT, null);
+        // Both following the locale: one formatter, so the join is the locale's
+        // own ("1 Aug 2026 at 14:30" rather than anything hand-assembled).
+        if (null === $datePattern && null === $timePattern) {
+            return $this->formatter($date->localeDateStyle(), \IntlDateFormatter::SHORT, null)->format($when) ?: '';
+        }
 
-        return $formatter->format($when) ?: '';
+        // Otherwise the halves are formatted independently and joined with a
+        // space. ICU cannot mix an explicit pattern with a style, and the two
+        // preferences are deliberately independent — either one may be explicit
+        // while the other follows the language.
+        $datePart = null !== $datePattern
+            ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $datePattern)->format($when)
+            : $this->formatter($date->localeDateStyle(), \IntlDateFormatter::NONE, null)->format($when);
+
+        $timePart = null !== $timePattern
+            ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $timePattern)->format($when)
+            : $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::SHORT, null)->format($when);
+
+        return trim(($datePart ?: '').' '.($timePart ?: ''));
     }
 
     /**
@@ -124,6 +138,13 @@ final class DateDisplayExtension extends AbstractExtension
         $user = $this->security->getUser();
 
         return $user instanceof User ? $user->getDateFormat() : DateFormat::Auto;
+    }
+
+    private function timePreference(): TimeFormat
+    {
+        $user = $this->security->getUser();
+
+        return $user instanceof User ? $user->getTimeFormat() : TimeFormat::Auto;
     }
 
     private function formatter(int $dateStyle, int $timeStyle, ?string $pattern): \IntlDateFormatter

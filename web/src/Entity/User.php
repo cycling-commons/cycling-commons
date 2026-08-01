@@ -5,6 +5,7 @@
 namespace App\Entity;
 
 use App\Account\DateFormat;
+use App\Account\TimeFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
@@ -174,6 +175,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // a page whose only job was to print a date.
     #[ORM\Column(name: 'date_format', type: 'string', length: 10, options: ['default' => 'auto'])]
     private string $dateFormat = DateFormat::Auto->value;
+
+    // And whether they read 14:30 or 2:30 PM. Its own column rather than
+    // something inferred from the date order: someone can want 01-08-2026 and
+    // 2:30 PM, and guessing a clock convention from a date format is a guess
+    // about their habits made from the wrong evidence.
+    #[ORM\Column(name: 'time_format', type: 'string', length: 10, options: ['default' => 'auto'])]
+    private string $timeFormat = TimeFormat::Auto->value;
 
     #[ORM\Column(type: 'boolean')]
     private bool $emailVerified = false;
@@ -628,6 +636,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setDateFormat(DateFormat $format): static
     {
         $this->dateFormat = $format->value;
+
+        return $this;
+    }
+
+    public function getTimeFormat(): TimeFormat
+    {
+        return TimeFormat::tryFrom($this->timeFormat) ?? TimeFormat::Auto;
+    }
+
+    public function setTimeFormat(TimeFormat $format): static
+    {
+        $this->timeFormat = $format->value;
 
         return $this;
     }

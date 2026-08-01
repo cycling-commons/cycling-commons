@@ -15,6 +15,7 @@
 
   var CFG = window.CC_DATE || {};
   var FMT = CFG.format || 'auto';
+  var TIME = CFG.time || 'auto';
   var LOC = CFG.locale || document.documentElement.lang || undefined;
 
   function pad(n) { return n < 10 ? '0' + n : String(n); }
@@ -55,6 +56,25 @@
     return intl(d, { year: 'numeric', month: 'long' === FMT ? 'long' : 'short' });
   }
 
+  /** The time of day, 24-hour or 12-hour as the rider asked. */
+  function ccTime(value) {
+    var d = value instanceof Date ? value : new Date(value);
+    if (!value || isNaN(d.getTime())) return '';
+
+    if ('h24' === TIME) return pad(d.getHours()) + ':' + pad(d.getMinutes());
+    var opts = { hour: 'numeric', minute: '2-digit' };
+    if ('h12' === TIME) opts.hour12 = true;
+    try { return d.toLocaleTimeString(LOC, opts); } catch (e) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  }
+
+  function ccDateTime(value) {
+    var date = ccDate(value);
+    var time = ccTime(value);
+    return date && time ? date + ' ' + time : (date || time);
+  }
+
   window.ccDate = ccDate;
   window.ccMonth = ccMonth;
+  window.ccTime = ccTime;
+  window.ccDateTime = ccDateTime;
 })();

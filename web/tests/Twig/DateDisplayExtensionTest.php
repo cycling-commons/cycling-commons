@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Twig;
 
 use App\Account\DateFormat;
+use App\Account\TimeFormat;
 use App\Entity\User;
 use App\Twig\DateDisplayExtension;
 use PHPUnit\Framework\TestCase;
@@ -25,8 +26,11 @@ final class DateDisplayExtensionTest extends TestCase
 {
     private const string WHEN = '2026-08-01 14:30:00';
 
-    private function extension(?DateFormat $format, string $locale = 'en'): DateDisplayExtension
-    {
+    private function extension(
+        ?DateFormat $format,
+        string $locale = 'en',
+        TimeFormat $time = TimeFormat::Auto,
+    ): DateDisplayExtension {
         // A stub, not a mock: nothing here verifies HOW Security is called,
         // only what it hands back, and phpunit.dist.xml fails the run on the
         // notice a expectation-less mock raises.
@@ -34,7 +38,7 @@ final class DateDisplayExtensionTest extends TestCase
         if (null === $format) {
             $security->method('getUser')->willReturn(null);
         } else {
-            $security->method('getUser')->willReturn((new User())->setDateFormat($format));
+            $security->method('getUser')->willReturn((new User())->setDateFormat($format)->setTimeFormat($time));
         }
 
         $request = new Request();
@@ -91,10 +95,31 @@ final class DateDisplayExtensionTest extends TestCase
         );
     }
 
-    public function testTheTimeConventionTravelsWithTheDateOrder(): void
+    public function testTheClockIsItsOwnChoiceNotOneInferredFromTheDate(): void
     {
-        self::assertStringContainsString('14:30', $this->extension(DateFormat::Dmy)->dateTime(self::WHEN));
-        self::assertStringContainsString('2:30', $this->extension(DateFormat::Mdy)->dateTime(self::WHEN));
+        // The pairing that an earlier design made impossible: a day-first date
+        // with a twelve-hour clock, and a month-first date with a 24-hour one.
+        // Both are ordinary combinations and neither is derivable from the other.
+        self::assertSame('01-08-2026 2:30 PM', $this->extension(DateFormat::Dmy, time: TimeFormat::H12)->dateTime(self::WHEN));
+        self::assertSame('08/01/2026 14:30', $this->extension(DateFormat::Mdy, time: TimeFormat::H24)->dateTime(self::WHEN));
+    }
+
+    public function testAnAutoClockFollowsThePageLanguage(): void
+    {
+        // English says 2:30 PM, Dutch and German say 14:30 — which is exactly
+        // what "match my language" should mean, and why it is the default.
+        self::assertStringContainsString('2:30', $this->extension(DateFormat::Dmy, 'en')->dateTime(self::WHEN));
+        self::assertStringContainsString('14:30', $this->extension(DateFormat::Dmy, 'nl')->dateTime(self::WHEN));
+    }
+
+    public function testBothFollowingTheLocaleUsesTheLocalesOwnJoin(): void
+    {
+        // One formatter rather than two halves glued with a space, so the
+        // language supplies its own connector where it has one.
+        $rendered = $this->extension(DateFormat::Auto, 'en')->dateTime(self::WHEN);
+
+        self::assertStringContainsString('2026', $rendered);
+        self::assertStringContainsString('2:30', $rendered);
     }
 
     public function testMonthIsAlwaysWrittenOutRatherThanNumeric(): void

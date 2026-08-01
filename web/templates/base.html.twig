@@ -26,6 +26,7 @@ window.ccT = function (k, fb, vars) { var s = (window.CC_I18N && window.CC_I18N[
    'auto', which is what the filters give them too. #}
 window.CC_DATE = {{ {
   format: cc_user_date_format(),
+  time: cc_user_time_format(),
   locale: app.request.locale|default('en')
 }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>

@@ -85,7 +85,45 @@ final class ProfileController extends AbstractController
                   ORDER BY ca.created_at DESC, ca.id DESC',
                 ['uid' => (int) $user->getId()],
             ),
+            // Whether the rider's OWN area has anyone looking after it. Someone
+            // who has never applied is not "a curator with no applications" —
+            // they are a rider, and the only thing worth telling them here is
+            // whether their patch needs somebody.
+            'home_region' => $this->homeRegion($db, $user),
         ]);
+    }
+
+    /**
+     * The first of the rider's derived base regions — the one containing their
+     * base point (map-and-search.md §4.5 puts it first) — and whether anyone
+     * curates it.
+     *
+     * Country-level moderators count: a moderator scoped to NL looks after
+     * every Dutch region, so treating those regions as uncovered would send
+     * riders to apply for work that is already being done.
+     *
+     * @return array{slug: string, covered: bool}|null null when no base
+     *                                                 location is set, which is the "we cannot say" case
+     */
+    private function homeRegion(Connection $db, User $user): ?array
+    {
+        $ids = $user->getBaseRegionIds();
+        if ([] === $ids) {
+            return null;
+        }
+
+        $row = $db->fetchAssociative(
+            'SELECT r.slug,
+                    EXISTS (
+                      SELECT 1 FROM moderator_area ma
+                       WHERE ma.region_id = r.id
+                          OR ma.country_code = r.country_code
+                    ) AS covered
+               FROM region r WHERE r.id = :id',
+            ['id' => $ids[0]],
+        );
+
+        return false === $row ? null : ['slug' => (string) $row['slug'], 'covered' => (bool) $row['covered']];
     }
 
     /**

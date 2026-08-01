@@ -653,10 +653,17 @@ so. `auto` is the default and means "whatever suits the language I am reading";
 the other four are explicit and mean the same thing in every locale — the
 pattern is fixed, only month **names** localise.
 
-The time convention travels with the date order: 24-hour everywhere except
-`mdy`, where somebody who picked `08/01/2026` is almost certainly expecting
-`2:30 PM`. That is the reader telling us about themselves, and it would be
-strange to take half the message.
+`App\Account\TimeFormat` — `auto | h24 | h12`, on `users.time_format`, is a
+**second, independent** preference. An earlier version derived it from the date
+order (month-first implies twelve-hour), which was tidy reasoning and wrong for
+real people: someone can want `01-08-2026` and `2:30 PM`, or `08/01/2026` and
+`14:30`, and a clock convention guessed from a date order is a guess about
+somebody's habits made from the wrong evidence.
+
+`cc_datetime` uses one ICU formatter when **both** halves follow the locale, so
+the language supplies its own connector; otherwise it formats each half and
+joins them with a space, because ICU cannot mix an explicit pattern with a
+style and either preference may be explicit while the other is not.
 
 **Every human-readable date goes through one filter.** `App\Twig\
 DateDisplayExtension` provides `cc_date`, `cc_datetime` and `cc_month`, and no

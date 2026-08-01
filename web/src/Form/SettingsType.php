@@ -5,6 +5,7 @@
 namespace App\Form;
 
 use App\Account\DateFormat;
+use App\Account\TimeFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
@@ -120,6 +121,13 @@ final class SettingsType extends AbstractType
                 'help' => 'form.help_date_format',
                 'required' => true,
                 'choice_label' => static fn (DateFormat $f): string => $f->labelKey(),
+            ])
+            ->add('timeFormat', EnumType::class, [
+                'class' => TimeFormat::class,
+                'label' => 'form.label_time_format',
+                'help' => 'form.help_time_format',
+                'required' => true,
+                'choice_label' => static fn (TimeFormat $f): string => $f->labelKey(),
             ])
             // Rider preferences (account-and-auth.md §9). EnumType hands the
             // entity setters real enum instances. Bike-type labels reuse the
