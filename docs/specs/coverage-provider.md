@@ -749,6 +749,21 @@ rather than failing the page. Coverage *percentages* are deliberately gone:
 there is no honest denominator for "how complete is a country", so the page
 shows real volumes instead.
 
+The density is **printed as a number** beside the bar, not left implicit in
+its length. A bar with no scale can only say "Germany is longer than
+Luxembourg", which is the opposite of what a density bar exists to correct —
+and Luxembourg is in fact the densest of the four. The explanatory list sits
+**below** the table: the numbers are what a reader came for, and three
+paragraphs of vocabulary in front of them is a toll gate.
+
+Reference places are **not** broken down by data provider, because there is
+exactly one — every `coverage_poi` row is OSM-derived, which is why the table
+carries `ref`/`osm_version`/`osm_ts` and no source column (§2). Partnering with
+a stays or drinking-water dataset means adding that column first; a breakdown
+grouped on a column that does not exist would be one bar wearing a chart's
+clothes. The page says as much in prose instead, so the intent is visible
+before the schema catches up.
+
 ## 10. Relationship to other documents
 
 - [osm-data-architecture.md](osm-data-architecture.md) owns the policy this

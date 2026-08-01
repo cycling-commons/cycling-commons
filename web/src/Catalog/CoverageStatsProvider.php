@@ -63,9 +63,13 @@ final class CoverageStatsProvider
      * (owner correction 2026-07-30: Luxembourg vs Germany), while density is
      * size-fair. The printed number stays the absolute count.
      *
+     * `poisPerKm2` is that same density as a NUMBER, because a bar without one
+     * is a shape: "Germany is longer than Luxembourg" was all this column could
+     * say, and the figure it was scaled by went unprinted.
+     *
      * @return list<array{code:string, name:string, flag:string, regions:int,
-     *                    coveragePois:int, items:int, itemsVerified:int,
-     *                    routes:int, share:int}>
+     *                    areaKm2:float, coveragePois:int, poisPerKm2:float,
+     *                    items:int, itemsVerified:int, routes:int, share:int}>
      */
     public function countries(string $locale): array
     {
@@ -112,7 +116,9 @@ final class CoverageStatsProvider
                 'name' => Countries::exists($cc) ? Countries::getName($cc, $locale) : $cc,
                 'flag' => 'flags/'.strtolower($cc).'.svg',
                 'regions' => (int) $row['regions'],
+                'areaKm2' => $area,
                 'coveragePois' => $n,
+                'poisPerKm2' => $density,
                 'items' => (int) $row['items'],
                 'itemsVerified' => (int) $row['verified'],
                 'routes' => (int) $row['routes'],
@@ -158,6 +164,13 @@ final class CoverageStatsProvider
      * yet. Rows with a NULL country (pre-normalization harvests) are ignored
      * for the per-country table but absent from the KPI sum too — the page
      * shows what is attributable, not a number that cannot be broken down.
+     *
+     * Not broken down by DATA PROVIDER, because there is exactly one: every
+     * row here is OSM-derived, which is why `coverage_poi` carries `ref`,
+     * `osm_version` and `osm_ts` and no source column at all
+     * (coverage-provider.md §2). Partnering with a stays or drinking-water
+     * dataset means adding that column first; grouping by a column that does
+     * not exist would be a chart of one bar pretending to be a breakdown.
      *
      * @return array<string, int>
      */
