@@ -250,7 +250,7 @@ licenses:
   media_must2_body: '— release adaptations under CC BY-SA 4.0'
   code_h: 'The code'
   code_sub: 'PolyForm Shield License 1.0.0 · source-available'
-  code_tldr: 'Read, run, modify, and build on the Cycling Commons source for any purpose — except running a product that competes with the Cycling Commons. Want to build a cycling app? Build on the open data and API, free for any use including commercial.'
+  code_tldr: 'Read, run, modify, and build on the Cycling Commons source for any purpose — except running a product that competes with the Cycling Commons. An atlas for hikers, runners or paddlers is exactly what this code is here for. Building for cyclists? Build on the open data and API instead — free for any use, commercial included.'
   code_can1: 'Read, run, and modify the source — free'
   code_can2: 'Adapt it for a non-competing use (e.g. another sport)'
   code_can3: 'Self-host and contribute back'
