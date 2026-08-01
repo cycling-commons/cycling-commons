@@ -684,6 +684,37 @@ Without it, JS-rendered dates (the photo drawer's capture month, the consent
 notice's agreement date) would disagree with server-rendered ones on the same
 page, which is exactly the failure the preference exists to prevent.
 
+### The curating invitation on the landing pane
+
+With a curator application in flight, this block answers "where is my request?".
+**Without one, the reader is a rider, not a curator** — telling them they have
+no application in progress states the obvious in somebody else's vocabulary,
+under a heading ("Curator applications") that is not about them. So the empty
+case is an invitation, and it answers the question a rider might actually have:
+*does my own patch have anyone looking after it?*
+
+Best evidence first — base region, else declared country, else nothing:
+
+| state | when | says |
+|---|---|---|
+| `region_local` | their region has its own curator | it does, and a region can have more than one |
+| `region_national` | only a country-wide moderator covers it | covered nationally, nobody local |
+| `region_none` | nobody at all | nobody yet |
+| `country_some` | no base location, their country has someone | it does, regions could still use somebody closer |
+| `country_none` | no base location, their country has nobody | not a single region |
+| `unknown` | neither known | what a curator is, and a link to set their area |
+
+Region-level and country-level cover are reported **separately** rather than
+folded into one boolean. A moderator scoped to NL is real cover for all twelve
+provinces, so those regions are not "uncovered" — but they are not done either:
+a region can have its own curators alongside the country's, and somebody who
+actually rides there sees what a country-wide view never will. Collapsing the
+two would either nag people whose area is handled or ignore people whose area
+needs them.
+
+Every state carries a way in, including the covered ones. There is more to do
+than curating, and "we have someone" is not a reason to close the door.
+
 ## 10. Self-service account deletion (GDPR Art. 17)
 
 Two-step flow in `SettingsController` (danger zone, Security tab), both steps

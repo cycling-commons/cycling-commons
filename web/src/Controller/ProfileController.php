@@ -85,45 +85,75 @@ final class ProfileController extends AbstractController
                   ORDER BY ca.created_at DESC, ca.id DESC',
                 ['uid' => (int) $user->getId()],
             ),
-            // Whether the rider's OWN area has anyone looking after it. Someone
+            // Whether the rider's OWN patch has anyone looking after it. Someone
             // who has never applied is not "a curator with no applications" —
             // they are a rider, and the only thing worth telling them here is
-            // whether their patch needs somebody.
-            'home_region' => $this->homeRegion($db, $user),
+            // whether their area needs somebody.
+            'curating' => $this->curatingContext($db, $user),
         ]);
     }
 
     /**
-     * The first of the rider's derived base regions — the one containing their
-     * base point (map-and-search.md §4.5 puts it first) — and whether anyone
-     * curates it.
+     * What to tell a rider about curation where they are.
      *
-     * Country-level moderators count: a moderator scoped to NL looks after
-     * every Dutch region, so treating those regions as uncovered would send
-     * riders to apply for work that is already being done.
+     * Best evidence first: their base region if they set a location, otherwise
+     * their declared country, otherwise nothing. The country fallback matters —
+     * plenty of accounts pick a country and never set a base location, and
+     * "somewhere in France" is still a far better answer than a generic
+     * paragraph about what a curator is.
      *
-     * @return array{slug: string, covered: bool}|null null when no base
-     *                                                 location is set, which is the "we cannot say" case
+     * Region-level and country-level cover are reported SEPARATELY rather than
+     * folded into one boolean. A country moderator looking after all of NL is
+     * real cover, so a region under one is not "uncovered" — but it is also not
+     * done: a region can have its own curators alongside the country's, and
+     * somebody who actually rides there sees what a country-wide view never
+     * will. Telling those two states apart is the difference between inviting
+     * the right people and either nagging or ignoring them.
+     *
+     * @return array{state: string, slug: string, country: string}
      */
-    private function homeRegion(Connection $db, User $user): ?array
+    private function curatingContext(Connection $db, User $user): array
     {
         $ids = $user->getBaseRegionIds();
-        if ([] === $ids) {
-            return null;
+        if ([] !== $ids) {
+            // The first id is the region CONTAINING the base point
+            // (map-and-search.md §4.5 orders them that way), not merely a nearby one.
+            $row = $db->fetchAssociative(
+                'SELECT r.slug,
+                        EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.region_id = r.id)                AS local,
+                        EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = r.country_code)   AS national
+                   FROM region r WHERE r.id = :id',
+                ['id' => $ids[0]],
+            );
+            if (false !== $row) {
+                $state = match (true) {
+                    (bool) $row['local'] => 'region_local',
+                    (bool) $row['national'] => 'region_national',
+                    default => 'region_none',
+                };
+
+                return ['state' => $state, 'slug' => (string) $row['slug'], 'country' => ''];
+            }
         }
 
-        $row = $db->fetchAssociative(
-            'SELECT r.slug,
-                    EXISTS (
-                      SELECT 1 FROM moderator_area ma
-                       WHERE ma.region_id = r.id
-                          OR ma.country_code = r.country_code
-                    ) AS covered
-               FROM region r WHERE r.id = :id',
-            ['id' => $ids[0]],
-        );
+        $country = $user->getCountry();
+        if (null !== $country) {
+            $covered = (bool) $db->fetchOne(
+                'SELECT EXISTS (SELECT 1 FROM moderator_area WHERE country_code = :cc)
+                     OR EXISTS (SELECT 1 FROM moderator_area ma
+                                  JOIN region r ON r.id = ma.region_id
+                                 WHERE r.country_code = :cc)',
+                ['cc' => $country->getIso2()],
+            );
 
-        return false === $row ? null : ['slug' => (string) $row['slug'], 'covered' => (bool) $row['covered']];
+            return [
+                'state' => $covered ? 'country_some' : 'country_none',
+                'slug' => '',
+                'country' => $country->getName(),
+            ];
+        }
+
+        return ['state' => 'unknown', 'slug' => '', 'country' => ''];
     }
 
     /**
