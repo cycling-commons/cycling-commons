@@ -885,14 +885,82 @@ settings:
   twofa_manage: '2FA verwalten ↗'
   twofa_setup: '2FA einrichten ↗'
   notice: '<b>Profile sind opt-in.</b> Nur Beiträge, die du öffentlich zeigen möchtest, erscheinen öffentlich — anonyme Bearbeitungen werden nie zugeordnet. Daten treten The Commons unter <b>ODbL 1.0</b> bei, Medien unter <b>CC BY-SA 4.0</b>.'
+  section_export: 'Deine Daten herunterladen'
+  export_help: 'Alles, was wir über dich gespeichert haben, in einer einzigen ZIP-Datei: dein Konto, deine Beiträge, deine Nachrichten, deine Lizenz-Einwilligungen und deine Fotos als Dateien. Dein Passwort und deine Zwei-Faktor-Geheimnisse sind nie dabei.'
+  label_export_password: 'Aktuelles Passwort'
+  export_password_help: 'Bestätigt, dass du es bist, bevor wir die Datei zusammenstellen.'
+  submit_export: 'Meine Daten herunterladen'
   section_danger: 'Gefahrenzone'
   delete_account_b: 'Konto löschen'
-  delete_account_small: 'Dein Konto und alle personenbezogenen Daten dauerhaft entfernen. Dies kann nicht rückgängig gemacht werden.'
+  delete_account_small: 'Dein Konto und deine personenbezogenen Daten dauerhaft entfernen. Deine Beiträge zur offenen Karte und der Nachweis jeder erteilten Fotolizenz bleiben bestehen, und keines davon nennt dich danach. Dies kann nicht rückgängig gemacht werden.'
   submit_delete_request: 'Löschcode senden'
   delete_summary: 'Ich habe einen Code — Löschung bestätigen'
   label_deletion_code: 'Löschcode (aus der E-Mail)'
   submit_password: 'Passwort ändern'
   submit_delete_confirm: 'Mein Konto dauerhaft löschen'
+export:
+  readme: |
+    DEINE CYCLING-COMMONS-DATEN
+    ===========================
+
+    Erstellt am %generated% für das Konto „%account%".
+
+    Dieses Archiv beantwortet zwei DSGVO-Rechte auf einmal: das Auskunftsrecht
+    (Art. 15) und das Recht auf Datenübertragbarkeit (Art. 20). Die
+    Übertragbarkeit deckt nur ab, was du uns selbst gegeben hast, die Auskunft
+    deckt mehr ab — statt dich zwischen zwei Downloads wählen zu lassen, ist
+    dies die Gesamtmenge.
+
+    WAS DRIN IST
+
+      account.json        Dein Konto: E-Mail, Anzeigename, Sprache, Land,
+                          Basisstandort, Einstellungen und Zeitstempel.
+      contributions.json  Deine Einreichungen und die Feldänderungen, die sie
+                          auf der Karte bewirkt haben, nachdem ein Kurator sie
+                          angenommen hat.
+      community.json      Bestätigungen, Routen-Stimmen, Fahrten,
+                          Korrekturvorschläge, Länderanfragen,
+                          Kurator-Bewerbungen.
+      messages.json       Deine Dashboard-Nachrichten, in beide Richtungen.
+      consent.json        Jede erteilte Fotolizenz: welcher Wortlaut, welche
+                          Version, und wann.
+      photos/index.json   Ein Eintrag pro hochgeladenem Foto, mit Status und
+                          der zugehörigen Datei.
+      photos/*.webp       Die Fotos selbst.
+
+    WAS NICHT DRIN IST, UND WARUM
+
+      Dein Passwort, dein Zwei-Faktor-Geheimnis und deine Backup-Codes. Das
+      sind die Zugangsdaten, die dieses Konto schützen. Ein Export ist eine
+      Datei, die Menschen weiterleiten und sichern, und die Schlüssel mit dem
+      Inhalt herauszugeben würde dich unsicherer machen, nicht besser
+      informiert.
+
+      Die Identität der Kuratoren, die deine Arbeit bearbeitet haben. Was über
+      deine Einreichungen entschieden wurde, sind deine Daten und steht hier
+      vollständig drin, Notizen inbegriffen. Wer die Entscheidung getroffen
+      hat, sind ihre.
+
+    ZU DEN FOTOS
+
+      Das sind unsere verarbeiteten Kopien, nicht die Dateien, die du
+      hochgeladen hast. Wir kodieren jedes Foto beim Eingang neu und entfernen
+      seine Metadaten, einschließlich jedes von der Kamera aufgezeichneten
+      Standorts — die Datei genau so, wie du sie geschickt hast, bewahren wir
+      nicht auf. Ein Eintrag im Index mit "file": null ist ein Foto, dessen
+      gespeicherte Objekte bereits gelöscht wurden; der Nachweis darüber
+      bleibt.
+
+      Fotos, die ein Kurator freigegeben hat, stehen unter CC BY-SA 4.0 und
+      bleiben Teil von The Commons. Diese Lizenz kann nicht widerrufen werden.
+      Dein Name steht jedoch nicht in den Dateien: Die Namensnennung wird live
+      aus deinem Profil aufgelöst — dein Profil auf privat zu stellen oder dein
+      Konto zu schließen ändert also, was jede Kopie deines Fotos nennt, auch
+      längst heruntergeladene Kopien.
+
+    FRAGEN
+
+      info@cyclingcommons.org
 vote:
   kicker: 'Wallonien, Belgien'
   title: 'Das Beste dieser Region bewerten.'
@@ -1810,6 +1878,7 @@ flash:
   deletion_code_sent: 'Schau in deine E-Mails für den Löschcode. Er läuft in 1 Stunde ab.'
   deletion_code_invalid: 'Ungültiger oder abgelaufener Löschcode.'
   account_deleted: 'Dein Konto wurde dauerhaft gelöscht.'
+  export_rate_limited: 'Du hast deine Daten heute schon einige Male angefordert. Bitte versuch es morgen erneut.'
 form:
   label_email: 'E-Mail'
   label_email_address: 'E-Mail-Adresse'

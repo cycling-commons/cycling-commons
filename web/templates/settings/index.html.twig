@@ -149,6 +149,7 @@
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('password_error') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('export_error') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('error') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
   <div class="dpane {{ active_tab == 'profile' ? 'on' }}" id="tab-profile" role="tabpanel" aria-labelledby="tabbtn-profile">
@@ -386,6 +387,24 @@
         {% if cc_user.twoFaEnabled and cc_user.totpSecret %}{{ 'settings.twofa_manage'|trans }}{% else %}{{ 'settings.twofa_setup'|trans }}{% endif %}
       </a>
     </div>
+  </div>
+
+  {# ── Download my data (docs/specs/account-and-auth.md §11) ──
+     Sits directly above the danger zone on purpose: the last thing a rider
+     reads before closing an account should be that they can take a copy with
+     them first. #}
+  <div style="margin-top:1.6rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.1)" id="export">
+    <h2 class="sec">{{ 'settings.section_export'|trans }}</h2>
+    <p class="fhelp" style="margin:0 0 1rem">{{ 'settings.export_help'|trans }}</p>
+    <form method="post" action="{{ path('settings_export') }}">
+      <input type="hidden" name="_token" value="{{ csrf_token('data_export') }}">
+      <div class="field" style="margin-bottom:.8rem;max-width:320px">
+        <label for="export_password">{{ 'settings.label_export_password'|trans }}</label>
+        <input type="password" id="export_password" name="current_password" autocomplete="current-password" required>
+        <p class="fhelp">{{ 'settings.export_password_help'|trans }}</p>
+      </div>
+      <button type="submit" class="btn">{{ 'settings.submit_export'|trans }}</button>
+    </form>
   </div>
 
   {# ── Danger zone ── #}

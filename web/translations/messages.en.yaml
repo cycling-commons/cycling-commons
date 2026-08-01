@@ -889,14 +889,74 @@ settings:
   twofa_manage: 'Manage 2FA ↗'
   twofa_setup: 'Set up 2FA ↗'
   notice: '<b>Profiles are opt-in.</b> Only contributions you choose to show appear publicly — anonymous edits are never attributed. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>.'
+  section_export: 'Download your data'
+  export_help: 'Everything we hold about you, in one ZIP file: your account, your contributions, your messages, your licence consents, and your photos as files. Your password and two-factor secrets are never included.'
+  label_export_password: 'Current password'
+  export_password_help: 'Confirms it is you before we assemble the file.'
+  submit_export: 'Download my data'
   section_danger: 'Danger zone'
   delete_account_b: 'Delete account'
-  delete_account_small: 'Permanently remove your account and all personal data. This cannot be undone.'
+  delete_account_small: 'Permanently remove your account and your personal data. Your contributions to the open map and the record of any photo licence you granted stay, and neither names you afterwards. This cannot be undone.'
   submit_delete_request: 'Send deletion code'
   delete_summary: 'I have a code — confirm deletion'
   label_deletion_code: 'Deletion code (from email)'
   submit_password: 'Change password'
   submit_delete_confirm: 'Permanently delete my account'
+export:
+  readme: |
+    YOUR CYCLING COMMONS DATA
+    =========================
+
+    Generated %generated% for the account "%account%".
+
+    This archive answers two GDPR rights at once: the right of access
+    (Art. 15) and the right to data portability (Art. 20). Portability covers
+    only what you gave us yourself and access covers more than that, so rather
+    than make you pick between two downloads, this is the superset.
+
+    WHAT IS IN HERE
+
+      account.json        Your account: email, display name, language, country,
+                          base location, preferences and timestamps.
+      contributions.json  The submissions you made, and the field-level changes
+                          they produced on the map once a curator accepted them.
+      community.json      Confirmations, route votes, rides, correction
+                          suggestions, country requests, curator applications.
+      messages.json       Your dashboard messages, in both directions.
+      consent.json        Every photo licence you granted: which wording, which
+                          version of it, and when.
+      photos/index.json   One entry per photo you uploaded, with its status and
+                          the file it corresponds to.
+      photos/*.webp       The photos themselves.
+
+    WHAT IS NOT IN HERE, AND WHY
+
+      Your password, your two-factor secret and your backup codes. These are
+      the credentials that protect this account. An export is a file people
+      forward and back up, and handing over the keys along with the contents
+      would make you less safe, not better informed.
+
+      The identity of the curators who handled your work. What was decided
+      about your submissions is your data and all of it is here, notes
+      included. Which person made the decision is theirs.
+
+    ABOUT THE PHOTOS
+
+      These are our processed copies, not the files you uploaded. We re-encode
+      every photo on arrival and strip its metadata, including any location the
+      camera recorded, so the file exactly as you sent it is not something we
+      keep. An entry in the index with "file": null is a photo whose stored
+      objects have already been deleted; the record of it survives.
+
+      Photos a curator approved are licensed CC BY-SA 4.0 and stay part of the
+      Commons. That licence cannot be withdrawn. Your name, however, is not in
+      the files: attribution is resolved live from your profile, so making your
+      profile private, or closing your account, changes what every copy of your
+      photo credits, including copies downloaded long ago.
+
+    QUESTIONS
+
+      info@cyclingcommons.org
 vote:
   kicker: 'Wallonia, Belgium'
   title: 'Rank this region''s best.'
@@ -1816,6 +1876,7 @@ flash:
   deletion_code_sent: 'Check your email for the deletion code. It expires in 1 hour.'
   deletion_code_invalid: 'Invalid or expired deletion code.'
   account_deleted: 'Your account has been permanently deleted.'
+  export_rate_limited: 'You have already requested your data a few times today. Please try again tomorrow.'
 form:
   label_email: 'Email'
   label_email_address: 'Email address'

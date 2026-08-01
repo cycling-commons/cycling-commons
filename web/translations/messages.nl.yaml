@@ -885,14 +885,79 @@ settings:
   twofa_manage: '2FA beheren ↗'
   twofa_setup: '2FA instellen ↗'
   notice: '<b>Profielen zijn opt-in.</b> Alleen bijdragen die jij wilt tonen, verschijnen openbaar — anonieme bewerkingen worden nooit toegeschreven. Data komt in de Commons terecht onder <b>ODbL 1.0</b>, media onder <b>CC BY-SA 4.0</b>.'
+  section_export: 'Je gegevens downloaden'
+  export_help: 'Alles wat we over je bewaren, in één ZIP-bestand: je account, je bijdragen, je berichten, je licentietoestemmingen en je foto''s als bestanden. Je wachtwoord en tweefactorgeheimen zitten er nooit in.'
+  label_export_password: 'Huidig wachtwoord'
+  export_password_help: 'Bevestigt dat jij het bent voordat we het bestand samenstellen.'
+  submit_export: 'Mijn gegevens downloaden'
   section_danger: 'Gevarenzone'
   delete_account_b: 'Account verwijderen'
-  delete_account_small: 'Verwijder permanent je account en alle persoonsgegevens. Dit kan niet ongedaan worden gemaakt.'
+  delete_account_small: 'Verwijder permanent je account en je persoonsgegevens. Je bijdragen aan de open kaart en de vastlegging van elke fotolicentie die je verleende blijven bestaan, en geen van beide noemt je daarna. Dit kan niet ongedaan worden gemaakt.'
   submit_delete_request: 'Verwijdercode versturen'
   delete_summary: 'Ik heb een code — bevestig verwijdering'
   label_deletion_code: 'Verwijdercode (uit e-mail)'
   submit_password: 'Wachtwoord wijzigen'
   submit_delete_confirm: 'Mijn account permanent verwijderen'
+export:
+  readme: |
+    JOUW CYCLING COMMONS-GEGEVENS
+    =============================
+
+    Gegenereerd op %generated% voor het account "%account%".
+
+    Dit archief beantwoordt twee AVG-rechten tegelijk: het recht op inzage
+    (art. 15) en het recht op gegevensoverdraagbaarheid (art. 20).
+    Overdraagbaarheid dekt alleen wat je ons zelf hebt gegeven en inzage dekt
+    meer dan dat, dus in plaats van je te laten kiezen tussen twee downloads
+    is dit het geheel.
+
+    WAT ERIN ZIT
+
+      account.json        Je account: e-mail, weergavenaam, taal, land,
+                          basislocatie, voorkeuren en tijdstempels.
+      contributions.json  De inzendingen die je deed, en de veldwijzigingen die
+                          ze op de kaart opleverden nadat een curator ze
+                          accepteerde.
+      community.json      Bevestigingen, routestemmen, ritten,
+                          correctievoorstellen, landverzoeken,
+                          curatoraanmeldingen.
+      messages.json       Je dashboardberichten, in beide richtingen.
+      consent.json        Elke fotolicentie die je verleende: welke tekst,
+                          welke versie, en wanneer.
+      photos/index.json   Eén regel per geüploade foto, met status en het
+                          bijbehorende bestand.
+      photos/*.webp       De foto's zelf.
+
+    WAT ER NIET IN ZIT, EN WAAROM
+
+      Je wachtwoord, je tweefactorgeheim en je back-upcodes. Dat zijn de
+      inloggegevens die dit account beschermen. Een export is een bestand dat
+      mensen doorsturen en back-uppen, en de sleutels meeleveren met de inhoud
+      zou je minder veilig maken, niet beter geïnformeerd.
+
+      De identiteit van de curatoren die je werk behandelden. Wat er over je
+      inzendingen besloten is, is jouw gegeven en staat hier volledig in,
+      notities inbegrepen. Wie de beslissing nam, is die van hen.
+
+    OVER DE FOTO'S
+
+      Dit zijn onze verwerkte kopieën, niet de bestanden die je uploadde. We
+      hercoderen elke foto bij binnenkomst en verwijderen de metadata, ook elke
+      locatie die de camera vastlegde, dus het bestand precies zoals jij het
+      stuurde bewaren we niet. Een regel in de index met "file": null is een
+      foto waarvan de opgeslagen objecten al verwijderd zijn; de vastlegging
+      ervan blijft.
+
+      Foto's die een curator goedkeurde zijn gelicentieerd onder CC BY-SA 4.0
+      en blijven deel van de Commons. Die licentie kan niet worden ingetrokken.
+      Je naam staat echter niet in de bestanden: de naamsvermelding wordt live
+      uit je profiel opgehaald, dus je profiel privé maken of je account
+      sluiten verandert wat elke kopie van je foto vermeldt, ook kopieën die
+      lang geleden zijn gedownload.
+
+    VRAGEN
+
+      info@cyclingcommons.org
 vote:
   kicker: 'Wallonië, België'
   title: 'Rangschik het beste van deze regio.'
@@ -1810,6 +1875,7 @@ flash:
   deletion_code_sent: 'Controleer je e-mail voor de verwijdercode. Deze verloopt over 1 uur.'
   deletion_code_invalid: 'Ongeldige of verlopen verwijdercode.'
   account_deleted: 'Je account is definitief verwijderd.'
+  export_rate_limited: 'Je hebt je gegevens vandaag al een paar keer opgevraagd. Probeer het morgen opnieuw.'
 form:
   label_email: 'E-mail'
   label_email_address: 'E-mailadres'

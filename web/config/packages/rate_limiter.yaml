@@ -19,6 +19,8 @@ framework:
                 adapter: cache.adapter.filesystem
             cache.media_upload_limiter:
                 adapter: cache.adapter.filesystem
+            cache.data_export_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -78,6 +80,17 @@ framework:
             limit: 30
             interval: '1 day'
             cache_pool: cache.media_upload_limiter
+        # Data export (account-and-auth.md §11): the heaviest read the app
+        # offers — fourteen queries plus every stored photo streamed through
+        # a temp file. Nobody legitimately needs a second copy of an unchanged
+        # account minutes after the first, and GDPR Art. 12(5) explicitly allows
+        # refusing requests that are "manifestly unfounded or excessive, in
+        # particular because of their repetitive character".
+        data_export:
+            policy: sliding_window
+            limit: 3
+            interval: '1 day'
+            cache_pool: cache.data_export_limiter
 
 when@test:
     framework:
@@ -96,4 +109,6 @@ when@test:
                 cache.curator_application_limiter:
                     adapter: cache.adapter.array
                 cache.media_upload_limiter:
+                    adapter: cache.adapter.array
+                cache.data_export_limiter:
                     adapter: cache.adapter.array

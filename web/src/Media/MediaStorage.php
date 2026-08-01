@@ -78,6 +78,32 @@ final class MediaStorage
         }
     }
 
+    /**
+     * Opens one stored variant for reading, or null when it is not there.
+     *
+     * A stream rather than a string: the caller is the data export, and a rider
+     * with a hundred photos must not cost a hundred full-resolution images'
+     * worth of memory. Absence is a normal answer — a tombstoned upload's row
+     * outlives its objects (docs/specs/photo-uploads.md §6) — so it is returned,
+     * not thrown.
+     *
+     * @return resource|null
+     *
+     * @api Called by DataExportService.
+     */
+    public function readStream(string $continent, string $prefix, string $variant)
+    {
+        if (!\in_array($variant, self::VARIANTS, true)) {
+            throw new \InvalidArgumentException(\sprintf('Unknown photo variant "%s".', $variant));
+        }
+
+        try {
+            return $this->filesystemFor($continent)->readStream($prefix.'/'.$variant.'.webp');
+        } catch (FilesystemException) {
+            return null;
+        }
+    }
+
     public function url(string $continent, string $prefix, string $variant): string
     {
         if (!\in_array($variant, self::VARIANTS, true)) {

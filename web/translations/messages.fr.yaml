@@ -885,14 +885,79 @@ settings:
   twofa_manage: 'Gérer la 2FA ↗'
   twofa_setup: 'Configurer la 2FA ↗'
   notice: '<b>Les profils sont optionnels.</b> Seules les contributions que vous choisissez d''afficher apparaissent publiquement — les modifications anonymes ne sont jamais attribuées. Les données rejoignent le Commons sous <b>ODbL 1.0</b>, les médias sous <b>CC BY-SA 4.0</b>.'
+  section_export: 'Télécharger vos données'
+  export_help: 'Tout ce que nous détenons à votre sujet, dans un seul fichier ZIP : votre compte, vos contributions, vos messages, vos consentements de licence et vos photos sous forme de fichiers. Votre mot de passe et vos secrets à deux facteurs n''y figurent jamais.'
+  label_export_password: 'Mot de passe actuel'
+  export_password_help: 'Confirme que c''est bien vous avant que nous assemblions le fichier.'
+  submit_export: 'Télécharger mes données'
   section_danger: 'Zone de danger'
   delete_account_b: 'Supprimer le compte'
-  delete_account_small: 'Suppression définitive de votre compte et de toutes les données personnelles. Cette action est irréversible.'
+  delete_account_small: 'Suppression définitive de votre compte et de vos données personnelles. Vos contributions à la carte ouverte et l''enregistrement de toute licence photo que vous avez accordée subsistent, et aucun ne vous nomme ensuite. Cette action est irréversible.'
   submit_delete_request: 'Envoyer le code de suppression'
   delete_summary: 'J''ai un code — confirmer la suppression'
   label_deletion_code: 'Code de suppression (reçu par email)'
   submit_password: 'Modifier le mot de passe'
   submit_delete_confirm: 'Supprimer définitivement mon compte'
+export:
+  readme: |
+    VOS DONNÉES CYCLING COMMONS
+    ===========================
+
+    Généré le %generated% pour le compte « %account% ».
+
+    Cette archive répond à deux droits du RGPD à la fois : le droit d'accès
+    (Art. 15) et le droit à la portabilité des données (Art. 20). La
+    portabilité ne couvre que ce que vous nous avez fourni vous-même et
+    l'accès couvre davantage, donc plutôt que de vous faire choisir entre deux
+    téléchargements, voici l'ensemble.
+
+    CE QU'ELLE CONTIENT
+
+      account.json        Votre compte : email, nom affiché, langue, pays,
+                          localisation de base, préférences et horodatages.
+      contributions.json  Les soumissions que vous avez faites, et les
+                          modifications de champs qu'elles ont produites sur la
+                          carte une fois acceptées par un curateur.
+      community.json      Confirmations, votes d'itinéraires, sorties,
+                          suggestions de correction, demandes de pays,
+                          candidatures de curateur.
+      messages.json       Vos messages de tableau de bord, dans les deux sens.
+      consent.json        Chaque licence photo accordée : quel texte, quelle
+                          version, et quand.
+      photos/index.json   Une entrée par photo envoyée, avec son statut et le
+                          fichier correspondant.
+      photos/*.webp       Les photos elles-mêmes.
+
+    CE QU'ELLE NE CONTIENT PAS, ET POURQUOI
+
+      Votre mot de passe, votre secret à deux facteurs et vos codes de secours.
+      Ce sont les identifiants qui protègent ce compte. Une exportation est un
+      fichier que l'on transfère et que l'on sauvegarde, et livrer les clés
+      avec le contenu vous rendrait moins en sécurité, pas mieux informé.
+
+      L'identité des curateurs qui ont traité votre travail. Ce qui a été
+      décidé sur vos soumissions est votre donnée et tout figure ici, notes
+      comprises. Qui a pris la décision est la leur.
+
+    À PROPOS DES PHOTOS
+
+      Ce sont nos copies traitées, pas les fichiers que vous avez envoyés. Nous
+      réencodons chaque photo à l'arrivée et supprimons ses métadonnées, y
+      compris toute localisation enregistrée par l'appareil : le fichier tel
+      que vous l'avez envoyé n'est pas quelque chose que nous conservons. Une
+      entrée de l'index avec "file": null est une photo dont les objets
+      stockés ont déjà été supprimés ; sa trace subsiste.
+
+      Les photos approuvées par un curateur sont sous licence CC BY-SA 4.0 et
+      restent dans le Commons. Cette licence ne peut pas être retirée. Votre
+      nom, en revanche, n'est pas dans les fichiers : l'attribution est résolue
+      en direct depuis votre profil, donc rendre votre profil privé, ou fermer
+      votre compte, change ce que crédite chaque copie de votre photo, y
+      compris celles téléchargées il y a longtemps.
+
+    QUESTIONS
+
+      info@cyclingcommons.org
 vote:
   kicker: 'Wallonie, Belgique'
   title: 'Classez le meilleur de cette région.'
@@ -1810,6 +1875,7 @@ flash:
   deletion_code_sent: 'Consultez votre e-mail pour obtenir le code de suppression. Il expire dans 1 heure.'
   deletion_code_invalid: 'Code de suppression invalide ou expiré.'
   account_deleted: 'Votre compte a été définitivement supprimé.'
+  export_rate_limited: 'Vous avez déjà demandé vos données plusieurs fois aujourd''hui. Réessayez demain.'
 form:
   label_email: 'E-mail'
   label_email_address: 'Adresse e-mail'
