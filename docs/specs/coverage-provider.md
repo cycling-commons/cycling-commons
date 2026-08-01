@@ -756,13 +756,22 @@ and Luxembourg is in fact the densest of the four. The explanatory list sits
 **below** the table: the numbers are what a reader came for, and three
 paragraphs of vocabulary in front of them is a toll gate.
 
-Reference places are **not** broken down by data provider, because there is
-exactly one — every `coverage_poi` row is OSM-derived, which is why the table
-carries `ref`/`osm_version`/`osm_ts` and no source column (§2). Partnering with
-a stays or drinking-water dataset means adding that column first; a breakdown
-grouped on a column that does not exist would be one bar wearing a chart's
-clothes. The page says as much in prose instead, so the intent is visible
-before the schema catches up.
+**Provenance is shown on the catalog column, not the reference one**, because
+that is where the mix actually is. `coverage_poi` is OSM top to bottom — every
+row carries an `osm_version` and a node/way `ref`, and the table has no source
+column at all (§2) — so a "breakdown" there would be one bar wearing a chart's
+clothes. Partner data does not land in that layer: it is imported as catalog
+`item` rows keeping their own `ItemSource`, which is how the Wallonia PIVOT
+stays and drinking-water taps already sit alongside rider contributions.
+
+The six `ItemSource` values are bucketed to four the page can say out loud:
+`osm` (mirrored) · `partner` (PIVOT, Wikidata — an open dataset somebody else
+maintains) · `riders` (`user` and `manual`, which the enum already defines as a
+hand-added row treated like a contribution) · `derived` (pipeline). An
+unrecognised source falls into `derived` rather than vanishing, so a new
+importer shows up as an unexplained number instead of silently shrinking the
+total. Zero buckets are dropped, so an OSM-only country shows one word rather
+than four with three noughts.
 
 ## 10. Relationship to other documents
 

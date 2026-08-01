@@ -67,9 +67,17 @@ final class CoverageStatsProvider
      * is a shape: "Germany is longer than Luxembourg" was all this column could
      * say, and the figure it was scaled by went unprinted.
      *
+     * `sources` breaks the catalog count down by where each row came from,
+     * bucketed from ItemSource (osm · partner · riders · derived). This is the
+     * column with a real mix — the reference layer is OSM top to bottom, while
+     * the catalog already holds imported partner data (Wallonia PIVOT stays and
+     * drinking-water taps) beside rider contributions and pipeline-derived
+     * rows, and a bare total hides all of it.
+     *
      * @return list<array{code:string, name:string, flag:string, regions:int,
      *                    areaKm2:float, coveragePois:int, poisPerKm2:float,
-     *                    items:int, itemsVerified:int, routes:int, share:int}>
+     *                    items:int, itemsVerified:int, sources:list<array{key:string, count:int}>,
+     *                    routes:int, share:int}>
      */
     public function countries(string $locale): array
     {
@@ -96,6 +104,7 @@ final class CoverageStatsProvider
               GROUP BY r.country_code',
         );
 
+        $sources = $this->itemSourcesByCountry();
         $pois = $this->poisByCountry();
         $maxDensity = 0.0;
         foreach ($rows as $row) {
@@ -121,6 +130,7 @@ final class CoverageStatsProvider
                 'poisPerKm2' => $density,
                 'items' => (int) $row['items'],
                 'itemsVerified' => (int) $row['verified'],
+                'sources' => $sources[$cc] ?? [],
                 'routes' => (int) $row['routes'],
                 'share' => $maxDensity > 0 ? (int) round(100.0 * $density / $maxDensity) : 0,
             ];
@@ -160,17 +170,70 @@ final class CoverageStatsProvider
     }
 
     /**
+     * Catalog items per country, bucketed by provenance.
+     *
+     * The six ItemSource values are collapsed to four the page can say out
+     * loud: `osm` mirrors OpenStreetMap, `partner` is data imported from an
+     * open dataset somebody else maintains (PIVOT, Wikidata), `riders` is
+     * contributed here (`user`, and `manual` — which the enum already defines
+     * as a hand-added row treated like a contribution), `derived` is computed
+     * by the pipeline. Anything unrecognised falls into `derived` rather than
+     * vanishing, so a new source shows up as an unexplained number instead of
+     * silently shrinking the total.
+     *
+     * Buckets are emitted in a fixed order and zeroes are dropped, so a country
+     * with only OSM rows shows one word rather than four with three noughts.
+     *
+     * @return array<string, list<array{key:string, count:int}>>
+     */
+    private function itemSourcesByCountry(): array
+    {
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT country_code AS cc, source, COUNT(*) AS n FROM item
+              WHERE state IN '.ItemState::servedSqlTuple()." AND country_code <> ''
+              GROUP BY country_code, source",
+        );
+
+        $bucketOf = [
+            ItemSource::Osm->value => 'osm',
+            ItemSource::Pivot->value => 'partner',
+            ItemSource::Wikidata->value => 'partner',
+            ItemSource::User->value => 'riders',
+            ItemSource::Manual->value => 'riders',
+            ItemSource::Auto->value => 'derived',
+        ];
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $cc = (string) $row['cc'];
+            $bucket = $bucketOf[(string) $row['source']] ?? 'derived';
+            $totals[$cc][$bucket] = ($totals[$cc][$bucket] ?? 0) + (int) $row['n'];
+        }
+
+        $out = [];
+        foreach ($totals as $cc => $byBucket) {
+            foreach (['osm', 'partner', 'riders', 'derived'] as $bucket) {
+                if (($byBucket[$bucket] ?? 0) > 0) {
+                    $out[$cc][] = ['key' => $bucket, 'count' => $byBucket[$bucket]];
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * POI counts per country, `[]` when the pipeline table does not exist
      * yet. Rows with a NULL country (pre-normalization harvests) are ignored
      * for the per-country table but absent from the KPI sum too — the page
      * shows what is attributable, not a number that cannot be broken down.
      *
-     * Not broken down by DATA PROVIDER, because there is exactly one: every
-     * row here is OSM-derived, which is why `coverage_poi` carries `ref`,
+     * Not broken down by provenance, because this layer has exactly one: every
+     * row is OSM-derived, which is why `coverage_poi` carries `ref`,
      * `osm_version` and `osm_ts` and no source column at all
-     * (coverage-provider.md §2). Partnering with a stays or drinking-water
-     * dataset means adding that column first; grouping by a column that does
-     * not exist would be a chart of one bar pretending to be a breakdown.
+     * (coverage-provider.md §2). Partner datasets do not land here — they are
+     * imported as catalog `item` rows with their own source, which is where
+     * `itemSourcesByCountry()` finds them.
      *
      * @return array<string, int>
      */
