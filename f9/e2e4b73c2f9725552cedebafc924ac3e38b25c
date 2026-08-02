@@ -1,0 +1,54 @@
+web/tests/Media/ThirdPartyReportTest.php
+  s_d30835e3caae18::t_a498ea390860e4 421-424
+  s_d30835e3caae18::t_4c257dbfef4868 156-210
+web/translations/messages.fr.yaml
+  s_d30835e3caae18::t_c07d18635e85bc 832,1647,1710,1781,1935-1936,1949-1950,2121,2125
+  s_d30835e3caae18::t_e90462f4cab82e 2128-2129,2266,2269
+docs/specs/photo-uploads.md
+  s_d30835e3caae18::t_555369bbe21cff 518-538,576-578,600-607,609-620
+  s_b7eccf3abfe4d7::t_84a089ae7a4c60 260-265
+web/translations/messages.en.yaml
+  s_d30835e3caae18::t_c07d18635e85bc 836
+  s_d30835e3caae18::t_1bbb543a7dd948 1334,1713,1784,1938-1939,1952-1953,2128,2131-2132,2269,2272
+web/src/Messaging/UserMessageKind.php
+  s_d30835e3caae18::t_71972bbcc08512 40-49
+web/translations/messages.de.yaml
+  s_d30835e3caae18::t_c07d18635e85bc 832,1650,1713,1784,1938-1939,1952-1953,2124,2128
+  s_d30835e3caae18::t_b64d37cab02efe 2131-2132,2269,2272
+web/src/Media/MediaTakedownService.php
+  s_d30835e3caae18::t_4d4094d89515c4 268,272-277
+  s_d30835e3caae18::t_9eae626e18638a 141-146
+  s_d30835e3caae18::t_4ee7371eb12212 224-227,233-237
+web/translations/messages.nl.yaml
+  s_d30835e3caae18::t_c07d18635e85bc 832,1647,1710,1781,1935-1936,1949-1950,2121,2125
+  s_d30835e3caae18::t_74daf5edbe6b73 2128-2129,2266,2269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "f9e2e4b73c2f9725552cedebafc924ac3e38b25c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b7eccf3abfe4d7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c0eae58b-5ade-4e9b-826e-5f61f82c48cf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d30835e3caae18": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2c176ff-abbd-40dd-b890-59ba0f5b9bd6",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
