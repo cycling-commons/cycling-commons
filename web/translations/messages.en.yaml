@@ -2187,7 +2187,7 @@ admin:
     note_label: 'Note for the record (optional)'
     note_placeholder: 'e.g. co-ordinated flood, 2026-08-02'
     restore: 'Restore selected photos'
-    restore_help: 'Restored photos go straight back on the map. The uploader is not messaged: nothing they ever saw changed, and being told somebody accused them is worse than silence.'
+    restore_help: 'Restored photos go straight back on the map and their contributors are told. The reporter is not told anything, and neither side ever learns who the other is.'
     restored: 'Restored %count% photo(s).'
   menu:
     dashboard: 'Dashboard'

@@ -2187,7 +2187,7 @@ admin:
     note_label: 'Notiz für die Akte (optional)'
     note_placeholder: 'z. B. koordinierte Welle, 2026-08-02'
     restore: 'Ausgewählte Fotos wiederherstellen'
-    restore_help: 'Wiederhergestellte Fotos sind sofort wieder auf der Karte. Die hochladende Person wird nicht benachrichtigt: für sie hat sich sichtbar nichts geändert, und zu erfahren, dass jemand sie beschuldigt hat, ist schlimmer als Schweigen.'
+    restore_help: 'Wiederhergestellte Fotos sind sofort wieder auf der Karte, und ihre Beitragenden werden informiert. Die meldende Person erfährt nichts, und keine Seite erfährt je, wer die andere ist.'
     restored: '%count% Foto(s) wiederhergestellt.'
   menu:
     dashboard: 'Dashboard'

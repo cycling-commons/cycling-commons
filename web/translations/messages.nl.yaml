@@ -2184,7 +2184,7 @@ admin:
     note_label: 'Notitie voor het dossier (optioneel)'
     note_placeholder: 'bijv. gecoördineerde golf, 2026-08-02'
     restore: 'Geselecteerde foto''s herstellen'
-    restore_help: 'Herstelde foto''s staan meteen weer op de kaart. De uploader krijgt geen bericht: er is voor hen niets zichtbaar veranderd, en horen dat iemand hen beschuldigde is erger dan stilte.'
+    restore_help: 'Herstelde foto''s staan meteen weer op de kaart en hun bijdragers worden ingelicht. De melder hoort niets, en geen van beide partijen komt ooit te weten wie de ander is.'
     restored: '%count% foto(''s) hersteld.'
   menu:
     dashboard: 'Dashboard'

@@ -2184,7 +2184,7 @@ admin:
     note_label: 'Note pour le registre (facultatif)'
     note_placeholder: 'ex. vague coordonnée, 2026-08-02'
     restore: 'Restaurer les photos sélectionnées'
-    restore_help: 'Les photos restaurées reviennent directement sur la carte. Le téléverseur n''est pas prévenu : rien de ce qu''il voyait n''a changé, et apprendre qu''on l''a accusé est pire que le silence.'
+    restore_help: 'Les photos restaurées reviennent directement sur la carte et leurs contributeurs sont prévenus. Le signalant n''est informé de rien, et aucune des deux parties n''apprend jamais qui est l''autre.'
     restored: '%count% photo(s) restaurée(s).'
   menu:
     dashboard: 'Tableau de bord'
