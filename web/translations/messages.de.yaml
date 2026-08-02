@@ -1485,9 +1485,8 @@ improve:
       help: 'Dieser Standort ist bereits gesetzt — prüfe, ob er stimmt, oder ändere ihn.'
   lifecycle:
     heading: 'Was mit deinem Vorschlag geschieht'
-    funnel: 'Es erscheint nichts sofort auf der Karte. Zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, den andere Fahrende bestätigen können — und nachdem einige von ihnen bestätigt haben, dass es wirklich da ist, wird daraus eine vollständige Markierung.'
-    votable_note: '<b>%type%</b> — darüber können Fahrende auch abstimmen, und die bestbewerteten landen auf der Best-of-Karte.'
-    utility_note: '<b>%type%</b> — ein praktischer Halt. Darüber stimmen Fahrende nie ab; es reicht, wenn einige bestätigen, dass es ihn wirklich gibt, danach bleibt er für alle auf der Karte.'
+    funnel_votable: 'Es erscheint nichts sofort auf der Karte — zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, und die erste fahrende Person, die bestätigt, dass es wirklich da ist, macht daraus eine vollständige Markierung. Über <b>%type%</b> kann außerdem abgestimmt werden, und die bestbewerteten landen auf der Best-of-Karte.'
+    funnel_utility: 'Es erscheint nichts sofort auf der Karte — zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, und die erste fahrende Person, die bestätigt, dass es wirklich da ist, macht daraus eine vollständige Markierung. <b>%type%</b> ist ein praktischer Halt: Fahrende bestätigen diese, abgestimmt wird darüber nie.'
   nav:
     back: 'Zurück'
     next: 'Weiter'

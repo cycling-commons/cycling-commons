@@ -101,6 +101,18 @@ The mode gate in `improve.js`:
   from `improve.js`), debounced **320 ms**. Mandatory offline fallback: on
   fetch failure the results dropdown shows "Search unavailable — tap the map
   instead" and map-tap keeps working — the geocoder is never load-bearing.
+- **The review card is a summary, not a control.** The site-wide `.card`
+  (atlas.css) lifts and shadows on hover because it is clickable everywhere
+  else; the wizard switches that off explicitly (`transition:none`,
+  `:hover{transform:none}`). Overriding only the background and border left
+  the whole review sliding under the pointer.
+- **The lifecycle block is ONE paragraph.** It says what happens next and what
+  this type means for the rider (votable, or confirmed-not-voted) in a single
+  sentence per type — `improve.lifecycle.funnel_votable` /
+  `funnel_utility`. The second paragraph that used to sit under it repeated
+  the first in different words, and said "after a few of them agree", which is
+  not what the code does: one counted confirmation promotes a dot to a full
+  pin (map-and-search.md §12).
 - **Every string the wizard renders itself is translated**, through
   `window.CC_IMPROVE_I18N` (`improve.step1.*`, `improve.step3.link_*`,
   `improve.review.*`, `improve.nav.submit`) — the readouts, the toasts, the

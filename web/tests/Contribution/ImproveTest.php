@@ -282,6 +282,74 @@ final class ImproveTest extends WebTestCase
         self::assertSame($segment, $submission->getPayload()['segment'] ?? null, 'the drawn segment must be recorded in the submission payload');
     }
 
+    /**
+     * A rider editing an item can fix its name.
+     *
+     * Several field sets — water & food among them — carry no name field, so
+     * editing offered no way to change it at all: a mis-tagged OSM tap kept
+     * whatever name it arrived with. The name is not an attribute, so it must
+     * ride as a CHANGE and never reach the attribute vocabulary (which has no
+     * `name` key for any letter, and would reject the whole edit).
+     */
+    public function testEditingAnItemCanChangeItsName(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'rename');
+        $item = $this->createItem('C', ['potable' => 'Yes (public supply)'], name: 'Waterpunt');
+
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Next →')->form();
+        self::assertSame('Waterpunt', $form['improve[details][name]']->getValue(), 'the current name is offered, prefilled');
+        $form['improve[details][name]'] = 'Waterpunt Geestmerambacht';
+        $client->submit($form);
+        self::assertResponseIsSuccessful();
+
+        $submission = $this->latestSubmission();
+        self::assertArrayHasKey('name', $submission->getChanges());
+        self::assertSame(
+            ['was' => 'Waterpunt', 'now' => 'Waterpunt Geestmerambacht'],
+            $submission->getChanges()['name'],
+        );
+        self::assertArrayNotHasKey('name', $submission->getPayload()['attributes'] ?? [], 'the name is never an attribute');
+    }
+
+    /**
+     * An emptied name box means "leave the name alone". Clearing a place's
+     * name is not something an edit form should be able to do by omission —
+     * an unnamed point must stay editable for its other fields.
+     */
+    public function testAnEmptiedNameLeavesTheNameAlone(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'rename-empty');
+        $item = $this->createItem('C', ['potable' => 'Yes (public supply)'], name: 'Waterpunt');
+
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+        $form = $crawler->selectButton('Next →')->form();
+        $form['improve[details][name]'] = '';
+        $form['improve[details][potable]'] = 'No / non-potable';
+        $client->submit($form);
+        self::assertResponseIsSuccessful();
+
+        $changes = $this->latestSubmission()->getChanges();
+        self::assertArrayNotHasKey('name', $changes, 'an empty box is not a rename to nothing');
+        self::assertArrayHasKey('potable', $changes, 'the rest of the edit still lands');
+    }
+
+    private function latestSubmission(): \App\Catalog\Entity\Submission
+    {
+        /** @var \App\Catalog\Entity\Submission|null $submission */
+        $submission = static::getContainer()
+            ->get(EntityManagerInterface::class)
+            ->getRepository(\App\Catalog\Entity\Submission::class)
+            ->findOneBy([], ['id' => 'DESC']);
+        self::assertNotNull($submission);
+
+        return $submission;
+    }
+
     public function testRideExposesTrackUploadMode(): void
     {
         $client = static::createClient();
@@ -310,7 +378,10 @@ final class ImproveTest extends WebTestCase
         // Climbs (B) can be voted on, and the wizard says so. Asserted on what
         // a rider is actually told — "vote" — rather than on the word "votable",
         // which is the schema's vocabulary and was never meant to reach the page.
-        self::assertSelectorTextContains('.lc-verdict', 'vote on these');
+        // One paragraph now carries both halves (the funnel and what this type
+        // means for the rider); the second one repeated the first.
+        self::assertSelectorTextContains('.lc-funnel', 'voted on');
+        self::assertSelectorCount(0, '.lc-verdict');
     }
 
     public function testUtilityTypeSaysItIsNeverVotedOn(): void
@@ -323,10 +394,10 @@ final class ImproveTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         // Water & food (C) is a utility type. The rider is told what that MEANS
-        // for them — nobody votes on it, a few confirmations are enough — and
-        // never the word "utility" or "coverage", which are ours, not theirs.
-        self::assertSelectorTextContains('.lc-verdict', 'never vote on these');
-        self::assertSelectorTextNotContains('.lc-verdict', 'coverage');
+        // for them — nobody votes on it, one rider's confirmation promotes it —
+        // and never the word "utility" or "coverage", which are ours, not theirs.
+        self::assertSelectorTextContains('.lc-funnel', 'they never vote on them');
+        self::assertSelectorTextNotContains('.lc-funnel', 'coverage');
     }
 
     public function testBoundItemLetterResolvesType(): void

@@ -96,6 +96,15 @@ on the account chip, curator↔rider pseudonymous messaging, 3-month retention +
 GC for dismissed corrections and rejected item submissions, and an immediate
 hard-delete **Trash** for spam. Per-type specs only note deviations.
 
+**The name is editable on every type, in both modes.** Add mode requires one
+(a new place must arrive named — the queue and the map both key on it); edit
+mode offers it prefilled and optional, because correcting a name is one of the
+commonest fixes there is and several field sets carry no name field of their
+own. An emptied box means *leave the name alone*, never *clear the name*. The
+name is not an attribute: it lives on `Item::name` and travels as a change,
+never through the attribute vocabulary (`ImproveType`,
+`CatalogContributionService`).
+
 **Setting the location (add mode, `?mode=add`).** The *first* action is always to set the location, and
 it varies by type:
 - **point** types (water, services, stays, hazards, getting-there, shelter, scenic, history) — tap the map
@@ -252,6 +261,24 @@ or low-density region −1 (seed coverage early, tighten as the community grows)
 - **Risk can live at the field, not the item** — "this fountain exists" (low X) ≠ "this water is potable"
   (never fully verifiable → *labelled* "Unsigned — use judgement", not gated). See [C-water-food](C-water-food.md).
 - The numbers above are **starting points (TBD)** — the *structure* (tiers + modifiers + decay) is what's fixed.
+
+**As built today (2026-08-02): X = 1 for every item type.** `CatalogProvider`'s
+verified derivation is `EXISTS (a counted item_confirmation)`, so the first
+rider who confirms a place promotes it from a community dot to a full pin.
+None of the tiers, modifiers or decay above exist yet, and only routes have a
+real configurable threshold (`route.ride_verify_threshold`). Rider-facing copy
+follows the code, not this table: the contribute wizard says "the first rider
+who confirms it is really there turns it into a full pin". If the tiers land,
+that copy and [../map-and-search.md](../map-and-search.md) §12 move together
+with them.
+
+**A submitter cannot confirm their own contribution.** Their answer on the
+improve form is kept so the map never asks them again, as an
+`item_confirmation` with `source = 'form'`, and form-sourced rows are excluded
+from both the tally and the verified derivation
+([../moderation-and-contribution.md](../moderation-and-contribution.md) §6.3).
+With X = 1 this is what stops a place verifying itself the moment it is
+approved.
 
 ## The items
 

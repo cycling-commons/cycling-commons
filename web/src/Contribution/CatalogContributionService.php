@@ -280,9 +280,22 @@ final class CatalogContributionService implements ContributionStubInterface
             // was already empty records no phantom change.
             $now = self::normalizeEmpty($rawNow);
             // The name pseudo-field lives on Item::name, never in attributes
-            // (see Item::NAME_FIELD). Comparing it against $currentAttrs would
-            // always see null and wrongly record an unchanged name as a change.
-            $was = Item::NAME_FIELD === $field ? $item->getName() : ($currentAttrs[$field] ?? null);
+            // (see Item::NAME_FIELD) — letting it through would submit `name`
+            // as an attribute key no letter's vocabulary allows, and the whole
+            // edit would be rejected as unknown. It travels as a CHANGE only,
+            // which is what ModerationService::applyEdit reads to setName().
+            //
+            // An emptied box means "leave the name alone", never "clear the
+            // name": editing offers the name prefilled (ImproveType) so a rider
+            // can correct it, and a place with no name at all is a different
+            // proposition from a place whose name somebody deleted.
+            if (Item::NAME_FIELD === $field) {
+                if (null !== $now && $item->getName() !== $now) {
+                    $changes[$field] = ['was' => $item->getName(), 'now' => $now];
+                }
+                continue;
+            }
+            $was = $currentAttrs[$field] ?? null;
             if (self::normalizeEmpty($was) !== $now) {
                 $changes[$field] = ['was' => $was, 'now' => $now];
             }

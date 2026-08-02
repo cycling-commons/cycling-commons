@@ -851,6 +851,17 @@ confirmation, or official-registry provenance (Tourisme Wallonie PIVOT rows
 count as verified) — never the simulated `c`
 attribute).
 
+**One counted confirmation is the whole threshold.** A single
+`item_confirmation` row flips a community dot to a full pin — there is no
+"three riders" rule for items (routes have one, `routes.ride_verify_threshold`;
+items do not). Rider-facing copy must say what actually happens: the
+contribute wizard's lifecycle paragraph says "the first rider who confirms it
+is really there turns it into a full pin", and anything promising "a few of
+them" would be a promise the code does not keep. `source = 'form'` rows are
+excluded from the derivation — that is the submitter's own answer, and
+counting it would let a rider verify their own contribution
+(moderation-and-contribution.md §6.3).
+
 - **1.** Search and the town card always read the full Commons; every index
   entry carries a `verified` flag; within each category verified/curated rows
   order first, then a tagged **community** subgroup. Town card: community

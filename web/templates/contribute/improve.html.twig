@@ -147,7 +147,12 @@
      block, no shadow, no hover, no transition. Two columns once there is room —
      a submission is a dozen short answers, and one long ladder of them makes
      the rider scroll past the thing they wanted to check. */
-  .card{background:transparent;border:none;border-top:1px solid rgba(20,22,14,.14);border-radius:0;padding:.4rem 0 0}
+  /* The site-wide .card (atlas.css) lifts and shadows on hover — it is a
+     clickable card everywhere else. Here it is a summary to read, so the
+     movement has to be switched off explicitly: overriding the background and
+     border alone left the whole review sliding under the pointer. */
+  .card{background:transparent;border:none;border-top:1px solid rgba(20,22,14,.14);border-radius:0;padding:.4rem 0 0;transition:none}
+  .card:hover{transform:none;box-shadow:none}
   .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.45rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
   .kv:last-child{border-bottom:none}
   .kv span:first-child{color:#595c4d}
@@ -484,13 +489,16 @@
 
     {# Where this suggestion goes next. The ONE place the wizard explains the
        review process: step4.help used to say it too, and the receipt says it
-       again after submitting, which made three tellings of one fact. #}
+       again after submitting, which made three tellings of one fact.
+
+       ONE paragraph, not two. The per-type verdict line underneath repeated
+       the funnel above it in different words — "a curator reads it, riders
+       confirm it" followed by "riders never vote on these, a few just need to
+       confirm it" — which is the same sentence twice. The type-specific half
+       (votable or confirmable) now rides in the funnel line itself. #}
     <div class="lifecycle">
       <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
-      <p class="lc-funnel">{{ 'improve.lifecycle.funnel'|trans|rich }}</p>
-      <p class="lc-verdict">
-        {{ (item_type.isVotable ? 'improve.lifecycle.votable_note' : 'improve.lifecycle.utility_note')|trans({'%type%': item_type.labelKey|trans})|rich }}
-      </p>
+      <p class="lc-funnel">{{ (item_type.isVotable ? 'improve.lifecycle.funnel_votable' : 'improve.lifecycle.funnel_utility')|trans({'%type%': item_type.labelKey|trans})|rich }}</p>
     </div>
 
     <p class="prov">{{ 'improve.step4.prov'|trans|rich }}</p>

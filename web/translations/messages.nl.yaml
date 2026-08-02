@@ -1482,9 +1482,8 @@ improve:
       help: 'Deze locatie is al ingesteld — controleer of ze klopt, of wijzig ze.'
   lifecycle:
     heading: 'Wat er met je suggestie gebeurt'
-    funnel: 'Er verschijnt niets meteen op de kaart. Een curator leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje dat andere fietsers kunnen bevestigen — en nadat een paar van hen beamen dat het er echt is, wordt het een volledige speld.'
-    votable_note: '<b>%type%</b> — hier kunnen fietsers ook op stemmen, en de hoogst gewaardeerde komen op de best-of-kaart.'
-    utility_note: '<b>%type%</b> — een praktische stop. Hier wordt nooit op gestemd; een paar fietsers hoeven alleen te bevestigen dat het er echt is, en dan blijft het voor iedereen op de kaart staan.'
+    funnel_votable: 'Er verschijnt niets meteen op de kaart — een curator leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje, en de eerste fietser die bevestigt dat het er echt is maakt er een volledige speld van. Op <b>%type%</b> kan ook gestemd worden, en de hoogst gewaardeerde komen op de best-of-kaart.'
+    funnel_utility: 'Er verschijnt niets meteen op de kaart — een curator leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje, en de eerste fietser die bevestigt dat het er echt is maakt er een volledige speld van. <b>%type%</b> is een praktische stop: fietsers bevestigen deze, ze stemmen er nooit op.'
   nav:
     back: 'Terug'
     next: 'Volgende'

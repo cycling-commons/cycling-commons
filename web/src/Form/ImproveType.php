@@ -77,22 +77,32 @@ final class ImproveType extends AbstractType
         // carry no name field because editing an existing item never needs
         // one. Inject a required name first, and skip any registry-optional
         // duplicate so the requirement cannot be bypassed.
-        if ($addMode) {
-            $details->add(Item::NAME_FIELD, TextType::class, [
-                'label' => 'Name',
-                'required' => true,
-                // Materialize-on-edit prefills the OSM name via `current`;
-                // the bare add flow starts blank.
-                'data' => $current[Item::NAME_FIELD] ?? null,
-                'constraints' => [
+        // EDIT mode gets the same field, prefilled and optional. A name is a
+        // fact about a place like any other, and it is the one a rider most
+        // often has to fix (an OSM tap named "Fontein" that everyone locally
+        // calls something else, a typo, a shop that changed hands) — but
+        // several registry field sets, water & food among them, carry no name
+        // field at all, so editing simply offered no way to change it.
+        // Optional here rather than required: an unnamed OSM point must stay
+        // editable for its other fields without forcing a name on it, and an
+        // emptied box means "leave the name alone", never "clear the name"
+        // (ImproveSubmissionBuilder).
+        $details->add(Item::NAME_FIELD, TextType::class, [
+            'label' => 'Name',
+            'required' => $addMode,
+            // Materialize-on-edit prefills the OSM name via `current`;
+            // the bare add flow starts blank.
+            'data' => $current[Item::NAME_FIELD] ?? null,
+            'constraints' => $addMode
+                ? [
                     new NotBlank(message: 'contribute.error.name_required'),
                     new Length(max: 120, maxMessage: 'contribute.error.field_too_long'),
-                ],
-            ]);
-        }
+                ]
+                : [new Length(max: 120, maxMessage: 'contribute.error.field_too_long')],
+        ]);
         foreach ($fieldSet->fields as $field) {
-            if ($addMode && Item::NAME_FIELD === $field->name) {
-                continue;
+            if (Item::NAME_FIELD === $field->name) {
+                continue;   // the explicit field above is the only name input
             }
             $this->addCatalogField($details, $field, $current);
         }

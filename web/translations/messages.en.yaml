@@ -1171,9 +1171,8 @@ improve:
       help: 'This location is already set — check it looks right, or change it.'
   lifecycle:
     heading: 'What happens to your suggestion'
-    funnel: 'Nothing appears on the map straight away. A curator reads it first. Once it passes, it shows up as a small dot that other riders can confirm — and after a few of them agree it is really there, it becomes a full pin.'
-    votable_note: '<b>%type%</b> — riders can also vote on these, and the ones they rate highest end up on the best-of map.'
-    utility_note: '<b>%type%</b> — a practical stop. Riders never vote on these; a few just need to confirm it is really there, and then it stays on the map for everyone.'
+    funnel_votable: 'Nothing appears on the map straight away — a curator reads it first. Once it passes it shows up as a small dot, and the first rider who confirms it is really there turns it into a full pin. <b>%type%</b> can also be voted on, and the ones riders rate highest end up on the best-of map.'
+    funnel_utility: 'Nothing appears on the map straight away — a curator reads it first. Once it passes it shows up as a small dot, and the first rider who confirms it is really there turns it into a full pin. <b>%type%</b> is a practical stop: riders confirm these, they never vote on them.'
   nav:
     back: 'Back'
     next: 'Next'
