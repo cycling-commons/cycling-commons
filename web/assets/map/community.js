@@ -121,8 +121,14 @@ function paintItemConfirm(box, s){
   if(s.token) _cfTokens[id]=s.token;
   const authed=!!_cfTokens[id];
   const defs=CC_CF_STANCES[s.stanceKind]||CC_CF_STANCES.existence;
-  const heading = s.stanceKind==='potability'
-    ? (D.waterQ||'Is the water drinkable?') : (D.hereQ||'Is this still here?');
+  // Stop asking someone a question they have already answered. The buttons
+  // stay (they can change their mind) and the tally stays, but the heading
+  // states the subject instead of putting the question again — being asked
+  // "is the water drinkable?" right above your own answer reads as though
+  // the answer never landed.
+  const heading = s.mine
+    ? (s.stanceKind==='potability' ? (D.waterA||'Drinking water') : (D.hereA||'Still here'))
+    : (s.stanceKind==='potability' ? (D.waterQ||'Is the water drinkable?') : (D.hereQ||'Is this still here?'));
   const btns=defs.map(([v,l])=>{
     const n=(s.stances&&s.stances[v])||0;
     const mine=s.mine===v?' is-mine':'';

@@ -199,6 +199,7 @@ final class MapController extends AbstractController
             'reasonDuplicate' => 'd_reason_duplicate', 'reasonNotRideable' => 'd_reason_notrideable',
             'reasonOther' => 'd_reason_other',
             'waterQ' => 'd_water_q', 'hereQ' => 'd_here_q', 'notPotable' => 'd_not_potable',
+            'waterA' => 'd_water_a', 'hereA' => 'd_here_a',
             'confirmHere' => 'd_confirm_here', 'confirmedOne' => 'd_confirmed_one', 'confirmedMany' => 'd_confirmed_many',
             'loginConfirm' => 'd_login_confirm',
             'toastLoginConfirm' => 'd_toast_login_confirm', 'toastThanks' => 'd_toast_thanks',

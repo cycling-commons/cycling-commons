@@ -74,7 +74,10 @@
             <time class="msg-meta" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|cc_datetime }}</time>
           </div>
           {% set is_question = m.kind.value == 'submission_needs_info' %}
-          {% set answers = answers[m.id] ?? [] %}
+          {# NOT `answers` — assigning to the loop variable would clobber the
+             whole map on the first row, and every later card would find its
+             answer missing. #}
+          {% set my_answers = answers[m.id] ?? [] %}
           {# The subject, as a link back to the contribution it is about. A
              reference like SUB-8 says nothing about which place this was. #}
           <div class="msg-ref">
@@ -100,7 +103,7 @@
             {% if m.bodyText %}<p class="msg-note">{{ m.bodyText }}</p>{% endif %}
             {# The answer belongs under the question it answers, in the same
                card — not as a separate row above it. #}
-            {% for a in answers %}
+            {% for a in my_answers %}
               <p class="msg-note msg-answer">
                 <span class="msg-answer-h">{{ 'account.you_replied'|trans }}</span>
                 {{ a.bodyText }}
@@ -121,7 +124,7 @@
           {% if mine %}
             <div class="msg-from-curator msg-from-you">{{ 'messages.you_sent'|trans }}</div>
           {% endif %}
-          {% if not mine and is_question and answers is empty and m.refId in replyable_submission_ids %}
+          {% if not mine and is_question and my_answers is empty and m.refId in replyable_submission_ids %}
             <form class="msg-reply" method="post" action="{{ path('messages_reply', {id: m.id}) }}">
               <input type="hidden" name="_token" value="{{ csrf_token('message-reply') }}">
               <label for="msg-reply-{{ m.id }}">{{ 'messages.reply_label'|trans }}</label>

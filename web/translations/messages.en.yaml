@@ -1611,6 +1611,8 @@ map:
   d_reason_other: 'Something else'
   d_water_q: 'Is the water drinkable?'
   d_here_q: 'Is this still here?'
+  d_water_a: 'Drinking water'
+  d_here_a: 'Still here'
   d_not_potable: 'Not potable'
   d_confirm_here: 'Confirm it''s here'
   d_confirmed_one: '{n} rider confirmed'

@@ -342,8 +342,18 @@ final class NeedsInfoReplyTest extends WebTestCase
             '_token' => $token,
         ]);
 
+        // A NEWER message on top of the question's card. The bug this pins:
+        // the template read the answer map into a loop variable of the same
+        // name, so it was clobbered on the first row and every card below it
+        // lost its answer — which is every real thread, since replying is
+        // itself followed by the outcome message.
+        $this->moderation()->decide((int) $sub->getId(), 'approve', $curator, null);
+        $this->em()->clear();
+
         $crawler = $client->request('GET', '/messages');
         self::assertResponseIsSuccessful();
+        self::assertGreaterThan(1, $crawler->filter('.msg-row')->count());
+        self::assertSame(0, $crawler->filter('.msg-list > .msg-row')->first()->filter('.msg-answer')->count(), 'the card on top is not the question');
 
         $card = $crawler->filter('#msg-'.$msgId);
         self::assertSame(1, $card->count());

@@ -1325,6 +1325,8 @@ map:
   d_reason_other: 'Iets anders'
   d_water_q: 'Is het water drinkbaar?'
   d_here_q: 'Is dit er nog?'
+  d_water_a: 'Drinkwater'
+  d_here_a: 'Nog aanwezig'
   d_not_potable: 'Niet drinkbaar'
   d_confirm_here: 'Bevestig dat het er is'
   d_confirmed_one: '{n} renner bevestigde'

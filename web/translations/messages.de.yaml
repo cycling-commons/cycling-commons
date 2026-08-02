@@ -1328,6 +1328,8 @@ map:
   d_reason_other: 'Etwas anderes'
   d_water_q: 'Ist das Wasser trinkbar?'
   d_here_q: 'Ist das noch da?'
+  d_water_a: 'Trinkwasser'
+  d_here_a: 'Noch da'
   d_not_potable: 'Nicht trinkbar'
   d_confirm_here: 'Bestätigen, dass es da ist'
   d_confirmed_one: '{n} Fahrer bestätigte'

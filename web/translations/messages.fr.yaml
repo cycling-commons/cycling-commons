@@ -1325,6 +1325,8 @@ map:
   d_reason_other: 'Autre chose'
   d_water_q: 'L''eau est-elle potable ?'
   d_here_q: 'Est-ce toujours là ?'
+  d_water_a: 'Eau potable'
+  d_here_a: 'Toujours là'
   d_not_potable: 'Non potable'
   d_confirm_here: 'Confirmer que c''est là'
   d_confirmed_one: '{n} cycliste a confirmé'
