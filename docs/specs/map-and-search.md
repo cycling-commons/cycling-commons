@@ -859,12 +859,13 @@ keeps the raw values; only the drawer translates them. A history row is a
 record of what changed and stays historic: what is true *now* is the
 confirmation panel above it, which counts live.
 
-**Once a rider has answered, the confirmation panel states rather than asks.**
-The heading drops the question ("Drinking water", not "Is the water
-drinkable?"), the answer is shown with where it was given, and the stance
-buttons fold behind "change my answer" — two live buttons under your own
-answer still read as being asked. The tally only appears when somebody has
-actually answered.
+**Once a rider has answered, the confirmation panel is one line.** The heading
+drops the question ("Drinking water · 2 riders confirmed", not "Is the water
+drinkable?"), and the only control is **change my answer**. What they answered,
+where they answered it, and the stance buttons all sit behind that toggle. A
+rider who has already answered came to look at the place: their own answer
+restated over two live buttons is noise on top of it, and reads as being asked
+again.
 
 **A name deep-link must resolve the CURATED item, never its OSM twin.**
 `resolveLocalFeature()` searches three places, in order: `CATALOG[].features`,

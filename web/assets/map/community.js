@@ -122,11 +122,10 @@ function paintItemConfirm(box, s){
   if(s.token) _cfTokens[id]=s.token;
   const authed=!!_cfTokens[id];
   const defs=CC_CF_STANCES[s.stanceKind]||CC_CF_STANCES.existence;
-  // Stop asking someone a question they have already answered. The buttons
-  // stay (they can change their mind) and the tally stays, but the heading
+  // Stop asking someone a question they have already answered: the heading
   // states the subject instead of putting the question again — being asked
-  // "is the water drinkable?" right above your own answer reads as though
-  // the answer never landed.
+  // "is the water drinkable?" over your own answer reads as though the answer
+  // never landed.
   const heading = s.mine
     ? (s.stanceKind==='potability' ? (D.waterA||'Drinking water') : (D.hereA||'Still here'))
     : (s.stanceKind==='potability' ? (D.waterQ||'Is the water drinkable?') : (D.hereQ||'Is this still here?'));
@@ -136,8 +135,8 @@ function paintItemConfirm(box, s){
     return `<button class="cc-cf-btn${mine}" data-cf-act="${v}"${authed?'':' disabled'}>${l} <span class="cc-cf-n">${n}</span></button>`;
   }).join('');
   const total = s.total ? `<span class="cc-cf-total">· ${tpl((s.total===1?D.confirmedOne:D.confirmedMany)||`{n} rider${s.total===1?'':'s'} confirmed`, {n:s.total})}</span>` : '';
-  // Once a rider HAS answered, stop rendering a question at them. The buttons
-  // stay so they can change their mind; the line above says where they stand.
+  // The label of their own stance, for the "you answered" line behind the
+  // toggle.
   const mineLabel = s.mine
     ? (defs.find(([v])=>v===s.mine)||[])[1] || s.mine
     : '';
@@ -150,19 +149,15 @@ function paintItemConfirm(box, s){
           || (s.mineSource === 'form' ? 'You answered: {a} — when you added this place' : 'You answered: {a}'),
         {a:mineLabel})}</div>`
     : '';
-  // Answered already? Then the answer is the panel, and the buttons fold away
-  // behind "change my answer". Leaving two live buttons under your own answer
-  // still reads as being asked — the tally stays visible either way, because
-  // that is what everyone else said, not a question put to you.
-  // Only when somebody has actually said something: "Potable 0 · Not potable 0"
-  // under your own answer is a row of zeros pretending to be information.
-  const tally = (s.mine && s.total)
-    ? `<div class="cc-cf-tally">${defs.map(([v,l])=>`${l} <b>${(s.stances&&s.stances[v])||0}</b>`).join(' · ')}</div>`
-    : '';
+  // Answered already? Then the panel is one line and a way back in: the
+  // subject, how many riders have said something, and "change my answer".
+  // What you answered, and the buttons to change it, appear only if you ask
+  // for them — a rider who has already answered came to look at the place,
+  // and everything shown to them by default is noise on top of it.
   box.querySelector('[data-cf-body]').innerHTML = s.mine
-    ? `<div class="cc-cf-h">${heading} ${total}</div>${yours}${tally}
+    ? `<div class="cc-cf-h">${heading} ${total}</div>
        <button type="button" class="cc-cf-change" data-cf-change>${D.changeAnswer||'Change my answer'}</button>
-       <div class="cc-cf-row" hidden>${btns}</div>`
+       <div class="cc-cf-more" hidden>${yours}<div class="cc-cf-row">${btns}</div></div>`
     : `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>`;
   box.querySelector('.cc-cf-login').hidden = authed;
 }
@@ -280,10 +275,10 @@ export function submitModeration(btn){
     .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast(D.decisionErr||'Could not record the decision — please try again.', {center:true}); });
 }
 export function initCommunity(){
-    // "Change my answer" reveals the stance buttons the answer folded away.
+    // "Change my answer" reveals what you answered and the buttons to change it.
     document.addEventListener('click', e=>{
       const t=e.target.closest('[data-cf-change]'); if(!t) return;
-      const row=t.parentElement.querySelector('.cc-cf-row'); if(row) row.hidden=false;
+      const more=t.parentElement.querySelector('.cc-cf-more'); if(more) more.hidden=false;
       t.hidden=true;
     });
     // Delegated: clicking a stance button records/switches it, then repaints.

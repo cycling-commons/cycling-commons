@@ -456,10 +456,6 @@
   .cc-cf-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.8);margin-bottom:.45rem}
   .cc-cf-yours{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;color:var(--glacier);margin-top:.45rem}
   .cc-cf-total{color:var(--glacier);text-transform:none;letter-spacing:0}
-  /* What everyone else said, once you have answered — a fact, not a
-     question, so it reads as text rather than as two live buttons. */
-  .cc-cf-tally{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;color:rgba(239,230,212,.7);margin-top:.3rem}
-  .cc-cf-tally b{color:var(--paper)}
   .cc-cf-change{margin-top:.5rem;padding:0;border:0;background:none;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--glacier);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .cc-cf-change:hover{color:var(--trail)}
   .cc-cf-row{display:flex;flex-wrap:wrap;gap:.5rem}
