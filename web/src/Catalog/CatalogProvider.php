@@ -19,6 +19,13 @@ use Doctrine\DBAL\Connection;
  */
 final class CatalogProvider
 {
+    /**
+     * The letters served as plain feature collections — the ones featureForItem()
+     * can hand the map a single feature for. A (segments), B (climbs) and
+     * K (routes) carry their own shapes and are deliberately not covered.
+     */
+    public const array POOL_LETTERS = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'M'];
+
     public function __construct(private readonly Connection $db)
     {
     }
@@ -79,7 +86,7 @@ final class CatalogProvider
      *
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool}>
      */
-    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null): array
+    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null): array
     {
         $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
                        (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id)) AS verified
@@ -94,6 +101,13 @@ final class CatalogProvider
         if (null !== $excludeSource) {
             $sql .= ' AND i.source != :excludeSource';
             $params['excludeSource'] = $excludeSource;
+        }
+        // One item, for featureForItem() — same derivation as the bulk payload,
+        // so a live-inserted feature is byte-identical to the one the next
+        // catalog fetch will carry.
+        if (null !== $onlyId) {
+            $sql .= ' AND i.id = :onlyId';
+            $params['onlyId'] = $onlyId;
         }
         // Coverage retirement predicate (coverage-provider.md
         // §9): a pure uncurated OSM row (source=osm, state=unverified, never
@@ -150,41 +164,83 @@ final class CatalogProvider
     {
         $features = [];
         foreach ($this->itemRows($letter, $source, $excludeSource) as $row) {
-            $props = $this->decode($row['attributes']);
-            if ('' !== $row['name']) {
-                $props['n'] = $row['name'];
-            }
-            if (null !== $row['prov']) {
-                $props['prov'] = $row['prov'];
-            }
-            // Display-safe provenance: the raw ItemSource value (osm/pivot/
-            // wikidata/auto/user/manual), never the internal provenance detail.
-            // Lets the drawer show "Rider-contributed" for user/manual items
-            // instead of a hardcoded per-layer OSM string (map.js sourceLabel()).
-            $props['srcType'] = $row['source'];
-            // Real community-tier signal (map-and-search.md
-            // §12): v:1 = verified state OR at least one rider confirmation.
-            // Absent key = community tier (keeps unverified payloads byte-stable).
-            if ($row['verified']) {
-                $props['v'] = 1;
-            }
-            // The DB item id always makes $props non-empty, so it always
-            // encodes as a JSON object, never `[]` (GeoJSON requires an
-            // object; an empty array would encode as `[]` instead).
-            $props['id'] = (int) $row['id'];
-            // Region membership for map.js scope filtering (map-and-search.md §4.5
-            // §4 / §7 Phase 2). Absent for rows outside every region (byte-stable).
-            if (null !== $row['region_id']) {
-                $props['rid'] = (int) $row['region_id'];
-            }
-            $features[] = [
-                'type' => 'Feature',
-                'properties' => $props,
-                'geometry' => $this->decode($row['geom']),
-            ];
+            $features[] = $this->feature($row);
         }
 
         return ['type' => 'FeatureCollection', 'features' => $features];
+    }
+
+    /**
+     * One served item, in the letter it belongs to — or null when the item is
+     * not (yet) served, or its letter has no feature-collection payload.
+     *
+     * Approving a submission puts a new item on the map, but the map's pools
+     * were built at page load: without this the rider's contribution stayed
+     * invisible, and the pending pin simply vanished, until the curator
+     * reloaded (moderation-and-contribution.md §6.2). The map inserts exactly
+     * this feature into the matching pool instead.
+     *
+     * Only the letters served as feature collections qualify. A/B/K carry
+     * their own shapes (segments, climbs, routes) and are left to the next
+     * catalog fetch rather than half-supported here.
+     *
+     * @return array{letter: string, feature: array{type: string, properties: array<string, mixed>, geometry: mixed}}|null
+     */
+    public function featureForItem(int $itemId): ?array
+    {
+        $letter = $this->db->fetchOne('SELECT letter FROM item WHERE id = :id', ['id' => $itemId]);
+        if (!\is_string($letter) || !\in_array($letter, self::POOL_LETTERS, true)) {
+            return null;
+        }
+
+        $rows = $this->itemRows($letter, onlyId: $itemId);
+
+        return [] === $rows ? null : ['letter' => $letter, 'feature' => $this->feature($rows[0])];
+    }
+
+    /**
+     * The per-row mapping shared by the bulk payload and featureForItem(), so
+     * a live-inserted feature can never drift from the served one.
+     *
+     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool} $row
+     *
+     * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
+     */
+    private function feature(array $row): array
+    {
+        $props = $this->decode($row['attributes']);
+        if ('' !== $row['name']) {
+            $props['n'] = $row['name'];
+        }
+        if (null !== $row['prov']) {
+            $props['prov'] = $row['prov'];
+        }
+        // Display-safe provenance: the raw ItemSource value (osm/pivot/
+        // wikidata/auto/user/manual), never the internal provenance detail.
+        // Lets the drawer show "Rider-contributed" for user/manual items
+        // instead of a hardcoded per-layer OSM string (map.js sourceLabel()).
+        $props['srcType'] = $row['source'];
+        // Real community-tier signal (map-and-search.md
+        // §12): v:1 = verified state OR at least one rider confirmation.
+        // Absent key = community tier (keeps unverified payloads byte-stable).
+        if ($row['verified']) {
+            $props['v'] = 1;
+        }
+        // The DB item id always makes $props non-empty, so it always
+        // encodes as a JSON object, never `[]` (GeoJSON requires an
+        // object; an empty array would encode as `[]` instead).
+        $props['id'] = (int) $row['id'];
+        // Region membership for map.js scope filtering (map-and-search.md §4.5
+        // §4 / §7 Phase 2). Absent for rows outside every region (byte-stable).
+        if (null !== $row['region_id']) {
+            $props['rid'] = (int) $row['region_id'];
+        }
+
+        return [
+            'type' => 'Feature',
+            'properties' => $props,
+            'geometry' => $this->decode($row['geom']),
+        ];
     }
 
     /**

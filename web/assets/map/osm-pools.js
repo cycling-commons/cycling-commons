@@ -71,6 +71,38 @@ export function setupConfClusters(){
     confState[srcId]={key, layer:layerByKey[key], info, onScreen:{}, confirmed:curated};
   });
 }
+/* Add one item to a curated pool and repaint it, without a page reload.
+
+   A curator approving a submission removes its pending pin, and until now the
+   place it approved appeared nowhere until the map was reloaded: the pools are
+   built once, from the catalog fetch at boot. The decision response carries the
+   approved item as the same GeoJSON feature the catalog would have served
+   (CatalogProvider::featureForItem), so it can simply join its pool.
+
+   Idempotent by item id, so a double decision (or a later catalog refetch)
+   cannot draw the same place twice. */
+export function addCuratedFeature(key, feature){
+  const info = osmLayers[key];
+  if(!info || !info.data || !feature || !feature.properties) return false;
+  const id = feature.properties.id;
+  if(info.data.features.some(f => f.properties && f.properties.id === id)) return true;
+  info.data.features.push(feature);
+
+  const srcId = key + '-conf';
+  const st = confState[srcId];
+  if(st){
+    st.confirmed = info.data.features;
+    const src = map.getSource(srcId);
+    if(src) src.setData({type:'FeatureCollection', features: st.confirmed.filter(f => inScope(f.properties.rid))});
+  } else {
+    // The pool had no features at boot, so it has no cluster source yet —
+    // setupConfClusters() skips empty pools. It has one now.
+    setupConfClusters();
+  }
+  updateConfMarkers();
+  return true;
+}
+
 // Region scope changed → rebuild each cluster source from its full confirmed
 // set, keeping only in-scope features, so cluster counts + leaf pins match the
 // scope (map-and-search.md §4.5). updateConfMarkers repaints on the

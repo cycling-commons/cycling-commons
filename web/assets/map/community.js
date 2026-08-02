@@ -17,11 +17,12 @@
    entry; their order relative to each other never mattered, because they match
    disjoint selectors ([data-cf-act], [data-rc-act], .cc-rc-invalid). */
 import { I18N, D, tpl, CC_SEASON_LABEL } from './i18n.js';
-import { layerByKey } from './catalog.js';
+import { layerByKey, LETTER_KEY } from './catalog.js';
 import { render } from './render.js';
 import { mapToast, closeDrawer } from './drawer.js';
 import { _pickSegs } from './picking.js';
 import { dropPendingFromSearch } from './search-ui.js';
+import { addCuratedFeature } from './osm-pools.js';
 
 // Route community loop (spec §7). One authenticated fetch on drawer-open
 // carries counts + my-state + a stateless CSRF token; the three POSTs reuse it.
@@ -243,6 +244,12 @@ export function submitModeration(btn){
     .then(r=>{ if(!r.ok) throw new Error('decide'); return r.json(); })
     .then(res=>{
       hidePendingPin(id); closeDrawer();
+      // An approved contribution takes the place of the pin that just went:
+      // the response carries it as the catalog's own feature, so it lands on
+      // the map immediately instead of after a reload. Letters whose payload
+      // is not a feature collection (A/B/K) send no item and keep the old
+      // behaviour.
+      if(res.item && LETTER_KEY[res.item.letter]) addCuratedFeature(LETTER_KEY[res.item.letter], res.item.feature);
       // Centred, like the other decision-weight confirmations: the drawer has
       // just closed and the pin has just gone, so a corner toast is easy to
       // miss — and needs-info says where the submission WENT, because the pin

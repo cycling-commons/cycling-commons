@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\CatalogProvider;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
@@ -109,7 +110,7 @@ final class ModerateController extends AbstractController
     }
 
     #[Route('/moderate/decide', name: 'moderate_decide', methods: ['POST'])]
-    public function decide(Request $request): Response
+    public function decide(Request $request, CatalogProvider $catalog): Response
     {
         $form = $this->createForm(ModerationDecisionType::class);
         $form->handleRequest($request);
@@ -160,6 +161,14 @@ final class ModerateController extends AbstractController
                     'persisted' => true,
                     'decision' => $data['decision'],
                     'submission_id' => $submission->getId(),
+                    // On approval, the item as the map's own pools carry it, so
+                    // the drawer can put the contribution on the map in place
+                    // of the pending pin it just removed. Null for the letters
+                    // whose payload is not a feature collection (A/B/K) and for
+                    // every non-approve decision — the client simply skips it.
+                    'item' => 'approve' === $data['decision'] && null !== $submission->getItemId()
+                        ? $catalog->featureForItem($submission->getItemId())
+                        : null,
                 ]);
             }
 

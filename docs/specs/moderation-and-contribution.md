@@ -392,6 +392,18 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
 needs-info pins are hidden from the map until the rider answers (§7.3), while
 the queue list shows both `pending` and `needs_info`.
 
+**An approval puts the item on the map straight away.** The decision response
+carries the approved item as the catalog's own GeoJSON feature
+(`CatalogProvider::featureForItem()`, the same per-row mapping the bulk payload
+uses, so a live-inserted feature can never drift from the served one), and the
+drawer inserts it into the pool it belongs to (`addCuratedFeature()`,
+idempotent by item id). Before this the pending pin simply vanished on approve
+and the place appeared nowhere until the curator reloaded — the map's pools are
+built once, at boot. It joins as a **community** pin (dashed, `v` absent):
+approved is not confirmed, and only a rider's confirmation flips that. Letters
+whose payload is not a feature collection (A segments, B climbs, K routes) send
+no item and keep the reload behaviour.
+
 **One exception, and it is what makes the desk's link work:** an explicit
 `/map?pending=<id>` serves that submission whatever its queue status
 (`SubmissionQueue::pendingForMap($scope, $focusId)`), still inside the

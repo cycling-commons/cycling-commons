@@ -6,7 +6,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
+use App\Catalog\ItemSource;
+use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
@@ -207,6 +210,81 @@ final class ModerateDecideAjaxTest extends WebTestCase
         $fresh = $em->find(Submission::class, $sub->getId());
         self::assertNotNull($fresh);
         self::assertSame(SubmissionStatus::NeedsInfo, $fresh->getStatus());
+    }
+
+    /**
+     * An approval carries the approved item back, as the catalog's own feature.
+     *
+     * The drawer removes the pending pin the moment a decision lands; without
+     * this the place it just approved appeared nowhere until the curator
+     * reloaded, because the map's pools are built once from the boot fetch.
+     */
+    public function testAnApprovalCarriesTheItemBackForTheMap(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'ajax-curator-feature@example.com', ['ROLE_CURATOR'], true);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter('C')->setName('Fontaine du Décide')
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setState(ItemState::Submitted)->setSource(ItemSource::User)->setSourceRef('sub:ajax-feature')
+            ->setAttributes(['potable' => 'yes']);
+        $em->persist($item);
+        $em->flush();
+
+        $sub = $this->seedSubmission();
+        $sub->setLetter('C')->setItemId($item->getId());
+        $em->flush();
+
+        $client->request('GET', '/map');
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', (string) $client->getResponse()->getContent(), $m));
+
+        $client->request(
+            'POST',
+            '/moderate/decide',
+            ['moderation_decision' => ['submission_id' => (string) $sub->getId(), 'decision' => 'approve', '_token' => $m[1]]],
+            [],
+            ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_ACCEPT' => 'application/json', 'HTTP_REFERER' => 'http://localhost/moderate'],
+        );
+
+        self::assertResponseIsSuccessful();
+        /** @var array{item: ?array{letter: string, feature: array{type: string, properties: array<string, mixed>, geometry: array<string, mixed>}}} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+
+        self::assertNotNull($data['item'], 'an approved C item must come back for the map');
+        self::assertSame('C', $data['item']['letter']);
+        self::assertSame('Feature', $data['item']['feature']['type']);
+        self::assertSame($item->getId(), $data['item']['feature']['properties']['id']);
+        self::assertSame('Fontaine du Décide', $data['item']['feature']['properties']['n']);
+        self::assertSame('yes', $data['item']['feature']['properties']['potable']);
+        // Approved is not confirmed: it joins the map as a community pin, and
+        // only a rider's confirmation flips `v`.
+        self::assertArrayNotHasKey('v', $data['item']['feature']['properties']);
+        self::assertSame([5.86, 50.47], $data['item']['feature']['geometry']['coordinates']);
+    }
+
+    public function testARejectionCarriesNoItem(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'ajax-curator-reject@example.com', ['ROLE_CURATOR'], true);
+        $sub = $this->seedSubmission();
+
+        $client->request('GET', '/map');
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', (string) $client->getResponse()->getContent(), $m));
+
+        $client->request(
+            'POST',
+            '/moderate/decide',
+            ['moderation_decision' => ['submission_id' => (string) $sub->getId(), 'decision' => 'reject', 'note' => 'duplicate', '_token' => $m[1]]],
+            [],
+            ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_ACCEPT' => 'application/json', 'HTTP_REFERER' => 'http://localhost/moderate'],
+        );
+
+        self::assertResponseIsSuccessful();
+        /** @var array{item: mixed} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertNull($data['item']);
     }
 
     public function testAjaxDecisionForbiddenForPlainRider(): void
