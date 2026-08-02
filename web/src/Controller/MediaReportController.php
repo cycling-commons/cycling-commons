@@ -9,6 +9,8 @@ namespace App\Controller;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaTakedownCategory;
 use App\Media\MediaTakedownService;
+use App\Media\ProofOfWork;
+use App\Media\UrgentWithholdBreaker;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,7 +49,35 @@ final class MediaReportController extends AbstractController
         private readonly MediaTakedownService $takedowns,
         private readonly RateLimiterFactory $mediaReportLimiter,
         private readonly RateLimiterFactory $mediaReportUrgentLimiter,
+        private readonly UrgentWithholdBreaker $breaker,
+        private readonly ProofOfWork $proofOfWork,
     ) {
+    }
+
+    /**
+     * Every render carries a fresh challenge, whether or not one is currently
+     * required, and the page's script always solves it once the urgent
+     * category is picked. Uniform on purpose: issuing it only while the
+     * breaker is open would tell an attacker their flood is working, and
+     * solving it in advance means a genuine reporter never waits at submit
+     * time.
+     *
+     * @return array<string, mixed>
+     */
+    private function context(string $uuid, bool $sent, ?string $error = null): array
+    {
+        return [
+            'page_title' => 'media.report.title',
+            'page_description' => 'media.report.title',
+            'nav_active' => '',
+            'photo_uuid' => strtolower($uuid),
+            'categories' => MediaTakedownCategory::all(),
+            'sent' => $sent,
+            'error' => $error,
+            'pow_challenge' => $this->proofOfWork->issue(new \DateTimeImmutable()),
+            'pow_difficulty' => ProofOfWork::DIFFICULTY,
+            'urgent_category' => MediaTakedownCategory::IntimateOrChild,
+        ];
     }
 
     #[Route(
@@ -60,14 +90,7 @@ final class MediaReportController extends AbstractController
     {
         // Deliberately no lookup: the form must render the same for a real
         // photo and an invented uuid, or GET alone is the oracle.
-        return $this->render('media/report.html.twig', [
-            'page_title' => 'media.report.title',
-            'page_description' => 'media.report.title',
-            'nav_active' => '',
-            'photo_uuid' => strtolower($uuid),
-            'categories' => MediaTakedownCategory::all(),
-            'sent' => false,
-        ]);
+        return $this->render('media/report.html.twig', $this->context($uuid, sent: false));
     }
 
     #[Route(
@@ -100,6 +123,22 @@ final class MediaReportController extends AbstractController
             return $this->formWithError($uuid, 'media.report.error.contact', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        // Adaptive friction (docs/specs/photo-uploads.md §6c): while the
+        // circuit breaker is open — i.e. while urgent reports are arriving far
+        // faster than any genuine rate — the urgent path costs a second of the
+        // caller's CPU. On an ordinary day nobody pays anything, and the check
+        // is ours: no third-party script, no hosted bot service, nothing
+        // learned about the reporter.
+        if (MediaTakedownCategory::autoWithholds($category) && $this->breaker->isOpen()
+            && !$this->proofOfWork->verify(
+                (string) $request->request->get('pow_challenge', ''),
+                (string) $request->request->get('pow_nonce', ''),
+                new \DateTimeImmutable(),
+            )
+        ) {
+            return $this->formWithError($uuid, 'media.report.error.challenge', Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         // The general limiter prices the form; the urgent limiter prices the
         // one lever that changes anything, and both bind before any lookup so
         // a rate-limited caller cannot probe. A 429 reveals only the caller's
@@ -120,26 +159,11 @@ final class MediaReportController extends AbstractController
         }
 
         // One acknowledgement for every outcome, unknown uuid included.
-        return $this->render('media/report.html.twig', [
-            'page_title' => 'media.report.title',
-            'page_description' => 'media.report.title',
-            'nav_active' => '',
-            'photo_uuid' => strtolower($uuid),
-            'categories' => MediaTakedownCategory::all(),
-            'sent' => true,
-        ]);
+        return $this->render('media/report.html.twig', $this->context($uuid, sent: true));
     }
 
     private function formWithError(string $uuid, string $error, int $status): Response
     {
-        return $this->render('media/report.html.twig', [
-            'page_title' => 'media.report.title',
-            'page_description' => 'media.report.title',
-            'nav_active' => '',
-            'photo_uuid' => strtolower($uuid),
-            'categories' => MediaTakedownCategory::all(),
-            'sent' => false,
-            'error' => $error,
-        ], new Response('', $status));
+        return $this->render('media/report.html.twig', $this->context($uuid, sent: false, error: $error), new Response('', $status));
     }
 }

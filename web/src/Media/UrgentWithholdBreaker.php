@@ -6,8 +6,14 @@ declare(strict_types=1);
 
 namespace App\Media;
 
+use App\Settings\SettingsRegistry;
+use App\Settings\SystemSettings;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\RateLimiter\LimiterInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\Storage\CacheStorage;
 
 /**
  * The site-wide budget for auto-withholding photos on an anonymous report
@@ -45,11 +51,43 @@ final class UrgentWithholdBreaker
      */
     private const string KEY = 'global';
 
+    private readonly CacheStorage $storage;
+
     public function __construct(
-        private readonly RateLimiterFactory $mediaUrgentBreakerHourlyLimiter,
-        private readonly RateLimiterFactory $mediaUrgentBreakerDailyLimiter,
+        #[Autowire(service: 'cache.media_urgent_breaker_limiter')]
+        CacheItemPoolInterface $pool,
+        private readonly SystemSettings $settings,
         private readonly LoggerInterface $logger,
+        private readonly UrgentWithholdAlert $alert,
     ) {
+        $this->storage = new CacheStorage($pool);
+    }
+
+    /**
+     * The two budgets, built per call rather than wired as configured
+     * limiters, because both limits are runtime-editable
+     * (system-configuration.md §2). An attack is exactly the moment nobody can
+     * wait for a deploy to change a number, so the number lives in the
+     * database and the window is constructed around it.
+     *
+     * @return array{hourly: LimiterInterface, daily: LimiterInterface}
+     */
+    private function limiters(): array
+    {
+        return [
+            'hourly' => $this->window(SettingsRegistry::MEDIA_URGENT_BREAKER_HOURLY, '1 hour'),
+            'daily' => $this->window(SettingsRegistry::MEDIA_URGENT_BREAKER_DAILY, '1 day'),
+        ];
+    }
+
+    private function window(string $setting, string $interval): LimiterInterface
+    {
+        return (new RateLimiterFactory([
+            'id' => $setting,
+            'policy' => 'sliding_window',
+            'limit' => $this->settings->get($setting),
+            'interval' => $interval,
+        ], $this->storage))->create(self::KEY);
     }
 
     /**
@@ -62,8 +100,9 @@ final class UrgentWithholdBreaker
      */
     public function allowWithhold(): bool
     {
-        $hourly = $this->mediaUrgentBreakerHourlyLimiter->create(self::KEY)->consume()->isAccepted();
-        $daily = $this->mediaUrgentBreakerDailyLimiter->create(self::KEY)->consume()->isAccepted();
+        $limiters = $this->limiters();
+        $hourly = $limiters['hourly']->consume()->isAccepted();
+        $daily = $limiters['daily']->consume()->isAccepted();
 
         if ($hourly && $daily) {
             return true;
@@ -76,6 +115,10 @@ final class UrgentWithholdBreaker
             'Auto-withhold circuit breaker is open: urgent photo reports are queuing instead of withholding.',
             ['hourly_budget_left' => $hourly, 'daily_budget_left' => $daily],
         );
+        // Throttled inside the alerter — the flood that opens the breaker keeps
+        // arriving, and a mail per report would be a second denial of service
+        // pointed at the person who has to read them.
+        $this->alert->breakerOpened();
 
         return false;
     }
@@ -91,7 +134,9 @@ final class UrgentWithholdBreaker
      */
     public function isOpen(): bool
     {
-        return $this->mediaUrgentBreakerHourlyLimiter->create(self::KEY)->consume(0)->getRemainingTokens() < 1
-            || $this->mediaUrgentBreakerDailyLimiter->create(self::KEY)->consume(0)->getRemainingTokens() < 1;
+        $limiters = $this->limiters();
+
+        return $limiters['hourly']->consume(0)->getRemainingTokens() < 1
+            || $limiters['daily']->consume(0)->getRemainingTokens() < 1;
     }
 }

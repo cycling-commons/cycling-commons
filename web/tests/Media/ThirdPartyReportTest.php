@@ -20,8 +20,8 @@ use App\Media\MediaStorage;
 use App\Media\MediaTakedownCategory;
 use App\Media\MediaTakedownService;
 use App\Media\MediaTakedownSource;
-use App\Media\UrgentWithholdBreaker;
 use App\Media\ProcessedPhoto;
+use App\Media\UrgentWithholdBreaker;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\UserMessageKind;
 use Doctrine\ORM\EntityManagerInterface;
@@ -294,18 +294,19 @@ final class ThirdPartyReportTest extends KernelTestCase
     {
         $owner = $this->rider('report-breaker@example.com');
 
-        // The budget is spent through the limiter itself rather than by
+        // The budget is spent through the breaker itself rather than by
         // looping a literal count, so this test asserts the behaviour and not
-        // the current numbers — the config owns those.
-        $hourly = static::getContainer()->get('limiter.media_urgent_breaker_hourly');
+        // the current numbers — the runtime setting owns those
+        // (system-configuration.md §2).
+        $breaker = static::getContainer()->get(UrgentWithholdBreaker::class);
         $spent = 0;
-        while ($hourly->create('global')->consume()->isAccepted()) {
-            self::assertLessThan(500, ++$spent, 'the hourly budget must be finite');
+        while ($breaker->allowWithhold()) {
+            self::assertLessThan(2000, ++$spent, 'the hourly budget must be finite');
         }
 
         // The flag the desk banner reads, so a curator knows the removals are
         // theirs from here on.
-        self::assertTrue(static::getContainer()->get(UrgentWithholdBreaker::class)->isOpen());
+        self::assertTrue($breaker->isOpen());
 
         $next = $this->approved($owner);
         $this->takedowns->report($next, MediaTakedownCategory::IntimateOrChild, 'One past the budget.', null, '198.51.100.250');
@@ -338,6 +339,78 @@ final class ThirdPartyReportTest extends KernelTestCase
         $urgent = $this->approved($owner);
         $this->takedowns->report($urgent, MediaTakedownCategory::IntimateOrChild, 'A real one.', null, '198.51.100.99');
         self::assertTrue($urgent->isTakedownWithheld(), 'the urgent budget was never touched');
+    }
+
+    /**
+     * The recovery half (docs/specs/photo-uploads.md §6c). The property that
+     * matters most is the LAST one: dismissal must not close the category, or
+     * clearing a flood would permanently immunise every attacked photo against
+     * the next genuine report.
+     */
+    public function testDismissingAnAbusiveReportRestoresWithoutClosingTheDoor(): void
+    {
+        $owner = $this->rider('report-dismiss@example.com');
+        $admin = $this->rider('report-admin@example.com');
+        $upload = $this->approved($owner);
+        $before = $this->itemOf($upload)->getAttributes()['photos'];
+
+        $this->takedowns->report($upload, MediaTakedownCategory::IntimateOrChild, 'Vandalism.', null, '198.51.100.7');
+        self::assertTrue($upload->isTakedownWithheld());
+
+        self::assertTrue($this->takedowns->dismissAsAbuse($upload, $admin, 'Co-ordinated flood.'));
+
+        self::assertFalse($upload->isTakedownPending());
+        self::assertSame($before, $this->itemOf($upload)->getAttributes()['photos'], 'back on the map');
+        self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
+        self::assertContains(MediaAction::TakedownDismissedAsAbuse, $this->actions($upload));
+        // Nothing visible changed for the uploader, so they are told nothing.
+        self::assertSame([], $this->messagesFor($owner));
+        // THE point: a real report of the same kind must still be heard.
+        self::assertFalse($upload->hasDecidedTakedown(MediaTakedownCategory::IntimateOrChild));
+        $this->takedowns->report($upload, MediaTakedownCategory::IntimateOrChild, 'A real one, later.', null, '198.51.100.8');
+        self::assertTrue($upload->isTakedownPending(), 'the door is still open');
+    }
+
+    public function testDismissalRefusesAnUploadersOwnRequestAndAnythingAlreadyDecided(): void
+    {
+        $owner = $this->rider('report-dismiss-guard@example.com');
+        $admin = $this->rider('report-admin2@example.com');
+
+        // An uploader's own request is not abuse to be swept — it is a rights
+        // request, and only the desk decides it.
+        $mine = $this->approved($owner);
+        $this->takedowns->request($mine, 'That is me.');
+        self::assertFalse($this->takedowns->dismissAsAbuse($mine, $admin));
+        self::assertTrue($mine->isTakedownPending());
+
+        // A curator deciding first outranks a bulk sweep.
+        $decided = $this->approved($owner);
+        $this->takedowns->report($decided, MediaTakedownCategory::IdentifiableSelf, 'Me.', null, '198.51.100.9');
+        $this->takedowns->decline($decided, $admin);
+        self::assertFalse($this->takedowns->dismissAsAbuse($decided, $admin));
+    }
+
+    public function testTheRestoreWorklistHoldsOnlyWithheldThirdPartyRequests(): void
+    {
+        $owner = $this->rider('report-worklist@example.com');
+
+        $queued = $this->approved($owner);
+        $this->takedowns->report($queued, MediaTakedownCategory::IdentifiableSelf, 'Queued, never withheld.', null, '198.51.100.20');
+
+        $mine = $this->approved($owner);
+        $this->takedowns->request($mine, 'My own.');
+
+        $withheld = $this->approved($owner);
+        $this->takedowns->report($withheld, MediaTakedownCategory::IntimateOrChild, 'Withheld.', null, '198.51.100.21');
+
+        $cards = $this->takedowns->withheldThirdPartyCards();
+
+        self::assertCount(1, $cards);
+        self::assertSame($withheld->getId()->toRfc4122(), $cards[0]['uuid']);
+        self::assertSame(MediaTakedownCategory::IntimateOrChild, $cards[0]['category']);
+        // A short salted-hash prefix, never an address or a raw IP.
+        self::assertSame(8, \strlen($cards[0]['reporter']));
+        self::assertStringNotContainsString('198.51.100', $cards[0]['reporter']);
     }
 
     public function testTheUploaderRouteStampsItsSource(): void

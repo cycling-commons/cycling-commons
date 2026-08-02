@@ -388,6 +388,19 @@ class MediaUpload
         $this->takedownWithheld = false;
     }
 
+    /**
+     * An abusive report is undone (docs/specs/photo-uploads.md §6c): the
+     * marker goes and the photo is published again, but the category is
+     * deliberately NOT added to the decided list — a fake claim must not spend
+     * the one slot a real one would need.
+     */
+    public function dismissTakedownAsAbuse(): void
+    {
+        $this->takedownRequestedAt = null;
+        $this->takedownResolvedAt = new \DateTimeImmutable();
+        $this->takedownWithheld = false;
+    }
+
     /** Grant-side bookkeeping: the disposal itself is MediaDisposalService's job. */
     public function resolveTakedown(): void
     {

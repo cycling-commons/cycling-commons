@@ -1,0 +1,55 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   Incident playbook: a flood of anonymous photo reports
+   (docs/specs/photo-uploads.md §6c).
+
+   Admin-only, and deliberately NOT mirrored into the public wiki. The
+   moderator rulebook is world-readable; anything it says about how a removal
+   decision is really made doubles as a script for talking a curator into
+   removing something. The public page carries the promise we make to somebody
+   exercising a right. This page carries what we do when that route is used as
+   a weapon.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.flood.title'|trans }}{% endblock %}
+
+{% block main %}
+    <div class="col-lg-9">
+        {% if breaker_open %}
+            <div class="alert alert-danger">
+                <strong>{{ 'admin.flood.state_open_b'|trans }}</strong>
+                {{ 'admin.flood.state_open'|trans }}
+            </div>
+        {% else %}
+            <div class="alert alert-success">{{ 'admin.flood.state_closed'|trans }}</div>
+        {% endif %}
+
+        <p>{{ 'admin.flood.lead'|trans }}</p>
+
+        <h2 class="h5 mt-4">{{ 'admin.flood.h_what'|trans }}</h2>
+        <p>{{ 'admin.flood.what'|trans({'%hourly%': hourly, '%daily%': daily}) }}</p>
+
+        <h2 class="h5 mt-4">{{ 'admin.flood.h_steps'|trans }}</h2>
+        <ol>
+            <li>{{ 'admin.flood.step_verify'|trans }}</li>
+            <li>{{ 'admin.flood.step_restore'|trans }}
+                — <a href="{{ path('admin_withheld_photos') }}">{{ 'admin.menu.withheld_photos'|trans }}</a></li>
+            <li>{{ 'admin.flood.step_zero'|trans }}
+                — <a href="{{ path('admin_system_config') }}">{{ 'admin.menu.system_config'|trans }}</a></li>
+            <li>{{ 'admin.flood.step_desk'|trans }}</li>
+            <li>{{ 'admin.flood.step_after'|trans }}</li>
+        </ol>
+
+        <h2 class="h5 mt-4">{{ 'admin.flood.h_dont'|trans }}</h2>
+        <ul>
+            <li>{{ 'admin.flood.dont_decline'|trans }}</li>
+            <li>{{ 'admin.flood.dont_raise'|trans }}</li>
+            <li>{{ 'admin.flood.dont_disclose'|trans }}</li>
+            <li>{{ 'admin.flood.dont_ignore'|trans }}</li>
+        </ul>
+
+        <h2 class="h5 mt-4">{{ 'admin.flood.h_real'|trans }}</h2>
+        <p>{{ 'admin.flood.real'|trans }}</p>
+    </div>
+{% endblock %}

@@ -26,7 +26,12 @@
     border:1px solid rgba(20,22,14,.2);border-radius:5px;background:var(--paper)}
   .report-note{padding:1rem 1.2rem;background:var(--paper-deep);border-left:2px solid var(--ochre);
     border-radius:0 8px 8px 0;font-size:.88rem;line-height:1.6;margin:1.2rem 0}
+  .pow-status{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#595c4d}
 </style>
+{% endblock %}
+
+{% block body_scripts %}
+<script src="{{ asset('media/report-challenge.js') }}" defer></script>
 {% endblock %}
 
 {% block body %}
@@ -46,8 +51,19 @@
       <div class="report-note" role="alert">{{ error|trans }}</div>
     {% endif %}
 
-    <form method="post" action="{{ path('photo_report_submit', {uuid: photo_uuid}) }}">
+    {# The challenge is embedded on every render and the script solves it as
+       soon as the urgent category is picked, whether or not the server is
+       currently enforcing it (§6c). Uniform on purpose: issuing it only under
+       attack would tell an attacker the attack is working, and pre-solving
+       means a genuine reporter never waits at submit time. #}
+    <form method="post" action="{{ path('photo_report_submit', {uuid: photo_uuid}) }}"
+          id="report-form"
+          data-pow-challenge="{{ pow_challenge }}"
+          data-pow-difficulty="{{ pow_difficulty }}"
+          data-urgent-category="{{ urgent_category }}">
       <input type="hidden" name="_token" value="{{ csrf_token('photo_report') }}">
+      <input type="hidden" name="pow_challenge" value="{{ pow_challenge }}">
+      <input type="hidden" name="pow_nonce" id="pow_nonce" value="">
 
       <fieldset>
         <legend>{{ 'media.report.legend_category'|trans }}</legend>
@@ -76,6 +92,11 @@
         <p>{{ 'media.report.process_note'|trans }}</p>
         <p>{{ 'media.report.urgent_note'|trans }}</p>
       </div>
+
+      <p id="pow-status" class="pow-status" hidden
+         data-working="{{ 'media.report.challenge_working'|trans }}"
+         data-ready="{{ 'media.report.challenge_ready'|trans }}"
+         data-failed="{{ 'media.report.challenge_failed'|trans }}"></p>
 
       <p><button type="submit" class="btn">{{ 'media.report.submit'|trans }}</button></p>
     </form>

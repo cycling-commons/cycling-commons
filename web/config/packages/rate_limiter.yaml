@@ -27,6 +27,10 @@ framework:
                 adapter: cache.adapter.filesystem
             cache.media_urgent_breaker_limiter:
                 adapter: cache.adapter.filesystem
+            cache.media_urgent_alert_limiter:
+                adapter: cache.adapter.filesystem
+            cache.media_pow:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -99,8 +103,10 @@ framework:
             cache_pool: cache.data_export_limiter
         # Third-party photo reports (photo-uploads.md §6c): anonymous, per-IP.
         # Five genuine complaints in a day is already an unusual day; fifty is
-        # a campaign. Deliberately NO CAPTCHA — a standing product decision —
-        # so the limiter and the queue-not-withhold design are the abuse story.
+        # a campaign. No CAPTCHA and no third-party bot service — the abuse
+        # story is this limiter, the queue-not-withhold design, the site-wide
+        # circuit breaker below, and the local proof-of-work the breaker turns
+        # on when it opens.
         media_report:
             policy: sliding_window
             limit: 5
@@ -113,27 +119,21 @@ framework:
             limit: 1
             interval: '1 day'
             cache_pool: cache.media_report_urgent_limiter
-        # The auto-withhold CIRCUIT BREAKER (photo-uploads.md §6c). Keyed on a
-        # single GLOBAL key, not per IP — that is the whole point. Per-IP limits
-        # cannot bound a distributed attacker by definition, so without a
-        # site-wide budget a proxy pool could withhold one photo per IP per day
-        # across the entire corpus. Above these budgets urgent reports still
-        # file and still pin to the top of the desk; they just stop taking
-        # photos down on their own.
-        #
-        # The numbers are deliberately far above any plausible genuine rate:
-        # a real "a child is depicted" report is RARE, so a burst is itself the
-        # evidence that the burst is not genuine.
-        media_urgent_breaker_hourly:
+        # NOTE: the auto-withhold circuit breaker (photo-uploads.md §6c) is
+        # deliberately NOT declared here. Its two budgets are runtime-editable
+        # settings (system-configuration.md §2), so UrgentWithholdBreaker
+        # builds its sliding windows itself around the current values and only
+        # borrows the cache pool below. A limiter whose limit is fixed at
+        # deploy time would be the wrong shape for a dial an owner may need to
+        # turn during an attack.
+        # How often the breaker may mail a human. The flood that opens the
+        # breaker keeps arriving, so an alert per report would be thousands of
+        # messages aimed at the one person who has to read them.
+        media_urgent_alert:
             policy: sliding_window
-            limit: 10
+            limit: 1
             interval: '1 hour'
-            cache_pool: cache.media_urgent_breaker_limiter
-        media_urgent_breaker_daily:
-            policy: sliding_window
-            limit: 25
-            interval: '1 day'
-            cache_pool: cache.media_urgent_breaker_limiter
+            cache_pool: cache.media_urgent_alert_limiter
 
 when@test:
     framework:
@@ -160,4 +160,8 @@ when@test:
                 cache.media_report_urgent_limiter:
                     adapter: cache.adapter.array
                 cache.media_urgent_breaker_limiter:
+                    adapter: cache.adapter.array
+                cache.media_urgent_alert_limiter:
+                    adapter: cache.adapter.array
+                cache.media_pow:
                     adapter: cache.adapter.array

@@ -52,27 +52,23 @@ Commons can show it honoured the request.
 
 **Someone who is in a photo they did not upload** has their own route: the
 "this photo shows me" link on every photo page, open to people without
-accounts. Their card lands on this same desk marked **Third-party report**,
-with a category — and unlike an uploader's request, **the photo is still on
-the map** while you decide (the card says so). The one exception withholds
-before you look: a report of intimate imagery or of a child.
+accounts. Their report lands on this same desk, marked as coming from a third
+party, and a curator decides it — nothing is removed automatically on
+somebody's say-so.
 
-For these cards the question is different, because you usually cannot know
-who is really in the picture and you must not ask for papers to find out:
+Two rules hold in both directions and are worth stating publicly, because
+they are promises rather than procedure: **nobody learns who anybody is** (the
+reporter is never told who uploaded, the uploader is never told who reported,
+and neither sees the other's contact details), and **we do not ask you to
+prove your identity** to have a photo of you looked at.
 
-**Does the photo, on its face, show an identifiable person — and is the claim
-plausible?** If yes, remove. When you are unsure, remove: one photo of a
-fountain is cheap, a refused genuine claim is a rights violation.
-
-Decline only what is clearly not a rights claim: nobody visible at all, or a
-complaint about the *place* rather than a person (that is a map correction —
-say so in your note and point at the correction flow).
-
-Three things never to do on a third-party card: don't tell the reporter who
-uploaded, don't tell the uploader who reported, and don't copy the reporter's
-reply address anywhere — if they left one, answer them through the project
-mailbox within the month. A declined claim is final for its category: an
-identical report later will not reappear here, and that is by design.
+> The working guidance for deciding these cards — what the test is, when to
+> lean which way, and how a co-ordinated wave is handled — is on the
+> moderation desk itself and in the admin playbooks, not on this page. That is
+> deliberate: this page is public, and a published account of how removal
+> decisions are really made is also a script for talking a curator into
+> removing something. If you hold the role and cannot find the guidance, ask
+> in the curator channel rather than improvising from this page.
 
 ## Do
 

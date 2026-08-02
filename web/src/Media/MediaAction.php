@@ -34,4 +34,13 @@ final class MediaAction
     public const string ThirdPartyReported = 'third_party_reported';
     public const string TakedownGranted = 'takedown_granted';
     public const string TakedownDeclined = 'takedown_declined';
+    /**
+     * An admin restored a photo that an abusive report had withheld
+     * (docs/specs/photo-uploads.md §6c). Deliberately NOT a decline: a decline
+     * is a judgement on a claim and closes that category forever, which after
+     * a flood would immunise the attacked photos against the next genuine
+     * report. This says only "that report was not real", and leaves the door
+     * open.
+     */
+    public const string TakedownDismissedAsAbuse = 'takedown_dismissed_as_abuse';
 }

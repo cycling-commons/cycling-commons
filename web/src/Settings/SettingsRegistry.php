@@ -53,10 +53,13 @@ final class SettingsRegistry
     public const string ROUTE_REGION_ACTIVE_CAP = 'route.region_active_cap';
     public const string ROUTE_RIDE_VERIFY_THRESHOLD = 'route.ride_verify_threshold';
     public const string MODERATION_RETENTION_MONTHS = 'moderation.retention_months';
+    public const string MEDIA_URGENT_BREAKER_HOURLY = 'media.urgent_breaker_hourly';
+    public const string MEDIA_URGENT_BREAKER_DAILY = 'media.urgent_breaker_daily';
 
     public const string GROUP_MAP = 'map';
     public const string GROUP_ROUTES = 'routes';
     public const string GROUP_MODERATION = 'moderation';
+    public const string GROUP_MEDIA = 'media';
 
     /** @var array<string, SettingDefinition> keyed by setting key, in render order */
     private array $definitions = [];
@@ -83,6 +86,15 @@ final class SettingsRegistry
             // Months, so the floor is "one month" and the ceiling ten years;
             // 0 would delete decided rows the moment they were decided.
             [self::MODERATION_RETENTION_MONTHS, 1, 120, self::GROUP_MODERATION],
+            // The auto-withhold circuit breaker (photo-uploads.md §6c). 0 is
+            // allowed here and means something real, unlike everywhere else in
+            // this table: it turns the lever off entirely, so anonymous reports
+            // never take a photo down on their own. That is a legitimate
+            // setting during a sustained attack, and it is the one dial an
+            // owner may need at 03:00. The ceilings are "more than any genuine
+            // day could produce" — past them the budget is not a budget.
+            [self::MEDIA_URGENT_BREAKER_HOURLY, 0, 500, self::GROUP_MEDIA],
+            [self::MEDIA_URGENT_BREAKER_DAILY, 0, 2000, self::GROUP_MEDIA],
         ];
 
         foreach ($table as [$key, $min, $max, $group]) {

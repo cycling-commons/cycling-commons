@@ -42,7 +42,7 @@ class MediaModerationEvent
     private ?int $actorId;
 
     /** One of {@see \App\Media\MediaAction}. */
-    #[ORM\Column(type: Types::STRING, length: 24)]
+    #[ORM\Column(type: Types::STRING, length: 40)]
     private string $action;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]

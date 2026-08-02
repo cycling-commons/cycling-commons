@@ -225,6 +225,80 @@ final class MediaTakedownService
     }
 
     /**
+     * Undo an abusive auto-withhold (docs/specs/photo-uploads.md §6c). The
+     * recovery tool for the case the circuit breaker bounds but cannot
+     * prevent: a flood of urgent reports that each took a photo down before a
+     * human saw it.
+     *
+     * Why this is not `decline()`, which would be the obvious reuse. A decline
+     * is a *judgement on a claim*: it closes that category for that photo
+     * forever (the finality ledger), so mass-declining a flood would quietly
+     * immunise every attacked photo against the next genuine report of the
+     * same kind — turning a day's vandalism into a permanent hole. Dismissal
+     * says only "this report was not real": the photo goes back, the ledger is
+     * untouched, and a future genuine claim is still heard.
+     *
+     * The uploader is not messaged either. Nothing about their photo changed
+     * that they ever saw, and "somebody accused you and we decided they were
+     * lying" is a worse thing to receive than silence.
+     *
+     * @return bool whether anything was restored — false for a row somebody else already decided
+     */
+    public function dismissAsAbuse(MediaUpload $upload, User $admin, ?string $note = null): bool
+    {
+        if (!$upload->isTakedownPending() || MediaTakedownSource::ThirdParty !== $upload->getTakedownSource()) {
+            return false;
+        }
+
+        $upload->dismissTakedownAsAbuse();
+        $this->reattach($upload);
+        $this->events->append($upload->getId(), (int) $admin->getId(), MediaAction::TakedownDismissedAsAbuse, $note);
+        $this->em->flush();
+
+        return true;
+    }
+
+    /**
+     * The recovery desk's worklist: third-party requests that took a photo
+     * down and are still waiting. Newest first — an attack arrives in a burst,
+     * and the burst is what an operator is here to undo.
+     *
+     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, category: ?string, reporter: string}>
+     */
+    public function withheldThirdPartyCards(): array
+    {
+        /** @var list<MediaUpload> $rows */
+        $rows = $this->em->createQuery(
+            'SELECT m FROM '.MediaUpload::class.' m
+             WHERE m.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
+               AND m.takedownSource = :source AND m.takedownWithheld = true
+             ORDER BY m.takedownRequestedAt DESC',
+        )->setParameter('source', MediaTakedownSource::ThirdParty)->getResult();
+
+        $cards = [];
+        foreach ($rows as $upload) {
+            $requestedAt = $upload->getTakedownRequestedAt();
+            if (null === $requestedAt) {
+                continue;
+            }
+            $cards[] = [
+                'uuid' => $upload->getId()->toRfc4122(),
+                'sm' => (string) $this->decisions->describe($upload)['sm'],
+                'reason' => $upload->getTakedownReason() ?? '',
+                'requestedAt' => $requestedAt,
+                'itemName' => $this->item($upload)?->getName() ?? '',
+                'category' => $upload->getTakedownCategory(),
+                // Eight characters of the salted hash: enough for an operator
+                // to see "these forty all came from one place" at a glance,
+                // and no more identifying than the full hash already is.
+                'reporter' => substr($upload->getTakedownReporterHash() ?? '', 0, 8),
+            ];
+        }
+
+        return $cards;
+    }
+
+    /**
      * Art. 5(1)(e): the reply address has no purpose once the month to answer
      * (Art. 12(3)) is long past. Swept by media:gc alongside the other two
      * retention windows (docs/specs/photo-uploads.md §6c).

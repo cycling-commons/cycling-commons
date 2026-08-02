@@ -1,0 +1,76 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   Photos an anonymous report has taken off the map
+   (docs/specs/photo-uploads.md §6c).
+
+   The recovery half of the circuit breaker: the breaker bounds how many photos
+   a flood can withhold, this page puts them back in one action. Admin rather
+   than the curator desk because clearing an attack is an operational response
+   to the site being attacked, not a judgement on anybody's claim — which is
+   also why restoring here DISMISSES rather than declines, leaving the category
+   open for a future genuine report.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.withheld.title'|trans }}{% endblock %}
+
+{% block main %}
+    <div class="col-lg-10">
+        <p>{{ 'admin.withheld.lead'|trans }}</p>
+
+        {% if breaker_open %}
+            <div class="alert alert-danger">
+                <strong>{{ 'admin.withheld.breaker_open_b'|trans }}</strong>
+                {{ 'admin.withheld.breaker_open'|trans }}
+            </div>
+        {% endif %}
+
+        {% if cards is empty %}
+            <p>{{ 'admin.withheld.empty'|trans }}</p>
+        {% else %}
+            <form method="post">
+                <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width:2rem"></th>
+                            <th style="width:7rem">{{ 'admin.withheld.col_photo'|trans }}</th>
+                            <th>{{ 'admin.withheld.col_claim'|trans }}</th>
+                            <th style="width:11rem">{{ 'admin.withheld.col_when'|trans }}</th>
+                            {# The reporter column is a salted-hash prefix, never an address or an IP:
+                               enough to see "these forty came from one place", nothing more. #}
+                            <th style="width:7rem">{{ 'admin.withheld.col_reporter'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in cards %}
+                            <tr>
+                                <td><input type="checkbox" name="media[]" value="{{ card.uuid }}" checked></td>
+                                <td><img src="{{ card.sm }}" alt="" style="width:6rem;height:auto;border-radius:4px"></td>
+                                <td>
+                                    <div class="small">
+                                        {{ card.itemName ?: ('admin.withheld.no_item'|trans) }}
+                                        {% if card.category %} &middot; {{ ('media.report.category.' ~ card.category)|trans }}{% endif %}
+                                    </div>
+                                    <div>{{ card.reason }}</div>
+                                </td>
+                                <td class="small">{{ card.requestedAt|cc_datetime }}</td>
+                                <td><code class="small">{{ card.reporter }}</code></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="mb-3">
+                    <label class="form-label" for="withheld-note">{{ 'admin.withheld.note_label'|trans }}</label>
+                    <input type="text" class="form-control" id="withheld-note" name="note" maxlength="2000"
+                           placeholder="{{ 'admin.withheld.note_placeholder'|trans }}">
+                </div>
+
+                <button type="submit" class="btn btn-primary">{{ 'admin.withheld.restore'|trans }}</button>
+                <p class="form-text">{{ 'admin.withheld.restore_help'|trans }}</p>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -12,6 +12,9 @@ use App\Community\CuratorApplicationService;
 use App\Community\CuratorApplicationStatus;
 use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaTakedownService;
+use App\Media\UrgentWithholdBreaker;
 use App\Moderation\Entity\ModeratorArea;
 use App\Service\AdminDashboardStats;
 use App\Settings\SettingsRegistry;
@@ -29,6 +32,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Translation\TranslatableMessage;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -48,6 +52,7 @@ final class DashboardController extends AbstractDashboardController
 
     /** CSRF token id for the curator-applications decision form (session-backed, same-origin). */
     public const string CURATOR_APPS_CSRF_TOKEN_ID = 'curator-applications';
+    public const string WITHHELD_PHOTOS_CSRF_TOKEN_ID = 'withheld-photos';
 
     public function __construct(private readonly AdminDashboardStats $stats)
     {
@@ -85,9 +90,11 @@ final class DashboardController extends AbstractDashboardController
         // A dedicated section so future playbooks slot in beside this one.
         yield MenuItem::section(new TranslatableMessage('admin.menu.playbooks'));
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.playbook_email'), 'fa fa-envelope-circle-check', 'admin_playbook_email_change');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.playbook_photo_flood'), 'fa fa-triangle-exclamation', 'admin_playbook_photo_flood');
         yield MenuItem::section(new TranslatableMessage('admin.menu.system'));
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.system_config'), 'fa fa-sliders', 'admin_system_config');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.curator_applications'), 'fa fa-user-check', 'admin_curator_applications');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.withheld_photos'), 'fa fa-image-slash', 'admin_withheld_photos');
     }
 
     /**
@@ -101,6 +108,27 @@ final class DashboardController extends AbstractDashboardController
     public function emailChangePlaybook(): Response
     {
         return $this->render('admin/playbook_email_change.html.twig');
+    }
+
+    /**
+     * Incident response for a flood of anonymous photo reports
+     * (docs/specs/photo-uploads.md §6c).
+     *
+     * Admin-only on purpose, and NOT in the public wiki: the moderator
+     * rulebook is world-readable, so anything it says about how removal
+     * decisions are actually made is also a script for talking a curator into
+     * removing something. What belongs in public is the promise we make to
+     * somebody exercising a right; what belongs here is how we respond when
+     * that route is used as a weapon.
+     */
+    #[AdminRoute('/playbook/photo-flood', 'playbook_photo_flood')]
+    public function photoFloodPlaybook(UrgentWithholdBreaker $breaker, SystemSettings $settings): Response
+    {
+        return $this->render('admin/playbook_photo_flood.html.twig', [
+            'breaker_open' => $breaker->isOpen(),
+            'hourly' => $settings->get(SettingsRegistry::MEDIA_URGENT_BREAKER_HOURLY),
+            'daily' => $settings->get(SettingsRegistry::MEDIA_URGENT_BREAKER_DAILY),
+        ]);
     }
 
     /**
@@ -329,6 +357,67 @@ final class DashboardController extends AbstractDashboardController
         return $this->render('admin/curator_applications.html.twig', [
             'rows' => $rows,
             'csrf_token_id' => self::CURATOR_APPS_CSRF_TOKEN_ID,
+        ]);
+    }
+
+    /**
+     * Put back photos that abusive reports took down
+     * (docs/specs/photo-uploads.md §6c).
+     *
+     * The recovery half of the circuit breaker. The breaker bounds how many
+     * photos a flood can withhold; it cannot un-withhold them, and clearing an
+     * incident one card at a time on the moderation desk is exactly the cost
+     * an attacker is buying — while the noise buries the genuine report the
+     * whole route exists for.
+     *
+     * Admin rather than the curator desk on purpose: this is an operational
+     * response to an attack on the site, not a judgement on any one claim.
+     * That is also why it dismisses rather than declines — a decline closes
+     * that category for that photo forever, so mass-declining a flood would
+     * quietly immunise every attacked photo against the next genuine report.
+     */
+    #[AdminRoute('/withheld-photos', 'withheld_photos', options: ['methods' => ['GET', 'POST']])]
+    public function withheldPhotos(
+        Request $request,
+        MediaTakedownService $takedowns,
+        UrgentWithholdBreaker $breaker,
+        EntityManagerInterface $em,
+        TranslatorInterface $translator,
+    ): Response {
+        /** @var User $actor */
+        $actor = $this->getUser();
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid(self::WITHHELD_PHOTOS_CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Invalid CSRF token for a photo restore.');
+            }
+
+            /** @var list<string> $selected */
+            $selected = $request->request->all('media');
+            $note = trim((string) $request->request->get('note', '')) ?: null;
+            $restored = 0;
+            foreach ($selected as $uuid) {
+                if (!Uuid::isValid($uuid)) {
+                    continue;
+                }
+                $upload = $em->find(MediaUpload::class, Uuid::fromString($uuid));
+                // Anything already decided by a curator in the meantime is
+                // skipped, not overridden: the desk and this page can be open
+                // at once, and a real decision outranks a bulk sweep.
+                if (null !== $upload && $takedowns->dismissAsAbuse($upload, $actor, $note)) {
+                    ++$restored;
+                }
+            }
+
+            $this->addFlash('success', $translator->trans('admin.withheld.restored', ['%count%' => $restored]));
+
+            return $this->redirectToRoute('admin_withheld_photos');
+        }
+
+        return $this->render('admin/withheld_photos.html.twig', [
+            'cards' => $takedowns->withheldThirdPartyCards(),
+            'breaker_open' => $breaker->isOpen(),
+            'csrf_token_id' => self::WITHHELD_PHOTOS_CSRF_TOKEN_ID,
         ]);
     }
 }
