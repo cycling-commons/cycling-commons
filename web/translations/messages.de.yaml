@@ -1275,7 +1275,7 @@ map:
   d_estimate_method: 'Schätzung · {pct}% der Route kartiert'
   d_contributed_gpx: 'Beigetragene GPX (nur GPS-Track)'
   d_community_report: 'Community-Meldung'
-  d_report_photo: 'Dieses Foto zeigt mich'
+  d_report_photo: 'Dieses Foto melden'
   d_src_auto: 'Von der Pipeline abgeleitet'
   d_src_rider: 'Von Fahrern beigetragen'
   d_source: 'Quelle'

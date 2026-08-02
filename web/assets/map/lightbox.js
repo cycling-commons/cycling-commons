@@ -25,7 +25,7 @@ const MEDIA_UUID = /\/photos\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[
 export function reportLink(p){
   const m = MEDIA_UUID.exec(String(p && (p.lg || p.sm) || ''));
   if(!m) return '';
-  return ` · <a class="cc-lb-report" href="/photo/${m[1]}/report">${escPend(D.reportPhoto||'This photo shows me')}</a>`;
+  return ` · <a class="cc-lb-report" href="/photo/${m[1]}/report">${escPend(D.reportPhoto||'Report this photo')}</a>`;
 }
 
 // lightbox doubles as a slideshow over a feature's photo gallery
