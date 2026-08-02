@@ -1,0 +1,44 @@
+web/src/Catalog/CatalogProvider.php
+  s_b2667a820417c3::t_31ad0942a0c01f 211
+  s_b2667a820417c3::t_a95750f39f4a9a 214
+  s_b2667a820417c3::t_82ad4f43a35951 105-111
+  s_b2667a820417c3::t_2f55ea175e6904 22-28
+  s_b2667a820417c3::t_f856415074b832 167,173-210
+  s_b2667a820417c3::t_74978dd8f978b0 238
+  s_b2667a820417c3::t_ff269aee790eab 212-213,215-237,239-244
+  s_b2667a820417c3::t_2d527ef2cb66d0 89
+  s_b2667a820417c3::t_e9e31b16596a17 245
+web/src/Controller/ModerateController.php
+  s_b2667a820417c3::t_6eced6f1310750 9,113
+  s_b2667a820417c3::t_475b3f8bfd57fa 164-171
+docs/specs/moderation-and-contribution.md
+  s_b2667a820417c3::t_ae637cd68862a7 395-406
+web/assets/map/community.js
+  s_b2667a820417c3::t_77041680b04e7d 20,25,247-252
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_b2667a820417c3::t_d8ed8a665d4af6 215-289
+  s_b2667a820417c3::t_0eafb787b52415 9,11-12
+web/assets/map/osm-pools.js
+  s_b2667a820417c3::t_527ba389ad898d 74-105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "d9fd2e396f39e1d3151697360237f76f898ddc77",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b2667a820417c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77b22ba5-fbce-489c-a40c-b5007f506956",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
