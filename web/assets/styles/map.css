@@ -224,6 +224,13 @@
   .cc-mod-body{font-size:.85rem;line-height:1.5;margin-bottom:.6rem}
   .cc-mod-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.5rem .7rem;font-size:.82rem;margin-bottom:.6rem}
   /* pending rider photos with per-photo keep/drop (docs/specs/photo-uploads.md §5) */
+  /* Waiting on the rider: the same card, but never mistakable for one that
+     has not been looked at yet — it only appears via the desk's own link. */
+  .cc-mod-badge.waiting{background:var(--ochre);color:var(--ink)}
+  .cc-mod-asked,.cc-mod-replied{font-size:.82rem;line-height:1.5;padding:.5rem .7rem;border-radius:0 5px 5px 0;margin:.45rem 0}
+  .cc-mod-asked{background:rgba(20,22,14,.05);border-left:2px solid var(--ochre)}
+  .cc-mod-replied{background:rgba(20,22,14,.05);border-left:2px solid var(--spruce)}
+  .cc-mod-asked-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
   .cc-mod-photos{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
   .cc-mod-photo{display:flex;flex-direction:column;gap:.2rem;width:120px;font-size:.68rem}
   .cc-mod-photo img{width:120px;height:90px;object-fit:cover;border-radius:5px;display:block}

@@ -36,7 +36,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class MapController extends AbstractController
 {
     #[Route('/map', name: 'map')]
-    public function map(SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions): Response
     {
         $user = $this->getUser();
         $regionRows = array_map(
@@ -118,7 +118,11 @@ final class MapController extends AbstractController
         //      before finishing 2FA. requiresSetup() is the same policy the
         //      enforcer/login handler use.
         if ($user instanceof User && $this->isGranted('ROLE_CURATOR') && !$twoFactorPolicy->requiresSetup($user)) {
-            $params['pending'] = $queue->pendingForMap($scopeProvider->scopeFor($user));
+            // ?pending=<id> is the desk's "review on the map" link. It carries
+            // needs-info rows too, which the general layer leaves out — see
+            // SubmissionQueue::pendingForMap().
+            $focus = $request->query->getInt('pending');
+            $params['pending'] = $queue->pendingForMap($scopeProvider->scopeFor($user), $focus > 0 ? $focus : null);
         }
 
         return $this->render('map/index.html.twig', $params);
@@ -171,6 +175,7 @@ final class MapController extends AbstractController
             'needsInfo' => 'd_needs_info', 'reject' => 'd_reject', 'modKeys' => 'd_mod_keys',
             'decisionErr' => 'd_decision_err', 'decisionRecorded' => 'd_decision_recorded',
             'decisionAsked' => 'd_decision_asked', 'needsInfoNote' => 'd_needs_info_note',
+            'waitingOnRider' => 'd_waiting_on_rider', 'youAsked' => 'd_you_asked', 'riderReplied' => 'd_rider_replied',
             // Pending rider photos in the moderation panel
             // (docs/specs/photo-uploads.md §5). The distance string carries a
             // literal {m} the drawer substitutes — the Twig desk list uses the

@@ -392,6 +392,16 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
 needs-info pins are hidden from the map until the rider answers (§7.3), while
 the queue list shows both `pending` and `needs_info`.
 
+**One exception, and it is what makes the desk's link work:** an explicit
+`/map?pending=<id>` serves that submission whatever its queue status
+(`SubmissionQueue::pendingForMap($scope, $focusId)`), still inside the
+curator's areas. The desk lists needs-info rows with a "review on the map"
+link, so applying the layer rule to the deep link too left that link landing
+on a map with no such pin — and the place underneath opened its ordinary
+drawer, so the submission looked lost. Such a card is badged **waiting on the
+rider** and carries the question that was asked plus the rider's answer, so it
+is never mistaken for one nobody has looked at yet.
+
 ### 5.6 User-keyed rows and account deletion
 
 `submission.user_id` (like `route_vote`/`route_ride`/`route_suggestion`
@@ -504,6 +514,17 @@ currently **2000** characters — shared by notes, curator messages and replies
 - The latest rider reply surfaces on the queue row for every curator
   (`SubmissionQueue` joins the newest `sender='rider'` message per
   submission).
+- **A question and its answer are one card.** The messages page folds the
+  reader's own reply into the card holding the question it answers
+  (`MessagesController::answersToQuestions()`, paired by submission and
+  order so a second ask-and-answer round stays straight). Listed separately
+  the answer sorted *above* its own question, reading as two unrelated
+  events. The card links its subject back to `/profile#sub-<id>`, drops the
+  "a curator needs more information about X … you can reply below" lead once
+  the question itself is present, and shows the reply form only while the
+  question is unanswered and the submission is still `needs_info`. A curator
+  reading the same page still sees a rider's reply as its own row — to them
+  it is incoming mail, not their half of an exchange.
 - **Both ends of the conversation are visible to the rider, from both of
   their pages.** A reply is addressed to the deciding curator, so it lives
   under the *curator's* `user_id`; `MessageService::listFor()` therefore

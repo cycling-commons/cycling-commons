@@ -32,7 +32,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type): array
     {
         $where = ["s.status IN ('pending', 'needs_info')"];
@@ -54,13 +54,31 @@ final class SubmissionQueue
     }
 
     /**
-     * Map pending layer: strictly pending (needs-info pins are hidden until answered).
+     * Map pending layer: strictly pending — needs-info pins stay off the map
+     * until the rider answers, because they are waiting on the rider, not on
+     * a curator, and a queue of questions nobody can act on is noise.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
+     * `$focusId` is the one exception, and it exists because the desk lists
+     * needs-info rows with a "review on the map" link: an explicit
+     * `/map?pending=<id>` is a request for THAT submission, so it is served
+     * whatever its queue status. Without it the link landed on a map with no
+     * such pin, and clicking the place underneath showed the ordinary drawer
+     * — the submission looked lost. The scope guard still applies, so a
+     * curator cannot reach a submission outside their areas by guessing ids.
+     *
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
      */
-    public function pendingForMap(ModerationScope $scope): array
+    public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
-        return $this->rows($scope, "s.status = 'pending'", []);
+        if (null === $focusId) {
+            return $this->rows($scope, "s.status = 'pending'", []);
+        }
+
+        return $this->rows(
+            $scope,
+            "(s.status = 'pending' OR (s.id = :focus AND s.status = 'needs_info'))",
+            ['focus' => $focusId],
+        );
     }
 
     public function total(ModerationScope $scope): int
@@ -101,7 +119,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
      *
      * The returned row is a deliberate shared view-model: the SAME shape is
      * consumed by both moderate/index.html.twig AND map.js (as JSON). The
@@ -117,7 +135,7 @@ final class SubmissionQueue
             $params += $frag['params'];
         }
         $rows = $this->db->fetchAllAssociative(
-            'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title,
+            'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title, s.status, s.decision_note,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
                     COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
                     rr.body_text AS rider_reply
@@ -167,6 +185,11 @@ final class SubmissionQueue
                 'body' => (string) $r['body'],
                 'was' => implode(' · ', $was),
                 'now' => implode(' · ', $new),
+                // A `needs_info` row only reaches the map on an explicit
+                // ?pending=<id>; the drawer says so rather than showing a card
+                // indistinguishable from one still awaiting a first look.
+                'status' => (string) $r['status'],
+                'asked' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
                 'riderReply' => null !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
                 'photos' => $photosBySubmission[(int) $r['id']] ?? [],
             ];

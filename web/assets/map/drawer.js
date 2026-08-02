@@ -375,8 +375,19 @@ function buildRecord(layer, f){
     const modHist = 'new' === s.type
       ? `<div class="cc-d-hist cc-d-hist-initial"><h4 class="cc-d-hist-h">${D.history||'History'}</h4><p class="cc-mod-initial">${D.initialEntry||'Initial entry — new item'}</p></div>`
       : (s.itemId != null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${s.itemId}"></div>` : '');
+    // A needs-info submission is only ever here because a curator followed the
+    // desk's link to it: it is off the map layer until the rider answers. Say
+    // that, show the question that was asked, and show the answer if one came
+    // — a card identical to a never-looked-at one would invite asking twice.
+    const asked = ('needs_info' === s.status && s.asked)
+      ? `<div class="cc-mod-asked"><span class="cc-mod-asked-h">${D.youAsked||'You asked'}</span> ${escPend(s.asked)}</div>` : '';
+    const replied = s.riderReply
+      ? `<div class="cc-mod-replied"><span class="cc-mod-asked-h">${D.riderReplied||'Rider replied'}</span> ${escPend(s.riderReply)}</div>` : '';
+    const badge = 'needs_info' === s.status
+      ? `<div class="cc-mod-badge waiting">? ${D.waitingOnRider||'Waiting on the rider'}</div>`
+      : `<div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>`;
     moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
-      <div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>${body}${diff}${modPhotos}
+      ${badge}${body}${diff}${asked}${replied}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       <div class="cc-mod-acts">
         <button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>

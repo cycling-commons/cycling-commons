@@ -70,15 +70,65 @@ final class MessagesController extends AbstractController
 
         $messages->markAllRead($userId);
 
+        $answers = self::answersToQuestions($list, $userId);
+
         return $this->render('messages/index.html.twig', [
             'page_title' => 'meta.messages_title',
             'page_description' => 'meta.messages_description',
             'nav_active' => '',
             'cc_user' => $user,
-            'messages' => $list,
+            // A question and its answer are one exchange, so they render as one
+            // card: the replies attached below are dropped from the top level.
+            'messages' => array_values(array_filter(
+                $list,
+                static fn (UserMessage $m): bool => !isset($answers['attached'][(int) $m->getId()]),
+            )),
+            'answers' => $answers['byQuestion'],
             'replyable_submission_ids' => $replyableSubmissionIds,
             'message_photos' => $this->messagePhotos($list),
         ]);
+    }
+
+    /**
+     * Pair each of the reader's own replies with the question it answers.
+     *
+     * A needs-info question and the answer to it are one exchange; listed as
+     * two rows they read as unrelated events, and the answer (newest first)
+     * appeared ABOVE the question it belongs to. Pairing is by submission and
+     * order: a reply answers the most recent question on the same submission
+     * that precedes it, which keeps a second round of ask-and-answer straight.
+     *
+     * @param list<UserMessage> $list
+     *
+     * @return array{byQuestion: array<int, list<UserMessage>>, attached: array<int, true>}
+     */
+    private static function answersToQuestions(array $list, int $userId): array
+    {
+        // listFor() is newest-first; pairing needs oldest-first.
+        $chronological = array_reverse($list);
+        $openQuestion = [];   // submission id => the question still unanswered
+        $byQuestion = [];
+        $attached = [];
+
+        foreach ($chronological as $m) {
+            if ('submission' !== $m->getChannel()) {
+                continue;
+            }
+            if (UserMessageKind::SubmissionNeedsInfo === $m->getKind()) {
+                $openQuestion[$m->getRefId()] = (int) $m->getId();
+                continue;
+            }
+            // Only the reader's OWN replies fold in. A curator reading this
+            // page sees the rider's reply as its own row, because to them it
+            // is an incoming message, not their half of the exchange.
+            if (UserMessageKind::RiderReply === $m->getKind() && $userId === $m->getSenderId()
+                && isset($openQuestion[$m->getRefId()])) {
+                $byQuestion[$openQuestion[$m->getRefId()]][] = $m;
+                $attached[(int) $m->getId()] = true;
+            }
+        }
+
+        return ['byQuestion' => $byQuestion, 'attached' => $attached];
     }
 
     /**

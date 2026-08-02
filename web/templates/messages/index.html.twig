@@ -36,6 +36,12 @@
   .msg-map-link{display:inline-block;margin-top:.45rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
   .msg-map-link:hover{color:var(--trail)}
   .msg-note{font-size:.88rem;line-height:1.55;color:#4a4d40;background:var(--paper);border-left:2px solid var(--glacier);padding:.6rem .85rem;border-radius:0 5px 5px 0;margin-top:.55rem}
+  .msg-subject{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
+  .msg-subject:hover{color:var(--trail)}
+  /* The reader's own answer, inside the card holding the question. */
+  .msg-answer{border-left-color:var(--ochre)}
+  .msg-answer-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
+  .msg-answer .msg-meta{display:block;margin-top:.3rem}
   .msg-from-curator{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
 
   .msg-reply{margin-top:.8rem;padding-top:.7rem;border-top:1px solid rgba(20,22,14,.1);display:flex;flex-direction:column;gap:.45rem}
@@ -67,7 +73,16 @@
             <span class="msg-kind">{{ mine ? 'messages.kind_you'|trans : ('messages.kind_' ~ m.kind.value)|trans }}</span>
             <time class="msg-meta" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|cc_datetime }}</time>
           </div>
-          <div class="msg-ref">{{ m.refLabel }}</div>
+          {% set is_question = m.kind.value == 'submission_needs_info' %}
+          {% set answers = answers[m.id] ?? [] %}
+          {# The subject, as a link back to the contribution it is about. A
+             reference like SUB-8 says nothing about which place this was. #}
+          <div class="msg-ref">
+            {{ m.refLabel }}
+            {% if m.channel == 'submission' and m.bodyParams['%title%'] is defined %}
+              · <a class="msg-subject" href="{{ path('profile') }}#sub-{{ m.refId }}">{{ m.bodyParams['%title%'] }}</a>
+            {% endif %}
+          </div>
           <div class="msg-body">
             {% if m.mediaId and message_photos[m.mediaId|trim] is defined %}
               {# The photo this message is about (docs/specs/photo-uploads.md §5b). #}
@@ -75,8 +90,23 @@
                 <img src="{{ message_photos[m.mediaId|trim] }}" alt="{{ 'messages.photo_alt'|trans }}" loading="lazy" width="120" height="90">
               </figure>
             {% endif %}
-            {% if m.bodyKey %}{{ m.bodyKey|trans(m.bodyParams ?? {}) }}{% endif %}
+            {# The lead ("a curator needs more information about X … you can
+               reply below") is scaffolding around a question. Once the question
+               itself is here — and certainly once it has been answered — it
+               says nothing the card does not, so it only stands in for a
+               question that is missing (rows from before the note was
+               required). #}
+            {% if m.bodyKey and not (is_question and m.bodyText) %}{{ m.bodyKey|trans(m.bodyParams ?? {}) }}{% endif %}
             {% if m.bodyText %}<p class="msg-note">{{ m.bodyText }}</p>{% endif %}
+            {# The answer belongs under the question it answers, in the same
+               card — not as a separate row above it. #}
+            {% for a in answers %}
+              <p class="msg-note msg-answer">
+                <span class="msg-answer-h">{{ 'account.you_replied'|trans }}</span>
+                {{ a.bodyText }}
+                <time class="msg-meta" datetime="{{ a.createdAt|date('c') }}">{{ a.createdAt|cc_datetime }}</time>
+              </p>
+            {% endfor %}
             {# link to the item — only for kinds whose subject is publicly on the
                map (approved submission by name; live route by id) #}
             {% if m.kind.value == 'submission_approved' %}
@@ -91,7 +121,7 @@
           {% if mine %}
             <div class="msg-from-curator msg-from-you">{{ 'messages.you_sent'|trans }}</div>
           {% endif %}
-          {% if not mine and m.kind.value == 'submission_needs_info' and m.refId in replyable_submission_ids %}
+          {% if not mine and is_question and answers is empty and m.refId in replyable_submission_ids %}
             <form class="msg-reply" method="post" action="{{ path('messages_reply', {id: m.id}) }}">
               <input type="hidden" name="_token" value="{{ csrf_token('message-reply') }}">
               <label for="msg-reply-{{ m.id }}">{{ 'messages.reply_label'|trans }}</label>

@@ -317,19 +317,21 @@ final class NeedsInfoReplyTest extends WebTestCase
     // ── The rider's own side of the conversation ─────────────────────────────
 
     /**
-     * The reply has to come back to the rider who wrote it.
+     * The reply has to come back to the rider who wrote it, in the card
+     * holding the question it answers.
      *
      * It is addressed to the deciding curator, so a recipient-only inbox
      * showed the rider the question and nothing else — their answer appeared
-     * to have gone nowhere, and there was no way to tell a delivered reply
-     * from a lost one.
+     * to have gone nowhere. And listed as its own row it landed ABOVE the
+     * question (newest first), reading as two unrelated events rather than
+     * one exchange.
      */
-    public function testRiderSeesTheirOwnReplyInTheirThread(): void
+    public function testTheRidersAnswerRendersInsideTheQuestionsCard(): void
     {
         $client = static::createClient();
         $curator = $this->curator('mine');
         $rider = $this->rider('mine');
-        $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Own thread');
+        $sub = $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Own thread');
 
         $crawler = $this->loginAndVisitMessages($client, $rider);
         $token = $this->replyTokenFrom($crawler);
@@ -342,10 +344,36 @@ final class NeedsInfoReplyTest extends WebTestCase
 
         $crawler = $client->request('GET', '/messages');
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('It is the tap by the second bench.', $crawler->filter('.msg-list')->text());
-        // Marked as the rider's own, and carrying no reply form of its own.
-        self::assertSame(1, $crawler->filter('.msg-row.msg-mine')->count());
-        self::assertSame(0, $crawler->filter('.msg-row.msg-mine form.msg-reply')->count());
+
+        $card = $crawler->filter('#msg-'.$msgId);
+        self::assertSame(1, $card->count());
+        self::assertStringContainsString('It is the tap by the second bench.', $card->filter('.msg-answer')->text());
+        // One card for the exchange, not two rows.
+        self::assertSame(0, $crawler->filter('.msg-row.msg-mine')->count());
+        // Answered, so nothing left to reply to.
+        self::assertSame(0, $card->filter('form.msg-reply')->count());
+        // The subject links back to the contribution it is about.
+        self::assertStringEndsWith('/profile#sub-'.$sub->getId(), (string) $card->filter('a.msg-subject')->attr('href'));
+    }
+
+    /**
+     * The lead ("a curator needs more information about X … you can reply
+     * below") is scaffolding around a question. With the question there, it
+     * repeats the card back at the reader, so it only stands in for rows from
+     * before the note was required.
+     */
+    public function testTheBoilerplateGivesWayToTheQuestionItself(): void
+    {
+        $client = static::createClient();
+        $curator = $this->curator('lead');
+        $rider = $this->rider('lead');
+        $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Lead');
+
+        $crawler = $this->loginAndVisitMessages($client, $rider);
+        $card = $crawler->filter('#msg-'.$this->needsInfoMessageId((int) $rider->getId()));
+
+        self::assertStringContainsString('Can you confirm the surface?', $card->text());
+        self::assertStringNotContainsString('needs more information about', $card->filter('.msg-body')->text());
     }
 
     /**
@@ -393,6 +421,36 @@ final class NeedsInfoReplyTest extends WebTestCase
         self::assertStringContainsString('Gravel, and the gate is open.', $crawler->filter('.item-reply')->text());
         // Back in the queue, so there is no question left to answer.
         self::assertSame(0, $crawler->filter('a.item-answer')->count());
+    }
+
+    /**
+     * The desk lists needs-info rows with a "review on the map" link, so that
+     * link has to land on the submission.
+     *
+     * The map layer leaves needs-info pins out — they wait on the rider, not
+     * on a curator — but the layer rule was applied to the deep link too, so
+     * `/map?pending=<id>` rendered a map with no such pin and the place
+     * underneath opened its ordinary drawer. The submission looked lost.
+     */
+    public function testTheMapDeepLinkStillReachesANeedsInfoSubmission(): void
+    {
+        $queue = $this->queue();
+        $curator = $this->curator('deeplink');
+        $rider = $this->rider('deeplink');
+        $sub = $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Deep link');
+        $id = (int) $sub->getId();
+
+        $ids = static fn (array $rows): array => array_map(static fn (array $r): int => $r['id'], $rows);
+
+        // Not in the general layer…
+        self::assertNotContains($id, $ids($queue->pendingForMap(ModerationScope::global())));
+        // …but served when it is the one asked for, and marked as waiting.
+        $focused = $queue->pendingForMap(ModerationScope::global(), $id);
+        self::assertContains($id, $ids($focused));
+
+        $row = array_values(array_filter($focused, static fn (array $r): bool => $id === $r['id']))[0];
+        self::assertSame('needs_info', $row['status']);
+        self::assertSame('Can you confirm the surface?', $row['asked']);
     }
 
     // ── CSRF ─────────────────────────────────────────────────────────────────

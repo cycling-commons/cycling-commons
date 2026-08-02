@@ -31,6 +31,7 @@
   .item-links a:hover{color:var(--trail)}
   .item-note{flex-basis:100%;margin:.1rem 0 0;font-size:.85rem;color:#4a4d40;border-left:2px solid var(--glacier);padding-left:.7rem}
   .item-reply{border-left-color:var(--ochre)}
+  .item:target{background:var(--paper-deep);box-shadow:0 0 0 2px var(--ochre);border-radius:6px;scroll-margin-top:1.5rem}
   /* A waiting question is the one thing on this row the rider has to act on. */
   .item-answer{color:var(--trail)!important;font-weight:700}
   .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px;white-space:nowrap}
@@ -71,7 +72,9 @@
            a live item; a new item is on the map once approved. Routes (letter K)
            have no item-edit binding — handled in the route-proposals list. #}
         {% set sub_live = sub.itemId is not null and sub.letter != 'K' and (sub.type.value == 'edit' or sub.status.value == 'approved') %}
-        <div class="item">
+        {# Anchor for the messages page, whose cards link back to the
+           contribution they are about. #}
+        <div class="item" id="sub-{{ sub.id }}">
           <span class="tag">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
           <h4>{{ sub.title }}</h4>
           {% if sub_live %}
