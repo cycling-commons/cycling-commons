@@ -23,7 +23,7 @@ import { osmLayers } from './osm-pools.js';
 import { nearbyItems, idxIds } from './item-index.js';
 import { render } from './render.js';
 import { sheet } from './sheet.js';
-import { openDrawer, osmDrawer, highlightAt, clearHighlight, revealPinAt } from './drawer.js';
+import { openDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, revealPinAt } from './drawer.js';
 import { COVERAGE_ON, widenForDeepLink, openCoverageByRef,
          invalidateCoverageDrawer } from './coverage.js';
 import { showRouteCorrections } from './corrections.js';
@@ -179,7 +179,21 @@ export function resolveLocalFeature(name){
   // refs and 404s on fx:pivot:/manual: source_refs.
   const pv=(window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || [])
     .find(f=>f.properties && f.properties.n===name);
-  return pv ? {pivot:pv} : null;
+  if(pv) return {pivot:pv};
+  // Curated POOL features (the letters served as feature collections — water,
+  // services, stays, transit, shelter, scenic, history, toilets) live in
+  // osmLayers[key].data, never in CATALOG[].features. Without this branch a
+  // name deep-link for a fountain resolved nothing locally and fell through to
+  // the coverage path, which opens the OSM twin's record — so a rider
+  // following "view it on the map" from their own approved contribution
+  // landed on a plain OpenStreetMap point and concluded their submission had
+  // been lost.
+  for(const key of Object.keys(osmLayers)){
+    const info=osmLayers[key];
+    const f=info && info.data && (info.data.features||[]).find(x=>x.properties && x.properties.n===name);
+    if(f) return {poolKey:key, f};
+  }
+  return null;
 }
 // open a specific feature by name (deep-link from e.g. a profile page): activate its layer, draw, zoom in
 export function openFeatureByName(name){
@@ -192,7 +206,29 @@ export function openFeatureByName(name){
     openStayPivot(pv);
     return true;
   }
+  if(found.poolKey) return openPoolFeature(found.poolKey, found.f);
   return openLocalFeature(found.layer, found.f);
+}
+/* Open a curated pool feature — the Commons item, not its OSM twin.
+
+   The same drawer the pin's own click builds (openCoverageByRef's pool branch
+   and confLeafPin both go through waterDrawer/osmDrawer with the served
+   properties), so a deep link, a search hit and a click on the pin all show
+   the same record: the rider's name, their photos, the attributes they filled
+   in — rather than the bare tile-derived OSM one. */
+export function openPoolFeature(key, f){
+  const layer=layerByKey[key]; if(!layer) return false;
+  const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return false;
+  const lo={lng:+c[0], lat:+c[1]};
+  if(!active.has(key)){
+    active.add(key);
+    const t=document.querySelector(`#layers .layer[data-key="${key}"]`); if(t) t.classList.remove('off');
+    render();
+  }
+  const info=osmLayers[key]||{};
+  openDrawer(layer, info.water ? waterDrawer(f.properties, lo) : osmDrawer(layer, f.properties, lo, info.src||''));
+  flyToPin([lo.lng, lo.lat]);
+  return true;
 }
 // Open an ALREADY-resolved CATALOG feature (no name lookup) — the
 // side-effecting half of openFeatureByName, shared by the index/place-card

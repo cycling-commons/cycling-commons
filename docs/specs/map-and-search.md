@@ -851,6 +851,19 @@ confirmation, or official-registry provenance (Tourisme Wallonie PIVOT rows
 count as verified) — never the simulated `c`
 attribute).
 
+**A name deep-link must resolve the CURATED item, never its OSM twin.**
+`resolveLocalFeature()` searches three places, in order: `CATALOG[].features`,
+the PIVOT stays collection, and — since 2026-08-02 — the curated **pools**
+(`osmLayers[key].data`, the letters served as feature collections). The pools
+were the gap: a fountain's features live there and never in
+`CATALOG[].features`, so `/map?feature=<name>` resolved nothing locally and
+fell through to `openCoverageFeatureByName()`, which opens the tile-derived
+OpenStreetMap record. A rider following "view it on the map" from their own
+approved contribution therefore landed on a plain OSM point with none of their
+name, photos or attributes on it, and reasonably concluded the submission had
+been lost. `openPoolFeature()` opens the same drawer the pin's own click
+builds, so deep link, search hit and pin click all show one record.
+
 **One counted confirmation is the whole threshold.** A single
 `item_confirmation` row flips a community dot to a full pin — there is no
 "three riders" rule for items (routes have one, `routes.ride_verify_threshold`;
