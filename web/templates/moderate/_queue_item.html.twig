@@ -79,6 +79,21 @@
       </form>
     </details>
 
+    {# The third verb (docs/specs/photo-uploads.md §6d). Sits BEFORE Trash on
+       purpose: a curator reaching for "destroy this" because it is illegal
+       should meet the right verb first. #}
+    <details class="msg-rider">
+      <summary>{{ 'moderate.escalate.summary'|trans }}</summary>
+      <form method="post" action="{{ path('moderate_escalate_submission') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
+        <input type="hidden" name="submission" value="{{ item.id }}">
+        <p>{{ 'moderate.escalate.help'|trans }}</p>
+        <input type="text" name="reason" maxlength="2000" required
+               placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
+        <button type="submit" class="btn-act btn-secondary">{{ 'moderate.escalate.submit'|trans }}</button>
+      </form>
+    </details>
+
     <details class="msg-rider trash-confirm">
       <summary>{{ 'moderate.trash.button'|trans }}</summary>
       <form method="post" action="{{ path('moderate_trash') }}">

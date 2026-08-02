@@ -22,6 +22,11 @@ namespace App\Catalog;
  * storage identifiers, never display order: surfaces that list categories
  * order them editorially (M renders next to C · Water & food).
  *
+ * Since 2026-08-02 they are not display *anything* — no rider-facing surface
+ * prints a letter. It survives in `?type=`, coverage tiles, `coverage_poi`
+ * and the public API; the rail, drawer, search rows, hub cards and wizard
+ * eyebrows show the type's icon and name (map-and-search.md §4.1).
+ *
  * @api Public catalog surface consumed by the improve form, controller and
  *      templates. `@api` tells Psalm these members are entry points, not dead.
  */

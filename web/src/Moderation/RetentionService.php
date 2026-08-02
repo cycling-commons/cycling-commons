@@ -70,7 +70,11 @@ final class RetentionService
             ['cutoff' => $cutoff],
         );
         $submissions = (int) $this->db->executeStatement(
-            "DELETE FROM submission WHERE status = 'rejected' AND decided_at < :cutoff",
+            // escalated_at IS NULL: a submission under legal hold outlives its
+            // retention window on purpose (docs/specs/photo-uploads.md §6d).
+            // The sweep is the one deletion path that runs unattended, so it
+            // is also the one most likely to quietly destroy evidence.
+            "DELETE FROM submission WHERE status = 'rejected' AND decided_at < :cutoff AND escalated_at IS NULL",
             ['cutoff' => $cutoff],
         );
 

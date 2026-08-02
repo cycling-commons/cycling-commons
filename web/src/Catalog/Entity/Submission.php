@@ -92,6 +92,26 @@ class Submission
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
+    /**
+     * A curator has escalated this submission's contents as suspected illegal
+     * content (docs/specs/photo-uploads.md §6d). Non-null is a **legal hold**:
+     * out of the queue, out of every curator's sight, and immune to Trash and
+     * to the retention sweep. Only an admin can act on it.
+     *
+     * The same reasoning as the photo side — where the material is the kind
+     * that must be reported, deleting it first destroys the evidence too —
+     * and words can be that material just as pixels can.
+     */
+    #[ORM\Column(name: 'escalated_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $escalatedAt = null;
+
+    #[ORM\Column(name: 'escalated_by_id', type: 'bigint', nullable: true)]
+    private ?int $escalatedById = null;
+
+    /** The curator's own words: the only description an admin has before deciding to look. */
+    #[ORM\Column(name: 'escalated_reason', type: 'text', nullable: true)]
+    private ?string $escalatedReason = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -277,5 +297,38 @@ class Submission
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function escalate(int $curatorId, string $reason): void
+    {
+        $this->escalatedAt = new \DateTimeImmutable();
+        $this->escalatedById = $curatorId;
+        $this->escalatedReason = $reason;
+    }
+
+    /** An admin has decided it was not what it looked like; normal moderation resumes. */
+    public function releaseEscalation(): void
+    {
+        $this->escalatedAt = null;
+    }
+
+    public function isEscalated(): bool
+    {
+        return null !== $this->escalatedAt;
+    }
+
+    public function getEscalatedAt(): ?\DateTimeImmutable
+    {
+        return $this->escalatedAt;
+    }
+
+    public function getEscalatedById(): ?int
+    {
+        return $this->escalatedById;
+    }
+
+    public function getEscalatedReason(): ?string
+    {
+        return $this->escalatedReason;
     }
 }

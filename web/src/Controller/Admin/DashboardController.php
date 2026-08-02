@@ -17,6 +17,7 @@ use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\Entity\ModeratorArea;
+use App\Moderation\ModerationService;
 use App\Service\AdminDashboardStats;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
@@ -447,7 +448,7 @@ final class DashboardController extends AbstractDashboardController
      * reported to decides when it may go.
      */
     #[AdminRoute('/escalated', 'escalated', options: ['methods' => ['GET', 'POST']])]
-    public function escalated(Request $request, MediaEscalationService $escalations, EntityManagerInterface $em, TranslatorInterface $translator): Response
+    public function escalated(Request $request, MediaEscalationService $escalations, ModerationService $moderation, EntityManagerInterface $em, TranslatorInterface $translator): Response
     {
         /** @var User $actor */
         $actor = $this->getUser();
@@ -456,13 +457,20 @@ final class DashboardController extends AbstractDashboardController
             if (!$this->isCsrfTokenValid(self::ESCALATED_CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Invalid CSRF token for an escalation release.');
             }
-            $uuid = (string) $request->request->get('media');
-            $upload = Uuid::isValid($uuid) ? $em->find(MediaUpload::class, Uuid::fromString($uuid)) : null;
-            if (null === $upload) {
-                throw $this->createNotFoundException('No such photo.');
-            }
             $note = trim((string) $request->request->get('note', '')) ?: null;
-            $escalations->release($upload, $actor, $note);
+            // One form, two kinds of held thing: a photo carries a uuid, a
+            // submission its id. Both release the same way.
+            $submissionId = (int) $request->request->get('submission', 0);
+            if ($submissionId > 0) {
+                $moderation->releaseSubmission($submissionId, $actor, $note);
+            } else {
+                $uuid = (string) $request->request->get('media');
+                $upload = Uuid::isValid($uuid) ? $em->find(MediaUpload::class, Uuid::fromString($uuid)) : null;
+                if (null === $upload) {
+                    throw $this->createNotFoundException('No such photo.');
+                }
+                $escalations->release($upload, $actor, $note);
+            }
             $this->addFlash('success', $translator->trans('admin.escalated.released'));
 
             return $this->redirectToRoute('admin_escalated');
@@ -470,6 +478,7 @@ final class DashboardController extends AbstractDashboardController
 
         return $this->render('admin/escalated.html.twig', [
             'cards' => $escalations->held(),
+            'submissions' => $moderation->heldSubmissions(),
             'csrf_token_id' => self::ESCALATED_CSRF_TOKEN_ID,
         ]);
     }

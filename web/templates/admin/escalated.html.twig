@@ -23,9 +23,34 @@
         <p>{{ 'admin.escalated.lead'|trans }}</p>
         <p><a href="{{ path('admin_playbook_photo_flood') }}">{{ 'admin.escalated.playbook_link'|trans }}</a></p>
 
-        {% if cards is empty %}
+        {% if cards is empty and submissions is empty %}
             <p>{{ 'admin.escalated.empty'|trans }}</p>
-        {% else %}
+        {% endif %}
+
+        {% for sub in submissions %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h3 class="h6 mb-1">{{ 'admin.escalated.submission'|trans({'%id%': sub.id}) }} &middot; {{ sub.title }}</h3>
+                    <p class="small mb-2">{{ 'admin.escalated.by'|trans({'%who%': sub.escalatedBy, '%when%': sub.escalatedAt|cc_datetime}) }}</p>
+                    <p class="mb-3"><strong>{{ 'admin.escalated.their_words'|trans }}</strong> {{ sub.reason }}</p>
+                    {# The submission's own text is deliberately not rendered
+                       here: read it in the database if you must, having
+                       decided to. #}
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+                        <input type="hidden" name="submission" value="{{ sub.id }}">
+                        <div class="mb-2">
+                            <label class="form-label" for="snote-{{ sub.id }}">{{ 'admin.escalated.note_label'|trans }}</label>
+                            <input type="text" class="form-control" id="snote-{{ sub.id }}" name="note" maxlength="2000"
+                                   placeholder="{{ 'admin.escalated.note_placeholder'|trans }}">
+                        </div>
+                        <button type="submit" class="btn btn-outline-secondary">{{ 'admin.escalated.release'|trans }}</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% if cards is not empty %}
             {% for card in cards %}
                 <div class="card mb-3">
                     <div class="card-body">

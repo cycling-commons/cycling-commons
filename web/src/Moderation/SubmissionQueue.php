@@ -35,7 +35,10 @@ final class SubmissionQueue
     /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type): array
     {
-        $where = ["s.status IN ('pending', 'needs_info')"];
+        // s.escalated_at IS NULL: a submission under legal hold leaves the
+        // desk entirely (docs/specs/photo-uploads.md §6d) — it is an admin's
+        // problem now, and no curator should meet it again.
+        $where = ["s.status IN ('pending', 'needs_info')", 's.escalated_at IS NULL'];
         $params = [];
         if (null !== $country && '' !== $country) {
             $where[] = 's.country_code = :country';
@@ -71,12 +74,12 @@ final class SubmissionQueue
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
         if (null === $focusId) {
-            return $this->rows($scope, "s.status = 'pending'", []);
+            return $this->rows($scope, "s.status = 'pending' AND s.escalated_at IS NULL", []);
         }
 
         return $this->rows(
             $scope,
-            "(s.status = 'pending' OR (s.id = :focus AND s.status = 'needs_info'))",
+            "(s.status = 'pending' OR (s.id = :focus AND s.status = 'needs_info')) AND s.escalated_at IS NULL",
             ['focus' => $focusId],
         );
     }
@@ -84,7 +87,7 @@ final class SubmissionQueue
     public function total(ModerationScope $scope): int
     {
         $frag = $scope->sqlFragment('s');
-        $sql = "SELECT COUNT(*) FROM submission s WHERE s.status IN ('pending', 'needs_info')"
+        $sql = "SELECT COUNT(*) FROM submission s WHERE s.status IN ('pending', 'needs_info') AND s.escalated_at IS NULL"
             .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
 
         return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
@@ -94,7 +97,7 @@ final class SubmissionQueue
     public function countries(ModerationScope $scope): array
     {
         $frag = $scope->sqlFragment('s');
-        $sql = "SELECT DISTINCT s.country_code FROM submission s WHERE s.status IN ('pending', 'needs_info') AND s.country_code <> ''"
+        $sql = "SELECT DISTINCT s.country_code FROM submission s WHERE s.status IN ('pending', 'needs_info') AND s.escalated_at IS NULL AND s.country_code <> ''"
             .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
 
         return $this->sortLocalized($this->db->fetchFirstColumn($sql, $frag['params'], $frag['types']));
@@ -105,7 +108,7 @@ final class SubmissionQueue
     {
         $frag = $scope->sqlFragment('s');
         $sql = 'SELECT DISTINCT r.name FROM submission s JOIN region r ON r.id = s.region_id '
-            ."WHERE s.status IN ('pending', 'needs_info')"
+            ."WHERE s.status IN ('pending', 'needs_info') AND s.escalated_at IS NULL"
             .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
 
         return $this->sortLocalized($this->db->fetchFirstColumn($sql, $frag['params'], $frag['types']));

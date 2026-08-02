@@ -271,6 +271,36 @@ final class ModerateController extends AbstractController
      * which is the entire reason a human is in this loop.
      */
     /**
+     * Escalate a submission's contents as suspected illegal content
+     * (docs/specs/photo-uploads.md §6d) — the same verb as the photo one
+     * below, for the case where the words are the material.
+     */
+    #[Route('/moderate/escalate-submission', name: 'moderate_escalate_submission', methods: ['POST'])]
+    public function escalateSubmission(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('moderate_escalate', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'flash.invalid_token');
+
+            return $this->redirectToRoute('moderate');
+        }
+
+        /** @var User $curator */
+        $curator = $this->getUser();
+        try {
+            $this->moderation->escalateSubmission(
+                (int) $request->request->get('submission'),
+                $curator,
+                (string) $request->request->get('reason', ''),
+            );
+            $this->addFlash('success', 'moderate.escalate.done');
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('moderate');
+    }
+
+    /**
      * Escalate a photo as suspected illegal content
      * (docs/specs/photo-uploads.md §6d).
      *

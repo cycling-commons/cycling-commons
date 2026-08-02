@@ -16,6 +16,7 @@ use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Community\ItemConfirmationService;
 use App\Entity\User;
+use App\Media\Entity\MediaUpload;
 use App\Media\MediaDecisionService;
 use App\Media\MediaDisposalService;
 use App\Messaging\MessageService;
@@ -36,6 +37,10 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class ModerationService
 {
+    /** Content-free audit actions for the escalation path (photo-uploads.md §6d). */
+    public const string ACTION_ESCALATE = 'submission_escalated';
+    public const string ACTION_ESCALATE_RELEASE = 'submission_escalation_released';
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MessageService $messages,
@@ -44,6 +49,7 @@ final class ModerationService
         private readonly MediaDecisionService $mediaDecisions,
         private readonly MediaDisposalService $mediaDisposal,
         private readonly ItemConfirmationService $confirmations,
+        private readonly EscalationAlert $escalationAlert,
     ) {
     }
 
@@ -162,6 +168,13 @@ final class ModerationService
             if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
                 throw new OutOfScopeException('Submission outside the curator\'s assigned areas.');
             }
+            // A submission under legal hold is beyond every deletion path
+            // (docs/specs/photo-uploads.md §6d): Trash exists to destroy
+            // content, and this content has to survive until it has been
+            // reported.
+            if ($submission->isEscalated()) {
+                throw new \LogicException(sprintf('SUB-%d is under legal hold and cannot be trashed.', $id));
+            }
 
             $this->adminLog->log($curator, TrashActions::TrashSubmission, null, sprintf('SUB-%d · type=%s', $id, $submission->getType()->value));
             // Trash means no content survives — the photos go with the words,
@@ -254,5 +267,99 @@ final class ModerationService
             ->setOldValue($old)
             ->setNewValue($new)
             ->setChangedBy((int) $curator->getId()));
+    }
+
+    /**
+     * Escalate a submission's contents as suspected illegal content
+     * (docs/specs/photo-uploads.md §6d) — the same third verb the photo side
+     * has, because words can be the material just as pixels can.
+     *
+     * It leaves the queue immediately (SubmissionQueue filters held rows out),
+     * nothing can delete it, and an admin is alerted at once. Any photos
+     * attached to it are escalated with it: they are the same act by the same
+     * person, and leaving them decidable would defeat the hold.
+     *
+     * @throws \InvalidArgumentException on an unknown submission or an empty reason
+     */
+    public function escalateSubmission(int $id, User $curator, string $reason): void
+    {
+        $reason = trim($reason);
+        if ('' === $reason) {
+            throw new \InvalidArgumentException('moderate.escalate.error.reason_required');
+        }
+        if (mb_strlen($reason) > 2000) {
+            throw new \InvalidArgumentException('moderate.escalate.error.reason_too_long');
+        }
+
+        $submission = $this->em->find(Submission::class, $id);
+        if (null === $submission) {
+            throw new \InvalidArgumentException(sprintf('Unknown submission %d', $id));
+        }
+        if ($submission->isEscalated()) {
+            return;   // idempotent: a double-submit must not re-alert
+        }
+
+        $submission->escalate((int) $curator->getId(), $reason);
+        foreach ($this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $id]) as $upload) {
+            if (!$upload->isEscalated()) {
+                $upload->escalate((int) $curator->getId(), $reason);
+            }
+        }
+        // Content-free, like every Trash row: what is audited is that a
+        // curator escalated SUB-N, never what it said.
+        $this->adminLog->log($curator, self::ACTION_ESCALATE, null, sprintf('SUB-%d', $id));
+        $this->em->flush();
+
+        $this->escalationAlert->escalated('submission', sprintf('SUB-%d', $id), $reason, '/admin/escalated');
+    }
+
+    /** An admin lifts the hold; the submission returns to the queue it left. */
+    public function releaseSubmission(int $id, User $admin, ?string $note = null): bool
+    {
+        $submission = $this->em->find(Submission::class, $id);
+        if (null === $submission || !$submission->isEscalated()) {
+            return false;
+        }
+
+        $submission->releaseEscalation();
+        foreach ($this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $id]) as $upload) {
+            $upload->releaseEscalation();
+        }
+        $this->adminLog->log($admin, self::ACTION_ESCALATE_RELEASE, null, sprintf('SUB-%d%s', $id, null !== $note ? ' · '.$note : ''));
+        $this->em->flush();
+
+        return true;
+    }
+
+    /**
+     * Held submissions for the admin area, newest first.
+     *
+     * @return list<array{id: int, title: string, reason: string, escalatedAt: \DateTimeImmutable, escalatedBy: string}>
+     */
+    public function heldSubmissions(): array
+    {
+        /** @var list<Submission> $rows */
+        $rows = $this->em->createQuery(
+            'SELECT s FROM '.Submission::class.' s WHERE s.escalatedAt IS NOT NULL ORDER BY s.escalatedAt DESC',
+        )->getResult();
+
+        $out = [];
+        foreach ($rows as $submission) {
+            $at = $submission->getEscalatedAt();
+            if (null === $at) {
+                continue;
+            }
+            $by = $submission->getEscalatedById();
+            $curator = null !== $by ? $this->em->find(User::class, $by) : null;
+            $out[] = [
+                'id' => (int) $submission->getId(),
+                'title' => $submission->getTitle(),
+                'reason' => $submission->getEscalatedReason() ?? '',
+                'escalatedAt' => $at,
+                'escalatedBy' => $curator?->getDisplayName() ?? '',
+            ];
+        }
+
+        return $out;
     }
 }

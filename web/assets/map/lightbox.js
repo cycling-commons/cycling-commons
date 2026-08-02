@@ -9,7 +9,24 @@
    photoCap renders the credit/licence caption and is shared with the drawer's
    own photo strip, so it stays where the drawer builds it. */
 import { escPend, safeHref } from './util.js';
+import { D } from './i18n.js';
 import { closeDrawer, photoCap } from './drawer.js';
+
+/* "This photo shows me" (docs/specs/photo-uploads.md §6c), offered where the
+   photo is actually being looked at full-size — which is where somebody
+   recognises themselves, not on a page they would have to go find.
+
+   The uuid is read back out of the stored URL rather than added to the photo
+   attribute, so galleries approved before this existed carry the link too. A
+   URL that does not match is a linked or imported photo rather than one of our
+   media rows: no uuid, no link, correctly — we cannot take down somebody
+   else's file. */
+const MEDIA_UUID = /\/photos\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\//i;
+export function reportLink(p){
+  const m = MEDIA_UUID.exec(String(p && (p.lg || p.sm) || ''));
+  if(!m) return '';
+  return ` · <a class="cc-lb-report" href="/photo/${m[1]}/report">${escPend(D.reportPhoto||'This photo shows me')}</a>`;
+}
 
 // lightbox doubles as a slideshow over a feature's photo gallery
 export let _lb={photos:[],i:0,name:''};
@@ -32,7 +49,8 @@ export function renderLightbox(){
   // photos whose licence most needs stating. photoCap() now renders each part
   // only when it exists, so it is safe to always call.
   lb.querySelector('.cc-lb-cap').innerHTML =
-    (_lb.name?`<b>${escPend(_lb.name)}</b> · `:'') + photoCap(p) + (multi?` · ${_lb.i+1} / ${_lb.photos.length}`:'');
+    (_lb.name?`<b>${escPend(_lb.name)}</b> · `:'') + photoCap(p)
+    + (multi?` · ${_lb.i+1} / ${_lb.photos.length}`:'') + reportLink(p);
   lb.querySelector('.cc-lb-prev').hidden=!multi; lb.querySelector('.cc-lb-next').hidden=!multi;
 }
 export function lbStep(d){ const n=_lb.photos.length; if(!n) return; _lb.i=(_lb.i+d+n)%n; renderLightbox(); }

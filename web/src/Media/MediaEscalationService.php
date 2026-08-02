@@ -9,13 +9,8 @@ namespace App\Media;
 use App\Catalog\Entity\Item;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
+use App\Moderation\EscalationAlert;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Email;
 
 /**
  * Escalation: the third verb, for suspected illegal content
@@ -57,11 +52,7 @@ final class MediaEscalationService
         private readonly EntityManagerInterface $em,
         private readonly MediaEventLog $events,
         private readonly MediaDecisionService $decisions,
-        private readonly MailerInterface $mailer,
-        private readonly AlertRecipients $recipients,
-        private readonly LoggerInterface $logger,
-        #[Autowire('%env(APP_SITE_URL)%')]
-        private readonly string $siteUrl,
+        private readonly EscalationAlert $alert,
     ) {
     }
 
@@ -84,7 +75,7 @@ final class MediaEscalationService
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::Escalated, $reason);
         $this->em->flush();
 
-        $this->alert($upload, $reason);
+        $this->alert->escalated('photo', $upload->getId()->toRfc4122(), $reason, '/admin/escalated');
     }
 
     /**
@@ -179,60 +170,5 @@ final class MediaEscalationService
         }
 
         return $this->em->find(Item::class, $itemId)?->getName() ?? '';
-    }
-
-    /**
-     * Unthrottled, unlike the breaker alert: an escalation is one deliberate
-     * act by a trusted person, not a flood, and every single one needs a human.
-     * The mail deliberately carries **no image and no thumbnail** — it says
-     * what was said and where to look, and nothing that would put suspected
-     * illegal material into a mailbox.
-     */
-    private function alert(MediaUpload $upload, string $reason): void
-    {
-        $to = $this->recipients->all();
-        if ([] === $to) {
-            $this->logger->critical('A photo was escalated but no alert recipients are configured.', ['media' => $upload->getId()->toRfc4122()]);
-
-            return;
-        }
-
-        $uuid = $upload->getId()->toRfc4122();
-        $email = (new Email())
-            ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
-            ->to(...$to)
-            ->priority(Email::PRIORITY_HIGH)
-            ->subject('[Cycling Commons] URGENT: a photo has been escalated as suspected illegal content')
-            ->text(<<<TXT
-                A curator has escalated a photo as suspected illegal content
-                (docs/specs/photo-uploads.md §6d). It is already hidden from the
-                public and from the moderation desk, and nothing in the app can
-                now delete it.
-
-                What they wrote:
-
-                  {$reason}
-
-                Reference: {$uuid}
-                Held items: {$this->siteUrl}/admin/escalated
-
-                This message deliberately contains no image.
-
-                Before doing anything else, read the playbook:
-                {$this->siteUrl}/admin/playbook/photo-flood
-
-                Do not delete the material. Where it is the kind that must be
-                reported, the record has to survive until it has been — and the
-                authority you report to decides when it may go.
-                TXT);
-
-        try {
-            $this->mailer->send($email);
-        } catch (TransportExceptionInterface $e) {
-            // Logged at CRITICAL rather than swallowed quietly: an escalation
-            // nobody hears about is the one failure in this domain that must
-            // be impossible to miss in the logs.
-            $this->logger->critical('Could not send an escalation alert.', ['media' => $uuid, 'exception' => $e]);
-        }
     }
 }
