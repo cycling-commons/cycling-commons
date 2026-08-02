@@ -354,16 +354,24 @@ function buildRecord(layer, f){
     // Pending photos with their harvested facts, each with a keep/drop tick
     // (docs/specs/photo-uploads.md §5). Default is ticked: approving the
     // submission approves its photos unless the curator says otherwise.
+    // The thumbnail is a button, not part of the Keep label: a curator has to
+    // be able to SEE the photo to answer the question this card asks (does it
+    // show what it claims, is anybody identifiable in it), and a 120px crop
+    // cannot answer that. Clicking it opens the same lightbox the public
+    // gallery uses, at the `lg` variant. It sits outside the <label> on
+    // purpose \u2014 inside one, every click to enlarge would also toggle Keep.
     const photos = Array.isArray(s.photos) ? s.photos : [];
-    const modPhotos = photos.length ? `<div class="cc-mod-photos">${photos.map(p => `
-      <label class="cc-mod-photo">
-        <img src="${safeHref(p.sm)}" alt="${escPend(D.photoAlt||'Submitted photo')}" loading="lazy" />
+    const modPhotos = photos.length ? `<div class="cc-mod-photos">${photos.map((p, i) => `
+      <div class="cc-mod-photo">
+        <button type="button" class="cc-mod-photo-zoom" data-mod-photo="${i}" aria-label="${escPend(D.photoOpen||'Open full size')}" title="${escPend(D.photoOpen||'Open full size')}">
+          <img src="${safeHref(p.sm)}" alt="${escPend(D.photoAlt||'Submitted photo')}" loading="lazy" />
+        </button>
         <span class="cc-mod-photo-meta">${escPend(
           (p.distanceM != null ? (D.photoDistance||'~{m} m from the pin').replace('{m}', String(p.distanceM)) : (D.photoNoGps||'No location in the file'))
           + (p.takenAt ? ' \u00b7 ' + p.takenAt : '')
         )}</span>
-        <span class="cc-mod-photo-keep"><input type="checkbox" class="cc-mod-photo-cb" data-media="${escPend(p.id)}" checked /> ${escPend(D.photoKeep||'Keep')}</span>
-      </label>`).join('')}</div>` : '';
+        <label class="cc-mod-photo-keep"><input type="checkbox" class="cc-mod-photo-cb" data-media="${escPend(p.id)}" checked /> ${escPend(D.photoKeep||'Keep')}</label>
+      </div>`).join('')}</div>` : '';
     const modHist = 'new' === s.type
       ? `<div class="cc-d-hist cc-d-hist-initial"><h4 class="cc-d-hist-h">${D.history||'History'}</h4><p class="cc-mod-initial">${D.initialEntry||'Initial entry — new item'}</p></div>`
       : (s.itemId != null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${s.itemId}"></div>` : '');
@@ -537,6 +545,12 @@ export function renderDrawerBody(layer, f){
   });
   document.querySelectorAll('#drawerBody .cc-mod-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>submitModeration(btn));
+  });
+  // The submitted photos open in the same lightbox the public gallery uses,
+  // at `lg` — a curator cannot judge a 120px crop (see the card markup).
+  const modPhotos = (f.pending && Array.isArray(f.pending.photos)) ? f.pending.photos : [];
+  if(modPhotos.length) document.querySelectorAll('#drawerBody .cc-mod-photo-zoom').forEach(btn=>{
+    btn.addEventListener('click', ()=>openLightbox(modPhotos, +btn.dataset.modPhoto || 0, f.pending.title || f.name));
   });
 }
 export function openDrawer(layer, f){

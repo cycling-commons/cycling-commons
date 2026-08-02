@@ -14,7 +14,9 @@ use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Messaging\Entity\UserMessage;
 use App\Moderation\AlreadyDecidedException;
+use App\Moderation\MissingQuestionException;
 use App\Moderation\ModerationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -205,6 +207,35 @@ final class ModerationServiceTest extends KernelTestCase
         self::assertSame('24/7', $item->getAttributes()['hours']);
         self::assertSame(SubmissionStatus::NeedsInfo, $this->em->find(Submission::class, $sub->getId())->getStatus());
         self::assertCount(0, $this->em->getRepository(ChangeHistory::class)->findAll());
+    }
+
+    /**
+     * A needs-info decision IS the question, so it cannot be sent blank.
+     *
+     * The failure being prevented is specific: the rider is told "a curator
+     * needs more information" with nothing to answer, while the submission
+     * leaves the map's pending layer until they answer — so an accidental
+     * empty needs-info takes the item off the map AND gives nobody a way to
+     * get it back on.
+     */
+    public function testNeedsInfoWithoutAQuestionIsRefused(): void
+    {
+        [, $sub] = $this->seedNew();
+
+        try {
+            $this->service->decide($sub->getId(), 'needs_info', $this->curator, "  \n ");
+            self::fail('Expected a MissingQuestionException.');
+        } catch (MissingQuestionException) {
+            // expected
+        }
+
+        $this->em->clear();
+        $fresh = $this->em->find(Submission::class, $sub->getId());
+        self::assertNotNull($fresh);
+        // Still decidable, still in the queue, and the rider was told nothing.
+        self::assertSame(SubmissionStatus::Pending, $fresh->getStatus());
+        self::assertNull($fresh->getDecidedAt());
+        self::assertCount(0, $this->em->getRepository(UserMessage::class)->findBy(['refId' => $sub->getId()]));
     }
 
     public function testDecidingTwiceThrows(): void

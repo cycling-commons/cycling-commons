@@ -32,7 +32,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,takenAt:?string,distanceM:?int}>}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type): array
     {
         $where = ["s.status IN ('pending', 'needs_info')"];
@@ -56,7 +56,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: strictly pending (needs-info pins are hidden until answered).
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,takenAt:?string,distanceM:?int}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
      */
     public function pendingForMap(ModerationScope $scope): array
     {
@@ -101,7 +101,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,takenAt:?string,distanceM:?int}>}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}>
      *
      * The returned row is a deliberate shared view-model: the SAME shape is
      * consumed by both moderate/index.html.twig AND map.js (as JSON). The
@@ -181,9 +181,16 @@ final class SubmissionQueue
      *
      * One query for the whole page rather than one per row.
      *
+     * Both variants travel: `sm` is the 120px card thumbnail, `lg` is what the
+     * curator opens in the lightbox. A 120px crop is not enough to judge
+     * whether a photo shows what it claims — or whether somebody is
+     * identifiable in it — which is exactly the judgement this card asks for.
+     * `orig` is never offered here, as everywhere else
+     * (docs/specs/photo-uploads.md §5).
+     *
      * @param list<int> $submissionIds
      *
-     * @return array<int, list<array{id:string,sm:string,takenAt:?string,distanceM:?int}>>
+     * @return array<int, list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>>
      */
     private function pendingPhotos(array $submissionIds): array
     {
@@ -209,6 +216,7 @@ final class SubmissionQueue
             $bySubmission[(int) $row['submission_id']][] = [
                 'id' => $id,
                 'sm' => $this->mediaStorage->url((string) $row['continent'], 'photos/'.$id, 'sm'),
+                'lg' => $this->mediaStorage->url((string) $row['continent'], 'photos/'.$id, 'lg'),
                 'takenAt' => $takenAt,
                 'distanceM' => null !== $row['gps_distance_m'] ? (int) $row['gps_distance_m'] : null,
             ];

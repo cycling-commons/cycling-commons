@@ -53,6 +53,14 @@ final class ModerationService
         if (!\in_array($decision, ['approve', 'reject', 'needs_info'], true)) {
             throw new \InvalidArgumentException(sprintf('Unknown decision "%s"', $decision));
         }
+        // A needs-info decision IS the question. Without a note the rider gets
+        // "a curator needs more information" and nothing else — no way to know
+        // what to answer — while the submission leaves the map queue until
+        // they answer. So the note is not optional for this one decision,
+        // and the guard lives here because this is the only write path.
+        if ('needs_info' === $decision && '' === trim((string) $note)) {
+            throw new MissingQuestionException('A needs-info decision must carry the question to ask the rider.');
+        }
 
         return $this->em->wrapInTransaction(function () use ($submissionId, $decision, $curator, $note, $rejectMediaIds): Submission {
             // Pessimistic row lock: two curators deciding the same submission

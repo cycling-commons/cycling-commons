@@ -170,12 +170,14 @@ final class MapController extends AbstractController
             'recentChanges' => 'd_recent_changes', 'modNotePh' => 'd_mod_note_ph', 'approve' => 'd_approve',
             'needsInfo' => 'd_needs_info', 'reject' => 'd_reject', 'modKeys' => 'd_mod_keys',
             'decisionErr' => 'd_decision_err', 'decisionRecorded' => 'd_decision_recorded',
+            'decisionAsked' => 'd_decision_asked', 'needsInfoNote' => 'd_needs_info_note',
             // Pending rider photos in the moderation panel
             // (docs/specs/photo-uploads.md §5). The distance string carries a
             // literal {m} the drawer substitutes — the Twig desk list uses the
             // %m%-parameterised moderate.media.distance instead.
             'photoAlt' => 'd_photo_alt', 'photoDistance' => 'd_photo_distance',
             'photoNoGps' => 'd_photo_no_gps', 'photoKeep' => 'd_photo_keep',
+            'photoOpen' => 'd_photo_open',
             // How a photo with no credit is captioned: an anonymous rider's
             // upload has an empty credit by design (the uploader rule), and a
             // bare "©" would read as a bug (docs/specs/photo-uploads.md §5).

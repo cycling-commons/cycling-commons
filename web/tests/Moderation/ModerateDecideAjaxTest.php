@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Submission;
+use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -139,6 +140,73 @@ final class ModerateDecideAjaxTest extends WebTestCase
         /** @var array{error:string} $data */
         $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertSame(['error' => 'invalid_decision'], $data);
+    }
+
+    /**
+     * "Needs info" with an empty note is refused with its own error code.
+     *
+     * Not `invalid_decision` and not `undecidable_submission`: the submission
+     * is perfectly decidable and the decision is a real one — the QUESTION is
+     * missing. The drawer tells the two apart to decide whether to put the
+     * cursor in the note box or report a failure, and the rider must never be
+     * sent "a curator needs more information" with nothing to answer.
+     */
+    public function testAjaxNeedsInfoWithoutANoteIsRefused(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'ajax-curator-needsinfo@example.com', ['ROLE_CURATOR'], true);
+        $sub = $this->seedSubmission();
+
+        $client->request('GET', '/map');
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+        $token = $m[1];
+
+        $client->request(
+            'POST',
+            '/moderate/decide',
+            ['moderation_decision' => ['submission_id' => (string) $sub->getId(), 'decision' => 'needs_info', 'note' => '   ', '_token' => $token]],
+            [],
+            ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_ACCEPT' => 'application/json', 'HTTP_REFERER' => 'http://localhost/moderate'],
+        );
+
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{error:string} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame(['error' => 'needs_info_note_required'], $data);
+
+        // And the submission is untouched — still pending, still in the queue.
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $fresh = $em->find(Submission::class, $sub->getId());
+        self::assertNotNull($fresh);
+        self::assertSame(SubmissionStatus::Pending, $fresh->getStatus());
+    }
+
+    public function testAjaxNeedsInfoWithAQuestionIsRecorded(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'ajax-curator-asks@example.com', ['ROLE_CURATOR'], true);
+        $sub = $this->seedSubmission();
+
+        $client->request('GET', '/map');
+        $html = (string) $client->getResponse()->getContent();
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', $html, $m));
+
+        $client->request(
+            'POST',
+            '/moderate/decide',
+            ['moderation_decision' => ['submission_id' => (string) $sub->getId(), 'decision' => 'needs_info', 'note' => 'Which side of the path is the tap on?', '_token' => $m[1]]],
+            [],
+            ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_ACCEPT' => 'application/json', 'HTTP_REFERER' => 'http://localhost/moderate'],
+        );
+
+        self::assertResponseIsSuccessful();
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $fresh = $em->find(Submission::class, $sub->getId());
+        self::assertNotNull($fresh);
+        self::assertSame(SubmissionStatus::NeedsInfo, $fresh->getStatus());
     }
 
     public function testAjaxDecisionForbiddenForPlainRider(): void

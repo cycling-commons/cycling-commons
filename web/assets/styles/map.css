@@ -227,6 +227,12 @@
   .cc-mod-photos{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
   .cc-mod-photo{display:flex;flex-direction:column;gap:.2rem;width:120px;font-size:.68rem}
   .cc-mod-photo img{width:120px;height:90px;object-fit:cover;border-radius:5px;display:block}
+  /* The thumbnail is a zoom control: a curator has to be able to open the
+     photo to judge it. Bare button, so it looks exactly like the old img. */
+  .cc-mod-photo-zoom{display:block;padding:0;border:0;background:none;cursor:zoom-in;border-radius:5px;position:relative}
+  .cc-mod-photo-zoom:focus-visible{outline:2px solid var(--ochre);outline-offset:2px}
+  .cc-mod-photo-zoom::after{content:"⤢";position:absolute;right:.25rem;bottom:.25rem;font-size:.7rem;line-height:1;padding:.15rem .3rem;border-radius:4px;background:rgba(20,22,14,.6);color:var(--paper);opacity:0;transition:opacity .12s}
+  .cc-mod-photo-zoom:hover::after,.cc-mod-photo-zoom:focus-visible::after{opacity:1}
   .cc-mod-photo-meta{color:#595c4d;line-height:1.3}
   .cc-mod-photo-keep{display:flex;align-items:center;gap:.25rem}
   .cc-mod-diff-h{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.3rem}
@@ -234,6 +240,9 @@
   .cc-mod-now{color:var(--trail)}
   .cc-mod-initial{font-size:.82rem;color:rgba(239,230,212,.7);font-style:italic;margin:0}
   .cc-mod-note{width:100%;min-height:52px;border:1px solid rgba(20,22,14,.2);border-radius:6px;padding:.5rem;font-family:var(--sans);font-size:.85rem;margin-bottom:.6rem;resize:vertical}
+  /* "Needs info" sent with an empty note: the question is the whole point of
+     that decision, so the box says so rather than the POST failing silently. */
+  .cc-mod-note.cc-mod-invalid{border-color:var(--clay);box-shadow:0 0 0 2px rgba(181,83,46,.35)}
   .cc-mod-acts{display:flex;gap:.5rem;flex-wrap:wrap}
   /* the site's ONE button system (orange primary / outlined secondary), on the
      dark drawer: approve = filled --trail; needs-info = paper outline; reject =

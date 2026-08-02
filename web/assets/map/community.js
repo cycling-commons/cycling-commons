@@ -204,7 +204,18 @@ function moderationToken(){
 export function submitModeration(btn){
   const box=btn.closest('.cc-mod'); if(!box) return;
   const id=box.dataset.id, decision=btn.dataset.decision;
-  const note=(box.querySelector('.cc-mod-note')||{}).value||'';
+  const noteEl=box.querySelector('.cc-mod-note');
+  const note=(noteEl||{}).value||'';
+  // "Needs info" IS the question. Sent blank, the rider is told a curator
+  // needs more information and nothing else, while the submission leaves the
+  // map queue until they answer — so the note is required for this decision
+  // only. The server refuses it too (ModerationService); this is here so the
+  // cursor lands in the right box instead of a POST coming back 422.
+  if('needs_info'===decision && !note.trim()){
+    if(noteEl){ noteEl.classList.add('cc-mod-invalid'); noteEl.focus(); }
+    mapToast(D.needsInfoNote||'Ask the rider what you need to know — a needs-info with no question tells them nothing.', {center:true});
+    return;
+  }
   // Per-photo decisions ride the SAME decide POST — no second endpoint, no
   // second mechanism (docs/specs/photo-uploads.md §5c).
   const rejected = Array.prototype.slice
@@ -224,8 +235,18 @@ export function submitModeration(btn){
       body:body.toString() });
   })
     .then(r=>{ if(!r.ok) throw new Error('decide'); return r.json(); })
-    .then(res=>{ hidePendingPin(id); closeDrawer(); mapToast(tpl(D.decisionRecorded||'Decision recorded ({d}) — preview, not yet persisted · {ref}', {d:decision.replace('_',' '), ref:res.reference})); })
-    .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast(D.decisionErr||'Could not record the decision — please try again.'); });
+    .then(res=>{
+      hidePendingPin(id); closeDrawer();
+      // Centred, like the other decision-weight confirmations: the drawer has
+      // just closed and the pin has just gone, so a corner toast is easy to
+      // miss — and needs-info says where the submission WENT, because the pin
+      // leaving the map is otherwise indistinguishable from losing it.
+      mapToast('needs_info'===decision
+        ? tpl(D.decisionAsked||'Question sent to the rider · {ref} — it leaves the map until they answer, and waits in the desk queue.', {ref:res.reference})
+        : tpl(D.decisionRecorded||'Decision recorded ({d}) · {ref}', {d:decision.replace('_',' '), ref:res.reference}),
+        {center:true});
+    })
+    .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast(D.decisionErr||'Could not record the decision — please try again.', {center:true}); });
 }
 export function initCommunity(){
     // Delegated: clicking a stance button records/switches it, then repaints.
@@ -250,6 +271,8 @@ export function initCommunity(){
     });
     // Clear the "must pick a bike type" warning as soon as the rider chooses one.
     document.addEventListener('change', e=>{ const s=e.target.closest('.cc-rc-invalid'); if(s) s.classList.remove('cc-rc-invalid'); });
+    // Same for the "needs info needs a question" mark — as soon as one is typed.
+    document.addEventListener('input', e=>{ const n=e.target.closest('.cc-mod-note.cc-mod-invalid'); if(n && n.value.trim()) n.classList.remove('cc-mod-invalid'); });
 }
 
 // Curator keyboard: it arms a moderation decision, so it belongs with the

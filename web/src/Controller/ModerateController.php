@@ -12,6 +12,7 @@ use App\Form\ModerationDecisionType;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaTakedownService;
 use App\Moderation\AlreadyDecidedException;
+use App\Moderation\MissingQuestionException;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OutOfScopeException;
@@ -132,6 +133,18 @@ final class ModerateController extends AbstractController
                 );
             } catch (OutOfScopeException) {
                 throw $this->createAccessDeniedException('Out of moderation scope.');
+            } catch (MissingQuestionException) {
+                // The curator's own slip, not a state conflict: the submission
+                // is still decidable and still in the queue. Say which of the
+                // two it was, so the drawer can put the cursor in the note
+                // rather than showing a generic failure.
+                if ($wantsJson) {
+                    return $this->json(['error' => 'needs_info_note_required'], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
+                $this->addFlash('error', 'moderate.error.needs_info_note_required');
+
+                return $this->redirectToRoute('moderate');
             } catch (AlreadyDecidedException|\InvalidArgumentException|\LogicException) {
                 if ($wantsJson) {
                     return $this->json(['error' => 'undecidable_submission'], Response::HTTP_CONFLICT);

@@ -81,11 +81,18 @@ identical report later will not reappear here, and that is by design.
   never a trash.
 - **Do ask before deciding** when a submission is unclear: send the rider a
   message (the needs-info flow). Most "wrong" submissions are just missing
-  context.
+  context. **Write the actual question in the note** — the desk requires it,
+  because a needs-info with no question tells the rider nothing while taking
+  their submission off the map until they answer. They see the question on
+  their contributions list and answer it from their messages page; their
+  reply puts the item straight back in the queue.
 - **Do write a decision note** on rejections — the rider reads it, and it's
   the difference between a contributor who improves and one who leaves.
 - **Do check a photo's context line** (capture date, distance from the pin)
-  before judging it — those facts are extracted for exactly this.
+  before judging it — those facts are extracted for exactly this. **Click the
+  thumbnail** to see the photo full size before you decide: the thumbnail is
+  too small to tell whether somebody in it is identifiable, and that is the
+  judgement a takedown request will later ask you about.
 - **Do decide photos individually** when a submission's facts are right but
   one photo isn't — approving the submission doesn't force approving every
   photo.

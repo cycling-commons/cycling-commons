@@ -276,6 +276,13 @@ Nothing public until approved — the rule everywhere else, applied here:
   (`sm` URLs) with their harvested context — capture date and the
   GPS-to-pin distance when the photo carried coordinates ("taken ~340 m
   from the pin") — so the curator judges the photo with the facts.
+  **Each thumbnail opens the full photo** in the same lightbox the public
+  gallery uses (`SubmissionQueue` serves `lg` alongside `sm`; `orig` is
+  never offered here either). A 120 px crop cannot answer the questions this
+  card asks — does the photo show what it claims, is anybody identifiable in
+  it — and the answer to the second decides whether a third-party takedown
+  (§6c) is coming. The thumbnail is a button *outside* the keep/drop label:
+  inside one, every click to enlarge would also untick Keep.
 - **Approve** → uploads flip to `approved`, and the item's `photos[]`
   attribute gains
   `{sm, lg, credit, license: 'CC BY-SA 4.0', takenAt?: 'YYYY-MM'}` per
