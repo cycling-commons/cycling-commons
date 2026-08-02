@@ -387,7 +387,23 @@ budgeted there is a site-wide capability, not one caller's share of it.
 | `curator_application` | sliding_window | 3 / 1 day | `user-<id>` | Curator-application submissions — same controller, country onboarded; the tighter of the two, since an application is a task for a human reviewer, not just a counter ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form |
 | `media_report` | sliding_window | 5 / 1 day | per **IP** (anonymous) | Third-party photo reports — `App\Controller\MediaReportController::submit()` ([photo-uploads.md](photo-uploads.md) §6c); anonymous by design (Art. 17 needs no account) and deliberately CAPTCHA-free, so this limiter and the queue-not-withhold design are the abuse story | `429`, form re-rendered with `media.report.error.rate_limited` |
 | `media_report_urgent` | sliding_window | 1 / 1 day | per **IP** (anonymous) | The intimate-imagery/child report category — the one lever an anonymous visitor has that changes anything (auto-withhold), so its budget is one pull per IP per day; consumed **in addition to** `media_report` | `429`, same re-render |
-| `media_urgent_breaker_hourly` · `media_urgent_breaker_daily` | sliding_window | 10 / 1 hour · 25 / 1 day | **one global key** (`global`) | The auto-withhold circuit breaker (`App\Media\UrgentWithholdBreaker`, [photo-uploads.md](photo-uploads.md) §6c). The only **site-wide** limiter in the app, and deliberately so: per-IP limits cannot bound a distributed attacker, so without a global budget a proxy pool could withhold one photo per IP per day across the whole photo corpus. Spent only by a report that would otherwise withhold | **Degrades, never refuses**: the report still files and pins to the desk, takes nothing down, shows a desk banner, and logs CRITICAL |
+| `media_urgent_alert` | sliding_window | 1 / 1 hour | **one global key** | How often the circuit breaker may mail a human ([photo-uploads.md](photo-uploads.md) §6c). The flood that opens the breaker keeps arriving, so a mail per report would be thousands of messages aimed at the one person who has to read them | Silently skips the mail; the CRITICAL log line is written either way |
+
+**Not in this file, and deliberately:** the auto-withhold **circuit breaker**
+(`App\Media\UrgentWithholdBreaker`, [photo-uploads.md](photo-uploads.md) §6c)
+is the app's only **site-wide** budget — one global key rather than one per
+caller, because per-IP limits cannot bound a distributed attacker by
+definition, and without it a proxy pool could hide one photo per IP per day
+across the whole corpus. Its two windows (10/hour and 25/day) are
+**runtime-editable settings**, not `rate_limiter.yaml` entries
+([system-configuration.md §2](system-configuration.md)): an attack is exactly
+the moment nobody can wait for a deploy to change a number, and 0 switches
+automatic hiding off entirely. The service therefore builds its own sliding
+windows around the current values, borrowing only the
+`cache.media_urgent_breaker_limiter` pool. It also **degrades rather than
+refuses**: over budget the report still files and still pins to the desk, it
+simply hides nothing.
+
 
 Storage note: `route_propose`, `route_suggest`, `ride_check`,
 `country_interest` and `curator_application` each use their own dedicated

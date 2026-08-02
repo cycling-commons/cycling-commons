@@ -41,8 +41,10 @@ committed — working docs stay local.
   fence, contract tests.
 - `coverage-provider.md` — the buildable coverage-provider contract.
 - `dev-environment.md` — dev stack, platform decisions, conventions.
-- `system-configuration.md` — the runtime-editable editorial thresholds: the
-  registry, the `system_setting` table, and the admin page that writes it.
+- `system-configuration.md` — the runtime-editable settings: the registry, the
+  two value types, the `system_setting` table, and the admin page that writes
+  it. Editorial thresholds plus the operational dials an owner may need to
+  turn mid-incident (the auto-withhold budgets, the alert recipients).
 
 ## Rules
 

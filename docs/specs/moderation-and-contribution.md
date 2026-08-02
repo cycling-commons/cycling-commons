@@ -477,6 +477,13 @@ cascade. The single documented exception is `user_message` (§7.6).
 
 ## 6. Trash — immediate hard delete for spam
 
+**Not for illegal content.** Trash destroys the evidence along with the
+material, and for some material the law expects that evidence to survive until
+it has been reported — so suspected illegal content goes to **Escalate**
+instead ([photo-uploads.md §6d](photo-uploads.md)), which hides it from
+everyone, freezes it against every deletion path and alerts an administrator.
+`trashSubmission()` refuses a submission under that hold outright.
+
 `ModerationService::trashSubmission()` (POST `/moderate/trash`, CSRF token id
 `moderate-trash`):
 

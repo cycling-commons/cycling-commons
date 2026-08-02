@@ -537,8 +537,16 @@ immediately, its limiter is one pull per IP per day, and every use is logged
 in `media_moderation_event` (`third_party_reported`, note suffixed
 `(auto-withheld)`).
 
-**The form** (`GET|POST /photo/{uuid}/report`, linked from every published
-photo page): category (the five in `MediaTakedownCategory`) · what is wrong
+**The form** (`GET|POST /photo/{uuid}/report`), linked from every published
+photo page **and from the map's full-screen photo viewer** — the viewer is
+where somebody actually recognises themselves, so a link only on a page they
+would have to go find is a link nobody uses. The viewer reads the uuid back
+out of the stored image URL rather than from a new attribute, so galleries
+approved before the link existed carry it too; a URL that does not match is a
+linked or imported photo and correctly gets no link, because we cannot take
+down somebody else's file.
+
+Fields: category (the five in `MediaTakedownCategory`) · what is wrong
 (free text, ≤2000) · an **optional** reply email. Nothing else — no name, no
 ID documents (Art. 5(1)(c); Art. 12(6) allows demanding more only where
 identity is genuinely in doubt, and for "that is me in the background" it is
@@ -644,6 +652,12 @@ formal uploader appeal (they can reply to the message; evidence first).
 
 ### 6d. Escalation — suspected illegal content
 
+**Applies to photos AND to submissions.** It is written here because the photo
+side needed it first, but a submission's words can be the illegal material just
+as its pixels can, and the verb, the hold and the alert are the same for both.
+[moderation-and-contribution.md](moderation-and-contribution.md) describes where
+it sits among the desk's verbs.
+
 Curators had two verbs and neither fits this case. **Reject** leaves the
 material in the queue for the next curator to meet. **Trash** deletes it at
 once — content, objects and history — which is exactly backwards where the law
@@ -674,17 +688,27 @@ recipients immediately and **unthrottled** (one mail per escalation, carrying
 the curator's words, the uuid and a link — never the image); and records who
 escalated it, when, and in whose words.
 
-**The hold is enforced at the chokepoint.** Every destructive path funnels
-through `MediaDisposalService::purge()` / `deleteObjects()`, and both refuse a
-held row, so Trash, orphan collection, the retention sweep and account deletion
-all stop there — a hold that one forgotten path could bypass is not a hold.
-`grant()`, `decline()` and `dismissAsAbuse()` refuse it too, and the desk
-queries exclude it. The refusal is silent and logged rather than thrown: Trash
+**The hold is enforced at the chokepoint.** For photos, every destructive path
+funnels through `MediaDisposalService::purge()` / `deleteObjects()`, and both
+refuse a held row, so Trash, orphan collection, the retention sweep and account
+deletion all stop there — a hold that one forgotten path could bypass is not a
+hold. `grant()`, `decline()` and `dismissAsAbuse()` refuse it too, and the desk
+queries exclude it. For submissions the same three places are covered:
+`trashSubmission()` throws on a held row, every `SubmissionQueue` predicate
+adds `escalated_at IS NULL` (including the counts and the country filter, so a
+held row leaves no phantom badge behind), and `RetentionService`'s sweep skips
+it — that sweep is the one deletion path that runs unattended, and therefore
+the one most likely to quietly destroy evidence. Escalating a submission holds
+**its attached photos with it**: same act, same person, and leaving them
+decidable would defeat the hold. The refusal is silent and logged rather than thrown: Trash
 sweeps a whole submission, and one held photo must neither abort the rest nor
 leak its existence through an error.
 
-**Only an admin can reach it**, at `/admin/escalated`, behind a details element
-so nobody is shown the material by scrolling past it. **Releasing** lifts the
+**Only an admin can reach it**, at `/admin/escalated` — one page listing both
+kinds — behind a details element so nobody is shown the material by scrolling
+past it. A held submission's own text is deliberately not rendered there
+either: an admin reads the curator's description and decides whether to go
+looking. **Releasing** lifts the
 hold and hands the row back to normal moderation; it republishes nothing and
 deletes nothing, because when the material had to be reported, the authority it
 was reported to decides when it may go.
@@ -694,8 +718,12 @@ to look again, and no other curator ever sees it. The one thing they are asked
 for is a sentence in their own words, because that is all an admin has before
 deciding whether to look at all.
 
+The alert body is shared by both kinds (`App\Moderation\EscalationAlert`) and
+carries neither the image nor the submission's text — only the curator's words,
+a reference (`SUB-123` or the uuid) and where to look.
+
 **Alert recipients are runtime-editable** (`app.alert_emails`,
-system-configuration.md §2) — the person who reads that mailbox goes on
+[system-configuration.md §2](system-configuration.md)) — the person who reads that mailbox goes on
 holiday, and an escalation cannot wait for them to come back. The list is
 validated where it is defined; an empty or malformed list cannot be saved.
 

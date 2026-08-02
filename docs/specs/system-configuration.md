@@ -76,11 +76,33 @@ retention deletes decided rows the moment they are decided, a zero ride
 threshold verifies on nothing — and leave the judgement inside those bounds to
 the admin.
 
-**Every setting is an integer.** All six are counts, so the type system is one
-type and the validation is one range check. The first non-integer setting needs
-a type discriminator in the registry, a wider column in `system_setting`, and a
-matching input in the template — deliberately a schema change rather than
-something that sneaks in behind a generic `mixed`.
+**Two types, and no more without meaning it.** Settings were integer-only while
+every one of them was a count or a threshold, and this document said the first
+non-integer one would need a type discriminator in the registry, a wider column
+in `system_setting` and a matching input in the template — deliberately a
+schema change rather than something sneaking in behind a generic `mixed`.
+
+That happened on 2026-08-02 for **`app.alert_emails`**, the addresses
+operational alerts go to ([photo-uploads.md §6c, §6d](photo-uploads.md)), which
+have to be editable when the usual reader is away — an escalation cannot wait
+for somebody to come back from holiday. So all three pieces were done:
+`SettingDefinition` carries a `type` with per-type validation (`min`/`max` for
+integers, `maxLength` plus a closure validator for text), `setting_value` is
+`TEXT` and each definition reads its own value back out of it
+(`fromStorage()`), and the form renders a spinner or a text box per type.
+
+Reading is **two typed accessors**, never a polymorphic return:
+`SettingsProviderInterface::get()` for integers and `getString()` for text,
+each throwing on the wrong type. A threshold silently read as `0` because it
+was really text is exactly the class of bug the type discriminator exists to
+prevent. A third type means doing this same exercise again, on purpose.
+
+**No setting may be saved empty**, whatever its type, and the page says so in
+its own message rather than answering an empty box with a complaint about a
+number nobody typed. The per-key **Reset** buttons carry `formnovalidate` so a
+row can always be put back to its default even while a sibling field is empty
+— the server's reset branch runs before validation, and without the attribute
+the browser's own `required` check would refuse to submit at all.
 
 ### 2.1 What is deliberately NOT configurable
 
@@ -150,14 +172,14 @@ gone, and the next test would read a number that exists nowhere.
 (`access_control: ^/admin`) and the controller (`#[IsGranted('ROLE_ADMIN')]`).
 
 **Deliberately a plain form, not an EasyAdmin CRUD over a settings entity.**
-These are six typed, grouped, range-checked fields with help text explaining
-what moving each one does to the site — not rows somebody browses, sorts and
+These are typed, grouped, range-checked fields with help text explaining what
+moving each one does to the site — not rows somebody browses, sorts and
 deletes. The precedent it follows is the email-change playbook
 ([account-and-auth.md §8](account-and-auth.md)), not a CRUD controller.
 
 The page contract:
 
-- **Grouped by area** (map / routes / moderation), each field showing its key,
+- **Grouped by area** (map / routes / moderation / photos / alerts), each field showing its key,
   its help sentence, its default and its allowed range.
 - **Per-field validation against the registry.** The raw string is rejected
   before it is cast, because `(int) ''` and `(int) 'abc'` are both `0` and `0`

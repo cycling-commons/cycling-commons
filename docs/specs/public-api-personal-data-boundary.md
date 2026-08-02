@@ -72,9 +72,20 @@ public. **Not built until an endpoint needs it.**
 `users`, `user_message`, `reset_password_request`, `admin_action_log`,
 `curator_application`, `country_interest`, `submission`, `moderator_area`,
 `system_setting`, `doctrine_migration_versions`, `messenger_messages` (when
-present).
+present), `media_upload`, `consent_record`, `media_moderation_event`.
 
 Notes on the less obvious rows:
+
+- **The three media tables** ([photo-uploads.md](photo-uploads.md)) are here,
+  even though the photos themselves are public. What the API serves is the
+  *gallery* — the `photos[]` entries on `item`, which are URLs plus a licence.
+  The rows behind them are not: `media_upload` holds the uploader link, the
+  distance-from-pin, takedown reasons in the subject's own words, a salted
+  reporter hash, an optional reporter email and the escalation columns
+  (§6c/§6d); `consent_record` is a permanent record of who granted what, and
+  survives the account on purpose; `media_moderation_event` is the moderation
+  trail, including which curator escalated what. A photo being public says
+  nothing about its paperwork being public.
 
 - **`users` gets no grant at all** — not even public columns. The `users` table
   mixes public (`display_name`, `country_id`, `public_profile`) and radioactive
