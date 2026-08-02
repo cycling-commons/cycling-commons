@@ -1,0 +1,20 @@
+web/translations/messages.de.yaml
+  h_fb5318cde6cf17 2190
+web/translations/messages.en.yaml
+  h_fb5318cde6cf17 2190
+web/translations/messages.fr.yaml
+  h_fb5318cde6cf17 2187
+web/translations/messages.nl.yaml
+  h_fb5318cde6cf17 2187
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "d2beb48390d25c11ebe28f78dbfe0d949fc8e36d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
