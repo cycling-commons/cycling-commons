@@ -851,6 +851,21 @@ confirmation, or official-registry provenance (Tourisme Wallonie PIVOT rows
 count as verified) — never the simulated `c`
 attribute).
 
+**`state` never reaches a rider in our words.** The item history renders the
+`state` field as **Status**, and its values as what they mean to a rider —
+`submitted` → "waiting for review", `unverified` → "on the map, not confirmed
+yet", `verified` → "confirmed by riders", `rejected` → "not accepted". The API
+keeps the raw values; only the drawer translates them. A history row is a
+record of what changed and stays historic: what is true *now* is the
+confirmation panel above it, which counts live.
+
+**Once a rider has answered, the confirmation panel states rather than asks.**
+The heading drops the question ("Drinking water", not "Is the water
+drinkable?"), the answer is shown with where it was given, and the stance
+buttons fold behind "change my answer" — two live buttons under your own
+answer still read as being asked. The tally only appears when somebody has
+actually answered.
+
 **A name deep-link must resolve the CURATED item, never its OSM twin.**
 `resolveLocalFeature()` searches three places, in order: `CATALOG[].features`,
 the PIVOT stays collection, and — since 2026-08-02 — the curated **pools**

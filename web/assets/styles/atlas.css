@@ -105,7 +105,13 @@ h2.disp{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.
 /* cards + bars */
 .grid{display:grid;gap:1rem}
 .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.4rem;transition:all .22s}
-.card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
+/* The lift is an affordance, so it belongs only to cards you can act on: one
+   inside a link, and the landing page's catalogue grid (.rv), which is a
+   deliberate flourish. It used to apply to every .card, which meant the
+   registration FORM, the licence text blocks, the coverage gap panels, the
+   contributor stat tiles and the contribute wizard's review summary all rose
+   under the pointer as though they were buttons. */
+a .card:hover,.card.rv:hover,.card.is-link:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
 .tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.2rem .45rem;border:1px solid rgba(20,22,14,.2);border-radius:3px;color:#4a4d40}
 .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.22rem .5rem;border-radius:30px}
 .bar{height:7px;background:rgba(20,22,14,.12);border-radius:4px;overflow:hidden}

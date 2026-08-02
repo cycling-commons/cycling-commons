@@ -150,8 +150,20 @@ function paintItemConfirm(box, s){
           || (s.mineSource === 'form' ? 'You answered: {a} — when you added this place' : 'You answered: {a}'),
         {a:mineLabel})}</div>`
     : '';
-  box.querySelector('[data-cf-body]').innerHTML =
-    `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>${yours}`;
+  // Answered already? Then the answer is the panel, and the buttons fold away
+  // behind "change my answer". Leaving two live buttons under your own answer
+  // still reads as being asked — the tally stays visible either way, because
+  // that is what everyone else said, not a question put to you.
+  // Only when somebody has actually said something: "Potable 0 · Not potable 0"
+  // under your own answer is a row of zeros pretending to be information.
+  const tally = (s.mine && s.total)
+    ? `<div class="cc-cf-tally">${defs.map(([v,l])=>`${l} <b>${(s.stances&&s.stances[v])||0}</b>`).join(' · ')}</div>`
+    : '';
+  box.querySelector('[data-cf-body]').innerHTML = s.mine
+    ? `<div class="cc-cf-h">${heading} ${total}</div>${yours}${tally}
+       <button type="button" class="cc-cf-change" data-cf-change>${D.changeAnswer||'Change my answer'}</button>
+       <div class="cc-cf-row" hidden>${btns}</div>`
+    : `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>`;
   box.querySelector('.cc-cf-login').hidden = authed;
 }
 
@@ -268,6 +280,12 @@ export function submitModeration(btn){
     .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast(D.decisionErr||'Could not record the decision — please try again.', {center:true}); });
 }
 export function initCommunity(){
+    // "Change my answer" reveals the stance buttons the answer folded away.
+    document.addEventListener('click', e=>{
+      const t=e.target.closest('[data-cf-change]'); if(!t) return;
+      const row=t.parentElement.querySelector('.cc-cf-row'); if(row) row.hidden=false;
+      t.hidden=true;
+    });
     // Delegated: clicking a stance button records/switches it, then repaints.
     document.addEventListener('click', e=>{
       const btn=e.target.closest('[data-cf-act]'); if(!btn) return;

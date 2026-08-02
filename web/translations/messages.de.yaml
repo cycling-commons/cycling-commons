@@ -1395,6 +1395,12 @@ map:
   d_needs_check: 'noch nicht bestätigt — schau es dir an, wenn du vorbeikommst'
   d_you_confirmed: 'Deine Antwort: {a}'
   d_you_answered_on_form: 'Du hast geantwortet: {a} — als du diesen Ort hinzugefügt hast'
+  d_change_answer: 'Meine Antwort ändern'
+  d_state_field: 'Status'
+  d_state_submitted: 'wartet auf Prüfung'
+  d_state_unverified: 'auf der Karte, noch nicht bestätigt'
+  d_state_verified: 'von Fahrenden bestätigt'
+  d_state_rejected: 'nicht übernommen'
   d_show_all: 'alle {n} anzeigen'
   mly_none: 'Keine Straßenansicht hier.'
   mly_zoom: 'Hineinzoomen und einen grünen Punkt anklicken, um die Straßenansicht zu öffnen.'
@@ -1473,6 +1479,7 @@ improve:
     heading: 'Prüfen &amp; einreichen'
     help: 'Sieh es dir kurz an, bevor du es abschickst.'
     media_heading: 'Fotos'
+    media_existing: 'Bereits an diesem Ort'
     prov: 'Was du schickst, wird Teil des offenen Commons — die Fakten unter <b>ODbL</b>, die Fotos unter <b>CC BY-SA 4.0</b>. Wir halten fest, von welchem Konto jeder Fakt stammt; dein Name erscheint nur, wenn du ein öffentliches Profil aktiviert hast.'
   # Die Prüfkarte baut improve.js / review-card.js vollständig selbst, ihre
   # Beschriftungen kommen daher aus dem Nachrichtenpaket statt aus dem Template.
@@ -1571,6 +1578,7 @@ contribute:
     invalid_location: 'Lege den Standort auf der Karte fest, bevor du absendest.'
     name_required: 'Gib dem Ort einen Namen.'
     already_materialized: 'Dieser Ort ist bereits im Commons — öffne ihn auf der Karte und bearbeite ihn dort.'
+    nothing_changed: 'Noch hat sich nichts geändert — ändere ein Detail, füge ein Foto hinzu oder verschiebe die Markierung, bevor du absendest.'
     invalid_geometry: 'Die gezeichnete Form konnte nicht gelesen werden — zeichne sie neu und versuche es erneut.'
     media_invalid: 'Eines der angehängten Fotos konnte nicht verwendet werden — entferne es und versuche es erneut.'
 media:

@@ -178,7 +178,16 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertEqualsWithDelta(50.47, $geom['coordinates'][1], 1e-9);
     }
 
-    public function testImproveResendingIdenticalGeometryRecordsNoPhantomChange(): void
+    /**
+     * Resending a climb's geometry unchanged records no phantom change — and
+     * with nothing else in the edit either, there is nothing to submit at all.
+     *
+     * The phantom-change guard (identical JSONB values must compare equal
+     * after a real DB round-trip) is what this pins; the refusal is how a
+     * changeless edit now ends, rather than as a queue row a curator reads and
+     * an approval that applies nothing.
+     */
+    public function testImproveResendingIdenticalGeometryChangesNothingAndIsRefused(): void
     {
         $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', [
             'route' => [[50.51, 5.24], [50.52, 5.25]],
@@ -191,16 +200,74 @@ final class CatalogContributionServiceTest extends KernelTestCase
         $id = $item->getId();
         $this->em->clear();
 
+        try {
+            $this->service->submit('improve', [
+                '_item_id' => $id,
+                'route' => '[[50.51,5.24],[50.52,5.25]]',
+                'grad' => '[6,9,13]',
+                'steep' => '{"at":[50.517,5.247],"pct":"26%","manual":false}',
+            ], $this->user());
+            self::fail('an edit that changes nothing must not be recorded');
+        } catch (ValidationFailedException $e) {
+            self::assertStringContainsString('contribute.error.nothing_changed', (string) $e->getViolations());
+        }
+    }
+
+    /**
+     * The same geometry alongside a real edit: the change list carries the
+     * edit and nothing else — the unchanged geometry stays out of it.
+     */
+    public function testImproveRecordsOnlyTheRealChangeBesideIdenticalGeometry(): void
+    {
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', [
+            'route' => [[50.51, 5.24], [50.52, 5.25]],
+            'grad' => [6, 9, 13],
+            'steep' => ['at' => [50.517, 5.247], 'pct' => '26%', 'manual' => false],
+            'surface' => 'Asphalt',
+        ]);
+        $id = $item->getId();
+        $this->em->clear();
+
         $receipt = $this->service->submit('improve', [
             '_item_id' => $id,
             'route' => '[[50.51,5.24],[50.52,5.25]]',
             'grad' => '[6,9,13]',
             'steep' => '{"at":[50.517,5.247],"pct":"26%","manual":false}',
+            'details' => ['surface' => 'Gravel'],
         ], $this->user());
 
         $sub = $this->em->find(Submission::class, $receipt->submissionId);
         self::assertNotNull($sub);
-        self::assertSame([], $sub->getChanges(), 'unchanged geometry must not record phantom changes');
+        self::assertSame(['surface'], array_keys($sub->getChanges()), 'unchanged geometry must not record phantom changes');
+    }
+
+    public function testImproveWithNoChangeAtAllIsRefused(): void
+    {
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
+
+        try {
+            $this->service->submit('improve', [
+                '_item_id' => $item->getId(),
+                'details' => ['surface' => 'Asphalt'],
+            ], $this->user());
+            self::fail('an edit that changes nothing must not be recorded');
+        } catch (ValidationFailedException $e) {
+            self::assertStringContainsString('contribute.error.nothing_changed', (string) $e->getViolations());
+        }
+    }
+
+    public function testAPhotoAloneIsAChange(): void
+    {
+        $item = $this->item('B', '{"type":"Point","coordinates":[5.24,50.51]}', ['surface' => 'Asphalt']);
+
+        // Nothing edited, but a photo link is a contribution in its own right.
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['surface' => 'Asphalt'],
+            'photoUrl' => 'https://commons.wikimedia.org/wiki/File:X.jpg',
+        ], $this->user());
+
+        self::assertNotNull($this->em->find(Submission::class, $receipt->submissionId));
     }
 
     public function testImproveClearingPrefilledAttributeRecordsRemoval(): void

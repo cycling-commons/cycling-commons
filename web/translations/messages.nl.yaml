@@ -1392,6 +1392,12 @@ map:
   d_needs_check: 'nog niet bevestigd — check het als je langsrijdt'
   d_you_confirmed: 'Jouw antwoord: {a}'
   d_you_answered_on_form: 'Jij antwoordde: {a} — toen je deze plek toevoegde'
+  d_change_answer: 'Mijn antwoord wijzigen'
+  d_state_field: 'Status'
+  d_state_submitted: 'wacht op controle'
+  d_state_unverified: 'op de kaart, nog niet bevestigd'
+  d_state_verified: 'bevestigd door fietsers'
+  d_state_rejected: 'niet geaccepteerd'
   d_show_all: 'alle {n} tonen'
   mly_none: 'Geen straatbeeld hier.'
   mly_zoom: 'Zoom in en klik op een groene stip om straatbeeld te openen.'
@@ -1470,6 +1476,7 @@ improve:
     heading: 'Controleren &amp; indienen'
     help: 'Controleer het even voordat je het verstuurt.'
     media_heading: 'Foto''s'
+    media_existing: 'Al bij deze plek'
     prov: 'Wat je verstuurt wordt deel van de open Commons — de feiten onder <b>ODbL</b>, de foto''s onder <b>CC BY-SA 4.0</b>. We noteren van welk account elk feit komt; je naam is alleen zichtbaar als je een openbaar profiel hebt aangezet.'
   # De controlekaart wordt volledig door improve.js / review-card.js opgebouwd,
   # dus komen de labels uit de berichtenzak in plaats van uit de template.
@@ -1568,6 +1575,7 @@ contribute:
     invalid_location: 'Stel de locatie op de kaart in voordat je verzendt.'
     name_required: 'Geef de plek een naam.'
     already_materialized: 'Deze plek staat al in de Commons — open die op de kaart en bewerk die daar.'
+    nothing_changed: 'Er is nog niets gewijzigd — pas een gegeven aan, voeg een foto toe of verplaats de speld voordat je verstuurt.'
     invalid_geometry: 'De getekende vorm kon niet worden gelezen — teken hem opnieuw en probeer het nogmaals.'
     media_invalid: 'Een van de bijgevoegde foto''s kon niet worden gebruikt — verwijder hem en probeer het opnieuw.'
 media:

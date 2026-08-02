@@ -1159,6 +1159,7 @@ improve:
     heading: 'Review & submit'
     help: 'Check it over before you send it.'
     media_heading: 'Photos'
+    media_existing: 'Already on this place'
     prov: 'What you send becomes part of the open Commons — the facts under <b>ODbL</b>, the photos under <b>CC BY-SA 4.0</b>. We record which account each fact came from; your name is only shown if you have turned on a public profile.'
   # The review card is built entirely by improve.js/review-card.js, so its
   # labels come through the message bag rather than the template.
@@ -1257,6 +1258,7 @@ contribute:
     invalid_location: 'Set the location on the map before submitting.'
     name_required: 'Give the place a name.'
     already_materialized: 'This place is already in the Commons — open it on the map and edit it there.'
+    nothing_changed: 'Nothing has changed yet — edit a detail, add a photo, or move the pin before you send it.'
     invalid_geometry: 'The drawn shape could not be read — redraw it and try again.'
     media_invalid: 'One of the attached photos could not be used — remove it and try again.'
 media:
@@ -1677,6 +1679,12 @@ map:
   d_needs_check: 'not confirmed yet — check it if you ride past'
   d_you_confirmed: 'You answered: {a}'
   d_you_answered_on_form: 'You answered: {a} — when you added this place'
+  d_change_answer: 'Change my answer'
+  d_state_field: 'Status'
+  d_state_submitted: 'waiting for review'
+  d_state_unverified: 'on the map, not confirmed yet'
+  d_state_verified: 'confirmed by riders'
+  d_state_rejected: 'not accepted'
   d_show_all: 'show all {n}'
   mly_none: 'No street-level imagery here.'
   mly_zoom: 'Zoom in and click a green dot to open street-level here.'

@@ -147,12 +147,11 @@
      block, no shadow, no hover, no transition. Two columns once there is room —
      a submission is a dozen short answers, and one long ladder of them makes
      the rider scroll past the thing they wanted to check. */
-  /* The site-wide .card (atlas.css) lifts and shadows on hover — it is a
-     clickable card everywhere else. Here it is a summary to read, so the
-     movement has to be switched off explicitly: overriding the background and
-     border alone left the whole review sliding under the pointer. */
+  /* No hover state here: atlas.css now lifts only cards you can act on (a
+     card inside a link, or the landing grid), and this one is a summary to
+     read. `transition:none` stays as the belt to that braces — a review that
+     slides under the pointer reads as a button. */
   .card{background:transparent;border:none;border-top:1px solid rgba(20,22,14,.14);border-radius:0;padding:.4rem 0 0;transition:none}
-  .card:hover{transform:none;box-shadow:none}
   .kv{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding:.45rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
   .kv:last-child{border-bottom:none}
   .kv span:first-child{color:#595c4d}
@@ -162,6 +161,9 @@
        of the whole list, which in a grid is not the bottom of both columns. */
     .kv:last-child{border-bottom:1px solid rgba(20,22,14,.08)}
   }
+  .nochange{font-size:.85rem;color:var(--clay);background:var(--paper-deep);border-left:2px solid var(--clay);padding:.6rem .85rem;border-radius:0 6px 6px 0;margin-top:.9rem}
+  .nochange[hidden]{display:none}
+  .rm-item.is-existing img{opacity:.85}
   .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
 
   /* the photos, on review — shown rather than listed as filenames */
@@ -327,7 +329,8 @@
     link_note_vimeo: 'improve.step3.link_note_vimeo'|trans,
     chip_link: 'improve.step3.chip_link'|trans,
     chip_needs_licence: 'improve.step3.chip_needs_licence'|trans,
-    chip_host_fallback: 'improve.step3.chip_host_fallback'|trans
+    chip_host_fallback: 'improve.step3.chip_host_fallback'|trans,
+    nothing_changed: 'contribute.error.nothing_changed'|trans
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
   <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
@@ -478,6 +481,9 @@
        together (docs/specs/photo-uploads.md §4). #}
     <div class="consent-gate" id="media-consent-review"></div>
     <div class="card" id="reviewBody"></div>
+    {# Filled + revealed by improve.js when an edit carries no change at all
+       (the Submit button is disabled in the same breath). #}
+    <p class="nochange" id="wz-nochange" hidden></p>
 
     {# The photos themselves, not their filenames. The heading is rendered here
        rather than in improve.js so it stays translated — that file has no
@@ -486,6 +492,23 @@
       <div class="rm-h">{{ 'improve.step4.media_heading'|trans }}</div>
       <div class="rm-list" id="reviewMediaList"></div>
     </div>
+
+    {# The photos already on this place. Server-rendered and read-only: they
+       are not part of the submission, but leaving them out made the review
+       read as "this place has no photos" to a rider looking at a place whose
+       photos they had just been shown two steps earlier. #}
+    {% if currentPhotos|default([])|length > 0 %}
+      <div class="review-media">
+        <div class="rm-h">{{ 'improve.step4.media_existing'|trans }}</div>
+        <div class="rm-list">
+          {% for p in currentPhotos %}
+            <figure class="rm-item is-existing">
+              <img src="{{ p.sm|default(p.lg|default('')) }}" alt="{{ 'improve.step3.current_alt'|trans({'%name%': current.name|default('')}) }}" loading="lazy" />
+            </figure>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
 
     {# Where this suggestion goes next. The ONE place the wizard explains the
        review process: step4.help used to say it too, and the receipt says it

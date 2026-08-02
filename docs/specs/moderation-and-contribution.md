@@ -101,6 +101,18 @@ The mode gate in `improve.js`:
   from `improve.js`), debounced **320 ms**. Mandatory offline fallback: on
   fetch failure the results dropdown shows "Search unavailable — tap the map
   instead" and map-tap keeps working — the geocoder is never load-bearing.
+- **An edit that changes nothing is refused.** `[] === $changes` with no photo,
+  no photo link and an unmoved pin (~1 m tolerance, because the wizard posts
+  the item's own coordinates straight back) is not a contribution: it costs a
+  curator a queue row to read, tells the rider's dashboard a suggestion is
+  pending, and applies nothing on approve. `CatalogContributionService` rejects
+  it with `contribute.error.nothing_changed`; the wizard disables Submit on the
+  review step and says the same sentence there, because a prefilled form walks
+  straight to Submit and this is easy to do by accident.
+- **The review shows the photos already on the place**, server-rendered and
+  read-only, under their own heading. They are not part of the submission, but
+  omitting them made the review read as "this place has no photos" two steps
+  after the rider had been shown them.
 - **The review card is a summary, not a control.** The site-wide `.card`
   (atlas.css) lifts and shadows on hover because it is clickable everywhere
   else; the wizard switches that off explicitly (`transition:none`,

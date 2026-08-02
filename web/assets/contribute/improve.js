@@ -131,11 +131,44 @@
     }
   }
 
+  /* ---------- "has anything actually changed?" ----------
+     An edit that changes nothing is not a contribution: it costs a curator a
+     queue row to read and applies nothing on approve, and the wizard walks
+     straight from a prefilled form to Submit, so it is easy to send by
+     accident. The server refuses it (CatalogContributionService); this is here
+     so the rider is told at the review step rather than by a form error after
+     pressing Submit.
+
+     A photo, a photo link and a moved pin each count as a change on their own. */
+  function detailsSnapshot() {
+    var out = [];
+    document.querySelectorAll('#w-details .field').forEach(function (fieldEl) {
+      var ctrl = fieldEl.querySelector('input:not([type="hidden"]), select, textarea');
+      if (ctrl) out.push(ctrl.name + '=' + (ctrl.value || ''));
+    });
+    return out.join('|');
+  }
+  var INITIAL_DETAILS = detailsSnapshot();
+
+  function pinMoved() {
+    if (!hasCoords || !WZ.loc || WZ.loc.type !== 'point') return false;
+    return Math.abs(WZ.loc.lat - initLat) > 1e-5 || Math.abs(WZ.loc.lng - initLng) > 1e-5;
+  }
+
+  function nothingChanged() {
+    if (ADD) return false;                       // a new place is all change
+    if (WZ.media.length || WZ.links.length) return false;
+    if (pinMoved()) return false;
+    return detailsSnapshot() === INITIAL_DETAILS;
+  }
+
   function refreshGate() {
     var nextBtn = document.getElementById('nextBtn');
     if (!nextBtn) return;
     if (WZ.cur === 1 && LOCATE !== 'off') {
       nextBtn.disabled = !WZ.loc;
+    } else if (WZ.cur === WZ.last) {
+      nextBtn.disabled = nothingChanged();
     } else {
       nextBtn.disabled = false;
     }
@@ -574,6 +607,13 @@
     RC.clear(rb);
     if (locTxt) rb.appendChild(RC.kvRow(t('label_location'), locTxt));
     fieldRows.forEach(function (row) { rb.appendChild(row); });
+
+    // Say why Submit is off, in the place the rider is already reading.
+    var note = document.getElementById('wz-nochange');
+    if (note) {
+      note.textContent = t('nothing_changed');
+      note.hidden = !nothingChanged();
+    }
 
     // Photos are shown, not listed. A filename tells a rider nothing about
     // whether they picked the right shot; the thumbnail is the only version of

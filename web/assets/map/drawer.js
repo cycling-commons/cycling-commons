@@ -444,9 +444,29 @@ function photoCount(n){
                  : (D.photosMany || '{n} photos').replace('{n}', String(c));
 }
 
+/* `state` is OUR vocabulary — submitted / unverified / verified — and it was
+   going straight into the rider-visible history, where "unverified" reads as a
+   verdict on the place rather than as the step it is. The words below say what
+   each state MEANS to a rider. The row stays historic either way: what is true
+   now is the confirmation panel above it, which counts live. */
+function stateWord(v){
+  if(v === 'submitted') return D.stateSubmitted || 'waiting for review';
+  if(v === 'unverified') return D.stateUnverified || 'on the map, not confirmed yet';
+  if(v === 'verified') return D.stateVerified || 'confirmed by riders';
+  if(v === 'rejected') return D.stateRejected || 'not accepted';
+  return v;
+}
+
 function historyRow(h){
   const isEmpty = v => v===null || v===undefined || v==='';
   const isPhotoField = h.field === 'photos' || h.field === 'photo';
+  if(h.field === 'state'){
+    return `<li class="cc-h-row">
+      <span class="cc-h-field">${escPend(D.stateField||'Status')}</span>
+      <span class="cc-h-diff">${escPend(stateWord(h.oldValue))} → ${escPend(stateWord(h.newValue))}</span>
+      <span class="cc-h-meta">${escPend(h.who)} · <time datetime="${escPend(h.changedAt)}">${escPend(h.when)}</time></span>
+    </li>`;
+  }
   const ov = isPhotoField ? escPend(photoCount(h.oldValue))
     : (isEmpty(h.oldValue) ? '—' : escPend(h.oldValue));
   const nv = isPhotoField ? escPend(photoCount(h.newValue))

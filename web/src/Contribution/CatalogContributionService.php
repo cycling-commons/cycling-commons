@@ -309,6 +309,21 @@ final class CatalogContributionService implements ContributionStubInterface
         // first vertex) so a segment edit is not stranded at Point(1 1).
         [$lng, $lat] = self::representativePoint((string) $item->getGeom());
 
+        // An edit that changes nothing is not a contribution: it costs a
+        // curator a queue row to read, tells the rider's own dashboard a
+        // suggestion is pending, and applies nothing on approve. The wizard
+        // walks straight from a prefilled form to Submit, so this is easy to
+        // do by accident — say so plainly instead of recording it.
+        //
+        // "Changed" is broader than the field diff: a photo, a photo link and
+        // a moved pin are all real contributions on their own.
+        if ([] === $changes
+            && !self::hasMedia($payload)
+            && !self::pinMoved($payload, (float) $lat, (float) $lng)
+        ) {
+            $this->reject('contribute.error.nothing_changed', 'details');
+        }
+
         $draft = new SubmissionDraft(
             type: ItemType::fromParam($item->getLetter()),
             title: $item->getName(),
@@ -415,6 +430,37 @@ final class CatalogContributionService implements ContributionStubInterface
     private function reject(string $message, string $field): never
     {
         throw new ValidationFailedException($message, new ConstraintViolationList([new ConstraintViolation($message, $message, [], $message, $field, null)]));
+    }
+
+    /**
+     * Does this edit carry a photo — an upload or a link?
+     *
+     * @param array<string, mixed> $payload
+     */
+    private static function hasMedia(array $payload): bool
+    {
+        return '' !== trim((string) ($payload['mediaIds'] ?? ''))
+            || '' !== trim((string) ($payload['photoUrl'] ?? ''));
+    }
+
+    /**
+     * Has the pin actually been moved, or is it sitting where it was?
+     *
+     * The wizard pre-places the pin at the item's own coordinates and posts
+     * them back untouched, so an exact comparison would call every edit a
+     * move. The tolerance is ~1 m: below that nobody moved anything, they
+     * just opened the map.
+     *
+     * @param array<string, mixed> $payload
+     */
+    private static function pinMoved(array $payload, float $lat, float $lng): bool
+    {
+        if (!is_numeric($payload['lat'] ?? null) || !is_numeric($payload['lng'] ?? null)) {
+            return false;
+        }
+
+        return abs((float) $payload['lat'] - $lat) > 1e-5
+            || abs((float) $payload['lng'] - $lng) > 1e-5;
     }
 
     /** Collapse '' / null / [] to null; leave every other value untouched. */
