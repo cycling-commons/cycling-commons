@@ -1,8 +1,15 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {# Messages dashboard (moderation-feedback spec M3) — decision outcomes,
-   curator notes, and rider replies delivered to this user, newest first.
+   curator notes, and rider replies, newest first.
    The controller marks everything read AFTER fetching the list, so this
-   render still sees which rows were new (`msg-new`) via `m.isRead`. #}
+   render still sees which rows were new (`msg-new`) via `m.isRead`.
+
+   The list is a THREAD, not an inbox: it carries what was sent to this
+   account and what this account sent itself (MessageService::listFor). A
+   rider's reply is addressed to the deciding curator, so a received-only
+   list showed them the question and never their own answer — which read as
+   though the reply had gone nowhere. Sent rows are marked, carry no reply
+   form, and are never "new". #}
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
@@ -13,6 +20,12 @@
   .msg-list{list-style:none;padding:0;margin:0}
   .msg-row{padding:1.1rem 1.2rem;margin-bottom:.9rem;border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper-deep)}
   .msg-row.msg-new{border-color:var(--trail);box-shadow:0 0 0 1px var(--trail)}
+  /* Sent by this account: the other half of the conversation, set back so the
+     thread reads as an exchange rather than a second inbox. */
+  .msg-row.msg-mine{background:var(--paper);border-style:dashed}
+  .msg-from-you{color:#595c4d}
+  /* Arriving from a submission row's "see the conversation" link. */
+  .msg-row:target{border-color:var(--ochre);box-shadow:0 0 0 2px var(--ochre);scroll-margin-top:1.5rem}
   .msg-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.4rem}
   .msg-kind{font-family:var(--sans);font-weight:700;font-size:.98rem}
   .msg-meta{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;white-space:nowrap}
@@ -48,9 +61,10 @@
   {% else %}
     <ul class="msg-list">
       {% for m in messages %}
-        <li class="msg-row {{ m.isRead ? '' : 'msg-new' }}">
+        {% set mine = m.senderId is not null and m.senderId == cc_user.id %}
+        <li class="msg-row {{ mine ? 'msg-mine' : (m.isRead ? '' : 'msg-new') }}" id="msg-{{ m.id }}">
           <div class="msg-head">
-            <span class="msg-kind">{{ ('messages.kind_' ~ m.kind.value)|trans }}</span>
+            <span class="msg-kind">{{ mine ? 'messages.kind_you'|trans : ('messages.kind_' ~ m.kind.value)|trans }}</span>
             <time class="msg-meta" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|cc_datetime }}</time>
           </div>
           <div class="msg-ref">{{ m.refLabel }}</div>
@@ -71,10 +85,13 @@
               <a class="msg-map-link" href="{{ path('map') }}?route={{ m.refId }}">{{ 'messages.view_on_map'|trans }} ↗</a>
             {% endif %}
           </div>
-          {% if m.sender == 'curator' %}
+          {% if m.sender == 'curator' and not mine %}
             <div class="msg-from-curator">{{ 'messages.from_curator'|trans }}</div>
           {% endif %}
-          {% if m.kind.value == 'submission_needs_info' and m.refId in replyable_submission_ids %}
+          {% if mine %}
+            <div class="msg-from-curator msg-from-you">{{ 'messages.you_sent'|trans }}</div>
+          {% endif %}
+          {% if not mine and m.kind.value == 'submission_needs_info' and m.refId in replyable_submission_ids %}
             <form class="msg-reply" method="post" action="{{ path('messages_reply', {id: m.id}) }}">
               <input type="hidden" name="_token" value="{{ csrf_token('message-reply') }}">
               <label for="msg-reply-{{ m.id }}">{{ 'messages.reply_label'|trans }}</label>

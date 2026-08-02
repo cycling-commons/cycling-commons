@@ -30,6 +30,9 @@
   .item-links a{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);white-space:nowrap}
   .item-links a:hover{color:var(--trail)}
   .item-note{flex-basis:100%;margin:.1rem 0 0;font-size:.85rem;color:#4a4d40;border-left:2px solid var(--glacier);padding-left:.7rem}
+  .item-reply{border-left-color:var(--ochre)}
+  /* A waiting question is the one thing on this row the rider has to act on. */
+  .item-answer{color:var(--trail)!important;font-weight:700}
   .pill{font-family:var(--mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .5rem;border-radius:30px;white-space:nowrap}
   .pill.ok{background:#3e7d4f;color:#fff} .pill.pend{background:var(--ochre);color:var(--ink)} .pill.conf{background:var(--spruce);color:var(--paper)}
   .pill.rej{background:var(--clay);color:#fff} .pill.ret{background:rgba(20,22,14,.12);color:#595c4d}
@@ -80,6 +83,22 @@
           <time class="co" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_date }}</time>
           <span class="pill {{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
           {% if sub.decisionNote %}<p class="item-note">{{ sub.decisionNote }}</p>{% endif %}
+          {# The conversation, the way the curator's desk shows it. A status
+             chip on its own left a rider who had been asked something with no
+             sign of the question, and no sign that their answer had landed. #}
+          {% set thread = submission_threads[sub.id] ?? null %}
+          {% if thread and thread.reply %}
+            <p class="item-note item-reply"><b>{{ 'account.you_replied'|trans }}</b> {{ thread.reply }}</p>
+          {% endif %}
+          {% if sub.status.value == 'needs_info' %}
+            <span class="item-links">
+              <a class="item-answer" href="{{ path('messages') }}{% if thread and thread.askedId %}#msg-{{ thread.askedId }}{% endif %}">{{ 'account.answer_curator'|trans }} →</a>
+            </span>
+          {% elseif thread and (thread.reply or thread.askedId) %}
+            <span class="item-links">
+              <a href="{{ path('messages') }}{% if thread.askedId %}#msg-{{ thread.askedId }}{% endif %}">{{ 'account.see_conversation'|trans }}</a>
+            </span>
+          {% endif %}
         </div>
       {% endfor %}
     {% endif %}

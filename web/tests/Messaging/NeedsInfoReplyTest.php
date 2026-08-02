@@ -314,6 +314,87 @@ final class NeedsInfoReplyTest extends WebTestCase
         self::assertSame(SubmissionStatus::NeedsInfo, $reloaded->getStatus());
     }
 
+    // ── The rider's own side of the conversation ─────────────────────────────
+
+    /**
+     * The reply has to come back to the rider who wrote it.
+     *
+     * It is addressed to the deciding curator, so a recipient-only inbox
+     * showed the rider the question and nothing else — their answer appeared
+     * to have gone nowhere, and there was no way to tell a delivered reply
+     * from a lost one.
+     */
+    public function testRiderSeesTheirOwnReplyInTheirThread(): void
+    {
+        $client = static::createClient();
+        $curator = $this->curator('mine');
+        $rider = $this->rider('mine');
+        $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Own thread');
+
+        $crawler = $this->loginAndVisitMessages($client, $rider);
+        $token = $this->replyTokenFrom($crawler);
+        $msgId = $this->needsInfoMessageId((int) $rider->getId());
+
+        $client->request('POST', '/messages/'.$msgId.'/reply', [
+            'body' => 'It is the tap by the second bench.',
+            '_token' => $token,
+        ]);
+
+        $crawler = $client->request('GET', '/messages');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('It is the tap by the second bench.', $crawler->filter('.msg-list')->text());
+        // Marked as the rider's own, and carrying no reply form of its own.
+        self::assertSame(1, $crawler->filter('.msg-row.msg-mine')->count());
+        self::assertSame(0, $crawler->filter('.msg-row.msg-mine form.msg-reply')->count());
+    }
+
+    /**
+     * A waiting question must be reachable from the contribution it is about.
+     * The status chip alone was the whole of what the rider saw.
+     */
+    public function testTheSubmissionRowLinksToTheWaitingQuestion(): void
+    {
+        $client = static::createClient();
+        $curator = $this->curator('profile-link');
+        $rider = $this->rider('profile-link');
+        $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Profile link');
+        $msgId = $this->needsInfoMessageId((int) $rider->getId());
+
+        $client->loginUser($rider);
+        $crawler = $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+
+        $answer = $crawler->filter('a.item-answer');
+        self::assertSame(1, $answer->count(), 'A needs-info row must offer a way to answer.');
+        self::assertStringEndsWith('/messages#msg-'.$msgId, (string) $answer->attr('href'));
+    }
+
+    /**
+     * And once answered, the row shows the answer — the same line the
+     * curator's desk shows as "Rider replied".
+     */
+    public function testTheSubmissionRowShowsTheRidersOwnReply(): void
+    {
+        $client = static::createClient();
+        $curator = $this->curator('profile-reply');
+        $rider = $this->rider('profile-reply');
+        $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Profile reply');
+
+        $crawler = $this->loginAndVisitMessages($client, $rider);
+        $token = $this->replyTokenFrom($crawler);
+        $msgId = $this->needsInfoMessageId((int) $rider->getId());
+        $client->request('POST', '/messages/'.$msgId.'/reply', [
+            'body' => 'Gravel, and the gate is open.',
+            '_token' => $token,
+        ]);
+
+        $crawler = $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Gravel, and the gate is open.', $crawler->filter('.item-reply')->text());
+        // Back in the queue, so there is no question left to answer.
+        self::assertSame(0, $crawler->filter('a.item-answer')->count());
+    }
+
     // ── CSRF ─────────────────────────────────────────────────────────────────
 
     public function testBadCsrfTokenIsForbidden(): void

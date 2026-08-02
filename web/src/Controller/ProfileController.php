@@ -11,6 +11,7 @@ use App\Catalog\SubmissionStatus;
 use App\Entity\User;
 use App\Moderation\RetentionService;
 use App\Routing\LocalePrefix;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -58,6 +59,12 @@ final class ProfileController extends AbstractController
             'nav_active' => '',
             'cc_user' => $user,
             'contributions' => $contributions,
+            // The conversation attached to each submission, so a contribution
+            // row can show it the way the curator's desk shows the rider's
+            // reply. Without this the rider saw a "needs info" chip and had no
+            // hint that a question was waiting on the messages page, nor that
+            // their own answer had been delivered.
+            'submission_threads' => $this->threadsFor((int) $user->getId(), $contributions, $db),
             'route_proposals' => $em->getRepository(RecommendedRoute::class)->findBy(
                 ['proposedBy' => (int) $user->getId()],
                 ['createdAt' => 'DESC', 'id' => 'DESC'],
@@ -91,6 +98,59 @@ final class ProfileController extends AbstractController
             // whether their area needs somebody.
             'curating' => $this->curatingContext($db, $user),
         ]);
+    }
+
+    /**
+     * The message thread behind each of the rider's submissions.
+     *
+     * Both halves travel, because both are missing from a submission row
+     * otherwise: `askedId` anchors the "answer this" link at the curator's
+     * question on the messages page, and `reply` is the rider's own last
+     * answer — the same line the curator's desk shows as "Rider replied".
+     *
+     * `sender_id = :uid` is what makes the rider's own reply findable at all:
+     * a needs-info reply is addressed TO the deciding curator, so it never
+     * appears under this rider's `user_id` (MessageService::sendRiderReply).
+     *
+     * One query for the page, keyed by submission id.
+     *
+     * @param list<Submission> $contributions
+     *
+     * @return array<int, array{askedId: ?int, reply: ?string}>
+     */
+    private function threadsFor(int $userId, array $contributions, Connection $db): array
+    {
+        $ids = array_values(array_filter(array_map(
+            static fn (Submission $s): ?int => $s->getId(),
+            $contributions,
+        )));
+        if ([] === $ids) {
+            return [];
+        }
+
+        $rows = $db->fetchAllAssociative(
+            "SELECT id, ref_id, kind, sender, body_text
+               FROM user_message
+              WHERE channel = 'submission' AND ref_id IN (:ids)
+                AND (user_id = :uid OR sender_id = :uid)
+              ORDER BY id ASC",
+            ['ids' => $ids, 'uid' => $userId],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
+        $threads = [];
+        foreach ($rows as $row) {
+            $ref = (int) $row['ref_id'];
+            $threads[$ref] ??= ['askedId' => null, 'reply' => null];
+            if ('submission_needs_info' === $row['kind']) {
+                $threads[$ref]['askedId'] = (int) $row['id'];
+            }
+            if ('rider' === $row['sender']) {
+                $threads[$ref]['reply'] = null !== $row['body_text'] ? (string) $row['body_text'] : null;
+            }
+        }
+
+        return $threads;
     }
 
     /**

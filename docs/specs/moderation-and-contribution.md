@@ -268,7 +268,17 @@ on the same submission: the second sees the decided status and gets
   row flips to `rejected` but is **kept** (never served) until retention GC
   (§8). Rejecting an `edit` never touches the item.
 - **needs_info** → mutates nothing on the item; the submission leaves the map
-  layer but stays on the queue (§6.2).
+  layer but stays on the queue (§6.2). **The note is mandatory for this
+  decision and only this one**: the note IS the question. Sent blank, the
+  rider is told "a curator needs more information" with nothing to answer,
+  while the submission disappears from the map until they answer — so an
+  accidental empty needs-info takes the item off the map and leaves nobody a
+  way to put it back. `ModerationService::decide()` refuses it with
+  `MissingQuestionException`; `/moderate/decide` maps that to JSON 422
+  `{"error":"needs_info_note_required"}` (distinct from
+  `undecidable_submission`: the submission is still pending and still
+  decidable), and the drawer blocks the click client-side, marks the note box
+  and focuses it.
 
 Every decision also fills `decision_note`/`decided_by`/`decided_at` and writes
 the submitter's outcome message inside the same transaction (§7.2). Decisions
@@ -494,6 +504,20 @@ currently **2000** characters — shared by notes, curator messages and replies
 - The latest rider reply surfaces on the queue row for every curator
   (`SubmissionQueue` joins the newest `sender='rider'` message per
   submission).
+- **Both ends of the conversation are visible to the rider, from both of
+  their pages.** A reply is addressed to the deciding curator, so it lives
+  under the *curator's* `user_id`; `MessageService::listFor()` therefore
+  matches `user_id = :id OR sender_id = :id`, and the messages page is a
+  thread rather than an inbox — sent rows are marked `msg-mine`, carry no
+  reply form, and are never counted unread (unread and mark-read stay
+  recipient-only). Each row carries `id="msg-<id>"` as an anchor.
+- The rider's **contributions list** (`/profile`) shows the same exchange the
+  curator's desk shows: the curator's question, the rider's own last reply,
+  and — while the status is `needs_info` — an "answer the curator" link
+  straight to `#msg-<id>` on the messages page. `ProfileController::threadsFor()`
+  is the one query behind it. Without this the rider saw only a status chip:
+  no question, no sign their answer had been delivered, and no route to the
+  reply form.
 
 ### 7.4 Curator → rider messages — M6a
 

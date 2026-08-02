@@ -151,14 +151,35 @@ final class MessageService
         return $message;
     }
 
-    /** @return list<UserMessage> */
+    /**
+     * The reader's own thread: what was sent TO them, and what they sent
+     * themselves.
+     *
+     * A rider's needs-info reply is addressed to the deciding curator
+     * (sendRiderReply), so a recipient-only list showed the rider the
+     * curator's question and then nothing — their own answer vanished, and
+     * the page read as though they had never replied. `sender_id` carries the
+     * author of every non-system message, which is what makes the sent half
+     * recoverable without a second table.
+     *
+     * Unread counting and mark-read stay recipient-only on purpose: a message
+     * you wrote is not news to you.
+     *
+     * @return list<UserMessage>
+     */
     public function listFor(int $userId, int $limit = 100): array
     {
-        $messages = $this->em->getRepository(UserMessage::class)->findBy(
-            ['userId' => $userId],
-            ['createdAt' => 'DESC', 'id' => 'DESC'],
-            $limit,
-        );
+        $qb = $this->em->getRepository(UserMessage::class)->createQueryBuilder('m');
+
+        /** @var list<UserMessage> $messages */
+        $messages = $qb
+            ->where($qb->expr()->orX('m.userId = :id', 'm.senderId = :id'))
+            ->setParameter('id', $userId)
+            ->orderBy('m.createdAt', 'DESC')
+            ->addOrderBy('m.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
 
         return $messages;
     }
