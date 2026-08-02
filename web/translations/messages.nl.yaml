@@ -1622,7 +1622,7 @@ media:
   report:
     link: 'Op deze foto sta ik — melden'
     title: 'Een foto melden'
-    intro: 'Sta je herkenbaar op een foto op de Cycling Commons — of meld je een foto die niet openbaar zou moeten zijn — dan kun je dat hier doorgeven. Je hebt geen account nodig en hoeft niet te bewijzen wie je bent.'
+    intro: 'Sta je herkenbaar op een foto op de Cycling Commons — of meld je een foto die niet openbaar zou moeten zijn — dan kun je dat hier doorgeven. Je hebt geen account nodig en we vragen niet om een identiteitsbewijs.'
     legend_category: 'Wat is er mis?'
     category:
       identifiable_self: 'Ik ben herkenbaar op deze foto'

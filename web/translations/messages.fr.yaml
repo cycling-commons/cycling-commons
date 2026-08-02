@@ -1622,7 +1622,7 @@ media:
   report:
     link: 'Cette photo me montre — la signaler'
     title: 'Signaler une photo'
-    intro: 'Si vous êtes reconnaissable sur une photo du Cycling Commons — ou si vous signalez une photo qui ne devrait pas être publique — dites-le-nous ici. Pas besoin de compte, ni de prouver qui vous êtes.'
+    intro: 'Si vous êtes reconnaissable sur une photo du Cycling Commons — ou si vous signalez une photo qui ne devrait pas être publique — dites-le-nous ici. Pas besoin de compte, et nous ne vous demanderons pas de pièce d''identité.'
     legend_category: 'Quel est le problème ?'
     category:
       identifiable_self: 'Je suis reconnaissable sur cette photo'

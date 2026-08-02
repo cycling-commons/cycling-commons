@@ -1316,7 +1316,7 @@ media:
   report:
     link: 'This photo shows me — report it'
     title: 'Report a photo'
-    intro: 'If you are identifiable in a photo on the Cycling Commons — or you are reporting one that should not be public — tell us here. You do not need an account, and you do not need to prove who you are.'
+    intro: 'If you are identifiable in a photo on the Cycling Commons — or you are reporting one that should not be public — tell us here. You do not need an account, and we will not ask you for identity documents.'
     legend_category: 'What is wrong?'
     category:
       identifiable_self: 'I am identifiable in this photo'

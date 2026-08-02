@@ -1625,7 +1625,7 @@ media:
   report:
     link: 'Dieses Foto zeigt mich — melden'
     title: 'Ein Foto melden'
-    intro: 'Bist du auf einem Foto der Cycling Commons erkennbar — oder meldest du eines, das nicht öffentlich sein sollte — dann sag es uns hier. Du brauchst kein Konto und musst nicht beweisen, wer du bist.'
+    intro: 'Bist du auf einem Foto der Cycling Commons erkennbar — oder meldest du eines, das nicht öffentlich sein sollte — dann sag es uns hier. Du brauchst kein Konto, und wir verlangen keinen Ausweis.'
     legend_category: 'Was stimmt nicht?'
     category:
       identifiable_self: 'Ich bin auf diesem Foto erkennbar'
