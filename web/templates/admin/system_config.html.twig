@@ -24,20 +24,33 @@
                         <div class="row align-items-start mb-3 pb-3 border-bottom">
                             <div class="col-md-7">
                                 <label class="form-label mb-0" for="{{ fieldId }}">{{ def.labelKey|trans }}</label>
-                                <div class="text-muted small">{{ def.helpKey|trans }}</div>
+                                <div class="small">{{ def.helpKey|trans }}</div>
                                 <div class="text-muted small"><code>{{ def.key }}</code></div>
                             </div>
                             <div class="col-md-5">
                                 <div class="input-group">
-                                    <input type="number"
-                                           class="form-control{{ invalid ? ' is-invalid' }}"
-                                           id="{{ fieldId }}"
-                                           name="settings[{{ def.key }}]"
-                                           value="{{ values[def.key] }}"
-                                           min="{{ def.min }}"
-                                           max="{{ def.max }}"
-                                           step="1"
-                                           required>
+                                    {# Two input types, matching the two setting types
+                                       (SettingDefinition): a spinner for a threshold, a plain
+                                       text box for a list of addresses. #}
+                                    {% if def.isString %}
+                                        <input type="text"
+                                               class="form-control{{ invalid ? ' is-invalid' }}"
+                                               id="{{ fieldId }}"
+                                               name="settings[{{ def.key }}]"
+                                               value="{{ values[def.key] }}"
+                                               maxlength="{{ def.maxLength }}"
+                                               required>
+                                    {% else %}
+                                        <input type="number"
+                                               class="form-control{{ invalid ? ' is-invalid' }}"
+                                               id="{{ fieldId }}"
+                                               name="settings[{{ def.key }}]"
+                                               value="{{ values[def.key] }}"
+                                               min="{{ def.min }}"
+                                               max="{{ def.max }}"
+                                               step="1"
+                                               required>
+                                    {% endif %}
                                     {# Disabled rather than hidden: the row keeps its shape whether or
                                        not the key is overridden, so the column does not jump about. #}
                                     <button type="submit" name="reset" value="{{ def.key }}"

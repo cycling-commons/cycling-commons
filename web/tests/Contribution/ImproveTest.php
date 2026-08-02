@@ -253,6 +253,33 @@ final class ImproveTest extends WebTestCase
         self::assertSelectorNotExists('[name="improve[segment]"]');
     }
 
+    /**
+     * The place-search box can read a coordinate pair copied off the map
+     * (right-click there → "lat, lng"). Pasting one used to reach Photon, come
+     * back "No matches" and leave the map on its default centre — which reads
+     * as the search sending you to the wrong country. The parser is a separate
+     * script, so what breaks silently is the WIRING: this asserts the page
+     * still ships coords.js and both result-row strings.
+     */
+    public function testImprovePageShipsTheCoordinatePasteWiring(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'coords');
+        $item = $this->createItem('D');
+
+        $crawler = $client->request('GET', '/improve?item='.$item->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(
+            1,
+            $crawler->filter('script[src*="contribute/coords"]')->count(),
+            'coords.js must load before improve.js reads window.Cc.parseLatLng',
+        );
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('search_coords_place', $html);
+        self::assertStringContainsString('search_coords_go', $html);
+    }
+
     /** The drawn segment endpoints round-trip into the persisted submission payload. */
     public function testSegmentPostLandsInSubmissionPayload(): void
     {

@@ -13,7 +13,8 @@ namespace App\Settings;
  * deploy; they now take this and read through it, so an admin edit takes effect
  * on the next request without a container rebuild.
  *
- * Every setting is a whole number — see SettingsRegistry for why.
+ * Numeric settings read through get(); the text ones through getString().
+ * Two types, deliberately — see SettingDefinition for why.
  *
  * @see docs/specs/system-configuration.md §3
  *
@@ -32,4 +33,12 @@ interface SettingsProviderInterface
      *                                   a typo must fail loudly, never read as a silent zero
      */
     public function get(string $key): int;
+
+    /**
+     * The same, for a text setting.
+     *
+     * @throws \InvalidArgumentException if the key is unknown, or is numeric
+     *                                   — reading a threshold as text is a bug, not a coercion
+     */
+    public function getString(string $key): string;
 }

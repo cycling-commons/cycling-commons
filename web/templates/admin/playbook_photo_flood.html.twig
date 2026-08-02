@@ -51,5 +51,16 @@
 
         <h2 class="h5 mt-4">{{ 'admin.flood.h_real'|trans }}</h2>
         <p>{{ 'admin.flood.real'|trans }}</p>
+
+        <h2 class="h5 mt-4">{{ 'admin.flood.h_escalated'|trans }}</h2>
+        <p>{{ 'admin.flood.escalated_intro'|trans }}
+           — <a href="{{ path('admin_escalated') }}">{{ 'admin.menu.escalated'|trans }}</a></p>
+        <ol>
+            <li>{{ 'admin.flood.esc_step_read'|trans }}</li>
+            <li>{{ 'admin.flood.esc_step_report'|trans }}</li>
+            <li>{{ 'admin.flood.esc_step_preserve'|trans }}</li>
+            <li>{{ 'admin.flood.esc_step_release'|trans }}</li>
+            <li>{{ 'admin.flood.esc_step_curator'|trans }}</li>
+        </ol>
     </div>
 {% endblock %}

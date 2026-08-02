@@ -1411,9 +1411,9 @@ improve:
   step1:
     label: 'Localiser'
     heading: 'Où est-il ?'
-    help: 'Recherchez la zone, puis appuyez sur la carte pour définir l''emplacement.'
+    help: 'Recherchez la zone ou collez des coordonnées, puis appuyez sur la carte pour définir l''emplacement.'
     search_label: 'Trouver un lieu ou une rue'
-    search_placeholder: 'p. ex. une ville, une rue, un café — recherchez pour y accéder…'
+    search_placeholder: 'p. ex. une ville, une rue, un café — ou collez 50.492000, 5.860000'
     map_aria: 'Carte — appuyez pour définir l''emplacement'
     readout_initial: '◎ Appuyez sur la carte pour définir l''emplacement'
     reset: 'Réinitialiser'
@@ -1690,6 +1690,15 @@ propose_route:
     name_too_long: 'Le nom doit compter 200 caractères au plus.'
     note_too_long: 'La note doit compter 2 000 caractères au plus.'
 moderate:
+  escalate:
+    summary: 'Ce contenu est illégal — escalader'
+    help: 'Réservé au contenu suspecté illégal : il disparaît immédiatement de ce bureau et du site public, plus rien ne peut le supprimer ensuite, et un administrateur est alerté aussitôt. Utilisez ceci plutôt que Corbeille — jeter détruit la preuve en même temps que le contenu. On ne vous demandera pas de le revoir.'
+    reason_placeholder: 'Ce que vous avez vu, dans vos mots'
+    submit: 'Escalader'
+    done: 'Escaladé. C''est masqué pour tout le monde et un administrateur a été alerté.'
+    error:
+      reason_required: 'Dites ce que vous avez vu — un administrateur n''a que vos mots.'
+      reason_too_long: 'C''est trop long. Merci de rester sous 2000 caractères.'
   kicker: 'File de modération'
   title: 'Examinez les soumissions en attente.'
   role_label: 'Curateur'
@@ -2115,6 +2124,22 @@ js:
   climb_marker_summit: 'FIN · sommet'
   climb_marker_steepest: 'PLUS RAIDE'
 admin:
+  escalated:
+    title: 'Photos sous blocage légal'
+    warning_b: 'À manipuler avec précaution.'
+    warning: 'Ces photos ont été escaladées comme contenu suspecté illégal. Elles sont masquées au public et au bureau de modération, et rien dans l''application ne peut les supprimer. Ne supprimez pas le contenu : lorsqu''il relève des cas à signaler, la trace doit subsister jusqu''à ce qu''il l''ait été, et l''autorité destinataire décide du moment où il peut disparaître.'
+    lead: 'Un curateur a vu quelque chose qu''il n''a pas voulu trancher seul. Lisez ce qu''il a écrit avant de décider de regarder l''image.'
+    playbook_link: 'Ouvrir le playbook d''incident'
+    empty: 'Rien n''est actuellement bloqué.'
+    no_item: 'Non rattachée à un lieu'
+    by: 'Escaladé par %who% le %when%'
+    their_words: 'Ce qu''a écrit le curateur :'
+    reveal: 'Afficher la photo'
+    note_label: 'Note pour le registre (facultatif)'
+    note_placeholder: 'ex. signalé aux autorités le …, référence …'
+    release: 'Lever le blocage'
+    release_help: 'Lève le blocage et rend la photo à la modération normale. Cela ne la remet pas sur la carte et ne supprime rien.'
+    released: 'Le blocage a été levé.'
   flood:
     title: 'Playbook : vague de signalements de photos'
     state_open_b: 'Le coupe-circuit de retrait automatique est OUVERT.'
@@ -2136,6 +2161,13 @@ admin:
     dont_ignore: 'Ne supposez pas qu''il s''agit d''une attaque. Vérifiez d''abord ; le levier existe pour du réel.'
     h_real: 'Si c''est réel'
     real: 'Si les signalements sont authentiques — une véritable campagne d''images illégales sur la carte — le coupe-circuit n''est pas votre ennemi : les signalements arrivent toujours et rien n''est perdu. Retenez vous-même depuis le bureau de modération ce qui doit l''être, conservez les traces, et impliquez immédiatement le propriétaire du site. Ne supprimez jamais les preuves de contenu illégal avant qu''il ait été signalé aux autorités.'
+    h_escalated: 'Si un curateur escalade un contenu comme illégal'
+    escalated_intro: 'Les photos escaladées sont déjà masquées au public et au bureau de modération, et rien dans l''application ne peut les supprimer. Elles sont ici'
+    esc_step_read: 'Lisez d''abord les mots du curateur et décidez si vous devez seulement regarder l''image. Souvent, non.'
+    esc_step_report: 'Signalez-le là où il faut. Un contenu impliquant une menace pour la vie ou la sécurité d''une personne doit être signalé sans délai aux autorités (DSA art. 18). Pour du matériel pédocriminel, utilisez la ligne dédiée (Offlimits / Meldpunt Kinderporno) et/ou la police. Le contenu terroriste impose une conservation de six mois.'
+    esc_step_preserve: 'Ne supprimez rien et ne demandez à personne de le faire. Le blocage existe pour que la trace subsiste jusqu''au signalement ; l''autorité destinataire décide du moment où cela peut disparaître.'
+    esc_step_release: 'Ne levez le blocage que s''il s''avère que ce n''était pas ce que cela semblait être. Lever rend le contenu à la modération normale — cela ne le remet pas sur la carte.'
+    esc_step_curator: 'Prenez des nouvelles du curateur qui a escaladé. Il l''a vu pour que personne d''autre n''ait à le voir : cela mérite un message.'
   withheld:
     title: 'Photos retenues par un signalement'
     lead: 'Toutes les photos qu''un signalement anonyme a retirées de la carte et qui attendent encore une décision. Les restaurer ici les remet en ligne et acte que le signalement n''était pas réel — cela ne ferme pas la catégorie, donc un futur signalement authentique sur la même photo sera toujours entendu.'
@@ -2164,6 +2196,7 @@ admin:
     system_config: 'Configuration du système'
     curator_applications: 'Candidatures de curateurs'
     withheld_photos: 'Photos retenues'
+    escalated: 'Escaladés (bloqués)'
   action:
     unlock: 'Déverrouiller le compte'
     disarm_2fa: 'Désactiver la 2FA'
@@ -2237,11 +2270,13 @@ admin:
     default_note: 'Par défaut : %value%'
     range_note: 'Autorisé : %min%–%max%'
     error_range: 'Saisissez un nombre entier entre %min% et %max%.'
+    error_text: 'Cette valeur n''est pas acceptable pour ce réglage.'
     group:
       map: 'Carte'
       routes: 'Itinéraires'
       moderation: 'Modération'
       media: 'Photos'
+      alerts: 'Alertes'
     field:
       map_curated_default_threshold:
         label: 'Éligibilité au mode Sélection : total d’éléments'
@@ -2267,6 +2302,9 @@ admin:
       media_urgent_breaker_daily:
         label: 'Budget de retrait automatique : par jour'
         help: 'Le même plafond mesuré sur une journée, pour qu''un goutte-à-goutte ne réussisse pas là où une rafale échoue. Les deux budgets doivent avoir de la marge avant qu''un signalement puisse masquer une photo de lui-même.'
+      app_alert_emails:
+        label: 'Destinataires des alertes'
+        help: 'Adresses e-mail séparées par des virgules qui reçoivent les alertes opérationnelles : l''ouverture du coupe-circuit et chaque escalade de contenu suspecté illégal. Modifiez-la quand la personne habituelle est absente — une escalade doit atteindre quelqu''un le jour même. Au moins une adresse valide est requise.'
   curator:
     title: 'Candidatures de curateurs'
     empty: 'Aucune candidature en attente.'

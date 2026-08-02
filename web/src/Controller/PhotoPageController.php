@@ -68,6 +68,10 @@ final class PhotoPageController extends AbstractController
             || MediaStatus::Approved !== $upload->getStatus()
             || null !== $upload->getObjectsDeletedAt()
             || $upload->isTakedownWithheld()
+            // Under legal hold (photo-uploads.md §6d): out of reach of the
+            // public exactly like a withheld one, and with no hint that the
+            // reason is different.
+            || $upload->isEscalated()
         ) {
             return $this->render('media/photo.html.twig', [
                 'page_title' => 'media.page.unpublished_title',

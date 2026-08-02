@@ -12,11 +12,22 @@ acting — this page is the do's and don'ts, not a replacement for judgement.
 |---|---|---|---|
 | **Approve** | The contribution is plausible and useful | It goes live; changes apply to the item | Everything, plus your decision in the item's visible history |
 | **Reject** | Honest contribution, but wrong / not verifiable / duplicate | Nothing goes live; the rider gets your note | The submission and any photos, for the standard retention window (currently 3 months), then collected |
-| **Trash** | Spam, abuse, or **illegal content** | Immediate permanent deletion — content, photos, and their history are gone at once, no retention window, and **no message is sent** to the submitter | Only a **content-free record of the action**: that *you* trashed submission N of type X at time T. The content itself is unrecoverable — deliberately |
+| **Trash** | Spam and abuse — **not** illegal content, see below | Immediate permanent deletion — content, photos, and their history are gone at once, no retention window, and **no message is sent** to the submitter | Only a **content-free record of the action**: that *you* trashed submission N of type X at time T. The content itself is unrecoverable — deliberately |
+| **Escalate** | Anything you believe may be **illegal** | It disappears from this desk and from the public site at once, an administrator is alerted immediately, and nothing in the app can delete it afterwards | Everything, under a hold. You are not asked to look at it again |
 
 **Keep the record, never the content** is the Trash principle: the Commons
 can always prove the moderation action happened, and can never reproduce
-the material — which is the point when the material is spam or illegal.
+the material — which is the point when the material is spam or abuse.
+
+**Illegal material is the exception, and it goes to Escalate, not Trash.**
+Trashing it destroys the evidence along with the content, and for some
+material the law expects that evidence to survive until it has been reported.
+Escalating takes it out of everyone's reach — yours included — freezes it
+against every deletion path, and puts it in front of an administrator the same
+minute. You are never expected to decide what it is, only to say what you saw.
+Nobody is asked to view escalated material twice, and if something you saw
+here is sitting with you afterwards, say so in the curator channel; that is a
+normal thing to need and not a failure.
 
 Because Trash is irreversible, the desk asks you to **type `DELETE`** to
 confirm. Cancelling leaves no trace at all — no record is written for a

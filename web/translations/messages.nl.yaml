@@ -1411,9 +1411,9 @@ improve:
   step1:
     label: 'Locatie'
     heading: 'Waar is het?'
-    help: 'Zoek het gebied, tik dan op de kaart om de locatie in te stellen.'
+    help: 'Zoek het gebied of plak coördinaten, tik dan op de kaart om de locatie in te stellen.'
     search_label: 'Vind een plek of straat'
-    search_placeholder: 'bijv. een stad, straat, café — zoek om er naartoe te springen…'
+    search_placeholder: 'bijv. een stad, straat, café — of plak 50.492000, 5.860000'
     map_aria: 'Kaart — tik om de locatie in te stellen'
     readout_initial: '◎ Tik op de kaart om de locatie in te stellen'
     reset: 'Opnieuw'
@@ -1690,6 +1690,15 @@ propose_route:
     name_too_long: 'De naam mag hoogstens 200 tekens lang zijn.'
     note_too_long: 'De notitie mag hoogstens 2.000 tekens lang zijn.'
 moderate:
+  escalate:
+    summary: 'Dit is illegale inhoud — escaleren'
+    help: 'Alleen voor vermoedelijk illegaal materiaal: het verdwijnt meteen van dit bureau en van de publieke site, daarna kan niets het meer verwijderen, en een beheerder wordt onmiddellijk gewaarschuwd. Gebruik dit in plaats van Prullenbak — weggooien vernietigt het bewijs samen met de inhoud. Je hoeft er niet nog eens naar te kijken.'
+    reason_placeholder: 'Wat je zag, in je eigen woorden'
+    submit: 'Escaleren'
+    done: 'Geëscaleerd. Het is voor iedereen verborgen en een beheerder is gewaarschuwd.'
+    error:
+      reason_required: 'Zeg wat je zag — een beheerder heeft alleen jouw woorden.'
+      reason_too_long: 'Dat is te lang. Houd het onder 2000 tekens.'
   kicker: 'Moderatiewachtrij'
   title: 'Beoordeel ingediende bijdragen.'
   role_label: 'Curator'
@@ -2115,6 +2124,22 @@ js:
   climb_marker_summit: 'EINDE · top'
   climb_marker_steepest: 'STEILSTE'
 admin:
+  escalated:
+    title: 'Foto''s onder juridische blokkade'
+    warning_b: 'Voorzichtig behandelen.'
+    warning: 'Deze foto''s zijn geëscaleerd als vermoedelijk illegale inhoud. Ze zijn verborgen voor het publiek en voor het moderatiebureau, en niets in de applicatie kan ze verwijderen. Verwijder het materiaal niet: waar het om meldplichtige inhoud gaat, moet de vastlegging blijven bestaan tot het gemeld is, en de instantie waaraan je meldt bepaalt wanneer het weg mag.'
+    lead: 'Een curator zag iets wat hij niet alleen wilde beslissen. Lees wat hij schreef voordat je besluit de afbeelding zelf te bekijken.'
+    playbook_link: 'Open het incident-playbook'
+    empty: 'Er staat op dit moment niets vast.'
+    no_item: 'Niet aan een plek gekoppeld'
+    by: 'Geëscaleerd door %who% op %when%'
+    their_words: 'Wat de curator schreef:'
+    reveal: 'Toon de foto'
+    note_label: 'Notitie voor het dossier (optioneel)'
+    note_placeholder: 'bijv. gemeld bij de autoriteiten op …, kenmerk …'
+    release: 'Blokkade opheffen'
+    release_help: 'Heft de blokkade op en geeft de foto terug aan de normale moderatie. Het zet hem niet terug op de kaart en verwijdert niets.'
+    released: 'De blokkade is opgeheven.'
   flood:
     title: 'Playbook: golf van fotomeldingen'
     state_open_b: 'De noodrem op automatisch offline halen staat OPEN.'
@@ -2136,6 +2161,13 @@ admin:
     dont_ignore: 'Ga er niet van uit dat het een aanval is. Controleer eerst; de hendel bestaat voor iets echts.'
     h_real: 'Als het echt is'
     real: 'Zijn de meldingen echt — een werkelijke golf illegale beelden op de kaart — dan is de noodrem niet je vijand: meldingen komen nog binnen en er gaat niets verloren. Houd zelf vanaf het moderatiebureau offline wat offline moet, bewaar de vastleggingen, en betrek onmiddellijk de site-eigenaar. Verwijder nooit bewijs van illegaal materiaal voordat het bij de autoriteiten is gemeld.'
+    h_escalated: 'Als een curator iets als illegaal escaleert'
+    escalated_intro: 'Geëscaleerde foto''s zijn al verborgen voor het publiek en voor het moderatiebureau, en niets in de applicatie kan ze verwijderen. Ze staan hier'
+    esc_step_read: 'Lees eerst de woorden van de curator en beslis of je de afbeelding überhaupt moet bekijken. Vaak hoeft dat niet.'
+    esc_step_report: 'Meld het waar het hoort. Materiaal met een bedreiging voor iemands leven of veiligheid moet onverwijld bij de politie worden gemeld (DSA art. 18). Voor kindermisbruikmateriaal: gebruik het meldpunt (Offlimits / Meldpunt Kinderporno) en/of de politie. Terroristische inhoud kent een bewaarplicht van zes maanden.'
+    esc_step_preserve: 'Verwijder niets en vraag niemand dat te doen. De blokkade bestaat zodat de vastlegging blijft bestaan tot er gemeld is; de instantie waaraan je meldt bepaalt wanneer het weg mag.'
+    esc_step_release: 'Hef de blokkade alleen op als blijkt dat het niet was wat het leek. Opheffen geeft het terug aan de normale moderatie — het zet het niet terug op de kaart.'
+    esc_step_curator: 'Vraag hoe het gaat met de curator die escaleerde. Die heeft het gezien zodat niemand anders dat hoefde; dat verdient een bericht.'
   withheld:
     title: 'Foto''s die door een melding offline staan'
     lead: 'Elke foto die een anonieme melding van de kaart heeft gehaald en die nog op een beslissing wacht. Herstellen zet ze terug en legt vast dat de melding niet echt was — het sluit de categorie niet, dus een latere echte melding over dezelfde foto wordt nog steeds gehoord.'
@@ -2164,6 +2196,7 @@ admin:
     system_config: 'Systeemconfiguratie'
     curator_applications: 'Curatoraanvragen'
     withheld_photos: 'Offline gehouden foto''s'
+    escalated: 'Geëscaleerd (vast)'
   action:
     unlock: 'Account ontgrendelen'
     disarm_2fa: '2FA uitschakelen'
@@ -2237,11 +2270,13 @@ admin:
     default_note: 'Standaard: %value%'
     range_note: 'Toegestaan: %min%–%max%'
     error_range: 'Vul een heel getal tussen %min% en %max% in.'
+    error_text: 'Die waarde is niet toegestaan voor deze instelling.'
     group:
       map: 'Kaart'
       routes: 'Routes'
       moderation: 'Moderatie'
       media: 'Foto''s'
+      alerts: 'Waarschuwingen'
     field:
       map_curated_default_threshold:
         label: 'Klaar voor Selectie-modus: totaal aantal items'
@@ -2267,6 +2302,9 @@ admin:
       media_urgent_breaker_daily:
         label: 'Budget automatisch offline halen: per dag'
         help: 'Hetzelfde plafond over een dag gemeten, zodat een langzame druppel niet lukt wat een golf niet lukt. Beide budgetten moeten ruimte hebben voordat een melding zelf een foto kan verbergen.'
+      app_alert_emails:
+        label: 'Ontvangers van waarschuwingen'
+        help: 'E-mailadressen, gescheiden door komma''s, die operationele waarschuwingen krijgen: het opengaan van de noodrem en elke escalatie van vermoedelijk illegale inhoud. Pas het aan als de gebruikelijke lezer weg is — een escalatie moet dezelfde dag iemand bereiken. Minstens één geldig adres is verplicht.'
   curator:
     title: 'Curatoraanvragen'
     empty: 'Geen aanvragen in behandeling.'

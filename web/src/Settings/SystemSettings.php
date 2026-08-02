@@ -36,7 +36,7 @@ final class SystemSettings implements SettingsProviderInterface
 {
     private const string CACHE_KEY = 'system_settings.overrides';
 
-    /** @var array<string, int>|null in-request memo; null = not loaded this request */
+    /** @var array<string, string>|null in-request memo of RAW stored values; null = not loaded this request */
     private ?array $memo = null;
 
     public function __construct(
@@ -49,8 +49,32 @@ final class SystemSettings implements SettingsProviderInterface
     #[\Override]
     public function get(string $key): int
     {
+        $value = $this->effective($key);
+
+        return \is_int($value) ? $value : throw new \InvalidArgumentException(sprintf('"%s" is a text setting; use getString().', $key));
+    }
+
+    /** The text half of the two typed accessors (SettingDefinition docblock). */
+    public function getString(string $key): string
+    {
+        $value = $this->effective($key);
+
+        return \is_string($value) ? $value : throw new \InvalidArgumentException(sprintf('"%s" is a numeric setting; use get().', $key));
+    }
+
+    /**
+     * The stored override when there is one and it is still legal for this
+     * key, the definition's default otherwise. Storage is textual for every
+     * type, so the definition does the reading back.
+     */
+    private function effective(string $key): int|string
+    {
         $def = $this->registry->get($key);
-        $stored = $this->overrides()[$key] ?? null;
+        $raw = $this->overrides()[$key] ?? null;
+        if (null === $raw) {
+            return $def->default;
+        }
+        $stored = $def->fromStorage($raw);
 
         return null !== $stored && $def->accepts($stored) ? $stored : $def->default;
     }
@@ -58,13 +82,13 @@ final class SystemSettings implements SettingsProviderInterface
     /**
      * Every setting's effective value, in registry order.
      *
-     * @return array<string, int>
+     * @return array<string, int|string>
      */
     public function all(): array
     {
         $out = [];
         foreach ($this->registry->all() as $key => $_def) {
-            $out[$key] = $this->get($key);
+            $out[$key] = $this->effective($key);
         }
 
         return $out;
@@ -88,7 +112,7 @@ final class SystemSettings implements SettingsProviderInterface
         $this->cache->delete(self::CACHE_KEY);
     }
 
-    /** @return array<string, int> stored values only, unknown keys dropped */
+    /** @return array<string, string> raw stored values only, unknown keys dropped */
     private function overrides(): array
     {
         if (null !== $this->memo) {
@@ -113,7 +137,7 @@ final class SystemSettings implements SettingsProviderInterface
         return $this->memo = $loaded;
     }
 
-    /** @return array<string, int>|null null when the table does not exist yet */
+    /** @return array<string, string>|null null when the table does not exist yet */
     private function load(): ?array
     {
         try {
@@ -128,7 +152,7 @@ final class SystemSettings implements SettingsProviderInterface
             // A row for a key the registry no longer defines (a setting removed
             // in a later release) is inert rather than fatal.
             if ($this->registry->has((string) $key)) {
-                $out[(string) $key] = (int) $value;
+                $out[(string) $key] = (string) $value;
             }
         }
 

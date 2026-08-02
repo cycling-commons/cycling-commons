@@ -43,4 +43,13 @@ final class MediaAction
      * open.
      */
     public const string TakedownDismissedAsAbuse = 'takedown_dismissed_as_abuse';
+    /**
+     * A curator escalated suspected illegal content, putting the row under
+     * legal hold (docs/specs/photo-uploads.md §6d), and an admin later
+     * released it. Both are append-only like everything here — and here the
+     * log is not just good practice, it is the account of our handling we
+     * would have to give.
+     */
+    public const string Escalated = 'escalated';
+    public const string EscalationReleased = 'escalation_released';
 }

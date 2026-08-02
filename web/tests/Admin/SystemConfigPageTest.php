@@ -115,8 +115,14 @@ final class SystemConfigPageTest extends WebTestCase
             $input = $crawler->filter(sprintf('input[name="settings[%s]"]', $key));
             self::assertCount(1, $input, "a field for {$key} must render");
             self::assertSame((string) $def->default, $input->attr('value'));
-            self::assertSame((string) $def->min, $input->attr('min'));
-            self::assertSame((string) $def->max, $input->attr('max'));
+            // Two input types, two sets of attributes (SettingDefinition): a
+            // spinner is bounded by min/max, a text box by maxlength.
+            if ($def->isString()) {
+                self::assertSame((string) $def->maxLength, $input->attr('maxlength'));
+            } else {
+                self::assertSame((string) $def->min, $input->attr('min'));
+                self::assertSame((string) $def->max, $input->attr('max'));
+            }
         }
 
         // The three coverage.* values are infrastructure and stay env-backed

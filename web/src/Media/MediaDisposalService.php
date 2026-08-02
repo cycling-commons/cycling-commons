@@ -12,6 +12,7 @@ use App\Media\Entity\MediaUpload;
 use App\Moderation\RetentionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * What happens to a photo's bytes at the end of each path
@@ -47,12 +48,28 @@ final class MediaDisposalService
         private readonly MediaEventLog $events,
         private readonly RetentionService $retention,
         private readonly ClockInterface $clock,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
-    /** Objects, row and log. Used by orphan collection, Trash and account deletion. */
+    /**
+     * Objects, row and log. Used by orphan collection, Trash and account
+     * deletion.
+     *
+     * **Refuses anything under legal hold** (docs/specs/photo-uploads.md §6d).
+     * This is the single chokepoint every destructive path runs through, which
+     * is why the guard lives here rather than being repeated at each caller:
+     * a hold that any one forgotten path could bypass is not a hold. Silent
+     * rather than throwing — Trash sweeps a whole submission, and one held
+     * photo must not abort the rest or leak its existence through an error.
+     */
     public function purge(MediaUpload $upload): void
     {
+        if ($upload->isEscalated()) {
+            $this->logger->warning('Refused to purge a photo under legal hold.', ['media' => $upload->getId()->toRfc4122()]);
+
+            return;
+        }
         $this->storage->deletePrefix($upload->getContinent(), $upload->getPathPrefix());
         $this->em->remove($upload);   // media_moderation_event cascades
     }
@@ -61,6 +78,11 @@ final class MediaDisposalService
     public function deleteObjects(MediaUpload $upload): void
     {
         if (null !== $upload->getObjectsDeletedAt()) {
+            return;
+        }
+        if ($upload->isEscalated()) {
+            $this->logger->warning('Refused to delete the objects of a photo under legal hold.', ['media' => $upload->getId()->toRfc4122()]);
+
             return;
         }
         $this->storage->deletePrefix($upload->getContinent(), $upload->getPathPrefix());

@@ -1,0 +1,62 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   Photos under legal hold (docs/specs/photo-uploads.md §6d).
+
+   The only place in the application where escalated material can be reached at
+   all: not the map, not the photo page, not the moderation desk. Admin-only,
+   and deliberately thumbnail-free — an admin decides to look, rather than
+   being shown. Nothing here deletes anything: releasing lifts the hold and
+   hands the row back to normal moderation, and the material itself only goes
+   when the authority it was reported to says it may.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'admin.escalated.title'|trans }}{% endblock %}
+
+{% block main %}
+    <div class="col-lg-10">
+        <div class="alert alert-warning">
+            <strong>{{ 'admin.escalated.warning_b'|trans }}</strong>
+            {{ 'admin.escalated.warning'|trans }}
+        </div>
+
+        <p>{{ 'admin.escalated.lead'|trans }}</p>
+        <p><a href="{{ path('admin_playbook_photo_flood') }}">{{ 'admin.escalated.playbook_link'|trans }}</a></p>
+
+        {% if cards is empty %}
+            <p>{{ 'admin.escalated.empty'|trans }}</p>
+        {% else %}
+            {% for card in cards %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h3 class="h6 mb-1">{{ card.itemName ?: ('admin.escalated.no_item'|trans) }}</h3>
+                        <p class="small mb-2">
+                            {{ 'admin.escalated.by'|trans({'%who%': card.escalatedBy, '%when%': card.escalatedAt|cc_datetime}) }}
+                            &middot; <code>{{ card.uuid }}</code>
+                        </p>
+                        <p class="mb-3"><strong>{{ 'admin.escalated.their_words'|trans }}</strong> {{ card.reason }}</p>
+
+                        {# Behind a details element on purpose: nobody sees this
+                           material by scrolling past it. #}
+                        <details class="mb-3">
+                            <summary>{{ 'admin.escalated.reveal'|trans }}</summary>
+                            <img src="{{ card.sm }}" alt="" class="mt-2" style="max-width:22rem;height:auto;border-radius:4px">
+                        </details>
+
+                        <form method="post">
+                            <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+                            <input type="hidden" name="media" value="{{ card.uuid }}">
+                            <div class="mb-2">
+                                <label class="form-label" for="note-{{ loop.index }}">{{ 'admin.escalated.note_label'|trans }}</label>
+                                <input type="text" class="form-control" id="note-{{ loop.index }}" name="note" maxlength="2000"
+                                       placeholder="{{ 'admin.escalated.note_placeholder'|trans }}">
+                            </div>
+                            <button type="submit" class="btn btn-outline-secondary">{{ 'admin.escalated.release'|trans }}</button>
+                            <span class="form-text ms-2">{{ 'admin.escalated.release_help'|trans }}</span>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endblock %}

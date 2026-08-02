@@ -174,6 +174,31 @@ class MediaUpload
     #[ORM\Column(name: 'takedown_decided_categories', type: Types::JSON)]
     private array $takedownDecidedCategories = [];
 
+    /**
+     * A curator has escalated this as suspected illegal content
+     * (docs/specs/photo-uploads.md §6d). Non-null means a **legal hold**: the
+     * photo is out of reach of the public AND of the moderation desk, and
+     * nothing may destroy it — not Trash, not the retention sweep, not orphan
+     * collection, not a bulk restore. Only an admin can act on it.
+     *
+     * Preservation is the point. Where the material is the kind that must be
+     * reported (EU DSA Art. 18, threat to life or safety; terrorist content,
+     * whose regulation carries an explicit six-month preservation duty),
+     * destroying it before it has been reported destroys the evidence with it
+     * — and the first curator to see it must not be the one making that call
+     * alone.
+     */
+    #[ORM\Column(name: 'escalated_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $escalatedAt = null;
+
+    /** Who escalated it, so an admin can ask what they saw without showing it to anyone again. */
+    #[ORM\Column(name: 'escalated_by_id', type: Types::INTEGER, nullable: true)]
+    private ?int $escalatedById = null;
+
+    /** The curator's own words — the only description an admin has before deciding whether to look. */
+    #[ORM\Column(name: 'escalated_reason', type: Types::TEXT, nullable: true)]
+    private ?string $escalatedReason = null;
+
     public function __construct(
         Uuid $id,
         int $userId,
@@ -452,6 +477,44 @@ class MediaUpload
     public function getTakedownReason(): ?string
     {
         return $this->takedownReason;
+    }
+
+    public function escalate(int $curatorId, string $reason): void
+    {
+        $this->escalatedAt = new \DateTimeImmutable();
+        $this->escalatedById = $curatorId;
+        $this->escalatedReason = $reason;
+    }
+
+    /** An admin has decided it was not what it looked like; normal moderation resumes. */
+    public function releaseEscalation(): void
+    {
+        $this->escalatedAt = null;
+    }
+
+    /**
+     * Under legal hold: invisible to the public and to curators, and immune to
+     * every deletion path until an admin releases it
+     * (docs/specs/photo-uploads.md §6d).
+     */
+    public function isEscalated(): bool
+    {
+        return null !== $this->escalatedAt;
+    }
+
+    public function getEscalatedAt(): ?\DateTimeImmutable
+    {
+        return $this->escalatedAt;
+    }
+
+    public function getEscalatedById(): ?int
+    {
+        return $this->escalatedById;
+    }
+
+    public function getEscalatedReason(): ?string
+    {
+        return $this->escalatedReason;
     }
 
     /** A curator has an undecided request — of either source — for this photo. */

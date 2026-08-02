@@ -42,8 +42,7 @@ final class UrgentWithholdAlert
         private readonly MailerInterface $mailer,
         private readonly RateLimiterFactory $mediaUrgentAlertLimiter,
         private readonly LoggerInterface $logger,
-        #[Autowire('%env(SECURITY_ALERT_EMAIL)%')]
-        private readonly string $alertAddress,
+        private readonly AlertRecipients $recipients,
         #[Autowire('%env(APP_SITE_URL)%')]
         private readonly string $siteUrl,
     ) {
@@ -51,7 +50,8 @@ final class UrgentWithholdAlert
 
     public function breakerOpened(): void
     {
-        if ('' === $this->alertAddress) {
+        $to = $this->recipients->all();
+        if ([] === $to) {
             return;
         }
         if (!$this->mediaUrgentAlertLimiter->create('global')->consume()->isAccepted()) {
@@ -60,7 +60,7 @@ final class UrgentWithholdAlert
 
         $email = (new Email())
             ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
-            ->to(new Address($this->alertAddress))
+            ->to(...$to)
             ->subject('[Cycling Commons] Photo auto-withhold circuit breaker is OPEN')
             ->text(<<<TXT
                 The site-wide budget for automatically withholding photos on an

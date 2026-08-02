@@ -26,3 +26,8 @@ parameters:
     media.default_continent: '%env(MEDIA_DEFAULT_CONTINENT)%'
     media.urgent_breaker_hourly: 10
     media.urgent_breaker_daily: 25
+    # Default recipients for operational alerts (the breaker opening, and every
+    # escalation of suspected illegal content). Runtime-editable from
+    # /admin/system-config so cover during a holiday needs no deploy; this env
+    # value is only the fallback when nothing has been set.
+    app.alert_emails: '%env(SECURITY_ALERT_EMAIL)%'

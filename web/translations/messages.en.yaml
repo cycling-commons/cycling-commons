@@ -1094,9 +1094,9 @@ improve:
   step1:
     label: 'Locate'
     heading: 'Where is it?'
-    help: 'Search for the area, then tap the map to set the location.'
+    help: 'Search for the area, or paste coordinates, then tap the map to set the location.'
     search_label: 'Find a place or street'
-    search_placeholder: 'e.g. a town, street, café — search to jump there…'
+    search_placeholder: 'e.g. a town, street, café — or paste 50.492000, 5.860000'
     map_aria: 'Map — tap to set the location'
     readout_initial: '◎ Tap the map to set the location'
     reset: 'Reset'
@@ -1693,6 +1693,15 @@ map:
   mly_none: 'No street-level imagery here.'
   mly_zoom: 'Zoom in and click a green dot to open street-level here.'
 moderate:
+  escalate:
+    summary: 'This is illegal content — escalate it'
+    help: 'For suspected illegal material only: it disappears from this desk and from the public site at once, nothing can delete it afterwards, and an administrator is alerted immediately. Use this instead of Trash — trashing destroys the evidence along with the content. You will not be asked to look at it again.'
+    reason_placeholder: 'What you saw, in your own words'
+    submit: 'Escalate'
+    done: 'Escalated. It is hidden from everyone and an administrator has been alerted.'
+    error:
+      reason_required: 'Please say what you saw — an administrator has only your words to go on.'
+      reason_too_long: 'That is too long. Please keep it under 2000 characters.'
   kicker: 'Moderation queue'
   title: 'Review pending submissions.'
   role_label: 'Curator'
@@ -2118,10 +2127,26 @@ js:
   climb_marker_summit: 'END · summit'
   climb_marker_steepest: 'STEEPEST'
 admin:
+  escalated:
+    title: 'Photos under legal hold'
+    warning_b: 'Handle with care.'
+    warning: 'These photos were escalated as suspected illegal content. They are hidden from the public and from the moderation desk, and nothing in the application can delete them. Do not delete the material: where it is the kind that must be reported, the record has to survive until it has been, and the authority you report to decides when it may go.'
+    lead: 'A curator saw something they were not willing to decide alone. Read what they wrote before deciding whether to look at the image itself.'
+    playbook_link: 'Open the incident playbook'
+    empty: 'Nothing is currently held.'
+    no_item: 'Not attached to a place'
+    by: 'Escalated by %who% on %when%'
+    their_words: 'What the curator wrote:'
+    reveal: 'Show the photo'
+    note_label: 'Note for the record (optional)'
+    note_placeholder: 'e.g. reported to the authorities on …, reference …'
+    release: 'Release the hold'
+    release_help: 'Lifts the hold and hands the photo back to normal moderation. It does not put it back on the map and it deletes nothing.'
+    released: 'The hold has been released.'
   flood:
     title: 'Playbook: a flood of photo reports'
     state_open_b: 'The auto-withhold breaker is OPEN right now.'
-    state_open: 'Anonymous reports are no longer removing photos by themselves. Work through the steps below.'
+    state_open: 'Anonymous reports are no longer hiding photos by themselves. Work through the steps below.'
     state_closed: 'The auto-withhold breaker is closed. Normal operation.'
     lead: 'The photo-report route lets anyone say they are in a photo, without an account, because the law does not make that right depend on one. That openness is also its weakness: a distributed attacker can file from thousands of addresses at once. This page is what to do when that happens.'
     h_what: 'What already happened automatically'
@@ -2139,6 +2164,13 @@ admin:
     dont_ignore: 'Do not assume it is an attack. Check first; the lever exists for something real.'
     h_real: 'If it is real'
     real: 'If the reports are genuine — an actual campaign of illegal images on the map — the breaker is not your enemy: reports still arrive and nothing is lost. Withhold what needs withholding from the moderation desk yourself, preserve the records, and involve the site owner immediately. Never delete evidence of illegal material before it has been reported to the authorities.'
+    h_escalated: 'If a curator escalates something as illegal'
+    escalated_intro: 'Escalated photos are already hidden from the public and from the moderation desk, and nothing in the app can delete them. They are here'
+    esc_step_read: 'Read the curator''s words first and decide whether you need to look at the image at all. Often you do not.'
+    esc_step_report: 'Report it where it belongs. Material involving a threat to someone''s life or safety must be reported promptly to law enforcement (DSA Art. 18). For child sexual abuse material, use the hotline (Offlimits / Meldpunt Kinderporno) and/or the police. Terrorist content carries a six-month preservation duty.'
+    esc_step_preserve: 'Do not delete anything, and do not ask anyone to. The hold exists so the record survives until it has been reported; the authority you report to decides when it may go.'
+    esc_step_release: 'Release the hold only if it turns out not to be what it looked like. Releasing returns it to normal moderation — it does not put it back on the map.'
+    esc_step_curator: 'Check on the curator who escalated it. They saw it so nobody else had to, and that is worth a message.'
   withheld:
     title: 'Photos withheld by a report'
     lead: 'Every photo an anonymous report has taken off the map and that is still waiting for a decision. Restoring here puts them back and records that the report was not real — it does not close the category, so a future genuine report about the same photo is still heard.'
@@ -2167,6 +2199,7 @@ admin:
     system_config: 'System configuration'
     curator_applications: 'Curator applications'
     withheld_photos: 'Withheld photos'
+    escalated: 'Escalated (held)'
   action:
     unlock: 'Unlock account'
     disarm_2fa: 'Disarm 2FA'
@@ -2240,11 +2273,13 @@ admin:
     default_note: 'Default: %value%'
     range_note: 'Allowed: %min%–%max%'
     error_range: 'Enter a whole number between %min% and %max%.'
+    error_text: 'That value is not acceptable for this setting.'
     group:
       map: 'Map'
       routes: 'Routes'
       moderation: 'Moderation'
       media: 'Photos'
+      alerts: 'Alerts'
     field:
       map_curated_default_threshold:
         label: 'Curated-mode readiness: total items'
@@ -2270,6 +2305,9 @@ admin:
       media_urgent_breaker_daily:
         label: 'Auto-withhold budget: per day'
         help: 'The same ceiling measured over a day, so a slow drip cannot do what a burst cannot. Both budgets must have room before a report can hide a photo on its own.'
+      app_alert_emails:
+        label: 'Alert recipients'
+        help: 'Comma-separated email addresses that receive operational alerts: the auto-withhold breaker opening, and every escalation of suspected illegal content. Change it when the usual reader is away — an escalation must reach somebody the same day. At least one valid address is required.'
   curator:
     title: 'Curator applications'
     empty: 'No pending applications.'

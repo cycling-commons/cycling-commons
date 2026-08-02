@@ -33,13 +33,15 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
  * cookie. What lives here is the editorial dial an admin should be able to
  * turn at 22:00 without a release.
  *
- * ## Why every setting is an integer
+ * ## Two types, and no more without meaning it
  *
- * All six are counts or thresholds, so the type system is one type and the
- * validation is one range check. When the first non-integer setting arrives it
- * needs a type discriminator here, a wider column in `system_setting`, and a
- * matching input in the template — that is deliberately a schema change, not
- * something that sneaks in behind a generic `mixed`.
+ * Settings were integer-only while every one of them was a count or a
+ * threshold, and this file said the first non-integer one would need a type
+ * discriminator, a wider `system_setting` column and its own input — a
+ * deliberate schema change rather than something sneaking in behind a generic
+ * `mixed`. That happened for `app.alert_emails`, so there are now exactly two
+ * types with two typed accessors (SettingDefinition). A third is the same
+ * deliberate exercise again.
  *
  * @see docs/specs/system-configuration.md §2
  *
@@ -55,11 +57,13 @@ final class SettingsRegistry
     public const string MODERATION_RETENTION_MONTHS = 'moderation.retention_months';
     public const string MEDIA_URGENT_BREAKER_HOURLY = 'media.urgent_breaker_hourly';
     public const string MEDIA_URGENT_BREAKER_DAILY = 'media.urgent_breaker_daily';
+    public const string ALERT_EMAILS = 'app.alert_emails';
 
     public const string GROUP_MAP = 'map';
     public const string GROUP_ROUTES = 'routes';
     public const string GROUP_MODERATION = 'moderation';
     public const string GROUP_MEDIA = 'media';
+    public const string GROUP_ALERTS = 'alerts';
 
     /** @var array<string, SettingDefinition> keyed by setting key, in render order */
     private array $definitions = [];
@@ -105,17 +109,73 @@ final class SettingsRegistry
                 // find that out is boot, not the first admin who opens the page.
                 throw new \LogicException(sprintf('Setting "%s" needs an integer container parameter of the same name.', $key));
             }
-            $slug = str_replace('.', '_', $key);
-            $this->definitions[$key] = new SettingDefinition(
+            $this->definitions[$key] = $this->define(
                 key: $key,
+                type: SettingDefinition::TYPE_INT,
                 default: (int) $raw,
                 min: $min,
                 max: $max,
                 group: $group,
-                labelKey: 'admin.settings.field.'.$slug.'.label',
-                helpKey: 'admin.settings.field.'.$slug.'.help',
             );
         }
+
+        // The first string setting (SettingDefinition docblock). Who gets told
+        // when something operational happens: the auto-withhold breaker
+        // opening, and every escalation of suspected illegal content
+        // (photo-uploads.md §6c, §6d). Editable because the person who reads
+        // that mailbox goes on holiday, and an escalation cannot wait for
+        // them to come back.
+        $default = $params->get(self::ALERT_EMAILS);
+        $this->definitions[self::ALERT_EMAILS] = $this->define(
+            key: self::ALERT_EMAILS,
+            type: SettingDefinition::TYPE_STRING,
+            default: \is_string($default) ? $default : '',
+            group: self::GROUP_ALERTS,
+            maxLength: 500,
+            // Comma-separated, every entry a real address, at least one of
+            // them: an empty list would silently turn the alerts off, and the
+            // one thing worse than a noisy alert is one nobody receives.
+            validator: static function (string $value): bool {
+                $parts = array_filter(array_map(trim(...), explode(',', $value)), static fn (string $p): bool => '' !== $p);
+                if ([] === $parts) {
+                    return false;
+                }
+                foreach ($parts as $part) {
+                    if (false === filter_var($part, \FILTER_VALIDATE_EMAIL)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            },
+        );
+    }
+
+    /** @param ?\Closure(string): bool $validator */
+    private function define(
+        string $key,
+        string $type,
+        int|string $default,
+        string $group,
+        ?int $min = null,
+        ?int $max = null,
+        ?int $maxLength = null,
+        ?\Closure $validator = null,
+    ): SettingDefinition {
+        $slug = str_replace('.', '_', $key);
+
+        return new SettingDefinition(
+            key: $key,
+            type: $type,
+            default: $default,
+            min: $min,
+            max: $max,
+            maxLength: $maxLength,
+            validator: $validator,
+            group: $group,
+            labelKey: 'admin.settings.field.'.$slug.'.label',
+            helpKey: 'admin.settings.field.'.$slug.'.help',
+        );
     }
 
     public function has(string $key): bool

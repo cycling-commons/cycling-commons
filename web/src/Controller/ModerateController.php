@@ -11,6 +11,7 @@ use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
 use App\Media\Entity\MediaUpload;
+use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\AlreadyDecidedException;
@@ -53,6 +54,7 @@ final class ModerateController extends AbstractController
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly RouteQueue $routeQueue,
         private readonly MediaTakedownService $takedowns,
+        private readonly MediaEscalationService $escalations,
         private readonly UrgentWithholdBreaker $breaker,
         private readonly EntityManagerInterface $em,
     ) {
@@ -268,6 +270,43 @@ final class ModerateController extends AbstractController
      * is only on loan. Nothing but the rider's own words tells them apart,
      * which is the entire reason a human is in this loop.
      */
+    /**
+     * Escalate a photo as suspected illegal content
+     * (docs/specs/photo-uploads.md §6d).
+     *
+     * The third verb, and the only one a curator should reach for here.
+     * Reject leaves the material in the queue for the next curator to meet;
+     * Trash destroys it along with the evidence that it existed, which is
+     * exactly what must survive until it has been reported. This hides it from
+     * everyone including the desk, freezes it against every deletion path, and
+     * puts it in front of an admin at once.
+     */
+    #[Route('/moderate/escalate', name: 'moderate_escalate', methods: ['POST'])]
+    public function escalate(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('moderate_escalate', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'flash.invalid_token');
+
+            return $this->redirectToRoute('moderate');
+        }
+
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $upload = $this->em->find(MediaUpload::class, Uuid::fromString((string) $request->request->get('media')));
+        if (null === $upload) {
+            throw $this->createNotFoundException();
+        }
+
+        try {
+            $this->escalations->escalate($upload, $curator, (string) $request->request->get('reason', ''));
+            $this->addFlash('success', 'moderate.escalate.done');
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('moderate');
+    }
+
     #[Route('/moderate/takedown', name: 'moderate_takedown', methods: ['POST'])]
     public function takedown(Request $request): Response
     {

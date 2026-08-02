@@ -13,6 +13,7 @@ use App\Community\CuratorApplicationStatus;
 use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
+use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\Entity\ModeratorArea;
@@ -53,6 +54,7 @@ final class DashboardController extends AbstractDashboardController
     /** CSRF token id for the curator-applications decision form (session-backed, same-origin). */
     public const string CURATOR_APPS_CSRF_TOKEN_ID = 'curator-applications';
     public const string WITHHELD_PHOTOS_CSRF_TOKEN_ID = 'withheld-photos';
+    public const string ESCALATED_CSRF_TOKEN_ID = 'escalated-photos';
 
     public function __construct(private readonly AdminDashboardStats $stats)
     {
@@ -95,6 +97,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.system_config'), 'fa fa-sliders', 'admin_system_config');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.curator_applications'), 'fa fa-user-check', 'admin_curator_applications');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.withheld_photos'), 'fa fa-image-slash', 'admin_withheld_photos');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.escalated'), 'fa fa-shield-halved', 'admin_escalated');
     }
 
     /**
@@ -179,6 +182,15 @@ final class DashboardController extends AbstractDashboardController
             $posted = $request->request->all('settings');
             foreach ($registry->all() as $key => $def) {
                 $raw = trim((string) ($posted[$key] ?? ''));
+                if ($def->isString()) {
+                    if (!$def->accepts($raw)) {
+                        $errors[$key] = $translator->trans('admin.settings.error_text');
+                        $values[$key] = $raw;
+                        continue;
+                    }
+                    $values[$key] = $raw;
+                    continue;
+                }
                 // Reject the string before casting: (int) '' is 0 and (int) 'abc'
                 // is 0, and 0 is a legal-looking number for none of these keys.
                 if (1 !== preg_match('/^-?\d+$/', $raw) || !$def->accepts((int) $raw)) {
@@ -197,11 +209,14 @@ final class DashboardController extends AbstractDashboardController
                 foreach ($values as $key => $value) {
                     // Only genuine changes are written, so re-saving an
                     // untouched form neither pins defaults into the table nor
-                    // fills the audit log with "25 -> 25".
-                    if ((int) $value === $settings->get($key)) {
+                    // fills the audit log with "25 -> 25". Compared in the
+                    // key's own type: casting a text setting to int would make
+                    // every address list look like 0 and "unchanged".
+                    $current = $registry->get($key)->isString() ? $settings->getString($key) : $settings->get($key);
+                    if ($value === $current) {
                         continue;
                     }
-                    $writer->set($key, (int) $value, $actor);
+                    $writer->set($key, $value, $actor);
                     ++$changed;
                 }
                 $this->addFlash(
@@ -418,6 +433,44 @@ final class DashboardController extends AbstractDashboardController
             'cards' => $takedowns->withheldThirdPartyCards(),
             'breaker_open' => $breaker->isOpen(),
             'csrf_token_id' => self::WITHHELD_PHOTOS_CSRF_TOKEN_ID,
+        ]);
+    }
+
+    /**
+     * Photos under legal hold (docs/specs/photo-uploads.md §6d).
+     *
+     * The only surface in the application where escalated material can be
+     * reached: it is gone from the map, the photo page and the moderation desk
+     * by the time it appears here. Releasing lifts the hold and hands the row
+     * back to normal moderation — it deletes nothing, because when the
+     * material is the kind that had to be reported, the authority it was
+     * reported to decides when it may go.
+     */
+    #[AdminRoute('/escalated', 'escalated', options: ['methods' => ['GET', 'POST']])]
+    public function escalated(Request $request, MediaEscalationService $escalations, EntityManagerInterface $em, TranslatorInterface $translator): Response
+    {
+        /** @var User $actor */
+        $actor = $this->getUser();
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid(self::ESCALATED_CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Invalid CSRF token for an escalation release.');
+            }
+            $uuid = (string) $request->request->get('media');
+            $upload = Uuid::isValid($uuid) ? $em->find(MediaUpload::class, Uuid::fromString($uuid)) : null;
+            if (null === $upload) {
+                throw $this->createNotFoundException('No such photo.');
+            }
+            $note = trim((string) $request->request->get('note', '')) ?: null;
+            $escalations->release($upload, $actor, $note);
+            $this->addFlash('success', $translator->trans('admin.escalated.released'));
+
+            return $this->redirectToRoute('admin_escalated');
+        }
+
+        return $this->render('admin/escalated.html.twig', [
+            'cards' => $escalations->held(),
+            'csrf_token_id' => self::ESCALATED_CSRF_TOKEN_ID,
         ]);
     }
 }

@@ -52,14 +52,14 @@ final class SystemSettingsWriter
      *
      * @throws \InvalidArgumentException on an unknown key or an out-of-range value
      */
-    public function set(string $key, int $value, ?User $actor): bool
+    public function set(string $key, int|string $value, ?User $actor): bool
     {
         $def = $this->registry->get($key);
         if (!$def->accepts($value)) {
-            throw new \InvalidArgumentException(sprintf('%s must be between %d and %d, got %d.', $key, $def->min, $def->max, $value));
+            throw new \InvalidArgumentException($def->isString() ? sprintf('%s is not an acceptable value for %s.', var_export($value, true), $key) : sprintf('%s must be between %d and %d, got %s.', $key, (int) $def->min, (int) $def->max, var_export($value, true)));
         }
 
-        $old = $this->settings->get($key);
+        $old = $def->isString() ? $this->settings->getString($key) : $this->settings->get($key);
         if ($old === $value && $this->settings->isOverridden($key)) {
             return false;
         }
@@ -71,11 +71,16 @@ final class SystemSettingsWriter
                     SET setting_value = EXCLUDED.setting_value,
                         updated_at    = EXCLUDED.updated_at,
                         updated_by_id = EXCLUDED.updated_by_id',
-            ['k' => $key, 'v' => $value, 't' => $this->clock->now(), 'u' => $actor?->getId()],
+            // Stored as text for every type; the definition reads it back
+            // (SettingDefinition::fromStorage).
+            ['k' => $key, 'v' => (string) $value, 't' => $this->clock->now(), 'u' => $actor?->getId()],
             ['t' => Types::DATETIME_IMMUTABLE],
         );
         $this->settings->invalidate();
-        $this->adminLog->log($actor, self::ACTION_CHANGE, null, sprintf('%s: %d -> %d', $key, $old, $value));
+        // The alert-recipient list is logged like any other change: who may be
+        // reached in an incident is exactly the kind of setting that should
+        // leave a trail.
+        $this->adminLog->log($actor, self::ACTION_CHANGE, null, sprintf('%s: %s -> %s', $key, $old, $value));
 
         return true;
     }

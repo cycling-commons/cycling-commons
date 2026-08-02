@@ -159,6 +159,20 @@
             {% endif %}
           </div>
         </div>
+        {# The third verb (docs/specs/photo-uploads.md §6d). Separate form so it
+           can never be a mis-click on the decision buttons, and folded away
+           because it is the rare case, not the common one. #}
+        <details class="td-escalate">
+          <summary>{{ 'moderate.escalate.summary'|trans }}</summary>
+          <p>{{ 'moderate.escalate.help'|trans }}</p>
+          <form method="post" action="{{ path('moderate_escalate') }}" class="td-actions">
+            <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
+            <input type="hidden" name="media" value="{{ t.uuid }}">
+            <input type="text" name="reason" maxlength="2000" required
+                   placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
+            <button type="submit" class="btn-act btn-reject">{{ 'moderate.escalate.submit'|trans }}</button>
+          </form>
+        </details>
         <form method="post" action="{{ path('moderate_takedown') }}" class="td-actions">
           <input type="hidden" name="_token" value="{{ csrf_token('moderate_takedown') }}">
           <input type="hidden" name="media" value="{{ t.uuid }}">

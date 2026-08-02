@@ -1414,9 +1414,9 @@ improve:
   step1:
     label: 'Ort bestimmen'
     heading: 'Wo ist es?'
-    help: 'Suche das Gebiet, tippe dann auf die Karte, um den Ort zu setzen.'
+    help: 'Suche das Gebiet oder füge Koordinaten ein, tippe dann auf die Karte, um den Ort zu setzen.'
     search_label: 'Einen Ort oder eine Straße finden'
-    search_placeholder: 'z. B. eine Stadt, Straße, ein Café — suchen, um dorthin zu springen…'
+    search_placeholder: 'z. B. eine Stadt, Straße, ein Café — oder füge 50.492000, 5.860000 ein'
     map_aria: 'Karte — tippen, um den Ort zu setzen'
     readout_initial: '◎ Tippe auf die Karte, um den Ort zu setzen'
     reset: 'Zurücksetzen'
@@ -1693,6 +1693,15 @@ propose_route:
     name_too_long: 'Der Name darf höchstens 200 Zeichen lang sein.'
     note_too_long: 'Der Hinweis darf höchstens 2.000 Zeichen lang sein.'
 moderate:
+  escalate:
+    summary: 'Das ist illegaler Inhalt — eskalieren'
+    help: 'Nur für mutmaßlich illegales Material: Es verschwindet sofort von diesem Platz und von der öffentlichen Seite, danach kann nichts es mehr löschen, und eine Administration wird umgehend alarmiert. Nutze dies statt Papierkorb — Wegwerfen vernichtet die Beweise zusammen mit dem Inhalt. Du wirst nicht gebeten, es erneut anzusehen.'
+    reason_placeholder: 'Was du gesehen hast, in deinen Worten'
+    submit: 'Eskalieren'
+    done: 'Eskaliert. Es ist für alle verborgen und eine Administration wurde alarmiert.'
+    error:
+      reason_required: 'Sag, was du gesehen hast — eine Administration hat nur deine Worte.'
+      reason_too_long: 'Das ist zu lang. Bitte bleib unter 2000 Zeichen.'
   kicker: 'Moderationswarteschlange'
   title: 'Ausstehende Einreichungen prüfen.'
   role_label: 'Kurator'
@@ -2118,6 +2127,22 @@ js:
   climb_marker_summit: 'ENDE · Gipfel'
   climb_marker_steepest: 'STEILSTE'
 admin:
+  escalated:
+    title: 'Fotos unter rechtlicher Sperre'
+    warning_b: 'Mit Sorgfalt behandeln.'
+    warning: 'Diese Fotos wurden als mutmaßlich illegale Inhalte eskaliert. Sie sind vor der Öffentlichkeit und vor dem Moderationsplatz verborgen, und nichts in der Anwendung kann sie löschen. Lösche das Material nicht: Wo es meldepflichtig ist, muss die Aufzeichnung bestehen bleiben, bis gemeldet wurde, und die Behörde, der du meldest, entscheidet, wann es gehen darf.'
+    lead: 'Eine kuratierende Person hat etwas gesehen, das sie nicht allein entscheiden wollte. Lies, was sie geschrieben hat, bevor du entscheidest, das Bild selbst anzusehen.'
+    playbook_link: 'Incident-Playbook öffnen'
+    empty: 'Derzeit ist nichts gesperrt.'
+    no_item: 'Keinem Ort zugeordnet'
+    by: 'Eskaliert von %who% am %when%'
+    their_words: 'Was die kuratierende Person schrieb:'
+    reveal: 'Foto anzeigen'
+    note_label: 'Notiz für die Akte (optional)'
+    note_placeholder: 'z. B. den Behörden gemeldet am …, Aktenzeichen …'
+    release: 'Sperre aufheben'
+    release_help: 'Hebt die Sperre auf und gibt das Foto an die normale Moderation zurück. Es kommt dadurch nicht auf die Karte zurück und es wird nichts gelöscht.'
+    released: 'Die Sperre wurde aufgehoben.'
   flood:
     title: 'Playbook: Welle von Fotomeldungen'
     state_open_b: 'Der Schutzschalter für automatisches Zurückhalten ist OFFEN.'
@@ -2139,6 +2164,13 @@ admin:
     dont_ignore: 'Geh nicht davon aus, dass es ein Angriff ist. Prüfe zuerst; den Hebel gibt es für etwas Echtes.'
     h_real: 'Wenn es echt ist'
     real: 'Sind die Meldungen echt — eine tatsächliche Welle illegaler Bilder auf der Karte — ist der Schutzschalter nicht dein Feind: Meldungen kommen weiter an, nichts geht verloren. Halte selbst vom Moderationsplatz aus zurück, was zurückgehalten werden muss, bewahre die Aufzeichnungen, und ziehe sofort die Eigentümerseite hinzu. Lösche niemals Beweise für illegales Material, bevor es den Behörden gemeldet wurde.'
+    h_escalated: 'Wenn eine kuratierende Person etwas als illegal eskaliert'
+    escalated_intro: 'Eskalierte Fotos sind bereits vor der Öffentlichkeit und vor dem Moderationsplatz verborgen, und nichts in der Anwendung kann sie löschen. Sie sind hier'
+    esc_step_read: 'Lies zuerst die Worte der kuratierenden Person und entscheide, ob du das Bild überhaupt ansehen musst. Oft nicht.'
+    esc_step_report: 'Melde es dort, wo es hingehört. Material mit einer Gefahr für Leib oder Leben ist unverzüglich den Strafverfolgungsbehörden zu melden (DSA Art. 18). Bei Missbrauchsdarstellungen von Kindern die Meldestelle (Offlimits / Meldpunt Kinderporno) und/oder die Polizei. Terroristische Inhalte unterliegen einer sechsmonatigen Aufbewahrungspflicht.'
+    esc_step_preserve: 'Lösche nichts und bitte niemanden darum. Die Sperre existiert, damit die Aufzeichnung bis zur Meldung bestehen bleibt; die Behörde, der du meldest, entscheidet, wann sie gehen darf.'
+    esc_step_release: 'Hebe die Sperre nur auf, wenn es sich als etwas anderes herausstellt. Aufheben gibt es an die normale Moderation zurück — es kommt dadurch nicht auf die Karte zurück.'
+    esc_step_curator: 'Frag nach, wie es der kuratierenden Person geht, die eskaliert hat. Sie hat es gesehen, damit es niemand sonst musste — das ist eine Nachricht wert.'
   withheld:
     title: 'Durch eine Meldung zurückgehaltene Fotos'
     lead: 'Jedes Foto, das eine anonyme Meldung von der Karte genommen hat und das noch auf eine Entscheidung wartet. Wiederherstellen setzt sie zurück und hält fest, dass die Meldung nicht echt war — die Kategorie bleibt offen, eine spätere echte Meldung zum selben Foto wird also weiterhin gehört.'
@@ -2167,6 +2199,7 @@ admin:
     system_config: 'Systemkonfiguration'
     curator_applications: 'Kuratorbewerbungen'
     withheld_photos: 'Zurückgehaltene Fotos'
+    escalated: 'Eskaliert (gesperrt)'
   action:
     unlock: 'Konto entsperren'
     disarm_2fa: '2FA deaktivieren'
@@ -2240,11 +2273,13 @@ admin:
     default_note: 'Standard: %value%'
     range_note: 'Zulässig: %min%–%max%'
     error_range: 'Geben Sie eine ganze Zahl zwischen %min% und %max% ein.'
+    error_text: 'Dieser Wert ist für diese Einstellung nicht zulässig.'
     group:
       map: 'Karte'
       routes: 'Routen'
       moderation: 'Moderation'
       media: 'Fotos'
+      alerts: 'Warnungen'
     field:
       map_curated_default_threshold:
         label: 'Reife für den Auswahlmodus: Gesamtzahl'
@@ -2270,6 +2305,9 @@ admin:
       media_urgent_breaker_daily:
         label: 'Budget für automatisches Zurückhalten: pro Tag'
         help: 'Dieselbe Obergrenze über einen Tag gemessen, damit ein langsames Tröpfeln nicht schafft, woran eine Welle scheitert. Beide Budgets brauchen Spielraum, bevor eine Meldung ein Foto von selbst verbergen kann.'
+      app_alert_emails:
+        label: 'Empfänger von Warnungen'
+        help: 'Kommagetrennte E-Mail-Adressen, die betriebliche Warnungen erhalten: das Öffnen des Schutzschalters und jede Eskalation mutmaßlich illegaler Inhalte. Ändere sie, wenn die übliche Person abwesend ist — eine Eskalation muss noch am selben Tag jemanden erreichen. Mindestens eine gültige Adresse ist erforderlich.'
   curator:
     title: 'Kuratorbewerbungen'
     empty: 'Keine ausstehenden Bewerbungen.'

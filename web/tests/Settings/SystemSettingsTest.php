@@ -69,14 +69,19 @@ final class SystemSettingsTest extends KernelTestCase
         foreach ($this->registry->all() as $key => $def) {
             // The key IS the parameter name: that is what keeps the YAML files
             // owning the defaults instead of a second copy drifting in PHP.
-            self::assertSame((int) $params->get($key), $def->default, "default for {$key}");
+            // Both types read from the same place; only the cast differs.
+            $expected = $def->isString() ? (string) $params->get($key) : (int) $params->get($key);
+            self::assertSame($expected, $def->default, "default for {$key}");
         }
     }
 
     public function testAnEmptyTableServesTheDefaults(): void
     {
         foreach ($this->registry->all() as $key => $def) {
-            self::assertSame($def->default, $this->settings->get($key));
+            // Two typed accessors, deliberately (SettingDefinition): reading a
+            // text setting through get() is a bug, not a coercion, so the test
+            // asks each key the question its own type answers.
+            self::assertSame($def->default, $def->isString() ? $this->settings->getString($key) : $this->settings->get($key));
             self::assertFalse($this->settings->isOverridden($key));
         }
     }
@@ -112,6 +117,41 @@ final class SystemSettingsTest extends KernelTestCase
         // rather than leaving the old map memoised.
         self::assertSame(42, $this->settings->get($key));
         self::assertTrue($this->settings->isOverridden($key));
+    }
+
+    /**
+     * The first text setting (SettingDefinition): who operational alerts reach,
+     * editable so cover during a holiday needs no deploy.
+     */
+    public function testATextSettingRoundTripsAndIsValidatedAsAList(): void
+    {
+        $key = SettingsRegistry::ALERT_EMAILS;
+
+        self::assertTrue($this->writer->set($key, 'a@example.org, b@example.org', null));
+        self::assertSame('a@example.org, b@example.org', $this->settings->getString($key));
+
+        // Reading a text setting as a number — or the reverse — is a bug in the
+        // caller, and must not be quietly coerced into 0.
+        $this->expectException(\InvalidArgumentException::class);
+        $this->settings->get($key);
+    }
+
+    public function testAnUnusableAlertListIsRefused(): void
+    {
+        $key = SettingsRegistry::ALERT_EMAILS;
+
+        // An empty list would switch the alerts off silently, and the one thing
+        // worse than a noisy alert is one nobody receives.
+        foreach (['', '   ', 'not-an-address', 'ok@example.org, nope'] as $bad) {
+            try {
+                $this->writer->set($key, $bad, null);
+                self::fail(sprintf('%s should have been refused', var_export($bad, true)));
+            } catch (\InvalidArgumentException) {
+                // expected
+            }
+        }
+
+        self::assertFalse($this->settings->isOverridden($key));
     }
 
     public function testSetIsIdempotentAndDoesNotLogANonChange(): void

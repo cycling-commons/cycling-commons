@@ -182,7 +182,9 @@ final class MediaTakedownService
      */
     public function grant(MediaUpload $upload, User $curator, ?string $note = null): void
     {
-        if (!$upload->isTakedownPending()) {
+        // A held row is nobody's to decide but an admin's, and granting would
+        // delete the objects the hold exists to preserve.
+        if (!$upload->isTakedownPending() || $upload->isEscalated()) {
             return;
         }
 
@@ -216,7 +218,7 @@ final class MediaTakedownService
      */
     public function decline(MediaUpload $upload, User $curator, ?string $note = null): void
     {
-        if (!$upload->isTakedownPending()) {
+        if (!$upload->isTakedownPending() || $upload->isEscalated()) {
             return;
         }
 
@@ -261,7 +263,10 @@ final class MediaTakedownService
      */
     public function dismissAsAbuse(MediaUpload $upload, User $admin, ?string $note = null): bool
     {
-        if (!$upload->isTakedownPending() || MediaTakedownSource::ThirdParty !== $upload->getTakedownSource()) {
+        if (!$upload->isTakedownPending()
+            || MediaTakedownSource::ThirdParty !== $upload->getTakedownSource()
+            // A bulk restore must never put a held photo back on the map.
+            || $upload->isEscalated()) {
             return false;
         }
 
@@ -294,6 +299,7 @@ final class MediaTakedownService
             'SELECT m FROM '.MediaUpload::class.' m
              WHERE m.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
                AND m.takedownSource = :source AND m.takedownWithheld = true
+               AND m.escalatedAt IS NULL
              ORDER BY m.takedownRequestedAt DESC',
         )->setParameter('source', MediaTakedownSource::ThirdParty)->getResult();
 
@@ -350,8 +356,13 @@ final class MediaTakedownService
     {
         /** @var list<MediaUpload> $rows */
         $rows = $this->em->createQuery(
+            // escalatedAt IS NULL: a photo under legal hold leaves the
+            // curator desk entirely (photo-uploads.md §6d). Whatever was
+            // pending on it is the admin's problem now, and no curator should
+            // be shown the thumbnail again.
             'SELECT m FROM '.MediaUpload::class.' m
              WHERE m.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
+               AND m.escalatedAt IS NULL
              ORDER BY m.takedownRequestedAt ASC',
         )->getResult();
 

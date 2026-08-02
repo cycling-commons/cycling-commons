@@ -62,6 +62,12 @@ final class MediaDecisionService
             'submissionId' => (int) $submission->getId(),
             'status' => MediaStatus::Pending,
         ], ['createdAt' => 'ASC']);
+        // A photo under legal hold (docs/specs/photo-uploads.md §6d) leaves
+        // the curator's hands entirely: deciding the submission around it must
+        // neither approve it onto the map nor reject it into the retention
+        // sweep that would eventually delete it. It stays exactly where it is
+        // until an admin says otherwise.
+        $uploads = array_values(array_filter($uploads, static fn (MediaUpload $u): bool => !$u->isEscalated()));
         if ([] === $uploads) {
             return null;
         }

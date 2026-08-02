@@ -642,6 +642,63 @@ processing of the whole corpus — an Art. 9-sized cure worse than the
 disease); blurring instead of removal (worth revisiting; v1 removes); a
 formal uploader appeal (they can reply to the message; evidence first).
 
+### 6d. Escalation — suspected illegal content
+
+Curators had two verbs and neither fits this case. **Reject** leaves the
+material in the queue for the next curator to meet. **Trash** deletes it at
+once — content, objects and history — which is exactly backwards where the law
+expects it to survive until it has been reported. Escalation is the third path.
+
+**When it is legally required to report** (confirm with counsel; this is the
+working understanding, not advice):
+
+- **EU DSA Art. 18** — on becoming aware of information giving rise to a
+  suspicion that a criminal offence **involving a threat to the life or safety
+  of a person** has taken place, is taking place or is likely to, we must
+  promptly inform law enforcement of the Member State concerned, or Europol.
+  This applies to hosting services of every size; no small-enterprise
+  exemption.
+- **CSAM** — no general Dutch statutory duty on a private platform to report
+  proactively (unlike US providers under 18 U.S.C. §2258A), but continued
+  hosting after knowledge is criminal exposure, and the established route is
+  the hotline (Offlimits / Meldpunt Kinderporno) and/or the police, with
+  deletion timed on their instruction. Art. 18 is usually engaged too.
+- **Terrorist content** — Regulation (EU) 2021/784 Art. 6 carries an explicit
+  duty to **preserve removed content and related data for six months**.
+- **Everything else** (copyright, defamation, ordinary illegality) — no
+  proactive reporting duty; normal takedown and normal retention.
+
+**What escalation does.** Hides the photo from the public *and* from the
+moderation desk; sets a **legal hold** on the row; alerts the configured
+recipients immediately and **unthrottled** (one mail per escalation, carrying
+the curator's words, the uuid and a link — never the image); and records who
+escalated it, when, and in whose words.
+
+**The hold is enforced at the chokepoint.** Every destructive path funnels
+through `MediaDisposalService::purge()` / `deleteObjects()`, and both refuse a
+held row, so Trash, orphan collection, the retention sweep and account deletion
+all stop there — a hold that one forgotten path could bypass is not a hold.
+`grant()`, `decline()` and `dismissAsAbuse()` refuse it too, and the desk
+queries exclude it. The refusal is silent and logged rather than thrown: Trash
+sweeps a whole submission, and one held photo must neither abort the rest nor
+leak its existence through an error.
+
+**Only an admin can reach it**, at `/admin/escalated`, behind a details element
+so nobody is shown the material by scrolling past it. **Releasing** lifts the
+hold and hands the row back to normal moderation; it republishes nothing and
+deletes nothing, because when the material had to be reported, the authority it
+was reported to decides when it may go.
+
+**Curator welfare is part of the design.** The escalating curator is not asked
+to look again, and no other curator ever sees it. The one thing they are asked
+for is a sentence in their own words, because that is all an admin has before
+deciding whether to look at all.
+
+**Alert recipients are runtime-editable** (`app.alert_emails`,
+system-configuration.md §2) — the person who reads that mailbox goes on
+holiday, and an escalation cannot wait for them to come back. The list is
+validated where it is defined; an empty or malformed list cannot be saved.
+
 ## 7. Limits & formats summary
 
 | thing | value |
