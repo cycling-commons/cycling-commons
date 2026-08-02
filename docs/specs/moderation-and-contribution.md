@@ -392,6 +392,36 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
 needs-info pins are hidden from the map until the rider answers (§7.3), while
 the queue list shows both `pending` and `needs_info`.
 
+### 6.3 The submitter's own answer — `item_confirmation.source`
+
+A rider adding a water point answers "Potable?" on the improve form. Asking
+them the same question again the first time they open the place they just
+added reads as though the answer went nowhere — so on approval it is carried
+across as their stance (`ModerationService::carryOwnAnswer()`), and the drawer
+shows it back as *"You answered: Potable — when you added this place"* instead
+of putting the question.
+
+It is recorded as **`source = 'form'`**, and form-sourced rows do not count:
+
+- not in the public tally (`ItemConfirmationService::snapshot()`,
+  `CoverageRepository`) — "2 riders confirmed" must mean two riders confirmed
+  it, not one rider plus the person making the claim;
+- not in the verified derivation (`CatalogProvider`, map-and-search.md §12) —
+  and this is the load-bearing half. A single counted confirmation turns a dot
+  into a full verified pin, so counting a submitter's own answer would let
+  anyone verify their own contribution with nobody else ever having seen the
+  place. The funnel in the lifecycle copy ("after a few of them agree it is
+  really there") depends on that not being possible.
+
+Answering in the drawer later **promotes** the row to `drawer` (the submitter
+has now confirmed it as a rider, and it starts counting); a form answer never
+demotes a real confirmation. "Unsigned — use judgement" is not a claim either
+way and carries nothing, so the map still asks. Only new-item submissions carry
+an answer across — an edit that sets `potable` on somebody else's item is left
+to the ordinary drawer confirmation.
+
+Owner decision, 2026-08-02: recorded but not counted, over counting it fully.
+
 **An approval puts the item on the map straight away.** The decision response
 carries the approved item as the catalog's own GeoJSON feature
 (`CatalogProvider::featureForItem()`, the same per-row mapping the bulk payload

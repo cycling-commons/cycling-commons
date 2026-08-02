@@ -141,8 +141,14 @@ function paintItemConfirm(box, s){
   const mineLabel = s.mine
     ? (defs.find(([v])=>v===s.mine)||[])[1] || s.mine
     : '';
+  // Where they answered matters to exactly one reader: the person who added
+  // the place and answered on the form. Told only "you answered", they would
+  // wonder when they confirmed somewhere they have never been back to.
   const yours = s.mine
-    ? `<div class="cc-cf-yours">${tpl(D.youConfirmed||'You answered: {a}', {a:mineLabel})}</div>`
+    ? `<div class="cc-cf-yours">${tpl(
+        (s.mineSource === 'form' ? D.youAnsweredOnForm : D.youConfirmed)
+          || (s.mineSource === 'form' ? 'You answered: {a} — when you added this place' : 'You answered: {a}'),
+        {a:mineLabel})}</div>`
     : '';
   box.querySelector('[data-cf-body]').innerHTML =
     `<div class="cc-cf-h">${heading} ${total}</div><div class="cc-cf-row">${btns}</div>${yours}`;

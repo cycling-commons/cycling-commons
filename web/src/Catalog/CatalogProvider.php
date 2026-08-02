@@ -84,12 +84,17 @@ final class CatalogProvider
      * confirmation, or official-registry provenance. Tourisme Wallonie PIVOT
      * rows count as verified.
      *
+     * A `form`-sourced confirmation is excluded: that is the submitter's own
+     * answer on the improve form, and counting it would let anyone turn their
+     * own contribution into a verified pin with nobody else ever having seen
+     * the place (ConfirmationSource).
+     *
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool}>
      */
     private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null): array
     {
         $sql = 'SELECT i.id, i.name, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id,
-                       (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id)) AS verified
+                       (i.state = \'verified\' OR i.source = \'pivot\' OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> \'form\')) AS verified
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
                 WHERE i.letter = :letter AND i.state IN '.ItemState::servedSqlTuple();

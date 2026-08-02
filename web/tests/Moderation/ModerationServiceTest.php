@@ -13,6 +13,7 @@ use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Community\ItemConfirmationService;
 use App\Entity\User;
 use App\Messaging\Entity\UserMessage;
 use App\Moderation\AlreadyDecidedException;
@@ -62,6 +63,32 @@ final class ModerationServiceTest extends KernelTestCase
             ->setItemId($item->getId())->setTitle('Côte du Test')
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
             ->setChanges(['len' => ['was' => null, 'now' => 3.1]])->setPayload([]);
+        $this->em->persist($sub);
+        $this->em->flush();
+
+        return [$item, $sub];
+    }
+
+    /**
+     * A new water point (letter C) with the submitter's own form answers in
+     * `changes`, the shape ImproveType produces.
+     *
+     * @param array<string, array{was: mixed, now: mixed}> $changes
+     *
+     * @return array{Item, Submission}
+     */
+    private function seedWater(array $changes): array
+    {
+        $item = (new Item())->setLetter('C')->setName('Fontaine du Test')
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setState(ItemState::Submitted)->setSource(ItemSource::User)->setSourceRef('sub:water')
+            ->setAttributes([]);
+        $this->em->persist($item);
+        $this->em->flush();
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('C')->setUserId($this->submitterId)
+            ->setItemId($item->getId())->setTitle('Fontaine du Test')
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setChanges($changes)->setPayload([]);
         $this->em->persist($sub);
         $this->em->flush();
 
@@ -236,6 +263,42 @@ final class ModerationServiceTest extends KernelTestCase
         self::assertSame(SubmissionStatus::Pending, $fresh->getStatus());
         self::assertNull($fresh->getDecidedAt());
         self::assertCount(0, $this->em->getRepository(UserMessage::class)->findBy(['refId' => $sub->getId()]));
+    }
+
+    /**
+     * Approving a water point carries the submitter's own potability answer
+     * across as their stance — recorded, so the map never asks them again, and
+     * not counted, so they have not verified their own contribution.
+     */
+    public function testApprovingWaterCarriesTheSubmittersOwnAnswer(): void
+    {
+        [$item, $sub] = $this->seedWater(['potable' => ['was' => null, 'now' => 'Yes (public supply)']]);
+        $this->service->decide($sub->getId(), 'approve', $this->curator, null);
+
+        /** @var ItemConfirmationService $confirmations */
+        $confirmations = static::getContainer()->get(ItemConfirmationService::class);
+        $submitter = $this->em->find(User::class, $this->submitterId);
+        self::assertNotNull($submitter);
+
+        $snap = $confirmations->snapshot($item, $submitter);
+        self::assertSame('potable', $snap['mine'], 'their own answer is remembered');
+        self::assertSame('form', $snap['mineSource']);
+        self::assertSame(0, $snap['total'], 'and does not count as a rider confirmation');
+    }
+
+    public function testApprovingWaterWithNoClaimAsksNothingOfNobody(): void
+    {
+        // "Unsigned — use judgement" is not a claim either way, so there is
+        // nothing to carry across and the map should still ask.
+        [$item, $sub] = $this->seedWater(['potable' => ['was' => null, 'now' => 'Unsigned — use judgement']]);
+        $this->service->decide($sub->getId(), 'approve', $this->curator, null);
+
+        /** @var ItemConfirmationService $confirmations */
+        $confirmations = static::getContainer()->get(ItemConfirmationService::class);
+        $submitter = $this->em->find(User::class, $this->submitterId);
+        self::assertNotNull($submitter);
+
+        self::assertNull($confirmations->snapshot($item, $submitter)['mine']);
     }
 
     public function testDecidingTwiceThrows(): void

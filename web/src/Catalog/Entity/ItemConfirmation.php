@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog\Entity;
 
+use App\Catalog\ConfirmationSource;
 use App\Catalog\ConfirmationStance;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -41,17 +42,27 @@ class ItemConfirmation
     #[ORM\Column(type: Types::STRING, length: 12, enumType: ConfirmationStance::class)]
     private ConfirmationStance $stance;
 
+    /**
+     * Where the answer came from. A form-sourced row is the submitter's own
+     * answer on the improve form: kept so they are never asked it again, but
+     * left out of the tally and the verified derivation, because it is the
+     * claim rather than a confirmation of it (ConfirmationSource).
+     */
+    #[ORM\Column(type: Types::STRING, length: 8, enumType: ConfirmationSource::class, options: ['default' => 'drawer'])]
+    private ConfirmationSource $source;
+
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(int $itemId, int $userId, ConfirmationStance $stance)
+    public function __construct(int $itemId, int $userId, ConfirmationStance $stance, ConfirmationSource $source = ConfirmationSource::Drawer)
     {
         $this->itemId = $itemId;
         $this->userId = $userId;
         $this->stance = $stance;
+        $this->source = $source;
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
     }
@@ -79,6 +90,24 @@ class ItemConfirmation
     public function setStance(ConfirmationStance $stance): static
     {
         $this->stance = $stance;
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function getSource(): ConfirmationSource
+    {
+        return $this->source;
+    }
+
+    /**
+     * Answering in the drawer promotes a form-sourced row: the rider has now
+     * confirmed the place as a rider, so it starts counting. It never goes the
+     * other way — a real confirmation is not demoted by a later form edit.
+     */
+    public function setSource(ConfirmationSource $source): static
+    {
+        $this->source = $source;
         $this->updatedAt = new \DateTimeImmutable();
 
         return $this;

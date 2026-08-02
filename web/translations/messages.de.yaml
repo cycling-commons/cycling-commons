@@ -1394,6 +1394,7 @@ map:
   d_community: 'Community'
   d_needs_check: 'noch nicht bestätigt — schau es dir an, wenn du vorbeikommst'
   d_you_confirmed: 'Deine Antwort: {a}'
+  d_you_answered_on_form: 'Du hast geantwortet: {a} — als du diesen Ort hinzugefügt hast'
   d_show_all: 'alle {n} anzeigen'
   mly_none: 'Keine Straßenansicht hier.'
   mly_zoom: 'Hineinzoomen und einen grünen Punkt anklicken, um die Straßenansicht zu öffnen.'

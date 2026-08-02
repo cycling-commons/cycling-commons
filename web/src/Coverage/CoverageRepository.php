@@ -416,7 +416,7 @@ final class CoverageRepository
 
         /** @var list<array{stance: string, n: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT stance, COUNT(*) AS n FROM item_confirmation WHERE item_id = :id GROUP BY stance ORDER BY stance',
+            "SELECT stance, COUNT(*) AS n FROM item_confirmation WHERE item_id = :id AND source <> 'form' GROUP BY stance ORDER BY stance",
             ['id' => $itemId],
             ['id' => ParameterType::INTEGER],
         );

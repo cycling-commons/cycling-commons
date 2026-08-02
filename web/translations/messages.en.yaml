@@ -1677,6 +1677,7 @@ map:
   d_community: 'community'
   d_needs_check: 'not confirmed yet — check it if you ride past'
   d_you_confirmed: 'You answered: {a}'
+  d_you_answered_on_form: 'You answered: {a} — when you added this place'
   d_show_all: 'show all {n}'
   mly_none: 'No street-level imagery here.'
   mly_zoom: 'Zoom in and click a green dot to open street-level here.'

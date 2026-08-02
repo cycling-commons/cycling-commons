@@ -98,6 +98,58 @@ final class ItemConfirmationServiceTest extends KernelTestCase
         self::assertArrayNotHasKey('potable', $snap['stances'], 'a utility only exposes its own stance keys');
     }
 
+    /**
+     * The submitter's own answer, carried from their improve form, is
+     * remembered but never counted.
+     *
+     * Both halves matter. Remembered: the map must not put the potability
+     * question to the person who just answered it while adding the place.
+     * Never counted: a single counted confirmation is what turns a dot into a
+     * verified pin, so counting the claimant's own claim would let anyone
+     * verify their own contribution with nobody else ever having been there.
+     */
+    public function testAFormAnswerIsRememberedButNotCounted(): void
+    {
+        $water = $this->item('C');
+        $submitter = $this->user('form-answer@t.test');
+
+        $this->service->recordFromSubmission($water, (int) $submitter->getId(), ConfirmationStance::Potable);
+
+        $public = $this->service->snapshot($water, null);
+        self::assertSame(0, $public['stances']['potable'], 'a form answer is not a rider confirmation');
+        self::assertSame(0, $public['total']);
+
+        $own = $this->service->snapshot($water, $submitter);
+        self::assertSame('potable', $own['mine'], 'the submitter is never asked again');
+        self::assertSame('form', $own['mineSource']);
+        self::assertSame(0, $own['total'], 'and their own answer still does not count');
+    }
+
+    public function testARiderConfirmationPromotesTheSubmittersOwnRow(): void
+    {
+        $water = $this->item('C');
+        $submitter = $this->user('promote@t.test');
+        $this->service->recordFromSubmission($water, (int) $submitter->getId(), ConfirmationStance::Potable);
+
+        // The same person, later, standing at the fountain and answering the
+        // map's question: now they have confirmed it as a rider.
+        $this->service->record($water, $submitter, ConfirmationStance::Potable);
+
+        $snap = $this->service->snapshot($water, $submitter);
+        self::assertSame('drawer', $snap['mineSource']);
+        self::assertSame(1, $snap['total']);
+        // One row per rider per item still holds — promotion, not a second row.
+        self::assertSame(1, $snap['stances']['potable']);
+    }
+
+    public function testAFormAnswerForAVanishedAccountIsANoOp(): void
+    {
+        $water = $this->item('C');
+        $this->service->recordFromSubmission($water, 987654321, ConfirmationStance::Potable);
+
+        self::assertSame(0, $this->service->snapshot($water, null)['total']);
+    }
+
     public function testRejectsStanceNotAllowedForType(): void
     {
         $water = $this->item('C');

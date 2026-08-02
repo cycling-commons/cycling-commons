@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Community;
 
+use App\Catalog\ConfirmationSource;
 use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\ItemConfirmation;
@@ -34,23 +35,48 @@ final class ItemConfirmationService
      * item's type does not offer (e.g. Potable on a bike-service point, or any
      * stance on a votable type).
      */
-    public function record(Item $item, User $user, ConfirmationStance $stance): void
+    public function record(Item $item, User $user, ConfirmationStance $stance, ConfirmationSource $source = ConfirmationSource::Drawer): void
     {
         $allowed = ItemType::fromParam($item->getLetter())->confirmationStances();
         if (!\in_array($stance, $allowed, true)) {
             throw new \InvalidArgumentException(sprintf('Stance "%s" is not offered for a %s item.', $stance->value, $item->getLetter()));
         }
 
-        $this->em->wrapInTransaction(function () use ($item, $user, $stance): void {
+        $this->em->wrapInTransaction(function () use ($item, $user, $stance, $source): void {
             $existing = $this->em->getRepository(ItemConfirmation::class)
                 ->findOneBy(['itemId' => (int) $item->getId(), 'userId' => (int) $user->getId()]);
 
             if (null !== $existing) {
                 $existing->setStance($stance);
+                // A drawer answer promotes a form-sourced row (the submitter has
+                // now confirmed as a rider); a form answer never demotes a real
+                // confirmation back out of the tally.
+                if (ConfirmationSource::Drawer === $source) {
+                    $existing->setSource($source);
+                }
             } else {
-                $this->em->persist(new ItemConfirmation((int) $item->getId(), (int) $user->getId(), $stance));
+                $this->em->persist(new ItemConfirmation((int) $item->getId(), (int) $user->getId(), $stance, $source));
             }
         });
+    }
+
+    /**
+     * The submitter's own answer to the same question, taken from an approved
+     * submission's payload — recorded so the map never asks them again, and
+     * never counted (ConfirmationSource::Form).
+     *
+     * Silent no-op when the submission asserted nothing: the potability field
+     * offers "Unsigned — use judgement", which is not a claim either way, and
+     * a submitter who left it alone has answered nothing.
+     */
+    public function recordFromSubmission(Item $item, int $userId, ConfirmationStance $stance): void
+    {
+        $user = $this->em->find(User::class, $userId);
+        if (null === $user) {
+            return;   // account gone between submitting and approval
+        }
+
+        $this->record($item, $user, $stance, ConfirmationSource::Form);
     }
 
     /**
@@ -58,7 +84,7 @@ final class ItemConfirmationService
      * an anonymous viewer). `stances` is keyed only by the stances the item's
      * type actually offers, each defaulting to 0.
      *
-     * @return array{stances: array<string, int>, total: int, mine: ?string}
+     * @return array{stances: array<string, int>, total: int, mine: ?string, mineSource: ?string}
      */
     public function snapshot(Item $item, ?User $user): array
     {
@@ -68,9 +94,14 @@ final class ItemConfirmationService
             $stances[$s->value] = 0;
         }
 
+        // Form-sourced rows are the submitter's own answer on the improve form.
+        // They are kept (so the map never re-asks the person who added the
+        // place) but never tallied: "2 riders confirmed" must mean two riders
+        // confirmed it, not one rider and the person making the claim
+        // (ConfirmationSource).
         /** @var list<array{stance: string, n: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT stance, COUNT(*) AS n FROM item_confirmation WHERE item_id = :id GROUP BY stance',
+            "SELECT stance, COUNT(*) AS n FROM item_confirmation WHERE item_id = :id AND source <> 'form' GROUP BY stance",
             ['id' => (int) $item->getId()],
         );
         $total = 0;
@@ -82,13 +113,20 @@ final class ItemConfirmationService
             }
         }
 
+        // `mine` ignores the source: the reader answered, whichever way they
+        // answered, and the drawer must not put the question to them again.
+        // `mineSource` lets it say WHERE they answered, so a submitter reading
+        // their own form answer back is not left wondering when they confirmed
+        // a place they only just added.
         $mine = null;
+        $mineSource = null;
         if (null !== $user) {
             $own = $this->em->getRepository(ItemConfirmation::class)
                 ->findOneBy(['itemId' => (int) $item->getId(), 'userId' => (int) $user->getId()]);
             $mine = $own?->getStance()->value;
+            $mineSource = $own?->getSource()->value;
         }
 
-        return ['stances' => $stances, 'total' => $total, 'mine' => $mine];
+        return ['stances' => $stances, 'total' => $total, 'mine' => $mine, 'mineSource' => $mineSource];
     }
 }

@@ -6,12 +6,15 @@ declare(strict_types=1);
 
 namespace App\Moderation;
 
+use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\ChangeHistory;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemState;
+use App\Catalog\ItemType;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Community\ItemConfirmationService;
 use App\Entity\User;
 use App\Media\MediaDecisionService;
 use App\Media\MediaDisposalService;
@@ -40,6 +43,7 @@ final class ModerationService
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly MediaDecisionService $mediaDecisions,
         private readonly MediaDisposalService $mediaDisposal,
+        private readonly ItemConfirmationService $confirmations,
     ) {
     }
 
@@ -173,6 +177,45 @@ final class ModerationService
     {
         $item->setState(ItemState::Unverified);
         $this->history($item, $submission, $curator, 'state', ItemState::Submitted->value, ItemState::Unverified->value);
+        $this->carryOwnAnswer($item, $submission);
+    }
+
+    /**
+     * The submitter already answered the map's own question on the improve
+     * form ("Potable?"), so record it as their stance rather than asking them
+     * again the first time they open the place they just added.
+     *
+     * Recorded as `form`-sourced, which keeps it out of the public tally and
+     * out of the verified derivation: it is the claim, not a confirmation of
+     * it, and a rider must not be able to verify their own contribution
+     * (ConfirmationSource, moderation-and-contribution.md §6.3).
+     */
+    private function carryOwnAnswer(Item $item, Submission $submission): void
+    {
+        $stance = self::stanceFromAnswer($submission->getChanges()['potable']['now'] ?? null);
+        if (null === $stance || ItemType::WaterFood !== ItemType::fromParam($item->getLetter())) {
+            return;
+        }
+
+        $this->confirmations->recordFromSubmission($item, $submission->getUserId(), $stance);
+    }
+
+    /**
+     * The improve form's potability answer as a stance, or null when it is not
+     * a claim either way — "Unsigned — use judgement" says the rider does not
+     * know, which is exactly the case the map should still ask about.
+     */
+    private static function stanceFromAnswer(mixed $answer): ?ConfirmationStance
+    {
+        if (!\is_string($answer)) {
+            return null;
+        }
+
+        return match (true) {
+            str_starts_with($answer, 'Yes') => ConfirmationStance::Potable,
+            str_starts_with($answer, 'No') => ConfirmationStance::NotPotable,
+            default => null,
+        };
     }
 
     private function applyEdit(Item $item, Submission $submission, User $curator): void
