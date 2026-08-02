@@ -1,0 +1,75 @@
+web/src/Moderation/ModerationService.php
+  s_b2667a820417c3::t_9088111c6583d2 14,17,46
+  s_b2667a820417c3::t_4cb31033830d87 180-218
+  s_b2667a820417c3::t_459327ed24ea0a 9
+web/tests/Moderation/ModerationServiceTest.php
+  s_b2667a820417c3::t_dc999b757192b9 268-301
+  s_d30835e3caae18::t_5879953208a06d 302-303
+  s_b2667a820417c3::t_c35ddba9e98397 16
+  s_b2667a820417c3::t_07c4f8664c3f9d 72-97
+web/src/Catalog/Entity/ItemConfirmation.php
+  s_b2667a820417c3::t_c2e69e00b343c2 9
+  s_b2667a820417c3::t_117db0117510d7 60,65
+  s_d30835e3caae18::t_5879953208a06d 111-115
+  s_b2667a820417c3::t_532f8f3897b7ac 98-110
+  s_b2667a820417c3::t_4026c428e1bb7c 45-53
+web/src/Controller/MapController.php
+  s_b2667a820417c3::t_c54427dfbca59a 246
+docs/specs/moderation-and-contribution.md
+  s_b2667a820417c3::t_2410c9b6589bdf 395-424
+web/translations/messages.nl.yaml
+  s_b2667a820417c3::t_c54427dfbca59a 1394
+web/translations/messages.de.yaml
+  s_b2667a820417c3::t_c54427dfbca59a 1397
+web/assets/map/community.js
+  s_b2667a820417c3::t_02b09d816e0808 144-146,148-151
+web/src/Community/ItemConfirmationService.php
+  s_b2667a820417c3::t_e1a55dfb0056b2 38,45,51-56,58,63-79
+  s_b2667a820417c3::t_fdd1a3bfbfe562 116-120,122,127,130
+  s_b2667a820417c3::t_567721b8e4da5c 9,87
+  s_b2667a820417c3::t_f713c31e210d4a 97-101,104
+  s_d30835e3caae18::t_64101fcfdce805 80-81
+web/translations/messages.en.yaml
+  s_b2667a820417c3::t_c54427dfbca59a 1680
+web/tests/Community/ItemConfirmationServiceTest.php
+  s_b2667a820417c3::t_ab50e79ec7b9b8 101-152
+web/src/Catalog/CatalogProvider.php
+  s_b2667a820417c3::t_4afb9d6d18d485 87-91,97
+web/src/Catalog/ConfirmationSource.php
+  s_b2667a820417c3::t_7d7a2f1a53f45b 1-33
+web/translations/messages.fr.yaml
+  s_b2667a820417c3::t_c54427dfbca59a 1394
+web/src/Coverage/CoverageRepository.php
+  s_b2667a820417c3::t_4afb9d6d18d485 419
+web/migrations/Version20260802100000.php
+  s_b2667a820417c3::t_6d8fd05722a7f4 1-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "1a6070a3fb769fd20cf0fb43697ded48f11ab903",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b2667a820417c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77b22ba5-fbce-489c-a40c-b5007f506956",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d30835e3caae18": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2c176ff-abbd-40dd-b890-59ba0f5b9bd6",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
