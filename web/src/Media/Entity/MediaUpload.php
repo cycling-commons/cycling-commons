@@ -154,6 +154,16 @@ class MediaUpload
     private ?\DateTimeImmutable $takedownResolvedAt = null;
 
     /**
+     * Whether THIS request actually withheld the photo — stored, not derived
+     * from the category. Once the auto-withhold budget can run out
+     * (UrgentWithholdBreaker, docs/specs/photo-uploads.md §6c), an urgent
+     * report may legitimately leave the photo up, and a value computed from the
+     * category would tell the photo page to hide something we never detached.
+     */
+    #[ORM\Column(name: 'takedown_withheld', type: Types::BOOLEAN, options: ['default' => false])]
+    private bool $takedownWithheld = false;
+
+    /**
      * Categories a curator has already decided for this photo. One decided
      * report per photo per category is FINAL: a later identical report matches
      * here and does not re-open the case, so a photo cannot be kept withheld —
@@ -339,6 +349,8 @@ class MediaUpload
         $this->takedownReason = $reason;
         $this->takedownSource = MediaTakedownSource::Uploader;
         $this->takedownResolvedAt = null;
+        // The uploader owns the row: their request always withholds.
+        $this->takedownWithheld = true;
     }
 
     /**
@@ -347,7 +359,7 @@ class MediaUpload
      * uploader route this records and changes nothing else: whether the photo
      * is withheld is MediaTakedownService's call, not the row's.
      */
-    public function reportThirdParty(string $category, string $reason, ?string $contact, string $reporterHash): void
+    public function reportThirdParty(string $category, string $reason, ?string $contact, string $reporterHash, bool $withheld): void
     {
         $this->takedownRequestedAt = new \DateTimeImmutable();
         $this->takedownReason = $reason;
@@ -356,6 +368,7 @@ class MediaUpload
         $this->takedownContact = $contact;
         $this->takedownReporterHash = $reporterHash;
         $this->takedownResolvedAt = null;
+        $this->takedownWithheld = $withheld;
     }
 
     /**
@@ -372,12 +385,14 @@ class MediaUpload
         }
         $this->takedownRequestedAt = null;
         $this->takedownResolvedAt = new \DateTimeImmutable();
+        $this->takedownWithheld = false;
     }
 
     /** Grant-side bookkeeping: the disposal itself is MediaDisposalService's job. */
     public function resolveTakedown(): void
     {
         $this->takedownResolvedAt = new \DateTimeImmutable();
+        $this->takedownWithheld = false;
     }
 
     public function hasDecidedTakedown(string $category): bool
@@ -435,17 +450,14 @@ class MediaUpload
     /**
      * Withheld from publication while the request waits. The uploader's own
      * request always withholds (they own the row; the worst case is somebody
-     * hiding their own contribution). A third party's withholds ONLY in the
-     * intimate-imagery/child category — anything else queuing invisible would
-     * be a heckler's veto (docs/specs/photo-uploads.md §6c).
+     * hiding their own contribution). A third party's withholds only in the
+     * intimate-imagery/child category AND only while the site-wide auto-
+     * withhold budget holds out — anything else queuing invisible would be a
+     * heckler's veto (docs/specs/photo-uploads.md §6c). Both facts are decided
+     * when the request is recorded and stored on the row, never recomputed.
      */
     public function isTakedownWithheld(): bool
     {
-        if (!$this->isTakedownPending()) {
-            return false;
-        }
-
-        return MediaTakedownSource::ThirdParty !== $this->takedownSource
-            || (null !== $this->takedownCategory && MediaTakedownCategory::autoWithholds($this->takedownCategory));
+        return $this->isTakedownPending() && $this->takedownWithheld;
     }
 }

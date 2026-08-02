@@ -1699,6 +1699,8 @@ moderate:
     alt: 'La photo dont le retrait est demandé'
     no_item: 'Non rattachée à un lieu'
     asked: 'Demandé le %when%'
+    breaker_open_b: 'Les signalements arrivent trop vite pour être authentiques.'
+    breaker_open: 'Le budget de retrait automatique du site est épuisé : les signalements urgents s''accumulent ici au lieu de retirer les photos d''eux-mêmes. Tranchez-les vous-même et prévenez le propriétaire du site — ce schéma est soit une attaque sur cette voie, soit un phénomène de grande ampleur.'
     source_uploader: 'Demandé par le téléverseur'
     source_third_party: 'Signalement tiers'
     state_withheld: 'photo retenue'

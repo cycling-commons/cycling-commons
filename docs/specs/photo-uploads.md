@@ -549,10 +549,45 @@ photo per category is final** — a repeat of a declined claim matches the
 ledger and does not re-open, so a stream of fresh copies cannot keep a photo
 down or a curator busy.
 
-**Abuse hardening**: `media_report` limiter 5/IP/day, `media_report_urgent`
-1/IP/day ([security-architecture.md §7](security-architecture.md)); **no
-CAPTCHA** (standing owner decision — the limiter and queue-not-withhold ARE
-the abuse story); the desk card and the finality ledger do the rest.
+**Abuse hardening**, in the order it actually binds:
+
+1. **The site-wide auto-withhold circuit breaker** (`UrgentWithholdBreaker`,
+   10/hour and 25/day, both windows, one global key). This is the control that
+   bounds the damage, and it exists because the per-IP limiters below **cannot
+   defend the auto-withhold against a distributed attacker** — per-IP limits
+   bound one IP and a proxy pool is many, while every photo's uuid sits in its
+   public image URL, so the target list is free. Without a global budget a
+   botnet could withhold one photo per IP per day across the entire corpus.
+   Over budget, urgent reports still file and still pin to the desk; they take
+   nothing down, the desk shows a banner, and the trip is logged at CRITICAL.
+   The degrade is safe because of what trips it: genuine reports of this kind
+   are rare, so a burst big enough to exhaust the budget is itself the evidence
+   its members are not genuine, while the isolated real report never comes near
+   the cap. Whether a request withheld is **stored** on the row
+   (`takedown_withheld`), never recomputed from the category — with the breaker
+   open an urgent report legitimately leaves the photo up.
+2. Per-IP limiters: `media_report` 5/IP/day, `media_report_urgent` 1/IP/day
+   ([security-architecture.md §7](security-architecture.md)). These price a
+   single abuser, not a distributed one.
+3. **No CAPTCHA** (standing owner decision). Evaluated again when the breaker
+   was designed and still declined: a challenge is a permanent tax paid by
+   every genuine reporter — including the ones least able to pay it — for a
+   threat the breaker already bounds. The option held in reserve is **adaptive**
+   friction: demand a bot check on the urgent path *only while the breaker is
+   open*, so peacetime stays frictionless and third-party-script-free. Not
+   built; it needs a CSP host allowance and revisits the standing decision.
+4. Email verification of the reporter was considered and **rejected**: the
+   address is deliberately optional (Art. 12(2) says facilitate the exercise of
+   rights), disposable mailboxes make it a weak gate anyway, and requiring it
+   would exclude exactly the reporter with the most to lose.
+
+**Residual risk, accepted and named.** A distributed attacker can still spend
+the whole budget and put ~10 photos/hour on the desk, and can flood the desk
+with queued urgent cards regardless of the budget. Nothing is destroyed —
+withholding detaches, deletion needs a curator — so every incident is
+recoverable, but recovery is per-card today. **Bulk restore of everything
+auto-withheld in a window is the next thing to build**, and is what turns a
+successful attack from a day of clicking into one action.
 
 **What the curator decides** — not "is this person really in the photo"
 (usually unknowable without collecting the documents this route refuses to

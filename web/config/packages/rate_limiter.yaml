@@ -25,6 +25,8 @@ framework:
                 adapter: cache.adapter.filesystem
             cache.media_report_urgent_limiter:
                 adapter: cache.adapter.filesystem
+            cache.media_urgent_breaker_limiter:
+                adapter: cache.adapter.filesystem
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -111,6 +113,27 @@ framework:
             limit: 1
             interval: '1 day'
             cache_pool: cache.media_report_urgent_limiter
+        # The auto-withhold CIRCUIT BREAKER (photo-uploads.md §6c). Keyed on a
+        # single GLOBAL key, not per IP — that is the whole point. Per-IP limits
+        # cannot bound a distributed attacker by definition, so without a
+        # site-wide budget a proxy pool could withhold one photo per IP per day
+        # across the entire corpus. Above these budgets urgent reports still
+        # file and still pin to the top of the desk; they just stop taking
+        # photos down on their own.
+        #
+        # The numbers are deliberately far above any plausible genuine rate:
+        # a real "a child is depicted" report is RARE, so a burst is itself the
+        # evidence that the burst is not genuine.
+        media_urgent_breaker_hourly:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+            cache_pool: cache.media_urgent_breaker_limiter
+        media_urgent_breaker_daily:
+            policy: sliding_window
+            limit: 25
+            interval: '1 day'
+            cache_pool: cache.media_urgent_breaker_limiter
 
 when@test:
     framework:
@@ -135,4 +158,6 @@ when@test:
                 cache.media_report_limiter:
                     adapter: cache.adapter.array
                 cache.media_report_urgent_limiter:
+                    adapter: cache.adapter.array
+                cache.media_urgent_breaker_limiter:
                     adapter: cache.adapter.array

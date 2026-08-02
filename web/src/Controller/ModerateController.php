@@ -12,6 +12,7 @@ use App\Entity\User;
 use App\Form\ModerationDecisionType;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaTakedownService;
+use App\Media\UrgentWithholdBreaker;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\MissingQuestionException;
 use App\Moderation\ModerationScopeProvider;
@@ -52,6 +53,7 @@ final class ModerateController extends AbstractController
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly RouteQueue $routeQueue,
         private readonly MediaTakedownService $takedowns,
+        private readonly UrgentWithholdBreaker $breaker,
         private readonly EntityManagerInterface $em,
     ) {
     }
@@ -106,6 +108,11 @@ final class ModerateController extends AbstractController
             // request on a legal clock, not editorial work to be shared out by
             // jurisdiction.
             'takedowns' => $this->takedowns->pendingCards(),
+            // When the auto-withhold budget is spent, urgent reports are
+            // arriving faster than any genuine rate and are NOT taking photos
+            // down on their own (docs/specs/photo-uploads.md §6c). The desk
+            // says so, because from here on the removals are the curator's.
+            'urgent_breaker_open' => $this->breaker->isOpen(),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
     }
 

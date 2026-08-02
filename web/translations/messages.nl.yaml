@@ -1699,6 +1699,8 @@ moderate:
     alt: 'De foto waarvoor verwijdering is gevraagd'
     no_item: 'Niet aan een plek gekoppeld'
     asked: 'Gevraagd op %when%'
+    breaker_open_b: 'Meldingen komen te snel binnen om echt te zijn.'
+    breaker_open: 'Het sitebrede budget voor automatisch offline halen is op: dringende meldingen wachten nu hier in plaats van zelf foto''s weg te halen. Beslis ze zelf en waarschuw de site-eigenaar — dit patroon is ofwel een aanval op deze route, ofwel iets dat op grote schaal gebeurt.'
     source_uploader: 'Gevraagd door de uploader'
     source_third_party: 'Melding van een derde'
     state_withheld: 'foto offline gehouden'

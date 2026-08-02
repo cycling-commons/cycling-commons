@@ -58,6 +58,7 @@ final class MediaTakedownService
         private readonly MediaDisposalService $disposal,
         private readonly MediaDecisionService $decisions,
         private readonly MessageService $messages,
+        private readonly UrgentWithholdBreaker $breaker,
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
     ) {
@@ -101,6 +102,11 @@ final class MediaTakedownService
      *   single exception is the intimate-imagery/child category, which
      *   withholds on the spot; its use is individually logged, because abusing
      *   the emergency lever is itself a moderation matter.
+     * - That exception is itself bounded by a site-wide budget
+     *   (UrgentWithholdBreaker). Once the budget is spent an urgent report
+     *   files and pins like any other and takes nothing down — per-IP limits
+     *   cannot bound a distributed attacker, and this route must not become a
+     *   way to empty the map.
      */
     public function report(MediaUpload $upload, string $category, string $reason, ?string $contact, string $reporterIp): void
     {
@@ -123,20 +129,29 @@ final class MediaTakedownService
             return;
         }
 
-        $upload->reportThirdParty($category, $reason, $contact, $this->hashReporter($reporterIp));
-        $withheld = MediaTakedownCategory::autoWithholds($category);
+        $urgent = MediaTakedownCategory::autoWithholds($category);
+        // The budget is spent only by a report that would otherwise withhold —
+        // an ordinary report must never move the breaker, or the cheap
+        // categories could exhaust the expensive one's budget for free.
+        $withheld = $urgent && $this->breaker->allowWithhold();
+
+        $upload->reportThirdParty($category, $reason, $contact, $this->hashReporter($reporterIp), $withheld);
         if ($withheld) {
             $this->detach($upload);
         }
         // Anonymous actor: null is honest — there may be no account behind
-        // this report at all. The note carries the category (and whether the
-        // emergency lever fired) so the log answers "who used auto-withhold"
-        // without a join.
+        // this report at all. The note carries the category and what the lever
+        // did, so the log answers "who used auto-withhold" — and "what did we
+        // do while the breaker was open" — without a join.
         $this->events->append(
             $upload->getId(),
             null,
             MediaAction::ThirdPartyReported,
-            $category.($withheld ? ' (auto-withheld)' : ''),
+            $category.match (true) {
+                $withheld => ' (auto-withheld)',
+                $urgent => ' (queued — breaker open)',
+                default => '',
+            },
         );
         $this->em->flush();
     }

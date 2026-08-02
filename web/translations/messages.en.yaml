@@ -1702,6 +1702,8 @@ moderate:
     alt: 'The photo a removal was requested for'
     no_item: 'Not attached to a place'
     asked: 'Asked %when%'
+    breaker_open_b: 'Reports are arriving too fast to be genuine.'
+    breaker_open: 'The site-wide auto-withhold budget is spent, so urgent reports are now queuing here instead of taking photos down on their own. Decide them yourself, and tell the site owner — this pattern is either an attack on this route or something happening at scale.'
     source_uploader: 'Asked by the uploader'
     source_third_party: 'Third-party report'
     state_withheld: 'photo withheld'

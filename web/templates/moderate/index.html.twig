@@ -124,9 +124,15 @@
      the rest of moderation uses. Two sources share the cards: the uploader
      (withheld the moment they asked) and a third party who says they are in
      the picture (photo still up unless the urgent category fired). #}
-  {% if takedowns is not empty %}
+  {% if takedowns is not empty or urgent_breaker_open|default(false) %}
   <section class="q-takedowns">
     <h2>{{ 'moderate.takedown.heading'|trans }}</h2>
+    {% if urgent_breaker_open|default(false) %}
+      {# The site-wide auto-withhold budget is spent: urgent reports are
+         arriving far faster than any genuine rate, so they are queuing here
+         instead of taking photos down by themselves (§6c). #}
+      <p class="td-lead" role="alert"><b>{{ 'moderate.takedown.breaker_open_b'|trans }}</b> {{ 'moderate.takedown.breaker_open'|trans }}</p>
+    {% endif %}
     <p class="td-lead">{{ 'moderate.takedown.lead'|trans }}</p>
     {% for t in takedowns %}
       <article class="td-card">

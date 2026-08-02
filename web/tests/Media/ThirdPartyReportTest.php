@@ -20,6 +20,7 @@ use App\Media\MediaStorage;
 use App\Media\MediaTakedownCategory;
 use App\Media\MediaTakedownService;
 use App\Media\MediaTakedownSource;
+use App\Media\UrgentWithholdBreaker;
 use App\Media\ProcessedPhoto;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\UserMessageKind;
@@ -280,6 +281,63 @@ final class ThirdPartyReportTest extends KernelTestCase
         self::assertSame(1, $cleared);
         self::assertNull($old->getTakedownContact());
         self::assertSame('fresh@example.org', $fresh->getTakedownContact());
+    }
+
+    /**
+     * The circuit breaker (docs/specs/photo-uploads.md §6c). Per-IP limits
+     * cannot bound a distributed attacker — every photo's uuid is in its
+     * public image URL, so a proxy pool could otherwise withhold one photo per
+     * IP per day across the whole corpus. The site-wide budget is what makes
+     * the blast radius finite.
+     */
+    public function testTheBudgetBoundsHowManyPhotosAnyoneCanWithhold(): void
+    {
+        $owner = $this->rider('report-breaker@example.com');
+
+        // The budget is spent through the limiter itself rather than by
+        // looping a literal count, so this test asserts the behaviour and not
+        // the current numbers — the config owns those.
+        $hourly = static::getContainer()->get('limiter.media_urgent_breaker_hourly');
+        $spent = 0;
+        while ($hourly->create('global')->consume()->isAccepted()) {
+            self::assertLessThan(500, ++$spent, 'the hourly budget must be finite');
+        }
+
+        // The flag the desk banner reads, so a curator knows the removals are
+        // theirs from here on.
+        self::assertTrue(static::getContainer()->get(UrgentWithholdBreaker::class)->isOpen());
+
+        $next = $this->approved($owner);
+        $this->takedowns->report($next, MediaTakedownCategory::IntimateOrChild, 'One past the budget.', null, '198.51.100.250');
+
+        // Still filed, still a curator's problem — but it took nothing down.
+        self::assertTrue($next->isTakedownPending(), 'the report is not lost');
+        self::assertFalse($next->isTakedownWithheld(), 'the breaker is open, so nothing is withheld');
+        self::assertCount(1, $this->itemOf($next)->getAttributes()['photos'], 'the photo is still on the map');
+
+        $events = $this->em->getRepository(MediaModerationEvent::class)->findBy(['mediaId' => $next->getId()], ['id' => 'ASC']);
+        $report = array_values(array_filter($events, static fn (MediaModerationEvent $e): bool => MediaAction::ThirdPartyReported === $e->getAction()));
+        self::assertCount(1, $report);
+        self::assertStringContainsString('breaker open', (string) $report[0]->getNote());
+    }
+
+    public function testAnOrdinaryReportNeverSpendsTheUrgentBudget(): void
+    {
+        $owner = $this->rider('report-breaker-cheap@example.com');
+        $breaker = static::getContainer()->get(UrgentWithholdBreaker::class);
+
+        // Ten ordinary reports — more than the hourly urgent budget — must not
+        // move the breaker, or the cheap categories could exhaust the
+        // expensive one's budget for free.
+        for ($i = 0; $i < 10; ++$i) {
+            $this->takedowns->report($this->approved($owner), MediaTakedownCategory::IdentifiableSelf, "Ordinary {$i}.", null, '198.51.100.'.$i);
+        }
+
+        self::assertFalse($breaker->isOpen());
+
+        $urgent = $this->approved($owner);
+        $this->takedowns->report($urgent, MediaTakedownCategory::IntimateOrChild, 'A real one.', null, '198.51.100.99');
+        self::assertTrue($urgent->isTakedownWithheld(), 'the urgent budget was never touched');
     }
 
     public function testTheUploaderRouteStampsItsSource(): void
