@@ -138,6 +138,12 @@ final class MediaTakedownService
         $upload->reportThirdParty($category, $reason, $contact, $this->hashReporter($reporterIp), $withheld);
         if ($withheld) {
             $this->detach($upload);
+            // Tell the contributor at once. Their photo has just vanished from
+            // the map; without a word from us the obvious reading is that we
+            // deleted their contribution. The message says hidden, says a
+            // human is looking, and says nothing that identifies the reporter
+            // or names the category that did it.
+            $this->notify($upload, UserMessageKind::MediaHiddenPendingReview, 'messages.body.media_hidden_pending_review', null);
         }
         // Anonymous actor: null is honest — there may be no account behind
         // this report at all. The note carries the category and what the lever
@@ -215,11 +221,20 @@ final class MediaTakedownService
         }
 
         $thirdParty = MediaTakedownSource::ThirdParty === $upload->getTakedownSource();
+        // Read before the decision clears it: whether this request had hidden
+        // the photo decides whether the uploader is owed the other half of a
+        // message we already sent them.
+        $wasHidden = $upload->isTakedownWithheld();
         $upload->declineTakedown();
         $this->reattach($upload);
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownDeclined, $note);
         if (!$thirdParty) {
             $this->notify($upload, UserMessageKind::MediaTakedownDeclined, 'messages.body.media_takedown_declined', $note);
+        } elseif ($wasHidden) {
+            // We told them it was hidden, so we tell them it is back. A report
+            // that only queued stays silent: nothing they could see ever
+            // changed, and "somebody accused you" is not ours to volunteer.
+            $this->notify($upload, UserMessageKind::MediaRestoredAfterReview, 'messages.body.media_restored_after_review', null);
         }
         $this->em->flush();
     }
@@ -250,9 +265,16 @@ final class MediaTakedownService
             return false;
         }
 
+        $wasHidden = $upload->isTakedownWithheld();
         $upload->dismissTakedownAsAbuse();
         $this->reattach($upload);
         $this->events->append($upload->getId(), (int) $admin->getId(), MediaAction::TakedownDismissedAsAbuse, $note);
+        if ($wasHidden) {
+            // Same promise as a decline: if we told them it was hidden, we
+            // tell them it is back. The operator's note stays internal — it
+            // usually says "co-ordinated flood", which is our business.
+            $this->notify($upload, UserMessageKind::MediaRestoredAfterReview, 'messages.body.media_restored_after_review', null);
+        }
         $this->em->flush();
 
         return true;

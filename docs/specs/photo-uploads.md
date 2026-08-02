@@ -257,9 +257,12 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   terms** · consented <date>" — with the contract text and the site terms
   each one tap away — on this and every later visit (the wizard bootstraps
   via `GET /media/consent/current`, which returns the caller's latest
-  record for the current `kind` + `version`). The review step repeats the notice
-  beside the queued photos, so what the rider is about to submit and the
-  licence they granted are visible together. The modal only ever returns
+  record for the current `kind` + `version`). The review step repeats the
+  notice **at the foot of the step, directly under the provenance line** — the
+  ODbL/CC BY-SA sentence and "you already granted the photo half, on this
+  date" are the same subject, so they close the step as one block. It sat
+  above the review card until 2026-08-02, where it opened step 4 with a legal
+  note before the rider reached their own answers. The modal only ever returns
   when the consent **wording version changes** — a new version means a new
   consent act, never a silent carry-over.
 - Submitted media ids travel in the form (hidden field, JSON list) and land
@@ -512,15 +515,27 @@ The commoner depicts-me case: recognisable in a photo *somebody else* took,
 quite possibly with no account. Art. 17 does not require one, so the route is
 open to everyone; today it is built, not a mailbox.
 
-**The asymmetry that shapes everything.** The uploader's request (§6b)
-withholds on the spot because they own the row — the worst case is somebody
-hiding their own contribution. A stranger's request **queues and changes
-nothing**: instant withholding on an anonymous POST would be a heckler's veto
-over the whole map. The one narrow exception is the category *intimate
-imagery, or a child is depicted*, where the cost of a day online dwarfs a
-wrongful removal: it withholds immediately, its limiter is one pull per IP
-per day, and every use is logged in `media_moderation_event`
-(`third_party_reported`, note suffixed `(auto-withheld)`).
+**Hidden is not removed.** Withholding detaches a photo from the map and
+404s its page; the objects stay in the bucket and the row stays in the
+database. **Only a curator removes anything** — granting is the sole path that
+deletes objects. Every user-facing surface says *hidden*, never *removed*, for
+the automatic action, because a contributor who reads "removed" reasonably
+concludes their work is gone. The contributor is messaged the moment their
+photo is hidden (`media_hidden_pending_review`) and again when it comes back
+(`media_restored_after_review`); if a curator grants the request, they get
+`media_removed_on_report` instead, which is the one message that means gone.
+A report that merely queues sends nothing — nothing they could see changed,
+and "somebody accused you" is not ours to volunteer.
+
+**The asymmetry that shapes everything.** The uploader's request (§6b) hides
+on the spot because they own the row — the worst case is somebody hiding their
+own contribution. A stranger's request **queues and changes nothing**: instant
+hiding on an anonymous POST would be a heckler's veto over the whole map. The
+one narrow exception is the category *intimate imagery, or a child is
+depicted*, where the cost of a day online dwarfs a wrongful hiding: it hides
+immediately, its limiter is one pull per IP per day, and every use is logged
+in `media_moderation_event` (`third_party_reported`, note suffixed
+`(auto-withheld)`).
 
 **The form** (`GET|POST /photo/{uuid}/report`, linked from every published
 photo page): category (the five in `MediaTakedownCategory`) · what is wrong
@@ -558,8 +573,9 @@ down or a curator busy.
    bound one IP and a proxy pool is many, while every photo's uuid sits in its
    public image URL, so the target list is free. Without a global budget a
    botnet could withhold one photo per IP per day across the entire corpus.
-   Over budget, urgent reports still file and still pin to the desk; they take
-   nothing down, the desk shows a banner, and the trip is logged at CRITICAL.
+   Over budget, urgent reports still file and still pin to the desk; they hide
+   nothing, the desk shows a banner, the trip is logged at CRITICAL, and the
+   operator address is mailed once an hour (`UrgentWithholdAlert`).
    The degrade is safe because of what trips it: genuine reports of this kind
    are rare, so a burst big enough to exhaust the budget is itself the evidence
    its members are not genuine, while the isolated real report never comes near
@@ -581,13 +597,27 @@ down or a curator busy.
    rights), disposable mailboxes make it a weak gate anyway, and requiring it
    would exclude exactly the reporter with the most to lose.
 
+**Recovery.** `/admin/withheld-photos` lists every photo an anonymous report
+has hidden and restores them in one action, telling each contributor their
+photo is back. It **dismisses** (`takedown_dismissed_as_abuse`) rather than
+declines: a decline closes that category for that photo forever, so
+mass-declining a flood would immunise every attacked photo against the next
+genuine report. `/admin/playbook/photo-flood` is the incident playbook —
+admin-only, deliberately not in the public wiki (§6c *What stays private*).
+
 **Residual risk, accepted and named.** A distributed attacker can still spend
-the whole budget and put ~10 photos/hour on the desk, and can flood the desk
-with queued urgent cards regardless of the budget. Nothing is destroyed —
-withholding detaches, deletion needs a curator — so every incident is
-recoverable, but recovery is per-card today. **Bulk restore of everything
-auto-withheld in a window is the next thing to build**, and is what turns a
-successful attack from a day of clicking into one action.
+the whole budget and can flood the desk with queued urgent cards regardless of
+it. Nothing is destroyed — hiding detaches, deletion needs a curator — and the
+contributors of hidden photos are told what happened and why, so the worst
+outcome is a bounded number of photos off the map for hours, and a noisy desk.
+
+**What stays private.** The decision test, the bias, the budgets and which
+category acts fastest live on the moderation desk and in the admin playbook,
+**not** in the public wiki. `wiki/moderator-rulebook.md` is world-readable, and
+a published account of how removal decisions are really made is also a script
+for talking a curator into removing something. What the public page carries is
+the promise (nobody learns who anybody is; no identity documents), not the
+procedure.
 
 **What the curator decides** — not "is this person really in the photo"
 (usually unknowable without collecting the documents this route refuses to

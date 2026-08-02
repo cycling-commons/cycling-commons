@@ -153,6 +153,61 @@ final class ThirdPartyReportTest extends KernelTestCase
         self::assertStringContainsString('(auto-withheld)', (string) $report[0]->getNote());
     }
 
+    /**
+     * A contributor whose photo vanishes with no word from us reasonably
+     * concludes we deleted their work (docs/specs/photo-uploads.md §6c). Both
+     * halves are asserted together because sending the first without the
+     * second would be worse than sending neither.
+     */
+    public function testHidingAPhotoTellsItsContributorAndSoDoesGivingItBack(): void
+    {
+        $owner = $this->rider('report-notify@example.com');
+        $curator = $this->rider('report-notify-curator@example.com');
+        $upload = $this->approved($owner);
+
+        $this->takedowns->report($upload, MediaTakedownCategory::IntimateOrChild, 'Vandalism.', null, '203.0.113.30');
+
+        $messages = $this->messagesFor($owner);
+        self::assertCount(1, $messages);
+        self::assertSame(UserMessageKind::MediaHiddenPendingReview, $messages[0]->getKind());
+
+        $this->takedowns->decline($upload, $curator, 'Nobody visible.');
+
+        $messages = $this->messagesFor($owner);
+        self::assertCount(2, $messages);
+        self::assertSame(UserMessageKind::MediaRestoredAfterReview, $messages[1]->getKind());
+    }
+
+    /** A report that only queued changed nothing they could see, so it says nothing. */
+    public function testAQueuedReportTellsTheContributorNothing(): void
+    {
+        $owner = $this->rider('report-quiet@example.com');
+        $curator = $this->rider('report-quiet-curator@example.com');
+        $upload = $this->approved($owner);
+
+        $this->takedowns->report($upload, MediaTakedownCategory::IdentifiableSelf, 'That is me.', null, '203.0.113.31');
+        self::assertSame([], $this->messagesFor($owner));
+
+        $this->takedowns->decline($upload, $curator);
+        self::assertSame([], $this->messagesFor($owner), 'still nothing — it never left the map');
+    }
+
+    public function testRestoringAnAbusiveHideTellsTheContributor(): void
+    {
+        $owner = $this->rider('report-notify-dismiss@example.com');
+        $admin = $this->rider('report-notify-admin@example.com');
+        $upload = $this->approved($owner);
+
+        $this->takedowns->report($upload, MediaTakedownCategory::IntimateOrChild, 'Vandalism.', null, '203.0.113.32');
+        $this->takedowns->dismissAsAbuse($upload, $admin, 'Co-ordinated flood.');
+
+        $kinds = array_map(
+            static fn (UserMessage $m): UserMessageKind => $m->getKind(),
+            $this->messagesFor($owner),
+        );
+        self::assertSame([UserMessageKind::MediaHiddenPendingReview, UserMessageKind::MediaRestoredAfterReview], $kinds);
+    }
+
     public function testIneligiblePhotosSwallowTheReportSilently(): void
     {
         $owner = $this->rider('report-ineligible@example.com');
@@ -363,8 +418,10 @@ final class ThirdPartyReportTest extends KernelTestCase
         self::assertSame($before, $this->itemOf($upload)->getAttributes()['photos'], 'back on the map');
         self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
         self::assertContains(MediaAction::TakedownDismissedAsAbuse, $this->actions($upload));
-        // Nothing visible changed for the uploader, so they are told nothing.
-        self::assertSame([], $this->messagesFor($owner));
+        // Their photo did visibly disappear, so they were told that and told
+        // when it came back — never who reported it, and never the operator's
+        // note (see testRestoringAnAbusiveHideTellsTheContributor).
+        self::assertCount(2, $this->messagesFor($owner));
         // THE point: a real report of the same kind must still be heard.
         self::assertFalse($upload->hasDecidedTakedown(MediaTakedownCategory::IntimateOrChild));
         $this->takedowns->report($upload, MediaTakedownCategory::IntimateOrChild, 'A real one, later.', null, '198.51.100.8');

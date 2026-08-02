@@ -37,6 +37,16 @@ enum UserMessageKind: string
      * body must not hint at who reported it.
      */
     case MediaRemovedOnReport = 'media_removed_on_report';
+    /**
+     * A report has hidden the uploader's photo while a curator reviews it
+     * (docs/specs/photo-uploads.md §6c). Hidden, not removed — only a curator
+     * removes anything, and the photo comes straight back if the report does
+     * not hold up. Told at once because a contributor who finds their photo
+     * missing with no explanation has every reason to think we deleted it.
+     */
+    case MediaHiddenPendingReview = 'media_hidden_pending_review';
+    /** …and the other half of that promise: it is back. */
+    case MediaRestoredAfterReview = 'media_restored_after_review';
 
     /** @return list<string> @api */
     public static function values(): array
