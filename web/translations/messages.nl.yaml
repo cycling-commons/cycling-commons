@@ -2272,6 +2272,7 @@ admin:
     default_note: 'Standaard: %value%'
     range_note: 'Toegestaan: %min%–%max%'
     error_range: 'Vul een heel getal tussen %min% en %max% in.'
+    error_required: 'Dit mag niet leeg zijn — elke instelling heeft een waarde nodig.'
     error_text: 'Die waarde is niet toegestaan voor deze instelling.'
     group:
       map: 'Kaart'

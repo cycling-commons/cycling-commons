@@ -2275,6 +2275,7 @@ admin:
     default_note: 'Standard: %value%'
     range_note: 'Zulässig: %min%–%max%'
     error_range: 'Geben Sie eine ganze Zahl zwischen %min% und %max% ein.'
+    error_required: 'Dies darf nicht leer sein — jede Einstellung braucht einen Wert.'
     error_text: 'Dieser Wert ist für diese Einstellung nicht zulässig.'
     group:
       map: 'Karte'

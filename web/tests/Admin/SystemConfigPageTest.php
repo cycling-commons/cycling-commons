@@ -136,6 +136,49 @@ final class SystemConfigPageTest extends WebTestCase
 
     // ── Saving ───────────────────────────────────────────────────────────────
 
+    /**
+     * No setting may be saved empty, whatever its type — and the page has to
+     * say that, rather than answering an empty box with a complaint about a
+     * number nobody typed.
+     */
+    public function testAnEmptyFieldIsRefusedWithItsOwnMessage(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true));
+        $registry = static::getContainer()->get(SettingsRegistry::class);
+
+        foreach ($registry->all() as $key => $_def) {
+            $crawler = $client->request('GET', $this->url());
+            $form = $crawler->selectButton('Save settings')->form();
+            $form['settings['.$key.']'] = '';
+            $crawler = $client->submit($form);
+
+            self::assertResponseIsSuccessful("{$key}: an empty value must not save");
+            self::assertStringContainsString('This cannot be empty', $crawler->html(), "{$key}: says why");
+            self::assertFalse($this->settings()->isOverridden($key), "{$key}: nothing was written");
+        }
+    }
+
+    /**
+     * The reset button carries formnovalidate. Without it the browser's own
+     * `required` check refuses to submit while any field is empty — and the
+     * row an admin is trying to put back is usually that very field, so the
+     * page would appear stuck with no way out.
+     */
+    public function testResetStaysUsableWhileAnotherFieldIsEmpty(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true));
+        $crawler = $client->request('GET', $this->url());
+
+        // A valueless HTML attribute reads back as '' rather than its own
+        // name, so presence is the thing to assert.
+        self::assertNotNull(
+            $crawler->filter('button[name="reset"]')->first()->attr('formnovalidate'),
+            'the reset button must opt out of client-side validation',
+        );
+    }
+
     public function testSavingTheRenderedFormChangesTheValueAndAudits(): void
     {
         $client = static::createClient();

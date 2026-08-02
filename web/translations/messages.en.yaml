@@ -2275,6 +2275,7 @@ admin:
     default_note: 'Default: %value%'
     range_note: 'Allowed: %min%–%max%'
     error_range: 'Enter a whole number between %min% and %max%.'
+    error_required: 'This cannot be empty — every setting needs a value.'
     error_text: 'That value is not acceptable for this setting.'
     group:
       map: 'Map'

@@ -183,6 +183,15 @@ final class DashboardController extends AbstractDashboardController
             $posted = $request->request->all('settings');
             foreach ($registry->all() as $key => $def) {
                 $raw = trim((string) ($posted[$key] ?? ''));
+                // No setting may be saved empty, whatever its type. Said in its
+                // own message rather than folded into the range/format one: an
+                // empty box answered with "enter a number between 1 and 1000"
+                // reads as a complaint about a number nobody typed.
+                if ('' === $raw) {
+                    $errors[$key] = $translator->trans('admin.settings.error_required');
+                    $values[$key] = $raw;
+                    continue;
+                }
                 if ($def->isString()) {
                     if (!$def->accepts($raw)) {
                         $errors[$key] = $translator->trans('admin.settings.error_text');

@@ -2272,6 +2272,7 @@ admin:
     default_note: 'Par défaut : %value%'
     range_note: 'Autorisé : %min%–%max%'
     error_range: 'Saisissez un nombre entier entre %min% et %max%.'
+    error_required: 'Ce champ ne peut pas être vide — chaque réglage a besoin d''une valeur.'
     error_text: 'Cette valeur n''est pas acceptable pour ce réglage.'
     group:
       map: 'Carte'

@@ -5,7 +5,7 @@
 
 {% block main %}
     <p>{{ 'admin.settings.intro'|trans }}</p>
-    <p class="text-muted">{{ 'admin.settings.infra_note'|trans }}</p>
+    <p>{{ 'admin.settings.infra_note'|trans }}</p>
 
     {# One form for everything: Save submits every field, each "reset" button
        submits its own key. The reset branch runs before validation, so a row
@@ -53,7 +53,12 @@
                                     {% endif %}
                                     {# Disabled rather than hidden: the row keeps its shape whether or
                                        not the key is overridden, so the column does not jump about. #}
-                                    <button type="submit" name="reset" value="{{ def.key }}"
+                                    {# formnovalidate is what makes the promise above true. The
+                                       server's reset branch runs before validation, but every input
+                                       here is `required`, so without this the BROWSER refuses to
+                                       submit while any field is empty — and the row a curator is
+                                       trying to put back is usually the empty one. #}
+                                    <button type="submit" name="reset" value="{{ def.key }}" formnovalidate
                                             class="btn btn-outline-secondary"
                                             {{ overridden[def.key] ? '' : 'disabled' }}>
                                         {{ 'admin.settings.reset'|trans }}
