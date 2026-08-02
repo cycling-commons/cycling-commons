@@ -1,0 +1,77 @@
+web/assets/map/community.js
+  s_b2667a820417c3::t_41af57af7d2562 207-218
+  s_b2667a820417c3::t_bddf7f959e8c38 274-275
+  s_b2667a820417c3::t_57f723a62cc7df 238-249
+web/translations/messages.de.yaml
+  s_b2667a820417c3::t_73c65faaf445f0 1888-1890,1903-1904
+  s_b2667a820417c3::t_28cf6dbde5beb1 1719
+  s_b2667a820417c3::t_1b3fd2776c71eb 1299
+  s_b2667a820417c3::t_e67f858eaa376f 1304-1306
+web/src/Moderation/MissingQuestionException.php
+  s_b2667a820417c3::t_8344f81b86f595 1-23
+wiki/moderator-rulebook.md
+  s_b2667a820417c3::t_5ced34ecaba14e 92-95
+  s_b2667a820417c3::t_515f554c2805fc 84-88
+web/translations/messages.fr.yaml
+  s_b2667a820417c3::t_73c65faaf445f0 1885-1887,1900-1901
+  s_b2667a820417c3::t_28cf6dbde5beb1 1716
+  s_b2667a820417c3::t_1b3fd2776c71eb 1296
+  s_b2667a820417c3::t_e67f858eaa376f 1301-1303
+web/translations/messages.en.yaml
+  s_b2667a820417c3::t_e67f858eaa376f 1587-1589
+  s_b2667a820417c3::t_28cf6dbde5beb1 1719
+  s_b2667a820417c3::t_73c65faaf445f0 1888-1890,1903-1904
+  s_b2667a820417c3::t_1b3fd2776c71eb 1582
+web/tests/Moderation/ModerationServiceTest.php
+  s_b2667a820417c3::t_066bbd765085e9 17,19
+  s_b2667a820417c3::t_1d55b088dc3d45 212-240
+web/src/Moderation/ModerationService.php
+  s_b2667a820417c3::t_c1096b0f479ddf 56-63
+web/assets/map/drawer.js
+  s_b2667a820417c3::t_c705c769068b2b 357-362,364-368,373-374
+  s_b2667a820417c3::t_4c8115483430ae 549-554
+web/src/Controller/MapController.php
+  s_b2667a820417c3::t_81bff228dcf84b 173
+  s_b2667a820417c3::t_16823bbbbc7f36 180
+web/translations/messages.nl.yaml
+  s_b2667a820417c3::t_28cf6dbde5beb1 1716
+  s_b2667a820417c3::t_73c65faaf445f0 1885-1887,1900-1901
+  s_b2667a820417c3::t_e67f858eaa376f 1301-1303
+  s_b2667a820417c3::t_1b3fd2776c71eb 1296
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_b2667a820417c3::t_9781cc2a6cbed5 10
+  s_b2667a820417c3::t_d55af528d4868f 145-211
+web/assets/styles/map.css
+  s_b2667a820417c3::t_717eb1df55720b 230-235
+  s_b2667a820417c3::t_682f3c8cee0f39 243-245
+web/src/Controller/ModerateController.php
+  s_b2667a820417c3::t_7b6a66a78442fc 136-147
+  s_b2667a820417c3::t_d9135a9621903a 15
+docs/specs/photo-uploads.md
+  s_b2667a820417c3::t_ae75ce731555c4 279-285
+web/src/Moderation/SubmissionQueue.php
+  s_b2667a820417c3::t_de4d94d14dca74 219
+  s_b2667a820417c3::t_9194c18ce8fcaf 35,59,104
+  s_b2667a820417c3::t_89e45fd5facceb 184-190,193
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "4855f432ea6ab89a859df58668d69517ad1a1b62",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b2667a820417c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77b22ba5-fbce-489c-a40c-b5007f506956",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
