@@ -1,0 +1,57 @@
+docs/specs/moderation-and-contribution.md
+  s_b7eccf3abfe4d7::t_37c3e1db0a73cd 259-268
+  s_b7eccf3abfe4d7::t_64a255bff579b7 303-323
+  s_b7eccf3abfe4d7::t_dc7d6bb426b023 119-129
+  s_b7eccf3abfe4d7::t_008d3fcdbe45eb 286-293,333-346
+  s_b7eccf3abfe4d7::t_be47ce436e2801 294-302,324-332
+  s_b7eccf3abfe4d7::t_bbd2ef0b5bc6bb 181-186,243
+  s_b7eccf3abfe4d7::t_3cf49e4dcaa9fe 244-258
+  s_b7eccf3abfe4d7::t_61dd58cf0e5393 576-583,587-595
+  s_b7eccf3abfe4d7::t_154640ce8e4161 621-629
+  s_b7eccf3abfe4d7::t_ed6e76b4fc8474 688-704
+  s_b7eccf3abfe4d7::t_34306b15083599 596-615
+  s_b7eccf3abfe4d7::t_373e234c699bfe 824-838
+  s_b7eccf3abfe4d7::t_10ed9e0ec4d35a 187-197
+  s_b7eccf3abfe4d7::t_dcd06d8713e371 104-118
+  s_b7eccf3abfe4d7::t_125af2e8ef0045 217-228
+  s_b7eccf3abfe4d7::t_a1ffa1867d14bc 573-575,584-586,616-620,630-638
+  s_b7eccf3abfe4d7::t_d1363c1fa5d6dd 165-180
+  s_b7eccf3abfe4d7::t_c6a0e5e798441b 198-216,229
+  s_b7eccf3abfe4d7::t_40951677bf742c 705-723
+  s_b7eccf3abfe4d7::t_814ae6791f4180 269-285
+  s_b7eccf3abfe4d7::t_d1db6c60fe579f 230-242
+  s_b7eccf3abfe4d7::t_373ef4901f5dce 639,839
+docs/specs/photo-uploads.md
+  s_b7eccf3abfe4d7::t_eff3be6f5e756b 265-272
+docs/specs/map-and-search.md
+  s_b7eccf3abfe4d7::t_a7b05282ae57bf 167-178
+  s_b7eccf3abfe4d7::t_d10ff4afb6a448 265-268,270,272-297
+  s_b7eccf3abfe4d7::t_b7e4dda02a5406 123-124
+  s_b7eccf3abfe4d7::t_939837ccbc5ebe 269,271,298-300
+  s_b7eccf3abfe4d7::t_89cdd8c70a8b6c 304
+  s_b7eccf3abfe4d7::t_6ac9dbdb43b0da 301-303,913
+  s_b7eccf3abfe4d7::t_3f6269d5e07fb6 134-156
+  s_b7eccf3abfe4d7::t_83204223a6adb0 157-166
+  s_b7eccf3abfe4d7::t_9468e9c5ca35b5 912,914-919
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "87c498d03acd37e5294807a071e380de279192f4",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b7eccf3abfe4d7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c0eae58b-5ade-4e9b-826e-5f61f82c48cf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
