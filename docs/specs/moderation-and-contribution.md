@@ -856,6 +856,43 @@ Everything else is untouched — a word stays a word, a multi-select joins with
 commas. Malformed geometry degrades to something printable rather than throwing,
 because a broken payload must not take the whole queue card down with it.
 
+### 5.2b Before/after for a proposed shape (2026-08-03)
+
+Summarising geometry as text (§5.2a) made the card readable, but it did not make
+a redrawn climb *reviewable*: `summit 50.4860, 5.6927` still says nothing about
+whether the summit moved somewhere sensible, and the map went on drawing the
+climb exactly as it is today (owner: "a human can't handle this data — we need
+to see it on the map").
+
+A pending card for a climb now carries a **Shape on the map · Before | After**
+switch, and the map draws whichever side is selected:
+
+- **After** — solid, in the violet the change history uses for a new value. It
+  is the default, because the curator is there to judge the proposal.
+- **Before** — muted grey and dashed, the shape the item has today.
+
+Both sides travel in the pending payload (`SubmissionQueue::shapeSides()`, keyed
+`shape`) rather than being read from the loaded catalog: a brand-new climb has
+no current feature to compare against, and a changed `route` with an unchanged
+`grad` would otherwise be coloured from the wrong profile. The switch is
+rendered only for the sides that exist — a new climb gets no dead "Before".
+
+Opening the drawer fits the map to the drawn side, because a summit moved a
+kilometre can otherwise land off screen, and an overlay nobody can see is not a
+review.
+
+**A switch, not both lines at once** (owner's call, stated twice). The two
+shapes usually share most of their length and diverge near one end, so drawn
+together they overlap into a single thick smear precisely where the difference
+is. Flipping one line in place makes the change read as movement.
+
+Implementation notes worth keeping: the overlay owns its own source and layers
+(`cc-pending-shape*`) and clears them before every draw, so switching sides can
+never leave a second line behind; **all layers are removed before the shared
+source**, because removing a source still in use by a sibling layer throws, and
+a throw there leaves the old side on screen while the switch says otherwise. The
+switch is delegated off `document` like every other card control (§5.2).
+
 ### 7.3a A rider can see WHAT they contributed (2026-08-03, owner)
 
 Both rider-facing surfaces named the place and stopped there. "Your

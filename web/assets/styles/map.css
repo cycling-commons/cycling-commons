@@ -231,6 +231,21 @@
   .cc-mod-ctx-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.5);margin-bottom:.35rem}
   .cc-mod-ctx .cc-d-rec{margin:0}
   .cc-mod-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.5rem .7rem;font-size:.82rem;margin-bottom:.6rem}
+  /* Before/after for a proposed climb shape. The switch redraws the line on
+     the MAP — coordinates in the text diff above are not reviewable. */
+  .cc-mod-shape{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:0 0 .6rem}
+  .cc-mod-shape-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#9a9d8c}
+  .cc-mod-shape-btns{display:inline-flex;border:1px solid rgba(239,230,212,.28);border-radius:30px;overflow:hidden}
+  .cc-shape-btn{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.3rem .7rem;background:transparent;color:rgba(239,230,212,.75);border:0;cursor:pointer;min-height:30px}
+  .cc-shape-btn+.cc-shape-btn{border-left:1px solid rgba(239,230,212,.28)}
+  .cc-shape-btn:hover:not(:disabled){background:rgba(239,230,212,.10);color:var(--paper)}
+  .cc-shape-btn.on{background:#B25BE8;color:#14160E;font-weight:700}
+  .cc-shape-btn:disabled{opacity:.35;cursor:default}
+  .cc-shape-btn:focus-visible{outline:2px solid var(--trail);outline-offset:-2px}
+  /* The proposed steepest marker, so it reads as a proposal and not as the
+     climb's own marker sitting beside it. */
+  .cc-steep-pending{border-style:dashed;opacity:.95}
   /* pending rider photos with per-photo keep/drop (docs/specs/photo-uploads.md §5) */
   /* Waiting on the rider: the same card, but never mistakable for one that
      has not been looked at yet — it only appears via the desk's own link. */

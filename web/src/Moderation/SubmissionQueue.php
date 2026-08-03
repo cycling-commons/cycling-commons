@@ -535,6 +535,17 @@ final class SubmissionQueue
                 'asked' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
                 'riderReply' => null !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
                 'photos' => $photosBySubmission[(int) $r['id']] ?? [],
+                /* The proposed SHAPE, for the drawer's before/after switch.
+                   Coordinates in a text diff are not reviewable: a curator
+                   cannot tell from "50.4860, 5.6927" whether the summit moved
+                   somewhere sensible. The map can show it, so it does — the
+                   switch redraws the climb line between what is there now and
+                   what is being proposed (owner, 2026-08-03).
+                   Both sides travel, rather than leaning on the loaded
+                   catalog: a NEW climb has no current feature to fall back to,
+                   and a changed `route` with an unchanged `grad` would
+                   otherwise colour the proposed line from the wrong profile. */
+                'shape' => self::shapeSides((string) $r['changes']),
             ];
         }, $rows);
     }
@@ -607,5 +618,45 @@ final class SubmissionQueue
         $this->collator->sort($strings);
 
         return array_values($strings);
+    }
+
+    /**
+     * The before/after climb geometry a submission proposes, or null when it
+     * proposes none.
+     *
+     * `changes` only carries the fields that actually changed, so each side is
+     * assembled from whichever of route/grad/steep is present. A side with no
+     * route is dropped: there is nothing to draw, and an empty overlay reads as
+     * "the climb has no line" rather than "this field was not touched".
+     *
+     * @return array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}}}|null
+     */
+    private static function shapeSides(string $changesJson): ?array
+    {
+        /** @var array<string, array{was: mixed, now: mixed}> $changes */
+        $changes = json_decode($changesJson, true) ?: [];
+        if (!isset($changes['route']) && !isset($changes['steep'])) {
+            return null;
+        }
+
+        $side = static function (string $key) use ($changes): ?array {
+            $route = $changes['route'][$key] ?? null;
+            if (!\is_array($route) || [] === $route) {
+                return null;
+            }
+            $grad = $changes['grad'][$key] ?? null;
+            $steep = $changes['steep'][$key] ?? null;
+
+            return [
+                'route' => array_values(array_filter($route, static fn (mixed $p): bool => \is_array($p) && 2 === \count($p))),
+                'grad' => \is_array($grad) ? array_values(array_filter($grad, is_numeric(...))) : [],
+                'steep' => \is_array($steep) && isset($steep['at']) ? $steep : null,
+            ];
+        };
+
+        $before = $side('was');
+        $after = $side('now');
+
+        return (null === $before && null === $after) ? null : ['before' => $before, 'after' => $after];
     }
 }

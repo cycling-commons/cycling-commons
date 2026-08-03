@@ -28,7 +28,8 @@ import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
 import { CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
-         hydrateItemConfirm } from './community.js';
+         hydrateItemConfirm, setPendingShape } from './community.js';
+import { showPendingShape, fitPendingShape, clearPendingShape } from './pending-shape.js';
 import { clearCorrections } from './corrections.js';
 
 // Injected by initDrawer() until their owning modules exist (see the header).
@@ -372,6 +373,23 @@ function buildRecord(layer, f){
     const diff = s.now
       ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>${s.was?`<div class="cc-mod-was">${escPend(s.was)}</div>`:''}<div class="cc-mod-now">${escPend(s.now)}</div></div>`
       : '';
+    /* A redrawn climb is not reviewable as coordinates. When the submission
+       carries a shape, the card offers a before/after switch that redraws the
+       line on the map — see pending-shape.js for why it is a switch and not
+       two lines at once. Only rendered when there is a side to switch TO: a
+       brand-new climb has no "before", and offering an empty one would be a
+       control that lies. */
+    const hasBefore = !!(s.shape && s.shape.before);
+    const hasAfter = !!(s.shape && s.shape.after);
+    const shapeSwitch = (hasBefore || hasAfter)
+      ? `<div class="cc-mod-shape">
+           <span class="cc-mod-shape-h">${D.shapeOnMap||'Shape on the map'}</span>
+           <div class="cc-mod-shape-btns" role="group">
+             <button type="button" class="cc-shape-btn" data-shape-side="before" aria-pressed="false"${hasBefore?'':' disabled'}>${D.shapeBefore||'Before'}</button>
+             <button type="button" class="cc-shape-btn on" data-shape-side="after" aria-pressed="true"${hasAfter?'':' disabled'}>${D.shapeAfter||'After'}</button>
+           </div>
+         </div>`
+      : '';
     // Moderation-UX (user request): "Everybody should always be able to see
     // the history of an item." A brand-new submission (type 'new') has no
     // prior item to have a history — say so plainly, no fetch needed. An
@@ -437,7 +455,7 @@ function buildRecord(layer, f){
       ? `<div class="cc-mod-badge waiting">? ${D.waitingOnRider||'Waiting on the rider'}</div>`
       : `<div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>`;
     moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
-      ${badge}${body}${diff}${context}${asked}${replied}${modPhotos}
+      ${badge}${body}${diff}${shapeSwitch}${context}${asked}${replied}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       <div class="cc-mod-acts">
         <button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>
@@ -608,6 +626,19 @@ export function renderDrawerBody(layer, f){
   document.getElementById('drawerBody').innerHTML = buildRecord(layer, f);
   if(layer.key==='experience' && f.id!=null) hydrateRouteCommunity(f.id);
   if(CC_CONFIRMABLE.has(layer.key) && f.id!=null) hydrateItemConfirm(f.id);
+  /* A pending climb edit: hand its shape to the before/after switch and draw
+     the proposed side straight away. The curator is here to judge the
+     PROPOSAL, so that is what the map shows first; "Before" is one click away.
+     Fit to it too — a summit moved a kilometre can otherwise land off screen,
+     and an overlay you cannot see is not a review. */
+  const pShape = f.pending && f.pending.shape;
+  setPendingShape(pShape || null);
+  if(pShape){
+    const first = pShape.after ? 'after' : 'before';
+    if(showPendingShape(pShape, first)) fitPendingShape(pShape, first);
+  } else {
+    clearPendingShape();
+  }
   // C1-T3: async "Recent changes" — see loadItemHistory for the race guard.
   // Pending (moderation) features carry no f.id; when they target a real
   // item (f.pending.itemId, i.e. an edit — never a brand-new submission,
@@ -730,6 +761,8 @@ export function closeDrawer(){
   clearRevealPin();
   clearRouteHighlight();
   clearCorrections();
+  clearPendingShape();                               // drop the before/after climb overlay with the card that owns it
+  setPendingShape(null);
   sheet.clear();                                     // drop snap classes + inline transform for the next open
 }
 // Close affordances: the X and the scrim (tap the dimmed area above the mobile

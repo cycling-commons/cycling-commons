@@ -23,6 +23,7 @@ import { mapToast, closeDrawer, openDrawer, osmDrawer } from './drawer.js';
 import { _pickSegs } from './picking.js';
 import { dropPendingFromSearch } from './search-ui.js';
 import { addCuratedFeature } from './osm-pools.js';
+import { showPendingShape } from './pending-shape.js';
 
 // Route community loop (spec §7). One authenticated fetch on drawer-open
 // carries counts + my-state + a stateless CSRF token; the three POSTs reuse it.
@@ -300,6 +301,12 @@ export function submitModeration(btn){
     })
     .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast(D.decisionErr||'Could not record the decision — please try again.', {center:true}); });
 }
+/* The shape of the pending submission whose drawer is open, so the delegated
+   before/after handler above has something to draw. Set by the drawer when it
+   renders a pending card; cleared when it closes. */
+let _pendingShape = null;
+export function setPendingShape(shape){ _pendingShape = shape || null; }
+
 export function initCommunity(){
     // "Change my answer" reveals what you answered and the buttons to change it.
     document.addEventListener('click', e=>{
@@ -340,6 +347,23 @@ export function initCommunity(){
       const btn=e.target.closest('.cc-mod-btn'); if(!btn) return;
       if(btn.disabled) return;         // a decision is already in flight
       submitModeration(btn);
+    });
+    /* Before/after for a proposed climb shape. Delegated for the same reason
+       as everything else here, and it redraws the line on the MAP rather than
+       changing anything in the card — coordinates in a text diff are not
+       something a curator can review (pending-shape.js). */
+    document.addEventListener('click', e=>{
+      const btn=e.target.closest('.cc-shape-btn'); if(!btn || btn.disabled) return;
+      const box=btn.closest('.cc-mod'); if(!box) return;
+      const side=btn.dataset.shapeSide;
+      const shape=_pendingShape;
+      if(!shape) return;
+      box.querySelectorAll('.cc-shape-btn').forEach(b=>{
+        const on = b === btn;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      showPendingShape(shape, side);
     });
     // Clear the "must pick a bike type" warning as soon as the rider chooses one.
     document.addEventListener('change', e=>{ const s=e.target.closest('.cc-rc-invalid'); if(s) s.classList.remove('cc-rc-invalid'); });
