@@ -54,10 +54,21 @@
     icon: wiz.dataset.icon || '✎'
   };
 
-  // Locate mode: point (most), segment (road surface), none/track (ride).
-  // Show the map when adding a place, OR when editing one that has coordinates
-  // (so its location is visible and correctable); otherwise skip step 1.
-  var LOCATE = (ADD || hasCoords || RELOCATE) ? _locMode : 'off';
+  /* Locate mode: point (most), segment (road surface), none/track (ride).
+     Show the map when adding a place, OR when editing one that has coordinates
+     (so its location is visible and correctable); otherwise skip step 1.
+
+     A CLIMB is the exception, and always gets its map. Its line is not a
+     location it happens to sit at — it IS the item, and the only way to change
+     where the climb ends is to drag the summit. The `hasCoords` gate depends
+     on the caller putting lat/lng in the URL, which the map drawer's edit link
+     does and the contributions list's does not: a rider answering a curator's
+     question about their proposed ending arrived at a form with no map, unable
+     to see or adjust the very thing they were being asked about
+     (owner-reported 2026-08-03). CC_ITEM carries the stored route/grad/steep
+     either way, so the editor has everything it needs to draw it. */
+  var IS_CLIMB = !!(window.CC_ITEM && 'B' === window.CC_ITEM.letter);
+  var LOCATE = (ADD || hasCoords || RELOCATE || (IS_CLIMB && !!(window.CC_ITEM || {}).route)) ? _locMode : 'off';
 
   // Wizard state
   // media = uploaded photos, owned wholesale by media-upload.js's onChange.

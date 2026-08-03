@@ -121,12 +121,35 @@ application's own data, and a form that would not say so.
 The rule now allows one optional leading `~` and nothing else
 (`/^~?\d{1,2}(\.\d{1,2})?%?$/`); `~~20%`, `~abc` and `~200%` stay refused.
 
-**Why this went unnoticed, and how to test it properly.** Every automated probe
-submitted successfully, because a headless browser never populates the hidden
-geometry fields — MapLibre does not initialise, so `route`/`grad`/`steep` post
-empty and the validator is never reached. `ClimbGeometryTest` covers the rule
-directly for that reason. **Anything about the climb editor has to be checked
-in a real browser**; a green probe proves nothing about the geometry path.
+**Why this went unnoticed.** Every automated probe submitted successfully, and
+the first explanation written here — "a headless browser never populates the
+hidden geometry fields, MapLibre does not initialise" — was **wrong**. MapLibre
+initialises fine; the canvas renders and the markers place. The real reason is
+below: those probes opened `/improve?item=…` with no `lat`/`lng`, which until
+2026-08-03 dropped the Locate step entirely, so there was no editor to write
+`route`/`grad`/`steep` and the validator was never reached. With the step
+restored, the geometry path IS reachable from a probe.
+
+`ClimbGeometryTest` still covers the rule directly, which is the right place
+for it.
+
+### A climb always gets its map (2026-08-03)
+
+`LOCATE` was gated on `ADD || hasCoords || RELOCATE`, and `hasCoords` depends on
+the CALLER putting `lat`/`lng` in the URL. The map drawer's edit link does; the
+contributions list's (`?item=&type=`) does not. So a rider following the link
+from their own contributions reached a wizard with **no map at all** — stepper
+straight to Details.
+
+That is wrong for any item and fatal for a climb: its line is not a location it
+happens to sit at, it IS the item, and the only way to change where the climb
+ends is to drag the summit. A rider answering a curator's question about their
+proposed ending arrived at a form that could not show the thing being asked
+about (owner-reported 2026-08-03).
+
+Letter B now always gets the Locate step when the item has a stored route.
+`CC_ITEM` already carries `route`/`grad`/`steep` regardless of the step, so the
+editor mounts on the real geometry with nothing extra sent.
 
 **Still latent:** the editor requests OSRM with `overview=full`, and
 `ClimbGeometry::MAX_POINTS` is 2000. A long enough climb could exceed it and be
