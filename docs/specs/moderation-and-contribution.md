@@ -829,6 +829,33 @@ alone is measuring the harness. That mistake cost a full diagnosis here, and
 produced a confident, wrong root-cause write-up (a CSRF-token theory) that this
 paragraph replaces.
 
+### 5.2a Geometry is summarised, never dumped (2026-08-03)
+
+A climb edit used to fill the curator's card with the raw payload: two hundred
+coordinate pairs, then the gradient array, then the marker JSON. Nobody can
+decide anything from that. The one question a curator has about a redrawn climb
+— did it get longer, and where does it end now — was the one thing the card did
+not answer (owner: "this is pretty useless").
+
+`App\Contribution\ChangeValue` formats a changed value for a human, and both
+diff paths use it: `SubmissionQueue::diffStrings()` (desk cards, the map
+drawer's pending card, the history) and `SubmissionChangeSummary` (the rider's
+own contributions and messages). Geometry becomes:
+
+| field | reads as |
+|---|---|
+| `route` | `2.5 km · foot 50.4832, 5.7039 → summit 50.4860, 5.6927 · 101 points` |
+| `grad` | `11 samples · -2% to 16%` |
+| `steep` | `~20% at 50.4908, 5.7058` (plus *(placed by hand)* when manual) |
+
+The length is a real great-circle measurement of the polyline, not a point
+count, so `2.0 km → 2.5 km` states the actual change. A negative low end on
+`grad` is information rather than noise: it means the extension descends.
+
+Everything else is untouched — a word stays a word, a multi-select joins with
+commas. Malformed geometry degrades to something printable rather than throwing,
+because a broken payload must not take the whole queue card down with it.
+
 ### 7.3a A rider can see WHAT they contributed (2026-08-03, owner)
 
 Both rider-facing surfaces named the place and stopped there. "Your

@@ -22,10 +22,13 @@ use App\Catalog\ItemType;
  *
  * The difference from the desk's version, and the reason this is its own class
  * rather than a shared method: **a curator reads field keys, a rider must not
- * have to.** The desk prints `sq: Rough`, because a curator works the catalog
- * every day and the key is the fastest thing to scan. A rider sees "Road
- * quality", the label the form asked them for — resolved through
+ * have to.** The desk prints `pumpValve: Presta + Schrader`, because a curator
+ * works the catalog every day and the key is the fastest thing to scan. A rider
+ * sees "Valve type", the label the form asked them for — resolved through
  * {@see CatalogFormRegistry}, the same registry that rendered the field.
+ *
+ * Values themselves are formatted by {@see ChangeValue}, shared with the desk,
+ * so a climb's redrawn route reads as a length and its endpoints on both.
  *
  * A key with no registry entry keeps the key. That is deliberate: it happens
  * for fields the registry has since dropped, and showing `hairpins` is honest
@@ -68,8 +71,8 @@ final readonly class SubmissionChangeSummary
 
             $rows[] = [
                 'label' => $labels[$field] ?? $field,
-                'was' => null === $was || '' === $was ? null : $this->scalar($was),
-                'now' => $this->scalar($now),
+                'was' => null === $was || '' === $was ? null : ChangeValue::format((string) $field, $was),
+                'now' => ChangeValue::format((string) $field, $now),
             ];
         }
 
@@ -108,30 +111,5 @@ final readonly class SubmissionChangeSummary
         }
 
         return null;
-    }
-
-    /**
-     * A value as the rider would read it back. Lists (a multi-select such as a
-     * stay's accessibility) join with commas rather than printing JSON at
-     * somebody — `["Step-free","Handbike-friendly"]` is not an answer anyone
-     * gave.
-     */
-    private function scalar(mixed $v): string
-    {
-        if (\is_bool($v)) {
-            return $v ? '1' : '0';
-        }
-        if (\is_scalar($v)) {
-            return (string) $v;
-        }
-        if (\is_array($v) && array_is_list($v) && [] !== $v) {
-            $flat = array_filter($v, \is_scalar(...));
-
-            return \count($flat) === \count($v)
-                ? implode(', ', array_map(strval(...), $flat))
-                : (json_encode($v, \JSON_UNESCAPED_UNICODE) ?: '');
-        }
-
-        return null === $v ? '' : (json_encode($v, \JSON_UNESCAPED_UNICODE) ?: '');
     }
 }

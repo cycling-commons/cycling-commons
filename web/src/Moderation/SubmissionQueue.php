@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\RiderPseudonym;
+use App\Contribution\ChangeValue;
 use App\Media\MediaStorage;
 use App\Messaging\UserMessageKind;
 use Doctrine\DBAL\ArrayParameterType;
@@ -147,10 +148,13 @@ final class SubmissionQueue
         $was = [];
         $new = [];
         foreach ($changes as $field => $pair) {
+            // Geometry is summarised, not dumped: ChangeValue turns a route of
+            // 200 coordinate pairs into "4.3 km · foot … → summit … · 200
+            // points", which is what a curator can actually decide on.
             if (null !== ($pair['was'] ?? null)) {
-                $was[] = $field.': '.$this->scalar($pair['was']);
+                $was[] = $field.': '.ChangeValue::format($field, $pair['was']);
             }
-            $new[] = $field.': '.$this->scalar($pair['now'] ?? null);
+            $new[] = $field.': '.ChangeValue::format($field, $pair['now'] ?? null);
         }
 
         return [implode(' · ', $was), implode(' · ', $new)];
@@ -585,11 +589,6 @@ final class SubmissionQueue
         }
 
         return $bySubmission;
-    }
-
-    private function scalar(mixed $v): string
-    {
-        return \is_scalar($v) ? (string) $v : (json_encode($v, \JSON_UNESCAPED_UNICODE) ?: '');
     }
 
     /**
