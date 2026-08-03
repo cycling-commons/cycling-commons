@@ -111,7 +111,7 @@ function renderPlaceCard(name, meta, near, covGroups){
       if(!it || !Array.isArray(it.ll)) return;
       if(it.itemId!=null && idxIds().has(g.letter+':'+it.itemId)) return;
       all.push({dist:haversine(meta.ll, it.ll), e:{name:it.n||layer.label, kind:layer.label,
-        badge:g.letter, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
+        badge:layer.icon, color:layer.color, letter:g.letter, ll:it.ll, hlOff:[0,0], community:!it.curated,
         // it.itemId (curated rows only) routes through the served item's own
         // attributes instead of the OSM-tile fallback — see openCoverageByRef's header.
         go:()=>openCoverageByRef(it.ref, g.letter, it.ll, it.n, it.itemId)}});
@@ -196,6 +196,40 @@ export function resolveLocalFeature(name){
   return null;
 }
 // open a specific feature by name (deep-link from e.g. a profile page): activate its layer, draw, zoom in
+/* Resolve a served feature by its DB id.
+
+   The by-name resolver above cannot serve the moderation history: a settled
+   submission knows the item id, and its title is the submission's title, which
+   need not still match the item's name. Linking a settled row at
+   `?pending=<id>` was worse still — the submission is no longer pending, so
+   nothing resolved and the map simply opened at the default scope with nothing
+   selected (owner-reported 2026-08-03). */
+export function resolveLocalFeatureById(id){
+  const want = String(id);
+  let found = null;
+  CATALOG.forEach(layer => (layer.features || []).forEach(f => {
+    if (f.id != null && String(f.id) === want) found = { layer, f };
+  }));
+  if (found) return found;
+  // Curated pool features (the letters served as feature collections) live in
+  // the OSM pools rather than CATALOG.features — same fallback order the
+  // by-name resolver uses.
+  for (const key of Object.keys(osmLayers)) {
+    const info = osmLayers[key];
+    const f = info && info.data && (info.data.features || [])
+      .find(x => x.properties && x.properties.id != null && String(x.properties.id) === want);
+    if (f) return { poolKey: key, f };
+  }
+  return null;
+}
+
+export function openFeatureById(id){
+  const found = resolveLocalFeatureById(id);
+  if (!found) return false;
+  if (found.poolKey) return openPoolFeature(found.poolKey, found.f);
+  return openLocalFeature(found.layer, found.f);
+}
+
 export function openFeatureByName(name){
   const found=resolveLocalFeature(name);
   if(!found) return false;

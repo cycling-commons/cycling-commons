@@ -26,6 +26,15 @@
   .subhead{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin:1.6rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid rgba(20,22,14,.12)}
   .subhead:first-of-type{margin-top:.3rem}
 
+  /* `hidden` must actually hide. An author rule that sets `display` beats the
+     UA's [hidden]{display:none} — author styles win over UA styles regardless
+     of specificity — so every element here that takes its display from a class
+     silently ignored the attribute. #wzChange is the one that got away with it:
+     improve.js kept it hidden for climbs and for non-confirm edits, the CSS
+     showed it anyway, and a "Change location" button sat under an editor that
+     was already directly editable (owner-reported 2026-08-03). This replaces
+     three separate one-off patches that each fixed one element after it bit. */
+  #wiz [hidden]{display:none}
   .field{margin-bottom:1.3rem}
   .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
   /* Details step: two columns on wide screens — the stacked full-width fields
@@ -39,6 +48,23 @@
   .field input:focus,.field textarea:focus{border-color:var(--trail)}
   .field .fhelp{font-family:var(--mono);font-size:.62rem;color:#9a9d8c;margin-top:.35rem;text-transform:none;letter-spacing:0}
 
+  /* Multi-select fields (stays' accessibility) render as the site's orange
+     chips, the same look as the route form's bike types and the map rail's
+     filters — one visual language for "pick any of these". Symfony's expanded
+     ChoiceType emits a flat <input><label> pair per choice, so the input is
+     visually hidden and its label IS the chip; :checked + label paints it.
+     Without this the pairs inherit .field label's full-width uppercase rule
+     and render as a stack of far-apart rows with the boxes off to the right. */
+  .field:has(input[type=checkbox]) > div{display:flex;flex-wrap:wrap;gap:.5rem}
+  .field input[type=checkbox]{position:absolute;opacity:0;width:1px;height:1px}
+  .field input[type=checkbox] + label{display:inline-block;width:auto;margin:0;
+    font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;
+    color:#5a5d4d;cursor:pointer;transition:all .18s;user-select:none}
+  .field input[type=checkbox] + label:hover{border-color:var(--ink);color:var(--ink)}
+  .field input[type=checkbox]:checked + label{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  .field input[type=checkbox]:focus-visible + label{outline:2px solid var(--trail);outline-offset:2px}
+
   /* step 1 map */
   #wmap{height:clamp(420px,74vh,720px);border-radius:8px;overflow:hidden;border:1px solid rgba(20,22,14,.15);margin-bottom:.8rem;background:var(--paper-deep)}
   #wmap.confirm{height:clamp(280px,40vh,420px)}
@@ -50,7 +76,12 @@
   }
   .maplibregl-canvas{filter:none}  /* no per-frame filter chain on the WebGL canvas (same call as map.css) */
   .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
-  .readout #wzReset{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+  .readout #wzReset,.readout #wzUndo{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+  .readout #wzUndo{margin-left:auto}
+  /* How to place a climb — read before the map, not after a mistake. */
+  .climb-howto{margin:0 0 .9rem;padding:.75rem 1rem .75rem 2.1rem;background:var(--paper-deep);
+    border-left:2px solid var(--trail);border-radius:0 6px 6px 0;font-size:.86rem;line-height:1.55;color:#4a4d40}
+  .climb-howto li{margin:.18rem 0}
   .cc-pin{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50% 50% 50% 0;background:var(--ink);border:2px solid var(--paper);box-shadow:0 3px 8px rgba(20,22,14,.4)}
   /* known-places overlay (add mode): visual context only, taps pass through */
   .cc-cov-dot{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--paper);border:1.5px solid rgba(20,22,14,.5);font-size:.62rem;opacity:.8;pointer-events:none;box-shadow:0 1px 4px rgba(20,22,14,.25)}
@@ -162,13 +193,11 @@
     .kv:last-child{border-bottom:1px solid rgba(20,22,14,.08)}
   }
   .nochange{font-size:.85rem;color:var(--clay);background:var(--paper-deep);border-left:2px solid var(--clay);padding:.6rem .85rem;border-radius:0 6px 6px 0;margin-top:.9rem}
-  .nochange[hidden]{display:none}
   .rm-item.is-existing img{opacity:.85}
   .prov{font-size:.8rem;color:#595c4d;margin-top:1rem;line-height:1.5}
 
   /* the photos, on review — shown rather than listed as filenames */
   .review-media{margin-top:1.2rem}
-  .review-media[hidden]{display:none}
   .rm-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:.5rem}
   .rm-list{display:flex;flex-wrap:wrap;gap:.7rem}
   .rm-item{margin:0;width:118px}
@@ -243,7 +272,10 @@
      data-location-mode="{{ item_type.locationMode.value }}"
      data-icon="{{ item_type.icon }}"
      data-track="{{ item_type.hasTrackUpload ? '1' : '0' }}">
-  <div class="ey">{{ item_type.eyebrowKey|trans }} · {{ item_type.letter }} · {{ item_type.labelKey|trans }}</div>
+  {# No catalog letter here: it is a storage identifier (it still rides in this
+     page's own ?type= URL), and to the rider it read as a code they were
+     supposed to know. The type's name says the same thing without one. #}
+  <div class="ey">{{ item_type.eyebrowKey|trans }} · {{ item_type.labelKey|trans }}</div>
   {# Show the exact item being edited, persistently above every step, so it's always clear what you're editing. #}
   <h1 class="disp">{% if edit_name is defined and edit_name %}{{ edit_name }}{% elseif add_mode|default(false) %}{{ 'contribute.add.title'|trans({'%type%': item_type.labelKey|trans}) }}{% else %}{{ 'improve.title'|trans }}{% endif %}</h1>
   <p class="sub">{{ (add_mode|default(false) ? 'contribute.add.lead' : 'improve.lead')|trans }}</p>
@@ -317,6 +349,8 @@
     search_no_matches: 'improve.step1.search_no_matches'|trans,
     search_unavailable: 'improve.step1.search_unavailable'|trans,
     search_result: 'improve.step1.search_result'|trans,
+    search_coords_place: 'improve.step1.search_coords_place'|trans,
+    search_coords_go: 'improve.step1.search_coords_go'|trans,
     label_location: 'improve.review.label_location'|trans,
     loc_climb: 'improve.review.loc_climb'|trans,
     link_recognised: 'improve.step3.link_recognised'|trans,
@@ -363,17 +397,39 @@
 
   {# STEP 1 — LOCATE #}
   <section class="pane on" data-s="1" id="w-locate" data-confirm-help="{{ 'improve.locate.confirm.help'|trans }}">
-    <h2>{{ 'improve.step1.heading'|trans }}</h2>
-    <p class="help">{{ 'improve.step1.help'|trans }}</p>
+    {# "Where is it?" only asks a question nobody has answered yet. An existing
+       item's location was settled when it was created, so an edit's step 1 is
+       about CHECKING it — and, for a climb, adjusting the three points
+       (owner, 2026-08-03). improve.js's confirm-help swap now writes the same
+       sentence the server already rendered, so it is a harmless no-op here. #}
+    <h2>{{ (add_mode|default(false) ? 'improve.step1.heading' : 'improve.locate.confirm.heading')|trans }}</h2>
+    <p class="help">{{ (add_mode|default(false) ? 'improve.step1.help' : 'improve.locate.confirm.help')|trans }}</p>
     <div class="field csearch">
       <label for="wz-search">{{ 'improve.step1.search_label'|trans }}</label>
       <input id="wz-search" type="search" autocomplete="off" placeholder="{{ 'improve.step1.search_placeholder'|trans }}" />
       <div class="csearch-results" id="wz-results" hidden></div>
     </div>
+    {# Placing a climb is not dropping a pin: three points, in order, with the
+       road between the first two snapped for you. The readout narrates the
+       step you are on, but a rider needs to know the whole shape BEFORE they
+       start — especially that a third tap marks the steepest ramp, which
+       nothing else on screen would ever suggest (owner request 2026-08-03). #}
+    {% if item_type.letter == 'B' %}
+      <ol class="climb-howto">
+        <li>{{ 'improve.step1.climb_how_1'|trans }}</li>
+        <li>{{ 'improve.step1.climb_how_2'|trans }}</li>
+        <li>{{ 'improve.step1.climb_how_3'|trans }}</li>
+        <li>{{ 'improve.step1.climb_how_4'|trans }}</li>
+      </ol>
+    {% endif %}
     <div id="wmap" role="application" aria-label="{{ 'improve.step1.map_aria'|trans }}"></div>
     <button type="button" id="wzChange" class="btn btn-g" hidden>◎ {{ 'improve.locate.change'|trans }}</button>
     <div class="readout">
       <span id="wz-readout">{{ 'improve.step1.readout_initial'|trans }}</span>
+      {# Undo before Reset: it is the one you want after a mis-drag, and Reset
+         next to it is the bigger hammer. Revealed by improve.js only when there
+         is something to undo — a permanently dead control teaches nothing. #}
+      <span id="wzUndo" role="button" tabindex="0" hidden>{{ 'improve.step1.undo'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
     {% if add_mode|default(false) %}
@@ -477,9 +533,6 @@
   <section class="pane" data-s="4" id="w-review">
     <h2>{{ 'improve.step4.heading'|trans }}</h2>
     <p class="help">{{ 'improve.step4.help'|trans }}</p>
-    {# The licence granted and the photos about to be submitted, visible
-       together (docs/specs/photo-uploads.md §4). #}
-    <div class="consent-gate" id="media-consent-review"></div>
     <div class="card" id="reviewBody"></div>
     {# Filled + revealed by improve.js when an edit carries no change at all
        (the Submit button is disabled in the same breath). #}
@@ -525,6 +578,14 @@
     </div>
 
     <p class="prov">{{ 'improve.step4.prov'|trans|rich }}</p>
+    {# The licence receipt sits UNDER the provenance line, not above the review
+       card (where it opened the step). Both sentences say what happens to what
+       you send — the ODbL/CC BY-SA terms, then "and you already agreed to the
+       photo half, on this date" — so they read as one closing block instead of
+       a legal note interrupting the rider on the way to their own answers
+       (docs/specs/photo-uploads.md §4). Same id, so media-upload.js still
+       fills it. #}
+    <div class="consent-gate" id="media-consent-review"></div>
   </section>
 
   {# NAV ROW #}
@@ -546,6 +607,9 @@
    Harmless no-op include for non-climb items — the scripts only attach to window.Cc. #}
 <script src="{{ asset('contribute/climb-elevation.js') }}"></script>
 <script src="{{ asset('contribute/climb-editor.js') }}"></script>
+{# coords.js registers window.Cc.parseLatLng — the place-search box reads it at
+   mount time so a coordinate copied off the map can be pasted straight in. #}
+<script src="{{ asset('contribute/coords.js') }}"></script>
 {# media-upload.js registers window.Cc.mountMediaUploads, which improve.js
    calls at mount time — so it has to be defined first. #}
 <script src="{{ asset('contribute/media-upload.js') }}"></script>

@@ -30,6 +30,7 @@
     var consentId = null;   // FAIL-CLOSED: negative until the server says otherwise
     var csrfToken = null;
     var items = [];         // {id, name, row, bar, state}
+    var consentHtml = '';   // the standing notice, '' until consent is known to exist
 
     function t(key, fallback) { return T[key] || fallback; }
 
@@ -71,11 +72,23 @@
         : '';
       var standing = esc(t('standing', '')).replace('%date%',
         '<span class="consent-when">' + esc(fmtDate(consentedAt)) + '</span>');
-      var html = '<div class="consent-ok">✓ ' + standing +
+      consentHtml = '<div class="consent-ok">✓ ' + standing +
         ' <details class="consent-more"><summary>' + esc(t('readContract', 'Read the contract')) +
         '</summary><p>' + esc(t('contract', '')) + '</p></details>' + terms + '</div>';
-      if (noticeEl) noticeEl.innerHTML = html;
-      if (reviewNoticeEl) reviewNoticeEl.innerHTML = html;
+      if (noticeEl) noticeEl.innerHTML = consentHtml;
+      syncReviewNotice();
+    }
+
+    /* The photo step always shows the standing notice — that step IS about
+       photos. The review step only shows it when this submission actually
+       carries one. Consent is durable (§4: granted once, remembered), so a
+       rider who donated a photo last month was otherwise told "your photos
+       join the Commons" at the foot of a text-only correction that has no
+       photos in it — a sentence about nothing, in the one place the rider is
+       checking what they are actually sending. */
+    function syncReviewNotice() {
+      if (!reviewNoticeEl) return;
+      reviewNoticeEl.innerHTML = (consentHtml && items.length) ? consentHtml : '';
     }
 
     /* Before consent exists there is nothing to show here. The rider drops a
@@ -85,8 +98,9 @@
        full on this step regardless (the notice below the drop zone), so
        nothing is sprung on anyone. */
     function renderConsentPrompt() {
+      consentHtml = '';
       if (noticeEl) noticeEl.innerHTML = '';
-      if (reviewNoticeEl) reviewNoticeEl.innerHTML = '';
+      syncReviewNotice();
     }
 
     /* ---------- consent ---------- */
@@ -209,6 +223,7 @@
     function syncHidden() {
       var ids = items.filter(function (i) { return i.id; }).map(function (i) { return i.id; });
       hidden.value = ids.length ? JSON.stringify(ids) : '';
+      syncReviewNotice();   // first photo in / last photo out flips the review notice
       // Name AND thumbnail: the review step shows the photos themselves, and a
       // rider checking their submission over should be looking at the pictures
       // rather than at a list of filenames.

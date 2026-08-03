@@ -11,7 +11,7 @@
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions'] %}
+{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_takedowns', 'moderate_rulebook', 'moderate_history'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -29,9 +29,17 @@
   <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
   <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count is defined and mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
   <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}{% if mod_route_count is defined and mod_route_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_route_count }}</span>{% endif %}</a>
+  {# Takedowns: their own desk since 2026-08-03. A rights request on a legal
+     clock does not belong at the bottom of an editorial backlog. Badge counts
+     every open request, unscoped — these are not shared out by jurisdiction. #}
+  <a href="{{ path('moderate_takedowns') }}" class="dtab-mod {{ active == 'moderate_takedowns' ? 'on' : '' }}">{{ 'nav.takedowns'|trans }}{% if mod_takedown_count is defined and mod_takedown_count %}<span class="dtab-count" title="{{ 'account.mod_takedowns_open'|trans }}">{{ mod_takedown_count }}</span>{% endif %}</a>
+  {# What is already settled — its own page, so the queue stays about work. #}
+  <a href="{{ path('moderate_history') }}" class="dtab-mod {{ active == 'moderate_history' ? 'on' : '' }}">{{ 'nav.history'|trans }}</a>
   {# Regions desk: the gated
      curated-by-default flag. No badge — nothing queues here. #}
   <a href="{{ path('moderate_regions') }}" class="dtab-mod {{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>
+  {# The rulebook, moderators-only (it used to be a public wiki page). #}
+  <a href="{{ path('moderate_rulebook') }}" class="dtab-mod {{ active == 'moderate_rulebook' ? 'on' : '' }}">{{ 'nav.rulebook'|trans }}</a>
 </nav>
 {% else %}
 <nav class="dtabs" aria-label="{{ 'account.sections'|trans }}">

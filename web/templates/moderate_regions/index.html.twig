@@ -3,6 +3,10 @@
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <style>
+  .mod-bar{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;margin:0 0 1.4rem}
+  .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0}
+  .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
+  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
   .mh{padding:2rem 0 1.4rem}
   .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
   .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
@@ -58,6 +62,23 @@
 <div class="wrap" id="main">
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  {# Country filter (owner request, 2026-08-03). Options come from the regions
+     this curator can actually see, built before the filter narrows them — a
+     list that shrank to the picked country would be a one-way door. #}
+  {% if countries|length > 1 %}
+    <div class="mod-bar">
+      <form class="mod-filters" method="get" action="{{ path('moderate_regions') }}">
+        <label>{{ 'moderate.filter.country'|trans }}
+          <select name="country" onchange="this.form.submit()">
+            <option value="">{{ 'moderate.filter.all'|trans }}</option>
+            {% for c in countries %}<option value="{{ c }}"{{ country == c ? ' selected' }}>{{ c }}</option>{% endfor %}
+          </select>
+        </label>
+        <noscript><button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button></noscript>
+      </form>
+    </div>
+  {% endif %}
 
   {% if regions is empty %}
     <div class="empty-queue">

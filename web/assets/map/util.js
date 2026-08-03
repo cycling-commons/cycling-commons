@@ -31,6 +31,15 @@ export function haversine(a,b){ const R=6371,d=Math.PI/180;
   const x=Math.sin((b[0]-a[0])*d/2)**2 + Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin((b[1]-a[1])*d/2)**2;
   return 2*R*Math.asin(Math.sqrt(x)); }
 export function featurePoint(f){ return (f.geom&&f.geom.ll) || (f.route&&f.route[0]) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
+/* WHERE THE PIN GOES, which is not the same question as featurePoint().
+   A climb's stored anchor is its summit, but its pin is drawn at the foot —
+   `route[0]` wins here and loses in featurePoint. Both rules are legitimate
+   (the anchor is the item's location, the pin is where you grab it), and they
+   were only ever written down inside render.js. A second reader that guessed
+   the other way put the pending-review pin at Côte de la Redoute's summit,
+   9 m from an unrelated monument, so "Review on the map" highlighted the
+   monument (owner-reported 2026-08-03). One helper, both readers. */
+export function pinPoint(f){ return (f.route&&f.route[0]) || (f.geom&&f.geom.ll) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
 export function currentSeason(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter'; }
 export const ccUrl = lic => ({
   'CC0':'https://creativecommons.org/publicdomain/zero/1.0/',

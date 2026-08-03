@@ -17,9 +17,9 @@
    Nothing is injected any more: every module this one reaches into has landed,
    so initDrawer() is gone and only initDrawerChrome() remains (§9). */
 import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
-import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos } from './util.js';
+import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
 import { map } from './map-init.js';
-import { CITIES } from './catalog.js';
+import { CATALOG, CITIES } from './catalog.js';
 import { pinEl } from './icons.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
@@ -77,6 +77,22 @@ export function schemaRows(letter, src, id, opts){
   });
   return rows;
 }
+/** The <li> markup for a list of record rows. Extracted so the pending card can
+    render the target item's own rows with exactly the drawer's markup and
+    exactly the drawer's escaping — a second, slightly different renderer is how
+    an escaping rule gets forgotten in one of them. */
+function recRowsHtml(recs){
+  return recs.map(r => {
+    const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${safeHref(l.href)}" target="_blank" rel="noopener">${escPend(l.label)} ↗</a>`).join('') : '';
+    // r.html is the explicit trusted-markup channel (like r.links): honored
+    // only for rows whose markup the builder constructs itself with EVERY
+    // interpolation escPend-escaped (RIDE_CITIES city links, bike-type
+    // chips). Raw payload values never take this path — they stay
+    // escPend-escaped below (spec §13).
+    return `<li class="${r.empty?'empty':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
+  }).join('');
+}
+
 // drawer card for a generic bulk-OSM point — shared by the dot click handler and the confirmed pin
 export function osmDrawer(layer, p, ll, src){
   const lbl=(layer||{}).label||D.place||'Place';
@@ -260,15 +276,7 @@ function buildRecord(layer, f){
     const attrLabels = new Set(attrRows.filter(r=>!r.empty).map(r=>r.label));
     recs = recs.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
   }
-  const rows = recs.map(r => {
-    const links = r.links ? ' ' + r.links.map(l=>`<a class="cc-d-link" href="${safeHref(l.href)}" target="_blank" rel="noopener">${escPend(l.label)} ↗</a>`).join('') : '';
-    // r.html is the explicit trusted-markup channel (like r.links): honored
-    // only for rows whose markup the builder constructs itself with EVERY
-    // interpolation escPend-escaped (RIDE_CITIES city links, bike-type
-    // chips). Raw payload values never take this path — they stay
-    // escPend-escaped below (spec §13).
-    return `<li class="${r.empty?'empty':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
-  }).join('');
+  const rows = recRowsHtml(recs);
   const freshState = f.freshness ? ({fresh:D.freshFresh, ageing:D.freshAgeing, stale:D.freshStale}[f.freshness.state] || f.freshness.state) : '';
   const fresh = f.freshness
     ? `<div class="cc-d-fresh ${f.freshness.state}">${freshState} · ${D.lastConfirmed||'last confirmed'} ${f.freshness.lastConfirmed==='this season'?(D.thisSeason||'this season'):f.freshness.lastConfirmed}</div>` : '';
@@ -282,6 +290,14 @@ function buildRecord(layer, f){
   const elev = f.elev ? `<div class="cc-elev-cap">${D.elevation||'Elevation'} · ${Math.min(...f.elev)}–${Math.max(...f.elev)} m`
     + (f.gain?` · ${tpl(D.mClimbing||'{n} m climbing',{n:f.gain})}`:'') + ` <em>${D.fromGpx||'(from GPX)'}</em></div>` + elevSvg(f.elev) : '';
   const grad = f.grad ? gradStrip(f.grad) : '';
+  // Length, measured off the drawn line. A climb had no length anywhere in the
+  // drawer: it is not a form field (nobody types a climb's length, and a typed
+  // one would disagree with the line on the map), and only a couple of seeded
+  // climbs happened to mention it inside their free-text headline. Deriving it
+  // from `route` means the number and the drawn climb can never disagree, and
+  // every climb with a geometry gets one — including edited and new ones.
+  const climbKm = routeLengthKm(f.route);
+  const len = climbKm ? `<div class="cc-elev-cap">${D.climbLength||'Length'} · ${climbKm.toFixed(1)} km</div>` : '';
   const up = f.uploader
     ? (f.uploader.public
         ? `<div class="cc-up">${D.sharedBy||'Shared by'} <b>${escPend(f.uploader.name)}</b> · <a href="/profile?u=${slug(f.uploader.name)}">${D.viewProfile||'view profile'}</a></div>`
@@ -304,9 +320,15 @@ function buildRecord(layer, f){
         + `&type=${layer.letter}`
         + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
       edit = `<a class="cc-d-act edit" href="/improve?${editQ}">✎ ${D.editItem||'Edit this item'}</a>`;
-      // Direct "this pin is wrong" path — only when we know where it is.
-      // editQ already carries lat/lng; fix=location opens the editor expanded.
-      if(ell){
+      /* Direct "this pin is wrong" path — only when we know where it is, and
+         NOT for climbs. A point item opens its edit form on a compact,
+         view-only confirm map, so "Fix location" is what unlocks the pin;
+         letter B has no such gate — the three-point editor is live the moment
+         the form opens, with foot, summit and steepest all draggable. Both
+         links would therefore land on the identical page, and a second door
+         into one room reads as a second room (owner, 2026-08-03).
+         editQ already carries lat/lng; fix=location opens the editor expanded. */
+      if(ell && 'B' !== layer.letter){
         edit += `<a class="cc-d-act fixloc" href="/improve?${editQ}&fix=location">◎ ${D.fixLocation||'Fix location'}</a>`;
       }
     }
@@ -341,8 +363,14 @@ function buildRecord(layer, f){
     const body = s.body ? `<p class="cc-mod-body">${escPend(s.body)}</p>` : '';
     // "Proposed change" — what THIS submission wants to change, not the
     // item's history. Kept visually distinct from the history section below.
-    const diff = (s.was && s.now)
-      ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div><div class="cc-mod-was">${escPend(s.was)}</div><div class="cc-mod-now">${escPend(s.now)}</div></div>`
+    // Gated on `now`, not on `was && now`. Requiring `was` hid the proposed
+    // change completely whenever the field had no previous value — which is
+    // the ENTIRE "+ add a missing field" funnel, the commonest contribution
+    // there is. The curator then got a card naming an item and never naming
+    // the change they were being asked to approve (owner-reported 2026-08-03).
+    // The struck-out line appears only when there is something to strike out.
+    const diff = s.now
+      ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>${s.was?`<div class="cc-mod-was">${escPend(s.was)}</div>`:''}<div class="cc-mod-now">${escPend(s.now)}</div></div>`
       : '';
     // Moderation-UX (user request): "Everybody should always be able to see
     // the history of an item." A brand-new submission (type 'new') has no
@@ -383,11 +411,33 @@ function buildRecord(layer, f){
       ? `<div class="cc-mod-asked"><span class="cc-mod-asked-h">${D.youAsked||'You asked'}</span> ${escPend(s.asked)}</div>` : '';
     const replied = s.riderReply
       ? `<div class="cc-mod-replied"><span class="cc-mod-asked-h">${D.riderReplied||'Rider replied'}</span> ${escPend(s.riderReply)}</div>` : '';
+    /* WHAT is being changed, shown against WHAT the item already says.
+       A curator who does not personally know the Côte de la Redoute was given
+       a title, a pseudonym, an age and a region — and asked to approve. The
+       proposed change alone is not enough either: "shade: Exposed" means
+       nothing without the record it is being added to (owner-reported
+       2026-08-03). So an edit now carries the target item's own rows, read
+       from the catalogue the map has already loaded, rendered with the
+       drawer's own row renderer and its escaping.
+
+       Edits only: a `new` submission has no prior item, and its own values are
+       the proposed change directly above. Resolved here rather than when
+       CC_PENDING is built, because that runs before catalog-load has populated
+       the layers — at drawer-open time the features are there. */
+    let context = '';
+    if('new' !== s.type && s.itemId != null){
+      const lyr = CATALOG.find(l => l.letter === s.letter);
+      const target = lyr && (lyr.features||[]).find(x => x.id != null && String(x.id) === String(s.itemId));
+      if(target){
+        const ctxRows = recRowsHtml(schemaRows(s.letter, target, null));
+        if(ctxRows) context = `<div class="cc-mod-ctx"><div class="cc-mod-ctx-h">${D.itemToday||'This item today'}</div><ul class="cc-d-rec">${ctxRows}</ul></div>`;
+      }
+    }
     const badge = 'needs_info' === s.status
       ? `<div class="cc-mod-badge waiting">? ${D.waitingOnRider||'Waiting on the rider'}</div>`
       : `<div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>`;
     moderate = `<div class="cc-mod" data-id="${escPend(s.id)}">
-      ${badge}${body}${diff}${asked}${replied}${modPhotos}
+      ${badge}${body}${diff}${context}${asked}${replied}${modPhotos}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       <div class="cc-mod-acts">
         <button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>
@@ -423,8 +473,8 @@ function buildRecord(layer, f){
   const osmHref = (f.geom && f.geom.ll)
     ? `https://www.openstreetmap.org/query?lat=${f.geom.ll[0]}&lon=${f.geom.ll[1]}#map=18/${f.geom.ll[0]}/${f.geom.ll[1]}`
     : 'https://www.openstreetmap.org';
-  return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.letter} · ${layer.label}</span>
-    <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${grad}
+  return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.icon} ${layer.label}</span>
+    <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, `<a href="${osmHref}" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>`).replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${confirmPanel}${act}${moderate}${histSlot}`;
 }
@@ -520,6 +570,18 @@ export function mapToast(msg, opts){
   t.classList.toggle('center', !!(opts && opts.center));
   t.classList.add('show');
   clearTimeout(mapToast._t); mapToast._t=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/** Total length of a climb's drawn line, in km; 0 when there is no geometry. */
+function routeLengthKm(route){
+  if(!Array.isArray(route) || route.length < 2) return 0;
+  let km = 0;
+  for(let i = 1; i < route.length; i++){
+    const a = route[i-1], b = route[i];
+    if(!Array.isArray(a) || !Array.isArray(b)) return 0;
+    km += haversine(a, b);
+  }
+  return km;
 }
 
 function gradStrip(grad){

@@ -40,6 +40,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .acct-dropdown[hidden]{display:none}
 .acct-dropdown a,.acct-dropdown button{display:block;width:100%;box-sizing:border-box;text-align:left;background:none;border:0;font-family:var(--sans);font-size:.9rem;color:var(--ink)!important;opacity:1!important;padding:.55rem .7rem;border-radius:5px;cursor:pointer;text-decoration:none;white-space:nowrap}
 .acct-dropdown a:hover,.acct-dropdown button:hover{background:rgba(20,22,14,.06)}
+/* Unread count on the Messages row: the same number as the avatar bulb, in the
+   place it actually refers to. */
+.acct-dropdown .acct-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;
+  margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--trail);color:var(--ink);
+  font-family:var(--mono);font-size:.62rem;font-weight:700;line-height:1;vertical-align:middle}
 /* section labels group the menu — makes clear what's personal vs. moderation/admin work */
 /* Personal / Moderation groups: a solid header block (spruce / clay, matching
    the account-shell tab-bar labels) over a light tint of the same hue behind

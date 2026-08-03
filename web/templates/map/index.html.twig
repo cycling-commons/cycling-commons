@@ -198,26 +198,25 @@
         </div>
       </div>
 
-      <div class="grp">
-        <h3>{{ 'map.planner_title'|trans }}</h3>
-        <div class="chips" id="planner">
-          <span class="chip" data-km="20">~20 km</span><span class="chip" data-km="50">~50 km</span><span class="chip" data-km="80">~80 km</span><span class="chip" data-km="125">~125 km</span>
-        </div>
-        <div class="hint">{{ 'map.planner_hint'|trans }}</div>
-      </div>
+      {# Gone for good (2026-08-02): "Plan a loop from Spa" (planner.js draws a
+         hardcoded sample loop and says "⚠ Faked" in its own drawer) and the
+         Freshness chips (never wired to anything — `f.freshness` is produced
+         by no server path either). Honest UI: a control a rider can press has
+         to do what it looks like it does.
 
-      <div class="grp">
-        <h3>{{ 'map.freshness'|trans }}</h3>
-        <div class="chips">
-          <span class="chip on">{{ 'map.fresh_confirmed'|trans }}</span><span class="chip">{{ 'map.fresh_ageing'|trans }}</span><span class="chip">{{ 'map.fresh_all'|trans }}</span>
-        </div>
-      </div>
+         The four below came back the same day, once the reason they looked
+         broken was fixed. All four now share attrMatch()'s narrowing rule —
+         every chip on hides nothing, deselecting one hides items that cannot
+         be confirmed to match — so an unfilled attribute never silently
+         deletes an item from the map (map-and-search.md §4.3). #}
 
       <div class="grp">
         <h3>{{ 'map.climb_surface'|trans }}</h3>
         <div class="chips" id="sqf">
           <span class="chip on" data-v="Smooth">{{ 'map.surf_smooth'|trans }}</span><span class="chip on" data-v="Good">{{ 'map.surf_good'|trans }}</span>
           <span class="chip on" data-v="Worn">{{ 'map.surf_worn'|trans }}</span><span class="chip on" data-v="Rough">{{ 'map.surf_rough'|trans }}</span>
+          {# The fifth value. Missing here, it was a climb-eating hole: see ALL_SURF in render.js. #}
+          <span class="chip on" data-v="Broken / loose">{{ 'map.surf_broken'|trans }}</span>
         </div>
       </div>
 

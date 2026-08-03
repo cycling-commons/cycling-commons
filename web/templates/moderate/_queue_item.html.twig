@@ -5,22 +5,144 @@
   Parameters:
     item   array  — queue item from SubmissionQueue::filtered()
     form   FormView — ModerationDecisionType for this item
+
+  Layout (2026-08-02, owner). The desk is a queue worked dozens at a sitting,
+  so the row is sized for that: heading and actions share the TOP block, and a
+  submission with nothing extra to show is two lines tall — near enough the
+  list view that the default card costs nothing to scan. A card only grows when
+  it carries something a curator must actually look at: a photo, an edit diff,
+  the rider's words, a reply.
+
+  The three <details> triggers are buttons beside the primary action rather
+  than link-ish text stacked below it; an opened panel takes the full width of
+  the action group (`.q-act[open]` in index.html.twig) so the button row never
+  ends up half-height. Spec: moderation-and-contribution.md §5.2.
 #}
 <div class="q-item" data-item-id="{{ item.id }}">
-  <div class="q-meta">
-    <span class="q-tag q-tag--{{ item.type }}">{{ ('moderate.type.' ~ item.type)|trans }}</span>
-    <span class="q-when">{{ item.when }}</span>
+  <div class="q-top">
+    <div class="q-headwrap">
+      <div class="q-head">
+        <span class="q-tag q-tag--{{ item.type }}">{{ ('moderate.type.' ~ item.type)|trans }}</span>
+        {# The rider answered a needs-info question. It used to arrive as a
+           message in the curator's PERSONAL inbox; moderation work belongs on
+           the desk, so the signal has to be here where it can be scanned
+           (owner, 2026-08-03). The answer itself is further down the card. #}
+        {% if item.riderReply %}<span class="q-tag q-tag--answered">{{ 'moderate.answered'|trans }}</span>{% endif %}
+        <h3 class="q-title">{{ item.title }}</h3>
+        <span class="q-when">{{ item.when }}</span>
+      </div>
+      <div class="q-submitter">
+        {{ item.who }} &middot; {{ item.lat|number_format(3) }}&deg;N {{ item.lng|number_format(3) }}&deg;E
+      </div>
+    </div>
+
+    {# Decisions are made ONLY on the map (so a curator always sees the item in
+       place before approving) — the first button just routes there. The other
+       three are the desk's own verbs, and they keep their order: Escalate sits
+       BEFORE Trash on purpose (docs/specs/photo-uploads.md §6d), so a curator
+       reaching for "destroy this" because it is illegal meets the right verb
+       first. #}
+    <div class="q-acts">
+      <a class="btn-act btn-secondary q-review"
+         href="{{ path('map') }}?pending={{ item.id }}"
+         target="_blank" rel="noopener">{{ 'moderate.action.review_on_map'|trans }} &#8599;</a>
+
+      <details class="q-act q-act--message">
+        <summary class="btn-act btn-secondary">{{ 'moderate.msg.summary'|trans }}</summary>
+        <div class="q-act-panel">
+          <form method="post" action="{{ path('moderate_message') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
+            <input type="hidden" name="channel" value="submission">
+            <input type="hidden" name="id" value="{{ item.id }}">
+            {% if item.photos|length > 0 %}
+              {# A message may be about one specific photo (docs/specs/photo-uploads.md §5b).
+                 Same thread, same form — the reference is a detail of an ordinary
+                 message, not a second messaging system. #}
+              <label class="msg-photo-ref">{{ 'moderate.msg.about_photo'|trans }}
+                <select name="mediaId">
+                  <option value="">{{ 'moderate.msg.no_photo'|trans }}</option>
+                  {% for p in item.photos %}
+                    <option value="{{ p.id }}">{{ loop.index }}{% if p.takenAt %} &middot; {{ p.takenAt }}{% endif %}</option>
+                  {% endfor %}
+                </select>
+              </label>
+            {% endif %}
+            <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
+          </form>
+        </div>
+      </details>
+
+      {# The third verb (docs/specs/photo-uploads.md §6d). Both destructive
+         verbs open with WHEN to use them and close with a ticked
+         acknowledgement, because the button label alone cannot carry the
+         difference between "this edit is wrong" and "this content is
+         criminal". The tick is a UI speed bump — native `required`, no POST
+         until it is ticked; the server's own gates are unchanged and remain
+         the real ones (a reason here, the typed DELETE for Trash). #}
+      <details class="q-act q-act--escalate">
+        <summary class="btn-act btn-secondary">{{ 'moderate.escalate.button'|trans }}</summary>
+        <div class="q-act-panel">
+          <form method="post" action="{{ path('moderate_escalate_submission') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
+            <input type="hidden" name="submission" value="{{ item.id }}">
+            <p class="q-act-head">{{ 'moderate.escalate.summary'|trans }}</p>
+            <p class="q-act-when">{{ 'moderate.escalate.when'|trans }}</p>
+            <p>{{ 'moderate.escalate.help'|trans }}</p>
+            <input type="text" name="reason" maxlength="2000" required
+                   placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
+            <label class="q-act-ack"><input type="checkbox" required>
+              <span>{{ 'moderate.escalate.confirm_check'|trans }}</span></label>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.escalate.submit'|trans }}</button>
+          </form>
+        </div>
+      </details>
+
+      <details class="q-act q-act--trash trash-confirm">
+        <summary class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</summary>
+        <div class="q-act-panel">
+          <form method="post" action="{{ path('moderate_trash') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('moderate-trash') }}">
+            <input type="hidden" name="kind" value="submission">
+            <input type="hidden" name="id" value="{{ item.id }}">
+            {# No link to the public wiki rulebook (2026-08-03, owner). A
+               world-readable page describing how moderators decide what to
+               destroy is a social-engineering aid: it tells anyone exactly
+               which words get a submission trashed and which get it escalated.
+               The rulebook becomes a moderators-only page reached from the
+               moderation menu; until that page exists this panel carries no
+               link at all rather than a public one. #}
+            <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong></p>
+            <p>{{ 'moderate.trash.confirm_rest'|trans }}</p>
+            <p class="q-act-when">{{ 'moderate.trash.when'|trans }}</p>
+            {# Typed confirmation (moderator rulebook): native pattern validation
+               blocks the POST unless the literal word is typed; the server
+               re-checks. Closing the panel/cancelling sends nothing — no record
+               is written for an uncompleted Trash. #}
+            <label class="trash-type-label">{{ 'moderate.trash.type_label'|trans }}
+              <input type="text" name="confirm" required pattern="DELETE" autocomplete="off" spellcheck="false" placeholder="DELETE" class="trash-type-input">
+            </label>
+            <label class="q-act-ack"><input type="checkbox" required>
+              <span>{{ 'moderate.trash.confirm_check'|trans }}</span></label>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+          </form>
+        </div>
+      </details>
+    </div>
   </div>
-  <h3 class="q-title">{{ item.title }}</h3>
-  <div class="q-submitter">
-    {{ item.who }} &middot; {{ item.lat|number_format(3) }}&deg;N {{ item.lng|number_format(3) }}&deg;E
-  </div>
+
   {% if item.body %}
     <p class="q-body">{{ item.body }}</p>
   {% endif %}
-  {% if item.was %}
+  {# Gated on `now`, not on `was`. Gating on `was` hid the change completely
+     whenever a field had no previous value — which is the ENTIRE "+ add a
+     missing field" funnel, the commonest contribution there is. The card then
+     showed a title and nothing else, and a curator was asked to approve a
+     change the page never named (owner-reported 2026-08-03). The struck-out
+     line only appears when there is something to strike out. #}
+  {% if item.now %}
     <div class="q-diff">
-      <div class="q-was">{{ item.was }}</div>
+      {% if item.was %}<div class="q-was">{{ item.was }}</div>{% endif %}
       <div class="q-now">{{ item.now }}</div>
     </div>
   {% endif %}
@@ -43,74 +165,4 @@
   {% if item.riderReply %}
     <p class="q-rider-reply"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ item.riderReply }}</p>
   {% endif %}
-
-  {# Decisions are made ONLY on the map (so a curator always sees the item in
-     place before approving). This list just routes there — open the pending
-     item's drawer, review, edit if needed, then approve/reject in the drawer. #}
-  <div class="q-actions">
-    <a class="btn-act btn-secondary q-review"
-       href="{{ path('map') }}?pending={{ item.id }}"
-       target="_blank" rel="noopener">{{ 'moderate.action.review_on_map'|trans }} &#8599;</a>
-  </div>
-
-  {# message + trash side by side (rider feedback: no full-width stack) #}
-  <div class="mod-2col">
-    <details class="msg-rider">
-      <summary>{{ 'moderate.msg.summary'|trans }}</summary>
-      <form method="post" action="{{ path('moderate_message') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
-        <input type="hidden" name="channel" value="submission">
-        <input type="hidden" name="id" value="{{ item.id }}">
-        {% if item.photos|length > 0 %}
-          {# A message may be about one specific photo (docs/specs/photo-uploads.md §5b).
-             Same thread, same form — the reference is a detail of an ordinary
-             message, not a second messaging system. #}
-          <label class="msg-photo-ref">{{ 'moderate.msg.about_photo'|trans }}
-            <select name="mediaId">
-              <option value="">{{ 'moderate.msg.no_photo'|trans }}</option>
-              {% for p in item.photos %}
-                <option value="{{ p.id }}">{{ loop.index }}{% if p.takenAt %} &middot; {{ p.takenAt }}{% endif %}</option>
-              {% endfor %}
-            </select>
-          </label>
-        {% endif %}
-        <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
-        <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
-      </form>
-    </details>
-
-    {# The third verb (docs/specs/photo-uploads.md §6d). Sits BEFORE Trash on
-       purpose: a curator reaching for "destroy this" because it is illegal
-       should meet the right verb first. #}
-    <details class="msg-rider">
-      <summary>{{ 'moderate.escalate.summary'|trans }}</summary>
-      <form method="post" action="{{ path('moderate_escalate_submission') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
-        <input type="hidden" name="submission" value="{{ item.id }}">
-        <p>{{ 'moderate.escalate.help'|trans }}</p>
-        <input type="text" name="reason" maxlength="2000" required
-               placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
-        <button type="submit" class="btn-act btn-secondary">{{ 'moderate.escalate.submit'|trans }}</button>
-      </form>
-    </details>
-
-    <details class="msg-rider trash-confirm">
-      <summary>{{ 'moderate.trash.button'|trans }}</summary>
-      <form method="post" action="{{ path('moderate_trash') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('moderate-trash') }}">
-        <input type="hidden" name="kind" value="submission">
-        <input type="hidden" name="id" value="{{ item.id }}">
-        <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong> {{ 'moderate.trash.confirm_rest'|trans }}
-           <a href="https://wiki.cyclingcommons.org/moderator-rulebook/" target="_blank" rel="noopener">{{ 'moderate.trash.rulebook_link'|trans }}</a></p>
-        {# Typed confirmation (moderator rulebook): native pattern validation
-           blocks the POST unless the literal word is typed; the server
-           re-checks. Closing the panel/cancelling sends nothing — no record
-           is written for an uncompleted Trash. #}
-        <label class="trash-type-label">{{ 'moderate.trash.type_label'|trans }}
-          <input type="text" name="confirm" required pattern="DELETE" autocomplete="off" spellcheck="false" placeholder="DELETE" class="trash-type-input">
-        </label>
-        <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
-      </form>
-    </details>
-  </div>
 </div>

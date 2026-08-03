@@ -10,18 +10,29 @@
   .mh .pend-count{font-family:var(--mono);font-size:.68rem;color:var(--clay);margin-left:.8rem}
 
 
-  .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0 0 1.4rem}
+  .mod-bar{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;margin:0 0 1.4rem}
+  .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0}
   .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
   .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
 
   .q-list{margin:1.8rem 0}
-  .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.3rem 1.4rem;margin-bottom:1.1rem;background:var(--paper)}
-  .q-meta{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
-  .q-tag{font-family:var(--mono);font-size:.57rem;letter-spacing:.07em;text-transform:uppercase;padding:.2rem .45rem;border-radius:3px;color:var(--ink)}
+  .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:.8rem .9rem;margin-bottom:.6rem;background:var(--paper)}
+  /* Heading block and action row share the card's top line, so an ordinary
+     submission is two lines tall and only real review context (photo, diff,
+     rider's words) makes the card grow. */
+  .q-top{display:flex;align-items:flex-start;gap:.9rem;flex-wrap:wrap}
+  .q-headwrap{flex:1 1 16rem;min-width:0}
+  .q-acts-wrap{flex:0 0 auto}
+  /* Tag, title and age share one line: three separate rows for one heading is
+     what made a queue of dozens scroll for pages. */
+  .q-head{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap}
+  .q-tag{font-family:var(--mono);font-size:.57rem;letter-spacing:.07em;text-transform:uppercase;padding:.2rem .45rem;border-radius:3px;color:var(--ink);flex:0 0 auto;align-self:center}
   .q-tag--new{background:#FF5A1F}.q-tag--edit{background:#8FB6A8}.q-tag--hazard{background:#C8923A}.q-tag--photo{background:#B5532E;color:var(--paper)}
-  .q-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:auto}
-  .q-title{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin-bottom:.25rem}
-  .q-submitter{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin-bottom:.5rem}
+  /* Answered: the rider came back and this card is waiting on the curator. */
+  .q-tag--answered{background:var(--spruce-lift);color:var(--paper)}
+  .q-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:auto;flex:0 0 auto}
+  .q-title{font-family:var(--serif);font-weight:600;font-size:1rem;margin:0;min-width:0}
+  .q-submitter{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin:.15rem 0 .45rem}
   .q-view{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35);white-space:nowrap}
   .q-view:hover{color:var(--ink);border-bottom-color:var(--ink)}
   .q-view:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:2px}
@@ -45,15 +56,68 @@
   .q-review{display:inline-block;text-decoration:none}
   /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system) */
 
-  .msg-rider{margin-top:.8rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.8rem}
-  .msg-rider summary{cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);
-    display:flex;align-items:center;min-height:32px;padding:.35rem 0}
-  .msg-rider summary:hover{color:var(--ink)}
-  .msg-rider form{margin-top:.6rem;display:flex;flex-direction:column;gap:.5rem}
-  /* message + trash split over two columns; buttons back to natural size */
-  .mod-2col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
-  @media(max-width:700px){.mod-2col{grid-template-columns:1fr}}
-  .msg-rider form .btn-act{align-self:flex-end}
+  /* ONE action row. The <details> triggers are buttons beside the primary
+     action; an OPEN panel claims the whole row (flex-basis:100%) so the form
+     drops underneath instead of stretching the row it sits in — which is what
+     lets four controls live on one line without the row jumping around. */
+  .q-acts{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;flex:0 1 auto;max-width:100%}
+  .q-act{flex:0 0 auto;min-width:0}
+  /* No-JS fallback only: an open <details> claims the row so its form is not
+     squeezed into a button's width. It costs the trigger its place in the
+     line, which is exactly what the enhancement below removes. */
+  .q-act[open]{flex:1 0 100%;order:1}
+  .q-act > summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center}
+  .q-act > summary::-webkit-details-marker{display:none}
+  .q-act > summary::marker{content:''}
+  .q-act[open] > summary{background:rgba(20,22,14,.06)}
+  .q-act-panel{margin:.55rem 0 .2rem;padding:.7rem .85rem;border:1px solid rgba(20,22,14,.14);
+    border-radius:6px;background:var(--paper-deep)}
+  /* Enhanced disclosure: the trigger is a real button that never leaves the
+     row, and its panel lives in .q-panels underneath the whole card. */
+  .q-act-btn[aria-expanded="true"]{background:rgba(20,22,14,.06)}
+  .q-panels .q-act-panel{margin:.6rem 0 0}
+  .q-act-panel form{display:flex;flex-direction:column;gap:.5rem}
+  .q-act-panel form .btn-act{align-self:flex-start}
+  .q-act-panel p{font-size:.86rem;line-height:1.5;color:#4a4d40}
+  .q-act-head{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
+  /* WHEN to reach for this verb, set apart from the how — the sentence that
+     stops a curator using Trash on a merely wrong edit. */
+  .q-act-when{border-left:2px solid var(--clay);padding-left:.6rem;font-weight:600}
+  .q-act-ack{display:flex;align-items:flex-start;gap:.45rem;font-size:.84rem;line-height:1.45;color:#4a4d40;cursor:pointer}
+  .q-act-ack input{margin-top:.2rem;flex:0 0 auto}
+  .q-act-panel textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
+  .q-act-panel input[type=text]{font-family:var(--sans);font-size:.9rem;padding:.45rem .55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper)}
+
+  /* List density (2026-08-02): the same rows with the review context folded
+     away — for triage passes, where the curator is scanning what arrived
+     rather than reading each one. The decision still happens on the map, so
+     nothing needed for a DECISION is hidden here; body, diff, photos and the
+     rider's reply are all context that the map drawer shows again. */
+  .q-density{display:flex;gap:.3rem;align-items:center;margin-left:auto}
+  .q-density .dens{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.35rem .6rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;background:transparent;
+    color:#595c4d;cursor:pointer;min-height:34px}
+  .q-density .dens.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .q-list.is-list .q-item{padding:.45rem .7rem;margin-bottom:.3rem}
+  .q-list.is-list .q-body,
+  .q-list.is-list .q-diff,
+  .q-list.is-list .q-photos,
+  .q-list.is-list .q-rider-reply{display:none}
+  .q-list.is-list .q-submitter{margin:0}
+  .q-list.is-list .q-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media(min-width:900px){
+    /* ONE line per submission: the card's own top block, with the heading and
+       the submitter side by side instead of stacked. Nothing is capped in
+       width — a cap made the four buttons wrap to a second line, and a
+       two-line "list" row is barely shorter than the card it compresses. The
+       title is the only elastic part and takes the ellipsis. Opening a panel
+       still expands the row, which is the one time the height is wanted. */
+    .q-list.is-list .q-item{padding:.35rem .7rem}
+    .q-list.is-list .q-top{flex-wrap:nowrap;align-items:center}
+    .q-list.is-list .q-headwrap{display:flex;align-items:baseline;gap:.6rem;flex:1 1 auto}
+    .q-list.is-list .q-head{flex:0 1 auto;min-width:0;flex-wrap:nowrap}
+    .q-list.is-list .q-submitter{flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:26ch}
+  }
   .trash-warn{color:#8b1a1a}
   .trash-type-label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8b1a1a;margin:.5rem 0}
   .trash-type-input{display:block;margin-top:.3rem;font-family:var(--mono);font-size:.85rem;padding:.35rem .5rem;border:1.5px solid #8b1a1a;border-radius:5px;background:transparent;max-width:11rem}
@@ -77,7 +141,7 @@
 </style>
 {% endblock %}
 
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: nav_active|default('moderate'), mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
 {% block body %}
 <div class="mh">
@@ -86,7 +150,7 @@
     <h1>{{ 'moderate.title'|trans }}</h1>
     <div>
       <span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span>
-      <span class="pend-count">{{ 'moderate.overview.showing'|trans({'%shown%': items|length, '%total%': total}) }}</span>
+      <span class="pend-count">{{ 'moderate.overview.showing'|trans({'%shown%': items|length, '%total%': matching}) }}</span>
     </div>
   </div>
 </div>
@@ -95,6 +159,7 @@
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
+  <div class="mod-bar">
   <form class="mod-filters" method="get" action="{{ path('moderate') }}">
     <label>{{ 'moderate.filter.country'|trans }}
       <select name="country" onchange="this.form.submit()">
@@ -114,76 +179,25 @@
         {% for t in types %}<option value="{{ t }}"{{ filters.type == t ? ' selected' }}>{{ ('moderate.type.' ~ t)|trans }}</option>{% endfor %}
       </select>
     </label>
+    <label class="mod-search">{{ 'moderate.filter.search'|trans }}
+      <input type="search" name="q" value="{{ filters.q }}" placeholder="{{ 'moderate.filter.search_ph'|trans }}">
+    </label>
     <noscript><button type="submit" class="btn-act btn-needs-info">{{ 'moderate.filter.apply'|trans }}</button></noscript>
+    <button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button>
   </form>
 
-  {# ── Photo takedown requests (docs/specs/photo-uploads.md §6b/§6c) ──
-     Above the queue, unfiltered, and shown to every curator: somebody has
-     asked for a photo to come down and the clock on that is a legal one, not
-     a workload one. Deliberately NOT a second desk — same page, same two verbs
-     the rest of moderation uses. Two sources share the cards: the uploader
-     (withheld the moment they asked) and a third party who says they are in
-     the picture (photo still up unless the urgent category fired). #}
-  {% if takedowns is not empty or urgent_breaker_open|default(false) %}
-  <section class="q-takedowns">
-    <h2>{{ 'moderate.takedown.heading'|trans }}</h2>
-    {% if urgent_breaker_open|default(false) %}
-      {# The site-wide auto-withhold budget is spent: urgent reports are
-         arriving far faster than any genuine rate, so they are queuing here
-         instead of taking photos down by themselves (§6c). #}
-      <p class="td-lead" role="alert"><b>{{ 'moderate.takedown.breaker_open_b'|trans }}</b> {{ 'moderate.takedown.breaker_open'|trans }}</p>
-    {% endif %}
-    <p class="td-lead">{{ 'moderate.takedown.lead'|trans }}</p>
-    {% for t in takedowns %}
-      <article class="td-card">
-        <div class="td-body">
-          <img src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}">
-          <div>
-            <b>{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}</b>
-            <p class="td-meta">
-              {% if t.source == 'third_party' %}
-                {{ 'moderate.takedown.source_third_party'|trans }}
-                · {{ ('media.report.category.' ~ t.category)|trans }}
-                · {{ (t.withheld ? 'moderate.takedown.state_withheld' : 'moderate.takedown.state_published')|trans }}
-              {% else %}
-                {{ 'moderate.takedown.source_uploader'|trans }}
-              {% endif %}
-            </p>
-            <p class="td-reason">{{ t.reason }}</p>
-            <p class="td-meta">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|cc_datetime}) }}</p>
-            {% if t.contact %}
-              {# Curator-only: the address to answer within the month
-                 (Art. 12(3)), through the project mailbox — never shown to,
-                 or shared with, the uploader. #}
-              <p class="td-meta">{{ 'moderate.takedown.reply_to'|trans({'%email%': t.contact}) }}</p>
-            {% endif %}
-          </div>
-        </div>
-        {# The third verb (docs/specs/photo-uploads.md §6d). Separate form so it
-           can never be a mis-click on the decision buttons, and folded away
-           because it is the rare case, not the common one. #}
-        <details class="td-escalate">
-          <summary>{{ 'moderate.escalate.summary'|trans }}</summary>
-          <p>{{ 'moderate.escalate.help'|trans }}</p>
-          <form method="post" action="{{ path('moderate_escalate') }}" class="td-actions">
-            <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
-            <input type="hidden" name="media" value="{{ t.uuid }}">
-            <input type="text" name="reason" maxlength="2000" required
-                   placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
-            <button type="submit" class="btn-act btn-reject">{{ 'moderate.escalate.submit'|trans }}</button>
-          </form>
-        </details>
-        <form method="post" action="{{ path('moderate_takedown') }}" class="td-actions">
-          <input type="hidden" name="_token" value="{{ csrf_token('moderate_takedown') }}">
-          <input type="hidden" name="media" value="{{ t.uuid }}">
-          <input type="text" name="note" maxlength="2000" placeholder="{{ 'moderate.takedown.note_placeholder'|trans }}">
-          <button type="submit" name="decision" value="grant" class="btn-act btn-approve">{{ 'moderate.takedown.grant'|trans }}</button>
-          <button type="submit" name="decision" value="decline" class="btn-act btn-reject">{{ 'moderate.takedown.decline'|trans }}</button>
-        </form>
-      </article>
-    {% endfor %}
-  </section>
+  {# Density switch: cards (full review context) ↔ list (one line per
+     submission, for a triage pass). Rendered only when there is a queue to
+     switch, and only with JS — it is a view preference, not a filter, so it
+     never touches the URL or the server. The choice is remembered per browser
+     because a curator picks a way of working, not a way of working *once*. #}
+  {% if items is not empty %}
+    <div class="q-density" id="qDensity" role="group" aria-label="{{ 'moderate.view.label'|trans }}" hidden>
+      <button type="button" class="dens" data-dens="cards" aria-pressed="true">{{ 'moderate.view.cards'|trans }}</button>
+      <button type="button" class="dens" data-dens="list" aria-pressed="false">{{ 'moderate.view.list'|trans }}</button>
+    </div>
   {% endif %}
+  </div>
 
   {% if items is empty %}
   <div class="empty-queue">
@@ -192,11 +206,109 @@
     <p>{{ 'moderate.empty.body'|trans }}</p>
   </div>
   {% else %}
-  <div class="q-list">
+  <div class="q-list" id="qList">
     {% for item in items %}
       {% include 'moderate/_queue_item.html.twig' with {item: item} %}
     {% endfor %}
   </div>
+  {% include 'moderate/_pager.html.twig' with {pager: pager, route: 'moderate', params: filters} %}
   {% endif %}
+
 </div>
+
+{# Density switch. Unhidden here rather than in the markup so the control only
+   exists where it can work — without JS the queue stays in cards, which is the
+   view that carries the full review context. #}
+<script nonce="{{ csp_nonce() }}">
+(function () {
+  var bar = document.getElementById('qDensity');
+  var list = document.getElementById('qList');
+  if (!bar || !list) return;
+  var KEY = 'cc-mod-density';
+  function apply(mode) {
+    list.classList.toggle('is-list', mode === 'list');
+    bar.querySelectorAll('.dens').forEach(function (b) {
+      var on = b.dataset.dens === mode;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  var saved = 'list';
+  try { saved = localStorage.getItem(KEY) === 'list' ? 'list' : 'cards'; } catch (e) { saved = 'cards'; }
+  apply(saved);
+  bar.hidden = false;
+  bar.addEventListener('click', function (e) {
+    var b = e.target.closest('.dens');
+    if (!b) return;
+    apply(b.dataset.dens);
+    try { localStorage.setItem(KEY, b.dataset.dens); } catch (e2) { /* private mode — the view still switched */ }
+  });
+})();
+
+/* Action panels: keep the four triggers on ONE line.
+
+   A <details> cannot do this. Its panel is a descendant of the element that
+   sits in the button row, so an open panel either squeezes into a button's
+   width or takes the whole row and drags its own trigger onto the next line
+   (`display:contents` on <details> is not a way out — Chrome then shows the
+   panel while it is CLOSED). So with JS the <details> becomes the disclosure
+   it was standing in for: a real button that stays put, and its panel moved to
+   a host below the card. aria-expanded/aria-controls carry what <summary> was
+   carrying for free.
+
+   Without JS the markup is untouched and every verb still works — the trigger
+   just moves when it opens. That is the reason this is an enhancement and not
+   the server's markup: a moderator with no JS keeps Message, Escalate, Trash.
+
+   One panel open at a time per card, so a queue does not quietly turn into a
+   column of expanded forms. */
+(function () {
+  document.querySelectorAll('.q-item').forEach(function (item) {
+    var acts = item.querySelector('.q-acts');
+    var details = Array.prototype.slice.call(item.querySelectorAll('.q-act'));
+    if (!acts || !details.length) return;
+
+    var host = document.createElement('div');
+    host.className = 'q-panels';
+    acts.parentNode.insertBefore(host, acts.nextSibling);
+
+    var pairs = [];
+    details.forEach(function (d, i) {
+      var summary = d.querySelector('summary');
+      var panel = d.querySelector('.q-act-panel');
+      if (!summary || !panel) return;
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = summary.className + ' q-act-btn ' + d.className.replace('q-act', '').trim();
+      btn.textContent = summary.textContent;
+      btn.setAttribute('aria-expanded', 'false');
+      var id = 'qp-' + (item.dataset.itemId || 'x') + '-' + i;
+      panel.id = id;
+      btn.setAttribute('aria-controls', id);
+
+      panel.hidden = true;
+      host.appendChild(panel);
+      d.parentNode.replaceChild(btn, d);
+      pairs.push({ btn: btn, panel: panel });
+    });
+
+    pairs.forEach(function (p) {
+      p.btn.addEventListener('click', function () {
+        var opening = p.panel.hidden;
+        pairs.forEach(function (o) {
+          o.panel.hidden = true;
+          o.btn.setAttribute('aria-expanded', 'false');
+        });
+        if (opening) {
+          p.panel.hidden = false;
+          p.btn.setAttribute('aria-expanded', 'true');
+          var first = p.panel.querySelector('textarea, input:not([type=hidden]), select');
+          if (first) first.focus();
+        }
+      });
+    });
+  });
+})();
+</script>
 {% endblock %}

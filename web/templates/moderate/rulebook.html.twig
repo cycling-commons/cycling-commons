@@ -1,0 +1,184 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The moderator rulebook — moderators only (2026-08-03, owner).
+
+  This page WAS the public wiki's `moderator-rulebook`. All of it moved here and
+  the public page is gone: a published account of how removal decisions are
+  really made is also a script for talking a curator into removing something,
+  and the takedown section was the clearest example — a two-row table mapping
+  "their words say" to "decide". The old page even said as much about its own
+  missing half. Now the whole thing is behind ROLE_CURATOR.
+
+  The rules are written INLINE here rather than through translation keys, and
+  that is deliberate. This is one operational document for a small team, full of
+  tables and conditional phrasing where a mistranslated clause changes what a
+  curator does to somebody's photo. The page's chrome (title, kicker, the
+  moderators-only badge) stays translated because it is chrome. If the rulebook
+  is ever translated, it should be translated by a person who moderates, not
+  key-by-key — see the handoff note.
+#}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .mh{padding:2rem 0 1.4rem}
+  .mh .kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
+  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
+  .mh .role-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce-lift);color:var(--paper);padding:.22rem .55rem;border-radius:30px;margin-top:.5rem}
+
+  .rb{max-width:74ch;margin:0 0 3rem}
+  .rb .lead{font-size:1rem;line-height:1.6;color:#4a4d40;margin-bottom:2rem}
+  .rb section{margin-bottom:2.4rem;scroll-margin-top:5rem}
+  .rb h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin-bottom:.5rem;color:var(--ink)}
+  .rb h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.4rem 0 .5rem}
+  .rb p{font-size:.95rem;line-height:1.65;color:#3a3d33;margin-bottom:.8rem}
+  .rb ul{margin:0 0 .9rem 1.1rem}
+  .rb li{font-size:.95rem;line-height:1.6;color:#3a3d33;margin-bottom:.5rem}
+  .rb strong{font-weight:700;color:var(--ink)}
+  .rb .private{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--clay);border:1px solid var(--clay);border-radius:30px;padding:.25rem .6rem;margin-bottom:1.2rem}
+  .rb-table{width:100%;border-collapse:collapse;margin:.6rem 0 1rem;font-size:.88rem}
+  .rb-table th{text-align:left;font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;
+    border-bottom:1px solid rgba(20,22,14,.18);padding:.4rem .6rem .4rem 0;vertical-align:bottom}
+  .rb-table td{border-bottom:1px solid rgba(20,22,14,.08);padding:.55rem .6rem .55rem 0;vertical-align:top;line-height:1.5;color:#3a3d33}
+  .rb-note{border-left:2px solid var(--clay);padding:.1rem 0 .1rem .8rem;margin:1rem 0;font-size:.92rem;line-height:1.6;color:#4a4d40}
+  .rb-scroll{overflow-x:auto}
+</style>
+{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_rulebook', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+
+{% block body %}
+<div class="mh">
+  <div class="wrap">
+    <div class="kicker">{{ 'moderate.rulebook.kicker'|trans }}</div>
+    <h1>{{ 'moderate.rulebook.title'|trans }}</h1>
+    <div><span class="role-badge">&#9876; {{ 'moderate.role_label'|trans }}</span></div>
+  </div>
+</div>
+
+<div class="wrap" id="main">
+  <div class="rb">
+    <span class="private">&#9679; {{ 'moderate.rulebook.private'|trans }}</span>
+    <p class="lead">The short, always-current rules for everyone holding a curator or moderator role. If a situation is not covered here, ask in the curator channel before acting — this page is the do's and don'ts, not a replacement for judgement.</p>
+
+    <section id="verbs">
+      <h2>The four verbs — and what each one keeps</h2>
+      <div class="rb-scroll">
+        <table class="rb-table">
+          <thead><tr><th>Verb</th><th>When</th><th>What happens</th><th>What is kept</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Approve</strong></td>
+              <td>The contribution is plausible and useful</td>
+              <td>It goes live; changes apply to the item</td>
+              <td>Everything, plus your decision in the item's visible history</td>
+            </tr>
+            <tr>
+              <td><strong>Reject</strong></td>
+              <td>Honest contribution, but wrong / not verifiable / duplicate</td>
+              <td>Nothing goes live; the rider gets your note</td>
+              <td>The submission and any photos, for the standard retention window (currently 3 months), then collected</td>
+            </tr>
+            <tr>
+              <td><strong>Trash</strong></td>
+              <td>Spam and abuse — <strong>not</strong> illegal content, see below</td>
+              <td>Immediate permanent deletion — content, photos and their history are gone at once, no retention window, and <strong>no message is sent</strong> to the submitter</td>
+              <td>Only a <strong>content-free record of the action</strong>: that <em>you</em> trashed submission N of type X at time T. The content itself is unrecoverable — deliberately</td>
+            </tr>
+            <tr>
+              <td><strong>Escalate</strong></td>
+              <td>Anything you believe may be <strong>illegal</strong></td>
+              <td>It disappears from this desk and from the public site at once, an administrator is alerted immediately, and nothing in the app can delete it afterwards</td>
+              <td>Everything, under a hold. You are not asked to look at it again</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>Keep the record, never the content</strong> is the Trash principle: the Commons can always prove the moderation action happened, and can never reproduce the material — which is the point when the material is spam or abuse.</p>
+
+      <p><strong>Illegal material is the exception, and it goes to Escalate, not Trash.</strong> Trashing it destroys the evidence along with the content, and for some material the law expects that evidence to survive until it has been reported. Escalating takes it out of everyone's reach — yours included — freezes it against every deletion path, and puts it in front of an administrator the same minute. You are never expected to decide what it is, only to say what you saw. Nobody is asked to view escalated material twice, and if something you saw here is sitting with you afterwards, say so in the curator channel; that is a normal thing to need and not a failure.</p>
+
+      <p>Because Trash is irreversible, the desk asks you to <strong>type <code>DELETE</code></strong> to confirm. Cancelling leaves no trace at all — no record is written for a Trash you did not complete.</p>
+    </section>
+
+    {# Linked from the takedowns desk as #takedowns. #}
+    <section id="takedowns">
+      <h2>Photo takedown requests</h2>
+      <p>A rider can ask for a photo they uploaded to be removed. The photo comes off the map <strong>the moment they ask</strong>, before you see it — you are not deciding whether it stays up meanwhile, only what happens next.</p>
+
+      <p>You are answering one question: <strong>which kind of request is this?</strong></p>
+
+      <div class="rb-scroll">
+        <table class="rb-table">
+          <thead><tr><th>Their words say</th><th>Decide</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>The photo shows them, or something personal they did not mean to publish</td>
+              <td><strong>Remove the photo.</strong> That is their right, and the CC BY-SA licence does not override it</td>
+            </tr>
+            <tr>
+              <td>They have changed their mind about contributing</td>
+              <td><strong>Decline and republish.</strong> The licence cannot be taken back — if it could, the Commons would only ever be on loan</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The test for a third-party claim</h3>
+      <p>Does the photo, on its face, show an identifiable person, and is the claim plausible? If yes, remove — <strong>when unsure, remove</strong>. Decline only what is clearly not a rights claim: an uploader's change of mind about contributing, nobody visible at all, or a complaint about the place rather than a person.</p>
+
+      <ul>
+        <li><strong>Do lean towards removing</strong> when you are unsure. Losing one photo of a fountain costs the Commons almost nothing; refusing a genuine claim about somebody's own image is a rights violation.</li>
+        <li><strong>Do write a note either way</strong> — on a decline especially. Say they can reply if you have misread them, because sometimes you will have.</li>
+        <li><strong>Don't ask them to prove it.</strong> Demanding identity documents to settle "that's me in the reflection" collects more personal data than the complaint is about. If the photo plausibly shows them, that is enough.</li>
+        <li><strong>Don't treat a removal as a black mark.</strong> It is not a rejection and it is not misconduct; it is somebody exercising a right.</li>
+      </ul>
+
+      <p>Removing deletes the image files. The record that a photo existed, that its subject asked, and that we did as asked is kept on purpose — it is how the Commons can show it honoured the request.</p>
+
+      <p><strong>Someone who is in a photo they did not upload</strong> has their own route: the "this photo shows me" link on every photo page, open to people without accounts. Their report lands on this same desk, marked as coming from a third party, and a curator decides it — nothing is removed automatically on somebody's say-so.</p>
+
+      <p class="rb-note">Two rules hold in both directions: <strong>nobody learns who anybody is</strong> (the reporter is never told who uploaded, the uploader is never told who reported, and neither sees the other's contact details), and <strong>we do not ask you to prove your identity</strong> to have a photo of you looked at. These two are promises rather than procedure, and they are the part of this page that is stated publicly — on the privacy notice, not here.</p>
+    </section>
+
+    <section id="do">
+      <h2>Do</h2>
+      <ul>
+        <li><strong>Do use Reject for disagreement, Trash only for bad faith.</strong> A wrong location or an unverifiable claim is a rejection with a friendly note — never a trash.</li>
+        <li><strong>Do ask before deciding</strong> when a submission is unclear: send the rider a message (the needs-info flow). Most "wrong" submissions are just missing context. <strong>Write the actual question in the note</strong> — the desk requires it, because a needs-info with no question tells the rider nothing while taking their submission off the map until they answer. They see the question on their contributions list and answer it from their messages page; their reply puts the item straight back in the queue.</li>
+        <li><strong>Do write a decision note</strong> on rejections — the rider reads it, and it is the difference between a contributor who improves and one who leaves.</li>
+        <li><strong>Do check a photo's context line</strong> (capture date, distance from the pin) before judging it — those facts are extracted for exactly this. <strong>Click the thumbnail</strong> to see the photo full size before you decide: the thumbnail is too small to tell whether somebody in it is identifiable, and that is the judgement a takedown request will later ask you about.</li>
+        <li><strong>Do decide photos individually</strong> when a submission's facts are right but one photo is not — approving the submission does not force approving every photo.</li>
+        <li><strong>Do report illegal content patterns</strong> to the site owner after escalating — repeated sources may need an account-level response, which is the admin desk's job, not yours.</li>
+      </ul>
+    </section>
+
+    <section id="dont">
+      <h2>Don't</h2>
+      <ul>
+        <li><strong>Don't share, download, or link pending content</strong> anywhere outside the moderation desk. Unapproved material is unpublished by design; its URLs exist only in your queue.</li>
+        <li><strong>Don't trash what you merely disagree with.</strong> Trash destroys the evidence of its own correctness — use it only where keeping the content would itself be the harm (spam, abuse), and never for illegal material, which goes to Escalate.</li>
+        <li><strong>Don't decide your own submissions</strong> or those of people close to you — hand them to another curator.</li>
+        <li><strong>Don't promise outcomes</strong> in rider messages ("this will be approved once you…") — you are describing the process, not pre-deciding it.</li>
+        <li><strong>Don't work around the tools</strong> (no manual database edits, no editing content on a rider's behalf beyond what the desk offers). If the tool cannot express the right decision, that is a bug to report, not a rule to bend.</li>
+      </ul>
+    </section>
+
+    <section id="privacy">
+      <h2>Privacy specifics</h2>
+      <ul>
+        <li>A photo's <strong>GPS coordinates are never stored</strong> — you see only the computed distance to the pin, and only until you decide.</li>
+        <li>Rider identity stays out of public surfaces unless the rider opted into a public profile; the desk may show you more than the public ever sees — treat everything on the desk as confidential.</li>
+        <li>Consent records (the CC BY-SA donation a rider granted) are permanent and none of your concern to manage — the system enforces them. They are disclosed on the privacy notice, so a rider asking "what do you keep after I leave?" can be pointed at that page rather than answered from memory.</li>
+        <li><strong>A takedown reason is confidential.</strong> It often says something personal about the rider — that is the whole point of it. It stays on the desk.</li>
+      </ul>
+    </section>
+
+    <section id="deep-rules">
+      <h2>Where the deep rules live</h2>
+      <p>This page is the operating summary. The binding contracts are the moderation and contribution specification (retention, Trash, messages, scoping) and the photo-uploads specification (media lifecycle) in the project repository — when this page and a spec disagree, the spec wins and this page has a bug.</p>
+    </section>
+  </div>
+</div>
+{% endblock %}

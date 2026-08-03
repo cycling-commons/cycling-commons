@@ -286,12 +286,12 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($curator, (int) $regionA->getId());
         $client->loginUser($curator);
 
-        // The queue renders one .msg-rider form per visible (in-scope) item —
+        // The queue renders one .q-act--message form per visible (in-scope) item —
         // the CSRF token id ('moderate-message') is fixed, not tied to the
         // particular submission it happened to render alongside.
         $crawler = $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
-        $token = (string) $crawler->filter('.msg-rider input[name="_token"]')->first()->attr('value');
+        $token = (string) $crawler->filter('.q-act--message input[name="_token"]')->first()->attr('value');
 
         $client->request('POST', '/moderate/message', [
             'channel' => 'submission',

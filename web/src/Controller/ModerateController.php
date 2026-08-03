@@ -16,12 +16,13 @@ use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\MissingQuestionException;
+use App\Moderation\ModerationScope;
+use App\Moderation\SubmissionQueue;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RetentionService;
 use App\Moderation\RouteQueue;
-use App\Moderation\SubmissionQueue;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -71,7 +72,131 @@ final class ModerateController extends AbstractController
             $request->query->getString('country'),
             $request->query->getString('region'),
             $request->query->getString('type'),
+            q: $request->query->getString('q'),
+            page: $request->query->getInt('page', 1),
         );
+    }
+
+    /**
+     * Settled submissions — their own page since 2026-08-03 (owner).
+     *
+     * It grew from a footnote under the queue into a searchable, paged record
+     * with a foldable conversation per row; a desk that is about what is still
+     * to do should not carry an unbounded list of what is already done.
+     */
+    #[Route('/moderate/history', name: 'moderate_history')]
+    public function history(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $scope = $this->scopeProvider->scopeFor($user);
+        $mine = 'mine' === $request->query->getString('handled');
+        $status = $request->query->getString('hstatus');
+        $q = $request->query->getString('q');
+        $country = $request->query->getString('country');
+        $region = $request->query->getString('region');
+        $type = $request->query->getString('type');
+        $page = max(1, $request->query->getInt('page', 1));
+        $me = $mine ? $user->getId() : null;
+        $total = $this->queue->countHistory($scope, $me, $status ?: null, $q ?: null, $country ?: null, $region ?: null, $type ?: null);
+
+        return $this->render('moderate/history.html.twig', [
+            'page_title' => 'meta.moderate_history_title',
+            'page_description' => 'meta.moderate_history_description',
+            'nav_active' => 'moderate_history',
+            'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, SubmissionQueue::PER_PAGE, $country ?: null, $region ?: null, $type ?: null),
+            'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type],
+            // Option lists describe the SETTLED set here, not the open queue —
+            // a country with no open work can still have a record worth reading.
+            'countries' => $this->queue->countries($scope, settled: true),
+            'regions' => $this->queue->regions($scope, settled: true),
+            'types' => SubmissionType::values(),
+            'pager' => self::pager($page, $total),
+            ...$this->deskBadges($user, $scope),
+        ]);
+    }
+
+    /**
+     * @return array{page:int, pages:int, total:int, prev:?int, next:?int}
+     */
+    private static function pager(int $page, int $total): array
+    {
+        $pages = max(1, (int) ceil($total / SubmissionQueue::PER_PAGE));
+        $page = min(max(1, $page), $pages);
+
+        return [
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
+            'prev' => $page > 1 ? $page - 1 : null,
+            'next' => $page < $pages ? $page + 1 : null,
+        ];
+    }
+
+    /**
+     * Photo takedown requests — their own desk since 2026-08-03 (owner).
+     *
+     * They rode along under the submissions queue, which put a legal clock and
+     * an editorial backlog on one page and made the takedowns look like the
+     * bottom of somebody's to-do list. They are neither scoped nor filtered
+     * (docs/specs/photo-uploads.md §6b): a rights request is not editorial work
+     * to be shared out by jurisdiction, so every curator sees every one.
+     */
+    #[Route('/moderate/takedowns', name: 'moderate_takedowns')]
+    public function takedowns(): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $scope = $this->scopeProvider->scopeFor($user);
+
+        return $this->render('moderate/takedowns.html.twig', [
+            'page_title' => 'meta.moderate_takedowns_title',
+            'page_description' => 'meta.moderate_takedowns_description',
+            'nav_active' => 'moderate_takedowns',
+            'takedowns' => $this->takedowns->pendingCards(),
+            'urgent_breaker_open' => $this->breaker->isOpen(),
+            ...$this->deskBadges($user, $scope),
+        ]);
+    }
+
+    /**
+     * The moderator rulebook — moderators only, deliberately NOT the public
+     * wiki (2026-08-03, owner).
+     *
+     * A world-readable page describing how moderators decide what to destroy
+     * is a social-engineering aid: it tells anyone which words get a
+     * submission trashed and which get it escalated. The wiki copy is going;
+     * this is where the rules live.
+     */
+    #[Route('/moderate/rulebook', name: 'moderate_rulebook')]
+    public function rulebook(): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $scope = $this->scopeProvider->scopeFor($user);
+
+        return $this->render('moderate/rulebook.html.twig', [
+            'page_title' => 'meta.moderate_rulebook_title',
+            'page_description' => 'meta.moderate_rulebook_description',
+            'nav_active' => 'moderate_rulebook',
+            ...$this->deskBadges($user, $scope),
+        ]);
+    }
+
+    /**
+     * The counts every moderation page's tab strip needs. Extracted so a new
+     * desk cannot ship with a dead badge simply by forgetting to pass them.
+     *
+     * @return array{mod_scope_names: list<string>, mod_submission_count: int, mod_route_count: int, mod_takedown_count: int}
+     */
+    private function deskBadges(User $user, ModerationScope $scope): array
+    {
+        return [
+            'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
+            'mod_submission_count' => $this->queue->total($scope),
+            'mod_route_count' => $this->routeQueue->total($scope) + $this->routeQueue->pendingSuggestionCount($scope),
+            'mod_takedown_count' => \count($this->takedowns->pendingCards()),
+        ];
     }
 
     /**
@@ -80,12 +205,20 @@ final class ModerateController extends AbstractController
      * not duplicated and the curator's active filters are preserved on an
      * invalid submit rather than reset to unfiltered.
      */
-    private function renderQueue(string $country, string $region, string $type, int $status = Response::HTTP_OK): Response
-    {
+    private function renderQueue(
+        string $country,
+        string $region,
+        string $type,
+        int $status = Response::HTTP_OK,
+        string $q = '',
+        int $page = 1,
+    ): Response {
         /** @var User $user */
         $user = $this->getUser();
         $scope = $this->scopeProvider->scopeFor($user);
-        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null);
+        $page = max(1, $page);
+        $matching = $this->queue->countFiltered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null);
+        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page);
 
         // No per-item decision forms here anymore: submissions are approved
         // ONLY from the map drawer (so a curator always sees the item in place
@@ -96,25 +229,14 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'items' => $items,
             'total' => $this->queue->total($scope),
-            'filters' => ['country' => $country, 'region' => $region, 'type' => $type],
+            'filters' => ['country' => $country, 'region' => $region, 'type' => $type, 'q' => $q],
+            'pager' => self::pager($page, $matching),
+            'matching' => $matching,
             'countries' => $this->queue->countries($scope),
             'regions' => $this->queue->regions($scope),
             'types' => SubmissionType::values(),
             'receipt' => null,
-            'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
-            // Both tab badges show the open count in the moderator's jurisdiction.
-            'mod_submission_count' => $this->queue->total($scope),
-            'mod_route_count' => $this->routeQueue->total($scope) + $this->routeQueue->pendingSuggestionCount($scope),
-            // Not scoped and not filtered (docs/specs/photo-uploads.md §6b):
-            // a rider asking for their own photo to come down is a rights
-            // request on a legal clock, not editorial work to be shared out by
-            // jurisdiction.
-            'takedowns' => $this->takedowns->pendingCards(),
-            // When the auto-withhold budget is spent, urgent reports are
-            // arriving faster than any genuine rate and are NOT taking photos
-            // down on their own (docs/specs/photo-uploads.md §6c). The desk
-            // says so, because from here on the removals are the curator's.
-            'urgent_breaker_open' => $this->breaker->isOpen(),
+            ...$this->deskBadges($user, $scope),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
     }
 
@@ -175,6 +297,9 @@ final class ModerateController extends AbstractController
                     // of the pending pin it just removed. Null for the letters
                     // whose payload is not a feature collection (A/B/K) and for
                     // every non-approve decision — the client simply skips it.
+                    // Sent for every approve, not just new items: approving an
+                    // EDIT has to refresh the item the curator is looking at,
+                    // or the drawer keeps showing the value they just changed.
                     'item' => 'approve' === $data['decision'] && null !== $submission->getItemId()
                         ? $catalog->featureForItem($submission->getItemId())
                         : null,

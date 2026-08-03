@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Item;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\Entity\Submission;
@@ -17,7 +18,9 @@ use App\Catalog\SubmissionType;
 use App\Entity\AdminActionLog;
 use App\Entity\User;
 use App\Messaging\Entity\UserMessage;
+use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
+use App\Moderation\SubmissionQueue;
 use App\Moderation\RouteModerationService;
 use App\Moderation\TrashActions;
 use App\Moderation\TrashBlockedException;
@@ -91,6 +94,28 @@ final class TrashTest extends WebTestCase
         $em->flush();
 
         return $sub;
+    }
+
+    /**
+     * The item intake creates for a submission, wired the way
+     * CatalogContributionService wires it (source_ref = sub:<id>), so the
+     * trash-side assertions exercise the real shape.
+     *
+     * @param array<string, mixed> $attributes
+     */
+    private function seedItemFor(Submission $sub, ItemState $state, array $attributes = []): Item
+    {
+        $em = $this->em();
+        $item = (new Item())->setLetter($sub->getLetter())->setName($sub->getTitle())
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
+            ->setCountryCode('BE')->setState($state)->setSource(ItemSource::User)
+            ->setSourceRef('sub:'.(string) $sub->getId())->setAttributes($attributes);
+        $em->persist($item);
+        $em->flush();
+        $sub->setItemId((int) $item->getId());
+        $em->flush();
+
+        return $item;
     }
 
     private function route(ItemState $state, ?int $proposedBy = null): RecommendedRoute
@@ -192,6 +217,105 @@ final class TrashTest extends WebTestCase
         self::assertStringNotContainsString(self::SPAM_BODY, (string) $log->getNote());
 
         self::assertCount(0, $this->messagesFor((int) $rider->getId()));
+    }
+
+    /**
+     * Trashing a NEW-place submission takes its unapproved item with it.
+     *
+     * Intake creates the item up front in state `submitted` so the pending pin
+     * reaches the curator's map. Trash used to delete only the submission,
+     * stranding that item for good — `source_ref` pointing at a submission that
+     * no longer exists, and nothing anywhere to sweep it (owner-reported
+     * 2026-08-03).
+     */
+    public function testTrashSubmissionAlsoRemovesItsUnapprovedNewItem(): void
+    {
+        $rider = $this->rider('sub-newitem');
+        $sub = $this->seedSubmission((int) $rider->getId());
+        $item = $this->seedItemFor($sub, ItemState::Submitted);
+        $subId = (int) $sub->getId();
+        $itemId = (int) $item->getId();
+
+        $this->moderation()->trashSubmission($subId, $this->curator());
+
+        $this->em()->clear();
+        self::assertNull($this->em()->find(Submission::class, $subId));
+        self::assertNull($this->em()->find(Item::class, $itemId), 'the unapproved item goes with the submission');
+    }
+
+    /**
+     * The safety rail. Once a new item has been APPROVED it is a real catalogue
+     * entry that riders may since have confirmed, photographed or edited —
+     * trashing the submission it arrived on must never take that with it.
+     */
+    public function testTrashSubmissionLeavesAnAlreadyApprovedItemAlone(): void
+    {
+        $rider = $this->rider('sub-approved-item');
+        $sub = $this->seedSubmission((int) $rider->getId(), SubmissionStatus::Approved);
+        $item = $this->seedItemFor($sub, ItemState::Unverified);
+        $subId = (int) $sub->getId();
+        $itemId = (int) $item->getId();
+
+        $this->moderation()->trashSubmission($subId, $this->curator());
+
+        $this->em()->clear();
+        self::assertNull($this->em()->find(Submission::class, $subId));
+        self::assertNotNull($this->em()->find(Item::class, $itemId), 'an approved catalogue item survives Trash');
+    }
+
+    /**
+     * An EDIT applies on approve, so a pending edit has changed nothing yet:
+     * trashing it discards the proposal and the item keeps the value it had.
+     */
+    public function testTrashingAnEditLeavesTheEditedItemAndItsValueIntact(): void
+    {
+        $rider = $this->rider('sub-edit');
+        $sub = $this->seedSubmission((int) $rider->getId());
+        $sub->setType(SubmissionType::Edit)
+            ->setChanges(['effort' => ['was' => 'Tough', 'now' => 'Very steep']]);
+        $item = $this->seedItemFor($sub, ItemState::Verified, ['effort' => 'Tough']);
+        $this->em()->flush();
+        $subId = (int) $sub->getId();
+        $itemId = (int) $item->getId();
+
+        $this->moderation()->trashSubmission($subId, $this->curator());
+
+        $this->em()->clear();
+        self::assertNull($this->em()->find(Submission::class, $subId));
+        $still = $this->em()->find(Item::class, $itemId);
+        self::assertNotNull($still, 'the edited item survives');
+        self::assertSame('Tough', $still->getAttributes()['effort'] ?? null, 'and keeps its pre-edit value');
+    }
+
+    /**
+     * A trashed submission still shows up under "Already settled", rebuilt from
+     * the content-free audit — a curator who trashes something and then cannot
+     * find it anywhere reasonably wonders whether it worked (owner-reported
+     * 2026-08-03). What it must NOT carry is the title: preserving that would
+     * preserve the spam Trash exists to destroy.
+     */
+    public function testTrashedSubmissionsAppearInTheSettledHistoryWithoutTheirContent(): void
+    {
+        $rider = $this->rider('sub-history');
+        $sub = $this->seedSubmission((int) $rider->getId());
+        $subId = (int) $sub->getId();
+        $curator = $this->curator();
+
+        $this->moderation()->trashSubmission($subId, $curator);
+        $this->em()->clear();
+
+        $queue = static::getContainer()->get(SubmissionQueue::class);
+        $scope = static::getContainer()->get(ModerationScopeProvider::class)->scopeFor($curator);
+        $rows = $queue->history($scope);
+
+        $trashed = array_values(array_filter($rows, static fn (array $r): bool => 'trashed' === $r['status']));
+        self::assertNotEmpty($trashed, 'the trash shows in the history');
+        self::assertSame('SUB-'.$subId, $trashed[0]['title']);
+        self::assertSame($curator->getDisplayName(), $trashed[0]['decidedBy']);
+        foreach ($rows as $row) {
+            self::assertStringNotContainsString(self::SPAM_BODY, json_encode($row, JSON_THROW_ON_ERROR), 'no trashed content is resurrected');
+            self::assertStringNotContainsString('Spam submission', (string) $row['title']);
+        }
     }
 
     public function testTrashSubmissionWorksRegardlessOfStatus(): void

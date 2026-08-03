@@ -91,6 +91,36 @@
     return { g: maxG, coord: maxCoord };
   }
 
+  /* The sustained gradient AT a point, over the same ~150 m window
+     steepestWindow() uses for the maximum.
+
+     This exists because the 11-bar display profile is the wrong instrument for
+     reading a gradient at a position. Those bars are equal-DISTANCE bins over
+     the whole climb, so extending a climb widens every bin and averages a short
+     ramp together with the flatter road around it: the same 19% ramp reads ~10%
+     once the bins get longer. The bar array is for drawing a shape; a number
+     printed next to a marker has to be measured the way the maximum was
+     (owner-reported 2026-08-03). */
+  function sustainedAtCoord(pts, elevs, cum, coord) {
+    var total = cum[cum.length - 1];
+    if (!(total > 0)) return 0;
+    var bestI = 0, bestD = Infinity;
+    for (var i = 0; i < pts.length; i++) {
+      var dx = pts[i][0] - coord[0], dy = pts[i][1] - coord[1];
+      var d = dx * dx + dy * dy;                    // squared degrees: ordering only
+      if (d < bestD) { bestD = d; bestI = i; }
+    }
+    var win = Math.min(150, total);
+    var centre = cum[bestI];
+    var startD = clamp(centre - win / 2, 0, Math.max(0, total - win));
+    var endD = Math.min(total, startD + win);
+    var dist = endD - startD;
+    if (dist <= 0) return 0;
+    var a = atDistance(pts, elevs, cum, startD);
+    var b = atDistance(pts, elevs, cum, endD);
+    return ((b.elev - a.elev) / dist) * 100;
+  }
+
   // Resolves null for "no usable data", REJECTS on API failure (HTTP error,
   // network, abort) so the caller can tell the two apart and warn the user.
   // `signal` (optional AbortSignal) lets the caller cancel a superseded request.
@@ -113,7 +143,15 @@
       var steep = steepestWindow(pts, elevs, cum);
       // Sanity clamp: real cycling ramps rarely exceed ~35%; anything higher is DEM noise.
       var pct = clamp(Math.round(steep.g), 0, 35);
-      return { grad: grad, steep: { at: steep.coord, pct: '~' + pct + '%' } };
+      return {
+        grad: grad,
+        steep: { at: steep.coord, pct: '~' + pct + '%' },
+        // Closes over THIS profile's samples so the caller can re-read the
+        // gradient at a kept marker position without a second API call.
+        sustainedAt: function (coord) {
+          return '~' + clamp(Math.round(sustainedAtCoord(pts, elevs, cum, coord)), 0, 35) + '%';
+        }
+      };
     });
   };
 })();

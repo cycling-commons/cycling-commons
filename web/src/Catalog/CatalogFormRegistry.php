@@ -148,7 +148,14 @@ final class CatalogFormRegistry
                     CatalogField::select('pets', 'Pets allowed?', self::UNKNOWN_YES_NO),
                     CatalogField::select('meals', 'Meals / breakfast?', self::UNKNOWN_YES_NO),
                     CatalogField::select('toolsToBorrow', 'Tools to borrow?', self::UNKNOWN_YES_NO),
-                    CatalogField::select('accessibility', 'Accessibility', ['Step-free access', 'Handbike-friendly', 'Wheelchair-accessible', 'Unknown']),
+                    // Multi, not single: a stay is routinely step-free AND
+                    // handbike-friendly, and a single select forced the rider
+                    // to drop the rest — which is exactly the fact a rider who
+                    // needs one of them is searching for. 'Unknown' is gone
+                    // with the single select: nothing ticked already means
+                    // "not stated", and an explicit Unknown alongside real
+                    // values is unanswerable ("step-free and unknown"?).
+                    CatalogField::multiselect('accessibility', 'Accessibility', ['Step-free access', 'Handbike-friendly', 'Wheelchair-accessible']),
                 ],
             ),
 

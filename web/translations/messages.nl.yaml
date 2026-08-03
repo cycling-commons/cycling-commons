@@ -18,6 +18,9 @@ nav:
   logout: 'Uitloggen'
   moderate: 'Inzendingen'
   routes: 'Routes'
+  history: 'Historie'
+  takedowns: 'Verwijderingen'
+  rulebook: 'Handboek'
   admin: 'Admin'
   language: 'Taal'
 footer:
@@ -1138,6 +1141,9 @@ map:
   disc_urban: 'Stad'
   disc_leisure: 'Recreatief'
   data_layers: 'Datalagen'
+  dl_group_utility: 'Praktisch · volledige dekking'
+  dl_group_votable: 'Emotioneel · gestemd door fietsers'
+  dl_group_moderation: 'Moderatie'
   deselect_all: 'alles uitvinken'
   select_all: 'alles aanvinken'
   pending_review: 'Wacht op beoordeling'
@@ -1156,6 +1162,7 @@ map:
   surf_good: 'Goed'
   surf_worn: 'Versleten'
   surf_rough: 'Ruw'
+  surf_broken: 'Kapot / los'
   climb_traffic: 'Verkeer op hellingen'
   traffic_free: 'Verkeersvrij'
   traffic_quiet: 'Rustig'
@@ -1255,6 +1262,7 @@ map:
   d_towns_on_route: 'Plaatsen op de route'
   d_surfaces: 'Wegdek'
   d_submitted_by: 'Ingediend door'
+  d_item_today: 'Dit item nu'
   d_age: 'Leeftijd'
   d_where: 'Waar'
   d_place: 'Plek'
@@ -1356,6 +1364,7 @@ map:
   d_visit_site: 'Bezoek site'
   d_difficulty: 'Moeilijkheid'
   d_elevation: 'Hoogte'
+  d_climb_length: 'Lengte'
   d_m_climbing: '{n} m klimmen'
   d_from_gpx: '(uit GPX)'
   d_grad_profile: 'Hellingsprofiel · gem ~{a}% · max {m}%'
@@ -1418,6 +1427,11 @@ improve:
     map_aria: 'Kaart — tik om de locatie in te stellen'
     readout_initial: '◎ Tik op de kaart om de locatie in te stellen'
     reset: 'Opnieuw'
+    undo: 'Ongedaan maken'
+    climb_how_1: 'Tik op de voet van de klim en daarna op de top — de weg ertussen wordt automatisch gevolgd.'
+    climb_how_2: 'Tik nog een keer om het steilste stuk te markeren. Optioneel, je mag het overslaan.'
+    climb_how_3: 'Sleep een marker om hem te corrigeren — de route en het stijgingspercentage worden opnieuw berekend.'
+    climb_how_4: 'Ongedaan maken neemt je laatste actie terug, ook een reset.'
     # De meldingen die improve.js zelf toont. Ze bereiken het bestand via
     # window.CC_IMPROVE_I18N als TEKST, nooit als opmaak
     # (docs/plans/2026-08-01-improve-js-i18n.md).
@@ -1439,6 +1453,8 @@ improve:
     search_no_matches: 'Geen resultaten'
     search_unavailable: 'Zoeken niet beschikbaar — tik in plaats daarvan op de kaart'
     search_result: 'Resultaat'
+    search_coords_place: 'Coördinaten — tik om de locatie hier te zetten'
+    search_coords_go: 'Coördinaten — tik om hierheen te springen'
   step2:
     label: 'Details'
     what_changed_label: 'Wat voeg je toe of wijzig je?'
@@ -1487,6 +1503,7 @@ improve:
   locate:
     change: 'Locatie wijzigen'
     confirm:
+      heading: 'Controleer de locatie'
       help: 'Deze locatie is al ingesteld — controleer of ze klopt, of wijzig ze.'
   lifecycle:
     heading: 'Wat er met je suggestie gebeurt'
@@ -1659,7 +1676,7 @@ media:
       rate_limited: 'Te veel meldingen vanaf jouw verbinding vandaag. Is het dringend, mail dan info@cyclingcommons.org.'
       challenge: 'Wacht tot de veiligheidscontrole klaar is en verstuur de melding opnieuw.'
 propose_route:
-  eyebrow: 'K · Aanbevolen routes'
+  eyebrow: 'Aanbevolen routes'
   title: 'Stel een route voor'
   lead: 'Deel een lus die de moeite waard is. Elke inzending wordt door een curator beoordeeld; na goedkeuring verschijnt ze op de kaart als voorgestelde route en wordt ze geverifieerd zodra andere fietsers bevestigen dat ze de rit reden.'
   gpx_label: 'Jouw rit (GPX)'
@@ -1692,6 +1709,9 @@ propose_route:
     note_too_long: 'De notitie mag hoogstens 2.000 tekens lang zijn.'
 moderate:
   escalate:
+    when: 'Gebruik dit als de inhoud zelf in strijd is met de wet — niet voor spam, niet voor een slechte bewerking, niet voor onbeleefdheid. Dat zijn Prullenbak en Bericht aan de fietser.'
+    confirm_check: 'Ik heb het bovenstaande gelezen en dit is vermoedelijk illegaal materiaal'
+    button: 'Escaleren'
     summary: 'Dit is illegale inhoud — escaleren'
     help: 'Alleen voor vermoedelijk illegaal materiaal: het verdwijnt meteen van dit bureau en van de publieke site, daarna kan niets het meer verwijderen, en een beheerder wordt onmiddellijk gewaarschuwd. Gebruik dit in plaats van Prullenbak — weggooien vernietigt het bewijs samen met de inhoud. Je hoeft er niet nog eens naar te kijken.'
     reason_placeholder: 'Wat je zag, in je eigen woorden'
@@ -1709,7 +1729,11 @@ moderate:
     no_gps: 'geen locatie in het bestand'
   takedown:
     heading: 'Verzoeken om foto''s te verwijderen'
-    lead: 'Iemand heeft gevraagd een foto te verwijderen. Het verzoek van een uploader is al van de kaart; een melding van een derde blijft online tot jij beslist (de kaart zegt welke het is). De toets voor een melding van een derde: toont de foto, op het eerste gezicht, een herkenbare persoon, en is de claim aannemelijk? Zo ja, verwijder — bij twijfel, verwijder. Wijs alleen af wat duidelijk geen rechtenkwestie is: een bedenking van de uploader over het bijdragen, niemand zichtbaar, of een klacht over de plek in plaats van over een persoon.'
+    lead_short: 'Iemand vraagt om een foto te verwijderen. Het verzoek van een uploader haalt de foto al van de kaart; een melding van een derde blijft staan tot jij beslist (de kaart zegt welke).'
+    rulebook_link: 'Hoe beslis je dit →'
+    kicker: 'Moderatie · rechtenverzoeken'
+    empty_heading: 'Niets te behandelen'
+    empty_body: 'Geen openstaande verwijderverzoeken. Dit bureau staat meestal leeg, en dat is de bedoeling: wat hier binnenkomt heeft een wettelijke klok lopen.'
     alt: 'De foto waarvoor verwijdering is gevraagd'
     no_item: 'Niet aan een plek gekoppeld'
     submission: 'Inzending %id%'
@@ -1736,7 +1760,7 @@ moderate:
     reject: 'Afwijzen'
     needs_info: 'Meer info nodig'
     decision_label: 'Beslissing'
-    review_on_map: 'Bekijk en keur goed op de kaart'
+    review_on_map: 'Bekijken'
     submit: 'Beslissing registreren'
     view: 'Op de kaart bekijken ↗'
   error:
@@ -1754,6 +1778,8 @@ moderate:
     type: 'Type'
     all: 'Alle'
     apply: 'Toepassen'
+    search: 'Zoeken'
+    search_ph: 'Titel van het item…'
   overview:
     showing: '%shown% van %total% in behandeling'
   msg:
@@ -1765,6 +1791,8 @@ moderate:
     sent: 'Bericht verstuurd naar de fietser.'
     error: 'Het bericht kon niet worden verstuurd.'
   trash:
+    when: 'Alleen voor spam en rommel: advertenties, wartaal, een duidelijke hoax. Een foutieve of onvolledige bijdrage weiger je met een notitie, nooit hier — de prullenbak vernietigt definitief.'
+    confirm_check: 'Ik heb het bovenstaande gelezen: dit is spam of rommel, geen vergissing'
     button: 'Weggooien'
     confirm_head: 'Dit permanent verwijderen als spam?'
     confirm_rest: 'De inhoud — inclusief foto''s en hun geschiedenis — wordt onmiddellijk en definitief verwijderd; alleen een inhoudsloos verslag van de handeling blijft bewaard. Er wordt geen bericht verstuurd.'
@@ -1774,6 +1802,35 @@ moderate:
     done: 'Weggegooid — permanent verwijderd.'
     blocked: 'Alleen ingediende of afgewezen voorstellen kunnen worden weggegooid.'
     error: 'Kon dit niet weggooien — het is mogelijk al verdwenen.'
+  view:
+    label: 'Weergavedichtheid'
+    cards: 'Kaarten'
+    list: 'Lijst'
+  rulebook:
+    private: 'Alleen voor moderatoren — niet op de publieke wiki'
+    kicker: 'Moderatie'
+    title: 'Moderatorhandboek'
+  history:
+    kicker: 'Moderatie · register'
+    heading: 'Al afgehandeld'
+    thread: '%count% bericht(en) in deze uitwisseling'
+    said_curator: 'Gevraagd'
+    said_rider: 'Fietser'
+    no_text: '(geen tekst)'
+    everyone: 'Iedereen'
+    mine: 'Door mij afgehandeld'
+    by: 'door %who%'
+    empty: 'Nog niets afgehandeld met deze filters.'
+  status:
+    approved: 'Goedgekeurd'
+    rejected: 'Afgewezen'
+    trashed: 'Verwijderd'
+  answered: 'Beantwoord'
+  pager:
+    label: 'Pagina''s'
+    prev: 'Nieuwer'
+    next: 'Ouder'
+    at: 'Pagina %page% van %pages% · %total% in totaal'
   rider_reply: 'De fietser heeft geantwoord'
 moderate_routes:
   title: 'Routes moderatiewachtrij'
@@ -1855,6 +1912,8 @@ account:
   menu_personal: 'Persoonlijk'
   menu_moderation: 'Moderatie'
   mod_scope_all: 'Alle gebieden'
+  unread_messages: '%count% ongelezen bericht(en)'
+  mod_takedowns_open: 'Openstaande verwijderverzoeken'
   mod_open_in_area: 'Open in jouw gebied'
   tab_contributions: 'Bijdragen'
   tab_votes: 'Stemmen'
@@ -2015,6 +2074,12 @@ meta:
   twofa_setup_description: 'Voeg een authenticator-app toe om je Cycling Commons-account te beveiligen.'
   twofa_enabled_title: 'Cycling Commons — Tweestapsverificatie ingeschakeld'
   twofa_enabled_description: 'Tweestapsverificatie (2FA) beschermt nu je Cycling Commons-account.'
+  moderate_history_title: 'Afgehandelde bijdragen'
+  moderate_history_description: 'Het register van besliste bijdragen.'
+  moderate_takedowns_title: 'Verzoeken om foto''s te verwijderen'
+  moderate_takedowns_description: 'Rechtenverzoeken die op een beslissing wachten.'
+  moderate_rulebook_title: 'Moderatorhandboek'
+  moderate_rulebook_description: 'De regels waar de moderatiebureaus op draaien.'
   moderate_title: 'Cycling Commons — Moderatie'
   moderate_description: 'Curatoroppervlak voor de Commons — beoordeel inzendingen, los meldingen op en houd de open fietsatlas betrouwbaar.'
   contribute_title: 'Cycling Commons — Bijdragen'

@@ -227,6 +227,30 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertGreaterThan(0, $climb['id']);
     }
 
+    /**
+     * featureForItem() serves B · climbs too.
+     *
+     * Approving an EDIT has to refresh the item the curator is looking at, and
+     * the drawer can only do that from the item's served shape. Climbs used to
+     * be excluded with A and K, so approving a climb edit left the map and the
+     * drawer showing the pre-edit values until a full page reload
+     * (owner-reported 2026-08-03). Rebuilt through the SAME mapper the bulk
+     * payload uses, so the live-updated climb cannot drift from the served one.
+     */
+    public function testFeatureForItemRebuildsAClimbInItsOwnShape(): void
+    {
+        $bulk = $this->payload()['B'][0];
+
+        $one = static::getContainer()->get(CatalogProvider::class)->featureForItem($bulk['id']);
+
+        self::assertNotNull($one);
+        self::assertSame('B', $one['letter']);
+        self::assertArrayHasKey('climb', $one, 'a climb comes back as a climb, not a GeoJSON feature');
+        self::assertArrayNotHasKey('feature', $one);
+        // Byte-identical to the bulk payload's entry: one mapper, two callers.
+        self::assertSame($bulk, $one['climb']);
+    }
+
     public function testSurfaceSegmentDecodesWayIdAndFlipsPath(): void
     {
         $seg = $this->payload()['A'][0];

@@ -1,0 +1,28 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Pager shared by both desks (2026-08-03, owner).
+
+  Params:
+    pager  array — {page, pages, total, prev, next} from ModerateController::pager()
+    route  string — the route to link back to
+    params array — the current filters, so paging never silently drops them
+
+  Plain links, no JS: a page a curator can bookmark, link to a colleague, and
+  come back to after a decision redirect. Rendered only when there is more than
+  one page — a lone "1 of 1" is furniture.
+#}
+{% if pager.pages > 1 %}
+  <nav class="pager" aria-label="{{ 'moderate.pager.label'|trans }}">
+    {% if pager.prev %}
+      <a class="pager-step" href="{{ path(route, params|merge({page: pager.prev})) }}" rel="prev">← {{ 'moderate.pager.prev'|trans }}</a>
+    {% else %}
+      <span class="pager-step is-off">← {{ 'moderate.pager.prev'|trans }}</span>
+    {% endif %}
+    <span class="pager-at">{{ 'moderate.pager.at'|trans({'%page%': pager.page, '%pages%': pager.pages, '%total%': pager.total}) }}</span>
+    {% if pager.next %}
+      <a class="pager-step" href="{{ path(route, params|merge({page: pager.next})) }}" rel="next">{{ 'moderate.pager.next'|trans }} →</a>
+    {% else %}
+      <span class="pager-step is-off">{{ 'moderate.pager.next'|trans }} →</span>
+    {% endif %}
+  </nav>
+{% endif %}

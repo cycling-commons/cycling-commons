@@ -18,6 +18,9 @@ nav:
   logout: 'Log out'
   moderate: 'Submissions'
   routes: 'Routes'
+  history: 'History'
+  takedowns: 'Takedowns'
+  rulebook: 'Rulebook'
   admin: 'Admin'
   language: 'Language'
 footer:
@@ -1100,6 +1103,11 @@ improve:
     map_aria: 'Map — tap to set the location'
     readout_initial: '◎ Tap the map to set the location'
     reset: 'Reset'
+    undo: 'Undo'
+    climb_how_1: 'Tap the foot of the climb, then tap the summit — the road between them is followed automatically.'
+    climb_how_2: 'Tap once more to mark the steepest ramp. Optional, and you can skip it.'
+    climb_how_3: 'Drag any marker to correct it — the route and the gradient are recalculated.'
+    climb_how_4: 'Undo takes back the last thing you did, including a Reset.'
     # The readouts, toasts and search notes improve.js renders itself. They
     # reach it through window.CC_IMPROVE_I18N as TEXT and are set with
     # textContent — never markup (docs/plans/2026-08-01-improve-js-i18n.md).
@@ -1121,6 +1129,12 @@ improve:
     search_no_matches: 'No matches'
     search_unavailable: 'Search unavailable — tap the map instead'
     search_result: 'Result'
+    # Shown when what was pasted into the search box reads as a coordinate pair
+    # (the map's right-click popup copies exactly this format). _place is the
+    # single-pin/segment wording, _go the climb one, where the paste only moves
+    # the view and the editor still owns foot and summit.
+    search_coords_place: 'Coordinates — tap to set the location here'
+    search_coords_go: 'Coordinates — tap to jump here'
   step2:
     label: 'Details'
     what_changed_label: 'What are you adding or changing?'
@@ -1169,6 +1183,7 @@ improve:
   locate:
     change: 'Change location'
     confirm:
+      heading: 'Check the location'
       help: 'This location is already set — check it looks right, or change it.'
   lifecycle:
     heading: 'What happens to your suggestion'
@@ -1345,7 +1360,7 @@ media:
       rate_limited: 'Too many reports from your connection today. If it is urgent, email info@cyclingcommons.org.'
       challenge: 'Please wait for the security check to finish, then send the report again.'
 propose_route:
-  eyebrow: 'K · Recommended routes'
+  eyebrow: 'Recommended routes'
   title: 'Propose a route'
   lead: 'Share a loop you know is worth riding. A curator reviews every proposal; once approved it appears on the map as a proposed route, and it becomes verified when other riders confirm they rode it.'
   gpx_label: 'Your ride (GPX)'
@@ -1429,6 +1444,12 @@ map:
   disc_urban: 'Urban'
   disc_leisure: 'Leisure'
   data_layers: 'Data layers'
+  # Layer-rail group headings — same two groups, same vocabulary as the
+  # contribute hub's Practical / Emotional sections (one split, told once).
+  # Moderation is the curator-only pending-review layer.
+  dl_group_utility: 'Practical · full coverage'
+  dl_group_votable: 'Emotional · voted by riders'
+  dl_group_moderation: 'Moderation'
   deselect_all: 'deselect all'
   select_all: 'select all'
   pending_review: 'Pending review'
@@ -1447,6 +1468,7 @@ map:
   surf_good: 'Good'
   surf_worn: 'Worn'
   surf_rough: 'Rough'
+  surf_broken: 'Broken / loose'
   climb_traffic: 'Climb traffic'
   traffic_free: 'Free'
   traffic_quiet: 'Quiet'
@@ -1463,7 +1485,7 @@ map:
   access_wheelchair: 'Wheelchair'
   places_shown: 'places shown'
   region_line: 'Wallonia, Belgium'
-  sub_everything: 'Everything · full backlog'
+  sub_everything: 'Everything · full catalog'
   contribute: '+ Contribute'
   contribute_aria: 'Contribute a place'
   legend_aria: 'Surface legend'
@@ -1546,6 +1568,7 @@ map:
   d_towns_on_route: 'Towns on route'
   d_surfaces: 'Surfaces'
   d_submitted_by: 'Submitted by'
+  d_item_today: 'This item today'
   d_age: 'Age'
   d_where: 'Where'
   d_place: 'Place'
@@ -1647,6 +1670,7 @@ map:
   d_visit_site: 'Visit site'
   d_difficulty: 'Difficulty'
   d_elevation: 'Elevation'
+  d_climb_length: 'Length'
   d_m_climbing: '{n} m climbing'
   d_from_gpx: '(from GPX)'
   d_grad_profile: 'Gradient profile · avg ~{a}% · max {m}%'
@@ -1695,6 +1719,9 @@ map:
   mly_zoom: 'Zoom in and click a green dot to open street-level here.'
 moderate:
   escalate:
+    when: 'Use this when the content itself is against the law — not for spam, not for a bad edit, not for someone being rude. Those are Trash and Message the rider.'
+    confirm_check: 'I have read the above and this is suspected illegal material'
+    button: 'Escalate'
     summary: 'This is illegal content — escalate it'
     help: 'For suspected illegal material only: it disappears from this desk and from the public site at once, nothing can delete it afterwards, and an administrator is alerted immediately. Use this instead of Trash — trashing destroys the evidence along with the content. You will not be asked to look at it again.'
     reason_placeholder: 'What you saw, in your own words'
@@ -1712,7 +1739,11 @@ moderate:
     no_gps: 'no location in the file'
   takedown:
     heading: 'Photo removal requests'
-    lead: 'Somebody has asked for a photo to come down. An uploader''s own request is already off the map; a third-party report stays up until you decide (the card says which). The test for a third-party claim: does the photo, on its face, show an identifiable person, and is the claim plausible? If yes, remove — when unsure, remove. Decline only what is clearly not a rights claim: an uploader''s change of mind about contributing, nobody visible at all, or a complaint about the place rather than a person.'
+    lead_short: 'Somebody has asked for a photo to come down. An uploader''s own request is already off the map; a third-party report stays up until you decide (the card says which).'
+    rulebook_link: 'How to decide these →'
+    kicker: 'Moderation · rights requests'
+    empty_heading: 'Nothing to answer'
+    empty_body: 'No open removal requests. This desk stays empty most of the time, and that is the point — when something lands here it has a legal clock on it.'
     alt: 'The photo a removal was requested for'
     no_item: 'Not attached to a place'
     submission: 'Submission %id%'
@@ -1741,7 +1772,7 @@ moderate:
     decision_label: 'Decision'
     submit: 'Record decision'
     view: 'View on map ↗'
-    review_on_map: 'Review & approve on the map'
+    review_on_map: 'Review'
   error:
     submission_id_required: 'Submission ID is required.'
     decision_required: 'A decision is required.'
@@ -1757,6 +1788,8 @@ moderate:
     type: 'Type'
     all: 'All'
     apply: 'Apply'
+    search: 'Search'
+    search_ph: 'Item title…'
   overview:
     showing: 'showing %shown% of %total% pending'
   msg:
@@ -1768,6 +1801,8 @@ moderate:
     sent: 'Message sent to the rider.'
     error: 'Could not send the message.'
   trash:
+    when: 'Use this for spam and junk only: adverts, gibberish, an obvious hoax. A wrong or incomplete contribution is a Reject with a note, never this — Trash destroys it for good.'
+    confirm_check: 'I have read the above and this is spam or junk, not a mistake'
     button: 'Trash'
     confirm_head: 'Permanently delete this as spam?'
     confirm_rest: 'The content — including photos and their history — is deleted immediately and forever; only a content-free record of the action is kept. No message is sent.'
@@ -1777,6 +1812,35 @@ moderate:
     done: 'Trashed — permanently deleted.'
     blocked: 'Only submitted or rejected proposals can be trashed.'
     error: 'Could not trash that — it may already be gone.'
+  view:
+    label: 'Queue density'
+    cards: 'Cards'
+    list: 'List'
+  rulebook:
+    private: 'Moderators only — not on the public wiki'
+    kicker: 'Moderation'
+    title: 'Moderator rulebook'
+  history:
+    kicker: 'Moderation · record'
+    heading: 'Already settled'
+    thread: '%count% message(s) in this exchange'
+    said_curator: 'Asked'
+    said_rider: 'Rider'
+    no_text: '(no text)'
+    everyone: 'Everyone'
+    mine: 'Handled by me'
+    by: 'by %who%'
+    empty: 'Nothing settled yet under these filters.'
+  status:
+    approved: 'Approved'
+    rejected: 'Rejected'
+    trashed: 'Trashed'
+  answered: 'Answered'
+  pager:
+    label: 'Pages'
+    prev: 'Newer'
+    next: 'Older'
+    at: 'Page %page% of %pages% · %total% in total'
   rider_reply: 'Rider replied'
 moderate_routes:
   title: 'Routes moderation desk'
@@ -1858,6 +1922,8 @@ account:
   menu_personal: 'Personal'
   menu_moderation: 'Moderation'
   mod_scope_all: 'All areas'
+  unread_messages: '%count% unread message(s)'
+  mod_takedowns_open: 'Open removal requests'
   mod_open_in_area: 'Open in your area'
   tab_contributions: 'Contributions'
   tab_votes: 'Votes'
@@ -2018,6 +2084,12 @@ meta:
   twofa_setup_description: 'Add an authenticator app to protect your Cycling Commons account.'
   twofa_enabled_title: 'Cycling Commons — Two-factor enabled'
   twofa_enabled_description: 'Two-factor authentication is now protecting your Cycling Commons account.'
+  moderate_history_title: 'Settled submissions'
+  moderate_history_description: 'The record of decided contributions.'
+  moderate_takedowns_title: 'Photo removal requests'
+  moderate_takedowns_description: 'Rights requests awaiting a curator decision.'
+  moderate_rulebook_title: 'Moderator rulebook'
+  moderate_rulebook_description: 'The rules the moderation desks run on.'
   moderate_title: 'Cycling Commons — Moderate'
   moderate_description: 'Curator surface for the Commons — review submissions, resolve flags, and keep the open cycling atlas trustworthy.'
   contribute_title: 'Cycling Commons — Contribute'

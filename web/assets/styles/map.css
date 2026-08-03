@@ -127,6 +127,12 @@
   .chip:hover{border-color:var(--paper)}
   .chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
 
+  /* Layer-group heading inside #layers (utilities / rider picks / moderation).
+     Quieter than .grp h3 above it — this is a divider within one panel, not a
+     new panel; the first one sits flush because the panel heading precedes it. */
+  .lgrp{font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+        color:rgba(239,230,212,.42);margin:.9rem 0 .35rem}
+  .lgrp:first-child{margin-top:0}
   .layer{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;cursor:pointer;user-select:none}
   .layer .sw{width:21px;height:21px;border-radius:5px;flex-shrink:0;border:1.5px solid var(--c);background:var(--c);display:flex;align-items:center;justify-content:center;font-size:.78rem;line-height:1;color:var(--ic,#fff);transition:all .18s}
   .layer .sw .sw-g{display:inline-block;font-style:normal;line-height:1;filter:var(--ig,none)}  /* force colour-emoji to a flat white/black silhouette */
@@ -222,6 +228,11 @@
   .cc-mod{margin-top:1rem;border:1px solid rgba(217,45,32,.4);border-left:3px solid #D92D20;border-radius:0 8px 8px 0;padding:.9rem 1rem;background:rgba(217,45,32,.05)}
   .cc-mod-badge{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#F97066;margin-bottom:.5rem}   /* readable red on the dark drawer (was #D92D20) */
   .cc-mod-body{font-size:.85rem;line-height:1.5;margin-bottom:.6rem}
+    /* The target item's own record inside a pending card — quieter than the
+     proposed change above it: this is the context, not the question. */
+  .cc-mod-ctx{margin:.7rem 0 0;border-top:1px solid rgba(239,230,212,.14);padding-top:.6rem}
+  .cc-mod-ctx-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.5);margin-bottom:.35rem}
+  .cc-mod-ctx .cc-d-rec{margin:0}
   .cc-mod-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.5rem .7rem;font-size:.82rem;margin-bottom:.6rem}
   /* pending rider photos with per-photo keep/drop (docs/specs/photo-uploads.md §5) */
   /* Waiting on the rider: the same card, but never mistakable for one that

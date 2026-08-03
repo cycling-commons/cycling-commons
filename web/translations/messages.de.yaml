@@ -18,6 +18,9 @@ nav:
   logout: 'Abmelden'
   moderate: 'Einreichungen'
   routes: 'Routen'
+  history: 'Verlauf'
+  takedowns: 'Entfernungen'
+  rulebook: 'Regelwerk'
   admin: 'Admin'
   language: 'Sprache'
 footer:
@@ -1141,6 +1144,9 @@ map:
   disc_urban: 'Stadt'
   disc_leisure: 'Freizeit'
   data_layers: 'Datenebenen'
+  dl_group_utility: 'Praktisch · volle Abdeckung'
+  dl_group_votable: 'Erlebnis · von Fahrern gewählt'
+  dl_group_moderation: 'Moderation'
   deselect_all: 'alle abwählen'
   select_all: 'alle auswählen'
   pending_review: 'Wartet auf Prüfung'
@@ -1159,6 +1165,7 @@ map:
   surf_good: 'Gut'
   surf_worn: 'Abgenutzt'
   surf_rough: 'Rau'
+  surf_broken: 'Aufgebrochen / lose'
   climb_traffic: 'Verkehr an Anstiegen'
   traffic_free: 'Verkehrsfrei'
   traffic_quiet: 'Ruhig'
@@ -1258,6 +1265,7 @@ map:
   d_towns_on_route: 'Orte an der Route'
   d_surfaces: 'Beläge'
   d_submitted_by: 'Eingereicht von'
+  d_item_today: 'Dieser Eintrag heute'
   d_age: 'Alter'
   d_where: 'Wo'
   d_place: 'Ort'
@@ -1359,6 +1367,7 @@ map:
   d_visit_site: 'Website öffnen'
   d_difficulty: 'Schwierigkeit'
   d_elevation: 'Höhe'
+  d_climb_length: 'Länge'
   d_m_climbing: '{n} m Anstieg'
   d_from_gpx: '(aus GPX)'
   d_grad_profile: 'Steigungsprofil · Ø ~{a}% · max {m}%'
@@ -1421,6 +1430,11 @@ improve:
     map_aria: 'Karte — tippen, um den Ort zu setzen'
     readout_initial: '◎ Tippe auf die Karte, um den Ort zu setzen'
     reset: 'Zurücksetzen'
+    undo: 'Rückgängig'
+    climb_how_1: 'Tippe auf den Fuß des Anstiegs, dann auf den Gipfel — die Straße dazwischen wird automatisch verfolgt.'
+    climb_how_2: 'Tippe noch einmal, um die steilste Rampe zu markieren. Optional, du kannst es überspringen.'
+    climb_how_3: 'Ziehe einen Marker, um ihn zu korrigieren — Route und Steigung werden neu berechnet.'
+    climb_how_4: 'Rückgängig nimmt deine letzte Aktion zurück, auch ein Zurücksetzen.'
     # Die Meldungen, die improve.js selbst rendert. Sie erreichen die Datei über
     # window.CC_IMPROVE_I18N als TEXT, nie als Markup
     # (docs/plans/2026-08-01-improve-js-i18n.md).
@@ -1442,6 +1456,8 @@ improve:
     search_no_matches: 'Keine Treffer'
     search_unavailable: 'Suche nicht verfügbar — tippe stattdessen auf die Karte'
     search_result: 'Treffer'
+    search_coords_place: 'Koordinaten — tippen, um den Ort hier zu setzen'
+    search_coords_go: 'Koordinaten — tippen, um dorthin zu springen'
   step2:
     label: 'Details'
     what_changed_label: 'Was fügst du hinzu oder änderst du?'
@@ -1490,6 +1506,7 @@ improve:
   locate:
     change: 'Standort ändern'
     confirm:
+      heading: 'Ort prüfen'
       help: 'Dieser Standort ist bereits gesetzt — prüfe, ob er stimmt, oder ändere ihn.'
   lifecycle:
     heading: 'Was mit deinem Vorschlag geschieht'
@@ -1662,7 +1679,7 @@ media:
       rate_limited: 'Zu viele Meldungen von deiner Verbindung heute. Wenn es dringend ist, schreib an info@cyclingcommons.org.'
       challenge: 'Bitte warte, bis die Sicherheitsprüfung fertig ist, und sende die Meldung erneut.'
 propose_route:
-  eyebrow: 'K · Empfohlene Routen'
+  eyebrow: 'Empfohlene Routen'
   title: 'Route vorschlagen'
   lead: 'Teile eine Runde, die sich lohnt. Jeder Vorschlag wird von einer Kuratorin oder einem Kurator geprüft; nach Freigabe erscheint er als vorgeschlagene Route auf der Karte und gilt als verifiziert, sobald andere Fahrer bestätigen, dass sie die Runde gefahren sind.'
   gpx_label: 'Deine Fahrt (GPX)'
@@ -1695,6 +1712,9 @@ propose_route:
     note_too_long: 'Der Hinweis darf höchstens 2.000 Zeichen lang sein.'
 moderate:
   escalate:
+    when: 'Nutze dies, wenn der Inhalt selbst gegen das Gesetz verstößt — nicht für Spam, nicht für eine schlechte Bearbeitung, nicht für Unhöflichkeit. Dafür gibt es Papierkorb und Nachricht an den Fahrer.'
+    confirm_check: 'Ich habe das Obige gelesen und dies ist mutmaßlich illegales Material'
+    button: 'Eskalieren'
     summary: 'Das ist illegaler Inhalt — eskalieren'
     help: 'Nur für mutmaßlich illegales Material: Es verschwindet sofort von diesem Platz und von der öffentlichen Seite, danach kann nichts es mehr löschen, und eine Administration wird umgehend alarmiert. Nutze dies statt Papierkorb — Wegwerfen vernichtet die Beweise zusammen mit dem Inhalt. Du wirst nicht gebeten, es erneut anzusehen.'
     reason_placeholder: 'Was du gesehen hast, in deinen Worten'
@@ -1712,7 +1732,11 @@ moderate:
     no_gps: 'keine Ortsangabe in der Datei'
   takedown:
     heading: 'Anträge auf Foto-Entfernung'
-    lead: 'Jemand hat um die Entfernung eines Fotos gebeten. Der Antrag der hochladenden Person ist bereits von der Karte; eine Meldung von Dritten bleibt online, bis du entscheidest (die Karte zeigt es an). Der Test für eine Meldung von Dritten: Zeigt das Foto auf den ersten Blick eine erkennbare Person, und ist die Angabe plausibel? Wenn ja, entferne es — im Zweifel entfernen. Lehne nur ab, was klar keine Rechtefrage ist: ein Sinneswandel der hochladenden Person über das Beitragen, niemand erkennbar, oder eine Beschwerde über den Ort statt über eine Person.'
+    lead_short: 'Jemand bittet darum, ein Foto zu entfernen. Die Bitte eines Uploaders nimmt das Foto bereits von der Karte; die Meldung eines Dritten bleibt sichtbar, bis du entscheidest (die Karte sagt, welche).'
+    rulebook_link: 'Wie du das entscheidest →'
+    kicker: 'Moderation · Rechteanfragen'
+    empty_heading: 'Nichts zu bearbeiten'
+    empty_body: 'Keine offenen Entfernungsanfragen. Dieser Schreibtisch ist meistens leer, und das ist so gewollt: Was hier landet, hat eine gesetzliche Frist.'
     alt: 'Das Foto, für das die Entfernung beantragt wurde'
     no_item: 'Keinem Ort zugeordnet'
     submission: 'Einreichung %id%'
@@ -1739,7 +1763,7 @@ moderate:
     reject: 'Ablehnen'
     needs_info: 'Informationen fehlen'
     decision_label: 'Entscheidung'
-    review_on_map: 'Auf der Karte prüfen & genehmigen'
+    review_on_map: 'Prüfen'
     submit: 'Entscheidung erfassen'
     view: 'Auf der Karte ansehen ↗'
   error:
@@ -1757,6 +1781,8 @@ moderate:
     type: 'Typ'
     all: 'Alle'
     apply: 'Anwenden'
+    search: 'Suchen'
+    search_ph: 'Titel des Eintrags…'
   overview:
     showing: '%shown% von %total% ausstehend'
   msg:
@@ -1768,6 +1794,8 @@ moderate:
     sent: 'Nachricht an den Fahrer gesendet.'
     error: 'Die Nachricht konnte nicht gesendet werden.'
   trash:
+    when: 'Nur für Spam und Müll: Werbung, Kauderwelsch, ein offensichtlicher Fake. Ein falscher oder unvollständiger Beitrag wird mit einer Notiz abgelehnt, niemals hier — der Papierkorb zerstört endgültig.'
+    confirm_check: 'Ich habe das Obige gelesen: das ist Spam oder Müll, kein Versehen'
     button: 'Löschen'
     confirm_head: 'Das dauerhaft als Spam löschen?'
     confirm_rest: 'Der Inhalt — einschließlich Fotos und deren Verlauf — wird sofort und endgültig gelöscht; nur ein inhaltsfreier Nachweis der Handlung bleibt erhalten. Es wird keine Nachricht gesendet.'
@@ -1777,6 +1805,35 @@ moderate:
     done: 'Gelöscht — dauerhaft entfernt.'
     blocked: 'Nur eingereichte oder abgelehnte Vorschläge können gelöscht werden.'
     error: 'Konnte das nicht löschen — es ist möglicherweise bereits weg.'
+  view:
+    label: 'Listendichte'
+    cards: 'Karten'
+    list: 'Liste'
+  rulebook:
+    private: 'Nur für Moderatoren — nicht im öffentlichen Wiki'
+    kicker: 'Moderation'
+    title: 'Moderatoren-Regelwerk'
+  history:
+    kicker: 'Moderation · Register'
+    heading: 'Bereits erledigt'
+    thread: '%count% Nachricht(en) in diesem Austausch'
+    said_curator: 'Gefragt'
+    said_rider: 'Fahrer'
+    no_text: '(kein Text)'
+    everyone: 'Alle'
+    mine: 'Von mir bearbeitet'
+    by: 'von %who%'
+    empty: 'Mit diesen Filtern ist noch nichts erledigt.'
+  status:
+    approved: 'Genehmigt'
+    rejected: 'Abgelehnt'
+    trashed: 'Gelöscht'
+  answered: 'Beantwortet'
+  pager:
+    label: 'Seiten'
+    prev: 'Neuer'
+    next: 'Älter'
+    at: 'Seite %page% von %pages% · %total% insgesamt'
   rider_reply: 'Der Fahrer hat geantwortet'
 moderate_routes:
   title: 'Routen-Moderationswarteschlange'
@@ -1858,6 +1915,8 @@ account:
   menu_personal: 'Persönlich'
   menu_moderation: 'Moderation'
   mod_scope_all: 'Alle Gebiete'
+  unread_messages: '%count% ungelesene Nachricht(en)'
+  mod_takedowns_open: 'Offene Entfernungsanfragen'
   mod_open_in_area: 'Offen in deinem Gebiet'
   tab_contributions: 'Beiträge'
   tab_votes: 'Stimmen'
@@ -2018,6 +2077,12 @@ meta:
   twofa_setup_description: 'Füge eine Authenticator-App hinzu, um dein Cycling Commons-Konto zu schützen.'
   twofa_enabled_title: 'Cycling Commons — Zwei-Faktor-Authentifizierung (2FA) aktiv'
   twofa_enabled_description: 'Die Zwei-Faktor-Authentifizierung (2FA) schützt jetzt dein Cycling Commons-Konto.'
+  moderate_history_title: 'Erledigte Beiträge'
+  moderate_history_description: 'Das Register entschiedener Beiträge.'
+  moderate_takedowns_title: 'Anfragen zur Entfernung von Fotos'
+  moderate_takedowns_description: 'Rechteanfragen, die auf eine Entscheidung warten.'
+  moderate_rulebook_title: 'Moderatoren-Regelwerk'
+  moderate_rulebook_description: 'Die Regeln, nach denen die Moderationsplätze arbeiten.'
   moderate_title: 'Cycling Commons — Moderation'
   moderate_description: 'Kuratoren-Bereich des Commons — Einreichungen prüfen, Meldungen bearbeiten und den offenen Cycling Atlas zuverlässig halten.'
   contribute_title: 'Cycling Commons — Beitragen'

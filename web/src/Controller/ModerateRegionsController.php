@@ -50,11 +50,27 @@ final class ModerateRegionsController extends AbstractController
     }
 
     #[Route('/moderate/regions', name: 'moderate_regions')]
-    public function index(TranslatorInterface $translator): Response
+    public function index(Request $request, TranslatorInterface $translator): Response
     {
         /** @var User $user */
         $user = $this->getUser();
         $rows = $this->visibleRegions($user);
+        // Every country this curator can see, taken from the rows themselves so
+        // the list can never offer a country with nothing behind it. Built
+        // BEFORE the filter narrows them, or picking a country would leave the
+        // select holding only that country (owner request, 2026-08-03).
+        $countries = array_values(array_unique(array_map(
+            static fn (array $r): string => (string) $r['countryCode'],
+            $rows,
+        )));
+        sort($countries);
+        $country = $request->query->getString('country');
+        if ('' !== $country) {
+            $rows = array_values(array_filter(
+                $rows,
+                static fn (array $r): bool => (string) $r['countryCode'] === $country,
+            ));
+        }
         $reports = $this->readiness->reportForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
         $threshold = $this->readiness->threshold();
         $minPerBlock = $this->readiness->minPerBlock();
@@ -101,6 +117,8 @@ final class ModerateRegionsController extends AbstractController
             'page_description' => 'moderate_regions.lead',
             'nav_active' => 'moderate',
             'regions' => $regions,
+            'countries' => $countries,
+            'country' => $country,
             'threshold' => $threshold,
             'min_blocks' => $this->readiness->minBlocks(),
             'min_per_block' => $minPerBlock,

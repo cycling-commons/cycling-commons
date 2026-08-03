@@ -6,7 +6,7 @@
    Loaded as an ES module: catalog-load.js injects it with type="module" once
    the catalog fetch has populated the CC_* globals this file reads. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel } from './i18n.js';
-import { wc } from './util.js';
+import { wc, pinPoint } from './util.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
          localiseBasemapLabels } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
@@ -24,7 +24,8 @@ import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
          fetchCoverageCounts, covShownCount } from './coverage.js';
 import { schemaRows, initDrawerChrome } from './drawer.js';
 import { initPicking } from './picking.js';
-import { resolveLocalFeature, openFeatureByName, openRouteById, openPendingById } from './places.js';
+import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFeatureById,
+         openRouteById, openPendingById } from './places.js';
 import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
@@ -87,8 +88,9 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
     // the resolvers here are exactly the ones the open calls use, so gate and
     // open can never disagree.
     const _dl = new URLSearchParams(location.search);
-    const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route');
+    const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route'), ip=_dl.get('item');
     const _dlHit =
+      (ip && !!resolveLocalFeatureById(ip)) ||
       (fp && !!resolveLocalFeature(fp)) ||
       (pp && !!(layerByKey.pending && (layerByKey.pending.features||[]).some(x=>x.pending && String(x.pending.id)===String(pp)))) ||
       (rp && ((layerByKey['experience']||{}).features||[]).some(x=>String(x.id)===String(rp)));
@@ -96,6 +98,10 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
     // deep-link: ?feature=<name> opens that item's drawer + zooms in (e.g. from
     // a profile page); coverage POIs stay linkable via one search-endpoint
     // lookup when the local index misses (coverage-provider.md §6)
+    // ?item=<id> — the moderation history's "what did I approve" link. By id,
+    // not by name: a settled submission carries the item id, and its own title
+    // need not still match the item's name.
+    if(ip) openFeatureById(ip);
     if(fp && !openFeatureByName(fp)) openCoverageFeatureByName(fp);
     if(pp) openPendingById(pp);
     // ?route=<id> opens a specific route selected (e.g. from the curator Routes desk)
@@ -257,9 +263,26 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
   // Curator-only pending submissions (injected by MapController for ROLE_CURATOR only).
   // Off the public map by design — riders never receive window.CC_PENDING.
   if(window.CC_IS_CURATOR && Array.isArray(window.CC_PENDING)){
+    /* The review pin has to land on the pin the curator is being sent to look
+       at. It used to sit at the submission's own point, which for an EDIT is
+       the item's stored anchor — and a climb's anchor is its SUMMIT while its
+       pin is drawn at the FOOT. On Côte de la Redoute that put the pending pin
+       9 m from the Monument de la Bataille de Sprimont, so "Review on the map"
+       highlighted the monument and the climb's real pin sat unmarked at the
+       other end of the line (owner-reported 2026-08-03).
+
+       pinPoint() is the renderer's own rule, now shared (util.js). A `new`
+       submission keeps its own point: there is no item yet, and its point is
+       the only thing that says where the place is. */
+    const pendingPin = s => {
+      if('new' === s.type || s.itemId == null) return [s.lat, s.lng];
+      const lyr = CATALOG.find(l => l.letter === s.letter);
+      const target = lyr && (lyr.features||[]).find(x => x.id != null && String(x.id) === String(s.itemId));
+      return (target && pinPoint(target)) || [s.lat, s.lng];
+    };
     const pf = window.CC_PENDING.map(s=>({
       name:s.title, headline:`${(I18N.pendingTypes||{})[s.type]||s.type} · ${s.who} · ${s.when}`,
-      geom:{ll:[s.lat, s.lng]},
+      geom:{ll:pendingPin(s)},
       record:[
         {label:D.submittedBy||'Submitted by', value:s.who},
         {label:D.age||'Age', value:s.when},

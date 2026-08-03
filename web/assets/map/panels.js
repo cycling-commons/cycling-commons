@@ -23,7 +23,8 @@
 import { I18N, D, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
 import { txtOn, currentSeason } from './util.js';
 import { map } from './map-init.js';
-import { CATALOG, CATALOG_AZ, active, layerByKey, mode, setMode,
+import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
+         active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter } from './render.js';
@@ -38,21 +39,38 @@ let boSeason=currentSeason(), boBike='all';
 let _bestOfReq=0;
 
 export function initLayerList(){
-  // catalog in canonical A–K order for the rail + legend (display only; render keeps CATALOG order)
-
-  // build layer toggles
+  // The rail lists categories in READING order, grouped (catalog.js): the
+  // utilities that aim for full coverage, then the layers riders vote into a
+  // best-of. Same split, same vocabulary as the contribute hub, so "what kind
+  // of thing is this" has one answer across the site.
+  //
+  // No letter in the row. The swatch already carries the category's icon and
+  // colour, so "B · Climbs" spent a prefix restating what the swatch says —
+  // and the letters, being storage identifiers, read as a broken sequence the
+  // moment the list is ordered for humans (A, C, M, D…). They stay in the
+  // URLs, tiles and API; they are gone from every surface a rider reads.
   const lc=document.getElementById('layers');
-  CATALOG_AZ.forEach(layer=>{
+  const row=layer=>{
     const el=document.createElement('div');
     el.className='layer'; el.style.setProperty('--c',layer.color); el.style.setProperty('--ic',txtOn(layer.color));
     el.style.setProperty('--ig', txtOn(layer.color)==='#fff' ? 'brightness(0) invert(1)' : 'brightness(0)'); el.dataset.key=layer.key;
     if(!active.has(layer.key)) el.classList.add('off');
     const _lc=layerCounts(layer);
     const ct=`${_lc.shown}/${_lc.total}`;
-    el.innerHTML=`<span class="sw"><i class="sw-g">${layer.icon}</i></span><span class="nm">${layer.letter} · ${layer.label}</span><span class="ct">${ct}</span>`;
+    el.innerHTML=`<span class="sw"><i class="sw-g">${layer.icon}</i></span><span class="nm">${layer.label}</span><span class="ct">${ct}</span>`;
     el.onclick=()=>{ if(active.has(layer.key)){active.delete(layer.key);el.classList.add('off')} else {active.add(layer.key);el.classList.remove('off')} syncLayersAll(); render(); };
     lc.appendChild(el);
-  });
+  };
+  const group=(title,layers)=>{
+    if(!layers.length) return;   // moderation section: curators only
+    const h=document.createElement('div');
+    h.className='lgrp'; h.textContent=title;
+    lc.appendChild(h);
+    layers.forEach(row);
+  };
+  group(I18N.groupUtility||'Utilities · full coverage', catalogUtility());
+  group(I18N.groupVotable||'Rider picks · voted', catalogVotable());
+  group(I18N.groupModeration||'Moderation', catalogModeration());
   // (de)select-all toggle for the data layers
   const layersAll=document.getElementById('layersAll');
   function syncLayersAll(){ layersAll.textContent = CATALOG.every(l=>active.has(l.key)) ? (I18N.deselectAll||'deselect all') : (I18N.selectAll||'select all'); }
@@ -141,7 +159,7 @@ export function initRailChrome(){
 
 function updateSubtitle(){
   const sub=document.querySelector('.map-top .sub'); if(!sub) return;
-  if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full backlog'; return; }
+  if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full catalog'; return; }
   const bike=boBike==='all' ? (I18N.allBikes||'All bikes') : (CC_BIKE_LABEL[boBike]||boBike);
   sub.textContent=`${I18N.curated||'Curated best-of'} · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
 }

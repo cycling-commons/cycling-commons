@@ -133,6 +133,34 @@
   var searchEl = document.getElementById('placeSearch');
   var resultsEl = document.getElementById('searchResults');
   var searchT = null;
+  var parseLatLng = (window.Cc && window.Cc.parseLatLng) || null;
+
+  /* A coordinate copied off the map (right-click there) is an answer, not a
+     query — Photon would return "No matches" for it and leave the map on its
+     default centre. Here the paste only moves the view: the foot and summit
+     stay the three-point editor's to place, since one pair of coordinates
+     cannot say which end of the climb it is. */
+  function goCoord(pt) {
+    if (!cmap) return;
+    cmap.flyTo({ center: [pt.lng, pt.lat], zoom: 16 });
+    if (resultsEl) resultsEl.hidden = true;
+  }
+
+  function renderCoord(pt) {
+    if (!resultsEl) return;
+    resultsEl.innerHTML = '';
+    var row = document.createElement('div');
+    row.className = 'res';
+    var b = document.createElement('b');
+    b.textContent = pt.lat.toFixed(6) + ', ' + pt.lng.toFixed(6);
+    var small = document.createElement('small');
+    small.textContent = 'Coordinates — tap to jump here';
+    row.appendChild(b);
+    row.appendChild(small);
+    row.addEventListener('click', function () { goCoord(pt); });
+    resultsEl.appendChild(row);
+    resultsEl.hidden = false;
+  }
 
   function renderResults(list) {
     if (!resultsEl) return;
@@ -183,13 +211,20 @@
   if (searchEl) {
     searchEl.addEventListener('input', function () {
       var q = searchEl.value.trim(); clearTimeout(searchT);
+      // ++searchSeq drops any geocode still in flight, so a slow reply for the
+      // half-typed query cannot land on top of the coordinate row.
+      var pt = parseLatLng && parseLatLng(q);
+      if (pt) { searchSeq++; renderCoord(pt); return; }
       if (q.length < 3) { renderResults(null); return; }
       searchT = setTimeout(function () { geocode(q); }, 320);
     });
     searchEl.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault(); clearTimeout(searchT);
-        var q = searchEl.value.trim(); if (q.length >= 2) geocode(q);
+        var q = searchEl.value.trim();
+        var pt = parseLatLng && parseLatLng(q);
+        if (pt) { searchSeq++; goCoord(pt); return; }
+        if (q.length >= 2) geocode(q);
       }
     });
   }

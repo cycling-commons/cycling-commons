@@ -85,8 +85,13 @@ export function addCuratedFeature(key, feature){
   const info = osmLayers[key];
   if(!info || !info.data || !feature || !feature.properties) return false;
   const id = feature.properties.id;
-  if(info.data.features.some(f => f.properties && f.properties.id === id)) return true;
-  info.data.features.push(feature);
+  // REPLACE when it is already there, not "already fine, nothing to do".
+  // Approving an EDIT sends the same id back with the change applied, and the
+  // early return meant the map kept rendering the pre-edit properties until
+  // the next full page load (2026-08-03).
+  const at = info.data.features.findIndex(f => f.properties && f.properties.id === id);
+  if(at >= 0) info.data.features[at] = feature;
+  else info.data.features.push(feature);
 
   const srcId = key + '-conf';
   const st = confState[srcId];

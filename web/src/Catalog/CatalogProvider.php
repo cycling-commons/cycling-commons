@@ -185,16 +185,26 @@ final class CatalogProvider
      * reloaded (moderation-and-contribution.md §6.2). The map inserts exactly
      * this feature into the matching pool instead.
      *
-     * Only the letters served as feature collections qualify. A/B/K carry
-     * their own shapes (segments, climbs, routes) and are left to the next
-     * catalog fetch rather than half-supported here.
+     * Two shapes, because the map has two: the pool letters come back as a
+     * GeoJSON `feature`, and B · climbs as the `climb` object map.js consumes
+     * (its own shape, with route/grad/steep). A · segments and K · routes are
+     * still left to the next catalog fetch — a segment's geometry and a route's
+     * whole domain are not worth half-supporting on this path.
      *
-     * @return array{letter: string, feature: array{type: string, properties: array<string, mixed>, geometry: mixed}}|null
+     * @return array{letter: string, feature?: array{type: string, properties: array<string, mixed>, geometry: mixed}, climb?: array<string, mixed>}|null
      */
     public function featureForItem(int $itemId): ?array
     {
         $letter = $this->db->fetchOne('SELECT letter FROM item WHERE id = :id', ['id' => $itemId]);
-        if (!\is_string($letter) || !\in_array($letter, self::POOL_LETTERS, true)) {
+        if (!\is_string($letter)) {
+            return null;
+        }
+        if ('B' === $letter) {
+            $rows = $this->itemRows('B', onlyId: $itemId);
+
+            return [] === $rows ? null : ['letter' => 'B', 'climb' => $this->climbFromRow($rows[0])];
+        }
+        if (!\in_array($letter, self::POOL_LETTERS, true)) {
             return null;
         }
 
@@ -257,6 +267,28 @@ final class CatalogProvider
     {
         $climbs = [];
         foreach ($this->itemRows('B') as $row) {
+            $climbs[] = $this->climbFromRow($row);
+        }
+
+        return $climbs;
+    }
+
+    /**
+     * One climb, in the shape map.js consumes.
+     *
+     * Extracted from climbs() so featureForItem() can rebuild a SINGLE climb
+     * after an approval — a curator approving an edit has to see it applied
+     * without reloading the page, and rebuilding it here rather than in a
+     * second mapper is what stops the live-updated climb drifting from the
+     * served one.
+     *
+     * @param array{id: int, name: string, geom: string, attributes: string, source: string, region_id: int|null, verified: bool} $row
+     *
+     * @return array<string, mixed>
+     */
+    private function climbFromRow(array $row): array
+    {
+        {
             $attrs = $this->decode($row['attributes']);
             // The fixture's top-level "source" is a citation string; the import
             // stores it as "attribution" because provenance owns the source
@@ -281,10 +313,9 @@ final class CatalogProvider
             if (null !== $row['region_id']) {
                 $climb['rid'] = (int) $row['region_id'];
             }
-            $climbs[] = $climb;
-        }
 
-        return $climbs;
+            return $climb;
+        }
     }
 
     /**

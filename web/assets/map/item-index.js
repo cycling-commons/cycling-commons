@@ -68,7 +68,10 @@ export function buildItemIndex(){
   // markers, confirmed OSM/pivot icon pins) centre the pulse on the pin
   // BODY with [0,-16]; canvas dots and line features pulse at the point.
   CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name) return;
-    push({name:f.name, unnamed:f.unnamed, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.letter||'•',
+    // badge = the category ICON, not its letter: the letter is a storage
+    // identifier and says nothing to a rider scanning a result list. `letter`
+    // below stays — it is what coverage lookups key on.
+    push({name:f.name, unnamed:f.unnamed, key:slug(f.name+' '+(layer.label||'')), kind:layer.label||'', badge:layer.icon||'•',
       color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
       rid:f.rid,   // region membership — search filters to scope like the map (07-20 review finding 3)
       // 07-15 decision A: real signal only — routes carry canonical state;
@@ -86,7 +89,7 @@ export function buildItemIndex(){
   (window.CC_STAYS_PIVOT && CC_STAYS_PIVOT.features || []).forEach(f=>{ const p=f.properties;
     if(!p || !p.n) return; const layer=layerByKey.stays; if(!layer) return;
     const c=f.geometry && f.geometry.coordinates; if(!c || c.length<2) return;
-    push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.letter,
+    push({name:p.n, key:slug(p.n+' '+(p.town||'')+' '+layer.label), kind:layer.label, badge:layer.icon,
       color:layer.color, letter:layer.letter, ll:[+c[1],+c[0]], id:p.id,
       rid:p.rid,   // pivot stays carry rid via catalog-load's property merge (finding 3)
       verified:!!p.v,   // v = real state/confirmation signal from CatalogProvider

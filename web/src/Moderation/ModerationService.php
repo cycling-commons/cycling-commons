@@ -182,8 +182,49 @@ final class ModerationService
             // (docs/specs/photo-uploads.md §6). The content-free audit row above
             // is the only trace either leaves.
             $this->mediaDisposal->purgeForSubmission($id);
+            $this->removeUnapprovedNewItem($submission);
             $this->em->remove($submission);
         });
+    }
+
+    /**
+     * Trashing a NEW-place submission takes its unapproved item with it.
+     *
+     * Intake creates the `Item` immediately, in state `submitted` — that is how
+     * the pending pin reaches the curator's map before anyone has decided
+     * anything (CatalogContributionService). Trash used to remove only the
+     * submission row, which left that item behind for good: state `submitted`,
+     * `source_ref` = `sub:<id>` pointing at a submission that no longer exists,
+     * and nothing anywhere to sweep it — `RetentionService` does not touch
+     * items. Invisible rather than harmful (ItemState::SERVED is
+     * unverified+verified, so a `submitted` row is never served publicly), but
+     * it is exactly the content Trash promises to destroy, still in the
+     * database. Owner-reported 2026-08-03.
+     *
+     * The state check is the safety rail, not decoration: once a new item has
+     * been APPROVED it is `unverified`/`verified`, a real catalogue entry that
+     * riders may since have confirmed, photographed or edited. Trashing the
+     * originating submission must never take that with it — only an item still
+     * waiting on its first decision has nothing else depending on it.
+     *
+     * An `edit` submission is untouched by all of this: an edit applies on
+     * approve, so a pending edit has changed nothing yet and trashing it can
+     * only ever discard the proposal.
+     */
+    private function removeUnapprovedNewItem(Submission $submission): void
+    {
+        if (SubmissionType::NewItem !== $submission->getType() || null === $submission->getItemId()) {
+            return;
+        }
+        $item = $this->em->find(Item::class, $submission->getItemId());
+        if (null === $item || ItemState::Submitted !== $item->getState()) {
+            return;
+        }
+        // Nothing else can be pointing at it: change_history is written on
+        // approve, confirmations need a served item, and an item-attached photo
+        // only gets its item_id on approve — the submission's own photos are
+        // already gone via purgeForSubmission above.
+        $this->em->remove($item);
     }
 
     private function approveNew(Item $item, Submission $submission, User $curator): void

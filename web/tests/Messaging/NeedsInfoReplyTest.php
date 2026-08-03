@@ -11,6 +11,8 @@ use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Messaging\Entity\UserMessage;
+use App\Messaging\MessageService;
+use App\Moderation\ModerationScopeProvider;
 use App\Messaging\UserMessageKind;
 use App\Moderation\ModerationScope;
 use App\Moderation\ModerationService;
@@ -24,9 +26,10 @@ use Symfony\Component\DomCrawler\Crawler;
  * Task 9 (moderation-feedback spec M6b): the needs-info reply loop — a rider
  * answers a curator's needs-info request from their own /messages page, and
  * the reply re-queues the submission (back to `pending`) plus delivers a
- * `rider_reply` message to the deciding curator. Every curator also sees the
- * reply surfaced directly on the queue row (SubmissionQueue::filtered), not
- * only the original decider's own inbox.
+ * `rider_reply` message addressed to the deciding curator. That address is a
+ * lookup key, not a destination: since 2026-08-03 the reply is deliberately
+ * kept OUT of the curator's personal inbox and surfaced on the queue row
+ * instead (SubmissionQueue::filtered), where moderation work belongs.
  *
  * Test isolation: DAMA\DoctrineTestBundle wraps each test in a rolled-back transaction.
  */
@@ -164,6 +167,94 @@ final class NeedsInfoReplyTest extends WebTestCase
     }
 
     // ── Happy path ───────────────────────────────────────────────────────────
+
+    /**
+     * The reply reaches the DESK, not the curator's personal inbox.
+     *
+     * It is addressed to the deciding curator so the queue can find it
+     * (SubmissionQueue's LATERAL join), but a rider's answer to a needs-info
+     * question is moderation work — it has no business in the inbox a rider
+     * uses for their own contributions, and an unread count on the account
+     * chip pointing at it pointed at nothing a curator could act on
+     * (owner-reported 2026-08-03).
+     */
+    /**
+     * The settled row carries the WHOLE exchange, not just the last answer.
+     *
+     * A two-round needs-info conversation had no home anywhere: the queue card
+     * and the history show only the latest reply, `change_history` records what
+     * was applied rather than what was asked, and the reply is not personal
+     * mail (§5.4). Folded away on the row, since most submissions never had one.
+     */
+    public function testTheSettledRowCarriesTheWholeNeedsInfoExchange(): void
+    {
+        $client = static::createClient();
+        $curator = $this->curator('thread');
+        $rider = $this->rider('thread');
+        $sub = $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Thread');
+
+        $crawler = $this->loginAndVisitMessages($client, $rider);
+        $client->request('POST', '/messages/'.$this->needsInfoMessageId((int) $rider->getId()).'/reply', [
+            'body' => 'Answered the first time.',
+            '_token' => $this->replyTokenFrom($crawler),
+        ]);
+        self::assertResponseRedirects('/messages');
+        $this->em()->clear();
+
+        $rows = static::getContainer()->get(SubmissionQueue::class)
+            ->history(static::getContainer()->get(ModerationScopeProvider::class)->scopeFor($curator));
+
+        // Settled rows only — this one is back to pending, so decide it first.
+        static::getContainer()->get(ModerationService::class)->decide((int) $sub->getId(), 'approve', $curator, null);
+        $this->em()->clear();
+        $rows = static::getContainer()->get(SubmissionQueue::class)
+            ->history(static::getContainer()->get(ModerationScopeProvider::class)->scopeFor($curator));
+
+        $row = null;
+        foreach ($rows as $r) {
+            if ($r['id'] === $sub->getId()) {
+                $row = $r;
+            }
+        }
+        self::assertNotNull($row, 'the approved submission is in the history');
+        // The curator's question AND the rider's answer, oldest first.
+        self::assertCount(2, $row['thread']);
+        self::assertSame('curator', $row['thread'][0]['who']);
+        self::assertSame('rider', $row['thread'][1]['who']);
+        self::assertSame('Answered the first time.', $row['thread'][1]['body']);
+    }
+
+    public function testTheModerationReplyStaysOffTheCuratorsPersonalInbox(): void
+    {
+        $client = static::createClient();
+        $curator = $this->curator('inbox');
+        $rider = $this->rider('inbox');
+        $sub = $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Inbox split');
+
+        $crawler = $this->loginAndVisitMessages($client, $rider);
+        $token = $this->replyTokenFrom($crawler);
+        $client->request('POST', '/messages/'.$this->needsInfoMessageId((int) $rider->getId()).'/reply', [
+            'body' => 'Shut off from November to March.',
+            '_token' => $token,
+        ]);
+        self::assertResponseRedirects('/messages');
+        $this->em()->clear();
+
+        // The row exists — the desk depends on it.
+        self::assertCount(1, $this->riderReplyMessagesFor((int) $curator->getId()));
+        self::assertSame('Shut off from November to March.', $this->findQueueRow((int) $sub->getId())['riderReply']);
+
+        // The curator's own inbox does not show it, and the chip does not count it.
+        $curatorCrawler = $this->loginAndVisitMessages($client, $curator);
+        self::assertStringNotContainsString('Shut off from November to March.', $curatorCrawler->text());
+
+        $messages = static::getContainer()->get(MessageService::class);
+        self::assertSame(0, $messages->unreadCount((int) $curator->getId()));
+
+        // The rider still sees their own answer in their own thread.
+        $riderCrawler = $this->loginAndVisitMessages($client, $rider);
+        self::assertStringContainsString('Shut off from November to March.', $riderCrawler->text());
+    }
 
     public function testRiderReplyRequeuesTheSubmissionAndNotifiesTheCurator(): void
     {

@@ -223,7 +223,15 @@ final class MediaTakedownEndpointTest extends WebTestCase
         $em->flush();
         $client->loginUser($curator);
 
-        $desk = $client->request('GET', '/moderate');
+        // Takedowns have their own desk since 2026-08-03 — a rights request on a
+        // legal clock does not belong at the bottom of the editorial queue
+        // (moderation-and-contribution.md §5.2). The submissions desk must NOT
+        // carry it any more, so both halves are asserted.
+        $queue = $client->request('GET', '/moderate');
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('That is me in the reflection.', $queue->text());
+
+        $desk = $client->request('GET', '/moderate/takedowns');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('That is me in the reflection.', $desk->text());
 

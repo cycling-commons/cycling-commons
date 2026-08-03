@@ -19,27 +19,37 @@ import { escPend } from './util.js';
 
 // One real, verified Ardennes example per catalog type (A–K). geom.ll = [lat,lng].
 // record[] rows render in the detail drawer; omit any attribute we cannot verify.
+//
+// This array's order is the DRAW order (render.js walks it to build markers and
+// sources, so later entries stack above earlier ones) — deliberately left as it
+// was. The order a rider READS categories in is CATALOG_DISPLAY below; the two
+// are different jobs and were only ever the same by accident.
+//
+// `votable` mirrors ItemType::isVotable() on the server and splits the rail
+// into its two groups. It is NOT `exp`: `exp` decides what Curated mode hides,
+// and the two genuinely disagree — road surface is a measured utility (never
+// voted) that still filters to curated, and K · Recommended routes is the
+// votable best-of layer that carries `exp:false` because render.js special-
+// cases it by key. Group by `votable`; filter by `exp`.
 export const CATALOG = [
-  { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, features:[] }
-  ,{ key:'climbs', letter:'B', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, features:[] }
-  ,{ key:'water', letter:'C', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, features:[] }
-  // M sits here by DISPLAY order (utilities next to water); the letter skips
-  // over the reserved L (ride heatmap) — letters are identifiers, not order.
-  ,{ key:'toilets', letter:'M', label:LAYER_L10N.toilets||'Public toilets', color:'#4E6E8C', icon:'🚻', kind:'point', exp:false, features:[] }
-  ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, features:[] }
-  ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, features:[] }
+  { key:'surface', letter:'A', label:LAYER_L10N.surface||'Road surface', color:'#4E8C84', icon:'▰', kind:'surface', exp:true, votable:false, features:[] }
+  ,{ key:'climbs', letter:'B', label:LAYER_L10N.climbs||'Climbs', color:'#6A2C8F', icon:'⛰', kind:'point', exp:true, votable:true, features:[] }
+  ,{ key:'water', letter:'C', label:LAYER_L10N.water||'Water & food', color:'#8FB6A8', icon:'💧', kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'toilets', letter:'M', label:LAYER_L10N.toilets||'Public toilets', color:'#4E6E8C', icon:'🚻', kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'services', letter:'D', label:LAYER_L10N.services||'Bike services', color:'#6b6f5e', icon:'⚙', kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'stays', letter:'E', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:'⛺', kind:'point', exp:true, votable:true, features:[] }
   // F · Hazards — features filled below from window.CC_HAZARDS (the served
   // payload), region-stamped like every letter (map-and-search.md §4.5
   // Task A). The hardcoded demo fixture ("Exposed crosswind · Hautes Fagnes")
   // was retired in the 07-20 review round (rid-less client fixtures have no
   // honest place in a scope-filtered map); it now returns as a real seeded,
   // region-stamped SeedManualCatalogCommand row served through this path.
-  ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, features:[]}
-  ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, features:[] }
-  ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, features:[] }
-  ,{ key:'scenic', letter:'I', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, features:[] }
-  ,{ key:'history', letter:'J', label:LAYER_L10N.history||'History & culture', color:'#6E5849', icon:'🏛', kind:'point', exp:true, features:[] }
-  ,{ key:'experience', letter:'K', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, features:[] }
+  ,{ key:'hazards', letter:'F', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:'⚠', kind:'point', exp:false, votable:false, features:[]}
+  ,{ key:'transit', letter:'G', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:'🚆', kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'shelter', letter:'H', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:'⛑', kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'scenic', letter:'I', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:'📷', kind:'point', exp:true, votable:true, features:[] }
+  ,{ key:'history', letter:'J', label:LAYER_L10N.history||'History & culture', color:'#6E5849', icon:'🏛', kind:'point', exp:true, votable:true, features:[] }
+  ,{ key:'experience', letter:'K', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:'★', kind:'line', exp:false, votable:true, features:[] }
 ];
 
 export const active = new Set(CATALOG.map(l => l.key));   // all layers (incl. K · Recommended routes) on by default
@@ -92,8 +102,25 @@ export const CITIES = {
 // must not break out of the attribute or element context.
 export const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;
 
-// A-Z ordering for the layer list; CATALOG's own order is the catalogue's.
-export const CATALOG_AZ=[...CATALOG].sort((a,b)=>a.letter<b.letter?-1:1);
+/* Reading order for the layer rail: the two groups a rider actually thinks in
+   — what is here (utilities, aiming for full coverage) and what is worth
+   riding to (votable, curated by riders) — mirroring the contribute hub's
+   PRACTICAL/EMOTIONAL split so one vocabulary describes the catalogue
+   everywhere. Within a group, CATALOG's order carries through.
+
+   This replaces an A–Z sort by letter, which put M · Public toilets last
+   (nowhere near Water & food, the row it belongs beside) and B · Climbs
+   second, above every utility, purely because climbs were catalogued early.
+   Letters are storage identifiers; they were never a running order.
+
+   Functions, not constants: the curator-only "Pending review" layer is pushed
+   into CATALOG at runtime (map.js), before initLayerList runs but after this
+   module evaluates — a precomputed array would silently drop it. It carries
+   `pendingLayer:true` and belongs to neither group; it is a moderation
+   overlay, not a category, so it gets its own trailing section. */
+export const catalogUtility = () => CATALOG.filter(l => !l.votable && !l.pendingLayer);
+export const catalogVotable = () => CATALOG.filter(l => l.votable && !l.pendingLayer);
+export const catalogModeration = () => CATALOG.filter(l => l.pendingLayer);
 
 // Letter <-> layer-key, both directions: coverage tiles are addressed by
 // letter, the served layers by key.

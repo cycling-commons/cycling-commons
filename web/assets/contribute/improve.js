@@ -155,10 +155,35 @@
     return Math.abs(WZ.loc.lat - initLat) > 1e-5 || Math.abs(WZ.loc.lng - initLng) > 1e-5;
   }
 
+  /* Geometry that is NOT a pin: a climb's route/steepest and a road surface's
+     two endpoints. They live in their own hidden fields, so pinMoved() — which
+     only ever compared lat/lng, and only for `type === 'point'` — could not see
+     them. Moving a climb's summit therefore left the wizard convinced nothing
+     had changed and Submit disabled, on an edit the SERVER would have accepted
+     perfectly well (ClimbGeometry is merged into the change diff there)
+     (owner-reported 2026-08-03).
+
+     Compared against a snapshot taken once the editor has hydrated: it writes
+     the item's stored shape into these fields synchronously at mount and does
+     not re-snap or re-profile on its own, so anything that differs afterwards
+     is the rider's doing. */
+  var INITIAL_GEOM = null;
+
+  function geomSnapshot() {
+    return ['route', 'steep', 'segment'].map(function (k) {
+      var f = fld(k);
+      return f ? f.value : '';
+    }).join('|');
+  }
+
+  function geomChanged() {
+    return null !== INITIAL_GEOM && geomSnapshot() !== INITIAL_GEOM;
+  }
+
   function nothingChanged() {
     if (ADD) return false;                       // a new place is all change
     if (WZ.media.length || WZ.links.length) return false;
-    if (pinMoved()) return false;
+    if (pinMoved() || geomChanged()) return false;
     return detailsSnapshot() === INITIAL_DETAILS;
   }
 
@@ -264,20 +289,30 @@
     var isClimb = !!(window.CC_ITEM && 'B' === window.CC_ITEM.letter);
     var climbEditor = null;
     var wzReset = document.getElementById('wzReset');
+    // Assigned by the single-pin/segment branch only; stays null for a climb,
+    // whose foot/summit belong to the shared editor (see placeAt below).
+    var placeAt = null;
 
     if (isClimb) {
       var initial = (window.CC_ITEM.route || window.CC_ITEM.grad || window.CC_ITEM.steep)
         ? { route: window.CC_ITEM.route, grad: window.CC_ITEM.grad, steep: window.CC_ITEM.steep }
         : undefined;
 
+      // Undo is only offered once there is something to take back — a control
+      // that is always there and usually dead teaches a rider nothing.
+      var undoBtn = document.getElementById('wzUndo');
       climbEditor = window.Cc.mountClimbEditor({
         map: wmap,
         hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep') },
         initial: initial,
+        onHistory: function (depth) { if (undoBtn) undoBtn.hidden = 0 === depth; },
         onChange: function (st) {
           var ro = document.getElementById('wz-readout');
           if (st.start && st.summit) {
-            WZ.loc = { type: 'climb', start: st.start, summit: st.summit };
+            // lengthKm rides along so the review can state the climb's
+            // length: two coordinate pairs do not tell a rider whether they
+            // drew the climb they meant to (owner request 2026-08-03).
+            WZ.loc = { type: 'climb', start: st.start, summit: st.summit, lengthKm: st.lengthKm };
             if (ro) {
               var txt = t('readout_climb_set');
               if (st.lengthKm) txt += ' · ' + t('climb_length', { '%km%': st.lengthKm.toFixed(1) });
@@ -301,8 +336,22 @@
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wzReset.click(); }
         });
       }
+      // The editor has written the item's stored shape into the hidden fields
+      // by now (mountClimbEditor ends with writeHidden), so this is the
+      // "unchanged" baseline the review-step gate compares against.
+      INITIAL_GEOM = geomSnapshot();
+      if (undoBtn) {
+        undoBtn.addEventListener('click', function () { if (climbEditor) climbEditor.undo(); });
+        undoBtn.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); undoBtn.click(); }
+        });
+      }
     } else {
       var placed = [];
+      // Same baseline for the non-climb branch. A road surface's endpoints are
+      // not prefilled (only points are pre-placed), so this snapshot is the
+      // empty shape and drawing one registers as the change it is.
+      INITIAL_GEOM = geomSnapshot();
 
       // Part C: an "Edit this item" bridge (known coords, not add, not fix=location)
       // opens a COMPACT, view-only confirm-map. confirmView gates click-to-reposition
@@ -400,16 +449,23 @@
         }
       };
 
-      wmap.on('click', function (e) {
+      // One way to drop a pin, two ways to ask for it: a tap on the map, or a
+      // coordinate pasted into the search box (see the search section below).
+      // `var` hoists the binding to this function's scope, so the search code —
+      // which is shared with the climb branch, where no pin exists — can test
+      // `if (placeAt)` and stay a fly-to there.
+      placeAt = function (lngLat) {
         if (confirmView) return;   // compact confirm-map is view-only until expanded
         var need = LOCATE === 'segment' ? 2 : 1;
         if (placed.length >= need) { placed.forEach(function (m) { m.remove(); }); placed.length = 0; }
-        var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(e.lngLat).addTo(wmap);
+        var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(lngLat).addTo(wmap);
         m.on('dragend', function () { syncLoc(); drawSeg(); announceMove(); });
         placed.push(m);
         syncLoc();
         drawSeg();
-      });
+      };
+
+      wmap.on('click', function (e) { placeAt(e.lngLat); });
 
       // Editing a located point: pre-place the pin at the item's coordinates so
       // the map opens on it. In CONFIRM mode it is a compact, glowing, view-only
@@ -455,6 +511,7 @@
     var searchEl = document.getElementById('wz-search');
     var resultsEl = document.getElementById('wz-results');
     var searchT = null;
+    var parseLatLng = (window.Cc && window.Cc.parseLatLng) || null;
 
     // A one-line note in the results list ("No matches", "Search unavailable").
     function resultNote(text) {
@@ -502,6 +559,41 @@
       resultsEl.hidden = false;
     }
 
+    /* A pasted coordinate is not a place name, so it never reaches Photon —
+       it answers the question the search box is asking on its own. The row is
+       rendered rather than applied silently so the rider sees WHAT was read
+       out of what they pasted before the map moves (and so a mistyped pair is
+       theirs to spot). Enter applies it directly, because someone who pastes
+       coordinates and hits Enter has already decided. */
+    function goCoord(pt) {
+      if (!wmap) return;
+      wmap.flyTo({ center: [pt.lng, pt.lat], zoom: 16 });
+      // Point/segment: the coordinates ARE the location — placing the pin is
+      // the whole reason to paste them, and re-tapping the map would only lose
+      // the precision the rider just handed us. A climb's foot/summit stay the
+      // editor's job, so there the paste is a fly-to and nothing more.
+      if (placeAt) placeAt([pt.lng, pt.lat]);
+      var fPlace = fld('place');
+      if (fPlace && !fPlace.value) fPlace.value = window.Cc.formatLatLng(pt.lat, pt.lng);
+      if (resultsEl) resultsEl.hidden = true;
+    }
+
+    function renderCoord(pt) {
+      if (!resultsEl) return;
+      RC.clear(resultsEl);
+      var row = document.createElement('div');
+      row.className = 'res';
+      var b = document.createElement('b');
+      b.textContent = window.Cc.formatLatLng(pt.lat, pt.lng);
+      var small = document.createElement('small');
+      small.textContent = placeAt ? t('search_coords_place') : t('search_coords_go');
+      row.appendChild(b);
+      row.appendChild(small);
+      row.addEventListener('click', function () { goCoord(pt); });
+      resultsEl.appendChild(row);
+      resultsEl.hidden = false;
+    }
+
     var searchSeq = 0;
 
     function geocode(q) {
@@ -527,6 +619,11 @@
       searchEl.addEventListener('input', function () {
         var q = searchEl.value.trim();
         clearTimeout(searchT);
+        // ++searchSeq drops any geocode already in flight: without it a slow
+        // Photon reply for the half-typed query lands on top of the coordinate
+        // row a moment later.
+        var pt = parseLatLng && parseLatLng(q);
+        if (pt) { searchSeq++; renderCoord(pt); return; }
         if (q.length < 3) { renderResults(null); return; }
         searchT = setTimeout(function () { geocode(q); }, 320);
       });
@@ -535,6 +632,8 @@
           e.preventDefault();
           clearTimeout(searchT);
           var q = searchEl.value.trim();
+          var pt = parseLatLng && parseLatLng(q);
+          if (pt) { searchSeq++; goCoord(pt); return; }
           if (q.length >= 2) geocode(q);
         }
       });
@@ -568,6 +667,11 @@
         '%foot%': WZ.loc.start[1].toFixed(4) + '°N ' + WZ.loc.start[0].toFixed(4) + '°E',
         '%summit%': WZ.loc.summit[1].toFixed(4) + '°N ' + WZ.loc.summit[0].toFixed(4) + '°E'
       });
+      // The length is the one number that says whether the drawn climb is the
+      // intended one — coordinates alone do not.
+      if (WZ.loc.lengthKm) {
+        locTxt += ' · ' + t('climb_length', { '%km%': WZ.loc.lengthKm.toFixed(1) });
+      }
     }
 
     // Echo every detail/extra field the rider actually filled in (step 2), so the

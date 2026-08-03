@@ -137,9 +137,14 @@ final class CatalogFormRegistryTest extends TestCase
         }
 
         self::assertArrayHasKey('accessibility', $byName);
-        self::assertSame(FieldKind::Select, $byName['accessibility']->kind);
+        // MULTI, not single (2026-08-02): a stay is routinely step-free AND
+        // handbike-friendly, and one-of-these forced the rider to drop the
+        // rest — the very fact a rider who needs one of them searches for.
+        // 'Unknown' went with the single select: nothing ticked already means
+        // "not stated", and it cannot coexist with a real value.
+        self::assertSame(FieldKind::MultiSelect, $byName['accessibility']->kind);
         self::assertSame(
-            ['Step-free access', 'Handbike-friendly', 'Wheelchair-accessible', 'Unknown'],
+            ['Step-free access', 'Handbike-friendly', 'Wheelchair-accessible'],
             $byName['accessibility']->choices,
         );
     }

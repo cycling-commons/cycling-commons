@@ -8,6 +8,8 @@ namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionType;
+use App\Moderation\ModerationScopeProvider;
+use App\Moderation\SubmissionQueue;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -55,6 +57,69 @@ final class ModerateOverviewTest extends WebTestCase
         $em->flush();
 
         return $sub;
+    }
+
+    /**
+     * Title search, on both desks (2026-08-03, owner). ILIKE with the wildcards
+     * in the bound value — a `%` typed by a curator is a literal percent, not a
+     * pattern they did not know they were writing.
+     */
+    public function testSearchNarrowsTheQueueByTitle(): void
+    {
+        $client = static::createClient();
+        $this->loginCurator($client);
+        $this->seedSubmission('Côte de Recherche', 'BE');
+        $this->seedSubmission('Fontaine ailleurs', 'BE');
+
+        $crawler = $client->request('GET', '/moderate?q=recherche');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Côte de Recherche', $crawler->text());
+        self::assertStringNotContainsString('Fontaine ailleurs', $crawler->text());
+    }
+
+    /** A `%` in the box matches a literal percent, not everything. */
+    public function testSearchTreatsWildcardsAsLiteralText(): void
+    {
+        $client = static::createClient();
+        $this->loginCurator($client);
+        $this->seedSubmission('Col du 100%', 'BE');
+        $this->seedSubmission('Plain title', 'BE');
+
+        $crawler = $client->request('GET', '/moderate?q=100%25');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Col du 100%', $crawler->text());
+        self::assertStringNotContainsString('Plain title', $crawler->text());
+    }
+
+    /**
+     * The queue pages, and the pager agrees with the rows it is paging: the
+     * page query and the count query share one WHERE builder.
+     */
+    public function testTheQueuePagesAndCountsTheSameSet(): void
+    {
+        $client = static::createClient();
+        $this->loginCurator($client);
+        for ($i = 0; $i < 3; ++$i) {
+            $this->seedSubmission('Paged climb '.$i, 'BE');
+        }
+
+        $queue = static::getContainer()->get(SubmissionQueue::class);
+        $scope = static::getContainer()->get(ModerationScopeProvider::class)
+            ->scopeFor(static::getContainer()->get(EntityManagerInterface::class)
+                ->getRepository(User::class)->findOneBy(['email' => 'overview-curator@example.com']));
+
+        $total = $queue->countFiltered($scope, null, null, null, 'Paged climb');
+        self::assertSame(3, $total);
+
+        $first = $queue->filtered($scope, null, null, null, 'Paged climb', 1, 2);
+        $second = $queue->filtered($scope, null, null, null, 'Paged climb', 2, 2);
+        self::assertCount(2, $first);
+        self::assertCount(1, $second);
+        // No row appears on both pages.
+        $ids = array_merge(array_column($first, 'id'), array_column($second, 'id'));
+        self::assertCount(3, array_unique($ids));
     }
 
     public function testFilterByCountryNarrowsTheQueue(): void

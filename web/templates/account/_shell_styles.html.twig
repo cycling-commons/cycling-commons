@@ -25,7 +25,14 @@
   .empty-state p{max-width:46ch;margin:0 auto 1.3rem;font-size:.95rem;line-height:1.6}
   .empty-state .door{display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;border:1.5px solid var(--ink);border-radius:5px;padding:.6rem 1rem;color:var(--ink);text-decoration:none;transition:background .2s}
   .empty-state .door:hover{background:var(--trail)}
-  .dtabs{display:flex;gap:.5rem;padding:0 clamp(1.25rem,4vw,2rem);background:var(--paper-deep);border-bottom:1px solid rgba(20,22,14,.12);overflow-x:auto}
+  /* overflow-y MUST be pinned. Setting only overflow-x:auto makes the other axis
+     compute to `auto` too (CSS overflow §), and `.dtabs a` carries
+     margin-bottom:-1px to pull the active tab's border over the bar's — one
+     pixel of overflow, which is all a scrollbar track needs. The result was a
+     little vertical scrollbar beside the moderation tabs, which read as the
+     account menu having one (owner-reported 2026-08-03). This strip scrolls
+     sideways or not at all. */
+  .dtabs{display:flex;gap:.5rem;padding:0 clamp(1.25rem,4vw,2rem);background:var(--paper-deep);border-bottom:1px solid rgba(20,22,14,.12);overflow-x:auto;overflow-y:hidden}
   .dtabs a{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:1rem .9rem;cursor:pointer;color:#595c4d;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;text-decoration:none}
   /* the selected section must be unmistakable: ink text + orange underline + a
      clear tint box (with side padding so the tint doesn't hug the label). */
@@ -43,6 +50,18 @@
   .dtabs.dtabs-modmode a.on{background:rgba(255,90,31,.2)}
   /* per-tab open-count badge (scoped to the moderator's jurisdiction) */
   .dtab-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--clay);color:var(--paper);font-size:.62rem;font-weight:700;line-height:1;vertical-align:middle}
+  /* Search + pager, shared by every moderation desk. They started life inside
+     one page's <style> block, so the other desk rendered an unstyled browser
+     default next to a designed one (owner-reported 2026-08-03). One home. */
+  .mod-search{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
+  .mod-search input{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:16rem}
+  .mod-go{align-self:flex-end}
+  .pager{display:flex;align-items:center;gap:1rem;margin:1.4rem 0 0;font-family:var(--mono);font-size:.66rem}
+  .pager-step{color:var(--clay);text-decoration:none;border:1px solid rgba(20,22,14,.25);border-radius:30px;padding:.4rem .8rem;letter-spacing:.06em;text-transform:uppercase}
+  .pager-step:hover{border-color:var(--ink);color:var(--ink)}
+  .pager-step.is-off{opacity:.35;border-style:dashed}
+  .pager-at{color:#595c4d;margin-left:auto}
+
   /* ONE button system for the account/moderation desks — the site's brand orange
      (--trail), matching .export/.cc-d-act. Primary actions = orange fill; the
      less-prominent / destructive ones (reject, dismiss, retire, needs-info) keep

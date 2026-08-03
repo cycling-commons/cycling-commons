@@ -92,9 +92,64 @@
       drawLine();
     }
 
+    /* ---------- undo ----------
+
+       Placing a climb is three separate acts (foot, summit, steepest) plus any
+       number of drag corrections, and the only escape used to be Reset — start
+       the whole climb again because you nudged the summit 40 m too far. Undo
+       restores the previous state; each act pushes one snapshot first.
+
+       Snapshots are values, not markers: the markers are rebuilt from state on
+       restore, so an undone drag cannot leave a stale pin behind. `grad`/route
+       are copied because the OSRM/elevation resolves mutate them in place. */
+    var history = [];
+    var HISTORY_MAX = 25;
+
+    function snapshot() {
+      history.push({
+        start: state.start ? state.start.slice() : null,
+        summit: state.summit ? state.summit.slice() : null,
+        steep: state.steep ? { at: state.steep.at.slice(), pct: state.steep.pct, manual: state.steep.manual } : null,
+        route: state.route.map(function (c) { return c.slice(); }),
+        grad: state.grad.slice(),
+        lengthKm: state.lengthKm
+      });
+      if (history.length > HISTORY_MAX) history.shift();
+      if (opts.onHistory) opts.onHistory(history.length);
+    }
+
+    /** Rebuild every marker from state — the one way markers get (re)created. */
+    function remarkers() {
+      if (footM) { footM.remove(); footM = null; }
+      if (summitM) { summitM.remove(); summitM = null; }
+      if (steepM) { steepM.remove(); steepM = null; }
+      if (state.start) { footM = mkMarker(state.start, 'foot', true, labels.foot); bindDrag(footM, onFootMoved); }
+      if (state.summit) { summitM = mkMarker(state.summit, 'summit', true, labels.summit); bindDrag(summitM, onSummitMoved); }
+      if (state.steep) { steepM = mkMarker(state.steep.at, 'steep', true, labels.steepest + (state.steep.pct ? ' · ' + state.steep.pct : '')); bindDrag(steepM, onSteepDragged); }
+    }
+
+    function undo() {
+      if (!history.length) return false;
+      // Anything in flight belongs to the state being undone: invalidate it, or
+      // a late resolve repaints the gradient of a route that no longer exists.
+      routeSeq++; profileSeq++;
+      abortRoute();
+      abortProfile();
+      routeError = false; profileError = false;
+      var prev = history.pop();
+      state.start = prev.start; state.summit = prev.summit; state.steep = prev.steep;
+      state.route = prev.route; state.grad = prev.grad; state.lengthKm = prev.lengthKm;
+      remarkers();
+      drawLine();
+      writeHidden();
+      if (opts.onHistory) opts.onHistory(history.length);
+      return true;
+    }
+
     /* ---------- clicks: foot, then summit, then (optional) steepest ---------- */
     function onMapClick(e) {
       var ll = [e.lngLat.lng, e.lngLat.lat];
+      snapshot();
       if (!state.start) {
         state.start = ll;
         footM = mkMarker(ll, 'foot', true, labels.foot);
@@ -114,6 +169,9 @@
     function onSummitMoved(ll) { state.summit = ll; onPointsChanged(); }
 
     function onPointsChanged() {
+      // The route is about to change: the previous profile's sampler describes
+      // a climb that no longer exists.
+      sustainedAt = null;
       // Any endpoint change invalidates whatever profile is still in flight —
       // a late resolve must not apply the OLD route's grad/steep to the new one.
       profileSeq++;
@@ -201,15 +259,51 @@
         profiling = false;
         if (!res) {
           state.grad = [];
-          if (!state.steep || !state.steep.manual) state.steep = null;
-          // manual steep: position stays; pct keeps its prior value (no grad to sample).
+          // The marker stays. Same rule as above: the position is a fact about
+          // the climb, and a profile we could not fetch is not a reason to
+          // delete it — only the % cannot be refreshed without a gradient.
         } else {
           state.grad = res.grad;
-          if (!state.steep || !state.steep.manual) {
+          /* An existing steepest marker STAYS PUT while the route changes.
+
+             It used to be re-derived from the profile on every resolve unless
+             the rider had placed it by hand, so dragging the summit a little
+             further up the road made the steepest ramp jump to somewhere else
+             on the climb — the rider had changed one end and watched a
+             different marker move (owner-reported 2026-08-03). Extending a
+             climb does not relocate its steepest ramp; only the numbers around
+             it change, so the position is kept and the % is re-read from the
+             new profile at that fixed position.
+
+             The one case that must move it is the route no longer passing it:
+             shorten the climb past the steepest ramp and the marker would
+             otherwise float beside a road that is no longer part of it. Then,
+             and only then, it is re-derived — including a hand-placed one,
+             because a marker stranded off the climb is wrong however it got
+             there. */
+          // Kept for the manual-drag path below, which has no fresh profile.
+          sustainedAt = res.sustainedAt || null;
+          if (!state.steep) {
             state.steep = { at: res.steep.at, pct: res.steep.pct, manual: false };
+          } else if (steepStillOnRoute()) {
+            /* Position AND percentage both stay.
+
+               How steep that ramp is, is a property of the ROAD. Where the
+               rider decided the climb starts and ends cannot change it, so any
+               movement in the printed number is a measurement artefact rather
+               than new information — and the rider sees a figure they did not
+               touch drifting while they adjust an endpoint (owner-reported
+               2026-08-03: 19% became 10%, then 16% once the sampling was fixed,
+               which is exactly what an artefact looks like).
+
+               Two artefacts fed it. The 11 display bars are equal slices of the
+               WHOLE climb, so a longer climb widens every bin and averages a
+               short ramp flat. And the elevation profile is 100 samples spread
+               over the route, so a longer route samples the same ramp more
+               coarsely. Neither is a fact about the ramp. The number is
+               re-measured only when the marker is actually (re)placed. */
           } else {
-            // manual: never move it, but refresh its % from the new grad at its fixed position.
-            state.steep.pct = nearestGradPct(state.steep.at) || state.steep.pct;
+            state.steep = { at: res.steep.at, pct: res.steep.pct, manual: false };
           }
         }
         placeSteepMarker();
@@ -221,7 +315,8 @@
         profiling = false;
         profileError = true;
         state.grad = [];
-        if (!state.steep || !state.steep.manual) state.steep = null;
+        // Marker kept, as above — a timed-out elevation API must not silently
+        // erase the steepest ramp the rider can see on their screen.
         placeSteepMarker();
         writeHidden();
       });
@@ -246,9 +341,42 @@
     function onSteepDragged(ll) { setManualSteep(ll); }
 
     function setManualSteep(ll) {
-      state.steep = { at: ll, pct: nearestGradPct(ll), manual: true };
+      state.steep = { at: ll, pct: steepPctAt(ll), manual: true };
       placeSteepMarker();
       writeHidden();
+    }
+
+    /* Is the steepest marker still ON the climb?
+
+       Measured against the nearest route vertex. OSRM returns a dense line
+       (~40 m between vertices on a 2 km climb), so a marker still on the road
+       sits well inside the tolerance while one left behind by a shortened
+       route is hundreds of metres out. */
+    var STEEP_ON_ROUTE_KM = 0.1;
+
+    function steepStillOnRoute() {
+      if (!state.steep || state.route.length < 2) return false;
+      var best = Infinity;
+      for (var i = 0; i < state.route.length; i++) {
+        var d = haversineKm(state.route[i], state.steep.at);
+        if (d < best) best = d;
+      }
+      return best <= STEEP_ON_ROUTE_KM;
+    }
+
+    /* The gradient to print beside the steepest marker.
+
+       Prefers the profile's own sustained-window sampler (same instrument as
+       the maximum); falls back to the coarse bar lookup only when no profile
+       has resolved yet — a rider dragging the marker before the elevation call
+       returns still gets a number rather than a blank. */
+    var sustainedAt = null;
+
+    function steepPctAt(ll) {
+      if (sustainedAt) {
+        try { return sustainedAt(ll); } catch (e) { /* fall through to the bars */ }
+      }
+      return nearestGradPct(ll);
     }
 
     // Maps a point to the nearest route vertex -> that fraction along the route
@@ -262,7 +390,16 @@
         var d = haversineKm(state.route[i], ll);
         if (d < bestD) { bestD = d; bestI = i; }
       }
-      var frac = bestI / (state.route.length - 1);
+      // Fraction by DISTANCE along the route, not by vertex index: OSRM packs
+      // vertices tightly through curves, so index/total is not where you are on
+      // the climb and picked the wrong bar whenever the shape changed.
+      var travelled = 0, total = 0;
+      for (var j = 1; j < state.route.length; j++) {
+        var seg = haversineKm(state.route[j - 1], state.route[j]);
+        total += seg;
+        if (j <= bestI) travelled += seg;
+      }
+      var frac = total > 0 ? travelled / total : 0;
       var barIdx = Math.min(state.grad.length - 1, Math.floor(frac * state.grad.length));
       return '~' + Math.round(state.grad[barIdx]) + '%';
     }
@@ -295,6 +432,10 @@
 
     /* ---------- reset / destroy ---------- */
     function reset() {
+      sustainedAt = null;
+      // Reset is undoable too — it is the most expensive mistake on this
+      // editor, and "I meant to move the summit" should not cost the climb.
+      snapshot();
       // Invalidate + abort anything in flight: a late OSRM/elevation resolve
       // must not repopulate grad/steep on the now-empty map.
       routeSeq++; profileSeq++;
@@ -326,6 +467,9 @@
 
     /* ---------- markers (teardrop SVG, extended from add-climb.js's mkMarker) ---------- */
     function bindDrag(marker, handler) {
+      // Snapshot on dragSTART: by dragend the marker is already at its new
+      // position, and a drag is precisely the mistake Undo exists for.
+      marker.on('dragstart', snapshot);
       marker.on('dragend', function () {
         var ll = marker.getLngLat();
         handler([ll.lng, ll.lat]);
@@ -374,6 +518,6 @@
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    return { destroy: destroy, reset: reset };
+    return { destroy: destroy, reset: reset, undo: undo, canUndo: function () { return history.length > 0; } };
   };
 })();

@@ -19,7 +19,7 @@
 import { I18N, D, tpl, CC_SEASON_LABEL } from './i18n.js';
 import { layerByKey, LETTER_KEY } from './catalog.js';
 import { render } from './render.js';
-import { mapToast, closeDrawer } from './drawer.js';
+import { mapToast, closeDrawer, openDrawer, osmDrawer } from './drawer.js';
 import { _pickSegs } from './picking.js';
 import { dropPendingFromSearch } from './search-ui.js';
 import { addCuratedFeature } from './osm-pools.js';
@@ -257,12 +257,38 @@ export function submitModeration(btn){
     .then(r=>{ if(!r.ok) throw new Error('decide'); return r.json(); })
     .then(res=>{
       hidePendingPin(id); closeDrawer();
-      // An approved contribution takes the place of the pin that just went:
-      // the response carries it as the catalog's own feature, so it lands on
-      // the map immediately instead of after a reload. Letters whose payload
-      // is not a feature collection (A/B/K) send no item and keep the old
-      // behaviour.
-      if(res.item && LETTER_KEY[res.item.letter]) addCuratedFeature(LETTER_KEY[res.item.letter], res.item.feature);
+      /* An approved contribution takes the place of the pin that just went —
+         and the curator stays on it. The response carries the item as the
+         catalog's own shape, so the change lands on the map AND the drawer
+         reopens showing the applied result, instead of closing on a toast and
+         leaving the curator to reload to find out what they just did
+         (owner-reported 2026-08-03).
+
+         Two shapes because the map has two: a pool letter arrives as a GeoJSON
+         feature, B · climbs as its own object. A · segments and K · routes send
+         nothing and keep the old close-and-toast — their payloads are not
+         rebuildable on this path. */
+      let reopen = null;
+      if(res.item && res.item.feature && LETTER_KEY[res.item.letter]){
+        const key = LETTER_KEY[res.item.letter];
+        addCuratedFeature(key, res.item.feature);
+        const p = res.item.feature.properties || {};
+        const g = (res.item.feature.geometry||{}).coordinates || [];
+        reopen = () => openDrawer(layerByKey[key], osmDrawer(layerByKey[key], p, [g[1], g[0]], p.src));
+      } else if(res.item && res.item.climb){
+        // Replace in place so the drawer, the rail counts and the drawn line
+        // all read the approved values; render() repaints from these features.
+        const lyr = layerByKey['climbs'];
+        if(lyr){
+          const at = (lyr.features||[]).findIndex(f => String(f.id) === String(res.item.climb.id));
+          if(at >= 0) lyr.features[at] = res.item.climb; else lyr.features.push(res.item.climb);
+          render();
+          reopen = () => openDrawer(lyr, res.item.climb);
+        }
+      }
+      // After the repaint, so the drawer opens onto the feature the map is
+      // now drawing rather than the one it was drawing a frame ago.
+      if(reopen) setTimeout(reopen, 0);
       // Centred, like the other decision-weight confirmations: the drawer has
       // just closed and the pin has just gone, so a corner toast is easy to
       // miss — and needs-info says where the submission WENT, because the pin

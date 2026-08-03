@@ -174,6 +174,24 @@ final class MessageService
         /** @var list<UserMessage> $messages */
         $messages = $qb
             ->where($qb->expr()->orX('m.userId = :id', 'm.senderId = :id'))
+            // A rider's answer to a needs-info question is MODERATION work, not
+            // personal correspondence, so it does not belong in the inbox a
+            // rider uses for their own contributions (owner, 2026-08-03). It is
+            // addressed to the deciding curator only so the desk can find it:
+            // SubmissionQueue's LATERAL join reads this row to render "Rider
+            // replied" on the queue card and in the map drawer, and the reply
+            // puts the submission back in the pending queue. Excluded HERE
+            // rather than not written, because deleting the row would take the
+            // desk's copy of the answer with it.
+            //
+            // Only when the reader is the curator it was addressed to. The
+            // rider's own answer still appears in their thread, matched on
+            // senderId by answersToQuestions().
+            ->andWhere($qb->expr()->orX(
+                'm.kind != :moderationReply',
+                'm.senderId = :id',
+            ))
+            ->setParameter('moderationReply', UserMessageKind::RiderReply)
             ->setParameter('id', $userId)
             ->orderBy('m.createdAt', 'DESC')
             ->addOrderBy('m.id', 'DESC')
@@ -186,17 +204,24 @@ final class MessageService
 
     public function unreadCount(int $userId): int
     {
+        // Matches listFor()'s exclusion, or the chip would count a message the
+        // page then refuses to show — a badge pointing at nothing.
         return (int) $this->db->fetchOne(
-            'SELECT COUNT(*) FROM user_message WHERE user_id = :u AND read_at IS NULL',
-            ['u' => $userId],
+            'SELECT COUNT(*) FROM user_message
+             WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply',
+            ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value],
         );
     }
 
     public function markAllRead(int $userId): void
     {
+        // Everything the page can show. Moderation replies are excluded from
+        // the list, so marking them read here would quietly consume a state
+        // the reader was never shown.
         $this->db->executeStatement(
-            'UPDATE user_message SET read_at = now() WHERE user_id = :u AND read_at IS NULL',
-            ['u' => $userId],
+            'UPDATE user_message SET read_at = now()
+             WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply',
+            ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value],
         );
     }
 

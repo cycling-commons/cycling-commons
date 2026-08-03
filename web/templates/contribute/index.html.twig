@@ -16,7 +16,6 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1rem}
   .card{position:relative;display:flex;flex-direction:column;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.3rem;transition:all .22s;overflow:hidden}
   .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5);border-color:var(--trail)}
-  .card .co{position:absolute;top:.6rem;right:.9rem;font-family:var(--serif);font-weight:600;font-size:2rem;line-height:1;color:var(--ochre);opacity:.45}
   .card .ic{font-size:1.5rem;margin-bottom:.7rem;display:block;filter:brightness(0)}
   .card h4{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:.3rem}
   .card p{font-size:.86rem;color:#4a4d40;line-height:1.55;margin-bottom:1rem}
@@ -27,7 +26,6 @@
   @media(max-width:560px){
     .grid{grid-template-columns:repeat(2,1fr);gap:.7rem}
     .card{padding:.85rem}
-    .card .co{font-size:1.5rem;top:.45rem;right:.6rem}
     .card .ic{font-size:1.25rem;margin-bottom:.35rem}
     .card h4{font-size:1rem;margin-bottom:.25rem}
     .card p{font-size:.76rem;line-height:1.45;margin-bottom:.7rem}
@@ -48,44 +46,44 @@
   <h3 class="cat-h"><b>{{ 'contribute_hub.cat_practical_h'|trans }}</b> <span>{{ 'contribute_hub.cat_practical_sub'|trans }}</span></h3>
   <div class="grid">
     <a class="card" href="{{ path('improve', {type: 'road-surface', mode: 'add'}) }}">
-      <span class="co">A</span><span class="ic">▰</span>
+      <span class="ic">▰</span>
       <h4>{{ 'contribute_hub.card_surface_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_surface_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_surface_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('improve', {type: 'water-food', mode: 'add'}) }}">
-      <span class="co">C</span><span class="ic">💧</span>
+      <span class="ic">💧</span>
       <h4>{{ 'contribute_hub.card_water_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_water_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_water_go'|trans }}</span>
     </a>
     {# M sits here by display order (utilities next to water); the letter skips the reserved L. #}
     <a class="card" href="{{ path('improve', {type: 'public-toilets', mode: 'add'}) }}">
-      <span class="co">M</span><span class="ic">🚻</span>
+      <span class="ic">🚻</span>
       <h4>{{ 'contribute_hub.card_toilets_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_toilets_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_toilets_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('improve', {type: 'bike-services', mode: 'add'}) }}">
-      <span class="co">D</span><span class="ic">⚙</span>
+      <span class="ic">⚙</span>
       <h4>{{ 'contribute_hub.card_services_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_services_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_services_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('improve', {type: 'hazards', mode: 'add'}) }}">
-      <span class="co">F</span><span class="ic">⚠</span>
+      <span class="ic">⚠</span>
       <h4>{{ 'contribute_hub.card_hazards_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_hazards_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_hazards_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('improve', {type: 'getting-there', mode: 'add'}) }}">
-      <span class="co">G</span><span class="ic">🚆</span>
+      <span class="ic">🚆</span>
       <h4>{{ 'contribute_hub.card_transit_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_transit_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_transit_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('improve', {type: 'shelter', mode: 'add'}) }}">
-      <span class="co">H</span><span class="ic">⛑</span>
+      <span class="ic">⛑</span>
       <h4>{{ 'contribute_hub.card_shelter_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_shelter_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_shelter_go'|trans }}</span>
@@ -95,37 +93,37 @@
   <h3 class="cat-h"><b>{{ 'contribute_hub.cat_emotional_h'|trans }}</b> <span>{{ 'contribute_hub.cat_emotional_sub'|trans }}</span></h3>
   <div class="grid">
     <a class="card" href="{{ path('add_climb') }}">
-      <span class="co">B</span><span class="ic">⛰</span>
+      <span class="ic">⛰</span>
       <h4>{{ 'contribute_hub.card_climbs_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_climbs_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_climbs_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('improve', {type: 'where-to-sleep', mode: 'add'}) }}">
-      <span class="co">E</span><span class="ic">⛺</span>
+      <span class="ic">⛺</span>
       <h4>{{ 'contribute_hub.card_sleep_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_sleep_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_sleep_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('improve', {type: 'scenic-views', mode: 'add'}) }}">
-      <span class="co">I</span><span class="ic">📷</span>
+      <span class="ic">📷</span>
       <h4>{{ 'contribute_hub.card_views_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_views_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_views_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('improve', {type: 'history-culture', mode: 'add'}) }}">
-      <span class="co">J</span><span class="ic">🏛</span>
+      <span class="ic">🏛</span>
       <h4>{{ 'contribute_hub.card_history_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_history_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_history_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('propose_route') }}">
-      <span class="co">K</span><span class="ic">★</span>
+      <span class="ic">★</span>
       <h4>{{ 'contribute_hub.card_rides_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_rides_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_rides_go'|trans }}</span>
     </a>
     <a class="card" href="{{ path('vote') }}">
-      <span class="co">V</span><span class="ic">◬</span>
+      <span class="ic">◬</span>
       <h4>{{ 'vote.tab_climbs'|trans }}</h4>
       <p>{{ 'pages.card_vote_p'|trans }}</p>
       <span class="go">{{ 'region.cta_vote'|trans }}</span>
@@ -135,7 +133,7 @@
   <h3 class="cat-h"><b>{{ 'contribute_hub.cat_derived_h'|trans }}</b> <span>{{ 'contribute_hub.cat_derived_sub'|trans }}</span></h3>
   <div class="grid">
     <div class="card off">
-      <span class="co">L</span><span class="ic">◴</span>
+      <span class="ic">◴</span>
       <h4>{{ 'contribute_hub.card_heatmap_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_heatmap_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_heatmap_go'|trans }}</span>

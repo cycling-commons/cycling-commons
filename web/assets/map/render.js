@@ -18,7 +18,7 @@ import { map, flyToPin, styleReady } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { I18N, D, LAYER_L10N, tpl, trVal, DIFF_LABELS, CC_SEASON_LABEL } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversine,
-         featurePoint, currentSeason, ccUrl, wc } from './util.js';
+         featurePoint, pinPoint, currentSeason, ccUrl, wc } from './util.js';
 import { CATALOG, active, layerByKey, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { inScope, curScope } from './scope-ui.js';
 import { pinEl, miniIcon } from './icons.js';
@@ -117,16 +117,28 @@ export const ROUTE_SEL_W=['interpolate',['linear'],['zoom'],9,8,13,13,16,17];
 export const ROUTE_SEL_CASE_W=['interpolate',['linear'],['zoom'],9,12,13,18,16,23];
 export let selectedRouteLayerId=null;
 export const routeLineIds=()=>map.getStyle().layers.map(l=>l.id).filter(id=>/^experience-\d+$/.test(id));
-// Climb lines, road-surface indications and Mapillary always render ABOVE
-// route lines (the draw-time stacking rule) — re-applied after any
-// selection moveLayer so highlighting a route never buries the A-layer
-// surface colours under an opaque ride line.
+/* THE stacking authority. Every layer named here is moved to the top in turn,
+   so the LAST one lifted ends up highest — the call order below IS the z-order,
+   bottom to top:
+
+     route lines  →  road surfaces  →  climb lines  →  Mapillary
+
+   Climbs go ABOVE surfaces (2026-08-03, owner). They were lifted first and so
+   ended up underneath, and an 8 px teal surface line swallowed the climb it
+   describes — on La Redoute only a sliver of the gradient line showed at the
+   edges. A climb is a named thing a rider came to look at; a surface segment
+   is a property of the road beneath it, and the narrower climb line still
+   leaves the surface colour visible on both sides.
+
+   Do not try to fix stacking at draw time instead: this function runs at the
+   end of every render AND after every selection move, so a moveLayer in
+   drawClimbLine is silently overridden here a moment later. One authority. */
 export function liftInfoLayersAboveRoutes(){
   const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
-  dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
   // consolidated A-layer (C3): one shared casing + one layer per surface class
   if(map.getLayer('surface-case')) map.moveLayer('surface-case');
   surfaceClsLayerIds().forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
+  dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
   ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
 }
 export function highlightRoute(selId){
@@ -264,22 +276,60 @@ export function renderSurfaceLayer(layer, visible){
   });
   return feats.length;
 }
-export const chipSet=id=>{const s=new Set();document.querySelectorAll('#'+id+' .chip.on').forEach(c=>s.add(c.dataset.v));return s;};
+/* null = that chip group is not on the page, which means NO filter — not "an
+   empty selection", which would mean "hide everything". The distinction is
+   load-bearing: the sq/tr predicate below is exact-match with no all-on
+   escape, so an absent #sqf returning an empty Set would make every climb
+   invisible with nothing on screen to explain why. The rail can legitimately
+   ship without a facet group (2026-08-02: the unfinished ones were removed),
+   so every reader of these Sets has to treat null as pass-through. */
+export const chipSet=id=>{
+  const el=document.getElementById(id);
+  if(!el) return null;
+  const s=new Set(); el.querySelectorAll('.chip.on').forEach(c=>s.add(c.dataset.v)); return s;
+};
 export let activeSurface=chipSet('sqf'), activeTraffic=chipSet('trf');
 // C2-T8 (spec §W2, D2): filters for the new difficulty/suitability attributes —
 // climbs' 'effort' (CatalogFormRegistry Climbs.effort) and stays' 'accessibility'
 // (CatalogFormRegistry WhereToSleep.accessibility). Vocab lists mirror the registry.
 export const ALL_EFFORT=new Set(['Steady','Challenging','Tough','Very steep']);
 export const ALL_ACCESS=new Set(['Step-free access','Handbike-friendly','Wheelchair-accessible']);
+// sq/tr mirror CatalogFormRegistry Climbs.sq / Climbs.tr — ALL FIVE road
+// qualities, including 'Broken / loose'. The chip list used to stop at four,
+// and because sq/tr were exact-match with no all-on escape, a climb edited to
+// the fifth value did not merely fail the filter: it disappeared from the map
+// with every chip lit. Any value added to the registry has to be added here
+// AND to the chips in map/index.html.twig.
+export const ALL_SURF=new Set(['Smooth','Good','Worn','Rough','Broken / loose']);
+export const ALL_TRAF=new Set(['Traffic-free','Quiet','Moderate','Busy']);
 // "Narrowing" semantics, deliberately different from the pre-existing sq/tr chips above
 // (which always require a matching value, hiding any climb missing sq/tr regardless of
 // chip state): most existing items predate effort/accessibility, so with every chip on
 // (the default) nothing is filtered — including items with no value for the attribute.
 // As soon as a rider deselects at least one option, items with no value are hidden too,
 // since they can't be confirmed to match the narrowed selection.
+/* Unknown is not a verdict.
+
+   An item with NO value for the attribute is not filtered out — we know
+   nothing about it, and hiding it would state something we have not been
+   told. Only an item that HAS a value can be judged, and it survives if any
+   of its values is still selected. This is the same rule prefMatch() already
+   applies to route bike types ("unknown ≠ unsuitable").
+
+   It replaces the earlier "narrowing" rule, where deselecting one chip also
+   hid every valueless item. On stays that was indefensible: 0 of 291 carry
+   `accessibility`, so unticking one box emptied the layer and told the rider
+   there are no accessible stays, when what we actually have is no data.
+   (2026-08-03, owner.) */
 export function attrMatch(value, activeSet, allSet){
-  if(activeSet.size===allSet.size) return true;
-  return value ? activeSet.has(value) : false;
+  if(!activeSet) return true;                    // group not on the page → no filter
+  if(activeSet.size===allSet.size) return true;  // nothing narrowed → nothing hidden
+  // A multiselect attribute (stays' accessibility) arrives as a list: the item
+  // matches if it carries ANY of the selected options. A rider filtering for
+  // "handbike-friendly" wants every stay that is handbike-friendly, not the
+  // ones that are ONLY that.
+  if(Array.isArray(value)) return value.length ? value.some(v=>activeSet.has(v)) : true;
+  return value ? activeSet.has(value) : true;
 }
 export let activeEffort=chipSet('effortf'), activeAccess=chipSet('accessf');
 
@@ -305,8 +355,11 @@ export function applyStaysAccessFilter(){
   // are the base and must survive every setFilter. The acc narrow composes
   // over the single coverage icon layer only (no cluster bubbles exist for
   // coverage, per coverage-provider.md §4).
-  const extra = activeAccess.size===ALL_ACCESS.size ? null
-    : ['in', ['get','acc'], ['literal', Array.from(activeAccess)]];
+  // Same "unknown is not a verdict" rule as attrMatch: a coverage stay with no
+  // `acc` prop at all survives every narrowing — only a stay that HAS one is
+  // judged by it. `!has acc` is the tile-expression spelling of "no value".
+  const extra = (!activeAccess || activeAccess.size===ALL_ACCESS.size) ? null
+    : ['any', ['!', ['has', 'acc']], ['in', ['get','acc'], ['literal', Array.from(activeAccess)]]];
   // stays split per country (Task 4): narrow every stays-<cc>-cov icon layer,
   // not just a single hardcoded id. cc===null is the pre-split 'stays-cov' id.
   COVERAGE_CCS.forEach(cc=>{
@@ -331,8 +384,13 @@ export function featureVisible(layer, f){
   if(show) show = inScope(f.rid);   // region scope gate (map-and-search.md §4.5)
   if(show && layer.key==='experience') show = prefMatch(f);
   if(show && layer.key==='climbs'){
-    show = activeSurface.has(f.sq) && activeTraffic.has(f.tr);
-    if(show) show = attrMatch(f.effort, activeEffort, ALL_EFFORT);
+    // All three now share attrMatch's narrowing semantics. sq/tr used to
+    // "always require" a matching value, which hid every climb that predates
+    // the attribute or carries a value the chips never listed — a filter that
+    // deletes data it cannot describe. With every chip on, nothing is hidden.
+    show = attrMatch(f.sq, activeSurface, ALL_SURF)
+      && attrMatch(f.tr, activeTraffic, ALL_TRAF)
+      && attrMatch(f.effort, activeEffort, ALL_EFFORT);
   }
   return show;
 }
@@ -402,7 +460,7 @@ export function render(){
         el.style.cursor='pointer';
         el.tabIndex=0; el.setAttribute('role','button');
         el.setAttribute('aria-label', `${f.name} — ${f.headline}`);
-        const start = f.route ? f.route[0] : f.geom.ll;   // climbs: pin sits at the start (foot)
+        const start = pinPoint(f);   // climbs: pin sits at the start (foot) — util.js owns the rule
         const lngLat=[start[1],start[0]];
         // stopPropagation: see the note above the steep-marker's click handler —
         // same click-bleed-through-to-the-map-canvas issue, same fix.

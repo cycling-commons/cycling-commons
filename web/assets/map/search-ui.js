@@ -165,7 +165,7 @@ export function initSearchUi(){
             .filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll))
             .filter(h=>!(h.itemId!=null && idxIds().has(h.letter+':'+h.itemId)))   // curated twin already indexed locally
             .map(h=>{ const layer=layerByKey[LETTER_KEY[h.letter]];
-              return {name:h.n, key:slug(h.n), kind:layer.label, badge:h.letter, color:layer.color,
+              return {name:h.n, key:slug(h.n), kind:layer.label, badge:layer.icon, color:layer.color,
                 letter:h.letter, ll:h.ll, cov:1, community:!h.curated,
                 // h.itemId (curated hits only) routes through the served
                 // item's own attributes instead of the OSM-tile fallback —

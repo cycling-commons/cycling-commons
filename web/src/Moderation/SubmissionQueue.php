@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\RiderPseudonym;
+use App\Messaging\UserMessageKind;
 use App\Media\MediaStorage;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -23,6 +24,9 @@ use Symfony\Component\Clock\ClockInterface;
  */
 final class SubmissionQueue
 {
+    /** Rows per page on both desks. */
+    public const int PER_PAGE = 25;
+
     private ?\Collator $collator = null; // created once and reused, not rebuilt per call
 
     public function __construct(
@@ -33,7 +37,37 @@ final class SubmissionQueue
     }
 
     /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>}> */
-    public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type): array
+    public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE): array
+    {
+        [$where, $params] = $this->openFilters($country, $region, $type, $q);
+
+        return $this->rows($scope, implode(' AND ', $where), $params, $perPage, self::offset($page, $perPage));
+    }
+
+    /** How many open submissions match, for the pager. */
+    public function countFiltered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null): int
+    {
+        [$where, $params] = $this->openFilters($country, $region, $type, $q);
+        $frag = $scope->sqlFragment('s');
+        if ('' !== $frag['sql']) {
+            $where[] = $frag['sql'];
+            $params += $frag['params'];
+        }
+
+        return (int) $this->db->fetchOne(
+            'SELECT COUNT(*) FROM submission s LEFT JOIN region r ON r.id = s.region_id WHERE '.implode(' AND ', $where),
+            $params,
+            $frag['types'],
+        );
+    }
+
+    /**
+     * The open-queue WHERE, shared by the page and its count so a pager can
+     * never disagree with the rows it is paging.
+     *
+     * @return array{0: list<string>, 1: array<string, mixed>}
+     */
+    private function openFilters(?string $country, ?string $region, ?string $type, ?string $q): array
     {
         // s.escalated_at IS NULL: a submission under legal hold leaves the
         // desk entirely (docs/specs/photo-uploads.md §6d) — it is an admin's
@@ -52,8 +86,20 @@ final class SubmissionQueue
             $where[] = 's.type = :type';
             $params['type'] = $type;
         }
+        if (null !== $q && '' !== trim($q)) {
+            // Case-insensitive contains on the submission's own title, which is
+            // the item name a curator is looking for. ILIKE with the wildcards
+            // in the BOUND VALUE, never concatenated into the SQL.
+            $where[] = 's.title ILIKE :q';
+            $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
+        }
 
-        return $this->rows($scope, implode(' AND ', $where), $params);
+        return [$where, $params];
+    }
+
+    private static function offset(int $page, int $perPage): int
+    {
+        return max(0, (max(1, $page) - 1) * $perPage);
     }
 
     /**
@@ -84,6 +130,292 @@ final class SubmissionQueue
         );
     }
 
+    /**
+     * The human-readable before/after for a submission's `changes` blob.
+     *
+     * Shared by the queue rows and the history so a settled submission reads
+     * exactly the way it read while it was pending — the history used to name
+     * a title and a verdict and never say WHAT had been approved
+     * (owner-reported 2026-08-03).
+     *
+     * @return array{0: string, 1: string} was, now
+     */
+    private function diffStrings(string $changesJson): array
+    {
+        /** @var array<string, array{was: mixed, now: mixed}> $changes */
+        $changes = json_decode($changesJson, true) ?: [];
+        $was = [];
+        $new = [];
+        foreach ($changes as $field => $pair) {
+            if (null !== ($pair['was'] ?? null)) {
+                $was[] = $field.': '.$this->scalar($pair['was']);
+            }
+            $new[] = $field.': '.$this->scalar($pair['now'] ?? null);
+        }
+
+        return [implode(' · ', $was), implode(' · ', $new)];
+    }
+
+    /**
+     * What has already been settled: approved and rejected submissions, newest
+     * decision first.
+     *
+     * Deliberately only those two. Trash hard-deletes the row
+     * (moderation-and-contribution.md §6) and escalation lifts it off every
+     * desk (photo-uploads.md §6d), so neither can appear here and neither
+     * needs a filter — the history is the complete set of decisions a curator
+     * can still be asked about.
+     *
+     * @param ?int    $decidedBy scope to one moderator's own decisions
+     * @param ?string $status    'approved' | 'rejected'; null = both
+     *
+     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
+     */
+    public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null): array
+    {
+        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type);
+        $params['lim'] = $perPage;
+        $params['off'] = self::offset($page, $perPage);
+
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT s.id, s.item_id, s.title, s.type, s.status, s.user_id, s.decided_at, s.decision_note,
+                    s.changes, u.display_name AS decided_by_name,
+                    rr.body_text AS rider_reply
+             FROM submission s LEFT JOIN users u ON u.id = s.decided_by
+                  -- The rider\'s answer follows the submission into the history.
+                  -- It is not personal mail (§5.4), so the desk is the ONLY place
+                  -- it exists — and once a submission is decided it drops out of
+                  -- the queue, which was the last surface still showing it.
+                  LEFT JOIN LATERAL (
+                      SELECT um.body_text
+                      FROM user_message um
+                      WHERE um.channel = \'submission\' AND um.ref_id = s.id AND um.sender = \'rider\'
+                      ORDER BY um.id DESC
+                      LIMIT 1
+                  ) rr ON TRUE
+             WHERE '.implode(' AND ', $where).'
+             ORDER BY s.decided_at DESC NULLS LAST, s.id DESC
+             LIMIT :lim OFFSET :off',
+            $params,
+            $types,
+        );
+        $now = $this->clock->now();
+
+        $out = array_map(function (array $r) use ($now): array {
+            // Same before/after the queue card renders, so a settled row says
+            // WHAT was approved and not merely that something was.
+            [$was, $new] = $this->diffStrings((string) $r['changes']);
+
+            return [
+            'id' => (int) $r['id'],
+            'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
+            'title' => (string) $r['title'],
+            'type' => (string) $r['type'],
+            'was' => $was,
+            'now' => $new,
+            'who' => RiderPseudonym::for($r['user_id']),
+            'when' => null !== $r['decided_at']
+                ? RelativeTime::ago(new \DateTimeImmutable((string) $r['decided_at']), $now)
+                : '',
+            'status' => (string) $r['status'],
+            // The moderator's own display name, not a pseudonym: curators are
+            // accountable to each other for decisions, and this page is
+            // curator-only.
+            'decidedBy' => null !== $r['decided_by_name'] ? (string) $r['decided_by_name'] : null,
+            'note' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
+            'riderReply' => null !== $r['rider_reply'] && '' !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
+            'sortAt' => null !== $r['decided_at'] ? (new \DateTimeImmutable((string) $r['decided_at']))->getTimestamp() : 0,
+            ];
+        }, $rows);
+
+        // Trashed submissions belong here too — a curator who trashed something
+        // and then cannot find it anywhere reasonably wonders whether it worked
+        // (owner-reported 2026-08-03). The row is gone, so this reads the
+        // content-free audit the Trash wrote instead, and that is ALL it can
+        // ever show: `trash_submission` deliberately records the reference and
+        // type and nothing else, because preserving a trashed title would
+        // preserve the spam Trash exists to destroy. Hence no title, no link,
+        // and no item — the reference is the whole record.
+        //
+        // Unscoped on purpose: the audit carries no region (the submission that
+        // had one is deleted), and with no content in the row there is nothing
+        // an out-of-area curator could learn from it.
+        $threads = $this->threadsFor(array_map(static fn (array $r): int => $r['id'], $out));
+        foreach ($out as $i => $row) {
+            $out[$i]['thread'] = $threads[$row['id']] ?? [];
+        }
+
+        // Trash rows only on the FIRST page of an unfiltered history. They come
+        // from a different table with no shared cursor, so interleaving them
+        // across pages would drop or repeat rows as the pager moved; page one
+        // is where "did my trash work?" is actually asked.
+        // ...and never under a title search: a trash audit row is content-free
+        // by design (§6), so it has no title to match and would surface as an
+        // unexplained hit on every query.
+        if (null === $status && (null === $q || '' === trim($q)) && 1 === max(1, $page)) {
+            $out = array_merge($out, $this->trashed($decidedBy, $perPage, $now));
+            usort($out, static fn (array $a, array $b): int => $b['sortAt'] <=> $a['sortAt']);
+            $out = \array_slice($out, 0, $perPage);
+        }
+
+        return $out;
+    }
+
+    /** How many settled submissions match, for the pager. */
+    public function countHistory(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, ?string $country = null, ?string $region = null, ?string $type = null): int
+    {
+        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type);
+
+        return (int) $this->db->fetchOne(
+            'SELECT COUNT(*) FROM submission s LEFT JOIN region r ON r.id = s.region_id WHERE '.implode(' AND ', $where),
+            $params,
+            $types,
+        );
+    }
+
+    /**
+     * The settled-history WHERE, shared by the page and its count.
+     *
+     * @return array{0: list<string>, 1: array<string, mixed>, 2: array<string, mixed>}
+     */
+    private function settledFilters(ModerationScope $scope, ?int $decidedBy, ?string $status, ?string $q, ?string $country = null, ?string $region = null, ?string $type = null): array
+    {
+        $where = ["s.status IN ('approved', 'rejected')", 's.escalated_at IS NULL'];
+        $params = [];
+        $types = [];
+        // The same three the open queue filters on: a curator narrowing the
+        // desk to their country should be able to narrow the record the same
+        // way, with the same controls (owner, 2026-08-03).
+        if (null !== $country && '' !== $country) {
+            $where[] = 's.country_code = :country';
+            $params['country'] = $country;
+        }
+        if (null !== $region && '' !== $region) {
+            $where[] = 'r.name = :region';
+            $params['region'] = $region;
+        }
+        if (null !== $type && '' !== $type) {
+            $where[] = 's.type = :type';
+            $params['type'] = $type;
+        }
+        if (null !== $decidedBy) {
+            $where[] = 's.decided_by = :me';
+            $params['me'] = $decidedBy;
+        }
+        // Anything other than the two real states is ignored rather than
+        // trusted into the SQL — the value arrives from a query string.
+        if (\in_array($status, ['approved', 'rejected'], true)) {
+            $where[] = 's.status = :st';
+            $params['st'] = $status;
+        }
+        if (null !== $q && '' !== trim($q)) {
+            $where[] = 's.title ILIKE :q';
+            $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
+        }
+        $frag = $scope->sqlFragment('s');
+        if ('' !== $frag['sql']) {
+            $where[] = $frag['sql'];
+            $params += $frag['params'];
+            $types += $frag['types'];
+        }
+
+        return [$where, $params, $types];
+    }
+
+    /**
+     * The needs-info exchange for each submission: every question a curator
+     * asked and every answer the rider sent, oldest first.
+     *
+     * This is the one part of a submission that lives nowhere else. The queue
+     * card and the settled row show only the LATEST reply, `change_history`
+     * records what was applied rather than what was asked, and the curator's
+     * personal inbox no longer carries it (§5.4) — so a two-round exchange had
+     * no home at all (owner-reported 2026-08-03).
+     *
+     * One query for the whole page rather than one per row.
+     *
+     * @param list<int> $submissionIds
+     *
+     * @return array<int, list<array{who:string,body:string,when:string}>>
+     */
+    private function threadsFor(array $submissionIds): array
+    {
+        if ([] === $submissionIds) {
+            return [];
+        }
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT ref_id, kind, body_text, created_at
+             FROM user_message
+             WHERE channel = 'submission' AND ref_id IN (:ids) AND kind IN (:kinds)
+             ORDER BY created_at, id",
+            ['ids' => $submissionIds, 'kinds' => [
+                UserMessageKind::SubmissionNeedsInfo->value,
+                UserMessageKind::RiderReply->value,
+            ]],
+            ['ids' => ArrayParameterType::INTEGER, 'kinds' => ArrayParameterType::STRING],
+        );
+        $now = $this->clock->now();
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r['ref_id']][] = [
+                'who' => UserMessageKind::RiderReply->value === $r['kind'] ? 'rider' : 'curator',
+                'body' => (string) $r['body_text'],
+                'when' => RelativeTime::ago(new \DateTimeImmutable((string) $r['created_at']), $now),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Trash entries, rebuilt from the content-free audit log.
+     *
+     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
+     */
+    private function trashed(?int $decidedBy, int $limit, \DateTimeImmutable $now): array
+    {
+        $where = ['l.action = :act'];
+        $params = ['act' => TrashActions::TrashSubmission, 'lim' => max(1, min(500, $limit))];
+        if (null !== $decidedBy) {
+            $where[] = 'l.actor_id = :me';
+            $params['me'] = $decidedBy;
+        }
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT l.note, l.created_at, u.display_name AS actor_name
+             FROM admin_action_log l LEFT JOIN users u ON u.id = l.actor_id
+             WHERE '.implode(' AND ', $where).'
+             ORDER BY l.created_at DESC, l.id DESC
+             LIMIT :lim',
+            $params,
+        );
+
+        return array_map(function (array $r) use ($now): array {
+            // The note is written as `SUB-12 · type=edit` and is the only thing
+            // there is to parse; anything unexpected degrades to the raw note
+            // rather than inventing a reference.
+            $note = (string) $r['note'];
+            preg_match('/^SUB-(\d+)(?:.*type=(\w+))?/', $note, $m);
+            $at = new \DateTimeImmutable((string) $r['created_at']);
+
+            return [
+                'id' => isset($m[1]) ? (int) $m[1] : 0,
+                'itemId' => null,
+                'title' => isset($m[1]) ? 'SUB-'.$m[1] : $note,
+                'type' => $m[2] ?? '',
+                'who' => '',
+                'when' => RelativeTime::ago($at, $now),
+                'status' => 'trashed',
+                'decidedBy' => null !== $r['actor_name'] ? (string) $r['actor_name'] : null,
+                'note' => null,
+                'riderReply' => null,
+                'was' => '',
+                'now' => '',
+                'thread' => [],
+                'sortAt' => $at->getTimestamp(),
+            ];
+        }, $rows);
+    }
+
     public function total(ModerationScope $scope): int
     {
         $frag = $scope->sqlFragment('s');
@@ -93,22 +425,34 @@ final class SubmissionQueue
         return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
     }
 
+    /**
+     * Which statuses an option list describes.
+     *
+     * The two desks list different sets: the queue offers the countries that
+     * still have open work, the record the countries that have settled work.
+     * A literal per branch, never an interpolated caller value.
+     */
+    private static function statusTuple(bool $settled): string
+    {
+        return $settled ? "('approved', 'rejected')" : "('pending', 'needs_info')";
+    }
+
     /** @return list<string> */
-    public function countries(ModerationScope $scope): array
+    public function countries(ModerationScope $scope, bool $settled = false): array
     {
         $frag = $scope->sqlFragment('s');
-        $sql = "SELECT DISTINCT s.country_code FROM submission s WHERE s.status IN ('pending', 'needs_info') AND s.escalated_at IS NULL AND s.country_code <> ''"
+        $sql = 'SELECT DISTINCT s.country_code FROM submission s WHERE s.status IN '.self::statusTuple($settled)." AND s.escalated_at IS NULL AND s.country_code <> ''"
             .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
 
         return $this->sortLocalized($this->db->fetchFirstColumn($sql, $frag['params'], $frag['types']));
     }
 
     /** @return list<string> */
-    public function regions(ModerationScope $scope): array
+    public function regions(ModerationScope $scope, bool $settled = false): array
     {
         $frag = $scope->sqlFragment('s');
         $sql = 'SELECT DISTINCT r.name FROM submission s JOIN region r ON r.id = s.region_id '
-            ."WHERE s.status IN ('pending', 'needs_info') AND s.escalated_at IS NULL"
+            .'WHERE s.status IN '.self::statusTuple($settled).' AND s.escalated_at IS NULL'
             .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '');
 
         return $this->sortLocalized($this->db->fetchFirstColumn($sql, $frag['params'], $frag['types']));
@@ -130,7 +474,7 @@ final class SubmissionQueue
      * diffs) is the single source of truth for both consumers. Moving it into
      * one template would fork the logic into client JS.
      */
-    private function rows(ModerationScope $scope, string $where, array $params): array
+    private function rows(ModerationScope $scope, string $where, array $params, ?int $limit = null, int $offset = 0): array
     {
         $frag = $scope->sqlFragment('s');
         if ('' !== $frag['sql']) {
@@ -151,8 +495,9 @@ final class SubmissionQueue
                       LIMIT 1
                   ) rr ON TRUE
              WHERE '.$where.'
-             ORDER BY s.created_at DESC, s.id DESC',
-            $params,
+             ORDER BY s.created_at DESC, s.id DESC'
+             .(null !== $limit ? ' LIMIT :lim OFFSET :off' : ''),
+            $params + (null !== $limit ? ['lim' => $limit, 'off' => $offset] : []),
             $frag['types'],
         );
         $now = $this->clock->now();
@@ -162,16 +507,7 @@ final class SubmissionQueue
         ));
 
         return array_map(function (array $r) use ($now, $photosBySubmission): array {
-            /** @var array<string, array{was: mixed, now: mixed}> $changes */
-            $changes = json_decode((string) $r['changes'], true) ?: [];
-            $was = [];
-            $new = [];
-            foreach ($changes as $field => $pair) {
-                if (null !== ($pair['was'] ?? null)) {
-                    $was[] = $field.': '.$this->scalar($pair['was']);
-                }
-                $new[] = $field.': '.$this->scalar($pair['now'] ?? null);
-            }
+            [$was, $new] = $this->diffStrings((string) $r['changes']);
 
             return [
                 'id' => (int) $r['id'],
@@ -186,8 +522,8 @@ final class SubmissionQueue
                 'who' => RiderPseudonym::for($r['user_id']),
                 'when' => RelativeTime::ago(new \DateTimeImmutable((string) $r['created_at']), $now),
                 'body' => (string) $r['body'],
-                'was' => implode(' · ', $was),
-                'now' => implode(' · ', $new),
+                'was' => $was,
+                'now' => $new,
                 // A `needs_info` row only reaches the map on an explicit
                 // ?pending=<id>; the drawer says so rather than showing a card
                 // indistinguishable from one still awaiting a first look.
