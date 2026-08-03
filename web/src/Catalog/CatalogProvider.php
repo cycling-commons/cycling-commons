@@ -288,34 +288,32 @@ final class CatalogProvider
      */
     private function climbFromRow(array $row): array
     {
-        {
-            $attrs = $this->decode($row['attributes']);
-            // The fixture's top-level "source" is a citation string; the import
-            // stores it as "attribution" because provenance owns the source
-            // column. Rename it back. Nested photo.source is untouched.
-            if (\array_key_exists('attribution', $attrs)) {
-                $attrs['source'] = $attrs['attribution'];
-                unset($attrs['attribution']);
-            }
-            /** @var array{coordinates: array{0: float, 1: float}} $geo */
-            $geo = $this->decode($row['geom']);
-            // 'source' above is the free-text citation (attribution); 'srcType'
-            // is the raw ItemSource enum value, kept separate so map.js can tell a
-            // rider-added/edited climb apart from an OSM/Wikidata one.
-            $climb = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
-            // Real community-tier signal, same derivation as featureCollection()
-            // (map-and-search.md §12): absent key = community, unverified
-            // payloads stay byte-stable. The demo 'cur' attribute keeps its
-            // best-of/badge meaning; the tier keys on this real signal.
-            if ($row['verified']) {
-                $climb['v'] = 1;
-            }
-            if (null !== $row['region_id']) {
-                $climb['rid'] = (int) $row['region_id'];
-            }
-
-            return $climb;
+        $attrs = $this->decode($row['attributes']);
+        // The fixture's top-level "source" is a citation string; the import
+        // stores it as "attribution" because provenance owns the source
+        // column. Rename it back. Nested photo.source is untouched.
+        if (\array_key_exists('attribution', $attrs)) {
+            $attrs['source'] = $attrs['attribution'];
+            unset($attrs['attribution']);
         }
+        /** @var array{coordinates: array{0: float, 1: float}} $geo */
+        $geo = $this->decode($row['geom']);
+        // 'source' above is the free-text citation (attribution); 'srcType'
+        // is the raw ItemSource enum value, kept separate so map.js can tell a
+        // rider-added/edited climb apart from an OSM/Wikidata one.
+        $climb = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source'], 'geom' => ['ll' => [$geo['coordinates'][1], $geo['coordinates'][0]]]] + $attrs;
+        // Real community-tier signal, same derivation as featureCollection()
+        // (map-and-search.md §12): absent key = community, unverified
+        // payloads stay byte-stable. The demo 'cur' attribute keeps its
+        // best-of/badge meaning; the tier keys on this real signal.
+        if ($row['verified']) {
+            $climb['v'] = 1;
+        }
+        if (null !== $row['region_id']) {
+            $climb['rid'] = (int) $row['region_id'];
+        }
+
+        return $climb;
     }
 
     /**

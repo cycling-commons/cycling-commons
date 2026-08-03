@@ -8,9 +8,9 @@ namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionType;
+use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
-use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;

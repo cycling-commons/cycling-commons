@@ -7,8 +7,8 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\RiderPseudonym;
-use App\Messaging\UserMessageKind;
 use App\Media\MediaStorage;
+use App\Messaging\UserMessageKind;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Clock\ClockInterface;
@@ -207,24 +207,24 @@ final class SubmissionQueue
             [$was, $new] = $this->diffStrings((string) $r['changes']);
 
             return [
-            'id' => (int) $r['id'],
-            'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
-            'title' => (string) $r['title'],
-            'type' => (string) $r['type'],
-            'was' => $was,
-            'now' => $new,
-            'who' => RiderPseudonym::for($r['user_id']),
-            'when' => null !== $r['decided_at']
-                ? RelativeTime::ago(new \DateTimeImmutable((string) $r['decided_at']), $now)
-                : '',
-            'status' => (string) $r['status'],
-            // The moderator's own display name, not a pseudonym: curators are
-            // accountable to each other for decisions, and this page is
-            // curator-only.
-            'decidedBy' => null !== $r['decided_by_name'] ? (string) $r['decided_by_name'] : null,
-            'note' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
-            'riderReply' => null !== $r['rider_reply'] && '' !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
-            'sortAt' => null !== $r['decided_at'] ? (new \DateTimeImmutable((string) $r['decided_at']))->getTimestamp() : 0,
+                'id' => (int) $r['id'],
+                'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
+                'title' => (string) $r['title'],
+                'type' => (string) $r['type'],
+                'was' => $was,
+                'now' => $new,
+                'who' => RiderPseudonym::for($r['user_id']),
+                'when' => null !== $r['decided_at']
+                    ? RelativeTime::ago(new \DateTimeImmutable((string) $r['decided_at']), $now)
+                    : '',
+                'status' => (string) $r['status'],
+                // The moderator's own display name, not a pseudonym: curators are
+                // accountable to each other for decisions, and this page is
+                // curator-only.
+                'decidedBy' => null !== $r['decided_by_name'] ? (string) $r['decided_by_name'] : null,
+                'note' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
+                'riderReply' => null !== $r['rider_reply'] && '' !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
+                'sortAt' => null !== $r['decided_at'] ? (new \DateTimeImmutable((string) $r['decided_at']))->getTimestamp() : 0,
             ];
         }, $rows);
 
