@@ -181,9 +181,6 @@
   .cc-compass-center button{font-weight:700} /* same "active = bold" idiom as #mode button.on, above */
   .cc-compass-more{display:flex;flex-wrap:wrap;gap:.35rem}
   .cc-compass-more button{flex:1 1 auto;min-width:calc(50% - .35rem)}
-  /* discipline filter — compacted (visual-only chips, see markup note): smaller pad/type + tighter gap */
-  #disc{gap:.3rem}
-  #disc .chip{padding:.26rem .5rem;font-size:.6rem;letter-spacing:.05em}
   /* view mode is a primary control → its active state must read unmistakably "on":
      orange fill like .chip.on (not the subtle spruce the other toggles use) */
   #mode{border-color:var(--trail)}

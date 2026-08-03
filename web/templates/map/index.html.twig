@@ -167,20 +167,16 @@
         <div class="chips"><span class="chip" id="prefFilter" role="button" tabindex="0" aria-pressed="false">{{ 'map.pref_filter'|trans }}</span></div>
       </div>
 
-      {# Discipline chips: re-based onto the RidingStyle enum (spec 2026-07-14 —
-         this vocabulary is the contract for future style-filtering). Still a
-         visual stub: the dataset carries no style tags, so they toggle but do
-         not filter. Logged-in riders' saved styles preselect them (map.js).
-         Compact styling lives at #disc in the CSS. #}
-      <div class="grp">
-        <h3>{{ 'map.discipline'|trans }}</h3>
-        <div class="chips" id="disc">
-          <span class="chip on" data-style="Road">{{ 'map.disc_road'|trans }}</span><span class="chip on" data-style="Gravel">{{ 'map.disc_gravel'|trans }}</span>
-          <span class="chip" data-style="Touring">{{ 'map.disc_touring'|trans }}</span><span class="chip" data-style="Bikepacking">{{ 'map.disc_bikepacking'|trans }}</span>
-          <span class="chip" data-style="Trail">{{ 'map.disc_trail'|trans }}</span><span class="chip" data-style="Urban">{{ 'map.disc_urban'|trans }}</span>
-          <span class="chip" data-style="Leisure">{{ 'map.disc_leisure'|trans }}</span>
-        </div>
-      </div>
+      {# The Discipline chips (#disc) were RETIRED on 2026-08-03, the same call
+         that removed the loop planner and the Freshness chips the day before
+         (map-and-search.md §4.3): they toggled, they looked like a filter, and
+         they filtered nothing, because no server path tags an item with a
+         riding style. A control that does nothing is not a placeholder for the
+         real one, it is a lie about what the map can do.
+
+         Nothing is lost that was working. RidingStyle stays the vocabulary a
+         rider saves in their profile and stays the contract these chips will
+         be rebuilt on — when the DATA carries style tags, not before. #}
 
       <div class="grp">
         <h3 class="dl-head">{{ 'map.data_layers'|trans }} <button class="dl-all" id="layersAll" type="button">{{ 'map.deselect_all'|trans }}</button></h3>

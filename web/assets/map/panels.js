@@ -266,12 +266,11 @@ export function initChips(){
   updateSubtitle();
   { const bf=document.getElementById('bestFacets'); if(bf) bf.hidden = (mode()!=='curated'); }
   refreshBestOf();
-  // discipline + freshness chips (visual)
-  document.querySelectorAll('#disc .chip, .grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
-  // Saved riding styles preselect the (visual-only) discipline chips.
-  if(PREFS.styles.length){
-    document.querySelectorAll('#disc .chip').forEach(c=>c.classList.toggle('on', PREFS.styles.includes(c.dataset.style)));
-  }
+  // Generic chip toggle. The climb-filter and preference chips below reassign
+  // onclick to do real work; this is the baseline every chip gets.
+  // (The #disc discipline chips it also used to drive were retired 2026-08-03 —
+  // map-and-search.md §4.3. PREFS.styles no longer preselects anything here.)
+  document.querySelectorAll('.grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
   // Preference prefilter chip: later onclick assignment overrides the generic
   // toggle-only binder above (same pattern as the climb-filter chips below).
   (function initPrefChip(){
