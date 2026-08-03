@@ -311,6 +311,7 @@
         consent_required: 'media.error.consent_required'|trans,
         missing_file: 'media.error.missing_file'|trans,
         photo_too_large: 'media.error.photo_too_large'|trans,
+        photo_too_many_pixels: 'media.error.photo_too_many_pixels'|trans,
         photo_format: 'media.error.photo_format'|trans,
         photo_unreadable: 'media.error.photo_unreadable'|trans,
         photo_too_small: 'media.error.photo_too_small'|trans,
@@ -416,10 +417,10 @@
        nothing else on screen would ever suggest (owner request 2026-08-03). #}
     {% if item_type.letter == 'B' %}
       <ol class="climb-howto">
-        <li>{{ 'improve.step1.climb_how_1'|trans }}</li>
-        <li>{{ 'improve.step1.climb_how_2'|trans }}</li>
-        <li>{{ 'improve.step1.climb_how_3'|trans }}</li>
-        <li>{{ 'improve.step1.climb_how_4'|trans }}</li>
+        <li>{{ 'js.climb_how_1'|trans }}</li>
+        <li>{{ 'js.climb_how_2'|trans }}</li>
+        <li>{{ 'js.climb_how_3'|trans }}</li>
+        <li>{{ 'js.climb_how_4'|trans }}</li>
       </ol>
     {% endif %}
     <div id="wmap" role="application" aria-label="{{ 'improve.step1.map_aria'|trans }}"></div>
@@ -429,7 +430,7 @@
       {# Undo before Reset: it is the one you want after a mis-drag, and Reset
          next to it is the bigger hammer. Revealed by improve.js only when there
          is something to undo — a permanently dead control teaches nothing. #}
-      <span id="wzUndo" role="button" tabindex="0" hidden>{{ 'improve.step1.undo'|trans }}</span>
+      <span id="wzUndo" role="button" tabindex="0" hidden>{{ 'js.climb_undo'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
     {% if add_mode|default(false) %}

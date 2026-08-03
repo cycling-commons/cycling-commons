@@ -1,4 +1,16 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+/* The add-a-climb wizard. It mounts the SAME three-point editor as /improve
+   (climb-editor.js), so it follows the same two rules that wizard settled on
+   in docs/plans/2026-08-01-improve-js-i18n.md:
+
+   - strings crossing into JS are TEXT; markup stays in Twig, where |rich
+     sanitises it;
+   - nothing with a value in it is built with innerHTML. The review card and
+     the search list both mix rider-entered text with catalogue strings, so
+     they are built with createElement + textContent via
+     assets/contribute/review-card.js. textContent cannot produce an element,
+     which is what makes a rider's `<img src=x onerror=…>` render as visible
+     characters instead of firing. */
 (function () {
   'use strict';
 
@@ -11,10 +23,31 @@
     return document.querySelector('[name="add_climb[' + sfName + ']"]');
   }
 
+  /* ---------- strings ----------
+     The bag is emitted by add_climb.html.twig with all four JSON_HEX_* flags,
+     so a catalogue string containing `</script>` cannot close the block it is
+     printed in. A missing key resolves to empty rather than to its own name: a
+     rider should never be shown `add_climb.step1.readout_climb_set`, and
+     tools/check-translations.sh is what stops a key going missing at all. */
+  var BAG = window.CC_ADD_CLIMB_I18N || {};
+
+  function t(key, vars) {
+    var s = typeof BAG[key] === 'string' ? BAG[key] : '';
+    if (vars) {
+      for (var p in vars) {
+        if (Object.prototype.hasOwnProperty.call(vars, p)) s = s.split(p).join(vars[p]);
+      }
+    }
+    return s;
+  }
+
+  // The review step's DOM builders (assets/contribute/review-card.js).
+  var RC = (window.Cc && window.Cc.reviewCard) || null;
+
   var S = {
     start: null, summit: null, lengthKm: 0, name: '', gain: 0,
     maxGrad: '', surface: 'Asphalt', surfaceQ: 'Smooth',
-    traffic: 'Traffic-free', disciplines: ['Road'], note: '', osm: 'Unknown',
+    traffic: 'Traffic-free', note: '', osm: 'Unknown',
     // Editor in-flight/failure signals (climb-editor.js onChange): the wizard
     // must not advance/submit a 2-point placeholder while OSRM/elevation is pending.
     routing: false, profiling: false, routeError: false, profileError: false
@@ -36,11 +69,10 @@
     if (backBtn) backBtn.style.visibility = (n > 1 && n < 5) ? 'visible' : 'hidden';
     var next = document.getElementById('nextBtn');
     if (next) {
-      next.textContent = n === 4 ? 'Submit for review →' : 'Next →';
+      next.textContent = (n === 4 ? t('nav_submit') : t('nav_next')) + ' →';
       next.style.display = n === 5 ? 'none' : 'inline-flex';
     }
     if (n === 2) onEnterProfile();
-    if (n === 3) updateAudienceHint();
     if (n === 4) renderReview();
     refreshGate();
     window.scrollTo(0, 0);
@@ -75,10 +107,14 @@
   cmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
 
   var editor = null;
+  // Undo is only offered once there is something to take back — a control that
+  // is always there and usually dead teaches a rider nothing.
+  var undoBtn = document.getElementById('undo');
   cmap.on('load', function () {
     editor = window.Cc.mountClimbEditor({
       map: cmap,
       hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep') },
+      onHistory: function (depth) { if (undoBtn) undoBtn.hidden = 0 === depth; },
       onChange: function (st) {
         S.start = st.start; S.summit = st.summit; S.lengthKm = st.lengthKm;
         S.routing = st.routing; S.profiling = st.profiling;
@@ -112,12 +148,13 @@
   function setReadout() {
     var el = document.getElementById('readout');
     if (!el) return;
-    if (!S.start) { el.textContent = 'Tap the map to set the foot of the climb.'; return; }
-    if (!S.summit) { el.textContent = 'Foot set — now tap the summit.'; return; }
-    var txt = 'Climb set' + (S.lengthKm ? ' · ' + S.lengthKm.toFixed(1) + ' km' : '');
-    if (S.routing || S.profiling || !S.lengthKm) txt += ' · measuring…';
-    else if (S.routeError) txt += ' — could not snap to the road network, showing a straight line';
-    else if (S.profileError) txt += ' — gradient profile unavailable';
+    if (!S.start) { el.textContent = t('readout_initial'); return; }
+    if (!S.summit) { el.textContent = t('readout_climb_summit'); return; }
+    var txt = t('readout_climb_set');
+    if (S.lengthKm) txt += ' · ' + t('climb_length', { '%km%': S.lengthKm.toFixed(1) });
+    if (S.routing || S.profiling || !S.lengthKm) txt += ' · ' + t('climb_measuring');
+    else if (S.routeError) txt += ' — ' + t('climb_route_error');
+    else if (S.profileError) txt += ' — ' + t('climb_profile_error');
     el.textContent = txt;
   }
 
@@ -126,6 +163,12 @@
     resetBtn.addEventListener('click', function () { if (editor) editor.reset(); });
     resetBtn.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (editor) editor.reset(); }
+    });
+  }
+  if (undoBtn) {
+    undoBtn.addEventListener('click', function () { if (editor) editor.undo(); });
+    undoBtn.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); undoBtn.click(); }
     });
   }
 
@@ -146,15 +189,23 @@
     if (resultsEl) resultsEl.hidden = true;
   }
 
+  // A one-line note in the results list ("No matches", "Search unavailable").
+  function resultNote(text) {
+    var el = document.createElement('div');
+    el.className = 'res empty';
+    el.textContent = text;
+    return el;
+  }
+
   function renderCoord(pt) {
     if (!resultsEl) return;
-    resultsEl.innerHTML = '';
+    RC.clear(resultsEl);
     var row = document.createElement('div');
     row.className = 'res';
     var b = document.createElement('b');
     b.textContent = pt.lat.toFixed(6) + ', ' + pt.lng.toFixed(6);
     var small = document.createElement('small');
-    small.textContent = 'Coordinates — tap to jump here';
+    small.textContent = t('search_coords_go');
     row.appendChild(b);
     row.appendChild(small);
     row.addEventListener('click', function () { goCoord(pt); });
@@ -162,30 +213,44 @@
     resultsEl.hidden = false;
   }
 
+  /* Photon's response is third-party text, so it is built as nodes like
+     everything else here — a place name is a name, never markup. The
+     coordinates ride along in the closure instead of in data- attributes,
+     which also removes the last string-into-attribute path in this file. */
   function renderResults(list) {
     if (!resultsEl) return;
-    if (!list) { resultsEl.hidden = true; resultsEl.innerHTML = ''; return; }
-    if (!list.length) { resultsEl.innerHTML = '<div class="res empty">No matches</div>'; resultsEl.hidden = false; return; }
-    resultsEl.innerHTML = list.map(function (f) {
-      var p = f.properties || {}, c = f.geometry.coordinates;
-      // Coerce before interpolating into the attribute — API strings never reach the markup raw.
+    RC.clear(resultsEl);
+    if (!list) { resultsEl.hidden = true; return; }
+    var shown = 0;
+    list.forEach(function (f) {
+      var p = f.properties || {};
+      var c = (f.geometry && f.geometry.coordinates) || [];
       var lng = +c[0], lat = +c[1];
-      if (!isFinite(lng) || !isFinite(lat)) return '';
-      var main = p.name || p.street || p.city || 'Result';
+      if (!isFinite(lng) || !isFinite(lat)) return;
+      var main = p.name || p.street || p.city || t('search_result');
       var sub = [p.name ? p.street : '', p.city, p.county, p.state, p.country].filter(Boolean).join(', ');
-      return '<div class="res" data-lng="' + lng + '" data-lat="' + lat + '"><b>' + escHtml(main) + '</b><small>' + escHtml(sub) + '</small></div>';
-    }).join('');
-    resultsEl.hidden = false;
-    resultsEl.querySelectorAll('.res[data-lat]').forEach(function (el) {
-      el.addEventListener('click', function () {
-        cmap.flyTo({ center: [+el.dataset.lng, +el.dataset.lat], zoom: 14 });
-        if (searchEl) searchEl.value = el.querySelector('b').textContent;
+
+      var row = document.createElement('div');
+      row.className = 'res';
+      var b = document.createElement('b');
+      b.textContent = main;
+      var small = document.createElement('small');
+      small.textContent = sub;
+      row.appendChild(b);
+      row.appendChild(small);
+      row.addEventListener('click', function () {
+        cmap.flyTo({ center: [lng, lat], zoom: 14 });
+        if (searchEl) searchEl.value = main;
         // update place hidden field
         var fPlace = fld('place');
-        if (fPlace) fPlace.value = el.querySelector('b').textContent;
+        if (fPlace) fPlace.value = main;
         resultsEl.hidden = true;
       });
+      resultsEl.appendChild(row);
+      shown++;
     });
+    if (!shown) resultsEl.appendChild(resultNote(t('search_no_matches')));
+    resultsEl.hidden = false;
   }
 
   var searchSeq = 0;
@@ -202,7 +267,8 @@
       .catch(function () {
         if (seq !== searchSeq) return;
         if (resultsEl) {
-          resultsEl.innerHTML = '<div class="res empty">Search unavailable — click the map instead</div>';
+          RC.clear(resultsEl);
+          resultsEl.appendChild(resultNote(t('search_unavailable')));
           resultsEl.hidden = false;
         }
       });
@@ -276,7 +342,7 @@
     S.traffic = fTraffic ? fTraffic.value : 'Traffic-free';
 
     var np = document.getElementById('namePreview');
-    if (np) { np.textContent = S.name || 'Unnamed climb'; np.classList.toggle('empty', !S.name); }
+    if (np) { np.textContent = S.name || t('name_placeholder'); np.classList.toggle('empty', !S.name); }
 
     var avg = avgGrad();
     var avgStr = avg ? avg.toFixed(1) + ' %' : '—';
@@ -291,78 +357,68 @@
     if (el) el.addEventListener('input', syncProfile);
   });
 
-  /* ---------- step 3: details ---------- */
-  function updateAudienceHint() {
-    var hint = document.getElementById('audienceHint'); if (!hint) return;
-    var avg = avgGrad();
-    var hasHandbike = S.disciplines.indexOf('Handbike') >= 0;
-    if (hasHandbike) {
-      if (avg > 6) {
-        hint.innerHTML = '⚠ ' + avg.toFixed(1) + '% avg is steep for handbikes — most handcyclists sustain ~6% (≈10% on short ramps). Note an accessible alternative if there is one.';
-        hint.style.color = 'var(--clay)';
-      } else if (avg > 0) {
-        hint.textContent = '~' + avg.toFixed(1) + '% avg — within reach for many handcyclists (≈6% sustained is a common comfortable max).';
-        hint.style.color = '';
-      } else {
-        hint.textContent = 'Handbike: most handcyclists sustain ~6% (≈10% on short ramps).';
-        hint.style.color = '';
-      }
-    } else {
-      hint.textContent = 'Rough gradient ceilings — road & MTB: 15%+ · gravel ~12% (traction) · loaded touring ~10% · handbike ~6%.';
-      hint.style.color = '';
-    }
-  }
-
-  document.querySelectorAll('#disc .chip').forEach(function (c) {
-    c.setAttribute('role', 'button'); c.setAttribute('tabindex', '0');
-    c.setAttribute('aria-pressed', c.classList.contains('on') ? 'true' : 'false');
-    function toggleChip() {
-      c.classList.toggle('on');
-      var on = c.classList.contains('on');
-      c.setAttribute('aria-pressed', on ? 'true' : 'false');
-      var k = c.textContent.trim();
-      var i = S.disciplines.indexOf(k);
-      if (on && i < 0) S.disciplines.push(k);
-      else if (!on && i >= 0) S.disciplines.splice(i, 1);
-      updateAudienceHint();
-    }
-    c.addEventListener('click', toggleChip);
-    c.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleChip(); }
-    });
-  });
+  /* ---------- step 3: details ----------
+     The "Targeted audience" chips were retired on 2026-08-03 (see the note in
+     add_climb.html.twig): they submitted nothing. The gradient guidance they
+     used to drive is now one static line rendered by the template, so there is
+     nothing left for this file to recalculate. */
 
   var fNoteEl = fld('fNote');
   if (fNoteEl) fNoteEl.addEventListener('input', function (e) { S.note = e.target.value; });
   var fOsmEl = fld('fOsm');
   if (fOsmEl) fOsmEl.addEventListener('input', function (e) { S.osm = e.target.value; });
 
-  /* ---------- step 4: review ---------- */
+  /* ---------- step 4: review ----------
+     Built as nodes, not markup. The climb name and the rider's note are the
+     hostile inputs here — a curator and later the public read this card back,
+     so nothing on it may become an element. */
   function renderReview() {
     var fLen = fld('fLen');
     var len = ((fLen ? parseFloat(fLen.value) : 0) || S.lengthKm || 0).toFixed(1);
     var rb = document.getElementById('reviewBody');
     if (!rb) return;
-    rb.innerHTML =
-      '<span class="co">Foot ' + fmt(S.start) + ' → Summit ' + fmt(S.summit) + '</span>' +
-      '<h3>' + escHtml(S.name || 'Unnamed climb') + '</h3>' +
-      '<div class="rtags">' + S.disciplines.map(function (d) { return '<span>' + escHtml(d) + '</span>'; }).join('') +
-      '<span class="t-surf">' + escHtml(S.surface) + ' · ' + escHtml(S.surfaceQ) + '</span>' +
-      '<span class="t-traf t-' + S.traffic.toLowerCase().replace(/[^a-z]/g, '') + '">' + escHtml(S.traffic) + '</span></div>' +
-      '<div class="kv"><span>Length</span><span>' + len + ' km</span></div>' +
-      '<div class="kv"><span>Elevation gain</span><span>△ ' + S.gain + ' m</span></div>' +
-      '<div class="kv"><span>Avg gradient</span><span>' + avgGrad().toFixed(1) + ' %</span></div>' +
-      '<div class="kv"><span>Max gradient</span><span>' + (S.maxGrad ? escHtml(S.maxGrad) + ' %' : '—') + '</span></div>' +
-      '<div class="kv"><span>Surface</span><span>' + escHtml(S.surface) + ' · ' + escHtml(S.surfaceQ) + '</span></div>' +
-      '<div class="kv"><span>Traffic</span><span>' + escHtml(S.traffic) + '</span></div>' +
-      '<div class="kv"><span>Already in OSM?</span><span>' + escHtml(S.osm) + '</span></div>' +
-      (S.note ? '<p style="margin-top:.7rem;font-size:.9rem">' + escHtml(S.note) + '</p>' : '');
+    RC.clear(rb);
+
+    function span(cls, text) {
+      var el = document.createElement('span');
+      if (cls) el.className = cls;
+      el.textContent = text;
+      return el;
+    }
+
+    rb.appendChild(span('co', t('review_loc', { '%foot%': fmt(S.start), '%summit%': fmt(S.summit) })));
+
+    var h3 = document.createElement('h3');
+    h3.textContent = S.name || t('name_placeholder');
+    rb.appendChild(h3);
+
+    var tags = document.createElement('div');
+    tags.className = 'rtags';
+    tags.appendChild(span('t-surf', S.surface + ' · ' + S.surfaceQ));
+    // The class is derived from the select's own value, never from free text.
+    tags.appendChild(span('t-traf t-' + S.traffic.toLowerCase().replace(/[^a-z]/g, ''), S.traffic));
+    rb.appendChild(tags);
+
+    rb.appendChild(RC.kvRow(t('label_length'), len + ' km'));
+    rb.appendChild(RC.kvRow(t('label_gain'), '△ ' + S.gain + ' m'));
+    rb.appendChild(RC.kvRow(t('label_avg'), avgGrad().toFixed(1) + ' %'));
+    rb.appendChild(RC.kvRow(t('label_max'), S.maxGrad ? S.maxGrad + ' %' : '—'));
+    rb.appendChild(RC.kvRow(t('label_surface'), S.surface + ' · ' + S.surfaceQ));
+    rb.appendChild(RC.kvRow(t('label_traffic'), S.traffic));
+    rb.appendChild(RC.kvRow(t('label_osm'), S.osm));
+
+    if (S.note) {
+      var p = document.createElement('p');
+      p.className = 'rnote';
+      p.textContent = S.note;
+      rb.appendChild(p);
+    }
   }
 
   /* ---------- step 5: submit (client-side wizard; also triggers real POST) ---------- */
   function submitClimb() {
     var doneName = document.getElementById('doneName');
-    if (doneName) doneName.textContent = S.name || 'your climb';
+    if (doneName) doneName.textContent = S.name || t('your_climb');
 
     // Sync geocoded coords to hidden form fields before submit
     var fLat = fld('lat');
@@ -378,12 +434,6 @@
     step(5);
     var yah = document.getElementById('youAreHere');
     if (yah) yah.classList.add('here');
-  }
-
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   refreshGate();

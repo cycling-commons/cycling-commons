@@ -1014,6 +1014,19 @@ add_climb:
     map_aria: 'Map — click the foot then the summit of the climb'
     readout_initial: 'Tap the map to set the foot of the climb.'
     reset: 'Reset'
+    # Everything add-climb.js renders itself reaches it through
+    # window.CC_ADD_CLIMB_I18N as TEXT and is set with textContent, never as
+    # markup — the rule improve.js follows (docs/plans/2026-08-01-improve-js-i18n.md).
+    readout_climb_summit: 'Foot set — now tap the summit.'
+    readout_climb_set: 'Climb set'
+    climb_length: '%km% km'
+    climb_measuring: 'measuring…'
+    climb_route_error: 'could not snap to the road network, showing a straight line'
+    climb_profile_error: 'gradient profile unavailable'
+    search_no_matches: 'No matches'
+    search_unavailable: 'Search unavailable — tap the map instead'
+    search_result: 'Result'
+    search_coords_go: 'Coordinates — tap to jump here'
   step2:
     label: 'Profile'
     heading: 'The profile'
@@ -1034,16 +1047,31 @@ add_climb:
     label: 'Details'
     heading: 'Details'
     help: 'Who''s this climb for, and anything riders should know? All optional.'
-    audience_label: 'Targeted audience'
+    gradient_help_label: 'Gradient guidance'
     note_label: 'Note for riders'
     note_placeholder: 'Surface changes, a brutal final ramp, the view from the top…'
     photo_label: 'Add a photo — optional'
     photo_after: 'Add photos once the climb is in the atlas — open it on the map and use "Add a photo".'
     osm_label: 'Already in OpenStreetMap?'
+    # Gradient guidance, rendered by the template. It used to be recalculated
+    # by add-climb.js as the (retired) audience chips changed; it says the same
+    # thing to everyone now, including the handbike ceiling.
+    hint_ceilings: 'Rough gradient ceilings — road & MTB: 15%+ · gravel ~12% (traction) · loaded touring ~10% · handbike ~6%.'
   step4:
     label: 'Review'
     heading: 'Review your climb'
     help: 'Check the facts before sending it to the curators.'
+    # Review-card labels. add-climb.js builds the card with createElement +
+    # textContent (assets/contribute/review-card.js), so none of these may
+    # carry markup.
+    loc: 'Foot %foot% → Summit %summit%'
+    label_length: 'Length'
+    label_gain: 'Elevation gain'
+    label_avg: 'Avg gradient'
+    label_max: 'Max gradient'
+    label_surface: 'Surface'
+    label_traffic: 'Traffic'
+    label_osm: 'Already in OSM?'
   step5:
     label: 'Submitted'
     heading: 'It''s in the queue.'
@@ -1054,6 +1082,7 @@ add_climb:
   nav:
     back: 'Back'
     next: 'Next'
+    submit: 'Submit for review'
   receipt:
     heading: 'Climb submitted.'
     body: 'Your climb has been queued for curator review. Nothing is live yet — the Commons is still in preview.'
@@ -1103,11 +1132,10 @@ improve:
     map_aria: 'Map — tap to set the location'
     readout_initial: '◎ Tap the map to set the location'
     reset: 'Reset'
-    undo: 'Undo'
-    climb_how_1: 'Tap the foot of the climb, then tap the summit — the road between them is followed automatically.'
-    climb_how_2: 'Tap once more to mark the steepest ramp. Optional, and you can skip it.'
-    climb_how_3: 'Drag any marker to correct it — the route and the gradient are recalculated.'
-    climb_how_4: 'Undo takes back the last thing you did, including a Reset.'
+    # Undo and the four how-to lines describe the shared three-point editor
+    # itself, not this wizard, so they live in js.* beside the editor's marker
+    # labels — /improve and /add-climb mount the same control and must not be
+    # able to explain it two different ways (2026-08-03 handoff item 1).
     # The readouts, toasts and search notes improve.js renders itself. They
     # reach it through window.CC_IMPROVE_I18N as TEXT and are set with
     # textContent — never markup (docs/plans/2026-08-01-improve-js-i18n.md).
@@ -1309,6 +1337,7 @@ media:
     consent_required: 'Agree to the photo licence first — then you can add photos.'
     missing_file: 'No photo arrived. Please pick a file and try again.'
     photo_too_large: 'That photo is over 15 MB. Please use a smaller version.'
+    photo_too_many_pixels: 'That photo has too many pixels — over 50 megapixels. Please use a smaller version.'
     photo_format: 'That file type cannot be used. Photos may be JPEG, PNG, WebP or HEIC.'
     photo_unreadable: 'That file could not be read as a photo.'
     photo_too_small: 'That photo is too small — the shortest side must be at least 200 pixels.'
@@ -1435,14 +1464,6 @@ map:
   curated_hint: 'Curated shows riders'' best climbs, stays & views. Utility data (water, hazards, services) aims for full coverage.'
   pref_filter_head: 'Your preferences'
   pref_filter: 'Routes for your bikes'
-  discipline: 'Discipline'
-  disc_road: 'Road'
-  disc_gravel: 'Gravel'
-  disc_touring: 'Touring'
-  disc_bikepacking: 'Bikepacking'
-  disc_trail: 'Trail'
-  disc_urban: 'Urban'
-  disc_leisure: 'Leisure'
   data_layers: 'Data layers'
   # Layer-rail group headings — same two groups, same vocabulary as the
   # contribute hub's Practical / Emotional sections (one split, told once).
@@ -2200,6 +2221,14 @@ js:
   climb_marker_foot: 'START · foot'
   climb_marker_summit: 'END · summit'
   climb_marker_steepest: 'STEEPEST'
+  # The shared three-point climb editor's own copy: mounted identically by
+  # /improve (letter B) and /add-climb, so one catalogue entry each. Undo is
+  # revealed only once there is history to take back.
+  climb_undo: 'Undo'
+  climb_how_1: 'Tap the foot of the climb, then tap the summit — the road between them is followed automatically.'
+  climb_how_2: 'Tap once more to mark the steepest ramp. Optional, and you can skip it.'
+  climb_how_3: 'Drag any marker to correct it — the route and the gradient are recalculated.'
+  climb_how_4: 'Undo takes back the last thing you did, including a Reset.'
 admin:
   escalated:
     title: 'Photos under legal hold'
