@@ -198,9 +198,25 @@
     return detailsSnapshot() === INITIAL_DETAILS;
   }
 
+  /* A photo still going up. The wizard will not advance or submit while one
+     is in flight: the hidden media-id field is only written when the upload
+     lands, so a rider who presses Next while watching a thumbnail appear would
+     submit without it — the photo is uploaded, unclaimed, and swept as an
+     orphan seven days later (docs/specs/photo-uploads.md §6). Waiting for the
+     thumbnail is the rider-visible signal that it is safe. */
+  var MEDIA_BUSY = false;
+  document.addEventListener('cc:media-busy', function (e) {
+    MEDIA_BUSY = !!(e.detail && e.detail.busy);
+    refreshGate();
+  });
+
   function refreshGate() {
     var nextBtn = document.getElementById('nextBtn');
     if (!nextBtn) return;
+    if (MEDIA_BUSY) {
+      nextBtn.disabled = true;
+      return;
+    }
     if (WZ.cur === 1 && LOCATE !== 'off') {
       nextBtn.disabled = !WZ.loc;
     } else if (WZ.cur === WZ.last) {

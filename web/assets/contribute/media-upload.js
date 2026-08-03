@@ -220,7 +220,20 @@
 
     /* ---------- the queue ---------- */
 
+    /* Is any photo still uploading?
+       The wizard gates Next on this: a rider who presses Next mid-upload
+       submits a form whose hidden media ids do not yet include the photo they
+       are watching upload, so the photo is orphaned and the contribution
+       arrives without it. Announced as a DOM event rather than a return value
+       because the queue changes from three different places (enqueue, succeed,
+       fail) and every one of them must move the button. */
+    function announceBusy() {
+      var busy = items.some(function (i) { return 'uploading' === i.state; });
+      document.dispatchEvent(new CustomEvent('cc:media-busy', { detail: { busy: busy } }));
+    }
+
     function syncHidden() {
+      announceBusy();
       var ids = items.filter(function (i) { return i.id; }).map(function (i) { return i.id; });
       hidden.value = ids.length ? JSON.stringify(ids) : '';
       syncReviewNotice();   // first photo in / last photo out flips the review notice
@@ -242,10 +255,12 @@
       var item = { id: null, name: name, row: row, bar: row.querySelector('.chip-bar i'), state: 'uploading' };
       row.querySelector('.chip-x').addEventListener('click', function () { removeItem(item); });
       items.push(item);
+      announceBusy();
       return item;
     }
 
     function removeItem(item) {
+      announceBusy();
       // Forgetting the id is all that is needed: an unclaimed object becomes an
       // orphan and is collected after seven days (docs/specs/photo-uploads.md §6).
       items = items.filter(function (i) { return i !== item; });

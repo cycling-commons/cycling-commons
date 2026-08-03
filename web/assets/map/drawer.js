@@ -352,7 +352,7 @@ function buildRecord(layer, f){
         <b class="cc-diff-lbl">${trVal(diffLabel)}</b></div>` : '';
   const elev = f.elev ? `<div class="cc-elev-cap">${D.elevation||'Elevation'} · ${Math.min(...f.elev)}–${Math.max(...f.elev)} m`
     + (f.gain?` · ${tpl(D.mClimbing||'{n} m climbing',{n:f.gain})}`:'') + ` <em>${D.fromGpx||'(from GPX)'}</em></div>` + elevSvg(f.elev) : '';
-  const grad = f.grad ? gradStrip(f.grad) : '';
+  const grad = f.grad ? gradStrip(f.grad, f) : '';
   // Length, measured off the drawn line. A climb had no length anywhere in the
   // drawer: it is not a form field (nobody types a climb's length, and a typed
   // one would disagree with the line on the map), and only a couple of seeded
@@ -682,9 +682,32 @@ function routeLengthKm(route){
   return km;
 }
 
-function gradStrip(grad){
-  const max=Math.max(...grad), avg=Math.round(grad.reduce((a,b)=>a+b,0)/grad.length);
-  const bars=grad.map(p=>`<span class="cc-grad-bar" style="height:${Math.round(10+(p/Math.max(max,1))*30)}px;background:${gradColor(p)}" title="${p}%"></span>`).join('');
+/* The bars are the SHAPE of the climb; the numbers beside them are the item's
+   own stated facts.
+
+   They used to be recomputed from the bars, which meant the same drawer showed
+   two different answers: the Average/Max gradient rows read "8.4%" and "~20%
+   (mid-climb ramp)" off the item's attributes, while this caption read "avg ~7%
+   · max 16%" off a sampled array that had since been re-profiled from a redrawn
+   route (owner-reported 2026-08-04). A reader cannot tell which one is the
+   climb. One fact, one source: the item states it, this repeats it, and the
+   computed values are only a fallback for a profile whose item says nothing.
+
+   `(illustrative)` stays, and describes the BARS. Some climbs carry a
+   hand-authored profile from the manual seed; others carry one sampled from
+   real elevation by the editor. Nothing in the payload distinguishes them, so
+   the caption under-claims rather than over-claims. Making that honest properly
+   needs a provenance flag on the profile. */
+function gradStrip(grad, f){
+  const barMax=Math.max(...grad);
+  const stated=v=>{
+    if(v==null || v==='') return null;
+    const m=String(v).match(/-?\d+(\.\d+)?/);
+    return m ? m[0] : null;
+  };
+  const avg = stated(f && f.avgGradient) ?? String(Math.round(grad.reduce((a,b)=>a+b,0)/grad.length));
+  const max = stated(f && f.maxGradient) ?? String(barMax);
+  const bars=grad.map(p=>`<span class="cc-grad-bar" style="height:${Math.round(10+(p/Math.max(barMax,1))*30)}px;background:${gradColor(p)}" title="${p}%"></span>`).join('');
   return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · avg ~{a}% · max {m}%', {a:avg, m:max})} <em>${D.illustrative||'(illustrative)'}</em></div>
     <div class="cc-grad">${bars}</div>`;
 }
