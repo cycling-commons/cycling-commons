@@ -120,8 +120,8 @@ lazy-firewall caching gotcha — see
 
 ### 4.1 Layer toggles
 
-- The rail lists the **A–K** catalog layers (letter + localized label + icon +
-  colour), each individually toggleable, with a **`shown/total`** count that
+- The rail lists the catalog layers (localized label + icon + colour), each
+  individually toggleable, with a **`shown/total`** count that
   reflects the current mode and filters (`layerCounts()`). **Both parts are
   scope-aware:** `shown` applies mode/filters/scope, and `total` is scoped too —
   curated features gate on `inScope()` and coverage uses the server's per-scope
@@ -131,6 +131,51 @@ lazy-firewall caching gotcha — see
   layers on at load.** Layer labels come from the `item_type.*.label`
   translation keys via `CC_I18N.layers`, so the rail can never drift from the
   improve form / drawer wording.
+- **The rail is grouped, and the grouping is the split riders already know**
+  (2026-08-02): *Practical · full coverage* (the utilities), then *Emotional ·
+  voted by riders* (the votable layers), then, for curators only, *Moderation*
+  (the pending-review overlay, which is not a category). The two headings use
+  the same vocabulary as the contribute hub's Practical/Emotional sections, so
+  one split describes the catalogue everywhere. Membership comes from
+  `layer.votable`, which mirrors `ItemType::isVotable()`. It is **not** `exp`:
+  `exp` decides what Curated mode hides, and the two disagree on both road
+  surface (utility, but filters to curated) and K (votable, but special-cased
+  by key). Within a group, `CATALOG`'s own order carries through; that array's
+  order stays the **draw** order (`render.js` walks it, so later entries stack
+  above earlier ones) and must not be reshuffled for display reasons.
+- **No catalog letter appears anywhere a rider reads a category** (2026-08-02
+  owner decision). Letters are storage identifiers — `?type=`, coverage tiles,
+  `coverage_poi.letter`, the public API — and they stay there. They are gone
+  from the rail rows, the drawer type chip, search-result badges, the
+  ride-check group badges, the contribute hub cards and the improve/propose
+  eyebrows; each of those shows the category's **icon** on its colour swatch
+  instead. The change was forced by the grouping: sorting the rail A–Z put
+  M · Public toilets last (far from Water & food, the row it belongs beside)
+  and B · Climbs above every utility, and once the list is ordered for humans
+  the letters read as a broken sequence (A, C, M, D…) — which is exactly what
+  an identifier looks like when it is used as an ordinal.
+- **A pin's position is `pinPoint()` (util.js), not `featurePoint()`.** They
+  answer different questions and disagree on climbs: the stored anchor is the
+  summit, the pin is drawn at the foot (`route[0]`). The rule lived only inside
+  render.js, so the curator's pending-review pin — built from the submission's
+  copy of the item anchor — landed on Côte de la Redoute's summit, 9 m from an
+  unrelated monument, and "Review on the map" highlighted the monument while
+  the climb's real pin sat unmarked at the other end of the line
+  (2026-08-03). Both readers now share the helper. A `new` submission keeps its
+  own point: there is no item yet, and that point is the only record of where
+  the place is.
+- **Layer stacking is decided in exactly one place**, `liftInfoLayersAboveRoutes()`
+  (render.js). It moves each named layer to the top in turn, so the call order
+  *is* the z-order, bottom to top: **route lines → road surfaces → climb lines →
+  Mapillary**. Climbs sit above surfaces (2026-08-03, owner): they were lifted
+  first and so ended up underneath, and an 8 px teal surface line swallowed the
+  climb it describes — on La Redoute only a sliver of the gradient line showed
+  at the edges. A climb is a named thing a rider came to look at; a surface
+  segment is a property of the road beneath it, and the narrower climb line
+  still leaves the surface colour visible on both sides. **Do not fix stacking
+  at draw time**: this function runs at the end of every render *and* after
+  every selection move, so a `moveLayer` in `drawClimbLine` is silently
+  overridden a moment later (tried and reverted the same day).
 - **L · Ride heatmap is deliberately NOT a catalog entry:** the generated rail
   lists A–K only; L appears as a separately labelled derived-overlay panel with
   its own On/Off toggle and season chips (§11).
@@ -217,13 +262,46 @@ name layer asks for `name:<document lang>`.
 
 ### 4.3 Filter chips
 
-- **Climb surface (`#sqf`) / traffic (`#trf`)**: legacy always-require
-  semantics — a climb missing the attribute is hidden regardless of chip state.
-- **Climb effort (`#effortf`) / stay accessibility (`#accessf`)**:
-  **narrowing** semantics (`attrMatch()`) — with every chip on (default)
-  nothing is filtered, including items with no value; deselecting any option
-  also hides valueless items (they can't be confirmed to match). The
-  accessibility filter applies to the stays dot layer (`setFilter`), the
+**Freshness is gone; the other four are back** (2026-08-02, same day). The
+planner and the Freshness chips were removed permanently — Freshness was never
+wired to anything and `f.freshness` is produced by no server path. The other
+four returned once the reason they looked broken was fixed:
+
+| Group | Backing field | State |
+|---|---|---|
+| Climb surface `#sqf` | `Climbs.sq` | Live. Chips now list **all five** registry values; the fifth was missing (see below). |
+| Climb traffic `#trf` | `Climbs.tr` | Live. 15/15 seeded climbs carry `tr`. |
+| Climb effort `#effortf` | `Climbs.effort` | Live. 5/15 carry a value; narrowing semantics make that honest. |
+| Stay accessibility `#accessf` | `WhereToSleep.accessibility` | Live, and the field is now **multi-select** — see below. |
+
+- **`accessibility` is a multi-select** (`FieldKind::MultiSelect`, list<string>).
+  A stay is routinely step-free *and* handbike-friendly, and one-of-these
+  forced the rider to drop the rest — the very fact a rider who needs one of
+  them is searching for. `Unknown` went with the single select: nothing ticked
+  already means "not stated", and it cannot coexist with a real value.
+  `attrMatch()` is array-aware and matches on **any** overlap: filtering for
+  handbike-friendly returns every stay that is handbike-friendly, not only the
+  ones that are *nothing else*. The coverage tile prop `acc` stays a single
+  string (it is derived from OSM `wheelchair=yes` in
+  `pipeline/coverage/tiles.py`), and the MapLibre `in` expression over it is
+  unaffected.
+- **All four now share `attrMatch()`'s narrowing semantics.** With every chip
+  on nothing is hidden, including items with no value; deselecting any option
+  also hides valueless items, which cannot be confirmed to match. sq/tr used to
+  "always require" a matching value instead, and that was a **climb-eating
+  bug**: `CatalogFormRegistry` offers five `sq` values and the chips listed
+  four, so a climb edited to **"Broken / loose"** did not merely fail the
+  filter — it vanished from the map with every chip lit, and so did any climb
+  predating the attribute. Adding a value to the registry now means adding it
+  to `ALL_SURF`/`ALL_TRAF` in `render.js` **and** to the chips in
+  `map/index.html.twig`; the comment on those Sets says so.
+
+- **A missing chip group means NO filter, never an empty selection.**
+  `chipSet(id)` returns `null` when the container is absent and every reader
+  treats that as pass-through. Kept even though all four groups are back on
+  the rail: it is what makes removing a group from the template a safe,
+  one-file edit rather than a way to empty a layer.
+- The accessibility filter applies to the stays dot layer (`setFilter`), the
   clustered confirmed pins, and the legend counts alike.
 - **Discipline chips (`#disc`)**: re-based onto the 7 `RidingStyle` enum values
   (the enum is the chip contract — see
@@ -831,10 +909,14 @@ requirement).
   real anonymized-ingest heatmap (map-match-then-discard, k-anonymity) is
   unbuilt; its privacy contract lives in the public wiki data catalog and gets
   its own spec when built.
-- The **"Plan from Spa" planner is openly faked**: distance chips pick the
-  nearest sample loop by km, draw it, and open a drawer that carries the
-  warning "⚠ Faked — the real planner stitches from the heatmap". The real
-  planner and geolocation are explicitly deferred.
+- The **"Plan from Spa" planner is off the rail as of 2026-08-02** (owner
+  decision; §4.3's chip groups came back the same day, the planner did not). It was openly faked: distance chips
+  picked the nearest sample loop by km, drew it, and opened a drawer carrying
+  the warning "⚠ Faked — the real planner stitches from the heatmap" — honest,
+  but a control that looks like a planner and is not one. `planner.js` and its
+  translation keys stay; the chips are gone from the template, `initPlanner()`
+  binds nothing, and the smoke sweep's planner checkpoint reports `skipped`
+  rather than failing. The real planner and geolocation remain deferred.
 - **Ride privacy:** route/heat fixture tracks have their first and last
   ~350–750 m trimmed (`trimEnds()`, **seeded by route id** so the trim is
   deterministic per route — located-correction fractions are stored relative

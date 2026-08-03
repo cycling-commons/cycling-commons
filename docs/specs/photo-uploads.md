@@ -262,7 +262,14 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   ODbL/CC BY-SA sentence and "you already granted the photo half, on this
   date" are the same subject, so they close the step as one block. It sat
   above the review card until 2026-08-02, where it opened step 4 with a legal
-  note before the rider reached their own answers. The modal only ever returns
+  note before the rider reached their own answers. **On the review step the
+  notice appears only when the submission actually carries a photo**
+  (`syncReviewNotice()`, re-run on every queue change): consent is durable, so
+  a rider who donated a photo months ago was otherwise told "your photos join
+  the Commons" at the foot of a text-only correction containing no photos — a
+  sentence about nothing, in the one place the rider is checking what they are
+  really sending. The photo step keeps the notice unconditionally; that step
+  *is* about photos. The modal only ever returns
   when the consent **wording version changes** — a new version means a new
   consent act, never a silent carry-over.
 - Submitted media ids travel in the form (hidden field, JSON list) and land

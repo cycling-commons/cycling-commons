@@ -101,6 +101,32 @@ The mode gate in `improve.js`:
   from `improve.js`), debounced **320 ms**. Mandatory offline fallback: on
   fetch failure the results dropdown shows "Search unavailable — tap the map
   instead" and map-tap keeps working — the geocoder is never load-bearing.
+- **A pasted coordinate pair short-circuits the geocoder.** The map's
+  right-click popup copies a spot as `lat, lng`, so the search box has to read
+  that back: `web/assets/contribute/coords.js` (`window.Cc.parseLatLng`, shared
+  with `add-climb.js`) parses `lat, lng`, `50.4920°N 5.8600°E`, `N50.49 E5.86`
+  and `geo:`/`@` prefixes, and the query never reaches Photon. The pair is
+  shown as a result row before anything moves, so the rider sees what was read
+  out of the paste. Selecting it flies there **and drops the pin** — the
+  coordinates *are* the location, and re-tapping the map would throw away the
+  precision the rider just supplied. A climb is the exception: there the paste
+  is a fly-to only, because one pair cannot say whether it is foot or summit.
+- **A coordinate pair is never silently swapped.** `5.86, 50.49` is refused,
+  not read as lng-first: guessing would drop the pin in another country while
+  looking authoritative. Out-of-range values, a third number, trailing text and
+  decimal commas are all refused the same way, and the query falls through to
+  the geocoder.
+- **The client's "nothing changed" gate covers geometry that is not a pin**
+  (2026-08-03, owner-reported). `pinMoved()` only ever compared lat/lng, and
+  only for `type === 'point'`, so a climb's route/steepest and a road surface's
+  endpoints were invisible to it: moving a climb's summit left the wizard
+  convinced nothing had changed and Submit disabled — on an edit the **server**
+  would have accepted perfectly well, since `ClimbGeometry::fromPayload()` is
+  merged into the change diff there. The gate now also diffs the `route`,
+  `steep` and `segment` hidden fields against a snapshot taken once the editor
+  has hydrated (`mountClimbEditor` writes the stored shape synchronously at
+  mount and never re-snaps or re-profiles on its own, so anything different
+  afterwards is the rider's doing).
 - **An edit that changes nothing is refused.** `[] === $changes` with no photo,
   no photo link and an unmoved pin (~1 m tolerance, because the wizard posts
   the item's own coordinates straight back) is not a contribution: it costs a
@@ -135,6 +161,188 @@ The mode gate in `improve.js`:
   `tools/check-translations.sh` is what stops one going missing.
 - The Back/Next bar is a sticky bottom row (`.navrow`, `position: sticky`) so
   the confirm control stays reachable under a tall map.
+
+**A rider's needs-info answer is desk work, not personal mail** (2026-08-03,
+owner-reported). The reply is still *addressed* to the deciding curator — that
+address is a lookup key, because `SubmissionQueue`'s LATERAL join reads the row
+to render "Rider replied" on the queue card and in the map drawer, and deleting
+it would take the desk's copy of the answer with it. But it is now excluded
+from `listFor()`, `unreadCount()` and `markAllRead()`, so it never appears in
+the inbox a rider uses for their own contributions and never inflates the
+account chip's badge. The rider still sees their own answer in their own
+thread: the exclusion is skipped when the reader is the sender.
+
+Because the personal inbox was carrying that notification, the desk now has to:
+a replied submission shows an **Answered** tag on its queue card, beside the
+type tag, so a curator can spot it while scanning. The reply itself is further
+down the card, as before. The reply also flips the submission back to
+`pending`, so it is already back in the queue it left.
+
+**And the reply follows the submission into the history.** A decided
+submission leaves the queue, which was the last surface still showing it — so
+taking it out of the inbox made an answered-then-approved submission's answer
+invisible everywhere (owner-reported immediately). `history()` now carries the
+same LATERAL join and the settled row renders it.
+
+**A settled row says what was decided, and opens it.** The history listed a
+verdict and a title and nothing else — nothing a curator could check
+(owner-reported 2026-08-03). It now renders the same before/after the queue
+card does, from a `diffStrings()` helper both share so the two cannot drift.
+The title links to **`/map?item=<id>`**, a new deep link resolved by DB id
+(`resolveLocalFeatureById`, covering CATALOG features and the OSM pools). It
+replaces `?pending=<id>`, which could not work by construction: a settled
+submission is not in the pending payload, so the link opened the map at the
+default scope with nothing selected. Only **approved** rows link — a rejected
+item is not on the map, and a link that lands nowhere is worse than no link.
+
+**The record is its own page, and both desks page and search** (2026-08-03,
+owner). `/moderate/history` carries the settled submissions; `/moderate` stays
+about what is still to do. Both take **25 rows a page** (`SubmissionQueue::PER_PAGE`)
+and a **title search**.
+
+- The page query and its count share one WHERE builder per desk
+  (`openFilters()`, `settledFilters()`), so a pager can never disagree with the
+  rows it is paging.
+- Search is `ILIKE` with the wildcards **in the bound value**, and `%`, `_` and
+  `\` in what the curator typed are escaped — a `%` in the box matches a literal
+  percent rather than silently matching everything.
+- Trash audit rows are merged into the history only on **page one of an
+  unfiltered, unsearched** view. They come from a different table with no shared
+  cursor, so interleaving them across pages would drop or repeat rows as the
+  pager moved; and being content-free by design they have no title to match, so
+  under a search they would surface as unexplained hits.
+- The pager is plain links carrying the active filters, so a filtered page can
+  be bookmarked and sent to a colleague, and a decision redirect comes back to
+  the same view.
+- **Both desks carry the same filter row** — country, region, type, search —
+  built from the same markup, with the search field and pager styled once in
+  `account/_shell_styles.html.twig`. They began in one page's `<style>` block,
+  so the other desk rendered an unstyled browser default beside a designed one.
+- The history's country/region option lists describe the **settled** set, not
+  the open queue (`statusTuple()`): a country with no open work can still have
+  a record worth reading.
+
+**The regions desk filters by country** (2026-08-03, owner). Options come from
+the regions the curator can see, built **before** the filter narrows them — a
+list that shrank to the picked country would be a one-way door — and the row is
+rendered only when there is more than one country to choose between.
+
+**The settled row folds out to the whole exchange** (2026-08-03, owner's
+choice of two proposals). Every needs-info question and every rider reply,
+oldest first, behind a disclosure on the history row — the row stays one line
+because most submissions never had a conversation. This is the only surface
+that carries it: the queue card and the settled row show just the latest reply,
+`change_history` records what was *applied* rather than what was *asked*, and
+the reply is no longer personal mail. One query per page (`threadsFor()`), not
+one per row.
+
+The owner's other proposal — grouping the desk history by item — was **not**
+built because it largely exists: `change_history` is already served per item at
+`/map/item/{id}/history` and rendered as "Recent changes" in the map drawer,
+which the history row's `?item=` link now opens in one click.
+
+**The account chip's unread count says where it points** (2026-08-03,
+owner asked twice what the number referred to). The bulb on the avatar reports
+`unread_message_count()` — it always did, and it was always right — but a
+number on an avatar names no destination. The same count now also renders on
+the **Messages** row inside the menu, from a single `{% set %}` so the two can
+never disagree: the bulb says something is waiting, the row says where.
+
+**The moderation tab strip no longer grows a phantom vertical scrollbar.**
+`.dtabs` sets `overflow-x:auto` for the horizontal tab list, which makes the
+other axis compute to `auto` as well (CSS overflow), and `.dtabs a` carries
+`margin-bottom:-1px` to pull the active tab's border over the bar's — exactly
+one pixel of vertical overflow, which is all a scrollbar track needs. It read
+as the account menu having a scrollbar, since the open menu sits over that
+strip. `overflow-y:hidden` pins it: this strip scrolls sideways or not at all.
+
+**`hidden` must actually hide** (2026-08-03, owner-reported). An author rule
+that sets `display` beats the UA's `[hidden]{display:none}` — author styles win
+over UA styles regardless of specificity — so every element in the wizard whose
+display came from a class silently ignored the attribute. `#wzChange` is the
+one that got away with it for months: improve.js correctly keeps "Change
+location" hidden for climbs (the three-point editor is directly editable) and
+for non-confirm edits, and the CSS showed it anyway. The template had already
+accumulated three separate one-off `[hidden]` patches, each added after that
+element bit; they are replaced by a single `#wiz [hidden]{display:none}`.
+
+**No "Fix location" on a climb, and no "Where is it?" on an existing item**
+(2026-08-03, owner):
+
+- The drawer's **Fix location** action is what unlocks a *point* item's pin: a
+  point opens its edit form on a compact, view-only confirm map, and
+  `fix=location` is the thing that expands it. **Letter B has no such gate** —
+  the three-point editor is live the moment the form opens, foot, summit and
+  steepest all draggable. Both links therefore landed on an identical page, and
+  a second door into one room reads as a second room. Gated to `'B' !==
+  layer.letter`.
+- **"Where is it?" only asks a question nobody has answered yet.** An existing
+  item's location was settled when it was created, so an edit's step 1 heading
+  is *"Check the location"* over the already-written "This location is already
+  set — check it looks right, or change it." Add mode keeps the original
+  question. improve.js's confirm-help swap now writes the sentence the server
+  already rendered, making it a harmless no-op.
+
+**Placing a climb is explained before it is attempted, and it is undoable**
+(2026-08-03, owner request). A climb is not a dropped pin: three points in
+order, with the road between the first two snapped for you, and nothing on
+screen would ever suggest that a *third* tap marks the steepest ramp. Step 1
+therefore carries a four-line how-to for letter B — tap foot then summit, tap
+again for the steepest ramp (optional), drag any marker to correct it, and Undo
+takes back the last thing you did.
+
+**The steepest marker stays where it is while the route changes**
+(2026-08-03, owner-reported). It used to be re-derived from the gradient
+profile on every resolve unless the rider had placed it by hand, so dragging
+the summit a little further up the road made the steepest ramp jump elsewhere
+on the climb — the rider changed one end and watched a different marker move.
+Extending a climb does not relocate its steepest ramp; only the numbers around
+it change. The position is therefore kept and the **%** is re-read from the new
+profile at that fixed position.
+
+**Its percentage stays too.** How steep a ramp is, is a property of the ROAD —
+where the rider decided the climb starts and ends cannot change it, so any
+movement in the printed figure is a measurement artefact, not new information.
+Two artefacts produced one: the 11 display bars are equal slices of the *whole*
+climb, so a longer climb widens every bin and averages a short ramp flat; and
+the elevation profile is 100 samples spread over the route, so a longer route
+samples the same ramp more coarsely. Re-reading through either made 19% print
+as 10% (and 16% after only the first was fixed — exactly what an artefact looks
+like). The number is now re-measured **only when the marker is actually
+(re)placed**.
+
+When it *is* measured, it is measured the way the maximum is — a ~150 m
+sustained window (`profileFromRoute().sustainedAt`), never off the display
+bars. The old bar lookup also mapped position→bar by **vertex index**, which is
+not position along a climb at all: OSRM packs vertices through curves, so it
+picked the wrong bar whenever the shape changed. It survives as a fallback for
+a drag before the first profile resolves, now keyed on cumulative distance.
+
+The one case that moves the marker is the route no longer passing it: shorten
+the climb past the steepest ramp and it would otherwise float beside a road
+that is no longer part of the climb. Then — and only then — it is re-derived,
+**including a hand-placed one**, because a marker stranded off the climb is
+wrong however it got there. "Still on the climb" is nearest-route-vertex within
+**100 m** (`STEEP_ON_ROUTE_KM`); OSRM returns ~40 m vertex spacing, so a marker
+on the road sits well inside it while one left behind by a shortened route is
+hundreds of metres out.
+
+A failed or timed-out elevation fetch no longer deletes the marker either: the
+position is a fact about the climb, and only the % needs a gradient to refresh.
+
+`mountClimbEditor` keeps a snapshot stack (25 deep) and exposes `undo()` /
+`canUndo()`:
+
+- Every act snapshots first: a map click, a marker drag (on **dragstart** — by
+  dragend the marker has already moved, and a mis-drag is precisely what Undo
+  is for), and **Reset**, which is the most expensive mistake on the editor.
+- Snapshots are values, and restoring rebuilds every marker from state, so an
+  undone drag cannot strand a stale pin. Route and gradient arrays are copied
+  because the OSRM/elevation resolves mutate them in place, and an undo
+  invalidates anything in flight — a late resolve must not paint the gradient
+  of a route that no longer exists.
+- The control is revealed by `onHistory` only once there is something to take
+  back: a permanently dead button teaches nothing.
 
 ### 1.3 Segment carrier
 
@@ -362,6 +570,73 @@ body, was, now, riderReply}` — `who` is the stable pseudonym
 diff strings. Contributor identity is never exposed to curators beyond the
 pseudonym.
 
+**Queue item layout (2026-08-02, owner).** The desk is a queue worked dozens
+at a time, so the row is sized for that:
+
+- **One action row, four buttons** (`.q-acts`), sharing the card's **top
+  block** with the heading (`.q-top`): an ordinary submission is two lines
+  tall, near enough the list view that the default card costs nothing to scan,
+  and a card only grows when it carries something a curator must look at — a
+  photo, an edit diff, the rider's words, a reply. The buttons are the primary
+  **Review ↗**, then Message the rider / Escalate / Trash. The last three were
+  link-ish `<summary>` text stacked in a two-column block below the primary
+  action, which cost two horizontal rules and two extra rows for three
+  controls. They keep their order — **Escalate before Trash** (§6d of
+  [photo-uploads.md](photo-uploads.md)), so a curator reaching for "destroy
+  this" because it is illegal meets the right verb first.
+- **Both destructive verbs open with WHEN to use them and close with a ticked
+  acknowledgement** (`.q-act-when`, `.q-act-ack`). A button label cannot carry
+  the difference between "this edit is wrong" and "this content is criminal",
+  and the two mistakes are not symmetrical: Trash on a merely-wrong
+  contribution destroys it for good, and Escalate on spam spends an
+  administrator's attention. The tick is a UI speed bump — native `required`,
+  no POST until ticked — and is deliberately **not** the real gate: the
+  server's own checks are unchanged (a reason for Escalate, the typed `DELETE`
+  for Trash, both re-checked server-side).
+- **No link to the public wiki rulebook** (2026-08-03, owner). A world-readable
+  page describing how moderators decide what to destroy is a social-engineering
+  aid: it tells anyone which words get a submission trashed and which get it
+  escalated. The link is gone from all three desks (submissions queue, routes
+  queue, routes detail). The rulebook becomes a **moderators-only page reached
+  from the moderation menu**; until that page exists these panels carry no link
+  rather than a public one. The `moderate.trash.rulebook_link` string is kept
+  for it.
+- **The four triggers never leave their line.** The server renders three
+  `<details>`; a nonce script upgrades each into a real disclosure — a
+  `<button aria-expanded aria-controls>` that stays in the row, with its panel
+  moved to a `.q-panels` host below the card, one open at a time. This is an
+  *enhancement*, not the markup, because a moderator without JS must still be
+  able to message, escalate and trash; without it the native `<details>` opens
+  inline and the trigger drops to the next line (`.q-act[open]`), which is the
+  only cost of having no JS. `display:contents` on `<details>` is **not** an
+  alternative — Chrome then renders the panel while it is closed (tested
+  2026-08-03). Each panel carries an explicit hook — `.q-act--message` /
+  `.q-act--escalate` / `.q-act--trash`, copied onto the upgraded button — so
+  neither tests nor CSS depend on sibling order.
+- The long sentence that used to *be* the trigger ("This is illegal content —
+  escalate it") is now the panel's own heading, read at the moment it applies;
+  the button says **Escalate**.
+- **Header on one line**: type tag, title and age share a row, with the
+  pseudonym + coordinates beneath.
+- **The history shows trashed submissions too**, rebuilt from the content-free
+  audit log (2026-08-03). A curator who trashes something and then cannot find
+  it anywhere reasonably wonders whether it worked. The row is deleted, so the
+  entry comes from `admin_action_log` (`trash_submission`) and shows **only**
+  the reference, the type, who trashed it and when — never the title, because
+  preserving that would preserve the spam Trash exists to destroy. It is
+  unscoped (the audit carries no region, and a content-free row leaks nothing)
+  and it is hidden when an approved/rejected status filter is active, since a
+  trashed row is neither.
+- **Density switch** (`cards` ↔ `list`, remembered in `localStorage` per
+  browser, never in the URL — it is a view preference, not a filter). List
+  folds every row to a single line and hides body, diff, photos and rider
+  reply. That is safe precisely because **decisions are not made here** (§5.1):
+  everything hidden is review context the map drawer shows again. The switch
+  is revealed by script, so a JS-less curator keeps the full-context cards.
+
+The routes desk (`moderate_routes/`) still uses the older `.msg-rider` stacked
+layout; it was left alone in this pass and is the obvious next candidate.
+
 ### 5.3 Curator payload gating on `/map`
 
 `/map` stays public. `MapController::map()` emits the pending payload
@@ -409,6 +684,42 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
   escape; needs-info leaves them pending, because the rider is still being
   asked. The `/moderate` list shows the same thumbs as review context, and
   keeps routing the decision to the map.
+
+**Approving keeps the curator on the item** (2026-08-03, owner-reported). The
+decision used to close the drawer on a toast, so a curator had to reload to see
+what they had just applied — and for an edit the map went on drawing the
+pre-edit values. Now the `decide` response's `item` is used to update the map
+in place *and* reopen the drawer on the applied result:
+
+- **Pool letters** come back as a GeoJSON `feature`. `addCuratedFeature()` now
+  **replaces** a feature whose id is already present instead of returning early
+  — the early return was why an approved edit never refreshed.
+- **B · climbs** come back as the `climb` object map.js consumes, rebuilt
+  through the same mapper the bulk payload uses (`climbFromRow`), so the
+  live-updated climb cannot drift from the served one. Climbs were previously
+  excluded from `featureForItem()` along with A and K.
+- **A · segments and K · routes** still send nothing and keep the old
+  close-and-toast: a segment's geometry and the route domain are not worth
+  half-supporting on this path.
+
+**A pending card must name the change and show what it changes** (2026-08-03,
+owner-reported). Two defects, one cause:
+
+- The proposed-change block was gated on `was && now`, and the queue card's
+  diff on `was` alone. A field with **no previous value** therefore rendered no
+  change anywhere — and that is the entire "+ add a missing field" funnel, the
+  commonest contribution there is. A curator got a card naming an item and
+  never naming the change they were being asked to approve. Both are now gated
+  on `now`; the struck-out line appears only when there is something to strike
+  out.
+- Even with the change shown, `shade: Exposed` means nothing on its own. An
+  edit's card now carries **the target item's own rows** ("This item today"),
+  read from the catalogue the map has already loaded and rendered with the
+  drawer's own row renderer (`recRowsHtml`, extracted for exactly this — a
+  second renderer is how an escaping rule gets forgotten in one of them).
+  Edits only: a `new` submission has no prior item, and its values *are* the
+  proposed change. Resolved at drawer-open time, not when `CC_PENDING` is
+  built — that runs before catalog-load has populated the layers.
 
 ### 5.5 Map layer vs queue visibility
 
@@ -509,6 +820,22 @@ everyone, freezes it against every deletion path and alerts an administrator.
   (`wiki/moderator-rulebook.md`, published on the wiki, linked from every
   Trash panel) — the rulebook is the operating summary, this spec is the
   binding contract, and on any disagreement this spec wins.
+
+**Trash takes an unapproved new item with it** (2026-08-03, owner-reported).
+Intake creates the `Item` immediately for a `new` submission, in state
+`submitted`, so the pending pin reaches the curator's map before anyone has
+decided anything. Trash removed only the submission row, stranding that item
+for good: state `submitted`, `source_ref` = `sub:<id>` pointing at a submission
+that no longer exists, and nothing anywhere to sweep it (`RetentionService`
+does not touch items). Invisible rather than harmful — `ItemState::SERVED` is
+`unverified`+`verified`, so a `submitted` row is never served publicly — but it
+is exactly the content Trash promises to destroy, still in the database.
+`ModerationService::removeUnapprovedNewItem()` now deletes it in the same
+transaction, **only while the item is still `submitted`**: once approved it is a
+real catalogue entry that riders may have confirmed, photographed or edited, and
+trashing the submission it arrived on must never take that with it. An `edit`
+submission is untouched by any of this — an edit applies on approve, so a
+pending edit has changed nothing and trashing it can only discard the proposal.
 
 ## 7. Messages — the moderation feedback system (M1–M12)
 
