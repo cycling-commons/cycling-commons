@@ -327,6 +327,20 @@ export function initCommunity(){
       const box=btn.closest('.cc-rc'); if(!box) return;
       rcPost(box, btn.dataset.rcAct);
     });
+    /* The moderation decision buttons, for exactly the same reason — and this
+       is the one place where getting it wrong is expensive. They used to be
+       bound per element in drawer.js right after the card was written; any
+       later re-render of the drawer body replaced those nodes and the listener
+       went with them. The card came back looking identical, with an Approve
+       button that did nothing at all: no request, no toast, no error, nothing
+       to tell a curator their click had not registered. It presented as
+       intermittent, because whether it worked depended on whether a re-render
+       happened to land between opening the drawer and pressing the button. */
+    document.addEventListener('click', e=>{
+      const btn=e.target.closest('.cc-mod-btn'); if(!btn) return;
+      if(btn.disabled) return;         // a decision is already in flight
+      submitModeration(btn);
+    });
     // Clear the "must pick a bike type" warning as soon as the rider chooses one.
     document.addEventListener('change', e=>{ const s=e.target.closest('.cc-rc-invalid'); if(s) s.classList.remove('cc-rc-invalid'); });
     // Same for the "needs info needs a question" mark — as soon as one is typed.

@@ -798,249 +798,36 @@ approved is not confirmed, and only a rider's confirmation flips that. Letters
 whose payload is not a feature collection (A segments, K routes) send
 no item and keep the reload behaviour.
 
-> **⚠ NOT WORKING IN THE BROWSER — found 2026-08-03, unfixed.**
->
-> The 2026-08-03 handoff listed the drawer refresh as "built but never watched
-> work". Watched, it does not. Reproduced five times against the dev stack, as
-> both payload arms (a letter-B climb and a pool letter):
->
-> - clicking **Approve** in the drawer disables the three `.cc-mod-btn`s and
->   then *nothing else happens in the browser*. The drawer stays open on the
->   stale "⏳ Pending review" card for as long as you watch (8 s polled), no
->   toast appears, and the buttons are never re-enabled;
-> - the decision nevertheless reaches the server every time — submissions 17-21
->   in the dev DB were approved by these clicks, the item was updated, the
->   rider was messaged;
-> - so the curator sees no confirmation of an action that *did* happen, which
->   is the exact failure the feature was built to remove.
->
-> `submitModeration()` disables the buttons, then calls `moderationToken()`,
-> then attaches `.then()` (which begins `hidePendingPin(); closeDrawer();`) and
-> `.catch()` (which re-enables the buttons and toasts). Buttons left disabled
-> with neither branch's effects visible means execution stopped *between* the
-> disable and the promise settling.
->
-> Ruled out while narrowing it: stale assets (the served
-> `community-*.js` contains the reopen code), a duplicated drawer or `.cc-mod`
-> box (exactly one of each), page errors (none), a missing token.
->
-> **The lead worth starting from:** `window.CC_MOD_TOKEN` is the literal string
-> `'csrf-token'` — Symfony's *stateless* CSRF placeholder, not a token.
-> `map/index.html.twig` sets it from `csrf_token('submit')`, and `submit` is in
-> `stateless_token_ids` (`config/packages/csrf.yaml`), so Twig hands back the
-> placeholder that page JS is supposed to swap from the `csrf-token` cookie on
-> **form submit** — a swap that never happens for a value read out of a
-> `<script>` into a `fetch`. No `csrf-token` cookie is readable from
-> `document.cookie` either.
->
-> Not fixed here: it is the CSRF plumbing of the moderation decision path, the
-> mechanism is a lead rather than a proven chain (the POST is invisible to both
-> an in-page `fetch` hook and Playwright's own network events, which is still
-> unexplained), and it wants an owner's eye rather than a speculative patch.
-> Probes: `.playwright-mcp/probe-item3{,b,c,d,e}.js`.
->
-> **The Answered tag could not be reached because of it.** The tag itself is a
-> two-line template gate on `item.riderReply`, but its precondition — a
-> submission in `needs_info` whose rider has answered — is created by the same
-> stalled path. `needs_info` landed once in five attempts (submission 9), and
-> that row belongs to a different rider, so no inbox on hand could answer it.
-> The tag is still unverified, and will stay unverified until the above is
-> fixed.
+**The decision buttons are delegated, not bound per element (2026-08-03).**
+This is the part that actually broke, and it is worth stating plainly because
+the failure was invisible.
 
-**One exception, and it is what makes the desk's link work:** an explicit
-`/map?pending=<id>` serves that submission whatever its queue status
-(`SubmissionQueue::pendingForMap($scope, $focusId)`), still inside the
-curator's areas. The desk lists needs-info rows with a "review on the map"
-link, so applying the layer rule to the deep link too left that link landing
-on a map with no such pin — and the place underneath opened its ordinary
-drawer, so the submission looked lost. Such a card is badged **waiting on the
-rider** and carries the question that was asked plus the rider's answer, so it
-is never mistaken for one nobody has looked at yet.
+`drawer.js` used to bind a click listener to each `.cc-mod-btn` immediately
+after writing the card. The drawer body is re-rendered often — the async
+"Recent changes" fetch alone rewrites it after open — and a per-element
+listener does not survive that: the buttons come back looking identical and do
+**nothing at all**. No request, no toast, no error, nothing to tell a curator
+their click had not registered. It presented as intermittent, because whether
+it worked depended on whether a re-render happened to land between opening the
+drawer and pressing the button.
 
-### 5.6 User-keyed rows and account deletion
+`community.js` already delegated every other community button off `document`
+for exactly this reason, and says so in a comment: *"drawer is re-rendered
+often"*. The moderation buttons now do the same. `submitModeration()` itself
+was never at fault, and neither was the endpoint: it answers a real approve in
+~150 ms with the full `item.climb` payload.
 
-`submission.user_id` (like `route_vote`/`route_ride`/`route_suggestion`
-user ids) is a plain no-FK bigint by house convention: contributed data
-survives account deletion as anonymous rows, by decoupling rather than
-cascade. The single documented exception is `user_message` (§7.6).
+Verified after the change: approve → the pending pin goes, the drawer closes
+and reopens on the applied result, the toast names the reference, and the
+drawer's own attribute row shows the newly approved value.
 
-## 6. Trash — immediate hard delete for spam
-
-**Not for illegal content.** Trash destroys the evidence along with the
-material, and for some material the law expects that evidence to survive until
-it has been reported — so suspected illegal content goes to **Escalate**
-instead ([photo-uploads.md §6d](photo-uploads.md)), which hides it from
-everyone, freezes it against every deletion path and alerts an administrator.
-`trashSubmission()` refuses a submission under that hold outright.
-
-`ModerationService::trashSubmission()` (POST `/moderate/trash`, CSRF token id
-`moderate-trash`):
-
-- Permanent hard delete, **any status is legal** for item submissions (route
-  proposals carry their own submitted/rejected-only guardrail —
-  [route-domain.md](route-domain.md)).
-- **Audit-before-delete, content-free**: an `AdminActionLogger` row with the
-  `TrashActions` constant + `SUB-<id> · type=<x>` only — unvetted rider text
-  (titles, bodies) never enters the immutable log.
-- **No message is sent** to the submitter — trashing never feeds spam.
-- No retention window; Trash exists precisely because policy-violating content
-  must not be kept 3 months (also the "policy violation" edge in
-  osm-data-architecture.md §6).
-- **Typed confirmation, both desks.** Trash is irreversible, so the desk
-  requires the moderator to literally type `DELETE` (native
-  `pattern="DELETE" required` input; the item and route trash endpoints
-  both re-check server-side and refuse with
-  `moderate.trash.confirm_required` otherwise). **A cancelled or
-  unconfirmed Trash writes nothing** — no audit row exists for a Trash
-  that didn't happen.
-- **Keep the record, never the content** is the moderator-facing summary of
-  this section; it lives in the **Moderator rulebook**, which since 2026-08-03
-  is a **moderators-only page at `/moderate/rulebook`**, reached from the
-  moderation menu. The wiki page it used to be (`wiki/moderator-rulebook.md`)
-  is deleted, and the Trash panels no longer link it: a world-readable document
-  describing how moderators decide what to destroy tells anyone which words get
-  a submission trashed and which get it escalated. The rulebook is the
-  operating summary, this spec is the binding contract, and on any disagreement
-  this spec wins.
-
-### 6e. The rulebook is English-only, deliberately
-
-Its rules are written inline in `templates/moderate/rulebook.html.twig` rather
-than through translation keys, and that is a decision, not an oversight
-(2026-08-03).
-
-It is one operational document full of tables and conditional phrasing where a
-mistranslated clause changes what a curator does to somebody's photo — and the
-clauses that matter most are exactly the ones hardest to translate safely
-("suspected illegal content", "keep the record, never the content"). Key-by-key
-translation is the wrong unit for it: whoever translates it has to read the
-whole document, and should be somebody who moderates.
-
-The page's **chrome** is translated like every other page, and `en` is the
-fallback, so an nl/fr/de curator sees English prose rather than broken keys.
-`tools/check-translations.sh` is unaffected — there are no keys to be missing.
-
-Revisit when there is a moderator who works in one of the other three languages
-and can own the translation end to end.
-
-**Trash takes an unapproved new item with it** (2026-08-03, owner-reported).
-Intake creates the `Item` immediately for a `new` submission, in state
-`submitted`, so the pending pin reaches the curator's map before anyone has
-decided anything. Trash removed only the submission row, stranding that item
-for good: state `submitted`, `source_ref` = `sub:<id>` pointing at a submission
-that no longer exists, and nothing anywhere to sweep it (`RetentionService`
-does not touch items). Invisible rather than harmful — `ItemState::SERVED` is
-`unverified`+`verified`, so a `submitted` row is never served publicly — but it
-is exactly the content Trash promises to destroy, still in the database.
-`ModerationService::removeUnapprovedNewItem()` now deletes it in the same
-transaction, **only while the item is still `submitted`**: once approved it is a
-real catalogue entry that riders may have confirmed, photographed or edited, and
-trashing the submission it arrived on must never take that with it. An `edit`
-submission is untouched by any of this — an edit applies on approve, so a
-pending edit has changed nothing and trashing it can only discard the proposal.
-
-## 7. Messages — the moderation feedback system (M1–M12)
-
-### 7.0 What the M-codes mean
-
-`M1`–`M12` are the twelve decisions that define this system. Code comments
-and the section headings below cite them by number, so this table is what
-those citations resolve to. Not all of them live in §7: Trash (M9) and
-retention (M8) have their own sections. Everything here is built except
-M7 (email) and M8's phase-2 scheduled runner, which are specified and
-pending, and M12, which is deliberately out of scope — see §7.8.
-
-| Code | Decision | Where |
-|---|---|---|
-| M1 | One `UserMessage` entity carries all moderation feedback. It is the recipient's inbox copy, **not** the institutional audit trail — that stays on `Submission.decisionNote`/`decidedBy`/`decidedAt` and `route_change_history`, which survive account deletion. | §7.1 |
-| M2 | Every decision on every channel writes a message inside the decision's own transaction, so the pair is atomic and duplicate-proof. | §7.2 |
-| M3 | Riders read their messages on a Messages page, reachable from the account shell's tab row. Shipped as its own route (`/messages`, mark-all-read on view), not as a `?tab=` panel inside `/profile` as originally designed. | §7.3, [account-and-auth.md](account-and-auth.md) §8 |
-| M4 | Unread bulb on the shared account chip, server-rendered once per page load. No polling. | §7.5 |
-| M5 | The map page carries the account chip too, so the bulb reaches the biggest logged-in surface. | §7.5 |
-| M6 | Curator → rider messaging, and the rider's reply to a needs-info request, which flips the submission back to `pending`. Both directions stay pseudonymous. | §7.3, §7.4 |
-| M6a | The curator → rider direction specifically (`curator_message`). | §7.4 |
-| M7 | Email as a later delivery channel on top of messages. **Specified, pending implementation.** | §7.8 |
-| M8 | Retention: dismissed/rejected contributions are kept `moderation.retention_months` (3), then collected. Phase 1 is lazy filtering plus an opportunistic sweep; the scheduled runner is phase 2. | §8, §7.8 |
-| M9 | Trash: immediate permanent hard delete for spam or abuse. No retention, no message sent, and a content-free audit row written before the delete. | §6 |
-| M10 | `user_message.user_id` carries a real `ON DELETE CASCADE` FK — the schema's only user FK, and a documented exception to "contributed data is anonymised, never cascade-deleted". Messages are correspondence *to* a person, not contributed content. | §7.6, §5.6 |
-| M11 | Message and note bodies have an explicit length cap (`MessageService::BODY_TEXT_MAX_LENGTH`, 2000) and are HTML-escaped on every render. | §7.2, §7.4 |
-| M12 | Account lock/ban is **not** part of this system. Trash handles the content; the account is the admin desk's job. | §7.8 |
-
-### 7.1 `UserMessage` (entity `App\Messaging\Entity\UserMessage`) — M1
-
-Columns: `user_id` (recipient), `kind` (enum `UserMessageKind`), `sender`
-(`system` \| `curator` \| `rider`), `sender_id` (NULL for system), `channel`
-(`submission` \| `route` \| `correction`), `ref_id`, `ref_label` (the human
-receipt, e.g. `SUB-42` or a route name), `body_key` + `body_params`
-(translation key + params for system messages), `body_text` (curator note /
-free-form body, verbatim), `created_at`, `read_at`. Index on
-`(user_id, read_at)` backs the unread count.
-
-**Inbox, not audit:** the message is the recipient's cascade-away inbox copy.
-The institutional record of who decided what and why stays where it survives
-account deletion: the submission row's decision columns (§3.1) and
-`route_change_history`. Neither direction ever exposes a display name —
-`sender` is a role string, `sender_id` an id for audit only; riders appear as
-`rider#hash`.
-
-Kinds: `submission_approved` / `submission_rejected` / `submission_needs_info`
-/ `route_approved` / `route_rejected` / `route_retired` / `correction_done` /
-`correction_dismissed` / `curator_message` / `rider_reply`.
-
-### 7.2 Every decision writes a message, in-transaction — M2
-
-`MessageService::sendSystem()` **persists without flushing** and is called
-from inside the decision's `wrapInTransaction` closure, so the message commits
-atomically with the status flip; the already-decided guards make the pair
-duplicate-proof (at most one message per outcome). If the recipient's account
-is already gone (`users` existence check), `sendSystem` returns `null` rather
-than violating the FK — the decision itself is never lost.
-
-System bodies render via translation keys (`messages.body.<kind>`) in the
-*viewer's* locale; the curator's note, when present, rides along in
-`body_text` and renders verbatim (escaped). Body cap:
-`MessageService::BODY_TEXT_MAX_LENGTH` (`web/src/Messaging/MessageService.php`),
-currently **2000** characters — shared by notes, curator messages and replies
-(M11).
-
-### 7.3 Needs-info reply loop — M6
-
-- The Messages page (`/messages`, mark-all-read on view) renders a reply form
-  on `submission_needs_info` messages whose submission is still in
-  `needs_info` status and still has a live deciding curator.
-- `POST /messages/{id}/reply` (CSRF `message-reply`, recipient-ownership
-  checked): writes a `rider_reply` message **to the deciding curator**
-  (`decided_by`) and flips the submission `NeedsInfo → Pending` in the same
-  transaction, re-entering the queue. Stale cases (already re-decided, curator
-  account gone) flash `messages.reply_too_late` instead.
-- The latest rider reply surfaces on the queue row for every curator
-  (`SubmissionQueue` joins the newest `sender='rider'` message per
-  submission).
-- **A question and its answer are one card.** The messages page folds the
-  reader's own reply into the card holding the question it answers
-  (`MessagesController::answersToQuestions()`, paired by submission and
-  order so a second ask-and-answer round stays straight). Listed separately
-  the answer sorted *above* its own question, reading as two unrelated
-  events. The card links its subject back to `/profile#sub-<id>`, drops the
-  "a curator needs more information about X … you can reply below" lead once
-  the question itself is present, and shows the reply form only while the
-  question is unanswered and the submission is still `needs_info`. A curator
-  reading the same page still sees a rider's reply as its own row — to them
-  it is incoming mail, not their half of an exchange.
-- **Both ends of the conversation are visible to the rider, from both of
-  their pages.** A reply is addressed to the deciding curator, so it lives
-  under the *curator's* `user_id`; `MessageService::listFor()` therefore
-  matches `user_id = :id OR sender_id = :id`, and the messages page is a
-  thread rather than an inbox — sent rows are marked `msg-mine`, carry no
-  reply form, and are never counted unread (unread and mark-read stay
-  recipient-only). Each row carries `id="msg-<id>"` as an anchor.
-- The rider's **contributions list** (`/profile`) shows the same exchange the
-  curator's desk shows: the curator's question, the rider's own last reply,
-  and — while the status is `needs_info` — an "answer the curator" link
-  straight to `#msg-<id>` on the messages page. `ProfileController::threadsFor()`
-  is the one query behind it. Without this the rider saw only a status chip:
-  no question, no sign their answer had been delivered, and no route to the
-  reply form.
+**A note for whoever tests this next.** Playwright's `page.click()` dispatches
+no events at all against this drawer in the dev browser (SwiftShader, no GPU) —
+a document-level capture listener sees nothing, while `element.click()` works
+normally. Any probe that concludes "the button does nothing" from `page.click()`
+alone is measuring the harness. That mistake cost a full diagnosis here, and
+produced a confident, wrong root-cause write-up (a CSRF-token theory) that this
+paragraph replaces.
 
 ### 7.3a A rider can see WHAT they contributed (2026-08-03, owner)
 

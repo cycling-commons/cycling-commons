@@ -28,7 +28,7 @@ import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
 import { CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
-         hydrateItemConfirm, submitModeration } from './community.js';
+         hydrateItemConfirm } from './community.js';
 import { clearCorrections } from './corrections.js';
 
 // Injected by initDrawer() until their owning modules exist (see the header).
@@ -636,9 +636,12 @@ export function renderDrawerBody(layer, f){
     a.addEventListener('mouseenter', ()=>{ const c=CITIES[a.dataset.city]; if(c) highlightAt(c.ll); });
     a.addEventListener('mouseleave', clearHighlight);
   });
-  document.querySelectorAll('#drawerBody .cc-mod-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>submitModeration(btn));
-  });
+  /* The moderation buttons are NOT bound here. They are delegated in
+     initCommunity(), like every other community button, because this body is
+     re-rendered often and a per-element listener does not survive that: the
+     card comes back looking identical with buttons that do nothing, and a
+     curator clicks Approve to no effect whatsoever (found 2026-08-03 — see
+     moderation-and-contribution.md §7.3b). */
   // The submitted photos open in the same lightbox the public gallery uses,
   // at `lg` — a curator cannot judge a 120px crop (see the card markup).
   const modPhotos = (f.pending && Array.isArray(f.pending.photos)) ? f.pending.photos : [];
