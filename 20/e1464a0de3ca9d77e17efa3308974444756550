@@ -1,0 +1,42 @@
+web/tests/Contribution/ImproveBindingTest.php
+  s_ba6cf53b5a7360::t_3dea2d6d2b97db 207-290
+  s_ba6cf53b5a7360::t_a800451098f3b2 14
+  s_ba6cf53b5a7360::t_2eccfe71de836a 206
+web/assets/contribute/climb-editor.js
+  s_ba6cf53b5a7360::t_2d65d99743488d 93-112
+web/src/Controller/ContributeController.php
+  s_ba6cf53b5a7360::t_81389f2643de4a 339-353,355-362
+  s_ba6cf53b5a7360::t_9e613e7b475ea2 13
+  s_ba6cf53b5a7360::t_36b5d99d3ff62e 354
+  s_ba6cf53b5a7360::t_d54e777a96ba75 46-50
+web/src/Contribution/CatalogContributionService.php
+  s_ba6cf53b5a7360::t_30bb67427083ca 336-349,354-369
+  s_ba6cf53b5a7360::t_e3425d75418439 407-419
+  s_ba6cf53b5a7360::t_a554e79cd8b515 397-406
+  s_ba6cf53b5a7360::t_4bc585af3436f9 380-396,420-421
+  s_ba6cf53b5a7360::t_7b9477e4416ac1 350-353
+  s_ba6cf53b5a7360::t_cc888a9a325c8d 379
+docs/specs/moderation-and-contribution.md
+  s_ba6cf53b5a7360::t_d4444354e101c9 932-964
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "20e1464a0de3ca9d77e17efa3308974444756550",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
