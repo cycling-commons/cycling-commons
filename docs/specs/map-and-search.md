@@ -303,11 +303,34 @@ four returned once the reason they looked broken was fixed:
   one-file edit rather than a way to empty a layer.
 - The accessibility filter applies to the stays dot layer (`setFilter`), the
   clustered confirmed pins, and the legend counts alike.
-- **Discipline chips (`#disc`)**: re-based onto the 7 `RidingStyle` enum values
-  (the enum is the chip contract — see
-  [account-and-auth.md](account-and-auth.md)); preselected from the rider's
-  saved styles; **visual-only** until the dataset carries style tags, honestly
-  labelled as such in the template.
+- **Discipline chips (`#disc`): RETIRED (2026-08-03).** They were re-based onto
+  the 7 `RidingStyle` values and preselected from the rider's saved styles, but
+  they never filtered anything, because no server path tags an item with a
+  riding style — the same shape as Freshness above, and given the same answer
+  one day later. Being honestly labelled in the template was not enough: a
+  control that toggles is a control that promises, and the promise was empty.
+
+  Nothing that worked was lost. `RidingStyle` remains the vocabulary a rider
+  saves in their profile and remains the contract these chips get rebuilt on —
+  when the DATA carries style tags, not before. Removing the group was the
+  one-file edit `chipSet(id) === null` was designed to make safe; the template,
+  the `#disc` CSS, the `PREFS.styles` preselect in `panels.js` and the seven
+  `map.disc_*` catalogue keys went with it.
+
+- **The same call, the same day, on `/add-climb`'s "Targeted audience" chips.**
+  They were worse than the map's: not only did they filter nothing, *nothing
+  submitted them* — `AddClimbType` has no audience field and
+  `CatalogContributionService::CLIMB_FIELDS` maps no such key — while the
+  wizard's review step listed the ticked ones back as though a curator would
+  receive them. Their labels were also the last untranslated strings on that
+  page. The gradient guidance they used to drive stays, as one static line: it
+  is advice for whoever is describing a climb, and it already names the handbike
+  ceiling the conditional version spelled out.
+
+  Bringing either set back means giving items a real audience attribute in
+  `CatalogFormRegistry`, which is a vocabulary decision — the add-climb chips
+  mixed riding STYLES with bike TYPES, and the codebase keeps those apart
+  (`RidingStyle` vs `BikeType`). That is the owner's to make.
 
 ### 4.4 Preference prefilter
 

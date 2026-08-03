@@ -746,8 +746,65 @@ validated where it is defined; an empty or malformed list cannot be saved.
 | embedded rights block | `orig` + `lg` only (~1.1 KB XMP); never `sm` |
 | embedded author name | never — attribution is a UUID link (§1.3c) |
 | min input | 200 px shortest side |
+| **max input pixels** | **50 MP, refused on the header** (see below) |
 | per submission | 6 photos |
 | rate limit | 30 uploads/day/user |
+
+### 7a. The decoder's own limits (2026-08-03)
+
+The 15 MB cap bounds the FILE. It does not bound what the file decodes to, and
+that is the gap: a few hundred kilobytes of entirely valid PNG — one long run
+of identical pixels — expands to gigabytes of pixel buffer and takes the worker
+with it. Every dimension check in `PhotoProcessor` used to run *after*
+`readImageBlob()` had already paid that cost.
+
+Two layers now, because either alone is a single point of failure:
+
+1. **`PhotoProcessor` reads the header first.** `pingImageBlob()` parses enough
+   to answer "how big does this claim to be" without allocating the canvas.
+   Over `MAX_PIXELS` (50 MP) the upload is refused with its own reason,
+   `photo_too_many_pixels` — not `photo_too_large`, which would tell somebody
+   with a 300 KB file that it is over 15 MB. It also sets
+   `Imagick::setResourceLimit()` for **width and height only** before any
+   decode, so a lying or exotic header fails inside the decoder rather than
+   after it.
+
+   **Only the stateless limits belong in PHP, and that is the lesson.** The
+   first version set the pixel-cache budgets there too (memory / map / disk)
+   plus time and threads. Those are consumed *cumulatively by the process*, not
+   per image: the test suite went red partway through with "unable to create
+   new image", having used its allowance up — and a PHP-FPM worker has exactly
+   that same long life, so in production it would have been every upload
+   failing after some hours, with no obvious cause. The budgets live in
+   policy.xml instead, where ImageMagick applies them per operation.
+2. **The image ships its own `policy.xml`** (`web/docker/imagemagick-policy.xml`,
+   copied to `/etc/ImageMagick-7/policy.xml`). Debian's stock policy carries
+   resource limits and denies the URL/HTTP coders, but leaves every other coder
+   readable and every delegate executable. Ours is deny-all-then-allow over the
+   same five formats the application accepts, denies delegates and the
+   `MSL/MVG/PS/EPS/PDF/SVG/URL/XPS/EPHEMERAL/...` module families (the
+   ImageTragick surface), and refuses indirect `@file` reads.
+
+**Two things learned doing this, both worth keeping:**
+
+- **ImageMagick parses `policy.xml` with its own XML parser, and a backtick
+  anywhere in the file — including inside a comment — silently swallows every
+  rule after it.** Measured against ImageMagick 7.1.1: the first draft used
+  backticks for code spans in two comments and the entire coder allowlist below
+  them was ignored, with GIF still decoding, no error and no log line. The file
+  says NO BACKTICKS at the top for that reason.
+- **So the build asserts the policy rather than trusting it.** `web/Dockerfile`
+  decodes a GIF (denied) and a PNG (allowed) after the COPY and fails the build
+  unless it gets exactly one refusal and one success. Verified in both
+  directions: the build passes on the real policy and fails on a
+  known-fail-open one. A policy that silently does nothing is worse than no
+  policy, because you stop looking.
+
+One consequence worth stating: under the shipped policy the application's own
+format allowlist becomes unreachable for a real file — anything it would reject
+the coder policy already refused. `PhotoProcessorTest` says so rather than
+pretending otherwise, accepting either `photo_format` (no policy: a developer's
+host) or `photo_unreadable` (policy in force: the app image, production).
 
 ## 8. Testing
 

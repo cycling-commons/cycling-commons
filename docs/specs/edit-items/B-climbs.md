@@ -81,9 +81,9 @@ Next is disabled until each step's minimum is met:
 
 | # | Step | Contents | Gate to advance |
 |---|---|---|---|
-| 1 | **Where** | map hosting the shared three-point editor (foot → summit → auto-routed track + steepest); keyless Photon place search with map-tap fallback; Reset | foot + summit placed, no routing/elevation request in flight |
+| 1 | **Where** | map hosting the shared three-point editor (foot → summit → auto-routed track + steepest); the four-line how-to; keyless Photon place search with map-tap fallback; Undo + Reset | foot + summit placed, no routing/elevation request in flight |
 | 2 | **Profile** | name, length (auto-filled from the routed track, editable — a user-typed value always wins over re-autofill), elevation gain, avg gradient (read-only, = gain ÷ length, live), max gradient, surface, road quality (`sq`), traffic (`tr`) | name + elevation gain > 0 |
-| 3 | **Details** | discipline chips (incl. Handbike, with a gradient-ceiling audience hint), rider note, "Already in OSM?" toggle | none (all optional) |
+| 3 | **Details** | gradient guidance (a static line naming the ceilings per discipline, handbikes included), rider note, "Already in OSM?" toggle | none (all optional) |
 | 4 | **Review** | echoes exactly the entered values ([README.md](README.md) P3) with the provenance line (curator queue; ODbL data / CC BY-SA media) | submit blocked while routing/profiling is pending |
 | 5 | **Submitted** | real POST → submission receipt; "you are here" highlight on the journey diagram | — |
 
@@ -99,6 +99,40 @@ above).
 
 Submissions consume the shared per-user `contribution_submit` rate limiter
 (`web/config/packages/rate_limiter.yaml`, currently 20/hour sliding window).
+
+### The wizard caught up with `/improve` (2026-08-03)
+
+Both flows mount the same three-point editor, but only `/improve` had been given
+that editor's supporting treatment. `/add-climb` now has all of it:
+
+- **Its JS is translated.** 23 hardcoded English strings — the readouts, the
+  search notes, the review-card labels, the nav — moved into a
+  `window.CC_ADD_CLIMB_I18N` bag, serialised with all four `JSON_HEX_*` flags
+  and read through a `t()` that resolves a missing key to empty rather than to
+  its own name. Same rules as `improve.js`
+  ([docs/plans/2026-08-01-improve-js-i18n.md](../../plans/2026-08-01-improve-js-i18n.md)):
+  **strings crossing into JS are text; markup stays in Twig.**
+- **Nothing with a value in it is built with `innerHTML` any more.** The review
+  card and the Photon results list — where rider-entered text and catalogue
+  strings meet in one node, and a curator reads it back — are built with
+  `createElement` + `textContent` through `assets/contribute/review-card.js`,
+  the module `improve.js` already uses. `escHtml()` is gone from the file, so
+  there is no longer a call anyone can forget. The search rows also carry their
+  coordinates in a closure instead of `data-` attributes, which removes the last
+  string-into-attribute path there.
+- **The four-line how-to** (tap foot → summit, tap again for the steepest ramp,
+  drag to correct, Undo takes back the last thing) now appears above the map,
+  not only on `/improve`. The third tap is undiscoverable without it.
+- **Undo is wired.** `mountClimbEditor` always exposed `undo()`/`canUndo()` and
+  an `onHistory` callback; add-climb simply never used them. The control is
+  revealed only once there is history to take back.
+
+**Where that copy lives.** The how-to lines and the Undo label describe the
+*shared editor*, not either wizard, so they moved from `improve.step1.*` into
+`js.*` beside the editor's marker labels (`js.climb_how_1..4`, `js.climb_undo`).
+Two wizards mounting one control must not be able to explain it two different
+ways. Wizard-specific copy (readouts, search notes, review labels) stays under
+each wizard's own keys.
 
 ## Read view (drawer "current details")
 - Length

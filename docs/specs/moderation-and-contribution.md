@@ -634,8 +634,37 @@ at a time, so the row is sized for that:
   everything hidden is review context the map drawer shows again. The switch
   is revealed by script, so a JS-less curator keeps the full-context cards.
 
-The routes desk (`moderate_routes/`) still uses the older `.msg-rider` stacked
-layout; it was left alone in this pass and is the obvious next candidate.
+**The routes desk joined the shared card (2026-08-03).** It was the last desk on
+the older `.msg-rider` stacked layout. A curator moves between `/moderate`,
+`/moderate/routes` and `/moderate/takedowns` in one sitting, so the card must
+not change shape under them — and one desk learning something the others do not
+is exactly how the routes desk ended up months behind.
+
+- **The card system is now a partial, not a copy.** `moderate/_card_styles.html.twig`
+  holds the `.q-*` CSS and `moderate/_card_script.html.twig` the two progressive
+  enhancements; every desk includes both. It began as the submissions queue's
+  own `<style>` block, which is why it never reached the others.
+- **The disclosure script is driven off `.q-acts`, not off the card.** A desk
+  may put an action row somewhere that is not a queue row — a route proposal's
+  DETAIL page has exactly one, belonging to the page — so the script finds every
+  action row and hangs its panel host after it. The panel id falls back to the
+  row's index when no `[data-item-id]` ancestor exists.
+- **The density switch folds every `.q-list` on the page.** The routes desk has
+  two sections (proposals and corrections) and a curator switching density means
+  the desk, not one section of it.
+- **Route corrections are one partial now** (`moderate_routes/_correction_item.html.twig`),
+  shared by the overview and a route's own page. They had drifted into two
+  different cards for the same thing: the overview carried Message + Trash, the
+  detail page carried Trash alone — and only one of them told a curator *when*
+  Trash is the right verb, or asked for the typed `DELETE`. The weaker of the
+  two was guarding the destructive verb.
+- **Trash on the routes desk now carries the WHEN copy and the ticked
+  acknowledgement**, like the submissions desk. **Escalate is deliberately
+  absent**: a route proposal is a GPX and a note, and the escalation path exists
+  for uploaded imagery ([photo-uploads.md](photo-uploads.md) §6d).
+- `tests/Messaging/CuratorMessageTest` reads its CSRF token from
+  `.q-act--message` instead of `.msg-rider`. Per-panel hooks, not sibling order,
+  so a desk gaining another action does not move it.
 
 ### 5.3 Curator payload gating on `/map`
 
@@ -766,8 +795,57 @@ idempotent by item id). Before this the pending pin simply vanished on approve
 and the place appeared nowhere until the curator reloaded — the map's pools are
 built once, at boot. It joins as a **community** pin (dashed, `v` absent):
 approved is not confirmed, and only a rider's confirmation flips that. Letters
-whose payload is not a feature collection (A segments, B climbs, K routes) send
+whose payload is not a feature collection (A segments, K routes) send
 no item and keep the reload behaviour.
+
+> **⚠ NOT WORKING IN THE BROWSER — found 2026-08-03, unfixed.**
+>
+> The 2026-08-03 handoff listed the drawer refresh as "built but never watched
+> work". Watched, it does not. Reproduced five times against the dev stack, as
+> both payload arms (a letter-B climb and a pool letter):
+>
+> - clicking **Approve** in the drawer disables the three `.cc-mod-btn`s and
+>   then *nothing else happens in the browser*. The drawer stays open on the
+>   stale "⏳ Pending review" card for as long as you watch (8 s polled), no
+>   toast appears, and the buttons are never re-enabled;
+> - the decision nevertheless reaches the server every time — submissions 17-21
+>   in the dev DB were approved by these clicks, the item was updated, the
+>   rider was messaged;
+> - so the curator sees no confirmation of an action that *did* happen, which
+>   is the exact failure the feature was built to remove.
+>
+> `submitModeration()` disables the buttons, then calls `moderationToken()`,
+> then attaches `.then()` (which begins `hidePendingPin(); closeDrawer();`) and
+> `.catch()` (which re-enables the buttons and toasts). Buttons left disabled
+> with neither branch's effects visible means execution stopped *between* the
+> disable and the promise settling.
+>
+> Ruled out while narrowing it: stale assets (the served
+> `community-*.js` contains the reopen code), a duplicated drawer or `.cc-mod`
+> box (exactly one of each), page errors (none), a missing token.
+>
+> **The lead worth starting from:** `window.CC_MOD_TOKEN` is the literal string
+> `'csrf-token'` — Symfony's *stateless* CSRF placeholder, not a token.
+> `map/index.html.twig` sets it from `csrf_token('submit')`, and `submit` is in
+> `stateless_token_ids` (`config/packages/csrf.yaml`), so Twig hands back the
+> placeholder that page JS is supposed to swap from the `csrf-token` cookie on
+> **form submit** — a swap that never happens for a value read out of a
+> `<script>` into a `fetch`. No `csrf-token` cookie is readable from
+> `document.cookie` either.
+>
+> Not fixed here: it is the CSRF plumbing of the moderation decision path, the
+> mechanism is a lead rather than a proven chain (the POST is invisible to both
+> an in-page `fetch` hook and Playwright's own network events, which is still
+> unexplained), and it wants an owner's eye rather than a speculative patch.
+> Probes: `.playwright-mcp/probe-item3{,b,c,d,e}.js`.
+>
+> **The Answered tag could not be reached because of it.** The tag itself is a
+> two-line template gate on `item.riderReply`, but its precondition — a
+> submission in `needs_info` whose rider has answered — is created by the same
+> stalled path. `needs_info` landed once in five attempts (submission 9), and
+> that row belongs to a different rider, so no inbox on hand could answer it.
+> The tag is still unverified, and will stay unverified until the above is
+> fixed.
 
 **One exception, and it is what makes the desk's link work:** an explicit
 `/map?pending=<id>` serves that submission whatever its queue status
@@ -814,12 +892,36 @@ everyone, freezes it against every deletion path and alerts an administrator.
   both re-check server-side and refuse with
   `moderate.trash.confirm_required` otherwise). **A cancelled or
   unconfirmed Trash writes nothing** — no audit row exists for a Trash
-  that didn't happen. The confirmation panel links the moderator rulebook.
+  that didn't happen.
 - **Keep the record, never the content** is the moderator-facing summary of
-  this section; it lives in the **Moderator rulebook**
-  (`wiki/moderator-rulebook.md`, published on the wiki, linked from every
-  Trash panel) — the rulebook is the operating summary, this spec is the
-  binding contract, and on any disagreement this spec wins.
+  this section; it lives in the **Moderator rulebook**, which since 2026-08-03
+  is a **moderators-only page at `/moderate/rulebook`**, reached from the
+  moderation menu. The wiki page it used to be (`wiki/moderator-rulebook.md`)
+  is deleted, and the Trash panels no longer link it: a world-readable document
+  describing how moderators decide what to destroy tells anyone which words get
+  a submission trashed and which get it escalated. The rulebook is the
+  operating summary, this spec is the binding contract, and on any disagreement
+  this spec wins.
+
+### 6e. The rulebook is English-only, deliberately
+
+Its rules are written inline in `templates/moderate/rulebook.html.twig` rather
+than through translation keys, and that is a decision, not an oversight
+(2026-08-03).
+
+It is one operational document full of tables and conditional phrasing where a
+mistranslated clause changes what a curator does to somebody's photo — and the
+clauses that matter most are exactly the ones hardest to translate safely
+("suspected illegal content", "keep the record, never the content"). Key-by-key
+translation is the wrong unit for it: whoever translates it has to read the
+whole document, and should be somebody who moderates.
+
+The page's **chrome** is translated like every other page, and `en` is the
+fallback, so an nl/fr/de curator sees English prose rather than broken keys.
+`tools/check-translations.sh` is unaffected — there are no keys to be missing.
+
+Revisit when there is a moderator who works in one of the other three languages
+and can own the translation end to end.
 
 **Trash takes an unapproved new item with it** (2026-08-03, owner-reported).
 Intake creates the `Item` immediately for a `new` submission, in state
