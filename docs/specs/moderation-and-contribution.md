@@ -929,6 +929,39 @@ recipient, so its `refId` should already be theirs — but this reads
 contribution content out of the database on the strength of an id carried by a
 row, and "should already be" is not an access rule.
 
+### 7.3b A rider revises their submission — they do not file a second one
+
+Owner decision, 2026-08-04: **"he needs to update his update."**
+
+A rider asked a question about their proposal has to be able to go back, see
+what they proposed, change it, and send the same submission again. Before this
+they could only file another one, which left the desk holding two competing
+proposals for one item with nothing to say which supersedes which — and left
+the curator's question attached to the abandoned one.
+
+- **The wizard opens on the rider's own proposal.** `/improve?item=…` overlays
+  the `now` side of their undecided submission's `changes` onto the form
+  defaults (`ContributeController`), so the fields show what they suggested,
+  not what the item currently says. Answering "is that ending really right?"
+  was otherwise impossible: the form showed the current climb, and re-submitting
+  would have re-proposed the item's own values.
+- **Submitting amends.** `CatalogContributionService::improve()` looks for the
+  rider's own undecided submission on that item
+  (`openSubmissionFor()`: status `pending` or `needs_info`) and updates its
+  `changes` and `payload` in place. **The reference is unchanged**, so the
+  message thread the rider and curator have already exchanged still names the
+  thing they are discussing.
+- **It returns to `pending`**, and the previous round's `decision_note` /
+  `decided_at` / `decided_by` are cleared — a stale "we need more information"
+  sitting on a freshly revised submission reads as a new complaint.
+- **`was` still diffs against the ITEM**, never against the previous proposal.
+  A curator must see what approving would actually change.
+- **A decided submission is never amended.** Approved or rejected is history; a
+  further change to that item is a new contribution, which is what it is.
+
+Both halves are pinned by `ImproveBindingTest` — the amend, and the refusal to
+amend anything already decided.
+
 ### 7.4 Curator → rider messages — M6a
 
 `POST /moderate/message` (`ModerateMessageController`, `ROLE_CURATOR`

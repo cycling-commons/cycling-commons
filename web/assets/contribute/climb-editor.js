@@ -90,6 +90,26 @@
       if (state.summit) { summitM = mkMarker(state.summit, 'summit', true, labels.summit); bindDrag(summitM, onSummitMoved); }
       if (state.steep) { steepM = mkMarker(state.steep.at, 'steep', true, labels.steepest + ' · ' + state.steep.pct); bindDrag(steepM, onSteepDragged); }
       drawLine();
+      /* Put the climb on screen. The map's centre comes from whatever the page
+         could work out before this ran — the item's coordinates if the caller
+         put them in the URL, otherwise a generic regional centre — and a
+         generic centre means the rider opens the editor looking at countryside
+         with their climb somewhere off screen, and has to zoom out hunting for
+         it (owner-reported 2026-08-04). We have the actual geometry here, so
+         nothing else should be deciding the view. */
+      fitToRoute();
+    }
+
+    /** Frame the drawn climb, with room for the marker labels. */
+    function fitToRoute() {
+      if (state.route.length < 2) return;
+      var lngs = state.route.map(function (p) { return p[0]; });
+      var lats = state.route.map(function (p) { return p[1]; });
+      map.fitBounds(
+        [[Math.min.apply(null, lngs), Math.min.apply(null, lats)],
+          [Math.max.apply(null, lngs), Math.max.apply(null, lats)]],
+        { padding: 70, duration: 0, maxZoom: 15 }
+      );
     }
 
     /* ---------- undo ----------

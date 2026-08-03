@@ -333,6 +333,40 @@ final class CatalogContributionService implements ContributionStubInterface
             itemId: $item->getId(),
         );
 
+        /* An undecided submission on this item by this rider is AMENDED, never
+           duplicated (owner decision, 2026-08-04). A rider asked a question
+           about their proposal goes back, revises it, and sends the same
+           submission again — "updates their update". Filing a second one would
+           leave the desk holding two competing proposals for one item with
+           nothing to say which supersedes which, and would leave the curator's
+           question attached to the abandoned one.
+
+           The reference is deliberately unchanged, so the messages thread the
+           rider and curator have already exchanged still names the thing they
+           are talking about. It returns to `pending`: the ball is back with the
+           curator, which is the same transition a needs-info reply makes. */
+        $open = $this->openSubmissionFor((int) $item->getId(), $by);
+        if (null !== $open) {
+            // `changes` and `payload` are the whole of an edit submission — an
+            // Edit carries no attributes column of its own; ModerationService
+            // applies the was/now map on approve.
+            $this->em->wrapInTransaction(function () use ($open, $changes, $payload): void {
+                $open->setChanges($changes)
+                    ->setPayload($payload)
+                    ->setStatus(SubmissionStatus::Pending)
+                    // The previous round's verdict belongs to the previous
+                    // round: a stale "we need more information" note sitting on
+                    // a freshly revised submission reads as a new complaint.
+                    ->setDecisionNote(null)
+                    ->setDecidedAt(null)
+                    ->setDecidedBy(null);
+            });
+
+            return new ContributionReceipt(
+                'SUB-'.(string) $open->getId(), 'improve', true, $open->getCreatedAt(), $open->getId(),
+            );
+        }
+
         // Pass the computed was/now map into submitDraft so it is set inside
         // the same transaction, with no second flush outside wrapInTransaction.
         $submission = $this->submitDraft($draft, SubmissionType::Edit, $by, $payload, $changes);
@@ -340,6 +374,49 @@ final class CatalogContributionService implements ContributionStubInterface
         return new ContributionReceipt(
             'SUB-'.(string) $submission->getId(), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
         );
+    }
+
+    /**
+     * The rider's own submission on this item that has not been decided yet.
+     *
+     * A rider who has already proposed a change and is asked a question about
+     * it must be able to go back and REVISE it — "update their update". Without
+     * this they can only file a second submission, and the desk then holds two
+     * competing proposals for one item with nothing to say which supersedes
+     * which (owner decision, 2026-08-04).
+     *
+     * `pending` and `needs_info` are exactly the undecided states. An approved
+     * or rejected submission is history and is never amended: a further change
+     * to that item is a new contribution, which is what it is.
+     *
+     * @api Read by ContributeController to prefill the wizard, and by
+     *      improve() to amend rather than duplicate.
+     */
+    public function openSubmissionFor(int $itemId, User $by): ?Submission
+    {
+        /* A QueryBuilder rather than findOneBy([... 'status' => [A, B]]): the
+           column maps through `enumType`, and an ARRAY of backed enums in
+           findOneBy criteria leans on Doctrine converting each element. It
+           does, but this is the query that decides whether a rider's revision
+           lands on their existing submission or forks a second one, so it says
+           what it means with scalar values and an explicit ordering.
+
+           Newest first: if a rider somehow holds two open submissions on one
+           item (possible before this method existed), the one they are looking
+           at is the most recent. */
+        return $this->em->createQueryBuilder()
+            ->select('s')
+            ->from(Submission::class, 's')
+            ->where('s.itemId = :item')
+            ->andWhere('s.userId = :uid')
+            ->andWhere('s.status IN (:open)')
+            ->setParameter('item', $itemId)
+            ->setParameter('uid', (int) $by->getId())
+            ->setParameter('open', [SubmissionStatus::Pending->value, SubmissionStatus::NeedsInfo->value])
+            ->orderBy('s.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     /**

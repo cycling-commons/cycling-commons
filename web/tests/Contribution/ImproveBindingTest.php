@@ -11,6 +11,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Moderation\ModerationService;
@@ -200,6 +201,91 @@ final class ImproveBindingTest extends WebTestCase
         self::assertNotNull($history);
         self::assertSame('Presta only', $history->getOldValue());
         self::assertSame('Presta + Schrader', $history->getNewValue());
+    }
+
+    /**
+     * A rider revising an undecided submission AMENDS it (owner decision,
+     * 2026-08-04) — "he needs to update his update".
+     *
+     * Filing a second submission instead would leave the desk holding two
+     * competing proposals for one item with nothing to say which supersedes
+     * which, and would strand the curator's question on the abandoned one.
+     */
+    public function testASecondEditAmendsTheOpenSubmissionInsteadOfForkingIt(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · Amend')
+            ->setGeom('{"type":"Point","coordinates":[6.028,50.427]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999005')
+            ->setAttributes(['pumpValve' => 'Presta only']);
+        $rider = (new User())->setEmail('amender@test.test');
+        $rider->setPassword('x');
+        $em->persist($item);
+        $em->persist($rider);
+        $em->flush();
+
+        $payload = [
+            '_item_id' => $item->getId(), 'type' => 'bike-services',
+            'extras' => [], 'lat' => '50.427', 'lng' => '6.028',
+        ];
+        $first = $service->submit('improve', ['details' => ['pumpValve' => 'Presta + Schrader']] + $payload, $rider);
+
+        // The curator asks a question: the submission is undecided, not closed.
+        $open = $em->getRepository(Submission::class)->find((int) $first->submissionId);
+        self::assertNotNull($open);
+        $open->setStatus(SubmissionStatus::NeedsInfo)->setDecisionNote('Which valve exactly?');
+        $em->flush();
+
+        $second = $service->submit('improve', ['details' => ['pumpValve' => 'Schrader only']] + $payload, $rider);
+
+        self::assertSame($first->submissionId, $second->submissionId, 'the revision amends, it does not fork');
+        self::assertSame(
+            1,
+            $em->getRepository(Submission::class)->count(['itemId' => $item->getId(), 'userId' => (int) $rider->getId()]),
+            'one submission, not two',
+        );
+
+        $em->refresh($open);
+        self::assertSame('Schrader only', $open->getChanges()['pumpValve']['now'], 'the revision replaced the proposal');
+        self::assertSame('Presta only', $open->getChanges()['pumpValve']['was'], 'still diffed against the ITEM, not the old proposal');
+        self::assertSame(SubmissionStatus::Pending, $open->getStatus(), 'the ball is back with the curator');
+        self::assertNull($open->getDecisionNote(), 'last round\'s question does not haunt the revision');
+    }
+
+    /** An approved submission is history: editing again is a NEW contribution. */
+    public function testADecidedSubmissionIsNeverAmended(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $item = (new Item())->setLetter('D')->setName('Repair station · Decided')
+            ->setGeom('{"type":"Point","coordinates":[6.029,50.428]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setSourceRef('node/999006')
+            ->setAttributes(['pumpValve' => 'Presta only']);
+        $rider = (new User())->setEmail('decided@test.test');
+        $rider->setPassword('x');
+        $em->persist($item);
+        $em->persist($rider);
+        $em->flush();
+
+        $payload = [
+            '_item_id' => $item->getId(), 'type' => 'bike-services',
+            'extras' => [], 'lat' => '50.428', 'lng' => '6.029',
+        ];
+        $first = $service->submit('improve', ['details' => ['pumpValve' => 'Presta + Schrader']] + $payload, $rider);
+
+        $decided = $em->getRepository(Submission::class)->find((int) $first->submissionId);
+        self::assertNotNull($decided);
+        $decided->setStatus(SubmissionStatus::Approved);
+        $em->flush();
+
+        $second = $service->submit('improve', ['details' => ['pumpValve' => 'Schrader only']] + $payload, $rider);
+
+        self::assertNotSame($first->submissionId, $second->submissionId, 'a decided submission is history');
     }
 
     /**

@@ -10,6 +10,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\ServiceKind;
+use App\Contribution\CatalogContributionService;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
 use App\Form\AddClimbType;
@@ -42,6 +43,11 @@ final class ContributeController extends AbstractController
 {
     public function __construct(
         private readonly ContributionStubInterface $contributionStub,
+        /* The concrete service, for the one read the submit interface does not
+           cover: finding the rider's own undecided submission so the wizard can
+           open on their proposal rather than on the item. Defining "undecided"
+           in a second place is how two definitions drift apart. */
+        private readonly CatalogContributionService $contributions,
     ) {
     }
 
@@ -330,6 +336,30 @@ final class ContributeController extends AbstractController
 
         $type = ItemType::fromParam($item->getLetter());
         $current = ['name' => $item->getName()] + $item->getAttributes();
+
+        /* A rider with an undecided submission on this item is REVISING it, so
+           the wizard opens on what they proposed — not on the item as it stands
+           (owner decision, 2026-08-04). Answering "is that ending really
+           right?" was otherwise impossible: the form showed the current climb,
+           so the rider could not see, let alone adjust, the change they were
+           being asked about, and re-submitting would have re-proposed the
+           item's own values.
+
+           Only the `now` side is overlaid: `was` is the item, which $current
+           already carries. */
+        $openSubmission = null;
+        if (null !== $item->getId() && $this->getUser() instanceof User) {
+            /** @var User $rider */
+            $rider = $this->getUser();
+            $openSubmission = $this->contributions->openSubmissionFor((int) $item->getId(), $rider);
+            if (null !== $openSubmission) {
+                foreach ($openSubmission->getChanges() as $field => $pair) {
+                    if (\is_array($pair) && \array_key_exists('now', $pair) && null !== $pair['now']) {
+                        $current[$field] = $pair['now'];
+                    }
+                }
+            }
+        }
         // D (BikeServices) kind-aware form: opening hours only makes sense
         // for a staffed shop, so the registry needs the concrete item's kind
         // to drop the field for a station/pump. Other types stay null.
