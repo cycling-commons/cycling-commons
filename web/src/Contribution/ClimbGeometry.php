@@ -127,11 +127,24 @@ final class ClimbGeometry
             throw new \InvalidArgumentException('steep.pct must be a scalar gradient value');
         }
         $pct = (string) $pctRaw;
-        // A gradient percentage: up to two digits, optional decimal, optional
-        // trailing '%'. Rejects arbitrary strings ("<script>", "Array", …) that
-        // would otherwise flow verbatim into published attributes.
-        if ('' !== $pct && 1 !== preg_match('/^\d{1,2}(\.\d{1,2})?%?$/', $pct)) {
-            throw new \InvalidArgumentException('steep.pct must look like a gradient, e.g. "12" or "12.5%"');
+        /* A gradient percentage: an optional leading '~', up to two digits, an
+           optional decimal, an optional trailing '%'. Still rejects arbitrary
+           strings ("<script>", "Array", …) that would otherwise flow verbatim
+           into published attributes — which is the whole point of the rule.
+
+           The '~' is not a loosening for its own sake: it is what the catalog
+           ALREADY stores and what the map already prints on the steepest
+           marker. Five of the six seeded climbs carry values like "~20%",
+           meaning "about 20%", which is honest for a pitch nobody has surveyed.
+
+           Refusing it made editing those climbs impossible: the editor loads
+           the stored steep marker, carries its pct into the hidden field, and
+           any submission that touched the geometry was refused as
+           `invalid_geometry` — the recurring "it just sends me back to the
+           first page" report (owner, 2026-08-03). A validator that rejects the
+           application's own data is the bug, not the data. */
+        if ('' !== $pct && 1 !== preg_match('/^~?\d{1,2}(\.\d{1,2})?%?$/', $pct)) {
+            throw new \InvalidArgumentException('steep.pct must look like a gradient, e.g. "12", "12.5%" or "~20%"');
         }
 
         return [

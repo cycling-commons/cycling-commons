@@ -109,4 +109,37 @@ final class ClimbGeometryTest extends TestCase
         self::assertSame('12', $a['steep']['pct']);
         self::assertSame('12.5%', $b['steep']['pct']);
     }
+
+    /**
+     * The catalog's OWN values. Five of the six seeded climbs record their
+     * steepest pitch as "about that much" — "~20%", "~11%" — which is honest
+     * for a ramp nobody has surveyed, and the map prints it verbatim on the
+     * steepest marker.
+     *
+     * Refusing it made those climbs uneditable: the editor loads the stored
+     * marker, carries its pct into the hidden field, and every submission that
+     * touched the geometry came back as `invalid_geometry` — the recurring
+     * "it just sends me back to the first page" report. A validator that
+     * rejects the application's own data is the bug.
+     */
+    public function testAcceptsTheApproximateFormTheCatalogActuallyStores(): void
+    {
+        foreach (['~20%', '~11%', '~9.5%', '~20'] as $pct) {
+            $out = ClimbGeometry::fromPayload(['steep' => '{"at":[50.49077,5.70583],"pct":"'.$pct.'"}']);
+            self::assertSame($pct, $out['steep']['pct'], $pct.' is a value the catalog stores and the map displays');
+        }
+    }
+
+    /** The '~' buys nothing else: it is one optional character, not a bypass. */
+    public function testTheApproximateMarkerDoesNotOpenTheRuleUp(): void
+    {
+        foreach (['~', '~~20%', '~abc', '~<script>', '~200%'] as $bad) {
+            try {
+                ClimbGeometry::fromPayload(['steep' => '{"at":[50.5,5.2],"pct":"'.$bad.'"}']);
+                self::fail(sprintf('"%s" should not be accepted as a gradient', $bad));
+            } catch (\InvalidArgumentException) {
+                self::assertTrue(true);
+            }
+        }
+    }
 }

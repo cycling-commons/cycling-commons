@@ -100,6 +100,39 @@ above).
 Submissions consume the shared per-user `contribution_submit` rate limiter
 (`web/config/packages/rate_limiter.yaml`, currently 20/hour sliding window).
 
+### The "it sends me back to the first page" bug (2026-08-03)
+
+Editing almost any seeded climb was impossible, and said nothing about why.
+
+`ClimbGeometry` validated `steep.pct` against `/^\d{1,2}(\.\d{1,2})?%?$/` — it
+had to start with a digit. But five of the six seeded climbs store their
+steepest pitch as an approximation: `~20%`, `~11%`, `~13%`. That is honest for a
+ramp nobody has surveyed, and `render.js` prints it verbatim on the steepest
+marker.
+
+So: the editor loads the stored marker, carries its `pct` into the hidden
+`steep` field, and **any** submission that touched the geometry came back
+`invalid_geometry`. The rider was returned to step 1 with no message, because
+the wizard rendered no form errors at all (fixed the same day — see
+moderation-and-contribution.md and the `.wiz-errors` block in
+`improve.html.twig`). Two faults compounding: a validator that rejected the
+application's own data, and a form that would not say so.
+
+The rule now allows one optional leading `~` and nothing else
+(`/^~?\d{1,2}(\.\d{1,2})?%?$/`); `~~20%`, `~abc` and `~200%` stay refused.
+
+**Why this went unnoticed, and how to test it properly.** Every automated probe
+submitted successfully, because a headless browser never populates the hidden
+geometry fields — MapLibre does not initialise, so `route`/`grad`/`steep` post
+empty and the validator is never reached. `ClimbGeometryTest` covers the rule
+directly for that reason. **Anything about the climb editor has to be checked
+in a real browser**; a green probe proves nothing about the geometry path.
+
+**Still latent:** the editor requests OSRM with `overview=full`, and
+`ClimbGeometry::MAX_POINTS` is 2000. A long enough climb could exceed it and be
+refused as `invalid_geometry` — now at least visibly. Not yet measured against a
+real long climb.
+
 ### The wizard caught up with `/improve` (2026-08-03)
 
 Both flows mount the same three-point editor, but only `/improve` had been given
