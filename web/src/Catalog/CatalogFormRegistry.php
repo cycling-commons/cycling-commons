@@ -63,7 +63,9 @@ final class CatalogFormRegistry
                     CatalogField::select('sq', 'Road quality', ['Smooth', 'Good', 'Worn', 'Rough', 'Broken / loose']),
                     CatalogField::select('tr', 'Traffic', ['Traffic-free', 'Quiet', 'Moderate', 'Busy']),
                     CatalogField::text('avgGradient', 'Average gradient (%)'),
-                    CatalogField::text('maxGradient', 'Max gradient (%)'),
+                    // Read off the steepest-ramp marker, not typed: see
+                    // CatalogField::$derived and B-climbs.md.
+                    CatalogField::derivedText('maxGradient', 'Max gradient (%)'),
                     CatalogField::select('effort', 'Effort', ['Steady', 'Challenging', 'Tough', 'Very steep']),
                     CatalogField::textarea('correction', 'Anything to correct?', 'e.g. the foot starts at the bridge, not the square', display: false),
                 ],

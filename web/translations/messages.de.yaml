@@ -1040,6 +1040,7 @@ add_climb:
     gain_help: 'Von deinem Computer/GPS — in der Produktion wird dieser aus einem offenen Höhenmodell (DEM) gemessen.'
     avg_label: 'Ø Steigung'
     max_label: 'Max. Steigung (%) — optional'
+    max_help: 'Aus der Markierung der steilsten Rampe, die du auf der Karte gesetzt hast.'
     surface_label: 'Belag'
     surface_q_label: 'Belagqualität'
     traffic_label: 'Verkehr'

@@ -268,9 +268,15 @@
         <input id="fAvgDisplay" readonly value="—" />
         {{ form_widget(form.fAvg, {attr: {style: 'display:none'}}) }}
       </div>
+      {# Read off the steepest-ramp marker placed in step 1, never typed: one
+         fact, one source. A box beside that marker invites a rider to disagree
+         with the profile, and free text is how a climb ends up publishing a
+         timestamp as its max gradient. Filled by add-climb.js from the
+         editor's own state. #}
       <div class="field">
-        <label for="{{ form.fMax.vars.id }}">{{ 'add_climb.step2.max_label'|trans }}</label>
-        {{ form_widget(form.fMax, {attr: {step: '0.1', min: '0', placeholder: 'e.g. 20'}}) }}
+        <label for="fMaxDisplay">{{ 'add_climb.step2.max_label'|trans }}</label>
+        <input id="fMaxDisplay" readonly value="—" />
+        <div class="fhelp">{{ 'add_climb.step2.max_help'|trans }}</div>
       </div>
     </div>
     <div class="two">

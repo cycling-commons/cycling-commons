@@ -154,7 +154,10 @@ final class ImproveBindingTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertGreaterThan(0, $crawler->filter('input[value="5.7"]')->count(), 'avgGradient prefilled from the baked record');
-        self::assertGreaterThan(0, $crawler->filter('input[value="13"]')->count(), 'maxGradient prefilled from the baked record');
+        // maxGradient is DERIVED now (CatalogField::$derived): the backfill
+        // still writes it and the drawer still shows it, but the edit form
+        // offers no box for it — a computed value nobody types.
+        self::assertSame(0, $crawler->filter('input[name="improve[details][maxGradient]"]')->count(), 'no input for a derived field');
         self::assertGreaterThan(0, $crawler->filter('option[selected][value="Asphalt"]')->count(), 'surface prefilled from the baked record');
         self::assertGreaterThan(0, $crawler->filter('input[value="La Flèche Wallonne"]')->count(), 'famousFor prefilled from the baked record');
     }
@@ -253,6 +256,75 @@ final class ImproveBindingTest extends WebTestCase
         self::assertSame('Presta only', $open->getChanges()['pumpValve']['was'], 'still diffed against the ITEM, not the old proposal');
         self::assertSame(SubmissionStatus::Pending, $open->getStatus(), 'the ball is back with the curator');
         self::assertNull($open->getDecisionNote(), 'last round\'s question does not haunt the revision');
+    }
+
+    /**
+     * The climb editor round-trips its steepest marker as `{at, pct, manual}`
+     * while the catalog stores `{at, pct}` — the same marker, in the same
+     * place, at the same percentage, with one extra default. Compared
+     * strictly that counted as a change, so every climb edit recorded a
+     * phantom `steep: ~20% at 50.4908, 5.7058 → ~20% at 50.4908, 5.7058` and a
+     * curator was asked to approve a difference that did not exist.
+     */
+    public function testAnUnchangedSteepestMarkerIsNotRecordedAsAChange(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $stored = ['at' => [50.49077, 5.70583], 'pct' => '~20%'];
+        $item = (new Item())->setLetter('B')->setName('Côte de Phantom')
+            ->setGeom('{"type":"Point","coordinates":[5.70391,50.48321]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::User)->setSourceRef('node/999007')
+            ->setAttributes(['steep' => $stored, 'hairpins' => '3']);
+        $rider = (new User())->setEmail('phantom@test.test');
+        $rider->setPassword('x');
+        $em->persist($item);
+        $em->persist($rider);
+        $em->flush();
+
+        // The editor re-sends the marker verbatim, plus its `manual` default,
+        // while the rider actually changes something else entirely.
+        $receipt = $service->submit('improve', [
+            '_item_id' => $item->getId(), 'type' => 'climbs',
+            'details' => [], 'extras' => ['hairpins' => '4'],
+            'steep' => json_encode(['at' => [50.49077, 5.70583], 'pct' => '~20%', 'manual' => false]),
+            'lat' => '50.48321', 'lng' => '5.70391',
+        ], $rider);
+
+        $submission = $em->getRepository(Submission::class)->find((int) $receipt->submissionId);
+        self::assertNotNull($submission);
+        self::assertArrayNotHasKey('steep', $submission->getChanges(), 'an unmoved marker is not a change');
+        self::assertArrayHasKey('hairpins', $submission->getChanges(), 'the real change is still recorded');
+    }
+
+    /** A marker that genuinely moved is still a change. */
+    public function testAMovedSteepestMarkerIsRecorded(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $service = static::getContainer()->get(\App\Service\ContributionStubInterface::class);
+
+        $item = (new Item())->setLetter('B')->setName('Côte de Moved')
+            ->setGeom('{"type":"Point","coordinates":[5.70391,50.48321]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::User)->setSourceRef('node/999008')
+            ->setAttributes(['steep' => ['at' => [50.49077, 5.70583], 'pct' => '~20%']]);
+        $rider = (new User())->setEmail('moved@test.test');
+        $rider->setPassword('x');
+        $em->persist($item);
+        $em->persist($rider);
+        $em->flush();
+
+        $receipt = $service->submit('improve', [
+            '_item_id' => $item->getId(), 'type' => 'climbs',
+            'details' => [], 'extras' => [],
+            'steep' => json_encode(['at' => [50.49500, 5.70900], 'pct' => '18%', 'manual' => true]),
+            'lat' => '50.48321', 'lng' => '5.70391',
+        ], $rider);
+
+        $submission = $em->getRepository(Submission::class)->find((int) $receipt->submissionId);
+        self::assertNotNull($submission);
+        self::assertArrayHasKey('steep', $submission->getChanges());
     }
 
     /** An approved submission is history: editing again is a NEW contribution. */

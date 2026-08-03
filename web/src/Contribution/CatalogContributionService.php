@@ -48,7 +48,8 @@ final class CatalogContributionService implements ContributionStubInterface
      */
     private const array CLIMB_FIELDS = [
         'fAvg' => 'avgGradient',
-        'fMax' => 'maxGradient',
+        // No fMax: max gradient is read off the steepest-ramp marker
+        // (deriveMaxGradient), never typed. See CatalogField::$derived.
         'fSurface' => 'surface',
         'fSurfaceQ' => 'sq',
         'fTraffic' => 'tr',
@@ -108,6 +109,7 @@ final class CatalogContributionService implements ContributionStubInterface
         } catch (\InvalidArgumentException) {
             $this->reject('contribute.error.invalid_geometry', 'route');
         }
+        $attributes = self::deriveMaxGradient($attributes);
 
         $draft = new SubmissionDraft(
             type: ItemType::Climbs,
@@ -270,6 +272,20 @@ final class CatalogContributionService implements ContributionStubInterface
         } catch (\InvalidArgumentException) {
             $this->reject('contribute.error.invalid_geometry', 'route');
         }
+        /* Max gradient follows the steepest-ramp marker — but only when the
+           marker actually MOVED.
+
+           Deriving it unconditionally re-introduces the phantom change this
+           class just learned to avoid: a seeded climb stores the editorial
+           "~20% (mid-climb ramp)" while the marker reads "~20%", so every edit
+           would record a maxGradient change nobody made, and would quietly
+           overwrite the editorial text on the way past. A rider who drags the
+           marker IS restating the max gradient; a rider who leaves it alone is
+           not. */
+        $currentSteep = $item->getAttributes()['steep'] ?? null;
+        if (isset($proposed['steep']) && !self::sameValue($currentSteep, $proposed['steep'])) {
+            $proposed = self::deriveMaxGradient($proposed);
+        }
 
         $currentAttrs = $item->getAttributes();
         $changes = [];
@@ -296,7 +312,7 @@ final class CatalogContributionService implements ContributionStubInterface
                 continue;
             }
             $was = $currentAttrs[$field] ?? null;
-            if (self::normalizeEmpty($was) !== $now) {
+            if (!self::sameValue(self::normalizeEmpty($was), $now)) {
                 $changes[$field] = ['was' => $was, 'now' => $now];
             }
             if (null !== $now) {
@@ -547,6 +563,53 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
+     * Is the proposed value the same fact as the stored one?
+     *
+     * `!==` is too literal for the values the climb editor round-trips. The
+     * steepest marker is stored as `{at, pct}` and comes back as
+     * `{at, pct, manual: false}` — the same marker in the same place at the
+     * same percentage, described with one extra default. Compared strictly it
+     * counted as a change, so EVERY climb edit recorded a phantom
+     * `steep: ~20% at 50.4908, 5.7058 → ~20% at 50.4908, 5.7058`, and a curator
+     * was asked to approve a difference that did not exist (owner-reported
+     * 2026-08-04). Key order does the same thing: PHP compares string-keyed
+     * arrays order-sensitively under `===`.
+     *
+     * So arrays are compared canonically — recursively key-sorted, with the
+     * marker's optional `manual` flag defaulted. Scalars keep strict
+     * comparison, where `'0'` and `0` and `false` are genuinely different
+     * answers.
+     */
+    private static function sameValue(mixed $was, mixed $now): bool
+    {
+        if (\is_array($was) && \is_array($now)) {
+            return self::canonical($was) === self::canonical($now);
+        }
+
+        return $was === $now;
+    }
+
+    /** Recursively key-sorted, with the steep marker's default filled in. */
+    private static function canonical(mixed $v): string
+    {
+        if (\is_array($v)) {
+            // The one documented default: an absent `manual` means "not placed
+            // by hand", which is exactly what `manual: false` says.
+            if (\array_key_exists('at', $v) && \array_key_exists('pct', $v)) {
+                $v['manual'] = (bool) ($v['manual'] ?? false);
+            }
+            ksort($v);
+            $out = [];
+            foreach ($v as $k => $child) {
+                $out[$k] = \is_array($child) ? json_decode(self::canonical($child), true) : $child;
+            }
+            $v = $out;
+        }
+
+        return json_encode($v, \JSON_UNESCAPED_UNICODE) ?: '';
+    }
+
+    /**
      * First coordinate of any GeoJSON geometry, as [lng, lat]. Points,
      * LineStrings and Polygons alike descend to the first numeric pair.
      *
@@ -572,5 +635,32 @@ final class CatalogContributionService implements ContributionStubInterface
         }
 
         throw new \InvalidArgumentException('item geometry has no usable coordinate');
+    }
+
+    /**
+     * Max gradient follows the steepest-ramp marker.
+     *
+     * It used to be a free-text box beside it, which meant two sources for one
+     * fact and no rule about which won — and a text box accepts anything, which
+     * is how a climb ended up publishing "answered-tag probe 16:10:23" as its
+     * max gradient (owner-reported 2026-08-03). The marker already carries the
+     * percentage the profile read at its position, so that is the value.
+     *
+     * No marker, no change: a climb whose steepest ramp has not been placed
+     * keeps whatever it has, rather than having it blanked.
+     *
+     * @param array<string, mixed> $attrs
+     *
+     * @return array<string, mixed>
+     */
+    private static function deriveMaxGradient(array $attrs): array
+    {
+        $steep = $attrs['steep'] ?? null;
+        $pct = \is_array($steep) ? ($steep['pct'] ?? null) : null;
+        if (\is_scalar($pct) && '' !== (string) $pct) {
+            $attrs['maxGradient'] = (string) $pct;
+        }
+
+        return $attrs;
     }
 }

@@ -19,7 +19,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\PositiveOrZero;
-use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Constraints\Regex;
 
 /**
@@ -102,18 +101,9 @@ final class AddClimbType extends AbstractType
                     ),
                 ],
             ])
-            ->add('fMax', NumberType::class, [
-                'label' => false,
-                'required' => false,
-                'scale' => 1,
-                'constraints' => [
-                    new Range(
-                        min: 0,
-                        max: 100,
-                        notInRangeMessage: 'add_climb.error.max_gradient_range',
-                    ),
-                ],
-            ])
+            // No max-gradient input: it is read off the steepest-ramp marker the
+            // rider places in step 1 (CatalogField::derived). A text box beside
+            // that marker is a second source for one fact, and accepts anything.
             // Climb surface/quality/traffic vocabularies come from the ONE
             // registry (Climbs surface/sq/tr fields), so add-climb and the
             // improve form can never store divergent values for the same

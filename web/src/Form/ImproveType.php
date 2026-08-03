@@ -104,12 +104,18 @@ final class ImproveType extends AbstractType
             if (Item::NAME_FIELD === $field->name) {
                 continue;   // the explicit field above is the only name input
             }
+            if ($field->derived) {
+                continue;   // computed and displayed, never typed (CatalogField::$derived)
+            }
             $this->addCatalogField($details, $field, $current);
         }
         $builder->add($details);
 
         $extras = $builder->create('extras', FormType::class, ['label' => false, 'required' => false]);
         foreach ($fieldSet->addFields as $field) {
+            if ($field->derived) {
+                continue;
+            }
             $this->addCatalogField($extras, $field, $current);
         }
         $builder->add($extras);

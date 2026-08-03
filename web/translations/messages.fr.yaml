@@ -1037,6 +1037,7 @@ add_climb:
     gain_help: 'D''après votre ordinateur/GPS — en production, ceci est calculé à partir d''un modèle d''altitude ouvert (MNT).'
     avg_label: 'Pente moyenne'
     max_label: 'Pente maximale (%) — optionnel'
+    max_help: 'D''après le marqueur de rampe la plus raide placé sur la carte.'
     surface_label: 'Revêtement'
     surface_q_label: 'Qualité du revêtement'
     traffic_label: 'Trafic'

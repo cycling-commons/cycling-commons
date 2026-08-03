@@ -1039,6 +1039,7 @@ add_climb:
     gain_help: 'From your computer/GPS — in production this is sampled from an open elevation model (DEM).'
     avg_label: 'Avg gradient'
     max_label: 'Max gradient (%) — optional'
+    max_help: 'From the steepest-ramp marker you placed on the map.'
     surface_label: 'Surface'
     surface_q_label: 'Surface quality'
     traffic_label: 'Traffic'

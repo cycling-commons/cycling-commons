@@ -117,6 +117,10 @@
       onHistory: function (depth) { if (undoBtn) undoBtn.hidden = 0 === depth; },
       onChange: function (st) {
         S.start = st.start; S.summit = st.summit; S.lengthKm = st.lengthKm;
+        // Max gradient IS the steepest marker's reading — never a typed field.
+        S.maxGrad = (st.steep && st.steep.pct) ? String(st.steep.pct) : '';
+        var maxEl = document.getElementById('fMaxDisplay');
+        if (maxEl) maxEl.value = S.maxGrad || '—';
         S.routing = st.routing; S.profiling = st.profiling;
         S.routeError = st.routeError; S.profileError = st.profileError;
         maybeRefreshLen();
@@ -327,7 +331,6 @@
   function syncProfile() {
     var fName = fld('fName');
     var fGain = fld('fGain');
-    var fMax = fld('fMax');
     var fSurface = fld('fSurface');
     var fSurfaceQ = fld('fSurfaceQ');
     var fTraffic = fld('fTraffic');
@@ -336,7 +339,6 @@
 
     S.name = fName ? fName.value.trim() : '';
     S.gain = fGain ? (parseFloat(fGain.value) || 0) : 0;
-    S.maxGrad = fMax ? fMax.value : '';
     S.surface = fSurface ? fSurface.value : 'Asphalt';
     S.surfaceQ = fSurfaceQ ? fSurfaceQ.value : 'Smooth';
     S.traffic = fTraffic ? fTraffic.value : 'Traffic-free';
@@ -352,7 +354,7 @@
     refreshGate();
   }
 
-  ['fName', 'fLen', 'fGain', 'fMax', 'fSurface', 'fSurfaceQ', 'fTraffic'].forEach(function (id) {
+  ['fName', 'fLen', 'fGain', 'fSurface', 'fSurfaceQ', 'fTraffic'].forEach(function (id) {
     var el = fld(id);
     if (el) el.addEventListener('input', syncProfile);
   });

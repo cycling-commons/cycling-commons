@@ -1037,6 +1037,7 @@ add_climb:
     gain_help: 'Van je computer/GPS — in productie wordt dit opgehaald uit een open hoogtemodel (DEM).'
     avg_label: 'Gemiddeld stijgingspercentage'
     max_label: 'Maximaal stijgingspercentage (%) — optioneel'
+    max_help: 'Van de markering voor het steilste stuk die je op de kaart hebt gezet.'
     surface_label: 'Wegdek'
     surface_q_label: 'Wegdekkwaliteit'
     traffic_label: 'Verkeer'

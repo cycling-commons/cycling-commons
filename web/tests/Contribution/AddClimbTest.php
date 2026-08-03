@@ -154,7 +154,6 @@ final class AddClimbTest extends WebTestCase
             'add_climb[fLen]' => '1.8',
             'add_climb[fGain]' => '161',
             'add_climb[fAvg]' => '8.9',
-            'add_climb[fMax]' => '19.0',
             'add_climb[fSurface]' => 'Asphalt',
             'add_climb[fSurfaceQ]' => 'Good',
             'add_climb[fTraffic]' => 'Quiet',
