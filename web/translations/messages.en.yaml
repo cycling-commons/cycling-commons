@@ -1290,6 +1290,7 @@ contribute:
     lead: 'Found something the atlas is missing? Pin it, describe it, and send it to the curators.'
     known_note: 'Small dots are places of this kind already on file — check yours is not one of them.'
   error:
+    heading: 'That could not be submitted:'
     unknown_attribute: 'One of the submitted fields is not recognised for this item type.'
     invisible_characters: 'This text contains invisible or formatting characters that aren’t allowed.'
     field_required: 'This field is required.'

@@ -1592,6 +1592,7 @@ contribute:
     lead: 'Fehlt etwas im Atlas? Setze den Pin, beschreibe es und schicke es an die Kuratoren.'
     known_note: 'Kleine Punkte sind Orte dieser Art, die bereits erfasst sind — prüfe, ob deiner schon dabei ist.'
   error:
+    heading: 'Das konnte nicht eingereicht werden:'
     unknown_attribute: 'Eines der übermittelten Felder ist für diesen Elementtyp nicht bekannt.'
     invisible_characters: 'Dieser Text enthält unsichtbare oder Formatierungszeichen, die nicht erlaubt sind.'
     field_required: 'Dieses Feld ist erforderlich.'

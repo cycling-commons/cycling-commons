@@ -1589,6 +1589,7 @@ contribute:
     lead: 'Mist de atlas iets? Prik het vast, beschrijf het en stuur het naar de curatoren.'
     known_note: 'Kleine stippen zijn plekken van dit type die al in beeld zijn — controleer of die van jou er niet al tussen staat.'
   error:
+    heading: 'Dit kon niet worden ingediend:'
     unknown_attribute: 'Een van de ingezonden velden wordt niet herkend voor dit itemtype.'
     invisible_characters: 'Deze tekst bevat onzichtbare of opmaaktekens die niet zijn toegestaan.'
     field_required: 'Dit veld is verplicht.'

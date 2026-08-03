@@ -1589,6 +1589,7 @@ contribute:
     lead: 'L''atlas manque quelque chose ? Épinglez-le, décrivez-le et envoyez-le aux curateurs.'
     known_note: 'Les petits points sont des lieux de ce type déjà recensés — vérifiez que le vôtre n''en fait pas partie.'
   error:
+    heading: 'Cette contribution n''a pas pu être envoyée :'
     unknown_attribute: 'Un des champs soumis n''est pas reconnu pour ce type d''élément.'
     invisible_characters: 'Ce texte contient des caractères invisibles ou de formatage qui ne sont pas autorisés.'
     field_required: 'Ce champ est obligatoire.'
