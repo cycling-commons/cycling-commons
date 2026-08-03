@@ -38,6 +38,45 @@ final class PhotoProcessor
     private const array HEIC_FORMATS = ['HEIC', 'HEIF'];
     private const int MAX_LONG_SIDE = 3840;
     private const int MIN_SHORT_SIDE = 200;
+
+    /**
+     * The cap that MATTERS for a decompression bomb: pixels, not bytes.
+     *
+     * MAX_BYTES bounds what arrives; it does not bound what that decodes to. A
+     * few hundred kilobytes of valid, well-formed PNG — one enormous run of
+     * identical pixels — expands to gigabytes of pixel buffer, and the worker
+     * dies before a single dimension check runs. 50 MP is comfortably above
+     * every camera whose full-resolution output fits inside the 15 MB cap, and
+     * ~400 MB of decoded RGBA, which the limits below then contain.
+     */
+    private const int MAX_PIXELS = 50_000_000;
+
+    /**
+     * Belt and braces for MAX_PIXELS: the header says how big the image claims
+     * to be, and these say how big ImageMagick is willing to go whatever the
+     * header claims, so a lying or exotic header fails inside the decoder
+     * rather than after it.
+     *
+     * **Only the stateless, per-image limits belong here.** These are
+     * process-global and outlive the call, which is fine for a dimension
+     * ceiling — 30,000 px means the same thing on every request forever. It is
+     * NOT fine for the pixel-cache budgets (memory / map / disk / area), which
+     * are consumed cumulatively by everything the process has decoded: set
+     * them here and a long-lived PHP-FPM worker eventually refuses every
+     * upload with "unable to create new image", having quietly used its
+     * allowance up. That is not theoretical — setting them here turned the
+     * test suite red partway through, in exactly that shape, which is the same
+     * process lifetime a worker has.
+     *
+     * So the budgets, the time ceiling and the thread cap live in the deployed
+     * policy.xml (web/docker/imagemagick-policy.xml), where ImageMagick applies
+     * them per operation instead of per process, and where the image build
+     * asserts they are actually in force (docs/specs/photo-uploads.md §7a).
+     */
+    private const array RESOURCE_LIMITS = [
+        \Imagick::RESOURCETYPE_WIDTH => 30_000,
+        \Imagick::RESOURCETYPE_HEIGHT => 30_000,
+    ];
     private const int LG_WIDTH = 1400;
     private const int SM_WIDTH = 520;
     private const int ORIG_QUALITY = 85;
@@ -49,8 +88,48 @@ final class PhotoProcessor
         return [] !== \Imagick::queryFormats('HEIC');
     }
 
+    /**
+     * Apply the process-global decoder limits.
+     *
+     * Idempotent and cheap, so it runs on every call rather than through a
+     * "have we done this yet" flag: the flag would be the bug, since anything
+     * that reset the limits (another library, a pooled worker) would leave the
+     * next decode unguarded and the flag would say it was fine.
+     */
+    private static function applyResourceLimits(): void
+    {
+        foreach (self::RESOURCE_LIMITS as $type => $limit) {
+            \Imagick::setResourceLimit($type, $limit);
+        }
+    }
+
     public function process(string $bytes, ?string $xmpPacket = null): ProcessedPhoto
     {
+        self::applyResourceLimits();
+
+        /* Read the HEADER before the pixels. `pingImageBlob` parses enough to
+           answer "how big does this claim to be" without allocating the pixel
+           buffer, which is the whole attack: MAX_BYTES bounds the file, and a
+           small well-formed file can still declare a gigapixel canvas. Refusing
+           here means the bomb never reaches a decoder at all — and the rider
+           gets "too large", which is what is actually wrong with it, rather
+           than a 502 from a worker that died mid-request. */
+        $ping = new \Imagick();
+        try {
+            $ping->pingImageBlob($bytes);
+            $claimedPixels = $ping->getImageWidth() * $ping->getImageHeight();
+        } catch (\ImagickException) {
+            throw new PhotoRejected('photo_unreadable');
+        } finally {
+            $ping->clear();
+        }
+        if ($claimedPixels > self::MAX_PIXELS) {
+            // Its own reason, not photo_too_large: a bomb is a few hundred
+            // kilobytes, so "that photo is over 15 MB" would be a lie told to
+            // somebody whose real problem is the pixel count.
+            throw new PhotoRejected('photo_too_many_pixels');
+        }
+
         $image = new \Imagick();
         try {
             $image->readImageBlob($bytes);

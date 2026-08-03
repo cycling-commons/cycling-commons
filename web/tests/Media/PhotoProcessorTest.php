@@ -225,16 +225,101 @@ final class PhotoProcessorTest extends TestCase
         }
     }
 
+    /**
+     * The property under test is that a GIF does not get in. WHICH layer stops
+     * it depends on where the suite runs, and both answers are correct:
+     *
+     * - with the shipped ImageMagick policy (web/docker/imagemagick-policy.xml,
+     *   so: the app image, and production) the GIF coder is denied outright and
+     *   the file never decodes — `photo_unreadable`;
+     * - without it (a developer's host ImageMagick) the bytes decode and
+     *   PhotoProcessor's own allowlist rejects the format — `photo_format`.
+     *
+     * The bytes are a literal rather than something Imagick writes for us,
+     * because under that same policy this process cannot produce a GIF either.
+     */
     public function testRejectsAnUnsupportedFormatByItsContentNotItsName(): void
     {
+        $gif = base64_decode('R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs=', true);
+        self::assertIsString($gif);
+
         $this->expectException(PhotoRejected::class);
 
         try {
-            (new PhotoProcessor())->process(self::image(400, 400, 'gif'));
+            (new PhotoProcessor())->process($gif);
         } catch (PhotoRejected $rejected) {
-            self::assertSame('photo_format', $rejected->reason);
+            self::assertContains(
+                $rejected->reason,
+                ['photo_format', 'photo_unreadable'],
+                'a GIF must be refused, by the coder policy or by our own allowlist',
+            );
 
             throw $rejected;
         }
+    }
+
+    /**
+     * The decompression bomb: a complete, entirely valid PNG, well under the
+     * 15 MB cap, that decodes to 64 megapixels. Nothing about the file is
+     * malformed — the byte cap has no reason to stop it, and by the time the
+     * old dimension check ran the pixels had already been allocated.
+     *
+     * The assertion that matters is the REASON. A rejection alone would prove
+     * little (a decoder that fell over would also raise one); getting
+     * `photo_too_many_pixels` is what says we refused it on the header,
+     * before allocating anything.
+     */
+    public function testRejectsADecompressionBombOnItsHeaderAlone(): void
+    {
+        $bomb = self::pngBomb(8_000, 8_000);
+        self::assertLessThan(
+            PhotoProcessor::MAX_BYTES,
+            \strlen($bomb),
+            'a bomb the byte cap already stops would not be testing anything',
+        );
+
+        $this->expectException(PhotoRejected::class);
+
+        try {
+            (new PhotoProcessor())->process($bomb);
+        } catch (PhotoRejected $rejected) {
+            self::assertSame('photo_too_many_pixels', $rejected->reason);
+
+            throw $rejected;
+        }
+    }
+
+    /**
+     * A complete greyscale PNG of $width x $height, every pixel zero — which
+     * is why it deflates to a rounding error of its decoded size.
+     *
+     * Hand-built rather than produced with Imagick: newImage() would allocate
+     * the canvas inside the test, which is the very cost the code under test
+     * exists to avoid paying.
+     */
+    private static function pngBomb(int $width, int $height): string
+    {
+        $chunk = static function (string $type, string $data): string {
+            return pack('N', \strlen($data)).$type.$data.pack('N', crc32($type.$data));
+        };
+
+        // 8-bit greyscale, no interlace.
+        $ihdr = pack('NN', $width, $height)."\x08\x00\x00\x00\x00";
+
+        // Each scanline is a filter byte followed by its pixels, all zeroes.
+        // Deflated a row at a time rather than assembled and compressed in one
+        // go: the uncompressed image is 64 MB, which is over the container's
+        // memory_limit, and a test that has to allocate the bomb to prove we
+        // do not allocate the bomb is not much of a test.
+        $stream = deflate_init(\ZLIB_ENCODING_DEFLATE, ['level' => 9]);
+        self::assertNotFalse($stream);
+        $row = str_repeat("\x00", $width + 1);
+        $idat = '';
+        for ($y = 0; $y < $height; ++$y) {
+            $idat .= deflate_add($stream, $row, \ZLIB_NO_FLUSH);
+        }
+        $idat .= deflate_add($stream, '', \ZLIB_FINISH);
+
+        return "\x89PNG\r\n\x1a\n".$chunk('IHDR', $ihdr).$chunk('IDAT', $idat).$chunk('IEND', '');
     }
 }

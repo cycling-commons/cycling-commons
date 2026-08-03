@@ -243,14 +243,12 @@ final class MediaUploadEndpointTest extends WebTestCase
         $token = $this->token($client);
         $consentId = $this->consentId($client, $token);
 
-        $image = new \Imagick();
-        $image->newImage(600, 400, 'blue');
-        $image->setImageFormat('gif');
-        // getImageBlob(), not writeImage(): ImageMagick picks the output format
-        // from the filename extension, so writing to a .jpg path would produce
-        // a real JPEG and the test would prove nothing.
-        $gifBytes = $image->getImageBlob();
-        $image->clear();
+        // A GIF as a byte literal rather than one Imagick writes for us: under
+        // the shipped policy.xml (web/docker/imagemagick-policy.xml) the GIF
+        // coder is denied, so this process cannot PRODUCE a GIF either and the
+        // fixture line would be what failed.
+        $gifBytes = base64_decode('R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs=', true);
+        self::assertIsString($gifBytes);
         $path = tempnam(sys_get_temp_dir(), 'ccgif').'.jpg';   // a LYING extension
         file_put_contents($path, $gifBytes);
 
@@ -261,7 +259,17 @@ final class MediaUploadEndpointTest extends WebTestCase
         );
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSame('photo_format', $this->json($client)['error']);
+        // The property under test is that the lying extension buys nothing.
+        // WHICH layer refuses it depends on where the suite runs, and both are
+        // correct: with the shipped ImageMagick policy the GIF coder is denied
+        // and the bytes never decode (photo_unreadable); without it, on a
+        // developer's host, they decode and PhotoProcessor's own allowlist
+        // rejects the format (photo_format). See photo-uploads.md §7a.
+        self::assertContains(
+            $this->json($client)['error'],
+            ['photo_format', 'photo_unreadable'],
+            'a GIF must be refused, by the coder policy or by our own allowlist',
+        );
         self::assertSame(0, $this->storedCount());
     }
 

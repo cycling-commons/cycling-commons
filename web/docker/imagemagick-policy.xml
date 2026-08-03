@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policymap [
+<!ELEMENT policymap (policy)*>
+<!ATTLIST policymap xmlns CDATA #FIXED "">
+<!ELEMENT policy EMPTY>
+<!ATTLIST policy xmlns CDATA #FIXED "">
+<!ATTLIST policy domain NMTOKEN #REQUIRED>
+<!ATTLIST policy name NMTOKEN #IMPLIED>
+<!ATTLIST policy pattern CDATA #IMPLIED>
+<!ATTLIST policy rights NMTOKEN #IMPLIED>
+<!ATTLIST policy stealth NMTOKEN #IMPLIED>
+<!ATTLIST policy value CDATA #IMPLIED>
+]>
+<!--
+  SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+  ImageMagick security policy for the app image.
+
+  This is the OTHER half of the guard on rider photo uploads. PhotoProcessor
+  sets its own resource limits and refuses an oversized canvas on the header
+  (docs/specs/photo-uploads.md §7), but that is application code: it protects
+  the path it runs on. This file protects the library itself, including any
+  code path that reaches ImageMagick without going through PhotoProcessor.
+
+  Debian's stock policy is not bad — it carries resource limits and denies the
+  URL/HTTP coders — but it leaves every other coder readable and every delegate
+  executable. The coder families below are the ImageTragick ones: MVG and MSL
+  are scripting languages ImageMagick will happily interpret out of a file that
+  claims to be an image, and EPHEMERAL/URL turn a decode into a file read or an
+  outbound request. The application already refuses anything that is not
+  JPEG/PNG/WebP/HEIC after decoding; this refuses them before.
+
+  Deny-all-then-allow is deliberate. An allowlist that names the risks has to
+  be edited every time ImageMagick gains a coder; this one is closed by default
+  and lists the five formats we actually accept.
+
+  NO BACKTICKS IN THIS FILE, not even inside a comment.
+
+  ImageMagick does not read policy.xml with a standards-compliant XML parser;
+  it uses its own, and that parser treats a backtick as a quote character.
+  Measured on 2026-08-03 against ImageMagick 7.1.1: the first version of this
+  file used backticks for code spans in two comments, and the ENTIRE coder
+  allowlist below them was silently ignored — GIF decoded happily, with no
+  error, no warning and no log line. Exactly which placements break it was not
+  worth pinning down; the rule is simply that they are banned here.
+
+  That is the failure mode this whole arrangement is built around: a bad policy
+  file is not an error, it is a policy that quietly does nothing. So the image
+  build ASSERTS the policy is in effect (web/Dockerfile) rather than trusting
+  that the file was copied. A guard you believe in but do not have is worse
+  than no guard, because you stop looking.
+-->
+<policymap>
+  <!-- Anything not named is refused. -->
+  <policy domain="Undefined" rights="none"/>
+
+  <!--
+    Resource ceilings. These are hard maxima: PHP's own
+    Imagick::setResourceLimit() calls cannot raise them, only lower, which is
+    the relationship we want — the app's limits are a floor it sets for
+    itself, and these are the ones an attacker cannot argue with.
+
+    The area limit must stay ABOVE PhotoProcessor::MAX_PIXELS (50 MP), or a legitimate
+    large photo would spill to the disk cache on every upload instead of being
+    handled in memory. width/height match RESOURCE_LIMITS.
+  -->
+  <policy domain="resource" name="memory" value="512MiB"/>
+  <policy domain="resource" name="map" value="1GiB"/>
+  <policy domain="resource" name="area" value="64MP"/>
+  <policy domain="resource" name="disk" value="1GiB"/>
+  <policy domain="resource" name="width" value="30KP"/>
+  <policy domain="resource" name="height" value="30KP"/>
+  <policy domain="resource" name="time" value="60"/>
+  <policy domain="resource" name="thread" value="2"/>
+  <!-- We process one still image at a time; a "sequence" of thousands of
+       frames is not something a rider photo has any reason to be. -->
+  <policy domain="resource" name="list-length" value="32"/>
+
+  <!-- Indirect reads (@file) are how a coder is talked into reading the
+       filesystem. Nothing we do needs them. -->
+  <policy domain="path" rights="none" pattern="@*"/>
+  <!-- No external programs. HEIC is decoded by libheif, which is linked into
+       ImageMagick and is NOT a delegate, so this costs us nothing. -->
+  <policy domain="delegate" rights="none" pattern="*"/>
+  <policy domain="filter" rights="none" pattern="*"/>
+  <policy domain="module" rights="none" pattern="{MSL,MVG,PS,EPS,PDF,SVG,URL,XPS,EPHEMERAL,TEXT,SHOW,WIN,PLT}"/>
+
+  <!-- The allowlist that matters. Same five formats PhotoProcessor accepts
+       after decoding, refused here before one is attempted. -->
+  <policy domain="coder" rights="none" pattern="*"/>
+  <policy domain="coder" rights="read|write" pattern="{JPEG,PNG,WEBP,HEIC,HEIF}"/>
+</policymap>
