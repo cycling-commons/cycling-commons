@@ -30,28 +30,16 @@
      only the layout margin is detail-specific here. */
   .btn-act{margin-top:.8rem}
 
-  .msg-rider{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;background:var(--paper)}
-  .msg-rider summary{cursor:pointer;font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);
-    display:flex;align-items:center;min-height:32px;padding:.35rem 0}
-  .msg-rider summary:hover{color:var(--ink)}
-  .msg-rider form{margin-top:.6rem;display:flex;flex-direction:column;gap:.5rem}
-  /* message + trash split over two columns; buttons back to natural size */
-  .mod-2col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
-  @media(max-width:700px){.mod-2col{grid-template-columns:1fr}}
-  .msg-rider form .btn-act{align-self:flex-end}
-  .trash-warn{color:#8b1a1a}
-  .trash-type-label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8b1a1a;margin:.5rem 0}
-  .trash-type-input{display:block;margin-top:.3rem;font-family:var(--mono);font-size:.85rem;padding:.35rem .5rem;border:1.5px solid #8b1a1a;border-radius:5px;background:transparent;max-width:11rem}
-  .msg-rider textarea{width:100%;min-height:90px;font-family:var(--sans);font-size:.88rem;padding:.55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
+{% include 'moderate/_card_styles.html.twig' %}
+
+  /* The proposal's own action row is the page's, not a queue row's, so it
+     needs the card's frame around it — on the overview the row inherits one
+     from the .q-item it sits in. */
+  .rd-acts{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;background:var(--paper)}
+  .q-item--corr .q-head{align-items:center}
+  .q-acts > form{display:contents}
 
   .rd-suggestions{margin:1.4rem 0 2.4rem}
-  .sugg-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin-bottom:.8rem;background:var(--paper);display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
-  .sugg-body{flex:1 1 260px}
-  .sugg-reason{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
-  .sugg-actions{display:flex;gap:.5rem}
-  /* Nested in .sugg-item's flex row — full-width, borderless (the card border
-     already frames it), unlike the standalone .msg-rider box above. */
-  .sugg-item .msg-rider{flex-basis:100%;border:none;border-top:1px solid rgba(20,22,14,.1);border-radius:0;padding:.6rem 0 0;margin:.4rem 0 0;background:transparent}
 </style>
 {% endblock %}
 
@@ -136,75 +124,66 @@
   </div>
   {% endif %}
 
-  {# message + trash side by side (rider feedback: no full-width stack) #}
-  <div class="mod-2col">
-    <details class="msg-rider">
-      <summary>{{ 'moderate.msg.summary'|trans }}</summary>
-      <form method="post" action="{{ path('moderate_message') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
-        <input type="hidden" name="channel" value="route">
-        <input type="hidden" name="id" value="{{ route.id }}">
-        <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
-        <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
-      </form>
-    </details>
+  {# This proposal's own verbs, in the shared card's action row
+     (moderation-and-contribution.md §5.2): one line, each <details> upgraded to
+     a real disclosure by moderate/_card_script.html.twig, and Trash carrying
+     WHEN to use it plus a ticked acknowledgement. Escalate is absent on
+     purpose — a route proposal is a GPX and a note, and the escalation path
+     exists for uploaded imagery (photo-uploads.md §6d). #}
+  <div class="rd-acts" data-item-id="route{{ route.id }}">
+    <div class="q-acts">
+      <details class="q-act q-act--message">
+        <summary class="btn-act btn-secondary">{{ 'moderate.msg.summary'|trans }}</summary>
+        <div class="q-act-panel">
+          <form method="post" action="{{ path('moderate_message') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
+            <input type="hidden" name="channel" value="route">
+            <input type="hidden" name="id" value="{{ route.id }}">
+            <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
+          </form>
+        </div>
+      </details>
 
-    {% if route.state in ['submitted', 'rejected'] %}
-    <details class="msg-rider trash-confirm-proposal">
-      <summary>{{ 'moderate.trash.button'|trans }}</summary>
-      <form method="post" action="{{ path('moderate_routes_trash') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
-        <input type="hidden" name="kind" value="proposal">
-        <input type="hidden" name="id" value="{{ route.id }}">
-        <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong></p>
-           <p>{{ 'moderate.trash.confirm_rest'|trans }}</p>
-        <label class="trash-type-label">{{ 'moderate.trash.type_label'|trans }}
-          <input type="text" name="confirm" required pattern="DELETE" autocomplete="off" spellcheck="false" placeholder="DELETE" class="trash-type-input">
-        </label>
-        <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
-      </form>
-    </details>
-    {% endif %}
+      {% if route.state in ['submitted', 'rejected'] %}
+      <details class="q-act q-act--trash trash-confirm-proposal">
+        <summary class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</summary>
+        <div class="q-act-panel">
+          <form method="post" action="{{ path('moderate_routes_trash') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
+            <input type="hidden" name="kind" value="proposal">
+            <input type="hidden" name="id" value="{{ route.id }}">
+            <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong></p>
+            <p>{{ 'moderate.trash.confirm_rest'|trans }}</p>
+            <p class="q-act-when">{{ 'moderate.trash.when'|trans }}</p>
+            <label class="trash-type-label">{{ 'moderate.trash.type_label'|trans }}
+              <input type="text" name="confirm" required pattern="DELETE" autocomplete="off" spellcheck="false" placeholder="DELETE" class="trash-type-input">
+            </label>
+            <label class="q-act-ack"><input type="checkbox" required>
+              <span>{{ 'moderate.trash.confirm_check'|trans }}</span></label>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+          </form>
+        </div>
+      </details>
+      {% endif %}
+    </div>
   </div>
 
   <h2>{{ 'moderate_routes.suggestions.title'|trans }}</h2>
   {% if suggestions is empty %}
     <p>{{ 'moderate_routes.suggestions.empty'|trans }}</p>
   {% else %}
-  <div class="rd-suggestions">
+  <div class="q-list rd-suggestions">
     {% for s in suggestions %}
-      <div class="sugg-item" data-suggestion-id="{{ s.id }}">
-        <div class="sugg-body">
-          <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</div>
-          {% if s.note %}<p>{{ s.note }}</p>{% endif %}
-        </div>
-        <div class="sugg-actions">
-          <form method="post" action="{{ path('moderate_routes_suggestion') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
-            <input type="hidden" name="suggestion_id" value="{{ s.id }}">
-            <input type="hidden" name="status" value="done">
-            <button type="submit" class="btn-act btn-done">{{ 'moderate_routes.action.done'|trans }}</button>
-          </form>
-          <form method="post" action="{{ path('moderate_routes_suggestion') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
-            <input type="hidden" name="suggestion_id" value="{{ s.id }}">
-            <input type="hidden" name="status" value="dismissed">
-            <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.dismiss'|trans }}</button>
-          </form>
-        </div>
-        <details class="msg-rider trash-confirm-correction">
-          <summary>{{ 'moderate.trash.button'|trans }}</summary>
-          <form method="post" action="{{ path('moderate_routes_trash') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
-            <input type="hidden" name="kind" value="correction">
-            <input type="hidden" name="id" value="{{ s.id }}">
-            <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong> {{ 'moderate.trash.confirm_rest'|trans }}</p>
-            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
-          </form>
-        </details>
-      </div>
+      {# Same card as the overview's corrections list. This page used to render
+         a leaner one with Trash but no Message and no typed confirmation —
+         two cards for one thing, and the weaker of the two guarding the
+         destructive verb. #}
+      {% include 'moderate_routes/_correction_item.html.twig' with {s: s, show_route: false} %}
     {% endfor %}
   </div>
   {% endif %}
 </div>
+
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}

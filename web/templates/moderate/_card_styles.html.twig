@@ -1,0 +1,122 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The moderation card system, shared by every desk that shows one.
+
+  It started as the submissions queue's own <style> block and was copied
+  nowhere — which is why the Routes desk was still on the older stacked
+  `.msg-rider` layout months later (2026-08-03 handoff item 2). One desk
+  learning something the others do not is the failure mode this partial
+  removes: a curator moves between /moderate, /moderate/routes and
+  /moderate/takedowns in one sitting and the card must not change shape
+  under them.
+
+  Include it inside a page's <style> block, and include
+  `moderate/_card_script.html.twig` at the end of `body` for the
+  disclosure + density enhancements. Spec: moderation-and-contribution.md §5.2.
+#}
+  .q-list{margin:1.8rem 0}
+  .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:.8rem .9rem;margin-bottom:.6rem;background:var(--paper)}
+  /* Heading block and action row share the card's top line, so an ordinary
+     submission is two lines tall and only real review context (photo, diff,
+     rider's words) makes the card grow. */
+  .q-top{display:flex;align-items:flex-start;gap:.9rem;flex-wrap:wrap}
+  .q-headwrap{flex:1 1 16rem;min-width:0}
+  .q-acts-wrap{flex:0 0 auto}
+  /* Tag, title and age share one line: three separate rows for one heading is
+     what made a queue of dozens scroll for pages. */
+  .q-head{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap}
+  .q-tag{font-family:var(--mono);font-size:.57rem;letter-spacing:.07em;text-transform:uppercase;padding:.2rem .45rem;border-radius:3px;color:var(--ink);flex:0 0 auto;align-self:center}
+  .q-tag--new{background:#FF5A1F}.q-tag--edit{background:#8FB6A8}.q-tag--hazard{background:#C8923A}.q-tag--photo{background:#B5532E;color:var(--paper)}
+  /* Answered: the rider came back and this card is waiting on the curator. */
+  .q-tag--answered{background:var(--spruce-lift);color:var(--paper)}
+  .q-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:auto;flex:0 0 auto}
+  .q-title{font-family:var(--serif);font-weight:600;font-size:1rem;margin:0;min-width:0}
+  .q-submitter{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin:.15rem 0 .45rem}
+  .q-view{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35);white-space:nowrap}
+  .q-view:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .q-view:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:2px}
+  .q-body{font-size:.9rem;line-height:1.5;color:#333;margin-bottom:.6rem}
+  .q-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.55rem .75rem;font-size:.86rem;margin-bottom:.7rem}
+  /* pending rider photos (docs/specs/photo-uploads.md §5) */
+  .q-photos{display:flex;flex-wrap:wrap;gap:.6rem;margin:.6rem 0}
+  .q-photo{margin:0}
+  .q-photo img{width:110px;height:82px;object-fit:cover;border-radius:5px;display:block}
+  .q-photo figcaption{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:#595c4d;margin-top:.2rem;max-width:110px}
+  .q-was{color:#8a8d7d;text-decoration:line-through}
+  .q-now{color:var(--trail)}
+  .q-rider-reply{font-size:.88rem;line-height:1.5;color:#4a4d40;background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.55rem .8rem;border-radius:0 5px 5px 0;margin-bottom:.7rem}
+  .q-rider-reply strong{color:var(--ink);font-weight:700}
+  .q-actions{margin-top:.9rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.9rem}
+  .q-act-form textarea{display:none}
+  .q-decision-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}
+  .q-decision-row label{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:0}
+  .q-decision-row select{max-width:220px}
+  .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+  .q-review{display:inline-block;text-decoration:none}
+  /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system) */
+
+  /* ONE action row. The <details> triggers are buttons beside the primary
+     action; an OPEN panel claims the whole row (flex-basis:100%) so the form
+     drops underneath instead of stretching the row it sits in — which is what
+     lets four controls live on one line without the row jumping around. */
+  .q-acts{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;flex:0 1 auto;max-width:100%}
+  .q-act{flex:0 0 auto;min-width:0}
+  /* No-JS fallback only: an open <details> claims the row so its form is not
+     squeezed into a button's width. It costs the trigger its place in the
+     line, which is exactly what the enhancement below removes. */
+  .q-act[open]{flex:1 0 100%;order:1}
+  .q-act > summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center}
+  .q-act > summary::-webkit-details-marker{display:none}
+  .q-act > summary::marker{content:''}
+  .q-act[open] > summary{background:rgba(20,22,14,.06)}
+  .q-act-panel{margin:.55rem 0 .2rem;padding:.7rem .85rem;border:1px solid rgba(20,22,14,.14);
+    border-radius:6px;background:var(--paper-deep)}
+  /* Enhanced disclosure: the trigger is a real button that never leaves the
+     row, and its panel lives in .q-panels underneath the whole card. */
+  .q-act-btn[aria-expanded="true"]{background:rgba(20,22,14,.06)}
+  .q-panels .q-act-panel{margin:.6rem 0 0}
+  .q-act-panel form{display:flex;flex-direction:column;gap:.5rem}
+  .q-act-panel form .btn-act{align-self:flex-start}
+  .q-act-panel p{font-size:.86rem;line-height:1.5;color:#4a4d40}
+  .q-act-head{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
+  /* WHEN to reach for this verb, set apart from the how — the sentence that
+     stops a curator using Trash on a merely wrong edit. */
+  .q-act-when{border-left:2px solid var(--clay);padding-left:.6rem;font-weight:600}
+  .q-act-ack{display:flex;align-items:flex-start;gap:.45rem;font-size:.84rem;line-height:1.45;color:#4a4d40;cursor:pointer}
+  .q-act-ack input{margin-top:.2rem;flex:0 0 auto}
+  .q-act-panel textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
+  .q-act-panel input[type=text]{font-family:var(--sans);font-size:.9rem;padding:.45rem .55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper)}
+
+  /* List density (2026-08-02): the same rows with the review context folded
+     away — for triage passes, where the curator is scanning what arrived
+     rather than reading each one. The decision still happens on the map, so
+     nothing needed for a DECISION is hidden here; body, diff, photos and the
+     rider's reply are all context that the map drawer shows again. */
+  .q-density{display:flex;gap:.3rem;align-items:center;margin-left:auto}
+  .q-density .dens{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:.35rem .6rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;background:transparent;
+    color:#595c4d;cursor:pointer;min-height:34px}
+  .q-density .dens.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .q-list.is-list .q-item{padding:.45rem .7rem;margin-bottom:.3rem}
+  .q-list.is-list .q-body,
+  .q-list.is-list .q-diff,
+  .q-list.is-list .q-photos,
+  .q-list.is-list .q-rider-reply{display:none}
+  .q-list.is-list .q-submitter{margin:0}
+  .q-list.is-list .q-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media(min-width:900px){
+    /* ONE line per submission: the card's own top block, with the heading and
+       the submitter side by side instead of stacked. Nothing is capped in
+       width — a cap made the four buttons wrap to a second line, and a
+       two-line "list" row is barely shorter than the card it compresses. The
+       title is the only elastic part and takes the ellipsis. Opening a panel
+       still expands the row, which is the one time the height is wanted. */
+    .q-list.is-list .q-item{padding:.35rem .7rem}
+    .q-list.is-list .q-top{flex-wrap:nowrap;align-items:center}
+    .q-list.is-list .q-headwrap{display:flex;align-items:baseline;gap:.6rem;flex:1 1 auto}
+    .q-list.is-list .q-head{flex:0 1 auto;min-width:0;flex-wrap:nowrap}
+    .q-list.is-list .q-submitter{flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:26ch}
+  }
+  .trash-warn{color:#8b1a1a}
+  .trash-type-label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8b1a1a;margin:.5rem 0}
+  .trash-type-input{display:block;margin-top:.3rem;font-family:var(--mono);font-size:.85rem;padding:.35rem .5rem;border:1.5px solid #8b1a1a;border-radius:5px;background:transparent;max-width:11rem}

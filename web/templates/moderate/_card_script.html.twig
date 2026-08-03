@@ -1,0 +1,111 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Progressive enhancements for the shared moderation card
+  (moderate/_card_styles.html.twig). Include at the END of a desk's `body`
+  block. Both halves are enhancements, never the markup: a curator with no JS
+  keeps every verb, and keeps the cards view that carries the full context.
+
+  Spec: moderation-and-contribution.md §5.2.
+#}
+<script nonce="{{ csp_nonce() }}">
+/* Density switch. The bar is unhidden here rather than in the markup so the
+   control only exists where it can work. Every `.q-list` on the page folds
+   together — the Routes desk has two (proposals and corrections) and a
+   curator switching density means the desk, not one section of it. */
+(function () {
+  var bar = document.getElementById('qDensity');
+  var lists = document.querySelectorAll('.q-list');
+  if (!bar || !lists.length) return;
+  var KEY = 'cc-mod-density';
+  function apply(mode) {
+    lists.forEach(function (list) { list.classList.toggle('is-list', mode === 'list'); });
+    bar.querySelectorAll('.dens').forEach(function (b) {
+      var on = b.dataset.dens === mode;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  var saved = 'list';
+  try { saved = localStorage.getItem(KEY) === 'list' ? 'list' : 'cards'; } catch (e) { saved = 'cards'; }
+  apply(saved);
+  bar.hidden = false;
+  bar.addEventListener('click', function (e) {
+    var b = e.target.closest('.dens');
+    if (!b) return;
+    apply(b.dataset.dens);
+    try { localStorage.setItem(KEY, b.dataset.dens); } catch (e2) { /* private mode — the view still switched */ }
+  });
+})();
+
+/* Action panels: keep the triggers on ONE line.
+
+   A <details> cannot do this. Its panel is a descendant of the element that
+   sits in the button row, so an open panel either squeezes into a button's
+   width or takes the whole row and drags its own trigger onto the next line
+   (`display:contents` on <details> is not a way out — Chrome then shows the
+   panel while it is CLOSED). So with JS the <details> becomes the disclosure
+   it was standing in for: a real button that stays put, and its panel moved to
+   a host below the card. aria-expanded/aria-controls carry what <summary> was
+   carrying for free.
+
+   Without JS the markup is untouched and every verb still works — the trigger
+   just moves when it opens. That is the reason this is an enhancement and not
+   the server's markup: a moderator with no JS keeps Message, Escalate, Trash.
+
+   Driven off `.q-acts` rather than off the card, because a desk may put an
+   action row somewhere that is not a queue row — the routes proposal DETAIL
+   page has exactly one, belonging to the page.
+
+   One panel open at a time per action row, so a queue does not quietly turn
+   into a column of expanded forms. */
+(function () {
+  document.querySelectorAll('.q-acts').forEach(function (acts, rowIndex) {
+    var details = Array.prototype.slice.call(acts.querySelectorAll('.q-act'));
+    if (!details.length) return;
+
+    var owner = acts.closest('[data-item-id]');
+    var key = (owner && owner.dataset.itemId) || ('r' + rowIndex);
+
+    var host = document.createElement('div');
+    host.className = 'q-panels';
+    acts.parentNode.insertBefore(host, acts.nextSibling);
+
+    var pairs = [];
+    details.forEach(function (d, i) {
+      var summary = d.querySelector('summary');
+      var panel = d.querySelector('.q-act-panel');
+      if (!summary || !panel) return;
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = summary.className + ' q-act-btn ' + d.className.replace('q-act', '').trim();
+      btn.textContent = summary.textContent;
+      btn.setAttribute('aria-expanded', 'false');
+      var id = 'qp-' + key + '-' + i;
+      panel.id = id;
+      btn.setAttribute('aria-controls', id);
+
+      panel.hidden = true;
+      host.appendChild(panel);
+      d.parentNode.replaceChild(btn, d);
+      pairs.push({ btn: btn, panel: panel });
+    });
+
+    pairs.forEach(function (p) {
+      p.btn.addEventListener('click', function () {
+        var opening = p.panel.hidden;
+        pairs.forEach(function (o) {
+          o.panel.hidden = true;
+          o.btn.setAttribute('aria-expanded', 'false');
+        });
+        if (opening) {
+          p.panel.hidden = false;
+          p.btn.setAttribute('aria-expanded', 'true');
+          var first = p.panel.querySelector('textarea, input:not([type=hidden]), select');
+          if (first) first.focus();
+        }
+      });
+    });
+  });
+})();
+</script>

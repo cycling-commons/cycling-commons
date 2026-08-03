@@ -4,25 +4,38 @@
   The queue no longer decides — it routes to the proposal's detail page where
   the review (map link, metadata, edit) and the decision form live.
 
+  Since 2026-08-03 this uses the shared moderation card
+  (moderation-and-contribution.md §5.2, moderate/_card_styles.html.twig):
+  heading block and action row share the card's TOP block, so a proposal is
+  two lines tall and a curator moving between /moderate and /moderate/routes
+  meets the same card twice instead of two layouts.
+
+  The action row holds only Review — a proposal is decided on its detail page,
+  and Message/Trash live there with the decision they belong to.
+
   Parameters:
     item  array — queue item from RouteQueue::pending()
 #}
 <div class="q-item" data-item-id="{{ item.id }}">
-  <div class="q-meta">
-    <span class="q-tag q-tag--new">{{ item.km }} km</span>
-    <span class="q-when">{{ item.when }}</span>
-  </div>
-  <h3 class="q-title">{{ item.name }}</h3>
-  <div class="q-submitter">
-    {{ item.who }} &middot; {{ item.region ?? 'moderate_routes.region_none'|trans }}
-    &middot;
-    <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': item.activeInRegion, '%cap%': item.cap}) }}</span>
-    {% if item.activeInRegion >= item.cap %}
-      <span class="q-tag q-tag--hazard">{{ 'moderate_routes.error.region_full'|trans }}</span>
-    {% endif %}
-  </div>
+  <div class="q-top">
+    <div class="q-headwrap">
+      <div class="q-head">
+        <span class="q-tag q-tag--new">{{ item.km }} km</span>
+        {% if item.activeInRegion >= item.cap %}
+          <span class="q-tag q-tag--hazard">{{ 'moderate_routes.error.region_full'|trans }}</span>
+        {% endif %}
+        <h3 class="q-title">{{ item.name }}</h3>
+        <span class="q-when">{{ item.when }}</span>
+      </div>
+      <div class="q-submitter">
+        {{ item.who }} &middot; {{ item.region ?? 'moderate_routes.region_none'|trans }}
+        &middot;
+        <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': item.activeInRegion, '%cap%': item.cap}) }}</span>
+      </div>
+    </div>
 
-  <div class="q-actions">
-    <a class="btn-act btn-secondary q-review" href="{{ path('moderate_routes_detail', {id: item.id}) }}">{{ 'moderate_routes.action.review'|trans }} &#8594;</a>
+    <div class="q-acts">
+      <a class="btn-act btn-secondary q-review" href="{{ path('moderate_routes_detail', {id: item.id}) }}">{{ 'moderate_routes.action.review'|trans }} &#8594;</a>
+    </div>
   </div>
 </div>

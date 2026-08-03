@@ -118,13 +118,19 @@ final class CuratorMessageTest extends WebTestCase
      * real value the way a browser would instead: render a desk page (any
      * page works — the token id is fixed, not page-specific) after logging
      * in and read it off the "message the rider" form it renders.
+     *
+     * `.q-act--message` is the shared moderation card's explicit hook for that
+     * panel (moderation-and-contribution.md §5.2), which the routes desk
+     * adopted on 2026-08-03 in place of the older `.msg-rider` block. The hook
+     * is per-panel and not sibling order, so a desk gaining another action
+     * does not move it.
      */
     private function messageToken(KernelBrowser $client): string
     {
         $warmupRoute = $this->route(null);
         $crawler = $client->request('GET', '/moderate/routes/'.$warmupRoute->getId());
 
-        return (string) $crawler->filter('.msg-rider input[name="_token"]')->attr('value');
+        return (string) $crawler->filter('.q-act--message input[name="_token"]')->first()->attr('value');
     }
 
     public function testCuratorMessagesASubmissionsRider(): void

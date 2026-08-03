@@ -13,25 +13,17 @@
   .mod-filters label{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
   .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
 
-  .q-list{margin:1.8rem 0}
-  .q-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.3rem 1.4rem;margin-bottom:1.1rem;background:var(--paper)}
-  .q-meta{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
-  .q-tag{font-family:var(--mono);font-size:.57rem;letter-spacing:.07em;text-transform:uppercase;padding:.2rem .45rem;border-radius:3px;color:var(--ink)}
-  .q-tag--new{background:#FF5A1F}.q-tag--hazard{background:#C8923A}
-  .q-when{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;margin-left:auto}
-  .q-title{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin-bottom:.25rem}
-  .q-submitter{font-family:var(--mono);font-size:.62rem;color:#595c4d;margin-bottom:.5rem}
-  .q-view{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35);white-space:nowrap}
-  .q-view:hover{color:var(--ink);border-bottom-color:var(--ink)}
-  .q-view:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:2px}
-  .q-actions{margin-top:.9rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.9rem}
-  .q-act-form textarea{display:none}
-  .q-decision-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}
-  .q-decision-row label{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:0}
-  .q-decision-row select{max-width:220px}
-  .q-act-btns{display:flex;gap:.5rem;flex-wrap:wrap}
-  .q-review{display:inline-block;text-decoration:none}
-  /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system) */
+{% include 'moderate/_card_styles.html.twig' %}
+
+  /* Route cards carry no lat/lng line, so the correction card's heading block
+     can sit on the action row's baseline instead of above it. */
+  .q-item--corr .q-head{align-items:center}
+  .q-item--corr .q-title{font-size:.95rem}
+  a.sugg-route{color:inherit;text-decoration:none}
+  a.sugg-route:hover,a.sugg-route:focus-visible{color:var(--trail);text-decoration:underline;text-underline-offset:3px}
+  /* Done/Dismiss are POSTs, so each is its own <form> inside the action row —
+     without this they would each claim a block-level line of their own. */
+  .q-acts > form{display:contents}
 
   /* section headers: delicate — a coloured label + a thin accent rule marks
      the two work streams (proposals / corrections) without a heavy fill. */
@@ -40,32 +32,6 @@
   .sec-band--corr{color:var(--spruce);border-color:rgba(28,58,42,.35)}
   .sec-band .sec-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.2rem;height:1.2rem;padding:0 .35rem;border-radius:999px;background:rgba(20,22,14,.08);color:#595c4d;font-size:.62rem}
   .sec-empty{color:#595c4d;font-size:.9rem;padding:.4rem 0 1.5rem}
-
-  .sugg-list{margin:1.1rem 0 2.4rem}
-  .sugg-item{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin-bottom:.8rem;background:var(--paper);display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
-  .sugg-body{flex:1 1 260px}
-  .sugg-route{font-family:var(--serif);font-weight:600;color:inherit;text-decoration:none;
-    display:inline-flex;align-items:center;min-height:32px}
-  a.sugg-route:hover,a.sugg-route:focus-visible{color:var(--trail);text-decoration:underline;text-underline-offset:3px}
-  .sugg-reason{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay)}
-  .sugg-actions{display:flex;gap:.5rem}
-
-  /* the two-column message/trash block spans the full suggestion-card width */
-  .sugg-item .mod-2col{flex-basis:100%;margin-top:.4rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
-  .msg-rider{flex-basis:100%;margin-top:.4rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
-  .mod-2col .msg-rider{margin-top:0;border-top:none;padding-top:0}
-  .msg-rider summary{cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);
-    display:flex;align-items:center;min-height:32px;padding:.35rem 0}
-  .msg-rider summary:hover{color:var(--ink)}
-  .msg-rider form{margin-top:.6rem;display:flex;flex-direction:column;gap:.5rem}
-  /* message + trash split over two columns; buttons back to natural size */
-  .mod-2col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
-  @media(max-width:700px){.mod-2col{grid-template-columns:1fr}}
-  .msg-rider form .btn-act{align-self:flex-end}
-  .trash-warn{color:#8b1a1a}
-  .trash-type-label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8b1a1a;margin:.5rem 0}
-  .trash-type-input{display:block;margin-top:.3rem;font-family:var(--mono);font-size:.85rem;padding:.35rem .5rem;border:1.5px solid #8b1a1a;border-radius:5px;background:transparent;max-width:11rem}
-  .msg-rider textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
 
   .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
   .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
@@ -101,6 +67,14 @@
       </select>
     </label>
     <button type="submit" class="btn-act btn-decide">{{ 'moderate.filter.apply'|trans }}</button>
+    {# Density switch: cards ↔ list, exactly as on the submissions desk, and it
+       folds BOTH sections — a curator switching density means the desk.
+       Unhidden by moderate/_card_script.html.twig, so without JS the desk
+       stays in cards, the view that carries the full context. #}
+    <div class="q-density" id="qDensity" role="group" aria-label="{{ 'moderate.view.label'|trans }}" hidden>
+      <button type="button" class="dens" data-dens="cards" aria-pressed="true">{{ 'moderate.view.cards'|trans }}</button>
+      <button type="button" class="dens" data-dens="list" aria-pressed="false">{{ 'moderate.view.list'|trans }}</button>
+    </div>
   </form>
 
   {# ── New route proposals — riders' newly-uploaded routes awaiting first review ── #}
@@ -112,7 +86,7 @@
     <p>{{ 'moderate_routes.overview.empty'|trans }}</p>
   </div>
   {% else %}
-  <div class="q-list">
+  <div class="q-list" id="qList">
     {% for item in routes %}
       {% include 'moderate_routes/_queue_item.html.twig' with {item: item} %}
     {% endfor %}
@@ -124,57 +98,13 @@
   {% if suggestions is empty %}
     <p class="sec-empty">{{ 'moderate_routes.suggestions.empty'|trans }}</p>
   {% else %}
-  <div class="sugg-list">
+  <div class="q-list sugg-list">
     {% for s in suggestions %}
-      <div class="sugg-item" data-suggestion-id="{{ s.id }}">
-        <div class="sugg-body">
-          <a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a>
-          <div class="sugg-reason">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}{% if s.segmentCount > 0 %} · {{ (s.segmentCount == 1 ? 'moderate_routes.suggestions.count_stretch' : 'moderate_routes.suggestions.count_stretches')|trans({'%n%': s.segmentCount}) }}{% endif %}</div>
-          {% if s.note %}<p>{{ s.note }}</p>{% endif %}
-        </div>
-        <div class="sugg-actions">
-          <form method="post" action="{{ path('moderate_routes_suggestion') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
-            <input type="hidden" name="suggestion_id" value="{{ s.id }}">
-            <input type="hidden" name="status" value="done">
-            <button type="submit" class="btn-act btn-done">{{ 'moderate_routes.action.done'|trans }}</button>
-          </form>
-          <form method="post" action="{{ path('moderate_routes_suggestion') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
-            <input type="hidden" name="suggestion_id" value="{{ s.id }}">
-            <input type="hidden" name="status" value="dismissed">
-            <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.dismiss'|trans }}</button>
-          </form>
-        </div>
-        <div class="mod-2col">
-          <details class="msg-rider">
-            <summary>{{ 'moderate.msg.summary'|trans }}</summary>
-            <form method="post" action="{{ path('moderate_message') }}">
-              <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
-              <input type="hidden" name="channel" value="correction">
-              <input type="hidden" name="id" value="{{ s.id }}">
-              <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
-              <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
-            </form>
-          </details>
-          <details class="msg-rider trash-confirm">
-            <summary>{{ 'moderate.trash.button'|trans }}</summary>
-            <form method="post" action="{{ path('moderate_routes_trash') }}">
-              <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
-              <input type="hidden" name="kind" value="correction">
-              <input type="hidden" name="id" value="{{ s.id }}">
-              <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong></p>
-           <p>{{ 'moderate.trash.confirm_rest'|trans }}</p>
-              <label class="trash-type-label">{{ 'moderate.trash.type_label'|trans }}
-                <input type="text" name="confirm" required pattern="DELETE" autocomplete="off" spellcheck="false" placeholder="DELETE" class="trash-type-input">
-              </label>
-              <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
-            </form>
-          </details>
-        </div>
-      </div>
+      {% include 'moderate_routes/_correction_item.html.twig' with {s: s, show_route: true} %}
     {% endfor %}
   </div>
   {% endif %}
 </div>
+
+{% include 'moderate/_card_script.html.twig' %}
 {% endblock %}

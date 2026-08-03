@@ -1,0 +1,97 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  Partial: one route correction (a rider flagging a fix on an EXISTING route).
+
+  Shared by the Routes desk overview and a single proposal's detail page, which
+  had drifted into two different cards for the same thing — the overview
+  carried Message + Trash, the detail page carried Trash alone, and only one of
+  them told a curator when Trash is the right verb.
+
+  It is the shared moderation card (moderation-and-contribution.md §5.2):
+  heading block and action row in the same TOP block, the destructive verb
+  behind a <details> that the nonce script upgrades to a real disclosure, and
+  WHEN-to-use copy plus a ticked acknowledgement inside it.
+
+  Parameters:
+    s           array — correction row (id, routeId, routeName, reason, note, segmentCount)
+    show_route  bool  — link the route's name (overview); false on a route's own page
+#}
+<div class="q-item q-item--corr" data-item-id="c{{ s.id }}" data-suggestion-id="{{ s.id }}">
+  <div class="q-top">
+    <div class="q-headwrap">
+      <div class="q-head">
+        <span class="q-tag q-tag--edit">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</span>
+        {% if show_route|default(false) %}
+          <h3 class="q-title"><a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a></h3>
+        {% endif %}
+      </div>
+      {% if s.segmentCount is defined and s.segmentCount > 0 %}
+        <div class="q-submitter">
+          {{ (s.segmentCount == 1 ? 'moderate_routes.suggestions.count_stretch' : 'moderate_routes.suggestions.count_stretches')|trans({'%n%': s.segmentCount}) }}
+        </div>
+      {% endif %}
+    </div>
+
+    {# Done and Dismiss are plain POSTs — they resolve the correction, they do
+       not destroy anything. Trash keeps its place LAST, after the verbs a
+       curator reaches for far more often. #}
+    <div class="q-acts">
+      <form method="post" action="{{ path('moderate_routes_suggestion') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
+        <input type="hidden" name="suggestion_id" value="{{ s.id }}">
+        <input type="hidden" name="status" value="done">
+        <button type="submit" class="btn-act btn-done">{{ 'moderate_routes.action.done'|trans }}</button>
+      </form>
+      <form method="post" action="{{ path('moderate_routes_suggestion') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('route-suggestion') }}">
+        <input type="hidden" name="suggestion_id" value="{{ s.id }}">
+        <input type="hidden" name="status" value="dismissed">
+        <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.dismiss'|trans }}</button>
+      </form>
+
+      <details class="q-act q-act--message">
+        <summary class="btn-act btn-secondary">{{ 'moderate.msg.summary'|trans }}</summary>
+        <div class="q-act-panel">
+          <form method="post" action="{{ path('moderate_message') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('moderate-message') }}">
+            <input type="hidden" name="channel" value="correction">
+            <input type="hidden" name="id" value="{{ s.id }}">
+            <textarea name="body" maxlength="2000" placeholder="{{ 'moderate.msg.placeholder'|trans }}" required></textarea>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.msg.send'|trans }}</button>
+          </form>
+        </div>
+      </details>
+
+      {# The destructive verb opens with WHEN to use it and closes with a
+         ticked acknowledgement, the same way the submissions desk does: a
+         button label cannot carry the difference between "this correction is
+         wrong" and "this is spam that must not survive". The tick is a UI
+         speed bump — native `required`, no POST until it is ticked — and is
+         deliberately not the real gate; the server re-checks the typed
+         DELETE. #}
+      <details class="q-act q-act--trash trash-confirm">
+        <summary class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</summary>
+        <div class="q-act-panel">
+          <form method="post" action="{{ path('moderate_routes_trash') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('route-trash') }}">
+            <input type="hidden" name="kind" value="correction">
+            <input type="hidden" name="id" value="{{ s.id }}">
+            <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong></p>
+            <p>{{ 'moderate.trash.confirm_rest'|trans }}</p>
+            <p class="q-act-when">{{ 'moderate.trash.when'|trans }}</p>
+            <label class="trash-type-label">{{ 'moderate.trash.type_label'|trans }}
+              <input type="text" name="confirm" required pattern="DELETE" autocomplete="off" spellcheck="false" placeholder="DELETE" class="trash-type-input">
+            </label>
+            <label class="q-act-ack"><input type="checkbox" required>
+              <span>{{ 'moderate.trash.confirm_check'|trans }}</span></label>
+            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+          </form>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  {% if s.note %}
+    <p class="q-body">{{ s.note }}</p>
+  {% endif %}
+</div>
