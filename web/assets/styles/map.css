@@ -233,6 +233,19 @@
   .cc-mod-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.5rem .7rem;font-size:.82rem;margin-bottom:.6rem}
   /* Before/after for a proposed climb shape. The switch redraws the line on
      the MAP — coordinates in the text diff above are not reviewable. */
+  /* Grouped, per field. One run-on sentence of every changed value was
+     technically complete and practically unreadable. */
+  .cc-mod-chg{display:grid;grid-template-columns:auto 1fr;gap:.2rem .7rem;margin:.35rem 0 0}
+  .cc-mod-chg dt{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;
+    color:#9a9d8c;align-self:baseline;padding-top:.15rem;white-space:nowrap}
+  .cc-mod-chg dd{margin:0;min-width:0;overflow-wrap:anywhere;font-size:.82rem;line-height:1.45}
+  .cc-mod-chg .was{color:#8a8d7d;text-decoration:line-through}
+  .cc-mod-chg .arw{color:#9a9d8c;margin:0 .3rem}
+  .cc-mod-chg .now{color:var(--trail)}
+  /* A row showing a PROPOSED value rather than the item's own. Orange, so it
+     reads as a proposal at a glance and never as recorded fact. */
+  .cc-d-rec li.chg .v{color:var(--trail);font-weight:600}
+  .cc-d-rec li.chg .k::after{content:"●";color:var(--trail);font-size:.5rem;margin-left:.3rem;vertical-align:middle}
   .cc-mod-shape{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:0 0 .6rem}
   .cc-mod-shape-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#9a9d8c}
   .cc-mod-shape-btns{display:inline-flex;border:1px solid rgba(239,230,212,.28);border-radius:30px;overflow:hidden}

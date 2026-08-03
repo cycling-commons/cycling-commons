@@ -173,6 +173,12 @@ final class MapController extends AbstractController
             'proposedChange' => 'd_proposed_change', 'history' => 'd_history', 'initialEntry' => 'd_initial_entry',
             // Before/after switch on a pending climb's proposed shape.
             'shapeOnMap' => 'd_shape_on_map', 'shapeBefore' => 'd_shape_before', 'shapeAfter' => 'd_shape_after',
+            'itemProposed' => 'd_item_proposed',
+            // Names for the fields that carry no DISPLAY row of their own (the
+            // climb editor's geometry, and the correction note) — without
+            // these a curator's diff reads `grad`, `route`, `steep`.
+            'fRoute' => 'd_f_route', 'fGrad' => 'd_f_grad', 'fSteep' => 'd_f_steep',
+            'fCorrection' => 'd_f_correction',
             'recentChanges' => 'd_recent_changes', 'modNotePh' => 'd_mod_note_ph', 'approve' => 'd_approve',
             'needsInfo' => 'd_needs_info', 'reject' => 'd_reject', 'modKeys' => 'd_mod_keys',
             'decisionErr' => 'd_decision_err', 'decisionRecorded' => 'd_decision_recorded',

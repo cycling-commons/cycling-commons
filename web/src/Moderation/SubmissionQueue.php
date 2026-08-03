@@ -546,6 +546,14 @@ final class SubmissionQueue
                    and a changed `route` with an unchanged `grad` would
                    otherwise colour the proposed line from the wrong profile. */
                 'shape' => self::shapeSides((string) $r['changes']),
+                /* The same change set as `was`/`now`, but per field, so the
+                   drawer can group it and — more usefully — show the proposed
+                   value in place of the current one when the curator flips to
+                   After. One run-on string was readable; a field-by-field
+                   comparison against the item's own display is reviewable
+                   (owner, 2026-08-03). Labels stay client-side: the drawer
+                   already has localised ones in CC_FIELD_SCHEMA. */
+                'changes' => self::changeRows((string) $r['changes']),
             ];
         }, $rows);
     }
@@ -658,5 +666,35 @@ final class SubmissionQueue
         $after = $side('now');
 
         return (null === $before && null === $after) ? null : ['before' => $before, 'after' => $after];
+    }
+
+    /**
+     * The submission's changes, one entry per field.
+     *
+     * `was` is null when the field had no previous value — the "add a missing
+     * field" case, which must not render a struck-out blank.
+     *
+     * @return list<array{key: string, was: ?string, now: string}>
+     */
+    private static function changeRows(string $changesJson): array
+    {
+        /** @var array<string, mixed> $changes */
+        $changes = json_decode($changesJson, true) ?: [];
+        $out = [];
+        foreach ($changes as $field => $pair) {
+            // A payload shape that is not {was, now} is not a diff and cannot
+            // be rendered as one. Skipping beats guessing.
+            if (!\is_array($pair)) {
+                continue;
+            }
+            $was = $pair['was'] ?? null;
+            $out[] = [
+                'key' => (string) $field,
+                'was' => null === $was || '' === $was ? null : ChangeValue::format((string) $field, $was),
+                'now' => ChangeValue::format((string) $field, $pair['now'] ?? null),
+            ];
+        }
+
+        return $out;
     }
 }

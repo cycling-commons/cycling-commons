@@ -19,7 +19,7 @@
 import { I18N, D, tpl, CC_SEASON_LABEL } from './i18n.js';
 import { layerByKey, LETTER_KEY } from './catalog.js';
 import { render } from './render.js';
-import { mapToast, closeDrawer, openDrawer, osmDrawer } from './drawer.js';
+import { mapToast, closeDrawer, openDrawer, osmDrawer, renderPendingContext } from './drawer.js';
 import { _pickSegs } from './picking.js';
 import { dropPendingFromSearch } from './search-ui.js';
 import { addCuratedFeature } from './osm-pools.js';
@@ -364,6 +364,10 @@ export function initCommunity(){
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
       showPendingShape(shape, side);
+      // The switch moves the WHOLE review, not just the line: the item's own
+      // rows repaint to the same side, so a curator compares values in place.
+      renderPendingContext(side);
+      box.classList.toggle('is-before', side === 'before');
     });
     // Clear the "must pick a bike type" warning as soon as the rider chooses one.
     document.addEventListener('change', e=>{ const s=e.target.closest('.cc-rc-invalid'); if(s) s.classList.remove('cc-rc-invalid'); });

@@ -49,9 +49,20 @@ export function schemaRows(letter, src, id, opts){
   const schema = (window.CC_FIELD_SCHEMA || {})[letter] || [];
   const skip = (opts && opts.skip) || [];
   const fixed = (opts && opts.fixed) || {};   // key -> assumed default when UNSET: shown as a value row instead of an "add" prompt; a stored value wins
+  /* opts.proposed: {key -> formatted value} from a pending submission. When
+     present, those fields render the PROPOSED value instead of the item's
+     current one, marked so it reads as a proposal rather than as fact. This is
+     what makes the pending card's Before/After switch move the whole drawer and
+     not just the map line: a curator compares against the item's own display,
+     in place, rather than against a separate diff block (owner, 2026-08-03). */
+  const proposed = (opts && opts.proposed) || null;
   const rows = [];
   schema.forEach(f=>{
     if(skip.indexOf(f.key) >= 0) return;
+    if(proposed && Object.prototype.hasOwnProperty.call(proposed, f.key)){
+      rows.push({label:f.label, value:proposed[f.key], changed:true});
+      return;
+    }
     const v = src[f.key];
     const has = Array.isArray(v) ? v.length > 0 : (v != null && v !== '');
     // Stored values are canonical English; f.choices (schema-provided, per
@@ -78,6 +89,57 @@ export function schemaRows(letter, src, id, opts){
   });
   return rows;
 }
+/* Fields a submission can change that have no DISPLAY row of their own, so the
+   schema below carries no label for them: the climb editor's three geometry
+   fields, and the correction note (display:false in the registry). Without
+   these the diff read `grad`, `route`, `steep` at a curator. */
+const OFF_SCHEMA_LABELS = {
+  route: () => D.fRoute || 'Climb line',
+  grad: () => D.fGrad || 'Gradient profile',
+  steep: () => D.fSteep || 'Steepest ramp',
+  correction: () => D.fCorrection || 'Anything to correct?',
+};
+
+/** A field's localised label from the display schema, or the raw name. */
+export function fieldLabelFor(letter, name){
+  const f = ((window.CC_FIELD_SCHEMA||{})[letter]||[]).find(x => x.key === name);
+  if(f && f.label) return f.label;
+  const off = OFF_SCHEMA_LABELS[name];
+  return off ? off() : name;
+}
+
+/** {fieldName -> proposed value}, for schemaRows' `proposed` option. */
+export function proposedMap(changes){
+  const out = {};
+  (changes||[]).forEach(c => { if(c && c.key != null) out[c.key] = c.now; });
+  return out;
+}
+
+/* The pending submission's item context, kept so the Before/After switch can
+   re-render it. Set when a pending card renders, cleared when the drawer
+   closes. */
+let _ctx = null;
+export function setPendingContext(ctx){ _ctx = ctx || null; }
+
+/**
+ * Repaint the "this item" rows for one side of the switch.
+ *
+ * AFTER shows the proposed values in place of the current ones, marked; BEFORE
+ * shows the item untouched. Repainting the same list — rather than revealing a
+ * second one — is what makes the two states comparable: every row stays where
+ * it was, so only the values move.
+ */
+export function renderPendingContext(side){
+  if(!_ctx) return;
+  const list = document.querySelector('#drawerBody [data-ctx-rows]');
+  if(!list) return;
+  const after = side !== 'before';
+  list.innerHTML = recRowsHtml(schemaRows(_ctx.letter, _ctx.target, null,
+    after ? {proposed: proposedMap(_ctx.changes)} : {}));
+  const h = document.querySelector('#drawerBody [data-ctx-h]');
+  if(h) h.textContent = after ? (D.itemProposed||'This item, as proposed') : (D.itemToday||'This item today');
+}
+
 /** The <li> markup for a list of record rows. Extracted so the pending card can
     render the target item's own rows with exactly the drawer's markup and
     exactly the drawer's escaping — a second, slightly different renderer is how
@@ -90,7 +152,7 @@ function recRowsHtml(recs){
     // interpolation escPend-escaped (RIDE_CITIES city links, bike-type
     // chips). Raw payload values never take this path — they stay
     // escPend-escaped below (spec §13).
-    return `<li class="${r.empty?'empty':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
+    return `<li class="${r.empty?'empty':''}${r.changed?' chg':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
   }).join('');
 }
 
@@ -370,9 +432,20 @@ function buildRecord(layer, f){
     // there is. The curator then got a card naming an item and never naming
     // the change they were being asked to approve (owner-reported 2026-08-03).
     // The struck-out line appears only when there is something to strike out.
-    const diff = s.now
-      ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>${s.was?`<div class="cc-mod-was">${escPend(s.was)}</div>`:''}<div class="cc-mod-now">${escPend(s.now)}</div></div>`
-      : '';
+    /* One row per changed field, not one run-on sentence. `s.changes` carries
+       {key, was, now}; the label comes from the same localised schema the item
+       rows use, so the diff and the item read in the same words. Falls back to
+       the joined strings for a submission whose payload predates this. */
+    const chList = Array.isArray(s.changes) ? s.changes : [];
+    const diff = chList.length
+      ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>
+          <dl class="cc-mod-chg">${chList.map(c=>`
+            <dt>${escPend(fieldLabelFor(s.letter, c.key))}</dt>
+            <dd>${c.was!=null?`<span class="was">${escPend(c.was)}</span><span class="arw">→</span>`:''}<span class="now">${escPend(c.now)}</span></dd>`).join('')}
+          </dl></div>`
+      : (s.now
+        ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>${s.was?`<div class="cc-mod-was">${escPend(s.was)}</div>`:''}<div class="cc-mod-now">${escPend(s.now)}</div></div>`
+        : '');
     /* A redrawn climb is not reviewable as coordinates. When the submission
        carries a shape, the card offers a before/after switch that redraws the
        line on the map — see pending-shape.js for why it is a switch and not
@@ -447,8 +520,15 @@ function buildRecord(layer, f){
       const lyr = CATALOG.find(l => l.letter === s.letter);
       const target = lyr && (lyr.features||[]).find(x => x.id != null && String(x.id) === String(s.itemId));
       if(target){
-        const ctxRows = recRowsHtml(schemaRows(s.letter, target, null));
-        if(ctxRows) context = `<div class="cc-mod-ctx"><div class="cc-mod-ctx-h">${D.itemToday||'This item today'}</div><ul class="cc-d-rec">${ctxRows}</ul></div>`;
+        /* Rendered for the side the switch is on, and re-rendered when it
+           flips (renderPendingContext). AFTER shows the proposed values in
+           place, highlighted; BEFORE shows the item exactly as it stands. That
+           is the comparison a curator actually wants: the proposal against the
+           item's own display, in its own words, rather than a separate diff
+           block to reconcile by eye (owner, 2026-08-03). */
+        setPendingContext({letter: s.letter, target, changes: chList});
+        const ctxRows = recRowsHtml(schemaRows(s.letter, target, null, {proposed: proposedMap(chList)}));
+        if(ctxRows) context = `<div class="cc-mod-ctx"><div class="cc-mod-ctx-h" data-ctx-h>${D.itemProposed||'This item, as proposed'}</div><ul class="cc-d-rec" data-ctx-rows>${ctxRows}</ul></div>`;
       }
     }
     const badge = 'needs_info' === s.status
@@ -763,6 +843,7 @@ export function closeDrawer(){
   clearCorrections();
   clearPendingShape();                               // drop the before/after climb overlay with the card that owns it
   setPendingShape(null);
+  setPendingContext(null);
   sheet.clear();                                     // drop snap classes + inline transform for the next open
 }
 // Close affordances: the X and the scrim (tap the dimmed area above the mobile
