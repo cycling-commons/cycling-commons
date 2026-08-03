@@ -2030,6 +2030,7 @@ messages:
     media_hidden_pending_review: 'Jemand hat eines deiner Fotos gemeldet, und wegen dessen, was die Meldung behauptet, haben wir es sofort von der Karte verborgen, während eine kuratierende Person es prüft. Verborgen ist nicht entfernt: Das Foto bleibt deins, ist weiterhin gespeichert, und nichts wurde gelöscht. Hält die Meldung nicht stand, ist es binnen Tagen zurück und wir sagen dir Bescheid. Nur eine kuratierende Person kann ein Foto entfernen, niemals eine Meldung allein — und wir können dir nicht sagen, wer gemeldet hat, so wie dieser Person nicht gesagt wurde, wer hochgeladen hat.'
     media_restored_after_review: 'Die Meldung zu deinem Foto hielt nicht stand, es ist also wieder auf der Karte, genau wie zuvor. Danke für deine Geduld — erst zu verbergen ist der Weg, mit dem eine echte Beschwerde nie tagelang online bleibt, und das heißt, dass gelegentlich ein Foto eine Weile umsonst verschwindet.'
   reply_label: 'Deine Antwort'
+  what_you_changed: 'Was du geändert hast'
   reply_send: 'Antwort senden'
   reply_sent: 'Antwort gesendet — dein Beitrag ist wieder in der Prüfwarteschlange.'
   reply_too_late: 'Dieser Beitrag wartet nicht mehr auf deine Antwort.'

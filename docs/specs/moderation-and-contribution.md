@@ -1042,6 +1042,42 @@ currently **2000** characters — shared by notes, curator messages and replies
   no question, no sign their answer had been delivered, and no route to the
   reply form.
 
+### 7.3a A rider can see WHAT they contributed (2026-08-03, owner)
+
+Both rider-facing surfaces named the place and stopped there. "Your
+contribution Côte de la Redoute was approved" and a contributions row reading
+`EDIT · Côte de la Redoute · APPROVED` are the same text for every edit to that
+climb — a rider who fixed the gradient on Monday and the surface on Tuesday saw
+two identical rows and could not tell which one a curator had acted on. The
+information was already in the submission; only the curator's desk was showing
+it.
+
+Both now render the change, as the same was → now shape the desk's `.q-diff`
+uses:
+
+- **`/profile` contributions list** — under every row that changed something.
+- **`/messages`** — inside the decision card, headed "What you changed".
+  **Not** on a needs-info card: there the curator's question is the point, and
+  a diff above the reply box pushes it down the page.
+
+**Field names are the form's labels, not the storage keys**, which is the one
+place this deliberately differs from the desk.
+`App\Contribution\SubmissionChangeSummary` resolves them through
+`CatalogFormRegistry` — a rider reads "Road quality", never `sq`. A key the
+registry no longer carries keeps the key rather than vanishing: showing
+`hairpinsOld` is honest, showing nothing would hide part of what somebody
+submitted. Multi-selects join with commas, because
+`["Step-free","Handbike-friendly"]` is not an answer anyone gave.
+
+The struck-out half appears only when there was a previous value — adding a
+missing field is the commonest contribution there is and has nothing to strike
+out. That is the same gate the desk's card learned on 2026-08-03.
+
+**The messages lookup is scoped by `user_id`.** A message is addressed to its
+recipient, so its `refId` should already be theirs — but this reads
+contribution content out of the database on the strength of an id carried by a
+row, and "should already be" is not an access rule.
+
 ### 7.4 Curator → rider messages — M6a
 
 `POST /moderate/message` (`ModerateMessageController`, `ROLE_CURATOR`

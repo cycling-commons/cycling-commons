@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionStatus;
+use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaStorage;
@@ -43,7 +44,7 @@ final class MessagesController extends AbstractController
     }
 
     #[Route('/messages', name: 'messages')]
-    public function index(MessageService $messages, Connection $db): Response
+    public function index(MessageService $messages, Connection $db, SubmissionChangeSummary $changes): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -86,7 +87,58 @@ final class MessagesController extends AbstractController
             'answers' => $answers['byQuestion'],
             'replyable_submission_ids' => $replyableSubmissionIds,
             'message_photos' => $this->messagePhotos($list),
+            // WHAT the contribution this message is about actually changed.
+            // "Your contribution X was approved" names a place and stops; the
+            // rider still cannot see which of their own edits it was
+            // (owner-reported 2026-08-03).
+            'submission_changes' => $this->submissionChanges($list, $userId, $changes),
         ]);
+    }
+
+    /**
+     * The change rows for every submission these messages refer to, keyed by
+     * submission id.
+     *
+     * **Scoped to the reader's own submissions.** A message is addressed to
+     * its recipient, so `refId` should already be theirs — but this reads
+     * contribution content out of the database on the strength of an id
+     * carried by a row, and "should already be" is not an access rule. The
+     * `userId` filter is the access rule.
+     *
+     * @param list<UserMessage> $list
+     *
+     * @return array<int, list<array{label: string, was: ?string, now: string}>>
+     */
+    private function submissionChanges(array $list, int $userId, SubmissionChangeSummary $changes): array
+    {
+        $refIds = array_values(array_unique(array_map(
+            static fn (UserMessage $m): int => $m->getRefId(),
+            array_filter($list, static fn (UserMessage $m): bool => 'submission' === $m->getChannel()),
+        )));
+        if ([] === $refIds) {
+            return [];
+        }
+
+        /** @var list<Submission> $subs */
+        $subs = $this->em->createQueryBuilder()
+            ->select('s')
+            ->from(Submission::class, 's')
+            ->where('s.id IN (:ids)')
+            ->andWhere('s.userId = :uid')
+            ->setParameter('ids', $refIds)
+            ->setParameter('uid', $userId)
+            ->getQuery()
+            ->getResult();
+
+        $out = [];
+        foreach ($subs as $sub) {
+            $rows = $changes->rows($sub);
+            if ([] !== $rows) {
+                $out[(int) $sub->getId()] = $rows;
+            }
+        }
+
+        return $out;
     }
 
     /**

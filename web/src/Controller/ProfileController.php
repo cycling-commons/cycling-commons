@@ -8,6 +8,7 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemType;
 use App\Catalog\SubmissionStatus;
+use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
 use App\Moderation\RetentionService;
 use App\Routing\LocalePrefix;
@@ -30,8 +31,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class ProfileController extends AbstractController
 {
     #[Route('/profile', name: 'profile')]
-    public function show(EntityManagerInterface $em, RetentionService $retention, Connection $db): Response
-    {
+    public function show(
+        EntityManagerInterface $em,
+        RetentionService $retention,
+        Connection $db,
+        SubmissionChangeSummary $changes,
+    ): Response {
         /** @var User $user */
         $user = $this->getUser();
 
@@ -65,6 +70,21 @@ final class ProfileController extends AbstractController
             // hint that a question was waiting on the messages page, nor that
             // their own answer had been delivered.
             'submission_threads' => $this->threadsFor((int) $user->getId(), $contributions, $db),
+            // WHAT each contribution actually changed. A row naming a place and
+            // a verdict says nothing to the person who wrote it — two edits to
+            // the same climb read identically (owner-reported 2026-08-03).
+            'submission_changes' => array_reduce(
+                $contributions,
+                static function (array $carry, Submission $s) use ($changes): array {
+                    $rows = $changes->rows($s);
+                    if ([] !== $rows) {
+                        $carry[$s->getId()] = $rows;
+                    }
+
+                    return $carry;
+                },
+                [],
+            ),
             'route_proposals' => $em->getRepository(RecommendedRoute::class)->findBy(
                 ['proposedBy' => (int) $user->getId()],
                 ['createdAt' => 'DESC', 'id' => 'DESC'],

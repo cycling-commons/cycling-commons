@@ -2027,6 +2027,7 @@ messages:
     media_hidden_pending_review: 'Quelqu''un a signalé une de vos photos et, vu ce qu''affirme le signalement, nous l''avons immédiatement masquée sur la carte le temps qu''un curateur l''examine. Masquée n''est pas supprimée : la photo reste la vôtre, elle est toujours stockée, rien n''a été effacé. Si le signalement ne tient pas, elle revient sous quelques jours et nous vous le dirons. Seul un curateur peut retirer une photo, jamais un signalement à lui seul — et nous ne pouvons pas vous dire qui a signalé, tout comme cette personne n''a pas su qui avait téléversé.'
     media_restored_after_review: 'Le signalement concernant votre photo n''a pas tenu : elle est de retour sur la carte, exactement comme avant. Merci de votre patience — masquer d''abord est ce qui garantit qu''une plainte authentique ne reste jamais en ligne des jours, et cela implique qu''une photo est parfois retirée un temps pour rien.'
   reply_label: 'Votre réponse'
+  what_you_changed: 'Ce que vous avez modifié'
   reply_send: 'Envoyer la réponse'
   reply_sent: 'Réponse envoyée — votre contribution est de retour dans la file de relecture.'
   reply_too_late: 'Cette contribution n''attend plus votre réponse.'

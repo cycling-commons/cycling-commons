@@ -31,6 +31,15 @@
   .item-links a:hover{color:var(--trail)}
   .item-note{flex-basis:100%;margin:.1rem 0 0;font-size:.85rem;color:#4a4d40;border-left:2px solid var(--glacier);padding-left:.7rem}
   .item-reply{border-left-color:var(--ochre)}
+  /* What was actually contributed. Same was/now shape the curator's desk uses
+     (.q-diff), so a rider and a curator are looking at one thing. */
+  .item-diff{flex-basis:100%;margin:.35rem 0 0;padding:.5rem .7rem;background:rgba(20,22,14,.05);border-radius:5px;font-size:.84rem;line-height:1.5}
+  .item-diff dl{display:grid;grid-template-columns:auto 1fr;gap:.15rem .7rem;margin:0}
+  .item-diff dt{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;align-self:baseline;padding-top:.15rem}
+  .item-diff dd{margin:0;min-width:0;overflow-wrap:anywhere}
+  .item-diff .was{color:#8a8d7d;text-decoration:line-through;margin-right:.4rem}
+  .item-diff .now{color:var(--trail)}
+  @media(max-width:520px){.item-diff dl{grid-template-columns:1fr;gap:0 0}.item-diff dt{padding-top:.35rem}}
   .item:target{background:var(--paper-deep);box-shadow:0 0 0 2px var(--ochre);border-radius:6px;scroll-margin-top:1.5rem}
   /* A waiting question is the one thing on this row the rider has to act on. */
   .item-answer{color:var(--trail)!important;font-weight:700}
@@ -85,6 +94,28 @@
           {% endif %}
           <time class="co" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_date }}</time>
           <span class="pill {{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
+          {# WHAT was contributed, not just which place it was about. Without
+             this, two edits to the same climb are the same row twice, and the
+             rider has no way to tell which of their own changes a curator
+             approved (owner-reported 2026-08-03). Field names come from the
+             registry, so they read as the form asked them — "Road quality",
+             not `sq`. The struck-out line appears only when there was a
+             previous value: adding a missing field is the commonest
+             contribution there is, and it has nothing to strike out. #}
+          {% set diff = submission_changes[sub.id] ?? [] %}
+          {% if diff is not empty %}
+            <div class="item-diff">
+              <dl>
+                {% for row in diff %}
+                  <dt>{{ row.label }}</dt>
+                  <dd>
+                    {%- if row.was is not null %}<span class="was">{{ row.was }}</span>{% endif -%}
+                    <span class="now">{{ row.now }}</span>
+                  </dd>
+                {% endfor %}
+              </dl>
+            </div>
+          {% endif %}
           {% if sub.decisionNote %}<p class="item-note">{{ sub.decisionNote }}</p>{% endif %}
           {# The conversation, the way the curator's desk shows it. A status
              chip on its own left a rider who had been asked something with no

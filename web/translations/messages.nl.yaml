@@ -2027,6 +2027,7 @@ messages:
     media_hidden_pending_review: 'Iemand heeft een van je foto''s gemeld, en vanwege wat de melding beweert hebben we hem meteen van de kaart verborgen terwijl een curator ernaar kijkt. Verborgen is niet verwijderd: de foto blijft van jou, staat er nog, en er is niets gewist. Houdt de melding geen stand, dan staat hij binnen enkele dagen terug en laten we het je weten. Alleen een curator kan een foto verwijderen, nooit een melding op zichzelf — en we kunnen je niet zeggen wie meldde, net zoals die persoon niet te horen kreeg wie uploadde.'
     media_restored_after_review: 'De melding over je foto hield geen stand, dus hij staat weer op de kaart, precies zoals hij was. Dank voor je geduld — eerst verbergen is hoe we zorgen dat een echte klacht nooit dagenlang blijft staan, en dat betekent dat er af en toe een foto voor niets even weg is.'
   reply_label: 'Jouw antwoord'
+  what_you_changed: 'Wat je hebt gewijzigd'
   reply_send: 'Antwoord versturen'
   reply_sent: 'Antwoord verstuurd — jouw bijdrage staat weer in de beoordelingswachtrij.'
   reply_too_late: 'Deze bijdrage wacht niet meer op je antwoord.'

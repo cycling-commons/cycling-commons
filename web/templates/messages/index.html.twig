@@ -43,6 +43,16 @@
   .msg-answer-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block}
   .msg-answer .msg-meta{display:block;margin-top:.3rem}
   .msg-from-curator{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
+  /* What the contribution changed — the same was/now shape the curator's desk
+     and the contributions list use, so all three read as one thing. */
+  .msg-diff{margin-top:.6rem;padding:.5rem .7rem;background:rgba(20,22,14,.05);border-radius:5px;font-size:.84rem;line-height:1.5}
+  .msg-diff-h{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:block;margin-bottom:.25rem}
+  .msg-diff dl{display:grid;grid-template-columns:auto 1fr;gap:.15rem .7rem;margin:0}
+  .msg-diff dt{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;align-self:baseline;padding-top:.15rem}
+  .msg-diff dd{margin:0;min-width:0;overflow-wrap:anywhere}
+  .msg-diff .was{color:#8a8d7d;text-decoration:line-through;margin-right:.4rem}
+  .msg-diff .now{color:var(--trail)}
+  @media(max-width:520px){.msg-diff dl{grid-template-columns:1fr;gap:0}.msg-diff dt{padding-top:.35rem}}
 
   .msg-reply{margin-top:.8rem;padding-top:.7rem;border-top:1px solid rgba(20,22,14,.1);display:flex;flex-direction:column;gap:.45rem}
   .msg-reply label{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d}
@@ -101,6 +111,28 @@
                required). #}
             {% if m.bodyKey and not (is_question and m.bodyText) %}{{ m.bodyKey|trans(m.bodyParams ?? {}) }}{% endif %}
             {% if m.bodyText %}<p class="msg-note">{{ m.bodyText }}</p>{% endif %}
+            {# WHAT the contribution was. "Your contribution X was approved"
+               names a place and stops, and a rider with two edits to the same
+               climb cannot tell which one this is about (owner-reported
+               2026-08-03). Only on the reader's OWN submissions — the
+               controller scopes the lookup by user id. Not shown on a
+               needs-info card: there the curator's question is the point, and
+               the diff would push it below the fold. #}
+            {% set diff = (m.channel == 'submission' and not is_question) ? (submission_changes[m.refId] ?? []) : [] %}
+            {% if diff is not empty %}
+              <div class="msg-diff">
+                <span class="msg-diff-h">{{ 'messages.what_you_changed'|trans }}</span>
+                <dl>
+                  {% for row in diff %}
+                    <dt>{{ row.label }}</dt>
+                    <dd>
+                      {%- if row.was is not null %}<span class="was">{{ row.was }}</span>{% endif -%}
+                      <span class="now">{{ row.now }}</span>
+                    </dd>
+                  {% endfor %}
+                </dl>
+              </div>
+            {% endif %}
             {# The answer belongs under the question it answers, in the same
                card — not as a separate row above it. #}
             {% for a in my_answers %}
