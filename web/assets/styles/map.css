@@ -554,9 +554,15 @@
     border-top:1px dashed rgba(239,230,212,.35);pointer-events:none}
   .cc-grad-col{flex:1;display:flex;flex-direction:column;transition:opacity .15s}
   .cc-grad-col:hover{opacity:.7}
-  /* margin-top:auto pushes a climbing bar down onto the baseline, so it grows
-     upward from the zero line rather than down from the top of the strip. */
-  .cc-grad-up{margin-top:auto;border-radius:2px 2px 0 0}
+  /* A climbing bar must rest ON the baseline, not on the floor of the strip.
+     margin-bottom reserves the descending zone beneath it so its lower edge
+     lands exactly at the zero line, and margin-top:auto then pushes it down
+     against that reservation so it grows upward. Without the margin-bottom
+     every climbing bar bottom-aligns to the whole 42px column and renders
+     BELOW the zero line - which made the second half of a climb that dips and
+     rises again read as though it were still descending (owner-reported
+     2026-08-04). */
+  .cc-grad-up{margin-top:auto;margin-bottom:var(--dn);border-radius:2px 2px 0 0}
   .cc-grad-dn{margin-top:var(--up);border-radius:0 0 2px 2px}
   .cc-up{margin-top:1rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:rgba(239,230,212,.6)}
   .cc-up b{color:var(--paper)}

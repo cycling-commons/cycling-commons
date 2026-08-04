@@ -785,6 +785,33 @@ one. Scaling each side to its own extreme would make a shallow dip look as
 dramatic as the steepest ramp on the climb, which is the same class of dishonesty
 as the missing zero.
 
+**A climbing bar rests ON the baseline, not on the floor of the strip.** Worth
+stating because the first implementation got it wrong in a way that looked
+plausible: bottom-aligning each bar to its column put every climbing bar below
+the zero line, so the second half of a climb that dips and rises again read as
+though it were still descending (owner-reported 2026-08-04). Verified in a
+browser rather than by inspection — every climbing bar's lower edge and every
+descending bar's upper edge measure 0 px from the baseline.
+
+### 6b. Descents are blue
+
+Colour carried no direction. `gradColor()` was a single purple ramp keyed on
+gradient, and since every negative falls in its first band, **a −12% drop wore
+the same pale purple as a 3% rise** — on the strip *and* on the map line. The
+dip was invisible unless you read the bar heights, which before
+[§6a](#6a-a-descent-must-look-like-a-descent) it did not have either.
+
+Descending gradients now use a blue ramp: `#A6CFF2` → `#5BA0E8` → `#2B76D0` →
+`#184F9F` → `#0A2A66`. It mirrors the purple exactly — **the same five
+|gradient| thresholds and the same light-to-dark progression** — so steepness
+reads identically in either direction and only the hue says which way the road
+goes. A rider who has learnt that dark means steep does not have to learn a
+second scale.
+
+This is in `gradColor()` itself rather than in the drawer, so **the map line and
+the profile strip agree**: the same stretch of road is the same colour in both,
+and a climb that descends shows blue on the map where it descends.
+
 The reference is the industry-standard climb profile (climbfinder, and the
 same shape used by every climbing site):
 

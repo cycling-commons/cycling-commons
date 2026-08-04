@@ -25,7 +25,22 @@ export function txtOn(hex){
   const h=hex.replace('#',''); const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
   return (0.299*r+0.587*g+0.114*b)/255 < 0.58 ? '#fff' : '#101E16';
 }
-export const gradColor=p=> p<5?'#D9A6F2':p<8?'#B25BE8':p<12?'#8A2BD0':p<16?'#5E18A0':'#3A0A66';   // purple, wide light→dark range
+/* Gradient colour: purple going up, blue coming down.
+
+   Descents used to fall through the first band and render as the palest
+   PURPLE, so a -12% drop wore the same colour as a 3% rise and a dip was
+   invisible on both the strip and the map line - only its height gave it away,
+   and until the baseline landed it did not even have that.
+
+   Both ramps use the same five |gradient| thresholds and the same light-to-dark
+   progression, so steepness reads identically in either direction and only the
+   hue says which way the road goes. */
+const UP_BANDS=['#D9A6F2','#B25BE8','#8A2BD0','#5E18A0','#3A0A66'];   // purple, light→dark
+const DOWN_BANDS=['#A6CFF2','#5BA0E8','#2B76D0','#184F9F','#0A2A66']; // blue,   light→dark
+export const gradColor=p=>{
+  const g=Math.abs(p), bands=p<0?DOWN_BANDS:UP_BANDS;
+  return g<5?bands[0]:g<8?bands[1]:g<12?bands[2]:g<16?bands[3]:bands[4];
+};
 export const DIFF_PURPLE=['','#D9A6F2','#B25BE8','#8A2BD0','#5E18A0','#3A0A66'];
 export function haversine(a,b){ const R=6371,d=Math.PI/180;
   const x=Math.sin((b[0]-a[0])*d/2)**2 + Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin((b[1]-a[1])*d/2)**2;
