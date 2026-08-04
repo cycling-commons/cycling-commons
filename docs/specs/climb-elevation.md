@@ -145,7 +145,54 @@ above collapses to **one worldwide source**, which would remove the per-region
 tile management of [§2b-i](#2b-i-self-hosting-valhalla-already-does-this)
 entirely. It is not on opentopodata's public endpoint, so it could not be
 measured here. **Measuring it is the highest-value open question in this
-document.**
+document** — and it should be measured on one region before any bulk
+acquisition, because [§2a-i](#2a-i-what-adopting-glo-30-actually-costs) shows
+the acquisition is the expensive half.
+
+### 2a-i. What adopting GLO-30 actually costs
+
+Checked 2026-08-04, because "register and rebuild" turns out to be the wrong
+model of the work on both counts.
+
+**No registration is required.** GLO-30 Public is on the AWS Open Data registry
+at `s3://copernicus-dem-30m/` (eu-central-1) and reads without an account:
+`aws s3 ls --no-sign-request s3://copernicus-dem-30m/`. Registering with the
+Copernicus Data Space Ecosystem is what unlocks the *restricted* instances;
+the public one does not need it. Note that GLO-30 Public withholds a small
+subset of tiles over certain countries, so "worldwide" has holes and
+[§2d](#2d-failure-is-honest) still has to hold.
+
+**No Valhalla rebuild is required either — for profiles.** Elevation is read by
+skadi from the directory named by `additional_data.elevation`, *separately from
+the routing graph*. Adding or replacing elevation tiles is a file copy and a
+restart, which is exactly what the existing EU-DEM procedure does. A **rebuild
+is only needed if elevation should influence routing decisions** — hill-aware
+bicycle costing — which is what `build_elevation` does at tile-build time. Those
+are two different features and only the second is expensive.
+
+**Conversion is required.** GLO-30 ships as Cloud Optimized GeoTIFF; skadi
+expects SRTM-format `.hgt`. So it goes through the same GDAL step EU-DEM does —
+the pipeline exists, the input changes. **Verify the longitude sampling at that
+step**: Copernicus DEM's distributed tiles are documented as decimating
+longitude at higher latitudes, so a uniform 3601×3601 `.hgt` may involve real
+resampling above ~50°N, unlike the grid-aligned EU-DEM v1 conversion. Belgium
+sits on that boundary.
+
+**Storage is the real cost.** A 1 arc-second `.hgt` tile is 3601×3601×2 bytes =
+**24.7 MB**, and the existing Europe set checks the arithmetic: 1517 tiles ×
+24.7 MB = 36.6 GB against 37 GB measured. Global land is on the order of
+14,000–26,000 tiles, so:
+
+| scope | tiles | `.hgt` size |
+|---|---|---|
+| Europe (already converted) | 1,517 | 37 GB |
+| global land | ~14,000–26,000 | **~340–630 GB** |
+
+That is a different class of commitment from the current 37 GB, and it is
+per-instance if the deployment stays regional. **Scope it to onboarded regions**
+([country onboarding](catalog-data-model.md)) rather than the globe: the
+Commons is worldwide in ambition, but coverage arrives country by country and
+an unpopulated continent needs no raster.
 
 ### 2b. Start on the public API; self-host when something makes it necessary
 
@@ -413,6 +460,9 @@ raises about opentopodata, and it has the sharper answer, because the stack
 **already runs Valhalla** for [§2b-i](#2b-i-self-hosting-valhalla-already-does-this).
 A Valhalla instance with routing tiles serves `/route` as well as `/height`, so
 the same service can supply both and the demo-server dependency disappears.
+Verified 2026-08-04: the existing European instance answers `/route` with
+`"costing":"bicycle"` today, so this is a client change rather than an
+infrastructure one.
 
 **It requests the `driving` profile.** The URL is
 `/route/v1/driving/…` — the only profile the demo server offers. A climb is
