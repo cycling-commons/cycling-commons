@@ -356,10 +356,12 @@ returns a height there. The trajectory comes entirely from routing.
 The full chain for one climb:
 
 1. The rider taps **foot** and **summit** on the map.
-2. **The routing engine produces the line.** `ClimbGeometry` asks OSRM with
+2. **The routing engine produces the line.** `climb-editor.js` calls OSRM with
    `overview=full`, which snaps those taps to the road network and returns the
    polyline actually ridden. This is the only step that decides *where* the
-   climb goes.
+   climb goes. See [§3e](#3e-the-routing-call-is-external-and-client-side) — it
+   is not a server-side call, and `ClimbGeometry` only validates what comes
+   back.
 3. **That polyline is resampled** to the interval in
    [§3c](#3c-sampling) — OSRM's vertices sit where the road bends, not at even
    spacing, so points are interpolated along it to get one every 20 m.
@@ -390,6 +392,41 @@ tolerable. Over a 20 m bin it would be ±2.5 points, and the bar would be mostly
 rounding error. Sampling at one fifth of the bin width
 ([§3c](#3c-sampling)) also helps here: averaging five readings dilutes the
 quantisation that differencing two endpoints would keep at full strength.
+
+### 3e. The routing call is external and client-side
+
+Recorded because it is easy to assume otherwise, and because it constrains
+everything above. As built today:
+
+| | where it runs | endpoint |
+|---|---|---|
+| geometry | **the browser** (`climb-editor.js`) | `https://router.project-osrm.org` |
+| elevation | **the browser** | `https://api.open-meteo.com` |
+| validation | the server (`ClimbGeometry`) | — |
+
+Three consequences.
+
+**`router.project-osrm.org` is the OSRM project's public demo server.** It
+carries no service guarantee and is explicitly not intended to back an
+application. This is the same courtesy question [§2b](#2b-start-on-the-public-api-self-host-when-something-makes-it-necessary)
+raises about opentopodata, and it has the sharper answer, because the stack
+**already runs Valhalla** for [§2b-i](#2b-i-self-hosting-valhalla-already-does-this).
+A Valhalla instance with routing tiles serves `/route` as well as `/height`, so
+the same service can supply both and the demo-server dependency disappears.
+
+**It requests the `driving` profile.** The URL is
+`/route/v1/driving/…` — the only profile the demo server offers. A climb is
+normally a road, so this is usually right; where it is wrong it is silently
+wrong, routing around a surface a bike may use and a car may not. A cycling
+profile is a reason to move to Valhalla independent of elevation.
+
+**The server never sees the road.** `ClimbGeometry` decodes and validates the
+posted payload — pairs of finite numbers, within `MAX_POINTS` — and by design
+checks shape rather than truth. It cannot confirm the polyline follows a road,
+because it never asked a router. So a route is a *contribution*, verified by
+moderation like any other, not a computed fact. Any future server-side
+recompute ([§7](#7-migration)) needs its own routing call rather than trusting
+the stored line.
 
 **Not used: `/route` with `elevation_interval`.** Valhalla can route and sample
 elevation in a single call, returning both geometry and heights. That suits a
