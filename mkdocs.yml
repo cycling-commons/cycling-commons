@@ -103,6 +103,7 @@ nav:
       - Data operations:
           - Harvesting OSM coverage: developers/data-ops/harvesting.md
           - Onboarding a new country: developers/data-ops/onboarding-a-country.md
+          - Building elevation tiles: developers/data-ops/elevation-tiles.md
 
 markdown_extensions:
   - admonition

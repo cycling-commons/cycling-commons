@@ -8,6 +8,14 @@ reports a climb figure today, it either reads a number a rider's own device alre
 asks a third party's elevation service for one, live, in the browser, for a preview only. Building a
 DEM (digital elevation model) sampling pipeline of its own is recorded direction, not shipped code.
 
+!!! note "That direction now has a pipeline and an evaluation"
+
+    Nothing in the app reads it yet, so this chapter's framing still holds. But the tooling to
+    build elevation tiles exists, and it has been used to choose a source by measurement rather
+    than by reputation — including why a finer raster is not automatically a better one, and why
+    the trees are in the data. That is
+    [Building elevation tiles](../data-ops/elevation-tiles.md).
+
 Course 1's [`routes.md`](../gis/routes.md) already made the general point that a derived spatial
 number is a choice, using `ascent_m` as its example. This chapter is where that point gets its full
 explanation: where elevation numbers actually come from, why two perfectly reasonable tools can
