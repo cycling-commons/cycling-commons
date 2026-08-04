@@ -109,14 +109,38 @@ cannot be the only source. GLO-90 stays as the floor because a coarse profile
 beats none — but see [§3a](#3a-bin-width-follows-the-source) for what it is
 allowed to draw.
 
-### 2b. Self-hosted, not a public API
+### 2b. Start on the public API; self-host when something makes it necessary
 
-opentopodata's public endpoint allows 1 call/second, 1000 calls/day and 100
-locations per call. That is a research tool, not a dependency for a contribution
-flow. The service is **self-hosted** on the existing cluster
-([dev-environment.md](dev-environment.md) for the local stack), which also
-removes the per-call location cap that would otherwise force a long climb into
-many round trips.
+Elevation is looked up when a climb's LINE changes — not per page view, not per
+map render. Doing the arithmetic before reaching for infrastructure (owner,
+2026-08-04):
+
+- opentopodata's public endpoint allows **100 locations per call**, so a climb up
+  to 2 km at 20 m sampling is **one call**. A 17 km climb is nine.
+- The budget is **1000 calls/day**, which is roughly **65 climb contributions a
+  day** at a generous 15 route-changes each — far beyond any volume this project
+  will see before it has other reasons to run its own service.
+
+So the public API is the starting point, and self-hosting is what the following
+require rather than a precondition:
+
+1. **A bulk recompute.** [§7](#7-migration) sweeps every climb with a route.
+   That is seven items today and finishes in seconds; a catalogue of thousands,
+   re-swept because the source or the binning changed, would take days at
+   1000/day.
+2. **Sustained contribution volume**, on the arithmetic above.
+3. **Terms of use.** opentopodata asks heavy and production users to run their
+   own instance. That is a courtesy this project extends to other people's
+   infrastructure as a matter of course, and it is the most likely trigger of
+   the three.
+
+**One thing to get right on the public API:** the lookup fires on every resolved
+route change, so a rider dragging a summit repeatedly can spend calls quickly and
+meet the 1 call/second limit mid-edit. `recomputeProfile()` already aborts an
+in-flight request when a newer one supersedes it; it also needs a settle delay so
+a drag costs one lookup rather than one per intermediate position. Without that,
+a throttled response shows a rider "profile unavailable" for a climb that is
+perfectly fine.
 
 ### 2c. Licensing is a gate, not a footnote
 
@@ -277,9 +301,10 @@ the chart is only honest once they are done.
 
 ## 9. Owner decisions still open
 
-- **Self-hosting scope** — full Europe EU-DEM (tens of gigabytes) against only
-  the regions currently onboarded, and whether the tiles live beside the
-  existing PMTiles infrastructure.
+- **When self-hosting is triggered** — [§2b](#2b-start-on-the-public-api-self-host-when-something-makes-it-necessary)
+  starts on the public API and names three triggers. When one bites: full Europe
+  EU-DEM (tens of gigabytes) or only the regions onboarded, and whether it lives
+  beside the existing PMTiles infrastructure.
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
 - **`~` in published gradients** — measured values are numbers; the catalog's
