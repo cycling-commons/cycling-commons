@@ -83,6 +83,11 @@ GLO-90 (today) [6, 8, 12, 12, 25, 0, -10, 16, 12,  7, 11, 17,  8, 12, 17,  8, 7,
 The existing 11-bin display (≈220 m per bar on a 2.4 km climb) is not accurate —
 it is merely *wide enough to hide this*.
 
+The last column is decisive **here and not in general**: La Redoute never
+descends, so a bin that reads downhill on it can only be an artifact. On a climb
+that genuinely drops between two ramps the same count means nothing — see the
+correction in [§2a](#2a-the-source).
+
 ### 1c. The bars mean different things on different climbs
 
 Seeded climbs carry hand-authored `grad` arrays of 10, 11 or 12 values. Editor-
@@ -93,83 +98,100 @@ distinguishes an estimate from a measurement, and both render identically.
 
 ## 2. The elevation service
 
-### 2a. Source chain
+### 2a. The source
 
-One service, resolved per coordinate, best available first:
+**One source, worldwide: Copernicus DEM GLO-30.** Owner decision, 2026-08-04.
 
-| order | source | resolution | coverage |
-|---|---|---|---|
-| 1 | EU-DEM v1 | 1 arc-second (~30 m) | Europe (EEA members + cooperating states) |
-| 2 | SRTM | 30 m | 60°N to 56°S |
-| 3 | Copernicus GLO-90 | 90 m | worldwide |
-
-The Commons is worldwide from day one
-([osm-data-architecture.md](osm-data-architecture.md)), so a Europe-only source
-cannot be the only source. GLO-90 stays as the floor because a coarse profile
-beats none — but see [§3a](#3a-bin-width-follows-the-source) for what it is
-allowed to draw.
-
-**Row 1 is v1, at 1 arc-second, and that is deliberate.** An earlier draft of
-this table said "EU-DEM v1.1, 25 m", which is a real dataset but not the one
-measured anywhere in this document. Both were then compared on La Redoute,
-2026-08-04:
-
-| | EU-DEM v1 (1 arc-sec) | EU-DEM v1.1 (25 m) |
+| source | resolution | coverage |
 |---|---|---|
-| gain to summit | 179.0 m | 178.8 m |
-| average | 8.61% | 8.59% |
-| 100 m bins reading downhill | 0 | 0 |
-| distinct readings | 83 / 99 | 99 / 99 |
+| Copernicus DEM GLO-30 | 30 m | worldwide land |
 
-They agree to **0.54 of a percentage point per 100 m bin**, and both land within
-1.2 m of climbfinder's 180 m of gain. v1.1's finer grid shows up as per-sample
-smoothness, not as a better answer — and v1's coarser count is the integer-metre
-reply of [§3d](#3d-where-the-coordinates-come-from-and-what-the-dem-returns),
-not the raster. So v1.1 is not worth acquiring for the accuracy, and the EEA
-has **discontinued EU-DEM entirely**, marking it superseded and directing users
-to Copernicus DEM. Adopting v1.1 would mean paying a migration to land on a
-dataset that is equally dead.
+There is no chain, no per-coordinate resolution order, and no regional
+fallback. That is the whole point of the decision: every mechanism this
+document previously needed — a priority list, a per-continent raster
+inventory, a `demSource` that varies by where you are standing — existed only
+to paper over a Europe-only first choice.
 
-**Both are Digital Surface Models.** EU-DEM's own readme describes it as "the
-first surface as illuminated by the sensors" — canopy and buildings included,
-not bare ground. On a wooded Ardennes climb the reading over a tree-lined
-stretch is not the road. This is not a defect to fix by changing EU-DEM version,
-because Copernicus DEM is a DSM too; it is a known error term, and it is the
-most likely explanation for any residual disagreement with a surveyed profile.
+**What replaced the chain.** The earlier design put EU-DEM v1 first for Europe,
+SRTM second, GLO-90 third as a worldwide floor. GLO-90 was genuinely too coarse
+([§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw)),
+which is what forced the fallback structure. But GLO-90 is a 3x downsample of
+GLO-30, so that verdict never applied to GLO-30 itself — it was inherited by
+association and left the better dataset untested for the entire design.
 
-**Row 3's successor is measured, and it works.** Copernicus DEM GLO-30 is the
-dataset EEA points to: 30 m, worldwide, and the same TanDEM-X source GLO-90 is a
-3× downsample of — so
-[§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw)'s
-verdict on GLO-90 never applied to it. Tested 2026-08-04 on all seven seeded
-climbs, by converting the GLO-30 tile to `.hgt` and reading **both sources with
-identical code**, so the comparison isolates the raster rather than two services'
-interpolation. (The reader was checked against Valhalla `/height` on the same
-EU-DEM tile: 179 m and 8.62% against the service's 179 m and 8.61%.)
+**The measurement that settled it**, 2026-08-04, on all seven seeded climbs:
+the GLO-30 tile was converted to `.hgt` and **both sources read by identical
+code**, so the comparison isolates the raster rather than two services'
+interpolation. The reader was first checked against Valhalla `/height` on the
+same EU-DEM tile — 179 m and 8.62% against the service's 179 m and 8.61% — and
+only then used to judge anything.
 
 | | EU-DEM v1 | GLO-30 |
 |---|---|---|
 | La Redoute, gain | 179 m | **181 m** (climbfinder: 180 m) |
-| bins reading downhill, short climbs | 2 | **0** |
-| mean per-bin disagreement | — | 1.96 points (worst climb 3.04) |
+| mean per-bin disagreement | — | 2.02 points (worst climb 3.04) |
+| downhill bins on Mur de Huy, which never descends | 1 | **0** |
 
-Over the six climbs with a measurable length; the seventh is the reversed line
-below, which has no bins to compare.
+The gain match against an independent reference is the load-bearing result.
+GLO-30 is **at least as good**, and the Mur de Huy row is a tiebreak rather than
+an argument: one bin on one climb. The spread between the two is not one of them
+being wrong — see the DSM note below.
 
-GLO-30 is **at least as good**, and marginally cleaner: it produced no impossible
-descent on any short climb, while EU-DEM produced one each on Mur de Huy and
-Bohissau. The spread is not one of them being wrong — both are DSMs disagreeing
-over tree cover, per the note above.
+**A correction worth keeping, owner 2026-08-04.** An earlier draft of this
+section scored the sources on their total count of downhill bins, on the
+reasoning that a climb descending in its middle is impossible. **That is false.**
+Roche-aux-Faucons climbs to 228 m, descends to 185 m over more than a kilometre,
+then climbs to 270 m; 27 of Hockai's bins read downhill and every one is real
+rail-trail descent. The rule would have condemned the correct answer on both.
 
-**So the chain in this table can collapse to a single worldwide source.** That
-removes the per-region raster management of
-[§2b-i](#2b-i-self-hosting-valhalla-already-does-this), removes EU-DEM's
-regulated-access question from [§2c](#2c-licensing-is-a-gate-not-a-footnote), and
-means one dataset covers every country onboarded from here. The remaining reason
-to keep EU-DEM is that its tiles already exist. What is *not* yet established is
-whether this holds outside the Ardennes — one tile, one massif, one latitude
-band. [§2a-i](#2a-i-what-adopting-glo-30-actually-costs) is the acquisition path,
-and Benelux is the first widening.
+A downhill bin is only diagnostic on a road **known** to rise monotonically —
+which is exactly why it was decisive against GLO-90 on La Redoute, a climb that
+never descends. Everywhere else it is a question.
+
+The measure that generalises is **disagreement about direction**: bins where the
+two sources differ on whether the road rises. A descent both see is terrain; one
+only a single source sees is an artifact — and it needs no prior knowledge of
+the road, so it works on climbs nobody has profiled. Across all seven climbs the
+sources dispute **33 of 266 bins**, and the split is clean: Hockai's 27 descents
+are almost entirely agreed, while EU-DEM's lone downhill bin on Mur de Huy *and*
+on Bohissau are both disputed, i.e. artifacts. `compare-sources.js` reports this
+column.
+
+**What adopting it retires.** Three things stop being problems rather than
+getting solved:
+
+- **EU-DEM's access terms.** Its readme places it under a GMES delegated
+  regulation setting user registration conditions, not an open-data licence.
+  GLO-30 Public is on the AWS Open Data registry and reads without an account.
+  [§2c](#2c-licensing-is-a-gate-not-a-footnote) shrinks to one attribution.
+- **Per-region raster inventory.** One dataset covers every country onboarded
+  from here, so acquisition stops being a step in
+  [country onboarding](catalog-data-model.md).
+- **`demSource` as a variable.** It becomes a constant, and the bin floor in
+  [§3a](#3a-bin-width-follows-the-source) becomes a single number rather than a
+  table lookup.
+
+**What it does not fix.** GLO-30 is a **Digital Surface Model** — the first
+surface as illuminated by the sensors, so canopy and buildings, not bare ground.
+On a wooded Ardennes climb a reading over a tree-lined stretch is partly the
+trees. EU-DEM was a DSM too, so this is not a regression; it is a permanent
+error term, and the most likely explanation whenever two good sources agree on a
+total and disagree over a stretch. A **DTM** at useful resolution would be the
+better input, and none is available worldwide.
+
+Two limits worth stating plainly. GLO-30 Public **withholds tiles over a few
+countries**, so "worldwide" has holes and
+[§2d](#2d-failure-is-honest) still has to hold. And the evidence is **one tile,
+one massif, one latitude band** — Benelux is the widening that would confirm it,
+via [tools/elevation](../../tools/elevation/README.md).
+
+**EU-DEM's status.** The 37 GB of converted tiles already in place stay usable
+and need not be deleted; they are simply no longer the plan. The EEA has
+discontinued EU-DEM outright, marking it superseded and pointing at Copernicus
+DEM, so this decision follows the publisher's own. For the record, v1.1 was also
+measured and agreed with v1 to 0.54 of a point per bin — the finer grid bought
+per-sample smoothness, not a better answer, so nothing was lost by never
+acquiring it.
 
 ### 2a-i. What adopting GLO-30 actually costs
 
@@ -293,14 +315,14 @@ fails. The read path still interpolates between cells, per
 [§3d](#3d-where-the-coordinates-come-from-and-what-the-dem-returns); the rounding
 is applied to the interpolated result.
 
-**It satisfies [§2a](#2a-source-chain) by deployment rather than by dispatch.**
-A single Valhalla instance has one elevation directory and cannot choose a
-source per coordinate — but the existing deployment is already **one instance
-per continent**, which is the same partition the source chain describes. EU-DEM
-tiles in the European instance, SRTM tiles elsewhere, GLO-90 as the floor:
-the chain becomes a question of which tiles each instance is given, and
-`demSource` is then a property of the instance that answered rather than of
-the reply.
+**The single source removes this section's hardest constraint.** A Valhalla
+instance has one elevation directory and cannot choose a source per coordinate,
+which is why an earlier draft had to argue that per-continent instances happened
+to match the source chain's partition. With [§2a](#2a-the-source) settled on one
+worldwide dataset that argument is unnecessary: **every instance gets the same
+tiles**, differing only in which part of the world they cover. `demSource` is a
+constant, and a climb near a regional boundary cannot get a different answer
+depending on which instance it reached.
 
 **The trap: Valhalla fails by returning zeros.** An instance with no elevation
 tiles loaded does not error — `/height` answers `0` for every point, which is a
@@ -336,11 +358,12 @@ keeps this a deployment decision instead of a code change.
    gates acquiring the data at all, not just publishing it, and EU-DEM's credit
    is mandatory on every surface that shows a derived profile.
 2. **Generate the tiles — or reuse the ones that exist.** The converter is GDAL
-   over the EU-DEM mosaic. **Europe is already done**: the owner's existing
-   conversion produced **1517 `.hgt` tiles, 37 GB**, covering the full EU-DEM
-   extent. So this step is already paid for in Europe, and the outstanding work
-   is the rest of the world, where the source is row 2 or 3 of
-   [§2a](#2a-source-chain) rather than EU-DEM.
+   over the GLO-30 tiles, scripted in
+   [tools/elevation](../../tools/elevation/README.md). The existing 37 GB of
+   EU-DEM `.hgt` does **not** carry over — it is a different dataset, so
+   [§2a](#2a-the-source)'s decision means converting Benelux first and then
+   whichever regions are onboarded, rather than topping up a Europe that is
+   already done.
 3. **Point `additional_data.elevation` at them** and set `build_elevation`, per
    instance.
 4. **Then** the client, behind the base-URL setting, with the non-zero guard
@@ -349,38 +372,53 @@ keeps this a deployment decision instead of a code change.
 
 ### 2c. Licensing is a gate, not a footnote
 
-EU-DEM is Copernicus data and SRTM is United States government data. Neither
-attribution requirement may be assumed from memory: both must be read and
-recorded in [osm-data-architecture.md](osm-data-architecture.md)'s licensing
-section, and surfaced wherever the profile is displayed, **before this ships**.
-The project's posture on data licences is deliberate and this is data.
+Attribution requirements may not be assumed from memory. They must be read from
+the distribution, recorded in
+[osm-data-architecture.md](osm-data-architecture.md)'s licensing section, and
+surfaced wherever a profile is displayed, **before this ships**. The project's
+posture on data licences is deliberate and this is data.
 
-Two specifics worth carrying, from the EU-DEM distribution's own readme:
+**Copernicus DEM GLO-30**, the source [§2a](#2a-the-source) settles on:
 
-- Its credit is **mandatory and displayed** — it must appear on every surface
-  showing EU-DEM-derived data, which here means the profile chart and any
-  gradient figure derived from it, not a licences page alone. A compact form
-  linking to the full credit satisfies it; omitting it does not.
-- **Version matters for the citation**, and [§2a](#2a-source-chain) settles it
-  as **v1**. The exact strings the distribution asks for:
+- **Free for the general public** for the GLO-30 Public instance, under the
+  Copernicus DEM Licence. Full terms live on the Copernicus Data Space COP-DEM
+  collection page and **must be read before publishing** — the AWS registry
+  entry links them rather than restating them.
+- The AWS Open Data registry gives the citation form *"Copernicus Digital
+  Elevation Model (DEM) was accessed on `DATE` from
+  https://registry.opendata.aws/copernicus-dem."* That is the **registry's**
+  citation for access, and it is not automatically the same thing as the
+  licence's own attribution requirement. Both need checking; assuming the
+  citation discharges the licence is exactly the shortcut this section exists to
+  prevent.
+- Where the credit belongs: on **every surface showing a derived profile** — the
+  chart and any gradient figure computed from it — not on a licences page alone.
+
+**Why this is now smaller than it was.** The previous source, EU-DEM, placed
+access under a GMES delegated regulation setting *user registration conditions*
+rather than an open-data licence — a materially heavier instrument. Adopting
+GLO-30 retires that question rather than answering it. The EU-DEM notes are kept
+below only because 37 GB of converted tiles still exist and could be used.
+
+<details>
+<summary>EU-DEM terms, retained for the tiles already converted</summary>
+
+- Its credit is **mandatory and displayed**, in this exact wording:
 
   > Data funded under GMES preparatory action 2009 on Reference Data Access by
   > the European Commission, DG Enterprise and Industry.
 
-  is the mandatory displayed credit, and the requested citation is *European
-  Commission – DG ENTR, 2012, EU-DEM Version 1*. Both are v1-specific; v1.1 is
-  an EEA product and carries different wording, so the credit must be re-checked
-  if the source ever changes.
+- The requested citation is *European Commission - DG ENTR, 2012, EU-DEM Version
+  1*. Both strings are v1-specific; v1.1 is an EEA product with different
+  wording.
+- Access is stated as "governed by Commission delegated regulation (EU) No
+  12386/13 of 12.7.2013 supplementing Regulation (EU) No 911/2010 ... establishing
+  registration and licensing conditions for GMES users". The instrument of that
+  date supplementing 911/2010 appears to be Delegated Regulation (EU) **No
+  1159/2013**, so the readme's number looks like an internal reference -
+  **verify before relying on it**.
 
-- **Access is regulated, not merely licensed.** The readme states access is
-  "governed by Commission delegated regulation (EU) No 12386/13 of 12.7.2013
-  supplementing Regulation (EU) No 911/2010 … establishing registration and
-  licensing conditions for GMES users". The instrument of that date supplementing
-  911/2010 appears to be Delegated Regulation (EU) **No 1159/2013**, so the
-  readme's number looks like an internal reference rather than the citation —
-  **verify before relying on it**. Either way this is a regulation setting user
-  conditions, not an open-data licence, and it must be read before derived
-  profiles are published rather than after.
+</details>
 
 ### 2d. Failure is honest
 
@@ -556,7 +594,7 @@ The cost is not cosmetic. Over the stored line the climb averages **6.80%**;
 trimmed at its summit it averages **8.61%** over 2080 m, against climbfinder's
 9.0% over 2000 m. **Overshooting the top understates the climb by 1.8
 percentage points** — an error several times larger than the difference between
-the DEM sources [§2a](#2a-source-chain) agonises over. Getting the source right
+the DEM sources [§2a](#2a-the-source) agonises over. Getting the source right
 and the endpoint wrong still publishes a wrong number.
 
 This is a rider-input problem, not a data problem: marking a summit a few
@@ -573,19 +611,31 @@ hundred metres late is easy and the map gives no feedback that it happened. So:
 - **[§7](#7-migration)'s sweep must re-derive endpoints, not just elevations.**
   Every existing climb was drawn without this check.
 
-**And the line must run uphill, which is a separate check.** Measured across all
-seven seeded climbs, 2026-08-04:
+**And the line must run uphill, which is a separate check.** Measured across
+every climb with a route, 2026-08-04, and the two defects found have **different
+origins** — which matters more than the count:
 
-| climb | high point sits at | |
+| climb | high point sits at | origin |
 |---|---|---|
-| Mur de Huy, Ereffe, Bohissau, Hockai | 100% along | correct |
-| Côte de Stockeu | 97% | mild overshoot |
-| Côte de la Redoute | 90% | 362 m overshoot |
-| **Côte de la Roche-aux-Faucons** | **0%** | **stored backwards** |
+| Mur de Huy, Ereffe, Bohissau, Hockai, Stockeu | at or within 5 m of the end | correct |
+| **Côte de la Roche-aux-Faucons** | **0%** | **seed data, stored backwards** — fixed |
+| Côte de la Redoute | 90%, 361 m of descent | **a route drawn in the editor**, during testing |
 
-Roche-aux-Faucons runs summit to foot: it starts at 242 m and ends at 181 m. So
-**three of seven** stored climbs have an endpoint defect, which makes this a
-validation rule rather than a footnote.
+An earlier draft of this section said "three of seven", counting Stockeu. Its
+tail is **5 m**, which is noise rather than a defect, and the real figure was
+never a count of seed errors at all:
+
+- **Roche-aux-Faucons was a seed error** — hand-authored summit-to-foot in
+  `SeedManualCatalogCommand`, starting at 242 m and ending at 181 m. One entry,
+  now reversed at source.
+- **La Redoute's overshoot is not in the seed at all.** The seeded route is
+  1959 m and ends at its summit. The 361 m of trailing descent belongs to a
+  route **drawn through the contribute wizard** while testing the moderation
+  flow — which makes it the more important of the two, because it is what the
+  live editor accepts from a real rider today, with no warning of any kind.
+
+So this is a validation rule rather than a footnote, and the validation belongs
+in the **editor**, not only in a migration sweep over seeded rows.
 
 The reversed case is the dangerous one, because the trim rule above **fails
 silently on it**. "Measure to the highest point" on a descending line puts the
@@ -686,14 +736,14 @@ the chart is only honest once they are done.
   region or only Europe at first, everything else falling to the public API.
 - **Adopt GLO-30 as the single source, or keep the chain?** GLO-30 is now
   measured and is at least as good as EU-DEM on all seven seeded climbs
-  ([§2a](#2a-source-chain)), which makes a one-source worldwide model possible.
+  ([§2a](#2a-the-source)), which makes a one-source worldwide model possible.
   The evidence is one tile, one massif, one latitude band — Benelux is the
   widening that would confirm it, via
   [tools/elevation](../../tools/elevation/README.md). Deciding *yes* retires
   EU-DEM's regulated-access question and the per-region raster management;
   deciding *no* keeps 37 GB of tiles that already exist.
   *(The EU-DEM version question is closed: v1, measured equivalent to v1.1 —
-  see [§2a](#2a-source-chain).)*
+  see [§2a](#2a-the-source).)*
 - **Fix the three defective stored climbs**
   ([§4a](#4a-the-line-must-end-at-the-summit)) — Roche-aux-Faucons is stored
   backwards and two others overshoot their summit. Whether that is a data
