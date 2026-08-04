@@ -193,7 +193,7 @@
     function onPointsChanged() {
       // The route is about to change: the previous profile's sampler describes
       // a climb that no longer exists.
-      sustainedAt = null;
+      sustainedAtSteep = null;
       // Any endpoint change invalidates whatever profile is still in flight —
       // a late resolve must not apply the OLD route's grad/steep to the new one.
       profileSeq++;
@@ -275,7 +275,8 @@
       var timer = setTimeout(function () { ctl.abort(); }, FETCH_TIMEOUT_MS);
       profiling = true;
       profileError = false;
-      window.Cc.profileFromRoute(state.route, ctl.signal).then(function (res) {
+      var manualAt = (state.steep && state.steep.manual) ? state.steep.at : null;
+      window.Cc.profileFromRoute(state.route, ctl.signal, manualAt).then(function (res) {
         clearTimeout(timer);
         if (seq !== profileSeq) return; // a newer route/profile superseded this one
         profiling = false;
@@ -304,8 +305,10 @@
              and only then, it is re-derived — including a hand-placed one,
              because a marker stranded off the climb is wrong however it got
              there. */
-          // Kept for the manual-drag path below, which has no fresh profile.
-          sustainedAt = res.sustainedAt || null;
+          // The server re-read the hand-placed marker's gradient at its own
+          // position, so the drag path below has a fresh number without a
+          // second round trip.
+          sustainedAtSteep = res.sustainedAtSteep || null;
           /* A marker the RIDER placed is theirs and stays put; an automatic one
              is re-derived from the new profile every time the line changes.
 
@@ -332,7 +335,7 @@
              beside a road that is no longer part of the climb is wrong however
              it got there. */
           if (state.steep && state.steep.manual && steepStillOnRoute()) {
-            state.steep.pct = sustainedAt ? sustainedAt(state.steep.at) : state.steep.pct;
+            state.steep.pct = sustainedAtSteep || state.steep.pct;
           } else {
             state.steep = { at: res.steep.at, pct: res.steep.pct, manual: false };
           }
@@ -397,16 +400,15 @@
 
     /* The gradient to print beside the steepest marker.
 
-       Prefers the profile's own sustained-window sampler (same instrument as
-       the maximum); falls back to the coarse bar lookup only when no profile
-       has resolved yet — a rider dragging the marker before the elevation call
-       returns still gets a number rather than a blank. */
-    var sustainedAt = null;
+       While DRAGGING there is no fresh measurement to read: the sustained
+       window is computed server-side now, so the exact figure arrives with the
+       next profile rather than under the cursor. The bar lookup gives the
+       rider an immediate approximate number so the label is never blank, and
+       recomputeProfile() replaces it with the measured one — asking the server
+       on every drag frame would be a request per pixel. */
+    var sustainedAtSteep = null;
 
     function steepPctAt(ll) {
-      if (sustainedAt) {
-        try { return sustainedAt(ll); } catch (e) { /* fall through to the bars */ }
-      }
       return nearestGradPct(ll);
     }
 
@@ -465,7 +467,7 @@
 
     /* ---------- reset / destroy ---------- */
     function reset() {
-      sustainedAt = null;
+      sustainedAtSteep = null;
       // Reset is undoable too — it is the most expensive mistake on this
       // editor, and "I meant to move the summit" should not cost the climb.
       snapshot();

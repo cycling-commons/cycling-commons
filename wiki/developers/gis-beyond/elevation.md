@@ -118,11 +118,9 @@ new climb, `web/assets/contribute/climb-elevation.js` fetches an elevation profi
 and looks for the single steepest sustained stretch — not the steepest adjacent-point jump, which
 would be exactly the kind of noise-prone reading this section just warned about:
 
-<!-- CODE-FROM web/assets/contribute/climb-elevation.js -->
-```js
-var MAX_WINDOW_M = 100;
-
-// Slide the window along the route and take the steepest sustained gradient.
+<!-- CODE-FROM web/src/Elevation/ClimbProfiler.php -->
+```php
+private const int MAX_WINDOW_M = 100;
 ```
 
 That window is the feature's own smoothing threshold, chosen for a different job — finding a climb's
@@ -157,7 +155,6 @@ So the call moved server-side:
 
 <!-- CODE-FROM web/assets/contribute/climb-elevation.js -->
 ```js
-var pts = sample(coords, 200);
 return fetch('/contribute/elevation', {
 ```
 
@@ -165,6 +162,14 @@ Nothing about that is a bigger feature — it is the same lookup — but it move
 to us: **which dataset** (a deployment setting, not a third party's default), **how densely to
 sample** (200 points, ~20 m on a 4 km climb), and **what happens when it fails**. It also removes an
 external host from the page's content-security policy, which is a security win that came free.
+
+Then the *arithmetic* followed the lookup across. Sampling, binning, the average and the
+steepest-window search all used to run in the browser, and the server stored whatever came back
+after checking only that it looked like a gradient — so the client was the author of every published
+number, and re-measuring the whole catalogue was impossible because the maths was not where the data
+is. It is one implementation in PHP now, which is why the constant quoted above is a PHP constant.
+The lesson generalises: **a computation belongs where its results are trusted**, not where they
+happen to be displayed.
 
 Read precisely what this preview is and is not. It genuinely samples a digital elevation model, not
 any rider's device. But it exists only to draw a gradient profile while someone is drawing a climb.

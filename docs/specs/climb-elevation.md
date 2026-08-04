@@ -4,10 +4,14 @@
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-> **Planned** (2026-08-04). Nothing in this document is built yet. The
-> measurements in [§1](#1-why-the-current-numbers-cannot-be-trusted) were taken
-> against the live dev stack and are the evidence the design rests on; the rest
-> is the contract to build against.
+> **Partly built** (2026-08-05). The elevation service, the measurement and the
+> catalogue sweep exist: `App\Elevation\ElevationClient` reads
+> [§2a](#2a-the-source)'s source through Valhalla, `App\Elevation\ClimbProfiler`
+> is the single implementation of everything in [§3](#3-sampling-and-binning)–[§5](#5-the-steepest-ramp-is-found-not-placed),
+> and `app:climbs:recompute` re-measures every climb with a line (dry run by
+> default). **Not yet run against the catalogue** — that is [§7](#7-migration),
+> and it waits on the editorial calls in [§9](#9-owner-decisions-still-open).
+> [§6](#6-the-chart)'s chart is built apart from provenance display.
 
 A rider marks two points — the **foot** and the **summit**. Everything else
 about the climb is measured: its length, its height gain, its average and
@@ -669,6 +673,16 @@ hundred metres late is easy and the map gives no feedback that it happened. So:
   — the rider may have meant to include a dip, and a spec that quietly discards
   part of a contribution is the kind of thing [§1](#1-why-the-current-numbers-cannot-be-trusted)
   is written against.
+- **"Materially" means metres LOST, not metres travelled** (owner, 2026-08-05).
+  An earlier draft flagged on tail *distance*, and it was wrong: many climbs
+  finish on a plateau, and **on flat ground the highest point is decided by DEM
+  noise rather than by the road**, so its position wanders by whatever the
+  quantisation happens to do. Roche-aux-Faucons is flat for its last 73 m; its
+  tail is 130 m long and loses **1 m**, and the route is correct. La Redoute's
+  tail is 361 m and loses **10 m**, and that is a descent. The threshold is on
+  the drop — 8 m in `ClimbProfiler` — and for the same reason the summit is the
+  **last** point at the maximum, not the first: a climb does not end where its
+  plateau begins.
 - **[§7](#7-migration)'s sweep must re-derive endpoints, not just elevations.**
   Every existing climb was drawn without this check.
 

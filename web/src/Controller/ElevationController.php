@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Elevation\ClimbProfiler;
 use App\Elevation\ElevationClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,13 +15,19 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Elevation for a drawn climb line.
+ * The measured profile of a drawn climb line.
  *
  * Exists so the climb editor asks *us* rather than a third party's public API
  * from the browser. That moves the dataset behind a setting instead of a CORS
  * allowlist, removes an external host from the page's CSP, and means the
  * gradient a rider sees comes from the source this project chose
  * (climb-elevation.md §2a).
+ *
+ * It returns the COMPUTED profile — length, gain, average and maximum gradient,
+ * the display bars and the steepest ramp — rather than raw elevations. The
+ * arithmetic used to live in the browser, which made the client the author of
+ * every published gradient and made a catalogue-wide re-measure impossible.
+ * One implementation now serves both the editor and the sweep.
  *
  * Contributor-only: it is an editor tool, not public map data, and it costs an
  * upstream request per call. Rate limiting rides on the same login the
@@ -30,7 +37,7 @@ final class ElevationController extends AbstractController
 {
     #[Route('/contribute/elevation', name: 'contribute_elevation', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
-    public function elevation(Request $request, ElevationClient $client): JsonResponse
+    public function elevation(Request $request, ClimbProfiler $profiler): JsonResponse
     {
         $payload = json_decode($request->getContent(), true);
         $raw = \is_array($payload) ? ($payload['coords'] ?? null) : null;
@@ -51,14 +58,23 @@ final class ElevationController extends AbstractController
             $coords[] = [$lat, $lng];
         }
 
-        $result = $client->heights($coords);
-        if (null === $result) {
+        // Optional: a marker the rider placed by hand, so its number can be
+        // re-read at that position without the marker being moved.
+        $steepAt = null;
+        $rawSteep = $payload['steepAt'] ?? null;   // $payload is already known to be an array here
+        if (isset($rawSteep[0], $rawSteep[1]) && is_numeric($rawSteep[0]) && is_numeric($rawSteep[1])) {
+            $steepAt = [(float) $rawSteep[0], (float) $rawSteep[1]];
+        }
+
+        $profile = $profiler->profile($coords, $steepAt);
+        if (null === $profile) {
             // 503, not 200-with-nulls: "we could not measure this" is a
             // different outcome from "this is flat", and the editor has to be
-            // able to tell them apart to say so honestly (§2d).
+            // able to tell them apart to say so honestly (§2d). A line that
+            // runs downhill lands here too — it has no climb to describe.
             return new JsonResponse(['error' => 'elevation_unavailable'], 503);
         }
 
-        return new JsonResponse($result);
+        return new JsonResponse($profile);
     }
 }
