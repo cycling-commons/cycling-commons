@@ -693,11 +693,17 @@ function routeLengthKm(route){
    climb. One fact, one source: the item states it, this repeats it, and the
    computed values are only a fallback for a profile whose item says nothing.
 
-   `(illustrative)` stays, and describes the BARS. Some climbs carry a
-   hand-authored profile from the manual seed; others carry one sampled from
-   real elevation by the editor. Nothing in the payload distinguishes them, so
-   the caption under-claims rather than over-claims. Making that honest properly
-   needs a provenance flag on the profile. */
+   `(illustrative)` is gone. It was written when the numbers beside it were
+   computed from sample bars, and it warned you not to trust them. They are the
+   item's own stated avg/max now, so the warning had stopped describing
+   anything true — it read as "these figures are made up" about figures a
+   curator had approved (owner-reported twice, 2026-08-04).
+
+   The BARS remain an approximation on some climbs: the manual seed hand-authors
+   a profile, the editor samples one from real elevation, and nothing in the
+   payload says which you are looking at. That is a provenance question, and
+   the honest fix is a flag on the profile rather than a blanket disclaimer on
+   the numbers. Until then the shape is offered without a claim about it. */
 function gradStrip(grad, f){
   const barMax=Math.max(...grad);
   const stated=v=>{
@@ -708,7 +714,7 @@ function gradStrip(grad, f){
   const avg = stated(f && f.avgGradient) ?? String(Math.round(grad.reduce((a,b)=>a+b,0)/grad.length));
   const max = stated(f && f.maxGradient) ?? String(barMax);
   const bars=grad.map(p=>`<span class="cc-grad-bar" style="height:${Math.round(10+(p/Math.max(barMax,1))*30)}px;background:${gradColor(p)}" title="${p}%"></span>`).join('');
-  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · avg ~{a}% · max {m}%', {a:avg, m:max})} <em>${D.illustrative||'(illustrative)'}</em></div>
+  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · avg ~{a}% · max {m}%', {a:avg, m:max})}</div>
     <div class="cc-grad">${bars}</div>`;
 }
 function elevSvg(elev){

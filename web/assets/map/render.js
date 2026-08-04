@@ -90,9 +90,20 @@ export function drawClimbLine(id, latlngs, grad, layer, f){
   if(!map.getLayer(id+'-case')) map.addLayer({id:id+'-case',type:'line',source:id,
     layout:{'line-cap':'round','line-join':'round'},
     paint:{'line-color':'#FBF4E4','line-width':caseW,'line-opacity':.95}});
-  const expr=['interpolate',['linear'],['line-progress']];
+  /* Hard bands, not a blend.
+
+     `interpolate` faded each colour into the next, so a climb read as a smooth
+     wash and you could not see where one gradient band ended and the next
+     began — while the profile strip beside it shows exactly that, as discrete
+     bars (owner-reported 2026-08-04). `step` gives the line the same edges the
+     bars have.
+
+     The stops are i/n, not i/(n-1): each sample IS a slice of the climb, not a
+     point on it, so n samples are n equal bands. Interpolating between
+     end-points quietly implied the first and last bars were half-width. */
   const n=grad.length;
-  for(let i=0;i<n;i++){ expr.push(i/(n-1)); expr.push(gradColor(grad[i])); }
+  const expr=['step',['line-progress'],gradColor(grad[0])];
+  for(let i=1;i<n;i++){ expr.push(i/n); expr.push(gradColor(grad[i])); }
   if(!map.getLayer(id)) map.addLayer({id,type:'line',source:id,
     layout:{'line-cap':'round','line-join':'round'},
     paint:{'line-width':lineW,'line-gradient':expr}});
