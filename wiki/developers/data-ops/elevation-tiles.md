@@ -7,6 +7,18 @@ digital elevation model, converting it into the format the routing engine reads,
 and — the part that matters most — proving it is good enough before anyone
 believes it.
 
+!!! info "What this project runs today"
+
+    **Copernicus GLO-30 is the source**, worldwide — 30 m cells, served from
+    Valhalla's `/height`, so the gradients a rider sees come from it. The Europe
+    tiles were built with the pipeline on this page (1137 `.hgt` tiles, 28 GB)
+    and replaced the earlier EU-DEM set on 2026-08-05.
+
+    Everything below about **GLO-90 describes the source that was replaced.** It
+    is kept because it is the clearest lesson available in why resolution is not
+    accuracy, and because the failure was measured on our own climbs rather than
+    borrowed from a textbook.
+
 Course 2's [Elevation and terrain](../gis-beyond/elevation.md) explains what a
 **DEM (digital elevation model)** is and why two tools disagree about the same
 ride. This page is the operational half: the pipeline, and the reasoning behind
@@ -65,7 +77,8 @@ elevation data produces a more precise wrong answer.
 The obvious question is "how many metres per cell?", and the obvious answer
 misleads.
 
-**Copernicus GLO-90** has 90 m cells. Sampled every 25 m along La Redoute it
+**Copernicus GLO-90** — *the source used until 2026-08-05, not the one used
+now* — has 90 m cells. Sampled every 25 m along La Redoute it
 returned 30 distinct values across 99 samples, with runs of seven identical
 readings and eight samples going *downhill* on a climb that never descends.
 Binned at 100 m it published a **10% descent through the middle of the climb**.
@@ -85,7 +98,9 @@ getting the grid's shape back instead of the road's. The rule that falls out:
 > **A bin is never narrower than about four DEM cells.**
 
 At 90 m cells that means bins no narrower than 360 m — which is why GLO-90
-cannot draw the 100 m bars we want, at any level of cleverness.
+cannot draw the 100 m bars we want, at any level of cleverness. **GLO-30's 30 m
+cells clear the same rule at 120 m**, which is what makes the profile actually
+published honest.
 
 The corollary matters just as much: a *finer* raster does not automatically buy
 a better answer. When EU-DEM v1 (1 arc-second) was compared against EU-DEM v1.1

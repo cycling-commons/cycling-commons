@@ -8,8 +8,10 @@ numbers cannot be trusted, which source, which bin width — is
 [docs/specs/climb-elevation.md](../../docs/specs/climb-elevation.md). This file
 is the procedure.
 
-**Status:** the pipeline runs and has been used to evaluate GLO-30 against
-EU-DEM on the seeded Wallonia climbs. Nothing in the application reads it yet.
+**Status:** in production. GLO-30 is the source, worldwide; the Europe set
+(1137 `.hgt` tiles, 28 GB) replaced EU-DEM on the Valhalla host on 2026-08-05,
+and the app reads it through `App\Elevation\ElevationClient` → Valhalla
+`/height`.
 
 ## The short version
 
