@@ -142,6 +142,60 @@ a drag costs one lookup rather than one per intermediate position. Without that,
 a throttled response shows a rider "profile unavailable" for a climb that is
 perfectly fine.
 
+### 2b-i. Self-hosting, when the time comes
+
+Written up now so it can be prepared rather than improvised. Two routes, and the
+architecture already prefers one of them.
+
+**The destination: the `pipeline` tier.** [dev-environment.md §3](dev-environment.md)
+places "Rasters (rasterio/DEM)" in the Python `pipeline` service, and that
+service's own docstring already names *DEM sampling* as its job. The scaffolding
+exists: `DEM_DIR` (default `./data/dem`) is mounted read-only and `GET /dem`
+reports whether it is populated. Nothing samples it yet.
+
+Adding an elevation endpoint there means:
+
+- rasters under `DEM_DIR/<source>/`, one subdirectory per source, downloaded
+  rather than built — the same discipline `valhalla` uses for its prebuilt tiles
+  (`use_tiles_ignore_pbf`, never built in-container);
+- a `POST /elevation` taking a coordinate list and returning elevations plus the
+  source that answered, so the caller gets the `demSource` of
+  [§4](#4-what-is-measured-and-what-is-stored) without a second lookup;
+- source selection per coordinate, best-available-first per
+  [§2a](#2a-source-chain), which a single-dataset service cannot do and which
+  the chain requires.
+
+**The stepping stone: an opentopodata container.** It speaks the API the client
+already calls, so switching is a base-URL change rather than a client rewrite,
+and it removes the daily budget and the per-call location cap in one step. It
+is a reasonable intermediate if elevation becomes urgent before the pipeline
+work is scheduled. It should still be an opt-in compose profile (`elevation`,
+alongside `routing` and `storage`) and **internal-only** — an unauthenticated
+elevation service has no business on a public port.
+
+**Either way, the client must not care.** One setting names the base URL, one
+names the source order; unset means the public endpoint. That is what keeps this
+a deployment decision instead of a code change, and it is why
+[§2d](#2d-failure-is-honest) matters — a self-hosted service that is down must
+degrade exactly like a public one that is throttled.
+
+**What to prepare, in order:**
+
+1. **Confirm licensing** ([§2c](#2c-licensing-is-a-gate-not-a-footnote)) — this
+   gates acquiring the data at all, not just publishing it.
+2. **Size the datasets.** EU-DEM v1.1 at 25 m over Europe and SRTM at 30 m are
+   both substantial, and the honest number is the one measured at download time
+   rather than one quoted from memory here. Only the onboarded regions are
+   needed ([country onboarding](catalog-data-model.md) governs which), which may
+   be far less than a continent.
+3. **Decide where the rasters live** — beside the existing object-storage bucket
+   that serves PMTiles ([coverage-provider.md](coverage-provider.md)), or on the
+   worker's own disk. They are read constantly by one service and never by a
+   browser, so this is a different question from tile hosting.
+4. **Then** the endpoint, behind the same setting, with
+   [§8](#8-testing)'s fixture test pinning the answer so a source swap that
+   silently changes La Redoute's gradient is caught.
+
 ### 2c. Licensing is a gate, not a footnote
 
 EU-DEM is Copernicus data and SRTM is United States government data. Neither
@@ -301,10 +355,13 @@ the chart is only honest once they are done.
 
 ## 9. Owner decisions still open
 
-- **When self-hosting is triggered** — [§2b](#2b-start-on-the-public-api-self-host-when-something-makes-it-necessary)
-  starts on the public API and names three triggers. When one bites: full Europe
-  EU-DEM (tens of gigabytes) or only the regions onboarded, and whether it lives
-  beside the existing PMTiles infrastructure.
+- **Which self-hosting route, when a trigger bites.**
+  [§2b-i](#2b-i-self-hosting-when-the-time-comes) prefers an elevation endpoint
+  in the `pipeline` tier, where the architecture already puts rasters, over an
+  opentopodata container that is quicker to stand up but cannot do the
+  best-available-first chain. Also open: whether the rasters cover every
+  onboarded region or only the busy ones, and whether they live beside the
+  PMTiles bucket or on the worker's disk.
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
 - **`~` in published gradients** — measured values are numbers; the catalog's
