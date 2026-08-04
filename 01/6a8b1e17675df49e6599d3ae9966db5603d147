@@ -1,0 +1,30 @@
+wiki/developers/data-ops/elevation-tiles.md
+  s_ba6cf53b5a7360::t_c682f73dc0442b 208,210-238
+  s_ba6cf53b5a7360::t_79bcc0a05f126c 248-253,255-257
+tools/elevation/compare-sources.js
+  s_ba6cf53b5a7360::t_ab0e0d75151473 163-165
+  s_ba6cf53b5a7360::t_63ddad3d892320 139-145,147,154-155
+  s_ba6cf53b5a7360::t_4ee52b42509a9c 130-131,133
+  s_ba6cf53b5a7360::t_e0d238e52cc7cb 15-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "016a8b1e17675df49e6599d3ae9966db5603d147",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
