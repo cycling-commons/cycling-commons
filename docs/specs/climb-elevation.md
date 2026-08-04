@@ -868,26 +868,26 @@ the chart is only honest once they are done.
 
 ## 9. Owner decisions still open
 
-- **Whether to skip the public API entirely.**
-  [§2b-i](#2b-i-self-hosting-valhalla-already-does-this) settled *which* self-hosted
-  route — Valhalla `/height`, already in the stack and already proven with EU-DEM
-  tiles elsewhere. That makes [§2b](#2b-start-on-the-public-api-self-host-when-something-makes-it-necessary)'s
-  staging debatable: the public endpoint was the starting point because
-  self-hosting looked like new infrastructure, and it is not. Starting on
-  Valhalla costs a tile generation run and skips both the daily budget and the
-  throttle-mid-drag problem. Still open: whether the tiles cover every onboarded
-  region or only Europe at first, everything else falling to the public API.
-- **Widen the GLO-30 evidence to Benelux.** The source question is *decided*
-  ([§2a](#2a-the-source)) — one worldwide source — but the measurement behind it
-  is one tile, one massif, one latitude band. Running
-  [tools/elevation](../../tools/elevation/README.md) over Benelux is what turns a
-  sound decision into a confirmed one, and the decimation factor changes with
-  latitude, so the Netherlands is a different test from the Ardennes.
-- **Roche-aux-Faucons' geometry.** Its *direction* is fixed
-  ([§4a](#4a-the-line-must-end-at-the-summit)), but the line itself is still
-  wrong: ours runs 1752 m and gains 56 m, while the reference profile is 4.3 km
-  from ~140 m to 270 m with a real descent between two ramps. Owner is redrawing
-  its start and end.
+- **Load the GLO-30 tiles on the Valhalla host.** Benelux is downloaded and
+  converted — 52 `.hgt` tiles, 644 MB — but the running
+  instance still answers from EU-DEM, verified 2026-08-04 by comparing its
+  replies against both local tile sets (60/60 samples matched EU-DEM). Until the
+  tiles are in the directory `additional_data.elevation` names, the source
+  decided in [§2a](#2a-the-source) is not the one riders' numbers come from.
+  Note both datasets use identical `N50E005.hgt` filenames and identical file
+  sizes, so **only the timestamp distinguishes them** — copying into the wrong
+  directory fails silently rather than erroring.
+- **Widen the GLO-30 evidence geographically.** Benelux tiles exist and were
+  compared against EU-DEM, but **every seeded climb sits in one tile**
+  (`N50E005`), so that run re-tested the same ground rather than widening it.
+  The Netherlands is the interesting test — the decimation factor changes with
+  latitude — and it needs climbs there to test *with*.
+- **`headline` is still stored and still wrong.** [§4](#4-what-is-measured-and-what-is-stored)
+  retires it, and nothing recomputes it: Roche-aux-Faucons reads
+  `1.5 km · 9% avg` on a line now measured at 4.4 km and 5.6%. The drawer
+  composes its own length so riders do not see it, which is exactly what makes
+  it easy to leave — it is wrong data sitting in the attribute, waiting for
+  something to read it.
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
 - **`~` in published gradients** — measured values are numbers; the catalog's
