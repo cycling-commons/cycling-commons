@@ -32,6 +32,9 @@ committed — working docs stay local.
 - `catalog-data-model.md` — the running catalog schema and data contracts.
 - `moderation-and-contribution.md` — the contribution-to-decision lifecycle.
 - `route-domain.md` — the K route domain in depth.
+- `climb-elevation.md` — how a climb's length, gain, gradients and profile are
+  MEASURED (elevation source chain, binning, the steepest-ramp window) and how
+  the profile chart is drawn. Nobody types a gradient.
 - `map-and-search.md` — the map/search UX contract
   (delegated to by osm-data-architecture.md §8).
 - `account-and-auth.md` — identity, roles, 2FA, admin desk, profiles.

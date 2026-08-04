@@ -151,6 +151,18 @@ Letter B now always gets the Locate step when the item has a stored route.
 `CC_ITEM` already carries `route`/`grad`/`steep` regardless of the step, so the
 editor mounts on the real geometry with nothing extra sent.
 
+### Elevation, gradients and the profile live in their own spec
+
+How a climb's length, height gain, average and maximum gradient and profile bars
+are MEASURED — the elevation source chain, the binning rules, the steepest-ramp
+window, and the chart that displays them — is owned by
+[climb-elevation.md](../climb-elevation.md).
+
+The short version, because it changes what this page may offer: **nobody types a
+gradient.** A rider marks the foot and the summit; everything else is derived.
+`maxGradient` is already `CatalogField::$derived` for that reason, and the rest
+follows when that spec is built.
+
 **Still latent:** the editor requests OSRM with `overview=full`, and
 `ClimbGeometry::MAX_POINTS` is 2000. A long enough climb could exceed it and be
 refused as `invalid_geometry` — now at least visibly. Not yet measured against a

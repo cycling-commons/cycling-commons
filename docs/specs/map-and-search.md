@@ -332,6 +332,21 @@ four returned once the reason they looked broken was fixed:
   mixed riding STYLES with bike TYPES, and the codebase keeps those apart
   (`RidingStyle` vs `BikeType`). That is the owner's to make.
 
+### 4.3a The climb profile strip
+
+The drawer's gradient bars and their caption are a placeholder for the profile
+chart specified in [climb-elevation.md](climb-elevation.md): unlabelled bars of
+proportional width, with no axis and no elevation silhouette. Two rules already
+hold and are the reason it reads honestly in the meantime:
+
+- **The numbers beside the bars are the item's own stated avg/max**, not values
+  recomputed from the bars. Recomputing gave the same drawer two different
+  answers — the attribute rows read `8.4%` while the caption read `~7%`
+  (2026-08-04).
+- **The bars use `step`, not `interpolate`**, so the climb line on the map has
+  the same hard band edges the bars do, at `i/n` boundaries — each sample IS a
+  slice of the climb, not a point on it.
+
 ### 4.4 Preference prefilter
 
 - Saved **bike types really filter the routes (K) layer** — routes are the only
