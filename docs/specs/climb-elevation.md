@@ -170,6 +170,9 @@ explained and bounded: `.hgt` is a fixed SRTM-format grid at 1 arc-second in
 way in. That costs per-sample fidelity (83 distinct rather than 100) and costs
 the aggregate figures nothing. It is comfortably past the bar
 [§3a](#3a-bin-width-follows-the-source) sets for 100 m bins, which GLO-90 fails.
+That loss happens at *conversion* time — the read path still interpolates
+between cells, per
+[§3d](#3d-where-the-coordinates-come-from-and-what-the-dem-returns).
 
 **It satisfies [§2a](#2a-source-chain) by deployment rather than by dispatch.**
 A single Valhalla instance has one elevation directory and cannot choose a
@@ -288,6 +291,58 @@ as [§1c](#1c-the-bars-mean-different-things-on-different-climbs).
 Sample the routed line at **one fifth of the bin width** (20 m for a 100 m bin),
 so every bar averages five readings rather than differencing two. Long climbs
 are batched against the self-hosted service; there is no 100-point ceiling.
+
+### 3d. Where the coordinates come from, and what the DEM returns
+
+Stated explicitly because it is the first thing a reader asks and nothing above
+says it: **the elevation source never produces coordinates.** A DEM has no idea
+a road exists. It is a lookup table — hand it a latitude and longitude, it
+returns a height there. The trajectory comes entirely from routing.
+
+The full chain for one climb:
+
+1. The rider taps **foot** and **summit** on the map.
+2. **The routing engine produces the line.** `ClimbGeometry` asks OSRM with
+   `overview=full`, which snaps those taps to the road network and returns the
+   polyline actually ridden. This is the only step that decides *where* the
+   climb goes.
+3. **That polyline is resampled** to the interval in
+   [§3c](#3c-sampling) — OSRM's vertices sit where the road bends, not at even
+   spacing, so points are interpolated along it to get one every 20 m.
+4. **Those points are sent to `/height`** as `shape`, with `range: true`.
+   Valhalla returns one elevation per point *and* the cumulative distance to it,
+   so no distance arithmetic is needed on our side.
+5. **Bins are cut** from that distance/elevation series per
+   [§3a](#3a-bin-width-follows-the-source)–[§3b](#3b-long-climbs-get-wider-bins).
+
+So step 2 owns the geometry and step 4 owns the heights, and they are
+independent: a profile can be recomputed against a better DEM without re-routing,
+and a re-drawn line gets a new profile without changing sources.
+
+**What `/height` does with a `.hgt` file.** Tiles are named for their south-west
+corner (`N50E005.hgt`) and hold a raw grid of 16-bit elevations — 3601×3601 for
+one arc-second. A lookup takes the integer part of the coordinate to pick the
+tile and the fractional part to index the grid, then **interpolates between the
+four surrounding cells** rather than snapping to the nearest one. Measured
+2026-08-04: walking 60 m in 2 m steps returned values changing every ~14 m on a
+~6.7% slope — run length tracking the *gradient* rather than the 30 m cell size,
+which is the signature of interpolation.
+
+**But the reply is integer metres**, and that is a second, independent argument
+for the [§3a](#3a-bin-width-follows-the-source) floor. Rounding to the metre is
+±0.5 m on every reading regardless of how good the source raster is. Over a
+100 m bin at 9% — 9 m of rise — that is ±0.5 of a percentage point, which is
+tolerable. Over a 20 m bin it would be ±2.5 points, and the bar would be mostly
+rounding error. Sampling at one fifth of the bin width
+([§3c](#3c-sampling)) also helps here: averaging five readings dilutes the
+quantisation that differencing two endpoints would keep at full strength.
+
+**Not used: `/route` with `elevation_interval`.** Valhalla can route and sample
+elevation in a single call, returning both geometry and heights. That suits a
+caller who has no geometry yet; here OSRM has already produced the line the
+rider approved, and re-routing through a second engine could return a
+*different* line than the one on screen. Worth knowing it exists — it is the
+natural choice if climbs ever route through Valhalla too.
 
 ---
 
