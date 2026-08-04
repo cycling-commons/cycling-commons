@@ -20,6 +20,12 @@
 # overlap by one row and column - carry real values instead of nodata.
 set -euo pipefail
 
+# GDAL writes a .aux.xml statistics sidecar beside every output it computes
+# stats for. Valhalla never reads them, and they double the file count in a
+# directory whose whole job is to be copied somewhere else - which is how a
+# 26-tile conversion got reported as 52 files.
+export GDAL_PAM_ENABLED=NO
+
 SRC="${1:?usage: $0 <geotiff_dir> [hgt_out_dir]}"
 OUT="${2:-${SRC%/}/hgt}"
 BUILD="$OUT/.build"
@@ -64,7 +70,7 @@ for tif in "${tifs[@]}"; do
 done
 
 rm -rf "$BUILD"
-echo "done: $made .hgt tiles in $OUT ($(du -sh "$OUT" | cut -f1))"
+echo "done: $made .hgt tiles in $OUT ($(du -sh "$OUT" | cut -f1)) - copy the .hgt files, nothing else"
 cat <<EOF
 
 To serve them, on the Valhalla host:

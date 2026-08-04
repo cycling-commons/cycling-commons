@@ -26,7 +26,7 @@ Then copy the `.hgt` files to the Valhalla host and restart it.
 | preset | bbox | tiles (land only) | `.hgt` |
 |---|---|---|---|
 | `BE` / `NL` / `LU` | one country | ~15–20 each | ~0.4–0.5 GB |
-| `BENELUX` | 49–54 N, 2–8 E | ~30 | ~0.7 GB |
+| `BENELUX` | 49–54 N, 2–8 E | **26** (measured) | **644 MB** |
 | `EUROPE` | 35–72 N, 11 W–32 E | ~900 of 1591 cells | **~20–25 GB** |
 
 Sea-only cells do not exist in the bucket and are skipped, so the land count is
@@ -90,16 +90,21 @@ different services measures their interpolation as much as their data. Reading
 the rasters directly does not.
 
 ```
-climb                         length   eudem (A)       glo30 (B)       diff/bin  down A/B
-Côte de la Redoute            2.08km   179m/8.6%       181m/8.7%         1.79pt  0/0
+climb                         length   eudem (A)       glo30 (B)       diff/bin  down A/B  disputed
+Côte de la Redoute            2.08km   179m/8.6%       181m/8.7%         2.02pt  0/0       0/21
 ```
 
 - **gain / average** are the published figures, so disagreement there is
   user-visible.
-- **bins reading downhill** is the failure that made GLO-90 unusable. A climb
-  that descends in its middle is impossible; any count above zero condemns the
-  source at that bin width.
 - **diff/bin** is the honest spread between two sources that are both plausible.
+- **disputed** is the one that generalises: bins where the two sources disagree
+  about whether the road *rises*. A descent both see is terrain; one only a
+  single source sees is an artifact — and it needs no prior knowledge of the
+  road, so it works on climbs nobody has profiled.
+- **bins reading downhill** is reported but is **not** a quality score. Real
+  climbs descend in their middles — 27 of Hockai's bins are genuine rail-trail
+  descent. It only condemns a source on a road known to rise monotonically,
+  which is what made it decisive against GLO-90 on La Redoute.
 
 It also flags **geometry** faults that no elevation source can fix — a line
 stored backwards, or running past its summit. Both exist in the seeded data.
@@ -128,7 +133,7 @@ The evidence is one tile at one latitude, so Benelux is the widening that
 confirms it. Two limits survive the decision: GLO-30 Public withholds tiles over
 a few countries, and it is a DSM.
 
-Storage, for planning: a `.hgt` tile is 24.7 MB. Benelux is tens of tiles;
+Storage, for planning: a `.hgt` tile is 24.7 MB. Benelux is 26 tiles (644 MB);
 global land is 14,000–26,000, or 340–630 GB. Scope rasters to onboarded
 countries rather than the globe.
 

@@ -869,7 +869,7 @@ the chart is only honest once they are done.
 ## 9. Owner decisions still open
 
 - **Load the GLO-30 tiles on the Valhalla host.** Benelux is downloaded and
-  converted — 52 `.hgt` tiles, 644 MB — but the running
+  converted — 26 `.hgt` tiles, 644 MB — but the running
   instance still answers from EU-DEM, verified 2026-08-04 by comparing its
   replies against both local tile sets (60/60 samples matched EU-DEM). Until the
   tiles are in the directory `additional_data.elevation` names, the source
