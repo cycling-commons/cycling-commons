@@ -99,7 +99,7 @@ One service, resolved per coordinate, best available first:
 
 | order | source | resolution | coverage |
 |---|---|---|---|
-| 1 | EU-DEM v1.1 | 25 m | Europe (EEA members + cooperating states) |
+| 1 | EU-DEM v1 | 1 arc-second (~30 m) | Europe (EEA members + cooperating states) |
 | 2 | SRTM | 30 m | 60°N to 56°S |
 | 3 | Copernicus GLO-90 | 90 m | worldwide |
 
@@ -108,6 +108,44 @@ The Commons is worldwide from day one
 cannot be the only source. GLO-90 stays as the floor because a coarse profile
 beats none — but see [§3a](#3a-bin-width-follows-the-source) for what it is
 allowed to draw.
+
+**Row 1 is v1, at 1 arc-second, and that is deliberate.** An earlier draft of
+this table said "EU-DEM v1.1, 25 m", which is a real dataset but not the one
+measured anywhere in this document. Both were then compared on La Redoute,
+2026-08-04:
+
+| | EU-DEM v1 (1 arc-sec) | EU-DEM v1.1 (25 m) |
+|---|---|---|
+| gain to summit | 179.0 m | 178.8 m |
+| average | 8.61% | 8.59% |
+| 100 m bins reading downhill | 0 | 0 |
+| distinct readings | 83 / 99 | 99 / 99 |
+
+They agree to **0.54 of a percentage point per 100 m bin**, and both land within
+1.2 m of climbfinder's 180 m of gain. v1.1's finer grid shows up as per-sample
+smoothness, not as a better answer — and v1's coarser count is the integer-metre
+reply of [§3d](#3d-where-the-coordinates-come-from-and-what-the-dem-returns),
+not the raster. So v1.1 is not worth acquiring for the accuracy, and the EEA
+has **discontinued EU-DEM entirely**, marking it superseded and directing users
+to Copernicus DEM. Adopting v1.1 would mean paying a migration to land on a
+dataset that is equally dead.
+
+**Both are Digital Surface Models.** EU-DEM's own readme describes it as "the
+first surface as illuminated by the sensors" — canopy and buildings included,
+not bare ground. On a wooded Ardennes climb the reading over a tree-lined
+stretch is not the road. This is not a defect to fix by changing EU-DEM version,
+because Copernicus DEM is a DSM too; it is a known error term, and it is the
+most likely explanation for any residual disagreement with a surveyed profile.
+
+**The successor for row 3, unmeasured.** Copernicus DEM GLO-30 is the dataset
+EEA points to: 30 m, worldwide, and the same TanDEM-X source that GLO-90 is a
+3× downsample of — so [§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw)'s
+verdict on GLO-90 says nothing about it. If it performs near EU-DEM, the chain
+above collapses to **one worldwide source**, which would remove the per-region
+tile management of [§2b-i](#2b-i-self-hosting-valhalla-already-does-this)
+entirely. It is not on opentopodata's public endpoint, so it could not be
+measured here. **Measuring it is the highest-value open question in this
+document.**
 
 ### 2b. Start on the public API; self-host when something makes it necessary
 
@@ -165,14 +203,15 @@ directory. Measured against that instance, 2026-08-04, on the same road as
 | gain vs climbfinder (180 m) | — | **179 m** | 180 m |
 
 Gain lands within a metre of the reference. The remaining coarseness is
-explained and bounded: `.hgt` is a fixed SRTM-format grid at 1 arc-second in
-**integer metres**, so a 25 m source is resampled to ~30 m and rounded on the
-way in. That costs per-sample fidelity (83 distinct rather than 100) and costs
-the aggregate figures nothing. It is comfortably past the bar
-[§3a](#3a-bin-width-follows-the-source) sets for 100 m bins, which GLO-90 fails.
-That loss happens at *conversion* time — the read path still interpolates
-between cells, per
-[§3d](#3d-where-the-coordinates-come-from-and-what-the-dem-returns).
+explained and bounded, and it is **not** a resampling loss. EU-DEM v1 is already
+published at 1 arc-second, which is exactly the `.hgt` grid, so the conversion is
+grid-aligned and moves no cells. The single loss is that `.hgt` stores **integer
+metres**. That costs per-sample fidelity — 83 distinct readings of 99 against
+v1.1's 99 — and costs the aggregate figures nothing, and it is comfortably past
+the bar [§3a](#3a-bin-width-follows-the-source) sets for 100 m bins, which GLO-90
+fails. The read path still interpolates between cells, per
+[§3d](#3d-where-the-coordinates-come-from-and-what-the-dem-returns); the rounding
+is applied to the interpolated result.
 
 **It satisfies [§2a](#2a-source-chain) by deployment rather than by dispatch.**
 A single Valhalla instance has one elevation directory and cannot choose a
@@ -216,10 +255,12 @@ keeps this a deployment decision instead of a code change.
 1. **Confirm licensing** ([§2c](#2c-licensing-is-a-gate-not-a-footnote)) — this
    gates acquiring the data at all, not just publishing it, and EU-DEM's credit
    is mandatory on every surface that shows a derived profile.
-2. **Generate the tiles.** The converter is GDAL over the EU-DEM mosaic; the
-   honest size is the one measured at conversion time, and only the onboarded
-   regions are needed ([country onboarding](catalog-data-model.md) governs
-   which) rather than a continent.
+2. **Generate the tiles — or reuse the ones that exist.** The converter is GDAL
+   over the EU-DEM mosaic. **Europe is already done**: the owner's existing
+   conversion produced **1517 `.hgt` tiles, 37 GB**, covering the full EU-DEM
+   extent. So this step is already paid for in Europe, and the outstanding work
+   is the rest of the world, where the source is row 2 or 3 of
+   [§2a](#2a-source-chain) rather than EU-DEM.
 3. **Point `additional_data.elevation` at them** and set `build_elevation`, per
    instance.
 4. **Then** the client, behind the base-URL setting, with the non-zero guard
@@ -240,13 +281,26 @@ Two specifics worth carrying, from the EU-DEM distribution's own readme:
   showing EU-DEM-derived data, which here means the profile chart and any
   gradient figure derived from it, not a licences page alone. A compact form
   linking to the full credit satisfies it; omitting it does not.
-- **Version matters for the citation.** The 2012 original is EU-DEM v1 by the
-  European Commission DG ENTR; the 2018 v1.1 update is by the EEA. They are
-  comparable in accuracy and carry *different* citations, so whichever mosaic
-  the tiles are generated from is what must be credited. The tiles measured in
-  [§2b-i](#2b-i-self-hosting-valhalla-already-does-this) are v1-derived, while
-  [§2a](#2a-source-chain) names v1.1 — that discrepancy has to be resolved
-  before shipping, in the direction of whatever is actually loaded.
+- **Version matters for the citation**, and [§2a](#2a-source-chain) settles it
+  as **v1**. The exact strings the distribution asks for:
+
+  > Data funded under GMES preparatory action 2009 on Reference Data Access by
+  > the European Commission, DG Enterprise and Industry.
+
+  is the mandatory displayed credit, and the requested citation is *European
+  Commission – DG ENTR, 2012, EU-DEM Version 1*. Both are v1-specific; v1.1 is
+  an EEA product and carries different wording, so the credit must be re-checked
+  if the source ever changes.
+
+- **Access is regulated, not merely licensed.** The readme states access is
+  "governed by Commission delegated regulation (EU) No 12386/13 of 12.7.2013
+  supplementing Regulation (EU) No 911/2010 … establishing registration and
+  licensing conditions for GMES users". The instrument of that date supplementing
+  911/2010 appears to be Delegated Regulation (EU) **No 1159/2013**, so the
+  readme's number looks like an internal reference rather than the citation —
+  **verify before relying on it**. Either way this is a regulation setting user
+  conditions, not an open-data licence, and it must be read before derived
+  profiles are published rather than after.
 
 ### 2d. Failure is honest
 
@@ -487,8 +541,12 @@ the chart is only honest once they are done.
   Valhalla costs a tile generation run and skips both the daily budget and the
   throttle-mid-drag problem. Still open: whether the tiles cover every onboarded
   region or only Europe at first, everything else falling to the public API.
-- **EU-DEM version** — v1 (2012, DG ENTR) or v1.1 (2018, EEA); they carry
-  different citations, per [§2c](#2c-licensing-is-a-gate-not-a-footnote).
+- **Measure Copernicus DEM GLO-30.** The highest-value question left. If it
+  performs near EU-DEM, [§2a](#2a-source-chain)'s three-source chain collapses to
+  one worldwide source and the per-region tile management disappears. It is not
+  on opentopodata's public endpoint, so it needs OpenTopography or a direct
+  download to test. *(The EU-DEM version question is closed: v1, measured
+  equivalent to v1.1 and already converted — see [§2a](#2a-source-chain).)*
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
 - **`~` in published gradients** — measured values are numbers; the catalog's
