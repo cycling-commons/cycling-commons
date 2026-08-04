@@ -137,17 +137,39 @@ stretch is not the road. This is not a defect to fix by changing EU-DEM version,
 because Copernicus DEM is a DSM too; it is a known error term, and it is the
 most likely explanation for any residual disagreement with a surveyed profile.
 
-**The successor for row 3, unmeasured.** Copernicus DEM GLO-30 is the dataset
-EEA points to: 30 m, worldwide, and the same TanDEM-X source that GLO-90 is a
-3× downsample of — so [§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw)'s
-verdict on GLO-90 says nothing about it. If it performs near EU-DEM, the chain
-above collapses to **one worldwide source**, which would remove the per-region
-tile management of [§2b-i](#2b-i-self-hosting-valhalla-already-does-this)
-entirely. It is not on opentopodata's public endpoint, so it could not be
-measured here. **Measuring it is the highest-value open question in this
-document** — and it should be measured on one region before any bulk
-acquisition, because [§2a-i](#2a-i-what-adopting-glo-30-actually-costs) shows
-the acquisition is the expensive half.
+**Row 3's successor is measured, and it works.** Copernicus DEM GLO-30 is the
+dataset EEA points to: 30 m, worldwide, and the same TanDEM-X source GLO-90 is a
+3× downsample of — so
+[§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw)'s
+verdict on GLO-90 never applied to it. Tested 2026-08-04 on all seven seeded
+climbs, by converting the GLO-30 tile to `.hgt` and reading **both sources with
+identical code**, so the comparison isolates the raster rather than two services'
+interpolation. (The reader was checked against Valhalla `/height` on the same
+EU-DEM tile: 179 m and 8.62% against the service's 179 m and 8.61%.)
+
+| | EU-DEM v1 | GLO-30 |
+|---|---|---|
+| La Redoute, gain | 179 m | **181 m** (climbfinder: 180 m) |
+| bins reading downhill, short climbs | 2 | **0** |
+| mean per-bin disagreement | — | 1.96 points (worst climb 3.04) |
+
+Over the six climbs with a measurable length; the seventh is the reversed line
+below, which has no bins to compare.
+
+GLO-30 is **at least as good**, and marginally cleaner: it produced no impossible
+descent on any short climb, while EU-DEM produced one each on Mur de Huy and
+Bohissau. The spread is not one of them being wrong — both are DSMs disagreeing
+over tree cover, per the note above.
+
+**So the chain in this table can collapse to a single worldwide source.** That
+removes the per-region raster management of
+[§2b-i](#2b-i-self-hosting-valhalla-already-does-this), removes EU-DEM's
+regulated-access question from [§2c](#2c-licensing-is-a-gate-not-a-footnote), and
+means one dataset covers every country onboarded from here. The remaining reason
+to keep EU-DEM is that its tiles already exist. What is *not* yet established is
+whether this holds outside the Ardennes — one tile, one massif, one latitude
+band. [§2a-i](#2a-i-what-adopting-glo-30-actually-costs) is the acquisition path,
+and Benelux is the first widening.
 
 ### 2a-i. What adopting GLO-30 actually costs
 
@@ -170,13 +192,24 @@ is only needed if elevation should influence routing decisions** — hill-aware
 bicycle costing — which is what `build_elevation` does at tile-build time. Those
 are two different features and only the second is expensive.
 
-**Conversion is required.** GLO-30 ships as Cloud Optimized GeoTIFF; skadi
-expects SRTM-format `.hgt`. So it goes through the same GDAL step EU-DEM does —
-the pipeline exists, the input changes. **Verify the longitude sampling at that
-step**: Copernicus DEM's distributed tiles are documented as decimating
-longitude at higher latitudes, so a uniform 3601×3601 `.hgt` may involve real
-resampling above ~50°N, unlike the grid-aligned EU-DEM v1 conversion. Belgium
-sits on that boundary.
+**Conversion is required, and it resamples.** GLO-30 ships as Cloud Optimized
+GeoTIFF; skadi expects SRTM-format `.hgt`. So it goes through the same GDAL step
+EU-DEM does — the pipeline exists, the input changes.
+
+The longitude decimation is **confirmed, not a caution**: the tile covering La
+Redoute is **2400 × 3600**, i.e. 1.5″ in longitude against 1″ in latitude.
+Copernicus does this deliberately, because meridians converge — at 50°N, 1.5″ of
+longitude is ≈30 m of ground, the same as 1″ of latitude, so the cells stay
+roughly square. `.hgt` cannot express that, since it is 1″ in both directions by
+definition.
+
+The conversion therefore **upsamples longitude 1.5″ → 1″**. That adds no
+information but destroys none either, which is why the measured result holds up.
+Two consequences worth carrying: the decimation factor **changes with latitude
+band**, so a converter must not hard-code 2400 and must read each tile's actual
+size; and a `.hgt` from GLO-30 is ~1.5× larger than its source information
+warrants, so the storage table below is a floor rather than an estimate of
+content.
 
 **Storage is the real cost.** A 1 arc-second `.hgt` tile is 3601×3601×2 bytes =
 **24.7 MB**, and the existing Europe set checks the arithmetic: 1517 tiles ×
@@ -540,6 +573,29 @@ hundred metres late is easy and the map gives no feedback that it happened. So:
 - **[§7](#7-migration)'s sweep must re-derive endpoints, not just elevations.**
   Every existing climb was drawn without this check.
 
+**And the line must run uphill, which is a separate check.** Measured across all
+seven seeded climbs, 2026-08-04:
+
+| climb | high point sits at | |
+|---|---|---|
+| Mur de Huy, Ereffe, Bohissau, Hockai | 100% along | correct |
+| Côte de Stockeu | 97% | mild overshoot |
+| Côte de la Redoute | 90% | 362 m overshoot |
+| **Côte de la Roche-aux-Faucons** | **0%** | **stored backwards** |
+
+Roche-aux-Faucons runs summit to foot: it starts at 242 m and ends at 181 m. So
+**three of seven** stored climbs have an endpoint defect, which makes this a
+validation rule rather than a footnote.
+
+The reversed case is the dangerous one, because the trim rule above **fails
+silently on it**. "Measure to the highest point" on a descending line puts the
+summit at index 0, giving a length of 0 m, a gain of 0 m, and an average
+gradient of 0% — numbers that are not obviously broken in a database column.
+Guard it explicitly: if the high point is at or near the *start*, the line is
+reversed, and the answer is to say so — offer to flip it — never to publish a
+zero. A climb whose foot and summit are the same height is not a climb, and a
+zero-length one is a bug report, not a measurement.
+
 ---
 
 ## 5. The steepest ramp is found, not placed
@@ -628,12 +684,20 @@ the chart is only honest once they are done.
   Valhalla costs a tile generation run and skips both the daily budget and the
   throttle-mid-drag problem. Still open: whether the tiles cover every onboarded
   region or only Europe at first, everything else falling to the public API.
-- **Measure Copernicus DEM GLO-30.** The highest-value question left. If it
-  performs near EU-DEM, [§2a](#2a-source-chain)'s three-source chain collapses to
-  one worldwide source and the per-region tile management disappears. It is not
-  on opentopodata's public endpoint, so it needs OpenTopography or a direct
-  download to test. *(The EU-DEM version question is closed: v1, measured
-  equivalent to v1.1 and already converted — see [§2a](#2a-source-chain).)*
+- **Adopt GLO-30 as the single source, or keep the chain?** GLO-30 is now
+  measured and is at least as good as EU-DEM on all seven seeded climbs
+  ([§2a](#2a-source-chain)), which makes a one-source worldwide model possible.
+  The evidence is one tile, one massif, one latitude band — Benelux is the
+  widening that would confirm it, via
+  [tools/elevation](../../tools/elevation/README.md). Deciding *yes* retires
+  EU-DEM's regulated-access question and the per-region raster management;
+  deciding *no* keeps 37 GB of tiles that already exist.
+  *(The EU-DEM version question is closed: v1, measured equivalent to v1.1 —
+  see [§2a](#2a-source-chain).)*
+- **Fix the three defective stored climbs**
+  ([§4a](#4a-the-line-must-end-at-the-summit)) — Roche-aux-Faucons is stored
+  backwards and two others overshoot their summit. Whether that is a data
+  repair now or falls out of [§7](#7-migration)'s sweep is a sequencing call.
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
 - **`~` in published gradients** — measured values are numbers; the catalog's
