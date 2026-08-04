@@ -18,10 +18,15 @@ and the app reads it through `App\Elevation\ElevationClient` → Valhalla
 ```bash
 ./fetch-glo30.sh EUROPE  ./data/dem/glo30      # download, no account needed
 ./to-hgt.sh     ./data/dem/glo30 ./data/dem/hgt # convert to Valhalla's format
-node compare-sources.js <old_hgt_dir> ./data/dem/hgt   # prove it before shipping
+node compare-sources.js <reference_hgt_dir> ./data/dem/hgt   # prove it first
 ```
 
 Then copy the `.hgt` files to the Valhalla host and restart it.
+
+The comparison needs a second tile set to read against. Once EU-DEM is gone the
+obvious reference is the *previous* GLO-30 build, which still catches a broken
+conversion — a truncated warp or a wrong bbox shows up immediately, even if it
+cannot tell you anything new about the dataset itself.
 
 ### Presets and what they cost
 
@@ -29,11 +34,14 @@ Then copy the `.hgt` files to the Valhalla host and restart it.
 |---|---|---|---|
 | `BE` / `NL` / `LU` | one country | ~15–20 each | ~0.4–0.5 GB |
 | `BENELUX` | 49–54 N, 2–8 E | **26** (measured) | **644 MB** |
-| `EUROPE` | 35–72 N, 11 W–32 E | ~900 of 1591 cells | **~20–25 GB** |
+| `EUROPE` | 35–72 N, 11 W–32 E | **1137** (measured) | **28 GB** |
 
 Sea-only cells do not exist in the bucket and are skipped, so the land count is
-well below the bbox cell count. For scale, the EU-DEM conversion of a similar
-extent produced 1517 tiles and 37 GB.
+below the bbox cell count — 1137 of 1591 for Europe. The intermediate GeoTIFFs
+are a further 27 GB, needed only during conversion.
+
+The `EUROPE` figures were an estimate of "~900 tiles, 20–25 GB" until the run
+happened; both were low. Budget from the measured numbers, not the guess.
 
 `EUROPE` deliberately stops at 32 °E, short of the Urals and the Caucasus.
 Every degree cell costs ~25 MB whether or not a climb is in it, so widen the
@@ -141,16 +149,44 @@ countries rather than the globe.
 
 ## Installing on Valhalla
 
-```
-additional_data.elevation  ->  the directory holding the .hgt files
+The config key is `additional_data.elevation`, and its value is a path **inside
+the container**. Find the real directory rather than assuming one:
+
+```bash
+docker inspect <container> --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{println}}{{end}}'
+docker exec <container> sh -lc 'grep -A3 additional_data /custom_files/valhalla.json'
 ```
 
-Copy the tiles there and **restart** Valhalla. No tile rebuild is needed: the
-elevation service reads this directory independently of the routing graph.
+The `ghcr.io/valhalla/*` images keep config and data under `/custom_files`, not
+`/data/valhalla` — guessing the latter wastes a round trip.
 
-`build_elevation` is a different feature — it bakes grade into the routing tiles
-so that bicycle costing can prefer flatter roads. That one does need a rebuild,
-and it is not required for climb profiles.
+Swap by moving, never by copying over:
+
+```bash
+mv elevation_data elevation_data.old      # nothing is destroyed yet
+mv <new hgt dir>  elevation_data
+docker restart <container>
+```
+
+Copying *into* the existing directory is the trap: tile filenames are identical
+between datasets **and so are the file sizes** (every 1-arc-second tile is
+exactly 25,934,402 bytes), so a copy into the wrong place fails silently and the
+old tiles simply keep answering. Only the timestamp distinguishes them.
+
+**Verify before deleting the old set.** Ask the running service for heights along
+a known climb and compare them against both tile sets locally — the one it
+matches is the one it is serving. Expect a close but not exact match: two
+conversions of the same source with different GDAL versions differed by 0.76 of a
+percentage point per 100 m bin here, which is resampling noise, not a wrong tile.
+
+Check ownership afterwards. A `mv` from a build directory can leave the live
+directory owned by `root` where the rest of the deployment expects the service
+account.
+
+**No tile rebuild is needed** — the elevation service reads this directory
+independently of the routing graph. `build_elevation` is a different feature: it
+bakes grade into the *routing* tiles so bicycle costing can prefer flatter roads,
+and that does need a rebuild. It is not required for climb profiles.
 
 ## Requirements
 
