@@ -41,6 +41,16 @@ services:
             $coverageCspHost: '%coverage.csp_host%'
             $mediaCspHost: '%media.csp_host%'
 
+    # Elevation for climb profiles. Points at Valhalla's /height, which reads
+    # its rasters from additional_data.elevation at request time, so changing
+    # dataset is a tile swap and a restart rather than a code change
+    # (climb-elevation.md §2b-i). Unset ELEVATION_URL disables profiles
+    # entirely: no elevation, no gradients, never a guess (§2d).
+    App\Elevation\ElevationClient:
+        arguments:
+            $valhallaUrl: '%env(ELEVATION_URL)%'
+            $demSource: '%env(ELEVATION_DEM_SOURCE)%'
+
     # S3 client shared by every continent's storage: one set of credentials, one
     # endpoint, many buckets (photo-uploads.md §2). Dev points it at the dev
     # stack's MinIO, production at the Cycling Commons buckets — the signing

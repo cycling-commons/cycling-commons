@@ -93,3 +93,7 @@ docs/specs/Dated/
 
 # Local dev-DB backups (pg_dump snapshots) — never committed, machine-local safety net.
 developers/docker/backups/
+
+# Elevation rasters staged by tools/elevation (GLO-30 GeoTIFF + generated .hgt).
+# Tens of GB, re-downloadable from the AWS Open Data bucket — never committed.
+data/dem/

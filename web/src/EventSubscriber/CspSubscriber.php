@@ -76,7 +76,6 @@ final class CspSubscriber implements EventSubscriberInterface
             'https://nominatim.openstreetmap.org',
             'https://photon.komoot.io',
             'https://router.project-osrm.org',
-            'https://api.open-meteo.com',
             'https://analytics.bikecoders.life',
         ];
         if ('' !== $this->coverageCspHost) {

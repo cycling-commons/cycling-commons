@@ -170,17 +170,33 @@
   // `signal` (optional AbortSignal) lets the caller cancel a superseded request.
   window.Cc.profileFromRoute = function (coords, signal) {
     if (!coords || coords.length < 2) return Promise.resolve(null);
-    var pts = sample(coords, 100);
-    var lats = pts.map(function (c) { return c[1]; }).join(',');
-    var lngs = pts.map(function (c) { return c[0]; }).join(',');
-    var url = 'https://api.open-meteo.com/v1/elevation?latitude=' + encodeURIComponent(lats) +
-      '&longitude=' + encodeURIComponent(lngs);
-    return fetch(url, { signal: signal }).then(function (r) {
-      if (!r.ok) throw new Error('elevation API HTTP ' + r.status);
+    /* 200 samples, from OUR endpoint.
+
+       It used to be 100 points against a public elevation API called straight
+       from the browser, which fixed both numbers for us: 100 was that API's cap,
+       and the dataset was whatever it happened to serve - Copernicus GLO-90, on
+       a ~90 m grid. That grid is why a 4 km climb reported a 32% ramp it does
+       not have (owner-reported 2026-08-04): the maximum is measured over 100 m,
+       which on 90 m cells is barely one cell, so two adjacent samples on a
+       staircase read as a wall.
+
+       Asking our own service fixes the cause rather than clamping the symptom.
+       The dataset is now a deployment setting (climb-elevation.md 2a), and the
+       sample count is ours to choose: 200 puts a 4 km climb at ~20 m spacing,
+       which is the sampling interval section 3c asks for. */
+    var pts = sample(coords, 200);
+    return fetch('/contribute/elevation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // Same-origin and login-gated; sends [lat,lng] in storage order.
+      body: JSON.stringify({ coords: pts.map(function (c) { return [c[1], c[0]]; }) }),
+      signal: signal
+    }).then(function (r) {
+      if (!r.ok) throw new Error('elevation HTTP ' + r.status);
       return r.json();
     }).then(function (d) {
-      if (!d || !Array.isArray(d.elevation) || d.elevation.length !== pts.length) return null;
-      var elevs = d.elevation;
+      if (!d || !Array.isArray(d.elevations) || d.elevations.length !== pts.length) return null;
+      var elevs = d.elevations;
       if (elevs.some(function (e) { return e == null; })) return null;
       var cum = cumulativeDistances(pts);
       var grad = toBars(pts, elevs, cum, 11);
@@ -190,6 +206,9 @@
       var avg = ascentOnlyAverage(pts, elevs, cum);
       return {
         grad: grad,
+        // Which dataset answered, so the item can record it rather than the
+        // profile being an unattributed number (climb-elevation.md 4).
+        demSource: d.source || '',
         // One decimal: a climb's average is the headline figure and rounding it
         // to whole percent throws away a distinction riders care about (8.6 and
         // 9.4 are not the same climb). The maximum stays whole because it is a

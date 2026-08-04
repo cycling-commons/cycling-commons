@@ -81,9 +81,12 @@ Two details make the point sharper:
 ### 1b. The elevation source is too coarse for the bins we want to draw
 
 The profile comes from `profileFromRoute()` in
-`web/assets/contribute/climb-elevation.js`, which samples the drawn line at 100
-points and calls open-meteo's elevation endpoint. That serves Copernicus
-GLO-90 — a **D**igital **E**levation **M**odel (DEM) on a roughly 90 m grid.
+`web/assets/contribute/climb-elevation.js`. Until 2026-08-04 it sampled the drawn
+line at 100 points and called open-meteo's elevation endpoint from the browser,
+which serves Copernicus GLO-90 — a **D**igital **E**levation **M**odel (DEM) on a
+roughly 90 m grid. It now posts to our own `/contribute/elevation`, which reads
+[§2a](#2a-the-source)'s source through Valhalla; everything below is what the
+90 m grid produced, and why the source had to change.
 
 Sampling every 25 m into a 90 m grid produces a staircase. Measured on La
 Redoute's stored route:
@@ -110,6 +113,16 @@ GLO-90 (today) [6, 8, 12, 12, 25, 0, -10, 16, 12,  7, 11, 17,  8, 12, 17,  8, 7,
 
 The existing 11-bin display (≈220 m per bar on a 2.4 km climb) is not accurate —
 it is merely *wide enough to hide this*.
+
+**And it stopped hiding it the moment anything measured narrower.** When
+`maxGradient` began coming from a 100 m window ([§5](#5-the-steepest-ramp-is-found-not-placed)),
+a redrawn Roche-aux-Faucons published a **32% ramp it does not have** (owner,
+2026-08-04). That is [§3a](#3a-bin-width-follows-the-source) arriving on the
+page: 100 m on a 90 m grid is barely one cell, so two adjacent samples on a
+staircase read as a wall. The same noise inflated the ascent-only average from
+5.7% to 6.3%, because ascent-only accumulates upward wobble and never subtracts
+it. Neither figure was wrong about its own arithmetic; both were wrong about the
+road, and no amount of clamping fixes a source that coarse.
 
 The last column is decisive **here and not in general**: La Redoute never
 descends, so a bin that reads downhill on it can only be an artifact. On a climb
@@ -397,6 +410,26 @@ keeps this a deployment decision instead of a code change.
 4. **Then** the client, behind the base-URL setting, with the non-zero guard
    above and [§8](#8-testing)'s fixture test pinning the answer, so a source
    swap that silently changes La Redoute's gradient is caught.
+
+**Step 4 is built** (2026-08-04). `App\Elevation\ElevationClient` posts to
+Valhalla `/height` and `POST /contribute/elevation` exposes it to the editor,
+login-gated. Both the base URL (`ELEVATION_URL`) and the attribution string
+(`ELEVATION_DEM_SOURCE`) are environment settings, so changing dataset is a tile
+swap and a restart rather than a deploy — and an unset URL disables profiles
+rather than erroring, per [§2d](#2d-failure-is-honest).
+
+The non-zero guard is the part with teeth, and it is tested directly: an
+all-zero reply is refused, while a route that merely *touches* sea level is
+kept, because only exact zeros count and a real climb is never mostly at exactly
+sea level. A reply whose length does not match the request is refused too —
+zipping mismatched arrays would attach elevations to the wrong coordinates,
+which is a wrong profile rather than no profile.
+
+**This also took the browser out of it.** The editor no longer calls a third
+party directly, so the dataset is no longer whatever that API happened to serve,
+the page's CSP lost an external host, and the sample count stopped being someone
+else's cap — it is 200 now, which puts a 4 km climb at the ~20 m spacing
+[§3c](#3c-sampling) asks for rather than the 43 m the old 100-point limit forced.
 
 ### 2c. Licensing is a gate, not a footnote
 
@@ -734,6 +767,23 @@ answers "how steep does this get".
 ---
 
 ## 6. The chart
+
+### 6a. A descent must look like a descent
+
+The bars carried no zero. Each was `10 + (p/max)*30` pixels with a 6-pixel
+floor, so a **−15% bin rendered as a short bar pointing the same way as every
+climbing one** — a chart that says "gentle rise" where the road drops. On a
+climb that genuinely descends between two ramps, which is what prompted this
+([§2a](#2a-the-source)'s correction), the profile told the opposite of the truth.
+
+Bars now hang below a baseline where the gradient is negative, and the dashed
+zero line is drawn only when something actually descends — an ordinary climb is
+not decorated with a rule that explains nothing.
+
+**Both directions share one scale.** A −12% bar is exactly as long as a +12%
+one. Scaling each side to its own extreme would make a shallow dip look as
+dramatic as the steepest ramp on the climb, which is the same class of dishonesty
+as the missing zero.
 
 The reference is the industry-standard climb profile (climbfinder, and the
 same shape used by every climbing site):

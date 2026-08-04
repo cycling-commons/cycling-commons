@@ -139,23 +139,36 @@ your readers will compare against someone else's is not.
 
 ## Where that preview's elevation actually comes from
 
-That gradient preview is also this project's one live exception to "no DEM anywhere." Fetching a
-profile for a hand-drawn climb line calls a third-party, DEM-backed elevation API, live, from the
-browser:
+That gradient preview is this project's one live exception to "no DEM anywhere." Drawing a climb
+fetches a real elevation profile for the drawn line — and **where it fetches it from changed on
+2026-08-04**, in a way worth understanding, because the reason is not tidiness.
+
+It used to call a third-party elevation API directly from the browser. That worked, and it quietly
+decided two things nobody had chosen. The dataset was whatever that API happened to serve —
+Copernicus GLO-90, on a ~90 m grid. And the sample count was that API's cap of 100 points, which on
+a 4 km climb is one reading every 43 m.
+
+Both surfaced at once. When the published "max gradient" began being measured over 100 m — the
+distance climb databases use — a redrawn climb reported a **32% ramp that does not exist**. One
+hundred metres on a 90 m grid is barely one cell, so two adjacent readings on a staircase read as a
+wall. The number was arithmetically correct and completely wrong about the road.
+
+So the call moved server-side:
 
 <!-- CODE-FROM web/assets/contribute/climb-elevation.js -->
 ```js
-var url = 'https://api.open-meteo.com/v1/elevation?latitude=' + encodeURIComponent(lats) +
-  '&longitude=' + encodeURIComponent(lngs);
+var pts = sample(coords, 200);
+return fetch('/contribute/elevation', {
 ```
 
-Read precisely what this is and is not. It is a real, working call to a DEM-backed elevation
-service — this project's comments say so themselves, describing an unrealistic reading as "DEM
-noise" — and it genuinely is sampling a digital elevation model, not any rider's device. But it
-exists only to draw a live gradient-profile preview while a curator is actively drawing a new climb
-in the add-climb / improve-climb tools. Nothing about a route's stored `ascent_m` ever goes through
-it. No rider-facing feature calls it. It is a curator-tool convenience, not this project's answer to
-"where does elevation data come from" in general.
+Nothing about that is a bigger feature — it is the same lookup — but it moves three decisions back
+to us: **which dataset** (a deployment setting, not a third party's default), **how densely to
+sample** (200 points, ~20 m on a 4 km climb), and **what happens when it fails**. It also removes an
+external host from the page's content-security policy, which is a security win that came free.
+
+Read precisely what this preview is and is not. It genuinely samples a digital elevation model, not
+any rider's device. But it exists only to draw a gradient profile while someone is drawing a climb.
+Nothing about a route's stored `ascent_m` goes through it, and no rider-facing feature calls it.
 
 ## DEM sources, and the resolution question
 

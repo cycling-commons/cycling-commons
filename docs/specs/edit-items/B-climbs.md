@@ -41,9 +41,13 @@ both `App\Form\AddClimbType` and `App\Form\ImproveType`).
 
 **Auto-routing.** Placing or moving foot + summit auto-routes the road between them via
 client-side OSRM (`router.project-osrm.org`), producing `route` and the snapped length;
-the gradient profile (`grad`) is then derived from the routed track via the client
-elevation API (`window.Cc.profileFromRoute` in `climb-elevation.js`, Open-Meteo elevation,
-≤ 100 sampled points). Requests time out after `FETCH_TIMEOUT_MS` (`climb-editor.js`,
+the gradient profile (`grad`) is then derived from the routed track by
+`window.Cc.profileFromRoute` in `climb-elevation.js`, which posts up to 200 sampled points
+to **our own** `POST /contribute/elevation` (`App\Elevation\ElevationClient` → Valhalla
+`/height`). It called Open-Meteo from the browser until 2026-08-04; moving it server-side
+put the dataset behind a setting instead of a third party's choice, and the sample count
+behind our own limit rather than theirs
+([../climb-elevation.md §2b-i](../climb-elevation.md)). Requests time out after `FETCH_TIMEOUT_MS` (`climb-editor.js`,
 currently 10 s).
 
 **Steepest: found, not placed.** The marker is derived from the steepest sustained

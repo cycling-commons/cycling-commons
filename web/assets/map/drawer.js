@@ -713,9 +713,35 @@ function gradStrip(grad, f){
   };
   const avg = stated(f && f.avgGradient) ?? String(Math.round(grad.reduce((a,b)=>a+b,0)/grad.length));
   const max = stated(f && f.maxGradient) ?? String(barMax);
-  const bars=grad.map(p=>`<span class="cc-grad-bar" style="height:${Math.round(10+(p/Math.max(barMax,1))*30)}px;background:${gradColor(p)}" title="${p}%"></span>`).join('');
+  /* Bars hang BELOW a baseline where the road descends.
+
+     They used to be `height: 10 + (p/barMax)*30` with a 6px floor, which has no
+     zero: a -15% bin rendered as a short bar pointing the same way as every
+     climbing one, so a descent read as a gentle rise. On a climb that genuinely
+     drops between two ramps - Roche-aux-Faucons loses 40 m in its middle - the
+     chart told the opposite of the truth.
+
+     Both directions share ONE scale, so a -12% bar is exactly as long as a +12%
+     one. Scaling each side to its own extreme would make a shallow dip look as
+     dramatic as the steepest ramp on the climb. */
+  const ups=grad.filter(p=>p>0), downs=grad.filter(p=>p<0);
+  const upMax=ups.length?Math.max(...ups):0;
+  const dnMax=downs.length?Math.abs(Math.min(...downs)):0;
+  const scale=Math.max(upMax,dnMax,1);
+  const H=42;
+  // Split the strip between the two directions in proportion to how far each
+  // actually goes, so a climb with no descent keeps its full height.
+  const upH=dnMax?Math.max(10,Math.round(H*(upMax/(upMax+dnMax)))):H;
+  const dnH=H-upH;
+  const bars=grad.map(p=>{
+    const h=Math.max(3,Math.round((Math.abs(p)/scale)*(p<0?dnH:upH)));
+    const cell=p<0
+      ? `<span class="cc-grad-dn" style="height:${h}px;background:${gradColor(p)}"></span>`
+      : `<span class="cc-grad-up" style="height:${h}px;background:${gradColor(p)}"></span>`;
+    return `<span class="cc-grad-col" style="--up:${upH}px;--dn:${dnH}px" title="${p}%">${cell}</span>`;
+  }).join('');
   return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · avg ~{a}% · max {m}%', {a:avg, m:max})}</div>
-    <div class="cc-grad">${bars}</div>`;
+    <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>`;
 }
 function elevSvg(elev){
   const w=300,h=64,pad=3,min=Math.min(...elev),max=Math.max(...elev),rng=Math.max(1,max-min);
