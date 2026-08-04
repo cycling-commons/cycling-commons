@@ -1,0 +1,51 @@
+web/assets/contribute/climb-elevation.js
+  s_ba6cf53b5a7360::t_11baa29a7bbdf1 173-195,198-199,209-211
+web/config/services.yaml
+  s_ba6cf53b5a7360::t_ca87321a409ff1 44-53
+web/src/Controller/ElevationController.php
+  s_ba6cf53b5a7360::t_38097760427de0 1-64
+web/assets/map/drawer.js
+  s_ba6cf53b5a7360::t_fbec0b38f9bc8a 716-742,744
+docs/specs/climb-elevation.md
+  s_ba6cf53b5a7360::t_816bac97fb96e2 771-787
+  s_ba6cf53b5a7360::t_25e836a1ebe411 84-89,117-125
+  s_ba6cf53b5a7360::t_722e658e2e30a6 414-433
+  s_ba6cf53b5a7360::t_ddc41a9baaf686 126
+web/assets/styles/map.css
+  s_ba6cf53b5a7360::t_a778c20b66d4be 548-560
+web/tests/Elevation/ElevationClientTest.php
+  s_ba6cf53b5a7360::t_b3c67c215239d3 1-109
+web/src/Elevation/ElevationClient.php
+  s_ba6cf53b5a7360::t_b4c2a76bd4abb4 1-62,65-128
+  s_ba6cf53b5a7360::t_a25546a1b27b88 63-64
+web/.env
+  s_ba6cf53b5a7360::t_09e6fadb0aa32e 76-86,88
+  s_ba6cf53b5a7360::t_871ccc141fca86 87
+docs/specs/edit-items/B-climbs.md
+  s_ba6cf53b5a7360::t_dda769e24b49a4 44-50
+wiki/developers/gis-beyond/elevation.md
+  s_ba6cf53b5a7360::t_0b6ad0c55c4c5b 142-156,160-161,164-171
+.gitignore
+  s_ba6cf53b5a7360::t_2f37355ca8f110 96-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "d922c47813034b3db91e7d6fbf99093f8017a571",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
