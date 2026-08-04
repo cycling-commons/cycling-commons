@@ -91,17 +91,23 @@ Measured 2026-08-04 on all seven seeded Wallonia climbs, comparing EU-DEM v1
 against GLO-30:
 
 - GLO-30 is **at least as good**. La Redoute: 181 m of gain against EU-DEM's
-  179 and climbfinder's 180.
-- GLO-30 produced **no impossible descent** on any short climb; EU-DEM produced
-  one each on Mur de Huy and Bohissau.
-- They disagree by **1.96 points per 100 m bin** on average. Both are Digital
+  179 and climbfinder's 180. That match against an independent reference is the
+  load-bearing result.
+- They disagree by **2.02 points per 100 m bin** on average. Both are Digital
   Surface Models — they include tree canopy, not bare ground — so local
   disagreement over a wooded stretch is expected from both.
+- The sources dispute the **direction** of 33 of 266 bins, and the split is
+  clean: Hockai's 27 descents are agreed between them and therefore real, while
+  EU-DEM's lone downhill bin on Mur de Huy and on Bohissau are both disputed and
+  therefore artifacts.
 
-That makes a **single worldwide source** viable, which would retire the
-three-source chain, the per-region raster management, and EU-DEM's regulated
-access terms. The evidence is one tile at one latitude, so Benelux is the
-widening that would confirm it.
+**Decision: GLO-30 is the single worldwide source.** No chain, no per-coordinate
+order, no regional fallback — which retires the per-region raster management and
+EU-DEM's regulated access terms rather than solving them.
+
+The evidence is one tile at one latitude, so Benelux is the widening that
+confirms it. Two limits survive the decision: GLO-30 Public withholds tiles over
+a few countries, and it is a DSM.
 
 Storage, for planning: a `.hgt` tile is 24.7 MB. Benelux is tens of tiles;
 global land is 14,000–26,000, or 340–630 GB. Scope rasters to onboarded

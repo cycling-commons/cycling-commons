@@ -94,7 +94,7 @@ climb, a reading over a tree-lined stretch is partly the trees.
 This is not a defect you fix by choosing a different version, because the
 alternatives are DSMs too. It is a permanent error term, and it is the most
 likely explanation when two good sources disagree locally while agreeing on the
-total — exactly the pattern measured here: 1.96 points of per-bin disagreement
+total — exactly the pattern measured here: 2.02 points of per-bin disagreement
 between EU-DEM and GLO-30, but gains within 2 m of each other.
 
 A **DTM (digital terrain model)** is the bare-earth counterpart. Where one is
@@ -244,7 +244,7 @@ EU-DEM v1 against Copernicus GLO-30, all seven seeded Wallonia climbs:
 | | EU-DEM v1 | GLO-30 |
 |---|---|---|
 | La Redoute, gain | 179 m | 181 m *(reference: 180 m)* |
-| mean per-bin disagreement | — | 1.96 points |
+| mean per-bin disagreement | — | 2.02 points |
 | downhill bins on Mur de Huy *(never descends)* | 1 | **0** |
 
 The gain match against an independent reference is the load-bearing result. The
@@ -252,15 +252,34 @@ Mur de Huy row is the narrow version of the downhill test — that climb genuine
 rises the whole way, so EU-DEM's bin there is an artifact and GLO-30's absence of
 one is real. It is one bin on one climb, so it is a tiebreak, not the argument.
 
-GLO-30 is at least as good. Since it is **worldwide**, that makes a single-source
-model viable — retiring a three-source chain, the per-region raster management,
-and EU-DEM's regulated access terms in one step.
+**The decision that followed: GLO-30 is the single source, worldwide.** No
+chain, no per-coordinate resolution order, no regional fallback.
 
-The honest caveat, recorded rather than glossed: this is one tile, one massif,
-one latitude band. Benelux is the widening that would confirm it. Which is why
-the storage arithmetic matters before committing — 24.7 MB per tile, ~1,500
-tiles for Europe (37 GB), 14,000–26,000 for global land (**340–630 GB**). Scope
+That is worth dwelling on, because the thing it removed was never a feature. The
+earlier design ranked three sources — EU-DEM in Europe, SRTM, then GLO-90 as a
+worldwide floor — and every mechanism that ranking demanded (a priority list, a
+per-continent raster inventory, a provenance field that varies by where you are
+standing) existed **only to work around a first choice that covered one
+continent**. Choosing a source that covers the world deleted all of it at once.
+
+GLO-90 really was too coarse. But GLO-90 is a 3× downsample of GLO-30, and that
+verdict got applied to GLO-30 by association — which left the better dataset
+untested for the entire design. **The cheapest thing on this page is measuring
+the option you assumed was bad.**
+
+Three things stop being problems rather than getting solved: EU-DEM's regulated
+access terms, the per-region raster inventory, and the provenance field, which
+becomes a constant.
+
+The honest caveat, recorded rather than glossed: the evidence is one tile, one
+massif, one latitude band. Benelux is the widening that confirms it, and the
+storage arithmetic is why scope still matters — 24.7 MB per tile, ~1,500 tiles
+for Europe (37 GB), 14,000–26,000 for global land (**340–630 GB**). Scope
 rasters to onboarded countries, not the globe.
+
+Two limits that survive the decision. GLO-30 Public **withholds tiles over a few
+countries**, so "worldwide" has holes. And GLO-30 is a **DSM** just as EU-DEM
+was, so the trees are still in the data.
 
 ## Installing, and a distinction worth money
 

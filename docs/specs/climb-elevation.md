@@ -734,20 +734,17 @@ the chart is only honest once they are done.
   Valhalla costs a tile generation run and skips both the daily budget and the
   throttle-mid-drag problem. Still open: whether the tiles cover every onboarded
   region or only Europe at first, everything else falling to the public API.
-- **Adopt GLO-30 as the single source, or keep the chain?** GLO-30 is now
-  measured and is at least as good as EU-DEM on all seven seeded climbs
-  ([§2a](#2a-the-source)), which makes a one-source worldwide model possible.
-  The evidence is one tile, one massif, one latitude band — Benelux is the
-  widening that would confirm it, via
-  [tools/elevation](../../tools/elevation/README.md). Deciding *yes* retires
-  EU-DEM's regulated-access question and the per-region raster management;
-  deciding *no* keeps 37 GB of tiles that already exist.
-  *(The EU-DEM version question is closed: v1, measured equivalent to v1.1 —
-  see [§2a](#2a-the-source).)*
-- **Fix the three defective stored climbs**
-  ([§4a](#4a-the-line-must-end-at-the-summit)) — Roche-aux-Faucons is stored
-  backwards and two others overshoot their summit. Whether that is a data
-  repair now or falls out of [§7](#7-migration)'s sweep is a sequencing call.
+- **Widen the GLO-30 evidence to Benelux.** The source question is *decided*
+  ([§2a](#2a-the-source)) — one worldwide source — but the measurement behind it
+  is one tile, one massif, one latitude band. Running
+  [tools/elevation](../../tools/elevation/README.md) over Benelux is what turns a
+  sound decision into a confirmed one, and the decimation factor changes with
+  latitude, so the Netherlands is a different test from the Ardennes.
+- **Roche-aux-Faucons' geometry.** Its *direction* is fixed
+  ([§4a](#4a-the-line-must-end-at-the-summit)), but the line itself is still
+  wrong: ours runs 1752 m and gains 56 m, while the reference profile is 4.3 km
+  from ~140 m to 270 m with a real descent between two ramps. Owner is redrawing
+  its start and end.
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
 - **`~` in published gradients** — measured values are numbers; the catalog's
