@@ -142,59 +142,86 @@ a drag costs one lookup rather than one per intermediate position. Without that,
 a throttled response shows a rider "profile unavailable" for a climb that is
 perfectly fine.
 
-### 2b-i. Self-hosting, when the time comes
+### 2b-i. Self-hosting: Valhalla already does this
 
-Written up now so it can be prepared rather than improvised. Two routes, and the
-architecture already prefers one of them.
+The stack **already runs Valhalla** — opt-in `routing` compose profile, today
+with `build_elevation: "False"`. Valhalla serves `POST /height`, which takes a
+shape and returns an elevation per point; with `range: true` it returns
+cumulative distance alongside each height, which is precisely the input
+[§3](#3-sampling-and-binning) bins. So the self-hosted option is not a new
+service. It is a flag and a directory of tiles.
 
-**The destination: the `pipeline` tier.** [dev-environment.md §3](dev-environment.md)
-places "Rasters (rasterio/DEM)" in the Python `pipeline` service, and that
-service's own docstring already names *DEM sampling* as its job. The scaffolding
-exists: `DEM_DIR` (default `./data/dem`) is mounted read-only and `GET /dem`
-reports whether it is populated. Nothing samples it yet.
+**This is proven, not theoretical.** The owner already runs a Valhalla instance
+for another application, fed by a converter that reads the EU-DEM mosaic and
+writes SRTM-format `.hgt` tiles into Valhalla's `additional_data.elevation`
+directory. Measured against that instance, 2026-08-04, on the same road as
+[§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw):
 
-Adding an elevation endpoint there means:
+| | GLO-90 (public API) | Valhalla, EU-DEM `.hgt` | EU-DEM 25 m direct |
+|---|---|---|---|
+| distinct values | 30 / 99 | **83 / 99** | 100 / 100 |
+| longest identical run | 7 | **3** | 1 |
+| 100 m bins reading downhill | several, incl. −10% mid-climb | **0** | 0 |
+| gain vs climbfinder (180 m) | — | **179 m** | 180 m |
 
-- rasters under `DEM_DIR/<source>/`, one subdirectory per source, downloaded
-  rather than built — the same discipline `valhalla` uses for its prebuilt tiles
-  (`use_tiles_ignore_pbf`, never built in-container);
-- a `POST /elevation` taking a coordinate list and returning elevations plus the
-  source that answered, so the caller gets the `demSource` of
-  [§4](#4-what-is-measured-and-what-is-stored) without a second lookup;
-- source selection per coordinate, best-available-first per
-  [§2a](#2a-source-chain), which a single-dataset service cannot do and which
-  the chain requires.
+Gain lands within a metre of the reference. The remaining coarseness is
+explained and bounded: `.hgt` is a fixed SRTM-format grid at 1 arc-second in
+**integer metres**, so a 25 m source is resampled to ~30 m and rounded on the
+way in. That costs per-sample fidelity (83 distinct rather than 100) and costs
+the aggregate figures nothing. It is comfortably past the bar
+[§3a](#3a-bin-width-follows-the-source) sets for 100 m bins, which GLO-90 fails.
 
-**The stepping stone: an opentopodata container.** It speaks the API the client
-already calls, so switching is a base-URL change rather than a client rewrite,
-and it removes the daily budget and the per-call location cap in one step. It
-is a reasonable intermediate if elevation becomes urgent before the pipeline
-work is scheduled. It should still be an opt-in compose profile (`elevation`,
-alongside `routing` and `storage`) and **internal-only** — an unauthenticated
-elevation service has no business on a public port.
+**It satisfies [§2a](#2a-source-chain) by deployment rather than by dispatch.**
+A single Valhalla instance has one elevation directory and cannot choose a
+source per coordinate — but the existing deployment is already **one instance
+per continent**, which is the same partition the source chain describes. EU-DEM
+tiles in the European instance, SRTM tiles elsewhere, GLO-90 as the floor:
+the chain becomes a question of which tiles each instance is given, and
+`demSource` is then a property of the instance that answered rather than of
+the reply.
 
-**Either way, the client must not care.** One setting names the base URL, one
-names the source order; unset means the public endpoint. That is what keeps this
-a deployment decision instead of a code change, and it is why
-[§2d](#2d-failure-is-honest) matters — a self-hosted service that is down must
-degrade exactly like a public one that is throttled.
+**The trap: Valhalla fails by returning zeros.** An instance with no elevation
+tiles loaded does not error — `/height` answers `0` for every point, which is a
+valid-looking sea-level profile. The other application's client defends against
+this by requiring at least half the samples to be non-zero before accepting a
+result, and falling back otherwise. **Any client here must do the same**, and
+it is why [§8](#8-testing) pins a known elevation rather than merely asserting
+the call succeeded. A silent zero is worse than a failure, because
+[§2d](#2d-failure-is-honest) cannot catch what does not report itself.
+
+**Remaining alternatives**, if Valhalla ever stops fitting:
+
+- **An opentopodata container** — speaks the API the public endpoint speaks, so
+  adopting it is a base-URL change. Removes the daily budget and the per-call
+  location cap without changing the client.
+- **The `pipeline` tier** — [dev-environment.md §3](dev-environment.md) places
+  "Rasters (rasterio/DEM)" there and the service's docstring already names *DEM
+  sampling* as its job; `DEM_DIR` is mounted read-only with a `GET /dem` health
+  check and nothing samples it yet. This is the only route that can select a
+  source **per coordinate** rather than per instance, which matters only if
+  regional partitioning proves too coarse.
+
+Either alternative stays internal-only on an opt-in compose profile — an
+unauthenticated elevation service has no business on a public port.
+
+**The client must not care which it is talking to.** One setting names the base
+URL, one names the source order; unset means the public endpoint. That is what
+keeps this a deployment decision instead of a code change.
 
 **What to prepare, in order:**
 
 1. **Confirm licensing** ([§2c](#2c-licensing-is-a-gate-not-a-footnote)) — this
-   gates acquiring the data at all, not just publishing it.
-2. **Size the datasets.** EU-DEM v1.1 at 25 m over Europe and SRTM at 30 m are
-   both substantial, and the honest number is the one measured at download time
-   rather than one quoted from memory here. Only the onboarded regions are
-   needed ([country onboarding](catalog-data-model.md) governs which), which may
-   be far less than a continent.
-3. **Decide where the rasters live** — beside the existing object-storage bucket
-   that serves PMTiles ([coverage-provider.md](coverage-provider.md)), or on the
-   worker's own disk. They are read constantly by one service and never by a
-   browser, so this is a different question from tile hosting.
-4. **Then** the endpoint, behind the same setting, with
-   [§8](#8-testing)'s fixture test pinning the answer so a source swap that
-   silently changes La Redoute's gradient is caught.
+   gates acquiring the data at all, not just publishing it, and EU-DEM's credit
+   is mandatory on every surface that shows a derived profile.
+2. **Generate the tiles.** The converter is GDAL over the EU-DEM mosaic; the
+   honest size is the one measured at conversion time, and only the onboarded
+   regions are needed ([country onboarding](catalog-data-model.md) governs
+   which) rather than a continent.
+3. **Point `additional_data.elevation` at them** and set `build_elevation`, per
+   instance.
+4. **Then** the client, behind the base-URL setting, with the non-zero guard
+   above and [§8](#8-testing)'s fixture test pinning the answer, so a source
+   swap that silently changes La Redoute's gradient is caught.
 
 ### 2c. Licensing is a gate, not a footnote
 
@@ -203,6 +230,20 @@ attribution requirement may be assumed from memory: both must be read and
 recorded in [osm-data-architecture.md](osm-data-architecture.md)'s licensing
 section, and surfaced wherever the profile is displayed, **before this ships**.
 The project's posture on data licences is deliberate and this is data.
+
+Two specifics worth carrying, from the EU-DEM distribution's own readme:
+
+- Its credit is **mandatory and displayed** — it must appear on every surface
+  showing EU-DEM-derived data, which here means the profile chart and any
+  gradient figure derived from it, not a licences page alone. A compact form
+  linking to the full credit satisfies it; omitting it does not.
+- **Version matters for the citation.** The 2012 original is EU-DEM v1 by the
+  European Commission DG ENTR; the 2018 v1.1 update is by the EEA. They are
+  comparable in accuracy and carry *different* citations, so whichever mosaic
+  the tiles are generated from is what must be credited. The tiles measured in
+  [§2b-i](#2b-i-self-hosting-valhalla-already-does-this) are v1-derived, while
+  [§2a](#2a-source-chain) names v1.1 — that discrepancy has to be resolved
+  before shipping, in the direction of whatever is actually loaded.
 
 ### 2d. Failure is honest
 
@@ -275,6 +316,33 @@ undetectable. All three need adding to the letter-B vocabulary in
 **`headline` is retired.** It is a stored display string (`"2.0 km · 8.4% avg"`)
 that nothing recomputes, so it drifts the moment a climb is redrawn. The drawer
 composes that line from `length` and `avgGradient` at render time.
+
+### 4a. The line must end at the summit
+
+`gain` and `avgGradient` are only meaningful if the line stops climbing. La
+Redoute's stored route does not: measured 2026-08-04, it runs **362 m past the
+high point**, and those last metres descend — the final 100 m bin reads −7.4%.
+
+The cost is not cosmetic. Over the stored line the climb averages **6.80%**;
+trimmed at its summit it averages **8.61%** over 2080 m, against climbfinder's
+9.0% over 2000 m. **Overshooting the top understates the climb by 1.8
+percentage points** — an error several times larger than the difference between
+the DEM sources [§2a](#2a-source-chain) agonises over. Getting the source right
+and the endpoint wrong still publishes a wrong number.
+
+This is a rider-input problem, not a data problem: marking a summit a few
+hundred metres late is easy and the map gives no feedback that it happened. So:
+
+- **`length` and `gain` are measured to the highest point on the line**, not to
+  its last point. The tail beyond the summit is excluded from every derived
+  figure.
+- **A trailing descent is a warning, not a silent trim.** If the line continues
+  materially past its high point, the editor says so and offers to cut it there
+  — the rider may have meant to include a dip, and a spec that quietly discards
+  part of a contribution is the kind of thing [§1](#1-why-the-current-numbers-cannot-be-trusted)
+  is written against.
+- **[§7](#7-migration)'s sweep must re-derive endpoints, not just elevations.**
+  Every existing climb was drawn without this check.
 
 ---
 
@@ -355,13 +423,17 @@ the chart is only honest once they are done.
 
 ## 9. Owner decisions still open
 
-- **Which self-hosting route, when a trigger bites.**
-  [§2b-i](#2b-i-self-hosting-when-the-time-comes) prefers an elevation endpoint
-  in the `pipeline` tier, where the architecture already puts rasters, over an
-  opentopodata container that is quicker to stand up but cannot do the
-  best-available-first chain. Also open: whether the rasters cover every
-  onboarded region or only the busy ones, and whether they live beside the
-  PMTiles bucket or on the worker's disk.
+- **Whether to skip the public API entirely.**
+  [§2b-i](#2b-i-self-hosting-valhalla-already-does-this) settled *which* self-hosted
+  route — Valhalla `/height`, already in the stack and already proven with EU-DEM
+  tiles elsewhere. That makes [§2b](#2b-start-on-the-public-api-self-host-when-something-makes-it-necessary)'s
+  staging debatable: the public endpoint was the starting point because
+  self-hosting looked like new infrastructure, and it is not. Starting on
+  Valhalla costs a tile generation run and skips both the daily budget and the
+  throttle-mid-drag problem. Still open: whether the tiles cover every onboarded
+  region or only Europe at first, everything else falling to the public API.
+- **EU-DEM version** — v1 (2012, DG ENTR) or v1.1 (2018, EEA); they carry
+  different citations, per [§2c](#2c-licensing-is-a-gate-not-a-footnote).
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
 - **`~` in published gradients** — measured values are numbers; the catalog's
