@@ -46,12 +46,13 @@ elevation API (`window.Cc.profileFromRoute` in `climb-elevation.js`, Open-Meteo 
 ≤ 100 sampled points). Requests time out after `FETCH_TIMEOUT_MS` (`climb-editor.js`,
 currently 10 s).
 
-**Steepest: auto-placed, manual-locked.** The steepest marker is auto-placed on the
-max-gradient segment of `grad`. Dragging or re-tapping it sets `manual: true`, which
-persists with the attribute — from then on it **never auto-moves again**: re-routing
-(after a foot/summit change) leaves its position fixed and only refreshes its `pct` from
-the new `grad` at that position. While still auto (`manual: false`), each re-route
-re-detects and re-places it.
+**Steepest: found, not placed.** The marker is derived from the steepest sustained
+~150 m window, and an automatic one is **re-derived on every route change** — the line is
+what determines where the steepest ramp is. Dragging or re-tapping it sets `manual: true`,
+which persists with the attribute: a hand-placed marker keeps its position through a
+redraw and only has its `pct` re-read, and is re-derived solely when the route no longer
+passes it, since a marker stranded beside a road that is no longer part of the climb is
+wrong however it got there. See [../climb-elevation.md §5](../climb-elevation.md).
 
 **No fake profile (honesty rule).** If routing fails, the straight foot→summit line stays
 with **no** `grad`, the steepest is settable only manually, and the failure is surfaced to
@@ -68,9 +69,23 @@ it a real track. Geometry edits are ordinary Edit submissions through the normal
 moderation + per-field change-history pipeline
 ([../moderation-and-contribution.md](../moderation-and-contribution.md)) — no special path.
 
-`avgGradient`/`maxGradient` are **not** recomputed server-side from `grad`: in the add
-flow the average is computed live client-side (gain ÷ length) into the posted field; in
-the edit flow both are ordinary registry fields the rider can adjust alongside the shape.
+**Both gradients are derived from the drawn line, in both flows** (2026-08-04). Neither
+is a box anyone types in: `CatalogField::derivedText` keeps them out of the edit form,
+and `CLIMB_FIELDS` carries no `fAvg`/`fMax`.
+
+- `avgGradient` — the editor's **ascent-only** average over ~100 m bins, posted in the
+  hidden `avg` field beside `route`/`grad`/`steep`, and moved onto the attribute by
+  `CatalogContributionService::applyDerivedAverage()`. Definition and the reasoning for
+  ascent-only: [../climb-elevation.md §4b](../climb-elevation.md).
+- `maxGradient` — read off the steepest-ramp marker (`deriveMaxGradient()`), which is the
+  steepest sustained ~150 m window.
+
+This replaces two earlier behaviours that produced stale numbers. The add flow used to
+compute the average as **gain ÷ length** from a *typed* gain — a different definition from
+the edit flow, so the same road got different figures depending on which door you came
+through. And the edit flow offered both as ordinary registry fields, so a redraw left them
+untouched: rebuilding Roche-aux-Faucons from 1.75 km to 4.35 km kept the 9% somebody typed
+in June (owner-reported 2026-08-04). One definition, measured, recomputed on every redraw.
 
 ## Adding a climb (`/add-climb`)
 
@@ -82,7 +97,7 @@ Next is disabled until each step's minimum is met:
 | # | Step | Contents | Gate to advance |
 |---|---|---|---|
 | 1 | **Where** | map hosting the shared three-point editor (foot → summit → auto-routed track + steepest); the four-line how-to; keyless Photon place search with map-tap fallback; Undo + Reset | foot + summit placed, no routing/elevation request in flight |
-| 2 | **Profile** | name, length (auto-filled from the routed track, editable — a user-typed value always wins over re-autofill), elevation gain, avg gradient (read-only, = gain ÷ length, live), max gradient, surface, road quality (`sq`), traffic (`tr`) | name + elevation gain > 0 |
+| 2 | **Profile** | name, length (auto-filled from the routed track, editable — a user-typed value always wins over re-autofill), elevation gain, avg gradient (read-only, measured ascent-only from the drawn line), max gradient (read-only, off the steepest marker), surface, road quality (`sq`), traffic (`tr`) | name + elevation gain > 0 |
 | 3 | **Details** | gradient guidance (a static line naming the ceilings per discipline, handbikes included), rider note, "Already in OSM?" toggle | none (all optional) |
 | 4 | **Review** | echoes exactly the entered values ([README.md](README.md) P3) with the provenance line (curator queue; ODbL data / CC BY-SA media) | submit blocked while routing/profiling is pending |
 | 5 | **Submitted** | real POST → submission receipt; "you are here" highlight on the journey diagram | — |
@@ -93,9 +108,9 @@ rejected branches) stays always visible below the wizard (the template's `.journ
 
 **Honesty rule** (carried from the original add-climb design and still binding): never
 fabricate a derived value and present it as measured. Length comes from the real routed
-geometry, the average gradient is an honest live computation of gain ÷ length, and the
-gradient profile exists only when real elevation resolved (see the no-fake-profile rule
-above).
+geometry, the average gradient is measured ascent-only from that geometry (never from a
+typed gain), and the gradient profile exists only when real elevation resolved (see the
+no-fake-profile rule above).
 
 Submissions consume the shared per-user `contribution_submit` rate limiter
 (`web/config/packages/rate_limiter.yaml`, currently 20/hour sliding window).

@@ -160,6 +160,9 @@ final class ImproveType extends AbstractType
                 ->add('route', HiddenType::class, ['label' => false, 'required' => false])
                 ->add('grad', HiddenType::class, ['label' => false, 'required' => false])
                 ->add('steep', HiddenType::class, ['label' => false, 'required' => false])
+                // Ascent-only average, computed by the editor from the drawn line.
+                // Derived, never typed: climb-elevation.md 4.
+                ->add('avg', HiddenType::class, ['label' => false, 'required' => false])
             ;
         }
 

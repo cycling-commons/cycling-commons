@@ -68,6 +68,36 @@
     return out;
   }
 
+  /* Average gradient, counting only the parts that go UP.
+
+     A climb with a dip in it has two defensible averages, and they differ a
+     lot. Net gain over length treats the descent as cancelling out the climbing
+     around it: Roche-aux-Faucons, which drops ~40 m between two ramps, reads
+     4.4% that way. Summing only the ascent reads 5.7%, against climbfinder's
+     5.4% for the same road. The second is what a rider experiences and what
+     climb sites publish, so it is what we publish (owner, 2026-08-04).
+
+     Measured over ~100 m bins rather than raw samples, on purpose. Ascent-only
+     is noise-sensitive by construction - every upward wobble in the DEM adds to
+     the total and nothing subtracts it - so summing raw sample deltas inflates
+     the figure on exactly the wooded climbs where the readings are least
+     trustworthy. Binning first is the same defence as the display profile's bin
+     floor (climb-elevation.md 3a). */
+  function ascentOnlyAverage(pts, elevs, cum) {
+    var total = cum[cum.length - 1];
+    if (!(total > 0)) return 0;
+    var BIN = 100;
+    var bins = Math.max(1, Math.round(total / BIN));
+    var step = total / bins;
+    var ascent = 0, prev = atDistance(pts, elevs, cum, 0).elev;
+    for (var b = 1; b <= bins; b++) {
+      var here = atDistance(pts, elevs, cum, b * step).elev;
+      if (here > prev) ascent += here - prev;
+      prev = here;
+    }
+    return (ascent / total) * 100;
+  }
+
   // Slide a ~150m window along the route and take the steepest sustained
   // gradient, instead of a single (noise-prone) adjacent-point delta.
   function steepestWindow(pts, elevs, cum) {
@@ -143,8 +173,14 @@
       var steep = steepestWindow(pts, elevs, cum);
       // Sanity clamp: real cycling ramps rarely exceed ~35%; anything higher is DEM noise.
       var pct = clamp(Math.round(steep.g), 0, 35);
+      var avg = ascentOnlyAverage(pts, elevs, cum);
       return {
         grad: grad,
+        // One decimal: a climb's average is the headline figure and rounding it
+        // to whole percent throws away a distinction riders care about (8.6 and
+        // 9.4 are not the same climb). The maximum stays whole because it is a
+        // single window's reading and its precision is not real.
+        avg: (Math.round(clamp(avg, 0, 35) * 10) / 10).toFixed(1) + '%',
         steep: { at: steep.coord, pct: '~' + pct + '%' },
         // Closes over THIS profile's samples so the caller can re-read the
         // gradient at a kept marker position without a second API call.

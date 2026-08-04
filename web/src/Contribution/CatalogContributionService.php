@@ -47,9 +47,10 @@ final class CatalogContributionService implements ContributionStubInterface
      * @see docs/specs/edit-items/B-climbs.md
      */
     private const array CLIMB_FIELDS = [
-        'fAvg' => 'avgGradient',
-        // No fMax: max gradient is read off the steepest-ramp marker
-        // (deriveMaxGradient), never typed. See CatalogField::$derived.
+        // No fAvg and no fMax: both gradients are measured from the drawn line,
+        // never typed. The average is the editor's ascent-only figure
+        // (applyDerivedAverage) and the maximum is read off the steepest-ramp
+        // marker (deriveMaxGradient). See CatalogField::$derived.
         'fSurface' => 'surface',
         'fSurfaceQ' => 'sq',
         'fTraffic' => 'tr',
@@ -109,7 +110,7 @@ final class CatalogContributionService implements ContributionStubInterface
         } catch (\InvalidArgumentException) {
             $this->reject('contribute.error.invalid_geometry', 'route');
         }
-        $attributes = self::deriveMaxGradient($attributes);
+        $attributes = self::applyDerivedAverage(self::deriveMaxGradient($attributes));
 
         $draft = new SubmissionDraft(
             type: ItemType::Climbs,
@@ -286,6 +287,7 @@ final class CatalogContributionService implements ContributionStubInterface
         if (isset($proposed['steep']) && !self::sameValue($currentSteep, $proposed['steep'])) {
             $proposed = self::deriveMaxGradient($proposed);
         }
+        $proposed = self::applyDerivedAverage($proposed);
 
         $currentAttrs = $item->getAttributes();
         $changes = [];
@@ -635,6 +637,36 @@ final class CatalogContributionService implements ContributionStubInterface
         }
 
         throw new \InvalidArgumentException('item geometry has no usable coordinate');
+    }
+
+    /**
+     * Moves the editor's ascent-only average onto `avgGradient`, and drops the
+     * transport key so `avg` never becomes an attribute in its own right.
+     *
+     * Unconditional, unlike deriveMaxGradient's caller-side gate. The average is
+     * a function of the whole line, so when the line changes it MUST change --
+     * that is the bug this closes: redrawing Roche-aux-Faucons from 1.75 km to
+     * 4.35 km left `avgGradient` reading the 9% somebody typed in June
+     * (owner-reported 2026-08-04). When the line is untouched the editor
+     * recomputes the same value from the same samples, so no phantom change is
+     * recorded.
+     *
+     * @param array<string, mixed> $attrs
+     *
+     * @return array<string, mixed>
+     */
+    private static function applyDerivedAverage(array $attrs): array
+    {
+        if (!\array_key_exists('avg', $attrs)) {
+            return $attrs;
+        }
+        $avg = $attrs['avg'];
+        unset($attrs['avg']);
+        if (\is_scalar($avg) && '' !== (string) $avg) {
+            $attrs['avgGradient'] = (string) $avg;
+        }
+
+        return $attrs;
     }
 
     /**

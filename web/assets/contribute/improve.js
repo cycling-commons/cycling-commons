@@ -330,7 +330,7 @@
       var undoBtn = document.getElementById('wzUndo');
       climbEditor = window.Cc.mountClimbEditor({
         map: wmap,
-        hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep') },
+        hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg') },
         initial: initial,
         onHistory: function (depth) { if (undoBtn) undoBtn.hidden = 0 === depth; },
         onChange: function (st) {

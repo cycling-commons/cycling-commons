@@ -42,6 +42,12 @@ final class ClimbGeometry
         if (self::present($payload['steep'] ?? null)) {
             $out['steep'] = self::steep(self::json((string) $payload['steep']));
         }
+        // The editor's ascent-only average, already formatted ("5.7%"). Kept as
+        // the string it will be displayed as, like `steep.pct`, rather than
+        // re-parsed into a number the drawer would have to format again.
+        if (self::present($payload['avg'] ?? null)) {
+            $out['avg'] = self::gradientText((string) $payload['avg']);
+        }
 
         return $out;
     }
@@ -152,5 +158,23 @@ final class ClimbGeometry
             'pct' => $pct,
             'manual' => (bool) ($v['manual'] ?? false),
         ];
+    }
+
+    /**
+     * Validates a gradient string against the same shape `steep.pct` accepts,
+     * so the average and the maximum cannot disagree about what a gradient
+     * looks like. Deliberately the same expression rather than a stricter one:
+     * the average is derived and will not carry a '~', but a validator that is
+     * tighter than the data the catalog already holds is how the editor became
+     * unusable on five of six seeded climbs once before.
+     */
+    private static function gradientText(string $raw): string
+    {
+        $v = trim($raw);
+        if ('' !== $v && 1 !== preg_match('/^~?\d{1,2}(\.\d{1,2})?%?$/', $v)) {
+            throw new \InvalidArgumentException('avg must look like a gradient, e.g. "5.7%"');
+        }
+
+        return $v;
     }
 }

@@ -153,11 +153,20 @@ final class ImproveBindingTest extends WebTestCase
         $crawler = $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
-        self::assertGreaterThan(0, $crawler->filter('input[value="5.7"]')->count(), 'avgGradient prefilled from the baked record');
-        // maxGradient is DERIVED now (CatalogField::$derived): the backfill
-        // still writes it and the drawer still shows it, but the edit form
-        // offers no box for it — a computed value nobody types.
+        /* BOTH gradients are DERIVED now (CatalogField::$derived): the backfill
+           still writes them and the drawer still shows them, but the edit form
+           offers no box for either — computed values nobody types. The average
+           joined the maximum on 2026-08-04, once it was measured ascent-only
+           from the drawn line rather than typed (climb-elevation.md §4).
+
+           So the assertion moves from "the form prefills it" to "the backfill
+           produced it", which is what this test was really about: the discrete
+           attribute has to exist for the drawer to render it, whether or not
+           anything offers to edit it. */
+        self::assertSame(0, $crawler->filter('input[name="improve[details][avgGradient]"]')->count(), 'no input for a derived field');
         self::assertSame(0, $crawler->filter('input[name="improve[details][maxGradient]"]')->count(), 'no input for a derived field');
+        $baked = $em->find(Item::class, $item->getId())->getAttributes();
+        self::assertSame('5.7', $baked['avgGradient'] ?? null, 'avgGradient backfilled from the baked record');
         self::assertGreaterThan(0, $crawler->filter('option[selected][value="Asphalt"]')->count(), 'surface prefilled from the baked record');
         self::assertGreaterThan(0, $crawler->filter('input[value="La Flèche Wallonne"]')->count(), 'famousFor prefilled from the baked record');
     }

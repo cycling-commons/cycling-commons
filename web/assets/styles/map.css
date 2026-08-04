@@ -453,7 +453,15 @@
   .cc-d-hist-list{list-style:none;margin:0;padding:0}
   .cc-h-row{display:flex;flex-wrap:wrap;gap:.1rem .5rem;padding:.5rem 0;border-bottom:1px solid rgba(239,230,212,.1);font-size:.85rem}
   .cc-h-field{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,230,212,.55)}
-  .cc-h-diff{flex:1 0 100%;color:rgba(239,230,212,.82)}
+  /* Clamped to two lines because a geometry change is a coordinate array, and
+     printed in full it buries every other entry in the log under a wall of
+     numbers nobody reads (owner-reported 2026-08-04). Two lines is enough to
+     see WHICH field moved and roughly where; the detail belongs on the map,
+     not in a change list. Clamping in CSS rather than truncating the string
+     keeps the full value selectable and searchable. */
+  .cc-h-diff{flex:1 0 100%;color:rgba(239,230,212,.82);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;overflow-wrap:anywhere}
   .cc-h-meta{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.45)}
   .cc-d-act{display:inline-block;margin-top:1.2rem;margin-right:.5rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;
     text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.5rem .8rem;border-radius:5px}

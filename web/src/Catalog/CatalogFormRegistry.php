@@ -62,9 +62,12 @@ final class CatalogFormRegistry
                     // 'Road quality'/'Traffic' rows); this makes them editable.
                     CatalogField::select('sq', 'Road quality', ['Smooth', 'Good', 'Worn', 'Rough', 'Broken / loose']),
                     CatalogField::select('tr', 'Traffic', ['Traffic-free', 'Quiet', 'Moderate', 'Busy']),
-                    CatalogField::text('avgGradient', 'Average gradient (%)'),
-                    // Read off the steepest-ramp marker, not typed: see
-                    // CatalogField::$derived and B-climbs.md.
+                    // Both gradients are measured from the drawn line, never
+                    // typed: the average is ascent-only over ~100 m bins, the
+                    // maximum is the steepest sustained ~150 m window under the
+                    // marker. See CatalogField::$derived, B-climbs.md and
+                    // climb-elevation.md 4.
+                    CatalogField::derivedText('avgGradient', 'Average gradient (%)'),
                     CatalogField::derivedText('maxGradient', 'Max gradient (%)'),
                     CatalogField::select('effort', 'Effort', ['Steady', 'Challenging', 'Tough', 'Very steep']),
                     CatalogField::textarea('correction', 'Anything to correct?', 'e.g. the foot starts at the bridge, not the square', display: false),

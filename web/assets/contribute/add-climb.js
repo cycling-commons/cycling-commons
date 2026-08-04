@@ -113,12 +113,16 @@
   cmap.on('load', function () {
     editor = window.Cc.mountClimbEditor({
       map: cmap,
-      hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep') },
+      hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg') },
       onHistory: function (depth) { if (undoBtn) undoBtn.hidden = 0 === depth; },
       onChange: function (st) {
         S.start = st.start; S.summit = st.summit; S.lengthKm = st.lengthKm;
         // Max gradient IS the steepest marker's reading — never a typed field.
         S.maxGrad = (st.steep && st.steep.pct) ? String(st.steep.pct) : '';
+        // Average likewise: the editor measures it ascent-only from the drawn
+        // line (climb-elevation.md 4). Kept separate from the gain/length
+        // fallback below so a profile that fails does not blank the figure.
+        S.avgMeasured = st.avg || '';
         var maxEl = document.getElementById('fMaxDisplay');
         if (maxEl) maxEl.value = S.maxGrad || '—';
         S.routing = st.routing; S.profiling = st.profiling;
@@ -346,7 +350,16 @@
     var np = document.getElementById('namePreview');
     if (np) { np.textContent = S.name || t('name_placeholder'); np.classList.toggle('empty', !S.name); }
 
-    var avg = avgGrad();
+    /* Prefer the measured average over the derived-from-typed-numbers one.
+
+       avgGrad() below is gain over length, where the gain is a number the rider
+       typed. That is net gain, so a climb with a dip in it reads low - and it
+       disagrees with the ascent-only figure the drawer and the improve flow
+       publish for the same road. One definition, measured from the line, in
+       both flows. The fallback stays for the case the elevation profile never
+       resolved, so the field is not simply blank. */
+    var measured = S.avgMeasured ? parseFloat(S.avgMeasured) : 0;
+    var avg = measured || avgGrad();
     var avgStr = avg ? avg.toFixed(1) + ' %' : '—';
     if (fAvgDisplay) fAvgDisplay.value = avgStr;
     if (fAvg) fAvg.value = avg ? avg.toFixed(1) : '';

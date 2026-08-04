@@ -596,7 +596,7 @@ is how the edit form is kept from offering a box for any of it.
 |---|---|
 | `length` | great-circle length of the routed line |
 | `gain` | summit elevation − foot elevation |
-| `avgGradient` | `gain / length` |
+| `avgGradient` | **ascent only**: the sum of the climbing, over the length — see [§4b](#4b-average-gradient-counts-only-the-climbing) |
 | `maxGradient` | the steepest sustained window — see [§5](#5-the-steepest-ramp-is-found-not-placed) |
 | `grad` | per-bin gradients, bin width per [§3](#3-sampling-and-binning) |
 | `elev` | elevation at each bin edge, for the silhouette |
@@ -673,6 +673,35 @@ Guard it explicitly: if the high point is at or near the *start*, the line is
 reversed, and the answer is to say so — offer to flip it — never to publish a
 zero. A climb whose foot and summit are the same height is not a climb, and a
 zero-length one is a bug report, not a measurement.
+
+### 4b. Average gradient counts only the climbing
+
+Owner decision, 2026-08-04. A climb with a dip in it has two defensible
+averages and they are far apart:
+
+| definition | Roche-aux-Faucons, redrawn |
+|---|---|
+| net gain ÷ length | 4.4% |
+| **ascent only ÷ length** | **5.7%** |
+| climbfinder, same road | 5.4% |
+
+Net gain lets a descent cancel out the climbing either side of it, which is not
+what the rider did — they climbed both ramps. Ascent-only is what climb sites
+publish and what the legs remember, and it lands within 0.3 of a point of the
+reference here. **We publish ascent-only.**
+
+**Measured over ~100 m bins, not raw samples.** Ascent-only is noise-sensitive
+by construction: every upward wobble in the DEM adds to the total and nothing
+ever subtracts, so summing raw sample deltas inflates the figure on exactly the
+wooded climbs whose readings are least trustworthy. Binning first is the same
+defence as [§3a](#3a-bin-width-follows-the-source)'s floor, and it is stable —
+the same climb reads 5.8% at 50 m bins, 5.7% at 100 m, 5.6% at 200 m, against
+6.0% unbinned.
+
+**One decimal place.** The average is the headline figure and whole percent
+throws away a distinction riders care about; 8.6% and 9.4% are not the same
+climb. The maximum stays whole, because it is one window's reading and that
+precision is not real.
 
 ---
 
@@ -778,4 +807,12 @@ the chart is only honest once they are done.
 - **`~` in published gradients** — measured values are numbers; the catalog's
   editorial strings (`~20% (mid-climb ramp)`) carry an approximation marker and
   a parenthetical. Once figures are measured, is the tilde still wanted, and
-  does the parenthetical survive as separate prose?
+  does the parenthetical survive as separate prose? Partly answered by
+  [§4b](#4b-average-gradient-counts-only-the-climbing): the average now ships as
+  a plain one-decimal number, while the maximum still carries `~` from the
+  editor. That split is currently accidental rather than decided.
+- **The recompute changes numbers people know.** Once
+  [§7](#7-migration)'s sweep runs, Stockeu moves from `9%+` to about 14% and
+  Roche-aux-Faucons from `9%` to about 5.7%. Whether that lands silently or with
+  a note explaining why the figures changed is an editorial call, not a
+  technical one.

@@ -22,7 +22,7 @@
       foot: 'START · foot', summit: 'END · summit', steepest: 'STEEPEST'
     };
 
-    var state = { start: null, summit: null, steep: null, route: [], grad: [], lengthKm: 0 };
+    var state = { start: null, summit: null, steep: null, route: [], grad: [], avg: '', lengthKm: 0 };
     var footM = null, summitM = null, steepM = null;
     var routeSeq = 0;
     var profileSeq = 0;
@@ -132,6 +132,7 @@
         steep: state.steep ? { at: state.steep.at.slice(), pct: state.steep.pct, manual: state.steep.manual } : null,
         route: state.route.map(function (c) { return c.slice(); }),
         grad: state.grad.slice(),
+        avg: state.avg,
         lengthKm: state.lengthKm
       });
       if (history.length > HISTORY_MAX) history.shift();
@@ -159,6 +160,7 @@
       var prev = history.pop();
       state.start = prev.start; state.summit = prev.summit; state.steep = prev.steep;
       state.route = prev.route; state.grad = prev.grad; state.lengthKm = prev.lengthKm;
+      state.avg = prev.avg;
       remarkers();
       drawLine();
       writeHidden();
@@ -284,6 +286,7 @@
           // delete it — only the % cannot be refreshed without a gradient.
         } else {
           state.grad = res.grad;
+          state.avg = res.avg;
           /* An existing steepest marker STAYS PUT while the route changes.
 
              It used to be re-derived from the profile on every resolve unless
@@ -303,25 +306,33 @@
              there. */
           // Kept for the manual-drag path below, which has no fresh profile.
           sustainedAt = res.sustainedAt || null;
-          if (!state.steep) {
-            state.steep = { at: res.steep.at, pct: res.steep.pct, manual: false };
-          } else if (steepStillOnRoute()) {
-            /* Position AND percentage both stay.
+          /* A marker the RIDER placed is theirs and stays put; an automatic one
+             is re-derived from the new profile every time the line changes.
 
-               How steep that ramp is, is a property of the ROAD. Where the
-               rider decided the climb starts and ends cannot change it, so any
-               movement in the printed number is a measurement artefact rather
-               than new information — and the rider sees a figure they did not
-               touch drifting while they adjust an endpoint (owner-reported
-               2026-08-03: 19% became 10%, then 16% once the sampling was fixed,
-               which is exactly what an artefact looks like).
+             This is climb-elevation.md 5: the steepest ramp is found, not
+             placed, and "an automatic marker is re-derived whenever the line
+             changes". The code used to keep an automatic marker where it was
+             and only re-read its percentage, which is why redrawing
+             Roche-aux-Faucons from 1.75 km to 4.35 km left the marker on the
+             old ramp still reading ~11% when the new line's steepest 100 m is
+             nearly 18% (owner-reported 2026-08-04).
 
-               Two artefacts fed it. The 11 display bars are equal slices of the
-               WHOLE climb, so a longer climb widens every bin and averages a
-               short ramp flat. And the elevation profile is 100 samples spread
-               over the route, so a longer route samples the same ramp more
-               coarsely. Neither is a fact about the ramp. The number is
-               re-measured only when the marker is actually (re)placed. */
+             That rule was added for a real reason - dragging an endpoint made
+             the number drift, 19% to 10% to 16%, which is what a measurement
+             artefact looks like rather than news about the road. But the fix
+             for an artefact is to stop producing it, not to freeze the value on
+             top of it. Both causes are now addressed: the maximum comes from a
+             fixed ~150 m window rather than the display bars, whose width
+             follows the climb's length, and the average is binned before it is
+             summed. What is left moves because the ROAD changed, which is
+             exactly what a rider redrawing a line is telling us.
+
+             A hand-placed marker still survives a redraw, and is only
+             re-derived when the route no longer passes it - a marker stranded
+             beside a road that is no longer part of the climb is wrong however
+             it got there. */
+          if (state.steep && state.steep.manual && steepStillOnRoute()) {
+            state.steep.pct = sustainedAt ? sustainedAt(state.steep.at) : state.steep.pct;
           } else {
             state.steep = { at: res.steep.at, pct: res.steep.pct, manual: false };
           }
@@ -434,6 +445,8 @@
     function writeHidden() {
       if (hidden.route) hidden.route.value = JSON.stringify(state.route.map(function (c) { return [c[1], c[0]]; }));
       if (hidden.grad) hidden.grad.value = JSON.stringify(state.grad);
+      // Derived, never typed - see climb-elevation.md 4 and ascentOnlyAverage().
+      if (hidden.avg) hidden.avg.value = state.avg || '';
       if (hidden.steep) hidden.steep.value = state.steep
         ? JSON.stringify({ at: [state.steep.at[1], state.steep.at[0]], pct: state.steep.pct, manual: !!state.steep.manual })
         : '';
@@ -442,7 +455,7 @@
 
     function publicState() {
       return {
-        start: state.start, summit: state.summit, steep: state.steep, lengthKm: state.lengthKm,
+        start: state.start, summit: state.summit, steep: state.steep, lengthKm: state.lengthKm, avg: state.avg,
         // In-flight/failure signals so the host wizard can gate Next/Submit and
         // tell the contributor when snapping or the gradient profile failed.
         routing: routing, profiling: profiling,
