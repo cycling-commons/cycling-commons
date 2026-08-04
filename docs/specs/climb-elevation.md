@@ -50,6 +50,34 @@ and not with the seeded figure:
 | Shuttle Radar Topography Mission (SRTM) 30 m | 182 m | 9.2% |
 | climbfinder.com | 180 m | 9.0% |
 
+**And it is not one bad entry.** Every seeded headline was checked against the
+route stored in the *same array*, 2026-08-04:
+
+| climb | published | measured from its own line |
+|---|---|---|
+| Côte de la Redoute | 2.0 km · 8.4% | 1.96 km · 9.2% |
+| Mur de Huy | 1.3 km · 9.3% | 1.39 km · 9.7% |
+| Côte de Stockeu | ~1.0 km · 9%+ | 1.00 km · **14.0%** |
+| Côte de la Roche-aux-Faucons | 1.5 km · 9% | 1.75 km · **3.2%** |
+
+Read the published column on its own: **8.4%, 9.3%, 9%+, 9%**. Four climbs that
+actually range from 3.2% to 14% were all published at about nine percent. That
+clustering is the tell — these are not measurements that drifted, they are
+plausible-looking numbers chosen to look like climb gradients.
+
+Two details make the point sharper:
+
+- **Even the lengths were typed.** Roche-aux-Faucons is published at 1.5 km while
+  the route sitting beside it in the same seed entry is 1.75 km. Nothing derived
+  the headline from the geometry it shipped with.
+- **Where the line is also wrong, neither number is the truth.**
+  Roche-aux-Faucons' stored line is not the climb at all: climbfinder puts that
+  climb at 4.3 km averaging 5.4%, against our line's 1.75 km and 3.2%. So the
+  published 9%, our own 3.2%, and the real 5.4% are three different numbers, and
+  only the last one describes the road. Fixing the source without fixing the line
+  ([§4a](#4a-the-line-must-end-at-the-summit)) just measures the wrong thing
+  precisely.
+
 ### 1b. The elevation source is too coarse for the bins we want to draw
 
 The profile comes from `profileFromRoute()` in
