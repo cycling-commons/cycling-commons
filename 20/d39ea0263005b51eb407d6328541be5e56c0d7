@@ -1,0 +1,27 @@
+docs/specs/climb-elevation.md
+  s_ba6cf53b5a7360::t_abc51c044e7f73 234-247
+  s_ba6cf53b5a7360::t_e4c19a6cd461f0 145-209,214-224
+  s_ba6cf53b5a7360::t_a78257ce15e165 320-346
+  s_ba6cf53b5a7360::t_73c28acb089bb1 426-436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "20d39ea0263005b51eb407d6328541be5e56c0d7",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
