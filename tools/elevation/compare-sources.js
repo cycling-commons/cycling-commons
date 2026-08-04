@@ -12,11 +12,19 @@
 // read from the dev database (docs/specs/climb-elevation.md section 8).
 //
 // What it reports, and why those numbers: gain and average gradient are the
-// published figures, so a disagreement there is user-visible. Bins reading
-// downhill are the failure that made GLO-90 unusable - a climb that descends in
-// the middle is impossible, so any count above zero condemns a source at that
-// bin width. Per-bin disagreement is the honest spread between two sources that
-// are both plausible.
+// published figures, so a disagreement there is user-visible. Per-bin
+// disagreement is the honest spread between two sources that are both plausible.
+//
+// Bins reading downhill are reported but MUST NOT be read as a source-quality
+// score. Real climbs descend in their middles - Roche-aux-Faucons drops 40 m
+// between two ramps, and 27 of Hockai's bins are genuine rail-trail descent. A
+// downhill bin only condemns a source on a road known to rise monotonically,
+// which is what made it decisive for GLO-90 on La Redoute.
+//
+// The column that generalises is `disputed`: bins where the two sources
+// DISAGREE about the sign of the gradient. A descent both see is terrain; one
+// only a single source sees is an artifact. That needs no prior knowledge of
+// the road, so it works on climbs nobody has profiled.
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -119,25 +127,32 @@ const A = hgtReader(dirA), B = hgtReader(dirB);
 const nameA = path.basename(path.resolve(dirA)), nameB = path.basename(path.resolve(dirB));
 
 console.log(`A = ${dirA}\nB = ${dirB}\n`);
-console.log('climb'.padEnd(30) + 'length   ' + `${nameA} (A)`.padEnd(16) + `${nameB} (B)`.padEnd(16) + 'diff/bin  down A/B');
+console.log('climb'.padEnd(30) + 'length   ' + `${nameA} (A)`.padEnd(16) + `${nameB} (B)`.padEnd(16)
+  + 'diff/bin  down A/B  disputed');
 
-let sum = 0, seen = 0, skipped = 0;
+let sum = 0, seen = 0, skipped = 0, disputedTotal = 0, binsTotal = 0;
 const flags = [];
 for (const [name, pts] of Object.entries(routes)) {
   const a = profile(A, pts), b = profile(B, pts);
   if (!a || !b) { skipped++; console.log(name.padEnd(30) + 'no tile coverage in one source'); continue; }
   const n = Math.min(a.bins.length, b.bins.length);
-  let s = 0;
-  for (let i = 0; i < n; i++) s += Math.abs(a.bins[i] - b.bins[i]);
+  let s = 0, disputed = 0;
+  for (let i = 0; i < n; i++) {
+    s += Math.abs(a.bins[i] - b.bins[i]);
+    // Sign disagreement: one source says this stretch climbs, the other says it
+    // descends. Flat bins are excluded - a 0% bin has no sign to disagree about.
+    if (a.bins[i] < 0 !== b.bins[i] < 0 && a.bins[i] !== 0 && b.bins[i] !== 0) disputed++;
+  }
   const per = n ? s / n : 0;
-  if (n) { sum += per; seen++; }
+  if (n) { sum += per; seen++; disputedTotal += disputed; binsTotal += n; }
 
   const fmt = (p) => `${p.gain}m/${(p.length ? p.gain / p.length * 100 : 0).toFixed(1)}%`;
   console.log(name.padEnd(30)
     + `${(a.length / 1000).toFixed(2)}km`.padEnd(9)
     + fmt(a).padEnd(16) + fmt(b).padEnd(16)
     + `${per.toFixed(2)}pt`.padStart(8)
-    + `  ${a.bins.filter((x) => x < 0).length}/${b.bins.filter((x) => x < 0).length}`);
+    + `  ${a.bins.filter((x) => x < 0).length}/${b.bins.filter((x) => x < 0).length}`.padEnd(9)
+    + `  ${disputed}/${n}`);
 
   if (a.reversed) flags.push(`${name}: stored BACKWARDS - summit is the first point (section 4a)`);
   else if (a.overshoot > 50) flags.push(`${name}: runs ${a.overshoot.toFixed(0)}m past its summit (section 4a)`);
@@ -145,6 +160,9 @@ for (const [name, pts] of Object.entries(routes)) {
 
 console.log(`\nmean per-bin disagreement: ${seen ? (sum / seen).toFixed(2) : 'n/a'} points over ${seen} climbs`
   + (skipped ? ` (${skipped} skipped)` : ''));
+console.log(`disputed direction: ${disputedTotal}/${binsTotal} bins`
+  + ' - the sources disagree about whether the road rises there.');
+console.log('  "down A/B" counts are NOT a quality score: real climbs descend in their middles.');
 if (flags.length) {
   console.log('\ngeometry problems, independent of the elevation source:');
   for (const f of flags) console.log('  ! ' + f);

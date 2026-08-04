@@ -204,12 +204,38 @@ Three measures, each earning its place:
 | measure | why it is there |
 |---|---|
 | gain and average gradient | the figures riders actually see; disagreement here is user-visible |
-| **bins reading downhill** | a climb that descends in its middle is *impossible* — any count above zero condemns the source at that bin width |
 | per-bin disagreement | the honest spread between two sources that are both plausible |
+| **bins reading downhill** | useful, but *only* with the caveat below |
 
-The middle one is the sharp instrument. It is not a matter of taste or
-tolerance: it is a physical impossibility, so it converts "does this look right?"
-into a question with a correct answer.
+### The downhill-bin trap
+
+It is tempting to treat a bin that reads downhill as proof the source is wrong —
+a climb that descends in its middle sounds impossible. **It is not.** Plenty of
+real climbs go up, drop, and go up again.
+
+Côte de la Roche-aux-Faucons is exactly that: it climbs to 228 m, descends to
+185 m over more than a kilometre, then climbs again to 270 m. Our own 17 km
+Hockai route reads downhill in 27 of its bins, and every one of them is a real
+descent on a rail-trail that undulates. A rule of "any downhill bin condemns the
+source" would have thrown out the correct answer in both cases.
+
+What makes the measure useful is knowing **whether that stretch of road actually
+descends**:
+
+- On a climb known to rise monotonically — Mur de Huy, a 1.4 km wall with no
+  descent anywhere in it — a downhill bin is unambiguously an artifact. That is
+  what condemned GLO-90 on La Redoute: the road never descends, and GLO-90
+  published a 10% drop through its middle.
+- On any other climb, a downhill bin is a **question, not a verdict**.
+
+The general way to answer that question without a surveyed reference is to
+**cross-check two independent sources**. A descent both of them see is terrain.
+A descent only one sees is an artifact. That test needs no prior knowledge of
+the road, which is what makes it usable on climbs nobody has profiled.
+
+The lesson generalises past elevation: a metric that is decisive on the example
+you developed it against can be nonsense one climb over. The fix is not a better
+threshold — it is knowing which question the number actually answers.
 
 ## What the evaluation concluded
 
@@ -218,12 +244,17 @@ EU-DEM v1 against Copernicus GLO-30, all seven seeded Wallonia climbs:
 | | EU-DEM v1 | GLO-30 |
 |---|---|---|
 | La Redoute, gain | 179 m | 181 m *(reference: 180 m)* |
-| bins reading downhill | 2 | **0** |
 | mean per-bin disagreement | — | 1.96 points |
+| downhill bins on Mur de Huy *(never descends)* | 1 | **0** |
 
-GLO-30 is at least as good, and slightly cleaner. Since it is **worldwide**, that
-makes a single-source model viable — retiring a three-source chain, the
-per-region raster management, and EU-DEM's regulated access terms in one step.
+The gain match against an independent reference is the load-bearing result. The
+Mur de Huy row is the narrow version of the downhill test — that climb genuinely
+rises the whole way, so EU-DEM's bin there is an artifact and GLO-30's absence of
+one is real. It is one bin on one climb, so it is a tiebreak, not the argument.
+
+GLO-30 is at least as good. Since it is **worldwide**, that makes a single-source
+model viable — retiring a three-source chain, the per-region raster management,
+and EU-DEM's regulated access terms in one step.
 
 The honest caveat, recorded rather than glossed: this is one tile, one massif,
 one latitude band. Benelux is the widening that would confirm it. Which is why
