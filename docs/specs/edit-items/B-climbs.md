@@ -47,7 +47,7 @@ elevation API (`window.Cc.profileFromRoute` in `climb-elevation.js`, Open-Meteo 
 currently 10 s).
 
 **Steepest: found, not placed.** The marker is derived from the steepest sustained
-~150 m window, and an automatic one is **re-derived on every route change** — the line is
+~100 m window, and an automatic one is **re-derived on every route change** — the line is
 what determines where the steepest ramp is. Dragging or re-tapping it sets `manual: true`,
 which persists with the attribute: a hand-placed marker keeps its position through a
 redraw and only has its `pct` re-read, and is re-derived solely when the route no longer
@@ -78,7 +78,8 @@ and `CLIMB_FIELDS` carries no `fAvg`/`fMax`.
   `CatalogContributionService::applyDerivedAverage()`. Definition and the reasoning for
   ascent-only: [../climb-elevation.md §4b](../climb-elevation.md).
 - `maxGradient` — read off the steepest-ramp marker (`deriveMaxGradient()`), which is the
-  steepest sustained ~150 m window.
+  steepest sustained ~100 m window - the distance climb databases report, so our
+  figure is comparable with theirs.
 
 This replaces two earlier behaviours that produced stale numbers. The add flow used to
 compute the average as **gain ÷ length** from a *typed* gain — a different definition from

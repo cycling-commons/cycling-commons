@@ -120,14 +120,22 @@ would be exactly the kind of noise-prone reading this section just warned about:
 
 <!-- CODE-FROM web/assets/contribute/climb-elevation.js -->
 ```js
-// Slide a ~150m window along the route and take the steepest sustained
-// gradient, instead of a single (noise-prone) adjacent-point delta.
+var MAX_WINDOW_M = 100;
+
+// Slide the window along the route and take the steepest sustained gradient.
 ```
 
-A 150-metre sliding window is that feature's own smoothing threshold, chosen for a different job —
-finding a climb's steepest representative stretch for display — than the routes feature's deliberate
-no-smoothing sum. Same underlying problem, two different, both defensible, choices, made for two
-different purposes.
+That window is the feature's own smoothing threshold, chosen for a different job — finding a climb's
+steepest representative stretch for display — than the routes feature's deliberate no-smoothing sum.
+Same underlying problem, two defensible choices, made for two different purposes.
+
+The distance is 100 m for a reason that has nothing to do with smoothing, though. It was 150 m,
+picked purely as "long enough to average out DEM noise". But the window is not a free parameter:
+climb databases publish the steepest **100 m**, so a longer window reads systematically gentler than
+every other source describing the same road, and a rider comparing us against a site they trust sees
+us understate a climb they have ridden. Matching the convention beat the marginal extra smoothing
+(2026-08-04). A threshold that is only answerable to itself is a threshold you get to choose; one
+your readers will compare against someone else's is not.
 
 ## Where that preview's elevation actually comes from
 

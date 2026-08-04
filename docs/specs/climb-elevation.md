@@ -707,10 +707,10 @@ precision is not real.
 
 ## 5. The steepest ramp is found, not placed
 
-`steepestWindow()` already slides a 150 m window along the profile and returns
-the maximum sustained gradient with its coordinate. **That becomes the default
-and only behaviour**: the rider marks foot and summit, and the steepest ramp
-appears where the measurement puts it.
+`steepestWindow()` slides a **100 m** window along the profile and returns the
+maximum sustained gradient with its coordinate. **That is the default and only
+behaviour**: the rider marks foot and summit, and the steepest ramp appears
+where the measurement puts it.
 
 The third tap survives as an **override**, for the case the rider is on the road
 and the model is not: a marker they move is flagged `manual: true` and keeps its
@@ -718,9 +718,18 @@ position, with its percentage re-read from the profile at that point (already
 the behaviour in `climb-editor.js`). An automatic marker is re-derived whenever
 the line changes.
 
-The 150 m window is why `maxGradient` (≈20%) legitimately exceeds the worst
-100 m bin (16%): a bar is an average over its bin, the marker is the worst
-sustained stretch. Both are true and they are not the same measurement.
+**Why 100 m** (owner, 2026-08-04). It was 150 m, chosen only as a
+noise-averaging distance. But the window is not a free parameter: climb
+databases publish the steepest **100 m**, so any longer window reads
+systematically gentler than every other source describing the same road, and a
+rider comparing us against climbfinder sees us understate a climb they know.
+Matching the convention is worth more than the marginal smoothing.
+
+It still is not the same number as the worst display bar. The bars are eleven
+equal slices of the *whole* climb, so on a 4 km climb each spans ~360 m and
+averages a short ramp flat; the marker is a fixed 100 m wherever it falls. Both
+are true, they measure different distances, and the marker is the one that
+answers "how steep does this get".
 
 ---
 

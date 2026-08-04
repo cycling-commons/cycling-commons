@@ -98,12 +98,26 @@
     return (ascent / total) * 100;
   }
 
-  // Slide a ~150m window along the route and take the steepest sustained
-  // gradient, instead of a single (noise-prone) adjacent-point delta.
+  /* The distance a published "max gradient" is averaged over.
+
+     100 m because that is what climb databases report and therefore what a
+     rider is comparing us against - climbfinder and friends quote the steepest
+     100 m, so a figure measured over a longer window reads systematically
+     gentler than every other source for the same road (owner, 2026-08-04).
+
+     It is a window and not an adjacent-point delta because a single pair of
+     samples on a 30 m DEM is mostly noise: the same climb produced per-sample
+     gradients from -39% to +101%. Averaging over a fixed distance is what makes
+     the number mean something, and fixing that distance - rather than a
+     fraction of the climb - is what stops it drifting when the line is
+     extended. */
+  var MAX_WINDOW_M = 100;
+
+  // Slide the window along the route and take the steepest sustained gradient.
   function steepestWindow(pts, elevs, cum) {
     var total = cum[cum.length - 1];
     if (!(total > 0)) return { g: 0, coord: pts[0] };
-    var win = Math.min(150, total);
+    var win = Math.min(MAX_WINDOW_M, total);
     var maxG = 0, maxCoord = pts[0];
     for (var i = 0; i < pts.length; i++) {
       var startD = cum[i], endD = startD + win;
@@ -121,8 +135,8 @@
     return { g: maxG, coord: maxCoord };
   }
 
-  /* The sustained gradient AT a point, over the same ~150 m window
-     steepestWindow() uses for the maximum.
+  /* The sustained gradient AT a point, over the same window steepestWindow()
+     uses for the maximum (MAX_WINDOW_M).
 
      This exists because the 11-bar display profile is the wrong instrument for
      reading a gradient at a position. Those bars are equal-DISTANCE bins over
@@ -140,7 +154,7 @@
       var d = dx * dx + dy * dy;                    // squared degrees: ordering only
       if (d < bestD) { bestD = d; bestI = i; }
     }
-    var win = Math.min(150, total);
+    var win = Math.min(MAX_WINDOW_M, total);
     var centre = cum[bestI];
     var startD = clamp(centre - win / 2, 0, Math.max(0, total - win));
     var endD = Math.min(total, startD + win);

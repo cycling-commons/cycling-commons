@@ -14,12 +14,31 @@ EU-DEM on the seeded Wallonia climbs. Nothing in the application reads it yet.
 ## The short version
 
 ```bash
-./fetch-glo30.sh BENELUX  ./data/dem/glo30      # download, no account needed
+./fetch-glo30.sh EUROPE  ./data/dem/glo30      # download, no account needed
 ./to-hgt.sh     ./data/dem/glo30 ./data/dem/hgt # convert to Valhalla's format
 node compare-sources.js <old_hgt_dir> ./data/dem/hgt   # prove it before shipping
 ```
 
 Then copy the `.hgt` files to the Valhalla host and restart it.
+
+### Presets and what they cost
+
+| preset | bbox | tiles (land only) | `.hgt` |
+|---|---|---|---|
+| `BE` / `NL` / `LU` | one country | ~15–20 each | ~0.4–0.5 GB |
+| `BENELUX` | 49–54 N, 2–8 E | ~30 | ~0.7 GB |
+| `EUROPE` | 35–72 N, 11 W–32 E | ~900 of 1591 cells | **~20–25 GB** |
+
+Sea-only cells do not exist in the bucket and are skipped, so the land count is
+well below the bbox cell count. For scale, the EU-DEM conversion of a similar
+extent produced 1517 tiles and 37 GB.
+
+`EUROPE` deliberately stops at 32 °E, short of the Urals and the Caucasus.
+Every degree cell costs ~25 MB whether or not a climb is in it, so widen the
+bbox when a country there is onboarded, not before.
+
+The download is resumable — re-running skips whatever is already on disk, so an
+interrupted `EUROPE` run picks up where it stopped.
 
 ## Why each step exists
 

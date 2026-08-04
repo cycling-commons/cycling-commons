@@ -28,7 +28,13 @@ case "${1:-}" in
   NL)      BBOX="50,3,54,8" ;;
   LU)      BBOX="49,5,51,7" ;;
   BENELUX) BBOX="49,2,54,8" ;;
-  "")      echo "usage: $0 <BE|NL|LU|BENELUX|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
+  # Mainland Europe plus the British Isles, Scandinavia and the western
+  # Mediterranean. Deliberately NOT the full EU-DEM extent: this stops at 32E,
+  # short of the Urals and the Caucasus, because nothing east of it is onboarded
+  # and each degree cell costs ~25 MB of .hgt whether or not a climb is in it.
+  # Widen the bbox when a country there is onboarded, not before.
+  EUROPE)  BBOX="35,-11,72,32" ;;
+  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
   *)       BBOX="$1" ;;
 esac
 
