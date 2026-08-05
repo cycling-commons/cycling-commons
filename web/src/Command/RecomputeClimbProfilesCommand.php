@@ -105,6 +105,12 @@ final class RecomputeClimbProfilesCommand extends Command
             }
 
             if ($write) {
+                // Length and gain are derived too (§4), and storing them is what
+                // stops the drawer measuring the whole drawn line while the bars
+                // cover only the climb — La Redoute read "2.4 km" over 21 bars
+                // of 100 m, which is 2.1.
+                $attrs['length'] = round($p['length']);
+                $attrs['gain'] = round($p['gain']);
                 $attrs['avgGradient'] = $p['avgGradient'];
                 $attrs['maxGradient'] = $p['maxGradient'];
                 $attrs['grad'] = $p['grad'];

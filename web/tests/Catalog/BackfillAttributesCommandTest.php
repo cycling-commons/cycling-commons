@@ -75,7 +75,7 @@ final class BackfillAttributesCommandTest extends KernelTestCase
         ];
     }
 
-    public function testBackfillsAvgGradientMaxGradientSurfaceAndFamousForFromBakedRecord(): void
+    public function testBackfillsAvgGradientSurfaceAndFamousForFromBakedRecord(): void
     {
         $item = $this->createClimb([
             'sq' => 'Good', 'tr' => 'Quiet', 'cur' => true,
@@ -90,7 +90,21 @@ final class BackfillAttributesCommandTest extends KernelTestCase
         $attrs = $reloaded->getAttributes();
 
         self::assertSame('5.7', $attrs['avgGradient'], 'strip the trailing % ');
-        self::assertSame('13', $attrs['maxGradient'], 'leading number only, ignoring ~ and the parenthetical');
+        /* maxGradient is NOT backfilled from a baked record, and that is
+           deliberate (2026-08-05).
+
+           Our field is the **steepest 100 m**. A baked record's "Max gradient"
+           is a POINT maximum from whoever compiled it — Mur de Huy's famous
+           ~26% is its steepest hairpin, which is a different measurement over a
+           different distance. Copying one into the other would put a foreign
+           definition into a field whose whole purpose is that it means the same
+           thing on every climb, which is the fault this rename exists to fix.
+
+           A climb with a drawn line gets the real figure from
+           `app:climbs:recompute`. A climb without one is better left empty than
+           filled with a number measured some other way. */
+        self::assertArrayNotHasKey('maxGradient', $attrs,
+            'a point maximum must not be backfilled into the steepest-100m field');
         self::assertSame('Asphalt', $attrs['surface'], 'exact registry choice match');
         self::assertSame('La Flèche Wallonne', $attrs['famousFor'], 'verbatim');
         // Untouched: record stays (it still holds the derived Length row) and
@@ -100,7 +114,7 @@ final class BackfillAttributesCommandTest extends KernelTestCase
         self::assertArrayHasKey('record', $attrs);
         self::assertCount(5, $attrs['record']);
 
-        self::assertStringContainsString('4 attribute(s)', $tester->getDisplay());
+        self::assertStringContainsString('3 attribute(s)', $tester->getDisplay());
     }
 
     public function testRerunningIsIdempotent(): void
@@ -135,8 +149,8 @@ final class BackfillAttributesCommandTest extends KernelTestCase
         $attrs = $this->em->find(Item::class, $item->getId())->getAttributes();
 
         self::assertSame('9.9', $attrs['avgGradient'], 'an existing discrete value is never overwritten');
-        // The other three fields, which had no discrete value yet, still backfill.
-        self::assertSame('13', $attrs['maxGradient']);
+        // The others that still map, and had no discrete value yet, backfill.
+        // maxGradient is not among them — see the note above.
         self::assertSame('Asphalt', $attrs['surface']);
         self::assertSame('La Flèche Wallonne', $attrs['famousFor']);
     }

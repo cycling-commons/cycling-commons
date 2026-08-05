@@ -1388,7 +1388,7 @@ map:
   d_climb_length: 'Longueur'
   d_m_climbing: '{n} m de dénivelé'
   d_from_gpx: '(du GPX)'
-  d_grad_profile: 'Profil de pente · moy {a}% · 100m les plus raides {m}%'
+  d_grad_profile: 'Profil de pente · par {b} m · moy {a}% · 100m les plus raides {m}%'
   d_illustrative: '(illustratif)'
   d_elev_aria: 'Profil altimétrique'
   d_shared_by: 'Partagé par'

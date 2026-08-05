@@ -359,7 +359,12 @@ function buildRecord(layer, f){
   // climbs happened to mention it inside their free-text headline. Deriving it
   // from `route` means the number and the drawn climb can never disagree, and
   // every climb with a geometry gets one — including edited and new ones.
-  const climbKm = routeLengthKm(f.route);
+  /* The MEASURED length, when there is one: it stops at the summit, while
+     routeLengthKm walks the whole drawn line. On a climb whose line runs past
+     the top those disagree — La Redoute displayed 2.4 km above 21 bars of
+     100 m — and the number beside the chart has to be the one the chart is
+     drawn from. Falls back to the line for climbs not yet re-measured. */
+  const climbKm = (f.length ? Number(f.length) / 1000 : 0) || routeLengthKm(f.route);
   const len = climbKm ? `<div class="cc-elev-cap">${D.climbLength||'Length'} · ${climbKm.toFixed(1)} km</div>` : '';
   const up = f.uploader
     ? (f.uploader.public
@@ -724,24 +729,45 @@ function gradStrip(grad, f){
      Both directions share ONE scale, so a -12% bar is exactly as long as a +12%
      one. Scaling each side to its own extreme would make a shallow dip look as
      dramatic as the steepest ramp on the climb. */
+  const binM = (f && f.binM) ? Number(f.binM)
+    : Math.round(((f && f.length ? Number(f.length) : routeLengthKm(f && f.route)*1000) / Math.max(1,grad.length)) / 10) * 10;
   const ups=grad.filter(p=>p>0), downs=grad.filter(p=>p<0);
   const upMax=ups.length?Math.max(...ups):0;
   const dnMax=downs.length?Math.abs(Math.min(...downs)):0;
   const scale=Math.max(upMax,dnMax,1);
-  const H=42;
+  const H=52;   // must match .cc-grad's height in map.css
   // Split the strip between the two directions in proportion to how far each
   // actually goes, so a climb with no descent keeps its full height.
   const upH=dnMax?Math.max(10,Math.round(H*(upMax/(upMax+dnMax)))):H;
   const dnH=H-upH;
-  const bars=grad.map(p=>{
+  const bars=grad.map((p,i)=>{
     const h=Math.max(3,Math.round((Math.abs(p)/scale)*(p<0?dnH:upH)));
     const cell=p<0
       ? `<span class="cc-grad-dn" style="height:${h}px;background:${gradColor(p)}"></span>`
       : `<span class="cc-grad-up" style="height:${h}px;background:${gradColor(p)}"></span>`;
-    return `<span class="cc-grad-col" style="--up:${upH}px;--dn:${dnH}px" title="${p}%">${cell}</span>`;
+    // The tooltip carries WHERE as well as how steep. A bar is a real distance
+    // now, so "12%" alone leaves the reader counting bars to find the ramp.
+    const from=(i*binM/1000), to=((i+1)*binM/1000);
+    const where=`${from.toFixed(from<10?1:0)}–${to.toFixed(to<10?1:0)} km`;
+    return `<span class="cc-grad-col" style="--up:${upH}px;--dn:${dnH}px" title="${where} · ${p}%">${cell}</span>`;
   }).join('');
-  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · avg {a}% · steepest 100m {m}%', {a:avg, m:max})}</div>
-    <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>`;
+  /* Distance ticks. Without them a 22-bar chart is a texture you cannot read a
+     position off, and the steepest-ramp marker on the map has nothing to
+     correspond to. One tick per whole kilometre, or per 500 m on a short climb,
+     so the labels never crowd. */
+  const totalKm=(grad.length*binM)/1000;
+  const tickKm=totalKm<=1.5?0.5:(totalKm<=6?1:Math.ceil(totalKm/6));
+  const ticks=[];
+  for(let k=tickKm;k<totalKm-0.05;k+=tickKm){
+    // Drop a tick that would crowd the end label: a 2.1 km climb printing "2"
+    // beside "2.1 km" reads as noise, and the end label already carries that
+    // information.
+    if(totalKm-k < tickKm*0.55) continue;
+    ticks.push(`<span class="cc-grad-tick" style="left:${(k/totalKm*100).toFixed(2)}%">${k%1?k.toFixed(1):k}</span>`);
+  }
+  const axis=`<div class="cc-grad-axis"><span class="cc-grad-tick cc-grad-tick-0">0</span>${ticks.join('')}<span class="cc-grad-tick cc-grad-tick-end">${totalKm.toFixed(totalKm<10?1:0)} km</span></div>`;
+  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · per {b} m · avg {a}% · steepest 100m {m}%', {a:avg, m:max, b:binM})}</div>
+    <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>${axis}`;
 }
 function elevSvg(elev){
   const w=300,h=64,pad=3,min=Math.min(...elev),max=Math.max(...elev),rng=Math.max(1,max-min);

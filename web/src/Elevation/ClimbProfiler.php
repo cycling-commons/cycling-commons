@@ -23,8 +23,23 @@ namespace App\Elevation;
  */
 final class ClimbProfiler
 {
-    /** Display bars. Eleven equal slices of the whole climb — a shape, not a measurement. */
-    private const int BARS = 11;
+    /**
+     * Bin widths the display profile may use, narrowest first.
+     *
+     * The profile used to be **eleven equal slices of whatever the climb was**,
+     * which meant a bar was a different distance on every climb: ~220 m on a
+     * 2.4 km climb, 1.5 km on Hockai. Two climbs' charts could not be compared,
+     * and a short steep ramp was averaged flat on any long climb. Fixing the
+     * bin to a real distance fixes both — and it is what makes the caption's
+     * "per 100 m" mean something (owner, 2026-08-05).
+     */
+    private const array BIN_LADDER = [100, 150, 200, 250, 500, 1000, 2000];
+
+    /**
+     * Most bars a chart may draw. Beyond this the profile stops being a shape
+     * and becomes texture — 17 km at 100 m would be 169 of them.
+     */
+    private const int MAX_BARS = 25;
 
     /**
      * The distance a published "max gradient" is averaged over.
@@ -35,7 +50,12 @@ final class ClimbProfiler
      */
     private const int MAX_WINDOW_M = 100;
 
-    /** Bin width for the ascent-only average — see avgGradient() for why binning first matters. */
+    /**
+     * Bin width for the ascent-only average — see avgGradient() for why binning
+     * first matters. Deliberately fixed rather than following the display
+     * ladder: the published average must not change because a climb got long
+     * enough to redraw with wider bars.
+     */
     private const int AVG_BIN_M = 100;
 
     /** Samples requested along the line. ~20 m spacing on a 4 km climb (§3c). */
@@ -114,10 +134,11 @@ final class ClimbProfiler
             'gain' => $gain,
             'avgGradient' => self::fmt(self::avgGradient($pts, $elev, $cum, $total), 1),
             'maxGradient' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0),
-            'grad' => self::bars($pts, $elev, $cum, $total),
+            'grad' => self::bars($pts, $elev, $cum, $total, self::binWidthFor($total)),
             'steep' => ['at' => $steep['at'], 'pct' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0), 'manual' => false],
             'demSource' => $read['source'],
-            'binM' => self::AVG_BIN_M,
+            // The bin the BARS are drawn at, so the chart can label itself.
+            'binM' => self::binWidthFor($total),
             'reversed' => false,
             'overshootM' => $drop >= self::OVERSHOOT_DROP_M ? $tail : 0.0,
             'overshootDropM' => $drop,
@@ -196,19 +217,43 @@ final class ClimbProfiler
     }
 
     /**
+     * The narrowest bin on the ladder that keeps the chart under MAX_BARS.
+     *
+     * A 2.4 km climb draws 24 bars of 100 m; past 2.5 km it steps to 150 m, and
+     * so on. The last rung is a floor, not a guarantee — a very long route draws
+     * more bars rather than being silently truncated.
+     */
+    public static function binWidthFor(float $total): int
+    {
+        foreach (self::BIN_LADDER as $w) {
+            if (ceil($total / $w) <= self::MAX_BARS) {
+                return $w;
+            }
+        }
+
+        return self::BIN_LADDER[\count(self::BIN_LADDER) - 1];
+    }
+
+    /**
      * @param list<array{0: float, 1: float}> $pts
      * @param list<float>                     $elev
      * @param list<float>                     $cum
      *
      * @return list<int>
      */
-    private static function bars(array $pts, array $elev, array $cum, float $total): array
+    private static function bars(array $pts, array $elev, array $cum, float $total, int $binM): array
     {
         $out = [];
-        $w = $total / self::BARS;
-        for ($b = 0; $b < self::BARS; ++$b) {
-            $s = self::at($pts, $elev, $cum, $b * $w)['elev'];
-            $e = self::at($pts, $elev, $cum, ($b + 1) * $w)['elev'];
+        $n = max(1, (int) ceil($total / $binM));
+        for ($b = 0; $b < $n; ++$b) {
+            $from = $b * $binM;
+            $to = min($total, $from + $binM);
+            $w = $to - $from;
+            if ($w <= 0) {
+                break;
+            }
+            $s = self::at($pts, $elev, $cum, $from)['elev'];
+            $e = self::at($pts, $elev, $cum, $to)['elev'];
             $out[] = (int) max(-35, min(35, (int) round((($e - $s) / $w) * 100)));
         }
 

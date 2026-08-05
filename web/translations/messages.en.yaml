@@ -1704,7 +1704,7 @@ map:
   d_climb_length: 'Length'
   d_m_climbing: '{n} m climbing'
   d_from_gpx: '(from GPX)'
-  d_grad_profile: 'Gradient profile · avg {a}% · steepest 100m {m}%'
+  d_grad_profile: 'Gradient profile · per {b} m · avg {a}% · steepest 100m {m}%'
   d_illustrative: '(illustrative)'
   d_elev_aria: 'Elevation profile'
   d_shared_by: 'Shared by'

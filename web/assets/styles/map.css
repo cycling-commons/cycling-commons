@@ -549,7 +549,7 @@
      splits at the baseline: climbing sits above it, descending hangs below.
      The rule is drawn only when something actually descends, so an ordinary
      climb is not decorated with a line that explains nothing. */
-  .cc-grad{display:flex;align-items:stretch;gap:2px;margin-top:.45rem;height:42px;position:relative}
+  .cc-grad{display:flex;align-items:stretch;gap:1px;margin-top:.45rem;height:52px;position:relative}
   .cc-grad.has-descent::before{content:"";position:absolute;left:0;right:0;top:var(--up);
     border-top:1px dashed rgba(239,230,212,.35);pointer-events:none}
   .cc-grad-col{flex:1;display:flex;flex-direction:column;transition:opacity .15s}
@@ -564,6 +564,21 @@
      2026-08-04). */
   .cc-grad-up{margin-top:auto;margin-bottom:var(--dn);border-radius:2px 2px 0 0}
   .cc-grad-dn{margin-top:var(--up);border-radius:0 0 2px 2px}
+  /* Distance axis. A bar is a real distance now, so the chart can be read as a
+     position along the climb rather than only as a silhouette — without it a
+     22-bar profile is a texture, and the steepest marker on the map has nothing
+     to correspond to. */
+  .cc-grad-axis{position:relative;height:1.15em;margin-top:.2rem;
+    font-size:.68rem;letter-spacing:.02em;color:rgba(239,230,212,.5)}
+  .cc-grad-tick{position:absolute;transform:translateX(-50%);white-space:nowrap}
+  .cc-grad-tick::before{content:"";position:absolute;left:50%;top:-.22rem;width:1px;height:.18rem;
+    background:rgba(239,230,212,.28)}
+  /* The end labels sit flush rather than centred, so neither can overflow the
+     strip on a narrow drawer. */
+  .cc-grad-tick-0{left:0;transform:none}
+  .cc-grad-tick-0::before{left:0}
+  .cc-grad-tick-end{right:0;left:auto;transform:none}
+  .cc-grad-tick-end::before{left:auto;right:0}
   .cc-up{margin-top:1rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:rgba(239,230,212,.6)}
   .cc-up b{color:var(--paper)}
   .cc-up a{color:var(--glacier);text-decoration:underline}

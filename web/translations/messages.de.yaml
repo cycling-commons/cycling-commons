@@ -1391,7 +1391,7 @@ map:
   d_climb_length: 'Länge'
   d_m_climbing: '{n} m Anstieg'
   d_from_gpx: '(aus GPX)'
-  d_grad_profile: 'Steigungsprofil · Ø {a}% · steilste 100m {m}%'
+  d_grad_profile: 'Steigungsprofil · je {b} m · Ø {a}% · steilste 100m {m}%'
   d_illustrative: '(illustrativ)'
   d_elev_aria: 'Höhenprofil'
   d_shared_by: 'Geteilt von'

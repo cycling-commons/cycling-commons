@@ -512,12 +512,41 @@ This is an engineering guideline drawn from the measurements above, not a
 theorem: at 100 m on GLO-90 the profile produced impossible descents, and at
 ≈220 m (2.5 cells) it was plausible but still noisy.
 
-### 3b. Long climbs get wider bins
+### 3b. A bar is a distance, not a fraction of the climb
 
-100 m bins on a 17 km climb — and Wallonia's longest seeded climb is 17 km —
-would be 170 bars, which is a texture, not a chart. Pick the **smallest bin from
-{100, 200, 250, 500, 1000} m that yields at most 40 bars**, subject to the floor
-in [§3a](#3a-bin-width-follows-the-source).
+**This is the rule, and it replaces a worse one** (owner, 2026-08-05). The
+profile used to be **eleven equal slices of whatever the climb happened to be**,
+so a bar meant ~220 m on a 2.4 km climb and 1.5 km on Hockai. Two charts looked
+alike and were not comparable, and any short ramp was averaged flat on a long
+climb.
+
+Bars are now a real distance, from the ladder **{100, 150, 200, 250, 500, 1000,
+2000} m**, taking the narrowest that keeps the chart to **25 bars or fewer**. So
+a 2.4 km climb draws 24 bars of 100 m; past 2.5 km it steps to 150 m, and so on.
+The last rung is a floor rather than a guarantee — an unusually long route draws
+more bars instead of being silently truncated.
+
+| climb | length | bin | bars |
+|---|---|---|---|
+| Mur de Huy | 1.39 km | 100 m | 14 |
+| Côte de la Redoute | 2.08 km | 100 m | 21 |
+| Roche-aux-Faucons | 4.24 km | 200 m | 22 |
+| Hockai | 16.90 km | 1000 m | 17 |
+
+**The average does NOT follow this ladder.** It stays at 100 m bins
+([§4b](#4b-average-gradient-counts-only-the-climbing)), because a published
+figure must not change merely because a climb grew long enough to be redrawn
+with wider bars.
+
+**The caption always states the bin width** ("per 100 m"). That was true before
+and unenforced; with the width now varying by climb it is the difference between
+a chart and a decoration, and it is the same fault as
+[§1c](#1c-the-bars-mean-different-things-on-different-climbs).
+
+**And the length beside the chart must be the measured one.** It stops at the
+summit, while the drawn line may not — La Redoute displayed "2.4 km" above 21
+bars of 100 m. `length` and `gain` are stored for exactly this reason
+([§4](#4-what-is-measured-and-what-is-stored)).
 
 **The caption always states the bin width** ("per 100 m"). A chart whose bars
 silently mean different distances on different climbs is the same class of fault
@@ -552,7 +581,7 @@ The full chain for one climb:
    Valhalla returns one elevation per point *and* the cumulative distance to it,
    so no distance arithmetic is needed on our side.
 5. **Bins are cut** from that distance/elevation series per
-   [§3a](#3a-bin-width-follows-the-source)–[§3b](#3b-long-climbs-get-wider-bins).
+   [§3a](#3a-bin-width-follows-the-source)–[§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb).
 
 So step 2 owns the geometry and step 4 owns the heights, and they are
 independent: a profile can be recomputed against a better DEM without re-routing,
@@ -759,6 +788,41 @@ maximum sustained gradient with its coordinate. **That is the default and only
 behaviour**: the rider marks foot and summit, and the steepest ramp appears
 where the measurement puts it.
 
+### 5a. Two markers: one measured, one remembered
+
+Proposed by the owner, 2026-08-05, and it resolves the Mur de Huy problem
+properly rather than by wording.
+
+The measurement above and a rider's knowledge answer **different questions**, and
+the section on the max ramp shows the DEM cannot answer the second one at all:
+Mur de Huy's Chapelle hairpin is smaller than a GLO-30 cell, so no window width
+recovers its 26%. That is not a precision we can reach by computing harder. It is
+information the dataset does not contain and a rider does.
+
+So there are two markers:
+
+| | placed by | means |
+|---|---|---|
+| **steepest 100 m** | us, automatically | the steepest sustained 100 m the DEM can see — comparable across every climb, and comparable with climb databases |
+| **steepest point** | a rider, by hand | where the wall actually is, on a road they have ridden |
+
+Ours stays ours: derived on every redraw, never edited, and it is the figure the
+catalogue publishes and sorts on, because it is the only one measured the same
+way everywhere. Theirs is a contribution — a distinct icon at a place they
+choose, going through the same moderation as any other, and it can carry a
+gradient the DEM cannot see.
+
+**Why not just let riders correct our number.** Because then the published field
+means something different on every climb, depending on whether anyone happened
+to edit it — which is exactly how the catalogue ended up publishing four
+different definitions of "max gradient" and calling them one field
+([§1a](#1a-the-published-figures-were-typed-by-hand)). Two fields with two
+honest definitions beat one field with a negotiable one.
+
+**Open before building:** the icon and label, whether the rider states a
+percentage or only a place, and whether a climb may carry more than one. None
+are decided here.
+
 The third tap survives as an **override**, for the case the rider is on the road
 and the model is not: a marker they move is flagged `manual: true` and keeps its
 position, with its percentage re-read from the profile at that point (already
@@ -827,6 +891,16 @@ climb that genuinely descends between two ramps, which is what prompted this
 Bars now hang below a baseline where the gradient is negative, and the dashed
 zero line is drawn only when something actually descends — an ordinary climb is
 not decorated with a rule that explains nothing.
+
+**The chart carries a distance axis.** With bars at a real width
+([§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb)) a profile can be
+read as a *position* along the climb, not only as a silhouette — which is what
+lets the steepest-ramp marker on the map correspond to something on the chart.
+Ticks are one per kilometre, or per 500 m under 1.5 km, and an interior tick
+that would crowd the end label is dropped rather than printed: a 2.1 km climb
+showing "2" beside "2.1 km" is noise. Each bar's tooltip names its stretch
+("1.2–1.3 km · 12%"), because on a 22-bar chart "12%" alone leaves the reader
+counting bars.
 
 **Both directions share one scale.** A −12% bar is exactly as long as a +12%
 one. Scaling each side to its own extreme would make a shallow dip look as
@@ -900,7 +974,7 @@ the chart is only honest once they are done.
 ## 8. Testing
 
 - **Unit** — binning: bin width chosen per [§3a](#3a-bin-width-follows-the-source)
-  and [§3b](#3b-long-climbs-get-wider-bins) for a 500 m, a 2 km and a 17 km
+  and [§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb) for a 500 m, a 2 km and a 17 km
   climb; a bin never narrower than four cells of the answering source.
 - **Unit** — `steepestWindow` finds a planted ramp; a `manual` marker survives a
   re-profile and an automatic one moves.

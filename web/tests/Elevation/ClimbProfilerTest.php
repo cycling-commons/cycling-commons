@@ -139,16 +139,48 @@ final class ClimbProfilerTest extends TestCase
         self::assertLessThan(560.0, $p['length'], 'length stops at the summit');
     }
 
-    public function testTheDisplayProfileAlwaysHasElevenBars(): void
+    /**
+     * A bar is a fixed distance, not a fraction of the climb.
+     *
+     * Eleven equal slices meant one bar was ~220 m on a 2.4 km climb and 1.5 km
+     * on a 17 km one — charts that looked alike and could not be compared, and
+     * a short ramp averaged flat on anything long.
+     */
+    public function testBinWidthClimbsTheLadderAsAClimbGetsLonger(): void
     {
+        // 2.4 km still fits under the bar cap at 100 m: 24 bars.
+        self::assertSame(100, ClimbProfiler::binWidthFor(2400));
+        self::assertSame(100, ClimbProfiler::binWidthFor(2500));
+        // Past 2.5 km, 100 m would exceed the cap, so it steps up.
+        self::assertSame(150, ClimbProfiler::binWidthFor(2600));
+        self::assertSame(150, ClimbProfiler::binWidthFor(3750));
+        self::assertSame(200, ClimbProfiler::binWidthFor(3800));
+        // Hockai, 16.9 km.
+        self::assertSame(1000, ClimbProfiler::binWidthFor(16900));
+    }
+
+    public function testNoClimbEverDrawsMoreBarsThanTheCap(): void
+    {
+        foreach ([500, 2400, 2600, 5000, 12000, 16900, 40000] as $len) {
+            $w = ClimbProfiler::binWidthFor((float) $len);
+            self::assertLessThanOrEqual(25, (int) ceil($len / $w),
+                "a {$len} m climb must not draw more than 25 bars");
+        }
+    }
+
+    public function testTheProfileIsBinnedAtTheWidthItReports(): void
+    {
+        // ~29 points at ~22 m is roughly 620 m, which bins at 100 m.
         $elev = [];
-        for ($i = 0; $i < 30; ++$i) {
+        for ($i = 0; $i < 29; ++$i) {
             $elev[] = 100.0 + $i * 3;
         }
-        $p = $this->profilerFor($elev)->profile($this->line(30));
+        $p = $this->profilerFor($elev)->profile($this->line(29));
 
         self::assertNotNull($p);
-        self::assertCount(11, $p['grad']);
+        self::assertSame(100, $p['binM']);
+        self::assertSame((int) ceil($p['length'] / $p['binM']), \count($p['grad']),
+            'the bar count must follow the reported bin width');
     }
 
     public function testProvenanceTravelsWithTheMeasurement(): void
