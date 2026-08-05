@@ -486,7 +486,18 @@ export function render(){
              darkest band sat at 1100 m reading 15%, two different pieces of
              road (owner-reported 2026-08-05). Falls back to the bars for a
              climb not yet re-measured. */
-          const lineG = (f.lineGrad && f.lineGrad.length) ? f.lineGrad : f.grad;
+          /* The line takes its colour from the BARS, so the same stretch of
+             road is the same colour in both places (owner, 2026-08-05). They
+             used to be separate series — the bars at fixed bin boundaries, the
+             line from a window sliding every ~25 m — and the two disagreed
+             about the colour band on up to half the bars of a climb, which is
+             indefensible when they are two pictures of one profile.
+
+             `lineGrad` is kept in the payload: it is the finer measure, and it
+             is what the steepest-ramp marker is derived from, so it explains
+             why the marker can sit on a bar that is not the darkest — a 100 m
+             ramp inside a 200 m bin is genuinely averaged down by its bar. */
+          const lineG = (f.grad && f.grad.length) ? f.grad : f.lineGrad;
           /* Draw the CLIMB, not necessarily the whole stored line. A line that
              runs past its summit is longer than the climb, and line-progress
              spreads the colour bands over whatever geometry is drawn — so

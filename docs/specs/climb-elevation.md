@@ -910,7 +910,28 @@ Bars now hang below a baseline where the gradient is negative, and the dashed
 zero line is drawn only when something actually descends — an ordinary climb is
 not decorated with a rule that explains nothing.
 
-**The line and the bars are coloured from different series, on purpose.** The
+**The line and the bars share one series** (owner, 2026-08-05): the map takes
+its colour from the bars, so the same stretch of road is the same colour in both
+places. They were separate — bars at fixed bin boundaries, line from a window
+sliding every ~25 m — and disagreed about the colour band on up to **11 of 21
+bars**, which is indefensible when they are two pictures of one profile.
+
+**A residual worth knowing about, not yet decided.** The steepest-ramp marker is
+still the true steepest 100 m at *any* offset, and a ramp that straddles a bin
+boundary is split between two bars. On Côte de Stockeu the marker reads 27% while
+sitting on a 14% bar, because its window spans two of them; the neighbouring bar
+reads 23%. Two ways out, and they trade against each other:
+
+- **Publish the sliding maximum** (today). Truer to the road — 27% really is
+  there over 100 m — but not verifiable from the chart a reader is looking at.
+- **Publish the steepest bar.** Verifiable by eye and always consistent with the
+  marker's position, at the cost of understating a ramp that happens to straddle
+  a boundary: Stockeu would read 23% rather than 27%.
+
+This is an editorial call about which kind of wrongness is worse, and the
+published figures have moved enough already. Recorded rather than decided.
+
+*(Previously, and kept because the reasoning still holds:)* The
 map line used to take its colour from the chart's bins, and the steepest-ramp
 marker then landed *off* the darkest stretch — on La Redoute the marker read 17%
 at 970 m while the darkest band sat at 1100 m reading 15%, two different pieces
