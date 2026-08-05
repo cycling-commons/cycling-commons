@@ -83,7 +83,7 @@ returned 30 distinct values across 99 samples, with runs of seven identical
 readings and eight samples going *downhill* on a climb that never descends.
 Binned at 100 m it published a **10% descent through the middle of the climb**.
 
-<figure class="gis-fig"><svg viewBox="0 0 680 476" role="img" aria-labelledby="dem1-t dem1-d" xmlns="http://www.w3.org/2000/svg"><title id="dem1-t">The same climb measured by a reference source and by a 90 metre elevation model</title><desc id="dem1-d">Two elevation profiles of the Cote de la Redoute drawn from real measurements, in one hundred metre bins. The accent line is the reference profile from climbfinder, rising continuously from foot to summit. The stepped line is what Copernicus GLO-90, a ninety metre model, returns for the identical road: it follows the general shape but in flat jumps, and in two bins it goes down instead of up. Those two descending bins are tinted, and the larger reports minus ten percent through the middle of a climb that never descends, bracketed by a twenty-five percent bin and a zero percent bin. The model is not slightly noisy here; it is reporting terrain that is not there.</desc>
+<figure class="gis-fig"><svg viewBox="0 0 680 476" role="img" aria-labelledby="dem1-t dem1-d" xmlns="http://www.w3.org/2000/svg"><title id="dem1-t">The same climb measured by a reference source and by a 90 metre elevation model</title><desc id="dem1-d">Two elevation profiles of the Cote de la Redoute drawn from real measurements, in one hundred metre bins. The accent line is the reference profile from another source, rising continuously from foot to summit. The stepped line is what Copernicus GLO-90, a ninety metre model, returns for the identical road: it follows the general shape but in flat jumps, and in two bins it goes down instead of up. Those two descending bins are tinted, and the larger reports minus ten percent through the middle of a climb that never descends, bracketed by a twenty-five percent bin and a zero percent bin. The model is not slightly noisy here; it is reporting terrain that is not there.</desc>
 <line class="gis-muted" stroke-dasharray="2 5" x1="56.0" y1="116" x2="56.0" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="87.8" y1="116" x2="87.8" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="119.6" y1="116" x2="119.6" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="151.4" y1="116" x2="151.4" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="183.2" y1="116" x2="183.2" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="214.9" y1="116" x2="214.9" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="246.7" y1="116" x2="246.7" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="278.5" y1="116" x2="278.5" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="310.3" y1="116" x2="310.3" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="342.1" y1="116" x2="342.1" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="373.9" y1="116" x2="373.9" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="405.7" y1="116" x2="405.7" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="437.5" y1="116" x2="437.5" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="469.3" y1="116" x2="469.3" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="501.1" y1="116" x2="501.1" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="532.8" y1="116" x2="532.8" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="564.6" y1="116" x2="564.6" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="596.4" y1="116" x2="596.4" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="628.2" y1="116" x2="628.2" y2="312"/><line class="gis-muted" stroke-dasharray="2 5" x1="660.0" y1="116" x2="660.0" y2="312"/><rect class="gis-fill-clay" fill-opacity=".45" x="246.7" y="241.8" width="31.8" height="11.1"/><rect class="gis-fill-clay" fill-opacity=".45" x="628.2" y="116.0" width="31.8" height="4.0"/><polyline class="gis-muted" fill="none" points="56.0,312.0 87.8,312.0 87.8,305.3 119.6,305.3 119.6,296.4 151.4,296.4 151.4,283.0 183.2,283.0 183.2,269.7 214.9,269.7 214.9,241.8 246.7,241.8 246.7,241.8 278.5,241.8 278.5,253.0 310.3,253.0 310.3,235.2 342.1,235.2 342.1,221.8 373.9,221.8 373.9,214.0 405.7,214.0 405.7,201.8 437.5,201.8 437.5,182.8 469.3,182.8 469.3,173.9 501.1,173.9 501.1,160.5 532.8,160.5 532.8,141.6 564.6,141.6 564.6,132.7 596.4,132.7 596.4,124.9 628.2,124.9 628.2,116.0 660.0,116.0 660.0,118.2"/><polyline class="gis-accent" fill="none" points="56.0,312.0 87.8,305.3 119.6,297.5 151.4,286.4 183.2,279.7 214.9,270.8 246.7,261.9 278.5,254.1 310.3,244.1 342.1,232.9 373.9,222.9 405.7,208.4 437.5,190.6 469.3,179.5 501.1,169.5 532.8,155.0 564.6,143.8 596.4,139.4 628.2,132.7 660.0,126.0"/>
 <text class="gis-label-sm" x="56" y="40">Same road, two measurements</text>
 <line class="gis-clay" x1="262.6" y1="235.8" x2="262.6" y2="94"/>
@@ -130,6 +130,58 @@ between EU-DEM and GLO-30, but gains within 2 m of each other.
 
 A **DTM (digital terrain model)** is the bare-earth counterpart. Where one is
 available at useful resolution it is the better input for road gradients.
+
+## What the trees cost, measured
+
+The section above is the theory. Here is what it did to a real climb.
+
+Côte de Stockeu is wooded and steep. Our figure for its steepest 100 m, from
+Copernicus GLO-30, was **27%**. Another source put the same climb at **19%**. The
+*averages* agreed almost exactly — 10.2% against 9.9% — which is the clue: an
+error that cancels over a whole climb but not over its worst hundred metres is
+not random noise, it is something concentrated in one place.
+
+Wallonia publishes a **50 cm LiDAR terrain model** — bare earth, vegetation and
+buildings removed. Sampled along the same road:
+
+| | average | steepest 100 m |
+|---|---|---|
+| Copernicus GLO-30 (surface model) | 10.2% | **27%** |
+| Wallonia 50 cm LiDAR (terrain model) | 9.8% | **16.7%** |
+| another source | 9.9% | 19% |
+
+And on the exact stretch GLO-30 called 27%, the bare earth is unremarkable:
+
+<!-- CODE-ILLUSTRATIVE sampled elevations, metres -->
+```
+780m 381.07   840m 388.88   900m 395.15   960m 401.88
+800m 384.19   860m 390.67   920m 398.02   980m 403.79
+```
+
+That is a steady ~11%. GLO-30 read a **27 m rise across 100 m** where the ground
+rises 9 m. The difference is the tree canopy: a surface model measures the top of
+the forest, and where the canopy thickens going up a hill it manufactures a
+gradient that no rider will ever feel.
+
+Two things worth taking from this.
+
+**The maximum is far more fragile than the average.** A sliding maximum searches
+every position and keeps the largest reading, so it *selects for* wherever the
+error happened to be worst — the one statistic guaranteed to find the canopy.
+Averages let errors cancel; maxima accumulate them by construction. When two
+sources agree on a climb's average and disagree on its maximum, suspect the
+maximum, not the average.
+
+**It pointed at the wrong road, not just the wrong number.** The LiDAR's steepest
+stretch is at 550 m; GLO-30's was at 850 m. A profile can be wrong about *where*
+as well as *how much*, and a marker on a map makes that visible in a way a table
+of numbers does not.
+
+**You can check this without downloading anything.** The Wallonia model is served
+as an ArcGIS `MapServer` with query enabled, so a single HTTP request returns the
+elevation at one coordinate — ninety-three of them profiled the whole climb in
+about thirty seconds. That is enough to *test* a hypothesis about a source, which
+is a different job from serving a catalogue and needs none of the storage.
 
 ## Two formats, and a lesson hiding in one of them
 
