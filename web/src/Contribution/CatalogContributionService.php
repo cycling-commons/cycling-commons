@@ -14,6 +14,7 @@ use App\Catalog\ItemType;
 use App\Catalog\LocationMode;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Elevation\ClimbProfiler;
 use App\Entity\User;
 use App\Media\MediaClaimService;
 use App\Service\ContributionReceipt;
@@ -63,6 +64,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly SpatialResolver $resolver,
         private readonly RateLimiterFactoryInterface $contributionSubmitLimiter,
         private readonly MediaClaimService $mediaClaims,
+        private readonly ClimbProfiler $profiler,
     ) {
     }
 
@@ -110,7 +112,7 @@ final class CatalogContributionService implements ContributionStubInterface
         } catch (\InvalidArgumentException) {
             $this->reject('contribute.error.invalid_geometry', 'route');
         }
-        $attributes = self::applyDerivedAverage(self::deriveMaxGradient($attributes));
+        $attributes = $this->deriveClimbProfile($attributes);
 
         $draft = new SubmissionDraft(
             type: ItemType::Climbs,
@@ -283,11 +285,7 @@ final class CatalogContributionService implements ContributionStubInterface
            overwrite the editorial text on the way past. A rider who drags the
            marker IS restating the max gradient; a rider who leaves it alone is
            not. */
-        $currentSteep = $item->getAttributes()['steep'] ?? null;
-        if (isset($proposed['steep']) && !self::sameValue($currentSteep, $proposed['steep'])) {
-            $proposed = self::deriveMaxGradient($proposed);
-        }
-        $proposed = self::applyDerivedAverage($proposed);
+        $proposed = $this->deriveClimbProfile($proposed, $item->getAttributes());
 
         $currentAttrs = $item->getAttributes();
         $changes = [];
@@ -655,43 +653,74 @@ final class CatalogContributionService implements ContributionStubInterface
      *
      * @return array<string, mixed>
      */
-    private static function applyDerivedAverage(array $attrs): array
-    {
-        if (!\array_key_exists('avg', $attrs)) {
-            return $attrs;
-        }
-        $avg = $attrs['avg'];
-        unset($attrs['avg']);
-        if (\is_scalar($avg) && '' !== (string) $avg) {
-            $attrs['avgGradient'] = (string) $avg;
-        }
-
-        return $attrs;
-    }
-
     /**
-     * Max gradient follows the steepest-ramp marker.
+     * Measures the climb from its drawn line and writes every derived value.
      *
-     * It used to be a free-text box beside it, which meant two sources for one
-     * fact and no rule about which won — and a text box accepts anything, which
-     * is how a climb ended up publishing "answered-tag probe 16:10:23" as its
-     * max gradient (owner-reported 2026-08-03). The marker already carries the
-     * percentage the profile read at its position, so that is the value.
+     * This used to set only the average and the maximum, and the rest —
+     * `length`, `gain`, `binM`, `lineGrad`, `demSource` — arrived solely from
+     * the catalogue sweep. So an approved redraw updated the gradients and the
+     * profile but left the length behind: Côte de Stockeu displayed "1.0 km"
+     * beside a chart whose own axis read 2.4 km (owner-reported 2026-08-05).
+     * Anything derived from the line has to be derived *when the line changes*,
+     * or the item is internally inconsistent until someone remembers to run a
+     * command.
      *
-     * No marker, no change: a climb whose steepest ramp has not been placed
-     * keeps whatever it has, rather than having it blanked.
+     * No route, no change: a submission that does not touch the geometry leaves
+     * every measurement exactly as it was.
      *
-     * @param array<string, mixed> $attrs
+     * @param array<string, mixed>      $attrs
+     * @param array<string, mixed>|null $current the item's present attributes, when editing
      *
      * @return array<string, mixed>
      */
-    private static function deriveMaxGradient(array $attrs): array
+    private function deriveClimbProfile(array $attrs, ?array $current = null): array
     {
-        $steep = $attrs['steep'] ?? null;
-        $pct = \is_array($steep) ? ($steep['pct'] ?? null) : null;
-        if (\is_scalar($pct) && '' !== (string) $pct) {
-            $attrs['maxGradient'] = (string) $pct;
+        /* `avg` is a TRANSPORT key, never an attribute: the editor posts it and
+           the profile below replaces it. Dropped first and unconditionally,
+           because a submission whose elevation lookup fails must not leave it
+           behind to be stored as though it were a field. */
+        unset($attrs['avg']);
+
+        $route = $attrs['route'] ?? ($current['route'] ?? null);
+        if (!\is_array($route) || \count($route) < 2) {
+            return $attrs;
         }
+        /** @var list<array{0: float, 1: float}> $coords */
+        $coords = array_values(array_map(
+            static fn (array $p): array => [(float) $p[0], (float) $p[1]],
+            array_filter($route, static fn ($p): bool => \is_array($p) && isset($p[0], $p[1])),
+        ));
+
+        /* A hand-placed steepest marker is the rider's: its position is kept and
+           only the number under it is re-read (climb-elevation.md §5). */
+        $steep = $attrs['steep'] ?? ($current['steep'] ?? null);
+        $manualAt = (\is_array($steep) && true === ($steep['manual'] ?? false) && isset($steep['at'][0], $steep['at'][1]))
+            ? [(float) $steep['at'][0], (float) $steep['at'][1]]
+            : null;
+
+        $p = $this->profiler->profile($coords, $manualAt);
+        if (null === $p) {
+            // No elevation, no numbers — never a guess (§2d). The geometry still
+            // submits: the line is the contribution, the profile derives from it.
+            return $attrs;
+        }
+
+        $attrs['length'] = round($p['length']);
+        $attrs['gain'] = round($p['gain']);
+        $attrs['avgGradient'] = $p['avgGradient'];
+        $attrs['maxGradient'] = $p['maxGradient'];
+        $attrs['grad'] = $p['grad'];
+        $attrs['lineGrad'] = $p['lineGrad'];
+        $attrs['binM'] = $p['binM'];
+        $attrs['demSource'] = $p['demSource'];
+        if (null !== $manualAt) {
+            $attrs['steep'] = ['at' => $manualAt, 'pct' => $p['sustainedAtSteep'] ?? ($steep['pct'] ?? ''), 'manual' => true];
+        } else {
+            $attrs['steep'] = $p['steep'];
+        }
+        // A stored display string nothing recomputes drifts the moment a climb
+        // is redrawn; the drawer composes that line at render time (§4).
+        unset($attrs['headline']);
 
         return $attrs;
     }
