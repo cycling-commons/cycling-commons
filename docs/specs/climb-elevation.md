@@ -892,6 +892,24 @@ Bars now hang below a baseline where the gradient is negative, and the dashed
 zero line is drawn only when something actually descends — an ordinary climb is
 not decorated with a rule that explains nothing.
 
+**The line and the bars are coloured from different series, on purpose.** The
+map line used to take its colour from the chart's bins, and the steepest-ramp
+marker then landed *off* the darkest stretch — on La Redoute the marker read 17%
+at 970 m while the darkest band sat at 1100 m reading 15%, two different pieces
+of road (owner-reported 2026-08-05). Neither number was wrong: the marker slides
+its window to any offset, and a fixed bin cannot.
+
+So `lineGrad` colours the line — the sustained gradient measured at each band's
+own centre — while `grad` keeps its fixed bins for the chart, because columns
+have to be comparable between climbs. The darkest part of the line is now the
+steepest part of the road by construction, which is where the marker is: across
+all seven climbs the marker and the darkest band land in the **same colour
+band**, and on La Redoute at the same point.
+
+One detail that mattered: the band gradient must be measured at its centre
+**distance**, not by resolving that centre to the nearest sampled coordinate.
+That quantisation alone under-read La Redoute's peak by a whole colour step.
+
 **The chart carries a distance axis.** With bars at a real width
 ([§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb)) a profile can be
 read as a *position* along the climb, not only as a silhouette — which is what

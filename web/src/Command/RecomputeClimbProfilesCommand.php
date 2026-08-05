@@ -114,6 +114,10 @@ final class RecomputeClimbProfilesCommand extends Command
                 $attrs['avgGradient'] = $p['avgGradient'];
                 $attrs['maxGradient'] = $p['maxGradient'];
                 $attrs['grad'] = $p['grad'];
+                // Colours the map line, at finer resolution than the bars, so
+                // the darkest stretch is the steepest one and the marker sits
+                // on it.
+                $attrs['lineGrad'] = $p['lineGrad'];
                 $attrs['demSource'] = $p['demSource'];
                 $attrs['binM'] = $p['binM'];
                 // A hand-placed steepest marker is the rider's, and re-deriving

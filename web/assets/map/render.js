@@ -449,7 +449,17 @@ export function render(){
       layer.features.forEach((f,i)=>{
         if(!featureVisible(layer,f)) return;
         if(f.route){                                    // climbs: draw the gradient-coloured road line + steepest marker
-          if(f.grad) drawClimbLine(`route-${layer.key}-${i}`, f.route, f.grad, layer, f);
+          /* lineGrad colours the LINE; grad draws the chart's bars. Two series
+             on purpose: bars sit at fixed bin boundaries so columns stay
+             comparable between climbs, while the line is coloured by the
+             sustained gradient AT each point. That is what puts the darkest
+             stretch where the steepest-ramp marker is — colouring from fixed
+             bins left La Redoute's marker reading 17% at 970 m while the
+             darkest band sat at 1100 m reading 15%, two different pieces of
+             road (owner-reported 2026-08-05). Falls back to the bars for a
+             climb not yet re-measured. */
+          const lineG = (f.lineGrad && f.lineGrad.length) ? f.lineGrad : f.grad;
+          if(lineG) drawClimbLine(`route-${layer.key}-${i}`, f.route, lineG, layer, f);
           else drawLine(`route-${layer.key}-${i}`, f.route, layer.color, layer, f);
           if(f.steep){
             const sEl=document.createElement('div');

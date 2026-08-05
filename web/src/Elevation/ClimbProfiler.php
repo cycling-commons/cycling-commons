@@ -87,8 +87,10 @@ final class ClimbProfiler
      *
      * @return array{
      *     length: float, gain: float, avgGradient: string, maxGradient: string,
-     *     grad: list<int>, steep: array{at: array{0: float, 1: float}, pct: string, manual: bool},
-     *     demSource: string, binM: int, reversed: bool, overshootM: float, overshootDropM: float
+     *     grad: list<int>, lineGrad: list<int>,
+     *     steep: array{at: array{0: float, 1: float}, pct: string, manual: bool},
+     *     demSource: string, binM: int, reversed: bool, overshootM: float,
+     *     overshootDropM: float, sustainedAtSteep: string|null
      * }|null null when elevation could not be established (§2d)
      */
     public function profile(array $route, ?array $steepAt = null): ?array
@@ -135,6 +137,7 @@ final class ClimbProfiler
             'avgGradient' => self::fmt(self::avgGradient($pts, $elev, $cum, $total), 1),
             'maxGradient' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0),
             'grad' => self::bars($pts, $elev, $cum, $total, self::binWidthFor($total)),
+            'lineGrad' => self::lineGradients($pts, $elev, $cum, $total),
             'steep' => ['at' => $steep['at'], 'pct' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0), 'manual' => false],
             'demSource' => $read['source'],
             // The bin the BARS are drawn at, so the chart can label itself.
@@ -214,6 +217,47 @@ final class ClimbProfiler
         }
 
         return ['g' => $best, 'at' => $at];
+    }
+
+    /**
+     * Per-position gradients for COLOURING THE MAP LINE, as distinct from the
+     * chart's bars.
+     *
+     * The two must not share a series, and a marker that landed off the darkest
+     * stretch is how we found out (owner-reported 2026-08-05). The steepest-ramp
+     * marker slides its window to ANY offset, while the bars sit at fixed
+     * boundaries, so on La Redoute the marker reads 17% at 970 m while the
+     * steepest bar is 15% at 1100 m — a different stretch of road. Both figures
+     * are right; they simply answer "how steep is the worst 100 m" and "how
+     * steep is this particular 100 m".
+     *
+     * Colouring the line by the sustained gradient CENTRED at each point makes
+     * the darkest part of the line the steepest part of the road by
+     * construction, which is where the marker is. The bars keep their fixed
+     * bins, because a chart needs comparable columns.
+     *
+     * @param list<array{0: float, 1: float}> $pts
+     * @param list<float>                     $elev
+     * @param list<float>                     $cum
+     *
+     * @return list<int>
+     */
+    private static function lineGradients(array $pts, array $elev, array $cum, float $total): array
+    {
+        $step = max(25.0, $total / 120);     // ~120 bands is plenty for a smooth line
+        $out = [];
+        for ($d = 0.0; $d < $total; $d += $step) {
+            // Measured at the band's own centre DISTANCE. Going via a
+            // coordinate would snap to the nearest of the 200 samples first,
+            // and that quantisation is enough to under-read the peak: La
+            // Redoute's darkest band came out 15% beside a marker reading 17%,
+            // which is a whole colour step.
+            $out[] = (int) max(-35, min(35, (int) round(
+                self::sustainedAtDistance($pts, $elev, $cum, $total, $d + $step / 2),
+            )));
+        }
+
+        return [] === $out ? [0] : $out;
     }
 
     /**
@@ -368,8 +412,26 @@ final class ClimbProfiler
                 $bestI = $i;
             }
         }
+
+        return self::sustainedAtDistance($pts, $elev, $cum, $total, $cum[$bestI]);
+    }
+
+    /**
+     * The sustained gradient over a window centred on a DISTANCE along the line.
+     *
+     * The distance-based form is the real one; sustainedAt(coord) resolves a
+     * coordinate to a distance and defers here. Taking a distance directly is
+     * what lets the line's colour bands be measured at their own centres rather
+     * than at whichever sample happens to be nearest.
+     *
+     * @param list<array{0: float, 1: float}> $pts
+     * @param list<float>                     $elev
+     * @param list<float>                     $cum
+     */
+    private static function sustainedAtDistance(array $pts, array $elev, array $cum, float $total, float $centre): float
+    {
         $win = min((float) self::MAX_WINDOW_M, $total);
-        $start = max(0.0, min($cum[$bestI] - $win / 2, $total - $win));
+        $start = max(0.0, min($centre - $win / 2, $total - $win));
         $end = min($total, $start + $win);
         $d = $end - $start;
 
