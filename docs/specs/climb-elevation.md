@@ -924,9 +924,29 @@ steepest part of the road by construction, which is where the marker is: across
 all seven climbs the marker and the darkest band land in the **same colour
 band**, and on La Redoute at the same point.
 
-One detail that mattered: the band gradient must be measured at its centre
-**distance**, not by resolving that centre to the nearest sampled coordinate.
-That quantisation alone under-read La Redoute's peak by a whole colour step.
+Three details mattered, and all three were found by looking at the map rather
+than at the numbers:
+
+- **The band gradient must be measured at its centre *distance***, not by
+  resolving that centre to the nearest sampled coordinate. That quantisation
+  alone under-read La Redoute's peak by a whole colour step.
+- **`lineGrad` must span the whole drawn line**, not just the climb.
+  `line-progress` runs 0..1 over the rendered geometry, so bands measured only
+  to the summit get stretched by the ratio between the two — on La Redoute that
+  drew the darkest band **145 m past** the marker. Covering the full line also
+  means a trailing descent is finally coloured as one instead of inheriting the
+  last climbing band.
+- **The steepest window must slide by a fixed step**, not from route vertex to
+  route vertex. A routing engine puts vertices where the road bends, so a
+  straight has almost none: on Côte d'Ereffe no vertex fell near 660 m, the
+  17.7% window there was never evaluated, and the marker landed **634 m away**
+  on a 17% stretch. Stepping by distance also makes the marker and the line
+  agree by construction, because both now measure the same way.
+
+Verified across all seven climbs: every marker now sits within one colour band
+of the darkest stretch, and within 20 m of it on six of them. The seventh is
+Hockai, where 167 m is a little over one band on a 17 km climb whose top
+windows are all within 0.1 of a point of each other.
 
 **The chart carries a distance axis.** With bars at a real width
 ([§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb)) a profile can be

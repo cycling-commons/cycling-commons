@@ -137,7 +137,13 @@ final class ClimbProfiler
             'avgGradient' => self::fmt(self::avgGradient($pts, $elev, $cum, $total), 1),
             'maxGradient' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0),
             'grad' => self::bars($pts, $elev, $cum, $total, self::binWidthFor($total)),
-            'lineGrad' => self::lineGradients($pts, $elev, $cum, $total),
+            // Spans the WHOLE drawn line, not just the climb: MapLibre's
+            // line-gradient maps these bands onto line-progress, which runs
+            // 0..1 over the rendered geometry. Measuring only to the summit
+            // stretched every band by the ratio between the two and pushed the
+            // darkest one 145 m past the marker on La Redoute
+            // (owner-reported 2026-08-05).
+            'lineGrad' => self::lineGradients($pts, $elev, $cum, $cum[\count($cum) - 1]),
             'steep' => ['at' => $steep['at'], 'pct' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0), 'manual' => false],
             'demSource' => $read['source'],
             // The bin the BARS are drawn at, so the chart can label itself.
@@ -198,22 +204,28 @@ final class ClimbProfiler
         $win = min((float) self::MAX_WINDOW_M, $total);
         $best = 0.0;
         $at = $pts[0];
-        foreach ($pts as $i => $_) {
-            $start = $cum[$i];
+        /* Slide at a FIXED step, not from vertex to vertex.
+
+           Starting a window at each route vertex sounds equivalent and is not:
+           a routing engine places vertices where the road bends, so a straight
+           gives you almost none. On Côte d'Ereffe that left a gap with no vertex
+           near 660 m, the 17.7% window there was never evaluated, and the marker
+           landed on a 17% stretch 634 m away — visibly off the darkest part of
+           the line (owner-reported 2026-08-05). A fixed step also makes this
+           agree with lineGradients(), which has always stepped by distance. */
+        $step = max(5.0, $win / 10);
+        for ($start = 0.0; $start <= $total - $win + 0.001; $start += $step) {
             $end = $start + $win;
-            if ($end > $total) {
-                $end = $total;
-                $start = max(0.0, $total - $win);
-            }
-            $d = $end - $start;
-            if ($d <= 0) {
-                continue;
-            }
-            $g = ((self::at($pts, $elev, $cum, $end)['elev'] - self::at($pts, $elev, $cum, $start)['elev']) / $d) * 100;
+            $g = ((self::at($pts, $elev, $cum, $end)['elev'] - self::at($pts, $elev, $cum, $start)['elev']) / $win) * 100;
             if ($g > $best) {
                 $best = $g;
                 $at = self::at($pts, $elev, $cum, ($start + $end) / 2)['coord'];
             }
+        }
+        // A climb shorter than one window still has a steepest stretch: itself.
+        if (0.0 === $best && $total > 0) {
+            $best = ((self::at($pts, $elev, $cum, $total)['elev'] - $elev[0]) / $total) * 100;
+            $at = self::at($pts, $elev, $cum, $total / 2)['coord'];
         }
 
         return ['g' => $best, 'at' => $at];
@@ -236,24 +248,31 @@ final class ClimbProfiler
      * construction, which is where the marker is. The bars keep their fixed
      * bins, because a chart needs comparable columns.
      *
+     * `$span` is the length of the DRAWN LINE, which is not always the length of
+     * the climb: a line running past its summit is longer. These bands are
+     * mapped onto `line-progress`, which runs 0..1 over the rendered geometry,
+     * so measuring over anything shorter stretches every band along the line.
+     * Covering the full line also means a trailing descent is coloured as one
+     * rather than inheriting the last climbing band.
+     *
      * @param list<array{0: float, 1: float}> $pts
      * @param list<float>                     $elev
      * @param list<float>                     $cum
      *
      * @return list<int>
      */
-    private static function lineGradients(array $pts, array $elev, array $cum, float $total): array
+    private static function lineGradients(array $pts, array $elev, array $cum, float $span): array
     {
-        $step = max(25.0, $total / 120);     // ~120 bands is plenty for a smooth line
+        $step = max(25.0, $span / 120);     // ~120 bands is plenty for a smooth line
         $out = [];
-        for ($d = 0.0; $d < $total; $d += $step) {
+        for ($d = 0.0; $d < $span; $d += $step) {
             // Measured at the band's own centre DISTANCE. Going via a
             // coordinate would snap to the nearest of the 200 samples first,
             // and that quantisation is enough to under-read the peak: La
             // Redoute's darkest band came out 15% beside a marker reading 17%,
             // which is a whole colour step.
             $out[] = (int) max(-35, min(35, (int) round(
-                self::sustainedAtDistance($pts, $elev, $cum, $total, $d + $step / 2),
+                self::sustainedAtDistance($pts, $elev, $cum, $span, $d + $step / 2),
             )));
         }
 
