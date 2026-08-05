@@ -740,7 +740,7 @@ function gradStrip(grad, f){
       : `<span class="cc-grad-up" style="height:${h}px;background:${gradColor(p)}"></span>`;
     return `<span class="cc-grad-col" style="--up:${upH}px;--dn:${dnH}px" title="${p}%">${cell}</span>`;
   }).join('');
-  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · avg ~{a}% · max {m}%', {a:avg, m:max})}</div>
+  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · avg {a}% · steepest 100m {m}%', {a:avg, m:max})}</div>
     <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>`;
 }
 function elevSvg(elev){

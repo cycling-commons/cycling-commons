@@ -113,9 +113,9 @@ final class ClimbProfiler
             'length' => $total,
             'gain' => $gain,
             'avgGradient' => self::fmt(self::avgGradient($pts, $elev, $cum, $total), 1),
-            'maxGradient' => '~'.self::fmt(min(35.0, max(0.0, $steep['g'])), 0),
+            'maxGradient' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0),
             'grad' => self::bars($pts, $elev, $cum, $total),
-            'steep' => ['at' => $steep['at'], 'pct' => '~'.self::fmt(min(35.0, max(0.0, $steep['g'])), 0), 'manual' => false],
+            'steep' => ['at' => $steep['at'], 'pct' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0), 'manual' => false],
             'demSource' => $read['source'],
             'binM' => self::AVG_BIN_M,
             'reversed' => false,
@@ -125,7 +125,7 @@ final class ClimbProfiler
             // is re-measured, over the same window the maximum uses (§5).
             'sustainedAtSteep' => null === $steepAt
                 ? null
-                : '~'.self::fmt(min(35.0, max(0.0, self::sustainedAt($pts, $elev, $cum, $total, $steepAt))), 0),
+                : self::fmt(min(35.0, max(0.0, self::sustainedAt($pts, $elev, $cum, $total, $steepAt))), 0),
         ];
     }
 

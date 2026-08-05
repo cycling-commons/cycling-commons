@@ -634,7 +634,7 @@ is how the edit form is kept from offering a box for any of it.
 | `length` | great-circle length of the routed line |
 | `gain` | summit elevation − foot elevation |
 | `avgGradient` | **ascent only**: the sum of the climbing, over the length — see [§4b](#4b-average-gradient-counts-only-the-climbing) |
-| `maxGradient` | the steepest sustained window — see [§5](#5-the-steepest-ramp-is-found-not-placed) |
+| `maxGradient` | the **steepest 100 m** — see [§5](#5-the-steepest-ramp-is-found-not-placed) |
 | `grad` | per-bin gradients, bin width per [§3](#3-sampling-and-binning) |
 | `elev` | elevation at each bin edge, for the silhouette |
 | `binM` | the bin width in metres, so the chart can label itself |
@@ -764,6 +764,40 @@ and the model is not: a marker they move is flagged `manual: true` and keeps its
 position, with its percentage re-read from the profile at that point (already
 the behaviour in `climb-editor.js`). An automatic marker is re-derived whenever
 the line changes.
+
+**And it is labelled "steepest 100m", not "max gradient"** (owner, 2026-08-05).
+The name was doing damage the number could not fix: "max gradient" invites
+comparison with a **point** maximum, so Mur de Huy's famous ~26% — its steepest
+hairpin — read as a contradiction of our 19%, when the two simply measure
+different distances. Naming the window settles it, and it is why the figure
+ships without a `~`: a tilde on a value whose measurement distance is stated is
+hedging about something that is not uncertain. The average ships plain for the
+same reason, which closes the accidental split
+[§9](#9-owner-decisions-still-open) flagged.
+
+**Could we publish a shorter "max ramp" as well?** Measured on the live GLO-30
+service, 2026-08-05, at four window widths:
+
+| climb | 25 m | 50 m | 100 m | 150 m |
+|---|---|---|---|---|
+| Mur de Huy | 20% | 20% | **20%** | 18% |
+| Côte de Stockeu | **41%** | 38% | 27% | 23% |
+| Côte de la Redoute | 21% | 18% | 17% | 16% |
+| Côte d'Ereffe | 23% | 21% | 19% | 16% |
+
+**No — not from this data.** GLO-30's cells are ~30 m, so a 25 m window is *less
+than one cell*, and the table shows exactly the two failures that predicts.
+Shortening the window does **not** recover Mur de Huy's famous 26% — the DEM
+cannot see that hairpin at any width, because the hairpin is smaller than a
+cell. And it invents **41%** on Stockeu, a gradient no paved road has. A shorter
+window yields a bigger number, not a truer one, which is
+[§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw)'s
+failure one scale down.
+
+What would actually measure a ramp is a finer source — Wallonia publishes 1 m
+LiDAR terrain data — or a rider with a known-good device. Both are real options
+and neither is this dataset. Until then, publishing a 25 m figure would be
+inventing precision.
 
 **Why 100 m** (owner, 2026-08-04). It was 150 m, chosen only as a
 noise-averaging distance. But the window is not a free parameter: climb
@@ -904,15 +938,12 @@ the chart is only honest once they are done.
   something to read it.
 - **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
   are updated.
-- **`~` in published gradients** — measured values are numbers; the catalog's
-  editorial strings (`~20% (mid-climb ramp)`) carry an approximation marker and
-  a parenthetical. Once figures are measured, is the tilde still wanted, and
-  does the parenthetical survive as separate prose? Partly answered by
-  [§4b](#4b-average-gradient-counts-only-the-climbing): the average now ships as
-  a plain one-decimal number, while the maximum still carries `~` from the
-  editor. That split is currently accidental rather than decided.
-- **The recompute changes numbers people know.** Once
-  [§7](#7-migration)'s sweep runs, Stockeu moves from `9%+` to about 14% and
-  Roche-aux-Faucons from `9%` to about 5.7%. Whether that lands silently or with
-  a note explaining why the figures changed is an editorial call, not a
-  technical one.
+- **Whether the changed numbers need saying out loud.** The sweep ran on
+  2026-08-05 and moved figures riders recognise — Stockeu from `9%+` to 14.0%,
+  Mur de Huy's maximum from `~26%` to 19% under its new name. The naming carries
+  most of the explanation, but whether a rider who knew the old numbers gets
+  told *why* they changed is still an editorial call rather than a technical one.
+
+*(Closed: the `~` question — measured values ship plain, and the maximum states
+the distance it is measured over, so there is nothing left to hedge. See
+[§5](#5-the-steepest-ramp-is-found-not-placed).)*

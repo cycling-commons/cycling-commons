@@ -53,7 +53,11 @@ final class SubmissionChangeSummaryTest extends TestCase
 
         self::assertNull($rows[0]['was'], 'no previous value means no struck-out line');
         self::assertSame('17', $rows[0]['now']);
-        self::assertSame('Max gradient (%)', $rows[0]['label']);
+        // The label states the distance the figure is measured over. "Max
+        // gradient" invited comparison with a point maximum — Mur de Huy's
+        // famous ~26% is its steepest hairpin, not its steepest 100 m — and a
+        // rider reading a change needs to know which one moved.
+        self::assertSame('Steepest 100m (%)', $rows[0]['label']);
     }
 
     /**
