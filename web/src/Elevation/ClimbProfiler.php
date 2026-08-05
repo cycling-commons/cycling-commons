@@ -137,13 +137,21 @@ final class ClimbProfiler
             'avgGradient' => self::fmt(self::avgGradient($pts, $elev, $cum, $total), 1),
             'maxGradient' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0),
             'grad' => self::bars($pts, $elev, $cum, $total, self::binWidthFor($total)),
-            // Spans the WHOLE drawn line, not just the climb: MapLibre's
-            // line-gradient maps these bands onto line-progress, which runs
-            // 0..1 over the rendered geometry. Measuring only to the summit
-            // stretched every band by the ratio between the two and pushed the
-            // darkest one 145 m past the marker on La Redoute
-            // (owner-reported 2026-08-05).
-            'lineGrad' => self::lineGradients($pts, $elev, $cum, $cum[\count($cum) - 1]),
+            /* Spans the CLIMB, and the map must draw only the climb to match.
+               These bands are mapped onto `line-progress`, which runs 0..1 over
+               whatever geometry is rendered, so the two extents have to be the
+               same or every band is stretched along the line — measuring to the
+               summit while drawing the whole route pushed the darkest band 145 m
+               past the marker (owner-reported 2026-08-05).
+
+               Drawing the climb rather than the whole line is also what makes
+               the map agree with everything else published: La Redoute's stored
+               contribution runs 361 m past its summit and gently descends, so
+               the map showed 2.44 km with a blue tail beside a chart and a
+               length that both said 2.1 km. The overshoot is kept in `route` —
+               it is a rider's contribution, and §4a warns rather than
+               discarding — but it is not part of the climb. */
+            'lineGrad' => self::lineGradients($pts, $elev, $cum, $total),
             'steep' => ['at' => $steep['at'], 'pct' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0), 'manual' => false],
             'demSource' => $read['source'],
             // The bin the BARS are drawn at, so the chart can label itself.

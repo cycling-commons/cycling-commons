@@ -82,6 +82,34 @@ export function clearDynamic(){
 }
 // draw a polyline with a light casing so it stays visible over the tinted basemap
 // climb line coloured by gradient (line-gradient over the route)
+/* Cut a stored line down to the climb it describes.
+
+   `length` is measured to the summit (climb-elevation.md §4a); the drawn line
+   may continue past it. Returns the original when there is no measured length
+   (a climb not yet re-measured) or when the line already stops at the summit,
+   so nothing is hidden that was not already excluded from every published
+   figure. The final vertex is interpolated so the line ends exactly at the
+   summit rather than at the nearest vertex before it. */
+export function trimToClimb(latlngs, lengthM){
+  const want = Number(lengthM);
+  if(!Array.isArray(latlngs) || latlngs.length < 2 || !(want > 0)) return latlngs;
+  const R=6371000, rad=d=>d*Math.PI/180;
+  const seg=(a,b)=>{ const x=rad(b[1]-a[1])*Math.cos(rad((a[0]+b[0])/2)), y=rad(b[0]-a[0]);
+    return Math.sqrt(x*x+y*y)*R; };
+  let acc=0;
+  for(let i=1;i<latlngs.length;i++){
+    const d=seg(latlngs[i-1],latlngs[i]);
+    if(acc+d >= want){
+      const t=(want-acc)/(d||1);
+      const end=[latlngs[i-1][0]+t*(latlngs[i][0]-latlngs[i-1][0]),
+                 latlngs[i-1][1]+t*(latlngs[i][1]-latlngs[i-1][1])];
+      return latlngs.slice(0,i).concat([end]);
+    }
+    acc+=d;
+  }
+  return latlngs;   // the line never reaches the stated length: draw all of it
+}
+
 export function drawClimbLine(id, latlngs, grad, layer, f){
   if(!map.getSource(id)) map.addSource(id,{type:'geojson',lineMetrics:true,data:{type:'Feature',properties:{},
     geometry:{type:'LineString',coordinates:latlngs.map(p=>[p[1],p[0]])}}});
@@ -459,8 +487,17 @@ export function render(){
              road (owner-reported 2026-08-05). Falls back to the bars for a
              climb not yet re-measured. */
           const lineG = (f.lineGrad && f.lineGrad.length) ? f.lineGrad : f.grad;
-          if(lineG) drawClimbLine(`route-${layer.key}-${i}`, f.route, lineG, layer, f);
-          else drawLine(`route-${layer.key}-${i}`, f.route, layer.color, layer, f);
+          /* Draw the CLIMB, not necessarily the whole stored line. A line that
+             runs past its summit is longer than the climb, and line-progress
+             spreads the colour bands over whatever geometry is drawn — so
+             rendering the full route stretched every band AND showed a
+             descending blue tail beside a chart and a length that both stopped
+             at the summit (owner-reported 2026-08-05). The overshoot stays in
+             `route`: it is a contribution, and §4a warns rather than discarding
+             it. It is simply not part of the climb. */
+          const climbRoute = trimToClimb(f.route, f.length);
+          if(lineG) drawClimbLine(`route-${layer.key}-${i}`, climbRoute, lineG, layer, f);
+          else drawLine(`route-${layer.key}-${i}`, climbRoute, layer.color, layer, f);
           if(f.steep){
             const sEl=document.createElement('div');
             sEl.className='cc-steep'; sEl.textContent=f.steep.pct;

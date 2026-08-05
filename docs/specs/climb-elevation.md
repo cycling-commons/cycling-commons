@@ -930,12 +930,17 @@ than at the numbers:
 - **The band gradient must be measured at its centre *distance***, not by
   resolving that centre to the nearest sampled coordinate. That quantisation
   alone under-read La Redoute's peak by a whole colour step.
-- **`lineGrad` must span the whole drawn line**, not just the climb.
-  `line-progress` runs 0..1 over the rendered geometry, so bands measured only
-  to the summit get stretched by the ratio between the two — on La Redoute that
-  drew the darkest band **145 m past** the marker. Covering the full line also
-  means a trailing descent is finally coloured as one instead of inheriting the
-  last climbing band.
+- **`lineGrad` and the drawn geometry must cover the same extent.**
+  `line-progress` runs 0..1 over whatever is rendered, so bands measured over a
+  different length get stretched — measuring to the summit while drawing the
+  whole route pushed the darkest band **145 m past** the marker. The fix is to
+  make both the *climb*: the map draws foot-to-summit, which is what every
+  published figure already describes. Drawing the whole stored line instead put
+  a 2.44 km line with a descending blue tail beside a chart and a length that
+  both said 2.1 km (owner-reported 2026-08-05). The overshoot stays in `route` —
+  it is a contribution, and [§4a](#4a-the-line-must-end-at-the-summit) warns
+  rather than discarding — but it is not part of the climb, so it is not drawn
+  as one.
 - **The steepest window must slide by a fixed step**, not from route vertex to
   route vertex. A routing engine puts vertices where the road bends, so a
   straight has almost none: on Côte d'Ereffe no vertex fell near 660 m, the
