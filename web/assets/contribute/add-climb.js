@@ -113,7 +113,7 @@
   cmap.on('load', function () {
     editor = window.Cc.mountClimbEditor({
       map: cmap,
-      hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg') },
+      hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg'), steepPoint: fld('steepPoint') },
       onHistory: function (depth) { if (undoBtn) undoBtn.hidden = 0 === depth; },
       onChange: function (st) {
         S.start = st.start; S.summit = st.summit; S.lengthKm = st.lengthKm;

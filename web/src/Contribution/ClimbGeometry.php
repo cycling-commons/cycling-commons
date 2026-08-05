@@ -42,6 +42,19 @@ final class ClimbGeometry
         if (self::present($payload['steep'] ?? null)) {
             $out['steep'] = self::steep(self::json((string) $payload['steep']));
         }
+        /* The RIDER's steepest point, which is a different thing from `steep`.
+
+           `steep` is ours: the steepest sustained 100 m the elevation model can
+           see, derived on every redraw. `steepPoint` is a contribution — where
+           the wall actually is, on a road someone has ridden. They exist
+           separately because the model cannot answer the second question at
+           all: Mur de Huy's Chapelle hairpin is smaller than one DEM cell, so
+           no window width recovers its ~26%. That is information the dataset
+           does not contain and a rider does
+           (climb-elevation.md §5a, owner 2026-08-05). */
+        if (self::present($payload['steepPoint'] ?? null)) {
+            $out['steepPoint'] = self::steepPoint(self::json((string) $payload['steepPoint']));
+        }
         // The editor's ascent-only average, already formatted ("5.7%"). Kept as
         // the string it will be displayed as, like `steep.pct`, rather than
         // re-parsed into a number the drawer would have to format again.
@@ -158,6 +171,55 @@ final class ClimbGeometry
             'pct' => $pct,
             'manual' => (bool) ($v['manual'] ?? false),
         ];
+    }
+
+    /**
+     * The rider-placed steepest point: where the wall actually is.
+     *
+     * Deliberately its own attribute rather than an edit to `steep`. Ours is the
+     * steepest sustained 100 m the model can see, measured identically on every
+     * climb, which is what makes it comparable and sortable. If riders could
+     * overwrite it, the published field would mean something different on every
+     * climb depending on whether anyone happened to edit it — which is exactly
+     * how the catalogue ended up publishing four definitions of "max gradient"
+     * under one name (climb-elevation.md §1a, §5a).
+     *
+     * `pct` is optional: a rider may know *where* the wall is without knowing
+     * how steep, and forcing a number would invite invented ones. `note` gives
+     * them somewhere to say what they do know ("the hairpin after the chapel").
+     *
+     * @return array{at:array{0:float,1:float}, pct:string, note:string}
+     */
+    private static function steepPoint(mixed $v): array
+    {
+        $at = \is_array($v) ? ($v['at'] ?? null) : null;
+        if (!\is_array($at) || 2 !== \count($at) || !\is_numeric($at[0] ?? null) || !\is_numeric($at[1] ?? null)) {
+            throw new \InvalidArgumentException('steepPoint.at must be [lat,lng]');
+        }
+        $lat = (float) $at[0];
+        $lng = (float) $at[1];
+        if (!is_finite($lat) || !is_finite($lng) || $lat < -90.0 || $lat > 90.0 || $lng < -180.0 || $lng > 180.0) {
+            throw new \InvalidArgumentException('steepPoint.at must be [lat,lng]');
+        }
+
+        $pctRaw = $v['pct'] ?? '';
+        if (\is_array($pctRaw)) {
+            throw new \InvalidArgumentException('steepPoint.pct must be a scalar gradient value');
+        }
+        $pct = trim((string) $pctRaw);
+        if ('' !== $pct && 1 !== preg_match('/^~?\d{1,2}(\.\d{1,2})?%?$/', $pct)) {
+            throw new \InvalidArgumentException('steepPoint.pct must look like a gradient, e.g. "26%"');
+        }
+
+        $noteRaw = $v['note'] ?? '';
+        if (\is_array($noteRaw)) {
+            throw new \InvalidArgumentException('steepPoint.note must be text');
+        }
+        // Bounded like any other free text reaching published attributes: this
+        // is a landmark, not a paragraph.
+        $note = mb_substr(trim((string) $noteRaw), 0, 120);
+
+        return ['at' => [$lat, $lng], 'pct' => $pct, 'note' => $note];
     }
 
     /**

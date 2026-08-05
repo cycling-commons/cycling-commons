@@ -1395,6 +1395,8 @@ map:
   d_view_profile: 'voir le profil'
   d_shared_anon: 'Partagé anonymement'
   d_steepest: 'Pente maximale'
+  d_rider_steepest: 'Point le plus raide, signalé par un cycliste'
+  d_rider_ramp: 'rampe'
   d_fresh_fresh: 'récent'
   d_fresh_ageing: 'vieillissant'
   d_fresh_stale: 'périmé'

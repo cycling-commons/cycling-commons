@@ -130,6 +130,77 @@ final class ClimbGeometryTest extends TestCase
         }
     }
 
+    /**
+     * The rider's steepest point is a SEPARATE attribute from our derived one.
+     *
+     * Ours is the steepest sustained 100 m the elevation model can see, measured
+     * identically on every climb, which is what makes it comparable and
+     * sortable. Theirs is knowledge the model does not have — a hairpin smaller
+     * than one DEM cell is invisible at any window width. If they shared a
+     * field, the published value would mean something different on every climb
+     * depending on who had edited it (climb-elevation.md §5a).
+     */
+    public function testTheRidersSteepestPointIsItsOwnAttribute(): void
+    {
+        $out = ClimbGeometry::fromPayload([
+            'steep' => '{"at":[50.5,5.2],"pct":"17%","manual":false}',
+            'steepPoint' => '{"at":[50.51,5.21],"pct":"26%","note":"the hairpin after the chapel"}',
+        ]);
+
+        self::assertSame([50.5, 5.2], $out['steep']['at'], 'the derived marker is untouched');
+        self::assertSame('17%', $out['steep']['pct']);
+        self::assertSame([50.51, 5.21], $out['steepPoint']['at']);
+        self::assertSame('26%', $out['steepPoint']['pct']);
+        self::assertSame('the hairpin after the chapel', $out['steepPoint']['note']);
+    }
+
+    /**
+     * A rider may know WHERE the wall is without knowing how steep. Demanding a
+     * number would invite an invented one.
+     */
+    public function testAPlaceWithoutAPercentageIsAccepted(): void
+    {
+        $out = ClimbGeometry::fromPayload(['steepPoint' => '{"at":[50.51,5.21]}']);
+
+        self::assertSame([50.51, 5.21], $out['steepPoint']['at']);
+        self::assertSame('', $out['steepPoint']['pct']);
+        self::assertSame('', $out['steepPoint']['note']);
+    }
+
+    public function testTheRidersPointIsHeldToTheSameGradientShape(): void
+    {
+        foreach (['<script>', 'Array', '200%', 'steep!', '~~9'] as $bad) {
+            try {
+                ClimbGeometry::fromPayload(['steepPoint' => '{"at":[50.5,5.2],"pct":"'.$bad.'"}']);
+                self::fail(sprintf('"%s" should not be accepted as a gradient', $bad));
+            } catch (\InvalidArgumentException) {
+                self::assertTrue(true);
+            }
+        }
+    }
+
+    public function testTheRidersPointMustBeSomewhereOnEarth(): void
+    {
+        foreach (['{"at":[95,5.2]}', '{"at":[50.5,200]}', '{"at":[50.5]}', '{"at":"nope"}'] as $bad) {
+            try {
+                ClimbGeometry::fromPayload(['steepPoint' => $bad]);
+                self::fail(sprintf('%s should not be accepted as a position', $bad));
+            } catch (\InvalidArgumentException) {
+                self::assertTrue(true);
+            }
+        }
+    }
+
+    /** A landmark, not a paragraph — free text reaching published attributes is bounded. */
+    public function testTheNoteIsBounded(): void
+    {
+        $out = ClimbGeometry::fromPayload([
+            'steepPoint' => '{"at":[50.5,5.2],"note":"'.str_repeat('x', 400).'"}',
+        ]);
+
+        self::assertSame(120, mb_strlen($out['steepPoint']['note']));
+    }
+
     /** The '~' buys nothing else: it is one optional character, not a bypass. */
     public function testTheApproximateMarkerDoesNotOpenTheRuleUp(): void
     {

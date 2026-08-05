@@ -1398,6 +1398,8 @@ map:
   d_view_profile: 'Profil ansehen'
   d_shared_anon: 'Anonym geteilt'
   d_steepest: 'Steilste Rampe'
+  d_rider_steepest: 'Steilster Punkt, von einem Radfahrer markiert'
+  d_rider_ramp: 'Rampe'
   d_fresh_fresh: 'aktuell'
   d_fresh_ageing: 'alternd'
   d_fresh_stale: 'veraltet'

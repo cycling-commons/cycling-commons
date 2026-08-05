@@ -1395,6 +1395,8 @@ map:
   d_view_profile: 'bekijk profiel'
   d_shared_anon: 'Anoniem gedeeld'
   d_steepest: 'Steilste stuk'
+  d_rider_steepest: 'Steilste punt, aangegeven door een fietser'
+  d_rider_ramp: 'steilte'
   d_fresh_fresh: 'vers'
   d_fresh_ageing: 'verouderend'
   d_fresh_stale: 'verouderd'

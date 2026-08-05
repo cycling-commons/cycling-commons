@@ -321,8 +321,12 @@
     var placeAt = null;
 
     if (isClimb) {
-      var initial = (window.CC_ITEM.route || window.CC_ITEM.grad || window.CC_ITEM.steep)
-        ? { route: window.CC_ITEM.route, grad: window.CC_ITEM.grad, steep: window.CC_ITEM.steep }
+      var initial = (window.CC_ITEM.route || window.CC_ITEM.grad || window.CC_ITEM.steep || window.CC_ITEM.steepPoint)
+        ? { route: window.CC_ITEM.route, grad: window.CC_ITEM.grad, steep: window.CC_ITEM.steep,
+            // The rider-placed steepest point, if this climb already has one.
+            // Without it the editor would drop an existing contribution the
+            // moment anyone edited anything else about the climb.
+            steepPoint: window.CC_ITEM.steepPoint }
         : undefined;
 
       // Undo is only offered once there is something to take back — a control
@@ -330,7 +334,7 @@
       var undoBtn = document.getElementById('wzUndo');
       climbEditor = window.Cc.mountClimbEditor({
         map: wmap,
-        hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg') },
+        hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg'), steepPoint: fld('steepPoint') },
         initial: initial,
         onHistory: function (depth) { if (undoBtn) undoBtn.hidden = 0 === depth; },
         onChange: function (st) {

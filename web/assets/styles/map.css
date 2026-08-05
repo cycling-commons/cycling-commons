@@ -624,6 +624,14 @@
     padding:.16rem .42rem;border-radius:10px;border:1.5px solid #8B45C0;
     box-shadow:0 2px 7px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
   .cc-steep::before{content:"▲";font-size:.55rem;color:#C79BE8}
+  /* The rider-marked steepest point. Deliberately a DIFFERENT colour and glyph
+     from the derived marker beside it: they answer different questions — ours
+     is the steepest sustained 100 m the model can see, theirs is where the wall
+     actually is — and a reader has to be able to tell which is which at a
+     glance. Amber against the purple, and a filled marker rather than a
+     triangle. */
+  .cc-steep-rider{color:#F2C46B;border-color:#C98A22}
+  .cc-steep-rider::before{content:"⬗";color:#F2C46B}
   /* Pulse via a compositable pseudo-element transform/opacity, not a box-shadow
      spread repaint every frame over the map canvas (review W10). */
   /* Selection halo: a transparent-centre glowing ring + expanding pulse, so the

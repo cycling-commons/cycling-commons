@@ -23,6 +23,9 @@ submission boundary by `App\Contribution\ClimbGeometry::fromPayload()`):
 | `route` | list of `[lat, lng]` pairs | the track, foot → summit (direction-bearing) |
 | `grad` | list of numbers | per-segment gradient profile (renders the coloured line + profile bars) |
 | `steep` | `{at: [lat, lng], pct: string, manual: bool}` | the steepest ramp marker (the "▲26%" badge) |
+| `steepPoint` | `{at: [lat, lng], pct: string, note: string}` | the **rider's** steepest point — see below |
+| `lineGrad` | list of numbers | per-position gradients that colour the map line (the bars use `grad`) |
+| `length` · `gain` · `binM` · `demSource` | numbers / string | derived and stored ([../climb-elevation.md §4](../climb-elevation.md)) |
 
 Validation invariants (`App\Contribution\ClimbGeometry`): `route`/`grad` are capped at
 `ClimbGeometry::MAX_POINTS` (currently 2000) entries; coordinates must be finite and in
@@ -49,6 +52,17 @@ put the dataset behind a setting instead of a third party's choice, and the samp
 behind our own limit rather than theirs
 ([../climb-elevation.md §2b-i](../climb-elevation.md)). Requests time out after `FETCH_TIMEOUT_MS` (`climb-editor.js`,
 currently 10 s).
+
+**Two steepest markers, and they are not the same thing.** `steep` is ours: the
+steepest sustained 100 m the elevation model can see, derived on every redraw
+and never edited, which is what makes it comparable between climbs.
+`steepPoint` is the rider's — where the wall actually is, placed by hand with a
+distinct amber icon, optionally carrying a percentage and a short note. It
+exists because the model *cannot* answer that question: a hairpin smaller than
+one DEM cell is invisible to it at any window width, so nothing recovers Mur de
+Huy's ~26% by computing harder. Placement is a mode (`markSteepestPoint()`),
+not a fourth tap, because it is optional and repeatable. See
+[../climb-elevation.md §5a](../climb-elevation.md).
 
 **Steepest: found, not placed.** The marker is derived from the steepest sustained
 ~100 m window, and an automatic one is **re-derived on every route change** — the line is

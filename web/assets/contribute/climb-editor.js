@@ -22,8 +22,13 @@
       foot: 'START · foot', summit: 'END · summit', steepest: 'STEEPEST'
     };
 
-    var state = { start: null, summit: null, steep: null, route: [], grad: [], avg: '', lengthKm: 0 };
-    var footM = null, summitM = null, steepM = null;
+    var state = { start: null, summit: null, steep: null, steepPoint: null, route: [], grad: [], avg: '', lengthKm: 0 };
+    var footM = null, summitM = null, steepM = null, riderM = null;
+    /* When armed, the next map tap places the RIDER's steepest point instead of
+       moving our derived marker. A mode rather than a fourth tap in the
+       sequence, because it is optional and repeatable: most climbs never get
+       one, and a rider who places one usually wants to nudge it afterwards. */
+    var placingRider = false;
     var routeSeq = 0;
     var profileSeq = 0;
     var routeCtl = null;      // AbortController for the in-flight OSRM request
@@ -89,6 +94,12 @@
       if (state.start) { footM = mkMarker(state.start, 'foot', true, labels.foot); bindDrag(footM, onFootMoved); }
       if (state.summit) { summitM = mkMarker(state.summit, 'summit', true, labels.summit); bindDrag(summitM, onSummitMoved); }
       if (state.steep) { steepM = mkMarker(state.steep.at, 'steep', true, labels.steepest + ' · ' + state.steep.pct); bindDrag(steepM, onSteepDragged); }
+      // storage order [lat,lng] -> editor order [lng,lat], as for route/steep.
+      if (initial.steepPoint && initial.steepPoint.at) {
+        state.steepPoint = { at: [initial.steepPoint.at[1], initial.steepPoint.at[0]],
+                             pct: initial.steepPoint.pct || '', note: initial.steepPoint.note || '' };
+        placeRiderMarker();
+      }
       drawLine();
       /* Put the climb on screen. The map's centre comes from whatever the page
          could work out before this ran — the item's coordinates if the caller
@@ -133,6 +144,7 @@
         route: state.route.map(function (c) { return c.slice(); }),
         grad: state.grad.slice(),
         avg: state.avg,
+        steepPoint: state.steepPoint ? { at: state.steepPoint.at.slice(), pct: state.steepPoint.pct, note: state.steepPoint.note } : null,
         lengthKm: state.lengthKm
       });
       if (history.length > HISTORY_MAX) history.shift();
@@ -147,6 +159,7 @@
       if (state.start) { footM = mkMarker(state.start, 'foot', true, labels.foot); bindDrag(footM, onFootMoved); }
       if (state.summit) { summitM = mkMarker(state.summit, 'summit', true, labels.summit); bindDrag(summitM, onSummitMoved); }
       if (state.steep) { steepM = mkMarker(state.steep.at, 'steep', true, labels.steepest + (state.steep.pct ? ' · ' + state.steep.pct : '')); bindDrag(steepM, onSteepDragged); }
+      placeRiderMarker();
     }
 
     function undo() {
@@ -161,6 +174,8 @@
       state.start = prev.start; state.summit = prev.summit; state.steep = prev.steep;
       state.route = prev.route; state.grad = prev.grad; state.lengthKm = prev.lengthKm;
       state.avg = prev.avg;
+      state.steepPoint = prev.steepPoint;
+      placeRiderMarker();
       remarkers();
       drawLine();
       writeHidden();
@@ -182,6 +197,8 @@
         summitM = mkMarker(ll, 'summit', true, labels.summit);
         bindDrag(summitM, onSummitMoved);
         onPointsChanged();
+      } else if (placingRider) {
+        setRiderPoint(ll);
       } else {
         setManualSteep(ll);
       }
@@ -380,6 +397,47 @@
       writeHidden();
     }
 
+    /* The rider's steepest point — where the wall actually is.
+
+       Kept apart from `state.steep` on purpose. Ours is the steepest sustained
+       100 m the elevation model can see, measured identically on every climb,
+       which is what makes it comparable. Theirs is knowledge the model does not
+       have: a hairpin smaller than one DEM cell is invisible at any window
+       width, so no amount of computing recovers Mur de Huy's 26%
+       (climb-elevation.md 5a). It never moves on its own — only the rider
+       places, drags or clears it. */
+    function setRiderPoint(ll, pct, note) {
+      state.steepPoint = {
+        at: ll,
+        pct: pct !== undefined ? pct : (state.steepPoint ? state.steepPoint.pct : ''),
+        note: note !== undefined ? note : (state.steepPoint ? state.steepPoint.note : '')
+      };
+      placingRider = false;
+      placeRiderMarker();
+      writeHidden();
+    }
+
+    function clearRiderPoint() {
+      snapshot();
+      state.steepPoint = null;
+      placingRider = false;
+      placeRiderMarker();
+      writeHidden();
+    }
+
+    function armRiderPoint() {
+      placingRider = true;
+      if (onChange) onChange(publicState());
+    }
+
+    function placeRiderMarker() {
+      if (riderM) { riderM.remove(); riderM = null; }
+      if (!state.steepPoint) return;
+      riderM = mkMarker(state.steepPoint.at, 'rider', true,
+        (labels.riderSteep || 'STEEPEST POINT') + (state.steepPoint.pct ? ' · ' + state.steepPoint.pct : ''));
+      bindDrag(riderM, function (ll) { snapshot(); setRiderPoint(ll); });
+    }
+
     /* Is the steepest marker still ON the climb?
 
        Measured against the nearest route vertex. OSRM returns a dense line
@@ -449,6 +507,10 @@
       if (hidden.grad) hidden.grad.value = JSON.stringify(state.grad);
       // Derived, never typed - see climb-elevation.md 4 and ascentOnlyAverage().
       if (hidden.avg) hidden.avg.value = state.avg || '';
+      if (hidden.steepPoint) hidden.steepPoint.value = state.steepPoint
+        ? JSON.stringify({ at: [state.steepPoint.at[1], state.steepPoint.at[0]],
+                           pct: state.steepPoint.pct || '', note: state.steepPoint.note || '' })
+        : '';
       if (hidden.steep) hidden.steep.value = state.steep
         ? JSON.stringify({ at: [state.steep.at[1], state.steep.at[0]], pct: state.steep.pct, manual: !!state.steep.manual })
         : '';
@@ -458,6 +520,7 @@
     function publicState() {
       return {
         start: state.start, summit: state.summit, steep: state.steep, lengthKm: state.lengthKm, avg: state.avg,
+        steepPoint: state.steepPoint, placingRider: placingRider,
         // In-flight/failure signals so the host wizard can gate Next/Submit and
         // tell the contributor when snapping or the gradient profile failed.
         routing: routing, profiling: profiling,
@@ -512,10 +575,15 @@
     }
 
     function mkMarker(ll, cls, draggable, labelText) {
-      var fill = cls === 'summit' ? '#FF5A1F' : cls === 'steep' ? '#D92D20' : '#1C3A2A';
+      // 'rider' is the contributor's own steepest point — amber, and a filled
+      // glyph rather than a triangle, so it is never mistaken for our derived
+      // marker sitting beside it (climb-elevation.md 5a).
+      var fill = cls === 'summit' ? '#FF5A1F' : cls === 'steep' ? '#D92D20' : cls === 'rider' ? '#C98A22' : '#1C3A2A';
       var glyph = cls === 'steep'
         ? '<text x="12" y="15" text-anchor="middle" font-size="10" font-weight="bold" fill="#EFE6D4">▲</text>'
-        : '';
+        : cls === 'rider'
+          ? '<text x="12" y="15.5" text-anchor="middle" font-size="10" font-weight="bold" fill="#14160E">⬗</text>'
+          : '';
       var wrap = document.createElement('div');
       wrap.className = 'cc-marker';
       wrap.dataset.mkType = cls;
@@ -553,6 +621,15 @@
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    return { destroy: destroy, reset: reset, undo: undo, canUndo: function () { return history.length > 0; } };
+    return {
+      destroy: destroy, reset: reset, undo: undo,
+      canUndo: function () { return history.length > 0; },
+      // The rider's steepest point: arm a placement, drag it, clear it. Exposed
+      // rather than driven by a fourth tap because it is optional and
+      // repeatable — most climbs never get one (climb-elevation.md 5a).
+      markSteepestPoint: armRiderPoint,
+      clearSteepestPoint: clearRiderPoint,
+      setSteepestPoint: setRiderPoint
+    };
   };
 })();

@@ -476,6 +476,24 @@ export function render(){
               .setLngLat([f.steep.at[1],f.steep.at[0]]).addTo(map);
             markers.push(sm);
           }
+          /* The RIDER's steepest point, alongside ours rather than instead of
+             it. Ours is the steepest sustained 100 m the elevation model can
+             see; theirs is where the wall actually is, on a road they have
+             ridden — and the model cannot answer that at all, because a hairpin
+             smaller than one DEM cell is invisible to it at any window width
+             (climb-elevation.md §5a). Distinct icon so the two are never
+             mistaken for each other. */
+          if(f.steepPoint && f.steepPoint.at){
+            const rEl=document.createElement('div');
+            rEl.className='cc-steep cc-steep-rider';
+            rEl.textContent=f.steepPoint.pct || (D.riderRamp||'ramp');
+            rEl.title=[D.riderSteepest||'Steepest point, marked by a rider',
+                       f.steepPoint.pct, f.steepPoint.note].filter(Boolean).join(' · ');
+            rEl.addEventListener('click',e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin([f.steepPoint.at[1],f.steepPoint.at[0]]); });
+            const rm=new maplibregl.Marker({element:rEl,anchor:'center'})
+              .setLngLat([f.steepPoint.at[1],f.steepPoint.at[0]]).addTo(map);
+            markers.push(rm);
+          }
         }
         const el = pinEl(layer,f.cur,f);
         el.style.cursor='pointer';

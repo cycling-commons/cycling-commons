@@ -149,6 +149,9 @@ final class AddClimbType extends AbstractType
             // Ascent-only average, computed by the editor from the drawn line.
             // Derived, never typed: climb-elevation.md 4.
             ->add('avg', HiddenType::class, ['label' => false, 'required' => false])
+            // The RIDER's steepest point, distinct from our derived `steep`:
+            // climb-elevation.md 5a.
+            ->add('steepPoint', HiddenType::class, ['label' => false, 'required' => false])
         ;
     }
 

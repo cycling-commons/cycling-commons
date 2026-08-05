@@ -1711,6 +1711,8 @@ map:
   d_view_profile: 'view profile'
   d_shared_anon: 'Shared anonymously'
   d_steepest: 'Steepest pitch'
+  d_rider_steepest: 'Steepest point, marked by a rider'
+  d_rider_ramp: 'ramp'
   d_fresh_fresh: 'fresh'
   d_fresh_ageing: 'ageing'
   d_fresh_stale: 'stale'

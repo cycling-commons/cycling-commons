@@ -33,7 +33,13 @@ final class AttributeVocabulary
         // 'attribution' (not 'source'): the climbs export preserves the citation
         // as `attribution` since `source` is reserved for provenance
         // (App\Catalog\ItemSource).
-        'B' => ['headline', 'cur', 'sq', 'tr', 'record', 'attribution', 'route', 'grad', 'steep'],
+        // Derived-and-stored measurements (climb-elevation.md §4) sit here rather
+        // than in the registry: nobody types them, so they are not form fields,
+        // but they must survive an import round-trip. `steepPoint` is the one
+        // exception in spirit — a rider places it — but it is geometry, not a
+        // text field, so it travels with `route`/`steep` (§5a).
+        'B' => ['headline', 'cur', 'sq', 'tr', 'record', 'attribution', 'route', 'grad',
+            'steep', 'steepPoint', 'lineGrad', 'binM', 'length', 'gain', 'demSource'],
         // serviceKind (App\Catalog\ServiceKind: shop/station/pump) - D/bike-services only.
         // Not a registry field: it's harvester/import-stamped (tools/wallonia's
         // service_kind_by_label + ImportCatalogCommand's legacy-label fallback),

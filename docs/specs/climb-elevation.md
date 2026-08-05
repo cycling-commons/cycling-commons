@@ -819,9 +819,27 @@ different definitions of "max gradient" and calling them one field
 ([§1a](#1a-the-published-figures-were-typed-by-hand)). Two fields with two
 honest definitions beat one field with a negotiable one.
 
-**Open before building:** the icon and label, whether the rider states a
-percentage or only a place, and whether a climb may carry more than one. None
-are decided here.
+**Built 2026-08-05.** Stored as `steepPoint` — `{at, pct, note}` — beside
+`steep`, never merged with it:
+
+- **The percentage is optional.** A rider may know *where* the wall is without
+  knowing how steep, and demanding a number invites an invented one. `note`
+  gives them somewhere to say what they do know ("the hairpin after the
+  chapel"), bounded to 120 characters because it is a landmark, not a paragraph.
+- **A distinct icon**, amber and filled against the derived marker's purple
+  triangle, in the editor and on the map. Two markers that meant different
+  things and looked alike would be worse than one.
+- **It never moves on its own.** Every other derived value is recomputed on
+  redraw; this one is only ever placed, dragged or cleared by a rider, and it
+  survives an edit to anything else on the climb.
+- **It travels as geometry**, through the same submission and moderation path as
+  the line itself — no new review mechanic
+  ([moderation-and-contribution.md](moderation-and-contribution.md)).
+
+**Still open:** whether a climb may carry more than one, and whether the rider's
+figure should ever appear in listings or sorting. It does not today, and that is
+the safe default — a field that means the same thing everywhere is what can be
+sorted on.
 
 The third tap survives as an **override**, for the case the rider is on the road
 and the model is not: a marker they move is flagged `manual: true` and keeps its
