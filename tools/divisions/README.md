@@ -129,8 +129,17 @@ re-import event (slugs/ISO codes stay identity; region rows are never deleted).
 make divisions-data c="NL"        # → tools/divisions/out/region-*.geojson
 mkdir -p web/var/catalog-out
 cp tools/divisions/out/region-<each-new-slug>.geojson web/var/catalog-out/
-docker exec cycling-commons-dev-app-1 php bin/console app:catalog:import /app/var/catalog-out
+docker exec cycling-commons-dev-app-1 php -d memory_limit=2G \
+  bin/console app:catalog:import /app/var/catalog-out
 ```
+
+**`-d memory_limit=2G` is not optional past a handful of countries.** The import
+sends every region's geometry as a query parameter, and in the dev environment
+Doctrine's SQL logger retains all of them for the profiler — 162 regions is
+~101 MB of GeoJSON, which exhausts the default 128 MB limit part-way through
+and dies with a fatal error. The whole import runs in one transaction, so a
+crash rolls back cleanly and re-running is safe; it is a limit to raise, not
+damage to repair.
 
 ## Tests
 

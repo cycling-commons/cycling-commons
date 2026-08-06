@@ -743,6 +743,267 @@ region:
     label: 'Luxemburg'
   all_lu:
     label: 'Ganz Luxemburg'
+  # FR — 2026-08-06 rollout
+  auvergne-rhone-alpes:
+    label: 'Auvergne-Rhône-Alpes'
+  bourgogne-franche-comte:
+    label: 'Burgund-Franche-Comté'
+  bretagne:
+    label: 'Bretagne'
+  centre-val-de-loire:
+    label: 'Centre-Val de Loire'
+  corse:
+    label: 'Korsika'
+  grand-est:
+    label: 'Grand Est'
+  hauts-de-france:
+    label: 'Hauts-de-France'
+  ile-de-france:
+    label: 'Île-de-France'
+  nouvelle-aquitaine:
+    label: 'Nouvelle-Aquitaine'
+  normandie:
+    label: 'Normandie'
+  occitanie:
+    label: 'Okzitanien'
+  provence-alpes-cote-d-azur:
+    label: 'Provence-Alpes-Côte d''Azur'
+  pays-de-la-loire:
+    label: 'Pays de la Loire'
+  all_fr:
+    label: 'Ganz Frankreich'
+  # CH — 2026-08-06 rollout
+  aargau:
+    label: 'Aargau'
+  appenzell-innerrhoden:
+    label: 'Appenzell Innerrhoden'
+  appenzell-ausserrhoden:
+    label: 'Appenzell Ausserrhoden'
+  bern:
+    label: 'Bern'
+  basel-landschaft:
+    label: 'Basel-Landschaft'
+  basel-stadt:
+    label: 'Basel-Stadt'
+  fribourg:
+    label: 'Freiburg'
+  geneve:
+    label: 'Genf'
+  glarus:
+    label: 'Glarus'
+  graubunden:
+    label: 'Graubünden'
+  jura:
+    label: 'Jura'
+  luzern:
+    label: 'Luzern'
+  neuchatel:
+    label: 'Neuenburg'
+  nidwalden:
+    label: 'Nidwalden'
+  obwalden:
+    label: 'Obwalden'
+  st-gallen:
+    label: 'St. Gallen'
+  schaffhausen:
+    label: 'Schaffhausen'
+  solothurn:
+    label: 'Solothurn'
+  schwyz:
+    label: 'Schwyz'
+  thurgau:
+    label: 'Thurgau'
+  ticino:
+    label: 'Tessin'
+  uri:
+    label: 'Uri'
+  vaud:
+    label: 'Waadt'
+  valais:
+    label: 'Wallis'
+  zug:
+    label: 'Zug'
+  zurich:
+    label: 'Zürich'
+  all_ch:
+    label: 'Ganze Schweiz'
+  # GB — 2026-08-06 rollout
+  england:
+    label: 'England'
+  scotland:
+    label: 'Schottland'
+  wales:
+    label: 'Wales'
+  northern-ireland:
+    label: 'Nordirland'
+  all_gb:
+    label: 'Gesamtes Vereinigtes Königreich'
+  # IT — 2026-08-06 rollout
+  piemonte:
+    label: 'Piemont'
+  valle-d-aosta:
+    label: 'Aostatal'
+  lombardia:
+    label: 'Lombardei'
+  trentino-alto-adige:
+    label: 'Trentino-Südtirol'
+  veneto:
+    label: 'Venetien'
+  friuli-venezia-giulia:
+    label: 'Friaul-Julisch Venetien'
+  liguria:
+    label: 'Ligurien'
+  emilia-romagna:
+    label: 'Emilia-Romagna'
+  toscana:
+    label: 'Toskana'
+  umbria:
+    label: 'Umbrien'
+  marche:
+    label: 'Marken'
+  lazio:
+    label: 'Latium'
+  abruzzo:
+    label: 'Abruzzen'
+  molise:
+    label: 'Molise'
+  campania:
+    label: 'Kampanien'
+  puglia:
+    label: 'Apulien'
+  basilicata:
+    label: 'Basilikata'
+  calabria:
+    label: 'Kalabrien'
+  sicilia:
+    label: 'Sizilien'
+  sardegna:
+    label: 'Sardinien'
+  all_it:
+    label: 'Ganz Italien'
+  # AU — 2026-08-06 rollout
+  australian-capital-territory:
+    label: 'Australisches Hauptstadtterritorium'
+  new-south-wales:
+    label: 'Neusüdwales'
+  northern-territory:
+    label: 'Northern Territory'
+  queensland:
+    label: 'Queensland'
+  south-australia:
+    label: 'South Australia'
+  tasmania:
+    label: 'Tasmanien'
+  victoria:
+    label: 'Victoria'
+  western-australia:
+    label: 'Western Australia'
+  all_au:
+    label: 'Ganz Australien'
+  # JP — 2026-08-06 rollout
+  hokkaido:
+    label: 'Hokkaido'
+  aomori:
+    label: 'Aomori'
+  iwate:
+    label: 'Iwate'
+  miyagi:
+    label: 'Miyagi'
+  akita:
+    label: 'Akita'
+  yamagata:
+    label: 'Yamagata'
+  fukushima:
+    label: 'Fukushima'
+  ibaraki:
+    label: 'Ibaraki'
+  tochigi:
+    label: 'Tochigi'
+  gunma:
+    label: 'Gunma'
+  saitama:
+    label: 'Saitama'
+  chiba:
+    label: 'Chiba'
+  tokyo:
+    label: 'Tokio'
+  kanagawa:
+    label: 'Kanagawa'
+  niigata:
+    label: 'Niigata'
+  toyama:
+    label: 'Toyama'
+  ishikawa:
+    label: 'Ishikawa'
+  fukui:
+    label: 'Fukui'
+  yamanashi:
+    label: 'Yamanashi'
+  nagano:
+    label: 'Nagano'
+  gifu:
+    label: 'Gifu'
+  shizuoka:
+    label: 'Shizuoka'
+  aichi:
+    label: 'Aichi'
+  mie:
+    label: 'Mie'
+  shiga:
+    label: 'Shiga'
+  kyoto:
+    label: 'Kyoto'
+  osaka:
+    label: 'Osaka'
+  hyogo:
+    label: 'Hyogo'
+  nara:
+    label: 'Nara'
+  wakayama:
+    label: 'Wakayama'
+  tottori:
+    label: 'Tottori'
+  shimane:
+    label: 'Shimane'
+  okayama:
+    label: 'Okayama'
+  hiroshima:
+    label: 'Hiroshima'
+  yamaguchi:
+    label: 'Yamaguchi'
+  tokushima:
+    label: 'Tokushima'
+  kagawa:
+    label: 'Kagawa'
+  ehime:
+    label: 'Ehime'
+  kochi:
+    label: 'Kochi'
+  fukuoka:
+    label: 'Fukuoka'
+  saga:
+    label: 'Saga'
+  nagasaki:
+    label: 'Nagasaki'
+  kumamoto:
+    label: 'Kumamoto'
+  oita:
+    label: 'Oita'
+  miyazaki:
+    label: 'Miyazaki'
+  kagoshima:
+    label: 'Kagoshima'
+  okinawa:
+    label: 'Okinawa'
+  all_jp:
+    label: 'Ganz Japan'
+  # US — 2026-08-06 rollout
+  california:
+    label: 'Kalifornien'
+  colorado:
+    label: 'Colorado'
+  all_us:
+    label: 'Gesamte USA'
   everywhere:
     label: 'Überall'
   cta_map: 'Diese Region auf der Karte öffnen'

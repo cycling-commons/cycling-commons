@@ -43,6 +43,21 @@
     'Europe/Amsterdam': 'NL',
     'Europe/Berlin': 'DE', 'Europe/Busingen': 'DE',
     'Europe/Luxembourg': 'LU',
+    'Europe/Paris': 'FR',
+    'Europe/Zurich': 'CH',
+    'Europe/London': 'GB', 'Europe/Belfast': 'GB',
+    'Europe/Rome': 'IT',
+    'Asia/Tokyo': 'JP',
+    'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU',
+    'Australia/Brisbane': 'AU', 'Australia/Perth': 'AU',
+    'Australia/Adelaide': 'AU', 'Australia/Hobart': 'AU',
+    'Australia/Darwin': 'AU', 'Australia/Canberra': 'AU',
+    'Australia/Broken_Hill': 'AU', 'Australia/Lindeman': 'AU',
+    'Australia/Lord_Howe': 'AU', 'Australia/Eucla': 'AU',
+    // Only the two onboarded states' zones. A visitor in America/New_York is
+    // in a country we have nothing for yet, so falling through to the default
+    // is more honest than guessing a home country whose whole map is dimmed.
+    'America/Los_Angeles': 'US', 'America/Denver': 'US',
   };
   const currentTimezone = () => {
     if (typeof globalThis !== 'undefined' && globalThis.__ccTz) return globalThis.__ccTz; // test hook
