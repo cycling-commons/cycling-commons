@@ -48,9 +48,16 @@ def db():
     # (map-and-search.md §4.5) orders overlapping matches by it. country_code
     # mirrors public.region too — load_region's boundary-snap constrains to a
     # POI's own country and backfills cc from the region (finding 5 / finding 8).
+    # admin_level mirrors public.region as well: every spatial step reads the
+    # operational-region set, which is derived from it (load.py's
+    # _materialize_operational_regions). It defaults to NULL here, and a country
+    # whose rows are ALL NULL is operational by `IS NOT DISTINCT FROM MAX(...)`
+    # — so existing fixtures keep behaving exactly as they did, and a test that
+    # wants an infrastructure row states a level explicitly.
     conn.execute(
         "CREATE TABLE region (id bigint PRIMARY KEY, area_km2 double precision, "
-        "country_code char(2), geom geometry(MultiPolygon, 4326))"
+        "country_code char(2), admin_level int, "
+        "geom geometry(MultiPolygon, 4326))"
     )
     conn.commit()
     yield conn

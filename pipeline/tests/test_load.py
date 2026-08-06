@@ -700,3 +700,75 @@ def test_diff_merge_deletes_disappeared_row(db):
     load_region(db, [a, b], "dev/fixture", None)        # node/3 disappears upstream
     refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
     assert refs == {"node/1", "node/2"}, "a row gone from the extract is deleted from the slice"
+
+
+def test_infrastructure_region_never_stamps_a_poi(db):
+    """A level-2 country outline must never own or stamp a POI once a deeper
+    level exists for that country.
+
+    coverage_poi.region_id is read by a client whose region registry is itself
+    filtered to operational regions, so an infrastructure stamp is an id the
+    client cannot resolve and the POI renders under no scope at all. The 2+4
+    playbook emits an outline for every country, and the boundary-snap reaches
+    it for any POI outside every subdivision — coastlines and islands — which
+    is how the 2026-08-06 rollout stamped 250 of them.
+    """
+    ensure_schema(db)
+    # The country outline (level 2) and one subdivision (level 4) it contains.
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, admin_level, geom) VALUES "
+        "(20, 9999, 'BE', 2, ST_GeomFromText("
+        "'MULTIPOLYGON(((3 49, 7 49, 7 52, 3 52, 3 49)))', 4326)), "
+        "(21, 100, 'BE', 4, ST_GeomFromText("
+        "'MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))"
+    )
+    db.commit()
+    load_region(db, [
+        _row("node/inside", "C", lon=5.0, lat=50.5),    # inside the subdivision
+        # Inside the OUTLINE but outside the subdivision and beyond the snap:
+        # the outline is the only region that contains it, and it must still
+        # not be stamped.
+        _row("node/gap", "C", lon=6.5, lat=51.5),
+    ], "europe/belgium")
+    got = dict(db.execute("SELECT ref, region_id FROM coverage_poi").fetchall())
+    assert got["node/inside"] == 21, "the operational subdivision stamps the POI"
+    assert got["node/gap"] is None, (
+        "a POI only the level-2 outline contains must stay unstamped — an "
+        "infrastructure id the client cannot resolve is worse than NULL"
+    )
+
+
+def test_a_stamp_that_stopped_being_operational_is_re_derived(db):
+    """A POI already carrying an infrastructure region_id is repaired, not kept.
+
+    Neither recompute can do this alone: the ST_Contains pass only SETs
+    region_id and never clears a stale one, and the boundary-snap is gated on
+    `region_id IS NULL`. Without the explicit reset the bad stamp survives every
+    future harvest — which is exactly what the first repair run showed, 229 rows
+    surviving a full-membership re-run.
+    """
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, admin_level, geom) VALUES "
+        "(20, 9999, 'BE', 2, ST_GeomFromText("
+        "'MULTIPOLYGON(((3 49, 7 49, 7 52, 3 52, 3 49)))', 4326)), "
+        "(21, 100, 'BE', 4, ST_GeomFromText("
+        "'MULTIPOLYGON(((4 50, 6 50, 6 51, 4 51, 4 50)))', 4326))"
+    )
+    db.commit()
+    load_region(db, [_row("node/1", "C", lon=5.0, lat=50.5)], "europe/belgium")
+    # Simulate the stamp a pre-fix harvest left behind.
+    db.execute("UPDATE coverage_poi SET region_id = 20 WHERE ref = 'node/1'")
+    db.commit()
+    # An unchanged row is not rewritten by the diff-merge, so this only repairs
+    # under a full-membership pass — the mode the playbook calls for after a
+    # `region` change.
+    import os
+    os.environ["COVERAGE_FULL_MEMBERSHIP"] = "1"
+    try:
+        load_region(db, [_row("node/1", "C", lon=5.0, lat=50.5)], "europe/belgium")
+    finally:
+        del os.environ["COVERAGE_FULL_MEMBERSHIP"]
+    assert db.execute(
+        "SELECT region_id FROM coverage_poi WHERE ref = 'node/1'"
+    ).fetchone()[0] == 21, "the stale infrastructure stamp must be re-derived"

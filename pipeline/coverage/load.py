@@ -243,6 +243,59 @@ def ensure_schema(conn: psycopg.Connection) -> None:
         conn.autocommit = prev_autocommit
 
 
+def _materialize_operational_regions(cur) -> None:
+    """Build the per-transaction `region_operational` set every spatial step reads.
+
+    THE RULE is web/src/Catalog/OperationalRegions.php's, restated: a region is
+    operational iff its admin_level equals the deepest onboarded level for its
+    country. `IS NOT DISTINCT FROM` keeps a single-row country whose admin_level
+    is NULL operational, exactly as the PHP predicate does. The two are the same
+    rule in two languages and must be changed together.
+
+    **Correctness.** coverage_poi.region_id is read by a client whose region
+    registry is itself filtered to operational regions
+    (RegionRegistryProvider). Stamping a POI with an infrastructure region — the
+    level-2 country outline the 2+4 playbook emits — hands the client an id it
+    has never heard of, and the POI then renders under no scope at all. The
+    outlines could never WIN a fully subdivided country (they tie at distance 0
+    with their own subdivisions and lose the area_km2 tie-break), which is why
+    this went unnoticed; a PARTLY onboarded country breaks the tie. Only
+    California and Colorado are seeded, so `united-states` claims every US POI
+    outside them, and `luxembourg` — operational, being its country's only
+    level — correctly stays.
+
+    **Cost.** This is also why the 2026-08-06 rollout made europe/germany,
+    europe/france and europe/italy exceed COVERAGE_STATEMENT_TIMEOUT. The US
+    outline spans 358.9 degrees of longitude — Alaska crosses the antimeridian
+    and the territories reach into the Pacific — so its bounding box overlaps
+    EVERY point on earth and the GiST prefilter these queries depend on stops
+    pruning it. Each staged row then ran full-detail ST_DWithin/ST_Contains over
+    a 136,302-vertex multipolygon. Measured on one German point: 10.6 ms against
+    all 162 regions, 2.0 ms once the two outlines are gone.
+
+    A TEMP table rather than an inline predicate on purpose: these run as
+    CORRELATED subqueries, once per staged row, so an inline
+    `MAX(admin_level)` lookup would re-derive the whole set per row. A CTE
+    measured SLOWER than no filter at all (23 ms) because it forfeits the index.
+    """
+    cur.execute(
+        """
+        CREATE TEMP TABLE region_operational ON COMMIT DROP AS
+        SELECT r.id, r.geom, r.country_code, r.area_km2
+        FROM region r
+        WHERE r.geom IS NOT NULL
+          AND r.admin_level IS NOT DISTINCT FROM (
+              SELECT MAX(r2.admin_level) FROM region r2
+              WHERE r2.country_code = r.country_code
+          )
+        """
+    )
+    # Without its own index the copy is seq-scanned per row and the fix is
+    # undone; without ANALYZE the planner sizes it from defaults, not 120 rows.
+    cur.execute("CREATE INDEX ON region_operational USING gist (geom)")
+    cur.execute("ANALYZE region_operational")
+
+
 def load_region(
     conn: psycopg.Connection,
     rows: Iterable[PoiRow],
@@ -270,6 +323,7 @@ def load_region(
             src_id = cur.execute(
                 "SELECT id FROM coverage_source WHERE slug = %s", (src_region,)
             ).fetchone()[0]
+            _materialize_operational_regions(cur)
             # Rows this source currently owns. Ownership is now decided by geometry,
             # not by which extract ran last (coverage-provider.md §1
             # §3, C1 final-review fix), so this count no longer flaps week to week from
@@ -357,7 +411,7 @@ def load_region(
                     """
                     DELETE FROM coverage_poi_staging s
                     WHERE COALESCE((
-                        SELECT r.country_code FROM region r
+                        SELECT r.country_code FROM region_operational r
                         WHERE r.geom && ST_Expand(s.geom, %(snap)s)
                           AND ST_DWithin(r.geom, s.geom, %(snap)s)
                           -- region.country_code is NOT NULL DEFAULT '', so a
@@ -457,6 +511,41 @@ def load_region(
             touched_c = "" if full_membership else " AND c.id IN (SELECT id FROM coverage_touched)"
             touched_poi = ("" if full_membership
                            else " AND coverage_poi.id IN (SELECT id FROM coverage_touched)")
+            # Drop a stamp that points at a region which is no longer
+            # operational, so the two recomputes below can re-derive it. Neither
+            # of them can do this on its own: the ST_Contains pass only SETs
+            # region_id for rows inside a polygon and never clears a stale one,
+            # and the boundary-snap is gated on `region_id IS NULL` — so a row
+            # already holding an infrastructure id is skipped by both and keeps
+            # it forever. The diff-merge's `region_id = NULL` reset does not
+            # cover it either, since an OSM-unchanged row is never rewritten.
+            #
+            # This is the repair path for the 2026-08-06 rollout, which stamped
+            # 250 POIs (JP 89, US 77, AU 52, CH 26, GB 6) with level-2 country
+            # outlines via the boundary-snap — coastlines and islands outside
+            # every subdivision but within the snap of the country polygon. The
+            # client's region registry is itself filtered to operational
+            # regions, so those ids resolve to nothing and the POI renders under
+            # no scope at all.
+            #
+            # It is also the general path for a country onboarding a FINER level:
+            # its previous operating level demotes to infrastructure the moment
+            # the finer rows land (tools/divisions/README.md), and every POI
+            # stamped with the old level has to be re-derived. Run with
+            # COVERAGE_FULL_MEMBERSHIP=1 after any such change, or only the
+            # rows OSM happened to touch get repaired.
+            cur.execute(
+                f"""
+                UPDATE coverage_poi SET region_id = NULL
+                WHERE coverage_poi.src_region_id = %s
+                  AND coverage_poi.region_id IS NOT NULL
+                  AND NOT EXISTS (
+                      SELECT 1 FROM region_operational o
+                      WHERE o.id = coverage_poi.region_id
+                  ){touched_poi}
+                """,
+                (src_id,),
+            )
             # Smallest-area-wins on overlap (map-and-search.md §4.5): the
             # third membership writer besides RegionResolver and
             # ImportCatalogCommand::recomputeMembership. DISTINCT ON keeps one
@@ -470,7 +559,7 @@ def load_region(
                 FROM (
                     SELECT DISTINCT ON (c.id) c.id AS poi_id, r.id AS region_id
                     FROM coverage_poi c
-                    JOIN region r ON ST_Contains(r.geom, c.geom)
+                    JOIN region_operational r ON ST_Contains(r.geom, c.geom)
                     WHERE c.src_region_id = %s{touched_c}
                     ORDER BY c.id, r.area_km2 ASC NULLS LAST, r.id ASC
                 ) m
@@ -494,7 +583,7 @@ def load_region(
                 FROM (
                     SELECT DISTINCT ON (c.id) c.id AS poi_id, r.id AS region_id
                     FROM coverage_poi c
-                    JOIN region r ON r.country_code = c.country_code
+                    JOIN region_operational r ON r.country_code = c.country_code
                                  AND ST_DWithin(r.geom, c.geom, %s)
                     WHERE c.src_region_id = %s
                       AND c.region_id IS NULL
