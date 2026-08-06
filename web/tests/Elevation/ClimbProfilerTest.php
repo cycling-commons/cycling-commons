@@ -205,4 +205,45 @@ final class ClimbProfilerTest extends TestCase
 
         self::assertNull((new ClimbProfiler($client))->profile($this->line(10)));
     }
+
+    public function testASingleBadSampleDoesNotBecomeThePublishedSteepestFigure(): void
+    {
+        // A steady 5% climb, ~22 m per point, with ONE sample pushed 30 m up and
+        // straight back down: an avalanche gallery, a cutting, or a rock face
+        // beside the carriageway. A Digital Surface Model reads all three, and
+        // before 2026-08-07 a maximum let any one of them become the headline —
+        // Grimsel, Susten and Klausen each published 35%, which was the clamp
+        // rather than the road, over raw windows as steep as 77%.
+        $elev = [];
+        for ($i = 0; $i < 80; ++$i) {
+            $elev[] = 1000.0 + $i * 1.1;    // ~22 m apart at 5%
+        }
+        $clean = $this->profilerFor($elev)->profile($this->line(80));
+
+        $spiked = $elev;
+        $spiked[40] += 30.0;                // one cell reading the wall, not the road
+        $withSpike = $this->profilerFor($spiked)->profile($this->line(80));
+
+        self::assertNotNull($clean);
+        self::assertNotNull($withSpike);
+        self::assertSame(
+            $clean['maxGradient'],
+            $withSpike['maxGradient'],
+            'one artificial sample must not move the published steepest figure',
+        );
+    }
+
+    public function testTheSteepestFigureCarriesTheWidthItWasMeasuredOver(): void
+    {
+        // The label is built from this, so a window change cannot leave the copy
+        // saying 100 m while the number means something else.
+        $elev = [];
+        for ($i = 0; $i < 60; ++$i) {
+            $elev[] = 500.0 + $i * 1.5;
+        }
+        $p = $this->profilerFor($elev)->profile($this->line(60));
+
+        self::assertNotNull($p);
+        self::assertSame(250, $p['steepWindowM']);
+    }
 }

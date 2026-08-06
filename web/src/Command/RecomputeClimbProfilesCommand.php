@@ -120,6 +120,12 @@ final class RecomputeClimbProfilesCommand extends Command
                 $attrs['lineGrad'] = $p['lineGrad'];
                 $attrs['demSource'] = $p['demSource'];
                 $attrs['binM'] = $p['binM'];
+                // The width maxGradient was averaged over, stored beside it so
+                // the drawer's caption is built from the measurement. Without
+                // this the copy keeps whatever number was typed into the four
+                // catalogues, which is how it came to say "steepest 100m" over
+                // a 250 m window.
+                $attrs['steepWindowM'] = $p['steepWindowM'];
                 // A hand-placed steepest marker is the rider's, and re-deriving
                 // it would silently discard a correction someone made standing
                 // on the road (§5).

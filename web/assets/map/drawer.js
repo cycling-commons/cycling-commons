@@ -766,7 +766,12 @@ function gradStrip(grad, f){
     ticks.push(`<span class="cc-grad-tick" style="left:${(k/totalKm*100).toFixed(2)}%">${k%1?k.toFixed(1):k}</span>`);
   }
   const axis=`<div class="cc-grad-axis"><span class="cc-grad-tick cc-grad-tick-0">0</span>${ticks.join('')}<span class="cc-grad-tick cc-grad-tick-end">${totalKm.toFixed(totalKm<10?1:0)} km</span></div>`;
-  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · per {b} m · avg {a}% · steepest 100m {m}%', {a:avg, m:max, b:binM})}</div>
+  /* The width the steepest figure was averaged over travels with the figure
+     (ClimbProfiler::MAX_WINDOW_M -> steepWindowM), so the caption cannot claim
+     100 m while the number means 250. Older rows predate the attribute; they
+     were measured at 100 m, so that is the honest fallback for them. */
+  const steepW = (f && f.steepWindowM) ? Number(f.steepWindowM) : 100;
+  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · per {b} m · avg {a}% · steepest {w}m {m}%', {a:avg, m:max, b:binM, w:steepW})}</div>
     <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>${axis}`;
 }
 function elevSvg(elev){

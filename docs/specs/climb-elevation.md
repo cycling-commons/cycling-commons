@@ -239,15 +239,49 @@ wall beside the carriageway.
 
 This is the Stockeu finding at a larger scale (GLO-30 27%, Wallonia LiDAR
 16.7%): **an error that cancels over a whole climb but concentrates in its worst
-hundred metres.** So the two published figures do not have equal standing on
-alpine terrain — length and average are sound, the maximum is not — and the
-current pipeline publishes both alike. Options, none yet chosen: suppress the
-maximum where a window's implied gradient is physically implausible for a road;
-detect the flat-after-a-step signature that marks a covered section; or carry
-the road's `tunnel`/`covered` OSM tags through from the route and refuse to
-measure across them. Until one lands, **treat `maxGradient` on any climb with
-tunnels as unverified**, and note that this weakens
-[§5](#5-the-steepest-ramp-is-found-not-placed) wherever it is quoted.
+hundred metres.**
+
+**FIXED 2026-08-07, and the diagnosis was not the one expected.** The first
+suspicion was sampling: `SAMPLES` is a fixed 200 regardless of length, so a
+26 km climb samples every 130 m and a 100 m window spans less than one interval.
+Measured, that turned out to be innocent — densifying Furka to 10 m, 20 m, 30 m
+and 50 m spacing moved the published figure by less than half a point. Two other
+things were guilty:
+
+- **The window was below the source's resolution.**
+  [§3a](#3a-bin-width-follows-the-source)'s own rule — never narrower than about
+  four DEM cells — puts GLO-30's floor at 120 m, and the window was 100 m. It
+  had always been asking the grid a question finer than its cells; short,
+  unroofed Ardennes climbs simply hid it.
+- **A maximum is an extreme-value statistic, and on a DSM the extreme is the
+  artifact.** The tell is that the raw maximum got *worse* as sampling improved:
+  denser sampling finds more spikes, not more road. Grimsel's raw window went
+  from 35% to 77% between 50 m and 20 m spacing. Worse, 35% was not a
+  measurement at all — Grimsel, Susten and Klausen all published exactly 35%
+  because they were hitting a `min(35.0, …)` clamp, which turned three artifacts
+  into three plausible-looking steep passes.
+
+The published figure is now the **95th percentile of sliding 250 m windows**
+(`MAX_WINDOW_M`, `STEEPEST_PERCENTILE`). Validated against the only two
+independent truths available, and it hits both: Wallonia's 50 cm LiDAR puts
+Stockeu's steepest at **16.7%** and we now read **16.7%**; the owner reports
+Furka at **~10%** and we now read **10.3%**. Those are two points, in different
+countries and different terrain, fitting one estimator — worth re-testing as
+more ground truth appears, not treated as settled.
+
+The clamp stays at 30% as a guard rather than a filter: above any real road's
+sustained 250 m, so it fires only when the estimator itself is wrong, which is
+when it should be visible.
+
+`steepWindowM` travels with the figure and the caption is built from it, so the
+copy can no longer say "100m" over a 250 m window — which is exactly what four
+translation catalogues did until this landed.
+
+**What this does not fix.** The tunnel readings are still in the data; the
+percentile only stops one from becoming the headline. Grimsel still reads 14%
+against a real ~11%, and it has the most galleries of the six. Carrying the
+road's `tunnel`/`covered` OSM tags through from the route and refusing to measure
+across them remains the real fix, and is not built.
 
 Two further limits worth stating plainly. GLO-30 Public **withholds tiles over a
 few countries**, so "worldwide" has holes and

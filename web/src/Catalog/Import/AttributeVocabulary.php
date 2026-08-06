@@ -39,7 +39,12 @@ final class AttributeVocabulary
         // exception in spirit — a rider places it — but it is geometry, not a
         // text field, so it travels with `route`/`steep` (§5a).
         'B' => ['headline', 'cur', 'sq', 'tr', 'record', 'attribution', 'route', 'grad',
-            'steep', 'steepPoint', 'lineGrad', 'binM', 'length', 'gain', 'demSource'],
+            'steep', 'steepPoint', 'lineGrad', 'binM', 'length', 'gain', 'demSource',
+            // The width `maxGradient` was averaged over. Stored beside the figure
+            // so the caption is built from the measurement rather than from a
+            // number typed into four translation catalogues — which is exactly
+            // how they came to read "steepest 100m" over a 250 m window.
+            'steepWindowM'],
         // serviceKind (App\Catalog\ServiceKind: shop/station/pump) - D/bike-services only.
         // Not a registry field: it's harvester/import-stamped (tools/wallonia's
         // service_kind_by_label + ImportCatalogCommand's legacy-label fallback),

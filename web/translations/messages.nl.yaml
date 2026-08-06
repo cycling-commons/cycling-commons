@@ -1649,7 +1649,7 @@ map:
   d_climb_length: 'Lengte'
   d_m_climbing: '{n} m klimmen'
   d_from_gpx: '(uit GPX)'
-  d_grad_profile: 'Hellingsprofiel · per {b} m · gem {a}% · steilste 100m {m}%'
+  d_grad_profile: 'Hellingsprofiel · per {b} m · gem {a}% · steilste {w}m {m}%'
   d_illustrative: '(illustratief)'
   d_elev_aria: 'Hoogteprofiel'
   d_shared_by: 'Gedeeld door'

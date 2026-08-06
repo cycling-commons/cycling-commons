@@ -42,13 +42,41 @@ final class ClimbProfiler
     private const int MAX_BARS = 25;
 
     /**
-     * The distance a published "max gradient" is averaged over.
+     * The distance a published "steepest" figure is averaged over.
      *
-     * 100 m because that is what climb databases report, so our figure is
-     * comparable with the sites a rider checks us against. A longer window
-     * reads systematically gentler than every other source for the same road.
+     * **250 m, not the 100 m climb databases quote, because 100 m is finer than
+     * this DEM can answer.** §3a's own rule is that a window is never narrower
+     * than about four DEM cells; GLO-30's 30 m cells put that floor at 120 m, so
+     * the original 100 m was below the source's resolution from the start. It
+     * survived only because the Ardennes seed climbs are short and unroofed.
+     *
+     * The Alps disproved it. Measured 2026-08-06: Furka published 20% against a
+     * real ~10%, and Grimsel, Susten and Klausen all published exactly 35% —
+     * which was not a measurement but the clamp below, hiding raw windows as
+     * steep as 77%. Two independent ground truths then agreed on this window
+     * with {@see STEEPEST_PERCENTILE}: Wallonia's 50 cm LiDAR says Stockeu's
+     * steepest is 16.7% and we now read 16.7%; the owner reports Furka at ~10%
+     * and we now read 10.3%.
      */
-    private const int MAX_WINDOW_M = 100;
+    private const int MAX_WINDOW_M = 250;
+
+    /**
+     * Which sliding window is published — the 95th percentile, not the steepest.
+     *
+     * A maximum is an extreme-value statistic, and on a Digital Surface Model
+     * the extreme is essentially always an artifact: an avalanche gallery, a
+     * cutting, a rock face beside the carriageway, a canopy edge. The proof is
+     * that the raw maximum got WORSE as sampling improved — densifying Furka
+     * from 50 m to 20 m moved Grimsel's raw window from 35% to 77%, because
+     * finer sampling finds more spikes rather than more road.
+     *
+     * A high percentile keeps the honest answer and drops the spikes: the
+     * published figure is the gradient that 5% of windows exceed, so a genuine
+     * sustained ramp still surfaces while a single bad cell cannot. This is the
+     * same reasoning that makes the AVERAGE trustworthy on a DSM — errors
+     * cancel over many samples — applied to the one figure that never had it.
+     */
+    private const float STEEPEST_PERCENTILE = 0.95;
 
     /**
      * Bin width for the ascent-only average — see avgGradient() for why binning
@@ -89,7 +117,8 @@ final class ClimbProfiler
      *     length: float, gain: float, avgGradient: string, maxGradient: string,
      *     grad: list<int>, lineGrad: list<int>,
      *     steep: array{at: array{0: float, 1: float}, pct: string, manual: bool},
-     *     demSource: string, binM: int, reversed: bool, overshootM: float,
+     *     demSource: string, binM: int, steepWindowM: int, reversed: bool,
+     *     overshootM: float,
      *     overshootDropM: float, sustainedAtSteep: string|null
      * }|null null when elevation could not be established (§2d)
      */
@@ -135,7 +164,18 @@ final class ClimbProfiler
             'length' => $total,
             'gain' => $gain,
             'avgGradient' => self::fmt(self::avgGradient($pts, $elev, $cum, $total), 1),
-            'maxGradient' => self::fmt(min(35.0, max(0.0, $steep['g'])), 0),
+            /* The 35% clamp this used to carry was load-bearing and should not
+               have been: Grimsel, Susten and Klausen all published exactly 35%,
+               which looked like three steep passes and was really one ceiling
+               three artifacts had hit. With a percentile over a 250 m window the
+               figure is inside the plausible range on its own, so the clamp is
+               back to being a guard rather than a filter — 30% is above any real
+               road's sustained 250 m and only fires if the estimator itself is
+               wrong, which is when we want to see it, not hide it. */
+            'maxGradient' => self::fmt(min(30.0, max(0.0, $steep['g'])), 0),
+            /* The width the figure is averaged over travels WITH it, so the
+               label cannot drift from the measurement (climb-elevation.md §5). */
+            'steepWindowM' => self::MAX_WINDOW_M,
             'grad' => self::bars($pts, $elev, $cum, $total, self::binWidthFor($total)),
             /* Spans the CLIMB, and the map must draw only the climb to match.
                These bands are mapped onto `line-progress`, which runs 0..1 over
@@ -222,13 +262,22 @@ final class ClimbProfiler
            the line (owner-reported 2026-08-05). A fixed step also makes this
            agree with lineGradients(), which has always stepped by distance. */
         $step = max(5.0, $win / 10);
+        /** @var list<array{g: float, at: array{0: float, 1: float}}> $seen */
+        $seen = [];
         for ($start = 0.0; $start <= $total - $win + 0.001; $start += $step) {
             $end = $start + $win;
             $g = ((self::at($pts, $elev, $cum, $end)['elev'] - self::at($pts, $elev, $cum, $start)['elev']) / $win) * 100;
-            if ($g > $best) {
-                $best = $g;
-                $at = self::at($pts, $elev, $cum, ($start + $end) / 2)['coord'];
-            }
+            $seen[] = ['g' => $g, 'at' => self::at($pts, $elev, $cum, ($start + $end) / 2)['coord']];
+        }
+        if ([] !== $seen) {
+            // Publish the STEEPEST_PERCENTILE window rather than the steepest
+            // one. The marker moves with the figure — it must point at the
+            // stretch we publish, not at the artifact we just discarded, or the
+            // map disagrees with the number beside it.
+            usort($seen, static fn (array $a, array $b): int => $a['g'] <=> $b['g']);
+            $pick = $seen[(int) min(\count($seen) - 1, (int) floor(\count($seen) * self::STEEPEST_PERCENTILE))];
+            $best = $pick['g'];
+            $at = $pick['at'];
         }
         // A climb shorter than one window still has a steepest stretch: itself.
         if (0.0 === $best && $total > 0) {
