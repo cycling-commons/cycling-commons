@@ -52,8 +52,9 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $items = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]);
         // Hazards (F) now have a real serving path (map-and-search.md §4.5
         // Task A), so the retired Hautes Fagnes crosswind demo returns as one
-        // seeded manual F row: 23 -> 24.
-        self::assertCount(24, $items, 'expected exactly the hand-authored demo pins (incl. the F hazard)');
+        // seeded manual F row: 23 -> 24. The 2026-08-06 Swiss rollout then
+        // added six alpine passes, all letter B: 24 -> 30.
+        self::assertCount(30, $items, 'expected exactly the hand-authored demo pins (incl. the F hazard)');
 
         $byLetter = [];
         foreach ($items as $item) {
@@ -63,7 +64,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         }
         ksort($byLetter);
         self::assertSame(
-            ['B' => 5, 'C' => 5, 'D' => 4, 'E' => 1, 'F' => 1, 'G' => 1, 'H' => 4, 'I' => 2, 'J' => 1],
+            ['B' => 11, 'C' => 5, 'D' => 4, 'E' => 1, 'F' => 1, 'G' => 1, 'H' => 4, 'I' => 2, 'J' => 1],
             $byLetter,
         );
 
@@ -170,7 +171,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $this->runSeed()->assertCommandIsSuccessful();
         $countAfterSecond = \count($this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]));
 
-        self::assertSame(24, $countAfterFirst);
+        self::assertSame(30, $countAfterFirst);
         self::assertSame($countAfterFirst, $countAfterSecond, 're-running must not duplicate rows');
     }
 
@@ -194,9 +195,9 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         $manualAbri = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'manual:abri-jean-poumay']);
         self::assertNull($manualAbri, 'a manual pin duplicating an existing non-manual (name, letter) item must not be seeded');
 
-        // Every other manual pin still seeds normally (23, not 24 — Abri Jean Poumay skipped).
+        // Every other manual pin still seeds normally (29, not 30 — Abri Jean Poumay skipped).
         $items = $this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual]);
-        self::assertCount(23, $items);
+        self::assertCount(29, $items);
 
         self::assertStringContainsString('Abri Jean Poumay', $tester->getDisplay());
     }

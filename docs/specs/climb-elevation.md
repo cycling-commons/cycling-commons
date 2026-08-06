@@ -224,8 +224,33 @@ error term, and the most likely explanation whenever two good sources agree on a
 total and disagree over a stretch. A **DTM** at useful resolution would be the
 better input, and none is available worldwide.
 
-Two limits worth stating plainly. GLO-30 Public **withholds tiles over a few
-countries**, so "worldwide" has holes and
+**The Alps made that error term much larger, and it has a second cause.**
+Seeding six Swiss passes on 2026-08-06 produced credible lengths and averages —
+Nufenen measured 13.27 km at 8.5% against a published 13.4 km at 8.5%, Furka
+10.31 km at 6.5% against ~10.1 km at 6.6% — beside **steepest-100 m figures of
+35%** on Grimsel, Susten and Klausen. No pass road sustains that.
+
+The cause is not canopy, it is **tunnels and avalanche galleries**. Where the
+road runs under cover, a surface model reads the mountain on top of it. On the
+Grimsel the profile climbs **768 m to 822 m in 140 m and then goes flat** — a
+54 m step that is the hillside above a gallery, not tarmac. Alpine pass roads
+are full of them, and roads cut into a cliff face give the same reading from the
+wall beside the carriageway.
+
+This is the Stockeu finding at a larger scale (GLO-30 27%, Wallonia LiDAR
+16.7%): **an error that cancels over a whole climb but concentrates in its worst
+hundred metres.** So the two published figures do not have equal standing on
+alpine terrain — length and average are sound, the maximum is not — and the
+current pipeline publishes both alike. Options, none yet chosen: suppress the
+maximum where a window's implied gradient is physically implausible for a road;
+detect the flat-after-a-step signature that marks a covered section; or carry
+the road's `tunnel`/`covered` OSM tags through from the route and refuse to
+measure across them. Until one lands, **treat `maxGradient` on any climb with
+tunnels as unverified**, and note that this weakens
+[§5](#5-the-steepest-ramp-is-found-not-placed) wherever it is quoted.
+
+Two further limits worth stating plainly. GLO-30 Public **withholds tiles over a
+few countries**, so "worldwide" has holes and
 [§2d](#2d-failure-is-honest) still has to hold. And the evidence is **one tile,
 one massif, one latitude band** — Benelux is the widening that would confirm it,
 via [tools/elevation](../../tools/elevation/README.md).
