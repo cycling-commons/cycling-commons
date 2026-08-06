@@ -117,12 +117,12 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Weekly coverage batch (PostGIS index + PMTiles)")
     ap.add_argument("--regions",
-                    help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands,europe/germany)")
+                    help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,australia-oceania/australia,asia/japan,north-america/us/california,north-america/us/colorado)")
     args = ap.parse_args(argv)
     # Code-level fallback mirrors the shipped .env.example / compose default so
     # an env-less invocation still covers every onboarded region, not just BE.
     regions = [r.strip() for r in
-               (args.regions or os.environ.get("COVERAGE_REGIONS", "europe/belgium,europe/netherlands,europe/germany")).split(",")
+               (args.regions or os.environ.get("COVERAGE_REGIONS", "europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,australia-oceania/australia,asia/japan,north-america/us/california,north-america/us/colorado")).split(",")
                if r.strip()]
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)

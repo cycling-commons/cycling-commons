@@ -43,6 +43,22 @@ BOUNDARY_SNAP_DEG = 0.01
 COUNTRY_BY_REGION = {
     "europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE",
     "europe/luxembourg": "LU",
+    # 2026-08-06 rollout.
+    "europe/france": "FR", "europe/switzerland": "CH", "europe/italy": "IT",
+    "europe/great-britain": "GB",
+    # Northern Ireland has no extract of its own — Geofabrik ships it inside the
+    # all-Ireland one, which also covers the Republic. Ireland is NOT onboarded,
+    # so nearest-region-wins deletes Republic rows for having no onboarded region
+    # within BOUNDARY_SNAP_DEG, EXCEPT in the ~1 km band along the border, where
+    # the snap hands them to northern-ireland. That band is mis-stamped GB until
+    # Ireland is onboarded, which re-harvests it with correct region stamps.
+    "europe/ireland-and-northern-ireland": "GB",
+    "australia-oceania/australia": "AU",
+    "asia/japan": "JP",
+    # State-level onboarding: only the two seeded states, not a north-america/us
+    # ancestor, so an unonboarded state's extract still hard-fails resolve_country
+    # instead of silently harvesting as US.
+    "north-america/us/california": "US", "north-america/us/colorado": "US",
 }
 
 # Per-session resource budget applied to the harvest connection at startup.

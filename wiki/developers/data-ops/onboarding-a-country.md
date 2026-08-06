@@ -117,8 +117,30 @@ tells the pipeline which country an extract owns:
 COUNTRY_BY_REGION = {
     "europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE",
     "europe/luxembourg": "LU",
+    # 2026-08-06 rollout.
+    "europe/france": "FR", "europe/switzerland": "CH", "europe/italy": "IT",
+    "europe/great-britain": "GB",
+    # Northern Ireland has no extract of its own — Geofabrik ships it inside the
+    # all-Ireland one, which also covers the Republic. Ireland is NOT onboarded,
+    # so nearest-region-wins deletes Republic rows for having no onboarded region
+    # within BOUNDARY_SNAP_DEG, EXCEPT in the ~1 km band along the border, where
+    # the snap hands them to northern-ireland. That band is mis-stamped GB until
+    # Ireland is onboarded, which re-harvests it with correct region stamps.
+    "europe/ireland-and-northern-ireland": "GB",
+    "australia-oceania/australia": "AU",
+    "asia/japan": "JP",
+    # State-level onboarding: only the two seeded states, not a north-america/us
+    # ancestor, so an unonboarded state's extract still hard-fails resolve_country
+    # instead of silently harvesting as US.
+    "north-america/us/california": "US", "north-america/us/colorado": "US",
 }
 ```
+
+A country whose regions live inside a **shared** extract (Northern Ireland above) is the case to
+watch: ownership is decided by nearest onboarded region, so the un-onboarded half of the extract is
+discarded except within `BOUNDARY_SNAP_DEG` of the border. That is correct behaviour, not a bug, but
+it does mean a thin band of the neighbour's POIs carries your country code until the neighbour is
+onboarded too.
 
 !!! warning "The guard will stop you if you skip step 5"
     A missing `COUNTRY_BY_REGION` entry now **hard-fails** that region's harvest rather than silently
@@ -130,7 +152,7 @@ Then run the harvest with the new country folded into the full list (never one c
 
 <!-- CODE-ILLUSTRATIVE harvest including the new country -->
 ```bash
-make coverage-refresh regions=europe/belgium,europe/netherlands,europe/germany,europe/luxembourg
+make coverage-refresh regions=europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france
 ```
 
 Once it completes, the new country's regions appear in the scope selector automatically — the client
