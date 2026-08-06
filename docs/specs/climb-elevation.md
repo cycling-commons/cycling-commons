@@ -277,11 +277,44 @@ when it should be visible.
 copy can no longer say "100m" over a 250 m window — which is exactly what four
 translation catalogues did until this landed.
 
-**What this does not fix.** The tunnel readings are still in the data; the
-percentile only stops one from becoming the headline. Grimsel still reads 14%
-against a real ~11%, and it has the most galleries of the six. Carrying the
-road's `tunnel`/`covered` OSM tags through from the route and refusing to measure
-across them remains the real fix, and is not built.
+**Tunnels, fixed the same day.** The percentile stopped a roof reading becoming
+the headline but left it in the data, and Grimsel still read 14% against a real
+~11%. The road network already knows where the roofs are: Valhalla's
+`/trace_attributes` map-matches a shape onto real edges and reports OSM's
+`tunnel` flag per edge. So this is a lookup, not a heuristic about what a step in
+a profile "probably" means. {@see App\Elevation\CoveredSpans} does that lookup
+and `steepestWindow()` drops any window overlapping cover.
+
+| | before | tunnel-aware | truth |
+|---|---:|---:|---:|
+| Grimsel | 14% | **12%** | ~11% |
+| Susten | 12% | **11%** | — |
+| Klausen | 15% | **14%** | — |
+| Furka, Gotthard, Nufenen, Stockeu, Redoute, Huy | — | **unchanged** | — |
+
+That last row is the result that matters: every climb with no cover measured
+identically, so the change moves only what it claims to move. Grimsel carries
+**2,082 m under cover across 9 spans**, 8% of the climb; Stockeu carries none.
+
+Three details that are load-bearing:
+
+- **Spans are fractions of the line, not metres.** Map-matching snaps to the
+  carriageway, so the matched geometry is not the shape that was sent and its
+  length differs. A fraction survives that; a metre offset drifts.
+- **The lookup runs on the profiler's own 200 samples**, not the stored route.
+  Matching follows the ROAD between samples, so a 33 m tunnel is still found from
+  points 130 m apart — measured on Grimsel, Susten and Klausen, the 200-point
+  shape returns identical spans to the full 690-point route. One call, not three.
+- **A failure costs accuracy, never a profile.** An unreachable instance returns
+  no spans and the climb measures exactly as it did before cover was considered.
+  The same applies if every window straddles cover, on a climb that is mostly
+  tunnel: it falls back to measuring the lot.
+
+**What is still not fixed.** Cover is excluded from the STEEPEST search only.
+The gallery readings remain in `gain`, in the bars and in the line colouring,
+where they are diluted enough not to have shown up as wrong — that is an
+argument for leaving them alone until someone measures a case where they are,
+not proof that they are right.
 
 Two further limits worth stating plainly. GLO-30 Public **withholds tiles over a
 few countries**, so "worldwide" has holes and

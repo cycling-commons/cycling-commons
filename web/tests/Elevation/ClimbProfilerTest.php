@@ -7,7 +7,9 @@ declare(strict_types=1);
 namespace App\Tests\Elevation;
 
 use App\Elevation\ClimbProfiler;
+use App\Elevation\CoveredSpans;
 use App\Elevation\ElevationClient;
+use App\Elevation\ElevationEndpoints;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -245,5 +247,57 @@ final class ClimbProfilerTest extends TestCase
 
         self::assertNotNull($p);
         self::assertSame(250, $p['steepWindowM']);
+    }
+
+    public function testAStepUnderAGalleryIsNotTheSteepestStretch(): void
+    {
+        // A steady 5% climb with a 40 m step in the middle — the shape a
+        // Digital Surface Model returns where the road runs under an avalanche
+        // gallery and the sensor saw the mountain on top of it. Grimsel has
+        // 2,082 m of exactly this, 8% of the climb.
+        // The 2.0 m rise per point matters: with a gentler trend the 40 m step
+        // would itself be the highest point on the line, and profile() trims to
+        // the summit — which moves the distance axis out from under the span.
+        $elev = [];
+        for ($i = 0; $i < 80; ++$i) {
+            $elev[] = 1000.0 + $i * 2.0;
+        }
+        for ($i = 38; $i < 44; ++$i) {
+            $elev[$i] += 40.0;              // the roof, not the road
+        }
+
+        $withoutCover = (new ClimbProfiler($this->profilerClient($elev)))
+            ->profile($this->line(80));
+
+        // 21 evenly spaced shape points; the tunnel edge spans indices 8..12,
+        // so the covered fraction is 0.40..0.60 — the step.
+        $covered = new CoveredSpans(
+            new MockHttpClient(new MockResponse((string) json_encode([
+                'shape' => '_gwj~A_sdpH_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?_q@?',
+                'edges' => [['tunnel' => true, 'begin_shape_index' => 8, 'end_shape_index' => 12]],
+            ]))),
+            new NullLogger(),
+            new ElevationEndpoints('http://valhalla.test'),
+        );
+        $withCover = (new ClimbProfiler($this->profilerClient($elev), $covered))
+            ->profile($this->line(80));
+
+        self::assertNotNull($withoutCover);
+        self::assertNotNull($withCover);
+        self::assertGreaterThan(
+            (float) $withCover['maxGradient'],
+            (float) $withoutCover['maxGradient'],
+            'the gallery step must not survive as the published steepest stretch',
+        );
+    }
+
+    private function profilerClient(array $elev): ElevationClient
+    {
+        return new ElevationClient(
+            new MockHttpClient(new MockResponse((string) json_encode(['height' => $elev]))),
+            new NullLogger(),
+            'http://valhalla.test',
+            'Copernicus DEM GLO-30',
+        );
     }
 }

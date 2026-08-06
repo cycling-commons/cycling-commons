@@ -103,8 +103,15 @@ final class ClimbProfiler
      */
     private const float OVERSHOOT_DROP_M = 8.0;
 
-    public function __construct(private readonly ElevationClient $elevation)
-    {
+    public function __construct(
+        private readonly ElevationClient $elevation,
+        /**
+         * Tunnels and galleries, excluded from the steepest-stretch search.
+         * Null keeps the pre-2026-08-07 behaviour, which is what the tests that
+         * do not care about cover construct.
+         */
+        private readonly ?CoveredSpans $covered = null,
+    ) {
     }
 
     /**
@@ -158,7 +165,13 @@ final class ClimbProfiler
         }
 
         $gain = $elev[$si] - $elev[0];
-        $steep = self::steepestWindow($pts, $elev, $cum, $total);
+        // Fractions, converted to this line's own metres: the matched geometry
+        // is not the shape we sent, so only a proportion survives the round trip.
+        $skip = array_map(
+            static fn (array $s): array => [$s[0] * $total, $s[1] * $total],
+            $this->covered?->forShape($pts) ?? [],
+        );
+        $steep = self::steepestWindow($pts, $elev, $cum, $total, $skip);
 
         return [
             'length' => $total,
@@ -244,10 +257,13 @@ final class ClimbProfiler
      * @param list<array{0: float, 1: float}> $pts
      * @param list<float>                     $elev
      * @param list<float>                     $cum
+     * @param list<array{0: float, 1: float}> $skip covered [startM, endM] spans;
+     *                                              a window overlapping one is not a candidate, because over a
+     *                                              tunnel the DEM is reading the mountain and not the road
      *
      * @return array{g: float, at: array{0: float, 1: float}}
      */
-    private static function steepestWindow(array $pts, array $elev, array $cum, float $total): array
+    private static function steepestWindow(array $pts, array $elev, array $cum, float $total, array $skip = []): array
     {
         $win = min((float) self::MAX_WINDOW_M, $total);
         $best = 0.0;
@@ -266,8 +282,19 @@ final class ClimbProfiler
         $seen = [];
         for ($start = 0.0; $start <= $total - $win + 0.001; $start += $step) {
             $end = $start + $win;
+            foreach ($skip as [$from, $to]) {
+                if ($start < $to && $end > $from) {
+                    continue 2;   // the window straddles cover: the DEM is reading rock
+                }
+            }
             $g = ((self::at($pts, $elev, $cum, $end)['elev'] - self::at($pts, $elev, $cum, $start)['elev']) / $win) * 100;
             $seen[] = ['g' => $g, 'at' => self::at($pts, $elev, $cum, ($start + $end) / 2)['coord']];
+        }
+        if ([] === $seen && [] !== $skip) {
+            // Every window straddled cover — a climb that is mostly tunnel. Fall
+            // back to measuring it all rather than publishing nothing: the
+            // figure is then no worse than it was before cover was considered.
+            return self::steepestWindow($pts, $elev, $cum, $total);
         }
         if ([] !== $seen) {
             // Publish the STEEPEST_PERCENTILE window rather than the steepest
