@@ -34,7 +34,15 @@ case "${1:-}" in
   # and each degree cell costs ~25 MB of .hgt whether or not a climb is in it.
   # Widen the bbox when a country there is onboarded, not before.
   EUROPE)  BBOX="35,-11,72,32" ;;
-  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
+  # The 2026-08-06 rollout's continents. Each is the onboarded ground, not the
+  # continent: AUSTRALIA stops at 44S (Tasmania) and leaves out Macquarie
+  # Island, and USWEST is California + Colorado only, because a degree cell
+  # costs ~25 MB of .hgt whether or not a climb is in it.
+  AUSTRALIA) BBOX="-44,112,-9,154" ;;
+  JAPAN)     BBOX="24,122,46,146" ;;
+  USWEST)    BBOX="32,-125,43,-113" ;;   # California
+  USROCKY)   BBOX="36,-110,42,-101" ;;   # Colorado
+  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|AUSTRALIA|JAPAN|USWEST|USROCKY|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
   *)       BBOX="$1" ;;
 esac
 

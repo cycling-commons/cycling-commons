@@ -50,6 +50,16 @@ services:
         arguments:
             $valhallaUrl: '%env(ELEVATION_URL)%'
             $demSource: '%env(ELEVATION_DEM_SOURCE)%'
+            $endpoints: '@App\Elevation\ElevationEndpoints'
+
+    # One Valhalla per continent, each serving only the .hgt tiles it holds, so
+    # a climb outside Europe has to be asked of the instance that has its ground
+    # (climb-elevation.md §2b-i). ELEVATION_URL remains both the default and the
+    # master switch; ELEVATION_URLS unset means single-instance behaviour.
+    App\Elevation\ElevationEndpoints:
+        arguments:
+            $defaultUrl: '%env(ELEVATION_URL)%'
+            $map: '%env(ELEVATION_URLS)%'
 
     # S3 client shared by every continent's storage: one set of credentials, one
     # endpoint, many buckets (photo-uploads.md §2). Dev points it at the dev

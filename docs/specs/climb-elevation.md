@@ -435,6 +435,42 @@ the page's CSP lost an external host, and the sample count stopped being someone
 else's cap — it is 200 now, which puts a 4 km climb at the ~20 m spacing
 [§3c](#3c-sampling) asks for rather than the 43 m the old 100-point limit forced.
 
+### 2b-ii. One Valhalla per continent, chosen by where the climb is
+
+Elevation stopped being a single-endpoint question on **2026-08-06**, when the
+rollout took the atlas to France, Switzerland, the United Kingdom, Italy,
+Australia, Japan, California and Colorado.
+
+The host runs **six Valhalla instances, one per continent**, and skadi reads
+`additional_data.elevation` per instance. An instance therefore answers `/height`
+for exactly the tiles in its own directory — and, per
+[§2d](#2d-failure-is-honest), answers **zeros** rather than an error everywhere
+else. Asking the Europe instance for a climb on Mount Buller is not a routing
+inefficiency; it is a request that comes back looking like a flat climb at sea
+level.
+
+So the client picks the instance from the shape's coordinates
+(`App\Elevation\ElevationEndpoints`, driven by `ELEVATION_URLS`;
+`ELEVATION_URL` stays both the default and the master switch, so unsetting it
+still disables profiles entirely). Three properties make this safe to get wrong:
+
+- **The boxes are tile sets, not continents.** They are tested in a fixed
+  priority order, and `europe` is first *because* the EUROPE tile set already
+  covers Sicily and southern Spain, which a truthful Africa box would otherwise
+  claim. The `europe` box is a copy of `fetch-glo30.sh`'s EUROPE bbox; the two
+  must be widened together.
+- **A continent with no configured instance falls back to the default** rather
+  than resolving to nothing, and an unrecognised key in `ELEVATION_URLS` is
+  dropped rather than trusted — a typo'd `occeania` must not look configured.
+- **A misroute costs a missing profile, never a wrong one.** The wrong instance
+  returns zeros and `MIN_NONZERO_SHARE` refuses them. This is the same guard that
+  already protects against an un-tiled instance, now doing double duty.
+
+The shape is routed by its **first point**. A climb is one road between a foot
+and a summit, so it does not cross a continent; a shape that somehow did is still
+answered by one dataset rather than stitched from two, which is the better of the
+two failures.
+
 ### 2c. Licensing is a gate, not a footnote
 
 Attribution requirements may not be assumed from memory. They must be read from

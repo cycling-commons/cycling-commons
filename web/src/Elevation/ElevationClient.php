@@ -53,6 +53,12 @@ final class ElevationClient
         private readonly LoggerInterface $logger,
         private readonly string $valhallaUrl,
         private readonly string $demSource,
+        /**
+         * Picks the per-continent instance for a shape. Null (and an unset
+         * ELEVATION_URLS) keeps the original single-instance behaviour, which is
+         * what every test that does not care about routing constructs.
+         */
+        private readonly ?ElevationEndpoints $endpoints = null,
     ) {
     }
 
@@ -65,9 +71,15 @@ final class ElevationClient
      */
     public function heights(array $coords): ?array
     {
+        // ELEVATION_URL stays the master switch: unset disables profiles
+        // entirely, no elevation, no gradients, never a guess (§2d) — whether or
+        // not per-continent instances are configured.
         if ([] === $coords || \count($coords) > self::MAX_POINTS || '' === $this->valhallaUrl) {
             return null;
         }
+
+        // Which continent's Valhalla holds tiles for this shape.
+        $url = $this->endpoints?->forShape($coords) ?? $this->valhallaUrl;
 
         $shape = array_map(
             static fn (array $c): array => ['lat' => $c[0], 'lon' => $c[1]],
@@ -75,7 +87,7 @@ final class ElevationClient
         );
 
         try {
-            $res = $this->http->request('POST', rtrim($this->valhallaUrl, '/').'/height', [
+            $res = $this->http->request('POST', rtrim($url, '/').'/height', [
                 'json' => ['shape' => $shape],
                 'timeout' => 8,
             ]);

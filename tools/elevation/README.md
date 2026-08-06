@@ -23,6 +23,24 @@ node compare-sources.js <reference_hgt_dir> ./data/dem/hgt   # prove it first
 
 Then copy the `.hgt` files to the Valhalla host and restart it.
 
+### Which host, and which instance
+
+The project runs **one Valhalla per continent**, each reading only the tiles in
+its own `additional_data.elevation` directory. So a tile set belongs to the
+instance whose ground it covers — Australia's tiles go to `valhalla-oceania`,
+not to the Europe instance that happened to be first.
+
+The app picks the instance from the climb's coordinates
+(`App\Elevation\ElevationEndpoints`, configured by `ELEVATION_URLS`). Its
+`europe` box is a copy of the `EUROPE` preset's bbox: **widen both together, or
+a climb lands on an instance holding no tiles for it.** That failure is not
+silent-but-wrong — the instance answers all-zeros and the client rejects the
+reply — so the cost is a missing profile, never a fabricated one.
+
+Fetch and convert **on the Valhalla host**, never at home: the tiles are tens of
+GB and the host pulls them at ~55 MB/s. Cap the conversion (`docker run
+--cpus=6`) so it does not starve the live routing instances.
+
 The comparison needs a second tile set to read against. Once EU-DEM is gone the
 obvious reference is the *previous* GLO-30 build, which still catches a broken
 conversion — a truncated warp or a wrong bbox shows up immediately, even if it
@@ -35,6 +53,9 @@ cannot tell you anything new about the dataset itself.
 | `BE` / `NL` / `LU` | one country | ~15–20 each | ~0.4–0.5 GB |
 | `BENELUX` | 49–54 N, 2–8 E | **26** (measured) | **644 MB** |
 | `EUROPE` | 35–72 N, 11 W–32 E | **1137** (measured) | **28 GB** |
+| `AUSTRALIA` | 44–9 S, 112–154 E | **890** (measured) | **22 GB** |
+| `JAPAN` | 24–46 N, 122–146 E | **239** (measured) | **5.9 GB** |
+| `USWEST` + `USROCKY` | California + Colorado | **165** (measured) | **4.1 GB** |
 
 Sea-only cells do not exist in the bucket and are skipped, so the land count is
 below the bbox cell count — 1137 of 1591 for Europe. The intermediate GeoTIFFs
