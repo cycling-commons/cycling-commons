@@ -120,20 +120,34 @@ would be exactly the kind of noise-prone reading this section just warned about:
 
 <!-- CODE-FROM web/src/Elevation/ClimbProfiler.php -->
 ```php
-private const int MAX_WINDOW_M = 100;
+private const int MAX_WINDOW_M = 250;
 ```
 
 That window is the feature's own smoothing threshold, chosen for a different job — finding a climb's
 steepest representative stretch for display — than the routes feature's deliberate no-smoothing sum.
 Same underlying problem, two defensible choices, made for two different purposes.
 
-The distance is 100 m for a reason that has nothing to do with smoothing, though. It was 150 m,
-picked purely as "long enough to average out DEM noise". But the window is not a free parameter:
-climb databases publish the steepest **100 m**, so a longer window reads systematically gentler than
-every other source describing the same road, and a rider comparing us against a site they trust sees
-us understate a climb they have ridden. Matching the convention beat the marginal extra smoothing
-(2026-08-04). A threshold that is only answerable to itself is a threshold you get to choose; one
-your readers will compare against someone else's is not.
+**The number has been wrong twice, and the way it was wrong is the lesson.** It started at 150 m,
+picked as "long enough to average out DEM noise". It moved to 100 m on 2026-08-04 for a reason that
+had nothing to do with smoothing: climb databases publish the steepest **100 m**, so a longer window
+reads gentler than every other source describing the same road, and a rider comparing us against a
+site they trust would see us understate a climb they had ridden. Matching the convention beat the
+marginal extra smoothing. The principle stated at the time was that a threshold only answerable to
+itself is one you get to choose, while one your readers will compare against someone else's is not.
+
+That principle was right and the conclusion was still wrong, because it left out a third party the
+threshold has to answer to: **the data**. A 100 m window over a 30 m grid asks for a figure across
+barely three cells — under this course's own four-cell rule. It survived on short Ardennes climbs and
+collapsed in the Alps, where the Furka published 20% for a road that is about 10%. It moved to 250 m
+on 2026-08-07, and the published figure became the 95th percentile of the sliding windows rather than
+the steepest of them, because a maximum asks "what is the single worst reading here", which on a
+surface model is a question about the noise rather than the road.
+
+So the ordering is: **the source constrains the window, the convention only gets what is left.** A
+threshold your readers will compare against someone else's is not free — but a threshold finer than
+your data can answer is not available at all, and matching a convention you cannot actually measure
+just publishes someone else's number with your name on it. The full account, with the measurements,
+is in [Building elevation tiles](../data-ops/elevation-tiles.md#measuring-a-climb-end-to-end).
 
 ## Where that preview's elevation actually comes from
 
