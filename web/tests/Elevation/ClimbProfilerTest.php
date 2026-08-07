@@ -300,4 +300,35 @@ final class ClimbProfilerTest extends TestCase
             'Copernicus DEM GLO-30',
         );
     }
+
+    public function testLengthIsMeasuredAlongTheRoadAndNotAcrossTheHairpins(): void
+    {
+        // A zig-zag: 400 vertices of tight switchbacks, the shape a routing
+        // engine returns for an alpine pass. Sampling keeps every other one, and
+        // measuring along the SAMPLED line chords straight across each bend —
+        // which is how the Susten published 26,956 m for a 28,215 m road and
+        // then had its drawn line trimmed 1.3 km short of its own summit.
+        $route = [];
+        for ($i = 0; $i < 400; ++$i) {
+            // North-bound, swinging east/west every vertex.
+            $route[] = [50.0 + $i * 0.0002, 5.0 + (0 === $i % 2 ? 0.0 : 0.0006)];
+        }
+        $elev = [];
+        for ($i = 0; $i < 200; ++$i) {
+            $elev[] = 500.0 + $i * 2.0;
+        }
+
+        $p = $this->profilerFor($elev)->profile($route);
+        self::assertNotNull($p);
+
+        // The straight-line north extent alone is ~8.7 km; the zig-zag makes the
+        // real road substantially longer. The published length must reflect the
+        // road, so it has to exceed the pure north-south distance by a clear
+        // margin rather than sitting on it.
+        self::assertGreaterThan(
+            9500.0,
+            $p['length'],
+            'length must follow the road, not chord across the sampled-away bends',
+        );
+    }
 }

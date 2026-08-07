@@ -134,13 +134,14 @@ final class ClimbProfiler
         if (\count($route) < 2) {
             return null;
         }
-        $pts = self::sample($route, self::SAMPLES);
+        // Distances come from the FULL road, not from the 200 points we read
+        // elevation at — see sampleWithDistance().
+        ['pts' => $pts, 'cum' => $cum] = self::sampleWithDistance($route, self::SAMPLES);
         $read = $this->elevation->heights($pts);
         if (null === $read) {
             return null;
         }
         $elev = $read['elevations'];
-        $cum = self::cumulative($pts);
 
         // The last index at the maximum, not the first: on a plateau the
         // earliest and latest high points can be hundreds of metres apart, and
@@ -408,23 +409,46 @@ final class ClimbProfiler
     }
 
     /**
+     * The points elevation is read at, WITH their true distance along the road.
+     *
+     * The two have to be separated, and conflating them was a real bug. Sampling
+     * keeps only every k-th vertex, and a routing engine puts vertices where the
+     * road bends — so the sampled polyline chords straight across every hairpin.
+     * Measuring distance along THAT loses real road: the Susten came out 26,956 m
+     * against a 28,215 m line, 4.5% short, and the Gotthard 6.5% short. It scales
+     * with how much was decimated away, which is why nobody noticed on the short
+     * Ardennes climbs where nothing is decimated at all.
+     *
+     * Everything downstream inherits it: the published length, the average
+     * (a short denominator reads steeper), the bar boundaries, and the drawn line,
+     * which the map trims to the published length — so the climb visibly stopped
+     * 1.3 km short of its own summit on the map while the editor drew it whole
+     * (owner-reported 2026-08-07).
+     *
+     * So: read elevation at 200 points, but take each one's distance from the
+     * full-resolution line it was sampled from.
+     *
      * @param list<array{0: float, 1: float}> $coords
      *
-     * @return list<array{0: float, 1: float}>
+     * @return array{pts: list<array{0: float, 1: float}>, cum: list<float>}
      */
-    private static function sample(array $coords, int $max): array
+    private static function sampleWithDistance(array $coords, int $max): array
     {
+        $full = self::cumulative($coords);
         $n = \count($coords);
         if ($n <= $max) {
-            return $coords;
+            return ['pts' => $coords, 'cum' => $full];
         }
         $step = ($n - 1) / ($max - 1);
-        $out = [];
+        $pts = [];
+        $cum = [];
         for ($i = 0; $i < $max; ++$i) {
-            $out[] = $coords[(int) round($i * $step)];
+            $idx = (int) round($i * $step);
+            $pts[] = $coords[$idx];
+            $cum[] = $full[$idx];
         }
 
-        return $out;
+        return ['pts' => $pts, 'cum' => $cum];
     }
 
     /**
