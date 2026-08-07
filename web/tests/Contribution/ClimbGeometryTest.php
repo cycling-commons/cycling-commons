@@ -67,7 +67,9 @@ final class ClimbGeometryTest extends TestCase
 
     public function testRejectsOverlongRoute(): void
     {
-        $pairs = array_fill(0, 2001, [50.5, 5.2]);
+        // Above MAX_POINTS, which rose to 8000 once a real 28.5 km alpine
+        // pass turned out to be 2,146 points at router resolution.
+        $pairs = array_fill(0, 8001, [50.5, 5.2]);
         $this->expectException(\InvalidArgumentException::class);
         ClimbGeometry::fromPayload(['route' => (string) json_encode($pairs)]);
     }
@@ -75,7 +77,7 @@ final class ClimbGeometryTest extends TestCase
     public function testRejectsOverlongGrad(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        ClimbGeometry::fromPayload(['grad' => (string) json_encode(array_fill(0, 2001, 5))]);
+        ClimbGeometry::fromPayload(['grad' => (string) json_encode(array_fill(0, 8001, 5))]);
     }
 
     public function testRejectsOutOfRangeRouteLatitude(): void
@@ -212,5 +214,22 @@ final class ClimbGeometryTest extends TestCase
                 self::assertTrue(true);
             }
         }
+    }
+
+    public function testARealAlpinePassIsNotTooLongToRead(): void
+    {
+        // The Susten from Innertkirchen is 2,146 points over 28.5 km at router
+        // resolution, and the editor stores the ROUTER's line. Under the old
+        // 2000-point cap that shape was rejected as unreadable, so an owner
+        // could not correct the climb's summit and redrawing could never have
+        // helped (owner-reported 2026-08-08).
+        $route = [];
+        for ($i = 0; $i < 2146; ++$i) {
+            $route[] = [46.70 + $i * 0.00001, 8.22 + $i * 0.0001];
+        }
+
+        $out = ClimbGeometry::fromPayload(['route' => json_encode($route)]);
+
+        self::assertCount(2146, $out['route']);
     }
 }

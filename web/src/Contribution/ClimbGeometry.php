@@ -18,12 +18,28 @@ namespace App\Contribution;
 final class ClimbGeometry
 {
     /**
-     * Upper bound on route/grad list lengths. A drawn climb is a handful of
-     * points; thousands means a hand-crafted or runaway payload. Capping here
-     * (before the value reaches the submission/item tables and, on approve,
-     * every visitor's /map/catalog.json) bounds storage and response size.
+     * Upper bound on route/grad list lengths — a runaway/hand-crafted payload
+     * guard, bounding what reaches the submission/item tables and, on approve,
+     * every visitor's /map/catalog.json.
+     *
+     * **8000, because 2000 rejected real climbs.** "A drawn climb is a handful
+     * of points" was true of the 2 km Ardennes climbs this was written for and
+     * is false in the Alps: the editor stores the ROUTER's line, and the Susten
+     * from Innertkirchen is 2,146 points over 28.5 km at router resolution. So
+     * an owner trying to correct that climb's summit got "The drawn shape could
+     * not be read — redraw it and try again", on a shape that was perfectly
+     * readable and simply longer than a cap nobody had revisited
+     * (owner-reported 2026-08-08). Redrawing could never have helped, which is
+     * the worst kind of error message.
+     *
+     * 8000 covers a 100 km climb at the same density — Alto de Letras, the
+     * longest paved climb likely to be submitted — with room to spare. The real
+     * cost is payload: one such climb is a few hundred kB in catalog.json, so
+     * if long climbs become common the answer is simplifying the line on the
+     * way in (shape-preserving, NOT even-distance thinning, which cuts hairpin
+     * corners), not lowering this back to a number that refuses the road.
      */
-    private const int MAX_POINTS = 2000;
+    private const int MAX_POINTS = 8000;
 
     /**
      * @param array<string, mixed> $payload
