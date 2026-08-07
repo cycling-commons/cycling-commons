@@ -111,6 +111,11 @@
   // is always there and usually dead teaches a rider nothing.
   var undoBtn = document.getElementById('undo');
   cmap.on('load', function () {
+    // Satellite + Mapillary: tracing a hairpin over a flat vector basemap
+    // is guesswork, and /map has had both for a long time.
+    if (window.Cc && window.Cc.mountEditorBase) {
+      window.Cc.mountEditorBase(cmap, { token: window.MAPILLARY_TOKEN, labels: window.CC_BASE_LABELS });
+    }
     editor = window.Cc.mountClimbEditor({
       map: cmap,
       hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg'), steepPoint: fld('steepPoint') },

@@ -163,3 +163,21 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
   .receipt-mark svg{animation:cc-receipt-rise .45s ease-out both}
 }
 @keyframes cc-receipt-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── Contribute-editor base control ───────────────────────────────────────
+   The Map/Satellite/Street-level switch on the two editor maps
+   (contribute/editor-base.js). MapLibre's own ctrl-group styles a column of
+   icon buttons; these are text, so they need their own sizing. */
+/* The .maplibregl-ctrl-group qualifier is load-bearing: MapLibre sizes its
+   control buttons to a fixed 29px square, which clipped these to "MAP SATE
+   STREE". Equal specificity would win or lose on stylesheet order. */
+.ed-base.maplibregl-ctrl-group{display:flex;overflow:hidden;width:auto}
+.ed-base.maplibregl-ctrl-group button{display:block;flex:0 0 auto;padding:.34rem .62rem;
+  border:0;background:#FBF4E4;color:#20241c;
+  font-family:var(--mono,ui-monospace,monospace);font-size:.62rem;letter-spacing:.06em;
+  text-transform:uppercase;cursor:pointer;white-space:nowrap;width:auto;height:auto}
+.ed-base.maplibregl-ctrl-group button+button{border-left:1px solid rgba(32,36,28,.18)}
+.ed-base.maplibregl-ctrl-group button:hover{background:#F2E7CE}
+.ed-base.maplibregl-ctrl-group button.on{background:#20241c;color:#FBF4E4}
+.ed-base.maplibregl-ctrl-group .ed-base-street.on{background:#05CB63;color:#0b3d22}
+.ed-base.maplibregl-ctrl-group button:focus-visible{outline:2px solid #FF5A1F;outline-offset:-2px}

@@ -254,6 +254,11 @@
     });
     wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     wmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
+    wmap.on('load', function () {
+      if (window.Cc && window.Cc.mountEditorBase) {
+        window.Cc.mountEditorBase(wmap, { token: window.MAPILLARY_TOKEN, labels: window.CC_BASE_LABELS });
+      }
+    });
 
     /* ── Known-places overlay (ADD mode only) ────────────────────────────
        Coverage POIs near the view — the same OSM-derived reference layer
