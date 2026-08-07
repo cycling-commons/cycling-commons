@@ -42,7 +42,7 @@
 {% block body %}
 {% if receipt is not null %}
 <div class="receipt">
-  <div style="font-size:2.4rem">◬</div>
+  {{ include('contribute/_receipt_mark.html.twig') }}
   <h2>{{ 'vote.receipt.heading'|trans }}</h2>
   <p>{{ 'vote.receipt.body'|trans }}</p>
   <p class="ref">{{ 'vote.receipt.reference'|trans }} {{ receipt.reference }}</p>

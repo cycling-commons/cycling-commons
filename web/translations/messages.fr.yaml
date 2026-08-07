@@ -1659,6 +1659,7 @@ map:
   d_rider_steepest: 'Point le plus raide, signalé par un cycliste'
   d_rider_ramp: 'rampe'
   d_fresh_fresh: 'récent'
+  d_climb_finish: 'Sommet'
   d_fresh_ageing: 'vieillissant'
   d_fresh_stale: 'périmé'
   d_last_confirmed: 'dernière confirmation'
@@ -2938,3 +2939,8 @@ moderate_regions:
   flash_enabled: 'Cette région s''ouvre désormais en Sélection.'
   flash_disabled: 'Cette région s''ouvre désormais en Tout.'
   flash_not_ready: 'Cette région n''a pas encore atteint le seuil de curation.'
+
+# Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
+# improve.receipt.* / vote.receipt.* groups stay separate.
+receipt:
+  thanks: 'Merci'

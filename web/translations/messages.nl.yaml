@@ -1659,6 +1659,7 @@ map:
   d_rider_steepest: 'Steilste punt, aangegeven door een fietser'
   d_rider_ramp: 'steilte'
   d_fresh_fresh: 'vers'
+  d_climb_finish: 'Top'
   d_fresh_ageing: 'verouderend'
   d_fresh_stale: 'verouderd'
   d_last_confirmed: 'laatst bevestigd'
@@ -2938,3 +2939,8 @@ moderate_regions:
   flash_enabled: 'Deze regio opent nu in Selectie.'
   flash_disabled: 'Deze regio opent nu in Alles.'
   flash_not_ready: 'Die regio heeft de samenstellingsdrempel nog niet bereikt.'
+
+# Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
+# improve.receipt.* / vote.receipt.* groups stay separate.
+receipt:
+  thanks: 'Bedankt'

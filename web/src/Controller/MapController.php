@@ -224,6 +224,7 @@ final class MapController extends AbstractController
             'elevAria' => 'd_elev_aria', 'sharedBy' => 'd_shared_by', 'viewProfile' => 'd_view_profile',
             'sharedAnon' => 'd_shared_anon', 'steepest' => 'd_steepest',
             'riderSteepest' => 'd_rider_steepest', 'riderRamp' => 'd_rider_ramp',
+            'climbFinish' => 'd_climb_finish',
             'freshFresh' => 'd_fresh_fresh', 'freshAgeing' => 'd_fresh_ageing', 'freshStale' => 'd_fresh_stale',
             'lastConfirmed' => 'd_last_confirmed', 'thisSeason' => 'd_this_season',
             'city' => 'd_city', 'notesNone' => 'd_notes_none', 'nearbyH' => 'd_nearby_h', 'nothingHere' => 'd_nothing_here',

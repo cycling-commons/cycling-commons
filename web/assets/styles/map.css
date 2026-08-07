@@ -632,6 +632,16 @@
      triangle. */
   .cc-steep-rider{color:#F2C46B;border-color:#C98A22}
   .cc-steep-rider::before{content:"⬗";color:#F2C46B}
+  /* Where the climb ENDS. Deliberately not in the purple/amber gradient family
+     the two steepness markers use: this one answers "where does it stop", not
+     "how steep is it", and a reader must not have to decode a third shade of
+     the same idea. Anchored bottom so the flag sits ON the summit point. */
+  .cc-summit{display:flex;align-items:center;gap:.2rem;background:var(--ink);color:#F3EBD8;
+    font-family:var(--mono);font-weight:700;font-size:.58rem;letter-spacing:.04em;line-height:1;
+    padding:.16rem .44rem;border-radius:3px;border:1.5px solid #F3EBD8;
+    box-shadow:0 2px 7px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
+  .cc-summit::before{content:"⚑";font-size:.62rem;color:#FF5A1F}
+  .cc-summit:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}
   /* Pulse via a compositable pseudo-element transform/opacity, not a box-shadow
      spread repaint every frame over the map canvas (review W10). */
   /* Selection halo: a transparent-centre glowing ring + expanding pulse, so the

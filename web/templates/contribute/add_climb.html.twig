@@ -133,7 +133,7 @@
 {# ── SERVER-SIDE RECEIPT (honest stub state after POST) ── #}
 <div class="wrap" id="main">
   <div class="receipt">
-    <div style="font-size:2.4rem">◬</div>
+    {{ include('contribute/_receipt_mark.html.twig') }}
     <h2>{{ 'add_climb.receipt.heading'|trans }}</h2>
     <p>{{ 'add_climb.receipt.body'|trans }}</p>
     <p class="ref">{{ 'add_climb.receipt.reference'|trans }} {{ receipt.reference }}</p>
@@ -351,7 +351,7 @@
 
   {# STEP 5 — SUBMITTED (client-side wizard only; real POST uses receipt above) #}
   <section class="pane submitted" data-s="5">
-    <div class="done-ic">◬</div>
+    {{ include('contribute/_receipt_mark.html.twig') }}
     <h2>{{ 'add_climb.step5.heading'|trans }}</h2>
     <p>{{ 'add_climb.step5.body_pre'|trans }} <b id="doneName">{{ 'add_climb.step5.your_climb'|trans }}</b>{{ 'add_climb.step5.body_post'|trans }}</p>
     <a class="btn btn-g" href="{{ path('map') }}">{{ 'add_climb.step5.cta'|trans }}</a>

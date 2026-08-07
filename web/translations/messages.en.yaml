@@ -1975,6 +1975,7 @@ map:
   d_rider_steepest: 'Steepest point, marked by a rider'
   d_rider_ramp: 'ramp'
   d_fresh_fresh: 'fresh'
+  d_climb_finish: 'Summit'
   d_fresh_ageing: 'ageing'
   d_fresh_stale: 'stale'
   d_last_confirmed: 'last confirmed'
@@ -2964,3 +2965,8 @@ moderate_regions:
   flash_enabled: 'This region now opens in Curated best-of.'
   flash_disabled: 'This region now opens in Everything.'
   flash_not_ready: 'That region has not reached the curated threshold yet.'
+
+# Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
+# improve.receipt.* / vote.receipt.* groups stay separate.
+receipt:
+  thanks: 'Thank you'

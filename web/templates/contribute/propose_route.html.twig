@@ -57,6 +57,7 @@
 
   {% if receipt is not null %}
     <section class="card receipt" data-receipt>
+      {{ include('contribute/_receipt_mark.html.twig') }}
       <h2>{{ 'propose_route.receipt_h'|trans }}</h2>
       <p>{{ 'propose_route.receipt_p'|trans }}</p>
       <div class="ref-box">

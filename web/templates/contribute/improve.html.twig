@@ -257,7 +257,7 @@
 {# ── SERVER-SIDE RECEIPT (honest stub state after POST) ── #}
 <div class="wrap" id="main">
   <div class="receipt">
-    <div style="font-size:2.4rem">◬</div>
+    {{ include('contribute/_receipt_mark.html.twig') }}
     <h2>{{ 'improve.receipt.heading'|trans }}</h2>
     <p>{{ 'improve.receipt.body'|trans }}</p>
     {# One statement of what happens next, not two. The amber note under this

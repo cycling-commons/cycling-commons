@@ -149,3 +149,17 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 .foot .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .foot .mono{font-size:.64rem;color:rgba(239,230,212,.72)}  /* lightened: ≈7.7:1 on --ink (WCAG AAA); was .5 ≈4.4:1 */
 .foot a:hover{color:var(--trail)}
+
+/* ── Submission receipts ──────────────────────────────────────────────────
+   Shared by contribute/_receipt_mark.html.twig, which every receipt includes.
+   Lives here rather than in each page's inline <style> block because five
+   templates render the same mark and they were already drifting: four carried
+   a ◬ glyph and propose_route had no mark at all. */
+.receipt-mark{display:flex;flex-direction:column;align-items:center;gap:.35rem;color:var(--ink,#20241c)}
+.receipt-mark svg{display:block}
+.receipt-thanks{font-family:var(--serif,Georgia,serif);font-size:1.05rem;
+  letter-spacing:.01em;color:var(--ink,#20241c)}
+@media(prefers-reduced-motion:no-preference){
+  .receipt-mark svg{animation:cc-receipt-rise .45s ease-out both}
+}
+@keyframes cc-receipt-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}

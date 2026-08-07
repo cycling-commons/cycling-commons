@@ -509,6 +509,32 @@ export function render(){
           const climbRoute = trimToClimb(f.route, f.length);
           if(lineG) drawClimbLine(`route-${layer.key}-${i}`, climbRoute, lineG, layer, f);
           else drawLine(`route-${layer.key}-${i}`, climbRoute, layer.color, layer, f);
+          /* The summit, marked. The pin sits at the FOOT (pinPoint), so without
+             this a climb has no visible end at all — the line just stops, and on
+             a pass whose last kilometres are gentle it is genuinely unclear
+             whether it stopped at the top or ran out of data.
+
+             It also fixes selecting one climb of several. Climbs that share a
+             valley town share a foot EXACTLY — Grimsel and Susten both start at
+             Innertkirchen, so their pins stack and only the upper one can be
+             clicked. Summits are always distinct, so every climb now has one
+             target that is unambiguously its own (owner-reported 2026-08-07). */
+          const summitAt = climbRoute && climbRoute.length ? climbRoute[climbRoute.length-1] : null;
+          if(summitAt){
+            const fEl=document.createElement('div');
+            fEl.className='cc-summit';
+            fEl.textContent=D.climbFinish||'SUMMIT';
+            fEl.title=`${f.name} · ${D.climbFinish||'SUMMIT'}`;
+            fEl.tabIndex=0; fEl.setAttribute('role','button');
+            fEl.setAttribute('aria-label', `${f.name} — ${D.climbFinish||'SUMMIT'}`);
+            // stopPropagation: see the note on the steep marker's handler below.
+            const openHere=e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin([summitAt[1],summitAt[0]]); };
+            fEl.addEventListener('click',openHere);
+            fEl.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openHere(e); }});
+            const fm=new maplibregl.Marker({element:fEl,anchor:'bottom'})
+              .setLngLat([summitAt[1],summitAt[0]]).addTo(map);
+            markers.push(fm);
+          }
           if(f.steep){
             const sEl=document.createElement('div');
             sEl.className='cc-steep'; sEl.textContent=f.steep.pct;
