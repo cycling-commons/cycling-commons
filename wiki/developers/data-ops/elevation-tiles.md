@@ -490,6 +490,26 @@ reading a limit rather than a measurement.*
 **The 95th percentile of sliding 250 m windows.** Wider than the source's
 resolution floor, and a statistic that a single bad cell cannot move.
 
+<figure class="gis-fig"><svg viewBox="0 0 660 350" role="img" aria-labelledby="pct-t pct-d" xmlns="http://www.w3.org/2000/svg"><title id="pct-t">Every sliding window on one climb, ordered by gradient</title><desc id="pct-d">A curve showing the gradient of every two hundred and fifty metre sliding window along the Furka, ordered from gentlest on the left to steepest on the right. For the first ninety five percent of windows the curve rises slowly and smoothly from about three percent to about ten percent, which is the road. In the last few percent it turns sharply upward and shoots to twenty four percent at the extreme right. That tail is tinted and labelled as artifacts: cuttings, rock faces and roofs. A vertical marker at the ninety fifth percentile shows the published figure of ten percent, sitting at the top of the smooth part of the curve, while the maximum at the far right is more than twice it.</desc>
+<line class="gis-muted" x1="70" y1="278" x2="628" y2="278"/>
+<line class="gis-muted" x1="70" y1="278" x2="70" y2="60"/>
+<line class="gis-muted" stroke-dasharray="2 5" x1="70" y1="194" x2="628" y2="194"/>
+<line class="gis-muted" stroke-dasharray="2 5" x1="70" y1="110" x2="628" y2="110"/>
+<text class="gis-label-sm" x="62" y="282" text-anchor="end">0%</text>
+<text class="gis-label-sm" x="62" y="198" text-anchor="end">10%</text>
+<text class="gis-label-sm" x="62" y="114" text-anchor="end">20%</text>
+<path class="gis-fill-clay" stroke="none" fill-opacity=".35" d="M 592 278 L 592 191 L 604 177 L 612 144 L 617 110 L 620 76 L 620 278 Z"/>
+<polyline class="gis-accent" fill="none" points="70,253 180,232 290,219 400,209 510,201 565,196 592,191 604,177 612,144 617,110 620,76"/>
+<line class="gis-clay" x1="592" y1="191" x2="592" y2="300"/>
+<text class="gis-label-sm gis-halo" x="600" y="308" text-anchor="end">95th percentile</text>
+<text class="gis-label-sm gis-halo" x="600" y="326" text-anchor="end">published 10%</text>
+<circle class="gis-clay gis-fill-clay" cx="620" cy="76" r="4"/>
+<text class="gis-label-sm gis-halo" x="608" y="64" text-anchor="end">maximum 24%</text>
+<text class="gis-label-sm gis-halo" x="500" y="128" text-anchor="middle">the tail is artifacts</text>
+<text class="gis-label-sm" x="70" y="40">Every 250 m window, ordered by gradient</text>
+<text class="gis-label-sm gis-halo" x="200" y="262">the road</text>
+<text class="gis-label-sm" x="70" y="302">gentlest &#8594; steepest</text></svg><figcaption>Every sliding window on one climb, gentlest to steepest. For 95% of them the curve is <strong>smooth and slow</strong> — that is the road. Then it turns almost vertical. <strong>A maximum reads the very last point of that tail</strong>, which is a cutting, a rock face or a roof; the 95th percentile reads the top of the smooth part. This is why the average was always trustworthy and the steepest figure never was: an average is a question the noise cancels out of, a maximum is a question <em>about</em> the noise.</figcaption></figure>
+
 It was checked against the only two independent truths available, and it hits
 both: Wallonia's 50 cm LiDAR puts the Côte de Stockeu's steepest at **16.7%**
 and we read **16.7%**; the Furka is about **10%** and we read **10.3%**. Two
@@ -501,16 +521,19 @@ stop testing.
 A percentile removes scattered noise. It does not remove a systematic error, and
 alpine roads have a large one.
 
-<figure class="gis-fig"><svg viewBox="0 0 660 360" role="img" aria-labelledby="gal-t gal-d" xmlns="http://www.w3.org/2000/svg"><title id="gal-t">A surface model follows the roof of an avalanche gallery, not the road inside it</title><desc id="gal-d">A cross-section of a mountain road crossing a slope. The accent line along the bottom is the road, climbing steadily from left to right. In the middle a covered gallery encloses it, drawn as a shaded box over the road. The muted dashed line above shows what a digital surface model records: it tracks the road on the open approach, jumps sharply upward at the gallery entrance to follow the roof and the rock on top of it, runs flat across the covered section, then drops back down to the road where the gallery ends. The step up is marked as fifty four metres gained in one hundred and forty metres, which reads as a thirty seven percent ramp that no road contains, and the flat section afterwards is what gives it away.</desc>
-<path class="gis-muted" fill="none" stroke-dasharray="5 4" d="M 40 250 L 180 232 L 200 150 L 420 142 L 440 214 L 620 190"/>
-<rect class="gis-spruce gis-fill-spruce" fill-opacity=".30" x="190" y="150" width="240" height="76"/>
-<path class="gis-accent" fill="none" d="M 40 250 L 180 232 L 420 214 L 620 190"/>
-<line class="gis-clay" x1="196" y1="228" x2="196" y2="96"/>
-<text class="gis-label-sm gis-halo" x="196" y="88" text-anchor="middle">+54 m in 140 m → "37%"</text>
-<text class="gis-label-sm gis-halo" x="305" y="140" text-anchor="middle">then flat — the giveaway</text>
-<text class="gis-label-sm gis-halo" x="305" y="205" text-anchor="middle">gallery</text>
-<text class="gis-label-sm" x="40" y="46">What the model reads where the road is roofed</text>
-<rect class="gis-ink gis-fill-accent" x="40" y="292" width="20" height="20"/><text class="gis-label-sm" x="70" y="308">the road you ride</text><rect class="gis-ink gis-fill-glacier" x="40" y="322" width="20" height="20"/><text class="gis-label-sm" x="70" y="338">what the surface model records</text></svg><figcaption>Where a road runs under an avalanche gallery or through a tunnel, a <strong>surface model reads the mountain on top of it</strong>. On the Grimsel the profile climbs <strong>768 m to 822 m in 140 m and then goes flat</strong> — a 54 m step that is the hillside above a gallery, not tarmac. The flat afterwards is the signature: real ramps do not stop dead.</figcaption></figure>
+<figure class="gis-fig"><svg viewBox="0 0 660 340" role="img" aria-labelledby="gal-t gal-d" xmlns="http://www.w3.org/2000/svg"><title id="gal-t">A surface model follows the roof of an avalanche gallery, not the road inside it</title><desc id="gal-d">A cross-section of a mountain road climbing gently from left to right. Over the middle third a solid roof slab sits above the road, forming an avalanche gallery, with the road running straight through underneath it unchanged. The accent line is the road itself, rising steadily and unbroken the whole way. The dashed line is what a digital surface model records: it lies on the road across the open approach, then jumps almost vertically at the gallery entrance up onto the top of the roof, runs dead flat along it, and drops back down onto the road where the gallery ends. The jump is annotated as fifty four metres gained in one hundred and forty metres, which reads as a thirty seven percent ramp, and the flat stretch immediately after it is annotated as the giveaway, because a real ramp does not stop dead.</desc>
+<rect class="gis-fill-spruce" stroke="none" fill-opacity=".38" x="200" y="178" width="240" height="14"/>
+<line class="gis-muted" x1="201" y1="190" x2="201" y2="261"/>
+<line class="gis-muted" x1="439" y1="190" x2="439" y2="233"/>
+<path class="gis-accent" fill="none" d="M 40 286 L 200 262 L 440 232 L 620 206"/>
+<path class="gis-muted" fill="none" stroke-dasharray="7 4" style="stroke-width:2.6" d="M 40 286 L 197 263 L 203 174 L 437 172 L 443 233 L 620 206"/>
+<line class="gis-clay" x1="197" y1="260" x2="197" y2="132"/>
+<text class="gis-label-sm gis-halo" x="205" y="126">+54 m in 140 m &#8594; reads as 37%</text>
+<text class="gis-label-sm gis-halo" x="320" y="164" text-anchor="middle">dead flat &#8212; the giveaway</text>
+<text class="gis-label-sm gis-halo" x="320" y="222" text-anchor="middle">gallery</text>
+<text class="gis-label-sm" x="40" y="44">What the model reads where the road is roofed</text>
+<rect class="gis-ink gis-fill-accent" x="40" y="306" width="18" height="14"/><text class="gis-label-sm" x="66" y="318">the road you ride</text>
+<rect class="gis-ink gis-fill-glacier" x="290" y="306" width="18" height="14"/><text class="gis-label-sm" x="316" y="318">what the surface model records</text></svg><figcaption>Where a road runs under an avalanche gallery or through a tunnel, a <strong>surface model reads the mountain on top of it</strong>. On the Grimsel the profile climbs <strong>768&nbsp;m to 822&nbsp;m in 140&nbsp;m and then goes flat</strong> — a 54&nbsp;m step that is the roof, not tarmac. The flat afterwards is the signature: real ramps do not stop dead. The road underneath never changes gradient at all.</figcaption></figure>
 
 The tempting fix is to detect that signature — find the step-then-flat pattern
 and discard it. Resist it. **The road network already knows.** Valhalla's
