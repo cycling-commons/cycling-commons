@@ -1093,7 +1093,7 @@ twofactor:
     complete_warn: 'C''est la seule fois que ces codes sont affichés — copiez-les maintenant. Chaque code est consommé dès son utilisation. Traitez-les comme des mots de passe.'
     done: 'Terminé'
     h1: 'Configurer l''authentification à deux facteurs'
-    lead: 'Toutes les photos qu''un signalement anonyme a masquées sur la carte et qui attendent encore une décision. Masquées, pas retirées : rien n''a été supprimé, et le contributeur a été prévenu qu''elle est masquée et pourquoi. Les restaurer ici les remet en ligne, prévient le contributeur et acte que le signalement n''était pas réel — cela ne ferme pas la catégorie, donc un futur signalement authentique sur la même photo sera toujours entendu.'
+    lead: 'Protégez votre compte avec un code à usage unique généré par une application d''authentification (Google Authenticator, Aegis, 1Password, etc.).'
     step1_no: 'Étape 1'
     step1_h2: 'Scannez ce QR code'
     qr_alt: 'QR code TOTP'
@@ -2129,7 +2129,7 @@ moderate_routes:
   stat_ascent: '%m% m de dénivelé'
   overview:
     showing: '%shown% sur %total% en attente'
-    empty: 'Aucune photo n''est actuellement masquée par un signalement tiers.'
+    empty: 'Aucune proposition d''itinéraire en attente pour le moment.'
   filter:
     region: 'Région'
     all_regions: 'Toutes les régions'
@@ -2526,8 +2526,8 @@ admin:
     esc_step_curator: 'Prenez des nouvelles du curateur qui a escaladé. Il l''a vu pour que personne d''autre n''ait à le voir : cela mérite un message.'
   withheld:
     title: 'Photos retenues par un signalement'
-    lead: 'Toutes les photos qu''un signalement anonyme a retirées de la carte et qui attendent encore une décision. Les restaurer ici les remet en ligne et acte que le signalement n''était pas réel — cela ne ferme pas la catégorie, donc un futur signalement authentique sur la même photo sera toujours entendu.'
-    empty: 'Aucune photo n''est actuellement retenue par un signalement tiers.'
+    lead: 'Toutes les photos qu''un signalement anonyme a masquées sur la carte et qui attendent encore une décision. Masquées, pas retirées : rien n''a été supprimé, et le contributeur a été prévenu qu''elle est masquée et pourquoi. Les restaurer ici les remet en ligne, prévient le contributeur et acte que le signalement n''était pas réel — cela ne ferme pas la catégorie, donc un futur signalement authentique sur la même photo sera toujours entendu.'
+    empty: 'Aucune photo n''est actuellement masquée par un signalement tiers.'
     breaker_open_b: 'Le coupe-circuit de retrait automatique est ouvert.'
     breaker_open: 'Les signalements urgents arrivent bien plus vite que tout rythme authentique : ils ne retirent donc plus les photos d''eux-mêmes. Restaurez ci-dessous ce qui n''est pas une vraie réclamation, et attendez-vous à en recevoir d''autres.'
     col_photo: 'Photo'

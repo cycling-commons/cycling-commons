@@ -1093,7 +1093,7 @@ twofactor:
     complete_warn: 'Dies ist das einzige Mal, dass diese Codes angezeigt werden — kopiere sie jetzt. Jeder Code wird in dem Moment verbraucht, in dem er verwendet wird. Behandle sie wie Passwörter.'
     done: 'Fertig'
     h1: 'Zwei-Faktor-Authentifizierung (2FA) einrichten'
-    lead: 'Jedes Foto, das eine anonyme Meldung von der Karte verborgen hat und das noch auf eine Entscheidung wartet. Verborgen, nicht entfernt: Es wurde nichts gelöscht, und die beitragende Person weiß, dass es verborgen ist und warum. Wiederherstellen setzt sie zurück, informiert die beitragende Person und hält fest, dass die Meldung nicht echt war — die Kategorie bleibt offen, eine spätere echte Meldung zum selben Foto wird also weiterhin gehört.'
+    lead: 'Schütze dein Konto mit einem Einmalcode aus einer Authenticator-App (Google Authenticator, Aegis, 1Password usw.).'
     step1_no: 'Schritt 1'
     step1_h2: 'Diesen QR-Code scannen'
     qr_alt: 'TOTP-QR-Code'
@@ -2132,7 +2132,7 @@ moderate_routes:
   stat_ascent: '%m% m Anstieg'
   overview:
     showing: '%shown% von %total% ausstehend'
-    empty: 'Derzeit hält keine Meldung von Dritten ein Foto verborgen.'
+    empty: 'Momentan keine ausstehenden Routenvorschläge.'
   filter:
     region: 'Region'
     all_regions: 'Alle Regionen'
@@ -2529,8 +2529,8 @@ admin:
     esc_step_curator: 'Frag nach, wie es der kuratierenden Person geht, die eskaliert hat. Sie hat es gesehen, damit es niemand sonst musste — das ist eine Nachricht wert.'
   withheld:
     title: 'Durch eine Meldung zurückgehaltene Fotos'
-    lead: 'Jedes Foto, das eine anonyme Meldung von der Karte genommen hat und das noch auf eine Entscheidung wartet. Wiederherstellen setzt sie zurück und hält fest, dass die Meldung nicht echt war — die Kategorie bleibt offen, eine spätere echte Meldung zum selben Foto wird also weiterhin gehört.'
-    empty: 'Derzeit hält keine Meldung von Dritten ein Foto zurück.'
+    lead: 'Jedes Foto, das eine anonyme Meldung von der Karte verborgen hat und das noch auf eine Entscheidung wartet. Verborgen, nicht entfernt: Es wurde nichts gelöscht, und die beitragende Person weiß, dass es verborgen ist und warum. Wiederherstellen setzt sie zurück, informiert die beitragende Person und hält fest, dass die Meldung nicht echt war — die Kategorie bleibt offen, eine spätere echte Meldung zum selben Foto wird also weiterhin gehört.'
+    empty: 'Derzeit hält keine Meldung von Dritten ein Foto verborgen.'
     breaker_open_b: 'Der Schutzschalter für automatisches Zurückhalten ist offen.'
     breaker_open: 'Dringende Meldungen treffen weit schneller ein als jede echte Rate, sie entfernen Fotos also nicht mehr von selbst. Stelle unten wieder her, was keine echte Beanstandung ist, und rechne mit mehr.'
     col_photo: 'Foto'

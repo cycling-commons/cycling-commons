@@ -1093,7 +1093,7 @@ twofactor:
     complete_warn: 'Dit is de enige keer dat deze codes worden getoond — kopieer ze nu. Elke code is verbruikt zodra hij is gebruikt. Behandel ze als wachtwoorden.'
     done: 'Klaar'
     h1: 'Twee-factor-authenticatie instellen'
-    lead: 'Elke foto die een anonieme melding van de kaart heeft verborgen en die nog op een beslissing wacht. Verborgen, niet verwijderd: er is niets gewist, en de bijdrager heeft te horen gekregen dat de foto verborgen is en waarom. Herstellen zet ze terug, licht de bijdrager in en legt vast dat de melding niet echt was — het sluit de categorie niet, dus een latere echte melding over dezelfde foto wordt nog steeds gehoord.'
+    lead: 'Beveilig je account met een eenmalige code uit een authenticator-app (Google Authenticator, Aegis, 1Password, enz.).'
     step1_no: 'Stap 1'
     step1_h2: 'Scan deze QR-code'
     qr_alt: 'TOTP QR-code'
@@ -2129,7 +2129,7 @@ moderate_routes:
   stat_ascent: '%m% m stijging'
   overview:
     showing: '%shown% van %total% in behandeling'
-    empty: 'Er is op dit moment geen foto verborgen door een melding van een derde.'
+    empty: 'Op dit moment geen routevoorstellen in behandeling.'
   filter:
     region: 'Regio'
     all_regions: 'Alle regio''s'
@@ -2526,8 +2526,8 @@ admin:
     esc_step_curator: 'Vraag hoe het gaat met de curator die escaleerde. Die heeft het gezien zodat niemand anders dat hoefde; dat verdient een bericht.'
   withheld:
     title: 'Foto''s die door een melding offline staan'
-    lead: 'Elke foto die een anonieme melding van de kaart heeft gehaald en die nog op een beslissing wacht. Herstellen zet ze terug en legt vast dat de melding niet echt was — het sluit de categorie niet, dus een latere echte melding over dezelfde foto wordt nog steeds gehoord.'
-    empty: 'Er staat op dit moment geen foto offline door een melding van een derde.'
+    lead: 'Elke foto die een anonieme melding van de kaart heeft verborgen en die nog op een beslissing wacht. Verborgen, niet verwijderd: er is niets gewist, en de bijdrager heeft te horen gekregen dat de foto verborgen is en waarom. Herstellen zet ze terug, licht de bijdrager in en legt vast dat de melding niet echt was — het sluit de categorie niet, dus een latere echte melding over dezelfde foto wordt nog steeds gehoord.'
+    empty: 'Er is op dit moment geen foto verborgen door een melding van een derde.'
     breaker_open_b: 'De noodrem op automatisch offline halen staat open.'
     breaker_open: 'Dringende meldingen komen veel sneller binnen dan enig echt tempo, dus ze halen foto''s niet langer zelf weg. Herstel hieronder wat geen echte claim is, en reken op meer.'
     col_photo: 'Foto'

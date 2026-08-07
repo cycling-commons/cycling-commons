@@ -1097,7 +1097,7 @@ twofactor:
     complete_warn: 'This is the only time these codes are shown — copy them now. Each code is consumed the moment it is used. Treat them like passwords.'
     done: 'Done'
     h1: 'Set up two-factor authentication'
-    lead: 'Every photo an anonymous report has hidden from the map and that is still waiting for a decision. Hidden, not removed: nothing has been deleted, and the contributor has been told it is hidden and why. Restoring here puts them back, tells the contributor, and records that the report was not real — it does not close the category, so a future genuine report about the same photo is still heard.'
+    lead: 'Protect your account with a one-time code from an authenticator app (Google Authenticator, Aegis, 1Password, etc.).'
     step1_no: 'Step 1'
     step1_h2: 'Scan this QR code'
     qr_alt: 'TOTP QR code'
@@ -2152,7 +2152,7 @@ moderate_routes:
   stat_ascent: '%m% m ascent'
   overview:
     showing: 'showing %shown% of %total% pending'
-    empty: 'No photo is currently hidden by a third-party report.'
+    empty: 'No route proposals waiting right now.'
   filter:
     region: 'Region'
     all_regions: 'All regions'
@@ -2552,8 +2552,8 @@ admin:
     esc_step_curator: 'Check on the curator who escalated it. They saw it so nobody else had to, and that is worth a message.'
   withheld:
     title: 'Photos withheld by a report'
-    lead: 'Every photo an anonymous report has taken off the map and that is still waiting for a decision. Restoring here puts them back and records that the report was not real — it does not close the category, so a future genuine report about the same photo is still heard.'
-    empty: 'No photo is currently withheld by a third-party report.'
+    lead: 'Every photo an anonymous report has hidden from the map and that is still waiting for a decision. Hidden, not removed: nothing has been deleted, and the contributor has been told it is hidden and why. Restoring here puts them back, tells the contributor, and records that the report was not real — it does not close the category, so a future genuine report about the same photo is still heard.'
+    empty: 'No photo is currently hidden by a third-party report.'
     breaker_open_b: 'The auto-withhold circuit breaker is open.'
     breaker_open: 'Urgent reports are arriving far faster than any genuine rate, so they are no longer taking photos down by themselves. Restore anything below that is not a real claim, and expect more to arrive.'
     col_photo: 'Photo'
