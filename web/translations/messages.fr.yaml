@@ -2763,7 +2763,7 @@ item_type:
 'Hazard type': 'Type de danger'
 'Lift / ramp?': 'Ascenseur / rampe ?'
 'Lit at night?': 'Éclairé la nuit ?'
-'Steepest 100m (%)': 'Pente des 100m les plus raides (%)'
+'Steepest 250m (%)': 'Pente des 250m les plus raides (%)'
 'Meals / breakfast?': 'Repas / petit-déjeuner ?'
 'Note': 'Note'
 'Note for riders': 'Note pour les cyclistes'

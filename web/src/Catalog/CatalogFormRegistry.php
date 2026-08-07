@@ -71,10 +71,18 @@ final class CatalogFormRegistry
                     // Named for the distance it is measured over, deliberately.
                     // "Max gradient" invites comparison with a POINT maximum -
                     // Mur de Huy's famous ~26% is its steepest hairpin, not its
-                    // steepest 100 m - and ours is the sustained figure climb
-                    // databases publish. Saying which one it is settles the
-                    // apparent disagreement (owner, 2026-08-05).
-                    CatalogField::derivedText('maxGradient', 'Steepest 100m (%)'),
+                    // steepest sustained stretch - and ours is the sustained
+                    // figure. Saying which one it is settles the apparent
+                    // disagreement (owner, 2026-08-05).
+                    //
+                    // THE NUMBER HERE MUST MATCH ClimbProfiler::MAX_WINDOW_M.
+                    // It is a msgid, so it cannot be interpolated without
+                    // breaking four catalogues, which is exactly why it went
+                    // stale: the window moved to 250 m on 2026-08-07 and this
+                    // label kept saying 100 m, so the drawer showed
+                    // "steepest 250m 11%" in its caption and "Steepest 100m"
+                    // in the field directly beneath it (owner-reported).
+                    CatalogField::derivedText('maxGradient', 'Steepest 250m (%)'),
                     CatalogField::select('effort', 'Effort', ['Steady', 'Challenging', 'Tough', 'Very steep']),
                     CatalogField::textarea('correction', 'Anything to correct?', 'e.g. the foot starts at the bridge, not the square', display: false),
                 ],

@@ -57,7 +57,7 @@ final class SubmissionChangeSummaryTest extends TestCase
         // gradient" invited comparison with a point maximum — Mur de Huy's
         // famous ~26% is its steepest hairpin, not its steepest 100 m — and a
         // rider reading a change needs to know which one moved.
-        self::assertSame('Steepest 100m (%)', $rows[0]['label']);
+        self::assertSame('Steepest 250m (%)', $rows[0]['label']);
     }
 
     /**
