@@ -1,0 +1,27 @@
+web/src/Contribution/ClimbGeometry.php
+  s_14d343aaa1f816::t_ca5d5b1342ca80 21-40,42
+web/tests/Contribution/ClimbGeometryTest.php
+  s_14d343aaa1f816::t_dfbb65c623accc 70-72,80
+  s_14d343aaa1f816::t_e20d60db290cb8 218-234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "363efaaa1fc2db6993ca0987223901e82755cad8",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_14d343aaa1f816": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "95808232-1ca6-4e95-ae43-a4126c68a402",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
