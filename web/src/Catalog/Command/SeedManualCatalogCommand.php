@@ -14,6 +14,7 @@ use Doctrine\DBAL\Exception as DBALException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -28,6 +29,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *
  * Idempotent: upserts by the same (source, source_ref, letter) key the
  * importer uses, with source_ref = `manual:<stable-slug>` - safe to re-run.
+ * A row that carries an approved edit keeps its DB content ({@see ItemUpsert}),
+ * unless its ref is named in `--overwrite-ref` - the owner-authorised escape
+ * hatch for when a corrected seed should beat the edit pinning the row.
  *
  * Collision-safe: before inserting/upserting a pin, skips it if a non-manual
  * item already exists with the same (name, letter) - i.e. never seeds a
@@ -430,10 +434,39 @@ final class SeedManualCatalogCommand extends Command
         parent::__construct();
     }
 
+    protected function configure(): void
+    {
+        $this->addOption(
+            'overwrite-ref',
+            null,
+            InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
+            'source_ref of a pin whose approved edit this run may overwrite (repeatable). Without it, an edited row keeps its DB content.',
+        );
+    }
+
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+
+        /** @var list<string> $overwriteRefs */
+        $overwriteRefs = $input->getOption('overwrite-ref');
+        $knownRefs = array_column(self::pins(), 'ref');
+        $unknownRefs = array_diff($overwriteRefs, $knownRefs);
+        if ([] !== $unknownRefs) {
+            $io->error(sprintf(
+                '--overwrite-ref matches no seeded pin: %s. Nothing was written.',
+                implode(', ', $unknownRefs),
+            ));
+
+            return Command::INVALID;
+        }
+        if ([] !== $overwriteRefs) {
+            $io->warning(sprintf(
+                'Overwriting the approved edit(s) on: %s. The change_history rows stay, the current content does not.',
+                implode(', ', $overwriteRefs),
+            ));
+        }
 
         try {
             $this->db->beginTransaction();
@@ -449,7 +482,7 @@ final class SeedManualCatalogCommand extends Command
                 }
 
                 $this->db->executeStatement(
-                    ItemUpsert::SQL,
+                    \in_array($pin['ref'], $overwriteRefs, true) ? ItemUpsert::SQL_OVERWRITE_EDITED : ItemUpsert::SQL,
                     [
                         'letter' => $pin['letter'],
                         'name' => $pin['name'],

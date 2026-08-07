@@ -185,6 +185,22 @@ shared by every seeding command so the rules below can never diverge:
    `subdivision_id`/`attributes` untouched and only refreshes `imported_at`.
    A re-harvest never clobbers a moderation-approved edit.
 
+The shield has exactly one escape hatch, for the case where a *corrected seed
+definition* should beat the edit pinning the row - a re-measured geometry, say.
+`app:catalog:seed-manual --overwrite-ref=<source_ref>` (repeatable) swaps in
+`ItemUpsert::SQL_OVERWRITE_EDITED`, the same statement without the guard, for
+the named refs only. It errors on a ref that matches no pin, so a typo can not
+silently widen the blast radius, and it prints a warning naming every ref it is
+about to overwrite. The `change_history` rows are left intact: the edit stays in
+the audit trail, only the current content is replaced. No other seeding command
+has this option, and there is no all-refs form.
+
+Note that the shielded columns include `attributes`, which is also where
+`app:climbs:recompute` stores a climb's measured `length`/`gain`/gradients. An
+overwrite therefore resets those to whatever the seed carries (usually nothing),
+so **re-run `app:climbs:recompute --write` after any climb overwrite** or the
+drawer will render an unmeasured climb.
+
 ## 4. Lifecycle states (`App\Catalog\ItemState`)
 
 | State | Meaning | Set by |

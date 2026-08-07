@@ -40,4 +40,40 @@ final class ItemUpsert
                        THEN NOW() ELSE item.updated_at END,
           imported_at = NOW()
         SQL;
+
+    /**
+     * The same upsert with the change_history guard removed, so a re-seed
+     * DOES overwrite a row that carries an approved edit.
+     *
+     * This exists for one situation: the seed definition has been corrected
+     * (a re-measured geometry, a fixed attribute) and the owner decides the
+     * corrected seed beats the edit that is pinning the row. It is never the
+     * default and never applies to a whole run - the only caller is
+     * {@see \App\Catalog\Command\SeedManualCatalogCommand}'s `--overwrite-ref`
+     * option, which names one source_ref at a time and errors on a ref that
+     * matches no pin, so a typo can not silently widen the blast radius.
+     *
+     * The change_history rows themselves are left intact: the edit stays in
+     * the audit trail, only the current content is replaced.
+     *
+     * Bind: identical to {@see self::SQL}.
+     *
+     * @see docs/specs/catalog-data-model.md §3
+     *
+     * @api Referenced by the manual catalog seeding command.
+     */
+    public const string SQL_OVERWRITE_EDITED = <<<'SQL'
+        INSERT INTO item (letter, name, geom, country_code, subdivision_id, state, source, source_ref, attributes, created_at, updated_at, imported_at)
+        VALUES (:letter, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :cc, :sub, :state, :source, :ref, :attrs, NOW(), NOW(), NOW())
+        ON CONFLICT (source, source_ref, letter) DO UPDATE SET
+          name = EXCLUDED.name,
+          geom = EXCLUDED.geom,
+          country_code = EXCLUDED.country_code,
+          subdivision_id = EXCLUDED.subdivision_id,
+          attributes = EXCLUDED.attributes,
+          updated_at = CASE WHEN (item.name, ST_AsEWKB(item.geom), item.country_code, item.subdivision_id, item.attributes)
+                            IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.country_code, EXCLUDED.subdivision_id, EXCLUDED.attributes)
+                       THEN NOW() ELSE item.updated_at END,
+          imported_at = NOW()
+        SQL;
 }
