@@ -1663,6 +1663,7 @@ map:
   d_rider_ramp: 'Rampe'
   d_fresh_fresh: 'aktuell'
   d_climb_finish: 'Gipfel'
+  d_avg_short: 'Ø'
   d_fresh_ageing: 'alternd'
   d_fresh_stale: 'veraltet'
   d_last_confirmed: 'zuletzt bestätigt'

@@ -1660,6 +1660,7 @@ map:
   d_rider_ramp: 'steilte'
   d_fresh_fresh: 'vers'
   d_climb_finish: 'Top'
+  d_avg_short: 'gem'
   d_fresh_ageing: 'verouderend'
   d_fresh_stale: 'verouderd'
   d_last_confirmed: 'laatst bevestigd'

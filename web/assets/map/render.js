@@ -18,7 +18,7 @@ import { map, flyToPin, styleReady } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { I18N, D, LAYER_L10N, tpl, trVal, DIFF_LABELS, CC_SEASON_LABEL } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversine,
-         featurePoint, pinPoint, currentSeason, ccUrl, wc } from './util.js';
+         featurePoint, pinPoint, currentSeason, ccUrl, wc, featureSummary } from './util.js';
 import { CATALOG, active, layerByKey, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { inScope, curScope } from './scope-ui.js';
 import { pinEl, miniIcon } from './icons.js';
@@ -310,7 +310,7 @@ export function renderSurfaceLayer(layer, visible){
       layout:{'line-cap':st.cap||'round','line-join':'round'},paint});
     map.on('click',id,e=>{ const f=featAt(e); if(f) openDrawer(layer,f); });
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-    map.on('mousemove',id,e=>{ const f=featAt(e); if(f) showTip(f.headline||f.name, e.lngLat); });   // surface type (e.g. "Asphalt · Excellent") on hover
+    map.on('mousemove',id,e=>{ const f=featAt(e); if(f) showTip(f.headline||featureSummary(f,D)||f.name, e.lngLat); });   // surface type (e.g. "Asphalt · Excellent") on hover
     map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
   });
   return feats.length;
@@ -572,15 +572,17 @@ export function render(){
         const el = pinEl(layer,f.cur,f);
         el.style.cursor='pointer';
         el.tabIndex=0; el.setAttribute('role','button');
-        el.setAttribute('aria-label', `${f.name} — ${f.headline}`);
+        const summary = featureSummary(f, D);
+        el.setAttribute('aria-label', summary ? `${f.name} — ${summary}` : f.name);
         const start = pinPoint(f);   // climbs: pin sits at the start (foot) — util.js owns the rule
         const lngLat=[start[1],start[0]];
         // stopPropagation: see the note above the steep-marker's click handler —
         // same click-bleed-through-to-the-map-canvas issue, same fix.
         el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin(lngLat); });
-        el.addEventListener('mouseenter', ()=>showTip(`${f.name} · ${f.headline}`, lngLat));
+        const tipText = summary ? `${f.name} · ${summary}` : f.name;
+        el.addEventListener('mouseenter', ()=>showTip(tipText, lngLat));
         el.addEventListener('mouseleave', hideTip);
-        el.addEventListener('focus', ()=>showTip(`${f.name} · ${f.headline}`, lngLat));
+        el.addEventListener('focus', ()=>showTip(tipText, lngLat));
         el.addEventListener('blur', hideTip);
         el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDrawer(layer,f); flyToPin(lngLat); }});
         const m=new maplibregl.Marker({element:el,anchor:'bottom'})

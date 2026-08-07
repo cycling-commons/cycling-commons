@@ -1660,6 +1660,7 @@ map:
   d_rider_ramp: 'rampe'
   d_fresh_fresh: 'récent'
   d_climb_finish: 'Sommet'
+  d_avg_short: 'moy'
   d_fresh_ageing: 'vieillissant'
   d_fresh_stale: 'périmé'
   d_last_confirmed: 'dernière confirmation'

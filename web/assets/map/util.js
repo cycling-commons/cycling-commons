@@ -101,3 +101,25 @@ export function attachPhotos(target, props){
   if(photo && !Array.isArray(photo)) target.photo = photo;
   return target;
 }
+
+/* A one-line summary for hovers, tooltips and aria-labels.
+
+   These used to print `f.headline`, a stored display string. It was DELETED
+   from every climb by app:climbs:recompute — it drifted the moment a climb was
+   redrawn, so the drawer composes its own line at render time now — and the
+   map's tooltip was never moved across, which is how a rider got
+   "Furka Pass · undefined" (owner-reported 2026-08-07).
+
+   Composed from the measured values, so it cannot drift again. Falls back to
+   the stored headline for layers that still legitimately carry one (surface),
+   and to nothing rather than to the word "undefined". */
+export function featureSummary(f, D){
+  if(!f) return '';
+  const bits = [];
+  const km = Number(f.length) > 0 ? Number(f.length)/1000 : 0;
+  if(km) bits.push(`${km.toFixed(1)} km`);
+  const avg = f.avgGradient == null ? null : String(f.avgGradient).match(/-?\d+(\.\d+)?/);
+  if(avg) bits.push(`${avg[0]}% ${(D && D.avgShort) || 'avg'}`);
+  if(bits.length) return bits.join(' · ');
+  return f.headline || '';
+}

@@ -1976,6 +1976,7 @@ map:
   d_rider_ramp: 'ramp'
   d_fresh_fresh: 'fresh'
   d_climb_finish: 'Summit'
+  d_avg_short: 'avg'
   d_fresh_ageing: 'ageing'
   d_fresh_stale: 'stale'
   d_last_confirmed: 'last confirmed'
