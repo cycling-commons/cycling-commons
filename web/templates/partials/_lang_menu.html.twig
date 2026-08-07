@@ -5,7 +5,7 @@
    (e.g. the map) keep their clean path; locale_switch still records the choice
    (session + user). A disclosure of plain links (button + aria-expanded), NOT
    an ARIA menu — same pattern as the account chip; driven by js/nav-menus.js. #}
-{% set _locales = {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch'} %}
+{% set _locales = {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch', 'es': 'Español'} %}
 {% set _alt = locale_alternates().urls %}
 <div class="lang-menu" data-nav-menu>
   <button type="button" class="lang-chip" data-nav-toggle aria-expanded="false" aria-controls="cc-lang-dd" aria-label="{{ 'nav.language'|trans }}">

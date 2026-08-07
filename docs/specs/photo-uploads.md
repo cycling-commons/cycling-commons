@@ -277,7 +277,7 @@ transaction**; an unclaimed upload's coordinates disappear with it at orphan
   is `pending`, and **belongs to the submitting user**, then stamps
   `submission_id` on the rows.
 - The video drop zone, `videoUrl` field, and video copy are removed; step-3
-  copy updates to photos-only in all four locales.
+  copy updates to photos-only in every locale.
 
 ## 5. Moderation path
 

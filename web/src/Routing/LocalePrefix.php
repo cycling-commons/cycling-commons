@@ -23,5 +23,6 @@ final class LocalePrefix
         'fr' => '/fr',
         'nl' => '/nl',
         'de' => '/de',
+        'es' => '/es',
     ];
 }

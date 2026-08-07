@@ -26,7 +26,7 @@ use Symfony\Component\Validator\Constraints\Url;
  */
 final class CatalogFieldConstraints
 {
-    public const array LOCALES = ['en', 'fr', 'nl', 'de'];
+    public const array LOCALES = ['en', 'fr', 'nl', 'de', 'es'];
 
     /** @return list<Constraint> */
     public static function for(CatalogField $field): array

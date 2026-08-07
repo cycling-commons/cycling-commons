@@ -25,7 +25,7 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class LocaleController extends AbstractController
 {
-    #[Route('/i18n/{_locale}', name: 'locale_switch', requirements: ['_locale' => 'en|fr|nl|de'])]
+    #[Route('/i18n/{_locale}', name: 'locale_switch', requirements: ['_locale' => 'en|fr|nl|de|es'])]
     public function switch(string $_locale, Request $request): Response
     {
         $request->getSession()->set('_locale', $_locale);

@@ -154,7 +154,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'json')]
     private array $baseCountryCodes = [];
 
-    // Preferred UI language (short code: en|fr|nl|de). Null = follow the
+    // Preferred UI language (short code: en|fr|nl|de|es). Null = follow the
     // language switcher / browser / site default.
     #[ORM\Column(type: 'string', length: 5, nullable: true)]
     private ?string $locale = null;

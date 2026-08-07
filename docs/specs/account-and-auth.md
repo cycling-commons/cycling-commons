@@ -630,7 +630,7 @@ enforces is a rule an administrator walks straight past.
 | rule | constraint | rejects |
 |---|---|---|
 | length ceiling | `Assert\Length(max: 100)` | over-long names |
-| no confusables | `Assert\NoSuspiciousCharacters` (en/fr/nl/de) | mixed-script lookalikes (`Jоhn` with a Cyrillic о) |
+| no confusables | `Assert\NoSuspiciousCharacters` (en/fr/nl/de/es) | mixed-script lookalikes (`Jоhn` with a Cyrillic о) |
 | no invisibles | `Assert\Regex('/\p{Cf}/u', match: false)` | zero-width and other format characters |
 | plain spelling | `App\Validator\PlainDisplayName` | non-U+0020 whitespace (non-breaking, ideographic), doubled or edge spaces, and Unicode compatibility forms (fullwidth) |
 

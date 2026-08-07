@@ -236,25 +236,25 @@ Scanning is layered, front line first
 
 ### i18n (first written spec — the contract)
 
-Day-one internationalisation across **EN / FR / NL / DE**:
+Day-one internationalisation across **EN / FR / NL / DE / ES**:
 
 - **Enabled locales:** `framework.default_locale: en`,
-  `enabled_locales: [en, fr, nl, de]`
+  `enabled_locales: [en, fr, nl, de, es]`
   (`web/config/packages/translation.yaml`).
 - **Path-prefix routing with clean EN.** English is served unprefixed; the
   other locales carry a path prefix (`/regions`, `/fr/regions`, `/nl/…`,
-  `/de/…`). The prefix map is the single constant
+  `/de/…`, `/es/…`). The prefix map is the single constant
   `App\Routing\LocalePrefix::PATHS` (`web/src/Routing/LocalePrefix.php`),
   applied as a class-level `#[Route(LocalePrefix::PATHS)]` on localized
   controllers; Symfony generates one route per locale and sets `_locale` from
   the matched path. Keep the constant in sync with `enabled_locales`.
   Locale subdomains were rejected for the app.
 - **One `messages` domain.** All user-facing strings are `|trans` keys in
-  `web/translations/messages.{en,fr,nl,de}.yaml` — no per-feature domains.
+  `web/translations/messages.{en,fr,nl,de,es}.yaml` — no per-feature domains.
 - **Validator-message rule:** `framework.validation.translation_domain` is set
   to `messages` (`web/config/packages/validator.yaml`), so every constraint
   message **must** be a catalogue key — leaving any built-in default (English)
-  message on a constraint ships untranslated text to fr/nl/de users (see
+  message on a constraint ships untranslated text to non-English users (see
   `App\Form\CatalogFieldConstraints` for the pattern of repointing built-in
   constraint messages at catalogue keys).
 - **Parity gate:** `web/tools/check-translations.sh` fails if any non-default
@@ -265,6 +265,12 @@ Day-one internationalisation across **EN / FR / NL / DE**:
   authenticated users persist a `User.locale` preference which
   `LoginSuccessHandler` restores into the session and `SettingsController`
   updates.
+- **ES has not had a native-speaker review.** Spanish was added on
+  2026-08-08 and every string in `messages.es.yaml` was written in one pass
+  by one translator; nobody on the project reads Spanish as a first language
+  yet. The catalogue is complete and in parity, and it is enabled, but treat
+  its copy as unreviewed until a Spanish-speaking rider has read it. Tracked
+  in `docs/TODO.md`.
 
 ## 8. Testing discipline
 

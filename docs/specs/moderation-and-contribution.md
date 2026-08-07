@@ -379,7 +379,7 @@ One envelope DTO, not eleven: `App\Contribution\SubmissionDraft` carries
 (`CatalogFormRegistry`), not classes. Constraints on the DTO:
 
 - `title`: `NotBlank`, `Length(max: 200)`,
-  `NoSuspiciousCharacters(locales: [en, fr, nl, de])`, plus a
+  `NoSuspiciousCharacters(locales: [en, fr, nl, de, es])`, plus a
   `Regex(/\p{Cf}/u, match: false)` that closes the lone-zero-width-character
   gap ICU's spoof checker leaves open (the same guard is centralized in
   `CatalogFieldConstraints` for registry text fields).
@@ -514,7 +514,7 @@ on the same submission: the second sees the decided status and gets
 
 Every decision also fills `decision_note`/`decided_by`/`decided_at` and writes
 the submitter's outcome message inside the same transaction (§7.2). Decisions
-require `ROLE_CURATOR` (access-control rule `^(/(fr|nl|de))?/moderate` →
+require `ROLE_CURATOR` (access-control rule `^(/(fr|nl|de|es))?/moderate` →
 `ROLE_CURATOR` in `web/config/packages/security.yaml` — locale-prefixed) and
 pass the moderator area guard (§9).
 

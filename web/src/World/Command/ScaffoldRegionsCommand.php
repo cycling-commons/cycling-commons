@@ -37,7 +37,7 @@ final class ScaffoldRegionsCommand extends Command
 {
     /** Overture operating subtype -> World Subdivision.level (tree depth). */
     private const array LEVEL_BY_SUBTYPE = ['region' => 1, 'county' => 2];
-    private const array LOCALES = ['en', 'fr', 'nl', 'de'];
+    private const array LOCALES = ['en', 'fr', 'nl', 'de', 'es'];
 
     public function __construct(private readonly Connection $db)
     {

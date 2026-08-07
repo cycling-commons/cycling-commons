@@ -124,16 +124,23 @@ final class ScaffoldRegionsCommandTest extends KernelTestCase
         self::assertStringContainsString('app:world:import', $tester->getDisplay());
     }
 
-    public function testEmitsFourLocaleStubsWithExonymMarkers(): void
+    public function testEmitsALocaleStubPerEnabledLocaleWithExonymMarkers(): void
     {
         $this->seedWorld();
         $this->runScaffold(['country' => 'NL'])->assertCommandIsSuccessful();
 
+        // Read the locales from the kernel rather than listing them here, so
+        // adding a locale to framework.enabled_locales cannot leave this test
+        // asserting the old count.
+        /** @var list<string> $locales */
+        $locales = self::getContainer()->getParameter('kernel.enabled_locales');
+        self::assertContains('es', $locales, 'guard: the parameter is the real locale list');
+
         $yaml = (string) file_get_contents($this->out.'/nl/translations.patch.yaml');
-        foreach (['en', 'fr', 'nl', 'de'] as $locale) {
+        foreach ($locales as $locale) {
             self::assertStringContainsString("\n{$locale}:\n", $yaml);
         }
-        self::assertSame(4, substr_count($yaml, "  all_nl:\n"), 'every locale carries the all_<cc> country rung');
+        self::assertSame(\count($locales), substr_count($yaml, "  all_nl:\n"), 'every locale carries the all_<cc> country rung');
         self::assertStringContainsString("label: 'Drenthe' # TODO exonym?", $yaml);
         self::assertStringContainsString("label: 'All Netherlands' # TODO exonym?", $yaml);
         // sokil db-only ships English msgids only -> NO locale is confidently

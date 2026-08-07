@@ -4,7 +4,7 @@
 #
 # Fails if any enabled non-default locale's catalog is missing keys (or has
 # extra keys) compared to the default locale (en). This keeps every user-facing
-# string translated across en/fr/nl/de, so an untranslated key can never ship
+# string translated across en/fr/nl/de/es, so an untranslated key can never ship
 # silently. Run as part of `make app-test` / CI.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -17,7 +17,7 @@ use Symfony\Component\Yaml\Yaml;
 
 $dir = 'translations';
 $default = 'en';
-$locales = ['fr', 'nl', 'de'];
+$locales = ['fr', 'nl', 'de', 'es'];
 
 function flat(array $a, string $p = ''): array
 {

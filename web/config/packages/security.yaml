@@ -30,14 +30,14 @@ security:
                 check_path: 2fa_login_check
 
     access_control:
-        # Localized routes carry an optional /fr|/nl|/de prefix (English is clean); the
-        # `(/(fr|nl|de))?` group keeps these rules matching both. `logout`, `verify`,
+        # Localized routes carry an optional /fr|/nl|/de|/es prefix (English is clean); the
+        # `(/(fr|nl|de|es))?` group keeps these rules matching both. `logout`, `verify`,
         # scheb's `/2fa` interstitial, `/api`, and `/admin` stay unprefixed (see i18n design).
-        - { path: '^(/(fr|nl|de))?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
+        - { path: '^(/(fr|nl|de|es))?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
         - { path: ^/verify, roles: PUBLIC_ACCESS }
         # Public rider profiles (spec 2026-07-14): explicit PUBLIC_ACCESS for the
         # same scheb lazy-firewall reason as /map/catalog.json below.
-        - { path: '^(/(fr|nl|de))?/riders/', roles: PUBLIC_ACCESS }
+        - { path: '^(/(fr|nl|de|es))?/riders/', roles: PUBLIC_ACCESS }
         # Explicit PUBLIC_ACCESS (not just "no rule matches") so scheb's lazy-firewall
         # TwoFactorAccessListener treats the path as publicly accessible and skips
         # tokenStorage->getToken() — otherwise it forces a session read on every
@@ -79,10 +79,10 @@ security:
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.
         # Must precede the ^/2fa rule below, which guards scheb's interstitial (/2fa, /2fa_check)
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.
-        - { path: '^(/(fr|nl|de))?/2fa/setup', roles: ROLE_USER }
+        - { path: '^(/(fr|nl|de|es))?/2fa/setup', roles: ROLE_USER }
         - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
-        - { path: '^(/(fr|nl|de))?/(profile|settings)', roles: ROLE_USER }
-        - { path: '^(/(fr|nl|de))?/moderate', roles: ROLE_CURATOR }
+        - { path: '^(/(fr|nl|de|es))?/(profile|settings)', roles: ROLE_USER }
+        - { path: '^(/(fr|nl|de|es))?/moderate', roles: ROLE_CURATOR }
         - { path: ^/admin, roles: ROLE_ADMIN }
 
     role_hierarchy:

@@ -94,6 +94,7 @@ final class UserCrudController extends AbstractCrudController
                 'Français' => 'fr',
                 'Nederlands' => 'nl',
                 'Deutsch' => 'de',
+                'Español' => 'es',
             ]))
             ->add(DateTimeFilter::new('createdAt', 'Registered'));
     }

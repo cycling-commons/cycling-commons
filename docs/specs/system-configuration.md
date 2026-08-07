@@ -212,8 +212,8 @@ value the admin page would refuse.
    fallback.
 2. Add a key constant and a `[key, min, max, group]` row to
    `SettingsRegistry`. The key must equal the parameter name.
-3. Add `admin.settings.field.<key_with_underscores>.label` and `.help` to **all
-   four** catalogs (en/fr/nl/de) — a pre-commit hook enforces parity. Write the
+3. Add `admin.settings.field.<key_with_underscores>.label` and `.help` to **every**
+   catalog (en/fr/nl/de/es) — a pre-commit hook enforces parity. Write the
    help as *what moving this does to the site*, not as a restatement of the
    label.
 4. Change the consumer to take `SettingsProviderInterface` and read through it.

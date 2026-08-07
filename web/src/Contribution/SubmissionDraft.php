@@ -32,7 +32,7 @@ final readonly class SubmissionDraft
         public ItemType $type,
         #[Assert\NotBlank]
         #[Assert\Length(max: 200)]
-        #[Assert\NoSuspiciousCharacters(locales: ['en', 'fr', 'nl', 'de'])]
+        #[Assert\NoSuspiciousCharacters(locales: ['en', 'fr', 'nl', 'de', 'es'])]
         // NoSuspiciousCharacters' CHECK_INVISIBLE (ICU Spoofchecker) only fires
         // on *repeated identical* nonspacing combining marks. A lone
         // zero-width/format character (e.g. U+200B ZERO WIDTH SPACE) is

@@ -109,6 +109,7 @@ final class SettingsType extends AbstractType
                     'Français' => 'fr',
                     'Nederlands' => 'nl',
                     'Deutsch' => 'de',
+                    'Español' => 'es',
                 ],
                 'choice_translation_domain' => false,
             ])

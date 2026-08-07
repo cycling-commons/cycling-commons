@@ -63,7 +63,7 @@ final class DateDisplayExtensionTest extends TestCase
      */
     public function testAFixedFormatIgnoresThePageLanguage(): void
     {
-        foreach (['en', 'fr', 'nl', 'de'] as $locale) {
+        foreach (['en', 'fr', 'nl', 'de', 'es'] as $locale) {
             self::assertSame('01-08-2026', $this->extension(DateFormat::Dmy, $locale)->date(self::WHEN), $locale);
         }
     }

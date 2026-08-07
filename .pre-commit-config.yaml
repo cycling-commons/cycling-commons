@@ -79,10 +79,10 @@ repos:
         language: python
         files: ^(web/.*\.(php|js)|pipeline/.*\.py)$
         pass_filenames: false
-      # four (en/fr/nl/de). Runs only when translation files are staged;
+      # five (en/fr/nl/de/es). Runs only when translation files are staged;
       # skips gracefully without php/vendor (CI still enforces it).
       - id: check-translations
-        name: translation catalogs in parity (en/fr/nl/de)
+        name: translation catalogs in parity (en/fr/nl/de/es)
         entry: tools/check-translations-precommit.sh
         language: script
         files: ^web/translations/messages\..*\.yaml$

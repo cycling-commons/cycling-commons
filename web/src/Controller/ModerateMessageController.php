@@ -163,7 +163,7 @@ final class ModerateMessageController extends AbstractController
         $referer = $request->headers->get('referer');
         if (null !== $referer) {
             $path = parse_url($referer, PHP_URL_PATH);
-            if (\is_string($path) && 1 === preg_match('#^(/(fr|nl|de))?/moderate(/|$)#', $path)) {
+            if (\is_string($path) && 1 === preg_match('#^(/(fr|nl|de|es))?/moderate(/|$)#', $path)) {
                 $query = parse_url($referer, PHP_URL_QUERY);
 
                 return $this->redirect($path.(\is_string($query) ? '?'.$query : ''));

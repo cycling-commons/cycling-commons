@@ -20,6 +20,7 @@ final class SecurityController extends AbstractController
         'fr' => '/fr/login',
         'nl' => '/nl/login',
         'de' => '/de/login',
+        'es' => '/es/login',
     ], name: 'login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {

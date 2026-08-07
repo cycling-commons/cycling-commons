@@ -35,6 +35,7 @@ final class RegistrationController extends AbstractController
         'fr' => '/fr/register',
         'nl' => '/nl/register',
         'de' => '/de/register',
+        'es' => '/es/register',
     ], name: 'register')]
     public function register(
         Request $request,
