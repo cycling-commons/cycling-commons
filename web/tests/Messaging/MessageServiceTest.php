@@ -255,4 +255,94 @@ final class MessageServiceTest extends KernelTestCase
             $list,
         ));
     }
+
+    public function testListForPagesAndCountForMatchesIt(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $svc = $this->svc();
+        $rider = $this->user($em, 'rider8@test.test');
+        $curator = $this->user($em, 'curator8@test.test');
+
+        $sent = [];
+        for ($i = 1; $i <= 5; ++$i) {
+            $sent[] = $svc->sendCurator($rider->getId(), $curator->getId(), 'correction', $i, 'R'.$i, 'note '.$i);
+        }
+        $newestFirst = array_map(
+            static fn (\App\Messaging\Entity\UserMessage $m): ?int => $m->getId(),
+            array_reverse($sent),
+        );
+
+        self::assertSame(5, $svc->countFor($rider->getId()), 'countFor sees every head');
+
+        $ids = static fn (array $page): array => array_map(
+            static fn (\App\Messaging\Entity\UserMessage $m): ?int => $m->getId(),
+            $page,
+        );
+        self::assertSame(\array_slice($newestFirst, 0, 2), $ids($svc->listFor($rider->getId(), 0, 2)));
+        self::assertSame(\array_slice($newestFirst, 2, 2), $ids($svc->listFor($rider->getId(), 2, 2)));
+        self::assertSame(\array_slice($newestFirst, 4, 2), $ids($svc->listFor($rider->getId(), 4, 2)));
+    }
+
+    /**
+     * The whole point of markRead over markAllRead: a reader who has seen page
+     * one must not have page two's unread state consumed underneath them.
+     */
+    public function testMarkReadOnlyTouchesTheMessagesGiven(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $svc = $this->svc();
+        $rider = $this->user($em, 'rider9@test.test');
+        $curator = $this->user($em, 'curator9@test.test');
+
+        $a = $svc->sendCurator($rider->getId(), $curator->getId(), 'correction', 1, 'A', 'first');
+        $b = $svc->sendCurator($rider->getId(), $curator->getId(), 'correction', 2, 'B', 'second');
+        $c = $svc->sendCurator($rider->getId(), $curator->getId(), 'correction', 3, 'C', 'third');
+        self::assertSame(3, $svc->unreadCount($rider->getId()));
+
+        $svc->markRead($rider->getId(), [(int) $c->getId(), (int) $b->getId()]);
+        self::assertSame(1, $svc->unreadCount($rider->getId()), 'only the page that was shown is read');
+
+        // Someone else's message id must not be readable by quoting it.
+        $other = $this->user($em, 'rider9b@test.test');
+        $svc->markRead($other->getId(), [(int) $a->getId()]);
+        self::assertSame(1, $svc->unreadCount($rider->getId()), 'mark-read is scoped to the recipient');
+
+        $svc->markRead($rider->getId(), [(int) $a->getId()]);
+        self::assertSame(0, $svc->unreadCount($rider->getId()));
+    }
+
+    /**
+     * Heads exclude the reader's own needs-info replies; repliesBySender()
+     * brings them back for the questions on the page, so a question and its
+     * answer can never land on different pages.
+     */
+    public function testRepliesAreNotHeadsButComeBackForTheirSubmission(): void
+    {
+        self::bootKernel();
+        $em = $this->em();
+        $svc = $this->svc();
+        $rider = $this->user($em, 'rider10@test.test');
+        $curator = $this->user($em, 'curator10@test.test');
+
+        $question = $svc->sendCurator($rider->getId(), $curator->getId(), 'submission', 42, 'SUB-42', 'which side?');
+        $reply = $svc->sendRiderReply($curator->getId(), $rider->getId(), 'submission', 42, 'SUB-42', 'the north side');
+        self::assertNotNull($question);
+        self::assertNotNull($reply);
+
+        $heads = $svc->listFor($rider->getId());
+        self::assertSame([$question->getId()], array_map(
+            static fn (\App\Messaging\Entity\UserMessage $m): ?int => $m->getId(),
+            $heads,
+        ), 'the rider’s own reply is not a head');
+        self::assertSame(1, $svc->countFor($rider->getId()), 'and it is not counted as one either');
+
+        self::assertSame([$reply->getId()], array_map(
+            static fn (\App\Messaging\Entity\UserMessage $m): ?int => $m->getId(),
+            $svc->repliesBySender($rider->getId(), [42]),
+        ));
+        self::assertSame([], $svc->repliesBySender($curator->getId(), [42]), 'scoped to the sender');
+        self::assertSame([], $svc->repliesBySender($rider->getId(), []));
+    }
 }

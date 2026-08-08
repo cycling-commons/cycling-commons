@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Messaging;
 
 use App\Messaging\Entity\UserMessage;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
@@ -23,6 +24,13 @@ use Symfony\Component\Uid\Uuid;
  */
 final class MessageService
 {
+    /**
+     * Messages per page on the dashboard. The list used to stop at a hard 100
+     * with nothing saying so; anyone past that simply never saw their older
+     * decisions again (2026-08-08).
+     */
+    public const int PER_PAGE = 20;
+
     private const int BODY_TEXT_MAX_LENGTH = 2000;
     private const string ERROR_TOO_LONG = 'moderate.error.note_too_long';
     private const string ERROR_REQUIRED = 'moderate.error.note_required';
@@ -165,9 +173,18 @@ final class MessageService
      * Unread counting and mark-read stay recipient-only on purpose: a message
      * you wrote is not news to you.
      *
+     * Returns THREAD HEADS only - everything except the reader's own replies,
+     * which {@see \App\Controller\MessagesController} attaches under the
+     * question they answer. Paging over heads is what keeps a question and its
+     * answer on the same page: paging the flat list would eventually put a
+     * reply at the foot of one page and the question it belongs to at the top
+     * of the next, where each reads as an orphan. (A reply whose question row
+     * is gone - retention sweep, deleted account - has nothing to attach to and
+     * does not render; the reply itself is not the record, the decision is.)
+     *
      * @return list<UserMessage>
      */
-    public function listFor(int $userId, int $limit = 100): array
+    public function listFor(int $userId, int $offset = 0, int $limit = self::PER_PAGE): array
     {
         $qb = $this->em->getRepository(UserMessage::class)->createQueryBuilder('m');
 
@@ -184,22 +201,74 @@ final class MessageService
             // rather than not written, because deleting the row would take the
             // desk's copy of the answer with it.
             //
-            // Only when the reader is the curator it was addressed to. The
-            // rider's own answer still appears in their thread, matched on
-            // senderId by answersToQuestions().
-            ->andWhere($qb->expr()->orX(
-                'm.kind != :moderationReply',
-                'm.senderId = :id',
-            ))
+            // Combined with the `senderId = :id` half of the clause above, the
+            // only rider replies that ever reached this list were the reader's
+            // OWN - and those are precisely what the controller re-attaches to
+            // the question they answer. So heads exclude the kind outright and
+            // repliesBySender() brings the reader's back, for the questions on
+            // this page only.
+            ->andWhere('m.kind != :moderationReply')
             ->setParameter('moderationReply', UserMessageKind::RiderReply)
             ->setParameter('id', $userId)
             ->orderBy('m.createdAt', 'DESC')
             ->addOrderBy('m.id', 'DESC')
+            ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
 
         return $messages;
+    }
+
+    /**
+     * How many thread heads {@see self::listFor()} would return in total.
+     * Same filters, or paging walks into pages the list refuses to render.
+     */
+    public function countFor(int $userId): int
+    {
+        return (int) $this->db->fetchOne(
+            'SELECT COUNT(*) FROM user_message
+             WHERE (user_id = :u OR sender_id = :u) AND kind <> :moderationReply',
+            ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value],
+        );
+    }
+
+    /**
+     * The reader's own needs-info replies for the given submissions, oldest
+     * first, so the controller can pair each with the question it answers.
+     *
+     * Scoped to `sender_id = :u`: a reply addressed to a curator is the
+     * curator's incoming message, not something this reader may pull up by
+     * quoting a submission id.
+     *
+     * @param list<int> $refIds
+     *
+     * @return list<UserMessage>
+     */
+    public function repliesBySender(int $userId, array $refIds): array
+    {
+        if ([] === $refIds) {
+            return [];
+        }
+
+        $qb = $this->em->getRepository(UserMessage::class)->createQueryBuilder('m');
+
+        /** @var list<UserMessage> $replies */
+        $replies = $qb
+            ->where('m.senderId = :id')
+            ->andWhere('m.kind = :moderationReply')
+            ->andWhere('m.channel = :channel')
+            ->andWhere($qb->expr()->in('m.refId', ':refIds'))
+            ->setParameter('id', $userId)
+            ->setParameter('moderationReply', UserMessageKind::RiderReply)
+            ->setParameter('channel', 'submission')
+            ->setParameter('refIds', $refIds)
+            ->orderBy('m.createdAt', 'ASC')
+            ->addOrderBy('m.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $replies;
     }
 
     public function unreadCount(int $userId): int
@@ -222,6 +291,31 @@ final class MessageService
             'UPDATE user_message SET read_at = now()
              WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply',
             ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value],
+        );
+    }
+
+    /**
+     * Marks read only the messages actually rendered.
+     *
+     * Since the dashboard pages (2026-08-08), marking everything read on a
+     * visit would consume the unread state of messages sitting on page 3 that
+     * the reader has not seen - the unread marker would then be a lie, and the
+     * chip would drop to zero over messages nobody opened. Only rows addressed
+     * TO the reader are touched: a message you sent was never unread to you.
+     *
+     * @param list<int> $ids
+     */
+    public function markRead(int $userId, array $ids): void
+    {
+        if ([] === $ids) {
+            return;
+        }
+
+        $this->db->executeStatement(
+            'UPDATE user_message SET read_at = now()
+             WHERE user_id = :u AND read_at IS NULL AND id IN (:ids)',
+            ['u' => $userId, 'ids' => $ids],
+            ['ids' => ArrayParameterType::INTEGER],
         );
     }
 

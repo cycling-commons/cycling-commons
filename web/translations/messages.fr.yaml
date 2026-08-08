@@ -2109,11 +2109,6 @@ moderate:
     rejected: 'Refusé'
     trashed: 'Supprimé'
   answered: 'Répondu'
-  pager:
-    label: 'Pages'
-    prev: 'Plus récents'
-    next: 'Plus anciens'
-    at: 'Page %page% sur %pages% · %total% au total'
   rider_reply: 'Le cycliste a répondu'
 moderate_routes:
   title: 'File de modération des itinéraires'
@@ -2269,6 +2264,8 @@ messages:
   title: 'Vos messages'
   empty: 'Pas encore de message — les décisions sur vos contributions apparaîtront ici.'
   from_curator: 'D''un curateur'
+  state_unread: 'Non lu'
+  state_read: 'Lu'
   kind_you: 'Votre réponse'
   you_sent: 'Envoyé par vous'
   kind_submission_approved: 'Contribution approuvée — merci !'
@@ -2943,5 +2940,11 @@ moderate_regions:
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.
+pager:
+  label: 'Pages'
+  prev: 'Plus récents'
+  next: 'Plus anciens'
+  at: 'Page %page% sur %pages% · %total% au total'
+
 receipt:
   thanks: 'Merci'

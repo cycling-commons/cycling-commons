@@ -981,6 +981,43 @@ shared `_account_chip.html.twig` partial — **no polling**, consistent with the
 no-fetch header architecture. The map rail carries the chip, so the bulb
 reaches the largest logged-in surface.
 
+### 7.5a Paging, and read state that means something (2026-08-08)
+
+Every unbounded list on the account side pages through
+`App\Pagination\Pager::of()` and renders `partials/_pager.html.twig` — the
+same partial and the same arithmetic the moderation desks use. It moved out of
+`templates/moderate/` and its keys out of `moderate.pager.*` into a top-level
+`pager.*` group the moment a second surface needed it.
+
+- **Messages** — 20 per page (`MessageService::PER_PAGE`). Before this the list
+  stopped at a hard 100 with nothing saying so.
+- **Contributions and route proposals** — 20 each, on one pane, paging
+  independently through `?page=` and `?rpage=`. A shared parameter would have
+  moved both lists when the reader meant to move one, so the partial takes a
+  `key`.
+
+Two consequences worth stating, because both are places a naive pager gets it
+wrong:
+
+1. **A question and its answer never split across a page.**
+   `MessageService::listFor()` returns thread HEADS only (the reader's own
+   needs-info replies excluded), and `repliesBySender()` re-attaches the
+   replies for the questions on that page. Paging the flat list would sooner or
+   later put a reply at the foot of one page and its question at the top of the
+   next, where each reads as an orphan.
+2. **Only what was shown is marked read.** `markRead($userId, $ids)` replaces
+   the old `markAllRead()` on the dashboard. Marking everything read on a visit
+   would consume the unread state of messages sitting on page 3 that nobody
+   opened — the unread marker would be a lie and the §7.5 bulb would drop to
+   zero over unread mail. `markAllRead()` still exists for callers that really
+   do mean all of it.
+
+Unread is also *visible*, not just counted: a received message carries a state
+marker in its header — a single tick for unread, a double tick for read, with
+the state name in the accessible name — and an unread row keeps the heavier
+left border and bolder heading. A message the reader **sent** carries no marker
+at all; it was never unread to them.
+
 ### 7.6 The FK exception — M10
 
 `user_message.user_id` carries the schema's only real user FK, `ON DELETE

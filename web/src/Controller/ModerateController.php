@@ -23,6 +23,7 @@ use App\Moderation\OutOfScopeException;
 use App\Moderation\RetentionService;
 use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
+use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -111,26 +112,9 @@ final class ModerateController extends AbstractController
             'countries' => $this->queue->countries($scope, settled: true),
             'regions' => $this->queue->regions($scope, settled: true),
             'types' => SubmissionType::values(),
-            'pager' => self::pager($page, $total),
+            'pager' => Pager::of($page, $total, SubmissionQueue::PER_PAGE),
             ...$this->deskBadges($user, $scope),
         ]);
-    }
-
-    /**
-     * @return array{page:int, pages:int, total:int, prev:?int, next:?int}
-     */
-    private static function pager(int $page, int $total): array
-    {
-        $pages = max(1, (int) ceil($total / SubmissionQueue::PER_PAGE));
-        $page = min(max(1, $page), $pages);
-
-        return [
-            'page' => $page,
-            'pages' => $pages,
-            'total' => $total,
-            'prev' => $page > 1 ? $page - 1 : null,
-            'next' => $page < $pages ? $page + 1 : null,
-        ];
     }
 
     /**
@@ -230,7 +214,7 @@ final class ModerateController extends AbstractController
             'items' => $items,
             'total' => $this->queue->total($scope),
             'filters' => ['country' => $country, 'region' => $region, 'type' => $type, 'q' => $q],
-            'pager' => self::pager($page, $matching),
+            'pager' => Pager::of($page, $matching, SubmissionQueue::PER_PAGE),
             'matching' => $matching,
             'countries' => $this->queue->countries($scope),
             'regions' => $this->queue->regions($scope),

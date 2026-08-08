@@ -11,11 +11,13 @@ use App\Catalog\SubmissionStatus;
 use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
 use App\Moderation\RetentionService;
+use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -30,8 +32,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 final class ProfileController extends AbstractController
 {
+    /**
+     * Contributions and route proposals per page. Both lists used to stop dead
+     * at 50 rows with nothing on the page saying so, which is the failure mode
+     * a rider notices only by missing something (2026-08-08). They page
+     * independently - `?page=` and `?rpage=` - because they sit on one pane and
+     * a shared parameter would move both when a rider only meant to move one.
+     */
+    private const int PER_PAGE = 20;
+
     #[Route('/profile', name: 'profile')]
     public function show(
+        Request $request,
         EntityManagerInterface $em,
         RetentionService $retention,
         Connection $db,
@@ -39,24 +51,42 @@ final class ProfileController extends AbstractController
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
+        $userId = (int) $user->getId();
 
         // Lazy retention filter (correct even if no sweep has run yet, M8
         // phase 1): a rejected submission past the cutoff must never render
-        // here, whether or not RetentionService::sweep() has deleted it.
-        /** @var list<Submission> $contributions */
-        $contributions = $em->createQueryBuilder()
-            ->select('s')
+        // here, whether or not RetentionService::sweep() has deleted it. The
+        // count applies the SAME filter as the page query - a total that counts
+        // rows the list refuses to show would page into empty tails.
+        $contributionsQuery = static fn (EntityManagerInterface $em) => $em->createQueryBuilder()
             ->from(Submission::class, 's')
             ->where('s.userId = :uid')
             ->andWhere('(s.status != :rejected OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff)')
-            ->setParameter('uid', (int) $user->getId())
+            ->setParameter('uid', $userId)
             ->setParameter('rejected', SubmissionStatus::Rejected)
-            ->setParameter('cutoff', $retention->cutoff())
+            ->setParameter('cutoff', $retention->cutoff());
+
+        $pager = Pager::of(
+            $request->query->getInt('page', 1),
+            (int) $contributionsQuery($em)->select('COUNT(s.id)')->getQuery()->getSingleScalarResult(),
+            self::PER_PAGE,
+        );
+
+        /** @var list<Submission> $contributions */
+        $contributions = $contributionsQuery($em)
+            ->select('s')
             ->orderBy('s.createdAt', 'DESC')
             ->addOrderBy('s.id', 'DESC')
-            ->setMaxResults(50)
+            ->setFirstResult($pager['offset'])
+            ->setMaxResults($pager['perPage'])
             ->getQuery()
             ->getResult();
+
+        $routePager = Pager::of(
+            $request->query->getInt('rpage', 1),
+            (int) $em->getRepository(RecommendedRoute::class)->count(['proposedBy' => $userId]),
+            self::PER_PAGE,
+        );
 
         return $this->render('profile/show.html.twig', [
             'page_title' => 'meta.profile_title',
@@ -64,6 +94,8 @@ final class ProfileController extends AbstractController
             'nav_active' => '',
             'cc_user' => $user,
             'contributions' => $contributions,
+            'pager' => $pager,
+            'route_pager' => $routePager,
             // The conversation attached to each submission, so a contribution
             // row can show it the way the curator's desk shows the rider's
             // reply. Without this the rider saw a "needs info" chip and had no
@@ -86,9 +118,10 @@ final class ProfileController extends AbstractController
                 [],
             ),
             'route_proposals' => $em->getRepository(RecommendedRoute::class)->findBy(
-                ['proposedBy' => (int) $user->getId()],
+                ['proposedBy' => $userId],
                 ['createdAt' => 'DESC', 'id' => 'DESC'],
-                50,
+                $routePager['perPage'],
+                $routePager['offset'],
             ),
             // Route ballots are private to the voter (route-domain.md §6): this
             // page is the only surface that shows WHAT was voted for, and only
@@ -99,9 +132,9 @@ final class ProfileController extends AbstractController
                   WHERE rv.user_id = :uid
                   ORDER BY rv.created_at DESC, rv.id DESC
                   LIMIT 50',
-                ['uid' => (int) $user->getId()],
+                ['uid' => $userId],
             ),
-            'confirmations' => $this->confirmations($db, (int) $user->getId()),
+            'confirmations' => $this->confirmations($db, $userId),
             // The answer to "where is my curator request?" lives on the landing
             // pane.
             'curator_applications' => $db->fetchAllAssociative(
@@ -110,7 +143,7 @@ final class ProfileController extends AbstractController
                    LEFT JOIN region r ON r.id = ca.requested_region_id
                   WHERE ca.user_id = :uid
                   ORDER BY ca.created_at DESC, ca.id DESC',
-                ['uid' => (int) $user->getId()],
+                ['uid' => $userId],
             ),
             // Whether the rider's OWN patch has anyone looking after it. Someone
             // who has never applied is not "a curator with no applications" —

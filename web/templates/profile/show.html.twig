@@ -135,6 +135,9 @@
           {% endif %}
         </div>
       {% endfor %}
+      {# Paging the contributions pane keeps `rpage` so moving through one list
+         never resets the other — they share a URL. #}
+      {% include 'partials/_pager.html.twig' with {pager: pager, route: 'profile', params: {rpage: route_pager.page}} %}
     {% endif %}
 
     {% if route_proposals is not empty %}
@@ -153,6 +156,7 @@
         <span class="pill {{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
       </div>
     {% endfor %}
+    {% include 'partials/_pager.html.twig' with {pager: route_pager, route: 'profile', params: {page: pager.page}, key: 'rpage'} %}
     {% endif %}
 
     {# ── Curating.

@@ -13,6 +13,7 @@ use App\Media\MediaStorage;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -44,15 +45,32 @@ final class MessagesController extends AbstractController
     }
 
     #[Route('/messages', name: 'messages')]
-    public function index(MessageService $messages, Connection $db, SubmissionChangeSummary $changes): Response
+    public function index(Request $request, MessageService $messages, Connection $db, SubmissionChangeSummary $changes): Response
     {
         /** @var User $user */
         $user = $this->getUser();
         $userId = (int) $user->getId();
 
+        $pager = Pager::of(
+            $request->query->getInt('page', 1),
+            $messages->countFor($userId),
+            MessageService::PER_PAGE,
+        );
+
         // Fetch BEFORE marking read, so the template can still flag which
         // rows were new to this visit via isRead().
-        $list = $messages->listFor($userId);
+        $heads = $messages->listFor($userId, $pager['offset'], $pager['perPage']);
+
+        // The reader's own replies, re-attached to the questions on THIS page.
+        // listFor() returns heads only so a question and its answer can never
+        // be split across a page boundary.
+        $list = [...$heads, ...$messages->repliesBySender(
+            $userId,
+            array_values(array_unique(array_map(
+                static fn (UserMessage $m): int => $m->getRefId(),
+                array_filter($heads, static fn (UserMessage $m): bool => 'submission' === $m->getChannel()),
+            ))),
+        )];
 
         // The reply form only renders for needs-info messages whose
         // submission is STILL `needs_info` — a curator may have decided it
@@ -69,7 +87,13 @@ final class MessagesController extends AbstractController
             ))
             : [];
 
-        $messages->markAllRead($userId);
+        // Only what this page actually showed. Marking everything read on a
+        // visit would consume the unread state of messages the reader has not
+        // reached yet, and the chip would drop to zero over unopened mail.
+        $messages->markRead($userId, array_map(
+            static fn (UserMessage $m): int => (int) $m->getId(),
+            $heads,
+        ));
 
         $answers = self::answersToQuestions($list, $userId);
 
@@ -92,6 +116,7 @@ final class MessagesController extends AbstractController
             // rider still cannot see which of their own edits it was
             // (owner-reported 2026-08-03).
             'submission_changes' => $this->submissionChanges($list, $userId, $changes),
+            'pager' => $pager,
         ]);
     }
 
@@ -156,8 +181,16 @@ final class MessagesController extends AbstractController
      */
     private static function answersToQuestions(array $list, int $userId): array
     {
-        // listFor() is newest-first; pairing needs oldest-first.
-        $chronological = array_reverse($list);
+        // Pairing needs oldest-first, and `$list` is no longer uniformly
+        // ordered: it is the page's heads (newest-first) with the reader's own
+        // replies appended. Sort rather than reverse — reversing a
+        // two-orderings list silently mispairs a second round of ask-and-answer.
+        $chronological = $list;
+        usort(
+            $chronological,
+            static fn (UserMessage $a, UserMessage $b): int => [$a->getCreatedAt(), (int) $a->getId()]
+                <=> [$b->getCreatedAt(), (int) $b->getId()],
+        );
         $openQuestion = [];   // submission id => the question still unanswered
         $byQuestion = [];
         $attached = [];

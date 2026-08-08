@@ -1,0 +1,37 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The pager, shared by every paged list: both moderation desks, the account's
+  contributions and route proposals, and the messages dashboard.
+
+  Params:
+    pager  array  — {page, pages, total, prev, next} from App\Pagination\Pager::of()
+    route  string — the route to link back to
+    params array  — the current filters, so paging never silently drops them
+    key    string — the query parameter this pager moves (default `page`)
+
+  `key` exists because the account page carries TWO paged lists on one pane.
+  With both writing `?page=`, moving through route proposals would have moved
+  the contributions list underneath the reader. The second pager passes
+  `rpage`, and each one puts the other's current page in `params` so neither
+  resets the other.
+
+  Plain links, no JS: a page a curator can bookmark, link to a colleague, and
+  come back to after a decision redirect. Rendered only when there is more than
+  one page — a lone "1 of 1" is furniture.
+#}
+{% set key = key|default('page') %}
+{% if pager.pages > 1 %}
+  <nav class="pager" aria-label="{{ 'pager.label'|trans }}">
+    {% if pager.prev %}
+      <a class="pager-step" href="{{ path(route, params|merge({(key): pager.prev})) }}" rel="prev">← {{ 'pager.prev'|trans }}</a>
+    {% else %}
+      <span class="pager-step is-off">← {{ 'pager.prev'|trans }}</span>
+    {% endif %}
+    <span class="pager-at">{{ 'pager.at'|trans({'%page%': pager.page, '%pages%': pager.pages, '%total%': pager.total}) }}</span>
+    {% if pager.next %}
+      <a class="pager-step" href="{{ path(route, params|merge({(key): pager.next})) }}" rel="next">{{ 'pager.next'|trans }} →</a>
+    {% else %}
+      <span class="pager-step is-off">{{ 'pager.next'|trans }} →</span>
+    {% endif %}
+  </nav>
+{% endif %}

@@ -2109,11 +2109,6 @@ moderate:
     rejected: 'Afgewezen'
     trashed: 'Verwijderd'
   answered: 'Beantwoord'
-  pager:
-    label: 'Pagina''s'
-    prev: 'Nieuwer'
-    next: 'Ouder'
-    at: 'Pagina %page% van %pages% · %total% in totaal'
   rider_reply: 'De fietser heeft geantwoord'
 moderate_routes:
   title: 'Routes moderatiewachtrij'
@@ -2269,6 +2264,8 @@ messages:
   title: 'Jouw berichten'
   empty: 'Nog geen berichten — beslissingen over je bijdragen verschijnen hier.'
   from_curator: 'Van een curator'
+  state_unread: 'Ongelezen'
+  state_read: 'Gelezen'
   kind_you: 'Jouw antwoord'
   you_sent: 'Door jou verstuurd'
   kind_submission_approved: 'Bijdrage goedgekeurd — bedankt!'
@@ -2943,5 +2940,11 @@ moderate_regions:
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.
+pager:
+  label: 'Pagina''s'
+  prev: 'Nieuwer'
+  next: 'Ouder'
+  at: 'Pagina %page% van %pages% · %total% in totaal'
+
 receipt:
   thanks: 'Bedankt'

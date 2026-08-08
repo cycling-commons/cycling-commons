@@ -2112,11 +2112,6 @@ moderate:
     rejected: 'Abgelehnt'
     trashed: 'Gelöscht'
   answered: 'Beantwortet'
-  pager:
-    label: 'Seiten'
-    prev: 'Neuer'
-    next: 'Älter'
-    at: 'Seite %page% von %pages% · %total% insgesamt'
   rider_reply: 'Der Fahrer hat geantwortet'
 moderate_routes:
   title: 'Routen-Moderationswarteschlange'
@@ -2272,6 +2267,8 @@ messages:
   title: 'Deine Nachrichten'
   empty: 'Noch keine Nachrichten — Entscheidungen zu deinen Beiträgen erscheinen hier.'
   from_curator: 'Von einem Kurator'
+  state_unread: 'Ungelesen'
+  state_read: 'Gelesen'
   kind_you: 'Deine Antwort'
   you_sent: 'Von dir gesendet'
   kind_submission_approved: 'Beitrag angenommen — danke!'
@@ -2946,5 +2943,11 @@ moderate_regions:
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.
+pager:
+  label: 'Seiten'
+  prev: 'Neuer'
+  next: 'Älter'
+  at: 'Seite %page% von %pages% · %total% insgesamt'
+
 receipt:
   thanks: 'Danke'

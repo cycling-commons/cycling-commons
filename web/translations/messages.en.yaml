@@ -2132,11 +2132,6 @@ moderate:
     rejected: 'Rejected'
     trashed: 'Trashed'
   answered: 'Answered'
-  pager:
-    label: 'Pages'
-    prev: 'Newer'
-    next: 'Older'
-    at: 'Page %page% of %pages% · %total% in total'
   rider_reply: 'Rider replied'
 moderate_routes:
   title: 'Routes moderation desk'
@@ -2292,6 +2287,8 @@ messages:
   title: 'Your messages'
   empty: 'No messages yet — decisions on your contributions will appear here.'
   from_curator: 'From a curator'
+  state_unread: 'Unread'
+  state_read: 'Read'
   kind_you: 'Your reply'
   you_sent: 'Sent by you'
   kind_submission_approved: 'Contribution approved — thank you!'
@@ -2969,5 +2966,11 @@ moderate_regions:
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* / vote.receipt.* groups stay separate.
+pager:
+  label: 'Pages'
+  prev: 'Newer'
+  next: 'Older'
+  at: 'Page %page% of %pages% · %total% in total'
+
 receipt:
   thanks: 'Thank you'
