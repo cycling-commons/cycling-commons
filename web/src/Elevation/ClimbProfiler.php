@@ -121,7 +121,8 @@ final class ClimbProfiler
      *                                                 position rather than the marker being moved (§5)
      *
      * @return array{
-     *     length: float, gain: float, avgGradient: string, maxGradient: string,
+     *     length: float, gain: float, footEle: float, summitEle: float,
+     *     avgGradient: string, maxGradient: string,
      *     grad: list<int>, lineGrad: list<int>,
      *     steep: array{at: array{0: float, 1: float}, pct: string, manual: bool},
      *     demSource: string, binM: int, steepWindowM: int, reversed: bool,
@@ -177,6 +178,15 @@ final class ClimbProfiler
         return [
             'length' => $total,
             'gain' => $gain,
+            /* The two ends, in metres above sea level. `gain` alone gives a
+               profile its height but not its position: a chart can say "+225 m"
+               without being able to say the climb runs 277 m -> 502 m, which is
+               what every published climb profile leads with, and what tells a
+               rider whether they are going to be cold at the top. Read from the
+               same elevation array everything else here is measured from, so
+               the labels cannot disagree with the shape. */
+            'footEle' => round($elev[0]),
+            'summitEle' => round($elev[$si]),
             'avgGradient' => self::fmt(self::avgGradient($pts, $elev, $cum, $total), 1),
             /* The 35% clamp this used to carry was load-bearing and should not
                have been: Grimsel, Susten and Klausen all published exactly 35%,

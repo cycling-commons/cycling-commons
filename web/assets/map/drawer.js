@@ -18,6 +18,7 @@
    so initDrawer() is gone and only initDrawerChrome() remains (§9). */
 import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
+import { openClimbProfile } from './climb-profile.js';
 import { map } from './map-init.js';
 import { CATALOG, CITIES } from './catalog.js';
 import { pinEl } from './icons.js';
@@ -771,8 +772,15 @@ function gradStrip(grad, f){
      100 m while the number means 250. Older rows predate the attribute; they
      were measured at 100 m, so that is the honest fallback for them. */
   const steepW = (f && f.steepWindowM) ? Number(f.steepWindowM) : 100;
+  /* The strip is now a button: it opens the full profile (climb-profile.js).
+     A 52 px glance cannot carry a vertical axis, the two altitudes, or a figure
+     per bar, and those are what a rider wants before riding a col. Kept as the
+     drawer's summary — the detail is one click away rather than pushing every
+     other row off screen. */
   return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · per {b} m · avg {a}% · steepest {w}m {m}%', {a:avg, m:max, b:binM, w:steepW})}</div>
-    <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>${axis}`;
+    <button type="button" class="cc-grad-open" data-cc-profile aria-label="${escPend(D.openProfile||'Open the full profile')}" title="${escPend(D.openProfile||'Open the full profile')}">
+      <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>${axis}
+    </button>`;
 }
 function elevSvg(elev){
   const w=300,h=64,pad=3,min=Math.min(...elev),max=Math.max(...elev),rng=Math.max(1,max-min);
@@ -827,6 +835,12 @@ export function renderDrawerBody(layer, f){
     if(cap) cap.innerHTML=photoCap(pl[i]);
     document.querySelectorAll('#drawerBody .cc-d-thumb').forEach((t,k)=>t.classList.toggle('on',k===i)); }
   if(mainImg && pl.length) mainImg.addEventListener('click', ()=>openLightbox(pl, cur, f.name));
+  // The gradient strip opens the full profile. Bound here with the rest of the
+  // body's own controls; the popup reads the feature it was handed, so a
+  // re-render cannot leave it showing the previous climb.
+  document.querySelectorAll('#drawerBody [data-cc-profile]').forEach(
+    b => b.addEventListener('click', () => openClimbProfile(f)),
+  );
   document.querySelectorAll('#drawerBody .cc-d-thumb').forEach(t=>t.addEventListener('click', ()=>show(+t.dataset.i)));
   document.querySelectorAll('#drawerBody .cc-city').forEach(a=>{
     a.addEventListener('click', e=>{ e.preventDefault(); openCity(a.dataset.city); });

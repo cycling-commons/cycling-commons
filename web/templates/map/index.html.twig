@@ -295,6 +295,19 @@
       <div class="cc-lb-stage"><img alt="" /><div class="cc-lb-cap"></div></div>
       <button class="cc-lb-nav cc-lb-next" aria-label="{{ 'map.lb_next'|trans }}" hidden>›</button>
     </div>
+    {# The full climb profile (assets/map/climb-profile.js), opened by clicking
+       the drawer's gradient strip. Its own overlay rather than the photo
+       lightbox: that one is a slideshow with prev/next and a credit line. #}
+    <div class="cc-cp" id="climbProfile" aria-hidden="true" role="dialog" aria-modal="true" aria-label="{{ 'map.profile_title'|trans }}">
+      <div class="cc-cp-panel">
+        <button class="cc-cp-x" aria-label="{{ 'map.lb_close'|trans }}">✕</button>
+        <div class="cc-cp-head">
+          <div class="cc-cp-title"></div>
+          <div class="cc-cp-sub"></div>
+        </div>
+        <div class="cc-cp-stage"></div>
+      </div>
+    </div>
     <section class="mly-dock" id="mlyDock" aria-hidden="true" aria-label="{{ 'map.mly_title'|trans }}">
       <div class="mly-grip" id="mlyGrip" role="separator" aria-orientation="horizontal" tabindex="0"
            aria-label="{{ 'map.mly_resize'|trans }}" title="{{ 'map.mly_resize_hint'|trans }}"></div>

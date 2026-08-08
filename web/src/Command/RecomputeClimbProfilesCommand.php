@@ -111,6 +111,10 @@ final class RecomputeClimbProfilesCommand extends Command
                 // of 100 m, which is 2.1.
                 $attrs['length'] = round($p['length']);
                 $attrs['gain'] = round($p['gain']);
+                // The two ends above sea level, so a profile can be labelled
+                // "277 m -> 502 m" and not merely "+225 m".
+                $attrs['footEle'] = $p['footEle'];
+                $attrs['summitEle'] = $p['summitEle'];
                 $attrs['avgGradient'] = $p['avgGradient'];
                 $attrs['maxGradient'] = $p['maxGradient'];
                 $attrs['grad'] = $p['grad'];

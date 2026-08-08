@@ -221,6 +221,8 @@ final class MapController extends AbstractController
             'difficulty' => 'd_difficulty', 'elevation' => 'd_elevation', 'mClimbing' => 'd_m_climbing',
             'climbLength' => 'd_climb_length',
             'fromGpx' => 'd_from_gpx', 'gradProfile' => 'd_grad_profile', 'illustrative' => 'd_illustrative',
+            // The full climb profile popup (assets/map/climb-profile.js).
+            'openProfile' => 'open_profile', 'gradPerBin' => 'grad_per_bin',
             'elevAria' => 'd_elev_aria', 'sharedBy' => 'd_shared_by', 'viewProfile' => 'd_view_profile',
             'sharedAnon' => 'd_shared_anon', 'steepest' => 'd_steepest',
             'riderSteepest' => 'd_rider_steepest', 'riderRamp' => 'd_rider_ramp',

@@ -909,6 +909,26 @@ precision is not real.
 
 ---
 
+### 4b. The full profile, and the two altitudes (2026-08-08)
+
+`profile()` now also returns **`footEle`** and **`summitEle`**, metres above sea
+level, read from the same elevation array every other figure here is measured
+from. `gain` gives a chart its height but not its position: it can say "+225 m"
+and not "277 m -> 502 m", which is the pair every published climb profile leads
+with and the one that tells a rider whether they will be cold at the top.
+`app:climbs:recompute --write` stores both. Rows measured before this simply do
+not have them, and the chart omits the labels rather than inventing a sea level.
+
+Independent check on the first climb that had one: Côte de Stockeu measures
+**278 m -> 506 m** here; myCols publishes 277 m -> 502 m.
+
+The drawer's 52 px gradient strip is now a **button** that opens the full
+profile (`assets/map/climb-profile.js`) in its own popup: the road's silhouette,
+each bin filled in its gradient colour with the figure written inside it, both
+altitudes, and a distance ruler. Nothing is re-measured there — the silhouette
+is the cumulative sum of the `grad` bins the strip already draws, so the two
+charts cannot disagree about the same climb.
+
 ## 5. The steepest ramp is found, not placed
 
 `steepestWindow()` slides a **100 m** window along the profile and returns the

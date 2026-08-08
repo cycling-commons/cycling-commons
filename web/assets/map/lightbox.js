@@ -11,6 +11,7 @@
 import { escPend, safeHref } from './util.js';
 import { D } from './i18n.js';
 import { closeDrawer, photoCap } from './drawer.js';
+import { closeClimbProfile, isClimbProfileOpen } from './climb-profile.js';
 
 /* "This photo shows me" (docs/specs/photo-uploads.md §6c), offered where the
    photo is actually being looked at full-size — which is where somebody
@@ -67,9 +68,14 @@ export function initLightbox(){
   document.querySelector('.cc-lb-prev').onclick=e=>{ e.stopPropagation(); lbStep(-1); };
   document.querySelector('.cc-lb-next').onclick=e=>{ e.stopPropagation(); lbStep(1); };
   document.getElementById('lightbox').addEventListener('click',e=>{ if(e.target.id==='lightbox'||e.target.classList.contains('cc-lb-x')) closeLightbox(); });
+  /* The climb-profile popup joins the same Escape chain, innermost first: it
+     opens FROM the drawer, so Escape must dismiss it without also dismissing
+     the drawer underneath, which would lose the rider's place on the map. */
+  const cp=document.getElementById('climbProfile');
+  if(cp) cp.addEventListener('click',e=>{ if(e.target.id==='climbProfile'||e.target.classList.contains('cc-cp-x')) closeClimbProfile(); });
   document.addEventListener('keydown',e=>{
     const lbOpen=document.getElementById('lightbox').classList.contains('open');
-    if(e.key==='Escape'){ lbOpen ? closeLightbox() : closeDrawer(); }
+    if(e.key==='Escape'){ if(isClimbProfileOpen()) closeClimbProfile(); else if(lbOpen) closeLightbox(); else closeDrawer(); }
     else if(lbOpen && e.key==='ArrowLeft') lbStep(-1);
     else if(lbOpen && e.key==='ArrowRight') lbStep(1);
   });
