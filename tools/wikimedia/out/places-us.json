@@ -108,5 +108,380 @@
         "license": "Public domain"
       }
     }
+  ],
+  "dropped": [
+    {
+      "qid": "Q130018",
+      "why": "no English label on Wikidata",
+      "at": [
+        63.069102777,
+        -151.006261111
+      ]
+    },
+    {
+      "qid": "Q83497",
+      "name": "Mount Rushmore",
+      "why": "outside the onboarded bbox",
+      "at": [
+        43.878888888,
+        -103.459166666
+      ]
+    },
+    {
+      "qid": "Q4675",
+      "why": "no English label on Wikidata",
+      "at": [
+        46.200277777,
+        -122.189444444
+      ]
+    },
+    {
+      "qid": "Q4675",
+      "why": "no English label on Wikidata",
+      "at": [
+        46.200277777,
+        -122.189444444
+      ]
+    },
+    {
+      "qid": "Q4675",
+      "why": "no English label on Wikidata",
+      "at": [
+        46.200277777,
+        -122.189444444
+      ]
+    },
+    {
+      "qid": "Q4675",
+      "why": "no English label on Wikidata",
+      "at": [
+        46.200277777,
+        -122.189444444
+      ]
+    },
+    {
+      "qid": "Q1066",
+      "name": "Lake Superior",
+      "why": "outside the onboarded bbox",
+      "at": [
+        47.528816111,
+        -87.760021944
+      ]
+    },
+    {
+      "qid": "Q1066",
+      "name": "Lake Superior",
+      "why": "outside the onboarded bbox",
+      "at": [
+        47.528816111,
+        -87.760021944
+      ]
+    },
+    {
+      "qid": "Q1066",
+      "name": "Lake Superior",
+      "why": "outside the onboarded bbox",
+      "at": [
+        47.528816111,
+        -87.760021944
+      ]
+    },
+    {
+      "qid": "Q1169",
+      "name": "Lake Michigan",
+      "why": "outside the onboarded bbox",
+      "at": [
+        44.007874,
+        -86.756451
+      ]
+    },
+    {
+      "qid": "Q1062",
+      "name": "Lake Ontario",
+      "why": "outside the onboarded bbox",
+      "at": [
+        43.728888888,
+        -78.106388888
+      ]
+    },
+    {
+      "qid": "Q5492",
+      "name": "Lake Erie",
+      "why": "outside the onboarded bbox",
+      "at": [
+        42.25,
+        -80.999722222
+      ]
+    },
+    {
+      "qid": "Q1383",
+      "name": "Lake Huron",
+      "why": "outside the onboarded bbox",
+      "at": [
+        44.592584,
+        -82.756293
+      ]
+    },
+    {
+      "qid": "Q127091",
+      "name": "Pearl Harbor",
+      "why": "outside the onboarded bbox",
+      "at": [
+        21.361944,
+        -157.953611
+      ]
+    },
+    {
+      "qid": "Q34221",
+      "name": "Niagara Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        43.08,
+        -79.071
+      ]
+    },
+    {
+      "qid": "Q34221",
+      "name": "Niagara Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        43.08,
+        -79.071
+      ]
+    },
+    {
+      "qid": "Q37319",
+      "name": "Multnomah Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        45.57595,
+        -122.115361111
+      ]
+    },
+    {
+      "qid": "Q38305",
+      "name": "Oloʻupena Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        21.164722222,
+        -156.859444444
+      ]
+    },
+    {
+      "qid": "Q38402",
+      "name": "Dry Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        47.605725,
+        -119.353644
+      ]
+    },
+    {
+      "qid": "Q351",
+      "name": "Yellowstone National Park",
+      "why": "outside the onboarded bbox",
+      "at": [
+        44.6,
+        -110.5
+      ]
+    },
+    {
+      "qid": "Q351",
+      "name": "Yellowstone National Park",
+      "why": "outside the onboarded bbox",
+      "at": [
+        44.6,
+        -110.5
+      ]
+    },
+    {
+      "qid": "Q274131",
+      "name": "Everglades National Park",
+      "why": "outside the onboarded bbox",
+      "at": [
+        25.3125,
+        -80.6875
+      ]
+    },
+    {
+      "qid": "Q274131",
+      "name": "Everglades National Park",
+      "why": "outside the onboarded bbox",
+      "at": [
+        25.3125,
+        -80.6875
+      ]
+    },
+    {
+      "qid": "Q2820392",
+      "name": "St. Joseph's Abbey",
+      "why": "outside the onboarded bbox",
+      "at": [
+        42.2977,
+        -72.0145
+      ]
+    },
+    {
+      "qid": "Q624556",
+      "name": "St. Patrick's Cathedral",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.758611111,
+        -73.976388888
+      ]
+    },
+    {
+      "qid": "Q866896",
+      "name": "Trinity Church",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.70801,
+        -74.01221
+      ]
+    },
+    {
+      "qid": "Q82387",
+      "name": "Basilica of the National Shrine of the Immaculate Conception",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.933333333,
+        -77.000555555
+      ]
+    },
+    {
+      "qid": "Q865655",
+      "name": "Cathedral of St. John the Divine",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.8036,
+        -73.9617
+      ]
+    },
+    {
+      "qid": "Q9202",
+      "name": "Statue of Liberty",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.689209166,
+        -74.044425277
+      ]
+    },
+    {
+      "qid": "Q178114",
+      "name": "Washington Monument",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.889475,
+        -77.035244444
+      ]
+    },
+    {
+      "qid": "Q178114",
+      "name": "Washington Monument",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.889475,
+        -77.035244444
+      ]
+    },
+    {
+      "qid": "Q216344",
+      "name": "Arlington National Cemetery",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.878087,
+        -77.068769
+      ]
+    },
+    {
+      "qid": "Q216344",
+      "name": "Arlington National Cemetery",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.878087,
+        -77.068769
+      ]
+    },
+    {
+      "qid": "Q216344",
+      "name": "Arlington National Cemetery",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.878087,
+        -77.068769
+      ]
+    },
+    {
+      "qid": "Q160236",
+      "name": "Metropolitan Museum of Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.779444444,
+        -73.963333333
+      ]
+    },
+    {
+      "qid": "Q160236",
+      "name": "Metropolitan Museum of Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.779444444,
+        -73.963333333
+      ]
+    },
+    {
+      "qid": "Q131626",
+      "name": "Smithsonian Institution",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.888888888,
+        -77.026
+      ]
+    },
+    {
+      "qid": "Q188740",
+      "name": "Museum of Modern Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.761444444,
+        -73.977611111
+      ]
+    },
+    {
+      "qid": "Q188740",
+      "name": "Museum of Modern Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.761666666,
+        -73.9775
+      ]
+    },
+    {
+      "qid": "Q188740",
+      "name": "Museum of Modern Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.761444444,
+        -73.977611111
+      ]
+    },
+    {
+      "qid": "Q188740",
+      "name": "Museum of Modern Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.761666666,
+        -73.9775
+      ]
+    },
+    {
+      "qid": "Q188740",
+      "name": "Museum of Modern Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.761444444,
+        -73.977611111
+      ]
+    }
   ]
 }

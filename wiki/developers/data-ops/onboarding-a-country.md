@@ -21,7 +21,7 @@ One sequence for every country. ⚑ marks a human judgment call.
 |---|------|--------------|
 | 1 | ⚑ **Choose the operating level** | `make region-probe c="XX"` lists the country's official subdivisions and their sizes. You decide which level to seed at (see below). |
 | 2 | **Scaffold** | `make region-scaffold c="XX"` emits a config block + label stubs. It *emits, never applies*. |
-| 3 | ⚑ **Review & merge** | Freeze slugs (permanent identity), fix exonyms in all four locales, add the `all_<cc>` rung, add the timezone. |
+| 3 | ⚑ **Review & merge** | Freeze slugs (permanent identity), fix exonyms in every locale, add the `all_<cc>` rung, add the timezone. |
 | 4 | **Export** | `make divisions-data c="XX"` queries Overture and writes `region-<slug>.geojson` artifacts. |
 | 5 | **Seed** | Import the artifacts as `Region` rows. |
 | 6 | **Coverage** | Add the Geofabrik region to the harvest, then run it. |
@@ -65,8 +65,9 @@ The scaffolder emits stubs; you make the permanent decisions:
   Use an established English exonym where one truly exists (`wallonia`, `flanders`), otherwise the
   native form (`noord-holland`). **Act on every collision warning** — the Netherlands has a Limburg
   and so does Belgium, so the Dutch one is `limburg-nl`.
-- **Exonyms in all four locales.** Region display labels come from the `messages` translation domain,
-  not from Overture. Add the label and the country rung to each of `en`/`fr`/`nl`/`de`:
+- **Exonyms in every locale.** Region display labels come from the `messages` translation domain,
+  not from Overture. Add the label and the country rung to each of `en`/`fr`/`nl`/`de`/`es` — the
+  parity gate fails the build if one catalogue is missing a key, so a half-done country cannot ship:
 
 <!-- CODE-FROM web/translations/messages.en.yaml -->
 ```yaml

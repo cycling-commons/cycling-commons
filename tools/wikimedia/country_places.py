@@ -188,10 +188,20 @@ def harvest(cc: str, per_layer: int = 6) -> dict:
                 if credit is None:
                     continue     # unattributable share-alike is unusable
                 label = b["itemLabel"]["value"]
-                if QID_AS_LABEL.match(label):
-                    continue
                 lng, lat = b["coord"]["value"].removeprefix("Point(").removesuffix(")").split()
+                if QID_AS_LABEL.match(label):
+                    # RECORDED, not silently skipped. A place with no English
+                    # label is dropped for good reason — "Q130018" on a pin is
+                    # worse than no pin — but the drop must be visible, or a
+                    # genuinely wanted place disappears and nobody ever learns
+                    # it was a candidate. The remedy is to add the label on
+                    # Wikidata, which fixes it for everyone.
+                    out.setdefault("dropped", []).append(
+                        {"qid": q, "why": "no English label on Wikidata", "at": [float(lat), float(lng)]})
+                    continue
                 if not in_country_box(cc, float(lat), float(lng)):
+                    out.setdefault("dropped", []).append(
+                        {"qid": q, "name": label, "why": "outside the onboarded bbox", "at": [float(lat), float(lng)]})
                     continue
                 seen.add(q)
                 out[layer].append({
@@ -237,6 +247,8 @@ def main() -> int:
         path = outdir / f"places-{cc.lower()}.json"
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         warn = f"  !! {len(data['failed'])} class(es) FAILED — rerun {cc}" if data.get("failed") else ""
+        if data.get("dropped"):
+            warn += f"  ({len(data['dropped'])} candidate(s) dropped — see \"dropped\" in the artifact)"
         print(f"{cc}: {len(data['scenic'])} scenic, {len(data['history'])} historical → {path}{warn}",
               file=sys.stderr)
         for entry in data["scenic"] + data["history"]:
