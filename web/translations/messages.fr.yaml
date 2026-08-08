@@ -2308,6 +2308,8 @@ messages:
   title: 'Vos messages'
   empty: 'Pas encore de message — les décisions sur vos contributions apparaîtront ici.'
   from_curator: 'D''un curateur'
+  email_cta: 'Ouvrir dans vos messages'
+  email_why: 'Vous recevez ceci parce que cela concerne une contribution que vous avez faite. L''échange complet se trouve sur votre page Messages.'
   state_unread: 'Non lu'
   state_read: 'Lu'
   kind_you: 'Votre réponse'

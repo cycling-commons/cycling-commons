@@ -2331,6 +2331,8 @@ messages:
   title: 'Your messages'
   empty: 'No messages yet — decisions on your contributions will appear here.'
   from_curator: 'From a curator'
+  email_cta: 'Open it in your messages'
+  email_why: 'You are getting this because it is about a contribution you made. The full exchange lives on your messages page.'
   state_unread: 'Unread'
   state_read: 'Read'
   kind_you: 'Your reply'

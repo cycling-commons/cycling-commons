@@ -1,0 +1,55 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  A dashboard message, delivered by email (M7).
+
+  Deliberately a POINTER, not a copy of the page. It carries the headline, the
+  body line, and the curator's own note when there is one — because on a
+  needs-info that note IS the question, and an email that made someone log in to
+  find out what was asked would be a notification pretending to be a message.
+
+  It carries no photo and nothing the dashboard would not show the same person.
+
+  Every string arrives pre-translated in the recipient's locale (MessageMailer),
+  so nothing here calls |trans: this template renders outside a request, where
+  the translator's locale is whatever the last one left behind.
+#}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ headline }}{% endblock %}
+
+{% block content %}
+  <h1 style="margin:0 0 14px;font-size:21px;line-height:1.25;font-weight:700;color:#14160e">
+    {{ headline }}
+  </h1>
+
+  {% if body %}
+    <p style="margin:0 0 14px;color:#3f4235">{{ body }}</p>
+  {% endif %}
+
+  {% if note %}
+    {# The curator's own words. On a needs-info this is the whole point of the
+       mail, so it is set apart rather than run into the paragraph above. #}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="border-collapse:collapse;margin:0 0 18px">
+      <tr>
+        <td style="border-left:3px solid #9FC6C0;background:#f4efe2;padding:12px 16px;
+                   color:#3f4235;font-size:15px;line-height:1.55">{{ note }}</td>
+      </tr>
+    </table>
+  {% endif %}
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:22px 0 6px">
+    <tr>
+      <td style="background:#FF5A1F;border-radius:6px">
+        <a href="{{ messages_url }}"
+           style="display:inline-block;padding:12px 22px;font-family:Helvetica,Arial,sans-serif;
+                  font-size:15px;font-weight:700;color:#101E16;text-decoration:none">{{ cta }}</a>
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8a8d7a">
+    {{ why }}<br>
+    <span style="font-family:monospace;font-size:12px">{{ reference }}</span>
+  </p>
+{% endblock %}

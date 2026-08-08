@@ -2345,6 +2345,8 @@ messages:
   title: 'Tus mensajes'
   empty: 'Todavía no hay mensajes — aquí aparecerán las decisiones sobre tus aportaciones.'
   from_curator: 'De un curador'
+  email_cta: 'Abrirlo en tus mensajes'
+  email_why: 'Recibes esto porque trata sobre una aportación tuya. El intercambio completo está en tu página de mensajes.'
   state_unread: 'Sin leer'
   state_read: 'Leído'
   kind_you: 'Tu respuesta'

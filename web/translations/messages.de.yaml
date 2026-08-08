@@ -2311,6 +2311,8 @@ messages:
   title: 'Deine Nachrichten'
   empty: 'Noch keine Nachrichten — Entscheidungen zu deinen Beiträgen erscheinen hier.'
   from_curator: 'Von einem Kurator'
+  email_cta: 'In deinen Nachrichten öffnen'
+  email_why: 'Du bekommst das, weil es um einen deiner Beiträge geht. Der ganze Austausch steht auf deiner Nachrichtenseite.'
   state_unread: 'Ungelesen'
   state_read: 'Gelesen'
   kind_you: 'Deine Antwort'

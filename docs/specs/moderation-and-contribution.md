@@ -1039,10 +1039,44 @@ kinds carry no link (subject not publicly visible).
 
 ### 7.8 Out of scope here
 
-**M7 email delivery** and the **M8 phase-2 scheduled GC runner** are
-**specified, pending implementation** — deferred together as one
-messenger/scheduler infrastructure investment (messages remain the record;
-email is a delivery channel on top, rendered per `User.locale`). **M12
+**M7 email delivery is BUILT (2026-08-08).** The dashboard is still the record;
+email is the delivery channel on top of it, rendered per `User.locale`. Before
+this, a curator could ask a rider a question and the rider found out only by
+logging back in and looking — which made the needs-info loop, the one exchange
+in the system that is *waiting* on somebody, the least likely to complete.
+
+- `MessageMailer` renders from the **same** `messages.kind_*` / `messages.body.*`
+  keys the dashboard uses, in the **recipient's** locale — not the locale of the
+  curator who made the decision. One wording, so an email cannot drift from the
+  page describing the same decision.
+- The mail is a **pointer, not a copy**: headline, body line, the curator's own
+  note, and a link. Never the photo, and never anything the dashboard would not
+  show that same person. The note travels because on a needs-info the note *is*
+  the question.
+- **Sends are queued, not immediate.** `sendSystem()` runs inside the moderation
+  decision's transaction, so mailing there would announce decisions that can
+  still roll back and would hold row locks across an SMTP round trip.
+  `MessageOutbox` collects them and `MessageMailSubscriber` flushes on
+  `kernel.terminate` / `console.terminate` — after the response, after the
+  commit. The mailer **re-reads the row** before sending, so a rolled-back
+  decision sends nothing.
+- **`RiderReply` is deliberately silent.** It is addressed to the deciding
+  curator, who has a desk that already shows it; mailing every reply turns a
+  queue into an inbox.
+- A transport failure is logged and dropped. The row is the record.
+
+There is **no Messenger transport**, so the terminate subscriber is the delivery
+mechanism. When one is introduced the honest change is for the subscriber to
+dispatch rather than send; the outbox and the re-read stay useful either way.
+
+Not built: a per-user email preference. These are transactional messages about
+a person's own contributions, so there is nothing to unsubscribe from without
+also opting out of being asked questions — but if one is ever wanted, it belongs
+on `User` beside `locale`.
+
+The **M8 phase-2 scheduled GC runner** is still
+**specified, pending implementation** — see `operations.md` §1, which carries
+the systemd units. **M12
 account lock/ban** is explicitly *not* part of this system: Trash handles the
 content, the account is the admin desk's job
 ([account-and-auth.md](account-and-auth.md)).
@@ -1354,8 +1388,8 @@ trusted moderators later, not built.
 
 ## 12. Specified, pending implementation
 
-- **M7 email delivery + M8 phase-2 scheduler** (§7.8, §8) — one
-  messenger/scheduler investment for both.
+- **M8 phase-2 scheduler** (§8) — the units are written in `operations.md` §1
+  and not installed. (**M7 email delivery is built** — §7.8.)
 - **M12 account lock/ban** — separate admin-desk work; recorded, unbuilt.
 - **Hazard intake UI** — `SubmissionType::Hazard` is queue-renderable but has
   no intake flow; `ModerationService` refuses to approve it until an apply path

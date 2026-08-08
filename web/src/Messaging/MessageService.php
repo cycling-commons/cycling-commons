@@ -38,6 +38,13 @@ final class MessageService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
+        /**
+         * Where a message goes to be emailed (M7). Queued rather than sent: the
+         * system path below runs INSIDE the moderation transaction, and mail
+         * announcing a decision that can still roll back is worse than no mail
+         * at all. {@see MessageOutbox}.
+         */
+        private readonly MessageOutbox $outbox,
     ) {
     }
 
@@ -97,6 +104,7 @@ final class MessageService
             $note,
         );
         $this->em->persist($message);
+        $this->outbox->queue($message);
 
         return $message;
     }
@@ -124,6 +132,7 @@ final class MessageService
         $message = new UserMessage($userId, UserMessageKind::CuratorMessage, 'curator', $curatorId, $channel, $refId, $refLabel, null, null, $body, $mediaId);
         $this->em->persist($message);
         $this->em->flush();
+        $this->outbox->queue($message);
 
         return $message;
     }
@@ -155,6 +164,7 @@ final class MessageService
         $message = new UserMessage($recipientCuratorId, UserMessageKind::RiderReply, 'rider', $riderId, $channel, $refId, $refLabel, null, null, $body, $mediaId);
         $this->em->persist($message);
         $this->em->flush();
+        $this->outbox->queue($message);
 
         return $message;
     }

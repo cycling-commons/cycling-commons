@@ -2308,6 +2308,8 @@ messages:
   title: 'Jouw berichten'
   empty: 'Nog geen berichten — beslissingen over je bijdragen verschijnen hier.'
   from_curator: 'Van een curator'
+  email_cta: 'Openen in je berichten'
+  email_why: 'Je krijgt dit omdat het over een bijdrage van jou gaat. Het volledige gesprek staat op je berichtenpagina.'
   state_unread: 'Ongelezen'
   state_read: 'Gelezen'
   kind_you: 'Jouw antwoord'
