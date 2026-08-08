@@ -93,7 +93,7 @@ final class BackfillAttributesCommandTest extends KernelTestCase
         /* maxGradient is NOT backfilled from a baked record, and that is
            deliberate (2026-08-05).
 
-           Our field is the **steepest 100 m**. A baked record's "Max gradient"
+           Our field is the **steepest sustained stretch**. A baked record's "Max gradient"
            is a POINT maximum from whoever compiled it — Mur de Huy's famous
            ~26% is its steepest hairpin, which is a different measurement over a
            different distance. Copying one into the other would put a foreign
@@ -104,7 +104,7 @@ final class BackfillAttributesCommandTest extends KernelTestCase
            `app:climbs:recompute`. A climb without one is better left empty than
            filled with a number measured some other way. */
         self::assertArrayNotHasKey('maxGradient', $attrs,
-            'a point maximum must not be backfilled into the steepest-100m field');
+            'a point maximum must not be backfilled into the sustained-gradient field');
         self::assertSame('Asphalt', $attrs['surface'], 'exact registry choice match');
         self::assertSame('La Flèche Wallonne', $attrs['famousFor'], 'verbatim');
         // Untouched: record stays (it still holds the derived Length row) and

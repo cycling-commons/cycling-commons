@@ -57,7 +57,7 @@ roles.
 | Lockout | `failedLoginAttempts`, `lockedUntil`, `isLocked()` | §3 |
 | Deletion | `deletionCode`, `deletionRequestedAt` | §10 |
 | Governance | `publicProfile` (bool, opt-in, default false) | §7 |
-| Preferences | `bikeTypes` (json), `ridingStyles` (json), `defaultMapMode` (string, default `auto`), `dateFormat`/`timeFormat` (string, default `auto`) | §9 |
+| Preferences | `bikeTypes` (json), `ridingStyles` (json), `defaultMapMode` (string, default `auto`), `dateFormat`/`timeFormat` (string, default `auto`), `distanceUnit` (string, default `km`), `elevationUnit` (string, default `m`) | §9 |
 | Age (GDPR Art. 8) | `ageConfirmedAt` (nullable datetime — when they declared 16+; NULL = predates the gate, or created by an admin/console path) | §2; deliberately **not** a date of birth |
 | Media | `keepMediaCredit` (bool) — the departing rider's credit choice, read at deletion | photo-uploads.md §6 |
 | Base location (optional, account-private) | `basePoint` (geometry GeoJSON Point, coords rounded to 2dp at write — ~1 km precision), `basePlace` (varchar(120), town-level label for the scope line), `baseRadiusKm` (smallint, default 40, clamped [10,150]), `baseRegionIds`/`baseCountryCodes` (json, derived — `App\Service\BaseAreaResolver`, cap 8) | map-and-search.md §4.5 Phase 4; **never** exposed on the public profile (§7 below); no GIST index (nothing queries users spatially) |
@@ -706,6 +706,115 @@ driven by the same value handed over as `window.CC_DATE` in `base.html.twig`.
 Without it, JS-rendered dates (the photo drawer's capture month, the consent
 notice's agreement date) would disagree with server-rendered ones on the same
 page, which is exactly the failure the preference exists to prevent.
+
+### Distance and elevation units
+
+`App\Account\DistanceUnit` — `km | mi`, stored on `users.distance_unit`,
+default `km`. `App\Account\ElevationUnit` — `m | ft`, on
+`users.elevation_unit`, default `m`. Migration `Version20260808220000`.
+
+**Two preferences, not one imperial switch.** Miles with metres of climbing is
+what most of Britain rides, and a single toggle would make those riders accept
+a unit they never use to get the one they do. Same argument as date vs time
+above: two habits, two columns.
+
+**Display only. Nothing stored ever leaves metric.** The database, the API, the
+GPX pipeline and every measurement in the Commons stay in kilometres and metres
+— a dataset whose units depend on who is reading it is a dataset nobody can
+join. Conversion happens at the last step before a number becomes text, and
+nowhere else. Anonymous visitors get metric, which is what the app has always
+shown.
+
+`App\Account\UnitFormatter` is that last step, and `App\Twig\
+UnitDisplayExtension` exposes it to templates:
+
+| filter/function | takes | writes |
+|---|---|---|
+| `\|cc_km` | kilometres | `84.2 km` / `52.3 mi` |
+| `\|cc_m` | metres, short range | `250 m` / `820 ft`; promotes to `cc_km` past a kilometre (a quarter mile) |
+| `\|cc_elev` | metres of height | `1,240 m` / `4,068 ft` |
+| `\|cc_km2` | square kilometres | `16,089 km²` / `6,212 sq mi` |
+| `\|cc_per_km2` | count per km² | the density number alone, fixed decimals |
+| `cc_distance_suffix()` / `cc_elevation_suffix()` / `cc_area_suffix()` | — | the bare unit word, for axis captions and input labels |
+| `cc_km_value()` / `cc_elev_value()` | metric | the converted **number**, for form fields and example placeholders |
+
+A short horizontal distance follows the **distance** preference and lands in
+feet, not fractions of a mile: "820 ft off the track" is a distance somebody can
+picture, "0.16 mi" is not. Areas and densities move in opposite directions — a
+square mile is bigger, so a country covers fewer of them and each holds more
+places.
+
+**Units left the translated strings.** Messages that used to write their own
+unit (`'{n} m climbing'`, `'%m% m ascent'`, `'Length (km)'`, `'km {a} · {b} m
+off'`, the route/ride length bounds) now place an already-formatted value:
+`'{n} climbing'`, `'%v% ascent'`, `'Length (%u%)'`, `'{a} along · {b} off'`,
+`'between %min% and %max%'`. A string that spells its own unit cannot follow a
+preference.
+
+The client half is `assets/js/cc-units.js` (`window.ccKm`, `window.ccM`,
+`window.ccElev`, plus `ccKmValue`/`ccElevValue` and the reverse
+`ccKmFromValue`/`ccElevFromValue`), driven by `window.CC_UNITS`. That bridge is
+emitted **twice**: in `base.html.twig` for every ordinary page, and again in
+`templates/map/index.html.twig`, which does not extend it. Without the second
+copy the map would draw every distance in kilometres while the same rider's
+moderation tables read miles. Map ES modules reach it through
+`assets/map/units.js` (`uKm`/`uM`/`uElev`), which falls back to metric so
+`node --test` can still import the leaf modules.
+
+**The three places a rider types or drags a distance** convert on the way in as
+well as out:
+
+- the climb wizard's length and gain fields — shown and autofilled in the
+  rider's unit, converted back by model transformers on `AddClimbType` so the
+  submitted payload is metric. Server-side rather than in the browser: a
+  submission that arrived in miles because JavaScript was supposed to convert it
+  and did not is a wrong number nobody can spot afterwards;
+- the base-location radius slider — the **input stays kilometres** (that is what
+  is stored and what the controller reads) and only the read-out follows the
+  preference;
+- the ride-check radius select — option **values** stay metres, because the
+  server accepts only its own fixed set (`RideCheckService::ALLOWED_RADII`);
+  the labels convert.
+
+**The baked display strings are gone** (2026-08-09). Ten seeded climbs carried
+pre-formatted `record` / `headline` values in `item.attributes` (`"2.2 km"`),
+written before either was derived at render time. A stored string cannot follow
+a preference — no formatter runs late enough — so the number went back to being
+a number:
+
+- `app:climbs:recompute --write` re-measured the 13 climbs that have a drawn
+  line, storing `length`/`gain` in metres and dropping `headline`;
+- `app:catalog:retire-baked-length --write`
+  ({@see App\Catalog\Command\RetireBakedLengthCommand}) parsed the remaining
+  baked `record` "Length" rows into the discrete `length` attribute for the
+  eight point-only Wikidata seeds, which have no line to measure. A **measured**
+  length always wins; an unparseable value is reported and left alone; the
+  consumed row leaves `record`, and `record` goes with it when it empties. Dry
+  run by default, safe to re-run.
+
+**The steepest-ramp label gave its width back to the value** (2026-08-09). The
+climb field used to be called `Steepest 250m (%)`, which failed three ways at
+once: a msgid cannot be interpolated, so the number had to be retyped in five
+catalogues whenever `ClimbProfiler::MAX_WINDOW_M` moved — and it went stale
+immediately, reading "Steepest 100m" under a caption saying "steepest 250m";
+it could not follow a rider reading in feet; and the width is not even a
+per-TYPE fact, since every climb stores the window it was actually measured at
+(`steepWindowM`) and rows measured before 2026-08-07 really are 100 m ones.
+
+The label is now `Steepest sustained (%)` — it still says WHICH measurement it
+is, which was the point of the 2026-08-05 rename ("max gradient" invites
+comparison with a point maximum; Mur de Huy's famous ~26% is its steepest
+hairpin, not its steepest sustained stretch). The width travels with the value:
+the drawer writes **"13% over 820 ft"** from that climb's own `steepWindowM`,
+in the reader's unit, falling back to 100 m for rows that predate the
+attribute. `BackfillAttributesCommand::LEGACY_LABELS` keeps the two retired
+labels resolving to `maxGradient` so an older harvest re-import still lands.
+A baked `Max gradient` stays deliberately unmatched — it is a point maximum
+from somebody else's compilation, a different measurement.
+
+One thing stays metric on purpose: an imported Wikidata *description* ("is a
+2,200 m climb") is quoted source prose, not a field we render. Rewriting
+somebody else's sentence is not unit conversion.
 
 ### The curating invitation on the landing pane
 

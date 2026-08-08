@@ -66,6 +66,28 @@ final class BackfillAttributesCommand extends Command
     /** Field names given a numeric-extraction rule instead of verbatim/choice-matching. */
     private const array NUMERIC_FIELDS = ['avgGradient', 'maxGradient'];
 
+    /**
+     * Baked labels a registry field no longer answers to, normalized
+     * ({@see self::normalizeLabel()}) — so a re-import of an older harvest
+     * still lands in the right attribute.
+     *
+     * The steepest-ramp field spelled its measurement window into its own label
+     * until 2026-08-09, and did so at two different widths as the window moved
+     * (100 m, then 250 m). The width now travels with the value instead
+     * (account-and-auth.md §9), which is what let the label stop being a
+     * moving target — but a dump taken before that still says the old thing.
+     *
+     * Only labels naming OUR OWN sustained measurement belong here. A baked
+     * "Max gradient" stays unmatched on purpose: it is a POINT maximum from
+     * whoever compiled it, a different measurement over a different distance,
+     * and copying it in would put a foreign definition into the one field whose
+     * whole value is that it means the same thing on every climb (2026-08-05).
+     */
+    private const array LEGACY_LABELS = [
+        'steepest 250m' => 'maxGradient',
+        'steepest 100m' => 'maxGradient',
+    ];
+
     public function __construct(
         private readonly Connection $db,
         private readonly CatalogFormRegistry $registry,
@@ -190,9 +212,22 @@ final class BackfillAttributesCommand extends Command
                 continue;
             }
 
-            $field = $fieldsByLabel[self::normalizeLabel($label)] ?? null;
+            $normalized = self::normalizeLabel($label);
+            $field = $fieldsByLabel[$normalized] ?? null;
+            if (null === $field && isset(self::LEGACY_LABELS[$normalized])) {
+                $wanted = self::LEGACY_LABELS[$normalized];
+                foreach ($this->registry->for($type)->all() as $candidate) {
+                    if ($candidate->name === $wanted) {
+                        $field = $candidate;
+                        break;
+                    }
+                }
+            }
             if (null === $field) {
-                continue; // no registry field for this label (e.g. "Length" - derived, display-only)
+                // No registry field for this label. "Length" used to land here
+                // too; it now has a discrete home and its own retirement
+                // command ({@see RetireBakedLengthCommand}).
+                continue;
             }
             if (\array_key_exists($field->name, $attributes)) {
                 continue; // a discrete value already exists - never overwrite it

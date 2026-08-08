@@ -68,21 +68,30 @@ final class CatalogFormRegistry
                     // CatalogField::$derived, B-climbs.md and
                     // climb-elevation.md 4.
                     CatalogField::derivedText('avgGradient', 'Average gradient (%)'),
-                    // Named for the distance it is measured over, deliberately.
-                    // "Max gradient" invites comparison with a POINT maximum -
-                    // Mur de Huy's famous ~26% is its steepest hairpin, not its
-                    // steepest sustained stretch - and ours is the sustained
-                    // figure. Saying which one it is settles the apparent
-                    // disagreement (owner, 2026-08-05).
+                    // Still named for what it MEASURES, not for a point
+                    // maximum: Mur de Huy's famous ~26% is its steepest
+                    // hairpin, ours is the steepest sustained stretch, and
+                    // saying "sustained" settles that apparent disagreement
+                    // (owner, 2026-08-05).
                     //
-                    // THE NUMBER HERE MUST MATCH ClimbProfiler::MAX_WINDOW_M.
-                    // It is a msgid, so it cannot be interpolated without
-                    // breaking four catalogues, which is exactly why it went
-                    // stale: the window moved to 250 m on 2026-08-07 and this
-                    // label kept saying 100 m, so the drawer showed
-                    // "steepest 250m 11%" in its caption and "Steepest 100m"
-                    // in the field directly beneath it (owner-reported).
-                    CatalogField::derivedText('maxGradient', 'Steepest 250m (%)'),
+                    // The WIDTH left the label on 2026-08-09, and could not
+                    // have stayed. A msgid cannot be interpolated, so the
+                    // number had to be retyped in five catalogues whenever
+                    // ClimbProfiler::MAX_WINDOW_M moved — it went stale
+                    // immediately (the window became 250 m on 2026-08-07 while
+                    // the label still said 100 m, so the drawer read
+                    // "steepest 250m 11%" above "Steepest 100m" for the same
+                    // climb). It could not follow a rider reading in feet
+                    // either. And it is not even a per-TYPE fact: every climb
+                    // stores the window it was actually measured at
+                    // (`steepWindowM`), and rows measured before the change
+                    // really are 100 m ones.
+                    //
+                    // So the width travels with the VALUE now — the drawer
+                    // writes "13% over 820 ft" from that climb's own
+                    // steepWindowM, in the reader's unit
+                    // (account-and-auth.md §9).
+                    CatalogField::derivedText('maxGradient', 'Steepest sustained (%)'),
                     CatalogField::select('effort', 'Effort', ['Steady', 'Challenging', 'Tough', 'Very steep']),
                     CatalogField::textarea('correction', 'Anything to correct?', 'e.g. the foot starts at the bridge, not the square', display: false),
                 ],
