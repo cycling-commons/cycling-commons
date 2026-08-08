@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Account\UnitFormatter;
 use App\Catalog\RideCheckService;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,6 +37,7 @@ final class RideCheckController extends AbstractController
         RideCheckService $service,
         TranslatorInterface $translator,
         RateLimiterFactoryInterface $rideCheckLimiter,
+        UnitFormatter $units,
     ): JsonResponse {
         $user = $this->getUser();
         if (!$this->isGranted('ROLE_USER') || !$user instanceof User) {
@@ -73,8 +75,14 @@ final class RideCheckController extends AbstractController
         try {
             return $this->json($service->check($file->getContent(), $radius));
         } catch (\InvalidArgumentException $e) {
-            // message = translation key (GpxParser / RideCheckService convention)
-            return $this->json(['error' => $translator->trans($e->getMessage())], 422);
+            // message = translation key (GpxParser / RideCheckService convention).
+            // The length bounds inside that message are written in the rider's
+            // own units (account-and-auth.md §9); an unused parameter on the
+            // other keys costs nothing.
+            return $this->json(['error' => $translator->trans($e->getMessage(), [
+                '%min%' => $units->shortDistance(RideCheckService::MIN_RAW_M),
+                '%max%' => $units->distance(RideCheckService::MAX_RAW_M / 1000, 0),
+            ])], 422);
         }
     }
 }

@@ -95,7 +95,11 @@
   input.is-invalid{border-bottom-color:var(--clay)}
 
   /* toggle switch */
-  .toggle{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 0;border-bottom:1px solid rgba(20,22,14,.1);max-width:420px}
+  /* The only toggle row sits directly under its own .sec header, which already
+     carries 1.1rem of bottom margin — a matching .85rem of padding on top of
+     that read as a gap, so the row hugs the header and keeps its breathing
+     room below. The neighbouring column's hint uses the same top offset. */
+  .toggle{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.1rem 0 .85rem;border-bottom:1px solid rgba(20,22,14,.1);max-width:420px}
   .toggle .lab b{display:block;font-size:.95rem}
   .toggle .lab small{color:#595c4d;font-size:.82rem}
   .sw{position:relative;flex:none;width:42px;height:24px}
@@ -243,7 +247,10 @@
              form_widget_simple), so this attr.value is the sole one rendered
              and there is no competing/duplicate value attribute. #}
           {{ form_widget(profileForm.baseRadiusKm, {attr: {value: cc_user.baseRadiusKm}}) }}
-          <output for="settings_baseRadiusKm" data-radius-output>{{ cc_user.baseRadiusKm }} km</output>
+          {# The slider itself stays in kilometres (that is what is stored and
+             what the controller reads); only the read-out follows the rider's
+             unit, so a mile-reading rider drags to "47 mi" and we keep 75. #}
+          <output for="settings_baseRadiusKm" data-radius-output>{{ cc_user.baseRadiusKm|cc_km(0) }}</output>
         </div>
 
         <div class="base-clear-row">
@@ -325,6 +332,21 @@
         {{ form_help(profileForm.timeFormat) }}
         {{ form_errors(profileForm.timeFormat) }}
       </div>
+      {# Distance and climbing are asked separately because miles-with-metres is
+         a real combination (most of Britain rides it) — see DistanceUnit. Both
+         are display-only: nothing the Commons stores leaves metric. #}
+      <div class="field">
+        {{ form_label(profileForm.distanceUnit) }}
+        {{ form_widget(profileForm.distanceUnit) }}
+        {{ form_help(profileForm.distanceUnit) }}
+        {{ form_errors(profileForm.distanceUnit) }}
+      </div>
+      <div class="field">
+        {{ form_label(profileForm.elevationUnit) }}
+        {{ form_widget(profileForm.elevationUnit) }}
+        {{ form_help(profileForm.elevationUnit) }}
+        {{ form_errors(profileForm.elevationUnit) }}
+      </div>
     </div>
 
     {# Section header like the other .sec headers; the toggle's old bold label
@@ -345,7 +367,7 @@
         {{ form_errors(profileForm.publicProfile) }}
       </div>
       <div class="field">
-        <div class="hint" style="margin:.85rem 0 0">
+        <div class="hint" style="margin:.1rem 0 0">
           {% if cc_user.publicProfile %}
             <a href="{{ path('rider_profile', {uuid: cc_user.uuid}) }}" target="_blank" rel="noopener">{{ 'settings.view_public'|trans }} ↗</a>
           {% else %}

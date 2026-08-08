@@ -17,6 +17,7 @@
    (07-20 review finding 9). */
 import { D, tpl } from './i18n.js';
 import { escPend, txtOn, haversine, featurePoint } from './util.js';
+import { uKm, uM } from './units.js';
 import { map, flyToPin } from './map-init.js';
 import { CATALOG, CITIES, active, layerByKey, LETTER_KEY, mode } from './catalog.js';
 import { osmLayers } from './osm-pools.js';
@@ -48,6 +49,11 @@ export function bumpPlaceReq(){ _placeReq++; }
 // re-open: no halo restart, no focus steal, no mobile-sheet snap to half.
 let _placeReq=0;
 
+/* The neighbourhood the town card covers, in kilometres. Named because three
+   places have to agree on it: the local index lookup, the coverage request,
+   and the heading the rider reads — which now writes it in their own unit. */
+const NEARBY_KM = 5;
+
 // place info card: fly to the town/village, show its info (when known) +
 // everything in the Commons within 5 km, grouped by layer. Works for any
 // geocoded place (spec 2026-07-14 §3.3): CITIES entries keep their wiki/info
@@ -67,7 +73,7 @@ export function openPlace(name, meta){
   }
   // A · Road surface segments are corridor data, not places — near any mapped
   // town they'd flood the card (Spa: 58 rows). Text search still finds them.
-  const near = nearbyItems(meta.ll, 5).filter(n=>n.e.letter!=='A');
+  const near = nearbyItems(meta.ll, NEARBY_KM).filter(n=>n.e.letter!=='A');
   renderPlaceCard(name, meta, near);
   // Frame the whole ≤5 km neighbourhood instead of flyToPin's zoom-14 dive —
   // hovering the list must pulse items that are actually on screen. The
@@ -90,7 +96,7 @@ export function openPlace(name, meta){
   // is already on screen; a slow/failed response changes nothing.
   if(!COVERAGE_ON) return;
   const myReq=++_placeReq;
-  fetch(`/map/coverage/nearby?lat=${meta.ll[0]}&lng=${meta.ll[1]}&km=5`, {headers:{'Accept':'application/json'}})
+  fetch(`/map/coverage/nearby?lat=${meta.ll[0]}&lng=${meta.ll[1]}&km=${NEARBY_KM}`, {headers:{'Accept':'application/json'}})
     .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
     .then(d=>{ if(myReq!==_placeReq) return;
       if(!document.getElementById('drawer').classList.contains('open')) return;   // card closed while in flight
@@ -128,7 +134,7 @@ function renderPlaceCard(name, meta, near, covGroups){
         // subgroup capped at 3 behind a "show all N" expander. Same collapsed
         // presentation on mobile (decision F) — one code path.
         const ver=rows.filter(n=>!isComm(n)), com=rows.filter(isComm);
-        const row=(n,hidden)=>`<li${hidden?` hidden data-more="${L}"`:''}><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}${isComm(n)?`<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`:''}</span><em>${n.dist<1?Math.round(n.dist*1000)+' m':n.dist.toFixed(1)+' km'}</em></button></li>`;
+        const row=(n,hidden)=>`<li${hidden?` hidden data-more="${L}"`:''}><button class="cc-near" data-i="${n._i}"><span class="cc-near-nm">${escPend(n.e.name)}${isComm(n)?`<span class="cc-comm-tag">${escPend(D.community||'community')}</span>`:''}</span><em>${n.dist<1?uM(Math.round(n.dist*1000)):uKm(n.dist)}</em></button></li>`;
         let html=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${e0.color};color:${txtOn(e0.color)}">${escPend(e0.badge)}</span>${escPend(e0.kind)} · ${rows.length}</li>`;
         html+=ver.map(n=>row(n,false)).join('');
         html+=com.slice(0,3).map(n=>row(n,false)).join('');
@@ -143,7 +149,7 @@ function renderPlaceCard(name, meta, near, covGroups){
      <div class="cc-d-name">${escPend(name)}</div>
      ${meta.info?`<div class="cc-city-info">${meta.info}</div>`:''}
      <div class="cc-city-links">${meta.wiki?`<a href="${meta.wiki}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">${D.notesNone||'community notes — none yet'}</span></div>
-     <h4 class="cc-near-h">${D.nearbyH||'In the Commons nearby · ≤ 5 km'}</h4>
+     <h4 class="cc-near-h">${(D.nearbyH||'In the Commons nearby · ≤ {d}').replace('{d}', uKm(NEARBY_KM, 0))}</h4>
      <ul class="cc-near-list">${list}</ul>`;
   document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
     const n=all[+b.dataset.i];

@@ -221,6 +221,10 @@ final class MapController extends AbstractController
             'difficulty' => 'd_difficulty', 'elevation' => 'd_elevation', 'mClimbing' => 'd_m_climbing',
             'climbLength' => 'd_climb_length',
             'fromGpx' => 'd_from_gpx', 'gradProfile' => 'd_grad_profile', 'illustrative' => 'd_illustrative',
+            // The steepest-ramp row writes the window it was measured over,
+            // per climb, because the field label no longer can (see
+            // CatalogFormRegistry's note on that label).
+            'steepOver' => 'd_steep_over',
             // The full climb profile popup (assets/map/climb-profile.js).
             'openProfile' => 'open_profile', 'gradPerBin' => 'grad_per_bin',
             'elevAria' => 'd_elev_aria', 'sharedBy' => 'd_shared_by', 'viewProfile' => 'd_view_profile',

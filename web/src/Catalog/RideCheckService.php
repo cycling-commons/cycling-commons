@@ -43,8 +43,11 @@ final class RideCheckService
      */
     public const array COVERAGE_LETTERS = ['C', 'D', 'G', 'H'];
 
-    private const int MIN_RAW_M = 500;      // shorter is a click, not a ride
-    private const int MAX_RAW_M = 400_000;  // route-domain cap (spec §5.3)
+    /* Public because the error message that quotes them is written in the
+       READER's units (account-and-auth.md §9), so the controller has to format
+       the bounds rather than the translation hard-coding "500 m and 400 km". */
+    public const int MIN_RAW_M = 500;       // shorter is a click, not a ride
+    public const int MAX_RAW_M = 400_000;   // route-domain cap (spec §5.3)
     private const int MAX_PER_LETTER = 200; // payload sanity; flagged as truncated
 
     /**

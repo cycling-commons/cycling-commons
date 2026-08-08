@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Account\UnitFormatter;
 use App\Contribution\RouteProposalService;
 use App\Entity\User;
 use App\Form\ProposeRouteType;
@@ -34,6 +35,7 @@ final class ProposeRouteController extends AbstractController
     public function __construct(
         private readonly RouteProposalService $proposals,
         private readonly TranslatorInterface $translator,
+        private readonly UnitFormatter $units,
     ) {
     }
 
@@ -64,7 +66,15 @@ final class ProposeRouteController extends AbstractController
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('error', 'contribute.error.rate_limited');
             } catch (\InvalidArgumentException $e) {
-                $form->addError(new FormError($this->translator->trans($e->getMessage())));
+                /* The length bounds are quoted in the rider's own units
+                   (account-and-auth.md §9). Passed on every message in this
+                   catch, not just the length one — an unused parameter costs
+                   nothing, and picking which key gets them would break the
+                   next message somebody adds. */
+                $form->addError(new FormError($this->translator->trans($e->getMessage(), [
+                    '%min%' => $this->units->distance(RouteProposalService::MIN_RAW_M / 1000, 0),
+                    '%max%' => $this->units->distance(RouteProposalService::MAX_RAW_M / 1000, 0),
+                ])));
             }
         }
 

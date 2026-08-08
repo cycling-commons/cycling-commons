@@ -126,7 +126,7 @@
             {% endif %}
             {% if reg.itemsVerified > 0 %}<span class="km">{{ (reg.itemsVerified == 1 ? 'regions.items_one' : 'regions.items_many')|trans({'%n%': reg.itemsVerified}) }}</span>{% endif %}
             {% if reg.routes > 0 %}<span class="km">{{ (reg.routes == 1 ? 'regions.routes_one' : 'regions.routes_many')|trans({'%n%': reg.routes}) }}</span>{% endif %}
-            {% if reg.areaKm2 %}<span class="km">{{ reg.areaKm2|round|number_format(0, '.', ',') }} km²</span>{% endif %}
+            {% if reg.areaKm2 %}<span class="km">{{ reg.areaKm2|cc_km2 }}</span>{% endif %}
           </a>
         {% endfor %}
       </div>

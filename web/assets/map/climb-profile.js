@@ -23,6 +23,7 @@
    gradients it was handed, not a second opinion about them. */
 import { escPend, gradColor, txtOn } from './util.js';
 import { D } from './i18n.js';
+import { uKm, uM, uElev, uKmValue, uDistUnit } from './units.js';
 
 /* Bins narrower than this get no figure printed in them. Below roughly 30 px a
    two-digit gradient plus its % sign either overflows its column or has to
@@ -88,6 +89,9 @@ export function profileSvg(f){
   /* Each bin is a quadrilateral under the road, not a rectangle: the top edge
      follows the climb, so the bars together ARE the silhouette rather than a
      histogram standing under a separate line. */
+  // A 100 m bin is 0.06 mi, so miles need the extra decimal or every bin in
+  // the first mile reads "0.1-0.1".
+  const binDec = 'mi' === uDistUnit() ? 2 : 1;
   const cols = grad.map((g,i)=>{
     const x0=x(i*binM), x1=x((i+1)*binM), y0=y(h[i]), y1=y(h[i+1]);
     const fill=gradColor(g);
@@ -100,24 +104,28 @@ export function profileSvg(f){
       ? `<text x="${((x0+x1)/2).toFixed(1)}" y="${(base+BAND/2+4).toFixed(1)}" class="cc-cp-num" fill="${txtOn(fill)}">${g}%</text>`
       : '';
     return `<polygon points="${x0.toFixed(1)},${base.toFixed(1)} ${x0.toFixed(1)},${y0.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)} ${x1.toFixed(1)},${base.toFixed(1)}"
-        fill="${fill}" fill-opacity="0.9" stroke="#fff" stroke-width="0.75"><title>${(i*binM/1000).toFixed(1)}–${((i+1)*binM/1000).toFixed(1)} km · ${g}%</title></polygon>${band}${label}`;
+        fill="${fill}" fill-opacity="0.9" stroke="#fff" stroke-width="0.75"><title>${uKmValue(i*binM/1000, binDec)}–${uKm((i+1)*binM/1000, binDec)} · ${g}%</title></polygon>${band}${label}`;
   }).join('');
 
-  // Distance ruler, under the band.
+  // Distance ruler, under the band. Spaced in the unit it is LABELLED in: a
+  // mile-reading rider gets whole miles, not the kilometre grid relabelled into
+  // 0.6, 1.2, 1.9. Positions stay a fraction of the total, so the geometry is
+  // identical either way.
   const totalKm=totalM/1000;
-  const stepKm = totalKm<=3?0.5:(totalKm<=12?1:Math.ceil(totalKm/10));
+  const totalDisp=uKmValue(totalKm);
+  const stepKm = totalDisp<=3?0.5:(totalDisp<=12?1:Math.ceil(totalDisp/10));
   const axisY = base+BAND;
   const ticks=[];
-  for(let k=stepKm;k<totalKm-0.001;k+=stepKm){
-    const px=x(k*1000);
+  for(let k=stepKm;k<totalDisp-0.001;k+=stepKm){
+    const px=padL+(k/totalDisp)*plotW;
     ticks.push(`<line x1="${px.toFixed(1)}" y1="${axisY}" x2="${px.toFixed(1)}" y2="${axisY+6}" class="cc-cp-tick"/>
       <text x="${px.toFixed(1)}" y="${axisY+22}" class="cc-cp-axis" text-anchor="middle">${k%1?k.toFixed(1):k}</text>`);
   }
   /* The unit once, at the end of the ruler, rather than repeated on every tick
-     — "3 km 6 km 9 km" is noise, and a bare row of numbers is ambiguous. The
-     app is metric throughout (there is no imperial preference on User), so this
-     is km, not a converted value. */
-  ticks.push(`<text x="${(padL+plotW+10).toFixed(1)}" y="${axisY+22}" class="cc-cp-axis" text-anchor="start">km</text>`);
+     — "3 km 6 km 9 km" is noise, and a bare row of numbers is ambiguous. Which
+     unit that is follows the rider's own setting (account-and-auth.md §9); the
+     numbers above were converted with it. */
+  ticks.push(`<text x="${(padL+plotW+10).toFixed(1)}" y="${axisY+22}" class="cc-cp-axis" text-anchor="start">${uDistUnit()}</text>`);
 
   /* The two altitudes, which is the pair `gain` alone cannot give you. Rows
      measured before footEle/summitEle existed simply do not get them — an
@@ -126,17 +134,17 @@ export function profileSvg(f){
   const foot = f.footEle!=null ? Math.round(Number(f.footEle)) : null;
   const summit = f.summitEle!=null ? Math.round(Number(f.summitEle)) : null;
   const endLabels = (foot!=null && summit!=null)
-    ? `<text x="${(padL-12)}" y="${(y(h[0])+4).toFixed(1)}" class="cc-cp-ele" text-anchor="end">${foot} m</text>
-       <text x="${(W-padR+12)}" y="${(y(h[h.length-1])+4).toFixed(1)}" class="cc-cp-ele" text-anchor="start">${summit} m</text>`
+    ? `<text x="${(padL-12)}" y="${(y(h[0])+4).toFixed(1)}" class="cc-cp-ele" text-anchor="end">${uElev(foot)}</text>
+       <text x="${(W-padR+12)}" y="${(y(h[h.length-1])+4).toFixed(1)}" class="cc-cp-ele" text-anchor="start">${uElev(summit)}</text>`
     : '';
 
   const startMark=`<circle cx="${x(0).toFixed(1)}" cy="${y(h[0]).toFixed(1)}" r="5" class="cc-cp-pin"/>`;
   const endMark=`<circle cx="${x(totalM).toFixed(1)}" cy="${y(h[h.length-1]).toFixed(1)}" r="5" class="cc-cp-pin"/>`;
 
-  const distLabel=`<text x="${(padL+plotW/2).toFixed(1)}" y="${H-8}" class="cc-cp-axis" text-anchor="middle">${totalKm.toFixed(totalKm<10?1:0)} km · ${D.gradPerBin ? D.gradPerBin.replace('{b}', binM) : `per ${binM} m`}</text>`;
+  const distLabel=`<text x="${(padL+plotW/2).toFixed(1)}" y="${H-8}" class="cc-cp-axis" text-anchor="middle">${uKm(totalKm, totalDisp<10?1:0)} · ${D.gradPerBin ? D.gradPerBin.replace('{b}', uM(binM)) : `per ${uM(binM)}`}</text>`;
 
   return `<svg class="cc-cp-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"
-      aria-label="${escPend(f.name||'')} — ${totalKm.toFixed(1)} km, ${Math.round(climbM)} m">
+      aria-label="${escPend(f.name||'')} — ${uKm(totalKm)}, ${uElev(Math.round(climbM))}">
     ${cols}<line x1="${padL}" y1="${base}" x2="${padL+plotW}" y2="${base}" class="cc-cp-base"/>
     ${startMark}${endMark}${endLabels}${ticks.join('')}${distLabel}
   </svg>`;

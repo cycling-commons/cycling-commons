@@ -255,12 +255,14 @@
     </div>
     <div class="two">
       <div class="field">
-        <label for="{{ form.fLen.vars.id }}">{{ 'add_climb.step2.len_label'|trans }}</label>
+        <label for="{{ form.fLen.vars.id }}">{{ 'add_climb.step2.len_label'|trans({'%u%': cc_distance_suffix()}) }}</label>
         {{ form_widget(form.fLen, {attr: {step: '0.1', min: '0'}}) }}
       </div>
       <div class="field">
-        <label for="{{ form.fGain.vars.id }}">{{ 'add_climb.step2.gain_label'|trans }}</label>
-        {{ form_widget(form.fGain, {attr: {step: '1', min: '0', placeholder: 'e.g. 161'}}) }}
+        <label for="{{ form.fGain.vars.id }}">{{ 'add_climb.step2.gain_label'|trans({'%u%': cc_elevation_suffix()}) }}</label>
+        {# The example follows the rider's unit too: "e.g. 161" beside a field
+           labelled (ft) is an instruction to type the wrong number. #}
+        {{ form_widget(form.fGain, {attr: {step: '1', min: '0', placeholder: 'e.g. ' ~ cc_elev_value(161)}}) }}
         <div class="fhelp">{{ 'add_climb.step2.gain_help'|trans }}</div>
       </div>
     </div>

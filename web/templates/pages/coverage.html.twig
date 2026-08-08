@@ -50,7 +50,7 @@
       <td>
         <div class="bar"><span style="width:{{ c.share }}%"></span></div>
         <span class="mono" style="font-size:.72rem">{{ c.coveragePois|number_format(0, '.', ',') }}</span>
-        <span class="dens">{{ 'coverage.per_km2'|trans({'%n%': c.poisPerKm2 < 0.01 and c.poisPerKm2 > 0 ? '<0.01' : c.poisPerKm2|number_format(2, '.', ',')}) }}</span>
+        <span class="dens">{{ 'coverage.per_km2'|trans({'%n%': c.poisPerKm2 < 0.01 and c.poisPerKm2 > 0 ? '<0.01' : c.poisPerKm2|cc_per_km2, '%u%': cc_area_suffix()}) }}</span>
       </td>
       {# Where the catalog rows came from. This is the column with a real mix:
          the reference layer is OSM top to bottom, but the catalog already holds
@@ -77,7 +77,7 @@
      are here for whoever wants to know what a column means. #}
   <ul class="tnote">
     <li>{% trans %}coverage.terms_reference{% endtrans %}</li>
-    <li>{% trans %}coverage.terms_bars{% endtrans %}</li>
+    <li>{{ 'coverage.terms_bars'|trans({'%u%': cc_area_suffix()})|rich }}</li>
     <li>{% trans %}coverage.terms_catalog{% endtrans %}</li>
   </ul>
 </div></section>

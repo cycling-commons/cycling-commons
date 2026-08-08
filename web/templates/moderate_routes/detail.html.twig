@@ -51,8 +51,8 @@
     <div class="kicker">{{ 'moderate_routes.kicker'|trans }}</div>
     <h1>{{ route.name }}</h1>
     <div class="stat-line">
-      {{ route.km }} km
-      {% if route.ascent is not null %}&middot; {{ 'moderate_routes.stat_ascent'|trans({'%m%': route.ascent}) }}{% endif %}
+      {{ route.km|cc_km }}
+      {% if route.ascent is not null %}&middot; {{ 'moderate_routes.stat_ascent'|trans({'%v%': route.ascent|cc_elev}) }}{% endif %}
       &middot; <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': active_in_region, '%cap%': region_cap}) }}</span>
       &middot; <a class="rd-maplink" href="{{ path('map') }}?route={{ route.id }}" target="_blank" rel="noopener">{{ 'moderate_routes.map_open'|trans }} &#8599;</a>
     </div>
@@ -69,8 +69,8 @@
   <div class="rd-meta">
     <table>
       <tr><td>{{ 'moderate_routes.meta.state'|trans }}</td><td>{{ ('account.route_state_' ~ route.state)|trans }}</td></tr>
-      <tr><td>{{ 'moderate_routes.meta.distance'|trans }}</td><td>{{ route.km }} km</td></tr>
-      <tr><td>{{ 'moderate_routes.meta.ascent'|trans }}</td><td>{{ route.ascent ?? '—' }}</td></tr>
+      <tr><td>{{ 'moderate_routes.meta.distance'|trans }}</td><td>{{ route.km|cc_km }}</td></tr>
+      <tr><td>{{ 'moderate_routes.meta.ascent'|trans }}</td><td>{{ route.ascent is null ? '—' : route.ascent|cc_elev }}</td></tr>
       <tr><td>{{ 'moderate_routes.meta.region'|trans }}</td><td>{{ route.regionId ?? '—' }}</td></tr>
       <tr>
         <td>{{ 'moderate_routes.meta.dominant_surface'|trans }}</td>

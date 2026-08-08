@@ -19,6 +19,7 @@
 import { I18N, D, tpl, trVal, sourceLabel, DIFF_LABELS } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
 import { openClimbProfile } from './climb-profile.js';
+import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
 import { map } from './map-init.js';
 import { CATALOG, CITIES } from './catalog.js';
 import { pinEl } from './icons.js';
@@ -79,7 +80,7 @@ export function schemaRows(letter, src, id, opts){
       } else if(f.kind === 'url'){
         rows.push({label:f.label, value:String(v).replace(/^https?:\/\//,'').replace(/\/$/,''), links:[{label:D.visitSite||'Visit site', href:v}]});
       } else {
-        rows.push({label:f.label, value:tv(v)});
+        rows.push({label:f.label, value:steepValue(letter, f.key, tv(v), src)});
       }
     } else if(fixed[f.key] != null){
       rows.push({label:f.label, value:tv(fixed[f.key])});
@@ -90,6 +91,20 @@ export function schemaRows(letter, src, id, opts){
   });
   return rows;
 }
+/* The steepest-ramp figure carries the width it was measured over — "13% over
+   820 ft" — because its LABEL cannot (CatalogFormRegistry's note on that field
+   has the reasoning). Three things made the number impossible to keep in the
+   label: a msgid cannot be interpolated, so it went stale the moment
+   ClimbProfiler::MAX_WINDOW_M moved; it cannot follow a rider reading in feet;
+   and the window is per CLIMB, not per type — `steepWindowM` travels with the
+   row, and climbs measured before 2026-08-07 really are 100 m ones, which is
+   the honest fallback for a row that predates the attribute. */
+function steepValue(letter, name, value, src){
+  if(letter !== 'B' || name !== 'maxGradient') return value;
+  const w = uM((src && src.steepWindowM) ? Number(src.steepWindowM) : 100);
+  return tpl(D.steepOver || '{v} over {w}', {v:value, w:w});
+}
+
 /* Fields a submission can change that have no DISPLAY row of their own, so the
    schema below carries no label for them: the climb editor's three geometry
    fields, and the correction note (display:false in the registry). Without
@@ -351,8 +366,9 @@ function buildRecord(layer, f){
     ? `<div class="cc-diff" title="${D.difficulty||'Difficulty'} 1–5: ${DIFF_LABELS.slice(1).join(' · ')}">${D.difficulty||'Difficulty'}
         <div class="cc-diff-scale">${[1,2,3,4,5].map(n=>`<span class="cc-diff-dot${n===diffScore?' on':''}" style="--p:${DIFF_PURPLE[n]}" title="${n} · ${DIFF_LABELS[n]}">${n}</span>`).join('')}</div>
         <b class="cc-diff-lbl">${trVal(diffLabel)}</b></div>` : '';
-  const elev = f.elev ? `<div class="cc-elev-cap">${D.elevation||'Elevation'} · ${Math.min(...f.elev)}–${Math.max(...f.elev)} m`
-    + (f.gain?` · ${tpl(D.mClimbing||'{n} m climbing',{n:f.gain})}`:'') + ` <em>${D.fromGpx||'(from GPX)'}</em></div>` + elevSvg(f.elev) : '';
+  // The band writes its unit once, on the upper figure: "1,200–1,850 m".
+  const elev = f.elev ? `<div class="cc-elev-cap">${D.elevation||'Elevation'} · ${uElevValue(Math.min(...f.elev),0)}–${uElev(Math.max(...f.elev))}`
+    + (f.gain?` · ${tpl(D.mClimbing||'{n} climbing',{n:uElev(f.gain)})}`:'') + ` <em>${D.fromGpx||'(from GPX)'}</em></div>` + elevSvg(f.elev) : '';
   const grad = f.grad ? gradStrip(f.grad, f) : '';
   // Length, measured off the drawn line. A climb had no length anywhere in the
   // drawer: it is not a form field (nobody types a climb's length, and a typed
@@ -366,7 +382,7 @@ function buildRecord(layer, f){
      100 m — and the number beside the chart has to be the one the chart is
      drawn from. Falls back to the line for climbs not yet re-measured. */
   const climbKm = (f.length ? Number(f.length) / 1000 : 0) || routeLengthKm(f.route);
-  const len = climbKm ? `<div class="cc-elev-cap">${D.climbLength||'Length'} · ${climbKm.toFixed(1)} km</div>` : '';
+  const len = climbKm ? `<div class="cc-elev-cap">${D.climbLength||'Length'} · ${uKm(climbKm)}</div>` : '';
   const up = f.uploader
     ? (f.uploader.public
         ? `<div class="cc-up">${D.sharedBy||'Shared by'} <b>${escPend(f.uploader.name)}</b> · <a href="/profile?u=${slug(f.uploader.name)}">${D.viewProfile||'view profile'}</a></div>`
@@ -492,7 +508,7 @@ function buildRecord(layer, f){
           <img src="${safeHref(p.sm)}" alt="${escPend(D.photoAlt||'Submitted photo')}" loading="lazy" />
         </button>
         <span class="cc-mod-photo-meta">${escPend(
-          (p.distanceM != null ? (D.photoDistance||'~{m} m from the pin').replace('{m}', String(p.distanceM)) : (D.photoNoGps||'No location in the file'))
+          (p.distanceM != null ? (D.photoDistance||'~{d} from the pin').replace('{d}', uM(p.distanceM)) : (D.photoNoGps||'No location in the file'))
           + (p.takenAt ? ' \u00b7 ' + p.takenAt : '')
         )}</span>
         <label class="cc-mod-photo-keep"><input type="checkbox" class="cc-mod-photo-cb" data-media="${escPend(p.id)}" checked /> ${escPend(D.photoKeep||'Keep')}</label>
@@ -749,7 +765,10 @@ function gradStrip(grad, f){
     // The tooltip carries WHERE as well as how steep. A bar is a real distance
     // now, so "12%" alone leaves the reader counting bars to find the ramp.
     const from=(i*binM/1000), to=((i+1)*binM/1000);
-    const where=`${from.toFixed(from<10?1:0)}–${to.toFixed(to<10?1:0)} km`;
+    // A 100 m bin is 0.06 mi, so miles need the extra decimal or every bar in
+    // the first mile reads "0.1-0.1".
+    const binDec = 'mi' === uDistUnit() ? 2 : 1;
+    const where=`${uKmValue(from,binDec)}–${uKm(to,binDec)}`;
     return `<span class="cc-grad-col" style="--up:${upH}px;--dn:${dnH}px" title="${where} · ${p}%">${cell}</span>`;
   }).join('');
   /* Distance ticks. Without them a 22-bar chart is a texture you cannot read a
@@ -757,16 +776,19 @@ function gradStrip(grad, f){
      correspond to. One tick per whole kilometre, or per 500 m on a short climb,
      so the labels never crowd. */
   const totalKm=(grad.length*binM)/1000;
-  const tickKm=totalKm<=1.5?0.5:(totalKm<=6?1:Math.ceil(totalKm/6));
+  // Ticks are spaced in the unit they are LABELLED in — a mile-reading rider
+  // gets whole miles, not the kilometre grid relabelled into 0.6, 1.2, 1.9.
+  const total=uKmValue(totalKm);
+  const tickKm=total<=1.5?0.5:(total<=6?1:Math.ceil(total/6));
   const ticks=[];
-  for(let k=tickKm;k<totalKm-0.05;k+=tickKm){
+  for(let k=tickKm;k<total-0.05;k+=tickKm){
     // Drop a tick that would crowd the end label: a 2.1 km climb printing "2"
     // beside "2.1 km" reads as noise, and the end label already carries that
     // information.
-    if(totalKm-k < tickKm*0.55) continue;
-    ticks.push(`<span class="cc-grad-tick" style="left:${(k/totalKm*100).toFixed(2)}%">${k%1?k.toFixed(1):k}</span>`);
+    if(total-k < tickKm*0.55) continue;
+    ticks.push(`<span class="cc-grad-tick" style="left:${(k/total*100).toFixed(2)}%">${k%1?k.toFixed(1):k}</span>`);
   }
-  const axis=`<div class="cc-grad-axis"><span class="cc-grad-tick cc-grad-tick-0">0</span>${ticks.join('')}<span class="cc-grad-tick cc-grad-tick-end">${totalKm.toFixed(totalKm<10?1:0)} km</span></div>`;
+  const axis=`<div class="cc-grad-axis"><span class="cc-grad-tick cc-grad-tick-0">0</span>${ticks.join('')}<span class="cc-grad-tick cc-grad-tick-end">${uKm(totalKm, total<10?1:0)}</span></div>`;
   /* The width the steepest figure was averaged over travels with the figure
      (ClimbProfiler::MAX_WINDOW_M -> steepWindowM), so the caption cannot claim
      100 m while the number means 250. Older rows predate the attribute; they
@@ -777,7 +799,7 @@ function gradStrip(grad, f){
      per bar, and those are what a rider wants before riding a col. Kept as the
      drawer's summary — the detail is one click away rather than pushing every
      other row off screen. */
-  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · per {b} m · avg {a}% · steepest {w}m {m}%', {a:avg, m:max, b:binM, w:steepW})}</div>
+  return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · per {b} · avg {a}% · steepest {w} {m}%', {a:avg, m:max, b:uM(binM), w:uM(steepW)})}</div>
     <button type="button" class="cc-grad-open" data-cc-profile aria-label="${escPend(D.openProfile||'Open the full profile')}" title="${escPend(D.openProfile||'Open the full profile')}">
       <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>${axis}
     </button>`;

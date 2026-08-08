@@ -27,6 +27,12 @@
   var wiz = document.getElementById('wiz');
   if (!wiz) return;
 
+  /* The rider's units (account-and-auth.md §9). cc-units.js (base.html.twig)
+     owns the conversion; these are the classic-script way to reach it, with a
+     metric fallback for the case the global never loaded. Everything passed in
+     is metric — nothing here converts on the way into a form field. */
+  function uKm(km) { return window.ccKm ? window.ccKm(km) : Number(km).toFixed(1) + ' km'; }
+
   // Read ?item= and ?mode= from URL (client-side only; controller does not process them)
   var _q = new URLSearchParams(location.search);
   var _id = _q.get('item') || '';
@@ -351,7 +357,7 @@
             WZ.loc = { type: 'climb', start: st.start, summit: st.summit, lengthKm: st.lengthKm };
             if (ro) {
               var txt = t('readout_climb_set');
-              if (st.lengthKm) txt += ' · ' + t('climb_length', { '%km%': st.lengthKm.toFixed(1) });
+              if (st.lengthKm) txt += ' · ' + t('climb_length', { '%km%': uKm(st.lengthKm) });
               if (st.routing || st.profiling) txt += ' · ' + t('climb_measuring');
               else if (st.routeError) txt += ' — ' + t('climb_route_error');
               else if (st.profileError) txt += ' — ' + t('climb_profile_error');
@@ -706,7 +712,7 @@
       // The length is the one number that says whether the drawn climb is the
       // intended one — coordinates alone do not.
       if (WZ.loc.lengthKm) {
-        locTxt += ' · ' + t('climb_length', { '%km%': WZ.loc.lengthKm.toFixed(1) });
+        locTxt += ' · ' + t('climb_length', { '%km%': uKm(WZ.loc.lengthKm) });
       }
     }
 

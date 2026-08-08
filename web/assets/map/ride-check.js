@@ -15,6 +15,7 @@
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn } from './util.js';
+import { uKm, uM, uElev } from './units.js';
 import { coverageIconId } from './icons.js';
 import { openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
 import { itemIndex } from './item-index.js';
@@ -44,7 +45,7 @@ export function initRideCheck(){
     const say=msg=>{ status.hidden=!msg; status.textContent=msg||''; };
     function loadedStatus(d){
       status.hidden=false;
-      status.innerHTML=`${d.distanceKm} km · <a class="cc-ride-lnk" data-act="show">${I18N.rcResults||'results'}</a> · <a class="cc-ride-lnk" data-act="clear">${I18N.rcClear||'clear'}</a>`;
+      status.innerHTML=`${uKm(d.distanceKm)} · <a class="cc-ride-lnk" data-act="show">${I18N.rcResults||'results'}</a> · <a class="cc-ride-lnk" data-act="clear">${I18N.rcClear||'clear'}</a>`;
     }
     status.addEventListener('click',e=>{ const a=e.target.closest('[data-act]'); if(!a) return;
       if(a.dataset.act==='show' && _last) renderRideDrawer(_last);
@@ -128,16 +129,18 @@ export function initRideCheck(){
       renderRideDrawer(d);
     }
     function renderRideDrawer(d){
-      const asc=d.ascentM!=null?` · ↑ ${d.ascentM} m`:'';
-      const radius=d.radiusM<1000?`${d.radiusM} m`:'1 km';
+      const asc=d.ascentM!=null?` · ↑ ${uElev(d.ascentM)}`:'';
+      // The radius is one of a fixed set of metre values; uM writes it short
+      // (250 m / 820 ft) and promotes the 1000 m option to 1 km / 0.6 mi.
+      const radius=uM(d.radiusM);
       const kColor=(layerByKey.experience||{}).color||'#FF5A1F';
       let html=`<span class="cc-d-type" style="--c:#3A3A33;color:#fff">➜ ${D.rideCheck||'Ride check'}</span>
        <div class="cc-d-name">${D.alongRide||'Along your ride'}</div>
-       <div class="cc-city-info">${d.distanceKm} km${asc} · ${tpl(D.rideMeta||'within {r} of the track — indication only, nothing stored.', {r:radius})}</div>
+       <div class="cc-city-info">${uKm(d.distanceKm)}${asc} · ${tpl(D.rideMeta||'within {r} of the track — indication only, nothing stored.', {r:radius})}</div>
        <div class="cc-ride-actions"><button class="cc-ride-btn" id="rcClearBtn" type="button">✕ ${D.clearRide||'Clear ride'}</button></div>`;
       if(d.routes.length){
         html+=`<h4 class="cc-near-h">${D.rideFollows||'Your ride follows'}</h4><ul class="cc-near-list">`
-          +d.routes.map(r=>`<li><button class="cc-near" data-rc-route="${r.id}"><span class="cc-near-k" style="background:${kColor};color:${txtOn(kColor)}">K</span><span class="cc-near-nm">${escPend(r.name)}</span><em>${tpl(D.kmShared||'{n} km shared', {n:r.sharedKm})}</em></button></li>`).join('')
+          +d.routes.map(r=>`<li><button class="cc-near" data-rc-route="${r.id}"><span class="cc-near-k" style="background:${kColor};color:${txtOn(kColor)}">K</span><span class="cc-near-nm">${escPend(r.name)}</span><em>${tpl(D.kmShared||'{n} shared', {n:uKm(r.sharedKm)})}</em></button></li>`).join('')
           +`</ul>`;
       }
       html+=`<h4 class="cc-near-h">${D.alongTrackH||'In the Commons along the track'}</h4>`;
@@ -146,7 +149,7 @@ export function initRideCheck(){
         d.groups.forEach(g=>{
           const meta=CATALOG.find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
           html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${meta.icon||'•'}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
-          html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-g="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'km {a} · {b} m off', {a:it.alongKm, b:it.distM})}</em></button></li>`).join('');
+          html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-g="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'{a} along · {b} off', {a:uKm(it.alongKm), b:uM(it.distM)})}</em></button></li>`).join('');
         });
         html+=`</ul>`;
       } else {
@@ -164,7 +167,7 @@ export function initRideCheck(){
         cov.forEach(g=>{
           const meta=CATALOG.find(l=>l.letter===g.letter)||{color:'#6b6f5e',label:g.letter};
           html+=`<li class="cc-near-grp"><span class="cc-near-k" style="background:${meta.color};color:${txtOn(meta.color)}">${meta.icon||'•'}</span>${escPend(meta.label)} · ${g.items.length}${g.truncated?` ${D.capped||'(capped)'}`:''}</li>`;
-          html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-c="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'km {a} · {b} m off', {a:it.alongKm, b:it.distM})}</em></button></li>`).join('');
+          html+=g.items.map((it,i)=>`<li><button class="cc-near" data-rc-c="${g.letter}" data-rc-i="${i}"><span class="cc-near-nm">${escPend(it.name||meta.label)}</span><em>${tpl(D.kmOff||'{a} along · {b} off', {a:uKm(it.alongKm), b:uM(it.distM)})}</em></button></li>`).join('');
         });
         html+=`</ul><div class="cc-near-note">${D.covArmNote||'From open data — not yet checked by a rider.'}</div>`;
       }

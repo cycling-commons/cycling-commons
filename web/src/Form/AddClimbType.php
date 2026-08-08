@@ -6,9 +6,11 @@ declare(strict_types=1);
 
 namespace App\Form;
 
+use App\Account\UnitFormatter;
 use App\Catalog\CatalogFormRegistry;
 use App\Catalog\ItemType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
@@ -34,8 +36,10 @@ use Symfony\Component\Validator\Constraints\Regex;
  */
 final class AddClimbType extends AbstractType
 {
-    public function __construct(private readonly CatalogFormRegistry $registry)
-    {
+    public function __construct(
+        private readonly CatalogFormRegistry $registry,
+        private readonly UnitFormatter $units,
+    ) {
     }
 
     /** @param array<array-key,mixed> $options */
@@ -153,6 +157,30 @@ final class AddClimbType extends AbstractType
             // climb-elevation.md 5a.
             ->add('steepPoint', HiddenType::class, ['label' => false, 'required' => false])
         ;
+
+        /* Length and gain are the only two numbers on this wizard a rider TYPES
+           in a unit of their own choosing (account-and-auth.md §9). The field
+           shows — and the editor autofills — miles or feet when that is what
+           they asked for; these transformers put the value back into kilometres
+           and metres before anything downstream sees it.
+
+           It has to happen here rather than in the browser: the payload a
+           moderator reads, the constraints below and every later measurement
+           are metric, and a submission that arrived in miles because JavaScript
+           was meant to convert it and did not is a wrong number nobody can spot
+           afterwards. A rider on a metric setting gets identity functions. */
+        $builder->get('fLen')->addModelTransformer(new CallbackTransformer(
+            fn (mixed $km): ?float => is_numeric($km) ? $this->units->distanceValue((float) $km, 1) : null,
+            fn (mixed $shown): ?float => is_numeric($shown)
+                ? $this->units->distanceUnit()->toKm((float) $shown)
+                : null,
+        ));
+        $builder->get('fGain')->addModelTransformer(new CallbackTransformer(
+            fn (mixed $metres): ?float => is_numeric($metres) ? $this->units->elevationValue((float) $metres) : null,
+            fn (mixed $shown): ?float => is_numeric($shown)
+                ? round($this->units->elevationUnit()->toMetres((float) $shown))
+                : null,
+        ));
     }
 
     #[\Override]

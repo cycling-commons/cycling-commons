@@ -5,6 +5,8 @@
 namespace App\Entity;
 
 use App\Account\DateFormat;
+use App\Account\DistanceUnit;
+use App\Account\ElevationUnit;
 use App\Account\TimeFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
@@ -182,6 +184,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // about their habits made from the wrong evidence.
     #[ORM\Column(name: 'time_format', type: 'string', length: 10, options: ['default' => 'auto'])]
     private string $timeFormat = TimeFormat::Auto->value;
+
+    // Kilometres or miles, and metres or feet, each on its own column. Nothing
+    // stored anywhere in the Commons changes: distances stay metric in the
+    // database and in the API, and these decide only what the last step before
+    // the text does with them. Two columns rather than one "imperial" flag
+    // because miles-and-metres is a real combination (most of Britain rides
+    // it), and the same tolerant accessor as the formats above — an unknown
+    // stored value falls back to metric rather than fatalling a page.
+    #[ORM\Column(name: 'distance_unit', type: 'string', length: 8, options: ['default' => 'km'])]
+    private string $distanceUnit = DistanceUnit::Km->value;
+
+    #[ORM\Column(name: 'elevation_unit', type: 'string', length: 8, options: ['default' => 'm'])]
+    private string $elevationUnit = ElevationUnit::M->value;
 
     #[ORM\Column(type: 'boolean')]
     private bool $emailVerified = false;
@@ -648,6 +663,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setTimeFormat(TimeFormat $format): static
     {
         $this->timeFormat = $format->value;
+
+        return $this;
+    }
+
+    public function getDistanceUnit(): DistanceUnit
+    {
+        return DistanceUnit::tryFrom($this->distanceUnit) ?? DistanceUnit::Km;
+    }
+
+    public function setDistanceUnit(DistanceUnit $unit): static
+    {
+        $this->distanceUnit = $unit->value;
+
+        return $this;
+    }
+
+    public function getElevationUnit(): ElevationUnit
+    {
+        return ElevationUnit::tryFrom($this->elevationUnit) ?? ElevationUnit::M;
+    }
+
+    public function setElevationUnit(ElevationUnit $unit): static
+    {
+        $this->elevationUnit = $unit->value;
 
         return $this;
     }

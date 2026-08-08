@@ -33,8 +33,11 @@ use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
  */
 final class RouteProposalService
 {
-    private const int MIN_RAW_M = 2_000;    // spec §4.1
-    private const int MAX_RAW_M = 400_000;  // spec §4.1
+    /* Public because the error message that quotes them is written in the
+       READER's units (account-and-auth.md §9), so the controller formats the
+       bounds instead of the translation hard-coding "2 and 400 km". */
+    public const int MIN_RAW_M = 2_000;     // spec §4.1
+    public const int MAX_RAW_M = 400_000;   // spec §4.1
 
     /** Attribute keys copied from the metadata form when non-empty. */
     private const array META_KEYS = ['difficulty', 'season', 'dominantSurface', 'note', 'bikeTypes', 'gradientLimited'];

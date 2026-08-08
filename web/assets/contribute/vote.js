@@ -2,13 +2,20 @@
 (function () {
   'use strict';
 
+  /* The rider's units (account-and-auth.md §9). Demo rows or not, a page that
+     prints kilometres at somebody who asked for miles is the failure the
+     preference exists to prevent — so the sample figures are held as metric
+     NUMBERS and written at render time, like everything else. */
+  function uElev(m) { return window.ccElev ? window.ccElev(m) : Math.round(Number(m)) + ' m'; }
+  function uKm(km) { return window.ccKm ? window.ccKm(km) : Number(km).toFixed(1) + ' km'; }
+
   var DATA = {
     climbs: [
-      ['Côte de la Redoute', '△168 m · 8.4%', 88],
-      ['Mur de Huy', '△121 m · 9.3%', 81],
-      ['Côte de Stockeu', '△90 m · 9.0%', 74],
-      ['Côte de la Roche-aux-Faucons', '△135 m · 9.0%', 60],
-      ['Côte de la Vecquée', '△ 3.1 km · 6.4%', 40]
+      ['Côte de la Redoute', '△' + uElev(168) + ' · 8.4%', 88],
+      ['Mur de Huy', '△' + uElev(121) + ' · 9.3%', 81],
+      ['Côte de Stockeu', '△' + uElev(90) + ' · 9.0%', 74],
+      ['Côte de la Roche-aux-Faucons', '△' + uElev(135) + ' · 9.0%', 60],
+      ['Côte de la Vecquée', '△ ' + uKm(3.1) + ' · 6.4%', 40]
     ],
     stays: [
       ['Cyclist gîte · Amblève', 'secure storage · used', 71],
@@ -16,7 +23,7 @@
       ['Hostel · Malmedy', 'group-friendly', 44]
     ],
     views: [
-      ['Signal de Botrange', '△694 m · highest point', 77],
+      ['Signal de Botrange', '△' + uElev(694) + ' · highest point', 77],
       ['Barrage de la Gileppe', 'dam panorama', 61],
       ['La Gleize valley', 'golden-hour', 48]
     ],

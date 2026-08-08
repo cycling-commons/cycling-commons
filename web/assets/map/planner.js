@@ -9,6 +9,7 @@
    clearPlan() is the only teardown. */
 import { map } from './map-init.js';
 import { D, trVal, CC_SEASON_LABEL } from './i18n.js';
+import { uKm } from './units.js';
 import { openDrawer, closeDrawer } from './drawer.js';
 
 // "plan from Spa" — pick the sample loop nearest the chosen distance (faked for now)
@@ -39,7 +40,7 @@ export function planFromSpa(km){
     elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
     record:[
       {label:D.start||'Start', value:'Spa'},
-      {label:D.distance||'Distance', value:r.km+' km'},
+      {label:D.distance||'Distance', value:uKm(r.km)},
       {label:D.shape||'Shape', value:D.roundtrip||'Roundtrip'},
       {label:D.season||'Season', value:CC_SEASON_LABEL[r.season]||trVal(r.season)},
       {label:D.why||'Why', value:D.popularSeason||'Popular this season'},

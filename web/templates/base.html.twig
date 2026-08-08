@@ -37,13 +37,24 @@ window.CC_DATE = {{ {
   time: cc_user_time_format(),
   locale: app.request.locale|default('en')
 }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+{# Same contract for kilometres/miles and metres/feet: the map draws a route's
+   length in JS while the page beside it renders one in Twig, and a rider who
+   asked for miles must not read both. Values crossing to the client stay
+   metric — cc-units.js converts at the point of writing, exactly as the Twig
+   filters do. Anonymous visitors get metric, as they always have. #}
+window.CC_UNITS = {{ {
+  distance: cc_user_distance_unit(),
+  elevation: cc_user_elevation_unit()
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 {# races.js paints the live event coordinate into every .cc-coord brandsub
    (topnav + account shell); not deferred — the homepage hero reads window.CC
    from an inline script. Idempotent, no-ops when .cc-coord is absent. #}
 <script src="{{ asset('data/races.js') }}"></script>
-{# Not deferred: drawer.js and media-upload.js call window.ccDate synchronously. #}
+{# Not deferred: drawer.js and media-upload.js call window.ccDate synchronously,
+   and the map's modules call window.ccKm the same way. #}
 <script src="{{ asset('js/cc-dates.js') }}"></script>
+<script src="{{ asset('js/cc-units.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/nav.js') }}" defer></script>
 <script src="{{ asset('js/nav-menus.js') }}" defer></script>

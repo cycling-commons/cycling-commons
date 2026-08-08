@@ -5,6 +5,8 @@
 namespace App\Form;
 
 use App\Account\DateFormat;
+use App\Account\DistanceUnit;
+use App\Account\ElevationUnit;
 use App\Account\TimeFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
@@ -129,6 +131,24 @@ final class SettingsType extends AbstractType
                 'help' => 'form.help_time_format',
                 'required' => true,
                 'choice_label' => static fn (TimeFormat $f): string => $f->labelKey(),
+            ])
+            // Two dropdowns rather than one metric/imperial switch: miles with
+            // metres of climbing is a real combination, and asking those riders
+            // to accept feet to get miles is the kind of tidy reasoning that is
+            // wrong about actual people (same argument as date vs time above).
+            ->add('distanceUnit', EnumType::class, [
+                'class' => DistanceUnit::class,
+                'label' => 'form.label_distance_unit',
+                'help' => 'form.help_distance_unit',
+                'required' => true,
+                'choice_label' => static fn (DistanceUnit $u): string => $u->labelKey(),
+            ])
+            ->add('elevationUnit', EnumType::class, [
+                'class' => ElevationUnit::class,
+                'label' => 'form.label_elevation_unit',
+                'help' => 'form.help_elevation_unit',
+                'required' => true,
+                'choice_label' => static fn (ElevationUnit $u): string => $u->labelKey(),
             ])
             // Rider preferences (account-and-auth.md §9). EnumType hands the
             // entity setters real enum instances. Bike-type labels reuse the

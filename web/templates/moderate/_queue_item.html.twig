@@ -155,7 +155,7 @@
         <figure class="q-photo">
           <img src="{{ p.sm }}" alt="{{ 'moderate.media.alt'|trans }}" loading="lazy" width="110" height="82">
           <figcaption>
-            {%- if p.distanceM is not null %}{{ 'moderate.media.distance'|trans({'%m%': p.distanceM}) }}{% else %}{{ 'moderate.media.no_gps'|trans }}{% endif -%}
+            {%- if p.distanceM is not null %}{{ 'moderate.media.distance'|trans({'%v%': p.distanceM|cc_m}) }}{% else %}{{ 'moderate.media.no_gps'|trans }}{% endif -%}
             {%- if p.takenAt %} &middot; {{ p.takenAt }}{% endif -%}
           </figcaption>
         </figure>

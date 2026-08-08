@@ -20,7 +20,7 @@
   <div class="q-top">
     <div class="q-headwrap">
       <div class="q-head">
-        <span class="q-tag q-tag--new">{{ item.km }} km</span>
+        <span class="q-tag q-tag--new">{{ item.km|cc_km }}</span>
         {% if item.activeInRegion >= item.cap %}
           <span class="q-tag q-tag--hazard">{{ 'moderate_routes.error.region_full'|trans }}</span>
         {% endif %}

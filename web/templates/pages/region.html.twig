@@ -25,7 +25,7 @@
   <div class="rstats">
     <div class="s"><b>{{ region.itemsVerified }}</b><span>{% trans %}region.stat_items{% endtrans %}</span></div>
     <div class="s"><b>{{ region.routes }}</b><span>{% trans %}region.stat_routes{% endtrans %}</span></div>
-    {% if region.areaKm2 %}<div class="s"><b>{{ region.areaKm2|round|number_format(0, '.', ',') }}</b><span>km²</span></div>{% endif %}
+    {% if region.areaKm2 %}<div class="s"><b>{{ region.areaKm2|cc_km2 }}</b><span>{{ cc_area_suffix() }}</span></div>{% endif %}
   </div>
   <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
     <a class="btn btn-p" href="{{ path('map') }}?scope=region:{{ region.slug }}">{% trans %}region.cta_map{% endtrans %}</a>

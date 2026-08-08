@@ -7,6 +7,7 @@
    the catalog fetch has populated the CC_* globals this file reads. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel } from './i18n.js';
 import { wc, pinPoint } from './util.js';
+import { uKm } from './units.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
          localiseBasemapLabels } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
@@ -149,7 +150,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
       // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
       const diffLabel = r.difficulty?.label ?? (typeof r.difficulty === 'string' ? r.difficulty : undefined);
       return {
-      id:r.id, rid:r.rid, name:r.name, state:r.state, headline:`${r.km} km${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
+      id:r.id, rid:r.rid, name:r.name, state:r.state, headline:`${uKm(r.km)}${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
       bikeTypes: Array.isArray(r.bikeTypes) ? r.bikeTypes : [],   // declared suitability (may be empty = undeclared)
@@ -167,7 +168,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
       // the attribute.
       record:(()=>{
         const rec=[
-          {label:D.distance||'Distance', value:r.km+' km'}
+          {label:D.distance||'Distance', value:uKm(r.km)}
         ];
         // Phase-2 badge: a proposed route (unverified) rides "ride it to verify";
         // a verified route renders normally. state is served by CatalogProvider.

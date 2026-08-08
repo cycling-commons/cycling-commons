@@ -34,6 +34,9 @@
     if (!window.CCScope) return;
     const I18N = strings || {};
     const tpl = (s, vars) => String(s).replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? vars[k] : m));
+    // A plain blocking script, so the rider's unit comes off the window global
+    // that cc-units.js sets (base.html.twig) rather than through an import.
+    const km = (v) => (window.ccKm ? window.ccKm(v, 0) : Math.round(Number(v)) + ' km');
     const s = window.CCScope.get();
     // My area (map-and-search.md §4.5 Phase 4): the header + search
     // line name the base place + radius, NEVER coordinates — the deliberately
@@ -49,8 +52,8 @@
     // one (their own owned string), independent of the registry.
     if (!isMy && !lbl) return;
     const myLine = isMy
-      ? (s.myArea.place ? tpl(I18N.myAreaLine || 'Near {place} · {km} km', { place: s.myArea.place, km: s.myArea.radiusKm })
-                         : tpl(I18N.myAreaLinePlain || 'My area · {km} km', { km: s.myArea.radiusKm }))
+      ? (s.myArea.place ? tpl(I18N.myAreaLine || 'Near {place} · {d}', { place: s.myArea.place, d: km(s.myArea.radiusKm) })
+                         : tpl(I18N.myAreaLinePlain || 'My area · {d}', { d: km(s.myArea.radiusKm) }))
       : null;
     const rl = document.getElementById('regionLine'); if (rl) rl.textContent = myLine || lbl;
     // Brand kicker follows the scope (retires the hardcoded "Wallonia · 50.32°N"):

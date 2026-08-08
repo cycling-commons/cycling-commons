@@ -3,9 +3,12 @@
 : escaping, colour, geometry,
    licence and Wikimedia URL building.
 
-   A leaf: imports nothing — not even i18n.js — so it evaluates first and can be
-   required from node --test. Nothing here touches the DOM, MapLibre or any CC_*
-   global; anything that needs a locale belongs in i18n.js instead. */
+   A leaf: imports only units.js, itself a leaf — not i18n.js, not anything with
+   side effects — so it evaluates first and can be required from node --test.
+   Nothing here touches the DOM, MapLibre or any CC_* global at import time;
+   anything that needs a locale belongs in i18n.js instead. (units.js reads
+   window lazily, inside its functions, and falls back to metric without one.) */
+import { uKm } from './units.js';
 
 // §13: shared HTML-escaper for real (user-authored) pending-submission text —
 // stored-XSS-in-curator-session risk now that submissions come from real users.
@@ -117,7 +120,7 @@ export function featureSummary(f, D){
   if(!f) return '';
   const bits = [];
   const km = Number(f.length) > 0 ? Number(f.length)/1000 : 0;
-  if(km) bits.push(`${km.toFixed(1)} km`);
+  if(km) bits.push(uKm(km));
   const avg = f.avgGradient == null ? null : String(f.avgGradient).match(/-?\d+(\.\d+)?/);
   if(avg) bits.push(`${avg[0]}% ${(D && D.avgShort) || 'avg'}`);
   if(bits.length) return bits.join(' · ');

@@ -24,7 +24,10 @@
       radiusInput.style.setProperty('--fill', pct + '%');
     };
     radiusInput.addEventListener('input', function () {
-      radiusOutput.textContent = radiusInput.value + ' km';
+      // The input's value is kilometres, as stored; the read-out beside it is
+      // the rider's unit (account-and-auth.md §9), matching the server-rendered
+      // one it replaces on the first drag.
+      radiusOutput.textContent = window.ccKm ? window.ccKm(radiusInput.value, 0) : radiusInput.value + ' km';
       syncRadiusFill();
     });
     syncRadiusFill();

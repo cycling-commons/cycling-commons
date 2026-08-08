@@ -18,6 +18,19 @@
   var wiz = document.getElementById('wiz');
   if (!wiz) return;
 
+  /* The rider's units (account-and-auth.md §9). cc-units.js (base.html.twig)
+     owns the conversion; these are the classic-script way to reach it, with a
+     metric fallback for the case the global never loaded. Everything passed in
+     is metric — nothing here converts on the way into a form field. */
+  function uKm(km) { return window.ccKm ? window.ccKm(km) : Number(km).toFixed(1) + ' km'; }
+  function uElev(m) { return window.ccElev ? window.ccElev(m) : Math.round(Number(m)) + ' m'; }
+  // The length and gain FIELDS are written and read in the rider's unit; S and
+  // everything downstream of it stay metric, and AddClimbType's transformers
+  // convert the submitted values back before the payload is built.
+  function dKm(km) { return window.ccKmValue ? window.ccKmValue(km, 1) : Number(km).toFixed(1); }
+  function vKm(v) { return window.ccKmFromValue ? window.ccKmFromValue(v) : (Number(v) || 0); }
+  function vElev(v) { return window.ccElevFromValue ? window.ccElevFromValue(v) : (Number(v) || 0); }
+
   // Helper: look up a Symfony form field by its name attribute
   function fld(sfName) {
     return document.querySelector('[name="add_climb[' + sfName + ']"]');
@@ -164,7 +177,7 @@
     if (!S.start) { el.textContent = t('readout_initial'); return; }
     if (!S.summit) { el.textContent = t('readout_climb_summit'); return; }
     var txt = t('readout_climb_set');
-    if (S.lengthKm) txt += ' · ' + t('climb_length', { '%km%': S.lengthKm.toFixed(1) });
+    if (S.lengthKm) txt += ' · ' + t('climb_length', { '%km%': uKm(S.lengthKm) });
     if (S.routing || S.profiling || !S.lengthKm) txt += ' · ' + t('climb_measuring');
     else if (S.routeError) txt += ' — ' + t('climb_route_error');
     else if (S.profileError) txt += ' — ' + t('climb_profile_error');
@@ -314,8 +327,8 @@
   /* ---------- step 2: profile ---------- */
   function avgGrad() {
     var fLen = fld('fLen');
-    var len = fLen ? (parseFloat(fLen.value) || 0) : 0;
-    return len > 0 ? (S.gain / (len * 1000)) * 100 : 0;
+    var lenKm = fLen ? vKm(parseFloat(fLen.value) || 0) : 0;
+    return lenKm > 0 ? (S.gain / (lenKm * 1000)) * 100 : 0;
   }
 
   // Last length value WE wrote into fLen — a user-typed value always wins, but
@@ -326,14 +339,14 @@
     var fLen = fld('fLen');
     if (!fLen || !S.lengthKm || S.routing) return;
     if (!fLen.value || fLen.value === lenAutofill) {
-      lenAutofill = fLen.value = S.lengthKm.toFixed(1);
+      lenAutofill = fLen.value = String(dKm(S.lengthKm));
       syncProfile();
     }
   }
 
   function onEnterProfile() {
     var fLen = fld('fLen');
-    if (fLen && !fLen.value && S.lengthKm) lenAutofill = fLen.value = S.lengthKm.toFixed(1);
+    if (fLen && !fLen.value && S.lengthKm) lenAutofill = fLen.value = String(dKm(S.lengthKm));
     syncProfile();
   }
 
@@ -347,7 +360,7 @@
     var fAvgDisplay = document.getElementById('fAvgDisplay');
 
     S.name = fName ? fName.value.trim() : '';
-    S.gain = fGain ? (parseFloat(fGain.value) || 0) : 0;
+    S.gain = fGain ? vElev(parseFloat(fGain.value) || 0) : 0;
     S.surface = fSurface ? fSurface.value : 'Asphalt';
     S.surfaceQ = fSurfaceQ ? fSurfaceQ.value : 'Smooth';
     S.traffic = fTraffic ? fTraffic.value : 'Traffic-free';
@@ -394,7 +407,7 @@
      so nothing on it may become an element. */
   function renderReview() {
     var fLen = fld('fLen');
-    var len = ((fLen ? parseFloat(fLen.value) : 0) || S.lengthKm || 0).toFixed(1);
+    var lenKm = (fLen ? vKm(parseFloat(fLen.value) || 0) : 0) || S.lengthKm || 0;
     var rb = document.getElementById('reviewBody');
     if (!rb) return;
     RC.clear(rb);
@@ -419,8 +432,8 @@
     tags.appendChild(span('t-traf t-' + S.traffic.toLowerCase().replace(/[^a-z]/g, ''), S.traffic));
     rb.appendChild(tags);
 
-    rb.appendChild(RC.kvRow(t('label_length'), len + ' km'));
-    rb.appendChild(RC.kvRow(t('label_gain'), '△ ' + S.gain + ' m'));
+    rb.appendChild(RC.kvRow(t('label_length'), uKm(lenKm)));
+    rb.appendChild(RC.kvRow(t('label_gain'), '△ ' + uElev(S.gain)));
     rb.appendChild(RC.kvRow(t('label_avg'), avgGrad().toFixed(1) + ' %'));
     rb.appendChild(RC.kvRow(t('label_max'), S.maxGrad ? S.maxGrad + ' %' : '—'));
     rb.appendChild(RC.kvRow(t('label_surface'), S.surface + ' · ' + S.surfaceQ));

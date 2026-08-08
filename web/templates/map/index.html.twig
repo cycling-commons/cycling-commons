@@ -69,11 +69,14 @@
         <div class="cc-ride-row">
           <button class="cc-ride-btn" id="rcPick" type="button">{{ 'ride_check.button'|trans }}</button>
           <label class="cc-ride-radius">{{ 'ride_check.within'|trans }}
+            {# The values stay metres — the server only accepts its own fixed
+               set (RideCheckService::ALLOWED_RADII) — while the labels follow
+               the rider's unit. #}
             <select id="rcRadius" aria-label="{{ 'ride_check.radius'|trans }}">
-              <option value="100">100 m</option>
-              <option value="250" selected>250 m</option>
-              <option value="500">500 m</option>
-              <option value="1000">1 km</option>
+              <option value="100">{{ 100|cc_m }}</option>
+              <option value="250" selected>{{ 250|cc_m }}</option>
+              <option value="500">{{ 500|cc_m }}</option>
+              <option value="1000">{{ 1000|cc_m }}</option>
             </select>
           </label>
         </div>
@@ -418,6 +421,19 @@
    graph, which the browser walks, warming i18n.js/util.js too. #}
 {{ importmap([], {nonce: csp_nonce()}) }}
 <link rel="modulepreload" href="{{ asset('map/map.js') }}">
+{# The rider's units (account-and-auth.md §9). This page does NOT extend
+   base.html.twig, so it carries its own copy of the bridge — without it every
+   distance the map draws would stay metric while the same rider's moderation
+   tables and settings page read miles, which is the disagreement the whole
+   preference exists to prevent. Loaded before scope-header.js (it writes the
+   "Near X · 30 mi" line synchronously) and before the module graph below. #}
+<script nonce="{{ csp_nonce() }}">
+  window.CC_UNITS = {{ {
+    distance: cc_user_distance_unit(),
+    elevation: cc_user_elevation_unit()
+  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+</script>
+<script src="{{ asset('js/cc-units.js') }}"></script>
 {# Scope model (window.CCScope) — must be defined before catalog-load.js injects map.js. #}
 <script src="{{ asset('map/scope.js') }}"></script>
 {# Scope-chip view model (window.CCScopeChips) — pure, unit-tested decision logic
