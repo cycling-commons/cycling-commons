@@ -414,7 +414,7 @@ error404:
   cta_home: 'Zurück zum Atlas'
 home:
   eyebrow: 'OFFENE RADDATEN · EINE VORSCHAU DESSEN, WAS SEIN KÖNNTE'
-  h1: 'Jede Straße.<br/>Jeder Weg.<br/>Ein <em>offener Atlas</em><span class="endp">.</span>'
+  h1: 'Alles, was Radfahrende wissen.<br/>Nichts über sie.<br/>Ein <em>offener Atlas</em><span class="endp">.</span>'
   lede: 'Eine von der Community erstellte Karte der besten Touren der Welt — Anstiege, Wasser, Aussichten, fahrradfreundliche Übernachtungen — kostenlos für jeden zum Nutzen, Aufbauen und Verbessern.'
   cta_map: 'Karte erkunden'
   cta_contribute: 'Beitragen'
@@ -1004,6 +1004,47 @@ region:
     label: 'Colorado'
   all_us:
     label: 'Gesamte USA'
+  # ES — 2026-08-08 rollout
+  andalucia:
+    label: 'Andalusien'
+  aragon:
+    label: 'Aragonien'
+  asturias:
+    label: 'Asturien'
+  cantabria:
+    label: 'Kantabrien'
+  ceuta:
+    label: 'Ceuta'
+  castilla-y-leon:
+    label: 'Kastilien und León'
+  castilla-la-mancha:
+    label: 'Kastilien-La Mancha'
+  canarias:
+    label: 'Kanarische Inseln'
+  catalunya:
+    label: 'Katalonien'
+  extremadura:
+    label: 'Extremadura'
+  galicia:
+    label: 'Galicien'
+  illes-balears:
+    label: 'Balearen'
+  murcia:
+    label: 'Region Murcia'
+  madrid:
+    label: 'Autonome Gemeinschaft Madrid'
+  melilla:
+    label: 'Melilla'
+  navarra:
+    label: 'Navarra'
+  pais-vasco:
+    label: 'Baskenland'
+  la-rioja-es:
+    label: 'La Rioja'
+  comunitat-valenciana:
+    label: 'Valencianische Gemeinschaft'
+  all_es:
+    label: 'Ganz Spanien'
   everywhere:
     label: 'Überall'
   cta_map: 'Diese Region auf der Karte öffnen'

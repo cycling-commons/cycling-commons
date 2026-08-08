@@ -1,0 +1,62 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The catch-all production error page — everything that is not a 404, which has
+  its own (error404.html.twig).
+
+  Until now only the 404 was styled, so a production 500 fell through to
+  Symfony's own grey page: no header, no way back, and nothing telling the
+  reader whether the fault was theirs. This says the honest thing — the failure
+  is ours, it has been logged, and here is the way back to the atlas.
+
+  Deliberately NOT extending base.html.twig. This template renders when
+  something has already gone wrong, and the base layout pulls in the nav, the
+  account chip and the locale switcher — every one of which can touch the
+  database or the session. A 500 page that itself 500s shows the reader a blank
+  screen, so this one depends on nothing but its own markup.
+
+  For the same reason the copy is inlined in English rather than translated:
+  reaching the translator means booting more of the container, and the whole
+  point of this page is to need as little of it as possible.
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Cycling Commons — something broke</title>
+  <style>
+    :root{ --paper:#EFE6D4; --trail:#FF5A1F; --glacier:#9FC6C0; --spruce:#16301F; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+    .broke{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;background:radial-gradient(125% 105% at 50% 0%,#27513a,var(--spruce) 48%,#0c1810 92%);
+      color:var(--paper);padding:3rem 1.4rem}
+    .broke .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.74rem;
+      letter-spacing:.28em;text-transform:uppercase;color:var(--trail)}
+    .broke h1{font-weight:800;font-size:clamp(2.2rem,6vw,3.4rem);line-height:1.06;letter-spacing:-1px;margin:.7rem 0 .6rem}
+    .broke h1 em{font-style:italic;color:var(--glacier)}
+    .broke p{max-width:32rem;color:rgba(239,230,212,.82);font-size:1.02rem;line-height:1.6;margin:.2rem 0}
+    .broke .row{display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center;margin-top:1.9rem}
+    .broke a{display:inline-block;padding:.7rem 1.3rem;border-radius:6px;text-decoration:none;
+      font-weight:600;font-size:.95rem}
+    .broke .p{background:var(--trail);color:#101E16}
+    .broke .g{border:1px solid rgba(239,230,212,.4);color:var(--paper)}
+    .broke .ref{margin-top:1.6rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      font-size:.7rem;color:rgba(239,230,212,.5)}
+  </style>
+</head>
+<body>
+  <section class="broke">
+    <span class="code">{{ status_code }} · this one is on us</span>
+    <h1>Something <em>broke</em>.</h1>
+    <p>Not your doing, and nothing you sent has been lost. The failure has been logged and somebody will see it.</p>
+    <p>Try again in a moment — or head back to the atlas.</p>
+    <div class="row">
+      <a class="p" href="/map">Open the map</a>
+      <a class="g" href="/">Back to the atlas</a>
+    </div>
+    <div class="ref">If it keeps happening, tell us at info@cyclingcommons.org</div>
+  </section>
+</body>
+</html>

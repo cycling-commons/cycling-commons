@@ -414,7 +414,7 @@ error404:
   cta_home: 'Back to the atlas'
 home:
   eyebrow: 'OPEN CYCLING DATA · A PREVIEW OF WHAT COULD BE'
-  h1: 'Every road.<br/>Every trail.<br/>One <em>open atlas</em><span class="endp">.</span>'
+  h1: 'Everything riders know.<br/>Nothing about riders.<br/>One <em>open atlas</em><span class="endp">.</span>'
   lede: 'A community-built map of the world''s best riding — climbs, water, views, bike-friendly stays — free for anyone to use, build on, and improve.'
   cta_map: 'Explore the map'
   cta_contribute: 'Contribute'
@@ -1008,6 +1008,47 @@ region:
     label: 'Colorado'
   all_us:
     label: 'All the US'
+  # ES — 2026-08-08 rollout
+  andalucia:
+    label: 'Andalusia'
+  aragon:
+    label: 'Aragon'
+  asturias:
+    label: 'Asturias'
+  cantabria:
+    label: 'Cantabria'
+  ceuta:
+    label: 'Ceuta'
+  castilla-y-leon:
+    label: 'Castile and León'
+  castilla-la-mancha:
+    label: 'Castilla-La Mancha'
+  canarias:
+    label: 'Canary Islands'
+  catalunya:
+    label: 'Catalonia'
+  extremadura:
+    label: 'Extremadura'
+  galicia:
+    label: 'Galicia'
+  illes-balears:
+    label: 'Balearic Islands'
+  murcia:
+    label: 'Region of Murcia'
+  madrid:
+    label: 'Community of Madrid'
+  melilla:
+    label: 'Melilla'
+  navarra:
+    label: 'Navarre'
+  pais-vasco:
+    label: 'Basque Country'
+  la-rioja-es:
+    label: 'La Rioja'
+  comunitat-valenciana:
+    label: 'Valencian Community'
+  all_es:
+    label: 'All Spain'
   everywhere:
     label: 'Everywhere'
   cta_map: 'Open this region on the map'

@@ -47,6 +47,11 @@
     'Europe/Zurich': 'CH',
     'Europe/London': 'GB', 'Europe/Belfast': 'GB',
     'Europe/Rome': 'IT',
+    // Spain runs two zones: the mainland and the Balearics on Europe/Madrid,
+    // the Canaries an hour behind on Atlantic/Canary. Ceuta and Melilla report
+    // Africa/Ceuta. All three are Spain, and a rider in Las Palmas would
+    // otherwise get no home-country guess at all.
+    'Europe/Madrid': 'ES', 'Atlantic/Canary': 'ES', 'Africa/Ceuta': 'ES',
     'Asia/Tokyo': 'JP',
     'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU',
     'Australia/Brisbane': 'AU', 'Australia/Perth': 'AU',

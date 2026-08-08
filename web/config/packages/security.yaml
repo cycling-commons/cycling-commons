@@ -35,6 +35,10 @@ security:
         # scheb's `/2fa` interstitial, `/api`, and `/admin` stay unprefixed (see i18n design).
         - { path: '^(/(fr|nl|de|es))?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
         - { path: ^/verify, roles: PUBLIC_ACCESS }
+        # Crawler entry points. Explicit PUBLIC_ACCESS for the same scheb
+        # lazy-firewall reason as /map/catalog.json below — a session read here
+        # would make both uncacheable, and these are fetched by every crawler.
+        - { path: '^/(robots\.txt|sitemap\.xml)$', roles: PUBLIC_ACCESS }
         # Public rider profiles (spec 2026-07-14): explicit PUBLIC_ACCESS for the
         # same scheb lazy-firewall reason as /map/catalog.json below.
         - { path: '^(/(fr|nl|de|es))?/riders/', roles: PUBLIC_ACCESS }

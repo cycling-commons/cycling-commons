@@ -303,6 +303,51 @@ COUNTRY_CONFIG = {
         "names": {"US-CA": "California", "US-CO": "Colorado"},
         "bbox": [-124.6, 32.4, -101.9, 42.1],
     },
+    # Spain — 2026-08-08 rollout. The 17 comunidades autónomas plus the two
+    # autonomous cities, i.e. exactly ISO 3166-2:ES. `Plazas de Soberanía`
+    # (1 km², the sovereign islets off Morocco) is deliberately NOT seeded: it
+    # carries no ISO 3166-2 code, so it has no stable identity to upsert on,
+    # and nobody rides it.
+    #
+    # Slugs are the native forms, following the German precedent (`bayern`, not
+    # `bavaria`) — the exonyms live in the message catalogues. Three were
+    # rewritten off the scaffolder's output, which builds them from Overture's
+    # dual-language and inverted-comma labels: `catalunya-cataluna`,
+    # `galicia-galicia`, `illes-balears-islas-baleares`, `murcia-region-de`,
+    # `madrid-comunidad-de`, `navarra-comunidad-foral-de`,
+    # `asturias-principado-de` and `valenciana-comunidad` are all artifacts of
+    # that, not names anyone uses.
+    #
+    # `la-rioja-es` carries the suffix because Argentina's AR-F is also La
+    # Rioja (scaffolder collision warning). AR is not onboarded, but a slug is
+    # permanent identity and renaming one later is an upsert-by-slug break —
+    # the `limburg-nl` precedent.
+    #
+    # The bbox spans the Canaries (28°N, 18°W) to the Pyrenees, which is why it
+    # is so much wider than a mainland-only box would be.
+    "ES": {
+        "subtype": "region",
+        "slugs": {
+            "ES-AN": "andalucia", "ES-AR": "aragon", "ES-AS": "asturias",
+            "ES-CB": "cantabria", "ES-CE": "ceuta", "ES-CL": "castilla-y-leon",
+            "ES-CM": "castilla-la-mancha", "ES-CN": "canarias",
+            "ES-CT": "catalunya", "ES-EX": "extremadura", "ES-GA": "galicia",
+            "ES-IB": "illes-balears", "ES-MC": "murcia", "ES-MD": "madrid",
+            "ES-ML": "melilla", "ES-NC": "navarra", "ES-PV": "pais-vasco",
+            "ES-RI": "la-rioja-es", "ES-VC": "comunitat-valenciana",
+        },
+        "names": {
+            "ES-AN": "Andalucía", "ES-AR": "Aragón", "ES-AS": "Asturias",
+            "ES-CB": "Cantabria", "ES-CE": "Ceuta", "ES-CL": "Castilla y León",
+            "ES-CM": "Castilla-La Mancha", "ES-CN": "Canarias",
+            "ES-CT": "Catalunya", "ES-EX": "Extremadura", "ES-GA": "Galicia",
+            "ES-IB": "Illes Balears", "ES-MC": "Región de Murcia",
+            "ES-MD": "Comunidad de Madrid", "ES-ML": "Melilla",
+            "ES-NC": "Navarra", "ES-PV": "País Vasco", "ES-RI": "La Rioja",
+            "ES-VC": "Comunitat Valenciana",
+        },
+        "bbox": [-18.26, 27.54, 4.43, 43.89],
+    },
 }
 
 # Level-2 country identity every onboarding run emits ALONGSIDE the operating
@@ -327,4 +372,5 @@ COUNTRY_L2 = {
     # nobody has onboarded. It anchors pre-onboarding evidence submissions and
     # is never operational while California and Colorado exist at level 4.
     "US": ("united-states", "United States"),
+    "ES": ("spain", "Spain"),
 }

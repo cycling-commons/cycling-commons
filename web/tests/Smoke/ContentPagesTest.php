@@ -87,7 +87,10 @@ final class ContentPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('nav.topnav');
         self::assertSelectorExists('footer.foot');
-        self::assertSelectorTextContains('h1', 'Every road');
+        // The closing line, not the opening one: "One open atlas" is the part
+        // of the hero that has held across rewrites, where the lines above it
+        // are the pitch and get re-cut (2026-08-08).
+        self::assertSelectorTextContains('h1', 'open atlas');
     }
 
     public function testJoinRenders(): void

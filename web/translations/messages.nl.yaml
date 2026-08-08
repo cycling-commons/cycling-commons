@@ -414,7 +414,7 @@ error404:
   cta_home: 'Terug naar de atlas'
 home:
   eyebrow: 'OPEN FIETSDATA · EEN VOORUITBLIK OP WAT MOGELIJK IS'
-  h1: 'Elke weg.<br/>Elk pad.<br/>Één <em>open atlas</em><span class="endp">.</span>'
+  h1: 'Alles wat fietsers weten.<br/>Niets over fietsers.<br/>Eén <em>open atlas</em><span class="endp">.</span>'
   lede: 'Een door de gemeenschap gebouwde kaart van de mooiste fietsroutes ter wereld — klimmen, water, uitzichten, fietsvriendelijke overnachtingen — gratis voor iedereen om te gebruiken, op te bouwen en te verbeteren.'
   cta_map: 'Verken de kaart'
   cta_contribute: 'Bijdragen'
@@ -1004,6 +1004,47 @@ region:
     label: 'Colorado'
   all_us:
     label: 'Heel de VS'
+  # ES — 2026-08-08 rollout
+  andalucia:
+    label: 'Andalusië'
+  aragon:
+    label: 'Aragón'
+  asturias:
+    label: 'Asturië'
+  cantabria:
+    label: 'Cantabrië'
+  ceuta:
+    label: 'Ceuta'
+  castilla-y-leon:
+    label: 'Castilië en León'
+  castilla-la-mancha:
+    label: 'Castilla-La Mancha'
+  canarias:
+    label: 'Canarische Eilanden'
+  catalunya:
+    label: 'Catalonië'
+  extremadura:
+    label: 'Extremadura'
+  galicia:
+    label: 'Galicië'
+  illes-balears:
+    label: 'Balearen'
+  murcia:
+    label: 'Regio Murcia'
+  madrid:
+    label: 'Gemeenschap Madrid'
+  melilla:
+    label: 'Melilla'
+  navarra:
+    label: 'Navarra'
+  pais-vasco:
+    label: 'Baskenland'
+  la-rioja-es:
+    label: 'La Rioja'
+  comunitat-valenciana:
+    label: 'Valenciaanse Gemeenschap'
+  all_es:
+    label: 'Heel Spanje'
   everywhere:
     label: 'Overal'
   cta_map: 'Open deze regio op de kaart'

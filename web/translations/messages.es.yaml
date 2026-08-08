@@ -415,7 +415,7 @@ error404:
   cta_home: 'Volver al atlas'
 home:
   eyebrow: 'DATOS CICLISTAS ABIERTOS · UN ANTICIPO DE LO QUE PODRÍA SER'
-  h1: 'Cada carretera.<br/>Cada camino.<br/>Un <em>atlas abierto</em><span class="endp">.</span>'
+  h1: 'Todo lo que saben los ciclistas.<br/>Nada sobre los ciclistas.<br/>Un <em>atlas abierto</em><span class="endp">.</span>'
   lede: 'Un mapa construido por la comunidad con lo mejor que se puede rodar en el mundo — puertos, agua, vistas, alojamientos que acogen bien a los ciclistas — libre para que cualquiera lo use, construya sobre él y lo mejore.'
   cta_map: 'Explorar el mapa'
   cta_contribute: 'Aportar'
@@ -1009,6 +1009,47 @@ region:
     label: 'Colorado'
   all_us:
     label: 'Todo Estados Unidos'
+  # ES — 2026-08-08 rollout
+  andalucia:
+    label: 'Andalucía'
+  aragon:
+    label: 'Aragón'
+  asturias:
+    label: 'Asturias'
+  cantabria:
+    label: 'Cantabria'
+  ceuta:
+    label: 'Ceuta'
+  castilla-y-leon:
+    label: 'Castilla y León'
+  castilla-la-mancha:
+    label: 'Castilla-La Mancha'
+  canarias:
+    label: 'Canarias'
+  catalunya:
+    label: 'Cataluña'
+  extremadura:
+    label: 'Extremadura'
+  galicia:
+    label: 'Galicia'
+  illes-balears:
+    label: 'Islas Baleares'
+  murcia:
+    label: 'Región de Murcia'
+  madrid:
+    label: 'Comunidad de Madrid'
+  melilla:
+    label: 'Melilla'
+  navarra:
+    label: 'Navarra'
+  pais-vasco:
+    label: 'País Vasco'
+  la-rioja-es:
+    label: 'La Rioja'
+  comunitat-valenciana:
+    label: 'Comunidad Valenciana'
+  all_es:
+    label: 'Toda España'
   everywhere:
     label: 'Todo el mundo'
   cta_map: 'Abrir esta región en el mapa'

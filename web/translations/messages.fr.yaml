@@ -414,7 +414,7 @@ error404:
   cta_home: 'Retour à l''atlas'
 home:
   eyebrow: 'DONNÉES CYCLISTES OUVERTES · UN APERÇU DE CE QUI POURRAIT ÊTRE'
-  h1: 'Chaque route.<br/>Chaque sentier.<br/>Un <em>atlas ouvert</em><span class="endp">.</span>'
+  h1: 'Tout ce que savent les cyclistes.<br/>Rien sur les cyclistes.<br/>Un <em>atlas ouvert</em><span class="endp">.</span>'
   lede: 'Une carte communautaire des meilleurs parcours du monde — cols, eau, panoramas, hébergements bike-friendly — libre à utiliser, améliorer et construire dessus, pour tous.'
   cta_map: 'Explorer la carte'
   cta_contribute: 'Contribuer'
@@ -1004,6 +1004,47 @@ region:
     label: 'Colorado'
   all_us:
     label: 'Tous les États-Unis'
+  # ES — 2026-08-08 rollout
+  andalucia:
+    label: 'Andalousie'
+  aragon:
+    label: 'Aragon'
+  asturias:
+    label: 'Asturies'
+  cantabria:
+    label: 'Cantabrie'
+  ceuta:
+    label: 'Ceuta'
+  castilla-y-leon:
+    label: 'Castille-et-León'
+  castilla-la-mancha:
+    label: 'Castille-La Manche'
+  canarias:
+    label: 'Îles Canaries'
+  catalunya:
+    label: 'Catalogne'
+  extremadura:
+    label: 'Estrémadure'
+  galicia:
+    label: 'Galice'
+  illes-balears:
+    label: 'Îles Baléares'
+  murcia:
+    label: 'Région de Murcie'
+  madrid:
+    label: 'Communauté de Madrid'
+  melilla:
+    label: 'Melilla'
+  navarra:
+    label: 'Navarre'
+  pais-vasco:
+    label: 'Pays basque'
+  la-rioja-es:
+    label: 'La Rioja'
+  comunitat-valenciana:
+    label: 'Communauté valencienne'
+  all_es:
+    label: 'Toute l''Espagne'
   everywhere:
     label: 'Partout'
   cta_map: 'Ouvrir cette région sur la carte'
