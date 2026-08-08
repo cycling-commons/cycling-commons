@@ -45,8 +45,15 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from commons_photo import FREE_LICENCES, credit_from, licence_of  # noqa: E402
 from divisions.config import COUNTRY_CONFIG  # noqa: E402
 
-# Wikidata returns the Q-id as the label when an item has no English one. That
+# Wikidata returns the Q-id as the label when it can find no name at all. That
 # is not a name, and "Q130018" on a map pin is worse than no pin.
+#
+# The label service is asked for "en,mul", NOT just "en". `mul` is Wikidata's
+# "default for all languages" — the value an item carries when its name is the
+# same everywhere, which is exactly the case for most mountains. Asking only for
+# English made Denali and Mount St. Helens come back as Q130018 and Q4675 and
+# get thrown away, when both have a perfectly good name sitting in `mul` and
+# their English row on Wikidata simply inherits it.
 QID_AS_LABEL = re.compile(r"^Q\d+$")
 
 # Reviewed exclusions: inside the country's box, correctly typed, correctly
@@ -96,7 +103,7 @@ SELECT ?item ?itemLabel ?itemDescription ?coord ?image ?links WHERE {
         wdt:P18 ?image ;
         wikibase:sitelinks ?links .
   FILTER(?links >= 8)
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en,mul". }
 }
 ORDER BY DESC(?links) LIMIT %(limit)d
 """
@@ -190,14 +197,13 @@ def harvest(cc: str, per_layer: int = 6) -> dict:
                 label = b["itemLabel"]["value"]
                 lng, lat = b["coord"]["value"].removeprefix("Point(").removesuffix(")").split()
                 if QID_AS_LABEL.match(label):
-                    # RECORDED, not silently skipped. A place with no English
-                    # label is dropped for good reason — "Q130018" on a pin is
-                    # worse than no pin — but the drop must be visible, or a
-                    # genuinely wanted place disappears and nobody ever learns
-                    # it was a candidate. The remedy is to add the label on
-                    # Wikidata, which fixes it for everyone.
+                    # Reaching here now means the item has NO name in English
+                    # and none in `mul` either — genuinely unnamed, not merely
+                    # un-Englished. Recorded rather than silently skipped: the
+                    # remedy is to add a label on Wikidata, which fixes it for
+                    # everyone, and you cannot do that for a drop you never saw.
                     out.setdefault("dropped", []).append(
-                        {"qid": q, "why": "no English label on Wikidata", "at": [float(lat), float(lng)]})
+                        {"qid": q, "why": "no label in English or mul", "at": [float(lat), float(lng)]})
                     continue
                 if not in_country_box(cc, float(lat), float(lng)):
                     out.setdefault("dropped", []).append(

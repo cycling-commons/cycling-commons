@@ -112,7 +112,8 @@
   "dropped": [
     {
       "qid": "Q130018",
-      "why": "no English label on Wikidata",
+      "name": "Denali",
+      "why": "outside the onboarded bbox",
       "at": [
         63.069102777,
         -151.006261111
@@ -129,7 +130,8 @@
     },
     {
       "qid": "Q4675",
-      "why": "no English label on Wikidata",
+      "name": "Mount St. Helens",
+      "why": "outside the onboarded bbox",
       "at": [
         46.200277777,
         -122.189444444
@@ -137,7 +139,8 @@
     },
     {
       "qid": "Q4675",
-      "why": "no English label on Wikidata",
+      "name": "Mount St. Helens",
+      "why": "outside the onboarded bbox",
       "at": [
         46.200277777,
         -122.189444444
@@ -145,7 +148,8 @@
     },
     {
       "qid": "Q4675",
-      "why": "no English label on Wikidata",
+      "name": "Mount St. Helens",
+      "why": "outside the onboarded bbox",
       "at": [
         46.200277777,
         -122.189444444
@@ -153,7 +157,8 @@
     },
     {
       "qid": "Q4675",
-      "why": "no English label on Wikidata",
+      "name": "Mount St. Helens",
+      "why": "outside the onboarded bbox",
       "at": [
         46.200277777,
         -122.189444444
