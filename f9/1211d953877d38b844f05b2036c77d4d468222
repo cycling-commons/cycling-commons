@@ -1,0 +1,27 @@
+web/assets/styles/map.css
+  s_40a002d02fdfd2::t_cdea13220c3b25 613,615-623,625-634
+web/assets/map/climb-profile.js
+  s_40a002d02fdfd2::t_e26b2aefc7a6f8 71-75
+  s_40a002d02fdfd2::t_da06bcb894cb69 64-70,76-79,81,94-95,97,100,103,106,110-111,121-122,128,130,132-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "f91211d953877d38b844f05b2036c77d4d468222",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_40a002d02fdfd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f434c5a5-23e5-4d99-bf56-2c92d9db49b0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
