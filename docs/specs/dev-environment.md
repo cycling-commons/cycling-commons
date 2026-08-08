@@ -272,6 +272,43 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
   its copy as unreviewed until a Spanish-speaking rider has read it. Tracked
   in `docs/TODO.md`.
 
+## 7a. Shared state — Redis (2026-08-08)
+
+Production is a **cluster**: a load balancer in front of two nginx frontends
+(one shared DB server behind them). Anything that has to agree across those
+frontends therefore may not live on a node's disk. Before this, all of it did:
+
+| State | On local disk it meant |
+|---|---|
+| Sessions (`handler_id: null`) | log in on node A, logged out on node B |
+| Every rate limiter | counters per node, so every published limit was doubled |
+| `media_urgent_breaker_limiter` | the **site-wide** auto-withhold budget promised by photo-uploads.md §6c was per node, and so was the emergency stop |
+| `cache.media_pow` | a proof-of-work challenge issued by one node could not be verified by the other, so the anonymous photo-report route failed intermittently — the one route that must never bounce someone reporting a photo of themselves |
+
+All of it now goes through Redis, addressed by a single `REDIS_URL`:
+
+- `framework.session.handler_id: '%env(REDIS_URL)%'`
+- `framework.cache.app: cache.adapter.redis`, provider `%env(REDIS_URL)%`
+- every named pool in `rate_limiter.yaml` uses `adapter: cache.app` rather than
+  naming an adapter itself, so it inherits whatever the environment's app pool
+  is. That indirection is also what finally made the **test** override real: the
+  pools used to name `cache.adapter.filesystem` outright, so
+  `test/framework.yaml`'s `app: cache.adapter.array` never reached them and
+  limiter counters persisted between phpunit runs. The suite needs no Redis, and
+  got about five minutes faster when they stopped touching the filesystem.
+
+**The image needs `ext-redis`** (`pecl install redis`, in `web/Dockerfile`) —
+**a production host without it fails closed on the first request**, so it belongs
+on the deploy checklist next to `ext-zip`.
+
+The dev stack ships its own `redis` service, deliberately **not** published to a
+host port so it cannot collide with a Redis you already run for something else.
+If you have one, point at it instead in `developers/docker/.env`:
+
+```
+REDIS_URL=redis://host.docker.internal:6379
+```
+
 ## 8. Testing discipline
 
 - `make app-test` is the full local gate: `phpunit` + `phpstan` + `psalm` +

@@ -170,7 +170,10 @@ final class AddClimbTest extends WebTestCase
         // review) now backs the receipt — reference is SUB-<submissionId>, not
         // the old unpersisted-stub CC- prefix.
         self::assertSelectorTextContains('.receipt h2', 'Climb submitted.');
-        self::assertSelectorTextContains('.receipt .stub-note', 'awaiting curator review');
+        // The claim that has to survive a copy edit: the rider is told a curator
+        // decides before this is on the map. The exact sentence changed on
+        // 2026-08-08 when the receipt stopped saying "Launching 2026".
+        self::assertSelectorTextContains('.receipt .stub-note', 'curator approves');
         self::assertSelectorTextContains('.receipt .ref', 'SUB-');
     }
 

@@ -6,6 +6,11 @@ framework:
     router:
         utf8: true
     session:
-        handler_id: null
+        # Redis, not PHP's file handler: production runs two frontends behind a
+        # load balancer, and on-disk sessions mean a rider who logs in on one
+        # node is logged out on the other. The test env swaps in
+        # `session.storage.factory.mock_file` (test/framework.yaml), so the
+        # suite still needs no Redis.
+        handler_id: '%env(REDIS_URL)%'
         cookie_secure: auto
         cookie_samesite: lax

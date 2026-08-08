@@ -1,36 +1,38 @@
 framework:
     cache:
         pools:
-            # Dedicated pool so the test env can swap it for the (per-kernel)
-            # array adapter below — the default filesystem pool persists across
-            # phpunit runs while DAMA reuses user ids, which would leak limiter
-            # counters between runs and flake the tests.
+            # Dedicated pools, all inheriting `cache.app` — which is Redis in
+            # dev/prod and the per-kernel array adapter in test. Inheriting is
+            # what makes that test swap actually happen: these pools used to
+            # name `cache.adapter.filesystem` outright, so the test override
+            # never reached them and limiter counters persisted across phpunit
+            # runs while DAMA reused user ids.
             cache.route_propose_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.route_suggest_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.ride_check_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.coverage_read_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.country_interest_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.curator_application_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.media_upload_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.data_export_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.media_report_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.media_report_urgent_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.media_urgent_breaker_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.media_urgent_alert_limiter:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
             cache.media_pow:
-                adapter: cache.adapter.filesystem
+                adapter: cache.app
     rate_limiter:
         contribution_submit:
             policy: sliding_window

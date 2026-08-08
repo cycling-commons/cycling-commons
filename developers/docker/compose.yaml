@@ -25,6 +25,20 @@ services:
       timeout: 5s
       retries: 12
 
+  # ---- shared state: sessions, rate limiters, the media circuit breaker, PoW ----
+  # Deliberately NOT published to a host port: it is only reachable inside this
+  # stack, so it cannot collide with a Redis you already run for another
+  # project. If you have one, set REDIS_URL=redis://host.docker.internal:6379
+  # in developers/docker/.env and this service just idles.
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
   # ---- serving the web app: Symfony on PHP-FPM, fronted by nginx (mirrors prod) ----
   app:
     build: ../../web
@@ -39,6 +53,10 @@ services:
       # tests/bootstrap.php therefore refuses to run against a non-*_test database;
       # to run phpunit inside this container, pass -e DATABASE_URL=…/cyclingcommons_test.
       DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=18&charset=utf8"
+      # Shared state (sessions, rate limiters, media circuit breaker, PoW).
+      # Override in developers/docker/.env to use a Redis you already run:
+      #   REDIS_URL=redis://host.docker.internal:6379
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379}"
       # Email is caught by the bundled Mailpit over the internal network (see below).
       # To use a shared host instance instead, override MAILER_DSN, e.g.
       #   MAILER_DSN=smtp://host.docker.internal:1025
@@ -83,6 +101,8 @@ services:
       - "host.docker.internal:host-gateway"   # so the container can reach the host's Mailpit
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       mailpit:
         condition: service_started
