@@ -1,0 +1,47 @@
+web/translations/messages.en.yaml
+  s_40a002d02fdfd2::t_1dee1206d7ab62 2334-2335
+web/translations/messages.es.yaml
+  s_40a002d02fdfd2::t_1dee1206d7ab62 2348-2349
+web/translations/messages.de.yaml
+  s_40a002d02fdfd2::t_1dee1206d7ab62 2314-2315
+web/tests/Messaging/MessageMailTest.php
+  s_40a002d02fdfd2::t_b673e83cd606e7 1-15,17-25,28-83,85-115,117-157,159-160
+  s_40a002d02fdfd2::t_c9362eda4f25ba 16,26-27,84,116,158
+web/src/Messaging/MessageService.php
+  s_40a002d02fdfd2::t_7efd424d857877 41-47,107,135,167
+web/translations/messages.nl.yaml
+  s_40a002d02fdfd2::t_1dee1206d7ab62 2311-2312
+web/templates/emails/message.html.twig
+  s_40a002d02fdfd2::t_9f1e02d6ff839f 1-55
+web/translations/messages.fr.yaml
+  s_40a002d02fdfd2::t_1dee1206d7ab62 2311-2312
+web/src/EventSubscriber/MessageMailSubscriber.php
+  s_40a002d02fdfd2::t_424def8cf8b55a 1-71
+web/src/Messaging/MessageMailer.php
+  s_40a002d02fdfd2::t_81265a39465a97 1-148
+web/src/Messaging/MessageOutbox.php
+  s_40a002d02fdfd2::t_a39ddd1c1054f5 1-57
+docs/specs/moderation-and-contribution.md
+  s_40a002d02fdfd2::t_1e4cbffc514d9d 1042-1079,1391-1392
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "d32394ecbf71185c13ddb3dfbfff846e7fd77bba",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_40a002d02fdfd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f434c5a5-23e5-4d99-bf56-2c92d9db49b0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
