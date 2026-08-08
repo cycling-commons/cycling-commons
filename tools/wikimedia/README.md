@@ -34,3 +34,30 @@ filename — a CC BY-SA photo you cannot attribute is a photo you cannot use.
    photos this project refuses to publish (`docs/specs/photo-uploads.md` §6).
    Every candidate for the Côte de Stockeu and the Côte de la Roche-aux-Faucons
    was rejected on this ground in the 2026-08-08 pass, despite clean licences.
+
+## `climb_candidates.py` — well-known climbs, and a check on ours
+
+```bash
+python3 tools/wikimedia/climb_candidates.py --country ES      # candidates
+python3 tools/wikimedia/climb_candidates.py --verify          # check what we store
+```
+
+`--verify` is the valuable half. It compares our stored `summitEle` against
+Wikidata's published elevation for the same pass, which is an **independent**
+check on the DEM, the sampling, and above all on where the drawn line stops — a
+climb whose line ends short of the col reads low here and nowhere else.
+
+2026-08-08: Furka +1, Grimsel +1, Susten +3, Nufenen −2, Klausen +14,
+**Gotthard −11**. Six agreements inside 14 m, and the old Susten defect (2260 m
+against a published 2224) is gone. Gotthard is the one worth redrawing.
+
+`--country` answers "can we get 10 well-known climbs here". Availability is
+uneven and tracks whether a country's famous climbs are *mountain passes*:
+CH/IT/FR/ES have 10+ each, BE gets its Flemish bergs correctly, GB about eight,
+DE/JP/AU are thin, and NL has none — there are no mountain passes in the
+Netherlands.
+
+**It gives you the col, never the foot.** Where a climb begins is a judgement
+about which junction the pass road leaves the valley at, and getting it wrong is
+the defect already logged in docs/TODO.md against the climbs we have. Treat this
+as research for a human building a seed list, not as an importer.
