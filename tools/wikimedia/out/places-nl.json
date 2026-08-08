@@ -1,0 +1,127 @@
+{
+  "country": "NL",
+  "scenic": [
+    {
+      "qid": "Q178064",
+      "name": "Cauberg",
+      "type": "Viewpoint / high point",
+      "note": "hill in Valkenburg aan de Geul, the Netherlands",
+      "lat": 50.86028,
+      "lng": 5.82333,
+      "sitelinks": 15,
+      "photo": {
+        "file": "Valkenburg, Cauberg01.jpg",
+        "credit": "Kleon3",
+        "user": "Kleon3",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1295357",
+      "name": "Eemmeer",
+      "type": "Viewpoint / high point",
+      "note": "lake in Netherlands, Eemmeer, Netherlands",
+      "lat": 52.28056,
+      "lng": 5.33083,
+      "sitelinks": 21,
+      "photo": {
+        "file": "Eemmeer.JPG",
+        "credit": "GerardM at Dutch Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q525364",
+      "name": "Lauwersmeer",
+      "type": "Viewpoint / high point",
+      "note": "lake in the Netherlands",
+      "lat": 53.377,
+      "lng": 6.173,
+      "sitelinks": 20,
+      "photo": {
+        "file": "Lauwersmeer-natuur-OpenTopo.jpg",
+        "credit": "Janwillemvanaalst",
+        "user": "Janwillemvanaalst",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1653947",
+      "name": "IJmeer",
+      "type": "Viewpoint / high point",
+      "note": "bordering lake in the Netherlands",
+      "lat": 52.36278,
+      "lng": 5.05194,
+      "sitelinks": 19,
+      "photo": {
+        "file": "Loc IJmeer.JPG",
+        "credit": "Kliek",
+        "user": null,
+        "license": "Public domain"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q2426916",
+      "name": "Muiderslot",
+      "type": "Heritage site",
+      "note": "castle in Muiden, the Netherlands",
+      "lat": 52.33423,
+      "lng": 5.07181,
+      "sitelinks": 21,
+      "photo": {
+        "file": "Muiden, Muiderslot. 09-05-2022. (actm.) 07.jpg",
+        "credit": "Agnes Monkelbaan",
+        "user": "Agnes Monkelbaan",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q2177577",
+      "name": "Loevestein Castle",
+      "type": "Heritage site",
+      "note": "Dutch medieval castle in Zaltbommel",
+      "lat": 51.81639,
+      "lng": 5.02139,
+      "sitelinks": 18,
+      "photo": {
+        "file": "2024-08-14 Slot Loevestein ZvD 55.jpg",
+        "credit": "Ziko",
+        "user": "Ziko",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1473283",
+      "name": "Valkenburg Castle",
+      "type": "Heritage site",
+      "note": "castle in Valkenburg, Netherlands",
+      "lat": 50.86194,
+      "lng": 5.83083,
+      "sitelinks": 11,
+      "photo": {
+        "file": "The falcons fort.jpg",
+        "credit": "The original uploader was B.F.G. at Dutch Wikipedia.",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q2447969",
+      "name": "Ammersoyen Castle",
+      "type": "Heritage site",
+      "note": "museum in Ammerzoden, the Netherlands",
+      "lat": 51.75167,
+      "lng": 5.22917,
+      "sitelinks": 10,
+      "photo": {
+        "file": "Ammersoyen 120307-3.JPG",
+        "credit": "Ninane",
+        "user": "Ninane",
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ]
+}

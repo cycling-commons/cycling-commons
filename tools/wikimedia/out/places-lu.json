@@ -1,0 +1,97 @@
+{
+  "country": "LU",
+  "scenic": [
+    {
+      "qid": "Q3029261",
+      "name": "Mont St. Jean",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Luxembourg",
+      "lat": 49.49029,
+      "lng": 6.05974,
+      "sitelinks": 8,
+      "photo": {
+        "file": "Gehaansbierg schmuel.jpg",
+        "credit": "Cornischong at Luxembourgish Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q2621998",
+      "name": "Upper Sûre Lake",
+      "type": "Viewpoint / high point",
+      "note": "reservoir in Luxembourg",
+      "lat": 49.9,
+      "lng": 5.86667,
+      "sitelinks": 16,
+      "photo": {
+        "file": "Leifreg 2.JPG",
+        "credit": "Johnny Chicago at lb.wikipedia",
+        "user": "Johnny Chicago",
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q615735",
+      "name": "Berg Castle",
+      "type": "Heritage site",
+      "note": "principal residence of the Grand Duke of Luxembourg",
+      "lat": 49.81417,
+      "lng": 6.08694,
+      "sitelinks": 23,
+      "photo": {
+        "file": "Residenz der Grossherzoeglichen Familie.jpg",
+        "credit": "Viatoris",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q3247067",
+      "name": "Fischbach Castle",
+      "type": "Heritage site",
+      "note": "castle in Luxembourg",
+      "lat": 49.74765,
+      "lng": 6.18657,
+      "sitelinks": 15,
+      "photo": {
+        "file": "Château de Fischbach 2021-07.jpg",
+        "credit": "Zinneke",
+        "user": "Zinneke",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q7431167",
+      "name": "Schengen Castle",
+      "type": "Heritage site",
+      "note": "castle in Schengen, Luxembourg",
+      "lat": 49.4701,
+      "lng": 6.3658,
+      "sitelinks": 13,
+      "photo": {
+        "file": "Schengener Schlass.JPG",
+        "credit": "Cornischong at Luxembourgish Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1010933",
+      "name": "Beaufort Castle",
+      "type": "Heritage site",
+      "note": "castle in Beaufort, Luxembourg",
+      "lat": 49.8336,
+      "lng": 6.28662,
+      "sitelinks": 13,
+      "photo": {
+        "file": "Beaufort Castle 2.jpg",
+        "credit": "Kauk0r",
+        "user": "Kauk0r",
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ]
+}

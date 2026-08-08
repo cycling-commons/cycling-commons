@@ -1,0 +1,112 @@
+{
+  "country": "US",
+  "scenic": [
+    {
+      "qid": "Q491677",
+      "name": "Yosemite Falls",
+      "type": "Viewpoint / high point",
+      "note": "Highest waterfall in Yosemite National Park",
+      "lat": 37.75502,
+      "lng": -119.5973,
+      "sitelinks": 40,
+      "photo": {
+        "file": "Yosemite Falls Trail May 2011 003.jpg",
+        "credit": "King of Hearts",
+        "user": "King of Hearts",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q37385",
+      "name": "Horsetail Fall",
+      "type": "Viewpoint / high point",
+      "note": "waterfall in Yosemite National Park, California",
+      "lat": 37.7291,
+      "lng": -119.628,
+      "sitelinks": 22,
+      "photo": {
+        "file": "2007-02-16 - Horsetail Fall (Yosemite).jpg",
+        "credit": "Ambitious Wench",
+        "user": null,
+        "license": "CC BY-SA 2.0"
+      }
+    },
+    {
+      "qid": "Q180402",
+      "name": "Yosemite National Park",
+      "type": "Nature reserve",
+      "note": "national park in California, United States",
+      "lat": 37.7425,
+      "lng": -119.5375,
+      "sitelinks": 87,
+      "photo": {
+        "file": "Half Dome with Eastern Yosemite Valley (50MP).jpg",
+        "credit": "Thomas Wolf, www.foto-tw.de",
+        "user": "Der Wolf im Wald",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q220289",
+      "name": "Grand Canyon National Park",
+      "type": "Nature reserve",
+      "note": "national park in Coconino and Mohave counties in Arizona, United States",
+      "lat": 36.0553,
+      "lng": -112.122,
+      "sitelinks": 62,
+      "photo": {
+        "file": "10 Grand Canyon Navajo Point viewpoint terrace, Grand Canyon National Park, USA - American nature.jpg",
+        "credit": "Marek Ślusarczyk (Tupungato) Photo portfolio",
+        "user": "Tupungato",
+        "license": "CC BY 3.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q1051217",
+      "name": "Crystal Cathedral",
+      "type": "Religious site",
+      "note": "church building in Garden Grove, Orange County, California, United States of America",
+      "lat": 33.7874,
+      "lng": -117.89893,
+      "sitelinks": 24,
+      "photo": {
+        "file": "2018 Christ Cathedral campus - Garden Grove, California 01.jpg",
+        "credit": "Farragutful",
+        "user": "Farragutful",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1122206",
+      "name": "Salt Lake Temple",
+      "type": "Religious site",
+      "note": "temple of The Church of Jesus Christ of Latter-day Saints in Salt Lake City, Utah, United States",
+      "lat": 40.77047,
+      "lng": -111.89196,
+      "sitelinks": 24,
+      "photo": {
+        "file": "Salt Lake Temple model - 2 March 2013.jpg",
+        "credit": "Flickr user: Nan Palmero  Model: Peter McCann Architectural Models",
+        "user": null,
+        "license": "CC BY 2.0"
+      }
+    },
+    {
+      "qid": "Q71719",
+      "name": "Hollywood Walk of Fame",
+      "type": "Monument",
+      "note": "more than 2,700 five-pointed terrazzo and brass stars embedded in the sidewalks along 15 blocks of Hollywood Boulevard and three blocks of Vine Street in Hollywood, California",
+      "lat": 34.1014,
+      "lng": -118.34497,
+      "sitelinks": 76,
+      "photo": {
+        "file": "Stan Freberg Walk of fame.jpg",
+        "credit": "BenSherman",
+        "user": "BenSherman",
+        "license": "Public domain"
+      }
+    }
+  ]
+}

@@ -47,17 +47,17 @@
       }
     },
     {
-      "qid": "Q320702",
-      "name": "Lake Robertville",
+      "qid": "Q764863",
+      "name": "Lake Genval",
       "type": "Viewpoint / high point",
-      "note": "lake in Waimes, Wallonia, Belgium",
-      "lat": 50.45,
-      "lng": 6.11361,
+      "note": "lake",
+      "lat": 50.72889,
+      "lng": 4.51944,
       "sitelinks": 11,
       "photo": {
-        "file": "Lac de Robertville , Pont Haelen.jpg",
-        "credit": "G. Friedrich",
-        "user": "Duhon",
+        "file": "Genval Lac1a.JPG",
+        "credit": "Jean-Pol GRANDMONT",
+        "user": "Jean-Pol GRANDMONT",
         "license": "CC BY 3.0"
       }
     }

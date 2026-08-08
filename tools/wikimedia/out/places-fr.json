@@ -1,0 +1,127 @@
+{
+  "country": "FR",
+  "scenic": [
+    {
+      "qid": "Q583",
+      "name": "Mont Blanc",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain in the Alps",
+      "lat": 45.83278,
+      "lng": 6.865,
+      "sitelinks": 127,
+      "photo": {
+        "file": "Panorama of Mont Blanc du Tacul, Mont Maudit and Mont Blanc from Aiguille du Midi, Chamonix, Haute-Savoie.jpg",
+        "credit": "Christian David",
+        "user": "Espandero",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q6403",
+      "name": "Lake Geneva",
+      "type": "Viewpoint / high point",
+      "note": "lake in Switzerland and France",
+      "lat": 46.45,
+      "lng": 6.55,
+      "sitelinks": 100,
+      "photo": {
+        "file": "Lake Geneva aerial.jpg",
+        "credit": "kallerna",
+        "user": "Kallerna",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q23426",
+      "name": "Lac du Bourget",
+      "type": "Viewpoint / high point",
+      "note": "lake in France",
+      "lat": 45.73333,
+      "lng": 5.86667,
+      "sitelinks": 35,
+      "photo": {
+        "file": "Lac du Bourget @ Mont Laval (51043830807).jpg",
+        "credit": "Guilhem Vellut from Annecy, France",
+        "user": null,
+        "license": "CC BY 2.0"
+      }
+    },
+    {
+      "qid": "Q576704",
+      "name": "Lake Annecy",
+      "type": "Viewpoint / high point",
+      "note": "perialpine lake in Haute-Savoie, France",
+      "lat": 45.85,
+      "lng": 6.16667,
+      "sitelinks": 34,
+      "photo": {
+        "file": "Lac d'Annecy from Col de la Forclaz.jpg",
+        "credit": "H005",
+        "user": "H005",
+        "license": "CC BY-SA 4.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q1143049",
+      "name": "Château de Montsoreau",
+      "type": "Heritage site",
+      "note": "castle in the Loire valley France and location of château de montsoreau-museum of contemporary art",
+      "lat": 47.2156,
+      "lng": 0.0622,
+      "sitelinks": 100,
+      "photo": {
+        "file": "Chateau de Montsoreau Museum of contemporary art Loire Valley France.jpg",
+        "credit": "Suavemarimagno",
+        "user": "Suavemarimagno",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1865480",
+      "name": "Bastille",
+      "type": "Heritage site",
+      "note": "former fortress in Paris, France",
+      "lat": 48.85333,
+      "lng": 2.36917,
+      "sitelinks": 86,
+      "photo": {
+        "file": "Bastille Exterior 1790 or 1791.jpg",
+        "credit": "AnonymousUnknown author",
+        "user": null,
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q663673",
+      "name": "Château de Vincennes",
+      "type": "Heritage site",
+      "note": "castle",
+      "lat": 48.84278,
+      "lng": 2.43583,
+      "sitelinks": 41,
+      "photo": {
+        "file": "Château de Vincennes Paris FRA 002.jpg",
+        "credit": "ignis",
+        "user": "Ignis",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q912447",
+      "name": "Chinon Castle",
+      "type": "Heritage site",
+      "note": "castle in France",
+      "lat": 47.16806,
+      "lng": 0.23611,
+      "sitelinks": 30,
+      "photo": {
+        "file": "Château de Chinon vu de la Vienne.jpg",
+        "credit": "Franck Badaire",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ]
+}

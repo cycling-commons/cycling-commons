@@ -1,0 +1,127 @@
+{
+  "country": "GB",
+  "scenic": [
+    {
+      "qid": "Q104674",
+      "name": "Ben Nevis",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain of Great Britain",
+      "lat": 56.79689,
+      "lng": -5.00368,
+      "sitelinks": 78,
+      "photo": {
+        "file": "Ben nevis.jpg",
+        "credit": "Loek037 at Dutch Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q217142",
+      "name": "Snowdon",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain in Wales",
+      "lat": 53.06886,
+      "lng": -4.07559,
+      "sitelinks": 49,
+      "photo": {
+        "file": "Snowdon from Llyn Llydaw.jpg",
+        "credit": "User:Gdr",
+        "user": "Gdr",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1146222",
+      "name": "Scafell Pike",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain in England",
+      "lat": 54.45417,
+      "lng": -3.21153,
+      "sitelinks": 34,
+      "photo": {
+        "file": "Scafell Pike.JPG",
+        "credit": "Thorneh at English Wikipedia",
+        "user": "Thorneh",
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q49650",
+      "name": "Loch Ness",
+      "type": "Viewpoint / high point",
+      "note": "lake in Highland, Scotland, UK, outflows via Loch Dochfour to the River Ness and Caledonian Canal",
+      "lat": 57.3,
+      "lng": -4.45,
+      "sitelinks": 78,
+      "photo": {
+        "file": "LochNessUrquhart.jpg",
+        "credit": "Sam Fentress",
+        "user": "Asbestos~commonswiki",
+        "license": "CC BY-SA 2.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q62378",
+      "name": "Tower of London",
+      "type": "Heritage site",
+      "note": "castle in central London, United Kingdom",
+      "lat": 51.5082,
+      "lng": -0.0762,
+      "sitelinks": 88,
+      "photo": {
+        "file": "Tower of London viewed from the River Thames.jpg",
+        "credit": "Bob Collowan",
+        "user": "Bob Collowân",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q212065",
+      "name": "Edinburgh Castle",
+      "type": "Heritage site",
+      "note": "castle in Edinburgh, Scotland, UK",
+      "lat": 55.9487,
+      "lng": -3.20073,
+      "sitelinks": 57,
+      "photo": {
+        "file": "Edinburgh Castle from the Grassmarket.jpg",
+        "credit": "Stephencdickson",
+        "user": "Stephencdickson",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q752266",
+      "name": "Durham Castle",
+      "type": "Heritage site",
+      "note": "Grade I listed historic house museum in Durham, England, UK",
+      "lat": 54.7749,
+      "lng": -1.57558,
+      "sitelinks": 46,
+      "photo": {
+        "file": "Durham Castle, April 2017 (14) (33459522640).jpg",
+        "credit": "Carla Brain",
+        "user": null,
+        "license": "CC BY-SA 2.0"
+      }
+    },
+    {
+      "qid": "Q639208",
+      "name": "Bodiam Castle",
+      "type": "Heritage site",
+      "note": "14th-century moated castle near Robertsbridge in East Sussex, England, UK",
+      "lat": 51.00226,
+      "lng": 0.54353,
+      "sitelinks": 41,
+      "photo": {
+        "file": "Bodiam-castle-10My8-1197.jpg",
+        "credit": "Antony McCallum",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ]
+}

@@ -32,95 +32,80 @@
       }
     },
     {
-      "qid": "Q152872",
-      "name": "Ball's Pyramid",
+      "qid": "Q747182",
+      "name": "Mount Ossa",
       "type": "Viewpoint / high point",
-      "note": "an island and an erosional remnant of a shield volcano southeast of Lord Howe Island in the Pacific",
-      "lat": -31.75417,
-      "lng": 159.25167,
-      "sitelinks": 49,
+      "note": "highest mountain in Tasmania, Australia",
+      "lat": -41.87103,
+      "lng": 146.03334,
+      "sitelinks": 25,
       "photo": {
-        "file": "Balls Pyramid, Lord Howe Marine Park 1008.jpg",
-        "credit": "PotMart186",
+        "file": "Mount Ossa Tasmania 2.jpg",
+        "credit": "J Brew",
         "user": null,
-        "license": "CC BY-SA 4.0"
-      }
-    },
-    {
-      "qid": "Q2114101",
-      "name": "Mawson Peak",
-      "type": "Viewpoint / high point",
-      "note": "volcano on Heard Island",
-      "lat": -53.10417,
-      "lng": 73.51694,
-      "sitelinks": 34,
-      "photo": {
-        "file": "Heard.jpg",
-        "credit": "NOAA",
-        "user": null,
-        "license": "Public domain"
+        "license": "CC BY-SA 2.0"
       }
     }
   ],
   "history": [
     {
-      "qid": "Q782783",
-      "name": "Australian War Memorial",
-      "type": "Monument",
-      "note": "national war memorial and museum in Canberra, Australia",
-      "lat": -35.28047,
-      "lng": 149.14906,
-      "sitelinks": 22,
+      "qid": "Q1138670",
+      "name": "St Patrick's Cathedral",
+      "type": "Religious site",
+      "note": "cathedral in Melbourne, Victoria, Australia",
+      "lat": -37.8101,
+      "lng": 144.976,
+      "sitelinks": 21,
       "photo": {
-        "file": "AWM canberra 1.jpg",
-        "credit": "Capital photographer (talk)",
-        "user": "Capital photographer",
+        "file": "St Patrick's Cathedral - Gothic Revival Style.jpg",
+        "credit": "Donaldytong",
+        "user": "Donaldytong",
         "license": "CC BY-SA 3.0"
       }
     },
     {
-      "qid": "Q1369544",
-      "name": "Shrine of Remembrance",
-      "type": "Monument",
-      "note": "memorial located in Kings Domain on St Kilda Road, Melbourne, Australia",
-      "lat": -37.83056,
-      "lng": 144.97344,
-      "sitelinks": 16,
+      "qid": "Q971514",
+      "name": "St Mary’s Cathedral",
+      "type": "Religious site",
+      "note": "cathedral in Sydney, New South Wales, Australia",
+      "lat": -33.87111,
+      "lng": 151.21333,
+      "sitelinks": 19,
       "photo": {
-        "file": "Shrine of Rememberence.jpg",
-        "credit": "Adam Carr at English Wikipedia",
-        "user": "Adam Carr",
-        "license": "Public domain"
+        "file": "St. Mary's Cathedral, Sídney-Australia42.jpg",
+        "credit": "Diego Delso",
+        "user": null,
+        "license": "CC BY-SA 3.0"
       }
     },
     {
-      "qid": "Q844556",
-      "name": "Anzac Memorial",
-      "type": "Monument",
-      "note": "memorial and museum in Sydney, Australia",
-      "lat": -33.87572,
-      "lng": 151.21094,
-      "sitelinks": 15,
+      "qid": "Q648182",
+      "name": "St James’ Church, Sydney",
+      "type": "Religious site",
+      "note": "Anglican parish church in inner city Sydney, Australia",
+      "lat": -33.8694,
+      "lng": 151.211,
+      "sitelinks": 13,
       "photo": {
-        "file": "ANZAC Memorial Sydney Australia - June 2007.jpg",
-        "credit": "Digital fuel (talk)",
-        "user": "Digital fuel",
-        "license": "Public domain"
-      }
-    },
-    {
-      "qid": "Q585241",
-      "name": "Archibald Fountain",
-      "type": "Monument",
-      "note": "fountain with sculptures in Hyde Park, Sydney",
-      "lat": -33.87099,
-      "lng": 151.21182,
-      "sitelinks": 11,
-      "photo": {
-        "file": "Archibald Fountain in Hyde Park, Sydney from The Powerhouse Museum.jpg",
-        "credit": "Tom Lennon Collection",
+        "file": "St James church, Sydney.jpg",
+        "credit": "Henry King (1855-1923)",
         "user": null,
         "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q1892155",
+      "name": "St Paul's Cathedral",
+      "type": "Religious site",
+      "note": "cathedral in Melbourne, Victoria, Australia",
+      "lat": -37.81685,
+      "lng": 144.96738,
+      "sitelinks": 12,
+      "photo": {
+        "file": "St pauls, melbourne.jpg",
+        "credit": "Adam.J.W.C.",
+        "user": "Adam.J.W.C.",
+        "license": "CC BY-SA 2.5"
       }
     }
   ]

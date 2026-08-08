@@ -94,6 +94,23 @@ final class SeedWikidataPlacesCommand extends Command
         }
 
         $counts = [];
+        /* A Q-id is the identity here (`source_ref`), and Wikidata's `country`
+           is sovereignty rather than geography — so a border mountain belongs
+           to two countries and appears in two artifacts. Mont Blanc is in FR
+           and IT, the Matterhorn in CH and IT. Seeding both would upsert the
+           same row twice with conflicting country codes, and the last artifact
+           read would silently win. First one wins instead, and the rest are
+           reported rather than dropped in silence. */
+        $seenRefs = [];
+        $duplicates = [];
+        /* Places that fall in no operational region. A country bbox is a
+           HARVEST box, not a statement of what has been onboarded — the US one
+           spans California to New Mexico while only California and Colorado
+           have regions — so Wikidata happily offers the Grand Canyon and the
+           Salt Lake Temple. A row with no region is invisible to every
+           region-scoped query, which is a pin nobody can find by looking where
+           it is. Skipped, and named, rather than imported into nowhere. */
+        $regionless = [];
         try {
             $this->db->beginTransaction();
             foreach ($files as $file) {
@@ -108,6 +125,17 @@ final class SeedWikidataPlacesCommand extends Command
 
                 foreach (self::LAYERS as $layer => $type) {
                     foreach ($data[$layer] ?? [] as $place) {
+                        $ref = 'wikidata:'.$place['qid'];
+                        if (isset($seenRefs[$ref])) {
+                            $duplicates[] = sprintf('%s (%s, already seeded for %s)',
+                                $place['name'], $country, $seenRefs[$ref]);
+                            continue;
+                        }
+                        if (null === $this->regionFor((float) $place['lat'], (float) $place['lng'])) {
+                            $regionless[] = sprintf('%s (%s)', $place['name'], $country);
+                            continue;
+                        }
+                        $seenRefs[$ref] = $country;
                         $this->seed($place, $type, $country, $dryRun);
                         $counts[$country][$type->letter()] = ($counts[$country][$type->letter()] ?? 0) + 1;
                     }
@@ -142,6 +170,20 @@ final class SeedWikidataPlacesCommand extends Command
                 $parts[] = sprintf('%s: %d', $letter, $n);
             }
             $io->writeln(sprintf('  %s — %s', $country, implode(', ', $parts)));
+        }
+        if ([] !== $regionless) {
+            $io->note(sprintf(
+                "Skipped %d place(s) that fall in no onboarded region:\n  %s",
+                \count($regionless),
+                implode("\n  ", $regionless),
+            ));
+        }
+        if ([] !== $duplicates) {
+            $io->note(sprintf(
+                "Skipped %d place(s) that a border shares with another country:\n  %s",
+                \count($duplicates),
+                implode("\n  ", $duplicates),
+            ));
         }
         $io->success(sprintf(
             '%s %d place(s) across %d country/ies.',
@@ -195,6 +237,29 @@ final class SeedWikidataPlacesCommand extends Command
             'ref' => 'wikidata:'.$place['qid'],
             'attrs' => json_encode($attributes, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION),
         ]);
+    }
+
+    /**
+     * The operational region containing a point, or null.
+     *
+     * Same smallest-area-wins rule as the membership recompute, asked BEFORE
+     * the insert so a place with no region is never written at all — rather
+     * than written, left unstamped, and invisible.
+     */
+    private function regionFor(float $lat, float $lng): ?int
+    {
+        $id = $this->db->fetchOne(
+            'SELECT r.id FROM region r
+              WHERE ST_Contains(r.geom, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326))
+                AND r.admin_level IS NOT DISTINCT FROM (
+                    SELECT MAX(r2.admin_level) FROM region r2 WHERE r2.country_code = r.country_code
+                )
+              ORDER BY r.area_km2 ASC NULLS LAST, r.id ASC
+              LIMIT 1',
+            ['lat' => $lat, 'lng' => $lng],
+        );
+
+        return false === $id ? null : (int) $id;
     }
 
     /**

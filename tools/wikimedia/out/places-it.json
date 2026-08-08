@@ -1,0 +1,127 @@
+{
+  "country": "IT",
+  "scenic": [
+    {
+      "qid": "Q524",
+      "name": "Mount Vesuvius",
+      "type": "Viewpoint / high point",
+      "note": "active stratovolcano in the Gulf of Naples, Italy",
+      "lat": 40.82261,
+      "lng": 14.42919,
+      "sitelinks": 134,
+      "photo": {
+        "file": "Il cratere del Vulcano - panoramio.jpg",
+        "credit": "pietro scerrato",
+        "user": null,
+        "license": "CC BY 3.0"
+      }
+    },
+    {
+      "qid": "Q583",
+      "name": "Mont Blanc",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain in the Alps",
+      "lat": 45.83278,
+      "lng": 6.865,
+      "sitelinks": 127,
+      "photo": {
+        "file": "Panorama of Mont Blanc du Tacul, Mont Maudit and Mont Blanc from Aiguille du Midi, Chamonix, Haute-Savoie.jpg",
+        "credit": "Christian David",
+        "user": "Espandero",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q16990",
+      "name": "Mount Etna",
+      "type": "Viewpoint / high point",
+      "note": "active stratovolcano on the east coast of Sicily, Italy",
+      "lat": 37.75083,
+      "lng": 14.99322,
+      "sitelinks": 124,
+      "photo": {
+        "file": "View of Mount Etna from Reggio Calabria - Italy - 10 Feb. 2017 - (1).jpg",
+        "credit": "Jacopo Werther",
+        "user": "Jacopo Werther",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1374",
+      "name": "Matterhorn",
+      "type": "Viewpoint / high point",
+      "note": "mountain in the Pennine Alps on the border between Switzerland and Italy",
+      "lat": 45.97639,
+      "lng": 7.65861,
+      "sitelinks": 92,
+      "photo": {
+        "file": "Cervino cloud.jpg",
+        "credit": "Gianluca Miscione",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q486382",
+      "name": "Castel Sant'Angelo",
+      "type": "Heritage site",
+      "note": "castle and museum in Rome, formerly the imperial mausoleum of the emperor Hadrian and subsequent Roman emperors",
+      "lat": 41.90304,
+      "lng": 12.46631,
+      "sitelinks": 58,
+      "photo": {
+        "file": "Castel Sant'Angelo at Night.jpg",
+        "credit": "Livioandronico2013",
+        "user": "Livioandronico2013",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q23354",
+      "name": "Sforza Castle",
+      "type": "Heritage site",
+      "note": "castle in Milan, Italy",
+      "lat": 45.471,
+      "lng": 9.17969,
+      "sitelinks": 44,
+      "photo": {
+        "file": "20110725 Castello Sforzesco Milan 5557.jpg",
+        "credit": "Jakub Hałun",
+        "user": "Jakubhal",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q165069",
+      "name": "Miramare Castle",
+      "type": "Heritage site",
+      "note": "castle in Trieste, Italy",
+      "lat": 45.70245,
+      "lng": 13.71232,
+      "sitelinks": 38,
+      "photo": {
+        "file": "Castello di Miramare (Trieste) (7).jpg",
+        "credit": "Michał Bulsa",
+        "user": "Lahcim n",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q645041",
+      "name": "Castel dell'Ovo",
+      "type": "Heritage site",
+      "note": "castle in Naples, Italy",
+      "lat": 40.82832,
+      "lng": 14.24766,
+      "sitelinks": 27,
+      "photo": {
+        "file": "Castel dell' Ovo.jpg",
+        "credit": "PaestumPaestum",
+        "user": "PaestumPaestum",
+        "license": "CC BY-SA 4.0"
+      }
+    }
+  ]
+}

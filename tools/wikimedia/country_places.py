@@ -36,11 +36,26 @@ import json
 import pathlib
 import sys
 import time
+import re
 import urllib.parse
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from commons_photo import FREE_LICENCES, credit_from, licence_of  # noqa: E402
+from divisions.config import COUNTRY_CONFIG  # noqa: E402
+
+# Wikidata returns the Q-id as the label when an item has no English one. That
+# is not a name, and "Q130018" on a map pin is worse than no pin.
+QID_AS_LABEL = re.compile(r"^Q\d+$")
+
+# Reviewed exclusions: inside the country's box, correctly typed, correctly
+# licensed — and still wrong for this atlas. A bbox cannot judge these, and the
+# judgement should survive a re-harvest rather than be made again every time,
+# so it lives here with its reason attached.
+EXCLUDE = {
+    "Q152872": "Ball's Pyramid — a sea stack 20 km off Lord Howe Island. No road, no rider.",
+}
 
 UA = "CyclingCommons-places/1.0 (https://cyclingcommons.org; info@cyclingcommons.org)"
 SPARQL = "https://query.wikidata.org/sparql"
@@ -83,10 +98,50 @@ ORDER BY DESC(?links) LIMIT %(limit)d
 """
 
 
-def _get(url: str) -> dict:
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=90) as resp:
-        return json.load(resp)
+def in_country_box(cc: str, lat: float, lng: float) -> bool:
+    """Inside the area this country was actually onboarded for.
+
+    Wikidata's `country` property is sovereignty, not geography, and the
+    difference is not academic: it puts Île Amsterdam and Île Saint-Paul (the
+    southern Indian Ocean) under France, Inaccessible Island and the Soufrière
+    Hills under the UK, and Saba, Sint Eustatius and Bonaire under the
+    Netherlands — whose divisions config deliberately excludes the Caribbean
+    municipalities. Seeding those puts scenic pins thousands of kilometres from
+    any road anybody here rides, in regions that do not exist.
+
+    The bbox is the SAME one the region onboarding used
+    (tools/divisions/config.py), so "somewhere we have regions for" means one
+    thing across both tools. A country with no config falls through as allowed —
+    it has no onboarded area to be outside of.
+    """
+    box = COUNTRY_CONFIG.get(cc.upper(), {}).get("bbox")
+    if not box:
+        return True
+    west, south, east, north = box
+    return south <= lat <= north and west <= lng <= east
+
+
+def _get(url: str, attempts: int = 4) -> dict:
+    """GET with backoff.
+
+    The SPARQL endpoint rate-limits, and a swallowed failure here is worse than
+    a crash: the layer simply fills with whatever the NEXT class returned, so a
+    throttled mountain query turns Australia's scenic pins from Uluru and
+    Kosciuszko into four waterfalls — and the artifact looks perfectly fine.
+    That happened once; hence retries, and hence a failed class being reported
+    at the end rather than only warned about mid-run.
+    """
+    last: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return json.load(resp)
+        except Exception as exc:  # noqa: BLE001 — retried below
+            last = exc
+            if attempt < attempts - 1:
+                time.sleep(5 * (attempt + 1))
+    raise RuntimeError(f"gave up after {attempts} attempts: {last}")
 
 
 def query(cls: str, country_qid: str, limit: int) -> list[dict]:
@@ -107,14 +162,15 @@ def harvest(cc: str, per_layer: int = 6) -> dict:
         for cls, type_label in classes.items():
             try:
                 rows = query(cls, qid, per_layer * 2)
-            except Exception as exc:  # noqa: BLE001 — one dead class is not fatal
-                print(f"  {cc} {layer}/{cls}: query failed ({exc})", file=sys.stderr)
+            except Exception as exc:  # noqa: BLE001 — recorded, not swallowed
+                print(f"  !! {cc} {layer}/{cls}: query failed ({exc})", file=sys.stderr)
+                out.setdefault("failed", []).append(f"{layer}/{cls}")
                 continue
             for b in rows:
                 if len(out[layer]) >= per_layer:
                     break
                 q = b["item"]["value"].rsplit("/", 1)[-1]
-                if q in seen:
+                if q in seen or q in EXCLUDE:
                     continue
                 filename = urllib.parse.unquote(
                     b["image"]["value"].rsplit("/", 1)[-1]).replace("_", " ")
@@ -127,11 +183,16 @@ def harvest(cc: str, per_layer: int = 6) -> dict:
                 credit, _ = credit_from(meta)
                 if credit is None:
                     continue     # unattributable share-alike is unusable
-                seen.add(q)
+                label = b["itemLabel"]["value"]
+                if QID_AS_LABEL.match(label):
+                    continue
                 lng, lat = b["coord"]["value"].removeprefix("Point(").removesuffix(")").split()
+                if not in_country_box(cc, float(lat), float(lng)):
+                    continue
+                seen.add(q)
                 out[layer].append({
                     "qid": q,
-                    "name": b["itemLabel"]["value"],
+                    "name": label,
                     "type": type_label,
                     "note": b.get("itemDescription", {}).get("value", ""),
                     "lat": round(float(lat), 5),
@@ -171,7 +232,8 @@ def main() -> int:
         data = harvest(cc, args.per_layer)
         path = outdir / f"places-{cc.lower()}.json"
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        print(f"{cc}: {len(data['scenic'])} scenic, {len(data['history'])} historical → {path}",
+        warn = f"  !! {len(data['failed'])} class(es) FAILED — rerun {cc}" if data.get("failed") else ""
+        print(f"{cc}: {len(data['scenic'])} scenic, {len(data['history'])} historical → {path}{warn}",
               file=sys.stderr)
         for entry in data["scenic"] + data["history"]:
             print(f"    {entry['name']} — {entry['type']} — {entry['photo']['license']}",

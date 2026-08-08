@@ -1,0 +1,127 @@
+{
+  "country": "JP",
+  "scenic": [
+    {
+      "qid": "Q39231",
+      "name": "Mount Fuji",
+      "type": "Viewpoint / high point",
+      "note": "volcano in Yamanashi and Shizuoka Prefectures, Japan",
+      "lat": 35.36056,
+      "lng": 138.7275,
+      "sitelinks": 146,
+      "photo": {
+        "file": "Kodaki fuji frm shojinko refurb.jpg",
+        "credit": "名古屋太郎, (edited by Hannes_24)",
+        "user": "Hannes 24",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q242730",
+      "name": "Mount Asama",
+      "type": "Viewpoint / high point",
+      "note": "volcano on the border of Gunma and Nagano prefectures in Japan",
+      "lat": 36.4,
+      "lng": 138.51667,
+      "sitelinks": 52,
+      "photo": {
+        "file": "Mt.Asama (From saku city).jpg",
+        "credit": "Yu.nakai",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q200239",
+      "name": "Lake Biwa",
+      "type": "Viewpoint / high point",
+      "note": "freshwater lake in Japan",
+      "lat": 35.255,
+      "lng": 136.08,
+      "sitelinks": 66,
+      "photo": {
+        "file": "Top view of Lake Biwa.jpg",
+        "credit": "Lonely Planet Japan",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1077984",
+      "name": "Lake Kasumigaura",
+      "type": "Viewpoint / high point",
+      "note": "lake in Ibaraki Prefecture, Kantō region, Japan",
+      "lat": 36.04028,
+      "lng": 140.39417,
+      "sitelinks": 31,
+      "photo": {
+        "file": "Kasumigaura landsat.jpg",
+        "credit": "Tdk at Japanese Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q188754",
+      "name": "Himeji Castle",
+      "type": "Heritage site",
+      "note": "Japanese castle complex",
+      "lat": 34.83944,
+      "lng": 134.69361,
+      "sitelinks": 74,
+      "photo": {
+        "file": "Himeji castle in may 2015.jpg",
+        "credit": "Nikos Kitsakis",
+        "user": "Nubero",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q648629",
+      "name": "Nagoya Castle",
+      "type": "Heritage site",
+      "note": "Japanese castle located in Nagoya, central Japan",
+      "lat": 35.18556,
+      "lng": 136.89861,
+      "sitelinks": 40,
+      "photo": {
+        "file": "Nagoya Castle(Larger).jpg",
+        "credit": "Base64",
+        "user": "Base64",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q613355",
+      "name": "Kumamoto Castle",
+      "type": "Heritage site",
+      "note": "castle",
+      "lat": 32.80606,
+      "lng": 130.70597,
+      "sitelinks": 38,
+      "photo": {
+        "file": "Kumamotojo.jpg",
+        "credit": "Birdman at Japanese Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q536925",
+      "name": "Tōkei-ji Temple",
+      "type": "Religious site",
+      "note": "building in Kamakura, Kanagawa Prefecture, Japan",
+      "lat": 35.33524,
+      "lng": 139.54564,
+      "sitelinks": 9,
+      "photo": {
+        "file": "Tōkei-ji, Main Hall 001.jpg",
+        "credit": "Naokijp",
+        "user": "Naokijp",
+        "license": "CC BY-SA 4.0"
+      }
+    }
+  ]
+}
