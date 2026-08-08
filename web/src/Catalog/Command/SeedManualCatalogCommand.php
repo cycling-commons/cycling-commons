@@ -440,6 +440,7 @@ final class SeedManualCatalogCommand extends Command
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this->addOption(
