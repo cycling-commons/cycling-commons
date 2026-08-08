@@ -49,6 +49,36 @@ country onboards later, demand-driven.
   guess silently resolves to nothing for the new country's visitors otherwise,
   and no test catches the gap.
 
+## Onboarded so far
+
+| Date | Country | Level | Rows | Notes |
+|---|---|---|---|---|
+| — | BE | L4 régions | 3 | first |
+| 2026-07-22 | NL | L4 provincies | 12 | `limburg-nl` — BE also has a Limburg |
+| 2026-07-22 | DE | L4 Bundesländer | 16 | first continental-scale run |
+| — | LU | L2 country | 1 | operating subtype is `country` |
+| 2026-08-06 | FR / CH / GB / IT / AU / JP | régions / cantons / nations / regioni / states / prefectures | 13 / 26 / 4 / 20 / 8 / 47 | |
+| 2026-08-06 | US | L4, `--only` | 2 | California + Colorado; first state-level run |
+| 2026-08-08 | **ES** | L4 comunidades autónomas | **19** | ISO 3166-2:ES exactly |
+
+**Spain (2026-08-08).** The 17 comunidades autónomas plus Ceuta and Melilla.
+`Plazas de Soberanía` is deliberately not seeded — 1 km², no ISO 3166-2 code, so
+no stable identity to upsert on. Slugs are native forms (the German precedent),
+with `la-rioja-es` carrying a suffix because Argentina's AR-F is also La Rioja:
+AR is not onboarded, but a slug is permanent identity and the `limburg-nl`
+precedent says act on the collision warning when it is raised, not later.
+
+Eight of the scaffolder's slugs were rewritten by hand. It builds them from
+Overture's dual-language labels and inverted-comma sort forms, which yields
+`catalunya-cataluna`, `galicia-galicia`, `illes-balears-islas-baleares`,
+`murcia-region-de`, `madrid-comunidad-de`, `navarra-comunidad-foral-de`,
+`asturias-principado-de` and `valenciana-comunidad` — none of them a name
+anyone uses. This is what review step 3 is for.
+
+Spain also needed three timezones in `TZ_COUNTRY` rather than one:
+`Europe/Madrid`, `Atlantic/Canary` (the Canaries run an hour behind) and
+`Africa/Ceuta`.
+
 ## Operational vs infrastructure rows
 
 Every onboarded country now carries at least two `region` rows for the same

@@ -59,6 +59,9 @@ COUNTRY_BY_REGION = {
     # ancestor, so an unonboarded state's extract still hard-fails resolve_country
     # instead of silently harvesting as US.
     "north-america/us/california": "US", "north-america/us/colorado": "US",
+    # 2026-08-08 rollout. The Geofabrik extract covers the mainland, the
+    # Balearics and the Canaries — the same three areas the ES bbox spans.
+    "europe/spain": "ES",
 }
 
 # Per-session resource budget applied to the harvest connection at startup.
