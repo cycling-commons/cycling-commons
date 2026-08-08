@@ -1,0 +1,55 @@
+web/assets/map/lightbox.js
+  s_40a002d02fdfd2::t_3b189fc8467166 14,71-75,78
+web/src/Command/RecomputeClimbProfilesCommand.php
+  s_40a002d02fdfd2::t_f4ddf2f38981b3 114-117
+web/translations/messages.fr.yaml
+  s_40a002d02fdfd2::t_6645e7fb83aff8 1543-1545
+web/src/Controller/MapController.php
+  s_40a002d02fdfd2::t_3b189fc8467166 224-225
+web/assets/map/climb-profile.js
+  s_40a002d02fdfd2::t_e03dfe83dbdc98 65-67
+  s_40a002d02fdfd2::t_e19e661d2851d4 62-64
+  s_40a002d02fdfd2::t_f2a035a8ab3538 68-70
+  s_40a002d02fdfd2::t_9a3976f6a7fda0 1-61,71-158
+web/templates/map/index.html.twig
+  s_40a002d02fdfd2::t_3b189fc8467166 298-310
+web/translations/messages.en.yaml
+  s_40a002d02fdfd2::t_6645e7fb83aff8 1859-1861
+web/translations/messages.es.yaml
+  s_40a002d02fdfd2::t_6645e7fb83aff8 1872-1874
+web/translations/messages.nl.yaml
+  s_40a002d02fdfd2::t_6645e7fb83aff8 1543-1545
+web/translations/messages.de.yaml
+  s_40a002d02fdfd2::t_6645e7fb83aff8 1546-1548
+web/src/Elevation/ClimbProfiler.php
+  s_40a002d02fdfd2::t_c4309242befbfa 181-189
+  s_40a002d02fdfd2::t_f4ddf2f38981b3 124-125
+web/assets/map/drawer.js
+  s_40a002d02fdfd2::t_924cff49b33db3 783
+  s_40a002d02fdfd2::t_3b189fc8467166 21,775-779,781-782,838-843
+web/assets/styles/map.css
+  s_40a002d02fdfd2::t_3b189fc8467166 607-630
+docs/specs/climb-elevation.md
+  s_40a002d02fdfd2::t_4e067d626b3cd6 912-931
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "0db1f23648449d3e8135b25a39bd3550810ce328",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_40a002d02fdfd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f434c5a5-23e5-4d99-bf56-2c92d9db49b0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
