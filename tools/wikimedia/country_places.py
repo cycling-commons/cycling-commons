@@ -54,7 +54,11 @@ QID_AS_LABEL = re.compile(r"^Q\d+$")
 # judgement should survive a re-harvest rather than be made again every time,
 # so it lives here with its reason attached.
 EXCLUDE = {
-    "Q152872": "Ball's Pyramid — a sea stack 20 km off Lord Howe Island. No road, no rider.",
+    # It IS land — a 562 m volcanic stack, and the tallest in the world. It is
+    # also 20 km of open ocean from the nearest road, uninhabited, and landing
+    # on it needs a permit. Excluded for being unreachable by bike, not for
+    # being wet.
+    "Q152872": "Ball's Pyramid — 20 km of open ocean from the nearest road; landing needs a permit.",
 }
 
 UA = "CyclingCommons-places/1.0 (https://cyclingcommons.org; info@cyclingcommons.org)"

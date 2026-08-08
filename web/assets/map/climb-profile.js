@@ -24,11 +24,11 @@
 import { escPend, gradColor, txtOn } from './util.js';
 import { D } from './i18n.js';
 
-/* Bins narrower than this get no number printed in them. Below roughly 22 px a
-   two-digit figure either overflows its column or has to shrink to a size
-   nobody can read, and a chart of unreadable numbers is worse than a chart of
-   none — the colour still carries the gradient. */
-const MIN_PX_FOR_LABEL = 22;
+/* Bins narrower than this get no figure printed in them. Below roughly 30 px a
+   two-digit gradient plus its % sign either overflows its column or has to
+   shrink to a size nobody can read, and a chart of unreadable numbers is worse
+   than a chart of none — the colour still carries the gradient. */
+const MIN_PX_FOR_LABEL = 30;
 
 export function canProfile(f){
   return !!(f && Array.isArray(f.grad) && f.grad.length);
@@ -93,8 +93,11 @@ export function profileSvg(f){
     const fill=gradColor(g);
     const band = `<rect x="${x0.toFixed(1)}" y="${base.toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${BAND}"
         fill="${fill}" stroke="#fff" stroke-width="0.75"/>`;
+    /* The unit travels with the figure. Without it the band is a row of bare
+       numbers that could be gradients, distances or bin indexes, and the only
+       thing saying otherwise is a caption at the bottom of the chart. */
     const label = showNums
-      ? `<text x="${((x0+x1)/2).toFixed(1)}" y="${(base+BAND/2+4).toFixed(1)}" class="cc-cp-num" fill="${txtOn(fill)}">${g}</text>`
+      ? `<text x="${((x0+x1)/2).toFixed(1)}" y="${(base+BAND/2+4).toFixed(1)}" class="cc-cp-num" fill="${txtOn(fill)}">${g}%</text>`
       : '';
     return `<polygon points="${x0.toFixed(1)},${base.toFixed(1)} ${x0.toFixed(1)},${y0.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)} ${x1.toFixed(1)},${base.toFixed(1)}"
         fill="${fill}" fill-opacity="0.9" stroke="#fff" stroke-width="0.75"><title>${(i*binM/1000).toFixed(1)}–${((i+1)*binM/1000).toFixed(1)} km · ${g}%</title></polygon>${band}${label}`;
@@ -110,6 +113,11 @@ export function profileSvg(f){
     ticks.push(`<line x1="${px.toFixed(1)}" y1="${axisY}" x2="${px.toFixed(1)}" y2="${axisY+6}" class="cc-cp-tick"/>
       <text x="${px.toFixed(1)}" y="${axisY+22}" class="cc-cp-axis" text-anchor="middle">${k%1?k.toFixed(1):k}</text>`);
   }
+  /* The unit once, at the end of the ruler, rather than repeated on every tick
+     — "3 km 6 km 9 km" is noise, and a bare row of numbers is ambiguous. The
+     app is metric throughout (there is no imperial preference on User), so this
+     is km, not a converted value. */
+  ticks.push(`<text x="${(padL+plotW+10).toFixed(1)}" y="${axisY+22}" class="cc-cp-axis" text-anchor="start">km</text>`);
 
   /* The two altitudes, which is the pair `gain` alone cannot give you. Rows
      measured before footEle/summitEle existed simply do not get them — an
