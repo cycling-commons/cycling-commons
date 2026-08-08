@@ -1,0 +1,127 @@
+{
+  "country": "CH",
+  "scenic": [
+    {
+      "qid": "Q1374",
+      "name": "Matterhorn",
+      "type": "Viewpoint / high point",
+      "note": "mountain in the Pennine Alps on the border between Switzerland and Italy",
+      "lat": 45.97639,
+      "lng": 7.65861,
+      "sitelinks": 92,
+      "photo": {
+        "file": "Cervino cloud.jpg",
+        "credit": "Gianluca Miscione",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q4425",
+      "name": "Eiger",
+      "type": "Viewpoint / high point",
+      "note": "mountain in the Bernese Alps, Switzerland",
+      "lat": 46.57761,
+      "lng": 8.00529,
+      "sitelinks": 58,
+      "photo": {
+        "file": "Eiger Nordwand - panoramio (1).jpg",
+        "credit": "qwesy qwesy",
+        "user": null,
+        "license": "CC BY 3.0"
+      }
+    },
+    {
+      "qid": "Q15312",
+      "name": "Jungfrau",
+      "type": "Viewpoint / high point",
+      "note": "one of the main summits of the Bernese Alps in Switzerland (4,158m / 13,642 ft)",
+      "lat": 46.53694,
+      "lng": 7.9625,
+      "sitelinks": 56,
+      "photo": {
+        "file": "Jungfrau.jpg",
+        "credit": "Roland Zumbühl, Arlesheim",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q3403",
+      "name": "Dufourspitze",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain of Switzerland",
+      "lat": 45.93692,
+      "lng": 7.86676,
+      "sitelinks": 50,
+      "photo": {
+        "file": "MonteRosaWestseite gesehenVomGornergrat.JPG",
+        "credit": "TobiasBender",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q372647",
+      "name": "Chillon Castle",
+      "type": "Heritage site",
+      "note": "moated castle in Veytaux in the canton of Vaud, Switzerland",
+      "lat": 46.41417,
+      "lng": 6.9275,
+      "sitelinks": 48,
+      "photo": {
+        "file": "Castle of Chillon N.jpg",
+        "credit": "Zacharie Grossen",
+        "user": "Zacharie Grossen",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q317096",
+      "name": "Habsburg Castle",
+      "type": "Heritage site",
+      "note": "castle on the Wülpelsberg in Habsburg in the canton of Aargau, Switzerland",
+      "lat": 47.46254,
+      "lng": 8.18073,
+      "sitelinks": 36,
+      "photo": {
+        "file": "Habsburg-Schloss.jpg",
+        "credit": "Roland Zumbuehl",
+        "user": "Roland Zumbuehl",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q688261",
+      "name": "Valère Castle",
+      "type": "Heritage site",
+      "note": "castle in Sion in the canton of Valais, Switzerland",
+      "lat": 46.23389,
+      "lng": 7.36444,
+      "sitelinks": 21,
+      "photo": {
+        "file": "Château de Valère from Tourbillon.jpg",
+        "credit": "Christian David",
+        "user": "Espandero",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q573643",
+      "name": "Kyburg Castle",
+      "type": "Heritage site",
+      "note": "castle in Switzerland",
+      "lat": 47.45838,
+      "lng": 8.74338,
+      "sitelinks": 17,
+      "photo": {
+        "file": "Kyburg - Schloss 2010-11-01 13-25-20 ShiftN.jpg",
+        "credit": "Roland zh",
+        "user": "Roland zh",
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ]
+}

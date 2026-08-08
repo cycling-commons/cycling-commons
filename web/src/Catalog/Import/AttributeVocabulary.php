@@ -44,7 +44,12 @@ final class AttributeVocabulary
             // so the caption is built from the measurement rather than from a
             // number typed into four translation catalogues — which is exactly
             // how they came to read "steepest 100m" over a 250 m window.
-            'steepWindowM'],
+            'steepWindowM',
+            // The two ends above sea level (climb-elevation.md §4b). Same
+            // family as length/gain — measured by ClimbProfiler, typed by
+            // nobody, and they must survive an export/import round trip or a
+            // re-imported climb loses the labels on its profile chart.
+            'footEle', 'summitEle'],
         // serviceKind (App\Catalog\ServiceKind: shop/station/pump) - D/bike-services only.
         // Not a registry field: it's harvester/import-stamped (tools/wallonia's
         // service_kind_by_label + ImportCatalogCommand's legacy-label fallback),

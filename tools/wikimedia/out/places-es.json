@@ -1,0 +1,127 @@
+{
+  "country": "ES",
+  "scenic": [
+    {
+      "qid": "Q209528",
+      "name": "Mulhacén",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain of the Sierra Nevada in Spain",
+      "lat": 37.05333,
+      "lng": -3.31139,
+      "sitelinks": 52,
+      "photo": {
+        "file": "Mulhacen Winter.jpg",
+        "credit": "Nilsf at German Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q732115",
+      "name": "Montserrat",
+      "type": "Viewpoint / high point",
+      "note": "multi-peaked mountain in Catalonia, Spain",
+      "lat": 41.60538,
+      "lng": 1.8115,
+      "sitelinks": 46,
+      "photo": {
+        "file": "Montserrat - 100.jpg",
+        "credit": "MARIA ROSA FERRE ✿",
+        "user": null,
+        "license": "CC BY-SA 2.0"
+      }
+    },
+    {
+      "qid": "Q215662",
+      "name": "Monte Perdido",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Huesca, next to the border with France",
+      "lat": 42.67389,
+      "lng": 0.03333,
+      "sitelinks": 42,
+      "photo": {
+        "file": "Cirque de Soaso et massif du Mont-Perdu.jpg",
+        "credit": "Patrick Rouzet",
+        "user": "Prouzet",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1143757",
+      "name": "Cumbre Vieja",
+      "type": "Viewpoint / high point",
+      "note": "volcano in La Palma, Spain",
+      "lat": 28.56667,
+      "lng": -17.83333,
+      "sitelinks": 34,
+      "photo": {
+        "file": "Plantation banana La Palma.jpg",
+        "credit": "Lviatour",
+        "user": "Lviatour",
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q498261",
+      "name": "Reales Alcázares",
+      "type": "Heritage site",
+      "note": "royal palace in Seville, Spain",
+      "lat": 37.38443,
+      "lng": -5.99119,
+      "sitelinks": 46,
+      "photo": {
+        "file": "Patio de las doncellas.jpg",
+        "credit": "Cat from Sevilla, Spain",
+        "user": null,
+        "license": "CC BY 2.0"
+      }
+    },
+    {
+      "qid": "Q557337",
+      "name": "Royal Alcázar of Segovia",
+      "type": "Heritage site",
+      "note": "castle and museum of the Old City of Segovia (Spain), UNESCO World Heritage Site",
+      "lat": 40.9525,
+      "lng": -4.1325,
+      "sitelinks": 37,
+      "photo": {
+        "file": "Panorámica Otoño Alcázar de Segovia.jpg",
+        "credit": "Ángel Sanz de Andrés",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1354033",
+      "name": "Aljafería",
+      "type": "Heritage site",
+      "note": "cultural property in Zaragoza, Spain",
+      "lat": 41.65649,
+      "lng": -0.89708,
+      "sitelinks": 32,
+      "photo": {
+        "file": "Aljafería Palace.jpg",
+        "credit": "Fernando",
+        "user": "Fernando",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1049259",
+      "name": "Loarre Castle",
+      "type": "Heritage site",
+      "note": "romanesque castle in Spain",
+      "lat": 42.32556,
+      "lng": -0.61194,
+      "sitelinks": 29,
+      "photo": {
+        "file": "Castillo de Loarre 2.jpg",
+        "credit": "Josue Mendivil",
+        "user": null,
+        "license": "CC BY-SA 2.0"
+      }
+    }
+  ]
+}

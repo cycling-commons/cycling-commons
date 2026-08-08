@@ -1,0 +1,127 @@
+{
+  "country": "DE",
+  "scenic": [
+    {
+      "qid": "Q3375",
+      "name": "Zugspitze",
+      "type": "Viewpoint / high point",
+      "note": "highest peak of the Wetterstein Mountains (Eastern Alps)",
+      "lat": 47.42122,
+      "lng": 10.98631,
+      "sitelinks": 75,
+      "photo": {
+        "file": "Zugspitzmassiv-von-Almkopf-2024.jpg",
+        "credit": "Tuxyso",
+        "user": "Tuxyso",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q4168",
+      "name": "Loreley",
+      "type": "Viewpoint / high point",
+      "note": "rock on the eastern bank of the River Rhine in Germany",
+      "lat": 50.13944,
+      "lng": 7.72889,
+      "sitelinks": 47,
+      "photo": {
+        "file": "Loreley 2025.jpg",
+        "credit": "Jörg Braukmann",
+        "user": "Milseburg",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q155721",
+      "name": "Brocken",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain of the Harz Mountains in Saxony-Anhalt, Germany",
+      "lat": 51.79913,
+      "lng": 10.61564,
+      "sitelinks": 41,
+      "photo": {
+        "file": "Brocken-Gipfelbereich.jpg",
+        "credit": "Rosa-Maria Rinkl",
+        "user": "Rosa-Maria Rinkl",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q316401",
+      "name": "Feldberg",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain in the Black Forest, Baden-Württemberg, Germany",
+      "lat": 47.87389,
+      "lng": 8.00391,
+      "sitelinks": 38,
+      "photo": {
+        "file": "Feldberg vom Schauinsland.jpg",
+        "credit": "Jörg Braukmann",
+        "user": "Milseburg",
+        "license": "CC BY-SA 4.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q156457",
+      "name": "Hohenzollern Castle",
+      "type": "Heritage site",
+      "note": "ancestral seat of the imperial House of Hohenzollern in the Swabian Alps of central Baden-Württemberg, Germany",
+      "lat": 48.32356,
+      "lng": 8.9674,
+      "sitelinks": 46,
+      "photo": {
+        "file": "Burg Hohenzollern ak.jpg",
+        "credit": "A. Kniesel (= User:-donald-), Lauffen",
+        "user": "-donald-",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q153426",
+      "name": "Eltz Castle",
+      "type": "Heritage site",
+      "note": "Castle in Germany",
+      "lat": 50.205,
+      "lng": 7.33667,
+      "sitelinks": 40,
+      "photo": {
+        "file": "Burg Eltz am frühen Morgen.jpg",
+        "credit": "Johannes Dörrstock",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q327265",
+      "name": "Heidelberg Castle",
+      "type": "Heritage site",
+      "note": "castle in Germany",
+      "lat": 49.41056,
+      "lng": 8.71583,
+      "sitelinks": 40,
+      "photo": {
+        "file": "Heidelberg-Schloß.JPG",
+        "credit": "Pumuckel42 (Reinhard Wolf) at de:Wikipedia",
+        "user": "Pumuckel42",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q157886",
+      "name": "Maulbronn Monastery",
+      "type": "Religious site",
+      "note": "monastery in Germany",
+      "lat": 49.0011,
+      "lng": 8.8129,
+      "sitelinks": 45,
+      "photo": {
+        "file": "Kloster Maulbronn 2009.jpg",
+        "credit": "Elke Wetzig (Elya)",
+        "user": "Elya",
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ]
+}

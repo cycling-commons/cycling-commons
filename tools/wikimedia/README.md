@@ -61,3 +61,45 @@ Netherlands.
 about which junction the pass road leaves the valley at, and getting it wrong is
 the defect already logged in docs/TODO.md against the climbs we have. Treat this
 as research for a human building a seed list, not as an importer.
+
+## `country_places.py` — scenic + historical places per country
+
+```bash
+python3 tools/wikimedia/country_places.py --country ES --per-layer 4
+python3 tools/wikimedia/country_places.py --all
+```
+
+Harvests notable viewpoints (layer **I**) and heritage sites (layer **J**) from
+Wikidata, verifies every photo against the same licence bar `commons_photo.py`
+sets, and writes a **reviewable** `out/places-<cc>.json`. The Symfony side
+(`app:catalog:seed-wikidata <dir>`) imports that artifact, so what ships is a
+list a human read, not whatever the API returned the minute the seed ran.
+
+Selection is by sitelink count, which measures **fame, not quality and not
+whether a road goes there**. Review the file. A place whose photo has no stated
+author is dropped rather than shipped uncredited.
+
+## `climb_foot.py` — where a climb starts, from its summit and its length
+
+```bash
+python3 tools/wikimedia/climb_foot.py --summit 50.3726,5.9437 --length-km 2.3 --both
+```
+
+Closes the gap that stopped `climb_candidates.py` being an importer. A foot is
+not unknown, it is *implied*: follow the road down from the col for the
+published length and that is where the climb begins. Overpass supplies the
+roads, the walk keeps to the straightest descending branch at junctions, and
+Valhalla gives the drop so a wrong answer is visible.
+
+Validated against Côte de Stockeu, whose foot we already know: derived
+50.39116,5.93722 against a true 50.39147,5.93248 — **338 m apart on a 2.3 km
+climb**, from geometry alone.
+
+`--both` reports every side of the pass with its drop and average gradient,
+because **which side is still a human's call** — Furka from Gletsch and Furka
+from Realp share a summit and are different climbs. The reported average
+gradient is the check: if it does not match the published figure, the walk went
+down the wrong side.
+
+Needs Valhalla for the elevation half (`make up-routing`); without it the walk
+still works and honestly reports "no elevation" rather than guessing.

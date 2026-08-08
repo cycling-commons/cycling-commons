@@ -257,4 +257,5 @@ coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → Po
 		-e COVERAGE_PUBLIC_BASE_URL=http://localhost:9100/cc-maps \
 		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
 		$(if $(pbf),-e COVERAGE_PBF_PATH=$(pbf)) \
+		$(if $(timeout),-e COVERAGE_STATEMENT_TIMEOUT=$(timeout)) \
 		pipeline python -m coverage.run

@@ -1,0 +1,127 @@
+{
+  "country": "BE",
+  "scenic": [
+    {
+      "qid": "Q322824",
+      "name": "Signal de Botrange",
+      "type": "Viewpoint / high point",
+      "note": "mountain",
+      "lat": 50.50167,
+      "lng": 6.09306,
+      "sitelinks": 40,
+      "photo": {
+        "file": "Signal de Botrange - panoramio.jpg",
+        "credit": "LucT",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q2183673",
+      "name": "Baraque de Fraiture",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Belgium",
+      "lat": 50.24944,
+      "lng": 5.73889,
+      "sitelinks": 15,
+      "photo": {
+        "file": "Skipiste Baraque Fraiture.JPG",
+        "credit": "Bimko",
+        "user": "Bimko",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q165395",
+      "name": "Dam of the Vesdre",
+      "type": "Viewpoint / high point",
+      "note": "dam",
+      "lat": 50.61667,
+      "lng": 6.09222,
+      "sitelinks": 12,
+      "photo": {
+        "file": "Eupen002.jpg",
+        "credit": "Frinck51, Private collection",
+        "user": null,
+        "license": "CC BY 2.0"
+      }
+    },
+    {
+      "qid": "Q320702",
+      "name": "Lake Robertville",
+      "type": "Viewpoint / high point",
+      "note": "lake in Waimes, Wallonia, Belgium",
+      "lat": 50.45,
+      "lng": 6.11361,
+      "sitelinks": 11,
+      "photo": {
+        "file": "Lac de Robertville , Pont Haelen.jpg",
+        "credit": "G. Friedrich",
+        "user": "Duhon",
+        "license": "CC BY 3.0"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q1543972",
+      "name": "Gravensteen",
+      "type": "Heritage site",
+      "note": "museum",
+      "lat": 51.05722,
+      "lng": 3.72056,
+      "sitelinks": 22,
+      "photo": {
+        "file": "Gravensteengent22042008.JPG",
+        "credit": "Paul Hermans",
+        "user": "Paul Hermans",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1014126",
+      "name": "Het Steen",
+      "type": "Heritage site",
+      "note": "fortress in Antwerp, Belgium",
+      "lat": 51.22278,
+      "lng": 4.3975,
+      "sitelinks": 18,
+      "photo": {
+        "file": "BEL Antwerpen, Het Steen 005.jpg",
+        "credit": "-wuppertaler",
+        "user": "-wuppertaler",
+        "license": "CC BY 4.0"
+      }
+    },
+    {
+      "qid": "Q567525",
+      "name": "Bouillon Castle",
+      "type": "Heritage site",
+      "note": "castle in Wallonia",
+      "lat": 49.7932,
+      "lng": 5.0662,
+      "sitelinks": 16,
+      "photo": {
+        "file": "Bouillon-kasteel.JPG",
+        "credit": "ErikH at Dutch Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q791969",
+      "name": "Beersel Castle",
+      "type": "Heritage site",
+      "note": "castle in Beersel, Belgium",
+      "lat": 50.76569,
+      "lng": 4.3,
+      "sitelinks": 15,
+      "photo": {
+        "file": "BurgBeersel.jpg",
+        "credit": "Paul Hermans",
+        "user": "Paul Hermans",
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ]
+}

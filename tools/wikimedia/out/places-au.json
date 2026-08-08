@@ -1,0 +1,127 @@
+{
+  "country": "AU",
+  "scenic": [
+    {
+      "qid": "Q33910",
+      "name": "Uluru",
+      "type": "Viewpoint / high point",
+      "note": "large sandstone isolated mount in Australia",
+      "lat": -25.345,
+      "lng": 131.03611,
+      "sitelinks": 92,
+      "photo": {
+        "file": "Sunset at Uluru on July 30, 2005.jpg",
+        "credit": "Thomas Schoch",
+        "user": "Mosmas",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q178167",
+      "name": "Mount Kosciuszko",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain in the mainland of the Australian continent, located on New South Wales–Victoria border",
+      "lat": -36.45583,
+      "lng": 148.26351,
+      "sitelinks": 86,
+      "photo": {
+        "file": "Kosciuszko Townsend.jpg",
+        "credit": "John Wormell",
+        "user": "John Wormell",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q152872",
+      "name": "Ball's Pyramid",
+      "type": "Viewpoint / high point",
+      "note": "an island and an erosional remnant of a shield volcano southeast of Lord Howe Island in the Pacific",
+      "lat": -31.75417,
+      "lng": 159.25167,
+      "sitelinks": 49,
+      "photo": {
+        "file": "Balls Pyramid, Lord Howe Marine Park 1008.jpg",
+        "credit": "PotMart186",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q2114101",
+      "name": "Mawson Peak",
+      "type": "Viewpoint / high point",
+      "note": "volcano on Heard Island",
+      "lat": -53.10417,
+      "lng": 73.51694,
+      "sitelinks": 34,
+      "photo": {
+        "file": "Heard.jpg",
+        "credit": "NOAA",
+        "user": null,
+        "license": "Public domain"
+      }
+    }
+  ],
+  "history": [
+    {
+      "qid": "Q782783",
+      "name": "Australian War Memorial",
+      "type": "Monument",
+      "note": "national war memorial and museum in Canberra, Australia",
+      "lat": -35.28047,
+      "lng": 149.14906,
+      "sitelinks": 22,
+      "photo": {
+        "file": "AWM canberra 1.jpg",
+        "credit": "Capital photographer (talk)",
+        "user": "Capital photographer",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1369544",
+      "name": "Shrine of Remembrance",
+      "type": "Monument",
+      "note": "memorial located in Kings Domain on St Kilda Road, Melbourne, Australia",
+      "lat": -37.83056,
+      "lng": 144.97344,
+      "sitelinks": 16,
+      "photo": {
+        "file": "Shrine of Rememberence.jpg",
+        "credit": "Adam Carr at English Wikipedia",
+        "user": "Adam Carr",
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q844556",
+      "name": "Anzac Memorial",
+      "type": "Monument",
+      "note": "memorial and museum in Sydney, Australia",
+      "lat": -33.87572,
+      "lng": 151.21094,
+      "sitelinks": 15,
+      "photo": {
+        "file": "ANZAC Memorial Sydney Australia - June 2007.jpg",
+        "credit": "Digital fuel (talk)",
+        "user": "Digital fuel",
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q585241",
+      "name": "Archibald Fountain",
+      "type": "Monument",
+      "note": "fountain with sculptures in Hyde Park, Sydney",
+      "lat": -33.87099,
+      "lng": 151.21182,
+      "sitelinks": 11,
+      "photo": {
+        "file": "Archibald Fountain in Hyde Park, Sydney from The Powerhouse Museum.jpg",
+        "credit": "Tom Lennon Collection",
+        "user": null,
+        "license": "Public domain"
+      }
+    }
+  ]
+}
