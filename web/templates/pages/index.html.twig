@@ -32,7 +32,19 @@
   @media(max-width:760px){.nav-links a:not(.nav-cta){display:none}}
 
   /* ---------- HERO ---------- */
-  .hero{position:relative;min-height:100svh;display:flex;flex-direction:column;color:var(--paper);overflow:hidden;
+  /* The hero is one screenful MINUS THE NAV, not one screenful. `.topnav` is
+     sticky and sits in the flow above it, so a plain 100svh pushed the hero's
+     last ~90px past the fold — and what lives there is the discipline strip,
+     which is pinned to the hero's bottom. It could never be fully read without
+     scrolling, which is the opposite of what pinning it there was for
+     (owner-reported 2026-08-09).
+
+     --nav-h is measured and published by the script at the foot of this file,
+     because the nav's height is content-driven (brand, chip, wrapping) and any
+     number written here would be a second source of truth that drifts. The
+     5.5rem fallback is only what the pre-JS paint uses; it is deliberately
+     close to the measured value so the correction is invisible. */
+  .hero{position:relative;min-height:calc(100svh - var(--nav-h, 5.5rem));display:flex;flex-direction:column;color:var(--paper);overflow:hidden;
     background:radial-gradient(120% 90% at 75% 15%,#27513a 0%,var(--spruce) 38%,#0f1f16 80%,var(--ink) 100%)}
   .hero-contours{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
   .hero-contours path{fill:none;stroke:var(--ride-outer,var(--ochre));stroke-width:1.7;opacity:.85;transition:stroke .6s ease}
@@ -54,8 +66,13 @@
   @media(max-width:760px){.corner.tr{display:none}}
 
   .hero-inner{position:relative;z-index:10;padding-bottom:clamp(2.5rem,6vw,5rem);padding-top:clamp(2.5rem,5vw,4rem);width:100%}
-  .eyebrow{display:inline-flex;align-items:center;gap:.6rem;color:var(--trail);margin-bottom:1.4rem}
-  .eyebrow::before{content:"";width:13px;height:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23FF5A1F' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat;transform:translateY(-1px)}
+  /* flex-start, not center: the pin marks the START of the line, so on a narrow
+     screen where the eyebrow wraps to two it must stay level with the first
+     one. Centred, it floated into the gap between the lines and read as a
+     bullet for the whole block (owner-reported 2026-08-09). The nudge below
+     centres it optically inside that first line box. */
+  .eyebrow{display:inline-flex;align-items:flex-start;gap:.6rem;color:var(--trail);margin-bottom:1.4rem}
+  .eyebrow::before{content:"";width:13px;height:17px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130'%3E%3Cpath fill='%23FF5A1F' d='M50 8 C31 8 16 23 16 42 C16 68 50 124 50 124 C50 124 84 68 84 42 C84 23 69 8 50 8 Z'/%3E%3C/svg%3E") center/contain no-repeat;flex:none;transform:translateY(1px)}
   h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.7rem,6.4vw,6rem);line-height:1.02;letter-spacing:-.025em;max-width:15ch}
   h1 em{font-style:italic;color:var(--trail)}
   h1 .endp{margin-left:.07em}  /* kerning: upright period after the italic 'atlas' */
@@ -77,6 +94,36 @@
   .rv.in{opacity:1;transform:none}
   .rv[data-d="1"]{transition-delay:.08s}.rv[data-d="2"]{transition-delay:.16s}.rv[data-d="3"]{transition-delay:.24s}.rv[data-d="4"]{transition-delay:.32s}
 
+  /* A wide-but-SHORT laptop is the other way the strip fell off the screen.
+     Every clamp in the hero is driven by viewport WIDTH, so a 1440x900 screen
+     asks for the same 92px headline and 5rem paddings as a 1440x1271 one and
+     then has 370px less room to put them in — the hero outgrows its own
+     screenful and the strip goes back under the fold. Below ~1000px of height
+     the rhythm tightens instead of the hero growing. The svh terms make the
+     tightening proportional rather than a second set of fixed numbers. */
+  @media(max-height:1000px){
+    /* padding-bottom goes to 0 rather than shrinking: the strip below already
+       brings its own top padding, and while the hero HAS slack the auto margin
+       swallows this padding anyway — so it only ever costs height in exactly
+       the case we are trying to fix. */
+    .hero-inner{padding-top:clamp(1.1rem,3svh,2.8rem);padding-bottom:0}
+    .eyebrow{margin-bottom:clamp(.5rem,1.4svh,1.4rem)}
+    h1{font-size:clamp(2.4rem,min(6.4vw,7.8svh),5rem)}
+    .hero p.lede{margin:clamp(.7rem,1.7svh,1.6rem) 0 clamp(.9rem,2.1svh,2.2rem);font-size:clamp(1rem,1.5vw,1.2rem)}
+    .hero .cta-row{margin-top:clamp(.9rem,2.4svh,2rem)}
+    .hero .ticks{margin-top:clamp(.8rem,2.4svh,2.4rem)}
+    .disc{padding:clamp(.8rem,1.9svh,1.8rem) 0}
+  }
+  /* A 1366x768 laptop maximised leaves about 640px of viewport, which is the
+     shortest screen still worth fitting the whole hero into. The last thing in
+     the way there is the chip row wrapping to two: at this width the eleven
+     chips fit on one line if they give back a little padding. */
+  @media(max-height:700px){
+    .chip{padding:.3rem .65rem;font-size:.66rem}
+    .disc .chips{gap:.3rem}
+    .hero .ticks{margin-top:clamp(.6rem,1.8svh,1.6rem)}
+  }
+
   /* ---------- DISCIPLINE STRIP (pinned to hero bottom) ---------- */
   .disc{margin-top:auto;color:var(--paper);width:100%;position:relative;z-index:10;
     padding:clamp(1.4rem,3vw,2.4rem) 0}
@@ -84,7 +131,15 @@
   .disc .label{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;color:var(--glacier);flex:none;white-space:nowrap}
   .disc .chips{display:flex;flex-wrap:wrap;gap:.4rem;min-width:0}
   .chip{font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;padding:.4rem .85rem;border:1px solid rgba(239,230,212,.28);border-radius:40px;color:var(--paper);user-select:none;white-space:nowrap}
-  @media(max-width:640px){.disc .wrap{flex-wrap:wrap}}
+  /* On a phone the label takes a line of its own and eleven chips wrap to
+     three rows, which is the last ~17px that pushed the strip off a 844px
+     screen. The strip pays for its own extra rows rather than the headline
+     shrinking again. */
+  @media(max-width:640px){
+    .disc .wrap{flex-wrap:wrap;gap:.35rem .8rem}
+    .disc{padding:clamp(.6rem,1.3svh,1.2rem) 0}
+    .disc .chips{gap:.3rem}
+  }
 
   /* ---------- SECTIONS ---------- */
   section.pad{padding:clamp(4rem,9vw,8rem) 0;position:relative}
@@ -320,6 +375,21 @@
 {% endblock %}
 {% block body_scripts %}
 <script nonce="{{ csp_nonce() }}">
+  /* Publish the nav's real height so the hero can be exactly one screenful
+     below it (see --nav-h in the stylesheet above). Measured rather than
+     written down: the bar's height comes from its content — the brand, the
+     account chip, the tagline under it, and whether any of that wraps — so a
+     constant would be right on one viewport and wrong on the next. Observed,
+     not just read once, because the burger collapse changes it mid-session. */
+  (function(){
+    const nav=document.querySelector('.topnav');
+    if(!nav) return;
+    const publish=()=>document.documentElement.style.setProperty('--nav-h', nav.getBoundingClientRect().height+'px');
+    publish();
+    if(window.ResizeObserver) new ResizeObserver(publish).observe(nav);
+    else window.addEventListener('resize', publish);
+  })();
+
   // staggered reveal on scroll
   const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.18});
   document.querySelectorAll('.rv:not(.in)').forEach(el=>io.observe(el));
