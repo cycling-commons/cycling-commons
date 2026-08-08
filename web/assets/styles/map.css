@@ -610,18 +610,28 @@
   .cc-grad-open:hover .cc-grad{opacity:.88}
   .cc-grad-open:focus-visible{outline:2px solid var(--trail);outline-offset:3px;border-radius:4px}
   .cc-cp{position:absolute;inset:0;z-index:1500;display:none;align-items:center;justify-content:center;
-    background:rgba(10,16,12,.93);padding:3vmin}
+    background:rgba(10,16,12,.93);padding:2vmin}
   .cc-cp.open{display:flex}
-  .cc-cp-panel{position:relative;background:var(--paper);border-radius:10px;padding:1.4rem 1.6rem 1rem;
-    max-width:min(1000px,94vw);width:100%;box-shadow:0 18px 50px -12px rgba(0,0,0,.7)}
-  .cc-cp-x{position:absolute;top:.6rem;right:.8rem;background:none;border:none;color:var(--ink);
-    font-size:1.3rem;line-height:1;cursor:pointer}
+  /* Fills the viewport it is given rather than sitting in the middle of it: a
+     climb profile is read by scanning left to right, so width is the dimension
+     that carries information and the old 1000px cap wasted most of a desktop. */
+  .cc-cp-panel{position:relative;background:var(--paper);border-radius:10px;
+    padding:1rem 1.2rem .6rem;max-width:min(1500px,97vw);width:100%;
+    max-height:96vh;display:flex;flex-direction:column;
+    box-shadow:0 18px 50px -12px rgba(0,0,0,.7)}
+  .cc-cp-x{position:absolute;top:.5rem;right:.7rem;background:none;border:none;color:var(--ink);
+    font-size:1.3rem;line-height:1;cursor:pointer;z-index:2}
   .cc-cp-x:hover{color:var(--clay)}
-  .cc-cp-head{margin-bottom:.5rem;padding-right:2rem}
-  .cc-cp-title{font-family:var(--display);font-size:1.5rem;line-height:1.15;color:var(--ink)}
-  .cc-cp-sub{font-family:var(--mono);font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:#595c4d;margin-top:.25rem}
-  .cc-cp-stage{overflow-x:auto}
-  .cc-cp-svg{width:100%;height:auto;display:block;min-width:520px}
+  /* Title and stats on ONE line where there is room — they are a caption, and
+     stacking them cost 2 rem of height the chart wanted. */
+  .cc-cp-head{display:flex;align-items:baseline;gap:.9rem;flex-wrap:wrap;
+    margin-bottom:.35rem;padding-right:2.2rem;flex:0 0 auto}
+  .cc-cp-title{font-family:var(--display);font-size:1.35rem;line-height:1.1;color:var(--ink)}
+  .cc-cp-sub{font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:#595c4d}
+  .cc-cp-stage{overflow-x:auto;flex:1 1 auto;min-height:0;display:flex}
+  /* The chart takes the height the panel has left, so a tall window gets a
+     taller silhouette instead of more empty paper. */
+  .cc-cp-svg{width:100%;height:100%;max-height:82vh;display:block;min-width:560px}
   .cc-cp-base{stroke:rgba(20,22,14,.45);stroke-width:1}
   .cc-cp-tick{stroke:rgba(20,22,14,.35);stroke-width:1}
   .cc-cp-axis{font-family:var(--mono);font-size:12px;fill:#595c4d}
