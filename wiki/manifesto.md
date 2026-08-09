@@ -34,7 +34,8 @@ Commons can be open *and* survive: it is governed, not merely published.
 climbs, water, hazards — and never about a person's fitness, identity, or movements.
 
 **II. Open for everyone.** The data is published under the Open Database Licence
-(ODbL) with a free query API and bulk exports. Anyone may build on it — commercial or not.
+(ODbL), and will be reachable through a free query API and bulk exports — designed,
+not yet live. Anyone may build on it — commercial or not.
 
 **III. Build on OpenStreetMap; give back to it.** OSM is the open base map. We do not re-collect it —
 we curate the cycling layers it is thin on, and we contribute durable facts back upstream. The ODbL is
@@ -50,7 +51,9 @@ are a matter of taste — best climbs, bike-friendly stays, finest views, histor
 judged by the riders who know it, not an undifferentiated firehose.
 
 **VI. The community governs the Commons.** The people who contribute decide what rises to the top, by
-voting, in open rounds. Curators serve the community; they do not rule it.
+voting, in open rounds. Curators serve the community; they do not rule it. (Routes work this way
+today; the seasonal rounds for climbs, stays, views and heritage open after launch — see
+[Curation & Voting](curation-and-voting.md).)
 
 **VII. Freshness is a duty.** A "road closed" that never expires becomes a lie. Perishable data carries
 a lifecycle — timestamps, confirmations, and decay — so the map heals itself instead of rotting.

@@ -49,7 +49,7 @@ resources (see [Manifesto](manifesto.md)). Each maps to a concrete part of the s
 |------------------|------------------------|
 | **1. Clearly defined boundaries** | Non-personal data only; the firm line between Commons and personal data (Manifesto §IV), drawn at the aggregate by [the sensing boundary](#the-sensing-boundary-how-activity-becomes-a-place-fact) |
 | **2. Rules fit local conditions** | Curation is **per region**; the curated target `X` scales with local density |
-| **3. Collective-choice (those affected make the rules)** | The seasonal **voting rounds** — riders rank their own regions |
+| **3. Collective-choice (those affected make the rules)** | The seasonal **voting rounds** — riders rank their own regions. *(Rounds open after launch; the shipped half is routes, which riders verify by riding and rank by seasonal recommend-vote — see [Curation & Voting](curation-and-voting.md))* |
 | **4. Monitoring** | The **freshness model** — timestamps, reporter counts, confirm/decay |
 | **5. Graduated sanctions** | *(aspirational)* Escalating consequences for rule-breaking — warn → restrict → remove, sized to severity and repeat offence rather than a first-strike ban. Aimed at abuse: spam, vote-rigging, vandalism |
 | **6. Cheap conflict resolution** | A fast, low-cost way to settle *good-faith* disagreements — a contested edit, a curation call — without escalation or cost. Adjudication between members, not punishment |

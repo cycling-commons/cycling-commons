@@ -95,6 +95,28 @@ flowchart TD
     fountain — you want to know it is there. Ranking is the whole point for a
     climb: you want the best ten, not all two hundred.
 
+!!! note "What of this funnel is running today"
+    The funnel above is the design. Two parts of it are live and one is not,
+    and the difference matters if you are reading this to predict what the map
+    will do:
+
+    - **Routes gate exactly as described.** Three independent riders tapping
+      *I rode this* promotes a route from Unverified to Verified, the count
+      excludes the proposer, and the threshold is an admin setting rather than
+      a constant.
+    - **Everything else does not gate yet.** For a place — water, services,
+      views, climbs, stays — a rider confirmation lifts how the map *presents*
+      it (a full pin rather than a help-confirm dot) from the **first**
+      independent confirmation, and the record's state is changed only by a
+      curator. The tiered X below, and the modifiers under it, are the design
+      for that gate, not a description of it.
+    - **Decay is designed, not built.** Nothing auto-stales after N days yet.
+      A "road closed" still needs a human to clear it, which is precisely the
+      gap Manifesto §VII names.
+
+    The potable/labelling rule in §3 and the view-mode gate in §4 *are* shipped
+    as written.
+
 ### How many confirmations is X?
 
 X is **not one number**, and it is not eleven knobs either. It is a small set of

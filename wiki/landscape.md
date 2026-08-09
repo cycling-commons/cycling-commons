@@ -4,7 +4,9 @@
 
 *Why the Commons exists: today a cyclist's knowledge is scattered across dozens of separate, mostly
 closed apps — "a different app for everything." This page lists the real providers in each area, as a
-reference behind that claim. It is a snapshot (June 2026); names and figures shift.*
+reference behind that claim. It is a snapshot (June 2026, spot-checked August 2026); names, licences
+and figures shift — FATMAP was shut down and EuroVelo's tracks became open in the space of two years,
+so treat any single entry as a starting point rather than a current fact.*
 
 Legend: **open** = open data / open source · **closed** = proprietary silo · **mixed** = open base, closed layer.
 
@@ -42,6 +44,7 @@ Route planning, navigation, ride sharing, and cyclist-experience ratings (quietn
 - **BRouter** — **open-source**, free. The configurable routing engine behind many other tools.
 - **CyclOSM / OpenCycleMap** — **open** (OSM), free. The open cycling map styles others embed.
 - **kurviger / Relive / Cyql** — closed, freemium. Scenic-road planning / ride videos / club ride org.
+- **EuroVelo** (European Cyclists' Federation) — **open** since 2024, free. 17 pan-European routes whose GPX tracks the ECF General Meeting placed under **ODbL** — the largest openly-licensed curated route set in Europe, and the counter-example to this section's pattern: a route network that chose to be shareable rather than a silo.
 
 **Fragmentation:** a thin open spine exists (OSM, BRouter, CyclOSM, cycle.travel), but the mass-market layer is proprietary and **cyclist-experience ratings are siloed per-app** (private Highlights, heatmaps, surface tags) — no portable quality standard.
 

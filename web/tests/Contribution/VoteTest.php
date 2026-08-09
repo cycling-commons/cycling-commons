@@ -111,9 +111,14 @@ final class VoteTest extends WebTestCase
         $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        // Honest stub state: ballot recorded / queued for review
-        self::assertSelectorTextContains('.receipt h2', 'Ballot recorded.');
-        self::assertSelectorTextContains('.receipt .stub-note', 'not yet persisted');
+        // The receipt must agree with the demo banner three lines above it. It
+        // used to say "Ballot recorded." and "queued for review" while the
+        // banner said nothing is recorded — three statements on one screen, two
+        // of them false (consistency audit pass three, finding 2). Nothing is
+        // stored here, and the receipt has to say so.
+        self::assertSelectorTextContains('.receipt h2', 'Nothing was recorded.');
+        self::assertSelectorTextContains('.receipt .stub-note', 'after launch');
+        self::assertSelectorTextNotContains('.receipt', 'queued for review');
         // Reference is present (CC- prefix)
         self::assertSelectorTextContains('.receipt .ref', 'CC-');
     }

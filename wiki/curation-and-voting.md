@@ -42,6 +42,14 @@ of drowning in data.
 
 ## The voting rounds
 
+!!! note "Not live yet"
+    The seasonal ballot rounds described in this section **open after launch**.
+    The `/vote` page shows the design and records nothing. What *is* running
+    today is the route path below — propose → curator review → rode-it
+    verification → seasonal recommend-votes on the map drawer — which feeds the
+    Curated ranking without a ballot. Everything else in this page (the two
+    strategies, regions, the backlog, integrity) describes shipped behaviour.
+
 - **Riders vote** on the candidates in each region.
 - **A fresh round opens each season.** Four rounds a year give the Commons a rhythm that follows the
   riding — a reason to come back as the season turns, and room for new entries to rise.
