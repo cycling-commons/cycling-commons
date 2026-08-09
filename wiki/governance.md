@@ -11,7 +11,7 @@ is structured so the answer is **no**.
 
 <!-- CODE-ILLUSTRATIVE org-structure diagram, hand-written -->
 ```
-BikeCoders            the company — open-source steward (→ independent foundation)
+BikeCoders            the company — open-data steward (→ independent foundation)
    │
    ├── Cycling Commons   the open data initiative — ODbL, neutral, for everyone
    │

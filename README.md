@@ -39,7 +39,8 @@ apps lock away. So rather than an endless list, it answers the question a rider 
 | [`pipeline/`](pipeline/) | — | the Python/FastAPI geospatial tier *(to be built)* |
 | [`tools/`](tools/) | — | data-generation & maintenance tooling (e.g. regional clustering) |
 | [`developers/`](developers/) | — | the Docker dev stack and contributor setup |
-| [`licenses/`](licenses/) | — | the data, media & terms licenses |
+| [`licenses/`](licenses/) | — | plain-language notices for the data, media & terms licences — what they mean, in prose |
+| [`LICENSES/`](LICENSES/) | — | the *verbatim* licence texts, named as [REUSE](https://reuse.software/) requires. One letter from the directory above and a different job: these are the legal texts a machine reads, those are the explanations a person reads |
 
 ## Developer setup — Docker
 
@@ -188,3 +189,11 @@ source-available code:
 - **Media** — [Commons Media License](licenses/COMMONS-MEDIA-LICENSE.md)
 - **Wiki text** (`wiki/`, published at wiki.cyclingcommons.org) — [CC BY-SA 4.0](licenses/CC-BY-SA-4.0.txt); each page carries an SPDX header (pre-commit enforced)
 - **Terms** — [Commons Terms & Clause](licenses/COMMONS-TERMS-CLAUSE.md)
+
+Every file in the repository declares its licence, and that is enforced rather
+than trusted: the project is **[REUSE](https://reuse.software/) compliant**.
+Files carry an `SPDX-License-Identifier` header; the ones that cannot (fonts,
+brand assets, data exports) are covered by [`REUSE.toml`](REUSE.toml); the
+verbatim texts live in [`LICENSES/`](LICENSES/); and `reuse lint` runs in CI on
+every push. So "which licence covers this file?" always has an answer you can
+check, not one you have to ask about.
