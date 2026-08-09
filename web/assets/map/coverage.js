@@ -37,7 +37,15 @@ import { osmLayers } from './osm-pools.js';
 // by MapController only when COVERAGE_TILES is on and the manifest resolves)
 // AND on the pmtiles protocol lib actually having loaded — absent either, the
 // map keeps today's pool-only behaviour (Photon-style silent degradation).
-export const COVERAGE_KEYS=[['water','c'],['services','d'],['stays','e'],['transit','g'],['shelter','h'],['scenic','i'],['history','j']];
+// Every bulk-OSM pool that gets coverage tile layers, as [rail key, lowercase
+// letter]. MUST stay in step with catalog.js's LETTER_KEY — those are the
+// letters that HAVE a coverage pool, and a letter missing from here gets no
+// layer at all while the rail still shows its DB count. That is precisely how
+// M went unnoticed: adding Public toilets updated the catalog, the rail and
+// the harvest (the tiles carry m_<cc> today), but not this line, so the rail
+// read "0/583" in Wallonia for a layer that was never built. covKeysTest.cjs
+// now fails if the two lists drift again.
+export const COVERAGE_KEYS=[['water','c'],['services','d'],['stays','e'],['transit','g'],['shelter','h'],['scenic','i'],['history','j'],['toilets','m']];
 // Coverage tiles split their source-layers per country (Task 1:
 // coverage-provider.md §4): a letter's rows live in
 // '<letter>_<cc>' (lowercase cc), with unstamped rows in the 'zz' bucket. The
@@ -58,7 +66,8 @@ export const COV_SRC={
   history:'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)',
   stays:'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)',
   shelter:'OpenStreetMap (shelter_type=picnic/weather/field/…)',
-  transit:'OpenStreetMap (railway=station / railway=halt)'
+  transit:'OpenStreetMap (railway=station / railway=halt)',
+  toilets:'OpenStreetMap (amenity=toilets)'
 };
 // Curated-ref dedupe (osm-data-architecture.md §8): any object already served
 // as an item draws once, as curated — its coverage twin is filtered out. A
@@ -155,7 +164,11 @@ export function covScopeQuery(){
 // in BOTH modes — at 0.55 opacity in Curated so verified pins keep visual
 // priority — while experiential letters E/I/J stay Everything-only (Curated
 // remains best-of for them).
-export const COV_UTILITY=new Set(['C','D','G','H']);
+// M joins the utilities: a toilet is infrastructure you either find or do not,
+// like water and bike services — it is never a rider's best-of pick, so it
+// stays visible in Curated mode (dimmed) rather than vanishing with the
+// experiential layers.
+export const COV_UTILITY=new Set(['C','D','G','H','M']);
 export function syncCoverageLayers(){
   if(!COVERAGE_ON) return;
   COVERAGE_KEYS.forEach(([key])=>{
