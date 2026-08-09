@@ -223,8 +223,14 @@
       .replace(/'/g, '&#39;');
   }
 
-  // Expose cat() for inline onclick in Twig template
-  window.voteCat = cat;
+  // The category tabs. Delegated from here rather than an `onclick=` in the
+  // template: the CSP is `script-src 'self' 'nonce-…'`, which does NOT cover
+  // inline event handlers — the browser refuses to run them and logs a
+  // violation, so the tabs looked wired and did nothing (2026-08-09).
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-votecat]');
+    if (b) cat(b, b.dataset.votecat);
+  });
 
   renderCands();
   renderBallot();

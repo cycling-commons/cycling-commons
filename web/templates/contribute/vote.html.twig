@@ -56,11 +56,13 @@
   <div class="kicker" style="color:var(--trail)">{{ 'vote.kicker'|trans }}</div>
   <h1 class="disp">{{ 'vote.title'|trans }}</h1>
   <div class="round">{{ 'vote.round'|trans }}</div>
+  {# data-votecat, not onclick: the CSP blocks inline handlers and says so only
+     in the console, so an onclick tab is a tab that silently does nothing. #}
   <div class="vtabs">
-    <button class="on" onclick="voteCat(this,'climbs')">{{ 'vote.tab_climbs'|trans }}</button>
-    <button onclick="voteCat(this,'stays')">{{ 'vote.tab_stays'|trans }}</button>
-    <button onclick="voteCat(this,'views')">{{ 'vote.tab_views'|trans }}</button>
-    <button onclick="voteCat(this,'heritage')">{{ 'vote.tab_heritage'|trans }}</button>
+    <button class="on" data-votecat="climbs">{{ 'vote.tab_climbs'|trans }}</button>
+    <button data-votecat="stays">{{ 'vote.tab_stays'|trans }}</button>
+    <button data-votecat="views">{{ 'vote.tab_views'|trans }}</button>
+    <button data-votecat="heritage">{{ 'vote.tab_heritage'|trans }}</button>
   </div>
 </div></div>
 

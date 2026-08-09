@@ -57,7 +57,7 @@
     <input type="hidden" name="_token" value="{{ csrf_token('rows_per_page') }}">
     <input type="hidden" name="back" value="{{ app.request.requestUri }}">
     <label class="text-muted small mb-0" for="rows-{{ key }}">{{ 'pager.per_page'|trans }}</label>
-    <select class="form-select form-select-sm w-auto" id="rows-{{ key }}" name="rows" onchange="this.form.requestSubmit()">
+    <select class="form-select form-select-sm w-auto" id="rows-{{ key }}" name="rows" data-autosubmit>
       {% for opt in cc_rows_per_page_options() %}
         <option value="{{ opt.value }}"{{ app.user.rowsPerPage.value == opt.value ? ' selected' }}>{{ opt.label|trans }}</option>
       {% endfor %}

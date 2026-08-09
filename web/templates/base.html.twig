@@ -56,6 +56,10 @@ window.CC_UNITS = {{ {
 <script src="{{ asset('js/cc-dates.js') }}"></script>
 <script src="{{ asset('js/cc-units.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
+{# Filter dropdowns and the pager's page-length select submit on change. Must
+   be a FILE, not an onchange= attribute: the CSP blocks inline handlers and
+   does it silently. See the script's own header. #}
+<script src="{{ asset('js/form-autosubmit.js') }}" defer></script>
 <script src="{{ asset('js/nav.js') }}" defer></script>
 <script src="{{ asset('js/nav-menus.js') }}" defer></script>
 <script nonce="{{ csp_nonce() }}">window.CC_VERSION = {{ cc_build()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>

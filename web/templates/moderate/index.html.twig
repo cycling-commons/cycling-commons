@@ -56,19 +56,19 @@
   <div class="mod-bar">
   <form class="mod-filters" method="get" action="{{ path('moderate') }}">
     <label>{{ 'moderate.filter.country'|trans }}
-      <select name="country" onchange="this.form.submit()">
+      <select name="country" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
         {% for c in countries %}<option value="{{ c }}"{{ filters.country == c ? ' selected' }}>{{ c }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ 'moderate.filter.region'|trans }}
-      <select name="region" onchange="this.form.submit()">
+      <select name="region" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
         {% for r in regions %}<option value="{{ r }}"{{ filters.region == r ? ' selected' }}>{{ r }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ 'moderate.filter.type'|trans }}
-      <select name="type" onchange="this.form.submit()">
+      <select name="type" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
         {% for t in types %}<option value="{{ t }}"{{ filters.type == t ? ' selected' }}>{{ ('moderate.type.' ~ t)|trans }}</option>{% endfor %}
       </select>

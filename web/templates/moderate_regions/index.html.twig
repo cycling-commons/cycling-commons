@@ -70,7 +70,7 @@
     <div class="mod-bar">
       <form class="mod-filters" method="get" action="{{ path('moderate_regions') }}">
         <label>{{ 'moderate.filter.country'|trans }}
-          <select name="country" onchange="this.form.submit()">
+          <select name="country" data-autosubmit>
             <option value="">{{ 'moderate.filter.all'|trans }}</option>
             {% for c in countries %}<option value="{{ c }}"{{ country == c ? ' selected' }}>{{ c }}</option>{% endfor %}
           </select>

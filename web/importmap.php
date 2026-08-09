@@ -20,6 +20,13 @@ return [
         'path' => './assets/admin_confirm.js',
         'entrypoint' => true,
     ],
+    // The admin area does not extend base.html.twig, so it cannot pick this up
+    // from base's <script> tag — and it needs it for the same reason every
+    // other page does: the CSP blocks inline `onchange=` handlers silently.
+    'form_autosubmit' => [
+        'path' => './assets/js/form-autosubmit.js',
+        'entrypoint' => true,
+    ],
     // The map front end. Listed so
     // AssetMapper walks map.js's relative imports and emits an importmap entry
     // for each module: JavaScriptImportPathCompiler rewrites `./i18n.js` to the

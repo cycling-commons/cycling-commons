@@ -69,7 +69,7 @@
   <form class="ack-bar" method="get" action="{{ path('contributors') }}">
     <input class="ack-q" type="search" name="q" value="{{ wall_q }}"
            placeholder="{{ 'contributors.search_placeholder'|trans }}" aria-label="{{ 'contributors.search_aria'|trans }}" />
-    <select class="ack-rg" name="country" aria-label="{{ 'contributors.region_aria'|trans }}" onchange="this.form.submit()">
+    <select class="ack-rg" name="country" aria-label="{{ 'contributors.region_aria'|trans }}" data-autosubmit>
       <option value="">{% trans %}contributors.region_all{% endtrans %}</option>
       {% for c in wall_countries %}<option{{ wall_country == c ? ' selected' }}>{{ c }}</option>{% endfor %}
     </select>

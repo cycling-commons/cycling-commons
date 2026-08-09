@@ -81,7 +81,11 @@ final class DashboardController extends AbstractDashboardController
     #[\Override]
     public function configureAssets(): Assets
     {
-        return Assets::new()->addAssetMapperEntry('admin_confirm');
+        // form_autosubmit: the pager's page-length select posts on change, and
+        // an inline onchange= would be blocked by the CSP without a word.
+        return Assets::new()
+            ->addAssetMapperEntry('admin_confirm')
+            ->addAssetMapperEntry('form_autosubmit');
     }
 
     #[\Override]
