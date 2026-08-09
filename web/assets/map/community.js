@@ -86,6 +86,15 @@ export function hydrateRouteCommunity(id){
     const m=box.querySelector('[data-rc-marks]');
     if(m) m.textContent = tpl((segs.length===1?D.marksOne:D.marksMany)||`· {n} stretch${segs.length===1?'':'es'} marked`, {n:segs.length});
   }
+  // Anonymous visitors get the login prompt WITHOUT the request: the endpoint
+  // would only 401, the page already knows (CC_RIDECHECK is emitted for
+  // ROLE_USER only), and every anonymous route open was logging that 401 as
+  // console noise — two failed requests per drawer (review 2026-08-09).
+  if(!window.CC_RIDECHECK){
+    const l=box.querySelector('.cc-rc-login'); if(l) l.hidden=false;
+    box.classList.add('cc-rc-anon');
+    return;
+  }
   fetch(`/routes/${id}/community`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
     .then(r=>{ if(r.status===401||r.status===403){ box.querySelector('.cc-rc-login').hidden=false; box.classList.add('cc-rc-anon'); throw new Error('anon'); } if(!r.ok) throw new Error('community'); return r.json(); })
     .then(s=>{ _rcTokens[id]=s.token; paintRouteCommunity(box, s); })

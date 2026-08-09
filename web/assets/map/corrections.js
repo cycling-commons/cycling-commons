@@ -34,6 +34,10 @@ export function clearCorrections(){
 }
 export function showRouteCorrections(routeId){
   const path=routePathById(routeId); if(!path) return;
+  // Curator-only endpoint; a non-curator's request can only 403 and the
+  // browser logs every failed request. CC_IS_CURATOR is emitted exactly for
+  // the sessions the endpoint accepts (review 2026-08-09).
+  if(!window.CC_IS_CURATOR){ clearCorrections(); return; }
   fetch(`/routes/${routeId}/corrections`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
     .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
     .then(d=>renderCorrections(path, d.corrections||[]))

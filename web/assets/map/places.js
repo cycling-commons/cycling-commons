@@ -291,6 +291,15 @@ export function openRouteById(id){
   const layer=layerByKey['experience']; if(!layer) return false;
   const f=layer.features.find(x=>String(x.id)===String(id));
   if(!f) return false;
+  // Opening a route IS asking to see it: with the layer toggled off the
+  // drawer opened over a map with no line on it and the rail read 0/11
+  // (owner-reported 2026-08-09). Same reveal openPendingById below has
+  // always done for the moderation deep-link.
+  if(!active.has('experience')){
+    active.add('experience');
+    const t=document.querySelector('#layers .layer[data-key="experience"]'); if(t) t.classList.remove('off');
+    render();
+  }
   openDrawer(layer,f);
   const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
   if(!(mode()==='all'||f.cur) && p) revealPinAt(layer, p);
