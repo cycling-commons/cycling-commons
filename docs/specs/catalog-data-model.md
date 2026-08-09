@@ -393,11 +393,21 @@ Harvest-side rules that shape what arrives (toolchain:
 |---|---|---|
 | `A` | surface-segment list | `path` = [[lat,lng]…]; `wayId` only for `way/…` refs |
 | `B` | climbs list | `geom.ll` = [lat,lng]; stored `attribution` served as `source` (citation) |
-| `C`,`D`,`G`,`H`,`I`,`J` | GeoJSON FeatureCollection | properties = attributes + `n` (name) + `prov` (subdivision name) + `id` |
+| `C`,`D`,`F`,`G`,`H`,`I`,`J`,`M` | GeoJSON FeatureCollection | properties = attributes + `n` (name) + `prov` (subdivision name) + `id` |
 | `E` | `{osm, pivot}` | the only source-split letter: `pivot` rows are their own bucket; every other source lands in `osm` |
 | `K` | routes list | includes raw `state` (map badges "proposed"), canonicalized `difficulty` and `bikeTypes` |
-| `L` | `[[lat, lng, season], …]` | |
-| `F` | **absent** | hazards have no serving path yet |
+| `refs` | `["node/123", …]` | source_ref of every served `source='osm'` item, so the client can drop the coverage-tile twin (osm-data-architecture.md §8) |
+| `L` | **absent** | the ride heatmap moved to its own endpoint on 2026-08-09 (below) |
+
+`F` (hazards) joined the payload on 2026-07-21 and `M` (public toilets) on
+2026-07-30; both are ordinary served-item collections, region-stamped like every
+other letter.
+
+**`L` is not in this payload.** The ~6,600 heat points serve from
+`GET /map/heat.json` (`MapController::heat()`), on the same public/ETag/max-age
+discipline, fetched only when a rider first switches the heatmap on. The layer
+is off by default, so on the catalog path every visitor was paying its bytes for
+something most of them never turn on (frontend review 2026-08-09).
 
 - Every served feature carries `srcType` (the raw `ItemSource` value) and
   `id` (the DB row id — the map edit-bridge's `?item=` target), so provenance
@@ -405,6 +415,35 @@ Harvest-side rules that shape what arrives (toolchain:
   legibly attributed.
 - Explicitly the **named interim until vector tiles** (catalog-data-model.md
   §11).
+
+### No server-side memo, and why (decided 2026-08-09)
+
+`CatalogProvider::json()` rebuilds the payload on every request. The body is
+user-independent, so it is the same answer every time and an obvious memo
+candidate. It was attempted and reverted, and the decision is **not to memoise
+it yet**. Measured on the dev catalog (1,768 items): **58 ms median** — 34 ms
+building, 25 ms encoding, 1.3 ms hashing — for 958 kB raw / 223 kB transferred.
+With `max-age=3600` and a content ETag in front of it, that is once per visitor
+per hour.
+
+Two things a future attempt must know, because both cost a session to find:
+
+- **A `MAX(updated_at)` content stamp does not work, and raising the column to
+  `timestamp(6)` does not fix it.** Doctrine writes `'Y-m-d H:i:s'` whatever the
+  column can hold (`AbstractPlatform::getDateTimeFormatString()`, not overridden
+  by PostgreSQL), so two edits in the same second share a stamp and the memo
+  serves the older payload — silently. No row in the three tables carries a
+  sub-second component today.
+- **The mechanism that works is a counter the database bumps itself**: a
+  one-row `catalog_stamp` table with `AFTER INSERT OR UPDATE OR DELETE … FOR
+  EACH STATEMENT` triggers on every table `payload()` reads. Collision-proof,
+  fires for raw SQL as well as the ORM, one primary-key read. Read the stamp
+  *before* building the payload, and keep a source-reading guard test asserting
+  each table `payload()` queries carries a trigger.
+
+Revisit when `/map/catalog.json` is a measurable share of request time under
+real traffic, or the payload grows well past ~1 MB. Try `proxy_cache` on the
+frontends before application code.
 
 The per-item public change log (`GET /map/item/{id}/history`, max-age 60) is
 served read-only from `change_history` via `ChangeHistoryView`; its content
