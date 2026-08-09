@@ -601,6 +601,7 @@ contributors:
   search_note: 'Geen rangschikking — bijdragers staan alfabetisch, nooit op volume. Zoek op naam, of filter op land.'
   search_placeholder: 'Zoek op naam…'
   search_aria: 'Zoek bijdragers op naam'
+  search_submit: 'Zoeken'
   region_aria: 'Filter bijdragers op land'
   region_all: 'Alle landen'
   no_match: 'Geen bijdragers gevonden.'

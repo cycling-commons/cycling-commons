@@ -601,6 +601,7 @@ contributors:
   search_note: 'Pas de classement — les contributeurs sont listés par ordre alphabétique, jamais par volume. Recherchez par nom ou filtrez par pays.'
   search_placeholder: 'Rechercher par nom…'
   search_aria: 'Rechercher des contributeurs par nom'
+  search_submit: 'Rechercher'
   region_aria: 'Filtrer les contributeurs par pays'
   region_all: 'Tous les pays'
   no_match: 'Aucun contributeur ne correspond.'

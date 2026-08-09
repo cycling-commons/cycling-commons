@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
 use App\Catalog\RegionDirectoryProvider;
+use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -158,20 +159,34 @@ final class PageController extends AbstractController
     }
 
     #[Route('/contributors', name: 'contributors')]
-    public function contributors(ContributorWallProvider $wallProvider): Response
+    public function contributors(Request $request, ContributorWallProvider $wallProvider): Response
     {
-        $wall = $wallProvider->wall();
-        // Country filter options come from the wall itself, so the dropdown
-        // never advertises a country with zero visible contributors.
-        $countries = array_values(array_unique(array_filter(array_column($wall, 'country'))));
-        sort($countries);
+        // Both filters are query parameters now, not JS over the rendered
+        // rows. The wall grows with the project, so it is paged — and a
+        // client-side filter over one page would answer "no match" for riders
+        // who are merely further down the list.
+        $q = trim($request->query->getString('q'));
+        $country = trim($request->query->getString('country'));
+
+        $pager = Pager::of(
+            $request->query->getInt('page', 1),
+            $wallProvider->wallCount($q, $country),
+            ContributorWallProvider::PER_PAGE,
+        );
 
         return $this->render('pages/contributors.html.twig', [
             'page_title' => 'meta.contributors_title',
             'page_description' => 'meta.contributors_description',
             'nav_active' => '',
-            'wall' => $wall,
-            'wall_countries' => $countries,
+            'wall' => $wallProvider->wall($q, $country, $pager['page'], $pager['perPage']),
+            // Country options come from the UNFILTERED wall, so the dropdown
+            // never advertises a country with zero visible contributors and
+            // never collapses to the one already chosen.
+            'wall_countries' => $wallProvider->wallCountries(),
+            'wall_q' => $q,
+            'wall_country' => $country,
+            'pager' => $pager,
+            'pager_params' => array_filter(['q' => $q, 'country' => $country], static fn (string $v): bool => '' !== $v),
             'stats' => $wallProvider->stats(),
         ]);
     }

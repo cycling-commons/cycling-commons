@@ -601,6 +601,7 @@ contributors:
   search_note: 'Keine Rangfolge — Beitragende sind alphabetisch aufgelistet, nie nach Volumen. Suche nach Name oder filtere nach Land.'
   search_placeholder: 'Nach Name suchen…'
   search_aria: 'Beitragende nach Name suchen'
+  search_submit: 'Suchen'
   region_aria: 'Beitragende nach Land filtern'
   region_all: 'Alle Länder'
   no_match: 'Keine Beitragenden gefunden.'

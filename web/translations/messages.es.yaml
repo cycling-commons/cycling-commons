@@ -602,6 +602,7 @@ contributors:
   search_note: 'Sin clasificación — los colaboradores se listan por orden alfabético, nunca por volumen. Busca por nombre o filtra por país.'
   search_placeholder: 'Buscar por nombre…'
   search_aria: 'Buscar colaboradores por nombre'
+  search_submit: 'Buscar'
   region_aria: 'Filtrar colaboradores por país'
   region_all: 'Todos los países'
   no_match: 'Ningún colaborador coincide.'

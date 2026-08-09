@@ -18,7 +18,16 @@
   .ack-q,.ack-rg{font-family:var(--mono);font-size:.85rem;padding:.5rem .8rem;border:1px solid rgba(20,22,14,.2);border-radius:6px;background:var(--paper);color:var(--ink)}
   .ack-q{flex:1;min-width:200px}
   .ack-q:focus,.ack-rg:focus{outline:none;border-color:var(--trail)}
+  .ack-go{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1rem;min-height:34px;border:1px solid var(--clay);border-radius:30px;background:var(--paper);color:var(--clay);cursor:pointer}
+  .ack-go:hover{background:var(--clay);color:var(--paper)}
   .ack-empty{font-size:.9rem;color:#7a7d6c;margin-top:1.2rem}
+  /* The shared pager (partials/_pager.html.twig) is styled by the account
+     shell, which a public page does not load. Same rules, same look. */
+  .pager{display:flex;align-items:center;gap:1rem;margin:1.4rem 0 0;font-family:var(--mono);font-size:.66rem}
+  .pager-step{color:var(--clay);text-decoration:none;border:1px solid rgba(20,22,14,.25);border-radius:30px;padding:.4rem .8rem;letter-spacing:.06em;text-transform:uppercase}
+  .pager-step:hover{border-color:var(--ink);color:var(--ink)}
+  .pager-step.is-off{opacity:.35;border-style:dashed}
+  .pager-at{color:#595c4d;margin-left:auto}
 </style>
 {% endblock %}
 {% block body %}
@@ -33,17 +42,24 @@
 
   <div class="kicker">{% trans %}contributors.active_kicker{% endtrans %}</div>
   <p class="rec-note">{% trans %}contributors.search_note{% endtrans %}</p>
-  {% if wall is not empty %}
-  <div class="ack-bar">
-    <input class="ack-q" type="search" placeholder="{{ 'contributors.search_placeholder'|trans }}" aria-label="{{ 'contributors.search_aria'|trans }}" />
-    <select class="ack-rg" aria-label="{{ 'contributors.region_aria'|trans }}">
+  {# A real GET form, not JS over the rendered rows: the wall is paged, so a
+     filter that only saw the current page would tell a rider on page 4 that
+     they are not on the wall at all. Both controls submit the form — the
+     select on change, the search box on Enter — and the button covers
+     everything else. #}
+  <form class="ack-bar" method="get" action="{{ path('contributors') }}">
+    <input class="ack-q" type="search" name="q" value="{{ wall_q }}"
+           placeholder="{{ 'contributors.search_placeholder'|trans }}" aria-label="{{ 'contributors.search_aria'|trans }}" />
+    <select class="ack-rg" name="country" aria-label="{{ 'contributors.region_aria'|trans }}" onchange="this.form.submit()">
       <option value="">{% trans %}contributors.region_all{% endtrans %}</option>
-      {% for c in wall_countries %}<option>{{ c }}</option>{% endfor %}
+      {% for c in wall_countries %}<option{{ wall_country == c ? ' selected' }}>{{ c }}</option>{% endfor %}
     </select>
-  </div>
+    <button type="submit" class="ack-go">{% trans %}contributors.search_submit{% endtrans %}</button>
+  </form>
+  {% if wall is not empty %}
   <div class="ack" id="ack">
     {% for c in wall %}
-    <div class="row" data-name="{{ c.name }}" data-region="{{ c.country ?? '' }}">
+    <div class="row">
       <span class="av">{{ c.initials }}</span>
       <a class="nm" href="{{ path('rider_profile', {uuid: c.uuid}) }}">{{ c.name }}</a>
       {% if c.country %}<span class="rg">{{ c.country }}</span>{% endif %}
@@ -51,7 +67,9 @@
     </div>
     {% endfor %}
   </div>
-  <p class="ack-empty" id="ack-empty" hidden>{% trans %}contributors.no_match{% endtrans %}</p>
+  {% include 'partials/_pager.html.twig' with {pager: pager, route: 'contributors', params: pager_params} %}
+  {% elseif wall_q or wall_country %}
+  <p class="ack-empty">{% trans %}contributors.no_match{% endtrans %}</p>
   {% else %}
   <p class="ack-empty">{% trans %}contributors.wall_empty{% endtrans %}</p>
   {% endif %}
@@ -63,27 +81,5 @@
   </div>
 </div></section>
 {% endblock %}
-{% block body_scripts %}
-{% if wall is not empty %}
-<script nonce="{{ csp_nonce() }}">
-/* Filter for the server-rendered acknowledgment wall — non-ranked,
-   alphabetical; rows are real opt-in public profiles. */
-(function(){
-  const wall=document.getElementById('ack');
-  const q=document.querySelector('.ack-q');
-  const rg=document.querySelector('.ack-rg');
-  const empty=document.getElementById('ack-empty');
-  const chips=[...wall.children];
-  function apply(){
-    const t=q.value.trim().toLowerCase(), reg=rg.value; let n=0;
-    chips.forEach(el=>{
-      const ok=(!t||el.dataset.name.toLowerCase().includes(t))&&(!reg||el.dataset.region===reg);
-      el.hidden=!ok; if(ok)n++;
-    });
-    empty.hidden=n>0;
-  }
-  q.addEventListener('input',apply); rg.addEventListener('change',apply);
-})();
-</script>
-{% endif %}
-{% endblock %}
+{# The wall's filter used to be a script over the rendered rows. It is a GET
+   form now that the wall is paged, so there is nothing left to script. #}
