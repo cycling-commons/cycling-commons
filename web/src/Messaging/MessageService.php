@@ -194,13 +194,28 @@ final class MessageService
      *
      * @return list<UserMessage>
      */
-    public function listFor(int $userId, int $offset = 0, int $limit = self::PER_PAGE): array
-    {
+    public function listFor(
+        int $userId,
+        int $offset = 0,
+        int $limit = self::PER_PAGE,
+        ?MessageCategory $category = null,
+        bool $unreadOnly = false,
+    ): array {
         $qb = $this->em->getRepository(UserMessage::class)->createQueryBuilder('m');
+
+        if (null !== $category) {
+            $qb->andWhere('m.kind IN (:kinds)')->setParameter('kinds', $category->kinds());
+        }
+        if ($unreadOnly) {
+            // Recipient-only, matching unreadCount(): a message the reader
+            // WROTE was never unread to them, so "unread" must not surface
+            // their own sent half (which the senderId arm below includes).
+            $qb->andWhere('m.readAt IS NULL')->andWhere('m.userId = :id');
+        }
 
         /** @var list<UserMessage> $messages */
         $messages = $qb
-            ->where($qb->expr()->orX('m.userId = :id', 'm.senderId = :id'))
+            ->andWhere($qb->expr()->orX('m.userId = :id', 'm.senderId = :id'))
             // A rider's answer to a needs-info question is MODERATION work, not
             // personal correspondence, so it does not belong in the inbox a
             // rider uses for their own contributions (owner, 2026-08-03). It is
@@ -234,13 +249,74 @@ final class MessageService
      * How many thread heads {@see self::listFor()} would return in total.
      * Same filters, or paging walks into pages the list refuses to render.
      */
-    public function countFor(int $userId): int
+    public function countFor(int $userId, ?MessageCategory $category = null, bool $unreadOnly = false): int
     {
-        return (int) $this->db->fetchOne(
-            'SELECT COUNT(*) FROM user_message
-             WHERE (user_id = :u OR sender_id = :u) AND kind <> :moderationReply',
+        $sql = 'SELECT COUNT(*) FROM user_message
+                 WHERE (user_id = :u OR sender_id = :u) AND kind <> :moderationReply';
+        $params = ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value];
+        $types = [];
+
+        if (null !== $category) {
+            $sql .= ' AND kind IN (:kinds)';
+            $params['kinds'] = $category->kindValues();
+            $types['kinds'] = ArrayParameterType::STRING;
+        }
+        if ($unreadOnly) {
+            $sql .= ' AND read_at IS NULL AND user_id = :u';
+        }
+
+        return (int) $this->db->fetchOne($sql, $params, $types);
+    }
+
+    /**
+     * How many messages sit on each shelf, and how many are unread, in one
+     * round trip — so the filter can say "Notices 3" rather than making the
+     * reader click each one to find out whether it holds anything.
+     *
+     * Unread is recipient-only, like {@see unreadCount()}. The per-category
+     * totals are not: they count the same set the unfiltered list shows, sent
+     * half included, or the numbers on the chips would not add up to the
+     * number on "All".
+     *
+     * @return array{total:int, unread:int, byCategory:array<string,int>}
+     */
+    public function countsFor(int $userId): array
+    {
+        /** @var list<array{kind:string, n:int|string, unread:int|string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT kind,
+                    COUNT(*) AS n,
+                    COUNT(*) FILTER (WHERE read_at IS NULL AND user_id = :u) AS unread
+               FROM user_message
+              WHERE (user_id = :u OR sender_id = :u) AND kind <> :moderationReply
+              GROUP BY kind',
             ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value],
         );
+
+        $shelfOf = [];
+        foreach (MessageCategory::cases() as $category) {
+            foreach ($category->kindValues() as $kind) {
+                $shelfOf[$kind] = $category->value;
+            }
+        }
+
+        $byCategory = array_fill_keys(array_map(
+            static fn (MessageCategory $c): string => $c->value,
+            MessageCategory::cases(),
+        ), 0);
+        $total = 0;
+        $unread = 0;
+        foreach ($rows as $row) {
+            $total += (int) $row['n'];
+            $unread += (int) $row['unread'];
+            // A kind nobody filed lands on no shelf rather than on the wrong
+            // one; MessageCategoryTest fails before that can ship.
+            if (isset($shelfOf[$row['kind']])) {
+                $byCategory[$shelfOf[$row['kind']]] += (int) $row['n'];
+            }
+        }
+
+        return ['total' => $total, 'unread' => $unread, 'byCategory' => $byCategory];
     }
 
     /**

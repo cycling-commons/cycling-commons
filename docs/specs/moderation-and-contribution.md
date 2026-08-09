@@ -1145,6 +1145,48 @@ account lock/ban** is explicitly *not* part of this system: Trash handles the
 content, the account is the admin desk's job
 ([account-and-auth.md](account-and-auth.md)).
 
+### 7.9 Shelves — the inbox's three categories and its unread switch (2026-08-09)
+
+`App\Messaging\MessageCategory` sorts the inbox onto three shelves, and the
+split is by **who started it**, not by which subsystem wrote the row — because
+that is the question a reader is actually asking when they reach for a filter.
+
+| Shelf | Means | Kinds |
+|---|---|---|
+| **Contributions** | an answer to something the rider offered or asked for | submission approved/rejected/needs-info, route approved/rejected/retired, correction done/dismissed, **and** takedown granted/declined |
+| **Notices** | something the platform did that the rider did not start | photo removed on report, hidden pending review, restored after review |
+| **General** | a person wrote to them | curator message |
+
+The takedown split is the case worth stating: a rider who *asked* for their own
+photo to come down is being answered, so that files under Contributions; a
+photo hidden because a stranger reported it is a notice. Same subsystem, two
+shelves, because the reader's relationship to the two events is not the same —
+and notices are precisely the ones nobody should have to dig for.
+
+`RiderReply` is on no shelf by design: it is the rider's own answer to a
+needs-info question, addressed to the deciding curator so the desk can find it,
+and `listFor()` has always excluded it from the inbox.
+`MessageCategory::allFiledKinds()` exists so `MessageFilterTest` can assert the
+shelves cover the enum minus that one — a new kind nobody filed would be
+invisible under every filter but "All", which is the sort of bug that surfaces
+only when a rider says they were never told something.
+
+**Unread is a switch, not a fourth shelf.** It composes with whichever shelf is
+open, because "unread notices" is a real thing to want. It is recipient-only,
+matching `unreadCount()`: a message the reader WROTE was never unread to them,
+so it must not surface their own sent half.
+
+The chips carry counts from one round trip (`countsFor()`, a single grouped
+query) because "Notices 0" is the answer and a click to discover it is a click
+wasted. Per-category totals count the same set the unfiltered list shows, sent
+half included, or the chips would not add up to "All".
+
+They are plain links, not a form: each shelf is a place the reader can bookmark
+and the back button then means what they expect. An unknown `?cat=` shows
+everything rather than erroring — it is a bookmark to a renamed shelf, not an
+attack. A filter that hid everything says so, and does not read as an empty
+inbox.
+
 ## 8. Retention and garbage collection — M8 phase 1
 
 | Key | Value | Where |

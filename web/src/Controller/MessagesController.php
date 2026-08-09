@@ -11,9 +11,11 @@ use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaStorage;
 use App\Messaging\Entity\UserMessage;
+use App\Messaging\MessageCategory;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Pagination\Pager;
+use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -41,6 +43,7 @@ final class MessagesController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MediaStorage $mediaStorage,
+        private readonly PageSize $pageSize,
     ) {
     }
 
@@ -51,15 +54,22 @@ final class MessagesController extends AbstractController
         $user = $this->getUser();
         $userId = (int) $user->getId();
 
+        // Three shelves and an unread switch (moderation-and-contribution.md
+        // §7.9). An unknown ?cat= is treated as no filter rather than as an
+        // error: it is a bookmark to a shelf that has been renamed, not an
+        // attack, and showing everything is the honest fallback.
+        $category = MessageCategory::tryFrom($request->query->getString('cat'));
+        $unreadOnly = $request->query->getBoolean('unread');
+
         $pager = Pager::of(
             $request->query->getInt('page', 1),
-            $messages->countFor($userId),
-            MessageService::PER_PAGE,
+            $messages->countFor($userId, $category, $unreadOnly),
+            $this->pageSize->resolve(MessageService::PER_PAGE),
         );
 
         // Fetch BEFORE marking read, so the template can still flag which
         // rows were new to this visit via isRead().
-        $heads = $messages->listFor($userId, $pager['offset'], $pager['perPage']);
+        $heads = $messages->listFor($userId, $pager['offset'], $pager['perPage'], $category, $unreadOnly);
 
         // The reader's own replies, re-attached to the questions on THIS page.
         // listFor() returns heads only so a question and its answer can never
@@ -117,6 +127,16 @@ final class MessagesController extends AbstractController
             // (owner-reported 2026-08-03).
             'submission_changes' => $this->submissionChanges($list, $userId, $changes),
             'pager' => $pager,
+            // The pager must keep the filter it is paging, or page two of
+            // "Notices" quietly becomes page two of everything.
+            'pager_params' => array_filter([
+                'cat' => $category?->value,
+                'unread' => $unreadOnly ? '1' : null,
+            ], static fn (?string $v): bool => null !== $v),
+            'filter_category' => $category?->value,
+            'filter_unread' => $unreadOnly,
+            'counts' => $messages->countsFor($userId),
+            'categories' => MessageCategory::cases(),
         ]);
     }
 
