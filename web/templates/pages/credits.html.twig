@@ -12,6 +12,13 @@
   .crow .who a{font-weight:600;text-decoration:none;border-bottom:1px solid var(--trail)}
   .crow .who .lic{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-top:.3rem}
   .crow p{font-size:.92rem;color:#3a3d30;margin:0}
+  /* Rows whose text is a LEGALLY REQUIRED notice, not a thank-you. The badge
+     exists for the next editor: twice in one week a mandated text was nearly
+     revised as if it were courtesy copy (the Copernicus notice both times).
+     Everything else on this page can be reworded; these rows cannot. */
+  .crow .req{display:inline-block;font-family:var(--mono);font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--paper);background:var(--clay);border-radius:3px;padding:.15rem .4rem;margin-left:.5rem;vertical-align:middle}
+  .legend{font-size:.82rem;color:#595c4d;margin:1.2rem 0 0}
+  .legend .req{margin-left:0;margin-right:.4rem}
   @media(max-width:640px){.crow{grid-template-columns:1fr;gap:.3rem}}
   .cnote{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin-top:2.4rem}
 </style>
@@ -21,6 +28,7 @@
   <div class="kicker" style="color:var(--trail)">{% trans %}credits.kicker{% endtrans %}</div>
   <h1 class="disp">{% trans %}credits.title{% endtrans %}</h1>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}credits.lead{% endtrans %}</p>
+  <p class="legend" style="color:rgba(239,230,212,.7)"><span class="req">{% trans %}credits.req_badge{% endtrans %}</span>{% trans %}credits.req_legend{% endtrans %}</p>
 </div></div>
 
 <section class="pad"><div class="wrap">
@@ -29,11 +37,11 @@
     <h3>{% trans %}credits.data_h{% endtrans %}</h3>
     <div class="gsub">{% trans %}credits.data_sub{% endtrans %}</div>
     <div class="crow">
-      <div class="who"><a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a><span class="lic">ODbL 1.0 · © OpenStreetMap contributors</span></div>
+      <div class="who"><a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">ODbL 1.0 · © OpenStreetMap contributors</span></div>
       <p>{% trans %}credits.osm_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://geoportail.wallonie.be/">Géoportail de la Wallonie · PIVOT</a><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
+      <div class="who"><a href="https://geoportail.wallonie.be/">Géoportail de la Wallonie · PIVOT</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">{% trans %}credits.lic_open_data{% endtrans %}</span></div>
       <p>{% trans %}credits.wallonia_p{% endtrans %}</p>
     </div>
     <div class="crow">
@@ -49,13 +57,13 @@
       <p>{% trans %}credits.drinkwater_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://commons.wikimedia.org/">Wikimedia Commons</a><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
+      <div class="who"><a href="https://commons.wikimedia.org/">Wikimedia Commons</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">{% trans %}credits.lic_per_photo{% endtrans %}</span></div>
       <p>{% trans %}credits.wikimedia_p{% endtrans %}</p>
     </div>
     {# The Copernicus programme's licence conditions require this credit on
        derived products — the climb gradients are exactly that. #}
     <div class="crow">
-      <div class="who"><a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM">Copernicus DEM GLO-30</a><span class="lic">© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH</span></div>
+      <div class="who"><a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM">Copernicus DEM GLO-30</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH</span></div>
       <p>{% trans %}credits.copernicus_p{% endtrans %}</p>
     </div>
   </div>
@@ -84,15 +92,15 @@
       <p>{% trans %}credits.redoc_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://www.mapillary.com/">Mapillary</a><span class="lic">CC BY-SA 4.0 · © Mapillary contributors</span></div>
+      <div class="who"><a href="https://www.mapillary.com/">Mapillary</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">CC BY-SA 4.0 · © Mapillary contributors</span></div>
       <p>{% trans %}credits.mapillary_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://www.esri.com/">Esri World Imagery</a><span class="lic">© Esri, Maxar, Earthstar Geographics</span></div>
+      <div class="who"><a href="https://www.esri.com/">Esri World Imagery</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">© Esri, Maxar, Earthstar Geographics</span></div>
       <p>{% trans %}credits.esri_p{% endtrans %}</p>
     </div>
     <div class="crow">
-      <div class="who"><a href="https://nominatim.org/">Nominatim</a><span class="lic">GPL-2.0</span></div>
+      <div class="who"><a href="https://nominatim.org/">Nominatim</a><span class="req">{% trans %}credits.req_badge{% endtrans %}</span><span class="lic">GPL-2.0</span></div>
       <p>{% trans %}credits.nominatim_p{% endtrans %}</p>
     </div>
     <div class="crow">
