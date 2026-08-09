@@ -139,6 +139,7 @@
       </div>
     {% endfor %}
   </div>
+  {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_regions', params: pager_params} %}
   {% endif %}
 </div>
 {% endblock %}

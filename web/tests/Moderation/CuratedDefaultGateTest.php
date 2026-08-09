@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Region;
+use App\Controller\ModerateRegionsController;
 use App\Entity\User;
 use App\Moderation\Entity\ModeratorArea;
 use Doctrine\DBAL\Connection;
@@ -234,5 +235,47 @@ final class CuratedDefaultGateTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(403);
         self::assertFalse($this->curatedDefault((int) $theirs->getId()));
+    }
+
+    /**
+     * The desk pages. A global curator sees every onboarded region on earth —
+     * Japan alone is 47 prefectures — and each row costs a readiness count, so
+     * the slice happens before the counting and page two is reachable.
+     *
+     * The country filter survives the paging: the pager's links carry it, or a
+     * curator who narrowed to one country would silently be paged back into
+     * every other one.
+     */
+    public function testTheDeskPagesAndTheCountryFilterSurvivesIt(): void
+    {
+        $client = static::createClient();
+        for ($i = 0; $i < ModerateRegionsController::PER_PAGE + 2; ++$i) {
+            $this->seedRegion(sprintf('paged-region-%02d', $i));
+        }
+        $client->loginUser($this->curator('gate-paging@example.com'), 'main');
+
+        $client->request('GET', '/moderate/regions');
+        self::assertResponseIsSuccessful();
+        $first = (string) $client->getResponse()->getContent();
+        self::assertSame(
+            ModerateRegionsController::PER_PAGE,
+            substr_count($first, 'class="rg-item"'),
+            'page one holds exactly a page',
+        );
+        self::assertStringContainsString('page=2', $first, 'and says there is more');
+
+        $client->request('GET', '/moderate/regions?page=2');
+        self::assertResponseIsSuccessful();
+        self::assertSame(2, substr_count((string) $client->getResponse()->getContent(), 'class="rg-item"'));
+
+        // Out of range lands on the last page, not on an empty desk.
+        $client->request('GET', '/moderate/regions?page=99');
+        self::assertResponseIsSuccessful();
+        self::assertSame(2, substr_count((string) $client->getResponse()->getContent(), 'class="rg-item"'));
+
+        $client->request('GET', '/moderate/regions?country=BE');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('country=BE', (string) $client->getResponse()->getContent(),
+            'the pager carries the filter it is paging');
     }
 }

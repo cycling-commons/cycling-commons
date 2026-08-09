@@ -10,6 +10,7 @@ use App\Catalog\CuratedReadiness;
 use App\Catalog\OperationalRegions;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
+use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -40,6 +41,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[IsGranted('ROLE_CURATOR')]
 final class ModerateRegionsController extends AbstractController
 {
+    /** Regions per page. Matches the submission and route desks. */
+    public const int PER_PAGE = 25;
+
     private const string CSRF_TOKEN_ID = 'region-curated-default';
 
     public function __construct(
@@ -71,6 +75,14 @@ final class ModerateRegionsController extends AbstractController
                 static fn (array $r): bool => (string) $r['countryCode'] === $country,
             ));
         }
+
+        // Sliced BEFORE the readiness reports are built, not after: a global
+        // curator sees every onboarded region on earth (Japan alone is 47),
+        // and every one of them costs a content count. The page is what gets
+        // measured.
+        $pager = Pager::of($request->query->getInt('page', 1), \count($rows), self::PER_PAGE);
+        $rows = \array_slice($rows, $pager['offset'], $pager['perPage']);
+
         $reports = $this->readiness->reportForRegions(array_map(static fn (array $r): int => $r['id'], $rows));
         $threshold = $this->readiness->threshold();
         $minPerBlock = $this->readiness->minPerBlock();
@@ -122,6 +134,8 @@ final class ModerateRegionsController extends AbstractController
             'threshold' => $threshold,
             'min_blocks' => $this->readiness->minBlocks(),
             'min_per_block' => $minPerBlock,
+            'pager' => $pager,
+            'pager_params' => '' === $country ? [] : ['country' => $country],
             'mod_scope_names' => $this->scopeProvider->describe($user, $this->scopeProvider->scopeFor($user)),
         ]);
     }
