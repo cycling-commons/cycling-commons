@@ -26,6 +26,12 @@
           </td>
         </tr>
         <tr>
+          {# The translated footer's <a> lost its inline colour when `style`
+             left the sanitizer allowlist; most clients honour a link colour
+             inherited from an outer <font>-ish rule badly, so accept the
+             client-default link colour in translated footers — the static
+             default below keeps its own inline style, which is template code,
+             not sanitized catalog output. #}
           <td align="center" style="padding:22px 24px 6px;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#8a8d7a">
             {% block footer %}Cycling Commons · open cycling atlas · <a href="https://cyclingcommons.org" style="color:#8a8d7a">cyclingcommons.org</a>{% endblock %}
           </td>

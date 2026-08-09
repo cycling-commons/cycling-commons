@@ -16,7 +16,7 @@
    resolve?" BEFORE any scope change, and the two lookups must never drift
    (07-20 review finding 9). */
 import { D, tpl } from './i18n.js';
-import { escPend, txtOn, haversine, featurePoint } from './util.js';
+import { escPend, safeHref, txtOn, haversine, featurePoint } from './util.js';
 import { uKm, uM } from './units.js';
 import { map, flyToPin } from './map-init.js';
 import { CATALOG, CITIES, active, layerByKey, LETTER_KEY, mode } from './catalog.js';
@@ -147,8 +147,8 @@ function renderPlaceCard(name, meta, near, covGroups){
   document.getElementById('drawerBody').innerHTML =
     `<span class="cc-d-type" style="--c:#3E7D8C;color:#fff">◎ ${meta.t==='City'?(D.city||'City'):(D.town||'Town')}</span>
      <div class="cc-d-name">${escPend(name)}</div>
-     ${meta.info?`<div class="cc-city-info">${meta.info}</div>`:''}
-     <div class="cc-city-links">${meta.wiki?`<a href="${meta.wiki}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">${D.notesNone||'community notes — none yet'}</span></div>
+     ${meta.info?`<div class="cc-city-info">${escPend(meta.info)}</div>`:''}
+     <div class="cc-city-links">${meta.wiki?`<a href="${safeHref(meta.wiki)}" target="_blank" rel="noopener">Wikipedia ↗</a> · `:''}<span class="cc-city-ua">${D.notesNone||'community notes — none yet'}</span></div>
      <h4 class="cc-near-h">${(D.nearbyH||'In the Commons nearby · ≤ {d}').replace('{d}', uKm(NEARBY_KM, 0))}</h4>
      <ul class="cc-near-list">${list}</ul>`;
   document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{

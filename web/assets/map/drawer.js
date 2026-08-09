@@ -100,7 +100,11 @@ export function schemaRows(letter, src, id, opts){
    row, and climbs measured before 2026-08-07 really are 100 m ones, which is
    the honest fallback for a row that predates the attribute. */
 function steepValue(letter, name, value, src){
-  if(letter !== 'B' || name !== 'maxGradient') return value;
+  if(letter !== 'B') return value;
+  // Ascent is stored in metres (ClimbProfiler); written in the reader's unit
+  // like every other height. The raw number would be ambiguous AND metric.
+  if(name === 'gain') return uElev(value);
+  if(name !== 'maxGradient') return value;
   const w = uM((src && src.steepWindowM) ? Number(src.steepWindowM) : 100);
   return tpl(D.steepOver || '{v} over {w}', {v:value, w:w});
 }
@@ -356,9 +360,9 @@ function buildRecord(layer, f){
     recs = recs.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
   }
   const rows = recRowsHtml(recs);
-  const freshState = f.freshness ? ({fresh:D.freshFresh, ageing:D.freshAgeing, stale:D.freshStale}[f.freshness.state] || f.freshness.state) : '';
+  const freshState = f.freshness ? ({fresh:D.freshFresh, ageing:D.freshAgeing, stale:D.freshStale}[f.freshness.state] || escPend(f.freshness.state)) : '';
   const fresh = f.freshness
-    ? `<div class="cc-d-fresh ${f.freshness.state}">${freshState} · ${D.lastConfirmed||'last confirmed'} ${f.freshness.lastConfirmed==='this season'?(D.thisSeason||'this season'):f.freshness.lastConfirmed}</div>` : '';
+    ? `<div class="cc-d-fresh ${f.freshness.state}">${freshState} · ${D.lastConfirmed||'last confirmed'} ${f.freshness.lastConfirmed==='this season'?(D.thisSeason||'this season'):escPend(f.freshness.lastConfirmed)}</div>` : '';
   // difficulty is always {score,label} now (P2-D1); typeof fallback is defensive only.
   const diffLabel = f.difficulty?.label ?? (typeof f.difficulty === 'string' ? f.difficulty : undefined);
   const diffScore = f.difficulty?.score ?? null;
@@ -769,7 +773,7 @@ function gradStrip(grad, f){
     // the first mile reads "0.1-0.1".
     const binDec = 'mi' === uDistUnit() ? 2 : 1;
     const where=`${uKmValue(from,binDec)}–${uKm(to,binDec)}`;
-    return `<span class="cc-grad-col" style="--up:${upH}px;--dn:${dnH}px" title="${where} · ${p}%">${cell}</span>`;
+    return `<span class="cc-grad-col" style="--up:${upH}px;--dn:${dnH}px" title="${where} · ${Number(p)}%">${cell}</span>`;
   }).join('');
   /* Distance ticks. Without them a 22-bar chart is a texture you cannot read a
      position off, and the steepest-ramp marker on the map has nothing to
@@ -851,8 +855,8 @@ export function renderDrawerBody(layer, f){
   const cap = document.getElementById('cc-d-cap');
   let cur = 0;
   function show(i){ cur=i;
-    if(mainImg){ mainImg.src=pl[i].sm;
-      if(pl[i].lg){ mainImg.srcset = `${pl[i].sm} 520w, ${pl[i].lg} 1400w`; mainImg.sizes = '(max-width: 560px) 100vw, 480px'; }
+    if(mainImg){ mainImg.src=safeHref(pl[i].sm);
+      if(pl[i].lg){ mainImg.srcset = `${safeHref(pl[i].sm)} 520w, ${safeHref(pl[i].lg)} 1400w`; mainImg.sizes = '(max-width: 560px) 100vw, 480px'; }
       else { mainImg.removeAttribute('srcset'); mainImg.removeAttribute('sizes'); } }
     if(cap) cap.innerHTML=photoCap(pl[i]);
     document.querySelectorAll('#drawerBody .cc-d-thumb').forEach((t,k)=>t.classList.toggle('on',k===i)); }

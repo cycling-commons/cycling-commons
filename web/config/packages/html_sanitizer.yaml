@@ -14,9 +14,12 @@ framework:
                     code: []
                     br: []
                     span: ['class']
-                    a: ['href', 'style', 'class', 'target', 'rel']
+                    a: ['href', 'class', 'target', 'rel']
                 allowed_link_schemes: ['http', 'https', 'mailto']
                 allow_relative_links: true
-                # a few catalog links carry a colour override
-                allow_attributes:
-                    style: ['a', 'span']
+                # `style` left the allowlist on 2026-08-09: the CSP ships
+                # style-src 'unsafe-inline', so a hostile translation merged
+                # into the public catalogs could inject overlay/phishing CSS
+                # through it, and the sanitizer cannot filter style VALUES.
+                # The two strings that used it (settings email_hint, the email
+                # footer) colour their links from the surrounding template now.

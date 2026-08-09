@@ -65,7 +65,7 @@ function buildCorrPanel(corrections, path){
   p.innerHTML=`<h4>Pending corrections</h4>`+corrections.map(c=>`
     <button class="cc-corr-item" data-corr="${c.id}">
       <span class="cc-corr-sw" style="background:${c._color}"></span>
-      <span class="cc-corr-body"><b>${c.reason.replace(/-/g,' ')}</b>${c.note?` — ${escPend(c.note)}`:''}
+      <span class="cc-corr-body"><b>${escPend(String(c.reason||'').replace(/-/g,' '))}</b>${c.note?` — ${escPend(c.note)}`:''}
         <em>${(c.segments||[]).length} stretch${(c.segments||[]).length===1?'':'es'}${c._pins&&c._pins.length?` · ${c._pins.join('→')}`:''}</em></span>
     </button>`).join('');
   document.querySelector('.mapwrap, .app, body').appendChild(p);

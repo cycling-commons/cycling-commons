@@ -94,6 +94,6 @@
   reorder: 'vote.reorder_hint'|trans,
   moveUp: 'vote.move_up'|trans,
   moveDown: 'vote.move_down'|trans,
-}|json_encode|raw }}</script>
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script src="{{ asset('contribute/vote.js') }}"></script>
 {% endblock %}

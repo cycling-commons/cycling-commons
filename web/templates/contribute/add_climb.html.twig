@@ -400,9 +400,9 @@
 <script nonce="{{ csp_nonce() }}">
   window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_BASE_LABELS = {
-    map: {{ 'map.base_map'|trans|json_encode|raw }},
-    satellite: {{ 'map.base_satellite'|trans|json_encode|raw }},
-    street: {{ 'map.street_level'|trans|json_encode|raw }}
+    map: {{ 'map.base_map'|trans|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }},
+    satellite: {{ 'map.base_satellite'|trans|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }},
+    street: {{ 'map.street_level'|trans|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
   };
 </script>
 <script src="{{ asset('contribute/editor-base.js') }}"></script>

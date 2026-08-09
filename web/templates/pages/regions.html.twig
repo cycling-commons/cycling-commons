@@ -156,7 +156,7 @@
     // 'ZZ' satisfies the route's [A-Za-z]{2} requirement at generation time and
     // is a user-assigned ISO code no real country will ever use; the replace
     // targets only the final path segment.
-    const joinHref = {{ path('join_country', {cc: 'ZZ'})|json_encode|raw }};
+    const joinHref = {{ path('join_country', {cc: 'ZZ'})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     q.addEventListener('input', () => {
       const needle = q.value.trim().toLowerCase();
