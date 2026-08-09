@@ -185,9 +185,15 @@ type this chapter's later sections on paint, layout and clicking do not really a
 
 <!-- CODE-FROM web/assets/map/map-init.js -->
 ```js
-map.addSource('satellite',{type:'raster',tileSize:256,
-  tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+  map.addSource('satellite',{type:'raster',tileSize:256,
+    tiles:[esriTileUrl(ESRI_KEY)],
 ```
+
+(`esriTileUrl()` builds the keyed Esri URL. The tiles used to come from a
+keyless endpoint, which answered without a token — not the same thing as being
+licensed to use it. Since 2026-08-09 the call carries an ArcGIS Location
+Platform key, and with no key configured the source is not added at all, so the
+Satellite control hides itself rather than offering a button that does nothing.)
 
 Compare that to the `geojson` source just above: no `data`, no features, just a `tiles` URL template
 and a `tileSize`. MapLibre never parses a shape out of this source at all — it just requests

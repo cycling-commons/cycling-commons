@@ -83,6 +83,15 @@ export function initLayerList(){
   syncLayersAll();
 
   // on-map base/overlay control (top-right) — Map ↔ Satellite + Street-level overlay
+  //
+  // No satellite layer means no Esri key (map-init.js addSatellite()), and a
+  // two-button Map/Satellite control where Satellite does nothing is worse
+  // than no control: it reads as broken rather than absent. The whole segment
+  // goes, because "Map" alone is not a choice.
+  if(!map.getLayer('satellite')){
+    const seg=document.getElementById('baseSeg');
+    if(seg) seg.hidden=true;
+  }
   document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#baseSeg button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');

@@ -21,6 +21,24 @@ identity/2FA in [account-and-auth.md](account-and-auth.md), CSP/CSRF/limiters in
 
 ---
 
+
+## Running the suite after `cache:clear --env=dev`
+
+`php bin/console cache:clear --env=dev` followed immediately by `bin/phpunit`
+in the same container fails **two** EasyAdmin tests
+(`AdminReadOnlyCrudsTest`) with *"The given DashboardController class is not a
+valid Dashboard controller"*. The class is fine; the dashboard registry the
+`AdminUrlGenerator` consults does not survive the clear.
+
+Measured 2026-08-09: **3 out of 3 runs fail with the dev clear, 0 out of 11
+without it.** Clearing the *test* cache afterwards (`--env=test`) makes it
+green again, and so does simply not clearing before testing.
+
+Worth knowing because of how it presents: two failures that vanish on a
+re-run look exactly like a flaky suite, and re-running until green is how a
+real regression gets waved through. This one is an artefact of the workflow,
+not of the code — but only if you know that.
+
 ## 1. Orchestration: Docker Compose only
 
 The entire dev environment is one Compose project,

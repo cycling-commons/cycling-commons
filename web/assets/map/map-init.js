@@ -102,11 +102,30 @@ export function initMapControls(){
   },'bottom-left');
 }
 
-// optional satellite base — Esri World Imagery (added below the data layers, hidden by default)
+/* The satellite base — Esri World Imagery, keyed.
+
+   The URL used to be the keyless `server.arcgisonline.com` REST path. It
+   answered without a token, which is not the same as being licensed to: Esri's
+   billed basemap endpoints are key-authenticated and their terms require a
+   subscription, and nothing published grants keyless third-party access
+   (docs/specs/Dated/2026-08-09-esri-imagery-terms.md). We hold an ArcGIS
+   Location Platform key now — public-application credential, static-basemap-
+   tiles privilege only, referrer-restricted — so the same imagery is served on
+   terms that permit it.
+
+   No key means NO satellite source at all, rather than a source that 401s
+   every tile: the layer has always been optional, and the toggle simply has
+   nothing to show. Which is also how a lapsed key behaves, so check
+   window.CC_ESRI_KEY before assuming a rendering bug. */
+export const ESRI_KEY = window.CC_ESRI_KEY || '';
+export const esriTileUrl = key =>
+  'https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?token='
+  + encodeURIComponent(key);
+
 export function addSatellite(){
-  if(map.getSource('satellite')) return;
+  if(map.getSource('satellite') || !ESRI_KEY) return;
   map.addSource('satellite',{type:'raster',tileSize:256,
-    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    tiles:[esriTileUrl(ESRI_KEY)],
     maxzoom:19, attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
   map.addLayer({id:'satellite',type:'raster',source:'satellite',layout:{visibility:'none'}});
 }

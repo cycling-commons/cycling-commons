@@ -70,7 +70,10 @@ final class CspSubscriber implements EventSubscriberInterface
         $connectSrc = [
             "'self'",
             'https://tiles.openfreemap.org',
-            'https://server.arcgisonline.com',
+            // Esri World Imagery, keyed since 2026-08-09. The old keyless
+            // server.arcgisonline.com host is gone with it — see
+            // docs/specs/Dated/2026-08-09-esri-imagery-terms.md.
+            'https://ibasemaps-api.arcgis.com',
             'https://*.mapillary.com',
             'https://*.fbcdn.net',
             'https://photon.komoot.io',

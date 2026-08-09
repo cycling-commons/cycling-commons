@@ -44,10 +44,16 @@
     var token = o.token || '';
     var streetOn = false;
 
-    if (!map.getSource('ed-satellite')) {
+    // Esri World Imagery, keyed since 2026-08-09 — see map-init.js's
+    // addSatellite() for why the keyless path had to go. No key, no source:
+    // the Satellite toggle then has nothing to show, which is the same
+    // behaviour a lapsed key produces.
+    var esriKey = window.CC_ESRI_KEY || '';
+    if (!map.getSource('ed-satellite') && esriKey) {
       map.addSource('ed-satellite', {
         type: 'raster', tileSize: 256, maxzoom: 19,
-        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tiles: ['https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?token='
+          + encodeURIComponent(esriKey)],
         attribution: 'Imagery © Esri, Maxar, Earthstar Geographics',
       });
       // NO beforeId, matching /map's addSatellite(). Inserting it before the
@@ -117,7 +123,14 @@
     var bSat = mk(labels.satellite || 'Satellite');
     bMap.classList.add('on');
 
+    // Without a key there is no ed-satellite layer, and setLayoutProperty on a
+    // layer MapLibre does not have throws — so this used to be one missing env
+    // var away from breaking the editor's base toggle outright, not merely
+    // leaving it inert. The button is removed rather than guarded silently.
+    if (!map.getLayer('ed-satellite')) bSat.hidden = true;
+
     function setBase(sat) {
+      if (!map.getLayer('ed-satellite')) return;
       map.setLayoutProperty('ed-satellite', 'visibility', sat ? 'visible' : 'none');
       bMap.classList.toggle('on', !sat);
       bSat.classList.toggle('on', sat);
