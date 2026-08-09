@@ -253,9 +253,19 @@
       routing = true;
       routeError = false;
       var a = state.start, b = state.summit;
-      var url = 'https://router.project-osrm.org/route/v1/driving/' + a[0] + ',' + a[1] + ';' + b[0] + ',' + b[1] + '?overview=full&geometries=geojson';
-      fetch(url, { signal: ctl.signal }).then(function (r) {
-        if (!r.ok) throw new Error('OSRM HTTP ' + r.status);
+      /* OUR Valhalla via /contribute/route, not the public OSRM demo server —
+         its policy forbids production reliance, and it was the one third party
+         in a rider's hot path (external-systems audit 2026-08-09). The proxy
+         answers in OSRM's response shape on purpose, so the parsing and the
+         no-route branch below are unchanged. Bicycle costing now, too: driving
+         refused the greenways some climbs actually ride. */
+      fetch('/contribute/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ a: a, b: b }),
+        signal: ctl.signal
+      }).then(function (r) {
+        if (!r.ok) throw new Error('route HTTP ' + r.status);
         return r.json();
       }).then(function (d) {
         clearTimeout(timer);

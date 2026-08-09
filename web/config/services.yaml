@@ -52,6 +52,14 @@ services:
             $demSource: '%env(ELEVATION_DEM_SOURCE)%'
             $endpoints: '@App\Elevation\ElevationEndpoints'
 
+    # Same Valhalla, same master switch, same per-continent selection — the
+    # climb editor's road snapping (replaced the OSRM demo server, whose policy
+    # forbids production reliance; external-systems audit 2026-08-09).
+    App\Elevation\RouteSnapper:
+        arguments:
+            $valhallaUrl: '%env(ELEVATION_URL)%'
+            $endpoints: '@App\Elevation\ElevationEndpoints'
+
     # One Valhalla per continent, each serving only the .hgt tiles it holds, so
     # a climb outside Europe has to be asked of the instance that has its ground
     # (climb-elevation.md §2b-i). ELEVATION_URL remains both the default and the
