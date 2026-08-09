@@ -156,12 +156,15 @@ export function drawClimbLine(id, latlngs, grad, layer, f){
 // unmistakable. Cleared when the drawer closes or a non-route feature opens.
 export const ROUTE_BASE_COLOR='#FD986E';   // 60% #FF5A1F pre-blended over #FBF4E4
 export const ROUTE_BASE_W=5, ROUTE_BASE_CASE_W=9;
-// A SELECTED route reads as a wide orange halo that the road-surface line
+// A SELECTED route reads as an orange halo that the road-surface line
 // (3→8 px by zoom, over an 8 px cream case) sits ON TOP of — so you see the
-// highlight AND the surface on it. Kept comfortably wider than the surface's
-// 8 px case at every zoom so the orange shows on both sides of the surface line.
-export const ROUTE_SEL_W=['interpolate',['linear'],['zoom'],9,8,13,13,16,17];
-export const ROUTE_SEL_CASE_W=['interpolate',['linear'],['zoom'],9,12,13,18,16,23];
+// highlight AND the surface on it. The halo therefore has to clear the
+// surface's 8 px case, but only just: the earlier stops (13 px line / 18 px
+// case at z13) overshot that constraint into a blob that dwarfed the 5 px
+// siblings (owner-reported 2026-08-09). Selection is carried mostly by the
+// full brand orange + dimmed siblings anyway; the width bump is a nudge.
+export const ROUTE_SEL_W=['interpolate',['linear'],['zoom'],9,7,13,10,16,13];
+export const ROUTE_SEL_CASE_W=['interpolate',['linear'],['zoom'],9,10,13,14,16,18];
 export let selectedRouteLayerId=null;
 export const routeLineIds=()=>map.getStyle().layers.map(l=>l.id).filter(id=>/^experience-\d+$/.test(id));
 /* THE stacking authority. Every layer named here is moved to the top in turn,
