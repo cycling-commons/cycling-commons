@@ -436,4 +436,40 @@ final class CuratorApplicationReviewTest extends WebTestCase
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM moderator_area WHERE user_id = ?', [$applicant->getId()]), 'no narrowing row was inserted');
         self::assertSame('pending', $db->fetchOne('SELECT status FROM curator_application WHERE id = ?', [$app->getId()]), 'the application is still re-decidable');
     }
+
+    /**
+     * The review page pages, and the pager counts the set it is paging. Only
+     * PENDING applications are on it — a decided one must leave both the list
+     * and the count, or the reviewer's "3 in total" outlives their work.
+     */
+    public function testTheReviewPagePagesAndCountsOnlyWhatIsWaiting(): void
+    {
+        $client = static::createClient();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $svc = self::getContainer()->get(CuratorApplicationService::class);
+        $em->getConnection()->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('paging-pt', 'Portugal', ST_GeomFromText('POLYGON((0 0,0 1,1 1,1 0,0 0))', 4326), 900, 'PT', 'PT', 2, 'test', NOW(), NOW())",
+        );
+
+        $apps = [];
+        for ($i = 0; $i < 3; ++$i) {
+            $applicant = new User();
+            $applicant->setEmail(sprintf('paging-applicant-%d@example.test', $i))->setDisplayName('Paging Applicant '.$i);
+            $applicant->setPassword('x');
+            $applicant->setEmailVerified(true);
+            $em->persist($applicant);
+            $em->flush();
+            $apps[] = $svc->submit($applicant, 'PT', null, null, 'I would like to help out here');
+        }
+
+        self::assertSame(3, $svc->pendingCount());
+        self::assertCount(2, $svc->pending(1, 2));
+        self::assertCount(1, $svc->pending(2, 2));
+
+        $svc->decline($apps[0], $this->admin($client), 'Not this time.');
+
+        self::assertSame(2, $svc->pendingCount(), 'a decided application leaves the count with the list');
+        self::assertCount(2, $svc->pending(1, 25));
+    }
 }

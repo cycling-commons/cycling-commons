@@ -18,6 +18,7 @@ use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationService;
+use App\Pagination\Pager;
 use App\Service\AdminDashboardStats;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
@@ -322,8 +323,14 @@ final class DashboardController extends AbstractDashboardController
             return $this->redirectToRoute('admin_curator_applications');
         }
 
+        $pager = Pager::of(
+            $request->query->getInt('page', 1),
+            $applications->pendingCount(),
+            CuratorApplicationService::PER_PAGE,
+        );
+
         $rows = [];
-        foreach ($applications->pending() as $app) {
+        foreach ($applications->pending($pager['page'], $pager['perPage']) as $app) {
             // requested_region_id carries no FK, so a region deleted after
             // submission does not null the column out — it dangles. That
             // must render as its own state, not fall through to "whole
@@ -382,6 +389,7 @@ final class DashboardController extends AbstractDashboardController
         return $this->render('admin/curator_applications.html.twig', [
             'rows' => $rows,
             'csrf_token_id' => self::CURATOR_APPS_CSRF_TOKEN_ID,
+            'pager' => $pager,
         ]);
     }
 
@@ -439,10 +447,19 @@ final class DashboardController extends AbstractDashboardController
             return $this->redirectToRoute('admin_withheld_photos');
         }
 
+        // Paging matters more here than anywhere: this page exists to undo a
+        // flood, and a flood is exactly what fills it.
+        $pager = Pager::of(
+            $request->query->getInt('page', 1),
+            $takedowns->withheldThirdPartyCount(),
+            MediaTakedownService::PER_PAGE,
+        );
+
         return $this->render('admin/withheld_photos.html.twig', [
-            'cards' => $takedowns->withheldThirdPartyCards(),
+            'cards' => $takedowns->withheldThirdPartyCards($pager['page'], $pager['perPage']),
             'breaker_open' => $breaker->isOpen(),
             'csrf_token_id' => self::WITHHELD_PHOTOS_CSRF_TOKEN_ID,
+            'pager' => $pager,
         ]);
     }
 
@@ -485,10 +502,18 @@ final class DashboardController extends AbstractDashboardController
             return $this->redirectToRoute('admin_escalated');
         }
 
+        // Two held lists on one page, so two pagers with two keys — `page` for
+        // the photos, `spage` for the submissions — and each carries the
+        // other's current page so neither resets the other.
+        $pager = Pager::of($request->query->getInt('page', 1), $escalations->heldCount(), MediaEscalationService::PER_PAGE);
+        $submissionPager = Pager::of($request->query->getInt('spage', 1), $moderation->heldSubmissionCount(), ModerationService::HELD_PER_PAGE);
+
         return $this->render('admin/escalated.html.twig', [
-            'cards' => $escalations->held(),
-            'submissions' => $moderation->heldSubmissions(),
+            'cards' => $escalations->held($pager['page'], $pager['perPage']),
+            'submissions' => $moderation->heldSubmissions($submissionPager['page'], $submissionPager['perPage']),
             'csrf_token_id' => self::ESCALATED_CSRF_TOKEN_ID,
+            'pager' => $pager,
+            'submission_pager' => $submissionPager,
         ]);
     }
 }

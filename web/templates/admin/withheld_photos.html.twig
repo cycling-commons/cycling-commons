@@ -71,6 +71,12 @@
                 <button type="submit" class="btn btn-primary">{{ 'admin.withheld.restore'|trans }}</button>
                 <p class="form-text">{{ 'admin.withheld.restore_help'|trans }}</p>
             </form>
+
+            {# Outside the form on purpose: paging is navigation, and a restore
+               acts on the page in front of the operator. Clearing a flood is
+               therefore a loop — restore this page, land back on a page one
+               that now holds the next batch. #}
+            {% include 'admin/_pager.html.twig' with {pager: pager, route: 'admin_withheld_photos', params: {}} %}
         {% endif %}
     </div>
 {% endblock %}

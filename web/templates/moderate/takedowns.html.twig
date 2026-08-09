@@ -122,6 +122,7 @@
         </form>
       </article>
     {% endfor %}
+    {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_takedowns', params: {}} %}
   </section>
   {% endif %}
 </div>

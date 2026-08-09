@@ -127,18 +127,25 @@ final class ModerateController extends AbstractController
      * to be shared out by jurisdiction, so every curator sees every one.
      */
     #[Route('/moderate/takedowns', name: 'moderate_takedowns')]
-    public function takedowns(): Response
+    public function takedowns(Request $request): Response
     {
         /** @var User $user */
         $user = $this->getUser();
         $scope = $this->scopeProvider->scopeFor($user);
 
+        $pager = Pager::of(
+            $request->query->getInt('page', 1),
+            $this->takedowns->pendingCount(),
+            MediaTakedownService::PER_PAGE,
+        );
+
         return $this->render('moderate/takedowns.html.twig', [
             'page_title' => 'meta.moderate_takedowns_title',
             'page_description' => 'meta.moderate_takedowns_description',
             'nav_active' => 'moderate_takedowns',
-            'takedowns' => $this->takedowns->pendingCards(),
+            'takedowns' => $this->takedowns->pendingCards($pager['page'], $pager['perPage']),
             'urgent_breaker_open' => $this->breaker->isOpen(),
+            'pager' => $pager,
             ...$this->deskBadges($user, $scope),
         ]);
     }
@@ -179,7 +186,7 @@ final class ModerateController extends AbstractController
             'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
             'mod_submission_count' => $this->queue->total($scope),
             'mod_route_count' => $this->routeQueue->total($scope) + $this->routeQueue->pendingSuggestionCount($scope),
-            'mod_takedown_count' => \count($this->takedowns->pendingCards()),
+            'mod_takedown_count' => $this->takedowns->pendingCount(),
         ];
     }
 

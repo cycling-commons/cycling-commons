@@ -1,0 +1,40 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+  The admin area's pager.
+
+  Same arithmetic as every other paged list — `pager` comes from
+  App\Pagination\Pager::of() and means exactly what it means on the curator
+  desks — but different clothes: these pages extend EasyAdmin's layout, which
+  is Bootstrap, and `partials/_pager.html.twig` is styled by
+  `account/_shell_styles.html.twig`, which admin pages never load. Rather than
+  ship the account CSS into EasyAdmin (or leave the links unstyled), this
+  renders Bootstrap's own pagination classes, which are already on the page.
+
+  Params: identical to partials/_pager.html.twig —
+    pager  array  — {page, pages, total, prev, next}
+    route  string — the route to link back to
+    params array  — the current filters, so paging never silently drops them
+    key    string — the query parameter this pager moves (default `page`)
+#}
+{% set key = key|default('page') %}
+{% if pager.pages > 1 %}
+  <nav aria-label="{{ 'pager.label'|trans }}" class="d-flex align-items-center gap-3 mt-3">
+    <ul class="pagination mb-0">
+      <li class="page-item{{ pager.prev ? '' : ' disabled' }}">
+        {% if pager.prev %}
+          <a class="page-link" href="{{ path(route, params|merge({(key): pager.prev})) }}" rel="prev">&larr; {{ 'pager.prev'|trans }}</a>
+        {% else %}
+          <span class="page-link">&larr; {{ 'pager.prev'|trans }}</span>
+        {% endif %}
+      </li>
+      <li class="page-item{{ pager.next ? '' : ' disabled' }}">
+        {% if pager.next %}
+          <a class="page-link" href="{{ path(route, params|merge({(key): pager.next})) }}" rel="next">{{ 'pager.next'|trans }} &rarr;</a>
+        {% else %}
+          <span class="page-link">{{ 'pager.next'|trans }} &rarr;</span>
+        {% endif %}
+      </li>
+    </ul>
+    <span class="text-muted small">{{ 'pager.at'|trans({'%page%': pager.page, '%pages%': pager.pages, '%total%': pager.total}) }}</span>
+  </nav>
+{% endif %}

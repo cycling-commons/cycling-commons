@@ -102,5 +102,6 @@
                 </div>
             </div>
         {% endfor %}
+        {% include 'admin/_pager.html.twig' with {pager: pager, route: 'admin_curator_applications', params: {}} %}
     </div>
 {% endblock %}

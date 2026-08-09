@@ -27,6 +27,13 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class CuratorApplicationService
 {
+    /**
+     * Applications per review page. Smaller than the desks' 25 on purpose:
+     * each row carries a person's motivation text, their OSM standing and
+     * their existing scope, and the reviewer reads all of it.
+     */
+    public const int PER_PAGE = 15;
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
@@ -277,10 +284,21 @@ final class CuratorApplicationService
     }
 
     /** @return list<CuratorApplication> */
-    public function pending(): array
+    public function pending(int $page = 1, int $perPage = self::PER_PAGE): array
+    {
+        return $this->em->getRepository(CuratorApplication::class)->findBy(
+            ['status' => CuratorApplicationStatus::Pending],
+            ['createdAt' => 'ASC'],
+            max(1, $perPage),
+            max(0, (max(1, $page) - 1) * max(1, $perPage)),
+        );
+    }
+
+    /** How many applications are waiting, for the pager. */
+    public function pendingCount(): int
     {
         return $this->em->getRepository(CuratorApplication::class)
-            ->findBy(['status' => CuratorApplicationStatus::Pending], ['createdAt' => 'ASC']);
+            ->count(['status' => CuratorApplicationStatus::Pending]);
     }
 
     /**

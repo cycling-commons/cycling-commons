@@ -52,6 +52,26 @@ final class MediaTakedownService
 {
     public const int REASON_MAX = 2000;
 
+    /** Cards per page on the takedown desk and the withheld-photo recovery page. */
+    public const int PER_PAGE = 25;
+
+    /**
+     * The open-request predicate, shared by the list and its count so the
+     * pager can never disagree with the page it is paging.
+     *
+     * `escalatedAt IS NULL`: a photo under legal hold leaves the curator desk
+     * entirely (docs/specs/photo-uploads.md §6d). Whatever was pending on it
+     * is the admin's problem now, and no curator should be shown the
+     * thumbnail again.
+     */
+    private const string PENDING_DQL = 'm.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
+               AND m.escalatedAt IS NULL';
+
+    /** The recovery desk's predicate, shared the same way. */
+    private const string WITHHELD_THIRD_PARTY_DQL = 'm.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
+               AND m.takedownSource = :source AND m.takedownWithheld = true
+               AND m.escalatedAt IS NULL';
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MediaEventLog $events,
@@ -290,18 +310,24 @@ final class MediaTakedownService
      * down and are still waiting. Newest first — an attack arrives in a burst,
      * and the burst is what an operator is here to undo.
      *
+     * Paged, and this is the surface where paging matters most: a flood is
+     * precisely the case that fills it, so the page that exists to UNDO a
+     * flood must not itself try to render one.
+     *
      * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, category: ?string, reporter: string}>
      */
-    public function withheldThirdPartyCards(): array
+    public function withheldThirdPartyCards(int $page = 1, int $perPage = self::PER_PAGE): array
     {
         /** @var list<MediaUpload> $rows */
         $rows = $this->em->createQuery(
             'SELECT m FROM '.MediaUpload::class.' m
-             WHERE m.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
-               AND m.takedownSource = :source AND m.takedownWithheld = true
-               AND m.escalatedAt IS NULL
+             WHERE '.self::WITHHELD_THIRD_PARTY_DQL.'
              ORDER BY m.takedownRequestedAt DESC',
-        )->setParameter('source', MediaTakedownSource::ThirdParty)->getResult();
+        )
+            ->setParameter('source', MediaTakedownSource::ThirdParty)
+            ->setFirstResult(self::offset($page, $perPage))
+            ->setMaxResults(max(1, $perPage))
+            ->getResult();
 
         $cards = [];
         foreach ($rows as $upload) {
@@ -324,6 +350,14 @@ final class MediaTakedownService
         }
 
         return $cards;
+    }
+
+    /** How many photos the recovery desk is holding, for its pager. */
+    public function withheldThirdPartyCount(): int
+    {
+        return (int) $this->em->createQuery(
+            'SELECT COUNT(m.id) FROM '.MediaUpload::class.' m WHERE '.self::WITHHELD_THIRD_PARTY_DQL,
+        )->setParameter('source', MediaTakedownSource::ThirdParty)->getSingleScalarResult();
     }
 
     /**
@@ -352,21 +386,39 @@ final class MediaTakedownService
     }
 
     /** @return list<MediaUpload> oldest first — a rights request waits for nobody's convenience */
-    public function pending(): array
+    public function pending(int $page = 1, int $perPage = self::PER_PAGE): array
     {
         /** @var list<MediaUpload> $rows */
         $rows = $this->em->createQuery(
-            // escalatedAt IS NULL: a photo under legal hold leaves the
-            // curator desk entirely (photo-uploads.md §6d). Whatever was
-            // pending on it is the admin's problem now, and no curator should
-            // be shown the thumbnail again.
             'SELECT m FROM '.MediaUpload::class.' m
-             WHERE m.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
-               AND m.escalatedAt IS NULL
+             WHERE '.self::PENDING_DQL.'
              ORDER BY m.takedownRequestedAt ASC',
-        )->getResult();
+        )
+            ->setFirstResult(self::offset($page, $perPage))
+            ->setMaxResults(max(1, $perPage))
+            ->getResult();
 
         return $rows;
+    }
+
+    /**
+     * How many rights requests are waiting.
+     *
+     * Both the pager and the desk-tab badge read this. The badge used to
+     * `count()` the built cards, which meant hydrating every pending upload
+     * and describing each one just to arrive at an integer — on every render
+     * of every moderation page, since the badge rides the shared shell.
+     */
+    public function pendingCount(): int
+    {
+        return (int) $this->em->createQuery(
+            'SELECT COUNT(m.id) FROM '.MediaUpload::class.' m WHERE '.self::PENDING_DQL,
+        )->getSingleScalarResult();
+    }
+
+    private static function offset(int $page, int $perPage): int
+    {
+        return max(0, (max(1, $page) - 1) * max(1, $perPage));
     }
 
     /**
@@ -376,10 +428,10 @@ final class MediaTakedownService
      *
      * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, source: string, category: ?string, contact: ?string, withheld: bool}>
      */
-    public function pendingCards(): array
+    public function pendingCards(int $page = 1, int $perPage = self::PER_PAGE): array
     {
         $cards = [];
-        foreach ($this->pending() as $upload) {
+        foreach ($this->pending($page, $perPage) as $upload) {
             $requestedAt = $upload->getTakedownRequestedAt();
             if (null === $requestedAt) {
                 continue;   // unreachable via pending(), and cheaper than a nullable in the view

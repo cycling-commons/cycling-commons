@@ -41,6 +41,13 @@ final class ModerationService
     public const string ACTION_ESCALATE = 'submission_escalated';
     public const string ACTION_ESCALATE_RELEASE = 'submission_escalation_released';
 
+    /**
+     * Rows per page in the admin's held-submission list. Matches
+     * MediaEscalationService::PER_PAGE — the two lists share one page, and a
+     * reader should not meet two page sizes on it.
+     */
+    public const int HELD_PER_PAGE = 25;
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MessageService $messages,
@@ -377,12 +384,15 @@ final class ModerationService
      *
      * @return list<array{id: int, title: string, reason: string, escalatedAt: \DateTimeImmutable, escalatedBy: string}>
      */
-    public function heldSubmissions(): array
+    public function heldSubmissions(int $page = 1, int $perPage = self::HELD_PER_PAGE): array
     {
         /** @var list<Submission> $rows */
         $rows = $this->em->createQuery(
             'SELECT s FROM '.Submission::class.' s WHERE s.escalatedAt IS NOT NULL ORDER BY s.escalatedAt DESC',
-        )->getResult();
+        )
+            ->setFirstResult(max(0, (max(1, $page) - 1) * max(1, $perPage)))
+            ->setMaxResults(max(1, $perPage))
+            ->getResult();
 
         $out = [];
         foreach ($rows as $submission) {
@@ -402,5 +412,13 @@ final class ModerationService
         }
 
         return $out;
+    }
+
+    /** How many submissions are under hold, for the pager. */
+    public function heldSubmissionCount(): int
+    {
+        return (int) $this->em->createQuery(
+            'SELECT COUNT(s.id) FROM '.Submission::class.' s WHERE s.escalatedAt IS NOT NULL',
+        )->getSingleScalarResult();
     }
 }

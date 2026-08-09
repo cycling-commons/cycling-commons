@@ -49,6 +49,10 @@
                 </div>
             </div>
         {% endfor %}
+        {# Two held lists, two pagers, two query keys: `spage` moves the
+           submissions above, `page` the photos below, and each carries the
+           other's current page so neither resets the other. #}
+        {% include 'admin/_pager.html.twig' with {pager: submission_pager, route: 'admin_escalated', params: {page: pager.page}, key: 'spage'} %}
 
         {% if cards is not empty %}
             {% for card in cards %}
@@ -82,6 +86,7 @@
                     </div>
                 </div>
             {% endfor %}
+            {% include 'admin/_pager.html.twig' with {pager: pager, route: 'admin_escalated', params: {spage: submission_pager.page}} %}
         {% endif %}
     </div>
 {% endblock %}

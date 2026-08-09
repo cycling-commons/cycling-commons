@@ -167,4 +167,31 @@ final class SubmissionEscalationTest extends KernelTestCase
         self::assertFalse($sub->isEscalated());
         self::assertSame([], $this->moderation->heldSubmissions());
     }
+
+    /**
+     * The admin's held list pages, and the count matches it. Releasing takes
+     * a row out of both — a count that outlived its list would tell an admin
+     * there is still material under hold when there is none.
+     */
+    public function testTheHeldListPagesAndCountsTheSameSet(): void
+    {
+        $curator = $this->user('esc-sub-paging-curator');
+        $admin = $this->user('esc-sub-paging-admin');
+
+        $ids = [];
+        for ($i = 0; $i < 3; ++$i) {
+            $id = (int) $this->submission($this->user('esc-sub-paging-author-'.$i))->getId();
+            $this->moderation->escalateSubmission($id, $curator, 'Held '.$i);
+            $ids[] = $id;
+        }
+
+        self::assertSame(3, $this->moderation->heldSubmissionCount());
+        self::assertCount(2, $this->moderation->heldSubmissions(1, 2));
+        self::assertCount(1, $this->moderation->heldSubmissions(2, 2));
+
+        $this->moderation->releaseSubmission($ids[0], $admin, 'False alarm.');
+
+        self::assertSame(2, $this->moderation->heldSubmissionCount());
+        self::assertCount(2, $this->moderation->heldSubmissions(1, 25));
+    }
 }
