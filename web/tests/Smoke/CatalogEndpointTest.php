@@ -45,17 +45,32 @@ final class CatalogEndpointTest extends WebTestCase
 
         /** @var array<string, mixed> $data */
         $data = json_decode((string) $response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
-        foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'] as $letter) {
+        // No 'L': the heat points moved to /map/heat.json on 2026-08-09 so
+        // they stop riding the critical payload for an Off-by-default layer.
+        foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'] as $letter) {
             self::assertArrayHasKey($letter, $data);
         }
         self::assertArrayHasKey('refs', $data);            // Plan 2 Task 13: curated-OSM refs for tile dedupe
         self::assertContains('node/1001', $data['refs']);
         self::assertCount(3, $data['D']['features']);
         self::assertCount(1, $data['K']);
-        self::assertCount(2, $data['L']);
+        self::assertArrayNotHasKey('L', $data, 'the heat points are not on the critical payload');
 
         // Conditional revalidation: replaying the ETag yields 304 with no body.
         $client->request('GET', '/map/catalog.json', [], [], ['HTTP_IF_NONE_MATCH' => $response->getEtag()]);
+        self::assertResponseStatusCodeSame(304);
+
+        // …and the heat points, on their own endpoint, with the same
+        // public-cacheable + ETag discipline.
+        $client->request('GET', '/map/heat.json');
+        $heatResponse = $client->getResponse();
+        self::assertResponseIsSuccessful();
+        /** @var list<array{0: float, 1: float, 2: ?string, 3: ?int}> $heat */
+        $heat = json_decode((string) $heatResponse->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertCount(2, $heat);
+        self::assertTrue($heatResponse->headers->getCacheControlDirective('public'));
+
+        $client->request('GET', '/map/heat.json', [], [], ['HTTP_IF_NONE_MATCH' => $heatResponse->getEtag()]);
         self::assertResponseStatusCodeSame(304);
     }
 }

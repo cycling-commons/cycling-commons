@@ -386,6 +386,8 @@ window.CC_VENDOR = {{ {
      sources. Production ships neither the flag nor the handle. #}
   {% if app.environment != 'prod' %}window.CC_DEBUG = true;{% endif %}
   window.CC_CATALOG_URL = {{ path('map_catalog')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  {# The heat points live off the critical payload; fetched on the first heatmap-On only. #}
+  window.CC_HEAT_URL = {{ path('map_heat')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_FIELD_SCHEMA = {{ field_schema|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Locale bundle for the strings map.js renders itself (layer list, subtitle,

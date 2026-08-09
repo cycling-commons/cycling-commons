@@ -288,7 +288,12 @@ final class CatalogProviderTest extends KernelTestCase
             "SELECT id FROM region WHERE slug = 'test-square'",
         );
         self::assertGreaterThan(0, $regionId);
-        self::assertSame([[50.5, 4.5, 'summer', $regionId], [50.6, 4.6, 'winter', $regionId]], $p['L']);
+        // heat() is its own endpoint now, not a catalog letter (2026-08-09).
+        self::assertArrayNotHasKey('L', $p);
+        self::assertSame(
+            [[50.5, 4.5, 'summer', $regionId], [50.6, 4.6, 'winter', $regionId]],
+            static::getContainer()->get(CatalogProvider::class)->heat(),
+        );
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
         self::assertIsInt($route['id']);
         self::assertGreaterThan(0, $route['id']);

@@ -344,12 +344,19 @@ export function initChips(){
   });
 
   // ride-heatmap toggle + season filter (source built on first On — W43)
-  document.querySelectorAll('#heattoggle button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#heattoggle button').forEach(b=>b.onclick=async()=>{
     document.querySelectorAll('#heattoggle button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
     // addHeatmap ends with updateHeatFilter(), which honours a season chip
     // selected before the layer existed AND the active region scope.
-    if(b.dataset.h==='on' && !map.getLayer('rideheat')) addHeatmap();
-    if(map.getLayer('rideheat')) map.setLayoutProperty('rideheat','visibility', b.dataset.h==='on'?'visible':'none');
+    // Awaited since 2026-08-09: the points are fetched on first use rather
+    // than shipped in catalog.json, so the layer does not exist yet when this
+    // returns synchronously. The visibility flip has to wait for it, and the
+    // button re-read below is deliberate — an impatient rider can have
+    // toggled Off again while the fetch was in flight, and the layer must end
+    // up matching the button, not the click that started the fetch.
+    if(b.dataset.h==='on' && !map.getLayer('rideheat')) await addHeatmap();
+    const want=document.querySelector('#heattoggle button.on');
+    if(map.getLayer('rideheat')) map.setLayoutProperty('rideheat','visibility', (want&&want.dataset.h==='on')?'visible':'none');
   });
   document.querySelectorAll('#season .chip').forEach(c=>c.onclick=()=>{
     document.querySelectorAll('#season .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');

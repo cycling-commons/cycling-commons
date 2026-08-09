@@ -4,21 +4,30 @@
    move and the right-click coordinate popup
 .
 
-   `map` is constructed at module scope — one of the two exceptions §4.2 allows.
+   `map` is bound at module scope — one of the two exceptions §4.2 allows.
    Every other module needs it before any init() runs, it is assigned once, and
    the catalog-fetch gate already guarantees the container exists. Everything
-   with a side effect beyond that is an exported init*() the entry calls. */
+   with a side effect beyond that is an exported init*() the entry calls.
 
-const _scopeBb = window.CCScope ? window.CCScope.bbox() : null;
-export const map = new maplibregl.Map({
-  container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
-  // Initial viewport = the active scope's bbox (Wallonia by default; a saved
-  // Flanders/Brussels scope reopens there). Everywhere has NO bbox (null), so
-  // it — like a missing registry — opens on the old hardcoded Wallonia
-  // literal: a deliberate anchor view, not a scope (review 07-20 info c).
-  bounds: _scopeBb ? [[_scopeBb[0],_scopeBb[1]],[_scopeBb[2],_scopeBb[3]]] : [[2.84,49.45],[6.41,50.85]],
-  fitBoundsOptions:{padding:24}, attributionControl:false
-});
+   It is ADOPTED, not constructed, since 2026-08-09. This module lives inside
+   the graph that only executes once the ~1 MB catalog has arrived, so
+   constructing here meant the basemap style request — and the first tile a
+   visitor sees — queued behind a payload describing layers drawn much later.
+   catalog-load.js builds the instance before it starts that fetch, and the
+   bounds reasoning moved there with it. Nothing else about the gate changed:
+   every module below still runs exactly when it used to.
+
+   The fallback constructs from the same options object catalog-load.js
+   published, so there is one home for them either way. Reaching the throw
+   means map.js was loaded by something other than catalog-load.js, in which
+   case none of the CC_* globals exist either and a named error here beats
+   twenty confusing ones below. */
+
+export const map = (function(){
+  if(window.__ccMapInstance) return window.__ccMapInstance;
+  if(window.__ccMapOpts) return new maplibregl.Map(window.__ccMapOpts);
+  throw new Error('map-init: no MapLibre instance and no options — map.js must be booted by catalog-load.js');
+})();
 // Non-prod test handle. web/tests/browser/map-smoke.js (the checkpoint sweep of
 // map-and-search.md §2) runs as a page script and has no
 // other way to reach the MapLibre instance, so it cannot assert on layers,

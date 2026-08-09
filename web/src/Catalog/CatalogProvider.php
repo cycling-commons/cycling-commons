@@ -62,7 +62,11 @@ final class CatalogProvider
             'I' => $this->featureCollection('I'),
             'J' => $this->featureCollection('J'),
             'K' => $this->routes(),
-            'L' => $this->heat(),
+            // L (the ~6,600 heat points) is NOT here. It moved to its own
+            // endpoint on 2026-08-09: the layer is Off by default, so every
+            // visitor was paying its bytes on the critical path for something
+            // most of them never switch on. {@see heat()} and
+            // MapController::heat().
             // M · Public toilets (2026-07-30) — plain served-items collection,
             // same path as G/H utilities.
             'M' => $this->featureCollection('M'),
@@ -427,14 +431,17 @@ final class CatalogProvider
     }
 
     /**
-     * CC_ROUTES.heat shape: [[lat, lng, season, rid], …] in import order.
+     * The ride heatmap's points — served by `/map/heat.json`, NOT by
+     * catalog.json, and fetched only when a rider first turns the layer on.
+     *
+     * Shape: [[lat, lng, season, rid], …] in import order.
      * rid = region_id (07-20 review finding 5): the heat layer scope-filters
      * client-side like every served layer; null renders only in Everywhere
      * (the leak-safe rid-less default, map-and-search.md §4.5).
      *
      * @return list<array{0: float, 1: float, 2: string|null, 3: int|null}>
      */
-    private function heat(): array
+    public function heat(): array
     {
         // Only 'auto' heat is served today. Rows from any future source
         // (e.g. user-contributed traces) are deliberately absent until a

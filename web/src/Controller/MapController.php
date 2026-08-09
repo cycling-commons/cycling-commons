@@ -378,6 +378,34 @@ final class MapController extends AbstractController
     }
 
     /**
+     * The ride heatmap's points, on their own endpoint.
+     *
+     * ~6,600 points, and the layer is Off by default. They used to ride inside
+     * catalog.json, so every visitor paid their bytes on the critical path to
+     * see a layer most of them never turn on — the source was already built
+     * lazily, but the DOWNLOAD was not (frontend review 2026-08-09, the second
+     * architectural item). The map fetches this on the first heatmap-On and
+     * never again.
+     *
+     * Same caching discipline as catalog.json, and for the same reason: the
+     * body is user-independent, so it is publicly cacheable and the
+     * session listener is told not to override that.
+     */
+    #[Route('/map/heat.json', name: 'map_heat', methods: ['GET'])]
+    public function heat(Request $request, CatalogProvider $catalog): Response
+    {
+        $json = json_encode($catalog->heat(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES);
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
+        $response->setMaxAge(3600);
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    /**
      * Per-item change log (moderation-and-contribution.md §4.1): who changed
      * what, when, newest first. Public, read-only; feeds the map drawer's
      * "Recent changes" panel. Unknown/never-edited items simply have no rows:

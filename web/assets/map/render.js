@@ -29,15 +29,39 @@ import { openDrawer } from './drawer.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
 
-// seasonal ride-heatmap (illustrative — built from sample GPX rides, served as catalog.json's L layer).
-// Built LAZILY on the first heatmap-On click (review W43): ~6,600 features
-// allocated + tiled at load for a layer that defaults Off was pure startup
-// cost; the toggle handler below calls this before flipping visibility.
-export function addHeatmap(){
-  if(!window.CC_ROUTES || map.getSource('rideheat')) return;
+/* Seasonal ride-heatmap (illustrative — built from sample GPX rides).
+
+   Built lazily on the first heatmap-On click (review W43), and since
+   2026-08-09 FETCHED lazily too. The ~6,600 points used to arrive inside
+   catalog.json: the source was built on demand, but its bytes were on the
+   critical path regardless, for a layer that is Off by default and that most
+   visitors never turn on (frontend review 2026-08-09, second architectural
+   item). They have their own endpoint now — window.CC_HEAT_URL — fetched once,
+   the first time somebody asks for the layer.
+
+   Async, so the caller awaits before flipping visibility on a layer that may
+   not exist yet. A failed fetch leaves the layer unbuilt and says so: the
+   toggle then does nothing visible, which is the same outcome as an empty
+   heat set and better than a half-built layer. */
+let heatPending=null;
+export async function addHeatmap(){
+  if(map.getSource('rideheat')) return;
+  if(!heatPending){
+    const url=window.CC_HEAT_URL;
+    heatPending = url
+      ? fetch(url).then(r=>{ if(!r.ok) throw new Error('heat.json HTTP '+r.status); return r.json(); })
+      // No URL handed over (an older template, or a page that never set it):
+      // fall back to whatever the catalog left behind rather than throwing.
+      : Promise.resolve((window.CC_ROUTES && window.CC_ROUTES.heat) || []);
+  }
+  let points;
+  try { points = await heatPending; }
+  catch(e){ heatPending=null; console.error('Ride heatmap unavailable.', e); return; }
+  // A second caller can arrive while the first was awaiting.
+  if(map.getSource('rideheat')) return;
   // h = [lat, lng, season, rid] (CatalogProvider::heat()) — rid feeds the
   // scope half of updateHeatFilter() (07-20 review finding 5).
-  const feats=CC_ROUTES.heat.map(h=>({type:'Feature',properties:{season:h[2],rid:h[3]},
+  const feats=points.map(h=>({type:'Feature',properties:{season:h[2],rid:h[3]},
     geometry:{type:'Point',coordinates:[h[1],h[0]]}}));
   map.addSource('rideheat',{type:'geojson',data:{type:'FeatureCollection',features:feats}});
   map.addLayer({id:'rideheat',type:'heatmap',source:'rideheat',layout:{visibility:'none'},paint:{
@@ -81,10 +105,43 @@ export const boundLayerIds=new Set();   // delegated click/hover handlers are at
    Every render overwrites its id's entry, so the handler always sees the
    feature currently drawn under that id. */
 export const layerTarget=new Map();     // layer id -> {layer, f}
+/* The handler FUNCTIONS, so they can be taken off again. map.off() needs the
+   same reference map.on() was given, so without this the bindings could only
+   ever accumulate: one set per distinct layer id, for as long as the page is
+   open. Nothing misbehaved — a handler for a removed layer simply never fires
+   — but a rider who spends an evening moving around the map builds a registry
+   of dead listeners, and every one of them is queried on every interaction.
+   (Frontend review 2026-08-09, the third architectural item.) */
+const boundHandlers=new Map();          // layer id -> [[event, fn], …]
+function bindLayer(id){
+  if(boundLayerIds.has(id)) return;
+  const onClick=()=>{ const t=layerTarget.get(id); if(t) openDrawer(t.layer, t.f); };
+  const onEnter=()=>map.getCanvas().style.cursor='pointer';
+  const onLeave=()=>map.getCanvas().style.cursor='';
+  map.on('click',id,onClick);
+  map.on('mouseenter',id,onEnter);
+  map.on('mouseleave',id,onLeave);
+  boundHandlers.set(id,[['click',onClick],['mouseenter',onEnter],['mouseleave',onLeave]]);
+  boundLayerIds.add(id);
+}
+/* Everything a layer id owns, released together: the three handlers, its
+   membership of boundLayerIds (which scope-ui's selectableLayers() reads, and
+   which used to carry stale ids across a render) and its click target. */
+function unbindLayer(id){
+  const handlers=boundHandlers.get(id);
+  if(handlers) handlers.forEach(([type,fn])=>map.off(type,id,fn));
+  boundHandlers.delete(id);
+  boundLayerIds.delete(id);
+  layerTarget.delete(id);
+}
 export function clearDynamic(){
   // remove casing layers first (they share the base source id), then base layer + source
   dynamicIds.forEach(id=>{ const c=id+'-case'; if(map.getLayer(c)) map.removeLayer(c); });
   dynamicIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); if(map.getSource(id)) map.removeSource(id); });
+  // A layer that stops being drawn stops being listened to. Re-drawing the
+  // same id re-binds it, and the click target is read at click time either
+  // way, so the stale-closure fix above is untouched.
+  dynamicIds.forEach(unbindLayer);
   dynamicIds.length=0;
 }
 // draw a polyline with a light casing so it stays visible over the tinted basemap
@@ -144,12 +201,7 @@ export function drawClimbLine(id, latlngs, grad, layer, f){
     paint:{'line-width':lineW,'line-gradient':expr}});
   dynamicIds.push(id);
   layerTarget.set(id, {layer, f});
-  if(!boundLayerIds.has(id)){
-    map.on('click',id,()=>{ const t=layerTarget.get(id); if(t) openDrawer(t.layer, t.f); });
-    map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-    map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
-    boundLayerIds.add(id);
-  }
+  bindLayer(id);
 }
 // K route selection styling: the selected route gets the full brand orange
 // and a slightly wider line; every sibling route dims so the selection is
@@ -269,12 +321,7 @@ export function drawLine(id, latlngs, color, layer, f){
     paint:{'line-color':layer.key==='experience'?ROUTE_BASE_COLOR:color,'line-width':5,'line-opacity':1}});
   dynamicIds.push(id);
   layerTarget.set(id, {layer, f});
-  if(!boundLayerIds.has(id)){
-    map.on('click',id,()=>{ const t=layerTarget.get(id); if(t) openDrawer(t.layer, t.f); });
-    map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-    map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
-    boundLayerIds.add(id);
-  }
+  bindLayer(id);
 }
 // A · Road surface — colour + pattern by surface class (solid paved · dashed gravel · dotted pavé)
 export const SURFACE_STYLE={
