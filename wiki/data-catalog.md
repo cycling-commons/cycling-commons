@@ -52,7 +52,7 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
     | **Unverified** | small **dot** | raw OSM `drinking_water=*`, shown but labelled *"verify locally"* |
 
     A point starts as a dot (imported from OSM) and is **promoted to an icon** once a verification step (utility cross-check or steward confirmation) passes. Demotion/expiry follows the freshness rules. The demo fakes the verification, but the dot-vs-icon distinction is the real intended UX.
-- Public toilets [tap][OSM]
+- Public toilets — their **own** category, **M** (below); listed here too because a rider looking for water and a rider looking for a toilet are usually the same rider, and the map shows M right after this group [tap][OSM]
 - Cyclist-friendly cafés / coffee stops [tap][edit]
 - Resupply — shops, supermarkets, bakeries (+ opening hours) [tap][OSM]
 - Notable on-route food stops [edit]
@@ -136,6 +136,19 @@ Result: a purely aggregate layer, publishable openly (ODbL), holding **the map, 
 (Manifesto §IV). This is the *measured* side of routes; the rider-verified side is **K** — rode-it
 counts plus seasonal recommend-votes cast on the map drawer.
 
+## M. Public toilets  *(the stop nobody maps well)*
+- Public toilets — municipal blocks, station and park facilities, serviced stops [tap][OSM]
+- Free or paid · accessible · opening hours, where they are known [tap][OSM]
+
+Its own letter rather than a line inside **C** because it answers a different
+question at a different moment, and folding it into "Water & food" made it
+unfindable — a rider looking for a toilet does not think of it as food. **L is
+reserved** for the derived heatmap, so this took M; on the map it is displayed
+straight after Water & food, where riders look for it.
+
+Sourced from OSM only. The obvious specialist directory for the Netherlands
+(HogeNood) is closed and partner-only, so nothing of theirs is copied.
+
 ---
 
 ## The boundary — what is NOT in the Commons
@@ -194,7 +207,7 @@ best season & when it's *open* (snow gates) · descent notes (technicality, surf
 **Water:** source type (fountain · public tap · cemetery tap · church · spring) · potable? · seasonal (frost
 shut-off) · reliability. **Café:** cyclist-friendly? · open days & hours [OSM] · weekly closing day · indoor bike
 parking · outdoor seating · card/cash · coffee-stop reputation. **Shop/bakery:** type · hours · open Sunday? · what
-they stock. **Toilet:** public · free/paid · accessible [OSM].
+they stock. (Toilets moved to their own category, **M** — see below.)
 
 ## D. Bike services — per point
 **Shop:** brands serviced · repairs? · rental? · e-bike service? · hours [OSM]. **Repair station:** pump + valve
@@ -237,6 +250,10 @@ seasonal best.
 Road popularity score · rideability inference (is this gravel OK on a road bike?) · under-explored areas · per-area
 coverage % and data freshness · confidence/age of each [safety] item. These are *outputs* of the Commons, not things
 a person fills in — but they're published openly too.
+
+## M. Public toilets — per point
+Public · free or paid · accessible · opening hours [OSM]. (These four used to be the "Toilet:" clause of **C**'s
+field list; they became their own category so the map could show them as their own thing.)
 
 ---
 

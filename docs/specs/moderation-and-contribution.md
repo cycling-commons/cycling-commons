@@ -314,8 +314,8 @@ like). The number is now re-measured **only when the marker is actually
 When it *is* measured, it is measured the way the maximum is — a ~150 m
 sustained window (`profileFromRoute().sustainedAt`), never off the display
 bars. The old bar lookup also mapped position→bar by **vertex index**, which is
-not position along a climb at all: OSRM packs vertices through curves, so it
-picked the wrong bar whenever the shape changed. It survives as a fallback for
+not position along a climb at all: a router packs vertices through curves, so
+it picked the wrong bar whenever the shape changed. It survives as a fallback for
 a drag before the first profile resolves, now keyed on cumulative distance.
 
 The one case that moves the marker is the route no longer passing it: shorten
@@ -323,9 +323,12 @@ the climb past the steepest ramp and it would otherwise float beside a road
 that is no longer part of the climb. Then — and only then — it is re-derived,
 **including a hand-placed one**, because a marker stranded off the climb is
 wrong however it got there. "Still on the climb" is nearest-route-vertex within
-**100 m** (`STEEP_ON_ROUTE_KM`); OSRM returns ~40 m vertex spacing, so a marker
-on the road sits well inside it while one left behind by a shortened route is
-hundreds of metres out.
+**100 m** (`STEEP_ON_ROUTE_KM`); the snap returns roughly 40 m vertex spacing,
+so a marker on the road sits well inside it while one left behind by a
+shortened route is hundreds of metres out. (Measured against OSRM, which the
+editor called until 2026-08-09; it snaps through our own Valhalla now and the
+proxy keeps the same response shape, so the spacing this threshold was chosen
+around is unchanged — worth re-measuring if that ever stops being true.)
 
 A failed or timed-out elevation fetch no longer deletes the marker either: the
 position is a fact about the climb, and only the % needs a gradient to refresh.
@@ -338,7 +341,7 @@ position is a fact about the climb, and only the % needs a gradient to refresh.
   is for), and **Reset**, which is the most expensive mistake on the editor.
 - Snapshots are values, and restoring rebuilds every marker from state, so an
   undone drag cannot strand a stale pin. Route and gradient arrays are copied
-  because the OSRM/elevation resolves mutate them in place, and an undo
+  because the snap and elevation resolves mutate them in place, and an undo
   invalidates anything in flight — a late resolve must not paint the gradient
   of a route that no longer exists.
 - The control is revealed by `onHistory` only once there is something to take

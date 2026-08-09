@@ -42,14 +42,21 @@ narrowly, in a way this reader has not met before. Get these three words straigh
 everything else across the map's modules reads as a combination of them.
 
 A **style** is the whole document describing what the map draws: every source, every layer, the
-background colour, all of it, together. This project does not hand-write one. Look at the top of
-`web/assets/map/map-init.js`, at the `new maplibregl.Map({...})` call that boots the whole thing:
+background colour, all of it, together. This project does not hand-write one. Look at the
+`new maplibregl.Map({...})` call that boots the whole thing — it lives in
+`web/assets/map/catalog-load.js`, and `map-init.js` adopts the instance it makes:
 
-<!-- CODE-FROM web/assets/map/map-init.js -->
+<!-- CODE-FROM web/assets/map/catalog-load.js -->
 ```js
-const map = new maplibregl.Map({
-  container:'map', style:'https://tiles.openfreemap.org/styles/liberty',
+    window.__ccMapOpts = {
+      container: 'map', style: 'https://tiles.openfreemap.org/styles/liberty',
 ```
+
+(It sits in `catalog-load.js` rather than in `map-init.js`, where you would expect it, for a
+reason worth knowing: `map-init.js` is inside the module graph that only runs once the map's
+~1 MB catalog has arrived. Constructing the map there meant the basemap — the first thing anybody
+sees — queued behind a payload describing layers drawn much later. Building it before that fetch
+starts lets tiles paint while the catalog is still travelling.)
 
 That URL *is* the starting style — a ready-made document served by OpenFreeMap, containing the
 roads, place names and land colours you see under everything else. The map never ships a second

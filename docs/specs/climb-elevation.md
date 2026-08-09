@@ -696,14 +696,16 @@ returns a height there. The trajectory comes entirely from routing.
 The full chain for one climb:
 
 1. The rider taps **foot** and **summit** on the map.
-2. **The routing engine produces the line.** `climb-editor.js` calls OSRM with
-   `overview=full`, which snaps those taps to the road network and returns the
-   polyline actually ridden. This is the only step that decides *where* the
-   climb goes. See [§3e](#3e-the-routing-call-is-external-and-client-side) — it
-   is not a server-side call, and `ClimbGeometry` only validates what comes
-   back.
+2. **The routing engine produces the line.** `climb-editor.js` POSTs the taps
+   to `/contribute/route`, which snaps them to the road network via **our own
+   Valhalla** (`RouteSnapper`, bicycle costing) and returns the polyline
+   actually ridden. This is the only step that decides *where* the climb goes.
+   **Changed 2026-08-09** (`ebf8eba`): it used to call the public OSRM demo
+   server straight from the browser, whose own policy forbids backing an
+   application. The proxy keeps OSRM's response shape, so the editor's parsing
+   was untouched; `ClimbGeometry` still only validates what comes back.
 3. **That polyline is resampled** to the interval in
-   [§3c](#3c-sampling) — OSRM's vertices sit where the road bends, not at even
+   [§3c](#3c-sampling) — routed vertices sit where the road bends, not at even
    spacing, so points are interpolated along it to get one every 20 m.
 4. **Those points are sent to `/height`** as `shape`, with `range: true`.
    Valhalla returns one elevation per point *and* the cumulative distance to it,
@@ -733,26 +735,36 @@ rounding error. Sampling at one fifth of the bin width
 ([§3c](#3c-sampling)) also helps here: averaging five readings dilutes the
 quantisation that differencing two endpoints would keep at full strength.
 
-### 3e. The routing call is external and client-side
+### 3e. The routing call — external and client-side until 2026-08-09, ours since
 
-Recorded because it is easy to assume otherwise, and because it constrains
-everything above. As built today:
+**This section's heading was true when it was written and is not any more.**
+Both halves of the chain moved server-side, and the reasoning below is kept
+because it is what argued them there.
 
 | | where it runs | endpoint |
 |---|---|---|
-| geometry | **the browser** (`climb-editor.js`) | `https://router.project-osrm.org` |
-| elevation | **the browser** | `https://api.open-meteo.com` |
+| geometry | **the server** (`RouteSnapper`, via `POST /contribute/route`) | our Valhalla, bicycle costing |
+| elevation | **the server** (`ElevationClient`) | our Valhalla `/height`, per-continent (`ELEVATION_URLS`) |
 | validation | the server (`ClimbGeometry`) | — |
 
-Three consequences.
+Neither `router.project-osrm.org` nor `api.open-meteo.com` is called by
+anything, and neither host is in the CSP. The editor's own parsing was left
+alone: the snap proxy deliberately returns OSRM's response shape.
 
-**`router.project-osrm.org` is the OSRM project's public demo server.** It
-carries no service guarantee and is explicitly not intended to back an
-application. This is the same courtesy question [§2b](#2b-start-on-the-public-api-self-host-when-something-makes-it-necessary)
-raises about opentopodata, and it has the sharper answer, because the stack
-**already runs Valhalla** for [§2b-i](#2b-i-self-hosting-valhalla-already-does-this).
-A Valhalla instance with routing tiles serves `/route` as well as `/height`, so
-the same service can supply both and the demo-server dependency disappears.
+Three consequences — of the arrangement as it WAS, which is why it changed.
+
+**`router.project-osrm.org` was the OSRM project's public demo server** — no
+service guarantee, and explicitly not intended to back an application. This
+paragraph used to argue that the stack **already runs Valhalla**
+([§2b-i](#2b-i-self-hosting-valhalla-already-does-this)), that a Valhalla
+instance with routing tiles serves `/route` as well as `/height`, and that the
+same service could therefore supply both.
+
+**That is what happened, 2026-08-09** (`ebf8eba`). Snapping goes through
+`POST /contribute/route` → `RouteSnapper` → our Valhalla with bicycle costing
+(driving refused the greenways). OSRM's host left the CSP; the demo-server
+dependency is gone. The rest of this section is kept as the reasoning that
+led there.
 Verified 2026-08-04: the existing European instance answers `/route` with
 `"costing":"bicycle"` today, so this is a client change rather than an
 infrastructure one.
@@ -773,10 +785,11 @@ the stored line.
 
 **Not used: `/route` with `elevation_interval`.** Valhalla can route and sample
 elevation in a single call, returning both geometry and heights. That suits a
-caller who has no geometry yet; here OSRM has already produced the line the
-rider approved, and re-routing through a second engine could return a
-*different* line than the one on screen. Worth knowing it exists — it is the
-natural choice if climbs ever route through Valhalla too.
+caller who has no geometry yet; here the snap has already produced the line the
+rider approved, and re-routing would risk returning a *different* line than the
+one on screen. Still true now that the snap IS Valhalla: the two calls are
+deliberately separate so the elevation is measured along the exact line the
+rider saw and accepted.
 
 ---
 

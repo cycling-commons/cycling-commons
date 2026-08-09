@@ -55,8 +55,10 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
    hand-set — funnel in
    [edit-items/README.md](edit-items/README.md#item-lifecycle-and-votability)).
 5. **Never break on missing externals.** Every third-party dependency (basemap,
-   Photon, Mapillary, Nominatim region boundary) degrades silently to a working
-   map. Same for empty catalog pools: `catalog-load.js` boots `map.js` even
+   Photon, Mapillary) degrades silently to a working map. The list is shorter
+   than it was: the region boundary and the editor's road snapping are served
+   by us now (`RegionBoundaryProvider`, `RouteSnapper`), so neither is an
+   external at all. Same for empty catalog pools: `catalog-load.js` boots `map.js` even
    when the catalog fetch fails.
 
 ## 2. Map shell and boot contract
@@ -65,8 +67,13 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   [security-architecture.md](security-architecture.md)), OpenFreeMap `liberty`
   basemap style, attribution control `© OpenStreetMap contributors · ODbL`.
   Optional Esri World Imagery satellite base (hidden by default, `#baseSeg`
-  Map/Satellite toggle). A Nominatim-fetched region boundary renders as a
-  spotlight mask + dashed outline; it is decorative — failure only logs.
+  Map/Satellite toggle; its terms are an open item —
+  `Dated/2026-08-09-esri-imagery-terms.md`). The region boundary renders as a
+  spotlight mask + dashed outline; it is decorative — failure only logs. It
+  comes from **our own** `/map/region/{slug}/boundary`
+  (`RegionBoundaryProvider`, simplified and cacheable), not from Nominatim:
+  that fetch was both an external dependency and a usage-policy problem at
+  any real traffic.
 - **Boot sequence** (`catalog-load.js`): fetch `window.CC_CATALOG_URL`
   (`GET /map/catalog.json`, `MapController::catalog()`, public, ETag,
   `max-age 3600`) → expose the layers as the `window.CC_*` globals → apply the
@@ -780,8 +787,15 @@ the index and the dropdown.
 ### 7.2 Any-town place search — Photon policy
 
 - **Photon (komoot), never Nominatim, for type-ahead**: Nominatim's usage
-  policy forbids autocomplete. (Nominatim is still used for the one-off region
-  boundary fetch.) Photon host is in the CSP `connect-src`.
+  policy forbids autocomplete. **And nothing else calls Nominatim either** —
+  as of 2026-08-09 the codebase makes zero Nominatim requests. The region
+  boundary moved to our own endpoint, and the add-climb wizard's last call
+  (which geocoded the hardcoded string "Wallonia" on every page load, wrong on
+  a worldwide wizard) was deleted rather than proxied. Distributed browser
+  calls could never have honoured a per-application rate cap; the only way to
+  respect the policy at scale was to need it zero times. Photon's host is in
+  the CSP `connect-src`; Nominatim's is not, because there is nothing to
+  allow.
 - Debounced (350 ms; the local index re-ranks at 150 ms — both `setTimeout`
   constants in the map.js search block), ≥ 3 chars, one in-flight request
   (stale ones aborted), bbox-biased to the region, filtered to place types
@@ -1080,8 +1094,10 @@ app: MapLibre GL render; PMTiles-on-CDN basemap direction with OpenFreeMap as
 the current keyless source; Copernicus GLO-30 / SRTM for elevation
 (climb-provenance side owned by
 [edit-items/B-climbs.md](edit-items/B-climbs.md)); **Photon** for type-ahead
-place search with Nominatim only for non-interactive lookups (§7.2); OSRM for
-the add-climb draw preview; optional Valhalla/GraphHopper for climb snapping.
+place search, and **no Nominatim at all** (§7.2); **our own Valhalla**, via
+`POST /contribute/route` → `RouteSnapper`, for the add-climb draw preview —
+the public OSRM demo server it used to call is gone from the CSP, and the
+proxy keeps OSRM's response shape so the editor's parsing was untouched.
 The coverage tiles themselves are specified in
 [coverage-provider.md](coverage-provider.md).
 
