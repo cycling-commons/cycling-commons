@@ -1291,7 +1291,7 @@ export:
 vote:
   kicker: 'Wallonien, Belgien'
   title: 'Das Beste dieser Region bewerten.'
-  round: '◷ Sommer-2026-Runde · endet in 47 Tagen · neu bewertet, niemals zurückgesetzt'
+  round: '◷ Saisonrunde · neu bewertet, niemals zurückgesetzt'
   tab_climbs: 'Anstiege'
   tab_stays: 'Übernachtungen'
   tab_views: 'Aussichten'

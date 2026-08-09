@@ -1294,7 +1294,7 @@ export:
 vote:
   kicker: 'Valonia, Bélgica'
   title: 'Ordena lo mejor de esta región.'
-  round: '◷ Ronda de verano de 2026 · cierra en 47 días · se reordena, nunca se reinicia'
+  round: '◷ Ronda estacional · se reordena, nunca se reinicia'
   tab_climbs: 'Puertos'
   tab_stays: 'Alojamientos'
   tab_views: 'Vistas'

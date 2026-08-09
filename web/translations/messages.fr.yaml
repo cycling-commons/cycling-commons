@@ -1288,7 +1288,7 @@ export:
 vote:
   kicker: 'Wallonie, Belgique'
   title: 'Classez le meilleur de cette région.'
-  round: '◷ Tour Été 2026 · ferme dans 47 jours · reclassé, jamais remis à zéro'
+  round: '◷ Tour saisonnier · reclassé, jamais remis à zéro'
   tab_climbs: 'Cols'
   tab_stays: 'Hébergements'
   tab_views: 'Panoramas'
