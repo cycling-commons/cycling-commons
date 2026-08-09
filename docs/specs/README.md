@@ -43,6 +43,9 @@ committed — working docs stay local.
   from account data: Postgres role/grants, dedicated connection, deptrac
   fence, contract tests.
 - `coverage-provider.md` — the buildable coverage-provider contract.
+- `data-source-register.md` — every candidate upstream source per catalog
+  letter, with its licence, an Ingest/Reference/Ask/No verdict and the evidence
+  behind it. The supply side; `wiki/landscape.md` is the product side.
 - `dev-environment.md` — dev stack, platform decisions, conventions.
 - `system-configuration.md` — the runtime-editable settings: the registry, the
   two value types, the `system_setting` table, and the admin page that writes
