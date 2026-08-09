@@ -344,7 +344,6 @@ credits:
   redoc_p: 'Affiche la référence publique de l''API, servie depuis ce site.'
   mapillary_p: 'Couverture photo au niveau de la rue dans le dock de vue immersive de la carte.'
   esri_p: 'Imagerie satellite derrière le calque satellite de l''éditeur de cols.'
-  nominatim_p: 'La recherche de lieux, propulsée par les données OpenStreetMap.'
   photon_p: 'Géocodage à la saisie par komoot, également construit sur OpenStreetMap.'
   software_h: 'Le logiciel'
   software_sub: 'Ce qui fait tourner le site'

@@ -345,7 +345,6 @@ credits:
   redoc_p: 'Muestra la referencia pública de la API, servida desde este sitio.'
   mapillary_p: 'Cobertura fotográfica a pie de calle en el visor street-level del mapa.'
   esri_p: 'Imágenes de satélite tras la capa satélite del editor de puertos.'
-  nominatim_p: 'Búsqueda de lugares, con datos de OpenStreetMap.'
   photon_p: 'Geocodificación con búsqueda sobre la marcha, de komoot, también construida sobre OpenStreetMap.'
   software_h: 'El software'
   software_sub: 'Sobre lo que funciona el sitio'

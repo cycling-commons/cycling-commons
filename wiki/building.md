@@ -176,7 +176,11 @@ when the audit ran — the OSRM demo server (its own policy forbids production
 reliance) and the unpkg CDN (no SLA, serialized first paint) — and both were
 resolved the same day: climb-editor snapping moved to the project's own
 Valhalla behind `/contribute/route`, and every third-party browser library is
-vendored under `web/assets/lib/`.
+vendored under `web/assets/lib/`. A third fell to the same audit hours later:
+the add-climb wizard's one **Nominatim** geocode turned out to be a hardcoded
+Wallonia-era leftover re-fetching a polygon the project already serves itself
+— deleted, so the codebase now makes no Nominatim calls at all (its 1 req/s
+policy could never have been honoured from riders' browsers at scale).
 
 | service | called from | their terms | our position |
 |---|---|---|---|
@@ -184,7 +188,6 @@ vendored under `web/assets/lib/`.
 | [Wikimedia Commons](https://commons.wikimedia.org/) | photo hotlinks in the drawers | hotlinking allowed and encouraged | per-photo credit + licence (required notice) |
 | [Mapillary](https://www.mapillary.com/) | street-level tiles + viewer (client token) | display with attribution | attribution on the tile source and /credits |
 | [Photon](https://github.com/komoot/photon) | search + base-location typeaheads | free, fair use, no guarantee | debounced and aborted; self-host if traffic grows |
-| [Nominatim](https://nominatim.org/) | one geocode in the add-climb wizard | max 1 req/s, attribution, identifying UA | single user-triggered lookups; credited. (The software is GPL-2.0 — irrelevant here, because it is *called*, never distributed; same reasoning as PostGIS in the licence disciplines above.) |
 | [Copernicus DEM GLO-30](https://dataspace.copernicus.eu/) | our own Valhalla's elevation tiles | verbatim credit notice **required** on derived products | Article 6(b) notice + 6(c) liability sentence on /credits |
 | [Esri World Imagery](https://www.esri.com/) | the climb editor's satellite layer | the least-clear terms for keyless production use | **open item** — confirm the position or swap the layer before launch |
 | [Geofabrik](https://www.geofabrik.de/) · Overpass · Wikidata | pipeline and maintainer tools only — never riders | be polite | md5-checked downloads, identifying UAs, and the tools prefer the local PBF over live APIs |

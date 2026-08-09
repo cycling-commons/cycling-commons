@@ -73,7 +73,6 @@ final class CspSubscriber implements EventSubscriberInterface
             'https://server.arcgisonline.com',
             'https://*.mapillary.com',
             'https://*.fbcdn.net',
-            'https://nominatim.openstreetmap.org',
             'https://photon.komoot.io',
             'https://analytics.bikecoders.life',
         ];

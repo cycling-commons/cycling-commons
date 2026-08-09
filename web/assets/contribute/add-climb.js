@@ -149,25 +149,16 @@
         setReadout(); refreshGate();
       }
     });
-    addRegionBoundary('Wallonia');
+    /* The Wallonia boundary mask that used to be drawn here is gone, and with
+       it the codebase's LAST Nominatim call. It hardcoded 'Wallonia' on what
+       is now a worldwide wizard (wrong mask for a Swiss climb), it re-fetched
+       a polygon we serve ourselves (/map/region/{slug}/boundary — the same
+       endpoint that retired the MAP's Nominatim fetch, for the same
+       usage-policy reason), and one geocode per page load could never respect
+       Nominatim's 1 req/s at scale (owner question, 2026-08-09). A wizard has
+       no single correct region to mask; if framing ever returns, it draws
+       from our own boundary endpoint per located region. */
   });
-
-  function addRegionBoundary(name) {
-    fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(name) + '&format=jsonv2&polygon_geojson=1&limit=1')
-      .then(function (r) { return r.json(); }).then(function (d) {
-        if (!d[0] || !d[0].geojson || cmap.getSource('region')) return;
-        var g = d[0].geojson;
-        var polys = g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates];
-        var world = [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]];
-        var mask = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [world].concat(polys.map(function (p) { return p[0]; })) } };
-        cmap.addSource('region-mask', { type: 'geojson', data: mask });
-        cmap.addSource('region', { type: 'geojson', data: { type: 'Feature', geometry: g } });
-        // Insert below the editor's drawn-route layer so the climb line stays on top.
-        var beforeId = cmap.getLayer('cc-climb-editor-route') ? 'cc-climb-editor-route' : undefined;
-        cmap.addLayer({ id: 'region-mask', type: 'fill', source: 'region-mask', paint: { 'fill-color': '#101E16', 'fill-opacity': 0.2 } }, beforeId);
-        cmap.addLayer({ id: 'region-line', type: 'line', source: 'region', paint: { 'line-color': '#C8923A', 'line-width': 2.5, 'line-dasharray': [2, 1.4], 'line-opacity': 0.9 } }, beforeId);
-      }).catch(function () {});
-  }
 
   function fmt(ll) { return ll ? ll[1].toFixed(3) + '°N ' + ll[0].toFixed(3) + '°E' : '…'; }
 

@@ -24,29 +24,25 @@ understanding before deciding whether to build the second one.
 
 Course 1's closing section already covered this project's forward-geocoding calls in detail: the
 map's place search and the settings page's base-location field both call **Photon**, a free,
-keyless, OpenStreetMap-based geocoder, and neither call needs a server-side proxy. The full CSP
-allow-list for these external geocoders is short, and every entry on it is a name-in service:
+keyless, OpenStreetMap-based geocoder, and neither call needs a server-side proxy. The CSP
+allow-list for external geocoders is now exactly one entry long, and it is a name-in service:
 
 <!-- CODE-FROM web/src/EventSubscriber/CspSubscriber.php -->
 ```php
-'https://nominatim.openstreetmap.org',
 'https://photon.komoot.io',
 ```
 
-Photon is not the only forward-geocoding caller in the codebase. `web/assets/contribute/add-climb.js`
-draws a dimmed backdrop around the current region on the add-climb map, and it gets that region's
-outline the same way — by asking Nominatim for a name:
+It used to be two. `web/assets/contribute/add-climb.js` once drew a dimmed backdrop around the
+region on the add-climb map by asking **Nominatim** for the name 'Wallonia' and taking the polygon
+from the answer — a call retired on 2026-08-09, and its reasons are a compact lesson in external
+geocoders: the name was hardcoded (wrong backdrop once the wizard went worldwide), the polygon was
+data the project had started serving itself (`/map/region/{slug}/boundary`), and Nominatim's usage
+policy caps an application at one request per second — a cap no code can honour when the calls come
+from thousands of riders' browsers. The only way to respect it at scale was to need it zero times.
 
-<!-- CODE-FROM web/assets/contribute/add-climb.js -->
-```js
-fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(name) + '&format=jsonv2&polygon_geojson=1&limit=1')
-```
-
-Read the URL and the shape of every one of these calls is the same: a `/search` endpoint, a `q`
-(query) parameter carrying a name, and a response carrying coordinates (or, here, a whole polygon).
-Name in. Shape out. Every geocoder call this codebase makes — Photon or Nominatim, map search or
-settings field or region backdrop — is built this way. None of them takes a coordinate and asks for
-a name back.
+The shape of every remaining geocoder call is the same: a `/search`-style endpoint, a `q` (query)
+parameter carrying a name, and a response carrying coordinates. Name in. Shape out. None of them
+takes a coordinate and asks for a name back.
 
 ## Why reverse is genuinely harder
 

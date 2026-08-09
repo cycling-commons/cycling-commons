@@ -344,7 +344,6 @@ credits:
   redoc_p: 'Rendert die öffentliche API-Referenz, ausgeliefert von dieser Seite.'
   mapillary_p: 'Street-Level-Fotoabdeckung im Straßenansicht-Dock der Karte.'
   esri_p: 'Satellitenbilder hinter der Satellitenebene des Anstiegs-Editors.'
-  nominatim_p: 'Die Ortssuche, angetrieben von OpenStreetMap-Daten.'
   photon_p: 'Geocoding beim Tippen, von komoot — ebenfalls auf OpenStreetMap gebaut.'
   software_h: 'Die Software'
   software_sub: 'Worauf die Website läuft'

@@ -344,7 +344,6 @@ credits:
   redoc_p: 'Renders the public API reference, served from this site.'
   mapillary_p: 'Street-level photo coverage in the map''s street view dock.'
   esri_p: 'Satellite imagery behind the climb editor''s satellite layer.'
-  nominatim_p: 'Place search, powered by OpenStreetMap data.'
   photon_p: 'Search-as-you-type geocoding by komoot, also built on OpenStreetMap.'
   software_h: 'The software'
   software_sub: 'What the site runs on'

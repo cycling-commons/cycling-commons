@@ -344,7 +344,6 @@ credits:
   redoc_p: 'Toont de publieke API-referentie, geserveerd vanaf deze site.'
   mapillary_p: 'Straatbeelddekking in het street-level-dock van de kaart.'
   esri_p: 'Satellietbeelden achter de satellietlaag van de klim-editor.'
-  nominatim_p: 'De plaatszoekfunctie, aangedreven door OpenStreetMap-data.'
   photon_p: 'Zoeken terwijl je typt, geocodering door komoot — ook gebouwd op OpenStreetMap.'
   software_h: 'De software'
   software_sub: 'Waar de site op draait'
