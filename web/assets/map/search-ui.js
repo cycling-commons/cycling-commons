@@ -211,6 +211,20 @@ export function initSearchUi(){
       // group, community after. Array.prototype.sort is stable (ES2019), so the
       // prefix-before-substring ranking survives within each tier.
       Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(commRow(a)?1:0)-(commRow(b)?1:0)));
+      /* A · road surface only: one row per ROUTE. A surfaced route is stored
+         as many segments named "{route} · {surface class}", so "stocke" listed
+         six "Rondje Super Stockeu…" rows that were parts of ONE thing
+         (owner-reported 2026-08-09; 351 segments share 76 names in the dev
+         catalog). The dedupe key is the name up to its "·", so the four
+         surface classes of one route collapse too — a rider searching a name
+         wants the road, and the drawer they land in names the class anyway.
+         Deliberately not applied to other letters: two same-named waters or
+         chapels are genuinely different places, and hiding one would be wrong.
+         After the sort, so the kept row is the best-ranked one. */
+      if(byLetter.A){
+        const seen=new Set();
+        byLetter.A=byLetter.A.filter(m=>{ const k=String(m.name||'').split(' · ')[0]; if(seen.has(k)) return false; seen.add(k); return true; });
+      }
       // Scopes group (task-6 brief; map-and-search.md §4.5
       // §A): matching regions + country rungs, ranked by CCScope.searchScopes
       // (prefix before substring; a country rung outranks its own regions on
