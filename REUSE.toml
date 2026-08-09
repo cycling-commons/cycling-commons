@@ -22,10 +22,17 @@ SPDX-FileCopyrightText = "© BikeCoders"
 SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
 
 # ── Fonts ────────────────────────────────────────────────────────────────────
-# Bricolage Grotesque and Spline Sans, both under the SIL Open Font License.
+# Three families, all SIL Open Font License 1.1, and the copyright lines are
+# reproduced exactly as their upstream OFL.txt states them.
+#
+# The files served are SUBSETS (latin / latin-ext / vietnamese), and subsetting
+# is modification under the OFL — so §5's Reserved Font Name clause would
+# forbid shipping them under the original names. Checked 2026-08-09 against
+# each family's upstream OFL.txt: NONE of the three declares a Reserved Font
+# Name, so the subsets keep their names.
 [[annotations]]
 path = "web/assets/fonts/**"
-SPDX-FileCopyrightText = "Bricolage Grotesque © Mathieu Triay; Spline Sans © the Spline Sans Project Authors"
+SPDX-FileCopyrightText = "Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage); Copyright 2021 The Spline Sans Project Authors (https://github.com/SorkinType/SplineSans); Copyright 2022 The Spline Sans Mono Project Authors (https://github.com/SorkinType/SplineSansMono)"
 SPDX-License-Identifier = "OFL-1.1"
 
 # ── Brand & imagery ─────────────────────────────────────────────────────────

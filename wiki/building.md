@@ -189,7 +189,7 @@ policy could never have been honoured from riders' browsers at scale).
 | [Mapillary](https://www.mapillary.com/) | street-level tiles + viewer (client token) | display with attribution | attribution on the tile source and /credits |
 | [Photon](https://github.com/komoot/photon) | search + base-location typeaheads | free, fair use, no guarantee | debounced and aborted; self-host if traffic grows |
 | [Copernicus DEM GLO-30](https://dataspace.copernicus.eu/) | our own Valhalla's elevation tiles | verbatim credit notice **required** on derived products | Article 6(b) notice + 6(c) liability sentence on /credits |
-| [Esri World Imagery](https://www.esri.com/) | the climb editor's satellite layer | the least-clear terms for keyless production use | **open item** — confirm the position or swap the layer before launch |
+| [Esri World Imagery](https://www.esri.com/) | the climb editor's satellite layer | **licensed, not public.** We call the old keyless REST tile path; Esri's billed endpoints are key-authenticated and their terms require a subscription | **researched 2026-08-09, decision pending** — take an ArcGIS Location Platform key and move to the keyed endpoint, or swap the layer. The absence of a 401 is not a licence |
 | [Geofabrik](https://www.geofabrik.de/) · Overpass · Wikidata | pipeline and maintainer tools only — never riders | be polite | md5-checked downloads, identifying UAs, and the tools prefer the local PBF over live APIs |
 
 Self-hosted and therefore *not* external: Valhalla (routing + elevation),
