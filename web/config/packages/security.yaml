@@ -55,6 +55,11 @@ security:
         # DB boundary that replaced the Nominatim fetch. Same lazy-firewall
         # rationale as /map/catalog.json above.
         - { path: '^/map/region/[a-z0-9-]+/boundary$', roles: PUBLIC_ACCESS }
+        # The My-area scope boundary (same response shape, same cacheability);
+        # it was added after this list and missed the treatment — the one
+        # cacheable /map endpoint scheb was still session-reading (frontend
+        # review 2026-08-09 #2).
+        - { path: '^/map/scope/boundary$', roles: PUBLIC_ACCESS }
         # Same cacheability rationale as /map/catalog.json above: explicit
         # PUBLIC_ACCESS so scheb's TwoFactorAccessListener skips the session
         # read that would downgrade Cache-Control to private.

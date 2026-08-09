@@ -43,6 +43,14 @@ final class ItemConfirmationController extends AbstractController
     ) {
     }
 
+    /**
+     * NEVER make this response publicly cacheable. It sits in security.yaml's
+     * PUBLIC_ACCESS cluster beside endpoints that are there FOR cacheability,
+     * but unlike them it is user-varying: `mine` is the caller's own stance and
+     * the payload carries a CSRF token. Its (default) `private` Cache-Control
+     * is load-bearing — setPublic() here would hand one rider's stance and
+     * token to everyone behind a shared cache (frontend review 2026-08-09 #3).
+     */
     #[Route('/items/{id}/confirmations', name: 'item_confirmations', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function snapshot(int $id, CsrfTokenManagerInterface $csrf): JsonResponse
     {

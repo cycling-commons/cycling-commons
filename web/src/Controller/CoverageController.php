@@ -13,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -220,6 +221,11 @@ final class CoverageController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
+        // Session-independent by design (§6 anonymity) — without this,
+        // LocaleSubscriber's session read lets AbstractSessionListener
+        // downgrade the whole coverage plane to `private` for any visitor
+        // carrying a session cookie (frontend review 2026-08-09 #1).
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge($maxAge);
         $response->isNotModified($request);
 

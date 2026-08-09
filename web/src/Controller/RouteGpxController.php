@@ -11,6 +11,7 @@ use App\Contribution\Gpx\GpxWriter;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -50,6 +51,10 @@ final class RouteGpxController extends AbstractController
             'Content-Type' => 'application/gpx+xml',
             'Content-Disposition' => sprintf('attachment; filename="%s.gpx"', $slug),
             'Cache-Control' => 'public, max-age=3600',
+            // Trackpoints only — session-independent; without this the session
+            // listener downgrades the caching for any cookie-carrying visitor
+            // (frontend review 2026-08-09 #1, same as the /map endpoints).
+            AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER => 'true',
         ]);
     }
 }
