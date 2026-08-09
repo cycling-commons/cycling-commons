@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
-/* Cycling Commons — demo build marker (shown on every page).
+/* Cycling Commons — build marker (shown on every page).
  *
- * Maintenance: bump `number` by hand (whole numbers — v1, v2, v3 …) whenever you cut a new demo
- * build, and set `date` to the deploy date, in the same commit. That's the whole workflow — this
- * file is the single source of truth and it's wired into every page via <script src="version.js">.
- *
- * Why not auto-stamp the date in CI? The deploy workflows only SSH-trigger a server-side deploy
- * (the server pulls the repo and runs its own deploy command), so there's no in-CI filesystem step
- * that reaches the served files. A true auto deploy-timestamp would have to be a one-liner in the
- * server's deploy script (outside this repo). Keeping it a hand-edited constant here is simplest. */
-window.CC_VERSION = { number: 'Demo v0.1.2', date: '2026-06-26' };
+ * window.CC_VERSION is emitted by the templates from the release tag (App\Service\BuildVersion:
+ * `git describe --tags --match 'v*'` + HEAD's commit date) — cut a tag like v0.2.0 and every
+ * footer follows it, nothing edited anywhere. This file only paints the stamp. It used to hold a
+ * hand-edited 'Demo v0.1.2 · 2026-06-26' constant, which went stale the way every hand-edited
+ * date does and said "demo" long after the site stopped being one (owner, 2026-08-09). */
 
 (function () {
   var T = window.ccT || function (k, fb) { return fb; };   // ccT is absent on chrome-less pages
-  var V = window.CC_VERSION;
+  var V = window.CC_VERSION || { number: 'dev', date: '' };   // chrome-less template missed the emit — still no broken footer
   var label = T('build', 'Build') + ' ' + V.number + (V.date ? ' · ' + V.date : '');
 
   function stamp() {

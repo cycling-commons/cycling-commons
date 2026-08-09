@@ -46,6 +46,11 @@ services:
     # dataset is a tile swap and a restart rather than a code change
     # (climb-elevation.md §2b-i). Unset ELEVATION_URL disables profiles
     # entirely: no elevation, no gradients, never a guess (§2d).
+    App\Service\BuildVersion:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $envFallback: '%env(default::APP_BUILD_VERSION)%'
+
     App\Elevation\ElevationClient:
         arguments:
             $valhallaUrl: '%env(ELEVATION_URL)%'

@@ -495,6 +495,7 @@ window.CC_VENDOR = {{ {
 <script src="{{ asset('map/scope-header.js') }}"></script>
 <script src="{{ asset('map/catalog-load.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">window.CC_VERSION = {{ cc_build()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('js/version.js') }}"></script>
 </body>
 </html>

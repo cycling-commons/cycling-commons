@@ -58,6 +58,7 @@ window.CC_UNITS = {{ {
 <script src="{{ asset('js/a11y.js') }}"></script>
 <script src="{{ asset('js/nav.js') }}" defer></script>
 <script src="{{ asset('js/nav-menus.js') }}" defer></script>
+<script nonce="{{ csp_nonce() }}">window.CC_VERSION = {{ cc_build()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('js/version.js') }}"></script>
 {% block body_scripts %}{% endblock %}
 </body>
