@@ -1,0 +1,30 @@
+web/src/Controller/ItemConfirmationController.php
+  s_45ec9b3f519700::t_cc20c4f7e3d933 46-53
+web/src/Controller/RouteGpxController.php
+  s_45ec9b3f519700::t_62dd4a14d06bc9 14,54-57
+web/src/Controller/CoverageController.php
+  s_45ec9b3f519700::t_187face8ff9899 16,224-228
+web/config/packages/security.yaml
+  s_45ec9b3f519700::t_c0b652803b3721 58-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "3e77098436f819fb660035a329a6ea8093d9798a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_45ec9b3f519700": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42c83203-4754-4e8f-b14b-28903077507b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
