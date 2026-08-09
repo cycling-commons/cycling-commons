@@ -2015,6 +2015,7 @@ map:
   d_from_gpx: '(from GPX)'
   d_grad_profile: 'Gradient profile · per {b} · avg {a}% · steepest {w} {m}%'
   d_steep_over: '{v} over {w}'
+  d_elev_from: 'elevation from {s}'
   d_illustrative: '(illustrative)'
   d_elev_aria: 'Elevation profile'
   d_shared_by: 'Shared by'

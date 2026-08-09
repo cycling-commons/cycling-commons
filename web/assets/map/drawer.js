@@ -128,6 +128,25 @@ export function fieldLabelFor(letter, name){
   return off ? off() : name;
 }
 
+/* The bottom provenance line. The geometry's sources were always named here;
+   the HEIGHTS' source was not, although every measured gradient on the card
+   derives from it. `demSource` is stored per climb by the recompute (rows
+   never measured carry none, and say nothing) — so the line credits the DEM
+   the row was actually measured from, not a site-wide assumption. Linkified
+   like OSM and the Géoportail; the licence-required credit lives on /credits.
+   (owner, 2026-08-09) */
+function srcLine(f, osmHref){
+  const link='style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px"';
+  let s=escPend(f.source)
+    .replace(/^(OpenStreetMap|OSM)/, `<a href="${osmHref}" target="_blank" rel="noopener" ${link}>$1</a>`)
+    .replace(/(Géoportail de la Wallonie)/, `<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" ${link}>$1</a>`);
+  if(f.demSource){
+    s += ' · ' + tpl(D.elevFrom||'elevation from {s}',
+      {s:`<a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM" target="_blank" rel="noopener" ${link}>${escPend(f.demSource)}</a>`});
+  }
+  return s;
+}
+
 /** {fieldName -> proposed value}, for schemaRows' `proposed` option. */
 export function proposedMap(changes){
   const out = {};
@@ -600,7 +619,7 @@ function buildRecord(layer, f){
   return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.icon} ${layer.label}</span>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
-    <div class="cc-d-src">${D.source||'Source'} · ${escPend(f.source).replace(/^(OpenStreetMap|OSM)/, `<a href="${osmHref}" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>`).replace(/(Géoportail de la Wallonie)/, '<a href="https://geoportail.wallonie.be/catalogue/91721175-5f01-410c-8c78-37c1d1893ba2.html" target="_blank" rel="noopener" style="color:var(--glacier);text-decoration:underline;text-underline-offset:2px">$1</a>')}</div>${confirmPanel}${act}${moderate}${histSlot}`;
+    <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}</div>${confirmPanel}${act}${moderate}${histSlot}`;
 }
 // C1-T3: renders one change_history row. Every interpolated value is
 // user-contributed (old/new attribute values, and `who`/`when`/`changedAt`

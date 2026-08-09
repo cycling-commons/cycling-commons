@@ -2028,6 +2028,7 @@ map:
   d_from_gpx: '(del GPX)'
   d_grad_profile: 'Perfil de pendiente · cada {b} · media {a}% · máxima {w} {m}%'
   d_steep_over: '{v} en {w}'
+  d_elev_from: 'altitudes de {s}'
   d_illustrative: '(ilustrativo)'
   d_elev_aria: 'Perfil de altitud'
   d_shared_by: 'Compartida por'

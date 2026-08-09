@@ -1702,6 +1702,7 @@ map:
   d_from_gpx: '(aus GPX)'
   d_grad_profile: 'Steigungsprofil · je {b} · Ø {a}% · steilste {w} {m}%'
   d_steep_over: '{v} auf {w}'
+  d_elev_from: 'Höhen aus {s}'
   d_illustrative: '(illustrativ)'
   d_elev_aria: 'Höhenprofil'
   d_shared_by: 'Geteilt von'

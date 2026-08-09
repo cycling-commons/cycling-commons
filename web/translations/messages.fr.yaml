@@ -1699,6 +1699,7 @@ map:
   d_from_gpx: '(du GPX)'
   d_grad_profile: 'Profil de pente · par {b} · moy {a}% · {w} les plus raides {m}%'
   d_steep_over: '{v} sur {w}'
+  d_elev_from: 'altitudes : {s}'
   d_illustrative: '(illustratif)'
   d_elev_aria: 'Profil altimétrique'
   d_shared_by: 'Partagé par'

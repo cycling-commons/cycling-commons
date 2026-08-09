@@ -232,6 +232,7 @@ final class MapController extends AbstractController
             // per climb, because the field label no longer can (see
             // CatalogFormRegistry's note on that label).
             'steepOver' => 'd_steep_over',
+            'elevFrom' => 'd_elev_from',
             // The full climb profile popup (assets/map/climb-profile.js).
             'openProfile' => 'open_profile', 'gradPerBin' => 'grad_per_bin',
             'elevAria' => 'd_elev_aria', 'sharedBy' => 'd_shared_by', 'viewProfile' => 'd_view_profile',

@@ -1699,6 +1699,7 @@ map:
   d_from_gpx: '(uit GPX)'
   d_grad_profile: 'Hellingsprofiel · per {b} · gem {a}% · steilste {w} {m}%'
   d_steep_over: '{v} over {w}'
+  d_elev_from: 'hoogte uit {s}'
   d_illustrative: '(illustratief)'
   d_elev_aria: 'Hoogteprofiel'
   d_shared_by: 'Gedeeld door'
