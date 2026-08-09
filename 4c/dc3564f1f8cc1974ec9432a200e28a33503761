@@ -1,0 +1,73 @@
+web/src/Media/MediaTakedownService.php
+  s_51f279dd04af7d::t_7da0d4f75daebf 55-74
+  s_51f279dd04af7d::t_f7e5bb459f6bae 431,434
+  s_51f279dd04af7d::t_f0625bab38527a 355-360
+  s_51f279dd04af7d::t_a84f635b706f22 361,389,394,396-399,404-422
+  s_51f279dd04af7d::t_b8bd55e1bfef48 313-316,319,324,326-330
+  s_51f279dd04af7d::t_03e33f5432640f 362,423
+web/tests/Moderation/SubmissionEscalationTest.php
+  s_51f279dd04af7d::t_979ae922fc8b34 170-196
+web/templates/moderate/takedowns.html.twig
+  s_51f279dd04af7d::t_87c666c1df570a 125
+web/src/Moderation/ModerationService.php
+  s_51f279dd04af7d::t_80a57e7a1c5ffc 416-422
+  s_51f279dd04af7d::t_1322a0db111532 392-395
+  s_51f279dd04af7d::t_737d430f4ea0ac 423
+  s_51f279dd04af7d::t_f60f3384a0815a 387
+  s_51f279dd04af7d::t_2d8a0f892ef4cb 44-50
+web/src/Controller/Admin/DashboardController.php
+  s_51f279dd04af7d::t_f4fe308be5fcb2 505-509,512-513,515-516
+  s_51f279dd04af7d::t_737d430f4ea0ac 510
+  s_51f279dd04af7d::t_0d3d76585aed35 21
+  s_51f279dd04af7d::t_f0f17a0b080ce5 326-331,333
+  s_51f279dd04af7d::t_48003e08479a7c 450-457,459,462
+  s_51f279dd04af7d::t_8ca7824d6fef86 392
+web/tests/Media/MediaDeskPagingTest.php
+  s_51f279dd04af7d::t_14396b1343a148 1-94,96-152,154-162
+  s_51f279dd04af7d::t_224609e1d0f6ab 95,153
+web/src/Media/MediaEscalationService.php
+  s_51f279dd04af7d::t_670ddf9d559038 141-146
+  s_51f279dd04af7d::t_9f20eaac46f275 51-53
+  s_51f279dd04af7d::t_50eadadc87f3e5 108,115-118
+  s_51f279dd04af7d::t_119c49c49a7606 147-148
+web/tests/Community/CuratorApplicationReviewTest.php
+  s_51f279dd04af7d::t_03755284f8b19a 447
+  s_51f279dd04af7d::t_23745ebf83f456 470
+  s_51f279dd04af7d::t_8938fd8fe50601 439-446,448-469,471-474
+web/src/Controller/ModerateController.php
+  s_51f279dd04af7d::t_6c3fe010b5de6d 130,136-141,146,148
+  s_51f279dd04af7d::t_9ba28645d761e0 189
+web/templates/admin/curator_applications.html.twig
+  s_51f279dd04af7d::t_c6648d9cd5b812 105
+web/templates/admin/escalated.html.twig
+  s_51f279dd04af7d::t_5bf136af0729dd 52-55
+  s_51f279dd04af7d::t_9c8389cf56e5b2 89
+web/templates/admin/_pager.html.twig
+  s_51f279dd04af7d::t_c24de71406bbef 1-40
+web/templates/admin/withheld_photos.html.twig
+  s_51f279dd04af7d::t_bfc2ecb748afa0 74-79
+web/src/Community/CuratorApplicationService.php
+  s_51f279dd04af7d::t_a9af61d7d094d9 287-298,301
+  s_51f279dd04af7d::t_68b393ad5ceea5 30-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "4cdc3564f1f8cc1974ec9432a200e28a33503761",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_51f279dd04af7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ffbf0480-8c49-47aa-8570-af5cdd0802af",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
