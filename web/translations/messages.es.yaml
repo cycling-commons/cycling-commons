@@ -338,7 +338,7 @@ credits:
   protomaps_p: 'El formato de archivo único PMTiles que hay detrás de las capas de cobertura.'
   lic_per_photo: 'licencia por foto · crédito en cada foto'
   wikimedia_p: 'Las fotos iniciales de puertos y lugares proceden de Wikimedia Commons; cada foto lleva su propio crédito de autor y licencia en el panel.'
-  copernicus_p: 'Modelo de elevación detrás de las pendientes. Elaborado con Copernicus WorldDEM-30, © DLR e.V. 2010-2014 y © Airbus Defence and Space GmbH 2014-2018, suministrado bajo COPERNICUS por la Unión Europea y la ESA; todos los derechos reservados.'
+  copernicus_p: 'Modelo de elevación detrás de las pendientes. "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved". The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.'
   mapillary_p: 'Cobertura fotográfica a pie de calle en el visor street-level del mapa.'
   esri_p: 'Imágenes de satélite tras la capa satélite del editor de puertos.'
   nominatim_p: 'Búsqueda de lugares, con datos de OpenStreetMap.'

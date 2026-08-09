@@ -337,7 +337,7 @@ credits:
   protomaps_p: 'Le format d''archive monofichier PMTiles derrière nos couches de couverture.'
   lic_per_photo: 'licence par photo · crédit affiché sur chaque photo'
   wikimedia_p: 'Les photos initiales de cols et de lieux viennent de Wikimedia Commons ; chaque photo porte son propre crédit et sa licence dans le panneau.'
-  copernicus_p: 'Modèle d''élévation derrière les pentes des cols. Réalisé à partir de Copernicus WorldDEM-30, © DLR e.V. 2010-2014 et © Airbus Defence and Space GmbH 2014-2018, fourni dans le cadre de COPERNICUS par l''Union européenne et l''ESA ; tous droits réservés.'
+  copernicus_p: 'Modèle d''élévation derrière les pentes des cols. "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved". The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.'
   mapillary_p: 'Couverture photo au niveau de la rue dans le dock de vue immersive de la carte.'
   esri_p: 'Imagerie satellite derrière le calque satellite de l''éditeur de cols.'
   nominatim_p: 'La recherche de lieux, propulsée par les données OpenStreetMap.'
