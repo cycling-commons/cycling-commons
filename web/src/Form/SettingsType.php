@@ -7,6 +7,7 @@ namespace App\Form;
 use App\Account\DateFormat;
 use App\Account\DistanceUnit;
 use App\Account\ElevationUnit;
+use App\Account\RowsPerPage;
 use App\Account\TimeFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
@@ -149,6 +150,16 @@ final class SettingsType extends AbstractType
                 'help' => 'form.help_elevation_unit',
                 'required' => true,
                 'choice_label' => static fn (ElevationUnit $u): string => $u->labelKey(),
+            ])
+            // One preference for every paged list in the application. `Auto`
+            // is not a single number: each list keeps the size it was designed
+            // around, because a message is a card and a wall row is one line.
+            ->add('rowsPerPage', EnumType::class, [
+                'class' => RowsPerPage::class,
+                'label' => 'form.label_rows_per_page',
+                'help' => 'form.help_rows_per_page',
+                'required' => true,
+                'choice_label' => static fn (RowsPerPage $r): string => $r->labelKey(),
             ])
             // Rider preferences (account-and-auth.md §9). EnumType hands the
             // entity setters real enum instances. Bike-type labels reuse the

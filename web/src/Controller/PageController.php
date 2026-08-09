@@ -8,6 +8,7 @@ use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
 use App\Catalog\RegionDirectoryProvider;
 use App\Pagination\Pager;
+use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -159,7 +160,7 @@ final class PageController extends AbstractController
     }
 
     #[Route('/contributors', name: 'contributors')]
-    public function contributors(Request $request, ContributorWallProvider $wallProvider): Response
+    public function contributors(Request $request, ContributorWallProvider $wallProvider, PageSize $pageSize): Response
     {
         // Both filters are query parameters now, not JS over the rendered
         // rows. The wall grows with the project, so it is paged — and a
@@ -171,7 +172,7 @@ final class PageController extends AbstractController
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             $wallProvider->wallCount($q, $country),
-            ContributorWallProvider::PER_PAGE,
+            $pageSize->resolve(ContributorWallProvider::PER_PAGE),
         );
 
         return $this->render('pages/contributors.html.twig', [

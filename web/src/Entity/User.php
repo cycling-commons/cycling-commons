@@ -7,6 +7,7 @@ namespace App\Entity;
 use App\Account\DateFormat;
 use App\Account\DistanceUnit;
 use App\Account\ElevationUnit;
+use App\Account\RowsPerPage;
 use App\Account\TimeFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapViewMode;
@@ -197,6 +198,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     #[ORM\Column(name: 'elevation_unit', type: 'string', length: 8, options: ['default' => 'm'])]
     private string $elevationUnit = ElevationUnit::M->value;
+
+    // How long a page of any list is. `auto` — the default — means every list
+    // keeps the size it was designed around, which is not one number: a
+    // message is a card, a queue item is a row of work, a wall row is one
+    // line. An explicit choice overrides all of them at once, because a rider
+    // who picks 100 is telling us about their screen, not about our layout.
+    #[ORM\Column(name: 'rows_per_page', type: 'string', length: 8, options: ['default' => 'auto'])]
+    private string $rowsPerPage = RowsPerPage::Auto->value;
 
     #[ORM\Column(type: 'boolean')]
     private bool $emailVerified = false;
@@ -687,6 +696,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setElevationUnit(ElevationUnit $unit): static
     {
         $this->elevationUnit = $unit->value;
+
+        return $this;
+    }
+
+    public function getRowsPerPage(): RowsPerPage
+    {
+        return RowsPerPage::tryFrom($this->rowsPerPage) ?? RowsPerPage::Auto;
+    }
+
+    public function setRowsPerPage(RowsPerPage $rows): static
+    {
+        $this->rowsPerPage = $rows->value;
 
         return $this;
     }

@@ -350,6 +350,15 @@
         {{ form_help(profileForm.elevationUnit) }}
         {{ form_errors(profileForm.elevationUnit) }}
       </div>
+      {# One setting for every paged list — messages, contributions, the
+         moderation desks, the contributors wall. Also settable from any pager
+         itself, which writes back here; this is the one that stores it. #}
+      <div class="field">
+        {{ form_label(profileForm.rowsPerPage) }}
+        {{ form_widget(profileForm.rowsPerPage) }}
+        {{ form_help(profileForm.rowsPerPage) }}
+        {{ form_errors(profileForm.rowsPerPage) }}
+      </div>
     </div>
 
     {# Section header like the other .sec headers; the toggle's old bold label

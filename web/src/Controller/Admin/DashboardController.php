@@ -19,6 +19,7 @@ use App\Media\UrgentWithholdBreaker;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationService;
 use App\Pagination\Pager;
+use App\Pagination\PageSize;
 use App\Service\AdminDashboardStats;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
@@ -267,6 +268,7 @@ final class DashboardController extends AbstractDashboardController
         CuratorApplicationService $applications,
         EntityManagerInterface $em,
         TranslatorInterface $translator,
+        PageSize $pageSize,
     ): Response {
         /** @var User $actor */
         $actor = $this->getUser();
@@ -326,7 +328,7 @@ final class DashboardController extends AbstractDashboardController
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             $applications->pendingCount(),
-            CuratorApplicationService::PER_PAGE,
+            $pageSize->resolve(CuratorApplicationService::PER_PAGE),
         );
 
         $rows = [];
@@ -416,6 +418,7 @@ final class DashboardController extends AbstractDashboardController
         UrgentWithholdBreaker $breaker,
         EntityManagerInterface $em,
         TranslatorInterface $translator,
+        PageSize $pageSize,
     ): Response {
         /** @var User $actor */
         $actor = $this->getUser();
@@ -452,7 +455,7 @@ final class DashboardController extends AbstractDashboardController
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             $takedowns->withheldThirdPartyCount(),
-            MediaTakedownService::PER_PAGE,
+            $pageSize->resolve(MediaTakedownService::PER_PAGE),
         );
 
         return $this->render('admin/withheld_photos.html.twig', [
@@ -474,7 +477,7 @@ final class DashboardController extends AbstractDashboardController
      * reported to decides when it may go.
      */
     #[AdminRoute('/escalated', 'escalated', options: ['methods' => ['GET', 'POST']])]
-    public function escalated(Request $request, MediaEscalationService $escalations, ModerationService $moderation, EntityManagerInterface $em, TranslatorInterface $translator): Response
+    public function escalated(Request $request, MediaEscalationService $escalations, ModerationService $moderation, EntityManagerInterface $em, TranslatorInterface $translator, PageSize $pageSize): Response
     {
         /** @var User $actor */
         $actor = $this->getUser();
@@ -505,8 +508,8 @@ final class DashboardController extends AbstractDashboardController
         // Two held lists on one page, so two pagers with two keys — `page` for
         // the photos, `spage` for the submissions — and each carries the
         // other's current page so neither resets the other.
-        $pager = Pager::of($request->query->getInt('page', 1), $escalations->heldCount(), MediaEscalationService::PER_PAGE);
-        $submissionPager = Pager::of($request->query->getInt('spage', 1), $moderation->heldSubmissionCount(), ModerationService::HELD_PER_PAGE);
+        $pager = Pager::of($request->query->getInt('page', 1), $escalations->heldCount(), $pageSize->resolve(MediaEscalationService::PER_PAGE));
+        $submissionPager = Pager::of($request->query->getInt('spage', 1), $moderation->heldSubmissionCount(), $pageSize->resolve(ModerationService::HELD_PER_PAGE));
 
         return $this->render('admin/escalated.html.twig', [
             'cards' => $escalations->held($pager['page'], $pager['perPage']),

@@ -847,6 +847,37 @@ needs them.
 Every state carries a way in, including the covered ones. There is more to do
 than curating, and "we have someone" is not a reason to close the door.
 
+### 9.4 How long a page is (2026-08-09)
+
+`users.rows_per_page` (`App\Account\RowsPerPage`, migration
+`Version20260809120000`) sits beside the unit and format preferences and is
+display-only in exactly the same way.
+
+**`auto` is the default, and it is not a number.** Each list keeps the size it
+was designed around — 20 for messages because a message is a card, 25 for a
+moderation desk because a queue item is a row of work, 60 for the contributors
+wall because a wall row is one line and somebody scanning for a name would
+rather scroll than click. Any single global default would have to be wrong for
+two of those three. `25`/`50`/`100` override all of them at once, which is the
+point: a rider who picks 100 is telling us about their screen and their
+patience, not about our page design.
+
+`App\Pagination\PageSize::resolve(int $surfaceDefault)` is the only reader.
+Each list passes the size it was built for and gets back either that number or
+the rider's choice — so the surface default stays in the CALL, the resolver
+holds no opinion about how long a message list should be, and adding a paged
+list never means editing it. A signed-out reader always gets the default;
+there is nowhere to store a choice for them.
+
+**Two doors, one setting.** It is on the Profile settings tab with the other
+display preferences, AND in every pager. The second door exists because the
+moment anyone *wants* a different page length is the moment they are looking at
+a pager, and sending them off to find a settings tab is the kind of
+correct-but-useless routing that means the setting never gets changed. The
+pager's control POSTs to `settings_rows_per_page`, writes the same column, and
+returns to the list — via a submitted `back` field, not `Referer`, and only
+relative paths are honoured, or a logged-in POST becomes an open redirect.
+
 ## 10. Self-service account deletion (GDPR Art. 17)
 
 Two-step flow in `SettingsController` (danger zone, Security tab), both steps

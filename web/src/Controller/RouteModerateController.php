@@ -20,6 +20,7 @@ use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TrashBlockedException;
 use App\Pagination\Pager;
+use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,6 +46,7 @@ final class RouteModerateController extends AbstractController
         private readonly RetentionService $retention,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly SubmissionQueue $submissionQueue,
+        private readonly PageSize $pageSize,
     ) {
     }
 
@@ -69,12 +71,12 @@ final class RouteModerateController extends AbstractController
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             $this->queue->pendingCount($scope, $regionId),
-            RouteQueue::PER_PAGE,
+            $this->pageSize->resolve(RouteQueue::PER_PAGE),
         );
         $suggestionPager = Pager::of(
             $request->query->getInt('spage', 1),
             $this->queue->pendingSuggestionsCount($scope, $regionId),
-            RouteQueue::PER_PAGE,
+            $this->pageSize->resolve(RouteQueue::PER_PAGE),
         );
 
         $rows = $this->queue->pending($scope, $regionId, $pager['page'], $pager['perPage']);

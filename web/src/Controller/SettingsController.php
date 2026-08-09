@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Account\RowsPerPage;
 use App\Entity\User;
 use App\Form\SettingsPasswordType;
 use App\Form\SettingsType;
@@ -168,6 +169,45 @@ final class SettingsController extends AbstractController
             // or one who has never been named on them, has nothing to decide.
             'has_approved_photos' => $user->isPublicProfile() && $this->hasApprovedPhotos($user),
         ]);
+    }
+
+    /**
+     * Set the page length from a pager, and go back to the list.
+     *
+     * The preference itself lives on the Profile tab with the other display
+     * settings — one home, and this writes to that same column. It
+     * exists because the moment anyone WANTS a different page length is the
+     * moment they are looking at a pager, and making them leave the queue,
+     * find a tab and come back is the kind of correct-but-useless routing
+     * that stops people from changing the setting at all.
+     *
+     * The return path is taken from the submitted `back` field rather than
+     * from Referer, and only relative paths are honoured — an absolute URL
+     * would turn a logged-in POST into an open redirect.
+     */
+    #[Route('/settings/rows-per-page', name: 'settings_rows_per_page', methods: ['POST'])]
+    public function rowsPerPage(Request $request, EntityManagerInterface $em): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('rows_per_page', $request->request->get('_token'))) {
+            $this->addFlash('error', 'flash.invalid_token');
+
+            return $this->redirectToRoute('settings');
+        }
+
+        $choice = RowsPerPage::tryFrom((string) $request->request->get('rows'));
+        if (null !== $choice) {
+            $user->setRowsPerPage($choice);
+            $em->flush();
+        }
+
+        $back = (string) $request->request->get('back', '');
+        // A single leading slash, and no scheme-relative `//host` form.
+        $safe = 1 === preg_match('#^/(?!/)[^\\\\]*$#', $back);
+
+        return $this->redirect($safe ? $back : $this->generateUrl('settings'));
     }
 
     /**

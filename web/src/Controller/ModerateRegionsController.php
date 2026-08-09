@@ -11,6 +11,7 @@ use App\Catalog\OperationalRegions;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Pagination\Pager;
+use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -50,6 +51,7 @@ final class ModerateRegionsController extends AbstractController
         private readonly Connection $db,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly CuratedReadiness $readiness,
+        private readonly PageSize $pageSize,
     ) {
     }
 
@@ -80,7 +82,7 @@ final class ModerateRegionsController extends AbstractController
         // curator sees every onboarded region on earth (Japan alone is 47),
         // and every one of them costs a content count. The page is what gets
         // measured.
-        $pager = Pager::of($request->query->getInt('page', 1), \count($rows), self::PER_PAGE);
+        $pager = Pager::of($request->query->getInt('page', 1), \count($rows), $this->pageSize->resolve(self::PER_PAGE));
         $rows = \array_slice($rows, $pager['offset'], $pager['perPage']);
 
         $reports = $this->readiness->reportForRegions(array_map(static fn (array $r): int => $r['id'], $rows));

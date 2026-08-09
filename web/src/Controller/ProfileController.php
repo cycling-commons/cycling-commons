@@ -12,6 +12,7 @@ use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
 use App\Moderation\RetentionService;
 use App\Pagination\Pager;
+use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -48,6 +49,7 @@ final class ProfileController extends AbstractController
         RetentionService $retention,
         Connection $db,
         SubmissionChangeSummary $changes,
+        PageSize $pageSize,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -69,7 +71,7 @@ final class ProfileController extends AbstractController
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             (int) $contributionsQuery($em)->select('COUNT(s.id)')->getQuery()->getSingleScalarResult(),
-            self::PER_PAGE,
+            $pageSize->resolve(self::PER_PAGE),
         );
 
         /** @var list<Submission> $contributions */
@@ -85,7 +87,7 @@ final class ProfileController extends AbstractController
         $routePager = Pager::of(
             $request->query->getInt('rpage', 1),
             (int) $em->getRepository(RecommendedRoute::class)->count(['proposedBy' => $userId]),
-            self::PER_PAGE,
+            $pageSize->resolve(self::PER_PAGE),
         );
 
         return $this->render('profile/show.html.twig', [

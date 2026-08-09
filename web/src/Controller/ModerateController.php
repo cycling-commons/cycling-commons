@@ -24,6 +24,7 @@ use App\Moderation\RetentionService;
 use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
 use App\Pagination\Pager;
+use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -59,6 +60,7 @@ final class ModerateController extends AbstractController
         private readonly MediaEscalationService $escalations,
         private readonly UrgentWithholdBreaker $breaker,
         private readonly EntityManagerInterface $em,
+        private readonly PageSize $pageSize,
     ) {
     }
 
@@ -99,20 +101,21 @@ final class ModerateController extends AbstractController
         $type = $request->query->getString('type');
         $page = max(1, $request->query->getInt('page', 1));
         $me = $mine ? $user->getId() : null;
+        $perPage = $this->pageSize->resolve(SubmissionQueue::PER_PAGE);
         $total = $this->queue->countHistory($scope, $me, $status ?: null, $q ?: null, $country ?: null, $region ?: null, $type ?: null);
 
         return $this->render('moderate/history.html.twig', [
             'page_title' => 'meta.moderate_history_title',
             'page_description' => 'meta.moderate_history_description',
             'nav_active' => 'moderate_history',
-            'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, SubmissionQueue::PER_PAGE, $country ?: null, $region ?: null, $type ?: null),
+            'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, $perPage, $country ?: null, $region ?: null, $type ?: null),
             'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type],
             // Option lists describe the SETTLED set here, not the open queue —
             // a country with no open work can still have a record worth reading.
             'countries' => $this->queue->countries($scope, settled: true),
             'regions' => $this->queue->regions($scope, settled: true),
             'types' => SubmissionType::values(),
-            'pager' => Pager::of($page, $total, SubmissionQueue::PER_PAGE),
+            'pager' => Pager::of($page, $total, $perPage),
             ...$this->deskBadges($user, $scope),
         ]);
     }
@@ -136,7 +139,7 @@ final class ModerateController extends AbstractController
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             $this->takedowns->pendingCount(),
-            MediaTakedownService::PER_PAGE,
+            $this->pageSize->resolve(MediaTakedownService::PER_PAGE),
         );
 
         return $this->render('moderate/takedowns.html.twig', [
@@ -208,8 +211,9 @@ final class ModerateController extends AbstractController
         $user = $this->getUser();
         $scope = $this->scopeProvider->scopeFor($user);
         $page = max(1, $page);
+        $perPage = $this->pageSize->resolve(SubmissionQueue::PER_PAGE);
         $matching = $this->queue->countFiltered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null);
-        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page);
+        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page, $perPage);
 
         // No per-item decision forms here anymore: submissions are approved
         // ONLY from the map drawer (so a curator always sees the item in place
@@ -221,7 +225,7 @@ final class ModerateController extends AbstractController
             'items' => $items,
             'total' => $this->queue->total($scope),
             'filters' => ['country' => $country, 'region' => $region, 'type' => $type, 'q' => $q],
-            'pager' => Pager::of($page, $matching, SubmissionQueue::PER_PAGE),
+            'pager' => Pager::of($page, $matching, $perPage),
             'matching' => $matching,
             'countries' => $this->queue->countries($scope),
             'regions' => $this->queue->regions($scope),
