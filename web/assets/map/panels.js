@@ -27,7 +27,7 @@ import { CATALOG, catalogUtility, catalogVotable, catalogModeration,
          active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
-         applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter } from './render.js';
+         applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
 import { curScope, inScope } from './scope-ui.js';
 
@@ -278,7 +278,7 @@ export function initChips(){
     if(!chip||!grp||!PREFS.bikes.length) return;      // anonymous / no prefs → group stays hidden
     grp.hidden=false;
     const sync=()=>{ const on=prefFilterEnabled(); chip.classList.toggle('on', on); chip.setAttribute('aria-pressed', on?'true':'false'); };
-    const flip=()=>{ const on=!prefFilterEnabled(); setPrefFilter(on); try{ localStorage.setItem('cc-pref-filter', on?'on':'off'); }catch(e){} sync(); render(); updateCounts(); };
+    const flip=()=>{ const on=!prefFilterEnabled(); setPrefFilter(on); try{ localStorage.setItem(PREF_FILTER_KEY, on?'on':'off'); }catch(e){} sync(); render(); updateCounts(); };
     chip.onclick=flip;
     chip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
     sync();

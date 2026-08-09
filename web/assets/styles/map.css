@@ -585,7 +585,11 @@
   .cc-d-desc{font-size:.92rem;line-height:1.55;color:rgba(239,230,212,.82);margin:.9rem 0 .2rem}
   .cc-d-tr{font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;color:rgba(239,230,212,.42);text-transform:uppercase}
   .cc-d-photo{margin:1rem 0 0}
-  .cc-d-photo>img{width:100%;border-radius:8px;display:block;cursor:zoom-in}
+  /* aspect-ratio reserves the box BEFORE the Wikimedia thumb lands, so the
+     records/actions below stop jumping when it does (CLS — frontend review
+     2026-08-09 #7). 4/3 approximates the 520w thumbs; object-fit crops the
+     odd portrait instead of stretching it. */
+  .cc-d-photo>img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in}
   .cc-d-photo figcaption{font-size:.6rem;color:rgba(239,230,212,.5);margin-top:.4rem;font-family:var(--mono);letter-spacing:.02em}
   .cc-d-photo figcaption a{color:rgba(239,230,212,.72);text-decoration:underline}
   /* no-photo placeholder = a contributor CTA (links to the improve wizard's media step) */

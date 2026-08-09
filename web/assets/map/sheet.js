@@ -38,7 +38,7 @@ function initSnapSheet(){
     const h=d.getBoundingClientRect().height;
     return {full:0, half:Math.max(0, h-window.innerHeight*0.5), peek:Math.max(0, h-7.5*rem())};
   }
-  let active=false, dragging=false, viaGrab=false, startY=0, startT=0, dy=0, baseOff=0;
+  let active=false, dragging=false, viaGrab=false, startY=0, startT=0, dy=0, baseOff=0, peekClamp=0;
   d.addEventListener('touchstart', e=>{
     if(!mobile() || e.touches.length!==1 || !d.classList.contains('open')) return;
     viaGrab=grab.contains(e.target);
@@ -51,6 +51,9 @@ function initSnapSheet(){
     // offsets() is still fine for the release-snap targets below.
     const tr=getComputedStyle(d).transform;
     baseOff = (tr && tr!=='none') ? new DOMMatrixReadOnly(tr).m42 : 0;
+    // The clamp ceiling is invariant during a drag; measuring it here saves a
+    // getBoundingClientRect per touchmove frame (frontend review 2026-08-09).
+    peekClamp = offsets().peek + 40;
   }, {passive:true});
   d.addEventListener('touchmove', e=>{
     if(!active) return;
@@ -64,8 +67,7 @@ function initSnapSheet(){
     }
     e.preventDefault();                              // own the gesture (passive:false)
     d.classList.add('dragging');
-    const off=offsets();
-    d.style.transform=`translateY(${Math.min(Math.max(0, baseOff+dy), off.peek+40)}px)`;   // clamp: never above full; slight give past peek
+    d.style.transform=`translateY(${Math.min(Math.max(0, baseOff+dy), peekClamp)}px)`;   // clamp: never above full; slight give past peek
   }, {passive:false});
   d.addEventListener('touchend', ()=>{
     if(!dragging){ active=false; return; }

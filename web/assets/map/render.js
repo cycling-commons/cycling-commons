@@ -74,6 +74,13 @@ export function updateHeatFilter(){
 export let markers = [];
 export const dynamicIds=[];
 export const boundLayerIds=new Set();   // delegated click/hover handlers are attached once per id
+/* What a bound layer's click OPENS is looked up here at click time, not
+   captured in the closure. The closure captured `f` from the FIRST render, so
+   after community.js swapped a feature on an approved edit, clicking the line
+   reopened the pre-edit record until reload (frontend review 2026-08-09 #3).
+   Every render overwrites its id's entry, so the handler always sees the
+   feature currently drawn under that id. */
+export const layerTarget=new Map();     // layer id -> {layer, f}
 export function clearDynamic(){
   // remove casing layers first (they share the base source id), then base layer + source
   dynamicIds.forEach(id=>{ const c=id+'-case'; if(map.getLayer(c)) map.removeLayer(c); });
@@ -136,8 +143,9 @@ export function drawClimbLine(id, latlngs, grad, layer, f){
     layout:{'line-cap':'round','line-join':'round'},
     paint:{'line-width':lineW,'line-gradient':expr}});
   dynamicIds.push(id);
+  layerTarget.set(id, {layer, f});
   if(!boundLayerIds.has(id)){
-    map.on('click',id,()=>openDrawer(layer,f));
+    map.on('click',id,()=>{ const t=layerTarget.get(id); if(t) openDrawer(t.layer, t.f); });
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
     map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
     boundLayerIds.add(id);
@@ -257,8 +265,9 @@ export function drawLine(id, latlngs, color, layer, f){
     // brand color + dimmed siblings) lives in highlightRoute().
     paint:{'line-color':layer.key==='experience'?ROUTE_BASE_COLOR:color,'line-width':5,'line-opacity':1}});
   dynamicIds.push(id);
+  layerTarget.set(id, {layer, f});
   if(!boundLayerIds.has(id)){
-    map.on('click',id,()=>openDrawer(layer,f));
+    map.on('click',id,()=>{ const t=layerTarget.get(id); if(t) openDrawer(t.layer, t.f); });
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
     map.on('mouseleave',id,()=>map.getCanvas().style.cursor='');
     boundLayerIds.add(id);
@@ -412,7 +421,11 @@ export function applyStaysAccessFilter(){
 // bikeTypes stays visible; only a declared non-overlap hides it. Off for
 // anonymous visitors (PREFS.bikes empty) and toggleable via the rail chip
 // (#prefFilter), persisted in localStorage.
-export let prefFilterOn = PREFS.bikes.length>0 && (localStorage.getItem('cc-pref-filter')||'on')==='on';
+// Keyed per ACCOUNT (uuid), not globally: a shared browser must not hand one
+// rider's "off" to the next (same shared-device rule as the view-mode key).
+// Anonymous visitors never read it — PREFS.bikes is empty without a profile.
+export const PREF_FILTER_KEY = 'cc-pref-filter:'+(PREFS.uid||'anon');
+export let prefFilterOn = PREFS.bikes.length>0 && (localStorage.getItem(PREF_FILTER_KEY)||'on')==='on';
 export function prefMatch(f){
   if(!prefFilterOn || !PREFS.bikes.length) return true;
   if(!f.bikeTypes || !f.bikeTypes.length) return true;          // undeclared → keep

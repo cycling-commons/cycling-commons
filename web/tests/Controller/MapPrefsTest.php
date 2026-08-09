@@ -75,7 +75,7 @@ final class MapPrefsTest extends WebTestCase
         // mapMode/authed joined the payload with the view-mode default;
         // the two lists are
         // still empty, which is what this test is about.
-        self::assertStringContainsString('{"bikes":[],"styles":[],"mapMode":"auto","authed":false}', $html);
+        self::assertStringContainsString('{"uid":null,"bikes":[],"styles":[],"mapMode":"auto","authed":false}', $html);
     }
 
     /**

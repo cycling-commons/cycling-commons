@@ -178,6 +178,7 @@ export function addCoverage(){
   maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
   mintWaterDrops();
   map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
+  const iconLayerIds=[]; const iconLayerKey=new Map();
   COVERAGE_KEYS.forEach(([key, letter])=>{
     // One icon layer per (letter, country): the source-layer is
     // '<letter>_<cc>' (lowercase cc; 'zz' = unstamped rows), and the layer ids
@@ -256,13 +257,23 @@ export function addCoverage(){
           'icon-size': key==='water'
             ? ['interpolate',['linear'],['zoom'],8,0.55,13,0.9,18,1.3]
             : ['interpolate',['linear'],['zoom'],8,0.42,13,0.7,18,0.95]}});
-      map.on('click',id,e=>{ const f0=e.features[0], tp=f0.properties, c=f0.geometry.coordinates;
-        openCoverageDrawer(key, tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });   // exact feature coords, same halo rule as addOsmDots
-      map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
-      map.on('mousemove',id,e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[key]||{}).label||'Item', e.lngLat); });
-      map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+      iconLayerIds.push(id); iconLayerKey.set(id, key);
     });
   });
+  /* ONE handler set over ALL icon layers, not four per (letter × country).
+     The per-layer form bound ~4 × 7 letters × 13 countries ≈ 360 delegated
+     listeners, and MapLibre runs a queryRenderedFeatures hit-test per
+     mousemove-delegated listener on every pointer move — the same fan-out the
+     2026-07-12 C4 surface fix removed, reintroduced by the per-country layer
+     split (frontend review 2026-08-09 #2). map.on(type, layerIds[], fn) has
+     accepted an array since MapLibre 4; e.features[0].layer.id says which
+     layer actually hit, and the key comes from the id map built above. */
+  const keyOf = e => iconLayerKey.get(e.features[0].layer.id);
+  map.on('click', iconLayerIds, e=>{ const f0=e.features[0], tp=f0.properties, c=f0.geometry.coordinates;
+    openCoverageDrawer(keyOf(e), tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });   // exact feature coords, same halo rule as addOsmDots
+  map.on('mouseenter', iconLayerIds, ()=>map.getCanvas().style.cursor='pointer');
+  map.on('mousemove', iconLayerIds, e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[keyOf(e)]||{}).label||'Item', e.lngLat); });
+  map.on('mouseleave', iconLayerIds, ()=>{ map.getCanvas().style.cursor=''; hideTip(); });
   // Selected-POI icon overlay (fix 2026-07-22): a coverage POI's individual
   // icon is drawn only by the tile <key>-<cc>-cov layer, which the z11 minzoom
   // hides on zoom-out — but the selection pulse (a coord-anchored DOM

@@ -176,10 +176,14 @@ export function initRideCheck(){
       body.innerHTML=html;
       document.getElementById('rcClearBtn').onclick=clearRideCheck;
       const groupsByLetter=Object.fromEntries(d.groups.map(g=>[g.letter,g]));
+      // One pass over the index, not one .find() per row: with a few thousand
+      // index entries and ~100 corridor rows the per-row scan was O(rows ×
+      // index) every render (frontend review 2026-08-09 #5).
+      const idxByKey=new Map(itemIndex().map(x=>[x.letter+':'+x.id, x]));
       body.querySelectorAll('[data-rc-route]').forEach(b=>{ b.onclick=()=>openRouteById(b.dataset.rcRoute); });
       body.querySelectorAll('[data-rc-g]').forEach(b=>{
         const it=(groupsByLetter[b.dataset.rcG]||{items:[]}).items[+b.dataset.rcI]; if(!it) return;
-        const entry=itemIndex().find(x=>x.letter===b.dataset.rcG && x.id===it.id);
+        const entry=idxByKey.get(b.dataset.rcG+':'+it.id);
         b.onclick=()=>{ if(entry) entry.go(); else { flyToPin([it.ll[1],it.ll[0]]); highlightAt(it.ll); } };
         b.onmouseenter=()=>highlightAt(it.ll, entry && entry.hlOff);
         b.onmouseleave=clearHighlight;

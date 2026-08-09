@@ -420,7 +420,47 @@
    the C5 parallel download stays a hand-written modulepreload — now of a module
    graph, which the browser walks, warming i18n.js/util.js too. #}
 {{ importmap([], {nonce: csp_nonce()}) }}
+{# Preload the WHOLE module graph, not just the entry: browsers do not walk
+   import graphs for modulepreload, so a single map.js preload left the other
+   ~25 modules downloading in serial dependency waves after the catalog landed
+   (frontend review 2026-08-09 #1). The list is maintained by hand — a module
+   missing here still works, it just loads one wave later. Preloading does not
+   execute anything, so the catalog gate below is untouched. #}
+<link rel="modulepreload" href="{{ asset('map/catalog.js') }}">
+<link rel="modulepreload" href="{{ asset('map/climb-profile.js') }}">
+<link rel="modulepreload" href="{{ asset('map/community.js') }}">
+<link rel="modulepreload" href="{{ asset('map/corrections.js') }}">
+<link rel="modulepreload" href="{{ asset('map/coverage.js') }}">
+<link rel="modulepreload" href="{{ asset('map/drawer.js') }}">
+<link rel="modulepreload" href="{{ asset('map/i18n.js') }}">
+<link rel="modulepreload" href="{{ asset('map/icons.js') }}">
+<link rel="modulepreload" href="{{ asset('map/item-index.js') }}">
+<link rel="modulepreload" href="{{ asset('map/lightbox.js') }}">
+<link rel="modulepreload" href="{{ asset('map/map-init.js') }}">
 <link rel="modulepreload" href="{{ asset('map/map.js') }}">
+<link rel="modulepreload" href="{{ asset('map/mapillary.js') }}">
+<link rel="modulepreload" href="{{ asset('map/osm-pools.js') }}">
+<link rel="modulepreload" href="{{ asset('map/panels.js') }}">
+<link rel="modulepreload" href="{{ asset('map/pending-shape.js') }}">
+<link rel="modulepreload" href="{{ asset('map/picking.js') }}">
+<link rel="modulepreload" href="{{ asset('map/places.js') }}">
+<link rel="modulepreload" href="{{ asset('map/planner.js') }}">
+<link rel="modulepreload" href="{{ asset('map/render.js') }}">
+<link rel="modulepreload" href="{{ asset('map/ride-check.js') }}">
+<link rel="modulepreload" href="{{ asset('map/scope-ui.js') }}">
+<link rel="modulepreload" href="{{ asset('map/search-ui.js') }}">
+<link rel="modulepreload" href="{{ asset('map/sheet.js') }}">
+<link rel="modulepreload" href="{{ asset('map/spotlight.js') }}">
+<link rel="modulepreload" href="{{ asset('map/units.js') }}">
+<link rel="modulepreload" href="{{ asset('map/util.js') }}">
+{# And the catalog itself: catalog-load.js starts this ~1 MB fetch only after
+   the vendor scripts execute; the preload puts it in flight from the preamble,
+   overlapping the maplibre/pmtiles downloads. crossorigin IS required even
+   same-origin: fetch() runs mode=cors + credentials=same-origin, and a bare
+   preload runs credentials=include — Chrome reports the mismatch and refetches
+   (verified in the console, 2026-08-09). crossorigin(=anonymous) makes the
+   preload's credentials mode match fetch()'s. #}
+<link rel="preload" as="fetch" href="{{ path('map_catalog') }}" crossorigin>
 {# The rider's units (account-and-auth.md §9). This page does NOT extend
    base.html.twig, so it carries its own copy of the bridge — without it every
    distance the map draws would stay metric while the same rider's moderation

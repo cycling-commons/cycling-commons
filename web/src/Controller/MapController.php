@@ -24,6 +24,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -61,6 +62,12 @@ final class MapController extends AbstractController
             // value-lists only, [] for anonymous — map.js treats
             // empty as "no prefilter" so anonymous behaviour is unchanged.
             'rider_prefs' => [
+                // The rider's public uuid, so client-side toggles can be
+                // stored per ACCOUNT: the prefilter's on/off used to live in
+                // one global localStorage key, and rider B on a shared browser
+                // inherited rider A's "off" (frontend review 2026-08-09 #4).
+                // The uuid is the identity every public surface already uses.
+                'uid' => $user instanceof User ? $user->getUuid() : null,
                 'bikes' => $user instanceof User
                     ? array_map(static fn (BikeType $t): string => $t->value, $user->getBikeTypes())
                     : [],
@@ -164,7 +171,7 @@ final class MapController extends AbstractController
             'age' => 'd_age', 'where' => 'd_where', 'place' => 'd_place', 'wallonia' => 'd_wallonia',
             'officialRegistry' => 'd_official_registry', 'confirmed' => 'd_confirmed', 'simulated' => 'd_simulated',
             'drinkingWater' => 'd_drinking_water', 'headlineDrinking' => 'd_headline_drinking',
-            'potableOsm' => 'd_potable_osm', 'potableOsmNo' => 'd_potable_osm_no', 'potableSim' => 'd_potable_sim', 'verifyWater' => 'd_verify_water',
+            'potableOsm' => 'd_potable_osm', 'potableOsmNo' => 'd_potable_osm_no', 'verifyWater' => 'd_verify_water',
             'proposedVerify' => 'd_proposed_verify', 'estimateMethod' => 'd_estimate_method',
             'contributedGpx' => 'd_contributed_gpx', 'srcAuto' => 'd_src_auto', 'srcRider' => 'd_src_rider',
             'communityReport' => 'd_community_report', 'reportPhoto' => 'd_report_photo',
@@ -356,6 +363,13 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
+        // The body is session-independent (metric numbers, ISO dates, no user
+        // data), but LocaleSubscriber's session read makes AbstractSessionListener
+        // overwrite public caching with `private, must-revalidate` for anyone
+        // carrying a session cookie — i.e. every logged-in rider. This header
+        // tells it the caching decision here is deliberate (frontend review
+        // 2026-08-09 #1).
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(3600);
         $response->isNotModified($request);
 
@@ -376,6 +390,13 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
+        // The body is session-independent (metric numbers, ISO dates, no user
+        // data), but LocaleSubscriber's session read makes AbstractSessionListener
+        // overwrite public caching with `private, must-revalidate` for anyone
+        // carrying a session cookie — i.e. every logged-in rider. This header
+        // tells it the caching decision here is deliberate (frontend review
+        // 2026-08-09 #1).
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(60);
         $response->isNotModified($request);
 
@@ -432,6 +453,13 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
+        // The body is session-independent (metric numbers, ISO dates, no user
+        // data), but LocaleSubscriber's session read makes AbstractSessionListener
+        // overwrite public caching with `private, must-revalidate` for anyone
+        // carrying a session cookie — i.e. every logged-in rider. This header
+        // tells it the caching decision here is deliberate (frontend review
+        // 2026-08-09 #1).
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(300);
         $response->isNotModified($request);
 
@@ -457,6 +485,13 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
+        // The body is session-independent (metric numbers, ISO dates, no user
+        // data), but LocaleSubscriber's session read makes AbstractSessionListener
+        // overwrite public caching with `private, must-revalidate` for anyone
+        // carrying a session cookie — i.e. every logged-in rider. This header
+        // tells it the caching decision here is deliberate (frontend review
+        // 2026-08-09 #1).
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         // Boundaries change only on a versioned re-import (rare); an hour matches
         // catalog.json's discipline and keeps the shared cache warm.
         $response->setMaxAge(3600);
@@ -502,6 +537,13 @@ final class MapController extends AbstractController
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
+        // The body is session-independent (metric numbers, ISO dates, no user
+        // data), but LocaleSubscriber's session read makes AbstractSessionListener
+        // overwrite public caching with `private, must-revalidate` for anyone
+        // carrying a session cookie — i.e. every logged-in rider. This header
+        // tells it the caching decision here is deliberate (frontend review
+        // 2026-08-09 #1).
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         $response->setMaxAge(3600);
         $response->isNotModified($request);
 

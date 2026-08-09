@@ -20,6 +20,12 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
+{# Preload the two primary latin faces: font-display:swap guarantees a swap
+   flash on cold loads unless the bytes beat first paint (frontend review
+   2026-08-09). The other subsets stay lazy — they only load when their
+   unicode-range is actually on the page. #}
+<link rel="preload" as="font" type="font/woff2" href="{{ asset('fonts/bricolage-400_800-latin.woff2') }}" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="{{ asset('fonts/spline-sans-400-latin.woff2') }}" crossorigin>
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/atlas.css') }}" />
 <script defer src="{{ asset('js/analytics.js') }}"></script>

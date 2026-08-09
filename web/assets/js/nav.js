@@ -240,14 +240,29 @@
       if (drawerLang) drawerLang.style.display = folded ? '' : 'none';
     }
     function fit() {
+      // Phase the reads and writes instead of interleaving them: the old loop
+      // called fits() (a scrollWidth read → forced layout) after every single
+      // display write, costing up to ~8 synchronous layouts per resize frame
+      // (frontend review 2026-08-09 #4). Now: one write pass (show all), one
+      // read pass (overflow + each link's width), one computed write pass,
+      // and a short corrective loop that in practice never iterates — it only
+      // exists because offsetWidth excludes the flex gap.
       inlineSub.forEach(function (a) { a.style.display = ''; });
       inlineBlocks.forEach(function (a) { a.style.display = ''; });
       foldLang(false);
       burger.style.display = 'none';
       if (fits()) return;                                  // everything fits — no burger
+      var deficit = navBar.scrollWidth - navBar.clientWidth;
+      var widths = inlineSub.map(function (a) { return a.offsetWidth; });
+      var gap = parseFloat(getComputedStyle(navBar).columnGap) || 0;
       burger.style.display = 'flex';                        // need the burger now
-      for (var i = inlineSub.length - 1; i >= 0 && !fits(); i--) {
+      deficit += 44 + gap;                                  // the burger itself takes room
+      for (var i = inlineSub.length - 1; i >= 0 && deficit > 0; i--) {
         inlineSub[i].style.display = 'none';                // drop secondary links, last first
+        deficit -= widths[i] + gap;
+      }
+      for (var j = i; j >= 0 && !fits(); j--) {
+        inlineSub[j].style.display = 'none';                // corrective: gap rounding
       }
       if (fits()) return;                                  // blocks (+ any links that fit) + burger
       inlineBlocks.forEach(function (a) { a.style.display = 'none'; });  // burger-only
