@@ -111,10 +111,22 @@ final class ThirdPartyReportTest extends KernelTestCase
         );
     }
 
-    /** @return list<UserMessage> */
+    /**
+     * Oldest first — and the ORDER BY is the point.
+     *
+     * Two callers assert the SEQUENCE of what the contributor was told
+     * ("hidden", then "given back"), which an unordered findBy() answers with
+     * whatever order Postgres happens to hand back. It agreed with the
+     * assertion for months and then stopped, under a full-suite run, for a
+     * change that touches neither messages nor their writes — the sibling
+     * helper above already sorts by id for exactly this reason.
+     *
+     * @return list<UserMessage>
+     */
     private function messagesFor(User $user): array
     {
-        return $this->em->getRepository(UserMessage::class)->findBy(['userId' => (int) $user->getId()]);
+        return $this->em->getRepository(UserMessage::class)
+            ->findBy(['userId' => (int) $user->getId()], ['id' => 'ASC']);
     }
 
     public function testAReportQueuesAndChangesNothingVisible(): void

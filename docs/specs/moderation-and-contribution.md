@@ -1018,6 +1018,70 @@ the state name in the accessible name — and an unread row keeps the heavier
 left border and bolder heading. A message the reader **sent** carries no marker
 at all; it was never unread to them.
 
+### 7.5b The sweep — every unbounded list pages (2026-08-09)
+
+§7.5a paged the account side. This closes the rest: **every list in the
+application that grows without bound now pages**, through the same
+`Pager::of()` and the same partial, so "page 3 of 12 · 240 in total" means one
+thing everywhere and an out-of-range `?page=` lands on the last page rather
+than on nothing.
+
+| Surface | Rows/page | Constant |
+|---|---|---|
+| Messages | 20 | `MessageService::PER_PAGE` |
+| Contributions · route proposals (`/profile`) | 20 each | `ProfileController::PER_PAGE` |
+| Submission queue · decided history | 25 | `SubmissionQueue::PER_PAGE` |
+| Routes desk — proposals · corrections | 25 each | `RouteQueue::PER_PAGE` |
+| Takedown desk | 25 | `MediaTakedownService::PER_PAGE` |
+| Withheld-photo recovery (admin) | 25 | `MediaTakedownService::PER_PAGE` |
+| Legal holds — photos · submissions (admin) | 25 each | `MediaEscalationService::PER_PAGE`, `ModerationService::HELD_PER_PAGE` |
+| Curator applications (admin) | 15 | `CuratorApplicationService::PER_PAGE` |
+| Regions desk | 25 | `ModerateRegionsController::PER_PAGE` |
+| Contributors wall (public) | 60 | `ContributorWallProvider::PER_PAGE` |
+
+Five things this sweep settled that a page-size change alone would not have:
+
+1. **Every list and its count read one shared WHERE.** `RouteQueue`,
+   `MediaTakedownService` and `ContributorWallProvider` each grew a private
+   predicate (or source builder) that the page query and the count query both
+   use, the arrangement `SubmissionQueue` already had. A pager whose count
+   comes from a second, hand-kept copy of the filter drifts the day either one
+   is edited.
+
+2. **A desk badge is not a pager count.** `RouteQueue::total()` and
+   `pendingSuggestionCount()` deliberately ignore the region filter — a
+   curator who has narrowed to one region should still see how much work the
+   whole scope holds — so the pagers read new `pendingCount()` /
+   `pendingSuggestionsCount()` methods that DO follow the filter. Both numbers
+   are correct and they are different numbers.
+
+3. **The takedown badge stopped building cards to count them.**
+   `deskBadges()` called `count($this->takedowns->pendingCards())`, hydrating
+   every pending upload and describing each one to arrive at an integer — on
+   every render of every moderation page, since the badge rides the shared
+   shell. It is `pendingCount()` now.
+
+4. **The Regions desk slices before it measures.** A global curator sees every
+   onboarded region on earth (Japan alone is 47 prefectures) and each row costs
+   a readiness count, so the page is taken before `reportForRegions()` runs.
+
+5. **The contributors wall's filters moved to the server.** The name search and
+   country select were JS over the rendered rows. Once the wall pages, a
+   client-side filter answers "no such rider" about riders who are merely on
+   page 4 — so both are query parameters (`?q=`, `?country=`) applied in SQL
+   across the whole wall, the pager carries them, and the ILIKE escapes `%`
+   and `_` so a rider called "100%" searches for themselves. The country
+   options still come from the *unfiltered* wall, so narrowing never collapses
+   the select to the one country already chosen.
+
+Section counts show the pager's **total**, never the page's length: a "12" over
+a section holding 25 of 40 is a lie about how much work is waiting.
+
+Admin pages take `templates/admin/_pager.html.twig` instead of the shared
+partial — same arithmetic, same parameters, Bootstrap's pagination classes,
+because EasyAdmin pages never load the account shell's CSS that styles the
+other one.
+
 ### 7.6 The FK exception — M10
 
 `user_message.user_id` carries the schema's only real user FK, `ON DELETE
