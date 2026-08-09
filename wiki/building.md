@@ -167,6 +167,36 @@ exactly this use — self-hosted, embedded, aggregated with any code. The OFL's
 two asks are that the licence accompanies the fonts (it does, in `LICENSES/`)
 and that they are never sold on their own.
 
+## External services — what the site calls, and on what terms
+
+The full audit ran on 2026-08-09; this is its result, kept current. The rule
+behind the table: **anything in a rider's hot path either has terms that
+welcome production use, or it gets self-hosted.** Two items failed that rule
+when the audit ran — the OSRM demo server (its own policy forbids production
+reliance) and the unpkg CDN (no SLA, serialized first paint) — and both were
+resolved the same day: climb-editor snapping moved to the project's own
+Valhalla behind `/contribute/route`, and every third-party browser library is
+vendored under `web/assets/lib/`.
+
+| service | called from | their terms | our position |
+|---|---|---|---|
+| [OpenFreeMap](https://openfreemap.org/) | every map load (basemap tiles) | explicitly free for production, no key | credited |
+| [Wikimedia Commons](https://commons.wikimedia.org/) | photo hotlinks in the drawers | hotlinking allowed and encouraged | per-photo credit + licence (required notice) |
+| [Mapillary](https://www.mapillary.com/) | street-level tiles + viewer (client token) | display with attribution | attribution on the tile source and /credits |
+| [Photon](https://github.com/komoot/photon) | search + base-location typeaheads | free, fair use, no guarantee | debounced and aborted; self-host if traffic grows |
+| [Nominatim](https://nominatim.org/) | one geocode in the add-climb wizard | max 1 req/s, attribution, identifying UA | single user-triggered lookups; credited. (The software is GPL-2.0 — irrelevant here, because it is *called*, never distributed; same reasoning as PostGIS in the licence disciplines above.) |
+| [Copernicus DEM GLO-30](https://dataspace.copernicus.eu/) | our own Valhalla's elevation tiles | verbatim credit notice **required** on derived products | Article 6(b) notice + 6(c) liability sentence on /credits |
+| [Esri World Imagery](https://www.esri.com/) | the climb editor's satellite layer | the least-clear terms for keyless production use | **open item** — confirm the position or swap the layer before launch |
+| [Geofabrik](https://www.geofabrik.de/) · Overpass · Wikidata | pipeline and maintainer tools only — never riders | be polite | md5-checked downloads, identifying UAs, and the tools prefer the local PBF over live APIs |
+
+Self-hosted and therefore *not* external: Valhalla (routing + elevation),
+Photon-shaped search could join it later, the analytics endpoint
+(analytics.bikecoders.life is first-party), the fonts, and every browser
+library. The page's Content-Security-Policy is the enforcement seam: its
+`script-src` names no third-party host at all, so a new external script
+dependency cannot appear without editing the CSP — which is the moment to
+re-run this table's test.
+
 ## Get involved
 
 The Commons grows two ways, and both need people.
