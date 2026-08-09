@@ -2502,7 +2502,7 @@ form:
   help_elevation_unit: 'L''unité des altitudes et du dénivelé.'
   label_rows_per_page: 'Lignes par page'
   help_rows_per_page: 'La longueur d''une page dans toutes les listes — messages, vos contributions, les bureaux de modération. Chaque liste garde sa propre longueur tant que vous ne choisissez pas un nombre ici. Modifiable aussi depuis n''importe quelle pagination.'
-  rows_per_page_auto: 'Chaque liste décide'
+  rows_per_page_auto: 'Choisir un nombre'
   rows_per_page_25: '25 lignes'
   rows_per_page_50: '50 lignes'
   rows_per_page_100: '100 lignes'

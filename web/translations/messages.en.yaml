@@ -2525,7 +2525,7 @@ form:
   help_elevation_unit: 'The unit every height and every metre of climbing is written in.'
   label_rows_per_page: 'Rows per page'
   help_rows_per_page: 'How long a page is in every list — messages, your contributions, the moderation desks. Each list keeps its own length unless you pick a number here. You can also change it from any pager.'
-  rows_per_page_auto: 'Each list decides'
+  rows_per_page_auto: 'Choose amount'
   rows_per_page_25: '25 rows'
   rows_per_page_50: '50 rows'
   rows_per_page_100: '100 rows'

@@ -2539,7 +2539,7 @@ form:
   help_elevation_unit: 'La unidad para alturas y desnivel acumulado.'
   label_rows_per_page: 'Filas por página'
   help_rows_per_page: 'La longitud de una página en todas las listas — mensajes, tus contribuciones, los escritorios de moderación. Cada lista mantiene su propia longitud salvo que elijas un número aquí. También se puede cambiar desde cualquier paginación.'
-  rows_per_page_auto: 'Cada lista decide'
+  rows_per_page_auto: 'Elegir cantidad'
   rows_per_page_25: '25 filas'
   rows_per_page_50: '50 filas'
   rows_per_page_100: '100 filas'

@@ -2502,7 +2502,7 @@ form:
   help_elevation_unit: 'De eenheid voor hoogtes en hoogtemeters.'
   label_rows_per_page: 'Rijen per pagina'
   help_rows_per_page: 'Hoe lang een pagina is in elke lijst — berichten, je bijdragen, de moderatiebalies. Elke lijst houdt zijn eigen lengte tenzij je hier een aantal kiest. Ook aanpasbaar vanuit elke paginering.'
-  rows_per_page_auto: 'Elke lijst beslist'
+  rows_per_page_auto: 'Kies een aantal'
   rows_per_page_25: '25 rijen'
   rows_per_page_50: '50 rijen'
   rows_per_page_100: '100 rijen'

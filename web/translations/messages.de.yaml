@@ -2505,7 +2505,7 @@ form:
   help_elevation_unit: 'Die Einheit für Höhen und Anstiege.'
   label_rows_per_page: 'Zeilen pro Seite'
   help_rows_per_page: 'Wie lang eine Seite in jeder Liste ist — Nachrichten, deine Beiträge, die Moderationstische. Jede Liste behält ihre eigene Länge, solange du hier keine Zahl wählst. Auch von jeder Seitennavigation aus änderbar.'
-  rows_per_page_auto: 'Jede Liste entscheidet'
+  rows_per_page_auto: 'Anzahl wählen'
   rows_per_page_25: '25 Zeilen'
   rows_per_page_50: '50 Zeilen'
   rows_per_page_100: '100 Zeilen'
