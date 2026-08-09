@@ -41,6 +41,20 @@ path = ["web/assets/flags/**", "web/public/media/**"]
 SPDX-FileCopyrightText = "© BikeCoders"
 SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
 
+# ── Vendored third-party frontend libraries (self-hosted 2026-08-09) ────────
+# Exact pinned dists, checksum-verified against the registry at vendoring time.
+[[annotations]]
+path = ["web/assets/lib/maplibre-gl-*", "web/assets/lib/pmtiles-*"]
+precedence = "override"
+SPDX-FileCopyrightText = "© MapLibre contributors; © Protomaps"
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = ["web/assets/lib/mapillary-js-*", "web/assets/lib/redoc-standalone-*"]
+precedence = "override"
+SPDX-FileCopyrightText = "© Meta Platforms (mapillary-js); © Redocly (redoc)"
+SPDX-License-Identifier = "MIT"
+
 # ── Data exports (ODbL — the open half of the project) ──────────────────────
 # Generated OSM-derived demo/fixture data; ODbL like the database it mirrors.
 [[annotations]]

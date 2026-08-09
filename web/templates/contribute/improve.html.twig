@@ -1,9 +1,7 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
-{# unpkg serves maplibre css+js: open the connection before the render-blocking stylesheet request (review W9) #}
-<link rel="preconnect" href="https://unpkg.com" crossorigin>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="{{ asset('lib/maplibre-gl-5.24.0.css') }}" />
 <style>
   .ey{font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.5rem}
   h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.05;margin-bottom:.4rem}
@@ -629,7 +627,7 @@
 {% endif %}
 {% endblock %}
 {% block body_scripts %}
-<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{{ asset('lib/maplibre-gl-5.24.0.js') }}"></script>
 {# climb-elevation.js + climb-editor.js must load before improve.js (Task 5: the
    climb edit path calls window.Cc.mountClimbEditor / window.Cc.profileFromRoute).
    Harmless no-op include for non-climb items — the scripts only attach to window.Cc. #}

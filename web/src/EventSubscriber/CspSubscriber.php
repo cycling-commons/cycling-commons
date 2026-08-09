@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 /**
  * Sets the Content-Security-Policy header on every main HTML response.
  * Script execution is locked to same-origin, nonced inline blocks, and
- * SRI-pinned unpkg scripts, so a stored-XSS payload that slips past output
+ * vendored same-origin scripts, so a stored-XSS payload that slips past output
  * escaping still does not execute. The directive table and the rationale for
  * each source list live in the linked spec, not here.
  *
@@ -64,7 +64,7 @@ final class CspSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
         $isMap = 'map' === $request->attributes->get('_route')
             || str_ends_with($request->getPathInfo(), '/map');
-        $scriptSrc = "script-src 'self' 'nonce-{$nonce}' https://unpkg.com"
+        $scriptSrc = "script-src 'self' 'nonce-{$nonce}'"
             .($isMap ? " 'unsafe-eval'" : '');
 
         $connectSrc = [
@@ -75,7 +75,6 @@ final class CspSubscriber implements EventSubscriberInterface
             'https://*.fbcdn.net',
             'https://nominatim.openstreetmap.org',
             'https://photon.komoot.io',
-            'https://router.project-osrm.org',
             'https://analytics.bikecoders.life',
         ];
         if ('' !== $this->coverageCspHost) {
@@ -102,7 +101,7 @@ final class CspSubscriber implements EventSubscriberInterface
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
             $scriptSrc,
-            "style-src 'self' 'unsafe-inline' https://unpkg.com",
+            "style-src 'self' 'unsafe-inline'",
             'img-src '.implode(' ', $imgSrc),
             "font-src 'self'",
             'connect-src '.implode(' ', $connectSrc),

@@ -101,18 +101,17 @@ function mlyPopup(lngLat,msg){
 function loadMapillaryJs(){
   if(window.mapillary) return Promise.resolve();
   if(mlyLoading) return mlyLoading;
-  // SRI-pinned like maplibre-gl in the template (review W2): a MITM-ed or
-  // compromised unpkg response must not run in the origin that holds the
-  // curator session + moderation CSRF token.
+  // Vendored + same-origin since 2026-08-09 (the W2 SRI pinning protected the
+  // unpkg fetch; self-hosting removes the third party entirely — AssetMapper's
+  // digested filename is the integrity now). URLs cross from the template as
+  // window.CC_VENDOR because digestion only exists in Twig.
   mlyLoading=new Promise((res,rej)=>{
+    const V=window.CC_VENDOR||{};
     const css=document.createElement('link'); css.rel='stylesheet';
-    css.href='https://unpkg.com/mapillary-js@4.1.2/dist/mapillary.css';
-    css.integrity='sha384-IamMZxz60pSNzUk3cW2nl3uYUdpiDoQpLJrBoAAezEE+QaOYCVA9rfi/8Cx0x15T';
-    css.crossOrigin='anonymous'; document.head.appendChild(css);
+    css.href=V.mapillaryCss||'/assets/lib/mapillary-js-4.1.2.css';
+    document.head.appendChild(css);
     const js=document.createElement('script');
-    js.src='https://unpkg.com/mapillary-js@4.1.2/dist/mapillary.js';
-    js.integrity='sha384-1AlAxcgdzKreJ5f2K+t7SW3pEE0ek9u3lUwlZXX+v+FtEk1tWSg6DBVLb3ZKhpB+';
-    js.crossOrigin='anonymous';
+    js.src=V.mapillaryJs||'/assets/lib/mapillary-js-4.1.2.js';
     js.onload=()=>res(); js.onerror=()=>rej(new Error('mapillary-js failed to load'));
     document.head.appendChild(js);
   });

@@ -22,7 +22,7 @@ final class ApiReferenceTest extends WebTestCase
         $client->request('GET', '/developers/api');
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
-        self::assertStringContainsString('redoc.standalone.js', $html);
+        self::assertStringContainsString('redoc-standalone', $html);   // vendored, digested filename
         self::assertStringContainsString('/api/openapi.yaml', $html);
         // English-only by design: no locale-prefixed variant exists.
         $client->request('GET', '/fr/developers/api');

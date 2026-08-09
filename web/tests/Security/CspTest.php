@@ -12,7 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 /**
  * Frontend review 2026-07-12 W3: every HTML response must carry a
  * Content-Security-Policy whose script-src is limited to self + a request
- * nonce + SRI-pinned unpkg, and every inline <script> in the rendered page
+ * nonce + vendored same-origin libraries, and every inline <script> in the rendered page
  * must carry that same nonce — otherwise the policy would silently break the
  * page instead of protecting it.
  */
@@ -28,7 +28,10 @@ final class CspTest extends WebTestCase
         self::assertNotNull($csp, 'HTML responses must carry a CSP header');
         self::assertStringContainsString("default-src 'self'", $csp);
         self::assertStringContainsString("object-src 'none'", $csp);
-        self::assertMatchesRegularExpression("/script-src 'self' 'nonce-[A-Za-z0-9+\\/=]+' https:\\/\\/unpkg\\.com/", $csp);
+        // No third-party script host at all since 2026-08-09: the libraries are
+        // vendored same-origin, so 'self' + the nonce is the whole allowlist.
+        self::assertMatchesRegularExpression("/script-src 'self' 'nonce-[A-Za-z0-9+\\/=]+';/", $csp);
+        self::assertStringNotContainsString('unpkg.com', $csp);
         self::assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $csp, 'script-src must not allow unsafe-inline');
     }
 

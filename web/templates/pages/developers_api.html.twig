@@ -2,9 +2,10 @@
 {# Standalone page (no base layout): the site chrome is locale-prefixed and
    this reference is English-only — a locale switcher would link to routes
    that don't exist. Redoc renders public/api/openapi.yaml client-side; the
-   bundle rides the unpkg + SRI pattern the map pages already use, and the
-   tiny init block is nonced per the CSP (script-src 'self' 'nonce-…'
-   https://unpkg.com, worker-src blob: for Redoc's search worker). #}
+   bundle is vendored under assets/lib/ like every other third-party lib
+   (self-hosted 2026-08-09 — unpkg had no SLA and serialized first paint), and
+   the tiny init block is nonced per the CSP (script-src 'self' 'nonce-…',
+   worker-src blob: for Redoc's search worker). #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,7 +46,7 @@
   <span class="draft">Draft contract — API not live yet</span>
 </div>
 <div id="redoc"></div>
-<script src="https://unpkg.com/redoc@2.5.3/bundles/redoc.standalone.js" integrity="sha384-xiEssMQFSpSfLbzRZCGfxxIM5QDb2DTrU6vyoZdp2sV1L6pmOMy6MpTtUoLbpC96" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{{ asset('lib/redoc-standalone-2.5.3.js') }}"></script>
 <script nonce="{{ csp_nonce() }}">
 Redoc.init('/api/openapi.yaml', {
   hideDownloadButton: false,

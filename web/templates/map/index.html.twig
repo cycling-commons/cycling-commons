@@ -26,9 +26,7 @@
 <meta name="twitter:description" content="Explore the Commons on one open map — climbs, water, viewpoints, bike-friendly stays and road conditions. Filter by surface, traffic and what matters to your ride." />
 <meta name="twitter:image" content="https://cyclingcommons.org/brand/og/map.jpg" />
 
-{# unpkg serves maplibre css+js: open the connection before the render-blocking stylesheet request (review W9) #}
-<link rel="preconnect" href="https://unpkg.com" crossorigin>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="{{ asset('lib/maplibre-gl-5.24.0.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
@@ -325,14 +323,21 @@
   </main>
   </div>
 </div>
-<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{{ asset('lib/maplibre-gl-5.24.0.js') }}"></script>
 {# pmtiles protocol adapter for the coverage vector source
-   (coverage-provider.md §4/§6) — SRI-pinned from unpkg
+   (coverage-provider.md §4/§6) — vendored same-origin (self-hosted 2026-08-09)
    exactly like maplibre-gl above. map.js only registers the protocol when
    window.CC_COVERAGE_URL is set (the COVERAGE_TILES manifest injection), so
    with the flag off this script is inert. #}
-<script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js" integrity="sha384-iS2/cbFYol4NsEeda4mW6N/8wPMOT6pv2eY+GNYSJRqVC4nbJECP1+mg6D2T8wT/" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script nonce="{{ csp_nonce() }}">window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+<script src="{{ asset('lib/pmtiles-4.4.1.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+{# The lazily-injected street-view library is vendored (self-hosted 2026-08-09)
+   and its digested URLs only exist in Twig, so they cross to mapillary.js
+   here. #}
+window.CC_VENDOR = {{ {
+  mapillaryJs: asset('lib/mapillary-js-4.1.2.js'),
+  mapillaryCss: asset('lib/mapillary-js-4.1.2.css')
+}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 {% if is_granted('ROLE_CURATOR') and pending is defined %}
 <script nonce="{{ csp_nonce() }}">
   window.CC_IS_CURATOR = true;
