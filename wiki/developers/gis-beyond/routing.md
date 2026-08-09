@@ -146,24 +146,28 @@ has not yet ridden. Riders bring the line; this project only ever measures it.
 There is a narrow, already-existing routing call in this codebase, and honesty about scope means
 naming it precisely rather than either hiding it or overselling it. When a curator draws a new climb
 on the add-climb map — clicking a start point and a summit point to define a new catalog entry — the
-two clicked points are snapped onto the actual road network by a live call to a public **OSRM**
-(Open Source Routing Machine) demo server:
+two clicked points are snapped onto the actual road network by the project's **own Valhalla**
+instance, through a small server-side proxy (it asked a public OSRM demo server until 2026-08-09,
+when the call moved in-house — the demo server's own policy forbids production reliance):
 
 <!-- CODE-FROM web/assets/contribute/climb-editor.js -->
 ```js
-var url = 'https://router.project-osrm.org/route/v1/driving/' + a[0] + ',' + a[1] + ';' + b[0] + ',' + b[1] + '?overview=full&geometries=geojson';
+      fetch('/contribute/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ a: a, b: b }),
+        signal: ctl.signal
+      })
 ```
 
-Read that URL carefully, because every word in it matters to what this is and is not:
+What this is and is not:
 
-- It uses OSRM's **`driving`** profile — not a cycling profile, not a cycling-specific cost function
-  at all. Whatever routes a car would take between the two clicked points is what gets returned.
+- The proxy (`/contribute/route` → `RouteSnapper`) asks Valhalla with its **`bicycle`** costing —
+  so unlike the old car-profile call, it will follow the cycleways and greenways some climbs
+  actually ride. But it is still not a route *planner*: it answers "which road connects these two
+  points," nothing about cheapest, flattest, or nicest.
 - It exists to turn **two curator-clicked points** into a road-following line for a **single new
   catalog entry** — it is a drawing aid for data entry, not a feature riders can reach.
-- It has no notion of "cheapest for a bike." It does not weigh surface, gradient, or traffic the way
-  the section above described a cycling profile would. It is asking, in effect, "how would a car get
-  between these two spots," and using that as a reasonable stand-in for "which road probably connects
-  them," because most climbs *are* on ordinary roads a car could also drive.
 - It degrades honestly when it fails: a straight line between the two points stays on screen, and the
   curator is told the snap did not work, rather than the tool silently pretending it succeeded.
 
@@ -187,13 +191,15 @@ just clicked" — and nothing broader.
 
     <!-- CODE-ILLUSTRATIVE sample output from this repository -->
     ```text
-    web/src/EventSubscriber/CspSubscriber.php
-    web/assets/contribute/climb-editor.js
+    web/src/Elevation/ElevationClient.php
+    web/src/Elevation/RouteSnapper.php
     ```
 
-    Two hits, and both are already named above: `CspSubscriber.php`'s CSP allow-list entry for the
-    OSRM demo host, and `climb-editor.js`, the curator-only click-to-snap tool this chapter described
-    in full. Nothing under `web/assets/map/` — the map a rider actually uses — appears in that list.
+    Two hits, both server-side and both already named above: the elevation client, and the
+    `RouteSnapper` behind the curator tool's `/contribute/route` proxy. No browser file calls a
+    routing engine directly any more (the old OSRM demo-server URL left `climb-editor.js` on
+    2026-08-09), and nothing under `web/assets/map/` — the map a rider actually uses — appears in
+    that list.
 
     Starting Valhalla to demonstrate an actual route would be dishonest here, and the compose file
     says exactly why before the service is even defined:

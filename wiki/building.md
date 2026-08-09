@@ -127,6 +127,46 @@ contracts — schema, moderation state machine, route domain, security architect
 are the canonical specs in
 [`docs/specs/`](https://github.com/cycling-commons/cycling-commons/tree/main/docs/specs).
 
+## Third-party code and licences — the disciplines
+
+The project combines four licence worlds — Shield-licensed platform code, ODbL
+data, CC BY-SA media, and other people's software — and they stay composable
+only because each inbound licence is matched to the one *work* it touches.
+Four rules keep it that way:
+
+**1 · Anything shipped to the browser must be permissive.** Everything under
+`web/assets/lib/` (MapLibre, pmtiles, mapillary-js, Redoc) is BSD or MIT.
+Serving a file **is** distribution, so a copyleft (GPL-family) library there
+would attach obligations to the page it ships with. Never vendor one. Each
+vendored dist keeps its upstream copyright header, the licence texts live in
+[`LICENSES/`](https://github.com/cycling-commons/cycling-commons/tree/main/LICENSES),
+and `reuse lint` holds the mapping honest in CI.
+
+**2 · The Composer tree is copyleft-gated in CI.** The platform source is
+publicly distributed, so a GPL dependency *inside it* would demand the
+combined work go GPL — incompatible with the Shield licence.
+`web/tools/check-licenses.sh` fails the build on any
+`GPL/LGPL/MPL/EUPL/OSL/CDDL/SSPL` dependency. Don't argue with the gate; pick
+a permissive alternative.
+
+**3 · GPL software is fine to *run* — the boundary is distribution.** PostGIS
+(GPL-2.0) runs server-side and the app talks to it over SQL; Nominatim is
+called over HTTP. A client across a process boundary is not a derivative
+work, and GPL-2.0 has no network clause — so operating them obliges nothing.
+The line to respect: if you ever *modify* one and publish the modified build
+(a Docker image counts), that modification is GPL. The app still isn't.
+
+**4 · Required notices are not editable copy.** On
+[/credits](https://cyclingcommons.org/credits), rows badged **required
+notice** carry wording a source's licence mandates verbatim (OpenStreetMap's
+ODbL line, the Copernicus DEM notice, Esri, Mapillary, per-photo Wikimedia
+credits). Reword thank-yous freely; never touch a badged row's text.
+
+Fonts, as the footnote: both families are SIL OFL 1.1, which is designed for
+exactly this use — self-hosted, embedded, aggregated with any code. The OFL's
+two asks are that the licence accompanies the fonts (it does, in `LICENSES/`)
+and that they are never sold on their own.
+
 ## Get involved
 
 The Commons grows two ways, and both need people.
