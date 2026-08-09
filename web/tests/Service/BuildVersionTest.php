@@ -35,6 +35,19 @@ final class BuildVersionTest extends TestCase
         self::assertSame(['number' => 'v0.2.0', 'date' => '2026-08-09'], $v->stamp());
     }
 
+    /**
+     * The release plan is pre-release-first (owner, 2026-08-09): live opens at
+     * v0.8.0-beta, moves to v1.0.0-beta when everything is in, and v1.0.0 is
+     * the first full release. The suffix must pass through untouched — a
+     * derivation that "cleaned" it would misstate what is deployed.
+     */
+    public function testAPreReleaseTagPassesThroughUntouched(): void
+    {
+        $v = new BuildVersion('/repo/web', '', static fn (string $cmd): ?string => str_contains($cmd, 'describe') ? 'v0.8.0-beta' : '2026-09-01');
+
+        self::assertSame(['number' => 'v0.8.0-beta', 'date' => '2026-09-01'], $v->stamp());
+    }
+
     public function testTheCommandAsksOnlyForReleaseShapedTags(): void
     {
         $seen = [];
