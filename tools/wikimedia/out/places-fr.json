@@ -17,6 +17,66 @@
       }
     },
     {
+      "qid": "Q209064",
+      "name": "Mont Ventoux",
+      "type": "Viewpoint / high point",
+      "note": "mountain of the Alps in southern France",
+      "lat": 44.16667,
+      "lng": 5.28333,
+      "sitelinks": 50,
+      "photo": {
+        "file": "Mont ventoux.jpg",
+        "credit": "NielsB at Dutch Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q404728",
+      "name": "Aiguille du Midi",
+      "type": "Viewpoint / high point",
+      "note": "mountain",
+      "lat": 45.87889,
+      "lng": 6.8875,
+      "sitelinks": 42,
+      "photo": {
+        "file": "Aiguille-du-Midi-summer.jpg",
+        "credit": "Martin Janner",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q607372",
+      "name": "Puy de Dôme",
+      "type": "Viewpoint / high point",
+      "note": "volcano in France",
+      "lat": 45.772,
+      "lng": 2.9624,
+      "sitelinks": 42,
+      "photo": {
+        "file": "Aerial image of Puy de Dôme (view from the west).jpg",
+        "credit": "Carsten Steger",
+        "user": "Carsten Steger",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q778597",
+      "name": "Puy de Sancy",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain of the Massif Central in France",
+      "lat": 45.52833,
+      "lng": 2.81417,
+      "sitelinks": 34,
+      "photo": {
+        "file": "Puy de Sancy 2016-08-23 n18.jpg",
+        "credit": "Marie-Lan Nguyen",
+        "user": "Jastrow",
+        "license": "CC BY 4.0"
+      }
+    },
+    {
       "qid": "Q6403",
       "name": "Lake Geneva",
       "type": "Viewpoint / high point",
@@ -122,6 +182,122 @@
         "user": null,
         "license": "CC BY-SA 3.0"
       }
+    },
+    {
+      "qid": "Q1552366",
+      "name": "Château du Haut-Koenigsbourg",
+      "type": "Heritage site",
+      "note": "castle in Alsace, France",
+      "lat": 48.24944,
+      "lng": 7.34417,
+      "sitelinks": 27,
+      "photo": {
+        "file": "France Haut-Koenigsbourg aerial view (cropped).jpg",
+        "credit": "Wrtalya",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q376699",
+      "name": "Castle of Pierrefonds",
+      "type": "Heritage site",
+      "note": "French castle",
+      "lat": 49.34694,
+      "lng": 2.98028,
+      "sitelinks": 26,
+      "photo": {
+        "file": "Le Château de Pierrefonds.jpg",
+        "credit": "Crazyswan85",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1090492",
+      "name": "Château Gaillard",
+      "type": "Heritage site",
+      "note": "French medieval castle in Les Andelys, Normandy",
+      "lat": 49.23813,
+      "lng": 1.40275,
+      "sitelinks": 25,
+      "photo": {
+        "file": "Château Gaillard (Les Andelys), vu du ciel.JPG",
+        "credit": "Sylvain Verlaine",
+        "user": "Sylvain Verlaine",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q576534",
+      "name": "Château de Coucy",
+      "type": "Heritage site",
+      "note": "13th-century castle in France",
+      "lat": 49.52167,
+      "lng": 3.31861,
+      "sitelinks": 24,
+      "photo": {
+        "file": "Coucy comparaison.jpg",
+        "credit": "Stardsen",
+        "user": "Stardsen",
+        "license": "CC BY-SA 4.0"
+      }
+    }
+  ],
+  "dropped": [
+    {
+      "qid": "Q194215",
+      "name": "Île Amsterdam",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -37.825833333,
+        77.554722222
+      ]
+    },
+    {
+      "qid": "Q194215",
+      "name": "Île Amsterdam",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -37.825833333,
+        77.554722222
+      ]
+    },
+    {
+      "qid": "Q204821",
+      "name": "Île Saint-Paul",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -38.73,
+        77.522222222
+      ]
+    },
+    {
+      "qid": "Q1049644",
+      "name": "Piton de la Fournaise",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -21.243116,
+        55.707236
+      ]
+    },
+    {
+      "qid": "Q1340711",
+      "name": "Mehetia",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -17.866666666,
+        -148.066666666
+      ]
+    },
+    {
+      "qid": "Q1340711",
+      "name": "Mehetia",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -17.866666666,
+        -148.066666666
+      ]
     }
   ]
 }

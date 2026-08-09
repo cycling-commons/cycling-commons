@@ -92,6 +92,66 @@
         "user": "Kauk0r",
         "license": "CC BY-SA 3.0"
       }
+    },
+    {
+      "qid": "Q4770630",
+      "name": "Ansembourg Castle",
+      "type": "Heritage site",
+      "note": "castle in Luxembourg",
+      "lat": 49.70292,
+      "lng": 6.03764,
+      "sitelinks": 11,
+      "photo": {
+        "file": "Ansembourg Old1.JPG",
+        "credit": "Ipigott",
+        "user": "Ipigott",
+        "license": "CC0"
+      }
+    },
+    {
+      "qid": "Q2714250",
+      "name": "Bock",
+      "type": "Heritage site",
+      "note": "promontory in Luxembourg City",
+      "lat": 49.61184,
+      "lng": 6.13697,
+      "sitelinks": 10,
+      "photo": {
+        "file": "Luxembourg City Bock and G-D-Charlotte bridge 2013-08.JPG",
+        "credit": "Zinneke",
+        "user": "Zinneke",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1011162",
+      "name": "Bourscheid Castle",
+      "type": "Heritage site",
+      "note": "castle",
+      "lat": 49.90536,
+      "lng": 6.07967,
+      "sitelinks": 10,
+      "photo": {
+        "file": "Bourscheid, château (104).jpg",
+        "credit": "GilPe",
+        "user": "GilPe",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1011703",
+      "name": "Larochette Castle",
+      "type": "Heritage site",
+      "note": "castle",
+      "lat": 49.78555,
+      "lng": 6.21681,
+      "sitelinks": 10,
+      "photo": {
+        "file": "Larochette, château fort (101).jpg",
+        "credit": "GilPe",
+        "user": "GilPe",
+        "license": "CC BY-SA 4.0"
+      }
     }
   ]
 }

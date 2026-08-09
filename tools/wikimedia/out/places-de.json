@@ -60,6 +60,66 @@
         "user": "Milseburg",
         "license": "CC BY-SA 4.0"
       }
+    },
+    {
+      "qid": "Q317074",
+      "name": "Vogelsberg",
+      "type": "Viewpoint / high point",
+      "note": "low mountain range in Germany",
+      "lat": 50.53333,
+      "lng": 9.23333,
+      "sitelinks": 36,
+      "photo": {
+        "file": "Vogelsberg-Uebersicht.png",
+        "credit": "Milseburg",
+        "user": "Milseburg",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q260073",
+      "name": "Großer Arber",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain of the Bohemian Forest in Bavaria, Germany",
+      "lat": 49.11247,
+      "lng": 13.13619,
+      "sitelinks": 32,
+      "photo": {
+        "file": "Grosser-Arber-002.jpg",
+        "credit": "Deconstruct at German Wikipedia\n\n(Original text: de:Benutzer:Deconstruct)",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q164561",
+      "name": "Fichtelberg",
+      "type": "Viewpoint / high point",
+      "note": "mountain of the Ore Mountains in Saxony, Germany",
+      "lat": 50.42944,
+      "lng": 12.95417,
+      "sitelinks": 23,
+      "photo": {
+        "file": "Fichtelberg - mountain.jpg",
+        "credit": "Pano_keilberg_fichtelberg.jpg:  photographed by Rafael Brix (SehLax) on 19/06/2005\nderivative work: Bulwersator (talk)",
+        "user": "Bulwersator",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q701516",
+      "name": "Kaiserstuhl",
+      "type": "Viewpoint / high point",
+      "note": "low mountain range in Germany",
+      "lat": 48.08333,
+      "lng": 7.66667,
+      "sitelinks": 22,
+      "photo": {
+        "file": "Wiki Kaiserstuhl.jpg",
+        "credit": "Ballonteam Norbert Blau",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
     }
   ],
   "history": [
@@ -109,17 +169,77 @@
       }
     },
     {
-      "qid": "Q157886",
-      "name": "Maulbronn Monastery",
-      "type": "Religious site",
-      "note": "monastery in Germany",
-      "lat": 49.0011,
-      "lng": 8.8129,
-      "sitelinks": 45,
+      "qid": "Q707396",
+      "name": "Nuremberg Castle",
+      "type": "Heritage site",
+      "note": "fortification",
+      "lat": 49.4579,
+      "lng": 11.0759,
+      "sitelinks": 32,
       "photo": {
-        "file": "Kloster Maulbronn 2009.jpg",
-        "credit": "Elke Wetzig (Elya)",
-        "user": "Elya",
+        "file": "Nürnberg Burg ArM.jpg",
+        "credit": "ArtMechanic",
+        "user": "ArtMechanic",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q156803",
+      "name": "Moritzburg Castle",
+      "type": "Heritage site",
+      "note": "castle in Moritzburg, Saxony, Germany",
+      "lat": 51.16757,
+      "lng": 13.67961,
+      "sitelinks": 29,
+      "photo": {
+        "file": "Schloss Moritzburg-003.jpg",
+        "credit": "Tilman2007",
+        "user": "Tilman2007",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q829299",
+      "name": "Glücksburg Castle",
+      "type": "Heritage site",
+      "note": "château",
+      "lat": 54.83167,
+      "lng": 9.54361,
+      "sitelinks": 26,
+      "photo": {
+        "file": "Schloss Gluecksburg msu 2018 -7111.jpg",
+        "credit": "User:Matthias Süßen",
+        "user": "Matthias Süßen",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q637827",
+      "name": "Wewelsburg",
+      "type": "Heritage site",
+      "note": "Renaissance castle in Germany, first built in 1123, rebuilt in today's form from 1603 to 1609, during the Nazi era used and rebuilt by the SS; today a museum and youth hostel",
+      "lat": 51.60677,
+      "lng": 8.65143,
+      "sitelinks": 25,
+      "photo": {
+        "file": "Wewelsburg2010 b.jpg",
+        "credit": "Wewelsburg2010.jpg: Tbachner\nderivative work: Alupus (talk)",
+        "user": "Tbachner",
+        "license": "CC BY 3.0"
+      }
+    },
+    {
+      "qid": "Q257210",
+      "name": "Marksburg",
+      "type": "Heritage site",
+      "note": "Castle in Braubach, Rhineland-Palatinate, Germany",
+      "lat": 50.27192,
+      "lng": 7.64944,
+      "sitelinks": 23,
+      "photo": {
+        "file": "Marksburg.jpg",
+        "credit": "Holger Weinandt",
+        "user": "Schaengel",
         "license": "CC BY-SA 3.0"
       }
     }

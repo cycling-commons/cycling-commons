@@ -17,6 +17,36 @@
       }
     },
     {
+      "qid": "Q2352195",
+      "name": "Duivelsberg",
+      "type": "Viewpoint / high point",
+      "note": "mountain in the Netherlands",
+      "lat": 51.82056,
+      "lng": 5.94361,
+      "sitelinks": 10,
+      "photo": {
+        "file": "Duivelsberg.jpg",
+        "credit": "Gouwenaar",
+        "user": "Gouwenaar",
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q955420",
+      "name": "Hasseberg",
+      "type": "Viewpoint / high point",
+      "note": "mountain in the Netherlands",
+      "lat": 52.9419,
+      "lng": 7.18111,
+      "sitelinks": 8,
+      "photo": {
+        "file": "Hasseberg.jpg",
+        "credit": "Fransvannes",
+        "user": "Fransvannes",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
       "qid": "Q1295357",
       "name": "Eemmeer",
       "type": "Viewpoint / high point",
@@ -59,6 +89,36 @@
         "credit": "Kliek",
         "user": null,
         "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q958780",
+      "name": "Veerse Meer",
+      "type": "Viewpoint / high point",
+      "note": "lake in the Netherlands",
+      "lat": 51.53333,
+      "lng": 3.71667,
+      "sitelinks": 18,
+      "photo": {
+        "file": "Veerse-Meer-Zeeland-2020-Luka-Peternel.jpg",
+        "credit": "Luka Peternel",
+        "user": "Path-x21",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q543460",
+      "name": "Veluwemeer",
+      "type": "Viewpoint / high point",
+      "note": "lake in Harderwijk, Gelderland, Netherlands",
+      "lat": 52.4,
+      "lng": 5.7,
+      "sitelinks": 17,
+      "photo": {
+        "file": "Zuiderzeewerke.png",
+        "credit": "Original von Scipius, überarbeitet von Voyager",
+        "user": "Scipius",
+        "license": "CC BY-SA 3.0"
       }
     }
   ],
@@ -122,6 +182,131 @@
         "user": "Ninane",
         "license": "CC BY-SA 3.0"
       }
+    },
+    {
+      "qid": "Q680425",
+      "name": "Doorwerth Castle",
+      "type": "Heritage site",
+      "note": "castle in the Netherlands",
+      "lat": 51.9667,
+      "lng": 5.78884,
+      "sitelinks": 9,
+      "photo": {
+        "file": "Kasteel Doorwerth. (actm) 28.jpg",
+        "credit": "Agnes Monkelbaan",
+        "user": "Agnes Monkelbaan",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q4989654",
+      "name": "Kasteel Huize Ruurlo",
+      "type": "Heritage site",
+      "note": "castle and estate in Ruurlo, the Netherlands",
+      "lat": 52.07886,
+      "lng": 6.44505,
+      "sitelinks": 9,
+      "photo": {
+        "file": "Kasteel Huis Ruurlo (Explore) (7123720921).jpg",
+        "credit": "Bert Kaufmann from Roermond, Netherlands",
+        "user": null,
+        "license": "CC BY-SA 2.0"
+      }
+    },
+    {
+      "qid": "Q686703",
+      "name": "Castle Brederode",
+      "type": "Heritage site",
+      "note": "castle ruins near Haarlem, NL",
+      "lat": 52.42556,
+      "lng": 4.6225,
+      "sitelinks": 9,
+      "photo": {
+        "file": "Brederode santpoort velsen.JPG",
+        "credit": "Arch",
+        "user": null,
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q1011187",
+      "name": "Castle of Bredevoort",
+      "type": "Heritage site",
+      "note": "castle",
+      "lat": 51.94412,
+      "lng": 6.61844,
+      "sitelinks": 8,
+      "photo": {
+        "file": "Kasteel bredevoort 1597.jpg",
+        "credit": "uitgegeven in 1618 te Leiden door J.J. Orlers in Warhafftige Beschreibung und Eigentliche Abbildung aller Zuge und Victorien,..., J.J. Orlers en H. van Haestens.",
+        "user": null,
+        "license": "Public domain"
+      }
+    }
+  ],
+  "dropped": [
+    {
+      "qid": "Q1301834",
+      "name": "Mount Scenery",
+      "why": "outside the onboarded bbox",
+      "at": [
+        17.635,
+        -63.239166666
+      ]
+    },
+    {
+      "qid": "Q1301834",
+      "name": "Mount Scenery",
+      "why": "outside the onboarded bbox",
+      "at": [
+        17.635,
+        -63.239166666
+      ]
+    },
+    {
+      "qid": "Q1301834",
+      "name": "Mount Scenery",
+      "why": "outside the onboarded bbox",
+      "at": [
+        17.635,
+        -63.239166666
+      ]
+    },
+    {
+      "qid": "Q1301834",
+      "name": "Mount Scenery",
+      "why": "outside the onboarded bbox",
+      "at": [
+        17.635,
+        -63.239166666
+      ]
+    },
+    {
+      "qid": "Q1586079",
+      "name": "The Quill",
+      "why": "outside the onboarded bbox",
+      "at": [
+        17.477777777,
+        -62.959722222
+      ]
+    },
+    {
+      "qid": "Q1586079",
+      "name": "The Quill",
+      "why": "outside the onboarded bbox",
+      "at": [
+        17.477777777,
+        -62.959722222
+      ]
+    },
+    {
+      "qid": "Q9178935",
+      "name": "Brandaris",
+      "why": "outside the onboarded bbox",
+      "at": [
+        12.2667,
+        -68.3833
+      ]
     }
   ]
 }

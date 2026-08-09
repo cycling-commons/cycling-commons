@@ -2,6 +2,51 @@
   "country": "US",
   "scenic": [
     {
+      "qid": "Q169962",
+      "name": "Lake Tahoe",
+      "type": "Viewpoint / high point",
+      "note": "lake in California and Nevada, United States",
+      "lat": 39.08333,
+      "lng": -120.03333,
+      "sitelinks": 60,
+      "photo": {
+        "file": "Tahoe North Shore from the East Shore.jpg",
+        "credit": "Lara Farhadi",
+        "user": null,
+        "license": "CC BY 2.0"
+      }
+    },
+    {
+      "qid": "Q335585",
+      "name": "Mono Lake",
+      "type": "Viewpoint / high point",
+      "note": "endorheic lake in California",
+      "lat": 38.01659,
+      "lng": -119.00931,
+      "sitelinks": 48,
+      "photo": {
+        "file": "Mono Lake sat zoomed.jpg",
+        "credit": "File:Mono lake sat.jpg: created by NASA\nRotation and crop: Hike395",
+        "user": "Hike395",
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q503301",
+      "name": "Salton Sea",
+      "type": "Viewpoint / high point",
+      "note": "saline lake in Imperial and Riverside counties in California, United States",
+      "lat": 33.3377,
+      "lng": -115.8391,
+      "sitelinks": 48,
+      "photo": {
+        "file": "Salton Sea from Space.jpg",
+        "credit": "NASA",
+        "user": null,
+        "license": "Public domain"
+      }
+    },
+    {
       "qid": "Q491677",
       "name": "Yosemite Falls",
       "type": "Viewpoint / high point",
@@ -29,6 +74,21 @@
         "credit": "Ambitious Wench",
         "user": null,
         "license": "CC BY-SA 2.0"
+      }
+    },
+    {
+      "qid": "Q38586",
+      "name": "Nevada Fall",
+      "type": "Viewpoint / high point",
+      "note": "waterfall in Yosemite National Park, California",
+      "lat": 37.72528,
+      "lng": -119.53278,
+      "sitelinks": 17,
+      "photo": {
+        "file": "Vernall Nevada Falls.JPG",
+        "credit": "self",
+        "user": null,
+        "license": "Public domain"
       }
     },
     {
@@ -91,6 +151,21 @@
         "credit": "Flickr user: Nan Palmero  Model: Peter McCann Architectural Models",
         "user": null,
         "license": "CC BY 2.0"
+      }
+    },
+    {
+      "qid": "Q1631067",
+      "name": "Cathedral of Our Lady of the Angels",
+      "type": "Religious site",
+      "note": "Catholic cathedral in Los Angeles, California",
+      "lat": 34.05833,
+      "lng": -118.24583,
+      "sitelinks": 19,
+      "photo": {
+        "file": "Cathedral of Our Lady of Angels, Los Angeles.JPG",
+        "credit": "Los Angeles",
+        "user": "Los Angeles",
+        "license": "CC BY-SA 4.0"
       }
     },
     {
@@ -162,6 +237,78 @@
       "at": [
         46.200277777,
         -122.189444444
+      ]
+    },
+    {
+      "qid": "Q4675",
+      "name": "Mount St. Helens",
+      "why": "outside the onboarded bbox",
+      "at": [
+        46.200277777,
+        -122.189444444
+      ]
+    },
+    {
+      "qid": "Q4675",
+      "name": "Mount St. Helens",
+      "why": "outside the onboarded bbox",
+      "at": [
+        46.200277777,
+        -122.189444444
+      ]
+    },
+    {
+      "qid": "Q159762",
+      "name": "Mauna Loa",
+      "why": "outside the onboarded bbox",
+      "at": [
+        19.483333333,
+        -155.6
+      ]
+    },
+    {
+      "qid": "Q194057",
+      "name": "Mount Rainier",
+      "why": "outside the onboarded bbox",
+      "at": [
+        46.851666666,
+        -121.760277777
+      ]
+    },
+    {
+      "qid": "Q194057",
+      "name": "Mount Rainier",
+      "why": "outside the onboarded bbox",
+      "at": [
+        46.851666666,
+        -121.760277777
+      ]
+    },
+    {
+      "qid": "Q194057",
+      "name": "Mount Rainier",
+      "why": "outside the onboarded bbox",
+      "at": [
+        46.851666666,
+        -121.760277777
+      ]
+    },
+    {
+      "qid": "Q188698",
+      "name": "Kīlauea",
+      "why": "outside the onboarded bbox",
+      "at": [
+        19.421097,
+        -155.286762
+      ]
+    },
+    {
+      "qid": "Q188698",
+      "name": "Kīlauea",
+      "why": "outside the onboarded bbox",
+      "at": [
+        19.421097,
+        -155.286762
       ]
     },
     {
@@ -237,6 +384,33 @@
       ]
     },
     {
+      "qid": "Q329266",
+      "name": "Crater Lake",
+      "why": "outside the onboarded bbox",
+      "at": [
+        42.943611111,
+        -122.106666666
+      ]
+    },
+    {
+      "qid": "Q329266",
+      "name": "Crater Lake",
+      "why": "outside the onboarded bbox",
+      "at": [
+        42.943611111,
+        -122.106666666
+      ]
+    },
+    {
+      "qid": "Q329266",
+      "name": "Crater Lake",
+      "why": "outside the onboarded bbox",
+      "at": [
+        42.943611111,
+        -122.106666666
+      ]
+    },
+    {
       "qid": "Q34221",
       "name": "Niagara Falls",
       "why": "outside the onboarded bbox",
@@ -279,6 +453,51 @@
       "at": [
         47.605725,
         -119.353644
+      ]
+    },
+    {
+      "qid": "Q1373778",
+      "name": "Horseshoe Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        43.077305,
+        -79.07562
+      ]
+    },
+    {
+      "qid": "Q1373778",
+      "name": "Horseshoe Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        43.077305,
+        -79.07562
+      ]
+    },
+    {
+      "qid": "Q1373778",
+      "name": "Horseshoe Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        43.077305,
+        -79.07562
+      ]
+    },
+    {
+      "qid": "Q1752963",
+      "name": "Saint Anthony Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        44.981666666,
+        -93.258611111
+      ]
+    },
+    {
+      "qid": "Q1320475",
+      "name": "American Falls",
+      "why": "outside the onboarded bbox",
+      "at": [
+        43.085,
+        -79.07
       ]
     },
     {
@@ -363,6 +582,60 @@
       ]
     },
     {
+      "qid": "Q1156586",
+      "name": "Riverside Church",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.81178,
+        -73.96307
+      ]
+    },
+    {
+      "qid": "Q18157",
+      "name": "St. Nicholas Greek Orthodox Church",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.7103,
+        -74.0139
+      ]
+    },
+    {
+      "qid": "Q18157",
+      "name": "St. Nicholas Greek Orthodox Church",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.71013,
+        -74.01322
+      ]
+    },
+    {
+      "qid": "Q72176",
+      "name": "Lakewood Church",
+      "why": "outside the onboarded bbox",
+      "at": [
+        29.73,
+        -95.434444444
+      ]
+    },
+    {
+      "qid": "Q72176",
+      "name": "Lakewood Church",
+      "why": "outside the onboarded bbox",
+      "at": [
+        29.73,
+        -95.434444444
+      ]
+    },
+    {
+      "qid": "Q603535",
+      "name": "Cathedral of St. Matthew the Apostle",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.906111,
+        -77.04
+      ]
+    },
+    {
       "qid": "Q9202",
       "name": "Statue of Liberty",
       "why": "outside the onboarded bbox",
@@ -414,6 +687,69 @@
       "at": [
         38.878087,
         -77.068769
+      ]
+    },
+    {
+      "qid": "Q213559",
+      "name": "Lincoln Memorial",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.889277777,
+        -77.050138888
+      ]
+    },
+    {
+      "qid": "Q213559",
+      "name": "Lincoln Memorial",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.889277777,
+        -77.050138888
+      ]
+    },
+    {
+      "qid": "Q326183",
+      "name": "Jefferson Memorial",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.881388888,
+        -77.036666666
+      ]
+    },
+    {
+      "qid": "Q2027162",
+      "name": "Gateway Arch",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.624611111,
+        -90.184972222
+      ]
+    },
+    {
+      "qid": "Q713628",
+      "name": "Vietnam Veterans Memorial",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.891111111,
+        -77.047777777
+      ]
+    },
+    {
+      "qid": "Q713628",
+      "name": "Vietnam Veterans Memorial",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.891111111,
+        -77.047777777
+      ]
+    },
+    {
+      "qid": "Q1136137",
+      "name": "National September 11 Memorial & Museum",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.711388888,
+        -74.013611111
       ]
     },
     {
@@ -486,6 +822,78 @@
       "at": [
         40.761444444,
         -73.977611111
+      ]
+    },
+    {
+      "qid": "Q188740",
+      "name": "Museum of Modern Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.761666666,
+        -73.9775
+      ]
+    },
+    {
+      "qid": "Q179191",
+      "name": "Rock and Roll Hall of Fame",
+      "why": "outside the onboarded bbox",
+      "at": [
+        41.508611111,
+        -81.695555555
+      ]
+    },
+    {
+      "qid": "Q9219",
+      "name": "United States Military Academy",
+      "why": "outside the onboarded bbox",
+      "at": [
+        41.3925,
+        -73.9575
+      ]
+    },
+    {
+      "qid": "Q214867",
+      "name": "National Gallery of Art",
+      "why": "outside the onboarded bbox",
+      "at": [
+        38.891388888,
+        -77.02
+      ]
+    },
+    {
+      "qid": "Q201469",
+      "name": "Solomon R. Guggenheim Museum",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.783055555,
+        -73.958888888
+      ]
+    },
+    {
+      "qid": "Q463179",
+      "name": "Fallingwater",
+      "why": "outside the onboarded bbox",
+      "at": [
+        39.906388888,
+        -79.468055555
+      ]
+    },
+    {
+      "qid": "Q217717",
+      "name": "American Museum of Natural History",
+      "why": "outside the onboarded bbox",
+      "at": [
+        40.780833333,
+        -73.974444444
+      ]
+    },
+    {
+      "qid": "Q272560",
+      "name": "USS Missouri",
+      "why": "outside the onboarded bbox",
+      "at": [
+        21.362222,
+        -157.953333
       ]
     }
   ]

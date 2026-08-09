@@ -32,6 +32,7 @@ of the point of a scenic pin.
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 import json
 import pathlib
 import sys
@@ -235,7 +236,10 @@ def main() -> int:
     ap.add_argument("--country", action="append", default=[])
     ap.add_argument("--all", action="store_true", help="every country in COUNTRY_QID")
     ap.add_argument("--per-layer", type=int, default=6, help="entries per layer per country")
-    ap.add_argument("--out", default="wikimedia/out", help="artifact directory")
+    # Anchored to this file, not the CWD: launched from the repo root the old
+    # relative default silently wrote a second artifact tree at ./wikimedia/out,
+    # and a later seed read the stale tools/wikimedia/out (2026-08-09).
+    ap.add_argument("--out", default=str(Path(__file__).parent / "out"), help="artifact directory")
     args = ap.parse_args()
 
     countries = sorted(COUNTRY_QID) if args.all else [c.upper() for c in args.country]

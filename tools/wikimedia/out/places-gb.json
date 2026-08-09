@@ -47,18 +47,78 @@
       }
     },
     {
-      "qid": "Q49650",
-      "name": "Loch Ness",
+      "qid": "Q712311",
+      "name": "Arthur's Seat",
       "type": "Viewpoint / high point",
-      "note": "lake in Highland, Scotland, UK, outflows via Loch Dochfour to the River Ness and Caledonian Canal",
-      "lat": 57.3,
-      "lng": -4.45,
-      "sitelinks": 78,
+      "note": "mountain in Edinburgh, Scotland, UK",
+      "lat": 55.94417,
+      "lng": -3.16194,
+      "sitelinks": 30,
       "photo": {
-        "file": "LochNessUrquhart.jpg",
-        "credit": "Sam Fentress",
-        "user": "Asbestos~commonswiki",
+        "file": "Edinburgh Arthur Seat dsc06165.jpg",
+        "credit": "David Monniaux",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q151445",
+      "name": "Bass Rock",
+      "type": "Viewpoint / high point",
+      "note": "island in the east of Scotland",
+      "lat": 56.08,
+      "lng": -2.64,
+      "sitelinks": 25,
+      "photo": {
+        "file": "BassRockNB.JPG",
+        "credit": "Honge (talk)",
+        "user": "Honge",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q550163",
+      "name": "Slieve Donard",
+      "type": "Viewpoint / high point",
+      "note": "mountain in County Down, Northern Ireland, UK",
+      "lat": 54.18028,
+      "lng": -5.92083,
+      "sitelinks": 25,
+      "photo": {
+        "file": "Slieve Donard - geograph.org.uk - 1138189.jpg",
+        "credit": "Ross",
+        "user": null,
         "license": "CC BY-SA 2.0"
+      }
+    },
+    {
+      "qid": "Q1325530",
+      "name": "Pen y Fan",
+      "type": "Viewpoint / high point",
+      "note": "mountain (886m) in Powys",
+      "lat": 51.88403,
+      "lng": -3.43676,
+      "sitelinks": 24,
+      "photo": {
+        "file": "Pen y Fan from Cribyn.jpg",
+        "credit": "Dave.Dunford at English Wikipedia",
+        "user": "Dave.Dunford",
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q1199959",
+      "name": "Calton Hill",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Edinburgh, Scotland, UK",
+      "lat": 55.95528,
+      "lng": -3.18222,
+      "sitelinks": 24,
+      "photo": {
+        "file": "Calton Hill - aerial - 2025-04-18 02.jpg",
+        "credit": "瑞丽江的河水",
+        "user": "瑞丽江的河水",
+        "license": "CC BY-SA 4.0"
       }
     }
   ],
@@ -122,6 +182,113 @@
         "user": null,
         "license": "CC BY-SA 3.0"
       }
+    },
+    {
+      "qid": "Q275128",
+      "name": "Caernarfon Castle",
+      "type": "Heritage site",
+      "note": "castle in Caernarfon, North Wales",
+      "lat": 53.13931,
+      "lng": -4.27689,
+      "sitelinks": 39,
+      "photo": {
+        "file": "Castell Caernarfon yn y cyfnos yn 2023 - Castell Caernarfon, Gwynedd, Wales at Dusk - 2023 10.png",
+        "credit": "Llywelyn2000",
+        "user": "Llywelyn2000",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q756830",
+      "name": "Conwy Castle",
+      "type": "Heritage site",
+      "note": "castle in Conwy, North Wales",
+      "lat": 53.28015,
+      "lng": -3.82563,
+      "sitelinks": 39,
+      "photo": {
+        "file": "Conwy-Castle-0006.jpg",
+        "credit": "Source: Llywelyn2000Derivative: User:MathKnight",
+        "user": "Llywelyn2000",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q756815",
+      "name": "Beaumaris Castle",
+      "type": "Heritage site",
+      "note": "castle in Beaumaris, Anglesey, Wales",
+      "lat": 53.26491,
+      "lng": -4.08957,
+      "sitelinks": 37,
+      "photo": {
+        "file": "Castell Beaumaris Castle, Ynys Mon (Anglesey), Wales 44.png",
+        "credit": "Llywelyn2000",
+        "user": "Llywelyn2000",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q950970",
+      "name": "Dover Castle",
+      "type": "Heritage site",
+      "note": "medieval castle in Dover, Kent, England, UK",
+      "lat": 51.12827,
+      "lng": 1.3235,
+      "sitelinks": 36,
+      "photo": {
+        "file": "1 dover castle aerial panorama 2017.jpg",
+        "credit": "Chensiyuan",
+        "user": "Chensiyuan",
+        "license": "CC BY-SA 4.0"
+      }
+    }
+  ],
+  "dropped": [
+    {
+      "qid": "Q914225",
+      "name": "Inaccessible Island",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -37.3025,
+        -12.674444444
+      ]
+    },
+    {
+      "qid": "Q845239",
+      "name": "Soufrière Hills",
+      "why": "outside the onboarded bbox",
+      "at": [
+        16.716666666,
+        -62.183333333
+      ]
+    },
+    {
+      "qid": "Q845239",
+      "name": "Soufrière Hills",
+      "why": "outside the onboarded bbox",
+      "at": [
+        16.716666666,
+        -62.183333333
+      ]
+    },
+    {
+      "qid": "Q845239",
+      "name": "Soufrière Hills",
+      "why": "outside the onboarded bbox",
+      "at": [
+        16.716666666,
+        -62.183333333
+      ]
+    },
+    {
+      "qid": "Q166972",
+      "name": "Zavodovski Island",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -56.3,
+        -27.58
+      ]
     }
   ]
 }

@@ -32,6 +32,66 @@
       }
     },
     {
+      "qid": "Q128841",
+      "name": "Sakurajima",
+      "type": "Viewpoint / high point",
+      "note": "volcano and island located in Kagoshima prefecture, Japan",
+      "lat": 31.58056,
+      "lng": 130.65806,
+      "sitelinks": 50,
+      "photo": {
+        "file": "Kagoshima and Sakurajima.jpg",
+        "credit": "Takobou at Japanese Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q733710",
+      "name": "Mount Aso",
+      "type": "Viewpoint / high point",
+      "note": "volcano in Kumamoto Prefecture, Japan",
+      "lat": 32.885,
+      "lng": 131.10417,
+      "sitelinks": 48,
+      "photo": {
+        "file": "20140516阿蘇山広域.jpg",
+        "credit": "Sonata / Sonata at ja.wikipedia",
+        "user": "Sonata",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1754806",
+      "name": "Mount Ontake",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Nagano and Gifu Prefectures, Japan",
+      "lat": 35.89278,
+      "lng": 137.48028,
+      "sitelinks": 42,
+      "photo": {
+        "file": "Kiso Ontake.jpg",
+        "credit": "Atsushi Ueda",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q748040",
+      "name": "Mount Hiei",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Kyōto, Kyōto prefefecture and Ōtsu, Shiga Prefectures, Japan",
+      "lat": 35.06667,
+      "lng": 135.83833,
+      "sitelinks": 39,
+      "photo": {
+        "file": "Sakura MtHiei.jpg",
+        "credit": "Moja",
+        "user": "Moja~commonswiki",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
       "qid": "Q200239",
       "name": "Lake Biwa",
       "type": "Viewpoint / high point",
@@ -109,6 +169,21 @@
       }
     },
     {
+      "qid": "Q1013399",
+      "name": "Nijō Castle",
+      "type": "Heritage site",
+      "note": "castle in Kyoto, Japan",
+      "lat": 35.01417,
+      "lng": 135.7475,
+      "sitelinks": 29,
+      "photo": {
+        "file": "Nijo Castle.jpg",
+        "credit": "Keith Pomakis",
+        "user": "Pomakis",
+        "license": "CC BY-SA 2.5"
+      }
+    },
+    {
       "qid": "Q536925",
       "name": "Tōkei-ji Temple",
       "type": "Religious site",
@@ -121,6 +196,51 @@
         "credit": "Naokijp",
         "user": "Naokijp",
         "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1091232",
+      "name": "Chūgū-ji Temple",
+      "type": "Religious site",
+      "note": "Buddhist temple in Nara Prefecture, Japan",
+      "lat": 34.61497,
+      "lng": 135.73958,
+      "sitelinks": 8,
+      "photo": {
+        "file": "Chuguji Hondo 2008.jpg",
+        "credit": "Wiiii",
+        "user": "Wiiii",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q2671301",
+      "name": "Enshō-ji",
+      "type": "Religious site",
+      "note": "Buddhist temple in Nara Prefecture, Japan",
+      "lat": 34.64386,
+      "lng": 135.84498,
+      "sitelinks": 8,
+      "photo": {
+        "file": "Enshouji gate.JPG",
+        "credit": "Misakubo",
+        "user": "Misakubo",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1193480",
+      "name": "St. Mary's Cathedral",
+      "type": "Religious site",
+      "note": "seat of the Roman Catholic Archdiocese of Tokyo",
+      "lat": 35.71417,
+      "lng": 139.72667,
+      "sitelinks": 27,
+      "photo": {
+        "file": "St. Mary's Cathedral Tokyo 2012.JPG",
+        "credit": "Kakidai",
+        "user": "Kakidai",
+        "license": "CC BY-SA 3.0"
       }
     }
   ]

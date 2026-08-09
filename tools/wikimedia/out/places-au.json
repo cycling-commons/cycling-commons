@@ -45,6 +45,81 @@
         "user": null,
         "license": "CC BY-SA 2.0"
       }
+    },
+    {
+      "qid": "Q1753878",
+      "name": "Mount Augustus",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Western Australia",
+      "lat": -24.325,
+      "lng": 116.84167,
+      "sitelinks": 22,
+      "photo": {
+        "file": "Mount Augustus panorama, July 2020.jpg",
+        "credit": "Calistemon",
+        "user": "Calistemon",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q130217",
+      "name": "Mount Bogong",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain in Victoria, Australia",
+      "lat": -36.7325,
+      "lng": 147.30583,
+      "sitelinks": 20,
+      "photo": {
+        "file": "Mount Bogong.jpg",
+        "credit": "Joe Ritson",
+        "user": "J.ritson",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q542041",
+      "name": "Mount Townsend",
+      "type": "Viewpoint / high point",
+      "note": "mountain in New South Wales, Australia",
+      "lat": -36.41667,
+      "lng": 148.26667,
+      "sitelinks": 19,
+      "photo": {
+        "file": "Kosciuszko Townsend.jpg",
+        "credit": "John Wormell",
+        "user": "John Wormell",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q204552",
+      "name": "Kunanyi / Mount Wellington",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Tasmania, Australia",
+      "lat": -42.89917,
+      "lng": 147.2325,
+      "sitelinks": 19,
+      "photo": {
+        "file": "Mount Wellington.jpg",
+        "credit": "tubagooba",
+        "user": null,
+        "license": "CC BY 2.0"
+      }
+    },
+    {
+      "qid": "Q1852361",
+      "name": "Mount Hotham",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Victoria, Australia",
+      "lat": -36.98333,
+      "lng": 147.13333,
+      "sitelinks": 18,
+      "photo": {
+        "file": "Mt Hotham from the summit 2007.jpg",
+        "credit": "Giggy",
+        "user": "Giggy",
+        "license": "CC BY 2.0"
+      }
     }
   ],
   "history": [
@@ -107,6 +182,86 @@
         "user": "Adam.J.W.C.",
         "license": "CC BY-SA 2.5"
       }
+    },
+    {
+      "qid": "Q1088015",
+      "name": "St Andrew's Cathedral",
+      "type": "Religious site",
+      "note": "cathedral church of the Anglican Diocese of Sydney, Australia",
+      "lat": -33.87392,
+      "lng": 151.20634,
+      "sitelinks": 10,
+      "photo": {
+        "file": "St Andrews facade.jpg",
+        "credit": "Edmund Blacket",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q607293",
+      "name": "Cathedral of St Stephen, Brisbane",
+      "type": "Religious site",
+      "note": "cathedral",
+      "lat": -27.4687,
+      "lng": 153.029,
+      "sitelinks": 9,
+      "photo": {
+        "file": "St Stephen's cathedral, Brisbane.jpg",
+        "credit": "Masalai at English Wikipedia",
+        "user": "Masalai",
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q2942506",
+      "name": "St Mary's Cathedral, Perth",
+      "type": "Religious site",
+      "note": "cathedral in Perth, Western Australia",
+      "lat": -31.95537,
+      "lng": 115.86644,
+      "sitelinks": 9,
+      "photo": {
+        "file": "St Mary's Catherdral, Perth.JPG",
+        "credit": "Ali K",
+        "user": "Ali K",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q7397106",
+      "name": "Sacred Heart Cathedral",
+      "type": "Religious site",
+      "note": "cathedral of the Roman Catholic Diocese of Sandhurst, Victoria, Australia",
+      "lat": -36.76,
+      "lng": 144.274,
+      "sitelinks": 9,
+      "photo": {
+        "file": "BendigoRomanCatholicCathedral.JPG",
+        "credit": "Mattinbgn",
+        "user": "Mattinbgn",
+        "license": "CC BY-SA 3.0"
+      }
+    }
+  ],
+  "dropped": [
+    {
+      "qid": "Q2114101",
+      "name": "Mawson Peak",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -53.104166666,
+        73.516944444
+      ]
+    },
+    {
+      "qid": "Q2114101",
+      "name": "Mawson Peak",
+      "why": "outside the onboarded bbox",
+      "at": [
+        -53.104166666,
+        73.516944444
+      ]
     }
   ]
 }

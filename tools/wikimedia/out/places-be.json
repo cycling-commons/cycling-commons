@@ -47,6 +47,21 @@
       }
     },
     {
+      "qid": "Q320702",
+      "name": "Lake Robertville",
+      "type": "Viewpoint / high point",
+      "note": "lake in Waimes, Wallonia, Belgium",
+      "lat": 50.45,
+      "lng": 6.11361,
+      "sitelinks": 11,
+      "photo": {
+        "file": "Lac de Robertville , Pont Haelen.jpg",
+        "credit": "G. Friedrich",
+        "user": "Duhon",
+        "license": "CC BY 3.0"
+      }
+    },
+    {
       "qid": "Q764863",
       "name": "Lake Genval",
       "type": "Viewpoint / high point",
@@ -59,6 +74,51 @@
         "credit": "Jean-Pol GRANDMONT",
         "user": "Jean-Pol GRANDMONT",
         "license": "CC BY 3.0"
+      }
+    },
+    {
+      "qid": "Q470432",
+      "name": "Lake Bütgenbach",
+      "type": "Viewpoint / high point",
+      "note": "lake in Bütgenbach, German-speaking Community of Belgium, Belgium",
+      "lat": 50.4275,
+      "lng": 6.22778,
+      "sitelinks": 10,
+      "photo": {
+        "file": "Abendstimmung am Butgenbacher See 04.jpg",
+        "credit": "G. Friedrich",
+        "user": "Duhon",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q617270",
+      "name": "Eau d'Heure lakes",
+      "type": "Viewpoint / high point",
+      "note": "lake",
+      "lat": 50.18861,
+      "lng": 4.38556,
+      "sitelinks": 10,
+      "photo": {
+        "file": "Barrages de l'Eau d'Heure; Lac de l'Eau d'heure vu du barrage de Falemprise.jpg",
+        "credit": "Marc Lambert",
+        "user": null,
+        "license": "CC BY-SA 2.5"
+      }
+    },
+    {
+      "qid": "Q3215575",
+      "name": "Lake Virelles",
+      "type": "Viewpoint / high point",
+      "note": "body of water",
+      "lat": 50.07222,
+      "lng": 4.34306,
+      "sitelinks": 9,
+      "photo": {
+        "file": "MeervanVirelles.JPG",
+        "credit": "Toska89",
+        "user": null,
+        "license": "CC BY-SA 3.0"
       }
     }
   ],
@@ -121,6 +181,66 @@
         "credit": "Paul Hermans",
         "user": "Paul Hermans",
         "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q316822",
+      "name": "Reuland Castle",
+      "type": "Heritage site",
+      "note": "castle in Burg-Reuland, East Belgium",
+      "lat": 50.19605,
+      "lng": 6.13441,
+      "sitelinks": 10,
+      "photo": {
+        "file": "Vennbahn-reuland.jpg",
+        "credit": "Bronstein",
+        "user": "Bronstein",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q2085724",
+      "name": "Anvaing Castle",
+      "type": "Heritage site",
+      "note": "castle in Wallonia",
+      "lat": 50.676,
+      "lng": 3.577,
+      "sitelinks": 9,
+      "photo": {
+        "file": "Anvaing 060713 (1).JPG",
+        "credit": "Jean-Pol GRANDMONT",
+        "user": "Jean-Pol GRANDMONT",
+        "license": "CC BY 3.0"
+      }
+    },
+    {
+      "qid": "Q1964331",
+      "name": "Bouchout Castle",
+      "type": "Heritage site",
+      "note": "castle in the Flemish town of Meise, Belgium",
+      "lat": 50.92808,
+      "lng": 4.32881,
+      "sitelinks": 8,
+      "photo": {
+        "file": "Meise JPG01.jpg",
+        "credit": "Jean-Pol GRANDMONT",
+        "user": "Jean-Pol GRANDMONT",
+        "license": "CC BY-SA 2.5"
+      }
+    },
+    {
+      "qid": "Q2001223",
+      "name": "Poeke Castle",
+      "type": "Heritage site",
+      "note": "castle near Poeke in East Flanders, Belgium",
+      "lat": 51.04113,
+      "lng": 3.45,
+      "sitelinks": 8,
+      "photo": {
+        "file": "Poeke Kasteel R02.jpg",
+        "credit": "Marc Ryckaert (MJJR)",
+        "user": "MJJR",
+        "license": "CC BY 3.0"
       }
     }
   ]

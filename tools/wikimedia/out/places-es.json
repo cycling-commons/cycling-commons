@@ -60,6 +60,66 @@
         "user": "Lviatour",
         "license": "CC BY-SA 3.0"
       }
+    },
+    {
+      "qid": "Q658271",
+      "name": "Tibidabo",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Barcelona, Spain (European Union)",
+      "lat": 41.4225,
+      "lng": 2.11861,
+      "sitelinks": 31,
+      "photo": {
+        "file": "El Tibidabo, l'observatori Fabra i la punxa d'una torre veneciana.jpg",
+        "credit": "jordi domènech",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q203353",
+      "name": "Pico Almanzor",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Spain",
+      "lat": 40.24667,
+      "lng": -5.29778,
+      "sitelinks": 30,
+      "photo": {
+        "file": "Almanzor sierra de gredos.jpg",
+        "credit": "Nachosan",
+        "user": "Nachosan",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1122701",
+      "name": "Montjuïc",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Barcelona",
+      "lat": 41.36417,
+      "lng": 2.15806,
+      "sitelinks": 30,
+      "photo": {
+        "file": "Fale - Spain - Barcelona - 8.jpg",
+        "credit": "Fabio Alessandro Locati",
+        "user": "Fale",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q1130287",
+      "name": "Monte Hacho",
+      "type": "Viewpoint / high point",
+      "note": "mountain in Ceuta",
+      "lat": 35.89693,
+      "lng": -5.28674,
+      "sitelinks": 28,
+      "photo": {
+        "file": "Monte Hacho.JPG",
+        "credit": "The original uploader was Jguk 2 at English Wikipedia.",
+        "user": "Jguk 2",
+        "license": "CC BY-SA 3.0"
+      }
     }
   ],
   "history": [
@@ -121,6 +181,66 @@
         "credit": "Josue Mendivil",
         "user": null,
         "license": "CC BY-SA 2.0"
+      }
+    },
+    {
+      "qid": "Q261707",
+      "name": "Bellver Castle",
+      "type": "Heritage site",
+      "note": "castle in Mallorca",
+      "lat": 39.56375,
+      "lng": 2.61934,
+      "sitelinks": 27,
+      "photo": {
+        "file": "Castillo de Bellver.jpg",
+        "credit": "Poniol60",
+        "user": null,
+        "license": "Public domain"
+      }
+    },
+    {
+      "qid": "Q24024872",
+      "name": "Alcazaba y Murallas del Cerro de San Cristóbal",
+      "type": "Heritage site",
+      "note": "fortress",
+      "lat": 36.84111,
+      "lng": -2.47194,
+      "sitelinks": 27,
+      "photo": {
+        "file": "Alcazaba de Almería.jpg",
+        "credit": "ANE",
+        "user": "ANE",
+        "license": "CC BY 3.0"
+      }
+    },
+    {
+      "qid": "Q3127243",
+      "name": "Alcazaba of Málaga",
+      "type": "Heritage site",
+      "note": "palatial fortification in Málaga",
+      "lat": 36.72118,
+      "lng": -4.41575,
+      "sitelinks": 24,
+      "photo": {
+        "file": "Alcazaba de Málaga overview.jpg",
+        "credit": "Fernando",
+        "user": "Fernando",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q212625",
+      "name": "Alcázar de los Reyes Cristianos",
+      "type": "Heritage site",
+      "note": "castle in Córdoba, Spain",
+      "lat": 37.8766,
+      "lng": -4.78138,
+      "sitelinks": 21,
+      "photo": {
+        "file": "Spain Cordoba quality image.jpg",
+        "credit": "Pixels4Free",
+        "user": null,
+        "license": "CC0"
       }
     }
   ]

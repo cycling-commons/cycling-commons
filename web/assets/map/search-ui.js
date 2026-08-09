@@ -261,7 +261,7 @@ export function initSearchUi(){
         widenHtml = `<li class="search-widen" role="option"><button type="button" data-widen="1" data-i="${sMatches.length}">${escH(wl)}</button></li>`;
         sMatches.push({widen:true, go:widenSearch});
       }
-      sRes.innerHTML = (realCount ? html : `<li class="search-empty">${D.noMatch||'No match in the Wallonia demo yet.'}</li>`) + widenHtml;
+      sRes.innerHTML = (realCount ? html : `<li class="search-empty">${D.noMatch||'No match in the Commons yet.'}</li>`) + widenHtml;
     }
     // one delegated listener + a short debounce (review W41): the per-keystroke
     // cost was a full index scan, an innerHTML rebuild AND fresh per-result

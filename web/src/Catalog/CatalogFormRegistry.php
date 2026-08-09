@@ -67,6 +67,14 @@ final class CatalogFormRegistry
                     // maximum is the steepest sustained 100 m. See
                     // CatalogField::$derived, B-climbs.md and
                     // climb-elevation.md 4.
+                    // Measured off the drawn line by ClimbProfiler, stored in
+                    // metres, and — until 2026-08-09 — displayed NOWHERE: the
+                    // drawer's elevation caption needs a GPX elevation array
+                    // most climbs don't have, so the one number riders look
+                    // for first on a climb card was invisible. The drawer
+                    // converts it to the reader's unit (uElev), like every
+                    // other height.
+                    CatalogField::derivedText('gain', 'Ascent'),
                     CatalogField::derivedText('avgGradient', 'Average gradient (%)'),
                     // Still named for what it MEASURES, not for a point
                     // maximum: Mur de Huy's famous ~26% is its steepest

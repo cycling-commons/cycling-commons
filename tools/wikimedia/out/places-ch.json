@@ -60,6 +60,66 @@
         "user": null,
         "license": "CC BY-SA 3.0"
       }
+    },
+    {
+      "qid": "Q16525",
+      "name": "Mönch",
+      "type": "Viewpoint / high point",
+      "note": "mountain in the Bernese Alps",
+      "lat": 46.55833,
+      "lng": 7.99722,
+      "sitelinks": 48,
+      "photo": {
+        "file": "Mönch depuis Niederhorn.jpg",
+        "credit": "Christian David",
+        "user": "Espandero",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q16648",
+      "name": "Monte San Giorgio",
+      "type": "Viewpoint / high point",
+      "note": "mountain",
+      "lat": 45.91667,
+      "lng": 8.95,
+      "sitelinks": 47,
+      "photo": {
+        "file": "Lake Lugano.jpg",
+        "credit": "Roland Zumbühl",
+        "user": "Roland Zumbühl",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q15265",
+      "name": "Mount Pilatus",
+      "type": "Viewpoint / high point",
+      "note": "mountain massif in central Switzerland",
+      "lat": 46.97389,
+      "lng": 8.24111,
+      "sitelinks": 45,
+      "photo": {
+        "file": "Pilatus (mountain).JPG",
+        "credit": "Johnny Chicago at Luxembourgish Wikipedia",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q15117",
+      "name": "Dom",
+      "type": "Viewpoint / high point",
+      "note": "mountain in the Pennine Alps",
+      "lat": 46.09444,
+      "lng": 7.85667,
+      "sitelinks": 44,
+      "photo": {
+        "file": "Dom of Mischabel.jpg",
+        "credit": "Zacharie Grossen",
+        "user": "Zacharie Grossen",
+        "license": "CC BY-SA 3.0"
+      }
     }
   ],
   "history": [
@@ -120,6 +180,66 @@
         "file": "Kyburg - Schloss 2010-11-01 13-25-20 ShiftN.jpg",
         "credit": "Roland zh",
         "user": "Roland zh",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q668647",
+      "name": "Lenzburg Castle",
+      "type": "Heritage site",
+      "note": "castle in Lenzburg in the canton of Aargau, Switzerland",
+      "lat": 47.38752,
+      "lng": 8.18531,
+      "sitelinks": 16,
+      "photo": {
+        "file": "20110621 Heliflug 33.JPG",
+        "credit": "Boehlich",
+        "user": null,
+        "license": "CC0"
+      }
+    },
+    {
+      "qid": "Q673786",
+      "name": "Aarburg Castle",
+      "type": "Heritage site",
+      "note": "castle in Aarburg in the canton of Aargau, Switzerland",
+      "lat": 47.32151,
+      "lng": 7.90108,
+      "sitelinks": 15,
+      "photo": {
+        "file": "Aarburg Castle - 2023 (2).jpg",
+        "credit": "Christian David",
+        "user": "Espandero",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q691966",
+      "name": "Castle of the counts of Gruyères",
+      "type": "Heritage site",
+      "note": "castle with outbuildings in Gruyères in the canton of Fribourg, Switzerland",
+      "lat": 46.58466,
+      "lng": 7.08399,
+      "sitelinks": 15,
+      "photo": {
+        "file": "Château de Gruyères.JPG",
+        "credit": "Michael Ehinger",
+        "user": null,
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q668250",
+      "name": "Tarasp Castle",
+      "type": "Heritage site",
+      "note": "castle in Tarasp in the Swiss canton of Grisons",
+      "lat": 46.77889,
+      "lng": 10.26167,
+      "sitelinks": 13,
+      "photo": {
+        "file": "SchlossTarasp1.pg.JPG",
+        "credit": "Adrian Michael",
+        "user": "Parpan05",
         "license": "CC BY-SA 3.0"
       }
     }

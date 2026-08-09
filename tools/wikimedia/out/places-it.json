@@ -60,6 +60,66 @@
         "user": null,
         "license": "CC BY-SA 4.0"
       }
+    },
+    {
+      "qid": "Q207323",
+      "name": "Vulcano",
+      "type": "Viewpoint / high point",
+      "note": "small volcanic island north of Sicily",
+      "lat": 38.4042,
+      "lng": 14.9658,
+      "sitelinks": 59,
+      "photo": {
+        "file": "Aerial image of Vulcano (view from the east).jpg",
+        "credit": "Carsten Steger",
+        "user": "Carsten Steger",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q154372",
+      "name": "Monte Cassino",
+      "type": "Viewpoint / high point",
+      "note": "rocky hill with monastery, southeast of Rome, Italy",
+      "lat": 41.49,
+      "lng": 13.81389,
+      "sitelinks": 43,
+      "photo": {
+        "file": "Monte Cassino Abbey.jpg",
+        "credit": "ThePhotografer",
+        "user": "ThePhotografer",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q470777",
+      "name": "Mount Amiata",
+      "type": "Viewpoint / high point",
+      "note": "lava dome in Tuscany, Italy",
+      "lat": 42.88775,
+      "lng": 11.62437,
+      "sitelinks": 39,
+      "photo": {
+        "file": "UmbMonteAmiata.jpg",
+        "credit": "Ziegler175",
+        "user": "Ziegler175",
+        "license": "CC BY-SA 3.0"
+      }
+    },
+    {
+      "qid": "Q636540",
+      "name": "Corno Grande",
+      "type": "Viewpoint / high point",
+      "note": "highest mountain of the Apennines in Italy",
+      "lat": 42.46917,
+      "lng": 13.56556,
+      "sitelinks": 38,
+      "photo": {
+        "file": "Corno grande da campo imperatore.jpg",
+        "credit": "Fiat 500e",
+        "user": "Fiat 500e",
+        "license": "CC BY 4.0"
+      }
     }
   ],
   "history": [
@@ -120,6 +180,66 @@
         "file": "Castel dell' Ovo.jpg",
         "credit": "PaestumPaestum",
         "user": "PaestumPaestum",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1473825",
+      "name": "Palazzo dei Normanni",
+      "type": "Heritage site",
+      "note": "palace in Palermo, Italy",
+      "lat": 38.11128,
+      "lng": 13.35341,
+      "sitelinks": 25,
+      "photo": {
+        "file": "Palais des Normands.jpg",
+        "credit": "Jules Vaulont",
+        "user": null,
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1033649",
+      "name": "Canossa Castle",
+      "type": "Heritage site",
+      "note": "castle in Italy",
+      "lat": 44.57605,
+      "lng": 10.45579,
+      "sitelinks": 24,
+      "photo": {
+        "file": "Castello (Canossa) - lato sud 3 2022-07-23.jpg",
+        "credit": "Parma1983",
+        "user": "Parma1983",
+        "license": "CC BY-SA 4.0"
+      }
+    },
+    {
+      "qid": "Q1048627",
+      "name": "Castel Sant'Elmo",
+      "type": "Heritage site",
+      "note": "fortification in Naples, Italy",
+      "lat": 40.84362,
+      "lng": 14.23933,
+      "sitelinks": 23,
+      "photo": {
+        "file": "Napoli s Elmo da Castel dell'Ovo 1040688.JPG",
+        "credit": "Lalupa",
+        "user": "Lalupa",
+        "license": "CC BY 3.0"
+      }
+    },
+    {
+      "qid": "Q1048836",
+      "name": "Castello Estense",
+      "type": "Heritage site",
+      "note": "Castle in Ferrara (FE)",
+      "lat": 44.83763,
+      "lng": 11.61943,
+      "sitelinks": 22,
+      "photo": {
+        "file": "Castello dall'alto.jpg",
+        "credit": "Nbisi",
+        "user": null,
         "license": "CC BY-SA 4.0"
       }
     }
