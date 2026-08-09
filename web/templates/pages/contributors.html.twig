@@ -23,11 +23,30 @@
   .ack-empty{font-size:.9rem;color:#7a7d6c;margin-top:1.2rem}
   /* The shared pager (partials/_pager.html.twig) is styled by the account
      shell, which a public page does not load. Same rules, same look. */
-  .pager{display:flex;align-items:center;gap:1rem;margin:1.4rem 0 0;font-family:var(--mono);font-size:.66rem}
-  .pager-step{color:var(--clay);text-decoration:none;border:1px solid rgba(20,22,14,.25);border-radius:30px;padding:.4rem .8rem;letter-spacing:.06em;text-transform:uppercase}
-  .pager-step:hover{border-color:var(--ink);color:var(--ink)}
-  .pager-step.is-off{opacity:.35;border-style:dashed}
-  .pager-at{color:#595c4d;margin-left:auto}
+  .pager{display:flex;align-items:center;flex-wrap:wrap;gap:.8rem 1.2rem;
+         margin:2rem 0 3.5rem;padding:.9rem 1.1rem;
+         border:1px solid rgba(20,22,14,.18);border-top:2px solid var(--clay);border-radius:0 0 8px 8px;
+         background:var(--paper-deep);font-family:var(--mono);font-size:.66rem}
+  .pager-steps{display:flex;gap:.5rem;flex:none}
+  .pager-step{color:var(--clay);text-decoration:none;border:1px solid rgba(20,22,14,.25);border-radius:30px;
+              padding:.45rem .9rem;min-height:32px;display:inline-flex;align-items:center;
+              letter-spacing:.06em;text-transform:uppercase;background:var(--paper)}
+  .pager-step:hover{border-color:var(--clay);background:var(--clay);color:var(--paper)}
+  .pager-step.is-off{opacity:.32;border-style:dashed;background:none;pointer-events:none}
+  .pager-at{margin:0 auto 0 0;display:flex;flex-direction:column;gap:.15rem;line-height:1.35}
+  .pager-range{color:var(--ink);font-size:.72rem}
+  .pager-of{color:#7a7d6c;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase}
+  .pager-size{display:flex;align-items:center;gap:.5rem;flex:none}
+  .pager-size label{color:#595c4d;letter-spacing:.08em;text-transform:uppercase}
+  .pager-size select{font-family:var(--mono);font-size:.66rem;padding:.35rem .5rem;min-height:32px;
+                     border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
+  @media(max-width:640px){
+    .pager{flex-direction:column;align-items:stretch;gap:.8rem}
+    .pager-steps{order:2}
+    .pager-steps .pager-step{flex:1;justify-content:center}
+    .pager-at{order:1;margin:0}
+    .pager-size{order:3;justify-content:space-between}
+  }
 </style>
 {% endblock %}
 {% block body %}

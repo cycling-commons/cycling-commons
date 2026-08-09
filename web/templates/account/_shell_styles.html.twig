@@ -56,11 +56,40 @@
   .mod-search{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
   .mod-search input{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:16rem}
   .mod-go{align-self:flex-end}
-  .pager{display:flex;align-items:center;gap:1rem;margin:1.4rem 0 0;font-family:var(--mono);font-size:.66rem}
-  .pager-step{color:var(--clay);text-decoration:none;border:1px solid rgba(20,22,14,.25);border-radius:30px;padding:.4rem .8rem;letter-spacing:.06em;text-transform:uppercase}
-  .pager-step:hover{border-color:var(--ink);color:var(--ink)}
-  .pager-step.is-off{opacity:.35;border-style:dashed}
-  .pager-at{color:#595c4d;margin-left:auto}
+  /* The pager reads as a footer to the list it closes, not as three stray
+     controls floating after it: a hairline rule above, a tinted strip, and
+     enough space below that the page's own footer never crowds it (owner,
+     2026-08-09). */
+  .pager{display:flex;align-items:center;flex-wrap:wrap;gap:.8rem 1.2rem;
+         margin:2rem 0 3.5rem;padding:.9rem 1.1rem;
+         border:1px solid rgba(20,22,14,.18);border-top:2px solid var(--clay);border-radius:0 0 8px 8px;
+         background:var(--paper-deep);font-family:var(--mono);font-size:.66rem}
+  .pager-steps{display:flex;gap:.5rem;flex:none}
+  .pager-step{color:var(--clay);text-decoration:none;border:1px solid rgba(20,22,14,.25);border-radius:30px;
+              padding:.45rem .9rem;min-height:32px;display:inline-flex;align-items:center;
+              letter-spacing:.06em;text-transform:uppercase;background:var(--paper)}
+  .pager-step:hover{border-color:var(--clay);background:var(--clay);color:var(--paper)}
+  .pager-step.is-off{opacity:.32;border-style:dashed;background:none;pointer-events:none}
+  /* The range is the headline — "26–50 of 213" answers the question a reader
+     actually has; the page number is the supporting detail, so it is quieter
+     and sits under it. */
+  .pager-at{margin:0 auto 0 0;display:flex;flex-direction:column;gap:.15rem;line-height:1.35}
+  .pager-range{color:var(--ink);font-size:.72rem}
+  .pager-of{color:#7a7d6c;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase}
+  .pager-size{display:flex;align-items:center;gap:.5rem;flex:none}
+  .pager-size label{color:#595c4d;letter-spacing:.08em;text-transform:uppercase}
+  .pager-size select{font-family:var(--mono);font-size:.66rem;padding:.35rem .5rem;min-height:32px;
+                     border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
+  /* On a phone the range leads, the steps sit under it full-width, and the
+     page-length control keeps its own row rather than being squeezed to a
+     sliver beside them. */
+  @media(max-width:640px){
+    .pager{flex-direction:column;align-items:stretch;gap:.8rem}
+    .pager-steps{order:2}
+    .pager-steps .pager-step{flex:1;justify-content:center}
+    .pager-at{order:1;margin:0}
+    .pager-size{order:3;justify-content:space-between}
+  }
 
   /* ONE button system for the account/moderation desks — the site's brand orange
      (--trail), matching .export/.cc-d-act. Primary actions = orange fill; the

@@ -1,7 +1,8 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {#
-  The pager, shared by every paged list: both moderation desks, the account's
-  contributions and route proposals, and the messages dashboard.
+  The pager, shared by every paged list: both moderation desks, the Routes and
+  Regions desks, the account's contributions and route proposals, the messages
+  dashboard and the public contributors wall.
 
   Params:
     pager  array  — {page, pages, total, prev, next} from App\Pagination\Pager::of()
@@ -9,29 +10,70 @@
     params array  — the current filters, so paging never silently drops them
     key    string — the query parameter this pager moves (default `page`)
 
-  `key` exists because the account page carries TWO paged lists on one pane.
-  With both writing `?page=`, moving through route proposals would have moved
-  the contributions list underneath the reader. The second pager passes
-  `rpage`, and each one puts the other's current page in `params` so neither
-  resets the other.
+  `key` exists because several pages carry TWO paged lists on one pane. With
+  both writing `?page=`, moving through route proposals would have moved the
+  contributions list underneath the reader. The second pager passes its own key
+  (`rpage`, `spage`), and each one puts the other's current page in `params` so
+  neither resets the other.
 
   Plain links, no JS: a page a curator can bookmark, link to a colleague, and
-  come back to after a decision redirect. Rendered only when there is more than
-  one page — a lone "1 of 1" is furniture.
+  come back to after a decision redirect.
+
+  Rendered whenever there is anything to say — which now includes a single page,
+  because the page-length control lives here and a reader on a list of 18 rows
+  is exactly the reader who wants to know why there is no page two. The steps
+  are dropped on a one-page list; the count and the control stay.
 #}
 {% set key = key|default('page') %}
-{% if pager.pages > 1 %}
+{% set show_size = show_size|default(true) and app.user %}
+{% if pager.pages > 1 or (show_size and pager.total > 0) %}
   <nav class="pager" aria-label="{{ 'pager.label'|trans }}">
-    {% if pager.prev %}
-      <a class="pager-step" href="{{ path(route, params|merge({(key): pager.prev})) }}" rel="prev">← {{ 'pager.prev'|trans }}</a>
-    {% else %}
-      <span class="pager-step is-off">← {{ 'pager.prev'|trans }}</span>
+    {% if pager.pages > 1 %}
+      <div class="pager-steps">
+        {% if pager.prev %}
+          <a class="pager-step" href="{{ path(route, params|merge({(key): pager.prev})) }}" rel="prev">&larr; {{ 'pager.prev'|trans }}</a>
+        {% else %}
+          <span class="pager-step is-off">&larr; {{ 'pager.prev'|trans }}</span>
+        {% endif %}
+        {% if pager.next %}
+          <a class="pager-step" href="{{ path(route, params|merge({(key): pager.next})) }}" rel="next">{{ 'pager.next'|trans }} &rarr;</a>
+        {% else %}
+          <span class="pager-step is-off">{{ 'pager.next'|trans }} &rarr;</span>
+        {% endif %}
+      </div>
     {% endif %}
-    <span class="pager-at">{{ 'pager.at'|trans({'%page%': pager.page, '%pages%': pager.pages, '%total%': pager.total}) }}</span>
-    {% if pager.next %}
-      <a class="pager-step" href="{{ path(route, params|merge({(key): pager.next})) }}" rel="next">{{ 'pager.next'|trans }} →</a>
-    {% else %}
-      <span class="pager-step is-off">{{ 'pager.next'|trans }} →</span>
+
+    {# Says which rows are in front of the reader, not just which page number
+       they are on: "26–50 of 213" answers "have I seen the rest?" and
+       "page 2 of 9" does not. #}
+    <p class="pager-at">
+      <span class="pager-range">{{ 'pager.range'|trans({
+        '%from%': pager.total > 0 ? (pager.page - 1) * pager.perPage + 1 : 0,
+        '%to%': min(pager.page * pager.perPage, pager.total),
+        '%total%': pager.total,
+      }) }}</span>
+      {% if pager.pages > 1 %}
+        <span class="pager-of">{{ 'pager.at'|trans({'%page%': pager.page, '%pages%': pager.pages, '%total%': pager.total}) }}</span>
+      {% endif %}
+    </p>
+
+    {# The page length, settable where the reader notices they want it. It
+       writes the SAME rider preference the Profile settings tab holds — this
+       is a second door onto one setting, not a second setting — so the choice
+       follows them to every other list. Signed-out readers have nowhere to
+       store it, which is why the control is behind app.user. #}
+    {% if show_size %}
+      <form class="pager-size" method="post" action="{{ path('settings_rows_per_page') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('rows_per_page') }}">
+        <input type="hidden" name="back" value="{{ app.request.requestUri }}">
+        <label for="rows-{{ key }}">{{ 'pager.per_page'|trans }}</label>
+        <select id="rows-{{ key }}" name="rows" onchange="this.form.requestSubmit()">
+          {% for opt in cc_rows_per_page_options() %}
+            <option value="{{ opt.value }}"{{ app.user.rowsPerPage.value == opt.value ? ' selected' }}>{{ opt.label|trans }}</option>
+          {% endfor %}
+        </select>
+        <noscript><button type="submit" class="pager-step">{{ 'pager.per_page_apply'|trans }}</button></noscript>
+      </form>
     {% endif %}
   </nav>
 {% endif %}

@@ -8,7 +8,7 @@
   is Bootstrap, and `partials/_pager.html.twig` is styled by
   `account/_shell_styles.html.twig`, which admin pages never load. Rather than
   ship the account CSS into EasyAdmin (or leave the links unstyled), this
-  renders Bootstrap's own pagination classes, which are already on the page.
+  renders Bootstrap's own classes, which are already on the page.
 
   Params: identical to partials/_pager.html.twig —
     pager  array  — {page, pages, total, prev, next}
@@ -17,8 +17,9 @@
     key    string — the query parameter this pager moves (default `page`)
 #}
 {% set key = key|default('page') %}
-{% if pager.pages > 1 %}
-  <nav aria-label="{{ 'pager.label'|trans }}" class="d-flex align-items-center gap-3 mt-3">
+{% if pager.total > 0 %}
+<nav aria-label="{{ 'pager.label'|trans }}" class="d-flex flex-wrap align-items-center gap-3 mt-4 mb-5 p-3 border rounded bg-light">
+  {% if pager.pages > 1 %}
     <ul class="pagination mb-0">
       <li class="page-item{{ pager.prev ? '' : ' disabled' }}">
         {% if pager.prev %}
@@ -35,6 +36,33 @@
         {% endif %}
       </li>
     </ul>
-    <span class="text-muted small">{{ 'pager.at'|trans({'%page%': pager.page, '%pages%': pager.pages, '%total%': pager.total}) }}</span>
-  </nav>
+  {% endif %}
+
+  {# Which rows are in front of the operator, not just which page number they
+     are on — "26–50 of 213" answers "have I seen the rest?". #}
+  <div class="me-auto lh-sm">
+    <div>{{ 'pager.range'|trans({
+      '%from%': pager.total > 0 ? (pager.page - 1) * pager.perPage + 1 : 0,
+      '%to%': min(pager.page * pager.perPage, pager.total),
+      '%total%': pager.total,
+    }) }}</div>
+    {% if pager.pages > 1 %}
+      <div class="text-muted small">{{ 'pager.at'|trans({'%page%': pager.page, '%pages%': pager.pages, '%total%': pager.total}) }}</div>
+    {% endif %}
+  </div>
+
+  {# Writes the same rider preference the Profile settings tab holds — one
+     setting, two doors — so the choice follows the operator to every list. #}
+  <form class="d-flex align-items-center gap-2" method="post" action="{{ path('settings_rows_per_page') }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('rows_per_page') }}">
+    <input type="hidden" name="back" value="{{ app.request.requestUri }}">
+    <label class="text-muted small mb-0" for="rows-{{ key }}">{{ 'pager.per_page'|trans }}</label>
+    <select class="form-select form-select-sm w-auto" id="rows-{{ key }}" name="rows" onchange="this.form.requestSubmit()">
+      {% for opt in cc_rows_per_page_options() %}
+        <option value="{{ opt.value }}"{{ app.user.rowsPerPage.value == opt.value ? ' selected' }}>{{ opt.label|trans }}</option>
+      {% endfor %}
+    </select>
+    <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">{{ 'pager.per_page_apply'|trans }}</button></noscript>
+  </form>
+</nav>
 {% endif %}
