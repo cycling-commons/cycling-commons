@@ -338,6 +338,8 @@ credits:
   lic_per_photo: 'licence par photo · crédit affiché sur chaque photo'
   wikimedia_p: 'Les photos initiales de cols et de lieux viennent de Wikimedia Commons ; chaque photo porte son propre crédit et sa licence dans le panneau.'
   copernicus_p: 'Modèle d''élévation derrière les pentes des cols. "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved". The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.'
+  valhalla_p: 'Le moteur de routage et d''altitude que nous hébergeons nous-mêmes : il mesure chaque profil de col sur le MNT Copernicus et cale les tracés de l''éditeur de cols sur le réseau routier.'
+  redoc_p: 'Affiche la référence publique de l''API, servie depuis ce site.'
   mapillary_p: 'Couverture photo au niveau de la rue dans le dock de vue immersive de la carte.'
   esri_p: 'Imagerie satellite derrière le calque satellite de l''éditeur de cols.'
   nominatim_p: 'La recherche de lieux, propulsée par les données OpenStreetMap.'
