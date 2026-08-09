@@ -9,8 +9,14 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 missing=0
 while IFS= read -r f; do
+# REUSE-IgnoreStart — the identifier below is DATA (written into or
+# grepped out of generated files), not this file's own licence.
   if ! head -n1 "$f" | grep -qF 'SPDX-License-Identifier: CC-BY-SA-4.0'; then
+# REUSE-IgnoreEnd
+# REUSE-IgnoreStart — the identifier below is DATA (written into or
+# grepped out of generated files), not this file's own licence.
     echo "MISSING/WRONG SPDX (expect first line '<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->'): $f"
+# REUSE-IgnoreEnd
     missing=1
   fi
 done < <(git ls-files 'wiki/*.md' 'wiki/**/*.md' | sort -u)

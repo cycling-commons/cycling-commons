@@ -85,9 +85,9 @@ both have to move with it.
 
 All built on permissive MIT libraries — `symfony/security-bundle`,
 `symfonycasts/verify-email-bundle`, `symfonycasts/reset-password-bundle`,
-`scheb/2fa-bundle` (+totp, +backup-code), `easycorp/easyadmin-bundle`. The
-proprietary `bikecoderslife/bundle` was a **pattern reference only**: never a
-dependency, no code copied.
+`scheb/2fa-bundle` (+totp, +backup-code), `easycorp/easyadmin-bundle`. A
+proprietary in-house auth bundle (private, unnamed here) was a **pattern
+reference only**: never a dependency, no code copied.
 
 **Registration** (`App\Controller\RegistrationController`):
 

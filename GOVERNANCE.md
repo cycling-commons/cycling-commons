@@ -12,7 +12,7 @@ sensing boundary that keeps personal data out, and independence in practice — 
 ## Who stewards it
 
 ```
-BikeCoders            the company — open-source steward (→ independent foundation)
+BikeCoders            the company — open-data steward (→ independent foundation)
    │
    ├── Cycling Commons   the open data initiative — ODbL, neutral, for everyone
    │

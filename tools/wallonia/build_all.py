@@ -18,7 +18,10 @@ WALLONIA_BBOX = (2.84, 49.45, 6.41, 50.85)  # (minlon, minlat, maxlon, maxlat)
 def _header(title, selectors, n, note=""):
     sels = ", ".join(f"{k}={v}" for k, v, _ in selectors)
     today = datetime.date.today().isoformat()
+# REUSE-IgnoreStart — the identifier below is DATA (written into or
+# grepped out of generated files), not this file's own licence.
     return (f"// SPDX-License-Identifier: ODbL-1.0\n"
+# REUSE-IgnoreEnd
             f"// Wallonia {title} © OpenStreetMap contributors (ODbL). Selectors: {sels}.\n"
             f"// Region-balanced across the 5 Walloon provinces. Harvested {today} · {n} points.\n"
             + (note or ""))
@@ -144,7 +147,10 @@ def annotate_water():
             f["properties"]["sim"] = 1
             nconf += 1
     header = (
+# REUSE-IgnoreStart — the identifier below is DATA (written into or
+# grepped out of generated files), not this file's own licence.
         "// SPDX-License-Identifier: ODbL-1.0\n"
+# REUSE-IgnoreEnd
         "// Wallonia drinking-water points © OpenStreetMap contributors (ODbL). amenity=drinking_water +\n"
         "// fountain/tap/spring with drinking_water=yes, within the Wallonie admin area. Potability is OSM-tagged,\n"
         "// not utility-verified. {t:type, n:name, c:confirmed-potable}.\n"

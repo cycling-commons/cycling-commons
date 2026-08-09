@@ -77,7 +77,10 @@ def test_parse_surface_fixture_handles_hybrid_js():
     comments, escaped apostrophes) plus an RS_START/RS_END machine-injected JSON
     block — parse_surface_fixture must round-trip both halves exactly."""
     js = (
+# REUSE-IgnoreStart — the identifier below is DATA (written into or
+# grepped out of generated files), not this file's own licence.
         "// SPDX-License-Identifier: ODbL-1.0\n"
+# REUSE-IgnoreEnd
         "/* A · Road surface — hand-picked demo segments.\n"
         " * cls drives colour + pattern\n"
         " */\n"

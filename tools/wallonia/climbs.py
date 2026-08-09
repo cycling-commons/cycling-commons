@@ -207,7 +207,10 @@ def build():
             print(f"  ! {m['name']}: foot given but trace invalid — the TOP coord looks wrong (Wikidata point bad?)")
         climbs.append(_assemble_climb(m, p, traced))
 
+# REUSE-IgnoreStart — the identifier below is DATA (written into or
+# grepped out of generated files), not this file's own licence.
     hdr = ("// SPDX-License-Identifier: ODbL-1.0\n"
+# REUSE-IgnoreEnd
            "// Legendary Wallonia climbs. Coordinates © Wikidata (CC0); descriptions © Wikipedia (CC BY-SA 4.0);\n"
            "// photos © Wikimedia Commons (per-file licence in photo.license). Curated set, appended to the B layer.\n")
     OUT.write_text(hdr + "window.CC_CLIMBS=" + json.dumps(climbs, ensure_ascii=False) + ";\n", encoding="utf-8")

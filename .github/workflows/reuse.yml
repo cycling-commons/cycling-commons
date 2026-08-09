@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+#
+# Machine-verifiable per-file licensing (reuse.software): every file in the
+# tree must resolve to a licence, either through its own SPDX header
+# (check-spdx.sh's rule) or through REUSE.toml (binaries, data, fonts).
+# The licence texts live in LICENSES/.
+name: REUSE compliance
+on:
+  push:
+    branches: [main, symfony-base]
+  pull_request:
+
+jobs:
+  reuse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: fsfe/reuse-action@v5

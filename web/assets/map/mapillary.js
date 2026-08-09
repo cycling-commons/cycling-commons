@@ -22,6 +22,10 @@ export function addMapillary(){
   if(!MLY_ENABLED || map.getSource('mly')) return;
   map.addSource('mly',{type:'vector',
     tiles:[`https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=${MAPILLARY_TOKEN}`],
+    // The dock viewer carries mapillary-js's own attribution, but these
+    // coverage TILES render in MapLibre, whose attribution control only knows
+    // what a source declares (go-live gate D, 2026-08-09).
+    attribution:'© <a href="https://www.mapillary.com/">Mapillary</a>',
     minzoom:6, maxzoom:14});
   map.addLayer({id:'mly-cov',type:'line',source:'mly','source-layer':'sequence',
     layout:{visibility:'none','line-cap':'round','line-join':'round'},

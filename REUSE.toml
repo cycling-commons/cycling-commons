@@ -1,0 +1,63 @@
+# REUSE (reuse.software) declarations for files that cannot carry their own
+# SPDX header — binaries, data exports, and third-party assets. Everything
+# else declares itself in a first-line SPDX comment (enforced by
+# web/tools/check-spdx.sh and the pre-commit hook).
+#
+# The full license texts live in LICENSES/; `reuse lint` in CI
+# (.github/workflows/reuse.yml) fails the build when a file is uncovered.
+version = 1
+SPDX-PackageName = "cycling-commons"
+SPDX-PackageSupplier = "BikeCoders <https://bikecoders.life>"
+SPDX-PackageDownloadLocation = "https://github.com/cycling-commons/cycling-commons"
+
+# ── Catch-all (FIRST on purpose: later annotations override earlier ones) ──
+# Most source files carry their own SPDX-License-Identifier header (enforced
+# by check-spdx.sh) but no per-file copyright line; this supplies the holder
+# and a default license repo-wide, and every group below overrides it where
+# it applies. aggregate = in-file tags still count beside it.
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+
+# ── Fonts ────────────────────────────────────────────────────────────────────
+# Bricolage Grotesque and Spline Sans, both under the SIL Open Font License.
+[[annotations]]
+path = "web/assets/fonts/**"
+SPDX-FileCopyrightText = "Bricolage Grotesque © Mathieu Triay; Spline Sans © the Spline Sans Project Authors"
+SPDX-License-Identifier = "OFL-1.1"
+
+# ── Brand & imagery ─────────────────────────────────────────────────────────
+# The Cycling Commons brand assets ship with the source but are not code.
+[[annotations]]
+path = ["web/assets/brand/**", "web/public/brand/**", "web/public/apple-touch-icon.png", "web/public/favicon.ico", "web/public/site.webmanifest", "atlas/demo/brand/**", "site/brand/**"]
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+
+# Region/country flag SVGs (drawn in-repo for the world reference bundle).
+[[annotations]]
+path = ["web/assets/flags/**", "web/public/media/**"]
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+
+# ── Data exports (ODbL — the open half of the project) ──────────────────────
+# Generated OSM-derived demo/fixture data; ODbL like the database it mirrors.
+[[annotations]]
+path = ["atlas/demo/*-osm.js", "atlas/demo/data/**", "web/assets/data/**", "web/tests/fixtures/**", "db/**", "tools/wallonia/fixtures/**", "tools/divisions/fixtures/**", "pipeline/tests/fixtures/**"]
+SPDX-FileCopyrightText = "© OpenStreetMap contributors"
+SPDX-License-Identifier = "ODbL-1.0"
+
+# ── The retired HTML demo and static site (pre-Symfony) ─────────────────────
+[[annotations]]
+path = ["atlas/**", "site/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"
+
+# ── Config / lockfiles / metadata that carry no creative content ────────────
+[[annotations]]
+path = ["**/composer.lock", "**/symfony.lock", "**/*.lock", "**/.gitignore", "**/.gitattributes", "**/.env", "**/.env.*", "**/phpunit.dist.xml", "**/phpstan.dist.neon", "**/psalm.xml", "**/*.neon", "**/.php-cs-fixer.dist.php", "**/importmap.php", "REUSE.toml", ".gitleaks.toml", ".pre-commit-config.yaml", "**/mkdocs.yml", "**/*.yaml", "**/*.yml", "**/*.json", "**/*.cff", "**/*.toml", "**/*.ini", "**/*.txt", "**/*.md", "**/Makefile", "**/Dockerfile", "**/*.conf", "**/*.sql", "**/*.xml", "**/*.editorconfig", "**/.dockerignore"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "© BikeCoders"
+SPDX-License-Identifier = "LicenseRef-PolyForm-Shield-1.0.0"

@@ -146,7 +146,10 @@ def harvest(report=False):
                       "geometry": {"type": "Point", "coordinates": [r["lon"], r["lat"]]}})
     today = datetime.date.today().isoformat()
     header = (
+# REUSE-IgnoreStart — the identifier below is DATA (written into or
+# grepped out of generated files), not this file's own licence.
         "// SPDX-License-Identifier: CC-BY-4.0\n"
+# REUSE-IgnoreEnd
         "// Wallonia tourist accommodation © Tourisme Wallonie (TW) — CC-BY 4.0.\n"
         "// Source: PIVOT \"Les offres touristiques en Wallonie\" via Géoportail de la Wallonie\n"
         "//   (geoservices.wallonie.be/arcgis/rest/services/TOURISME/OFFRES_TOURISTIQUES). NOT OSM.\n"

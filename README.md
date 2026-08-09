@@ -140,7 +140,11 @@ All three action pages (`/add-climb`, `/improve`, `/vote`) require a verified ac
 
 ### Persistence boundary — what is and is not saved
 
-> **Important:** contribution and moderation actions are currently **stubbed**. Submitting a form records intent — a flash, a log line, and a `CC-…` receipt reference — via `ContributionStubService`, but **no domain data is persisted** and nothing is published. Real persistence will be wired in as part of the future data-API spec. Users and curators are told this explicitly in the UI.
+Contribution and moderation are **fully persisted**: a submission becomes a
+moderation-queue row, an approval publishes to the live catalog, and every
+decision keeps its audit trail (see
+[`docs/specs/moderation-and-contribution.md`](docs/specs/moderation-and-contribution.md)).
+The `CC-…` receipt a contributor sees references the stored submission.
 
 ### Seed the local dev database with demo accounts + world data
 

@@ -30,7 +30,7 @@ def _translate(text, src):
     if overpass.STRICT:
         raise RuntimeError(f"strict-cache: no cached translation ({key.name})")
     # the `de` contact email raises MyMemory's daily limit (public project contact, not a secret)
-    url = ("https://api.mymemory.translated.net/get?de=paceline@cyclingcommons.com&langpair="
+    url = ("https://api.mymemory.translated.net/get?de=paceline@cyclingcommons.org&langpair="
            + src + "|en&q=" + urllib.parse.quote(text))
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "CyclingCommons/wallonia-harvest"})

@@ -8,7 +8,10 @@ BBOX = (2.84, 49.45, 6.41, 50.85)
 
 def test_services_fixture_is_valid_and_in_bbox():
     txt = FIX.read_text(encoding="utf-8")
+# REUSE-IgnoreStart — the identifier below is DATA (written into or
+# grepped out of generated files), not this file's own licence.
     assert "SPDX-License-Identifier: ODbL-1.0" in txt
+# REUSE-IgnoreEnd
     assert "OpenStreetMap contributors" in txt
     payload = json.loads(txt.split("window.CC_SERVICES_OSM=", 1)[1].rsplit(";", 1)[0])
     assert payload["type"] == "FeatureCollection"

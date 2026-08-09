@@ -1,4 +1,4 @@
-# Cycling Commons — web app (`api/`)
+# Cycling Commons — web app (`web/`)
 
 Symfony 7.4 application serving content pages for `cyclingcommons.org`. Server-rendered HTML via Twig, styles and scripts managed by AssetMapper (no Node build step required).
 
@@ -34,7 +34,7 @@ CI runs all gates on every push: `.github/workflows/ci-app.yml`. Rector (`make a
 
 ## Configuration
 
-`.env` holds placeholder values only and is committed. Copy the values you need into `api/.env.local` (gitignored) to override locally. Never commit real secrets.
+`.env` holds placeholder values only and is committed. Copy the values you need into `web/.env.local` (gitignored) to override locally. Never commit real secrets.
 
 ## Licensing
 
