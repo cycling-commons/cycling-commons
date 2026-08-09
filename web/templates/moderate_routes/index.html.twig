@@ -78,7 +78,9 @@
   </form>
 
   {# ── New route proposals — riders' newly-uploaded routes awaiting first review ── #}
-  <h2 class="sec-band sec-band--new">{{ 'moderate_routes.section_proposals'|trans }} <span class="sec-count">{{ routes|length }}</span></h2>
+  {# The section counts are the pager's totals, not the page's length: a "12"
+     over a section holding 25 of 40 would be a lie about how much work waits. #}
+  <h2 class="sec-band sec-band--new">{{ 'moderate_routes.section_proposals'|trans }} <span class="sec-count">{{ pager.total }}</span></h2>
   {% if routes is empty %}
   <div class="empty-queue">
     <div class="ic">&#9650;</div>
@@ -91,10 +93,11 @@
       {% include 'moderate_routes/_queue_item.html.twig' with {item: item} %}
     {% endfor %}
   </div>
+  {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_routes', params: pager_params|merge({spage: suggestion_pager.page})} %}
   {% endif %}
 
   {# ── Route corrections — riders flagging fixes on EXISTING routes ── #}
-  <h2 class="sec-band sec-band--corr">{{ 'moderate_routes.suggestions.title'|trans }} <span class="sec-count">{{ suggestions|length }}</span></h2>
+  <h2 class="sec-band sec-band--corr">{{ 'moderate_routes.suggestions.title'|trans }} <span class="sec-count">{{ suggestion_pager.total }}</span></h2>
   {% if suggestions is empty %}
     <p class="sec-empty">{{ 'moderate_routes.suggestions.empty'|trans }}</p>
   {% else %}
@@ -103,6 +106,7 @@
       {% include 'moderate_routes/_correction_item.html.twig' with {s: s, show_route: true} %}
     {% endfor %}
   </div>
+  {% include 'partials/_pager.html.twig' with {pager: suggestion_pager, route: 'moderate_routes', params: pager_params|merge({page: pager.page}), key: 'spage'} %}
   {% endif %}
 </div>
 

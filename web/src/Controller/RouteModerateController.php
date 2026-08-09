@@ -19,6 +19,7 @@ use App\Moderation\RouteModerationService;
 use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TrashBlockedException;
+use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,17 +62,35 @@ final class RouteModerateController extends AbstractController
         $region = $request->query->get('region');
         $regionId = null !== $region && ctype_digit((string) $region) ? (int) $region : null;
 
-        $rows = $this->queue->pending($scope, $regionId);
+        // Two work streams on one pane, so two pagers with two query keys —
+        // the same arrangement the account page uses. `page` moves proposals,
+        // `spage` moves corrections, and each carries the other's current page
+        // so moving through one never resets the other underneath the reader.
+        $pager = Pager::of(
+            $request->query->getInt('page', 1),
+            $this->queue->pendingCount($scope, $regionId),
+            RouteQueue::PER_PAGE,
+        );
+        $suggestionPager = Pager::of(
+            $request->query->getInt('spage', 1),
+            $this->queue->pendingSuggestionsCount($scope, $regionId),
+            RouteQueue::PER_PAGE,
+        );
+
+        $rows = $this->queue->pending($scope, $regionId, $pager['page'], $pager['perPage']);
 
         // No per-item decision forms here anymore: a proposal is decided ONLY
         // on its detail page (the review surface). The list routes there.
         return $this->render('moderate_routes/index.html.twig', [
             'nav_active' => 'moderate_routes',
             'routes' => $rows,
-            'suggestions' => $this->queue->pendingSuggestions($scope, $regionId),
+            'suggestions' => $this->queue->pendingSuggestions($scope, $regionId, $suggestionPager['page'], $suggestionPager['perPage']),
             'total' => $this->queue->total($scope),
             'regions' => $this->queue->regions($scope),
             'filter_region' => $regionId,
+            'pager' => $pager,
+            'suggestion_pager' => $suggestionPager,
+            'pager_params' => null === $regionId ? [] : ['region' => $regionId],
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
             'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
