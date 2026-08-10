@@ -51,6 +51,12 @@ class Contract:
     # extras live in LetterSpec.tile_props; these are implicit and universal,
     # emitted by tiles.py::_letter_sql for every letter.
     universal_tile_props: list[str]
+    # The road-surface LINE layer's selectors and class vocabulary
+    # (Dated/2026-08-09-surface-line-tiles-design.md). Kept as the raw mapping
+    # rather than a typed spec: it is a value table, not a selector list, and
+    # the shape it must agree with is the CLIENT's SURFACE_STYLE, which the
+    # cross-language test pins directly.
+    surface: dict
     # The ONLY tag keys parse.py writes into coverage_poi.tags — the serve-set
     # of the narrow serving cache (osm-data-architecture.md §1 principle 4,
     # coverage-provider.md §2). `osmium tags-filter` selects OBJECTS, not keys,
@@ -119,6 +125,25 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
         if not spec.selectors:
             raise ValueError(f"letter {letter} has no selectors")
 
+    if "surface" not in raw:
+        raise ValueError("contract missing top-level \"surface\" key")
+    surface = raw["surface"]
+    for required in ("highways", "classes", "cyclewayClass", "untaggedClass", "minZoom", "maxZoom"):
+        if required not in surface:
+            raise ValueError(f"contract surface section missing {required!r}")
+    # A value may not sit in two classes: the first match would win silently and
+    # the same road would be gravel on one build and dirt on the next reorder.
+    seen: dict[str, str] = {}
+    for cls, values in surface["classes"].items():
+        for v in values:
+            if v in seen:
+                raise ValueError(f"surface value {v!r} is in both {seen[v]!r} and {cls!r}")
+            seen[v] = cls
+    # A gate can only gate a highway that is actually selected.
+    for gated in surface.get("gatedHighways", {}):
+        if gated not in surface["highways"]:
+            raise ValueError(f"gatedHighways names {gated!r}, which is not in highways")
+
     if "serviceKind" not in raw:
         raise ValueError("contract missing top-level \"serviceKind\" key")
 
@@ -159,5 +184,6 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
         letters=letters,
         service_kind=service_kind,
         universal_tile_props=universal,
+        surface=surface,
         stored_tag_keys=stored,
     )

@@ -278,3 +278,36 @@ def verify_pmtiles(path, expected_layers=None, expected_bbox=None):
                     f"min-zoom tiles of {path}")
     raise RuntimeError(
         f"pmtiles verify: no decodable non-empty tile at z{z} within header bounds of {path}")
+
+
+def build_surface_pmtiles(layer_files: dict[str, Path], out_path: Path, contract) -> None:
+    """tippecanoe -> the road-surface LINE artifact, one `surface_<cc>` layer per country.
+
+    A different profile from the point build, and deliberately so
+    (Dated/2026-08-09-surface-line-tiles-design.md §4):
+
+    - **No thinning.** `--drop-densest-as-needed` exists to make dense POINT
+      tiles fit; dropping lines would delete roads from the map at low zoom,
+      which is worse than a large tile. Measured on Belgium, nothing needs it.
+    - **Simplification instead**, which is how line data gets cheap: geometry
+      loses vertices at low zoom, not features.
+    - **z8-13.** z13 is roughly 10 m fidelity, plenty for "what is under my
+      tyres", and z14+ overzooms from it for free.
+
+    Measured on Belgium (2026-08-10, 417,371 classified ways): **43 MB**, of
+    which z8-9 is 11 MB — an order of magnitude under the design's "low
+    hundreds of MB" guess, which is why the z8 floor was affordable to keep.
+    """
+    spec = contract.surface
+    cmd = [
+        "tippecanoe", "-o", str(out_path), "--force", "--quiet",
+        "--minimum-zoom", str(spec["minZoom"]), "--maximum-zoom", str(spec["maxZoom"]),
+        "--simplification", "4",
+        # Both off on purpose: a dropped LINE is a road that vanishes, and a
+        # truncated tile is a road that vanishes. Lines are cheap enough to keep
+        # whole (measured above), so neither trade is worth making.
+        "--no-feature-limit", "--no-tile-size-limit",
+    ]
+    for cc in sorted(layer_files):
+        cmd += ["-L", f"surface_{cc.lower()}:{layer_files[cc]}"]
+    _run(cmd)

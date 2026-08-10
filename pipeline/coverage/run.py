@@ -21,11 +21,13 @@ import urllib.request
 import psycopg
 
 from .contract import load_contract
-from .extract import run_extract
+from .extract import run_extract, run_filter
 from .load import apply_session_budget, ensure_schema, load_region, resolve_country
 from .parse import parse_pois
 from .publish import ensure_bucket, prune, upload
-from .tiles import build_pmtiles, export_geojsonl, verify_pmtiles
+from .surface import parse_surface_ways, write_geojsonl
+from .surface import selector_expressions as surface_selectors
+from .tiles import build_pmtiles, build_surface_pmtiles, export_geojsonl, verify_pmtiles
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 
@@ -114,8 +116,50 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
     )
 
 
+def _run_surface(regions, workdir, contract, *, untagged: bool) -> int:
+    """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe. No database at all.
+
+    Deliberately not folded into the per-region loop above: that loop exists to
+    keep coverage_poi in step, and lines never touch it. Sharing it would mean
+    holding the advisory lock and a Postgres session through a build that needs
+    neither (Dated/2026-08-09-surface-line-tiles-design.md §4).
+    """
+    arm = "untagged" if untagged else "classified"
+    layer_files: dict[str, pathlib.Path] = {}
+    failed = []
+    for region in regions:
+        try:
+            country_code = resolve_country(region)
+            pbf = fetch_pbf(region, workdir)
+            filtered = workdir / (region.replace("/", "-") + "-surface.osm.pbf")
+            run_filter(pbf, filtered, surface_selectors(contract))
+            ways = parse_surface_ways(filtered, contract, untagged=untagged)
+            out = workdir / f"surface_{country_code.lower()}_{arm}.geojsonl"
+            n = write_geojsonl(ways, out, cctok=f"|{country_code}|")
+            layer_files[country_code] = out
+            print(f"[surface] {region}: {n} ways -> {out.name}")
+        except Exception as exc:  # noqa: BLE001 — one region must not stop the rest
+            print(f"[surface] {region} FAILED: {exc}", file=sys.stderr)
+            failed.append(region)
+    if layer_files:
+        artifact = workdir / (f"surface-untagged.pmtiles" if untagged else "surface.pmtiles")
+        build_surface_pmtiles(layer_files, artifact, contract)
+        print(f"[surface] {artifact.name}: {artifact.stat().st_size / 1e6:.1f} MB")
+    return 1 if failed else 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Weekly coverage batch (PostGIS index + PMTiles)")
+    ap.add_argument("--surface", action="store_true",
+                    help="build the road-surface LINE artifact for the given regions "
+                         "instead of the point index (zero DB rows; its own pmtiles)")
+    ap.add_argument("--untagged", action="store_true",
+                    help="with --surface: build the 'needs a tag' arm instead of the "
+                         "classified one. Its OWN artifact on purpose — a vector tile "
+                         "is fetched whole, and on Belgium this arm is as big as the "
+                         "classified one (42 MB against 43), so folding it in would "
+                         "double every rider's tile bytes for a layer that is off by "
+                         "default.")
     ap.add_argument("--regions",
                     help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,australia-oceania/australia,asia/japan,north-america/us/california,north-america/us/colorado,europe/spain)")
     args = ap.parse_args(argv)
@@ -127,6 +171,8 @@ def main(argv=None) -> int:
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
     contract = load_contract()
+    if args.surface:
+        return _run_surface(regions, workdir, contract, untagged=args.untagged)
     failed = []
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with psycopg.connect(dsn) as conn:

@@ -25,14 +25,19 @@ def selector_expressions(contract: Contract) -> list[str]:
     return exprs
 
 
-def run_extract(pbf_path: Path, out_path: Path, contract: Contract) -> Path:
-    """Filter `pbf_path` down to the contract selectors, writing `out_path`."""
+def run_filter(pbf_path: Path, out_path: Path, expressions: list[str]) -> Path:
+    """Run `osmium tags-filter` with arbitrary expressions.
+
+    Factored out of run_extract so the road-surface LINE pass (surface.py) can
+    reuse it: same tool, same failure handling, a different selector set — and
+    a second pass on purpose, so the point subset stays a few MB.
+    """
     cmd = [
         "osmium", "tags-filter",
         "--overwrite",
         "-o", str(out_path),
         str(pbf_path),
-        *selector_expressions(contract),
+        *expressions,
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0:
@@ -40,3 +45,8 @@ def run_extract(pbf_path: Path, out_path: Path, contract: Contract) -> Path:
             f"osmium tags-filter failed ({proc.returncode}): {proc.stderr.strip()}"
         )
     return out_path
+
+
+def run_extract(pbf_path: Path, out_path: Path, contract: Contract) -> Path:
+    """Filter `pbf_path` down to the contract POINT selectors, writing `out_path`."""
+    return run_filter(pbf_path, out_path, selector_expressions(contract))
