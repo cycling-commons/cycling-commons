@@ -616,7 +616,7 @@ function buildRecord(layer, f){
   const osmHref = (f.geom && f.geom.ll)
     ? `https://www.openstreetmap.org/query?lat=${f.geom.ll[0]}&lon=${f.geom.ll[1]}#map=18/${f.geom.ll[0]}/${f.geom.ll[1]}`
     : 'https://www.openstreetmap.org';
-  return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}">${layer.icon} ${layer.label}</span>
+  return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${srcLine(f, osmHref)}</div>${confirmPanel}${act}${moderate}${histSlot}`;

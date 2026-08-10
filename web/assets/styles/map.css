@@ -4,6 +4,13 @@
     --spruce:#1C3A2A; --spruce-lift:#2C5440; --trail:#FF5A1F;
     --clay:#B5532E; --glacier:#8FB6A8; --ochre:#C8923A;
     --serif:"Bricolage Grotesque",system-ui,sans-serif; --sans:"Spline Sans",system-ui,sans-serif; --mono:"Spline Sans Mono",monospace;
+    /* Category glyphs are emoji (tent, droplet, train, camera…), and the three
+       served families are LATIN SUBSETS with no emoji coverage at all — so any
+       element that inherits --sans draws them as tofu boxes. Every surface that
+       renders a layer.icon must use this stack. Kept in sync with the canvas
+       equivalent in assets/map/icons.js (mintMini), which mints the same glyphs
+       for the tile layers; emoji-font-stack.test.cjs asserts the two agree. */
+    --emoji:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{height:100%;overflow:hidden}   /* never let the page itself scroll (drawer/dock translate off-screen → would otherwise create scroll, shoving the overlay off the top) */
@@ -108,7 +115,7 @@
   .search-res button{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(239,230,212,.07);color:var(--paper);font-family:var(--sans);font-size:.86rem;padding:.5rem .55rem;cursor:pointer;transition:background .12s}
   .search-res li:last-child button{border-bottom:none}
   .search-res button:hover,.search-res button.hl{background:rgba(255,90,31,.14)}
-  .search-res .sw{flex:0 0 auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.66rem;font-weight:700}
+  .search-res .sw{flex:0 0 auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.66rem;font-weight:700;font-family:var(--emoji)}
   .search-res .snm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45)}
   .search-res .scomm{margin-left:.45rem;font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,230,212,.45);border:1px solid rgba(239,230,212,.22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
@@ -135,7 +142,7 @@
   .lgrp:first-child{margin-top:0}
   .layer{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;cursor:pointer;user-select:none}
   .layer .sw{width:21px;height:21px;border-radius:5px;flex-shrink:0;border:1.5px solid var(--c);background:var(--c);display:flex;align-items:center;justify-content:center;font-size:.78rem;line-height:1;color:var(--ic,#fff);transition:all .18s}
-  .layer .sw .sw-g{display:inline-block;font-style:normal;line-height:1;filter:var(--ig,none)}  /* force colour-emoji to a flat white/black silhouette */
+  .layer .sw .sw-g{display:inline-block;font-style:normal;line-height:1;filter:var(--ig,none);font-family:var(--emoji)}  /* force colour-emoji to a flat white/black silhouette */
   .layer.off .sw{opacity:.45}
   .layer .nm{flex:1;font-size:.92rem}
   .layer.off .nm{opacity:.45}
@@ -204,7 +211,11 @@
   /* tilted teardrop: the 50% 50% 50% 0 radius makes the drop point down-left (the look we want) with
      NO rotate — so the glyph inside stays upright on its own (don't rotate .cc-pin or the span) */
   .cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(20,22,14,.4);border:2px solid var(--paper)}
-  .cc-pin span{font-size:.85rem;line-height:1}
+  .cc-pin span{font-size:.85rem;line-height:1;font-family:var(--emoji)}
+  /* Every remaining surface that prints a category glyph. Without --emoji these
+     draw tofu boxes on any machine whose browser has no colour-emoji font —
+     which is silent: the pin still renders, it just says nothing. */
+  .cc-g{font-family:var(--emoji);font-style:normal}
   .cc-pin.cur::after{content:"";position:absolute;width:6px;height:6px;background:var(--paper);border-radius:50%;top:-3px;right:-3px;transform:rotate(45deg)}
   .cc-pin.pending{border-color:#D92D20;border-width:3px}
   /* community tier (07-15 decisions B/D): same per-type marker, lighter — no new icon set.
@@ -530,7 +541,7 @@
   .cc-near-list{list-style:none;margin:0;padding:0}
   .cc-near{display:flex;align-items:center;gap:.55rem;width:100%;background:none;border:none;border-bottom:1px solid rgba(239,230,212,.1);padding:.5rem 0;color:var(--paper);font-family:var(--sans);font-size:.9rem;text-align:left;cursor:pointer}
   .cc-near:hover{color:var(--trail)}
-  .cc-near-k{width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.6rem;font-weight:700;flex:none}
+  .cc-near-k{width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--emoji);font-size:.6rem;font-weight:700;flex:none}
   .cc-near-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cc-near em{font-style:normal;font-family:var(--mono);font-size:.62rem;color:rgba(239,230,212,.55);flex:none}
   .cc-near-empty{color:rgba(239,230,212,.5);font-size:.88rem;padding:.4rem 0}
