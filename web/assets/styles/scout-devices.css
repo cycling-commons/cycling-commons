@@ -46,3 +46,8 @@
 @media(max-width:560px){
   .scout-devices.compact{display:none}   /* the CTA text carries it on a phone */
 }
+
+/* The Scout mark (partials/_scout_logo.html.twig). A hard-edged square tile
+   reads as an asset dropped on the page; a small radius makes it look placed.
+   Size comes from the partial, so a future SVG/WebP swap needs no CSS change. */
+.scout-logo{border-radius:7px;display:block}
