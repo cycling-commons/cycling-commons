@@ -1,0 +1,69 @@
+web/translations/messages.en.yaml
+  s_bbe01d4f023787::t_1903201eb63e67 1943
+  s_bbe01d4f023787::t_37d54b27481cb5 2869-2874
+web/src/Command/ExpireClosuresCommand.php
+  s_bbe01d4f023787::t_b04886d28ec28c 1-74
+web/src/Catalog/Entity/ChangeHistory.php
+  s_bbe01d4f023787::t_b2d553137df3a8 26-36
+web/translations/messages.fr.yaml
+  s_bbe01d4f023787::t_37d54b27481cb5 2843-2848
+  s_bbe01d4f023787::t_1903201eb63e67 1627
+web/translations/messages.nl.yaml
+  s_bbe01d4f023787::t_1903201eb63e67 1627
+  s_bbe01d4f023787::t_37d54b27481cb5 2843-2848
+web/src/Catalog/ChangeHistoryView.php
+  s_bbe01d4f023787::t_8a19c32a0ed8cf 69-76
+  s_bbe01d4f023787::t_e6b676c96a2f55 9,26-36
+web/tests/Catalog/ClosureExpiryServiceTest.php
+  s_bbe01d4f023787::t_e83948fb493692 1-9,11-198
+  s_bbe01d4f023787::t_29b443d9e06d92 10
+web/src/Catalog/ClosureLifetime.php
+  s_bbe01d4f023787::t_f01dcbecf91631 1-87
+web/translations/messages.de.yaml
+  s_bbe01d4f023787::t_1903201eb63e67 1630
+  s_bbe01d4f023787::t_37d54b27481cb5 2846-2851
+web/src/Controller/MapController.php
+  s_bbe01d4f023787::t_2623884e63beb9 182-184
+  s_bbe01d4f023787::t_7470a3165fca62 365,367-376
+  s_bbe01d4f023787::t_0623c03318f0b0 11
+web/translations/messages.es.yaml
+  s_bbe01d4f023787::t_1903201eb63e67 1956
+  s_bbe01d4f023787::t_37d54b27481cb5 2884-2889
+wiki/data-priority.md
+  s_bbe01d4f023787::t_ebc32bd0815bae 113-120
+web/src/Catalog/CatalogFormRegistry.php
+  s_bbe01d4f023787::t_fc205739f33b5d 200-207
+web/src/Catalog/ClosureExpiryService.php
+  s_bbe01d4f023787::t_a6b6c80bdf5f27 1-42,44-157
+  s_bbe01d4f023787::t_961dae97f36033 43
+web/tests/Catalog/ClosureLifetimeTest.php
+  s_bbe01d4f023787::t_29b443d9e06d92 85
+  s_bbe01d4f023787::t_97638a4b9fe310 1-84,86-90
+docs/specs/edit-items/F-hazards.md
+  s_bbe01d4f023787::t_6e6c6be0977052 25-26,45-77
+  s_bbe01d4f023787::t_d61806214801e2 78
+web/assets/map/drawer.js
+  s_bbe01d4f023787::t_2623884e63beb9 668,678
+  s_bbe01d4f023787::t_a2bf2ba74e47c2 653-660
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "2aa9f99f0ba606626956fa349c82988667fe2485",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
