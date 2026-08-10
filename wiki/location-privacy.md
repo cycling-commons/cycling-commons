@@ -6,6 +6,13 @@ The map guesses roughly where you are so it can show *your* area first instead o
 region on Earth, and it lets you jump straight to a region by search or by tapping the map. None of
 that needs a cookie banner. Here's exactly why.
 
+!!! note "This is not the privacy policy"
+    The [privacy policy](https://cyclingcommons.org/privacy) is the authoritative document: what is
+    collected, on what legal basis, for how long, and what rights you have. This page answers one
+    question that policy deliberately doesn't go into detail on — *why is there no cookie banner on
+    the map?* — because answering it properly needs the mechanics below. Where the two touch, the
+    policy wins.
+
 !!! note "The short version"
     - Guessing your country from your browser's timezone happens **only in your browser** and is
       **stored nowhere** — not in a cookie, not in local storage, not on our servers.
@@ -17,7 +24,8 @@ that needs a cookie banner. Here's exactly why.
       you can see it, and you can remove it. Details below.
     - There's no advertising, no cross-site tracking, and no device fingerprinting anywhere in this
       feature.
-    - Our analytics (self-hosted **Umami**) is aggregate and cookieless, and its dashboard is public.
+    - Our analytics sets no cookies either; what it does collect is in the
+      [privacy policy](https://cyclingcommons.org/privacy).
     - Put together, none of this crosses the threshold that requires a cookie/consent banner — so
       the map doesn't show you one.
 
@@ -66,6 +74,9 @@ exact about:
 - Signed-out visitors get the same feature entirely inside the browser: the circle lives in local
   storage, rounded the same way, and never reaches us.
 
+It is listed in the [privacy policy](https://cyclingcommons.org/privacy) too, under what an account
+holds — that is the authoritative wording; the detail here is about how the *map* uses it.
+
 Both of those — the region choice in your browser and the base location on your account — are
 **first-party, functional** preferences, the same category as remembering your interface
 language or your last zoom level. It isn't used to track you across sites, it isn't shared with any
@@ -75,13 +86,12 @@ your own settings, and that you control by simply choosing something else, doesn
 banner under cookie-law rules built around tracking and advertising. If you never pick a scope, the
 map remembers nothing about your location at all.
 
-## Analytics: aggregate, cookieless, public
+## Analytics
 
-Cycling Commons runs its own self-hosted **Umami** analytics — no cookies, no per-visitor
-fingerprinting, no data shared with ad networks or third-party trackers. It counts things like page
-views in aggregate, not individual visitor journeys tied back to a person. Because it's aggregate and
-cookieless, it doesn't trigger a consent requirement either, and we keep its dashboard **public** —
-anyone can see the same traffic numbers we do.
+Analytics sets no cookies, so it doesn't change the banner answer above. What it does collect — and
+it does receive your IP address, which is personal data — is set out in the
+[privacy policy](https://cyclingcommons.org/privacy) under *Cookies & analytics*. That page is the
+authoritative account; this one deliberately doesn't keep a second copy of it.
 
 ## What this page does — and doesn't — cover
 
