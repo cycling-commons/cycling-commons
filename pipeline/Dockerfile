@@ -50,8 +50,20 @@ RUN pip install --no-cache-dir -r requirements.txt
 # volume inherits appuser ownership on first use.
 RUN useradd -m -U -u 1000 appuser \
     && mkdir -p /data/work && chown appuser:appuser /data/work
+
+# The source is BAKED IN, not only bind-mounted. Dev compose mounts
+# `pipeline/ → /app` on top of this so uvicorn --reload sees live edits, but
+# without this COPY the image is unusable anywhere else: a host that pulls it
+# and runs a batch job finds an empty /app and nothing to execute.
+COPY --chown=appuser:appuser . .
+
 USER appuser
 
-# App source is bind-mounted at runtime (see compose) so uvicorn --reload works.
+# This is a BATCH image. Its default must not be a resident service — prod runs
+# it to completion (`python -m coverage.run …`) and there is nothing here that
+# should listen on a port unattended. The FastAPI app in app/main.py is a dev
+# scaffold (health/db/dem diagnostics, nothing calls it); dev compose starts it
+# explicitly with its own `command:`, which is the only place a server belongs.
+# Running the image bare prints what it can do and exits.
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["python", "-m", "coverage.run", "--help"]

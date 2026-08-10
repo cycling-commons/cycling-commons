@@ -1,0 +1,15 @@
+# The image bakes the pipeline source (see Dockerfile). Keep build junk out of
+# it — these are either regenerated inside the container or local-only.
+#
+# NOTE: .dockerignore is NOT .gitignore. Patterns are matched with Go's
+# filepath.Match against the path relative to the context root, so a bare
+# `__pycache__/` matches ONLY a top-level directory of that name. Every pattern
+# that should apply at any depth needs the `**/` prefix — verified by building
+# and looking inside, because getting this wrong fails silently: the build
+# succeeds and simply ships the junk.
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/

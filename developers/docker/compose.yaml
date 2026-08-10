@@ -127,6 +127,11 @@ services:
   # ---- Python pipeline: geospatial/raster/routing + coverage batch ----------
   pipeline:
     build: ../../pipeline
+    # The image is a batch worker and defaults to no service (see its
+    # Dockerfile). The dev stack is the one place the FastAPI scaffold runs, so
+    # it asks for it explicitly rather than relying on the image default —
+    # which is what keeps "no resident HTTP service" true everywhere else.
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     environment:
       DATABASE_DSN: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}"
       DEM_DIR: /data/dem
@@ -142,7 +147,13 @@ services:
       COVERAGE_S3_SECRET: ${COVERAGE_S3_SECRET:-ccadminsecret}
       COVERAGE_PUBLIC_BASE_URL: ${COVERAGE_PUBLIC_BASE_URL:-http://localhost:9100/cc-maps}
     ports:
-      - "${PIPELINE_PORT:-8002}:8000"
+      # 8012, not 8002: host 8002 is where ELEVATION_URL expects Europe's
+      # Valhalla (the other continents sit on 8003/8004/8007, and the compose
+      # valhalla service publishes 8003). The old default collided with it, so
+      # a clone that did not copy .env.example bound the pipeline to 8002 and
+      # elevation could not start. .env.example already used 8012; this makes
+      # the fallback agree with it.
+      - "${PIPELINE_PORT:-8012}:8000"
     volumes:
       - ../../pipeline:/app
       - ${DEM_DIR:-./data/dem}:/data/dem:ro   # downloaded DEM (see README)
