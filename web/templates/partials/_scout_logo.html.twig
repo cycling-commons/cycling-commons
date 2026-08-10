@@ -1,0 +1,13 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   The Scout mark. `size` is the rendered edge in px (default 76).
+
+   Still the 500x500 JPG straight from brand-src, which is 104 kB of solid flat
+   colour — a format that costs the most for exactly the kind of art that
+   should cost the least. Replacing it is on the backlog; nothing here changes
+   when it does, since only the file behind `src` moves.
+#}
+{% set size = size|default(76) %}
+<img class="scout-logo" src="{{ asset('brand/scout-logo.jpg') }}" alt="{{ 'scout.logo_alt'|trans }}"
+     width="{{ size }}" height="{{ size }}" loading="lazy" decoding="async"
+     style="width:{{ size }}px;height:{{ size }}px">
