@@ -1,0 +1,28 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{#
+   Scout on the two devices it ships for. The bezels are CSS; the screens are
+   ordinary <img>s pointing at assets/scout/*.svg.
+
+   That split is the point: to put a real screenshot in, overwrite
+   assets/scout/garmin-screen.svg or assets/scout/android-screen.svg and change
+   nothing else. PNG works as well as SVG — object-fit crops either to the
+   frame, so only the rough aspect ratio matters.
+
+   Params:
+     compact — smaller pair for the homepage CTA (default false)
+#}
+{% set compact = compact|default(false) %}
+<div class="scout-devices{{ compact ? ' compact' : '' }}" aria-hidden="{{ compact ? 'true' : 'false' }}">
+  <figure class="dev dev-garmin">
+    <div class="screen">
+      <img src="{{ asset('scout/garmin-screen.svg') }}" alt="{{ compact ? '' : 'scout.shot_garmin_alt'|trans }}" loading="lazy" decoding="async">
+    </div>
+    {% if not compact %}<figcaption>{% trans %}scout.shot_garmin_cap{% endtrans %}</figcaption>{% endif %}
+  </figure>
+  <figure class="dev dev-phone">
+    <div class="screen">
+      <img src="{{ asset('scout/android-screen.svg') }}" alt="{{ compact ? '' : 'scout.shot_android_alt'|trans }}" loading="lazy" decoding="async">
+    </div>
+    {% if not compact %}<figcaption>{% trans %}scout.shot_android_cap{% endtrans %}</figcaption>{% endif %}
+  </figure>
+</div>

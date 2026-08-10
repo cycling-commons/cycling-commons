@@ -1,6 +1,7 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/scout-devices.css') }}" />
 <style>
   :root{
     --ink:#101E16; --paper:#EFE6D4; --paper-deep:#E2D5BC;
@@ -353,6 +354,7 @@
         <h3 style="margin:.4rem 0 .5rem">{{ 'home.scout_h'|trans }}</h3>
         <p style="max-width:60ch;line-height:1.6;color:#4a4d40">{{ 'home.scout_p'|trans }}</p>
       </div>
+      {{ include('partials/_scout_devices.html.twig', {compact: true}) }}
       <a class="btn btn-primary" href="{{ path('scout') }}">{{ 'home.scout_cta'|trans }}</a>
     </div>
   </div>

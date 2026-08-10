@@ -1,6 +1,7 @@
 {# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/scout-devices.css') }}" />
 <style>
   .shero{background:var(--ink);color:var(--paper);padding:3rem 0 2.6rem}
   .plats{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.8rem}
@@ -18,11 +19,14 @@
   .steps3 .s h4{margin:.5rem 0 .35rem}
   .steps3 .s .no{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--trail)}
   .note{font-size:.92rem;color:#4a4d40;max-width:72ch;line-height:1.6}
+  .sherolay{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(1.6rem,5vw,3.5rem);align-items:center}
+  @media(max-width:900px){.sherolay{grid-template-columns:1fr}.sherolay .scout-devices{justify-content:flex-start}}
 </style>
 {% endblock %}
 {% block body %}
 
-<div class="shero"><div class="wrap">
+<div class="shero"><div class="wrap sherolay">
+  <div>
   <div class="kicker" style="color:var(--trail)">{% trans %}scout.kicker{% endtrans %}</div>
   <h1 class="disp">{% trans %}scout.title{% endtrans %}</h1>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem;max-width:70ch">{{ 'scout.lead'|trans|rich }}</p>
@@ -37,6 +41,8 @@
     <span class="plat soon">{% trans %}scout.plat_android{% endtrans %} <span class="st">{% trans %}scout.plat_soon{% endtrans %}</span></span>
     <span class="plat planned">{% trans %}scout.plat_karoo{% endtrans %} <span class="st">{% trans %}scout.plat_planned{% endtrans %}</span></span>
   </div>
+  </div>
+  {{ include('partials/_scout_devices.html.twig') }}
 </div></div>
 
 <section class="pad"><div class="wrap">
