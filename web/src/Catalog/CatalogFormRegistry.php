@@ -197,7 +197,14 @@ final class CatalogFormRegistry
 
             ItemType::Hazards => new ItemFieldSet(
                 fields: [
-                    CatalogField::select('hazardType', 'Hazard type', ['Crosswind / fog', 'Ice / frost', 'Loose surface / gravel', 'Flooding', 'Roadworks', 'Other']),
+                    // 'Road closed' is the one hazard with an end date, and
+                    // the only reason `closedFor` below exists. Scout's Closure
+                    // tag lands here too, so a tap on a bike computer and a
+                    // typed report decay by the same rule (ClosureLifetime).
+                    CatalogField::select('hazardType', 'Hazard type', ['Crosswind / fog', 'Ice / frost', 'Loose surface / gravel', 'Flooding', 'Roadworks', 'Road closed', 'Other']),
+                    // Only meaningful when the type above is 'Road closed';
+                    // ignored otherwise. Choices are Scout's CLOSED FOR? menu.
+                    CatalogField::select('closedFor', 'If closed, for how long?', ClosureLifetime::CHOICES, default: 'Unknown'),
                     CatalogField::select('severity', 'Severity', ['Low', 'Moderate', 'High']),
                     CatalogField::select('worstWhen', 'When is it worst?', ['Autumn / winter', 'Year-round', 'After rain', 'Windy days']),
                     CatalogField::select('stillPresent', 'Still present?', ['Yes — confirmed today', 'Reduced', 'Gone — clear now']),

@@ -23,6 +23,17 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_history_item_time', columns: ['item_id', 'changed_at'])]
 class ChangeHistory
 {
+    /**
+     * `changed_by` for a change nobody made: the automatic expiry of a stale
+     * closure (ClosureExpiryService), and anything like it later.
+     *
+     * Zero is safe as a sentinel because user ids are generated and start at 1.
+     * It must never be handed to RiderPseudonym, which would mint a plausible
+     * "rider#xxxx" for a person who does not exist and put it on a public
+     * change log — ChangeHistoryView special-cases it instead.
+     */
+    public const int SYSTEM_ACTOR = 0;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'bigint')]

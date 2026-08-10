@@ -650,6 +650,14 @@ function stateWord(v){
   return v;
 }
 
+// The history endpoint is publicly cached, so it cannot translate its own
+// strings — an automatic change comes back as the literal token 'system' and
+// the label is resolved here, where the locale is known. Everything else is a
+// rider#hash and passes through untouched.
+function whoLabel(who){
+  return who === 'system' ? (D.historyAuto || 'automatically') : who;
+}
+
 function historyRow(h){
   const isEmpty = v => v===null || v===undefined || v==='';
   const isPhotoField = h.field === 'photos' || h.field === 'photo';
@@ -657,7 +665,7 @@ function historyRow(h){
     return `<li class="cc-h-row">
       <span class="cc-h-field">${escPend(D.stateField||'Status')}</span>
       <span class="cc-h-diff">${escPend(stateWord(h.oldValue))} → ${escPend(stateWord(h.newValue))}</span>
-      <span class="cc-h-meta">${escPend(h.who)} · <time datetime="${escPend(h.changedAt)}">${escPend(h.when)}</time></span>
+      <span class="cc-h-meta">${escPend(whoLabel(h.who))} · <time datetime="${escPend(h.changedAt)}">${escPend(h.when)}</time></span>
     </li>`;
   }
   const ov = isPhotoField ? escPend(photoCount(h.oldValue))
@@ -667,7 +675,7 @@ function historyRow(h){
   return `<li class="cc-h-row">
     <span class="cc-h-field">${escPend(h.field)}</span>
     <span class="cc-h-diff">${ov} → ${nv}</span>
-    <span class="cc-h-meta">${escPend(h.who)} · <time datetime="${escPend(h.changedAt)}">${escPend(h.when)}</time></span>
+    <span class="cc-h-meta">${escPend(whoLabel(h.who))} · <time datetime="${escPend(h.changedAt)}">${escPend(h.when)}</time></span>
   </li>`;
 }
 // Empty history (never-edited item) renders nothing — spec W5/C1-T3

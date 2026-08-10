@@ -110,9 +110,14 @@ flowchart TD
       independent confirmation, and the record's state is changed only by a
       curator. The tiered X below, and the modifiers under it, are the design
       for that gate, not a description of it.
-    - **Decay is designed, not built.** Nothing auto-stales after N days yet.
-      A "road closed" still needs a human to clear it, which is precisely the
-      gap Manifesto §VII names.
+    - **Decay is built for closures, and only for closures.** A hazard reported
+      as *Road closed* carries the reporter's own answer to "closed for how
+      long?" — today, days, weeks, months — and retires itself once that window
+      passes, unless somebody confirms it is still shut, which restarts the
+      clock. Retired means it stops being shown, not deleted: the closure was
+      true when it was reported, and keeping it is what makes a repeat closure
+      legible next year. Nothing else auto-stales yet; a hazard with no stated
+      end date still needs a human to clear it.
 
     The potable/labelling rule in §3 and the view-mode gate in §4 *are* shipped
     as written.

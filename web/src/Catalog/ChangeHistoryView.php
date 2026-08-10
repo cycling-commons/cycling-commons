@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Catalog\Entity\ChangeHistory;
 use App\Moderation\RelativeTime;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -22,6 +23,17 @@ use Symfony\Component\Clock\ClockInterface;
  */
 final class ChangeHistoryView
 {
+    /**
+     * The `who` value for an automatic change — a TOKEN, not prose.
+     *
+     * This endpoint is public and cacheable (max-age 60), so its body must not
+     * vary by locale: translating here would serve one language's word to
+     * every reader who hit the same cached URL. The client maps this token to
+     * a translated label (`d.historyAuto`), the way it already does for every
+     * other drawer string.
+     */
+    public const string SYSTEM_LABEL = 'system';
+
     /** Fields whose value is a photo gallery, reported as a count rather than dumped. */
     private const array PHOTO_FIELDS = ['photos' => true, 'photo' => true];
 
@@ -54,7 +66,14 @@ final class ChangeHistoryView
                 'field' => $field,
                 'oldValue' => $this->decode($r['old_value'], $field),
                 'newValue' => $this->decode($r['new_value'], $field),
-                'who' => RiderPseudonym::for($r['changed_by']),
+                // An automatic expiry has no author. Handing 0 to
+                // RiderPseudonym would mint a plausible "rider#xxxx" for a
+                // person who does not exist and publish it on the item's
+                // change log — a fabricated contributor, on the one surface
+                // whose whole job is provenance.
+                'who' => ChangeHistory::SYSTEM_ACTOR === (int) $r['changed_by']
+                    ? self::SYSTEM_LABEL
+                    : RiderPseudonym::for($r['changed_by']),
                 'when' => RelativeTime::ago($changedAt, $now),
                 'changedAt' => $changedAt->format(\DateTimeInterface::ATOM),
             ];

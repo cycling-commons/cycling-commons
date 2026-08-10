@@ -8,6 +8,7 @@ use App\Catalog\BikeType;
 use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
 use App\Catalog\ChangeHistoryView;
+use App\Catalog\ClosureExpiryService;
 use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
 use App\Catalog\RegionRegistryProvider;
@@ -178,6 +179,9 @@ final class MapController extends AbstractController
             'source' => 'd_source', 'editItem' => 'd_edit_item', 'fixLocation' => 'd_fix_location',
             'voteRound' => 'd_vote_round', 'downloadGpx' => 'd_download_gpx',
             'proposedChange' => 'd_proposed_change', 'history' => 'd_history', 'initialEntry' => 'd_initial_entry',
+            // Author of an automatic change (a closure that reached its stated
+            // window). The endpoint emits a token; the label is translated here.
+            'historyAuto' => 'd_history_auto',
             // Before/after switch on a pending climb's proposed shape.
             'shapeOnMap' => 'd_shape_on_map', 'shapeBefore' => 'd_shape_before', 'shapeAfter' => 'd_shape_after',
             'itemProposed' => 'd_item_proposed',
@@ -358,8 +362,18 @@ final class MapController extends AbstractController
      * (unverified/verified rows).
      */
     #[Route('/map/catalog.json', name: 'map_catalog', methods: ['GET'])]
-    public function catalog(Request $request, CatalogProvider $catalog): Response
+    public function catalog(Request $request, CatalogProvider $catalog, ClosureExpiryService $closures): Response
     {
+        // A closure past the window its reporter stated must stop being served
+        // (ClosureLifetime). The scheduled command is the mechanism; this is
+        // the safety net, rate-limited to once an hour, because docs/TODO.md
+        // records that nothing on the worker host runs the timers yet — and a
+        // decay nobody runs is the same lie as no decay at all.
+        //
+        // Before the payload is built, so an expiry lands in the very response
+        // that would otherwise have carried the stale closure.
+        $closures->sweepOpportunistically();
+
         $json = $catalog->json();
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));

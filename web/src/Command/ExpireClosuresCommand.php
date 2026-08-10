@@ -1,0 +1,74 @@
+<?php
+
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
+
+declare(strict_types=1);
+
+namespace App\Command;
+
+use App\Catalog\ClosureExpiryService;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+/**
+ * Retires road closures whose stated window has run out.
+ *
+ * Dry-run by default and safe to re-run, like every other catalog maintenance
+ * command here. Nothing is deleted: an expired closure moves to
+ * `ItemState::Retired`, which is already outside the served states, so it stops
+ * rendering while its row, history and confirmations stay.
+ *
+ * Install this on the worker host beside `app:moderation:gc` and
+ * `app:media:gc` — the decay promise in wiki/data-priority.md is only kept by
+ * something that actually runs. Until a timer exists, the map read path sweeps
+ * opportunistically at most once an hour.
+ */
+#[AsCommand(
+    name: 'app:catalog:expire-closures',
+    description: 'Retire road closures past the window their reporter stated',
+)]
+final class ExpireClosuresCommand extends Command
+{
+    public function __construct(private readonly ClosureExpiryService $expiry)
+    {
+        parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->addOption('write', null, InputOption::VALUE_NONE, 'Actually retire them (default is a dry run)');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+        $write = (bool) $input->getOption('write');
+
+        $due = $write ? $this->expiry->sweep() : $this->expiry->due();
+
+        if ([] === $due) {
+            $io->success('No closures are past their window.');
+
+            return Command::SUCCESS;
+        }
+
+        $io->table(
+            ['id', 'name', 'closed for', 'last seen', 'expired'],
+            array_map(static fn (array $r): array => [
+                $r['id'], $r['name'], $r['closedFor'], $r['observedAt'], $r['expiresAt'],
+            ], $due),
+        );
+
+        $io->{$write ? 'success' : 'warning'}(sprintf(
+            '%d closure(s) %s.',
+            \count($due),
+            $write ? 'retired' : 'would be retired — re-run with --write',
+        ));
+
+        return Command::SUCCESS;
+    }
+}
