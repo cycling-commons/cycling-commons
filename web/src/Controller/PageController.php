@@ -221,4 +221,20 @@ final class PageController extends AbstractController
             'nav_active' => '',
         ]);
     }
+
+    /**
+     * Scout, the CC Tagger — the field recorder the Commons is fed from.
+     *
+     * Reached from the homepage CTA rather than the main nav: it is one
+     * companion app, not a top-level section of the atlas.
+     */
+    #[Route('/scout', name: 'scout')]
+    public function scout(): Response
+    {
+        return $this->render('pages/scout.html.twig', [
+            'page_title' => 'meta.scout_title',
+            'page_description' => 'meta.scout_description',
+            'nav_active' => '',
+        ]);
+    }
 }

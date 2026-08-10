@@ -1,0 +1,79 @@
+{# SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0 #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<style>
+  .shero{background:var(--ink);color:var(--paper);padding:3rem 0 2.6rem}
+  .plats{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.8rem}
+  .plat{display:inline-flex;align-items:center;gap:.55rem;border:1.5px solid rgba(239,230,212,.28);border-radius:8px;padding:.7rem 1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;min-height:44px}
+  a.plat:hover{border-color:var(--trail);background:rgba(200,146,58,.12)}
+  .plat .st{font-size:.6rem;letter-spacing:.1em;color:rgba(239,230,212,.55)}
+  .plat.soon,.plat.planned{opacity:.72}
+  .plat.live .st{color:var(--trail)}
+  .tags-tbl{width:100%;border-collapse:collapse;margin-top:1.2rem}
+  .tags-tbl th{text-align:left;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;padding:.6rem .8rem;border-bottom:1px solid rgba(20,22,14,.15)}
+  .tags-tbl td{padding:.75rem .8rem;border-bottom:1px solid rgba(20,22,14,.08);font-size:.93rem;vertical-align:top}
+  .tags-tbl td.k{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;color:var(--ink)}
+  .tags-tbl td .opts{display:block;font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:#7a7d6c;margin-top:.3rem}
+  .steps3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.4rem;margin-top:1.6rem}
+  .steps3 .s h4{margin:.5rem 0 .35rem}
+  .steps3 .s .no{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--trail)}
+  .note{font-size:.92rem;color:#4a4d40;max-width:72ch;line-height:1.6}
+</style>
+{% endblock %}
+{% block body %}
+
+<div class="shero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}scout.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}scout.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem;max-width:70ch">{{ 'scout.lead'|trans|rich }}</p>
+
+  <div class="plats">
+    {# Garmin is live and links to the real store listing. The other two say
+       what they are instead of pretending — an unlinked "download" would be the
+       fake-mechanism pattern the go-live gate exists to catch. #}
+    <a class="plat live" href="https://apps.garmin.com/apps/7849af70-3769-4143-bea7-8c1ea5e5f847" rel="noopener">
+      {% trans %}scout.plat_garmin{% endtrans %} <span class="st">{% trans %}scout.plat_available{% endtrans %}</span>
+    </a>
+    <span class="plat soon">{% trans %}scout.plat_android{% endtrans %} <span class="st">{% trans %}scout.plat_soon{% endtrans %}</span></span>
+    <span class="plat planned">{% trans %}scout.plat_karoo{% endtrans %} <span class="st">{% trans %}scout.plat_planned{% endtrans %}</span></span>
+  </div>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <h2 style="max-width:none">{% trans %}scout.what_h{% endtrans %}</h2>
+  <p class="note">{{ 'scout.what_p1'|trans|rich }}</p>
+  <p class="note" style="margin-top:.9rem">{{ 'scout.what_p2'|trans|rich }}</p>
+
+  <div class="steps3">
+    <div class="s"><span class="no">{% trans %}scout.step1_no{% endtrans %}</span><h4>{% trans %}scout.step1_h{% endtrans %}</h4><p class="note">{% trans %}scout.step1_p{% endtrans %}</p></div>
+    <div class="s"><span class="no">{% trans %}scout.step2_no{% endtrans %}</span><h4>{% trans %}scout.step2_h{% endtrans %}</h4><p class="note">{% trans %}scout.step2_p{% endtrans %}</p></div>
+    <div class="s"><span class="no">{% trans %}scout.step3_no{% endtrans %}</span><h4>{% trans %}scout.step3_h{% endtrans %}</h4><p class="note">{% trans %}scout.step3_p{% endtrans %}</p></div>
+  </div>
+</div></section>
+
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap">
+  <h2 style="max-width:none">{% trans %}scout.tags_h{% endtrans %}</h2>
+  <p class="note">{% trans %}scout.tags_lead{% endtrans %}</p>
+  <table class="tags-tbl">
+    <thead><tr><th>{% trans %}scout.tags_col_tag{% endtrans %}</th><th>{% trans %}scout.tags_col_what{% endtrans %}</th></tr></thead>
+    <tbody>
+      <tr><td class="k">{% trans %}scout.tag_resupply{% endtrans %}</td><td>{% trans %}scout.tag_resupply_p{% endtrans %}<span class="opts">WATER · FOOD · REPAIR</span></td></tr>
+      <tr><td class="k">{% trans %}scout.tag_closure{% endtrans %}</td><td>{% trans %}scout.tag_closure_p{% endtrans %}<span class="opts">TODAY · DAYS · WEEKS · MONTHS · UNKNOWN</span></td></tr>
+      <tr><td class="k">{% trans %}scout.tag_surface{% endtrans %}</td><td>{% trans %}scout.tag_surface_p{% endtrans %}<span class="opts">ASPHALT · CONCRETE · PAVING · SETT · COBBLES · GRAVEL · DIRT · SAND · END</span></td></tr>
+      <tr><td class="k">{% trans %}scout.tag_notice{% endtrans %}</td><td>{% trans %}scout.tag_notice_p{% endtrans %}<span class="opts">POTHOLES · CROSSING · CORNER · OTHER</span></td></tr>
+      <tr><td class="k">{% trans %}scout.tag_scenery{% endtrans %}</td><td>{% trans %}scout.tag_scenery_p{% endtrans %}<span class="opts">NATURE · HISTORY · CULTURE · VIEW · ARCHITECT · UNKNOWN</span></td></tr>
+      <tr><td class="k">{% trans %}scout.tag_other{% endtrans %}</td><td>{% trans %}scout.tag_other_p{% endtrans %}</td></tr>
+      <tr><td class="k">{% trans %}scout.tag_radar{% endtrans %}</td><td>{% trans %}scout.tag_radar_p{% endtrans %}</td></tr>
+    </tbody>
+  </table>
+</div></section>
+
+<section class="pad"><div class="wrap">
+  <h2 style="max-width:none">{% trans %}scout.privacy_h{% endtrans %}</h2>
+  <p class="note">{{ 'scout.privacy_p'|trans|rich }}</p>
+  <p class="note" style="margin-top:.9rem">
+    {% trans %}scout.standalone_p{% endtrans %}
+    <a href="{{ path('privacy') }}">{% trans %}scout.privacy_link{% endtrans %}</a>
+  </p>
+</div></section>
+{% endblock %}

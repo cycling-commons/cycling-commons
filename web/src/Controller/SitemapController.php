@@ -47,6 +47,7 @@ final class SitemapController extends AbstractController
         ['coverage', 'daily'],
         ['about', 'monthly'],
         ['join', 'monthly'],
+        ['scout', 'monthly'],
         ['contributors', 'weekly'],
         ['developers', 'monthly'],
         ['licenses', 'yearly'],
