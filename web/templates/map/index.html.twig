@@ -259,7 +259,10 @@
       <button class="lg-toggle" id="lgToggle" type="button" aria-label="{{ 'map.legend_aria'|trans }}" aria-expanded="false">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
-      <h4>{{ 'item_type.road-surface.label'|trans }} · A</h4>
+      {# The key serves BOTH the curated A layer and the Surfaces tile skin —
+         same seven classes, same colours, deliberately (SURFACE_STYLE is
+         shared). Dropping the "· A" because it is no longer only A's key. #}
+      <h4>{{ 'item_type.road-surface.label'|trans }}</h4>
       <div class="skey">
         <div class="skey-row"><span class="skey-ln" style="--sc:#3E9C8A"></span>{{ 'map.legend_cycleway'|trans }}</div>
         <div class="skey-row"><span class="skey-ln" style="--sc:#4E6E66"></span>{{ 'map.legend_paved'|trans }}</div>

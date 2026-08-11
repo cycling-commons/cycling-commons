@@ -101,10 +101,16 @@
   .skey{display:flex;flex-direction:column;gap:.55rem;margin-top:.1rem}
   .skey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--paper)}
   .skey-ln{width:34px;height:4px;border-radius:2px;flex:none;background:var(--sc)}
-  /* gaps use the map's line casing colour (#FBF4E4), not the dark panel — so the swatch reads
-     colour-over-white exactly like the dashed surface lines on the map */
-  .skey-ln.dash{background:repeating-linear-gradient(90deg,var(--sc) 0 8px,#FBF4E4 8px 13px)}
-  .skey-ln.dot{background:repeating-linear-gradient(90deg,var(--sc) 0 3px,#FBF4E4 3px 7px)}
+  /* Gaps are TRANSPARENT, not white.
+     They used to be painted #FBF4E4 to match the white casing the curated A
+     layer draws under its lines — true of that layer, and false of everything
+     else. The surface tile skin has no casing (a white casing under every road
+     in a country is a smear, not a map), so its dashes show terrain through the
+     gaps, and a reader comparing legend to map saw white segments that do not
+     exist (owner-reported 2026-08-11). The colour and the pattern are the
+     information; the casing is a rendering nicety of one layer. */
+  .skey-ln.dash{background:repeating-linear-gradient(90deg,var(--sc) 0 8px,transparent 8px 13px)}
+  .skey-ln.dot{background:repeating-linear-gradient(90deg,var(--sc) 0 3px,transparent 3px 7px)}
   .search{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(239,230,212,.3);color:var(--paper);font-family:var(--sans);font-size:.95rem;padding:.5rem 0;outline:none}
   .search::placeholder{color:rgba(239,230,212,.45)}
   .search:focus{border-color:var(--trail)}
