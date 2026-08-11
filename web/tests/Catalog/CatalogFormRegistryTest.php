@@ -214,4 +214,43 @@ final class CatalogFormRegistryTest extends TestCase
             }
         }
     }
+
+    public function testNoChoiceNamesOneRegionsLocalBrand(): void
+    {
+        // RAVeL is Wallonia's greenway network. It sat in the A-layer traffic
+        // dropdown that now describes twelve countries, where it was both
+        // parochial and simply wrong (owner review 2026-08-12). The general
+        // rule it stands for: a choice a rider picks from is vocabulary, and
+        // vocabulary may not assume which country they are in.
+        $local = ['RAVeL', 'Knooppunt', 'Bundesstraße', 'Sustrans'];
+        foreach (ItemType::cases() as $type) {
+            foreach ($this->registry->for($type)->all() as $field) {
+                foreach ($field->choices as $choice) {
+                    foreach ($local as $brand) {
+                        self::assertStringNotContainsString(
+                            $brand,
+                            $choice,
+                            "{$type->value}.{$field->name} offers '{$choice}', which names one region's network",
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    public function testTheSurfaceTrafficAndSegregationQuestionsStayTogether(): void
+    {
+        // They are one question asked twice — how much motor traffic, and is it
+        // kept off? Split across the two panes they landed pages apart on a
+        // narrow screen (owner-reported 2026-08-12).
+        $names = array_map(
+            static fn ($f) => $f->name,
+            $this->registry->for(ItemType::RoadSurface)->fields,
+        );
+        $traffic = array_search('traffic', $names, true);
+        $segregated = array_search('segregated', $names, true);
+        self::assertIsInt($traffic, 'traffic is a "Fix details" field');
+        self::assertIsInt($segregated, 'segregated moved out of "Add missing" to sit beside it');
+        self::assertSame(1, $segregated - $traffic, 'they must remain adjacent');
+    }
 }

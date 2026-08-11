@@ -42,13 +42,30 @@ final class CatalogFormRegistry
                     CatalogField::select('surface', 'Surface', SurfaceVocabulary::DECLARABLE),
                     CatalogField::select('smoothness', 'Smoothness', ['Excellent', 'Good', 'Intermediate', 'Bad', 'Very bad']),
                     CatalogField::text('width', 'Width (m)', default: '3.0'),
-                    CatalogField::select('traffic', 'Traffic', ['Quiet', 'Moderate', 'Busy', 'Car-free (RAVeL)']),
+                    // 'Car-free', not 'Car-free (RAVeL)'. RAVeL is one region's
+                    // brand for its greenway network and this layer now serves
+                    // twelve countries, so the parenthetical was both parochial
+                    // and wrong outside Wallonia (owner 2026-08-12). It is also
+                    // what the harvester has been storing all along, so the
+                    // dropdown now agrees with the data instead of adding a
+                    // second spelling of the same fact.
+                    CatalogField::select('traffic', 'Traffic', ['Quiet', 'Moderate', 'Busy', 'Car-free']),
+                    // Beside Traffic, not stranded in "Add missing": they are
+                    // one question asked twice ("how much motor traffic, and is
+                    // it kept off?"), and on a narrow screen the two sat pages
+                    // apart. The pane a field lives in is presentation — both
+                    // panes merge into one flat attribute set on submit — so
+                    // moving it changes nothing about storage.
+                    CatalogField::select('segregated', 'Segregated from cars?', self::UNKNOWN_YES_NO),
                     CatalogField::textarea('note', 'Note', 'e.g. resurfaced in 2025, or pavé through the village'),
                 ],
                 addFields: [
                     CatalogField::select('lit', 'Lit at night?', self::UNKNOWN_YES_NO),
-                    CatalogField::select('segregated', 'Segregated from cars?', self::UNKNOWN_YES_NO),
-                    CatalogField::select('seasonalClosure', 'Seasonal closure?', ['None', 'Winter', 'Forestry']),
+                    // 'Forestry work' rather than 'Forestry': the bare noun does
+                    // not say what closes the road (owner asked what it meant,
+                    // 2026-08-12). It is the logging season, when a forest track
+                    // is shut for felling and hauling.
+                    CatalogField::select('seasonalClosure', 'Seasonal closure?', ['None', 'Winter', 'Forestry work']),
                 ],
             ),
 

@@ -98,15 +98,37 @@ start, which is what resolves the region); the **item** gets the LineString.
 | Surface | select(Asphalt / Concrete / Paving stones / Sett — pavé / Compacted / Fine gravel / Gravel / Dirt / Rock) | `[OSM]` |
 | Smoothness | select(Excellent / Good / Intermediate / Bad / Very bad) | `[OSM]` |
 | Width (m) | input | `[OSM]` |
-| Traffic | select(Quiet / Moderate / Busy / Car-free (RAVeL)) | `[edit]` |
+| Traffic | select(Quiet / Moderate / Busy / Car-free) | `[edit]` |
+| Segregated from cars? | select(Unknown / Yes / No) | `[OSM]` |
 | Note | textarea | `[edit]` |
 
 ### Add missing  (type-specific)
 | Field | Control | Provenance |
 |---|---|---|
 | Lit at night? | select(Unknown / Yes / No) | `[edit]` |
-| Segregated from cars? | select(Unknown / Yes / No) | `[OSM]` |
-| Seasonal closure? | select(None / Winter / Forestry) | `[edit]` |
+| Seasonal closure? | select(None / Winter / Forestry work) | `[edit]` |
+
+**Three vocabulary/layout corrections, 2026-08-12 (owner review):**
+
+- **`Car-free`, not `Car-free (RAVeL)`.** RAVeL is Wallonia's brand for its
+  greenway network, and this layer serves twelve countries. It was also a second
+  spelling of a value the harvester already writes as plain `Car-free` (132 rows
+  against 1), so the dropdown now agrees with the data. Same reasoning retires
+  `Cycleway · RAVeL` as the *displayed* legend and drawer label — it is
+  `Cycleway` now, in five locales. The harvester's stored `Cycleway · RAVeL`
+  label stays mapped in `SurfaceVocabulary::BUCKETS`: stored values are history,
+  display is not.
+- **`Forestry work`, not `Forestry`.** The bare noun does not say what closes
+  the road. It is the logging season.
+- **Segregated sits beside Traffic**, not in "Add missing". They are one
+  question asked twice, and on a narrow screen they were pages apart. Which pane
+  a field lives in is presentation only — both merge into one flat attribute set
+  on submit — so nothing about storage moved with it.
+
+`Version20260812010000` carries the two renames across existing rows and
+undecided submissions. It reverses only the closure rename: merging two traffic
+spellings into one is a one-way door, and a `down()` that renamed all 133 rows
+back would corrupt the 132 that never carried the parenthetical.
 
 ### Report a problem
 - Wrong surface · Surface changed (resurfaced) · Blocked / impassable · Wrong location

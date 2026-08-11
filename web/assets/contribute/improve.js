@@ -574,13 +574,61 @@
       // `var` hoists the binding to this function's scope, so the search code —
       // which is shared with the climb branch, where no pin exists — can test
       // `if (placeAt)` and stay a fly-to there.
+      /* ---------- undo ----------
+         Reset without undo is a cliff: the only way back from a mis-drag was to
+         throw both pins away and start over, on a stretch that took two taps and
+         a router call to get right (owner-reported 2026-08-12). The climb editor
+         has had undo since 2026-08-03 and the rule there is the same — every
+         mutating act pushes ONE snapshot first, and the control appears only
+         once there is something to take back. */
+      var hist = [];
+      var undoCtl = document.getElementById('wzUndo');
+      var dragFrom = null;
+
+      /* A drag has already moved the marker by the time `dragend` fires, so a
+         snapshot taken then would record the state we are already in and undo
+         would do nothing visible. `moved`/`from` put the pre-drag position back
+         into the snapshot. */
+      var pushHistory = function (moved, from) {
+        hist.push({
+          pts: placed.map(function (m) { return (moved && m === moved && from) ? from : m.getLngLat().toArray(); }),
+          line: snapped
+        });
+        if (undoCtl) undoCtl.hidden = false;
+      };
+
+      /* Drop a marker WITHOUT touching history — the shared half of placing a
+         pin, prefilling one and restoring one, so the three cannot drift. */
+      var addMarker = function (lngLat) {
+        var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(lngLat).addTo(wmap);
+        m.on('dragstart', function () { dragFrom = m.getLngLat().toArray(); });
+        m.on('dragend', function () {
+          pushHistory(m, dragFrom);
+          dragFrom = null;
+          snapped = null; syncLoc(); drawSeg(); announceMove(); snapSeg();
+        });
+        placed.push(m);
+        return m;
+      };
+
+      var undo = function () {
+        var prev = hist.pop();
+        if (!prev) return;
+        placed.forEach(function (m) { m.remove(); });
+        placed.length = 0;
+        prev.pts.forEach(function (pt) { addMarker({ lng: pt[0], lat: pt[1] }); });
+        snapped = prev.line;
+        if (undoCtl) undoCtl.hidden = 0 === hist.length;
+        syncLoc();
+        drawSeg();
+      };
+
       placeAt = function (lngLat) {
         if (confirmView) return;   // compact confirm-map is view-only until expanded
         var need = LOCATE === 'segment' ? 2 : 1;
+        pushHistory();
         if (placed.length >= need) { placed.forEach(function (m) { m.remove(); }); placed.length = 0; }
-        var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(lngLat).addTo(wmap);
-        m.on('dragend', function () { snapped = null; syncLoc(); drawSeg(); announceMove(); snapSeg(); });
-        placed.push(m);
+        addMarker(lngLat);
         snapped = null;
         syncLoc();
         drawSeg();
@@ -594,8 +642,14 @@
       // same code path a tap takes — no second way for a segment to exist.
       if (LOCATE === 'segment' && hasSegment) {
         wmap.on('load', function () {
-          placeAt({ lng: segA[0], lat: segA[1] });
-          placeAt({ lng: segB[0], lat: segB[1] });
+          // addMarker, not placeAt: the stretch we opened on is the BASELINE, so
+          // undo must not offer to take the rider back to a blank map they never
+          // asked for.
+          addMarker({ lng: segA[0], lat: segA[1] });
+          addMarker({ lng: segB[0], lat: segB[1] });
+          syncLoc();
+          drawSeg();
+          snapSeg();
           var b = new maplibregl.LngLatBounds(segA, segA);
           b.extend(segB);
           wmap.fitBounds(b, { padding: 60, maxZoom: 16, duration: 0 });
@@ -636,13 +690,23 @@
 
       if (wzReset) {
         wzReset.addEventListener('click', function () {
+          // Reset is itself undoable — clearing a stretch by accident is exactly
+          // the mistake undo exists for.
+          pushHistory();
           placed.forEach(function (m) { m.remove(); });
           placed.length = 0;
+          snapped = null;
           drawSeg();
           syncLoc();
         });
         wzReset.addEventListener('keydown', function (e) {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wzReset.click(); }
+        });
+      }
+      if (undoCtl) {
+        undoCtl.addEventListener('click', undo);
+        undoCtl.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); undoCtl.click(); }
         });
       }
     }
