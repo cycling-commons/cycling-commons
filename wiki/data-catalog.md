@@ -258,8 +258,9 @@ field list; they became their own category so the map could show them as their o
 ---
 
 *Design note:* keep every field **optional and additive** — a rider adds one fact (a water tap, a gradient, a
-"closed" flag) without filling a form. Richness accretes from many small contributions, OSM-style. Required fields
-kill contribution; optional fields let the Commons grow one tap at a time.
+"closed" flag) and everything else can stay blank. Adding takes a form; confirming an existing entry does not.
+The map grows from many small contributions, OSM-style. Required fields kill contribution; optional fields let
+the Commons grow one tap at a time.
 
 ---
 

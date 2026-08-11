@@ -2,9 +2,10 @@
 
 # Contributing
 
-The Commons grows one small fact at a time. Nobody fills in a form — a rider adds a water tap, a
-gradient, a "closed" flag, and the map gets a little better. Richness accretes from many tiny
-contributions, the way OpenStreetMap was built.
+The Commons grows one small fact at a time. Confirming what is already on the map — "still here?",
+"the water is drinkable" — is a single tap, and so is a vote. Adding something new (a water tap, a
+gradient, a "closed" flag) takes a short form, never a long one. Either way the map grows in small
+pieces, the way OpenStreetMap was built.
 
 ## Ways to contribute
 
