@@ -109,9 +109,10 @@ Notes on the less obvious rows:
   data, never dataset.
 - **IP addresses** never reach the database (rate limiting is cache-backed;
   `admin_action_log` stores no IP). The platform-level IP logs named in the
-  privacy policy are **nginx access logs** — out of this spec's mechanism,
-  governed by log retention on the servers ([account-and-auth.md
-  §accounts](account-and-auth.md) owns that statement).
+  privacy policy are **nginx access *and error* logs** — out of this spec's
+  mechanism, governed by log retention on the servers. The error log is the one
+  that cannot be formatted away, so retention is the only real bound
+  ([operations.md §2a](operations.md) owns that statement).
 
 **Editorial visibility is not this spec's job.** Filtering unpublished /
 disputed / retired `item` states out of responses is application logic in the

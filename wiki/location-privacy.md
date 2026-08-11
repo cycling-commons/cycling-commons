@@ -98,7 +98,7 @@ authoritative account; this one deliberately doesn't keep a second copy of it.
 This page is specifically about the map's location and scope feature: the timezone guess, the region
 chips, search, and click-to-scope. It is not a claim that Cycling Commons holds no personal data at
 all — if you create an account, that account does hold ordinary account data (your email address, a
-securely hashed password, and standard server access logs), the same as any site with a login. None
+securely hashed password, and standard server logs, which record IP addresses), the same as any site with a login. None
 of that is used by, or shared with, the location feature described here.
 
 ## For the curious
