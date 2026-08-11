@@ -182,6 +182,14 @@ final class MapController extends AbstractController
             // Author of an automatic change (a closure that reached its stated
             // window). The endpoint emits a token; the label is translated here.
             'historyAuto' => 'd_history_auto',
+            // Surface-tile drawer: the seven canonical class names (shared with
+            // the on-map legend, so a tile line and the key read the same word)
+            // plus its two row labels.
+            'surfCycleway' => 'legend_cycleway', 'surfPaved' => 'legend_paved',
+            'surfGravel' => 'legend_gravel', 'surfCobbles' => 'legend_cobbles',
+            'surfDirt' => 'legend_dirt', 'surfRock' => 'legend_rock',
+            'surfUnverified' => 'legend_unverified',
+            'surface' => 'd_surface', 'roadType' => 'd_road_type',
             // Before/after switch on a pending climb's proposed shape.
             'shapeOnMap' => 'd_shape_on_map', 'shapeBefore' => 'd_shape_before', 'shapeAfter' => 'd_shape_after',
             'itemProposed' => 'd_item_proposed',

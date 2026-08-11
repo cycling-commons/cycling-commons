@@ -22,8 +22,11 @@
       SURFACE_STYLE is reused verbatim so a tile line and an A-item of the same
       class are the same colour and the same dash — the whole point of sharing
       the vocabulary. */
-import { map } from './map-init.js';
+import { map, flyToPin } from './map-init.js';
 import { SURFACE_CLS, surfaceStyle } from './render.js';
+import { D } from './i18n.js';
+import { layerByKey } from './catalog.js';
+import { openDrawer } from './drawer.js';
 
 /* Gated on a real URL: absent means no artifact has been built, and the rail
    must not offer a toggle for tiles that do not exist.
@@ -90,6 +93,9 @@ export function addSurfaceTiles() {
         layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
         paint,
       });
+      map.on('click', id, e => openSurfaceDrawer(e.features[0].properties, e.lngLat));
+      map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
   });
   added = true;
@@ -107,4 +113,56 @@ export function setSurfaceTiles(on) {
     .filter(l => l.id.startsWith('surftile-'))
     .forEach(l => map.setLayoutProperty(l.id, 'visibility', visible ? 'visible' : 'none'));
   return visible;
+}
+
+/** Localised name for a canonical class, falling back to the raw key. */
+export function classLabel(cls) {
+  const k = { cycleway: 'surfCycleway', paved: 'surfPaved', gravel: 'surfGravel',
+              pave: 'surfCobbles', dirt: 'surfDirt', rock: 'surfRock',
+              unverified: 'surfUnverified' }[cls];
+  return (k && D[k]) || cls;
+}
+
+/**
+ * Drawer for one tile line.
+ *
+ * Opened against the **A layer** (`layerByKey.surface`), so it wears road
+ * surface's colour, icon and label: a tile line IS road-surface data, just
+ * nobody's-curated-it-yet road-surface data.
+ *
+ * **No "improve this" action, deliberately.** The obvious move was to set
+ * `osmRef` and let the existing edit bridge build `/improve?ref=way/NNN&type=A`
+ * — materialize-on-edit, exactly as an uncurated coverage POI works. It does
+ * not work here and cannot: `ContributeController::materialize()` resolves the
+ * ref through `coverage_poi`, the POINT index, and surface lines never enter
+ * PostGIS at all (that is the whole reason country-scale lines are cheap). The
+ * lookup misses, the wizard falls through to "Pick a place to improve", and the
+ * rider gets a dead end that looks like a feature. Verified by clicking it.
+ *
+ * So the drawer links to the exact OSM way instead — which is also the honest
+ * destination: a surface tag is upstream data, and data-priority.md says
+ * upstream fixes belong upstream. Wiring a real A-item bridge needs a
+ * materialize path that does not go through coverage_poi, and that is its own
+ * piece of work.
+ */
+export function openSurfaceDrawer(p, lngLat) {
+  const layer = layerByKey.surface;
+  if (!layer) return;
+  const label = classLabel(p.cls);
+  const rec = [{ label: D.surface || 'Surface', value: label, method: 'OSM' }];
+  // The raw OSM highway value, unlocalised on purpose: it is the tag, and a
+  // rider following it back to OSM needs the word OSM uses.
+  if (p.hw) rec.push({ label: D.roadType || 'Road type', value: p.hw });
+
+  openDrawer(layer, {
+    name: label,
+    headline: label + (p.hw ? ' · ' + p.hw : ''),
+    geom: { ll: [lngLat.lat, lngLat.lng] },
+    record: rec,
+    source: 'OpenStreetMap',
+    // The exact way, not a coordinate query: we know the element id, so the
+    // source link goes straight to the object whose tags the rider is reading.
+    osmUrl: p.ref ? 'https://www.openstreetmap.org/' + p.ref : undefined,
+  });
+  flyToPin([lngLat.lng, lngLat.lat]);
 }

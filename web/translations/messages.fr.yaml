@@ -1679,6 +1679,8 @@ map:
   d_shape_after: 'Après'
   d_history: 'Historique'
   d_history_auto: 'automatiquement'
+  d_surface: 'Revêtement'
+  d_road_type: 'Type de voie'
   d_initial_entry: 'Entrée initiale — nouvel élément'
   d_recent_changes: 'Modifications récentes'
   d_mod_note_ph: 'Note facultative — une raison ou du contexte…'

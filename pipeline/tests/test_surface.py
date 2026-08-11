@@ -72,13 +72,13 @@ def test_the_selector_filters_on_highway_not_surface(contract):
 def test_geojsonl_features_carry_the_tile_contract(tmp_path, contract):
     out = tmp_path / "s.geojsonl"
     n = write_geojsonl(
-        [SurfaceWay("w42", "gravel", "track", [(4.1234567, 50.7654321), (4.2, 50.8)])],
+        [SurfaceWay("way/42", "gravel", "track", [(4.1234567, 50.7654321), (4.2, 50.8)])],
         out, ridtok="|7|", cctok="|BE|",
     )
     assert n == 1
     feature = json.loads(out.read_text().strip())
     assert feature["geometry"]["type"] == "LineString"
-    assert feature["properties"] == {"cls": "gravel", "hw": "track", "ref": "w42",
+    assert feature["properties"] == {"cls": "gravel", "hw": "track", "ref": "way/42",
                                      "ridtok": "|7|", "cctok": "|BE|"}
     # Coordinates are rounded: 6 dp is ~11 cm, and the raw doubles would inflate
     # a country-scale file for precision no renderer can show.

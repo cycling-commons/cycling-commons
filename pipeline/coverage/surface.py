@@ -40,7 +40,7 @@ from coverage.contract import Contract
 class SurfaceWay:
     """One OSM way, ready to be written as a GeoJSON LineString feature."""
 
-    ref: str                       # 'w<osm-id>' — the design's tile `ref`
+    ref: str                       # 'way/<osm-id>' — item.source_ref format
     cls: str                       # canonical class (SURFACE_STYLE key)
     highway: str                   # raw highway value, for the drawer
     coords: list[tuple[float, float]]   # [(lon, lat), …] as drawn
@@ -112,7 +112,13 @@ class _Collector(osmium.SimpleHandler):
             return
         if len(coords) < 2:
             return
-        self.ways.append(SurfaceWay(f"w{w.id}", cls, highway, coords))
+        # 'way/<id>', NOT the design sketch's 'w<id>'. This ref is what the
+        # drawer hands to /improve, and materialize-on-edit then creates an A
+        # item carrying it as source_ref — which every other path in the
+        # codebase writes and reads as "way/NNN" (CatalogProvider::curatedRefs,
+        # the coverage dedupe, the importer). A second spelling would create
+        # items that look right and dedupe against nothing.
+        self.ways.append(SurfaceWay(f"way/{w.id}", cls, highway, coords))
 
 
 def parse_surface_ways(pbf_path: Path, contract: Contract, *, untagged: bool = False) -> list[SurfaceWay]:

@@ -1682,6 +1682,8 @@ map:
   d_shape_after: 'Nachher'
   d_history: 'Verlauf'
   d_history_auto: 'automatisch'
+  d_surface: 'Belag'
+  d_road_type: 'Wegtyp'
   d_initial_entry: 'Ersteintrag — neues Element'
   d_recent_changes: 'Letzte Änderungen'
   d_mod_note_ph: 'Optionale Notiz — Grund oder Kontext…'

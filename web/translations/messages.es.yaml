@@ -2008,6 +2008,8 @@ map:
   d_shape_after: 'Después'
   d_history: 'Historial'
   d_history_auto: 'automáticamente'
+  d_surface: 'Firme'
+  d_road_type: 'Tipo de vía'
   d_initial_entry: 'Entrada inicial — elemento nuevo'
   d_recent_changes: 'Cambios recientes'
   d_mod_note_ph: 'Nota opcional — un motivo, o algo de contexto…'

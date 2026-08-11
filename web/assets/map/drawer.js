@@ -613,9 +613,13 @@ function buildRecord(layer, f){
   // feature-query view) rather than the OSM homepage. The served OSM features
   // carry no element (node/way) id, so a coordinate query is the closest we can
   // deep-link to the exact object the rider is looking at.
-  const osmHref = (f.geom && f.geom.ll)
-    ? `https://www.openstreetmap.org/query?lat=${f.geom.ll[0]}&lon=${f.geom.ll[1]}#map=18/${f.geom.ll[0]}/${f.geom.ll[1]}`
-    : 'https://www.openstreetmap.org';
+  // f.osmUrl wins when the feature knows its exact OSM element (surface tile
+  // lines carry way/<id>), because a coordinate query is only the fallback for
+  // features that have no element id at all.
+  const osmHref = f.osmUrl
+    || ((f.geom && f.geom.ll)
+      ? `https://www.openstreetmap.org/query?lat=${f.geom.ll[0]}&lon=${f.geom.ll[1]}#map=18/${f.geom.ll[0]}/${f.geom.ll[1]}`
+      : 'https://www.openstreetmap.org');
   return `<span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layer.icon}</i> ${layer.label}</span>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${desc}${diff}${elev}${len}${grad}
     <ul class="cc-d-rec">${rows}</ul>${fresh}${up}

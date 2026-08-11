@@ -1679,6 +1679,8 @@ map:
   d_shape_after: 'Na'
   d_history: 'Geschiedenis'
   d_history_auto: 'automatisch'
+  d_surface: 'Ondergrond'
+  d_road_type: 'Wegtype'
   d_initial_entry: 'Eerste invoer — nieuw element'
   d_recent_changes: 'Recente wijzigingen'
   d_mod_note_ph: 'Optionele notitie — een reden of context…'
