@@ -125,7 +125,7 @@ privacy:
   transfers_body: 'Sommige infrastructuurproviders kunnen gegevens verwerken buiten de Europese Economische Ruimte. Waar dat het geval is, steunen we op passende waarborgen — zoals de Standaard Contractuele Clausules van de Europese Commissie of een adequaatheidsbesluit.'
   h_retention: 'Hoe lang we het bewaren'
   retention_account: '<b>Accountgegevens</b> — zolang je account actief is, plus een korte respijtperiode nadat je het sluit.'
-  retention_logs: '<b>Serverlogboeken</b> — kort bewaard voor beveiliging en probleemoplossing, daarna verwijderd of geanonimiseerd.'
+  retention_logs: '<b>Serverlogboeken</b> — <b>14 dagen</b> bewaard en daarna automatisch verwijderd. Ze bevatten IP-adressen: een webserver schrijft het adres van de bezoeker in zijn foutmeldingen en biedt geen instelling om dat weg te laten. Die termijn is dus de begrenzing, niet een belofte over de inhoud.'
   retention_contributions: '<b>Bijdragen</b> — feiten die je teruggaf aan de open kaart blijven bestaan als onderdeel van de Commons (met herkomst), ook nadat je vertrekt; het zijn geen persoonsgegevens over jou.'
   retention_consent: '<b>Licentietoestemmingen</b> — wanneer je een foto onder licentie aan de Commons geeft, leggen we vast dat je akkoord ging, met welke tekst precies, en wanneer. We bewaren die vastlegging onbeperkt, en ze blijft bestaan nadat je je account sluit: het is ons bewijs dat de licentie is verleend, dat we nodig kunnen hebben om een rechtsvordering in te stellen of te verdedigen (art. 17(3)(e)). Ze bevat een accountverwijzing en verder niets over jou, en zodra het account weg is, identificeert die verwijzing hier niemand meer.'
   h_rights: 'Jouw rechten'

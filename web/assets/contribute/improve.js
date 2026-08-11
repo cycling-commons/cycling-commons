@@ -59,6 +59,11 @@
   var segA = _pair(_q.get('sa'));
   var segB = _pair(_q.get('sb'));
   var hasSegment = !!(segA && segB);
+  // "This is correct" (?confirm=1): the rider is agreeing with the location as
+  // well as the surface, so the wizard opens on the details rather than making
+  // them press Next past a map they have already accepted. Only meaningful with
+  // a known stretch — without one there is nothing to have confirmed.
+  var CONFIRM_SEGMENT = _q.get('confirm') === '1' && hasSegment;
 
   // "◎ Fix location" bridge from the drawer: open the LOCATE editor directly
   // in expanded (change) mode, because the intent is explicitly to move the pin.
@@ -594,6 +599,11 @@
           var b = new maplibregl.LngLatBounds(segA, segA);
           b.extend(segB);
           wmap.fitBounds(b, { padding: 60, maxZoom: 16, duration: 0 });
+          // Skip AFTER the pins exist, never before: step 2 with an empty
+          // hidden segment field would submit a located type with no location
+          // and be refused at the very end, which is the worst place to find
+          // out. The rider can still step back to the map.
+          if (CONFIRM_SEGMENT) step(2);
         });
       }
 

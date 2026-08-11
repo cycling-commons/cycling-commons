@@ -453,12 +453,18 @@ function buildRecord(layer, f){
       const p2 = c => `${c[0].toFixed(6)},${c[1].toFixed(6)}`;
       refQ += `&sa=${encodeURIComponent(p2(f.segmentEnds.a))}&sb=${encodeURIComponent(p2(f.segmentEnds.b))}`;
     }
+    // What OSM says about this way is a CURRENT DETAIL, so the form shows it —
+    // on the edit link too, not only on the confirm one. "Fix details" opening
+    // with an empty Surface asks the rider to retype what we just told them in
+    // the drawer, and an empty dropdown reads as "we know nothing here".
+    if(f.confirmClass) refQ += `&surface=${encodeURIComponent(f.confirmClass)}`;
     edit = `<a class="cc-d-act edit" href="/improve?${refQ}">✎ ${D.editItem||'Edit this item'}</a>`;
-    // "It is already right" is the SAME submission with the class pre-chosen.
-    // The first confirmation is what mints our own item; after that the item
-    // exists and ordinary one-tap confirmation applies to it.
+    // "It is already right" is the SAME submission, one step shorter: the
+    // location is being confirmed too, so the wizard opens on the details
+    // instead of on the map. The first confirmation is what mints our own item;
+    // after that the item exists and ordinary one-tap confirmation applies.
     if(f.confirmClass){
-      edit += `<a class="cc-d-act confirm-surface" href="/improve?${refQ}&surface=${encodeURIComponent(f.confirmClass)}">✓ ${D.surfaceConfirm||'This is correct'}</a>`;
+      edit += `<a class="cc-d-act confirm-surface" href="/improve?${refQ}&confirm=1">✓ ${D.surfaceConfirm||'This is correct'}</a>`;
     }
   }
   let moderate = '';

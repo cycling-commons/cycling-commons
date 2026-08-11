@@ -125,7 +125,7 @@ privacy:
   transfers_body: 'Some infrastructure providers may process data outside the European Economic Area. Where they do, we rely on appropriate safeguards — such as the European Commission''s Standard Contractual Clauses or an adequacy decision.'
   h_retention: 'How long we keep it'
   retention_account: '<b>Account data</b> — while your account is open, plus a short grace period after you close it.'
-  retention_logs: '<b>Server logs</b> — kept briefly for security and troubleshooting, then deleted or anonymised.'
+  retention_logs: '<b>Server logs</b> — kept for <b>14 days</b>, then deleted automatically. They contain IP addresses: a web server writes the visitor''s address into its error entries and offers no setting that removes it, so the time limit is what bounds this rather than any promise about the contents.'
   retention_contributions: '<b>Contributions</b> — facts you give back to the open map persist as part of the Commons (with provenance), even after you leave; they are not personal data about you.'
   retention_consent: '<b>Licence consents</b> — when you licence a photo to the Commons we record that you agreed, the exact wording you agreed to, and when. We keep that record indefinitely, and it survives closing your account: it is our evidence that the licence was granted, which we may need to establish or defend a legal claim (Art. 17(3)(e)). It holds an account reference and nothing else about you, and once the account is gone that reference no longer identifies anyone here.'
   h_rights: 'Your rights'

@@ -49,8 +49,17 @@ actions that are the **same submission** one decision apart:
 
 | Action | What it does |
 |---|---|
-| ✎ Edit this item | opens `/improve?ref=way/NNN&type=A&sa=…&sb=…` — the add wizard in segment mode |
-| ✓ This is correct | the same URL plus `&surface=<tile class>`, so the class arrives already chosen |
+| ✎ Edit this item | opens `/improve?ref=way/NNN&type=A&sa=…&sb=…&surface=<tile class>` — the add wizard in segment mode, on the map step |
+| ✓ This is correct | the same URL plus `&confirm=1`, which opens on the **details** instead |
+
+**Both prefill the surface.** What OSM says about the way is a *current detail*,
+and the "Fix details" step exists to show current details — opening it with an
+empty Surface dropdown asks the rider to retype what the drawer just told them,
+and reads as "we know nothing here" (owner-reported 2026-08-12). The difference
+between the two actions is therefore not the data, it is the step: confirming
+means the location is right too, so that step is skipped. The skip happens only
+*after* the pins are placed — jumping to the details with an empty segment field
+would fail at submit, which is the worst place to discover it.
 
 There is no separate "agree with OSM" store. Confirming **mints our own A
 item** carrying `way/NNN` as `source_ref` (materialize-on-edit,
