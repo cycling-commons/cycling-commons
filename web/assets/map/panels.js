@@ -30,6 +30,7 @@ import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
 import { curScope, inScope } from './scope-ui.js';
+import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
 
 // Bindings a later init reads, so they cannot stay `const` inside the init that
 // looks them up: `app` is assigned by initRailChrome(), the two facet <select>s
@@ -92,6 +93,15 @@ export function initLayerList(){
     const seg=document.getElementById('baseSeg');
     if(seg) seg.hidden=true;
   }
+  // Road-surface reference skin (surface-tiles.js). Off by default and only
+  // offered when an artifact exists; SURFACE_TILES_ON is false when
+  // CC_SURFACE_URL is absent, which is every region that has not been built.
+  const surfBtn=document.getElementById('ovSurface');
+  if(surfBtn && surfaceTilesConfigured()){
+    surfBtn.hidden=false;
+    surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); };
+  }
+
   document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#baseSeg button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');

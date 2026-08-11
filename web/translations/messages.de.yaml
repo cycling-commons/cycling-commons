@@ -1575,6 +1575,7 @@ map:
   base_map: 'Karte'
   base_satellite: 'Satellit'
   street_level: 'Straßenansicht'
+  surfaces: 'Beläge'
   mly_title: 'Mapillary · Straßenansicht'
   mly_loading: 'Straßenansicht lädt…'
   mly_expand: 'Viewer vergrößern'

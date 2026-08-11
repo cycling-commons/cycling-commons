@@ -1888,6 +1888,7 @@ map:
   base_map: 'Map'
   base_satellite: 'Satellite'
   street_level: 'Street-level'
+  surfaces: 'Surfaces'
   mly_title: 'Mapillary · street-level'
   mly_loading: 'Loading street-level…'
   mly_expand: 'Expand viewer'

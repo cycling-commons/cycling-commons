@@ -23,6 +23,7 @@ import { initPlanner } from './planner.js';
 import { render } from './render.js';
 import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
          fetchCoverageCounts, covShownCount } from './coverage.js';
+import { addSurfaceTiles } from './surface-tiles.js';
 import { schemaRows, initDrawerChrome } from './drawer.js';
 import { initPicking } from './picking.js';
 import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFeatureById,
@@ -46,7 +47,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
 
 
 
-  map.on('load',()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage();   // heatmap is lazy (W43)
+  map.on('load',()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage(); addSurfaceTiles();   // heatmap is lazy (W43)
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     // renderScopeChips() must wait until here (not right after CCScope.init near
     // the top of the file): it reads `curScope`, a const declared BELOW that call
@@ -75,7 +76,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
     // applyScope). No moveend/idle refresh: the coverage 'shown' is the
     // scope-aware count (covShownCount), not a viewport-render count, so it
     // never changes on pan/zoom.
-    if(COVERAGE_ON) fetchCoverageCounts();
+    if(COVERAGE_ON()) fetchCoverageCounts();
     render();
     // Deep links (?feature/?pending/?route) point at a specific object a narrow
     // scope might filter out (map-and-search.md §4.5): widen to Everywhere

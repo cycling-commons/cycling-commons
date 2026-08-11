@@ -281,6 +281,10 @@
         <button data-b="satellite">{{ 'map.base_satellite'|trans }}</button>
       </div>
       <button class="mc-ov" id="ovStreet"><span class="mc-ic">📷</span>{{ 'map.street_level'|trans }}</button>
+      {# Road-surface reference skin. Hidden by panels.js when no artifact is
+         built — the same rule the satellite segment follows, and for the same
+         reason: a control that does nothing reads as broken, not absent. #}
+      <button class="mc-ov" id="ovSurface" hidden><span class="mc-ic">▰</span>{{ 'map.surfaces'|trans }}</button>
     </div>
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">
@@ -411,6 +415,15 @@ window.CC_VENDOR = {{ {
      coverage layer; an empty/absent array falls back to one unsplit layer per
      letter, so an old manifest still renders. #}
   window.CC_COVERAGE_COUNTRIES = {{ coverage_countries|default([])|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
+  {# Road-surface LINE tiles: a SEPARATE artifact from the coverage points
+     (Dated/2026-08-09-surface-line-tiles-design.md), so it has its own URL and
+     its own gate. Absent/empty means the Surfaces toggle never renders — a
+     control for a layer whose tiles do not exist is worse than no control,
+     which is the toilets lesson (a rail row for a layer that was never built).
+     HEX-escaped like the others: the value originates outside the app. #}
+  {% if surface_tiles_url %}
+  window.CC_SURFACE_URL = {{ surface_tiles_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {% endif %}
 </script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog

@@ -1572,6 +1572,7 @@ map:
   base_map: 'Kaart'
   base_satellite: 'Satelliet'
   street_level: 'Straatbeeld'
+  surfaces: 'Ondergrond'
   mly_title: 'Mapillary · straatbeeld'
   mly_loading: 'Straatbeeld laden…'
   mly_expand: 'Viewer vergroten'

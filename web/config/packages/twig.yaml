@@ -8,6 +8,10 @@ twig:
         # The satellite base layer's key. Empty disables satellite and the map
         # falls back to the standard base — the layer has always been optional.
         esri_api_key: '%env(ESRI_API_KEY)%'
+        # The road-surface line-tile artifact (its own pmtiles, separate from
+        # coverage). Empty hides the Surfaces toggle entirely — a control for a
+        # layer whose tiles do not exist is worse than no control.
+        surface_tiles_url: '%env(SURFACE_TILES_URL)%'
 
 when@test:
     twig:
