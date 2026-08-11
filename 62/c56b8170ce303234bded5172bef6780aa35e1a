@@ -1,0 +1,32 @@
+web/src/Contribution/CatalogContributionService.php
+  s_bbe01d4f023787::t_a67a6e9990e24d 148-168
+  s_bbe01d4f023787::t_c8b18dfebe4742 484-503,529
+web/assets/map/surface-tiles.js
+  s_bbe01d4f023787::t_160c20411c7a79 131-137,139-142,162-167
+web/src/Catalog/CatalogProvider.php
+  s_bbe01d4f023787::t_c8b18dfebe4742 345,347-354
+web/src/Controller/ContributeController.php
+  s_bbe01d4f023787::t_d5b9ec33cc84a4 172-201,206
+  s_bbe01d4f023787::t_5e38ff63c1ea63 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "62c56b8170ce303234bded5172bef6780aa35e1a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
