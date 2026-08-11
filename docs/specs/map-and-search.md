@@ -534,6 +534,28 @@ the newest rung of that same ladder.
   `unverified` (no surface tag — "needs a tag"). Re-render is a single
   `setData`; click/hover listeners bind once per class layer and resolve the
   feature via `properties.idx`.
+- **A · the OSM surface skin** is a *second* A layer and a different thing: the
+  curated source above is our own items, this one is every surfaced way OSM
+  knows, served from its own **vector-tile artifact with zero database rows**
+  (`web/assets/map/surface-tiles.js`, off by default behind the ▰ Surfaces
+  control). It is deliberately not in `coverage_poi`: that index is for points,
+  and lines need neither SQL nor dedupe, which is what makes country-scale
+  surface data cheap. `SURFACE_STYLE` is reused verbatim, so a tile line and a
+  curated item of the same class are the same colour — ours simply draws on
+  top. The class set is the pipeline's
+  (`pipeline/contract/coverage-contract.json` `surface.classes`), one layer per
+  class per country, filtered on `cls`. Contribution loop:
+  [edit-items/A-road-surface.md](edit-items/A-road-surface.md).
+- **The legend is the filter for it.** Each of the seven key rows is a button
+  with `aria-pressed`; toggling one hides that class on *both* the curated and
+  the tile layers, because a rider filtering to "gravel" means gravel, not
+  gravel-from-one-source. Dash gaps in the key are **transparent**, not cream:
+  the curated layer has a white casing and the tile layer has none, so a painted
+  gap made the key disagree with the map it was explaining.
+- **Study mode** (the toggle inside the legend, where it belongs — it is about
+  reading these classes) drops the basemap to a flat light-grey and hides
+  satellite and street-level with it, leaving only the surface lines. Turning it
+  off restores whatever the style had, rather than forcing everything visible.
 - **B · Climbs** with traced geometry draw a gradient-coloured line
   (`line-gradient` over `line-progress`, purple ramp `gradColor()`) plus a
   "steepest pitch" marker; the pin sits at the climb **foot** (first route

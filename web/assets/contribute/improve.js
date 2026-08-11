@@ -45,6 +45,21 @@
   var initLng = parseFloat(_q.get('lng'));
   var hasCoords = !isNaN(initLat) && !isNaN(initLng);
 
+  // A stretch we already know the ends of (?sa=lng,lat&sb=lng,lat). The map
+  // drawer sends these when a rider corrects an OSM surface line: that way
+  // already HAS a start and an end, so opening on a blank map and asking for
+  // two taps throws away what we know and invites a worse answer. Both pins
+  // are placed and draggable — adjusting beats placing.
+  var _pair = function (raw) {
+    var p = String(raw || '').split(',');
+    if (p.length !== 2) return null;
+    var lng = parseFloat(p[0]), lat = parseFloat(p[1]);
+    return (isNaN(lng) || isNaN(lat) || lng < -180 || lng > 180 || lat < -90 || lat > 90) ? null : [lng, lat];
+  };
+  var segA = _pair(_q.get('sa'));
+  var segB = _pair(_q.get('sb'));
+  var hasSegment = !!(segA && segB);
+
   // "◎ Fix location" bridge from the drawer: open the LOCATE editor directly
   // in expanded (change) mode, because the intent is explicitly to move the pin.
   var RELOCATE = _q.get('fix') === 'location';
@@ -508,6 +523,19 @@
       };
 
       wmap.on('click', function (e) { placeAt(e.lngLat); });
+
+      // Pre-place a known stretch, then frame it. placeAt() handles the marker,
+      // the drag handler, the readout and the drawn line, so the prefill is the
+      // same code path a tap takes — no second way for a segment to exist.
+      if (LOCATE === 'segment' && hasSegment) {
+        wmap.on('load', function () {
+          placeAt({ lng: segA[0], lat: segA[1] });
+          placeAt({ lng: segB[0], lat: segB[1] });
+          var b = new maplibregl.LngLatBounds(segA, segA);
+          b.extend(segB);
+          wmap.fitBounds(b, { padding: 60, maxZoom: 16, duration: 0 });
+        });
+      }
 
       // Editing a located point: pre-place the pin at the item's coordinates so
       // the map opens on it. In CONFIRM mode it is a compact, glowing, view-only

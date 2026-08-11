@@ -240,8 +240,6 @@
           <span class="chip on" data-v="Wheelchair-accessible">{{ 'map.access_wheelchair'|trans }}</span>
         </div>
       </div>
-      {# Study mode: drop the basemap so the surface classes read on their own. #}
-      <button type="button" class="skey-study" id="skeyStudy" aria-pressed="false">{{ 'map.study_mode'|trans }}</button>
     </div>
     <div class="rail-foot">
       <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
@@ -274,6 +272,8 @@
         <button type="button" class="skey-row" data-surf-cls="rock" aria-pressed="true"><span class="skey-ln dot" style="--sc:#5F5A54"></span>{{ 'map.legend_rock'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="unverified" aria-pressed="true"><span class="skey-ln dash" style="--sc:#D92D20"></span>{{ 'map.legend_unverified'|trans }}</button>
       </div>
+      {# Study mode belongs with the key: it is about reading these classes. #}
+      <button type="button" class="skey-study" id="skeyStudy" aria-pressed="false">{{ 'map.study_mode'|trans }}</button>
     </div>
     <div class="map-ctrl" aria-label="{{ 'map.base_aria'|trans }}">
       <button class="mc-toggle" id="mcToggle" type="button" aria-label="{{ 'map.base_layers_aria'|trans }}" aria-expanded="false">

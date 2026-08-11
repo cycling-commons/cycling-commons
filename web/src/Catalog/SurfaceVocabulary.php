@@ -47,6 +47,31 @@ final class SurfaceVocabulary
         'Fine gravel' => 'Gravel', 'Gravel' => 'Gravel', 'Dirt' => 'Gravel', 'Rock' => 'Gravel',
     ];
 
+    /** @var array<string, string> Surface-tile class → the declarable label a
+     *  rider is agreeing with when they confirm that stretch. The tile classes
+     *  are the pipeline's (pipeline/contract/coverage-contract.json
+     *  `surface.classes`), coarser than DECLARABLE by design: one colour has to
+     *  stand for a family of OSM values, so `gravel` covers compacted and fine
+     *  gravel too. Confirming picks the family's plain name; the rider can still
+     *  change it in the form.
+     *
+     *  Two tile classes are deliberately absent. `cycleway` says what a way IS,
+     *  not what it is made of — there is nothing to agree with. `unverified` is
+     *  the absence of a claim, so confirming it would be confirming nothing. */
+    public const array TILE_CLASS = [
+        'paved' => 'Asphalt',
+        'gravel' => 'Gravel',
+        'pave' => 'Sett — pavé',
+        'dirt' => 'Dirt',
+        'rock' => 'Rock',
+    ];
+
+    /** The declarable label a tile class confirms to, or null when it confirms nothing. */
+    public static function fromTileClass(string $cls): ?string
+    {
+        return self::TILE_CLASS[$cls] ?? null;
+    }
+
     /** @param array{covered:int, parts:list<array{surface:string, pct:int|float}>}|null $profile */
     public static function suggestFromProfile(?array $profile): ?string
     {

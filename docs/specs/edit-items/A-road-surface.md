@@ -20,6 +20,43 @@ the segment line is drawn between the two taps. (Contrast: most types drop a sin
 A segment may follow an actual ride — the demo includes a **gravel descent traced along the Spa · Sankt
 Vith loop** near its end, so a ride's real road type can be recorded.
 
+## Correcting or confirming OSM's answer (built 2026-08-12)
+
+Most A segments a rider sees are not ours: they are the **OSM surface skin**, a
+tile layer of every surfaced way OSM knows
+([map-and-search.md](../map-and-search.md) §5). Clicking one opens the drawer
+with the class, the raw `highway` value and a link to the way on OSM, plus two
+actions that are the **same submission** one decision apart:
+
+| Action | What it does |
+|---|---|
+| ✎ Edit this item | opens `/improve?ref=way/NNN&type=A&sa=…&sb=…` — the add wizard in segment mode |
+| ✓ This is correct | the same URL plus `&surface=<tile class>`, so the class arrives already chosen |
+
+There is no separate "agree with OSM" store. Confirming **mints our own A
+item** carrying `way/NNN` as `source_ref` (materialize-on-edit,
+[osm-data-architecture.md](../osm-data-architecture.md) §6); from then on the
+ordinary one-tap item confirmation applies to that item, and the region's
+moderators decide the submission exactly as they decide any other. Approved, our
+line draws on top of the tile line; the tile stays underneath as OSM's answer.
+
+**The wizard opens knowing where the stretch is.** The clicked way already has
+ends, so `sa`/`sb` place both pins on it, draggable — the rider adjusts rather
+than re-taps from a blank map. A wrong-but-close start beats an empty one.
+
+**Not every class can be confirmed.** `cycleway` says what a way *is*, not what
+it is made of, and `unverified` is the absence of a claim; neither offers the
+confirm action. The other five map to a declarable label in
+`SurfaceVocabulary::TILE_CLASS` (`paved`→Asphalt, `gravel`→Gravel,
+`pave`→Sett — pavé, `dirt`→Dirt, `rock`→Rock — coarser than the dropdown by
+design, since one colour stands for a family of OSM values). The map states the
+same five in `CONFIRMABLE_CLASSES`; `SurfaceConfirmClassContractTest` fails if
+the two lists ever drift.
+
+Segment-located types never resolve through `coverage_poi` — it is the point
+index, and surface lines never enter PostGIS. The submission keeps a point (its
+start, which is what resolves the region); the **item** gets the LineString.
+
 ## Read view (drawer "current details")
 - Surface
 - Smoothness

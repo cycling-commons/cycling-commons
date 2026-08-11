@@ -445,9 +445,21 @@ function buildRecord(layer, f){
     // coverage POI is improved like any other place — the wizard opens with
     // the OSM name + location given, and submit CREATES the item (carrying
     // this ref, so the coverage twin dedupes away once it serves).
-    const refQ = `ref=${encodeURIComponent(f.osmRef)}&type=${layer.letter}`
+    let refQ = `ref=${encodeURIComponent(f.osmRef)}&type=${layer.letter}`
       + (ell ? `&lat=${ell[0]}&lng=${ell[1]}` : '');
+    // A segment we already know the ends of (a clicked surface line): send
+    // them so the wizard opens with both pins on the stretch, draggable.
+    if(f.segmentEnds){
+      const p2 = c => `${c[0].toFixed(6)},${c[1].toFixed(6)}`;
+      refQ += `&sa=${encodeURIComponent(p2(f.segmentEnds.a))}&sb=${encodeURIComponent(p2(f.segmentEnds.b))}`;
+    }
     edit = `<a class="cc-d-act edit" href="/improve?${refQ}">✎ ${D.editItem||'Edit this item'}</a>`;
+    // "It is already right" is the SAME submission with the class pre-chosen.
+    // The first confirmation is what mints our own item; after that the item
+    // exists and ordinary one-tap confirmation applies to it.
+    if(f.confirmClass){
+      edit += `<a class="cc-d-act confirm-surface" href="/improve?${refQ}&surface=${encodeURIComponent(f.confirmClass)}">✓ ${D.surfaceConfirm||'This is correct'}</a>`;
+    }
   }
   let moderate = '';
   if(layer.pendingLayer && f.pending){

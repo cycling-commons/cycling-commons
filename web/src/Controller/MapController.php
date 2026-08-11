@@ -190,6 +190,7 @@ final class MapController extends AbstractController
             'surfDirt' => 'legend_dirt', 'surfRock' => 'legend_rock',
             'surfUnverified' => 'legend_unverified',
             'surface' => 'd_surface', 'roadType' => 'd_road_type',
+            'surfaceConfirm' => 'd_surface_confirm',
             // Before/after switch on a pending climb's proposed shape.
             'shapeOnMap' => 'd_shape_on_map', 'shapeBefore' => 'd_shape_before', 'shapeAfter' => 'd_shape_after',
             'itemProposed' => 'd_item_proposed',

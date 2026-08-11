@@ -93,7 +93,7 @@ export function addSurfaceTiles() {
         layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
         paint,
       });
-      map.on('click', id, e => openSurfaceDrawer(e.features[0].properties, e.lngLat));
+      map.on('click', id, e => openSurfaceDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry));
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
@@ -141,7 +141,15 @@ export function classLabel(cls) {
  * rider can fix OSM directly or give the Commons its own answer, and both are
  * legitimate.
  */
-export function openSurfaceDrawer(p, lngLat) {
+/* The tile classes a rider can confirm. Mirrors SurfaceVocabulary::TILE_CLASS
+   in PHP, which owns the translation into the declarable vocabulary and is the
+   side that ultimately validates; SurfaceConfirmClassContractTest asserts the
+   two lists stay identical, because a silent drift here would show a confirm
+   button that quietly does nothing. */
+export const CONFIRMABLE_CLASSES = ['paved', 'gravel', 'pave', 'dirt', 'rock'];
+const CONFIRMABLE = new Set(CONFIRMABLE_CLASSES);
+
+export function openSurfaceDrawer(p, lngLat, geometry) {
   const layer = layerByKey.surface;
   if (!layer) return;
   const label = classLabel(p.cls);
@@ -150,10 +158,26 @@ export function openSurfaceDrawer(p, lngLat) {
   // rider following it back to OSM needs the word OSM uses.
   if (p.hw) rec.push({ label: D.roadType || 'Road type', value: p.hw });
 
+  // The way already has ends. Hand them to the wizard so it opens with both
+  // pins placed on the stretch the rider clicked, ready to be dragged, instead
+  // of a blank map asking for two taps — we know more than that, and throwing
+  // it away invites a worse answer than the one we already have.
+  const ends = segmentEnds(geometry);
+
   openDrawer(layer, {
     name: label,
     headline: label + (p.hw ? ' · ' + p.hw : ''),
     geom: { ll: [lngLat.lat, lngLat.lng] },
+    segmentEnds: ends,
+    // Confirming OSM is the same submission as correcting it, with the class
+    // already chosen — the first confirmation is what MINTS our own A item, and
+    // from then on the ordinary one-tap item confirmation applies to that item.
+    // One mechanic, no separate "agree" store keyed on an OSM ref.
+    //
+    // Only for a class that actually claims a surface. `cycleway` says what the
+    // way IS, not what it is made of, and `unverified` is the absence of a
+    // claim — "this is correct" on either would be agreeing with nothing.
+    confirmClass: CONFIRMABLE.has(p.cls) ? p.cls : undefined,
     record: rec,
     source: 'OpenStreetMap',
     // The exact way, not a coordinate query: we know the element id, so the
@@ -240,4 +264,20 @@ export function setStudyMode(on) {
   });
   document.querySelector('.map-wrap')?.classList.toggle('study', study);
   return study;
+}
+
+/**
+ * First and last vertex of the clicked way, as [lng,lat] pairs.
+ *
+ * A tile feature can arrive as a LineString or, where the way crosses a tile
+ * boundary, a MultiLineString — take the outermost ends of the whole thing so
+ * the pins land on the stretch the rider actually sees.
+ */
+function segmentEnds(geometry) {
+  if (!geometry) return null;
+  const parts = geometry.type === 'MultiLineString' ? geometry.coordinates
+    : geometry.type === 'LineString' ? [geometry.coordinates] : [];
+  const flat = parts.flat();
+  if (flat.length < 2) return null;
+  return { a: flat[0], b: flat[flat.length - 1] };
 }

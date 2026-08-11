@@ -177,4 +177,34 @@ final class MaterializeFlowTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
         self::assertSame(1, $em->getRepository(Item::class)->count(['sourceRef' => self::REF]), 'no second item minted');
     }
+
+    public function testASurfaceLineOpensTheWizardWithBothEndsAndTheClassChosen(): void
+    {
+        // A clicked surface line: no coverage_poi row exists for it and never
+        // will (lines are tile-only), the ends come from the clicked geometry,
+        // and "This surface is correct" pre-picks the class it confirms.
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'surface');
+
+        $crawler = $client->request('GET', '/improve?ref=way/778899&type=road-surface&lat=50.49&lng=6.04&sa=6.04,50.49&sb=6.06,50.51&surface=gravel');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('[data-improve-unbound]', 'a surface line must not fall through to "pick a place"');
+        self::assertSelectorExists('input[name="improve[segment]"]');
+        self::assertSame('Gravel', $crawler->filter('select[name="improve[details][surface]"] option[selected]')->attr('value'));
+    }
+
+    public function testAClassThatConfirmsNothingLeavesTheSurfaceUnchosen(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'unverified');
+
+        // `unverified` is the absence of a claim, and `moon_dust` is not ours
+        // at all. Neither may arrive in the form as a chosen answer.
+        foreach (['unverified', 'moon_dust', 'Gravel'] as $cls) {
+            $crawler = $client->request('GET', '/improve?ref=way/778899&type=road-surface&lat=50.49&lng=6.04&surface='.$cls);
+            self::assertResponseIsSuccessful();
+            self::assertCount(0, $crawler->filter('select[name="improve[details][surface]"] option[selected]'), $cls);
+        }
+    }
 }

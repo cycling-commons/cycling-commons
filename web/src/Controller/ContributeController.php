@@ -6,11 +6,13 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\CatalogFormRegistry;
 use App\Catalog\Entity\Item;
-use App\Catalog\LocationMode;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
+use App\Catalog\LocationMode;
 use App\Catalog\ServiceKind;
+use App\Catalog\SurfaceVocabulary;
 use App\Contribution\CatalogContributionService;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
@@ -49,6 +51,9 @@ final class ContributeController extends AbstractController
            open on their proposal rather than on the item. Defining "undecided"
            in a second place is how two definitions drift apart. */
         private readonly CatalogContributionService $contributions,
+        /* Read-only: validating a pre-chosen surface class from the query
+           string against the choices the registry actually offers. */
+        private readonly CatalogFormRegistry $registry,
     ) {
     }
 
@@ -201,9 +206,28 @@ final class ContributeController extends AbstractController
             }
         }
 
+        // "This surface is correct" arrives with the class already chosen
+        // (?surface=<tile class>), so agreeing with OSM is the SAME submission
+        // as correcting it, one decision shorter — not a separate agree-store.
+        // The query carries the tile class, never a label: the map only knows
+        // its own seven classes, and SurfaceVocabulary owns the single
+        // translation into the declarable vocabulary. A class that maps to
+        // nothing, or a value the registry does not offer, is dropped rather
+        // than trusted into the form.
+        $current = [Item::NAME_FIELD => (string) ($poi['name'] ?? '')];   // '' for a segment: the rider names the stretch
+        $prechosen = SurfaceVocabulary::fromTileClass((string) $request->query->get('surface', ''));
+        if (null !== $prechosen) {
+            foreach ($this->registry->for($type)->all() as $field) {
+                if ('surface' === $field->name && \in_array($prechosen, $field->choices, true)) {
+                    $current['surface'] = $prechosen;
+                    break;
+                }
+            }
+        }
+
         $form = $this->createForm(ImproveType::class, null, [
             'catalog_type' => $type,
-            'current' => [Item::NAME_FIELD => (string) ($poi['name'] ?? '')],   // '' for a segment: the rider names the stretch
+            'current' => $current,
             'service_kind' => null,
             'add_mode' => true,
         ]);
