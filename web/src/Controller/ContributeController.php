@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\LocationMode;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\ServiceKind;
@@ -168,21 +169,41 @@ final class ContributeController extends AbstractController
             return $this->redirectToRoute('improve', ['item' => $existing->getId(), 'type' => $type->value]);
         }
 
-        [$osmType, $osmId] = explode('/', $ref);
-        try {
-            $poi = $coverage->detail($osmType, (int) $osmId);
-        } catch (TableNotFoundException) {
-            // Fresh contributor stack: coverage_poi is pipeline-owned DDL and
-            // may not exist yet — degrade like an unknown ref, never a 500.
-            $poi = null;
-        }
-        if (null === $poi || $poi['letter'] !== $type->letter()) {
-            return $this->renderUnbound();
+        // Segment-located types (A · road surface) do NOT resolve through the
+        // coverage POI index, and must not be required to.
+        //
+        // coverage_poi is the POINT index. Road-surface lines are served from
+        // their own tile artifact and never enter PostGIS at all — that is what
+        // makes country-scale line data cheap
+        // (Dated/2026-08-09-surface-line-tiles-design.md §4). So a rider
+        // clicking a surface line and asking to correct it arrives with a
+        // perfectly good `way/NNN` that this lookup could never find, and the
+        // wizard used to fall through to "pick a place", which reads as broken
+        // rather than unsupported.
+        //
+        // It does not need the lookup either. For a point, the coverage row
+        // supplies the name and the location the rider is about to confirm; for
+        // a segment the rider DRAWS the geometry (two pins, LocationMode::Segment)
+        // and the OSM ref is provenance plus the one-item-per-ref key, both of
+        // which are already enforced downstream in CatalogContributionService.
+        $poi = null;
+        if (LocationMode::Segment !== $type->locationMode()) {
+            [$osmType, $osmId] = explode('/', $ref);
+            try {
+                $poi = $coverage->detail($osmType, (int) $osmId);
+            } catch (TableNotFoundException) {
+                // Fresh contributor stack: coverage_poi is pipeline-owned DDL and
+                // may not exist yet — degrade like an unknown ref, never a 500.
+                $poi = null;
+            }
+            if (null === $poi || $poi['letter'] !== $type->letter()) {
+                return $this->renderUnbound();
+            }
         }
 
         $form = $this->createForm(ImproveType::class, null, [
             'catalog_type' => $type,
-            'current' => [Item::NAME_FIELD => (string) ($poi['name'] ?? '')],
+            'current' => [Item::NAME_FIELD => (string) ($poi['name'] ?? '')],   // '' for a segment: the rider names the stretch
             'service_kind' => null,
             'add_mode' => true,
         ]);

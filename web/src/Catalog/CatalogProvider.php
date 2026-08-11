@@ -342,8 +342,16 @@ final class CatalogProvider
             if (str_starts_with($row['source_ref'], 'way/')) {
                 $seg['wayId'] = (int) substr($row['source_ref'], 4);
             }
-            /** @var array{coordinates: list<array{0: float, 1: float}>} $geo */
+            /** @var array{type?: string, coordinates: list<array{0: float, 1: float}>} $geo */
             $geo = $this->decode($row['geom']);
+            // A is the one letter whose geometry MUST be a line. A row that is
+            // not — a legacy import, or a bug upstream — would otherwise be
+            // flipped as if its coordinates were vertex pairs and corrupt the
+            // whole payload, taking the map with it. Skip the row instead: one
+            // missing segment is a gap, a broken catalog.json is an outage.
+            if ('LineString' !== ($geo['type'] ?? null)) {
+                continue;
+            }
             $seg['path'] = $this->flip($geo['coordinates']);
             $segments[] = $seg;
         }

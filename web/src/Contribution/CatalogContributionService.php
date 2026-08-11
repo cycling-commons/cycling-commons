@@ -145,6 +145,27 @@ final class CatalogContributionService implements ContributionStubInterface
         if (null === $type || \in_array($type, [ItemType::Climbs, ItemType::QualityRides], true)) {
             throw new \InvalidArgumentException('add requires a non-climb, non-route catalog type');
         }
+        // A drawn segment IS a location, so a segment-located type does not
+        // need a separate pin. The rider places a start and an end (A · road
+        // surface is the only such type today) and the wizard fills `segment`;
+        // requiring lat/lng as well made a complete submission fail with
+        // "set the location on the map", pointing at a pin the form never
+        // asked for.
+        //
+        // Derived here rather than in the client because lat/lng are not
+        // decoration: RegionResolver turns them into the region whose
+        // moderators see this submission. The stretch's START is the
+        // representative point — the same choice submitImprove already makes
+        // for an existing segment item (representativePoint takes the first
+        // vertex).
+        if (LocationMode::Segment === $type->locationMode()
+            && !is_numeric($payload['lat'] ?? null)
+            && \is_string($payload['segment'] ?? null) && '' !== $payload['segment']
+        ) {
+            $start = $this->decodeSegment((string) $payload['segment'])['a'];
+            $payload['lng'] = $start[0];
+            $payload['lat'] = $start[1];
+        }
         if (!is_numeric($payload['lat'] ?? null) || !is_numeric($payload['lng'] ?? null)) {
             $this->reject('contribute.error.invalid_location', 'lat');
         }
@@ -460,8 +481,26 @@ final class CatalogContributionService implements ContributionStubInterface
 
         $geo = $this->resolver->resolve($draft->lat, $draft->lng);
         $point = json_encode(['type' => 'Point', 'coordinates' => [$draft->lng, $draft->lat]], \JSON_THROW_ON_ERROR);
+        // A segment-located item is a LINE, and storing it as a point would be
+        // a quiet corruption rather than an approximation: CatalogProvider's
+        // surfaceSegments() reads geom as a list of vertex pairs to build the
+        // A layer's `path`, so a Point there yields nonsense for that row.
+        //
+        // The submission itself keeps the point geometry — the moderation desk
+        // pins submissions on a map, and the start of the stretch is the right
+        // pin — while the ITEM gets the line the rider drew.
+        //
+        // Straight a→b for now. A stretch of road bends, so the honest
+        // long-term shape is the OSM way's own geometry clipped between the two
+        // taps; the client has that geometry (it is in the tile) and the server
+        // deliberately does not. Sending it is a contract change, and worth
+        // making deliberately rather than inferring here.
+        $segment = $draft->attributes['segment'] ?? null;
+        $itemGeom = \is_array($segment) && isset($segment['a'], $segment['b'])
+            ? json_encode(['type' => 'LineString', 'coordinates' => [$segment['a'], $segment['b']]], \JSON_THROW_ON_ERROR)
+            : $point;
 
-        return $this->em->wrapInTransaction(function () use ($draft, $type, $by, $rawPayload, $geo, $point, $changes): Submission {
+        return $this->em->wrapInTransaction(function () use ($draft, $type, $by, $rawPayload, $geo, $point, $itemGeom, $changes): Submission {
             $submission = (new Submission())
                 ->setType($type)
                 ->setLetter($draft->type->letter())
@@ -487,7 +526,7 @@ final class CatalogContributionService implements ContributionStubInterface
                 $item = (new Item())
                     ->setLetter($draft->type->letter())
                     ->setName($draft->title)
-                    ->setGeom($point)
+                    ->setGeom($itemGeom)
                     ->setCountryCode($geo['countryCode'])
                     ->setRegionId($geo['regionId'])
                     ->setState(ItemState::Submitted)

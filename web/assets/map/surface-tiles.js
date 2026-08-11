@@ -128,20 +128,18 @@ export function classLabel(cls) {
  * surface's colour, icon and label: a tile line IS road-surface data, just
  * nobody's-curated-it-yet road-surface data.
  *
- * **No "improve this" action, deliberately.** The obvious move was to set
- * `osmRef` and let the existing edit bridge build `/improve?ref=way/NNN&type=A`
- * — materialize-on-edit, exactly as an uncurated coverage POI works. It does
- * not work here and cannot: `ContributeController::materialize()` resolves the
- * ref through `coverage_poi`, the POINT index, and surface lines never enter
- * PostGIS at all (that is the whole reason country-scale lines are cheap). The
- * lookup misses, the wizard falls through to "Pick a place to improve", and the
- * rider gets a dead end that looks like a feature. Verified by clicking it.
+ * **The improve action works now**, and did not at first. Setting `osmRef`
+ * makes the existing edit bridge build `/improve?ref=way/NNN&type=A`, but
+ * `ContributeController::materialize()` used to resolve every ref through
+ * `coverage_poi` — the POINT index — and surface lines never enter PostGIS at
+ * all, so the lookup missed and the wizard fell through to "pick a place".
+ * Segment-located types skip that lookup now: the rider DRAWS the geometry, so
+ * the OSM ref is provenance and the one-item-per-ref key, nothing more.
  *
- * So the drawer links to the exact OSM way instead — which is also the honest
- * destination: a surface tag is upstream data, and data-priority.md says
- * upstream fixes belong upstream. Wiring a real A-item bridge needs a
- * materialize path that does not go through coverage_poi, and that is its own
- * piece of work.
+ * The source line still links the exact OSM way, because a surface tag is
+ * upstream data and data-priority.md says upstream fixes belong upstream — a
+ * rider can fix OSM directly or give the Commons its own answer, and both are
+ * legitimate.
  */
 export function openSurfaceDrawer(p, lngLat) {
   const layer = layerByKey.surface;
@@ -161,6 +159,12 @@ export function openSurfaceDrawer(p, lngLat) {
     // The exact way, not a coordinate query: we know the element id, so the
     // source link goes straight to the object whose tags the rider is reading.
     osmUrl: p.ref ? 'https://www.openstreetmap.org/' + p.ref : undefined,
+    // Materialize-on-edit, now that A can reach it: /improve opens the road-
+    // surface wizard in Segment mode, the rider drops a start and an end pin
+    // and picks the surface, and submit creates a SUBMISSION that the region's
+    // moderators decide. Approved, it becomes one of our A items and draws on
+    // top of this tile line — the tile stays as OSM's answer underneath.
+    osmRef: p.ref,
   });
   flyToPin([lngLat.lng, lngLat.lat]);
 }
