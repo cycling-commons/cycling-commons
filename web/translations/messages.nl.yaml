@@ -1567,6 +1567,7 @@ map:
   legend_dirt: 'Aarde'
   legend_rock: 'Rots'
   legend_unverified: 'Wegdek niet geverifieerd'
+  study_mode: 'Studiemodus · achtergrond uit'
   base_aria: 'Basiskaart en overlays'
   base_layers_aria: 'Kaartlagen'
   base_map: 'Kaart'

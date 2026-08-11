@@ -240,6 +240,8 @@
           <span class="chip on" data-v="Wheelchair-accessible">{{ 'map.access_wheelchair'|trans }}</span>
         </div>
       </div>
+      {# Study mode: drop the basemap so the surface classes read on their own. #}
+      <button type="button" class="skey-study" id="skeyStudy" aria-pressed="false">{{ 'map.study_mode'|trans }}</button>
     </div>
     <div class="rail-foot">
       <div class="res"><b id="count">0</b> {{ 'map.places_shown'|trans }}</div>
@@ -264,13 +266,13 @@
          shared). Dropping the "· A" because it is no longer only A's key. #}
       <h4>{{ 'item_type.road-surface.label'|trans }}</h4>
       <div class="skey">
-        <div class="skey-row"><span class="skey-ln" style="--sc:#3E9C8A"></span>{{ 'map.legend_cycleway'|trans }}</div>
-        <div class="skey-row"><span class="skey-ln" style="--sc:#4E6E66"></span>{{ 'map.legend_paved'|trans }}</div>
-        <div class="skey-row"><span class="skey-ln dash" style="--sc:#C8923A"></span>{{ 'map.legend_gravel'|trans }}</div>
-        <div class="skey-row"><span class="skey-ln dot" style="--sc:#6E7B96"></span>{{ 'map.legend_cobbles'|trans }}</div>
-        <div class="skey-row"><span class="skey-ln dash" style="--sc:#6E5849"></span>{{ 'map.legend_dirt'|trans }}</div>
-        <div class="skey-row"><span class="skey-ln dot" style="--sc:#5F5A54"></span>{{ 'map.legend_rock'|trans }}</div>
-        <div class="skey-row"><span class="skey-ln dash" style="--sc:#D92D20"></span>{{ 'map.legend_unverified'|trans }}</div>
+        <button type="button" class="skey-row" data-surf-cls="cycleway" aria-pressed="true"><span class="skey-ln" style="--sc:#3E9C8A"></span>{{ 'map.legend_cycleway'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="paved" aria-pressed="true"><span class="skey-ln" style="--sc:#4E6E66"></span>{{ 'map.legend_paved'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="gravel" aria-pressed="true"><span class="skey-ln dash" style="--sc:#C8923A"></span>{{ 'map.legend_gravel'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="pave" aria-pressed="true"><span class="skey-ln dot" style="--sc:#6E7B96"></span>{{ 'map.legend_cobbles'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="dirt" aria-pressed="true"><span class="skey-ln dash" style="--sc:#6E5849"></span>{{ 'map.legend_dirt'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="rock" aria-pressed="true"><span class="skey-ln dot" style="--sc:#5F5A54"></span>{{ 'map.legend_rock'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="unverified" aria-pressed="true"><span class="skey-ln dash" style="--sc:#D92D20"></span>{{ 'map.legend_unverified'|trans }}</button>
       </div>
     </div>
     <div class="map-ctrl" aria-label="{{ 'map.base_aria'|trans }}">

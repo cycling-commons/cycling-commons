@@ -99,7 +99,20 @@
   .dl-all:hover{border-color:var(--trail);color:var(--trail)}
   /* road-surface key — how the A·Road surface layer is drawn (colour + line pattern); shown in the on-map legend */
   .skey{display:flex;flex-direction:column;gap:.55rem;margin-top:.1rem}
-  .skey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--paper)}
+  /* Rows are buttons now: the key doubles as a filter (tick gravel alone and
+     the map shows gravel alone, in both the tile skin and our own items). */
+  .skey-row{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--paper);
+    background:none;border:none;padding:.15rem .2rem;margin:-.15rem -.2rem;width:calc(100% + .4rem);
+    text-align:left;cursor:pointer;border-radius:4px;font-family:inherit;min-height:1.9rem}
+  .skey-row:hover{background:rgba(239,230,212,.08)}
+  .skey-row:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
+  .skey-row[aria-pressed="false"]{opacity:.4}
+  .skey-row[aria-pressed="false"] .skey-ln{filter:grayscale(1)}
+  .skey-study{margin-top:.7rem;width:100%;background:none;border:1px solid rgba(239,230,212,.28);
+    border-radius:5px;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;
+    text-transform:uppercase;padding:.45rem .5rem;cursor:pointer;min-height:2rem}
+  .skey-study:hover{border-color:var(--trail)}
+  .skey-study[aria-pressed="true"]{background:var(--trail);border-color:var(--trail);color:var(--ink)}
   .skey-ln{width:34px;height:4px;border-radius:2px;flex:none;background:var(--sc)}
   /* Gaps are TRANSPARENT, not white.
      They used to be painted #FBF4E4 to match the white casing the curated A

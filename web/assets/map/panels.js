@@ -30,7 +30,8 @@ import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
          applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
 import { curScope, inScope } from './scope-ui.js';
-import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
+import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
+         toggleSurfaceClass, setStudyMode, studyModeOn } from './surface-tiles.js';
 
 // Bindings a later init reads, so they cannot stay `const` inside the init that
 // looks them up: `app` is assigned by initRailChrome(), the two facet <select>s
@@ -101,6 +102,15 @@ export function initLayerList(){
     surfBtn.hidden=false;
     surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); };
   }
+
+  // Legend-as-filter + study mode. Both live on the legend because that is
+  // where the classes are named; both work with the tile skin off, since the
+  // class filter also governs our own curated A items.
+  document.querySelectorAll('.skey-row[data-surf-cls]').forEach(b=>{
+    b.onclick=()=>{ b.setAttribute('aria-pressed', toggleSurfaceClass(b.dataset.surfCls) ? 'true' : 'false'); };
+  });
+  const studyBtn=document.getElementById('skeyStudy');
+  if(studyBtn) studyBtn.onclick=()=>{ studyBtn.setAttribute('aria-pressed', setStudyMode(!studyModeOn()) ? 'true' : 'false'); };
 
   document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#baseSeg button').forEach(x=>x.classList.remove('on'));

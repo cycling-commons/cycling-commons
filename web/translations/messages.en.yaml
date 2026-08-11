@@ -1883,6 +1883,7 @@ map:
   legend_dirt: 'Dirt'
   legend_rock: 'Rock'
   legend_unverified: 'Surface unverified'
+  study_mode: 'Study mode · hide basemap'
   base_aria: 'Base map and overlays'
   base_layers_aria: 'Map layers'
   base_map: 'Map'

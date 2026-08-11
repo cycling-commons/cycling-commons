@@ -1567,6 +1567,7 @@ map:
   legend_dirt: 'Terre'
   legend_rock: 'Rocher'
   legend_unverified: 'Revêtement non vérifié'
+  study_mode: 'Mode étude · masquer le fond'
   base_aria: 'Fond de carte et surcouches'
   base_layers_aria: 'Couches de la carte'
   base_map: 'Carte'

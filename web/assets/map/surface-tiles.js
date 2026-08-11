@@ -109,9 +109,7 @@ export function setSurfaceTiles(on) {
   if (!surfaceTilesAvailable()) return false;
   if (!added) addSurfaceTiles();
   visible = !!on;
-  map.getStyle().layers
-    .filter(l => l.id.startsWith('surftile-'))
-    .forEach(l => map.setLayoutProperty(l.id, 'visibility', visible ? 'visible' : 'none'));
+  applyClassVisibility();   // per-class filters compose with the layer switch
   return visible;
 }
 
@@ -165,4 +163,77 @@ export function openSurfaceDrawer(p, lngLat) {
     osmUrl: p.ref ? 'https://www.openstreetmap.org/' + p.ref : undefined,
   });
   flyToPin([lngLat.lng, lngLat.lat]);
+}
+
+/* ── Class filters ─────────────────────────────────────────────────────────
+   The legend doubles as a filter: tick gravel alone and the map shows gravel
+   alone. It applies to BOTH layers on purpose — the tile skin AND the curated
+   A items — because the legend is one key for both, and "show me only gravel"
+   that still drew curated asphalt would be answering a different question. */
+const classesOff = new Set();
+
+export const surfaceClassEnabled = cls => !classesOff.has(cls);
+
+/** Visibility for one class = its own toggle AND (for tiles) the layer switch. */
+function applyClassVisibility() {
+  const style = map.getStyle();
+  if (!style) return;
+  style.layers.forEach(l => {
+    if (l.id.startsWith('surftile-')) {
+      const cls = l.id.slice('surftile-'.length).replace(/-[a-z]{2}$/, '');
+      map.setLayoutProperty(l.id, 'visibility',
+        visible && surfaceClassEnabled(cls) ? 'visible' : 'none');
+    } else if (l.id.startsWith('surface-cls-')) {
+      // The curated A layer. Hidden per class too, but never gated on the tile
+      // toggle — these are our own items and stay on when the skin is off.
+      const cls = l.id.slice('surface-cls-'.length);
+      map.setLayoutProperty(l.id, 'visibility', surfaceClassEnabled(cls) ? 'visible' : 'none');
+    }
+  });
+}
+
+export function toggleSurfaceClass(cls) {
+  if (classesOff.has(cls)) classesOff.delete(cls); else classesOff.add(cls);
+  if (!added) addSurfaceTiles();
+  applyClassVisibility();
+  return surfaceClassEnabled(cls);
+}
+
+/* ── Study mode ────────────────────────────────────────────────────────────
+   Drops the basemap so the surface classes can be read on their own. The
+   basemap is a NAMED set of sources rather than a guess at layer ids: the
+   OpenFreeMap style ships `openmaptiles` (109 layers) and `ne2_shaded`, and
+   the satellite/street-level overlays go with them because the point is a
+   blank field. Everything else on the map is ours and stays.
+
+   The background layer is recoloured rather than hidden — hiding it leaves
+   the canvas transparent, which shows whatever is behind the map element. */
+const BASEMAP_SOURCES = new Set(['openmaptiles', 'ne2_shaded', 'satellite', 'mly']);
+const STUDY_BG = '#EDEDE8';
+let study = false;
+let bgBefore = null;
+
+export const studyModeOn = () => study;
+
+export function setStudyMode(on) {
+  const style = map.getStyle();
+  if (!style) return study;
+  study = !!on;
+  style.layers.forEach(l => {
+    if (l.type === 'background') {
+      if (study) {
+        if (bgBefore === null) bgBefore = map.getPaintProperty(l.id, 'background-color') ?? '#ffffff';
+        map.setPaintProperty(l.id, 'background-color', STUDY_BG);
+      } else if (bgBefore !== null) {
+        map.setPaintProperty(l.id, 'background-color', bgBefore);
+      }
+      return;
+    }
+    if (!BASEMAP_SOURCES.has(l.source)) return;
+    // Satellite and street-level keep their own toggles; study mode only
+    // forces them off, and turning study off restores what the style had.
+    map.setLayoutProperty(l.id, 'visibility', study ? 'none' : 'visible');
+  });
+  document.querySelector('.map-wrap')?.classList.toggle('study', study);
+  return study;
 }

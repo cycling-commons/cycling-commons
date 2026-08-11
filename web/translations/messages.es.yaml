@@ -1896,6 +1896,7 @@ map:
   legend_dirt: 'Tierra'
   legend_rock: 'Roca'
   legend_unverified: 'Firme sin verificar'
+  study_mode: 'Modo estudio · ocultar el mapa base'
   base_aria: 'Mapa base y capas superpuestas'
   base_layers_aria: 'Capas del mapa'
   base_map: 'Mapa'

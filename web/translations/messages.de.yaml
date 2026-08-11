@@ -1570,6 +1570,7 @@ map:
   legend_dirt: 'Erde'
   legend_rock: 'Fels'
   legend_unverified: 'Belag nicht verifiziert'
+  study_mode: 'Studienmodus · Basiskarte aus'
   base_aria: 'Basiskarte und Overlays'
   base_layers_aria: 'Kartenebenen'
   base_map: 'Karte'
