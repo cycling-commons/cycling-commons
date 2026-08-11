@@ -200,4 +200,94 @@ final class AddPlaceFlowTest extends WebTestCase
         self::assertSame(0, static::getContainer()->get(EntityManagerInterface::class)
             ->getRepository(Submission::class)->count([]));
     }
+
+    public function testASnappedRoadPathBecomesTheItemGeometry(): void
+    {
+        // The rider taps two points; the router returns the road between them.
+        // The ITEM has to carry that road — a straight chord across the fields
+        // between two bends is a visibly wrong line on the map.
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'snapped');
+
+        $line = [[6.04, 50.49], [6.045, 50.497], [6.052, 50.503], [6.06, 50.51]];
+        $crawler = $client->request('GET', '/improve?type=road-surface&mode=add');
+        $form = $crawler->selectButton('Next →')->form([
+            'improve[details][name]' => 'Bending gravel track',
+            'improve[lat]' => '50.49',
+            'improve[lng]' => '6.04',
+            'improve[segment]' => json_encode(['a' => [6.04, 50.49], 'b' => [6.06, 50.51], 'line' => $line]),
+            'improve[mode]' => 'add',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Bending gravel track']);
+        self::assertNotNull($submission);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        $geom = json_decode($em->getConnection()->fetchOne(
+            'SELECT ST_AsGeoJSON(geom) FROM item WHERE id = ?', [$item->getId()]
+        ), true);
+        self::assertSame('LineString', $geom['type']);
+        self::assertCount(4, $geom['coordinates'], 'the road path, not the two taps');
+        self::assertSame($line, $item->getAttributes()['segment']['line']);
+    }
+
+    public function testWithoutARoadTheStraightChordIsStillAccepted(): void
+    {
+        // No route, no router, or an older client: the chord is a worse shape
+        // but never a wrong one, so it must not be refused.
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'chord');
+
+        $crawler = $client->request('GET', '/improve?type=road-surface&mode=add');
+        $form = $crawler->selectButton('Next →')->form([
+            'improve[details][name]' => 'Unrouted stretch',
+            'improve[lat]' => '50.49',
+            'improve[lng]' => '6.04',
+            'improve[segment]' => '{"a":[6.04,50.49],"b":[6.06,50.51]}',
+            'improve[mode]' => 'add',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Unrouted stretch']);
+        self::assertNotNull($submission);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertArrayNotHasKey('line', $item->getAttributes()['segment']);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function badLines(): iterable
+    {
+        // Every one of these would draw SOMETHING on the map under a name and a
+        // surface the rider chose, which is why `line` cannot be a free channel.
+        yield 'a line that ends nowhere near the pin' => ['{"a":[6.04,50.49],"b":[6.06,50.51],"line":[[6.04,50.49],[7.90,51.80]]}'];
+        yield 'a single point' => ['{"a":[6.04,50.49],"b":[6.06,50.51],"line":[[6.04,50.49]]}'];
+        yield 'a pair that is not a pair' => ['{"a":[6.04,50.49],"b":[6.06,50.51],"line":[[6.04,50.49],["x",50.51]]}'];
+        yield 'coordinates off the planet' => ['{"a":[6.04,50.49],"b":[6.06,50.51],"line":[[6.04,50.49],[999,50.51]]}'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('badLines')]
+    public function testAPathThatIsNotTheStretchIsRejected(string $segment): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'badline'.substr(md5($segment), 0, 6));
+
+        $crawler = $client->request('GET', '/improve?type=road-surface&mode=add');
+        $form = $crawler->selectButton('Next →')->form([
+            'improve[details][name]' => 'Hand-crafted',
+            'improve[lat]' => '50.49',
+            'improve[lng]' => '6.04',
+            'improve[segment]' => $segment,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+    }
 }

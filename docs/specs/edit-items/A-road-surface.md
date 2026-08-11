@@ -15,8 +15,27 @@
 Real road/path segments (RAVeL cycleway, forest gravel, pavé/sett) shown as lines coloured and patterned by surface, so riders can pick the right bike for the terrain.
 
 ## Location (add mode)
-A surface entry is a **segment**, not a point: the first action is to tap the **start**, then the **end**;
-the segment line is drawn between the two taps. (Contrast: most types drop a single pin; rides need none.)
+A surface entry is a **segment**, not a point: the first action is to tap the **start**, then the **end**.
+(Contrast: most types drop a single pin; rides need none.)
+
+**The line between them follows the road** (2026-08-12). The two pins are snapped
+with the same bicycle router the climb editor uses — `/contribute/route` → our
+Valhalla — and the path it returns is what is drawn and what is stored. A
+straight chord between two taps crosses fields, houses and the wrong bank of a
+river; on a map that reads as a mistake, because it is one. Measured on the
+hairpins above Francorchamps, the road wanders **563 m** from the chord.
+
+Stored as `attributes.segment = {a, b, line?}`: `a`/`b` are where the rider
+pointed, `line` is the road. `line` is **optional by design** — no route, no
+router, or an older client all mean the chord, which is a worse shape but never
+a wrong one, and the rider is told the straight line stayed rather than being
+shown a road we did not find. The **item** geometry is the `line` when present.
+Dragging either pin re-snaps (sequence-guarded, so a slow earlier answer cannot
+land after a newer drag).
+
+Server-side `line` is bounded, because it is otherwise a channel for drawing any
+shape at all under a name and surface somebody chose: ≤ 3,000 points, every pair
+a real coordinate, and **both ends within 1 km of the pin they snapped from**.
 A segment may follow an actual ride — the demo includes a **gravel descent traced along the Spa · Sankt
 Vith loop** near its end, so a ride's real road type can be recorded.
 

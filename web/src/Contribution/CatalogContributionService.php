@@ -241,9 +241,37 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
-     * Decode + bounds-check the wizard's {"a":[lng,lat],"b":[lng,lat]} JSON.
+     * Longest road-following path a surface stretch may carry.
      *
-     * @return array{a: array{float, float}, b: array{float, float}}
+     * A stretch is a stretch, not an Alpine climb: the router returns a vertex
+     * every few metres, so 3,000 covers many kilometres of bends. The cap is
+     * not about the honest case, it is about what a hand-crafted POST could put
+     * into every visitor's catalog.json — the same exposure ClimbGeometry's
+     * MAX_POINTS bounds, and the lesson from that constant is to set it above
+     * the real road rather than at the shape somebody imagined.
+     */
+    private const int MAX_SEGMENT_POINTS = 3000;
+
+    /**
+     * How far the snapped path may start or end from the pin it snapped from.
+     *
+     * The router moves a pin to the nearest road, which is metres in a town and
+     * can be a few hundred on a moor. Beyond a kilometre it is not the same
+     * stretch any more, so the path is refused rather than quietly recorded as
+     * somewhere the rider never pointed at.
+     */
+    private const float MAX_SNAP_DRIFT_M = 1000.0;
+
+    /**
+     * Decode + bounds-check the wizard's segment JSON:
+     * {"a":[lng,lat],"b":[lng,lat],"line":[[lng,lat],…]}.
+     *
+     * `a`/`b` are where the rider pointed; `line` is the road between them as
+     * the router drew it, and is optional — no route, no router, or an older
+     * client all mean the straight chord, which is a worse shape but never a
+     * wrong one.
+     *
+     * @return array{a: array{float, float}, b: array{float, float}, line?: list<array{float, float}>}
      */
     private function decodeSegment(string $raw): array
     {
@@ -265,7 +293,51 @@ final class CatalogContributionService implements ContributionStubInterface
             $this->reject('contribute.error.invalid_geometry', 'segment');
         }
 
-        return ['a' => $a, 'b' => $b];
+        $segment = ['a' => $a, 'b' => $b];
+        // $decoded is an array by here: a non-array could not have produced a
+        // valid $a above, and reject() does not return.
+        $rawLine = $decoded['line'] ?? null;
+        if (null === $rawLine) {
+            return $segment;
+        }
+
+        if (!\is_array($rawLine) || !array_is_list($rawLine)
+            || \count($rawLine) < 2 || \count($rawLine) > self::MAX_SEGMENT_POINTS) {
+            $this->reject('contribute.error.invalid_geometry', 'segment');
+        }
+        $line = [];
+        foreach ($rawLine as $point) {
+            $valid = $pair($point);
+            if (null === $valid) {
+                $this->reject('contribute.error.invalid_geometry', 'segment');
+            }
+            $line[] = $valid;
+        }
+        // Both ends must belong to the stretch the rider pointed at. Without
+        // this the `line` key is an open channel for any shape at all, drawn on
+        // the map under a name and a surface somebody else chose.
+        if (self::metres($line[0], $a) > self::MAX_SNAP_DRIFT_M
+            || self::metres($line[\count($line) - 1], $b) > self::MAX_SNAP_DRIFT_M) {
+            $this->reject('contribute.error.invalid_geometry', 'segment');
+        }
+        $segment['line'] = $line;
+
+        return $segment;
+    }
+
+    /**
+     * Great-circle metres between two [lng, lat] pairs.
+     *
+     * @param array{float, float} $p
+     * @param array{float, float} $q
+     */
+    private static function metres(array $p, array $q): float
+    {
+        $lat = deg2rad(($p[1] + $q[1]) / 2);
+        $dx = deg2rad($q[0] - $p[0]) * cos($lat);
+        $dy = deg2rad($q[1] - $p[1]);
+
+        return 6371000.0 * sqrt($dx * $dx + $dy * $dy);
     }
 
     /** @param array<string, mixed> $payload */
@@ -490,15 +562,21 @@ final class CatalogContributionService implements ContributionStubInterface
         // pins submissions on a map, and the start of the stretch is the right
         // pin — while the ITEM gets the line the rider drew.
         //
-        // Straight a→b for now. A stretch of road bends, so the honest
-        // long-term shape is the OSM way's own geometry clipped between the two
-        // taps; the client has that geometry (it is in the tile) and the server
-        // deliberately does not. Sending it is a contract change, and worth
-        // making deliberately rather than inferring here.
+        // The line FOLLOWS THE ROAD when the router could find one. A road
+        // bends, and a straight chord between two taps crosses fields, houses
+        // and the wrong side of a river — it reads as a mistake, because on a
+        // map it is one. So the wizard snaps the two pins with the same bicycle
+        // router the climb editor uses (RouteSnapper) and sends the resulting
+        // path as `segment.line`; a→b survives only as the fallback for when no
+        // route exists, which is the honest answer in that case rather than a
+        // shape nobody rode.
         $segment = $draft->attributes['segment'] ?? null;
-        $itemGeom = \is_array($segment) && isset($segment['a'], $segment['b'])
-            ? json_encode(['type' => 'LineString', 'coordinates' => [$segment['a'], $segment['b']]], \JSON_THROW_ON_ERROR)
-            : $point;
+        $itemGeom = $point;
+        if (\is_array($segment) && isset($segment['a'], $segment['b'])) {
+            /** @var list<array{float, float}> $path */
+            $path = \is_array($segment['line'] ?? null) ? $segment['line'] : [$segment['a'], $segment['b']];
+            $itemGeom = json_encode(['type' => 'LineString', 'coordinates' => $path], \JSON_THROW_ON_ERROR);
+        }
 
         return $this->em->wrapInTransaction(function () use ($draft, $type, $by, $rawPayload, $geo, $point, $itemGeom, $changes): Submission {
             $submission = (new Submission())

@@ -1519,6 +1519,7 @@ improve:
     climb_drag_hint: 'drag a marker to correct it'
     toast_pin_moved: 'Pin moved to %coords% — submit to record it'
     toast_segment_moved: 'Segment updated — submit to record it'
+    toast_segment_straight: 'No road found between those points — the straight line stays'
     search_no_matches: 'No matches'
     search_unavailable: 'Search unavailable — tap the map instead'
     search_result: 'Result'

@@ -1529,6 +1529,7 @@ improve:
     climb_drag_hint: 'arrastra un marcador para corregirlo'
     toast_pin_moved: 'Chincheta movida a %coords% — envíalo para que quede registrado'
     toast_segment_moved: 'Tramo actualizado — envíalo para que quede registrado'
+    toast_segment_straight: 'No se encontró ninguna carretera entre esos puntos: se mantiene la línea recta'
     search_no_matches: 'Sin resultados'
     search_unavailable: 'Búsqueda no disponible — pulsa en el mapa'
     search_result: 'Resultado'

@@ -1844,6 +1844,7 @@ improve:
     climb_drag_hint: 'sleep een marker om het te corrigeren'
     toast_pin_moved: 'Speld verplaatst naar %coords% — dien in om het vast te leggen'
     toast_segment_moved: 'Segment bijgewerkt — dien in om het vast te leggen'
+    toast_segment_straight: 'Geen weg gevonden tussen die punten — de rechte lijn blijft staan'
     search_no_matches: 'Geen resultaten'
     search_unavailable: 'Zoeken niet beschikbaar — tik in plaats daarvan op de kaart'
     search_result: 'Resultaat'

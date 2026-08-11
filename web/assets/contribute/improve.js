@@ -444,14 +444,68 @@
         return ll.lat.toFixed(4) + '°N ' + ll.lng.toFixed(4) + '°E';
       };
 
+      /* The road between the two pins, as the router drew it.
+
+         A straight chord between two taps crosses fields, houses and the wrong
+         bank of a river: on a map that reads as a mistake, because it is one.
+         So the stretch is snapped with the SAME bicycle router the climb editor
+         uses (/contribute/route → our Valhalla), and `snapped` holds its path.
+         Null means we have not asked yet or the answer was "no road", and then
+         the straight line stays and the rider is told — never a shape presented
+         as the road that isn't. */
+      var snapped = null;
+      var snapSeq = 0;
+      var snapCtl = null;
+      var SNAP_TIMEOUT_MS = 8000;
+
       var drawSeg = function () {
         if (!wmap.isStyleLoaded()) { wmap.once('idle', drawSeg); return; }
         var id = 'seg';
         if (wmap.getLayer(id)) wmap.removeLayer(id);
         if (wmap.getSource(id)) wmap.removeSource(id);
         if (placed.length < 2) return;
-        wmap.addSource(id, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: placed.map(function (m) { return m.getLngLat().toArray(); }) } } });
+        var coords = snapped || placed.map(function (m) { return m.getLngLat().toArray(); });
+        wmap.addSource(id, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
         wmap.addLayer({ id: id, type: 'line', source: id, paint: { 'line-color': '#FF5A1F', 'line-width': 4 } });
+      };
+
+      /* Ask the router for the road between the pins. Sequence-guarded and
+         abortable because dragging a pin fires this repeatedly, and a slow
+         earlier answer arriving last would draw a stretch the rider has already
+         moved away from. */
+      var snapSeg = function () {
+        var seq = ++snapSeq;
+        if (snapCtl) { snapCtl.abort(); snapCtl = null; }
+        if (placed.length < 2) { snapped = null; return; }
+        var a = placed[0].getLngLat().toArray();
+        var b = placed[1].getLngLat().toArray();
+        var ctl = snapCtl = new AbortController();
+        var timer = setTimeout(function () { ctl.abort(); }, SNAP_TIMEOUT_MS);
+        fetch('/contribute/route', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ a: a, b: b }),
+          signal: ctl.signal
+        }).then(function (r) {
+          if (!r.ok) throw new Error('route HTTP ' + r.status);
+          return r.json();
+        }).then(function (d) {
+          clearTimeout(timer);
+          if (seq !== snapSeq) return;   // superseded by a newer drag
+          var line = d && d.code === 'Ok' && d.routes && d.routes[0]
+            && d.routes[0].geometry && d.routes[0].geometry.coordinates;
+          if (!line || line.length < 2) { snapped = null; toast(t('toast_segment_straight')); }
+          else { snapped = line; }
+          syncLoc();
+          drawSeg();
+        }).catch(function () {
+          clearTimeout(timer);
+          if (seq !== snapSeq) return;
+          snapped = null;
+          toast(t('toast_segment_straight'));
+          syncLoc();
+          drawSeg();
+        });
       };
 
       var syncLoc = function () {
@@ -467,7 +521,11 @@
             if (ro) ro.textContent = placed.length === 1 ? t('readout_segment_end') : t('readout_segment_start');
           } else {
             WZ.loc = { type: 'segment', a: placed[0].getLngLat().toArray(), b: placed[1].getLngLat().toArray() };
-            if (fSeg) fSeg.value = JSON.stringify({ a: WZ.loc.a, b: WZ.loc.b });
+            // `line` only when the router answered: the server treats its
+            // absence as "no road found", which is exactly what it means.
+            var seg = { a: WZ.loc.a, b: WZ.loc.b };
+            if (snapped && snapped.length > 1) seg.line = snapped;
+            if (fSeg) fSeg.value = JSON.stringify(seg);
             if (ro) ro.textContent = '✓ ' + fmt(placed[0].getLngLat()) + ' → ' + fmt(placed[1].getLngLat());
           }
         } else {
@@ -516,10 +574,12 @@
         var need = LOCATE === 'segment' ? 2 : 1;
         if (placed.length >= need) { placed.forEach(function (m) { m.remove(); }); placed.length = 0; }
         var m = new maplibregl.Marker({ element: mkPin(), draggable: true, anchor: 'bottom' }).setLngLat(lngLat).addTo(wmap);
-        m.on('dragend', function () { syncLoc(); drawSeg(); announceMove(); });
+        m.on('dragend', function () { snapped = null; syncLoc(); drawSeg(); announceMove(); snapSeg(); });
         placed.push(m);
+        snapped = null;
         syncLoc();
         drawSeg();
+        snapSeg();
       };
 
       wmap.on('click', function (e) { placeAt(e.lngLat); });

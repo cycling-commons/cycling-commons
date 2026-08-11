@@ -1847,6 +1847,7 @@ improve:
     climb_drag_hint: 'ziehe eine Markierung, um es zu korrigieren'
     toast_pin_moved: 'Markierung auf %coords% verschoben — zum Festhalten einreichen'
     toast_segment_moved: 'Abschnitt aktualisiert — zum Festhalten einreichen'
+    toast_segment_straight: 'Keine Straße zwischen diesen Punkten gefunden — die gerade Linie bleibt'
     search_no_matches: 'Keine Treffer'
     search_unavailable: 'Suche nicht verfügbar — tippe stattdessen auf die Karte'
     search_result: 'Treffer'
