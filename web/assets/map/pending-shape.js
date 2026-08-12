@@ -81,10 +81,18 @@ export function showPendingShape(shape, side) {
   map.addSource(LINE, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } } });
   // A casing under the line so it stays legible over the climb it is being
   // compared with, whatever the basemap is doing underneath.
+  /* The casing under the line. Dark ink for a climb, because it has to stay
+     legible over whatever the basemap is doing — but the UNRECORDED before is
+     the legend's red dotted line, and that one wears the surface skin's own
+     white casing. Dark ink between red dashes reads as a grey road surface,
+     which is precisely the thing the line is saying nobody has recorded
+     (owner-reported 2026-08-12, twice: the same mistake the legend made). */
   map.addLayer({
     id: CASE, type: 'line', source: LINE,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': '#14160E', 'line-width': 11, 'line-opacity': 0.55 },
+    paint: s.unrecorded
+      ? { 'line-color': '#FBF4E4', 'line-width': 11, 'line-opacity': 0.9 }
+      : { 'line-color': '#14160E', 'line-width': 11, 'line-opacity': 0.55 },
   });
   map.addLayer({
     id: LINE, type: 'line', source: LINE,

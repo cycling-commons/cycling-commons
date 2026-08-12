@@ -115,7 +115,12 @@
     .q-list.is-list .q-top{flex-wrap:nowrap;align-items:center}
     .q-list.is-list .q-headwrap{display:flex;align-items:baseline;gap:.6rem;flex:1 1 auto}
     .q-list.is-list .q-head{flex:0 1 auto;min-width:0;flex-wrap:nowrap}
-    .q-list.is-list .q-submitter{flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:26ch}
+    /* 26ch cut the country off a region with a long name ("XanderK · North
+       Holland …", owner-reported 2026-08-12) — and the row had the space to
+       spare. 44ch fits the longest region names we carry (North
+       Rhine-Westphalia) with the country after them; the title is still the
+       elastic part that takes the ellipsis first. */
+    .q-list.is-list .q-submitter{flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44ch}
   }
   .trash-warn{color:#8b1a1a}
   .trash-type-label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8b1a1a;margin:.5rem 0}
