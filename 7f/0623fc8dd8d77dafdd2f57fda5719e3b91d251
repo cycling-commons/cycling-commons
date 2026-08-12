@@ -1,0 +1,70 @@
+web/translations/messages.en.yaml
+  s_bbe01d4f023787::t_78e7929c93e5b6 1828,2663
+  s_bbe01d4f023787::t_78dcd7489db9dd 1839,2660
+docs/specs/moderation-and-contribution.md
+  s_bbe01d4f023787::t_db534b084feb32 1434
+  s_bbe01d4f023787::t_c83641f54aeefc 623-648
+  s_bbe01d4f023787::t_286a20d0275e3b 1310-1329,1364-1414
+  s_bbe01d4f023787::t_55d0419748b0f0 1415,1708-1749
+docs/specs/edit-items/J-history-culture.md
+  s_bbe01d4f023787::t_685c171a7f4574 26
+web/translations/messages.de.yaml
+  s_bbe01d4f023787::t_9f4ecaa1bdf5b1 2643
+  s_bbe01d4f023787::t_78dcd7489db9dd 1527,2640
+docs/specs/edit-items/M-public-toilets.md
+  s_bbe01d4f023787::t_db07cb47a60cb8 45
+web/assets/map/drawer.js
+  s_bbe01d4f023787::t_268cb48c9614ee 362
+docs/specs/edit-items/C-water-food.md
+  s_bbe01d4f023787::t_685c171a7f4574 28
+docs/specs/edit-items/H-shelter.md
+  s_bbe01d4f023787::t_685c171a7f4574 26
+web/templates/map/index.html.twig
+  s_bbe01d4f023787::t_b7c6d191e4c821 401
+docs/specs/edit-items/G-getting-there.md
+  s_bbe01d4f023787::t_685c171a7f4574 26
+docs/specs/catalog-data-model.md
+  s_bbe01d4f023787::t_c5fd6c0a98f4d2 323-343,408-419
+web/translations/messages.es.yaml
+  s_bbe01d4f023787::t_9f4ecaa1bdf5b1 1840,2677
+  s_bbe01d4f023787::t_78dcd7489db9dd 1851,2674
+docs/specs/edit-items/D-bike-services.md
+  s_bbe01d4f023787::t_685c171a7f4574 69
+web/translations/messages.nl.yaml
+  s_bbe01d4f023787::t_78dcd7489db9dd 1524,2637
+  s_bbe01d4f023787::t_9f4ecaa1bdf5b1 2640
+docs/specs/map-and-search.md
+  s_bbe01d4f023787::t_db534b084feb32 37,40
+  s_bbe01d4f023787::t_46072ed38b59c3 193-220,246-256
+  s_bbe01d4f023787::t_e7771d99f148ed 757
+web/translations/messages.fr.yaml
+  s_bbe01d4f023787::t_78dcd7489db9dd 1524,2637
+  s_bbe01d4f023787::t_9f4ecaa1bdf5b1 2640
+docs/specs/account-and-auth.md
+  s_bbe01d4f023787::t_caef68d5f89d60 60,743-749
+  s_bbe01d4f023787::t_c8215a6816e69f 750-754
+web/assets/map/panels.js
+  s_bbe01d4f023787::t_268cb48c9614ee 207
+docs/specs/edit-items/I-scenic-views.md
+  s_bbe01d4f023787::t_685c171a7f4574 37
+docs/specs/edit-items/README.md
+  s_bbe01d4f023787::t_a237b78499ff5c 200-201,203,205,208-212,222,224-232
+  s_bbe01d4f023787::t_ff17f077d18c29 191-194,234-238
+  s_bbe01d4f023787::t_d3d5eec414e441 233
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "7f0623fc8dd8d77dafdd2f57fda5719e3b91d251",
+  "prompts": {},
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
