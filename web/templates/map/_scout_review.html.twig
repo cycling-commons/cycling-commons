@@ -24,5 +24,21 @@
   <div class="scout-list" id="scoutList" hidden>
     <div class="scout-count"><b id="scoutDone">0</b> / <span id="scoutTotal">0</span> {{ 'scout.review_approved'|trans }}</div>
     <ol id="scoutTags"></ol>
+    {# Send everything still outstanding. Below the list, because it is the last
+       thing you do — and it never sends what is already sent. #}
+    <button type="button" class="scout-sendall" id="scoutSendAll">{{ 'scout.review_send_all'|trans }}</button>
+  </div>
+
+  {# The photo uploader, mounted once. media-upload.js addresses these ids
+     directly, and it owns the consent gate — which is exactly why there is one
+     of it and not one per tag: consent must fail closed in a single place
+     (docs/specs/photo-uploads.md). A row's "add a photo" button routes the next
+     completed upload to that row. #}
+  <div class="scout-media" id="scoutMedia" hidden>
+    <div class="consent-gate" id="media-consent"></div>
+    <input type="file" id="file-photo" accept="image/jpeg,image/png,image/webp,image/heic" hidden>
+    <div class="drop" id="drop-photo" role="button" tabindex="0" aria-controls="file-photo">{{ 'scout.review_photo_drop'|trans }}</div>
+    <div class="ulq" id="q-photo"></div>
+    <input type="hidden" id="scoutMediaIds">
   </div>
 </aside>

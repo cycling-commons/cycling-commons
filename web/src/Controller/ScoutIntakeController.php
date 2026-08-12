@@ -138,6 +138,13 @@ final class ScoutIntakeController extends AbstractController
                 'lat' => (float) $lat,
                 'lng' => (float) $lng,
                 'mode' => 'add',
+                /* A photo taken at the spot. Claimed by MediaClaimService in
+                   the same transaction as the facts, exactly as the wizard's
+                   photos are — a rejected id rolls the whole submission back
+                   rather than leaving a half-attached contribution. Passed
+                   through verbatim: this endpoint has no business re-deciding
+                   what that service already validates. */
+                'mediaIds' => $payload['mediaIds'] ?? null,
                 // Provenance says HOW it was submitted, never that anything was
                 // verified: the server did not see the ride and cannot check a
                 // thing about it (plan §3).

@@ -291,6 +291,13 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
       name:s.title, headline:`${(I18N.pendingTypes||{})[s.type]||s.type} · ${s.who} · ${s.when}`,
       geom:{ll:pendingPin(s)},
       record:[
+        /* WHICH LAYER this is. The card named the place, the person and the
+           region, and never the one thing a curator needs first — is this a
+           viewpoint, a water point, a hazard? (owner-reported 2026-08-12). The
+           label is the layer's own, so it reads exactly as the rail and the
+           improve form do. */
+        {label:D.type||'Type', value:(LAYER_L10N[(CATALOG.find(l=>l.letter===s.letter)||{}).key] ||
+                                      (CATALOG.find(l=>l.letter===s.letter)||{}).label || s.letter)},
         {label:D.submittedBy||'Submitted by', value:s.who},
         {label:D.age||'Age', value:s.when},
         {label:D.where||'Where', value:`${s.region||''} · ${s.country||''}`}

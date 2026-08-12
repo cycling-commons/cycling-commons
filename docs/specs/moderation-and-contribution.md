@@ -1574,6 +1574,41 @@ so the panel can never present a choice the server refuses. `resupply` may be
 water or a bike service; `other` may be almost anything, which is why it is
 resolved by the rider rather than guessed by us.
 
+**The review screen shows everything at once** (2026-08-12). Rows are open, not
+collapsed: a rider came to check that thirteen tags are the right thirteen
+things, and hiding that behind thirteen clicks defeats the screen. Each row
+carries its letter, its name and a photo button; **Send the rest** clears
+whatever is still outstanding, in order.
+
+- **Dragging a pin needs no save.** The position updates the moment the drag
+  ends and travels with that tag's own Approve — there is no separate commit,
+  and no state that can be left behind. Dragging is clamped to the ride line.
+- **An unnamed spot is still sendable.** A blank name becomes the tag's own kind
+  ("Scenery", "Surface · gravel") rather than blocking the send or writing
+  "Untitled" — the type already says more than a placeholder can, and the rider
+  can type over it.
+- **A photo can be attached per tag**, which is the point for a camera that
+  writes no GPS: the tag knows where it was even when the picture does not. One
+  uploader for the panel, not one per row — `media-upload.js` owns the licence
+  consent gate, and consent must fail closed in a single place
+  ([photo-uploads.md](photo-uploads.md)); the row that asked is the row the next
+  completed upload lands on. Ids travel as `mediaIds` and are claimed by the
+  same service every other submission uses.
+
+**Curator-facing naming follows the rider's own choice** (2026-08-12). The desk
+is pseudonymous by default — a decision should turn on the contribution, not on
+who sent it — but `public_profile` is an explicit opt-in that already puts a
+name on the contributors wall and on `/riders/{uuid}`, so hiding it from the one
+person who has to read the work was inconsistent rather than protective. A
+private account still shows `rider#<hash>`, which is where the protection
+matters. Public change history is unchanged.
+
+**A curator can open a pending item in the wizard.** `/improve?item=` binds only
+publicly-served states for everyone else, and the pending drawer was offering an
+"Edit this item" link that could never resolve. A curator is already reading
+that submission on the desk, so nothing is exposed that they cannot see — and
+the alternative was bouncing a typo back to the rider as a needs-info.
+
 **Open:** the observation date rides in the submission's raw payload (which the
 moderator reads) rather than as a first-class attribute — making it one is task
 6a of the plan and a registry change of its own. And approving every tag by hand

@@ -176,4 +176,64 @@ final class ScoutIntakeTest extends WebTestCase
             }
         }
     }
+
+    public function testAPhotoTravelsWithTheTag(): void
+    {
+        // A camera without GPS cannot say where a picture was taken; the tag
+        // can. An unknown media id must fail the whole submission rather than
+        // land a half-attached contribution.
+        $client = static::createClient();
+        $this->login($client, 'photo');
+
+        $this->post($client, [
+            'tag' => 'scenery', 'letter' => 'I', 'lat' => 52.0, 'lng' => 4.0,
+            'details' => ['name' => 'Waterkering'],
+            'mediaIds' => '00000000-0000-4000-8000-000000000000',
+        ]);
+
+        self::assertResponseStatusCodeSame(422, 'an id that claims nothing is refused');
+        self::assertSame(0, static::getContainer()->get(EntityManagerInterface::class)
+            ->getRepository(Submission::class)->count(['title' => 'Waterkering']));
+    }
+
+    public function testASurfaceTagArrivesWithTheClassPickedOnTheDevice(): void
+    {
+        // Scout writes OSM's own word; the form speaks declarable labels.
+        // Translating server-side saves the rider choosing the same thing twice.
+        $client = static::createClient();
+        $this->login($client, 'osmsurface');
+
+        $this->post($client, [
+            'tag' => 'surface', 'letter' => 'A', 'lat' => 52.0, 'lng' => 4.0,
+            'details' => ['name' => 'Cobbled stretch'],
+            'osmSurface' => 'cobblestone',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Cobbled stretch']);
+        self::assertNotNull($submission);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertSame('Sett — pavé', $item->getAttributes()['surface'] ?? null);
+    }
+
+    public function testAnUnknownOsmSurfaceIsDroppedRatherThanGuessed(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'moondust');
+
+        $this->post($client, [
+            'tag' => 'surface', 'letter' => 'A', 'lat' => 52.0, 'lng' => 4.0,
+            'details' => ['name' => 'Moon stretch'],
+            'osmSurface' => 'moon_dust',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Moon stretch']);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertArrayNotHasKey('surface', $item->getAttributes(), 'the form asks instead');
+    }
 }

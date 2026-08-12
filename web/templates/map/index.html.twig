@@ -435,6 +435,49 @@ window.CC_VENDOR = {{ {
      from ScoutTag::LETTERS — the same list the intake endpoint validates
      against, so the panel can never offer a choice the server refuses. #}
   window.CC_SCOUT_TAGS = {{ scout_tags|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+</script>
+{% if scout_review|default(false) %}
+  {# Photo intake config, only on the review screen: /map itself uploads
+     nothing, and shipping the consent bag to every map load would be weight
+     for nobody. Same shape the improve wizard emits — one contract. #}
+  <script nonce="{{ csp_nonce() }}">window.CC_MEDIA = {{ {
+    tokenUrl: path('media_token'),
+    uploadUrl: path('media_photos_upload'),
+    consentUrl: path('media_consent'),
+    consentCurrentUrl: path('media_consent_current'),
+    termsUrl: path('terms'),
+    licenceUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    max: 6,
+    i18n: {
+      title: 'media.consent.title'|trans,
+      intro: 'media.consent.intro'|trans,
+      contract: 'media.consent.contract'|trans,
+      keepOwnership: 'media.consent.keep_ownership'|trans,
+      accept: 'media.consent.accept'|trans,
+      cancel: 'media.consent.cancel'|trans,
+      consentError: 'media.consent.error'|trans,
+      standing: 'media.consent.standing'|trans,
+      readContract: 'media.consent.read_contract'|trans,
+      readLicence: 'media.consent.read_licence'|trans,
+      siteTerms: 'media.consent.site_terms'|trans,
+      remove: 'improve.step3.remove_photo'|trans,
+      tooMany: 'improve.step3.too_many_photos'|trans,
+      errors: {
+        consent_required: 'media.error.consent_required'|trans,
+        missing_file: 'media.error.missing_file'|trans,
+        photo_too_large: 'media.error.photo_too_large'|trans,
+        photo_too_many_pixels: 'media.error.photo_too_many_pixels'|trans,
+        photo_format: 'media.error.photo_format'|trans,
+        photo_unreadable: 'media.error.photo_unreadable'|trans,
+        photo_too_small: 'media.error.photo_too_small'|trans,
+        rate_limited: 'media.error.rate_limited'|trans,
+        unknown: 'media.error.unknown'|trans
+      }
+    }
+  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script src="{{ asset('contribute/media-upload.js') }}"></script>
+{% endif %}
+<script nonce="{{ csp_nonce() }}">
   {% endif %}
 </script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog

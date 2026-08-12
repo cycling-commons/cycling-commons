@@ -190,8 +190,12 @@ final class SubmissionQueue
         $rows = $this->db->fetchAllAssociative(
             'SELECT s.id, s.item_id, s.title, s.type, s.status, s.user_id, s.decided_at, s.decision_note,
                     s.changes, u.display_name AS decided_by_name,
+                    su.public_profile, su.display_name, su.uuid AS user_uuid,
                     rr.body_text AS rider_reply
              FROM submission s LEFT JOIN users u ON u.id = s.decided_by
+                  -- The SUBMITTER, for the same public-profile rule the open
+                  -- queue follows (submitterLabel).
+                  LEFT JOIN users su ON su.id = s.user_id
                   -- The rider\'s answer follows the submission into the history.
                   -- It is not personal mail (§5.4), so the desk is the ONLY place
                   -- it exists — and once a submission is decided it drops out of
@@ -223,7 +227,7 @@ final class SubmissionQueue
                 'type' => (string) $r['type'],
                 'was' => $was,
                 'now' => $new,
-                'who' => RiderPseudonym::for($r['user_id']),
+                'who' => self::submitterLabel($r),
                 'when' => null !== $r['decided_at']
                     ? RelativeTime::ago(new \DateTimeImmutable((string) $r['decided_at']), $now)
                     : '',
@@ -495,8 +499,10 @@ final class SubmissionQueue
             'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title, s.status, s.decision_note,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
                     COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
-                    rr.body_text AS rider_reply
+                    rr.body_text AS rider_reply,
+                    u.public_profile, u.display_name, u.uuid AS user_uuid
              FROM submission s LEFT JOIN region r ON r.id = s.region_id
+                  LEFT JOIN users u ON u.id = s.user_id
                   LEFT JOIN LATERAL (
                       SELECT um.body_text
                       FROM user_message um
@@ -529,7 +535,8 @@ final class SubmissionQueue
                 'title' => (string) $r['title'],
                 'lat' => (float) $r['lat'],
                 'lng' => (float) $r['lng'],
-                'who' => RiderPseudonym::for($r['user_id']),
+                'who' => self::submitterLabel($r),
+                'whoUuid' => ($r['public_profile'] ?? false) ? (string) ($r['user_uuid'] ?? '') : '',
                 'when' => RelativeTime::ago(new \DateTimeImmutable((string) $r['created_at']), $now),
                 'body' => (string) $r['body'],
                 'was' => $was,
@@ -562,6 +569,31 @@ final class SubmissionQueue
                 'changes' => self::changeRows((string) $r['changes']),
             ];
         }, $rows);
+    }
+
+    /**
+     * How a submitter is named to a curator.
+     *
+     * Pseudonymous by default (`account-and-auth.md` §names): a decision should
+     * turn on the contribution, not on who sent it.
+     *
+     * **Except when the rider has said otherwise.** `public_profile` is an
+     * explicit opt-in that already puts their name on the contributors wall and
+     * on a public `/riders/{uuid}` page, so hiding it from the one person who
+     * has to read their work was inconsistent rather than protective — the
+     * owner hit exactly that (2026-08-12). A private account is unchanged, and
+     * that is where the protection actually matters.
+     *
+     * @param array<string, mixed> $row
+     */
+    private static function submitterLabel(array $row): string
+    {
+        $name = trim((string) ($row['display_name'] ?? ''));
+        if (($row['public_profile'] ?? false) && '' !== $name) {
+            return $name;
+        }
+
+        return RiderPseudonym::for($row['user_id']);
     }
 
     /**

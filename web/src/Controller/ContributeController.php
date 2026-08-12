@@ -343,15 +343,26 @@ final class ContributeController extends AbstractController
         //
         // ctype_digit('') is false, so this also rejects a missing/blank param.
         if (ItemType::QualityRides !== $requestedType && ctype_digit($itemParam)) {
-            // Only bind items in a publicly-served state: /map serves only
-            // unverified/verified (docs/specs/catalog-data-model.md §4).
-            // A 'submitted' item is another rider's un-moderated contribution;
-            // 'rejected'/'retired' are withdrawn. Binding any of them would
-            // prefill the form with data that no public read path exposes.
-            // Everything else falls through to the unbound explainer.
+            /* Only bind items in a publicly-served state: /map serves only
+               unverified/verified (docs/specs/catalog-data-model.md §4).
+               A 'submitted' item is another rider's un-moderated contribution;
+               'rejected'/'retired' are withdrawn. Binding any of them would
+               prefill the form with data that no public read path exposes.
+
+               **Except for a curator**, who is already reading that very
+               submission on the moderation desk. The pending drawer offers
+               "Edit this item" on exactly these rows, and the link landed on
+               "pick a place to improve" — a control that cannot work
+               (owner-reported 2026-08-12). Nothing is exposed that the curator
+               cannot already see, and the alternative is bouncing a typo back
+               to the rider as a needs-info. */
+            $states = [ItemState::Unverified, ItemState::Verified];
+            if ($this->isGranted('ROLE_CURATOR')) {
+                $states[] = ItemState::Submitted;
+            }
             $item = $em->getRepository(Item::class)->findOneBy([
                 'id' => (int) $itemParam,
-                'state' => [ItemState::Unverified, ItemState::Verified],
+                'state' => $states,
             ]);
             // Guard the shared client-side id contract for A–J: the resolved row
             // must be the type the client opened. A mismatch means the id

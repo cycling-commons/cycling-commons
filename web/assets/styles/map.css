@@ -468,6 +468,19 @@
   .scout-approve{background:var(--trail);color:#fff;border:none;border-radius:5px;padding:.4rem .6rem;
     font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
   .scout-approve:disabled{background:rgba(127,207,154,.35);cursor:default}
+  .scout-photo{background:none;border:1px solid rgba(239,230,212,.28);border-radius:5px;
+    color:var(--paper);font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;
+    text-transform:uppercase;padding:.35rem .5rem;cursor:pointer}
+  .scout-photo:hover{border-color:var(--trail)}
+  .scout-sendall{margin-top:.8rem;width:100%;background:var(--trail);color:#fff;border:none;
+    border-radius:6px;padding:.55rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;
+    text-transform:uppercase;cursor:pointer}
+  .scout-sendall:disabled{opacity:.5;cursor:default}
+  /* The uploader's own markup, revealed only when a row asks for a photo. */
+  .scout-media{margin-top:.9rem;border-top:1px solid rgba(239,230,212,.14);padding-top:.8rem}
+  .scout-media .drop{border:1px dashed rgba(239,230,212,.35);border-radius:8px;padding:.7rem;
+    text-align:center;font-size:.74rem;color:rgba(239,230,212,.75);cursor:pointer}
+  .scout-media .drop:hover{border-color:var(--trail)}
   /* Red because it is UNRESOLVED, not because it is wrong: red is the one
      colour the map does not use for a place, so a rider can find what still
      needs them at a glance. Green once it has gone in. */

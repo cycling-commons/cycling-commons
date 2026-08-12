@@ -233,6 +233,8 @@ final class MapController extends AbstractController
             'scoutNeedName' => 'd_scout_need_name', 'scoutSendFailed' => 'd_scout_send_failed',
             'scoutBadFile' => 'd_scout_bad_file', 'scoutNoTags' => 'd_scout_no_tags',
             'scoutNeedFit' => 'd_scout_need_fit',
+            'scoutAddPhoto' => 'd_scout_add_photo', 'scoutPhotoAttached' => 'd_scout_photo_attached',
+            'scoutSendAll' => 'd_scout_send_all',
             'roadMain' => 'd_road_main', 'roadLocal' => 'd_road_local',
             'roadResidential' => 'd_road_residential', 'roadTrack' => 'd_road_track',
             'roadPath' => 'd_road_path', 'roadCycleway' => 'd_road_cycleway',

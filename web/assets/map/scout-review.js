@@ -175,15 +175,17 @@ function renderList() {
     const li = document.createElement('li');
     li.className = 'scout-tag' + (entry.approved ? ' done' : '');
 
+    /* Open, all of them. A collapsed list hides exactly the thing a rider came
+       to check — that thirteen tags are the right thirteen things — behind
+       thirteen clicks (owner, 2026-08-12). The head stays a button because it
+       still flies the map to the tag. */
     const head = document.createElement('button');
     head.type = 'button';
     head.className = 'scout-tag-head';
     head.textContent = (i + 1) + ' · ' + (t('scoutTag_' + entry.tag, entry.tag));
-    head.addEventListener('click', () => {
-      map.flyTo({ center: [entry.lng, entry.lat], zoom: 16 });
-      li.classList.toggle('open');
-    });
+    head.addEventListener('click', () => map.flyTo({ center: [entry.lng, entry.lat], zoom: 16 }));
     li.appendChild(head);
+    li.classList.add('open');
 
     const body = document.createElement('div');
     body.className = 'scout-tag-body';
@@ -211,6 +213,15 @@ function renderList() {
     name.addEventListener('input', () => { entry.name = name.value; });
     body.appendChild(name);
 
+    const photo = document.createElement('button');
+    photo.type = 'button';
+    photo.className = 'scout-photo';
+    photo.textContent = entry.mediaIds
+      ? t('scoutPhotoAttached', 'Photo attached')
+      : t('scoutAddPhoto', 'Add a photo');
+    photo.addEventListener('click', () => requestPhotoFor(entry, photo));
+    body.appendChild(photo);
+
     const approve = document.createElement('button');
     approve.type = 'button';
     approve.className = 'scout-approve';
@@ -228,12 +239,22 @@ function renderList() {
   if (done) done.textContent = String(tags.filter(x => x.approved).length);
 }
 
+/* A name we can stand behind when the rider gives none.
+
+   Not "Untitled": the tag already says what kind of thing it is, and the type
+   the device recorded says a little more, so "Scenery" beats an empty field and
+   beats a placeholder that means nothing to the curator who reads it next. The
+   rider can always type over it — this only stops an unnamed spot from being
+   unsendable (owner, 2026-08-12). */
+function fallbackName(entry) {
+  const kind = t('scoutTag_' + entry.tag, entry.tag);
+  const detail = (entry.osmSurface || '').trim();
+  return detail ? kind + ' · ' + detail : kind;
+}
+
 /** One tag, one request — see ScoutIntakeController for why not a batch. */
 async function sendOne(entry, button, li) {
-  if (!entry.name || !entry.name.trim()) {
-    msg(t('scoutNeedName', 'Give the tag a name before sending it.'), true);
-    return;
-  }
+  if (!entry.name || !entry.name.trim()) entry.name = fallbackName(entry);
   button.disabled = true;
   button.textContent = t('scoutSending', 'Sending…');
   try {
@@ -252,6 +273,11 @@ async function sendOne(entry, button, li) {
         // The server maps it to the declarable label; an unknown value is
         // dropped there rather than trusted.
         osmSurface: entry.osmSurface || undefined,
+        // A photo taken at the spot, for a camera that writes no GPS: the tag
+        // knows where it was even when the picture does not (owner,
+        // 2026-08-12). Claimed by the same MediaClaimService every other
+        // submission uses.
+        mediaIds: entry.mediaIds || undefined,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -330,6 +356,64 @@ function loadFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
+/* ── photos ────────────────────────────────────────────────────────────────
+   ONE uploader for the whole panel, not one per row. media-upload.js owns the
+   licence-consent gate, and consent has to fail closed in a single place
+   (docs/specs/photo-uploads.md) — duplicating that machinery per tag is how a
+   second copy ends up defaulting to "yes". So the module is mounted once, and
+   the row that asked for a photo is the row the next completed upload lands
+   on. */
+let photoTarget = null;
+let photoButton = null;
+
+function mountPhotos() {
+  const hidden = el('scoutMediaIds');
+  if (!hidden || !window.Cc || !window.Cc.mountMediaUploads) return;
+  window.Cc.mountMediaUploads({
+    hidden,
+    onChange: () => {
+      // The hidden field carries every id the queue holds; the newest belongs
+      // to whoever asked last.
+      const ids = String(hidden.value || '').split(',').map(x => x.trim()).filter(Boolean);
+      const latest = ids[ids.length - 1];
+      if (!latest || !photoTarget) return;
+      if (photoTarget.mediaIds === latest) return;
+      photoTarget.mediaIds = latest;
+      if (photoButton) photoButton.textContent = t('scoutPhotoAttached', 'Photo attached');
+      photoTarget = null;
+      photoButton = null;
+    },
+  });
+}
+
+function requestPhotoFor(entry, button) {
+  const media = el('scoutMedia');
+  const input = el('file-photo');
+  if (!media || !input) return;
+  photoTarget = entry;
+  photoButton = button;
+  // Revealed rather than always shown: the consent notice and the queue are
+  // meaningful only once somebody has asked to add a picture.
+  media.hidden = false;
+  input.click();
+}
+
+/** Send everything still outstanding, in order. */
+async function sendAll(button) {
+  const rows = [...document.querySelectorAll('.scout-tag')];
+  button.disabled = true;
+  button.textContent = t('scoutSending', 'Sending…');
+  for (let i = 0; i < tags.length; i++) {
+    const entry = tags[i];
+    if (entry.approved) continue;
+    const li = rows[i];
+    const rowBtn = li && li.querySelector('.scout-approve');
+    if (rowBtn) await sendOne(entry, rowBtn, li);
+  }
+  button.disabled = false;
+  button.textContent = t('scoutSendAll', 'Send the rest');
+}
+
 /** Mount the panel. A no-op everywhere except /scout/review. */
 export function initScoutReview() {
   const panel = el('scoutPanel');
@@ -340,6 +424,9 @@ export function initScoutReview() {
     pick.addEventListener('click', () => input.click());
     input.addEventListener('change', () => loadFile(input.files && input.files[0]));
   }
+  mountPhotos();
+  const sendAllBtn = el('scoutSendAll');
+  if (sendAllBtn) sendAllBtn.addEventListener('click', () => sendAll(sendAllBtn));
   const drop = el('scoutDrop');
   if (drop) {
     drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
@@ -353,3 +440,10 @@ export function initScoutReview() {
 }
 
 export const scoutRed = RED;
+
+/* A handle for the browser smoke harness (web/tests/browser/map-smoke.js's
+   idiom). Dragging a MapLibre marker cannot be driven by synthetic mouse events
+   in the probe browser — a trap this codebase has hit before — so the drag path
+   is exercised through the markers themselves instead of pretending a
+   page.mouse drag proves anything. */
+if (typeof window !== 'undefined') window.__ccScoutTags = () => tags;
