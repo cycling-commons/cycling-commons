@@ -62,6 +62,16 @@ precedence = "override"
 SPDX-FileCopyrightText = "© Meta Platforms (mapillary-js); © Redocly (redoc)"
 SPDX-License-Identifier = "MIT"
 
+# Scout's FIT reader, copied verbatim from the Scout repository's
+# tools/fit-viewer.html between its own PARSER-START/PARSER-END markers. Same
+# owner as this project, MIT rather than PolyForm — so it stays annotated as
+# what it is, and a re-sync stays a copy rather than a merge.
+[[annotations]]
+path = ["web/assets/lib/scout-fit.js", "web/tests/fixtures/scout/*"]
+precedence = "override"
+SPDX-FileCopyrightText = "© BikeCoders (Scout)"
+SPDX-License-Identifier = "MIT"
+
 # ── Data exports (ODbL — the open half of the project) ──────────────────────
 # Generated OSM-derived demo/fixture data; ODbL like the database it mirrors.
 [[annotations]]

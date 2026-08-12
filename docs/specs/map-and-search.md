@@ -563,10 +563,19 @@ the newest rung of that same ladder.
 - **`unverified` is labelled "Surface not recorded"**, not "unverified" — the
   class means OSM records no `surface` tag there, and riders are precisely who
   *verifies* things, so the old word claimed the opposite of what it meant
-  (owner-reported 2026-08-12). Note that the classified artifact does not carry
-  this class at all: untagged ways are the separate untagged arm, which is not
-  built or served yet, so the legend row currently describes our own curated
-  items only.
+  (owner-reported 2026-08-12).
+- **The untagged arm is served** (2026-08-12), behind its own ◌ *Needs a surface
+  tag* control and its own artifact. Every line in it is a road OSM has no
+  surface value for — which is to say a road somebody could go and record, so
+  it is the **contribution view**: "then people will know what to tag and extend
+  the map knowledge" (owner). Independent of the classified toggle, because a
+  rider asking what is left to do should not have to switch on a million
+  answered lines to see the unanswered ones. Drawn thinner and fainter than the
+  classified arm: it is a to-do list, not an answer, and at country zoom a
+  full-weight 900k-line network is a red smear.
+  Two artifacts rather than one because a vector tile is fetched whole — folding
+  them together would make every surface tile several times larger for every
+  rider, to carry lines most will never switch on.
 - **B · Climbs** with traced geometry draw a gradient-coloured line
   (`line-gradient` over `line-progress`, purple ramp `gradColor()`) plus a
   "steepest pitch" marker; the pin sits at the climb **foot** (first route

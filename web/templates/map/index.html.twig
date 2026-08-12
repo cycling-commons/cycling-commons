@@ -290,6 +290,10 @@
          built — the same rule the satellite segment follows, and for the same
          reason: a control that does nothing reads as broken, not absent. #}
       <button class="mc-ov" id="ovSurface" hidden><span class="mc-ic">▰</span>{{ 'map.surfaces'|trans }}</button>
+      {# The "needs a tag" arm — every road OSM has no surface value for. Its own
+         artifact and its own toggle, off by default: it is a contribution view,
+         and it is bigger than the answered one. #}
+      <button class="mc-ov mc-ov-sub" id="ovUntagged" hidden><span class="mc-ic">◌</span>{{ 'map.surfaces_untagged'|trans }}</button>
     </div>
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">
@@ -430,6 +434,7 @@ window.CC_VENDOR = {{ {
      HEX-escaped like the others: the value originates outside the app. #}
   {% if surface_tiles_url %}
   window.CC_SURFACE_URL = {{ surface_tiles_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  window.CC_SURFACE_UNTAGGED_URL = {{ surface_untagged_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Scout review: the tag vocabulary with the letters each tag may resolve to,
      from ScoutTag::LETTERS — the same list the intake endpoint validates
      against, so the panel can never offer a choice the server refuses. #}

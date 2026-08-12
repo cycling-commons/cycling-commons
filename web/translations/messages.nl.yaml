@@ -1577,6 +1577,7 @@ map:
   base_satellite: 'Satelliet'
   street_level: 'Straatbeeld'
   surfaces: 'Ondergrond'
+  surfaces_untagged: 'Wegdek nog te noteren'
   mly_title: 'Mapillary · straatbeeld'
   mly_loading: 'Straatbeeld laden…'
   mly_expand: 'Viewer vergroten'

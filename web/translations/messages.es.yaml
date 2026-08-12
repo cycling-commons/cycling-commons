@@ -1907,6 +1907,7 @@ map:
   base_satellite: 'Satélite'
   street_level: 'A pie de calle'
   surfaces: 'Firmes'
+  surfaces_untagged: 'Falta indicar el firme'
   mly_title: 'Mapillary · a pie de calle'
   mly_loading: 'Cargando la vista a pie de calle…'
   mly_expand: 'Ampliar el visor'

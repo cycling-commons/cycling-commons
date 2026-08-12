@@ -86,6 +86,36 @@ English word into a name field for good. Cost: the Belgium artifact went from
 43 MB to **53.9 MB** (418,304 ways) — names are ~25%, and unnamed ways omit the
 key entirely rather than carrying an empty string.
 
+### One artifact, three countries, and no seam at the border (2026-08-12)
+
+Belgium, the Netherlands and Luxembourg are built into **one** PMTiles archive
+with a source layer per country (`surface_be`, `surface_nl`, `surface_lu`), the
+same shape the coverage tiles use:
+
+| | ways | |
+|---|---|---|
+| Belgium | 418,304 | |
+| Netherlands | 796,815 | |
+| Luxembourg | 50,916 | |
+| **classified artifact** | **1,266,035** | **152.4 MB** |
+| untagged arm (same three) | 894,217 | 119.1 MB |
+
+**Border crossings are not a problem, and it was worth checking rather than
+assuming.** Verified at Baarle-Hertog/Nassau — the most tangled border in
+Europe, where Belgian enclaves sit inside Dutch ones: 588 Belgian and 746 Dutch
+lines render together in one viewport, from both source layers, with no gap
+along the line. Geofabrik's extracts overlap slightly at borders, so a road that
+crosses is complete in both, and the worst case is a double-drawn metre rather
+than a missing kilometre.
+
+**The archive is not extendible.** PMTiles is a single immutable file with its
+directory written in one pass, so adding a country means re-running tippecanoe
+over all of them — there is no append. What *is* cached is the expensive half:
+the PBF downloads persist in the pipeline volume ("PBF unchanged, skipping
+download"), so a rebuild re-extracts and re-tiles but does not re-fetch. Adding
+a fourth country today costs one osmium pass for that country plus one tiling
+pass for the set.
+
 ### Why the names stay in the tile, measured (2026-08-12)
 
 The alternative considered was a name table on our side, fetched when a rider

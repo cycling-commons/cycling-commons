@@ -1577,6 +1577,7 @@ map:
   base_satellite: 'Satellite'
   street_level: 'Vue immersive'
   surfaces: 'Revêtements'
+  surfaces_untagged: 'Revêtement à renseigner'
   mly_title: 'Mapillary · vue immersive'
   mly_loading: 'Chargement de la vue immersive…'
   mly_expand: 'Agrandir la vue'

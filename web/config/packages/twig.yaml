@@ -12,6 +12,7 @@ twig:
         # coverage). Empty hides the Surfaces toggle entirely — a control for a
         # layer whose tiles do not exist is worse than no control.
         surface_tiles_url: '%env(SURFACE_TILES_URL)%'
+        surface_untagged_url: '%env(SURFACE_UNTAGGED_URL)%'
 
 when@test:
     twig:

@@ -1894,6 +1894,7 @@ map:
   base_satellite: 'Satellite'
   street_level: 'Street-level'
   surfaces: 'Surfaces'
+  surfaces_untagged: 'Needs a surface tag'
   mly_title: 'Mapillary · street-level'
   mly_loading: 'Loading street-level…'
   mly_expand: 'Expand viewer'

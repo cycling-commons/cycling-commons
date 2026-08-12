@@ -23,6 +23,8 @@
    scanning a ride needs to find what still needs them. */
 import { map } from './map-init.js';
 import { D } from './i18n.js';
+import { parseFit, extractTags, buildSurfaceSegments, MESG, semiToDeg, fitToDate,
+         POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY } from '../lib/scout-fit.js';
 
 const RIDE_SRC = 'cc-scout-ride';
 const RIDE_LINE = 'cc-scout-ride-line';
@@ -36,12 +38,84 @@ const el = id => document.getElementById(id);
 const t = (k, fallback) => (D && D[k]) || fallback;
 
 /* ── reading a ride ────────────────────────────────────────────────────────
-   GPX today, and the structure says why FIT is not here yet: Scout writes FIT,
-   the parser is JavaScript in the Scout repository, and vendoring somebody
-   else's dist without reading its licence is how copyleft reaches a
-   source-available codebase (plan task 1). Until it is vendored, `.fit` is
-   accepted by the picker and answered with a plain "not yet" — which is a
-   truthful state, where a silently ignored file is not. */
+   FIT is the real format: it is what Scout writes into the activity a bike
+   computer was already recording, and it is the only one that carries the tag
+   TYPE, its sub-type and the moment it was dropped as structured fields. The
+   decoder is Scout's own, vendored verbatim (assets/lib/scout-fit.js, MIT).
+
+   GPX is kept as the second door, because a rider who has already exported
+   their ride somewhere else should not have to go back for the original. Its
+   tags come from `<wpt>` names, which is a weaker channel — no sub-type, no
+   surface value — so it is the fallback, not the contract. */
+
+/* Scout's poi_type → our tag vocabulary (ScoutTag::TYPES, PHP). The legacy
+   spellings matter: before Scout 1.3, water/food/repair were three separate
+   poi_types rather than one RESUPPLY with a kind, and rides recorded then are
+   still on people's devices. Dropping them would silently discard real tags. */
+const POI_TO_TAG = {
+  1: 'notice', 2: 'scenery', 3: 'resupply', 4: 'other',
+  5: 'closure', 6: 'surface', 7: 'resupply', 8: 'resupply', 9: 'resupply',
+};
+
+/* Which letter a resupply tag lands on. Water and food are one letter here (C);
+   a repair stop is another (D). The rider can still change it — this only
+   decides which is offered first. */
+const RESUPPLY_LETTER = { 1: 'C', 2: 'C', 3: 'D' };
+
+function fitTagName(tag, detail) {
+  if (tag === 'resupply') return POI_RESUPPLY[detail] || '';
+  if (tag === 'surface') return OSM_SURFACE[detail] || '';
+  return '';
+}
+
+/** Decode a Scout FIT: the ride line, the tags, and the surface stretches. */
+function readFit(buffer) {
+  const parsed = parseFit(buffer);
+  const { tags: raw } = extractTags(parsed, 'poi_type', 'poi_detail');
+
+  // The ride line, from the RECORD messages. Used to draw the ride and to clamp
+  // a dragged tag to it — and, like everything else here, never sent anywhere.
+  const track = [];
+  for (const m of parsed.messages) {
+    if (m.globalNum !== MESG.RECORD) continue;
+    const lat = semiToDeg(m.fields[0]);
+    const lng = semiToDeg(m.fields[1]);
+    if (lat == null || lng == null) continue;
+    track.push({ lat, lng, at: fitToDate(m.fields[253]) });
+  }
+
+  const rideEnd = track.length ? track[track.length - 1].at : null;
+  const segments = buildSurfaceSegments(raw, rideEnd);
+
+  /* A cancelled tag is one the rider retracted on the device by tapping the
+     same tile twice — Scout's own undo rule, applied by the vendored parser.
+     It is not ours to second-guess, and showing it would ask them to decide
+     again about something they already un-decided. */
+  const tags = raw
+    .filter(t => !t.cancelled && t.lat != null && t.lon != null)
+    .map(t => {
+      const legacy = LEGACY_RESUPPLY[t.type];
+      const detail = legacy || t.detail;
+      const tag = POI_TO_TAG[t.type] || 'other';
+      const letter = tag === 'resupply'
+        ? (RESUPPLY_LETTER[detail] || 'C')
+        : ((window.CC_SCOUT_TAGS || {})[tag] || ['C'])[0];
+      return {
+        tag,
+        letter,
+        lat: t.lat,
+        lng: t.lon,
+        at: t.time ? t.time.toISOString() : '',
+        name: fitTagName(tag, detail),
+        // Kept so a surface tag can carry the class the rider actually chose on
+        // the device rather than making them pick it again.
+        osmSurface: tag === 'surface' ? (OSM_SURFACE[detail] || '') : '',
+      };
+    });
+
+  return { track, tags, segments };
+}
+
 function parseGpx(text) {
   const doc = new DOMParser().parseFromString(text, 'application/xml');
   if (doc.querySelector('parsererror')) throw new Error('parse');
@@ -209,6 +283,10 @@ async function sendOne(entry, button, li) {
         lng: entry.lng,
         observedAt: entry.at || '',
         details: { name: entry.name.trim() },
+        // The surface the rider picked on the device, in OSM's own vocabulary.
+        // The server maps it to the declarable label; an unknown value is
+        // dropped there rather than trusted.
+        osmSurface: entry.osmSurface || undefined,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -245,41 +323,42 @@ function placeTags() {
   });
 }
 
+function show(parsed) {
+  track = parsed.track;
+  tags = parsed.tags.map(w => ({
+    ...w,
+    letter: w.letter || ((window.CC_SCOUT_TAGS || {})[w.tag] || ['C'])[0],
+    approved: false,
+  }));
+  drawRide();
+  placeTags();
+  renderList();
+  const list = el('scoutList');
+  if (list) list.hidden = false;
+  msg(tags.length ? '' : t('scoutNoTags', 'That ride has no tags in it — nothing to review.'), !tags.length);
+}
+
 function loadFile(file) {
   if (!file) return;
-  if (/\.fit$/i.test(file.name)) {
-    // Truthful, and deliberately not a silent no-op: the FIT parser is not
-    // vendored yet (plan task 1), and a file that appears to load and yields
-    // nothing looks exactly like a ride with no tags.
-    msg(t('scoutFitSoon', 'FIT files are not readable here yet — export the ride as GPX for now.'), true);
-    return;
-  }
+  const isFit = /\.fit$/i.test(file.name);
   const reader = new FileReader();
   reader.onload = () => {
     let parsed;
     try {
-      parsed = parseGpx(String(reader.result));
+      parsed = isFit ? readFit(reader.result) : parseGpx(String(reader.result));
     } catch (e) {
-      msg(t('scoutBadFile', 'That file could not be read as a ride.'), true);
+      /* Loudly, with the decoder's own words. A corrupt FIT and a ride with no
+         tags look identical when a parser fails quietly, and that is the one
+         failure this screen must never have: a rider would conclude their tags
+         had not recorded. */
+      msg((e && e.message) ? e.message : t('scoutBadFile', 'That file could not be read as a ride.'), true);
       return;
     }
-    track = parsed.track;
-    tags = parsed.tags.map(w => ({
-      ...w,
-      letter: ((window.CC_SCOUT_TAGS || {})[w.tag] || ['C'])[0],
-      approved: false,
-    }));
-    drawRide();
-    placeTags();
-    renderList();
-    const list = el('scoutList');
-    if (list) list.hidden = false;
-    msg(tags.length
-      ? ''
-      : t('scoutNoTags', 'That ride has no tags in it — nothing to review.'), !tags.length);
+    show(parsed);
   };
   reader.onerror = () => msg(t('scoutBadFile', 'That file could not be read as a ride.'), true);
-  reader.readAsText(file);
+  if (isFit) reader.readAsArrayBuffer(file);
+  else reader.readAsText(file);
 }
 
 /** Mount the panel. A no-op everywhere except /scout/review. */

@@ -66,6 +66,37 @@ final class SurfaceVocabulary
         'rock' => 'Rock',
     ];
 
+    /** @var array<string, string> OSM `surface=` value → declarable label.
+     *
+     *  What a Scout tag carries: the rider picked a surface on the device, and
+     *  the device writes OSM's own word for it. Mapping it here rather than in
+     *  the intake controller keeps every translation into the declarable
+     *  vocabulary in one class — the tile classes above are the other half of
+     *  the same job. Values we do not offer (`sand`) map to their nearest
+     *  declarable neighbour only where that is honest; the rest are absent, and
+     *  an absent value means the rider chooses. */
+    public const array FROM_OSM = [
+        'asphalt' => 'Asphalt',
+        'concrete' => 'Concrete',
+        'paving_stones' => 'Paving stones',
+        'sett' => 'Sett — pavé',
+        'cobblestone' => 'Sett — pavé',
+        'compacted' => 'Compacted',
+        'fine_gravel' => 'Fine gravel',
+        'gravel' => 'Gravel',
+        'ground' => 'Dirt',
+        'dirt' => 'Dirt',
+        'earth' => 'Dirt',
+        'sand' => 'Dirt',
+        'rock' => 'Rock',
+    ];
+
+    /** The declarable label for a raw OSM surface value, or null. */
+    public static function fromOsmValue(string $value): ?string
+    {
+        return self::FROM_OSM[strtolower(trim($value))] ?? null;
+    }
+
     /** The declarable label a tile class confirms to, or null when it confirms nothing. */
     public static function fromTileClass(string $cls): ?string
     {

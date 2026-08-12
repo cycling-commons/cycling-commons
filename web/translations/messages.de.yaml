@@ -1580,6 +1580,7 @@ map:
   base_satellite: 'Satellit'
   street_level: 'Straßenansicht'
   surfaces: 'Beläge'
+  surfaces_untagged: 'Belag fehlt noch'
   mly_title: 'Mapillary · Straßenansicht'
   mly_loading: 'Straßenansicht lädt…'
   mly_expand: 'Viewer vergrößern'

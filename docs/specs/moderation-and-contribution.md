@@ -1514,8 +1514,25 @@ trusted moderators later, not built.
 
 **Status: built 2026-08-12** (`/scout/review`, `ScoutIntakeController`,
 `web/assets/map/scout-review.js`). Consolidated from
-`Dated/2026-08-09-scout-cc-tagger-plan.md` tasks 5, 7 and 8; the FIT parser
-(task 1) is not vendored yet, so the screen reads GPX and says so plainly.
+`Dated/2026-08-09-scout-cc-tagger-plan.md` tasks 1, 5, 7 and 8.
+
+**FIT is the format.** Scout's own reader is vendored verbatim at
+`web/assets/lib/scout-fit.js` (MIT, same owner as this project), copied between
+the source file's own `===PARSER-START===` / `===PARSER-END===` markers —
+markers that exist precisely because Scout's node harness extracts the same
+span. Keeping it byte-identical makes a re-sync a copy rather than a merge, so
+two implementations of a binary format cannot drift into disagreeing about
+somebody's ride. Do not edit it here; fix it in Scout and re-copy.
+
+What that buys over GPX is everything structured: the tag type, its sub-type
+(which resupply, which surface), the moment it was dropped, Scout's own undo
+rule for a double-tapped tile, and the surface stretches a start/END pair
+describes. A surface tag therefore arrives carrying the OSM value the rider
+chose on the device, and `SurfaceVocabulary::fromOsmValue()` turns it into the
+declarable label so nobody picks the same thing twice. GPX stays as a second
+door for a rider who has already exported their ride elsewhere; its tags come
+from `<wpt>` names, which is a weaker channel, so it is the fallback and not the
+contract.
 
 **The ride never reaches the server.** It is read in the rider's own browser
 with `FileReader`, drawn from memory, and what crosses the network is a single

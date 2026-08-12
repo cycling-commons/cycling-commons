@@ -49,6 +49,20 @@ export const surfaceTilesConfigured = () =>
   typeof window.CC_SURFACE_URL === 'string' && !!window.CC_SURFACE_URL;
 
 export const SURFACE_TILE_SOURCE = 'surface-tiles';
+/* The "needs a tag" arm, in its own artifact and its own source.
+
+   Two arms exist because a vector tile is fetched whole: folding 381,313
+   untagged Belgian ways into the classified tiles would make every surface tile
+   several times larger for every rider, to carry lines most of them will never
+   switch on. Separate artifacts mean you download this one only if you ask for
+   it (Dated/2026-08-09-surface-line-tiles-design.md D3).
+
+   It is the CONTRIBUTION view: every line here is a road OpenStreetMap has no
+   `surface` tag for, which is to say a road somebody could go and record. That
+   is why the owner asked for it to be servable — "then people will know what to
+   tag and extend the map knowledge" (2026-08-12). */
+export const SURFACE_UNTAGGED_SOURCE = 'surface-untagged';
+const UNTAGGED_PREFIX = 'surfuntag-';
 export const surfaceTileLayerIds = () => SURFACE_CLS.filter(c => c !== 'other').map(c => 'surftile-' + c);
 
 let added = false;
@@ -99,6 +113,63 @@ export function addSurfaceTiles() {
     });
   });
   added = true;
+}
+
+/** Is the untagged artifact configured (an URL, not necessarily loaded)? */
+export const untaggedConfigured = () =>
+  typeof window.CC_SURFACE_UNTAGGED_URL === 'string' && !!window.CC_SURFACE_UNTAGGED_URL;
+
+let untaggedAdded = false;
+let untaggedOn = false;
+
+export function addUntaggedTiles() {
+  if (!untaggedConfigured() || untaggedAdded || typeof pmtiles === 'undefined') return;
+  maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+  if (!map.getSource(SURFACE_UNTAGGED_SOURCE)) {
+    map.addSource(SURFACE_UNTAGGED_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_SURFACE_UNTAGGED_URL });
+  }
+  // One layer per country, and NO per-class split: every feature in this
+  // artifact is the same class by construction, so the seven-layer dance the
+  // classified arm needs (one dash pattern per layer) collapses to one.
+  const st = surfaceStyle('unverified');
+  sourceLayers().forEach(srcLayer => {
+    const id = UNTAGGED_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
+    if (map.getLayer(id)) return;
+    map.addLayer({
+      id,
+      type: 'line',
+      source: SURFACE_UNTAGGED_SOURCE,
+      'source-layer': srcLayer,
+      layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
+      paint: {
+        'line-color': st.color,
+        'line-dasharray': st.dash || [2, 2],
+        // Thinner and fainter than the classified arm. This is a to-do list,
+        // not an answer, and it must never out-shout a road somebody HAS
+        // recorded — 381k lines at full weight is a red smear over a country.
+        'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 12, 1.1, 15, 2.2],
+        'line-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0.35, 13, 0.7],
+      },
+    });
+    map.on('click', id, e => openSurfaceDrawer(
+      { ...e.features[0].properties, cls: 'unverified' }, e.lngLat, e.features[0].geometry));
+    map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
+  });
+  untaggedAdded = true;
+}
+
+export const untaggedVisible = () => untaggedOn;
+
+/** Show or hide the "needs a tag" arm. Returns the state it settled on. */
+export function setUntaggedTiles(on) {
+  if (!untaggedAdded) addUntaggedTiles();
+  if (!untaggedAdded) return false;
+  untaggedOn = !!on;
+  map.getStyle().layers
+    .filter(l => l.id.startsWith(UNTAGGED_PREFIX))
+    .forEach(l => map.setLayoutProperty(l.id, 'visibility', untaggedOn ? 'visible' : 'none'));
+  return untaggedOn;
 }
 
 /** Is the layer currently drawn? */

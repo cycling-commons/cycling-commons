@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\SurfaceVocabulary;
 use App\Contribution\CatalogContributionService;
 use App\Entity\User;
 use App\Scout\ScoutTag;
@@ -94,6 +95,17 @@ final class ScoutIntakeController extends AbstractController
 
         /** @var array<string, mixed> $details */
         $details = \is_array($payload['details'] ?? null) ? $payload['details'] : [];
+        /* A surface tag carries the value the rider chose ON THE DEVICE, in
+           OSM's vocabulary. Translating it here saves them picking the same
+           thing twice; a value we do not recognise is dropped rather than
+           guessed, and then the form asks. */
+        $osmSurface = (string) ($payload['osmSurface'] ?? '');
+        if ('A' === $letter && '' !== $osmSurface) {
+            $declarable = SurfaceVocabulary::fromOsmValue($osmSurface);
+            if (null !== $declarable) {
+                $details['surface'] = $declarable;
+            }
+        }
         $details[Item::NAME_FIELD] = trim((string) ($details[Item::NAME_FIELD] ?? ''));
         if ('' === $details[Item::NAME_FIELD]) {
             return new JsonResponse(['error' => 'name_required'], 400);

@@ -168,8 +168,11 @@ app-test: ## run the app test suite + static analysis + gates
 	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh && ./tools/check-translations.sh
 	$(MAKE) scope-test
 
-scope-test: ## run the map scope-model Node smoke tests (no deps — node:test ships with Node ≥18)
+scope-test: ## run the map scope-model + vendored-parser Node tests (no deps — node:test ships with Node ≥18)
 	node --test web/tests/js/*.test.cjs
+	@# .mjs separately: the vendored Scout FIT reader is an ES module, and the
+	@# .cjs glob above would not load it.
+	node --test web/tests/js/*.test.mjs
 
 map-refs: ## check no web/assets/map module still references a binding map.js owns (split gate)
 	@# Syntax-check as ES MODULES, which is how the browser loads them. Plain
