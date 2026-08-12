@@ -12,3 +12,22 @@ scheb_two_factor:
 
     backup_codes:
         enabled: true
+
+# Dev only: no second factor (owner 2026-08-12).
+#
+# Every elevated fixture account is fully enrolled, which is right — a curator
+# desk that can be reached without 2FA in prod is not a desk we would ship. But
+# on a local stack it means every scripted browser check has to compute a TOTP
+# from the fixture seed, and when that goes wrong (as it did tonight) the failure
+# looks like a broken page rather than a failed login.
+#
+# Turning the PROVIDER off is the narrow way to do it: the accounts keep their
+# enrolment, the entity keeps its logic, nothing about the prod path changes, and
+# the switch is one word in a `when@dev` block rather than a flag some deploy can
+# read. `when@dev` cannot leak: prod and staging never load it.
+when@dev:
+    scheb_two_factor:
+        totp:
+            enabled: false
+        backup_codes:
+            enabled: false

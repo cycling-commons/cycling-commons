@@ -40,6 +40,18 @@
   .rg-state--off{background:rgba(20,22,14,.08);color:#595c4d}
   .rg-act{display:flex;align-items:center;gap:.6rem}
   .rg-locked{font-family:var(--mono);font-size:.6rem;color:#8a8d7d;max-width:22ch;line-height:1.5}
+  /* Three rungs, one row. The mode a region is IN reads as a filled chip, the
+     ones it may move to as ordinary buttons, and the ones it has not earned as
+     muted text carrying their own reason on hover — a curator working a young
+     region should see what it is short of, not just that nothing is pressable
+     (owner 2026-08-12). */
+  .rg-modes{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+  .rg-mode{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;
+    padding:.35rem .6rem;border-radius:30px;white-space:nowrap}
+  .rg-mode--is{background:var(--ink);color:var(--paper);border:1px solid var(--ink)}
+  button.rg-mode{border:1px solid rgba(20,22,14,.3);background:transparent;color:var(--ink);cursor:pointer}
+  button.rg-mode:hover{border-color:var(--trail);color:var(--trail)}
+  .rg-mode--locked{border:1px dashed rgba(20,22,14,.22);color:#8a8d7d;cursor:help}
   .empty-queue{text-align:center;padding:4rem 1rem;color:#595c4d}
   .empty-queue .ic{font-size:2.4rem;margin-bottom:.5rem}
   .empty-queue h3{font-family:var(--serif);font-size:1.4rem}
