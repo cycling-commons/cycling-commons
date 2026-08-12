@@ -1,0 +1,25 @@
+web/templates/moderate/_queue_item.html.twig
+  s_bbe01d4f023787::t_8da72aca9605d1 46-54
+web/tests/Contribution/OsmConfirmTest.php
+  s_bbe01d4f023787::t_fd10fae0c73666 255-301
+web/src/Controller/OsmConfirmController.php
+  s_bbe01d4f023787::t_a03b5f52c8aeb6 185-186,189-190
+web/src/Contribution/CatalogContributionService.php
+  s_bbe01d4f023787::t_a03b5f52c8aeb6 224-233,643-659,664-665
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9b5e0ff98f26baaed11d16058461f0e89ac81825",
+  "prompts": {},
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
