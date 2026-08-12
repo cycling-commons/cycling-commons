@@ -35,6 +35,13 @@
   .hist-row{display:flex;align-items:baseline;gap:.6rem;padding:.4rem 0;border-bottom:1px solid rgba(20,22,14,.07);font-size:.88rem}
   .hist-state{font-family:var(--mono);font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;
     padding:.16rem .4rem;border-radius:3px;flex:0 0 auto}
+  /* Smaller than the queue's: this list is a scan of what happened, not a
+     surface for judging, so the picture jogs the memory rather than carrying
+     the decision. */
+  .hist-thumb{flex:0 0 28px;display:block;line-height:0;border-radius:4px;overflow:hidden;
+    border:1px solid rgba(20,22,14,.18);align-self:center}
+  .hist-thumb img{width:28px;height:28px;object-fit:cover;display:block}
+  .hist-thumb:hover{border-color:var(--trail)}
   .hist-state--approved{background:rgba(46,125,50,.16);color:#2c5440}
   .hist-state--rejected{background:rgba(181,83,46,.16);color:#6b3016}
   .hist-state--trashed{background:rgba(139,26,26,.14);color:#8b1a1a}
@@ -128,6 +135,15 @@
         {% for h in history %}
           <li class="hist-row">
             <span class="hist-state hist-state--{{ h.status }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
+            {# The picture, as in the open queue. A trashed row has none by
+               design — the audit is content-free — and a rejected one may have
+               lost its photos to disposal, so this is `if`, not `else`. #}
+            {% if h.photos is defined and h.photos|length > 0 %}
+              <a class="hist-thumb" href="{{ h.photos[0].lg }}" target="_blank" rel="noopener"
+                 title="{{ 'improve.step3.open_full'|trans }}">
+                <img src="{{ h.photos[0].sm }}" alt="" loading="lazy" width="28" height="28">
+              </a>
+            {% endif %}
             {# ?item=<id>, not ?pending=<id>: the submission is settled, so it is
                no longer in the pending payload and that link resolved nothing —
                the map just opened at the default scope with nothing selected.

@@ -81,6 +81,7 @@ final class ItemConfirmationController extends AbstractController
             return $this->json(['error' => 'invalid_stance'], 422);
         }
 
+        $wasVerified = ItemState::Verified === $item->getState();
         try {
             $this->confirmations->record($item, $user, $stance);
         } catch (\InvalidArgumentException) {
@@ -88,7 +89,16 @@ final class ItemConfirmationController extends AbstractController
             return $this->json(['error' => 'invalid_stance'], 422);
         }
 
-        return $this->json([...$this->payload($item, $user), 'ok' => true]);
+        /* Did this press verify the item? A curator's confirmation does
+           (ItemConfirmationService), and the map has to be told: the catalog
+           payload is fetched once at load, so the pin kept its "not confirmed
+           yet" mark until a reload and the curator saw their own decision fail
+           to happen (owner-reported 2026-08-12). */
+        return $this->json([
+            ...$this->payload($item, $user),
+            'ok' => true,
+            'verified' => !$wasVerified && ItemState::Verified === $item->getState(),
+        ]);
     }
 
     /**

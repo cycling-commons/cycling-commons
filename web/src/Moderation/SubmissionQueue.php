@@ -179,7 +179,7 @@ final class SubmissionQueue
      * @param ?int    $decidedBy scope to one moderator's own decisions
      * @param ?string $status    'approved' | 'rejected'; null = both
      *
-     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
+     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
      */
     public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null): array
     {
@@ -214,8 +214,17 @@ final class SubmissionQueue
             $types,
         );
         $now = $this->clock->now();
+        /* The photos too. A settled row is read the same way an open one is —
+           a curator checking what they approved last week wants the picture,
+           not the title (owner 2026-08-12). A rejected or trashed row may have
+           none left: disposal is real, and an empty list is the honest result
+           rather than a broken thumbnail. */
+        $photosBySubmission = $this->pendingPhotos(array_map(
+            static fn (array $r): int => (int) $r['id'],
+            $rows,
+        ), settled: true);
 
-        $out = array_map(function (array $r) use ($now): array {
+        $out = array_map(function (array $r) use ($now, $photosBySubmission): array {
             // Same before/after the queue card renders, so a settled row says
             // WHAT was approved and not merely that something was.
             [$was, $new] = $this->diffStrings((string) $r['changes']);
@@ -227,6 +236,7 @@ final class SubmissionQueue
                 'type' => (string) $r['type'],
                 'was' => $was,
                 'now' => $new,
+                'photos' => $photosBySubmission[(int) $r['id']] ?? [],
                 'who' => self::submitterLabel($r),
                 'when' => null !== $r['decided_at']
                     ? RelativeTime::ago(new \DateTimeImmutable((string) $r['decided_at']), $now)
@@ -384,7 +394,7 @@ final class SubmissionQueue
     /**
      * Trash entries, rebuilt from the content-free audit log.
      *
-     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
+     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
      */
     private function trashed(?int $decidedBy, int $limit, \DateTimeImmutable $now): array
     {
@@ -416,6 +426,10 @@ final class SubmissionQueue
                 'itemId' => null,
                 'title' => isset($m[1]) ? 'SUB-'.$m[1] : $note,
                 'type' => $m[2] ?? '',
+                // A trashed row is content-free by design: the content is gone,
+                // and so are its photos. The empty list keeps the shared row
+                // shape true rather than making every reader test for it.
+                'photos' => [],
                 'who' => '',
                 'when' => RelativeTime::ago($at, $now),
                 'status' => 'trashed',
@@ -615,19 +629,28 @@ final class SubmissionQueue
      *
      * @return array<int, list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>>
      */
-    private function pendingPhotos(array $submissionIds): array
+    private function pendingPhotos(array $submissionIds, bool $settled = false): array
     {
         if ([] === $submissionIds) {
             return [];
         }
 
+        /* Which photos exist depends on which desk is asking.
+
+           The open queue wants the ones still awaiting a verdict. The history
+           wants what was APPROVED — those objects are live and are what the
+           row is a record of. Rejected media is deleted on expiry
+           (photo-uploads.md §6), so listing it would put a broken thumbnail on
+           an audit trail, which reads as data loss rather than as disposal
+           working. */
+        $statuses = $settled ? ['approved'] : ['pending'];
         $rows = $this->db->fetchAllAssociative(
-            "SELECT id, submission_id, continent, taken_at, gps_distance_m
+            'SELECT id, submission_id, continent, taken_at, gps_distance_m
              FROM media_upload
-             WHERE status = 'pending' AND submission_id IN (:ids)
-             ORDER BY created_at ASC, id ASC",
-            ['ids' => $submissionIds],
-            ['ids' => ArrayParameterType::INTEGER],
+             WHERE status IN (:statuses) AND submission_id IN (:ids)
+             ORDER BY created_at ASC, id ASC',
+            ['ids' => $submissionIds, 'statuses' => $statuses],
+            ['ids' => ArrayParameterType::INTEGER, 'statuses' => ArrayParameterType::STRING],
         );
 
         $bySubmission = [];

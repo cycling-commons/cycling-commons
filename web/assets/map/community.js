@@ -17,7 +17,7 @@
    entry; their order relative to each other never mattered, because they match
    disjoint selectors ([data-cf-act], [data-rc-act], .cc-rc-invalid). */
 import { I18N, D, tpl, CC_SEASON_LABEL } from './i18n.js';
-import { layerByKey, LETTER_KEY } from './catalog.js';
+import { CATALOG, layerByKey, LETTER_KEY } from './catalog.js';
 import { render } from './render.js';
 import { mapToast, closeDrawer, openDrawer, osmDrawer, renderPendingContext } from './drawer.js';
 import { _pickSegs } from './picking.js';
@@ -46,6 +46,22 @@ const _rcTokens={};   // route id → CSRF token from the last snapshot
 export const CC_VOTABLE=new Set(['climbs','stays','scenic','history']);
 export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter','toilets','scenic','history','stays','climbs']);
 const _cfTokens={};   // item id → CSRF token from the last confirmations snapshot
+
+/* Flip a loaded feature to verified, in place.
+
+   The `v` flag is what the renderer reads for the "?" badge and what the drawer
+   reads for its status line, so both follow from one write. Searching every
+   layer rather than being told which: a confirmation panel knows an item id and
+   nothing else, and the id is unique across the catalog. */
+function markItemVerified(itemId){
+  for(const layer of CATALOG){
+    const f = (layer.features||[]).find(x => x.id != null && String(x.id) === String(itemId));
+    if(!f) continue;
+    f.v = 1;
+    render();
+    return;
+  }
+}
 
 export function routeCommunityPanel(id, state){
   const bikeL=I18N.bikes||{};
@@ -354,7 +370,17 @@ export function initCommunity(){
       fetch(`/items/${id}/confirm`, {method:'POST', credentials:'same-origin',
         headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:body.toString()})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
-        .then(s=>{ paintItemConfirm(box, s); mapToast(D.toastThanks||'Thanks — recorded.', {center:true}); })
+        .then(s=>{
+          paintItemConfirm(box, s);
+          /* The pin, not just the panel. When a press VERIFIES the item — a
+             curator's does — the feature the map is drawing still carries the
+             old "not confirmed yet" flag, because the catalog payload was
+             fetched at page load. Setting it here and repainting is the
+             difference between a decision that happened and one that appears
+             not to have (owner-reported 2026-08-12). */
+          if(s && s.verified) markItemVerified(id);
+          mapToast(D.toastThanks||'Thanks — recorded.', {center:true});
+        })
         .catch(()=>{ box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false); mapToast(D.toastErr||'Could not record that — please try again.'); });
     });
     // Delegated click handler for every community button (drawer is re-rendered often).
