@@ -183,9 +183,10 @@ function drawRide() {
    ground figure and the marker shows the car alone rather than a number that
    would read as the vehicle's speed and be 20 km/h short of it.
 
-   The speed is all a marker says. There is no tooltip: closing speed and
-   nearest range are the radar's working, not the fact a rider wants off a map,
-   and hover is not a thing on the bike computer this data came from.
+   The speed is all a marker says - a "?" when the radar gave none. There is no
+   tooltip: closing speed and nearest range are the radar's working, not the
+   fact a rider wants off a map, and hover is not a thing on the bike computer
+   this data came from.
 
    Measured here, never sent - like the count line, and for the same reason:
    nothing on the server can hold a measurement yet. */
@@ -199,7 +200,11 @@ function passEl(pass) {
     + '<circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/>'
     + '</svg>';
   const sp = document.createElement('span');
-  sp.textContent = uSpeed(pass.ground);
+  /* No speed reading, no invented number: a "?" says the car passed here and
+     that how fast is unknown, which is the honest pair (owner 2026-08-12). The
+     unit goes with it - "? km/h" would read like a measurement that failed to
+     render rather than one that was never taken. */
+  sp.textContent = pass.ground == null ? '?' : uSpeed(pass.ground);
   d.appendChild(sp);
   return d;
 }
@@ -209,10 +214,10 @@ function placePasses(radar) {
   passMarkers = [];
   if (!radar || !radar.passes) return;
   radar.passes.forEach(pass => {
-    // No place or no speed, no marker: the whole point of drawing one is the
-    // number on it, and a car chip with nothing on it says less than the count
-    // line already does. Both cases are counted there instead.
-    if (pass.lat == null || pass.lon == null || pass.ground == null) return;
+    // No place, no marker - there is nowhere to put it. A missing SPEED is a
+    // different thing: the pass still happened here, and the marker says so
+    // with a "?" rather than disappearing.
+    if (pass.lat == null || pass.lon == null) return;
     passMarkers.push(new maplibregl.Marker({ element: passEl(pass), anchor: 'bottom' })
       .setLngLat([pass.lon, pass.lat])
       .addTo(map));
@@ -404,9 +409,9 @@ function renderRideFacts(parsed) {
     /* How many of them we could not place. A rider who counts nine cars on the
        map and reads fifteen in the line above deserves the difference named,
        not left to look like a drawing bug. */
-    const placed = parsed.radar.passes.filter(x => x.lat != null && x.lon != null && x.ground != null).length;
+    const placed = parsed.radar.passes.filter(x => x.lat != null && x.lon != null).length;
     if (placed < parsed.radar.total) {
-      lines.push(tplCount(t('scoutPassNoFix', '{n} of them could not be placed with a speed, so they are not on the map'), parsed.radar.total - placed));
+      lines.push(tplCount(t('scoutPassNoFix', '{n} of them had no GPS fix, so they are not on the map'), parsed.radar.total - placed));
     }
   }
   if (parsed.unplaceable > 0) {
