@@ -634,19 +634,29 @@ function buildRecord(layer, f){
   const confirmPanel = (CC_CONFIRMABLE.has(layer.key) && f.id!=null)
     ? `<div class="cc-cf" data-item="${f.id}"><div class="cc-cf-body" data-cf-body></div><div class="cc-cf-login" hidden>${D.loginConfirm||'Log in to confirm'} · <a href="/login">${I18N.login||'Log in'}</a></div></div>`
     : '';
-  /* An OSM point in a confirmable layer has no item id, so the panel above
-     cannot render — confirmations are keyed on an item, and this place is not
-     one yet. That left a drawer saying "confirm on the spot" with nothing to
-     press (owner-reported 2026-08-12: "Can't confirm this one, I checked it
-     myself yesterday").
+  /* An OSM place, answered in one tap.
 
-     The bridge is the one already built for surface lines: confirming is the
-     SAME submission as correcting, one decision shorter. It opens the wizard
-     prefilled from the OSM tags, and submitting mints our item carrying the
-     ref — after which the ordinary one-tap panel above applies. No second
-     confirmation store keyed on an OSM ref, and no new moderation mechanic. */
+     A confirmation is recorded against an item and an OSM point is not one, so
+     the only route in used to be the improve wizard: a form, for an answer that
+     is one word (owner 2026-08-12 — "that should be made easier … in the
+     background we then just pretend it is a submitted form and we create the
+     new item"). These buttons do exactly that: POST /osm/confirm fills the
+     letter's own form from what we already know and posts it for the rider.
+
+     Water asks a different question from everything else — "is it drinkable",
+     not "is it here" — and it is the same pair C's own panel asks once the
+     place is ours, so the vocabulary never changes under a rider. */
   const osmConfirm = (CC_CONFIRMABLE.has(layer.key) && f.id==null && f.osmRef)
-    ? `<a class="cc-d-act confirm-osm" href="/improve?ref=${encodeURIComponent(f.osmRef)}&type=${layer.letter}${ell?`&lat=${ell[0]}&lng=${ell[1]}`:''}&confirm=1">✓ ${D.confirmHere||'Confirm it\u2019s here'}</a>`
+    ? (!window.CC_CONFIRM_TOKEN
+        /* Anonymous: the same line the item panel shows, not a dead button. A
+           rider who cannot answer should be told why in one clause. */
+        ? `<div class="cc-osmcf"><span class="cc-cf-login">${D.loginConfirm||'Log in to confirm'} · <a href="/login">${I18N.login||'Log in'}</a></span></div>`
+        : `<div class="cc-osmcf" data-osm-ref="${escPend(f.osmRef)}">`
+        + ('water' === layer.key
+            ? `<button type="button" class="cc-d-act confirm-osm" data-osm-stance="potable">✓ ${D.waterA||'Drinking water'}</button>`
+              + `<button type="button" class="cc-d-act confirm-osm-no" data-osm-stance="not_potable">✕ ${D.notPotable||'Not potable'}</button>`
+            : `<button type="button" class="cc-d-act confirm-osm" data-osm-stance="exists">✓ ${D.confirmHere||'Confirm it\u2019s here'}</button>`)
+      + '</div>')
     : '';
   const act = edit + osmConfirm + vote;
   const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';

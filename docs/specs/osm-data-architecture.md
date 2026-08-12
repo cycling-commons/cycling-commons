@@ -241,6 +241,22 @@ Rules:
 - **Materialize on first edit.** Submitting an edit for an uncurated OSM object
   copies the referenced object into the canonical store as `{osm_ref, edit}` and
   opens a submission. Nothing is materialized by mere viewing.
+- **A confirmation is an edit** (owner decision 2026-08-12). A rider standing at
+  an OSM tap answers one question - "drinkable?", "still here?" - and that answer
+  is a claim about the place, so it materializes it exactly as the wizard would.
+  `POST /osm/confirm` fills the letter's own form from the coverage row and the
+  rider's stance, and posts it for them: same submission, same queue, same
+  moderators, one tap instead of a form. The endpoint is the only shortcut - it
+  approves nothing, and the item lands `submitted` like any other proposal.
+  - The name comes from OSM when there is one, and from the layer's own label
+    when there is not ("Water & food"), because the title is what a curator
+    reads first.
+  - **One item per `{osm_ref, letter}`.** A place already awaiting review is
+    invisible from the drawer, so a second tap is answered `409 pending_review`
+    and the rider is told what happened rather than invited to try again.
+  - Confirmation tallies still live on the item (`item_confirmation`), never on
+    an OSM ref. On approval the submitter's own stance is recorded form-sourced
+    and uncounted, so the map never asks them the same question twice.
 - **Approve → stays** as a curated category-2 item.
 - **Reject → retained 3 months**, then the garbage collector deletes it. The
   window exists to handle disputes: we keep the record long enough to review a
@@ -318,8 +334,10 @@ never touches Overpass again.
   location prefilled from the cached POI — and submit mints the item with
   `source_ref = <osm ref>` / `source = osm` (one item per ref, enforced at
   intake), so the §6 lifecycle and the coverage dedupe both engage.
-  Confirmations still require the materialized item to be approved/served
-  first; a confirm-triggered materialization remains open.
+  Confirm arm done 2026-08-12: `POST /osm/confirm` mints the same item from a
+  single tap (§6), so a rider no longer has to fill a form to say the tap
+  works. Confirmations still count only on the materialized item once it is
+  approved and served - the tap proposes, a curator decides.
 - ~~Split **D · Bike services** into `shop / station / pump` kinds.~~ Done —
   kind-selectable manual add remains deferred until an add-new flow exists (§5).
 - Add the **API-only access** rule and **scraping prohibition** to the user terms.

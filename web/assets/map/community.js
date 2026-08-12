@@ -364,7 +364,7 @@ export function initCommunity(){
       const btn=e.target.closest('[data-cf-act]'); if(!btn) return;
       const box=btn.closest('.cc-cf'); if(!box) return;
       const id=box.getAttribute('data-item'), token=_cfTokens[id];
-      if(!token){ mapToast(D.toastLoginConfirm||'Please log in to confirm.'); return; }
+      if(!token){ mapToast(D.osmLogin||'Please log in to confirm.'); return; }
       const body=new URLSearchParams(); body.set('_token', token); body.set('stance', btn.getAttribute('data-cf-act'));
       box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=true);
       fetch(`/items/${id}/confirm`, {method:'POST', credentials:'same-origin',
@@ -382,6 +382,37 @@ export function initCommunity(){
           mapToast(D.toastThanks||'Thanks — recorded.', {center:true});
         })
         .catch(()=>{ box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false); mapToast(D.toastErr||'Could not record that — please try again.'); });
+    });
+    /* One-tap confirmation of an OSM place. It is not a confirmation yet — it
+       is the submission that makes one possible, so the toast says "a curator
+       will review it" rather than "recorded". Saying otherwise would promise a
+       tally that does not exist until the item does. */
+    document.addEventListener('click', e=>{
+      const btn=e.target.closest('[data-osm-stance]'); if(!btn) return;
+      const box=btn.closest('.cc-osmcf'); if(!box) return;
+      const ref=box.getAttribute('data-osm-ref');
+      const token = window.CC_CONFIRM_TOKEN;
+      if(!token){ mapToast(D.toastLoginConfirm||'Please log in to confirm.'); return; }
+      box.querySelectorAll('.cc-d-act').forEach(b=>b.disabled=true);
+      const body=new URLSearchParams();
+      body.set('_token', token); body.set('ref', ref); body.set('stance', btn.getAttribute('data-osm-stance'));
+      fetch('/osm/confirm', {method:'POST', credentials:'same-origin',
+        headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'},
+        body:body.toString()})
+        .then(r=>r.json().then(j=>({ok:r.ok, status:r.status, j})))
+        .then(({ok, status, j})=>{
+          /* 409 is not a failure — somebody already sent this place, and saying
+             "try again" would invite exactly the duplicate we just refused. */
+          if(ok || 409===status){
+            box.innerHTML=`<span class="cc-osmcf-done">${
+              409===status ? (D.osmAlready||'Already sent — a curator is looking at it.')
+                           : (D.osmSent||'Thanks — a curator will review it.')}</span>`;
+            return;
+          }
+          throw new Error(String(status));
+        })
+        .catch(()=>{ box.querySelectorAll('.cc-d-act').forEach(b=>b.disabled=false);
+                     mapToast(D.osmFailed||'That could not be sent — try again.'); });
     });
     // Delegated click handler for every community button (drawer is re-rendered often).
     document.addEventListener('click', e=>{

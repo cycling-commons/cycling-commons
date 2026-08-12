@@ -294,6 +294,9 @@ final class MapController extends AbstractController
             'waterQ' => 'd_water_q', 'hereQ' => 'd_here_q', 'notPotable' => 'd_not_potable',
             'waterA' => 'd_water_a', 'hereA' => 'd_here_a',
             'confirmHere' => 'd_confirm_here', 'confirmedOne' => 'd_confirmed_one', 'confirmedMany' => 'd_confirmed_many',
+            // One-tap confirmation of an OSM place: a receipt, not a tally.
+            'osmSent' => 'd_osm_sent', 'osmAlready' => 'd_osm_already',
+            'osmFailed' => 'd_osm_failed', 'osmLogin' => 'd_osm_login',
             'loginConfirm' => 'd_login_confirm',
             'toastLoginConfirm' => 'd_toast_login_confirm', 'toastThanks' => 'd_toast_thanks',
             'toastErr' => 'd_toast_err', 'toastLoginRate' => 'd_toast_login_rate', 'toastCurator' => 'd_toast_curator',

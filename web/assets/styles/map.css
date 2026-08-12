@@ -446,6 +446,20 @@
   /* Centred against the whole three-line block, not pinned to the first line:
      the mark labels the card, and top-aligned it read as a bullet on the
      heading (owner 2026-08-12). */
+  /* The close control sits in the panel's own corner and does not scroll with
+     the list — the list is long, and a way out you have to scroll back up for
+     is not one. */
+  .scout-close{position:sticky;top:0;float:right;margin:-.35rem -.35rem 0 .5rem;z-index:2;
+    width:28px;height:28px;line-height:1;display:flex;align-items:center;justify-content:center;
+    background:rgba(239,230,212,.08);color:var(--paper);border:1px solid rgba(239,230,212,.18);
+    border-radius:6px;font-size:1.15rem;cursor:pointer}
+  .scout-close:hover{background:rgba(239,230,212,.16)}
+  .scout-reopen{position:absolute;top:1rem;left:1rem;z-index:1100;display:flex;align-items:center;gap:.5rem;
+    background:var(--ink);color:var(--paper);border:1px solid rgba(239,230,212,.16);border-radius:8px;
+    padding:.45rem .7rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;
+    text-transform:uppercase;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+  .scout-reopen img{border-radius:4px}
+  .scout-reopen[hidden]{display:none}
   .scout-head{display:flex;align-items:center;gap:.75rem}
   .scout-headtext{min-width:0}
   .scout-head h2{margin:0 0 .25rem;font-size:1.05rem}
@@ -626,6 +640,18 @@
   .cc-h-meta{flex:1 0 100%;font-family:var(--mono);font-size:.6rem;color:rgba(239,230,212,.45)}
   .cc-d-act{display:inline-block;margin-top:1.2rem;margin-right:.5rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;
     text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.5rem .8rem;border-radius:5px}
+  /* The two one-tap answers on an OSM place. They are <button>s, not links, so
+     they need the resets a link never did — and they sit in their own row, so
+     the base rule's stacking margins would double up here. */
+  .cc-osmcf{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem}
+  .cc-osmcf .cc-d-act{margin:0;border:1px solid transparent;cursor:pointer;font-family:var(--mono)}
+  .cc-osmcf .cc-d-act[disabled]{opacity:.5;cursor:default}
+  .cc-osmcf-done{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#7fcf9a;padding:.5rem 0}
+  /* "Not potable" is a warning, not a second recommendation — filled amber on
+     filled orange was unreadable (owner-reported 2026-08-12). Outline it: the
+     one you are expected to press stays the solid one. */
+  .cc-d-act.confirm-osm-no{background:transparent;color:#F0B45E;border-color:rgba(240,180,94,.6)}
+  .cc-d-act.confirm-osm-no:hover{background:rgba(240,180,94,.14);color:#F7C87E}
   .cc-d-act.edit{background:transparent;color:var(--paper);border:1px solid rgba(239,230,212,.45)}
   .cc-d-act.edit:hover{border-color:var(--trail);color:var(--trail)}
   .cc-d-act.fixloc{background:transparent;color:rgba(239,230,212,.85);border:1px solid rgba(239,230,212,.3)}
