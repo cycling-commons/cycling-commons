@@ -28,13 +28,13 @@ municipality — **not** a game shape from any app built on top. Keeping the Com
 and independent is deliberate: an app's game layer may *map onto* Commons regions, never the reverse.
 That keeps the Commons usable by anyone, decoupled from any one product.
 
-For each region the Commons surfaces a curated **best-of**:
+For each region the Commons surfaces a **best-of** (the map's first view mode, *Best of*):
 
 - the best **climbs**
 - the best **bike-friendly stays**
 - the most scenic **views**
 - the best **history & culture** to ride past
-- the best **quality rides / routes** (routes' best-of is the map's season/bike Curated ranking, not the seasonal ballot)
+- the best **quality rides / routes** (routes' best-of is the map's season/bike Best-of ranking, not the seasonal ballot)
 - (extensible: best café stops, best gravel, etc.)
 
 So when you arrive somewhere new, you get a clear, opinionated picture of the best there is — instead
@@ -47,7 +47,7 @@ of drowning in data.
     The `/vote` page shows the design and records nothing. What *is* running
     today is the route path below — propose → curator review → rode-it
     verification → seasonal recommend-votes on the map drawer — which feeds the
-    Curated ranking without a ballot. Everything else in this page (the two
+    Best-of ranking without a ballot. Everything else in this page (the two
     strategies, regions, the backlog, integrity) describes shipped behaviour.
 
 - **Riders vote** on the candidates in each region.
@@ -57,7 +57,7 @@ of drowning in data.
   legendary climb is never wiped out by one low-turnout season; it just has to keep earning its place.
 - **These rounds cover climbs, stays, views, and heritage.** Routes sit outside the seasonal ballot:
   they follow their own **propose → curator moderate → rode-it-verify → seasonal recommend-vote** flow
-  on the map drawer, feeding the same season/bike Curated ranking rather than a ballot round.
+  on the map drawer, feeding the same season/bike Best-of ranking rather than a ballot round.
 
 ## Solving the cold start: seed from popularity, refine by vote
 
@@ -67,7 +67,7 @@ signals, and the list is never blank on day one.
 
 ## The backlog: nothing is thrown away
 
-The curated best-of is the **lede**, not the whole library. Every climb, view, and route beyond the
+The best-of is the **lede**, not the whole library. Every climb, view, and route beyond the
 top list still lives in the Commons as a **backlog** — fully queryable for completists who want it
 all. The Commons *ranks* data; it never *discards* it.
 

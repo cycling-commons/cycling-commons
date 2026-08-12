@@ -82,7 +82,7 @@ flowchart TD
     SPLIT -->|"Utility<br/>water · services · shelter<br/>transit · hazards · surface"| STOP(["Stops here.<br/>Never voted on.<br/>The value is coverage."])
     SPLIT -->|"Experiential<br/>climbs · stays · views<br/>history · routes"| VOTABLE["Votable<br/>now collects rider votes"]
 
-    VOTABLE --> BEST(["Best-of<br/>top-voted<br/>this is what Curated shows"])
+    VOTABLE --> BEST(["Best-of<br/>top-voted<br/>this is what Best of shows"])
 
     style OUT fill:#8b1a1a,color:#EFE6D4
     style STOP fill:#3E7D8C,color:#EFE6D4
@@ -110,6 +110,16 @@ flowchart TD
       independent confirmation, and the record's state is changed only by a
       curator. The tiered X below, and the modifiers under it, are the design
       for that gate, not a description of it.
+    - **A curator's own confirmation settles it.** When the person confirming
+      holds curator rights, the place becomes Verified on that one answer. Three
+      riders should not be needed to agree that a castle is a castle, and a
+      curator standing at a place is the strongest signal the system has.
+    - **Anything you can stand in front of can be confirmed.** The old rule
+      asked whether a place could *vanish*, which excluded castles and
+      mountains. The right question is whether a rider was there and this is
+      right — its existence, its position, its name — and a climb can be wrong
+      about all three. An invented viewpoint with a generated photo is exactly
+      what the next rider at that spot disproves.
     - **Decay is built for closures, and only for closures.** A hazard reported
       as *Road closed* carries the reporter's own answer to "closed for how
       long?" — today, days, weeks, months — and retires itself once that window
@@ -182,7 +192,8 @@ The same principle covers anything we cannot actually check.
 
 ## 4 · What the map shows, and when
 
-The two view modes are a **density** control, not a trust control.
+The view modes are a **density** control, not a trust control. There are three,
+and they read the lifecycle above from the top down.
 
 <!-- CODE-ILLUSTRATIVE mermaid diagram source, rendered by javascripts/diagrams.js -->
 ```mermaid
@@ -193,23 +204,40 @@ flowchart LR
         E3["full utility coverage"]
         E4["all experiential places"]
     end
-    subgraph CU["Curated — the trip-planning map"]
+    subgraph CO["Confirmed — what somebody has vouched for"]
+        O1["every place a rider or curator confirmed"]
+        O2["plus the best-of picks"]
+        O3["no unchecked reference data"]
+    end
+    subgraph CU["Best of — the trip-planning map"]
         C1["best-of experiential only"]
         C2["full utility coverage<br/>(unchanged)"]
     end
+    style CO fill:#1C3A2A,color:#EFE6D4
     style CU fill:#1C3A2A,color:#EFE6D4
 ```
+
+**Confirmed is the middle rung**, and it contains Best of rather than sitting
+beside it: a curator verifying a place *is* somebody vouching for it. What it
+leaves out is the reference layer — the OpenStreetMap data we mirror but nobody
+here has checked — because a mode meaning *someone looked at this* cannot carry
+the one layer where nobody has.
+
+That also means Confirmed starts nearly empty in a new region, and stays that
+way until riders fill it. We would rather show you an honest empty screen than
+imply a check that never happened; it is also the one screen that makes pressing
+*Confirm* worth something.
 
 **Search always reaches everything, in both modes.** "Too much" is solved by
 ranking and collapsing — curated first, community tagged — never by hiding.
 
 ### Which mode a region opens in
 
-A region opens in **Everything** by default. Curated is something a region
-*earns*, because a Curated map of an uncurated region is an empty map — and an
+A region opens in **Everything** by default. Best of is something a region
+*earns*, because a best-of map of an uncurated region is an empty map — and an
 empty map reads as "there's nothing here" even when the rail says 1,488 places.
 
-A moderator can flip a region to open in Curated once it has enough curated
+A moderator can flip a region to open in Best of once it has enough curated
 content, **spread across enough kinds of content**:
 
 <!-- CODE-ILLUSTRATIVE mermaid diagram source, rendered by javascripts/diagrams.js -->
@@ -219,7 +247,7 @@ flowchart TD
     T -->|no| LOCK(["Locked<br/>opens in Everything"])
     T -->|yes| B{"Spread over enough<br/>different blocks,<br/>each carrying its share?"}
     B -->|no| LOCK2(["Still locked<br/>25 scenic views and nothing else<br/>is still an empty map"])
-    B -->|yes| OK(["A moderator may flip it<br/>opens in Curated"])
+    B -->|yes| OK(["A moderator may flip it<br/>opens in Best of"])
     style LOCK2 fill:#C8923A,color:#101E16
     style OK fill:#FF5A1F,color:#101E16
 ```
@@ -227,7 +255,7 @@ flowchart TD
 The **blocks** are the data layers themselves — road surface, climbs, where to
 sleep, scenic views, history & culture, best-of routes. Utility layers do not
 count towards readiness, because they render in *both* modes: a full map of
-water taps is no evidence that Curated has anything to show.
+water taps is no evidence that Best of has anything to show.
 
 Breadth is *"N blocks of M"*, not *"every block"*, on purpose. A Dutch province
 has no climbs and never will, and must still be able to qualify on stays, views,
@@ -282,4 +310,5 @@ flowchart TD
 **Where this is specified.** The lifecycle and the X tiers:
 `docs/specs/edit-items/README.md`. Provenance and deduplication:
 `docs/specs/osm-data-architecture.md`. What the map shows:
-`docs/specs/map-and-search.md`, §4.2 for the Curated-by-default gate.
+`docs/specs/map-and-search.md`, §4.2 for the view modes and the
+Best-of-by-default gate.

@@ -18,7 +18,7 @@ shows the country tier right on each region's chip:
 | **Not on the map yet** | The country hasn't been onboarded. It doesn't appear on `/regions`, but you can still ask for it — see below. |
 | **Onboarded** | The region is live on the map from the day it's added — full read/write, full contribution flow — but riders haven't confirmed anything there yet. |
 | **Growing** | Riders have started adding and confirming places. The commons for that region is no longer empty. |
-| **Curated** | A curator maintains the region and the map opens there in Curated view by default — best climbs, best stays, best views, ranked rather than just listed. |
+| **Curated** | A curator maintains the region and the map opens there in **Best of** view by default — best climbs, best stays, best views, ranked rather than just listed. |
 
 The important part: **the map serves every onboarded region from day one.**
 Onboarding is not a waiting room before the map "turns on" — it's the

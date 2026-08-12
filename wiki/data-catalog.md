@@ -168,7 +168,7 @@ A "road closed" or "pothole" report that never expires becomes a lie. Perishable
 - **Confidence from confirmations.** 1 report = *unconfirmed*; several independent ones = *confirmed*. Show the state, don't hide it.
 - **Decay / expiry by type.** Each hazard has a half-life: a pothole persists for months, "closed for an event" expires in days, "loose gravel" fades over weeks. After expiry it's hidden (not deleted) pending re-confirmation.
 - **Auto-clear from aggregate use.** If riders keep passing through a spot flagged "closed," that's evidence it reopened — [auto] data downgrades a stale [tap] report.
-- **One-tap confirm / dispute.** A rider passing a flagged spot gets a light "still there? yes / gone" prompt that feeds confidence.
+- **One-tap confirm / dispute.** A rider passing a flagged spot gets a light "still there? yes / gone" prompt that feeds confidence. **Built for every place, not only hazards** (2026-08): the drawer asks the letter's own question — *drinkable?* for water, *still here?* for the rest — and offers the three ways a place stops being true beside it: **out of order**, **closed**, **not there anymore**. Out of order is offered only where something can break; a viewpoint cannot. Each writes the same field the edit form offers, so a one-tap answer and a typed correction are one record rather than two, and each goes through the ordinary review queue: a tap proposes, a curator decides. A place confirmed gone leaves the map and does **not** reappear from the OpenStreetMap layer underneath it.
 - **Provenance kept, identity not.** Store *that* N riders confirmed and *when* — never *who* — in the public Commons.
 
 This turns perishable reports into a self-healing layer instead of an ever-growing pile of stale warnings.
