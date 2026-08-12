@@ -264,6 +264,14 @@ Rules:
     and finds their own answer already chosen rather than a second, contradictory
     record of it. *Out of order* appears only where something can break (water,
     bike services, toilets); a viewpoint cannot.
+  - **The same answers survive materialization.** A place that became ours is
+    not frozen: a water point added as existing and potable can be shut off,
+    break, or be taken out next season (owner 2026-08-12), so
+    `POST /items/{id}/condition` offers the identical three words on an item we
+    already hold. It files an ordinary **edit** submission rather than a
+    confirmation - a claim about the place, not a vote on it - so the queue,
+    the diff and the approve button are the ones that already exist. A second
+    report of the same thing answers `409 pending_review`.
   - **`condition = 'Not there anymore'` removes a place from the map, without
     handing it back to OSM.** `CatalogProvider::itemRows()` stops drawing the
     item; `curatedRefs()` still claims its ref, so the coverage POI it was

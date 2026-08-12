@@ -269,6 +269,85 @@ final class OsmConfirmTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
     }
 
+    /**
+     * Becoming ours must not freeze a place (owner 2026-08-12: "a water point
+     * once added as existing and potable can later be removed or out of order
+     * etc"). The same three answers reach an item we already hold - as an
+     * ordinary edit, through the ordinary queue.
+     */
+    public function testAPlaceWeAlreadyHoldTakesTheSameThreeAnswers(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'ours');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter('C')->setName('Fontein Vrijdagmarkt')
+            ->setGeom('{"type":"Point","coordinates":[3.72,51.05]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)
+            ->setSourceRef('node/909090')->setAttributes(['potable' => 'Yes (public supply)']);
+        $em->persist($item);
+        $em->flush();
+        $id = (int) $item->getId();
+
+        $client->request('POST', '/items/'.$id.'/condition', [
+            '_token' => $this->mapToken($client),
+            'stance' => 'out_of_order',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        /** @var Submission $submission */
+        $submission = $em->getRepository(Submission::class)->findOneBy(['itemId' => $id]);
+        self::assertNotNull($submission, 'it travels as an ordinary edit, not a new mechanic');
+        self::assertSame('Out of order', $submission->getChanges()['condition']['now']);
+        self::assertSame(
+            ['potable' => 'Yes (public supply)'],
+            $em->getRepository(Item::class)->find($id)->getAttributes(),
+            'a report proposes; nothing changes on the item until a curator says so',
+        );
+    }
+
+    public function testTheSameReportTwiceIsNotTwoRowsInTheQueue(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'twice');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter('H')->setName('Schuilhut')
+            ->setGeom('{"type":"Point","coordinates":[3.73,51.06]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setAttributes([]);
+        $em->persist($item);
+        $em->flush();
+        $id = (int) $item->getId();
+        $token = $this->mapToken($client);
+
+        $client->request('POST', '/items/'.$id.'/condition', ['_token' => $token, 'stance' => 'gone']);
+        self::assertResponseIsSuccessful();
+        $client->request('POST', '/items/'.$id.'/condition', ['_token' => $token, 'stance' => 'gone']);
+
+        self::assertResponseStatusCodeSame(409, 'the map is not a tally of who else saw it go');
+        self::assertSame(1, $em->getRepository(Submission::class)->count(['itemId' => $id]));
+    }
+
+    public function testAnItemReportIsRefusedForUnknownIdsAndAnswers(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'itembad');
+        $token = $this->mapToken($client);
+
+        $client->request('POST', '/items/99999999/condition', ['_token' => $token, 'stance' => 'gone']);
+        self::assertResponseStatusCodeSame(404);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter('C')->setName('Tap')
+            ->setGeom('{"type":"Point","coordinates":[3.74,51.07]}')->setCountryCode('BE')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Manual)->setAttributes([]);
+        $em->persist($item);
+        $em->flush();
+
+        // 'As mapped' is the letter's own confirmation, which has its own
+        // button; this endpoint only takes the ways a place stops being true.
+        $client->request('POST', '/items/'.$item->getId().'/condition', ['_token' => $token, 'stance' => 'exists']);
+        self::assertResponseStatusCodeSame(422);
+    }
+
     public function testAnAnonymousTapIsRefused(): void
     {
         $client = static::createClient();

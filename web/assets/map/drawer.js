@@ -634,6 +634,23 @@ function buildRecord(layer, f){
   const confirmPanel = (CC_CONFIRMABLE.has(layer.key) && f.id!=null)
     ? `<div class="cc-cf" data-item="${f.id}"><div class="cc-cf-body" data-cf-body></div><div class="cc-cf-login" hidden>${D.loginConfirm||'Log in to confirm'} · <a href="/login">${I18N.login||'Log in'}</a></div></div>`
     : '';
+  /* Becoming ours does not freeze a place. A water point added as existing and
+     potable can be shut off, break, or be taken out next season (owner
+     2026-08-12), and until now the moment it became ours was the moment those
+     answers disappeared: the panel above asks only the letter's own question.
+
+     Same three words as the OSM row, same field, same queue — but an EDIT, not
+     a confirmation, because it is a claim about the place rather than a vote
+     on it. Signed-in riders only, for the same reason the OSM row is. */
+  const stateRow = (CC_CONFIRMABLE.has(layer.key) && f.id!=null && window.CC_CONFIRM_TOKEN)
+    ? `<div class="cc-osmcf" data-item-cond="${f.id}">`
+        + (CC_BREAKABLE.has(layer.key)
+            ? `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="out_of_order">⚠ ${D.osmBroken||'Out of order'}</button>`
+            : '')
+        + `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="closed">⌀ ${D.osmClosed||'Closed'}</button>`
+        + `<button type="button" class="cc-d-act confirm-osm-gone" data-osm-stance="gone">✕ ${D.osmGone||'Not there anymore'}</button>`
+      + '</div>'
+    : '';
   /* An OSM place, answered in one tap.
 
      A confirmation is recorded against an item and an OSM point is not one, so
@@ -670,7 +687,7 @@ function buildRecord(layer, f){
         + `<button type="button" class="cc-d-act confirm-osm-gone" data-osm-stance="gone">✕ ${D.osmGone||'Not there anymore'}</button>`
       + '</div>')
     : '';
-  const act = edit + osmConfirm + vote;
+  const act = edit + osmConfirm + stateRow + vote;
   const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
   // C1-T3 (spec W5): an empty placeholder for the async "Recent changes"
   // section — openDrawer() fetches GET /map/item/{id}/history after this

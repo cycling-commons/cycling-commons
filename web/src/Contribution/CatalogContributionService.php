@@ -457,7 +457,15 @@ final class CatalogContributionService implements ContributionStubInterface
 
         $draft = new SubmissionDraft(
             type: ItemType::fromParam($item->getLetter()),
-            title: $item->getName(),
+            /* A submission needs a heading, and plenty of places have no name:
+               a drinking-water node in OSM usually carries nothing but its
+               tags. Callers that know a better word for it (the one-tap
+               condition report passes the layer's own label) hand it over as
+               `_title_fallback`; the ITEM is not renamed by it, because the
+               title is what the queue displays and nothing else. */
+            title: '' !== $item->getName()
+                ? $item->getName()
+                : trim((string) ($payload['_title_fallback'] ?? '')),
             // The submission sits where the RIDER put it, not where the item
             // still is: the desk pins submissions on a map, and a curator
             // judging a move has to see the proposed spot.

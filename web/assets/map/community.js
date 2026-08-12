@@ -397,13 +397,19 @@ export function initCommunity(){
     document.addEventListener('click', e=>{
       const btn=e.target.closest('[data-osm-stance]'); if(!btn) return;
       const box=btn.closest('.cc-osmcf'); if(!box) return;
+      // Two arms of one gesture: an OSM place we do not hold yet (POST creates
+      // the item), and a place already ours (POST proposes an edit to it). The
+      // rider presses the same word either way, so the handler is one.
       const ref=box.getAttribute('data-osm-ref');
+      const itemId=box.getAttribute('data-item-cond');
+      const url=itemId ? `/items/${encodeURIComponent(itemId)}/condition` : '/osm/confirm';
       const token = window.CC_CONFIRM_TOKEN;
       if(!token){ mapToast(D.toastLoginConfirm||'Please log in to confirm.'); return; }
       box.querySelectorAll('.cc-d-act').forEach(b=>b.disabled=true);
       const body=new URLSearchParams();
-      body.set('_token', token); body.set('ref', ref); body.set('stance', btn.getAttribute('data-osm-stance'));
-      fetch('/osm/confirm', {method:'POST', credentials:'same-origin',
+      body.set('_token', token); body.set('stance', btn.getAttribute('data-osm-stance'));
+      if(!itemId) body.set('ref', ref);
+      fetch(url, {method:'POST', credentials:'same-origin',
         headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'},
         body:body.toString()})
         .then(r=>r.json().then(j=>({ok:r.ok, status:r.status, j})))

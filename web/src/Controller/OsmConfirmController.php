@@ -13,6 +13,7 @@ use App\Contribution\CatalogContributionService;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -63,8 +64,93 @@ final class OsmConfirmController extends AbstractController
     public function __construct(
         private readonly CatalogContributionService $contributions,
         private readonly Connection $db,
+        private readonly EntityManagerInterface $em,
         private readonly TranslatorInterface $translator,
     ) {
+    }
+
+    /**
+     * The same three answers, for a place that is already ours.
+     *
+     * Materializing an OSM tap does not freeze it: a water point added as
+     * existing and potable can be removed, shut off or break next season
+     * (owner 2026-08-12). Before this, our own items offered only the
+     * letter's confirmation - potable / still here - so the moment a place
+     * became ours, the ways of saying it had STOPPED being true disappeared.
+     *
+     * It is an edit, not a confirmation: a claim about the place rather than a
+     * vote on it, so it travels as an ordinary improve submission through the
+     * same queue as any other edit. No new moderation mechanic, and the same
+     * `condition` vocabulary as the OSM arm and the edit form.
+     */
+    #[Route('/items/{id}/condition', name: 'item_condition', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_USER')]
+    public function condition(Request $request, int $id): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('item-confirm', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        $stance = (string) $request->request->get('stance');
+        // 'As mapped' is not offered here: saying a place is fine IS the
+        // letter's confirmation, and it already has a button.
+        if (!\in_array($stance, ['out_of_order', 'closed', 'gone'], true)) {
+            return $this->json(['error' => 'invalid_stance'], 422);
+        }
+        $value = self::STANCE_FIELDS[$stance]['condition'];
+
+        $item = $this->em->find(Item::class, $id);
+        if (null === $item || !\in_array($item->getState(), ItemState::SERVED, true)) {
+            return $this->json(['error' => 'unknown_item'], 404);
+        }
+        // Same letter→type walk the OSM arm does; ItemType is keyed by slug,
+        // and the item carries the letter.
+        $type = null;
+        foreach (ItemType::cases() as $case) {
+            if ($case->letter() === $item->getLetter()) {
+                $type = $case;
+                break;
+            }
+        }
+        if (null === $type || !$type->isConfirmable()) {
+            return $this->json(['error' => 'not_confirmable'], 422);
+        }
+
+        /* Already said, by this rider or by anyone: the map is not a tally of
+           how many people watched the same tap break. A second report of the
+           same thing is answered with what already happened, exactly as the
+           OSM arm answers a second tap. */
+        if ($value === ($item->getAttributes()['condition'] ?? null)) {
+            return $this->json(['error' => 'already_recorded'], 409);
+        }
+        $pending = $this->db->fetchOne(
+            "SELECT id FROM submission WHERE item_id = :id AND status = 'pending'
+                 AND changes->'condition'->>'now' = :value LIMIT 1",
+            ['id' => $id, 'value' => $value],
+        );
+        if (false !== $pending) {
+            return $this->json(['error' => 'pending_review', 'submissionId' => (int) $pending], 409);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        try {
+            $receipt = $this->contributions->submit('improve', [
+                '_item_id' => $id,
+                'details' => ['condition' => $value],
+                // Most materialized POIs are nameless; the queue still needs a
+                // heading, and the layer's own words are the ones the rider
+                // just read in the drawer.
+                '_title_fallback' => $this->translator->trans('item_type.'.$type->value.'.label'),
+            ], $user);
+        } catch (TooManyRequestsHttpException) {
+            return $this->json(['error' => 'rate_limited'], 429);
+        } catch (ValidationFailedException) {
+            return $this->json(['error' => 'invalid'], 422);
+        }
+
+        return $this->json(['ok' => true, 'reference' => $receipt->reference, 'stance' => $stance]);
     }
 
     #[Route('/osm/confirm', name: 'osm_confirm', methods: ['POST'])]
