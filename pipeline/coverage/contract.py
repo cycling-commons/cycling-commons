@@ -128,7 +128,9 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     if "surface" not in raw:
         raise ValueError("contract missing top-level \"surface\" key")
     surface = raw["surface"]
-    for required in ("highways", "classes", "cyclewayClass", "untaggedClass", "minZoom", "maxZoom"):
+    # `cyclewayClass` is gone: road type is not a colour in the surface scale
+    # (owner 2026-08-12) — see surface._roadTypeChannel in the contract.
+    for required in ("highways", "classes", "untaggedClass", "minZoom", "maxZoom"):
         if required not in surface:
             raise ValueError(f"contract surface section missing {required!r}")
     # A value may not sit in two classes: the first match would win silently and
@@ -143,6 +145,32 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     for gated in surface.get("gatedHighways", {}):
         if gated not in surface["highways"]:
             raise ValueError(f"gatedHighways names {gated!r}, which is not in highways")
+
+    # The to-do arm is a SUBSET of the selected network, never a second
+    # selector: it is drawn from the same extract pass, so a highway nobody
+    # extracts can never appear in it, and naming one here would silently
+    # promise a layer that is always empty.
+    for required in ("highways", "minZoom", "maxZoom"):
+        if required not in surface.get("todo", {}):
+            raise ValueError(f"contract surface.todo section missing {required!r}")
+    for hw in surface["todo"]["highways"]:
+        if hw not in surface["highways"]:
+            raise ValueError(
+                f"surface.todo.highways names {hw!r}, which is not in surface.highways — "
+                "the to-do arm is filtered out of the same extract, not selected separately")
+
+    for required in ("cellZoom", "minZoom", "maxZoom", "tileProps"):
+        if required not in surface.get("gaps", {}):
+            raise ValueError(f"contract surface.gaps section missing {required!r}")
+    # The grid and the lines are one legend row shown at two resolutions, so
+    # the handover has to be exact: a gap between them is a zoom level where a
+    # rider who asked "what needs recording?" is shown nothing at all, and an
+    # overlap draws squares on top of the roads they summarise.
+    if surface["gaps"]["maxZoom"] != surface["todo"]["minZoom"]:
+        raise ValueError(
+            f"surface.gaps.maxZoom ({surface['gaps']['maxZoom']}) must equal "
+            f"surface.todo.minZoom ({surface['todo']['minZoom']}) — the grid hands over "
+            "to the lines at exactly one zoom, with no gap and no overlap")
 
     if "serviceKind" not in raw:
         raise ValueError("contract missing top-level \"serviceKind\" key")

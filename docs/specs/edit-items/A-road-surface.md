@@ -98,7 +98,43 @@ same shape the coverage tiles use:
 | Netherlands | 796,815 | |
 | Luxembourg | 50,916 | |
 | **classified artifact** | **1,266,035** | **152.4 MB** |
-| untagged arm (same three) | 894,217 | 119.1 MB |
+| "needs recording" arm (same three) | 414,774 | 34.8 MB |
+| gap grid (same three, 2,163 cells) | — | 0.6 MB |
+
+**The "needs recording" arm stopped being "every untagged way" on 2026-08-12,
+and the reason is editorial before it is about bytes.** It was every untagged
+way, and it cost as much as the entire classified skin (894,217 ways, 119 MB).
+Measured against our own tagged data for the same countries, most of that was
+asking riders to confirm what is already known — of Belgian ways somebody HAS
+tagged, these are the shares that turned out unpaved:
+
+| highway | unpaved when tagged | in the to-do arm? |
+|---|---|---|
+| `track` | 88.2 % | **yes** |
+| `path` | 50.1 % | **yes** |
+| `unclassified` | 6.8 % | **yes** — the rural lane question |
+| `living_street` | 20.0 % | no (owner call: not interesting to ride) |
+| `residential` | 7.2 % | no |
+| `tertiary` | 2.5 % | no |
+| `secondary` | 0.5 % | no |
+| `primary` | 0.1 % | no |
+| `cycleway` | 0.0 % | no |
+
+Mappers tag the surprising road first, so an *untagged* primary is even more
+certainly asphalt than that 0.1 % suggests. Keeping only the unpredictable
+classes cut the arm to 29 % of its size and made every line in it a road where
+riding actually settles something. The set is contract data
+(`surface.todo.highways`), so widening it later is a one-line change plus a
+rebuild — no code, no client release.
+
+**The gap grid answers the same question for planning.** Per z12 cell (~6 km):
+kilometres of unrecorded to-do network, its share of that cell's network, and a
+road count. Kilometres rather than ways, because a way is an arbitrary unit — a
+rural track runs unbroken for 3 km while a village lane is split at every
+junction, so counting ways would make dense villages look like more work than
+the gravel network around them. A cell where everything is recorded is omitted
+rather than shipped as zero: a square drawn over finished work reads as "there
+is something to do here", which is the one thing the layer must never say.
 
 **Border crossings are not a problem, and it was worth checking rather than
 assuming.** Verified at Baarle-Hertog/Nassau — the most tangled border in

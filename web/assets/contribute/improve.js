@@ -473,6 +473,20 @@
       var snapCtl = null;
       var SNAP_TIMEOUT_MS = 8000;
 
+      /* The drawn stretch covers the road it describes.
+
+         A 4 px orange line over a 3 m farm track hides exactly the surface the
+         rider is being asked to judge — on satellite imagery, which is the one
+         base that can answer "is that gravel or asphalt?", the line IS the road
+         at this zoom (owner-reported 2026-08-12). So the line can be taken off
+         for a moment. The pins stay: they are what makes the stretch findable
+         again, and they sit at its ends rather than on top of it.
+
+         A toggle rather than a hold-to-peek, because judging a surface from
+         imagery is a look-around-and-compare job, not a glance — and a rider
+         holding a button cannot pan. */
+      var segHidden = false;
+
       var drawSeg = function () {
         if (!wmap.isStyleLoaded()) { wmap.once('idle', drawSeg); return; }
         var id = 'seg';
@@ -481,7 +495,45 @@
         if (placed.length < 2) return;
         var coords = snapped || placed.map(function (m) { return m.getLngLat().toArray(); });
         wmap.addSource(id, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
-        wmap.addLayer({ id: id, type: 'line', source: id, paint: { 'line-color': '#FF5A1F', 'line-width': 4 } });
+        wmap.addLayer({
+          id: id, type: 'line', source: id,
+          // Re-applied on every redraw, and that is the whole trick: dragging a
+          // pin destroys and rebuilds this layer, so without it the line would
+          // silently come back every time the rider moved an end.
+          layout: { visibility: segHidden ? 'none' : 'visible' },
+          paint: { 'line-color': '#FF5A1F', 'line-width': 4 },
+        });
+      };
+
+      /* The control that hides it, in the same top-left group as Map/Satellite:
+         it answers a question about what is drawn on the map, like they do. */
+      var mountSegPeek = function () {
+        var ctrl = document.createElement('div');
+        ctrl.className = 'ed-base maplibregl-ctrl maplibregl-ctrl-group ed-peek';
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('aria-pressed', 'false');
+        var sync = function () {
+          b.textContent = segHidden ? (t('seg_show') || 'Show line') : (t('seg_hide') || 'Hide line');
+          b.title = segHidden
+            ? (t('seg_show_title') || 'Draw the stretch back on')
+            : (t('seg_hide_title') || 'Take the line off to see the road underneath');
+          b.setAttribute('aria-pressed', segHidden ? 'true' : 'false');
+          b.classList.toggle('on', segHidden);
+        };
+        b.addEventListener('click', function () {
+          segHidden = !segHidden;
+          if (wmap.getLayer('seg')) {
+            wmap.setLayoutProperty('seg', 'visibility', segHidden ? 'none' : 'visible');
+          }
+          sync();
+        });
+        sync();
+        ctrl.appendChild(b);
+        wmap.addControl({
+          onAdd: function () { return ctrl; },
+          onRemove: function () { ctrl.remove(); },
+        }, 'top-left');
       };
 
       /* Ask the router for the road between the pins. Sequence-guarded and
@@ -646,6 +698,11 @@
       };
 
       wmap.on('click', function (e) { placeAt(e.lngLat); });
+
+      // Segment mode only: a point item draws no line, so a control offering to
+      // hide one would be a button that does nothing on most of the wizard's
+      // types.
+      if (LOCATE === 'segment') mountSegPeek();
 
       // Pre-place a known stretch, then frame it. placeAt() handles the marker,
       // the drag handler, the readout and the drawn line, so the prefill is the

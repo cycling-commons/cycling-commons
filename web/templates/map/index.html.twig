@@ -269,7 +269,6 @@
          shared). Dropping the "· A" because it is no longer only A's key. #}
       <h4>{{ 'item_type.road-surface.label'|trans }}</h4>
       <div class="skey">
-        <button type="button" class="skey-row" data-surf-cls="cycleway" aria-pressed="true"><span class="skey-ln" style="--sc:#7A4FCF"></span>{{ 'map.legend_cycleway'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="paved" aria-pressed="true"><span class="skey-ln" style="--sc:#4E6E66"></span>{{ 'map.legend_paved'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="gravel" aria-pressed="true"><span class="skey-ln dash" style="--sc:#C8923A"></span>{{ 'map.legend_gravel'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="pave" aria-pressed="true"><span class="skey-ln dot" style="--sc:#6E7B96"></span>{{ 'map.legend_cobbles'|trans }}</button>
@@ -444,14 +443,27 @@ window.CC_VENDOR = {{ {
      HEX-escaped like the others: the value originates outside the app. #}
   {% if surface_tiles_url %}
   window.CC_SURFACE_URL = {{ surface_tiles_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
+  {# Each arm gates on ITSELF. They are separate artifacts and a build can
+     legitimately publish one without the others (a pinned classified URL for a
+     bisect, a gaps-only experiment), so nesting them under the classified gate
+     would hide a layer that exists. #}
+  {% if surface_todo_url %}
   window.CC_SURFACE_TODO_URL = {{ surface_todo_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
+  {% if surface_gaps_url %}
   window.CC_SURFACE_GAPS_URL = {{ surface_gaps_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
   {# Scout review: the tag vocabulary with the letters each tag may resolve to,
      from ScoutTag::LETTERS — the same list the intake endpoint validates
-     against, so the panel can never offer a choice the server refuses. #}
+     against, so the panel can never offer a choice the server refuses.
+
+     NOT gated on the surface tiles, though it used to be — it sat inside that
+     block, so an instance with no surface artifact shipped no tag vocabulary
+     and the ride-review panel lost the list it validates against. Scout reads
+     rides; it does not need a tile artifact to exist. #}
   window.CC_SCOUT_TAGS = {{ scout_tags|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_SCOUT_DETAILS = {{ scout_details|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {% endif %}
 </script>
 {# The photo-intake config below is one queue for a WHOLE RIDE, not for one
    place — a rider reviewing thirty tags may photograph several of them, hence

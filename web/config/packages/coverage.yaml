@@ -11,3 +11,13 @@ parameters:
     # range-reads tiles from another origin (dev: http://localhost:9100) —
     # the two hosts legitimately differ. Empty = no coverage host in the policy.
     coverage.csp_host: '%env(COVERAGE_CSP_HOST)%'
+    # Road-surface line tiles. The manifest is the normal path — the build
+    # publishes three artifacts under one stamp and repoints it, so a rebuild
+    # goes live without a config change. The three URLs below PIN a specific
+    # build and win when set: the hatch for bisecting a rendering problem, or
+    # for serving an artifact that was never published. Empty = follow the
+    # manifest.
+    surface.manifest_url: '%env(SURFACE_MANIFEST_URL)%'
+    surface.tiles_url: '%env(SURFACE_TILES_URL)%'
+    surface.todo_url: '%env(SURFACE_TODO_URL)%'
+    surface.gaps_url: '%env(SURFACE_GAPS_URL)%'

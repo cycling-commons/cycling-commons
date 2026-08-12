@@ -36,6 +36,13 @@ services:
             $tilesEnabled: '%coverage.tiles_enabled%'
             $manifestUrl: '%coverage.manifest_url%'
 
+    App\Coverage\SurfaceManifest:
+        arguments:
+            $manifestUrl: '%surface.manifest_url%'
+            $pinnedClassifiedUrl: '%surface.tiles_url%'
+            $pinnedTodoUrl: '%surface.todo_url%'
+            $pinnedGapsUrl: '%surface.gaps_url%'
+
     App\EventSubscriber\CspSubscriber:
         arguments:
             $coverageCspHost: '%coverage.csp_host%'

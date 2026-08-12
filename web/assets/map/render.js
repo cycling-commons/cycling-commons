@@ -323,10 +323,16 @@ export function drawLine(id, latlngs, color, layer, f){
   layerTarget.set(id, {layer, f});
   bindLayer(id);
 }
-// A · Road surface — colour + pattern by surface class (solid paved · dashed gravel · dotted pavé)
+/* A · Road surface — colour + pattern by surface class, and NOTHING else.
+   (solid paved · dashed gravel · dotted pavé)
+
+   `cycleway` was a colour here until 2026-08-12 and should not have been: road
+   TYPE is a different question from what is under the tyres, and a scale that
+   answers both answers neither. Most Dutch cycleways are asphalt, some are not,
+   and the purple line could not say which. Road type is its own channel now —
+   a pale core drawn inside whatever surface colour the way has (CYCLEWAY_CORE
+   below, surface-tiles.js). */
 export const SURFACE_STYLE={
-  cycleway:{color:'#7A4FCF'},                        // a dedicated cycleway — solid purple, the one hue
-                                                     // paved/gravel/dirt/rock/pavé do not use (2026-08-12)
   paved:{color:'#4E6E66'},                           // asphalt/concrete — solid slate
   gravel:{color:'#C8923A',dash:[2,1.5],cap:'butt'},  // gravel/compacted — dashed ochre
   pave:{color:'#6E7B96',dash:[1,1.5],cap:'butt'},    // sett/cobbles (pavé) — square slate-grey dashes (matches the legend; distinct from brown ground)

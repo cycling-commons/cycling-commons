@@ -353,6 +353,53 @@ own coordinate — the phantom-bubble class of bug has no surface left to occur 
 </figure>
 <!-- FIGURE-TODO id=F14 ch=7 -->
 
+## Lines, and when to ship no geometry at all
+
+Everything so far has been points. The road-surface layer is **lines** — every way OSM has a
+`surface` tag for — and the pyramid handles them the same way, with one difference in the profile:
+lines are never *dropped* to make a tile fit. A dropped point at low zoom is a thinner sample; a
+dropped line is a road that vanishes from the map. So the surface build simplifies **geometry**
+instead — a way loses vertices at low zoom, never its existence.
+
+The more interesting case is the layer's other half: the roads nobody has recorded a surface for.
+Drawn as lines, that is hundreds of thousands of features per country, and at z8 a national road
+network is an unreadable smear whichever way you style it. But look at the question a rider is
+actually asking down there. It is not *"is this lane gravel?"* — you cannot even see the lane. It is
+*"which part of the map has nobody surveyed?"*
+
+That question has a far cheaper answer: one square per ~6 km carrying how many kilometres inside it
+are unrecorded. For the Benelux that is **0.6 MB against 34.8 MB** of the same information as
+lines — about 1.5 % — and it reads better, because a choropleth is what a "where" question wants.
+The lines then take over at z11, where a rider is looking at a road they could actually go and ride.
+
+<figure class="gis-fig"><svg viewBox="0 0 640 448" role="img" aria-labelledby="sf2-t sf2-d" xmlns="http://www.w3.org/2000/svg">
+<title id="sf2-t">The same question answered as squares at country zoom and as roads close in</title>
+<desc id="sf2-d">Two stacked panels of the same piece of country. The upper panel, labelled zoom 9, is covered by a grid of eighteen rectangles, each tinted to a different strength: pale where almost everything has been recorded, strong where almost nothing has. No roads are drawn at all, and it is annotated 0.6 megabytes for the Benelux. An arrow points down from it to the lower panel, labelled at zoom 11 the grid hands over. The lower panel, labelled zoom 12, shows the same area with individual roads instead: three dashed lines are tracks and lanes with no recorded surface, and two plain lines are roads somebody has already recorded. It is annotated 34.8 megabytes for the Benelux. The point is that the upper panel answers where is there work and the lower answers which road, and each is the cheaper way to answer its own question.</desc>
+<defs><marker id="gis-arrow-fS2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs>
+<text class="gis-label-sm" x="20" y="30">z9 · one square per ~6 km</text>
+<rect class="gis-fill-accent" x="20" y="40" width="100" height="50" fill-opacity="0.10"/><rect class="gis-fill-accent" x="120" y="40" width="100" height="50" fill-opacity="0.18"/><rect class="gis-fill-accent" x="220" y="40" width="100" height="50" fill-opacity="0.40"/><rect class="gis-fill-accent" x="320" y="40" width="100" height="50" fill-opacity="0.55"/><rect class="gis-fill-accent" x="420" y="40" width="100" height="50" fill-opacity="0.30"/><rect class="gis-fill-accent" x="520" y="40" width="100" height="50" fill-opacity="0.12"/><rect class="gis-fill-accent" x="20" y="90" width="100" height="50" fill-opacity="0.16"/><rect class="gis-fill-accent" x="120" y="90" width="100" height="50" fill-opacity="0.34"/><rect class="gis-fill-accent" x="220" y="90" width="100" height="50" fill-opacity="0.62"/><rect class="gis-fill-accent" x="320" y="90" width="100" height="50" fill-opacity="0.70"/><rect class="gis-fill-accent" x="420" y="90" width="100" height="50" fill-opacity="0.44"/><rect class="gis-fill-accent" x="520" y="90" width="100" height="50" fill-opacity="0.20"/><rect class="gis-fill-accent" x="20" y="140" width="100" height="50" fill-opacity="0.08"/><rect class="gis-fill-accent" x="120" y="140" width="100" height="50" fill-opacity="0.22"/><rect class="gis-fill-accent" x="220" y="140" width="100" height="50" fill-opacity="0.38"/><rect class="gis-fill-accent" x="320" y="140" width="100" height="50" fill-opacity="0.30"/><rect class="gis-fill-accent" x="420" y="140" width="100" height="50" fill-opacity="0.18"/><rect class="gis-fill-accent" x="520" y="140" width="100" height="50" fill-opacity="0.10"/><line class="gis-muted" x1="120" y1="40" x2="120" y2="190"/><line class="gis-muted" x1="220" y1="40" x2="220" y2="190"/><line class="gis-muted" x1="320" y1="40" x2="320" y2="190"/><line class="gis-muted" x1="420" y1="40" x2="420" y2="190"/><line class="gis-muted" x1="520" y1="40" x2="520" y2="190"/><line class="gis-muted" x1="20" y1="90" x2="620" y2="90"/><line class="gis-muted" x1="20" y1="140" x2="620" y2="140"/>
+<rect class="gis-ink" x="20" y="40" width="600" height="150" fill="none"/>
+<text class="gis-label-mono gis-halo" x="610" y="180" text-anchor="end">0.6 MB</text>
+<line class="gis-ink" x1="320" y1="204" x2="320" y2="242" marker-end="url(#gis-arrow-fS2)"/>
+<text class="gis-label-sm" x="336" y="228">at z11 the grid hands over</text>
+<text class="gis-label-sm" x="20" y="272">z12 · the roads themselves</text>
+<rect class="gis-ink gis-fill-paper" x="20" y="282" width="600" height="128"/>
+<path class="gis-accent" d="M 40 392 C 140 366 210 330 330 322 S 520 300 610 286" stroke-dasharray="7 6"/><path class="gis-accent" d="M 90 296 C 170 322 220 360 300 388" stroke-dasharray="7 6"/><path class="gis-accent" d="M 350 400 C 420 372 470 356 560 352" stroke-dasharray="7 6"/><path class="gis-muted" d="M 20 340 C 160 336 300 348 420 330 S 560 306 620 316"/><path class="gis-muted" d="M 470 402 C 486 366 500 330 508 286"/>
+<rect class="gis-ink" x="20" y="282" width="600" height="128" fill="none"/>
+<text class="gis-label-mono gis-halo" x="610" y="400" text-anchor="end">34.8 MB</text>
+<text class="gis-label-sm" x="20" y="436">dashed · nobody has recorded it</text><text class="gis-label-sm" x="380" y="436">plain · already recorded</text>
+</svg>
+<figcaption>One legend row, two resolutions. At country zoom a rider is not asking "is <em>this</em> lane gravel?" — they cannot see the lane — they are asking <strong>which part of the map has nobody surveyed</strong>, and a grid answers that in <strong>0.6&nbsp;MB</strong> where the same information as lines costs <strong>34.8&nbsp;MB</strong>. Zoom past z11 and the squares hand over to the roads they were summarising, which is where "which road?" becomes a question you can act on. The handover zoom is one number held in the shared contract and asserted on both sides, because a mismatch would leave a band of zoom showing neither.</figcaption></figure>
+
+That is the general lesson, and it is the mirror image of the no-clustering rule above. There, the
+question was *"where exactly is this fountain?"*, and aggregating would have answered a question
+nobody asked. Here the question is *"where is there work?"*, and shipping the geometry would answer
+it at a hundred times the cost. **Match the resolution of the answer to the question being asked at
+that zoom** — sometimes that means every feature at its own coordinate, and sometimes it means
+counting.
+
+[Building road-surface tiles](../data-ops/surface-tiles.md) is the runbook for both halves.
+
 ## Why the layers are split per country
 
 Every tile a tippecanoe run produces is organised into named **layers** — one named collection of

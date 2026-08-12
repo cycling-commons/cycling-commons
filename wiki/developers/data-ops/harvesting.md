@@ -92,6 +92,12 @@ A failed region keeps last week's slice serving and exits non-zero; it never lea
 slice. The tile rebuild is part of the same command — there is no separate publish step, so a
 successful run means the live map is already updated.
 
+## Road surface is a separate build
+
+Everything on this page produces **points**. Road surface is **lines**, it never touches PostGIS, and
+it has its own chapter: [Building road-surface tiles](surface-tiles.md). Same Geofabrik extracts,
+same `osmium tags-filter` step, same tippecanoe — a different shape at the end, and no database.
+
 ## Ownership: which country's extract owns a border POI
 
 Geofabrik's extracts **overlap** at borders, so one OSM entity arrives in several countries' files.

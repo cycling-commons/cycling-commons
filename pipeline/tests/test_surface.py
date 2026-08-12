@@ -16,12 +16,20 @@ def contract():
     return load_contract()
 
 
-def test_cycleway_wins_over_its_surface_tag(contract):
-    # A rider wants to know it is a cycleway first and what it is paved with
-    # second, so the highway value decides regardless of the surface tag.
-    assert canonical_class("asphalt", "cycleway", contract) == "cycleway"
-    assert canonical_class("gravel", "cycleway", contract) == "cycleway"
-    assert canonical_class(None, "cycleway", contract) == "cycleway"
+def test_road_type_is_not_a_surface_class(contract):
+    """The colour answers ONE question: what is under the tyres.
+
+    `highway=cycleway` used to override the surface value, so a purple line said
+    "cycleway" while the line beside it said "asphalt" and neither could be read
+    as a surface (owner decision 2026-08-12). Most Dutch cycleways are asphalt —
+    not all — and the scale had no way to say which. Road type rides on as `hw`
+    and the client draws it as its own channel.
+    """
+    assert canonical_class("asphalt", "cycleway", contract) == "paved"
+    assert canonical_class("gravel", "cycleway", contract) == "gravel"
+    # And a cycleway nobody has tagged is unrecorded, like any other road: it is
+    # the to-do arm's business, not a colour claiming knowledge we lack.
+    assert canonical_class(None, "cycleway", contract) == contract.surface["untaggedClass"]
 
 
 @pytest.mark.parametrize("surface,expected", [
@@ -114,3 +122,136 @@ def test_an_unnamed_way_omits_the_key_entirely(tmp_path):
     out = tmp_path / "unnamed.geojsonl"
     write_geojsonl([SurfaceWay("way/8", "gravel", "track", "", [(4.1, 50.7), (4.2, 50.8)])], out)
     assert "name" not in json.loads(out.read_text().strip())["properties"]
+
+
+# ── The to-do arm and the gap grid ─────────────────────────────────────────
+
+def test_the_todo_arm_is_a_subset_of_the_extracted_network(contract):
+    # It is filtered out of the classified pass, not selected separately, so a
+    # highway named here but not extracted would promise an always-empty layer.
+    todo = contract.surface["todo"]["highways"]
+    assert todo, "the to-do arm must name at least one highway class"
+    assert set(todo) <= set(contract.surface["highways"])
+
+
+def test_the_todo_arm_carries_the_classes_where_nobody_can_predict(contract):
+    """What counts as "nobody has said", by class.
+
+    The measurement stands — on Belgium's tagged ways, primary is unpaved 0.1%
+    of the time, secondary 0.5%, tertiary 2.5%, cycleway 0.0%, residential 7.2%
+    — but it answered the wrong question for two of them. A statistically
+    predictable road still draws as a HOLE when it has no tag and no arm, and a
+    hole reads as a broken layer rather than as an editorial decision: the
+    Zuiderdijk (7 untagged tertiary ways on a dijk) is the case that surfaced
+    it. Tertiary and cycleway are back; the big through-roads and the
+    residential grid stay out, where the hole is not where a rider looks.
+    """
+    todo = set(contract.surface["todo"]["highways"])
+    # The genuinely uncertain ones: track is 88% unpaved when tagged, path is a
+    # coin flip, and a rural unclassified lane is 6.8%.
+    assert {"track", "path", "unclassified"} <= todo
+    # Still out, by CLASS: confirming a primary road is asphalt is not work worth
+    # asking for, and the residential grid is most of the bytes for the least
+    # doubt. Tertiary and cycleway were briefly added and withdrawn — the gap
+    # they addressed is real (an untagged tertiary on a signed route) but the
+    # key is route membership, not class. See the handoff plan.
+    for hw in ("primary", "secondary", "tertiary", "cycleway", "residential"):
+        assert hw not in todo, f"{hw} is not homework by CLASS — route-awareness is the rule"
+
+
+def test_the_grid_hands_over_to_the_lines_at_exactly_one_zoom(contract):
+    # One legend row, two resolutions. A gap between them is a zoom where a
+    # rider who asked "what needs recording?" sees nothing; an overlap draws
+    # squares on top of the roads they summarise.
+    assert contract.surface["gaps"]["maxZoom"] == contract.surface["todo"]["minZoom"]
+
+
+def _way(ref, cls, hw, coords=((4.1, 50.7), (4.11, 50.7))):
+    return SurfaceWay(ref, cls, hw, "", list(coords))
+
+
+def test_one_pass_splits_the_arms_and_never_writes_a_way_twice(tmp_path, contract, monkeypatch):
+    from coverage import surface as mod
+
+    ways = [
+        _way("way/1", "gravel", "track"),          # recorded, and a to-do class
+        _way("way/2", "unverified", "track"),      # the homework
+        _way("way/3", "unverified", "residential"),  # untagged, but predictable
+        _way("way/4", "paved", "primary"),         # recorded
+    ]
+    monkeypatch.setattr(mod, "stream_surface_ways",
+                        lambda pbf, contract, emit: [emit(w) for w in ways])
+    counts = mod.extract_region(
+        tmp_path / "ignored.pbf", contract,
+        classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
+        gaps_out=tmp_path / "g.geojsonl", cctok="|BE|")
+
+    classified = [json.loads(l) for l in (tmp_path / "c.geojsonl").read_text().splitlines()]
+    todo = [json.loads(l) for l in (tmp_path / "t.geojsonl").read_text().splitlines()]
+    assert counts.classified == len(classified) == 2
+    assert [f["properties"]["ref"] for f in classified] == ["way/1", "way/4"]
+    # An untagged residential street is not homework, and a recorded track is
+    # not either — the to-do arm is the intersection of "no answer" and "the
+    # answer is unpredictable".
+    assert counts.todo == len(todo) == 1
+    assert todo[0]["properties"]["ref"] == "way/2"
+    # No way may appear in both arms: the client draws them as two layers, and a
+    # duplicated road would be drawn twice, at two weights, saying two things.
+    assert not ({f["properties"]["ref"] for f in classified}
+                & {f["properties"]["ref"] for f in todo})
+
+
+def test_the_grid_counts_kilometres_of_todo_network_only(tmp_path, contract, monkeypatch):
+    from coverage import surface as mod
+
+    # Two unrecorded tracks and one recorded track in the same cell, plus an
+    # untagged residential street that must not count as work.
+    ways = [
+        _way("way/1", "unverified", "track", [(4.10, 50.70), (4.20, 50.70)]),
+        _way("way/2", "unverified", "track", [(4.10, 50.71), (4.20, 50.71)]),
+        _way("way/3", "gravel", "track", [(4.10, 50.72), (4.20, 50.72)]),
+        _way("way/4", "unverified", "residential", [(4.10, 50.73), (4.20, 50.73)]),
+    ]
+    monkeypatch.setattr(mod, "stream_surface_ways",
+                        lambda pbf, contract, emit: [emit(w) for w in ways])
+    counts = mod.extract_region(
+        tmp_path / "ignored.pbf", contract,
+        classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
+        gaps_out=tmp_path / "g.geojsonl", cctok="|BE|")
+
+    cells = [json.loads(l) for l in (tmp_path / "g.geojsonl").read_text().splitlines()]
+    assert counts.cells == len(cells) == 1
+    props = cells[0]["properties"]
+    # ~7.1 km per way at this latitude, so two unrecorded of three tracks.
+    assert props["n"] == 2
+    assert 13.0 < props["km"] < 15.0
+    assert props["pct"] == 67, "two unrecorded km-thirds of the to-do network"
+    assert props["cctok"] == "|BE|"
+    assert cells[0]["geometry"]["type"] == "Polygon"
+
+
+def test_a_fully_recorded_cell_is_not_shipped(tmp_path, contract, monkeypatch):
+    # A square drawn over finished work reads as "there is something to do here"
+    # and is the one thing this layer must never say.
+    from coverage import surface as mod
+
+    monkeypatch.setattr(mod, "stream_surface_ways",
+                        lambda pbf, contract, emit: emit(_way("way/1", "gravel", "track")))
+    counts = mod.extract_region(
+        tmp_path / "ignored.pbf", contract,
+        classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
+        gaps_out=tmp_path / "g.geojsonl")
+    assert counts.cells == 0
+    assert (tmp_path / "g.geojsonl").read_text() == ""
+
+
+def test_the_grid_charges_a_way_to_the_cell_holding_its_midpoint(contract):
+    # Documented behaviour, not an accident: at ~6 km cells, splitting a way
+    # across the cells it crosses would cost a clipping pass per way to move a
+    # rounding error between neighbouring squares.
+    from coverage.surface import GapGrid
+
+    grid = GapGrid(contract.surface["gaps"]["cellZoom"])
+    grid.add(_way("way/1", "unverified", "track", [(4.10, 50.70), (4.11, 50.70)]), recorded=False)
+    grid.add(_way("way/2", "unverified", "track", [(9.10, 45.70), (9.11, 45.70)]), recorded=False)
+    assert len(list(grid.features())) == 2, "far-apart ways land in different cells"

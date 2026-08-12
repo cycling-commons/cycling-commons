@@ -49,20 +49,39 @@ export const surfaceTilesConfigured = () =>
   typeof window.CC_SURFACE_URL === 'string' && !!window.CC_SURFACE_URL;
 
 export const SURFACE_TILE_SOURCE = 'surface-tiles';
-/* The "needs a tag" arm, in its own artifact and its own source.
+/* The "needs recording" arm, in its own artifact and its own source.
 
-   Two arms exist because a vector tile is fetched whole: folding 381,313
-   untagged Belgian ways into the classified tiles would make every surface tile
-   several times larger for every rider, to carry lines most of them will never
-   switch on. Separate artifacts mean you download this one only if you ask for
-   it (Dated/2026-08-09-surface-line-tiles-design.md D3).
+   Separate artifacts because a vector tile is fetched whole: folding this arm
+   into the classified tiles would cost its bytes to every rider, for lines most
+   of them never switch on (Dated/2026-08-09-surface-line-tiles-design.md D3).
 
-   It is the CONTRIBUTION view: every line here is a road OpenStreetMap has no
-   `surface` tag for, which is to say a road somebody could go and record. That
-   is why the owner asked for it to be servable — "then people will know what to
-   tag and extend the map knowledge" (2026-08-12). */
-export const SURFACE_UNTAGGED_SOURCE = 'surface-untagged';
-const UNTAGGED_PREFIX = 'surfuntag-';
+   It is the CONTRIBUTION view — every line is a road somebody could go and
+   record, which is why the owner asked for it to be servable: "then people will
+   know what to tag and extend the map knowledge" (2026-08-12).
+
+   **It is not every untagged road, and that is the point.** It used to be, and
+   it cost as much as the whole classified skin. Measured against our own tagged
+   data (2026-08-12), a Belgian primary road with a surface tag is unpaved 0.1%
+   of the time, secondary 0.5%, tertiary 2.5%, cycleway 0.0%, residential 7.2% —
+   so drawing those as homework asked riders to go and confirm asphalt. The arm
+   now carries the classes where nobody can predict the answer (tracks: 88%
+   unpaved; paths: a coin flip; rural lanes), which is a third of the bytes and a
+   sharper question. The pipeline decides the set, from contract surface.todo. */
+export const SURFACE_TODO_SOURCE = 'surface-todo';
+const TODO_PREFIX = 'surftodo-';
+/* Where the to-do LINES start, and therefore where the gap GRID stops.
+
+   The same question at two resolutions, on one legend row: below this a rider
+   is asking "which area needs work", and a whole country of dashed lines
+   answers that worse than a grid does while costing many times the bytes. Above
+   it they are looking at a road they could actually go and ride. Pinned to
+   contract surface.todo.minZoom / surface.gaps.maxZoom by surface-zooms.test.cjs
+   — a client that disagreed with the build would show a blank band of zoom
+   where the artifact simply has no tiles. */
+const TODO_MIN_ZOOM = 11;
+export const SURFACE_GAPS_SOURCE = 'surface-gaps';
+const GAPS_FILL = 'surfgaps-fill';
+const GAPS_LINE = 'surfgaps-line';
 export const surfaceTileLayerIds = () => SURFACE_CLS.filter(c => c !== 'other').map(c => 'surftile-' + c);
 
 let added = false;
@@ -111,51 +130,163 @@ export function addSurfaceTiles() {
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
+
   });
   added = true;
 }
 
-/** Is the untagged artifact configured (an URL, not necessarily loaded)? */
-export const untaggedConfigured = () =>
-  typeof window.CC_SURFACE_UNTAGGED_URL === 'string' && !!window.CC_SURFACE_UNTAGGED_URL;
+/** Is the to-do artifact configured (an URL, not necessarily loaded)? */
+export const todoConfigured = () =>
+  typeof window.CC_SURFACE_TODO_URL === 'string' && !!window.CC_SURFACE_TODO_URL;
+
+/** Is the gap grid configured? Independent of the to-do arm: either half of
+    the "what needs recording" answer can be served without the other. */
+export const gapsConfigured = () =>
+  typeof window.CC_SURFACE_GAPS_URL === 'string' && !!window.CC_SURFACE_GAPS_URL;
 
 let untaggedAdded = false;
+let gapsAdded = false;
+
+/* Where a lazily-mounted surface layer belongs in the stack.
+
+   The classified skin is added at map-load time, which puts it under
+   everything render() adds afterwards. The to-do arm and the grid are mounted
+   on demand — later than render() — so without a `beforeId` they would land on
+   TOP of the curated catalog: a translucent red wash over the pins and lines
+   riders actually came for. Both are background information about somebody
+   else's data, so both go under our own: below the first surface-tile layer if
+   the skin is up, else below the first layer that is not the basemap. */
+function belowOurLayers() {
+  const layers = map.getStyle()?.layers || [];
+  const skin = layers.find(l => l.id.startsWith('surftile-'));
+  if (skin) return skin.id;
+  const ours = layers.find(l => l.type !== 'background' && !BASEMAP_SOURCES.has(l.source));
+  return ours ? ours.id : undefined;
+}
 
 export function addUntaggedTiles() {
-  if (!untaggedConfigured() || untaggedAdded || typeof pmtiles === 'undefined') return;
+  addGapsGrid();
+  if (!todoConfigured() || untaggedAdded || typeof pmtiles === 'undefined') return;
   maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
-  if (!map.getSource(SURFACE_UNTAGGED_SOURCE)) {
-    map.addSource(SURFACE_UNTAGGED_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_SURFACE_UNTAGGED_URL });
+  if (!map.getSource(SURFACE_TODO_SOURCE)) {
+    map.addSource(SURFACE_TODO_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_SURFACE_TODO_URL });
   }
   // One layer per country, and NO per-class split: every feature in this
   // artifact is the same class by construction, so the seven-layer dance the
   // classified arm needs (one dash pattern per layer) collapses to one.
   const st = surfaceStyle('unverified');
+  const under = belowOurLayers();
   sourceLayers().forEach(srcLayer => {
-    const id = UNTAGGED_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
+    const id = TODO_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
     if (map.getLayer(id)) return;
     map.addLayer({
       id,
       type: 'line',
-      source: SURFACE_UNTAGGED_SOURCE,
+      source: SURFACE_TODO_SOURCE,
       'source-layer': srcLayer,
+      // The artifact has no tiles below this, and the grid is drawn there
+      // instead. Declaring it keeps MapLibre from asking for tiles that were
+      // never built.
+      minzoom: TODO_MIN_ZOOM,
       layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
       paint: {
         'line-color': st.color,
         'line-dasharray': st.dash || [2, 2],
         // Thinner and fainter than the classified arm. This is a to-do list,
         // not an answer, and it must never out-shout a road somebody HAS
-        // recorded — 381k lines at full weight is a red smear over a country.
-        'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 12, 1.1, 15, 2.2],
-        'line-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0.35, 13, 0.7],
+        // recorded.
+        'line-width': ['interpolate', ['linear'], ['zoom'], 11, 0.9, 15, 2.2],
+        'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 13, 0.7],
       },
-    });
+    }, under);
     map.on('click', id, e => openSurfaceDrawer(
       { ...e.features[0].properties, cls: 'unverified' }, e.lngLat, e.features[0].geometry));
     map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
   });
   untaggedAdded = true;
+}
+
+/* ── The gap grid ──────────────────────────────────────────────────────────
+   "Where should I go scanning?", answered with ~900 squares per country
+   instead of 400,000 line geometries — 0.6 MB against 35 MB for the Benelux.
+
+   It is not a second feature: it is the SAME legend row as the to-do lines,
+   drawn at the zooms where individual roads cannot be read anyway. A rider who
+   ticks "surface not recorded" sees dark squares over the areas nobody has
+   surveyed, zooms into one, and at z11 the squares hand over to the actual
+   roads they were summarising. That handover is pinned to the contract on both
+   sides, because a mismatch would leave a band of zoom showing neither.
+
+   Colour is the SHARE unrecorded, not the absolute kilometres: a rider is
+   choosing where to ride, and "almost nothing here is known" is the useful
+   signal — a dense city cell would otherwise always out-shout the empty
+   countryside that actually needs the survey. */
+export function addGapsGrid() {
+  if (!gapsConfigured() || gapsAdded || typeof pmtiles === 'undefined') return;
+  maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+  if (!map.getSource(SURFACE_GAPS_SOURCE)) {
+    map.addSource(SURFACE_GAPS_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_SURFACE_GAPS_URL });
+  }
+  const under = belowOurLayers();
+  const shade = ['interpolate', ['linear'], ['coalesce', ['get', 'pct'], 0],
+    25, 0.06, 60, 0.18, 90, 0.34];
+  map.addLayer({
+    id: GAPS_FILL,
+    type: 'fill',
+    source: SURFACE_GAPS_SOURCE,
+    'source-layer': 'gaps',
+    maxzoom: TODO_MIN_ZOOM,
+    layout: { visibility: 'none' },
+    paint: { 'fill-color': surfaceStyle('unverified').color, 'fill-opacity': shade },
+  }, under);
+  map.addLayer({
+    id: GAPS_LINE,
+    type: 'line',
+    source: SURFACE_GAPS_SOURCE,
+    'source-layer': 'gaps',
+    maxzoom: TODO_MIN_ZOOM,
+    layout: { visibility: 'none' },
+    // A hairline edge so the grid reads as a grid rather than as a blurry
+    // stain, without drawing attention away from the fill it encloses.
+    paint: { 'line-color': surfaceStyle('unverified').color, 'line-width': 0.4, 'line-opacity': 0.35 },
+  }, under);
+  map.on('click', GAPS_FILL, e => openGapsDrawer(e.features[0].properties, e.lngLat));
+  map.on('mouseenter', GAPS_FILL, () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', GAPS_FILL, () => { map.getCanvas().style.cursor = ''; });
+  gapsAdded = true;
+}
+
+/**
+ * Drawer for one grid square: how much is unrecorded here, and what to do.
+ *
+ * Deliberately NOT an "improve this" bridge like a tile line's drawer. A square
+ * is 6 km of countryside, not a road — there is nothing here to edit, and the
+ * honest next step is to go and ride it (with Scout, or by recording stretches
+ * afterwards). Offering a wizard would ask a rider to invent an answer for a
+ * road they have not seen, which is exactly the fiction this layer exists to
+ * remove.
+ */
+export function openGapsDrawer(p, lngLat) {
+  const layer = layerByKey.surface;
+  if (!layer) return;
+  const km = Number(p.km || 0);
+  const pct = Number(p.pct || 0);
+  openDrawer(layer, {
+    name: D.gapsTitle || 'Not recorded here',
+    headline: (D.gapsTitle || 'Not recorded here') + ' · ' + pct + '%',
+    geom: { ll: [lngLat.lat, lngLat.lng] },
+    record: [
+      { label: D.gapsUnrecorded || 'Still to record',
+        value: km.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' km' },
+      { label: D.gapsShare || 'Share of local network', value: pct + '%' },
+      { label: D.gapsRoads || 'Roads', value: String(p.n || 0) },
+    ],
+    desc: D.gapsHint || 'Tracks, paths and lanes around here have no recorded surface. '
+      + 'Zoom in to see which ones, or ride them with Scout and the tags come back with you.',
+    source: 'OpenStreetMap',
+  });
+  flyToPin([lngLat.lng, lngLat.lat]);
 }
 
 /** Is the layer currently drawn? */
@@ -339,7 +470,14 @@ function applyClassVisibility() {
       const cls = l.id.slice('surftile-'.length).replace(/-[a-z]{2}$/, '');
       map.setLayoutProperty(l.id, 'visibility',
         visible && surfaceClassEnabled(cls) ? 'visible' : 'none');
-    } else if (l.id.startsWith(UNTAGGED_PREFIX)) {
+    } else if (l.id === GAPS_FILL || l.id === GAPS_LINE) {
+      /* The grid is the to-do arm at planning zoom, so it obeys exactly the
+         same row. Its own maxzoom does the rest: tick "not recorded" on and a
+         rider gets squares over the country and roads once they zoom in,
+         without ever choosing between two controls for one question. */
+      map.setLayoutProperty(l.id, 'visibility',
+        visible && surfaceClassEnabled('unverified') ? 'visible' : 'none');
+    } else if (l.id.startsWith(TODO_PREFIX)) {
       /* "Surface not recorded" is a legend CLASS like the other six, not a
          control of its own (owner, 2026-08-12). It happens to live in a second
          artifact — the classified tiles carry no untagged ways at all, and our
@@ -381,6 +519,15 @@ const BASEMAP_SOURCES = new Set(['openmaptiles', 'ne2_shaded', 'satellite', 'mly
 const STUDY_BG = '#EDEDE8';
 let study = false;
 let bgBefore = null;
+/* What each basemap layer's visibility was when study mode took it away.
+
+   Study mode used to claim it "restores what the style had" and then set every
+   basemap-source layer to `visible` on the way out — so leaving it switched ON
+   the satellite imagery and the Mapillary coverage, which the rider had never
+   asked for and in most cases had never had on (owner-reported 2026-08-12).
+   Turning a mode off must leave the map as it found it; anything else teaches
+   riders that a toggle has side effects and they stop using it. */
+let visBefore = null;
 
 export const studyModeOn = () => study;
 
@@ -388,6 +535,7 @@ export function setStudyMode(on) {
   const style = map.getStyle();
   if (!style) return study;
   study = !!on;
+  if (study && visBefore === null) visBefore = new Map();
   style.layers.forEach(l => {
     if (l.type === 'background') {
       if (study) {
@@ -399,10 +547,28 @@ export function setStudyMode(on) {
       return;
     }
     if (!BASEMAP_SOURCES.has(l.source)) return;
-    // Satellite and street-level keep their own toggles; study mode only
-    // forces them off, and turning study off restores what the style had.
-    map.setLayoutProperty(l.id, 'visibility', study ? 'none' : 'visible');
+    if (study) {
+      // MapLibre reports undefined for a layer that never declared visibility,
+      // which means visible — write the resolved value, so the restore is a
+      // real answer rather than "whatever the default is today".
+      // First snapshot only: calling setStudyMode(true) twice would otherwise
+      // record the 'none' study mode itself just wrote, and the restore would
+      // faithfully put back a hidden basemap.
+      if (!visBefore.has(l.id)) {
+        visBefore.set(l.id, map.getLayoutProperty(l.id, 'visibility') || 'visible');
+      }
+      map.setLayoutProperty(l.id, 'visibility', 'none');
+      return;
+    }
+    // Restore ONLY what study mode hid, and only while it is still hidden. A
+    // rider who switched satellite on during study mode meant it, and undoing
+    // that on exit would be the same disrespect in the other direction.
+    const before = visBefore?.get(l.id);
+    if (before && map.getLayoutProperty(l.id, 'visibility') === 'none') {
+      map.setLayoutProperty(l.id, 'visibility', before);
+    }
   });
+  if (!study) visBefore = null;
   document.querySelector('.map-wrap')?.classList.toggle('study', study);
   return study;
 }

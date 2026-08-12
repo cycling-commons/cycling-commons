@@ -50,9 +50,32 @@ Check the result:
 | `COVERAGE_S3_KEY` / `COVERAGE_S3_SECRET` | – | bucket credentials |
 | `COVERAGE_S3_REGION` | `us-east-1` | signing region only (MinIO ignores it) |
 | `COVERAGE_PUBLIC_BASE_URL` | – | public base of the bucket (dev: `http://localhost:9100/cc-maps`) |
+| `COVERAGE_PBF_OFFLINE` | – | `1` = use the PBFs already in the workdir, never contact Geofabrik. For the surface tiling pass, which walks the whole region list to rebuild artifacts from cached extracts and would otherwise re-verify ~20 GB. |
+| `COVERAGE_FORCE_EXTRACT` | – | `1` = ignore the extract cache. The hatch for a pipeline change no timestamp or hash can show. |
+| `COVERAGE_ALLOW_SHRINK` | – | `1` = permit a surface publish whose country set is a strict subset of the live manifest's. Without it such a publish is refused, because a one-region rebuild would otherwise take every other country off the map with a zero exit code. |
 
 `make coverage-refresh` injects the MinIO values; prod values live in
 `/etc/cycling-commons/coverage.env` on the worker server.
+
+### The surface build (`make surface-tiles`)
+
+Same command family, same bucket env, different output: three LINE artifacts
+and no database at all. `python -m coverage.run --surface` builds
+`surface.pmtiles` (classified), `surface-todo.pmtiles` (still to record) and
+`surface-gaps.pmtiles` (the planning grid), then publishes all three under one
+versioned prefix plus `surface/manifest.json`.
+
+| Flag | Meaning |
+|---|---|
+| `--surface` | build the line artifacts instead of the point index |
+| `--extract-only` | stop after the per-region GeoJSONL. For continental runs done one region at a time, so a failure costs one country instead of the queue. |
+| `--no-publish` | build without uploading or moving the manifest (size experiments) |
+
+The app reads the manifest through `App\Coverage\SurfaceManifest`, so a rebuild
+needs no config change. `SURFACE_MANIFEST_URL` points at it server-side;
+`SURFACE_TILES_URL` / `SURFACE_TODO_URL` / `SURFACE_GAPS_URL` pin a specific
+build and **override** the manifest when set — useful for bisecting, and the
+likeliest cause of "we published but the map still shows the old tiles".
 
 ## Prod scheduling (worker server, systemd timer)
 

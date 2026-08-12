@@ -50,7 +50,35 @@ def test_fetch_pbf_override_missing_file_aborts(monkeypatch, tmp_path):
     assert str(missing) in str(exc.value)
 
 
+def test_fetch_pbf_offline_uses_the_local_file_without_asking(monkeypatch, tmp_path):
+    # The surface build tiles every country again whenever one is added, and
+    # that pass walks the whole region list. Without an offline mode it would
+    # re-verify ~20 GB of PBFs to rebuild artifacts from extracts it already has.
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.setenv("COVERAGE_PBF_OFFLINE", "1")
+    dest = tmp_path / "europe-belgium-latest.osm.pbf"
+    dest.write_bytes(b"last week's bytes")
+
+    def boom(*args, **kwargs):
+        raise AssertionError("network touched despite COVERAGE_PBF_OFFLINE")
+
+    monkeypatch.setattr(run.urllib.request, "urlopen", boom)
+    assert run.fetch_pbf("europe/belgium", tmp_path) == dest
+
+
+def test_fetch_pbf_offline_without_a_local_file_aborts(monkeypatch, tmp_path):
+    # Failing loudly beats falling through to a download the operator asked us
+    # not to make, and beats an opaque osmium error on a file that is not there.
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.setenv("COVERAGE_PBF_OFFLINE", "1")
+    monkeypatch.setattr(run.urllib.request, "urlopen",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("network touched")))
+    with pytest.raises(RuntimeError, match="COVERAGE_PBF_OFFLINE"):
+        run.fetch_pbf("europe/belgium", tmp_path)
+
+
 def test_fetch_pbf_skips_unchanged_download(monkeypatch, tmp_path):
+    monkeypatch.delenv("COVERAGE_PBF_OFFLINE", raising=False)
     monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
     dest = tmp_path / "europe-belgium-latest.osm.pbf"
     dest.write_bytes(b"same bytes as last week")

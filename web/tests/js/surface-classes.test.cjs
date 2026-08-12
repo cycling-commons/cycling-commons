@@ -32,11 +32,17 @@ function styleKeys() {
   return [...block[1].matchAll(/^\s*([a-z]+)\s*:/gm)].map((m) => m[1]);
 }
 
-/** The classes the pipeline can stamp: cycleway + the mapped ones + untagged. */
+/** The classes the pipeline can stamp: the mapped surface values + untagged.
+ *
+ * `cyclewayClass` used to be one of them. It is not a surface (owner decision
+ * 2026-08-12): road type is a separate channel drawn from the raw `hw` value,
+ * so the colour scale answers one question. A class list that still expected it
+ * would make the client carry a colour the pipeline can never stamp. */
 function contractClasses() {
   const s = contract.surface;
   assert.ok(s, 'the contract has no surface section');
-  return [s.cyclewayClass, ...Object.keys(s.classes), s.untaggedClass];
+  assert.equal(s.cyclewayClass, undefined, 'road type is not a surface class');
+  return [...Object.keys(s.classes), s.untaggedClass];
 }
 
 test('the pipeline emits exactly the classes the client can draw', () => {

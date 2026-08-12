@@ -468,6 +468,22 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   segments keep serving via `catalog.json`. B/F/K are category-3 (our own
   data) and are never in the extract
   ([osm-data-architecture.md §5](osm-data-architecture.md)).
+  **It has its own artifacts and its own manifest since 2026-08-12** — three of
+  them (classified skin, "still to record" arm, gap grid), built by the same
+  `coverage.run --surface` command from the same Geofabrik extracts but never
+  touching PostGIS, and published under `surface/<stamp>/<arm>.pmtiles` with a
+  stable `surface/manifest.json`. Read server-side by
+  `App\Coverage\SurfaceManifest`, which mirrors `CoverageManifest`'s TTLs and
+  its tolerate-everything failure policy. Twelve countries, ~15.0M classified
+  ways / ~12.2M to record / ~102k grid cells. The build and its editorial
+  decisions live in
+  [Dated/2026-08-09-surface-line-tiles-design.md](Dated/2026-08-09-surface-line-tiles-design.md)
+  §10 and in the wiki's *Building road-surface tiles* chapter. Two rails the
+  point job does not have, both from the first real publish: a publish is
+  **refused** when its country set is a strict subset of the live manifest's
+  (a one-region rebuild would otherwise take eleven countries off the map with
+  a zero exit), and pruning removes whole build prefixes rather than individual
+  arms.
 - **Manifest** (stable key `coverage/manifest.json`):
   `{"version":1, "url":"<COVERAGE_PUBLIC_BASE_URL>/coverage/<YYYYMMDD-HHMM>.pmtiles",
   "built_at":"<ISO>", "counts":{"C":n,…}, "regions":[…], "country_codes":[…]}`.

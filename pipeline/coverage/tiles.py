@@ -280,8 +280,9 @@ def verify_pmtiles(path, expected_layers=None, expected_bbox=None):
         f"pmtiles verify: no decodable non-empty tile at z{z} within header bounds of {path}")
 
 
-def build_surface_pmtiles(layer_files: dict[str, Path], out_path: Path, contract) -> None:
-    """tippecanoe -> the road-surface LINE artifact, one `surface_<cc>` layer per country.
+def build_surface_pmtiles(layer_files: dict[str, list[Path]], out_path: Path, contract,
+                          *, min_zoom: int | None = None, max_zoom: int | None = None) -> None:
+    """tippecanoe -> a road-surface LINE artifact, one `surface_<cc>` layer per country.
 
     A different profile from the point build, and deliberately so
     (Dated/2026-08-09-surface-line-tiles-design.md §4):
@@ -297,11 +298,25 @@ def build_surface_pmtiles(layer_files: dict[str, Path], out_path: Path, contract
     Measured on Belgium (2026-08-10, 417,371 classified ways): **43 MB**, of
     which z8-9 is 11 MB — an order of magnitude under the design's "low
     hundreds of MB" guess, which is why the z8 floor was affordable to keep.
+
+    The zoom range is an argument because the two arms want different ones: the
+    classified skin spans z8-13 (a planning view of where the gravel is), while
+    the to-do arm starts at z11, where the grid hands over (contract
+    `surface.todo`). Below that a rider is asking "which AREA needs work", and
+    a country's worth of dashed lines answers it worse than the grid does, for
+    a third of the archive's bytes.
+
+    `layer_files` maps a country to a LIST of files because a country can span
+    several Geofabrik extracts — the US is onboarded as california + colorado.
+    Repeated `-L` with one layer name merges them into that layer (verified
+    against tippecanoe 2.79); keying a single path per country silently kept
+    whichever region ran last.
     """
     spec = contract.surface
     cmd = [
         "tippecanoe", "-o", str(out_path), "--force", "--quiet",
-        "--minimum-zoom", str(spec["minZoom"]), "--maximum-zoom", str(spec["maxZoom"]),
+        "--minimum-zoom", str(spec["minZoom"] if min_zoom is None else min_zoom),
+        "--maximum-zoom", str(spec["maxZoom"] if max_zoom is None else max_zoom),
         "--simplification", "4",
         # Both off on purpose: a dropped LINE is a road that vanishes, and a
         # truncated tile is a road that vanishes. Lines are cheap enough to keep
@@ -309,5 +324,28 @@ def build_surface_pmtiles(layer_files: dict[str, Path], out_path: Path, contract
         "--no-feature-limit", "--no-tile-size-limit",
     ]
     for cc in sorted(layer_files):
-        cmd += ["-L", f"surface_{cc.lower()}:{layer_files[cc]}"]
+        for path in layer_files[cc]:
+            cmd += ["-L", f"surface_{cc.lower()}:{path}"]
+    _run(cmd)
+
+
+def build_gaps_pmtiles(files: list[Path], out_path: Path, contract) -> None:
+    """tippecanoe -> the gap grid: one square per cell, every country in one layer.
+
+    A single `gaps` layer rather than one per country, unlike the line arms.
+    The lines are split per country because the client needs to add and scope
+    them per country; the grid is a few thousand squares in total, carries its
+    own `cctok`, and one layer keeps the client to one `addLayer` call.
+
+    No simplification and no thinning: the geometry is already a rectangle, and
+    dropping a square would remove a region's gaps from the map entirely.
+    """
+    gaps = contract.surface["gaps"]
+    cmd = [
+        "tippecanoe", "-o", str(out_path), "--force", "--quiet",
+        "--minimum-zoom", str(gaps["minZoom"]), "--maximum-zoom", str(gaps["maxZoom"]),
+        "--no-feature-limit", "--no-tile-size-limit",
+    ]
+    for path in files:
+        cmd += ["-L", f"gaps:{path}"]
     _run(cmd)

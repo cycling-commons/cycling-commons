@@ -152,6 +152,44 @@ globalThis.runMapSmoke = async function runMapSmoke(opts) {
       },
     },
     {
+      name: 'study mode leaves the bases as it found them',
+      async run() {
+        const m = M();
+        if (!m) return 'skip: no __ccMap handle (CC_DEBUG off)';
+        const btn = document.getElementById('skeyStudy');
+        if (!btn) return 'skip: no study-mode control on this instance';
+        if (btn.disabled) return 'skip: study mode is gated on the surface skin being on';
+        // Every basemap-source layer, satellite and Mapillary included — the
+        // exact set study mode takes away.
+        const BASES = ['openmaptiles', 'ne2_shaded', 'satellite', 'mly'];
+        const snapshot = () => {
+          const out = {};
+          m.getStyle().layers.forEach(l => {
+            if (BASES.indexOf(l.source) !== -1) {
+              out[l.id] = m.getLayoutProperty(l.id, 'visibility') || 'visible';
+            }
+          });
+          return out;
+        };
+        const before = snapshot();
+        assert(Object.keys(before).length, 'no basemap layers found to study');
+        btn.click();
+        await waitFor(() => document.querySelector('.map-wrap.study'), 4000);
+        btn.click();
+        await waitFor(() => !document.querySelector('.map-wrap.study'), 4000);
+        const after = snapshot();
+        // The regression this exists for: leaving study mode used to set EVERY
+        // basemap layer to `visible`, switching on satellite imagery and
+        // Mapillary coverage the rider never asked for (owner-reported
+        // 2026-08-12). A mode that is switched off has to leave no trace.
+        const changed = Object.keys(before).filter(id => before[id] !== after[id]);
+        assert(!changed.length,
+          changed.length + ' base layer(s) changed visibility across a study-mode '
+          + 'round trip, e.g. ' + changed[0] + ': ' + before[changed[0]] + ' -> '
+          + after[changed[0]]);
+      },
+    },
+    {
       name: 'spotlight follows the scope',
       async run() {
         const m = M();

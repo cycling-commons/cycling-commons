@@ -75,3 +75,46 @@ def test_the_force_hatch_skips_the_cache(tmp_path, monkeypatch):
     extract = _touch(tmp_path / "surface_be.geojsonl", 2000)
     monkeypatch.setenv("COVERAGE_FORCE_EXTRACT", "1")
     assert _extract_is_current(extract, pbf, contract) is False
+
+
+def test_a_touched_but_unchanged_contract_does_NOT_invalidate(tmp_path):
+    """The 2026-08-12 waste: the contract was touched, not edited, between the
+    extraction and the tiling pass, and three countries were re-extracted for
+    nothing. In production it is worse — a deploy sets every file's mtime to
+    now, so an mtime rule re-extracts every onboarded country on every release.
+    """
+    from coverage.run import contract_fingerprint
+
+    pbf = _touch(tmp_path / "be.osm.pbf", 1000)
+    contract = _touch(tmp_path / "contract.json", 1000)
+    extract = _touch(tmp_path / "surface_be.geojsonl", 2000)
+    stamp = tmp_path / "surface_be.stamp"
+    stamp.write_text(contract_fingerprint(contract), encoding="utf-8")
+
+    os.utime(contract, (5000, 5000))          # touched, byte-identical
+    assert _extract_is_current(extract, pbf, contract, stamp) is True
+
+
+def test_an_edited_contract_still_invalidates(tmp_path):
+    # The protection the mtime rule existed for has to survive the fix: adding a
+    # highway class changes what SHOULD be in the extract while leaving the PBF
+    # untouched, and a stale file would be tiled as if it were current.
+    from coverage.run import contract_fingerprint
+
+    pbf = _touch(tmp_path / "be.osm.pbf", 1000)
+    contract = _touch(tmp_path / "contract.json", 1000)
+    extract = _touch(tmp_path / "surface_be.geojsonl", 2000)
+    stamp = tmp_path / "surface_be.stamp"
+    stamp.write_text(contract_fingerprint(contract), encoding="utf-8")
+
+    contract.write_text('{"surface": "now different"}\n', encoding="utf-8")
+    assert _extract_is_current(extract, pbf, contract, stamp) is False
+
+
+def test_a_missing_stamp_is_stale(tmp_path):
+    # Written before stamps existed, or left by a run killed mid-extract. One
+    # extract is a cheap price for not guessing what shaped a file.
+    pbf = _touch(tmp_path / "be.osm.pbf", 1000)
+    contract = _touch(tmp_path / "contract.json", 1000)
+    extract = _touch(tmp_path / "surface_be.geojsonl", 2000)
+    assert _extract_is_current(extract, pbf, contract, tmp_path / "gone.stamp") is False

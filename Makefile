@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh region-probe region-scaffold course-data
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh surface-tiles region-probe region-scaffold course-data
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -262,3 +262,25 @@ coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → Po
 		$(if $(pbf),-e COVERAGE_PBF_PATH=$(pbf)) \
 		$(if $(timeout),-e COVERAGE_STATEMENT_TIMEOUT=$(timeout)) \
 		pipeline python -m coverage.run
+
+# The road-surface LINE layer — three artifacts from one pass over each region's
+# PBF, and NO database at all (Dated/2026-08-09-surface-line-tiles-design.md):
+#   surface.pmtiles        the classified skin (what is under your tyres), z8-13
+#   surface-todo.pmtiles   roads nobody has recorded, in the classes where the
+#                          answer is genuinely unknown (tracks, paths, lanes), z11+
+#   surface-gaps.pmtiles   the same question per ~6 km square, for planning zoom
+# The run PUBLISHES them: three artifacts under one versioned prefix plus a
+# manifest at a stable key, which SurfaceManifest reads server-side — so a
+# rebuild goes live within the hour with no config change and no cache clear.
+# `ARGS=--no-publish` builds without uploading (size experiments); `offline=1`
+# uses the PBFs already in the workdir instead of asking Geofabrik.
+surface-tiles: ## Build + publish the road-surface line, to-do and gap-grid PMTiles (regions=csv)
+	@$(DOCKER_COMP) --profile storage up --detach --wait minio
+	@$(DOCKER_COMP) run --rm \
+		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
+		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
+		-e COVERAGE_S3_SECRET=$${MINIO_ROOT_PASSWORD:-ccadminsecret} \
+		-e COVERAGE_PUBLIC_BASE_URL=http://localhost:9100/cc-maps \
+		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
+		$(if $(offline),-e COVERAGE_PBF_OFFLINE=1) \
+		pipeline python -m coverage.run --surface $(ARGS)

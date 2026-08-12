@@ -287,7 +287,6 @@
         ]
       }
     },
-    "cyclewayClass": "cycleway",
     "classes": {
       "paved": [
         "asphalt",
@@ -324,10 +323,32 @@
       ]
     },
     "untaggedClass": "unverified",
+    "todo": {
+      "_comment": "The \"needs a tag\" arm is NOT every untagged way — it is the ways whose answer is genuinely unknown. Measured on Belgium's tagged ways (2026-08-12): a primary road is unpaved 0.1% of the time, secondary 0.5%, tertiary 2.5%, cycleway 0.0%, residential 7.2% — and since mappers tag the surprising road first, an UNTAGGED one of those classes is safer still. Asking a rider to go and record them is asking them to confirm asphalt. Tracks (88% unpaved), paths (50/50) and rural unclassified lanes (6.8%) are where nobody can predict the answer, and they are a third of the bytes: 43.3 MB -> 16 MB for Belgium. | 2026-08-12: tertiary and cycleway were briefly added here and then withdrawn. The gap they were meant to fix (an untagged tertiary on a signed route, e.g. the Zuiderdijk) is real, but highway class is the wrong key for it: the rule that survives is ROUTE-AWARENESS — an untagged way carrying a signed route or node network is homework whatever its class, because a rider rides it BECAUSE it is signed. Implement with the routes extractor (docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md).",
+      "highways": [
+        "track",
+        "path",
+        "unclassified"
+      ],
+      "minZoom": 11,
+      "maxZoom": 13
+    },
+    "gaps": {
+      "_comment": "The planning half of the same question. Per-cell km of unrecorded to-do network, so \"where should I go scanning?\" is answered by ~900 squares per country (0.5 MB for Belgium) instead of 400,000 line geometries. cellZoom 12 is ~6 km at 50N. maxZoom hands over to the to-do lines exactly where they begin (todo.minZoom), so one legend row means squares at planning zoom and roads at riding zoom.",
+      "cellZoom": 12,
+      "minZoom": 4,
+      "maxZoom": 11,
+      "tileProps": [
+        "km",
+        "pct",
+        "n"
+      ]
+    },
     "tileProps": [
       "cls",
       "hw",
       "ref"
-    ]
+    ],
+    "_roadTypeChannel": "Road type is NOT a colour in this scale (owner 2026-08-12). `highway=cycleway` used to override the surface class, which answered two questions with one key. The raw highway value rides every feature as `hw` (tileProps) and the client draws a cycleway as a pale core inside whatever surface colour it has."
   }
 }

@@ -16,6 +16,7 @@ use App\Catalog\RidingStyle;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
 use App\Coverage\CoverageManifest;
+use App\Coverage\SurfaceManifest;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
@@ -55,13 +56,13 @@ final class MapController extends AbstractController
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
-    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions): Response
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RegionRegistryProvider $regions): Response
     {
-        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $regions, scoutReview: true);
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $regions, scoutReview: true);
     }
 
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions, bool $scoutReview = false): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RegionRegistryProvider $regions, bool $scoutReview = false): Response
     {
         $user = $this->getUser();
         $regionRows = array_map(
@@ -136,6 +137,15 @@ final class MapController extends AbstractController
             // each into a per-country coverage layer (source-layers <letter>_<cc>);
             // [] falls the client back to a single unsplit layer per letter.
             'coverage_countries' => $coverage->countryCodes(),
+            // Road-surface line tiles. Resolved server-side from the build's
+            // manifest (or an operator's pin), so publishing a rebuild needs no
+            // config change and no cache clear — the same contract the coverage
+            // artifact has had since it shipped. Null means the layer is simply
+            // not offered: a control for tiles that do not exist is worse than
+            // no control.
+            'surface_tiles_url' => $surface->classifiedUrl(),
+            'surface_todo_url' => $surface->todoUrl(),
+            'surface_gaps_url' => $surface->gapsUrl(),
         ];
 
         // Curator-only: hand the pending submissions to the map so the moderation

@@ -180,4 +180,8 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 .ed-base.maplibregl-ctrl-group button:hover{background:#F2E7CE}
 .ed-base.maplibregl-ctrl-group button.on{background:#20241c;color:#FBF4E4}
 .ed-base.maplibregl-ctrl-group .ed-base-street.on{background:#05CB63;color:#0b3d22}
+/* "Hide line", pressed: wears the colour of the line it took away, so the
+   control and the thing it controls are visibly the same subject — and so a
+   rider who left it on can see WHY the stretch is missing. */
+.ed-base.ed-peek.maplibregl-ctrl-group button.on{background:#FF5A1F;color:#fff}
 .ed-base.maplibregl-ctrl-group button:focus-visible{outline:2px solid #FF5A1F;outline-offset:-2px}
