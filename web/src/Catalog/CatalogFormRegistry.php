@@ -28,6 +28,27 @@ final class CatalogFormRegistry
     private const array UNKNOWN_YES_NO = ['Unknown', 'Yes', 'No'];
 
     /**
+     * Whether a place is still what the map says it is.
+     *
+     * One vocabulary across every confirmable point type, because a rider
+     * standing in front of a dead tap, a shut shelter and a bench that is no
+     * longer there is answering the same question each time, and three
+     * different wordings would make the same fact three fields. The map's
+     * one-tap answers write exactly these values (OsmConfirmController), so a
+     * tap and a form edit can never disagree about what "gone" is called.
+     *
+     * 'Not there anymore' is the one with teeth: an item carrying it is not
+     * drawn (CatalogProvider::itemRows), while its OSM ref stays claimed, so
+     * the reference point does not come back in its place.
+     *
+     * No DEFAULT, deliberately. A default would make every untouched edit form
+     * assert 'As mapped' about a place the editor never looked at - and worse,
+     * turn a no-op edit into a change, which the intake is supposed to refuse
+     * (MovedPinTest). Silence here means nobody has said.
+     */
+    private const array CONDITION = ['As mapped', 'Out of order', 'Closed', 'Not there anymore'];
+
+    /**
      * Opening hours is intentionally NOT free text: specific weekly hours change
      * without notice and we can't verify them, so we only record what stays true,
      * round-the-clock or "check the source", and default to Unknown.
@@ -145,6 +166,7 @@ final class CatalogFormRegistry
                     CatalogField::select('type', 'Type', ['Public fountain', 'Drinking tap', 'Cemetery tap', 'Café — refill point']),
                     CatalogField::select('potable', 'Potable?', ['Yes (public supply)', 'Unsigned — use judgement', 'No / non-potable']),
                     CatalogField::select('seasonal', 'Seasonal availability', ['Year-round', 'Summer only', 'Frost-shut in winter', 'Unknown']),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
                     CatalogField::textarea('note', 'Note for riders', 'e.g. low flow, or hard to spot behind the church'),
                 ],
                 addFields: [
@@ -161,6 +183,7 @@ final class CatalogFormRegistry
                     CatalogField::select('fee', 'Fee', ['Free', 'Paid']),
                     CatalogField::select('wheelchair', 'Wheelchair accessible?', self::UNKNOWN_YES_NO),
                     CatalogField::text('openingHours', 'Opening hours', placeholder: 'e.g. 24/7, or Apr–Oct daylight'),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
                     CatalogField::textarea('note', 'Note for riders', 'e.g. behind the beach pavilion; code at the counter'),
                 ],
                 addFields: [
@@ -184,6 +207,7 @@ final class CatalogFormRegistry
                     // someone tells us.
                     CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: (null === $serviceKind || $serviceKind->hasOpeningHours()) ? 'Unknown' : '24/7'),
                     CatalogField::text('tools', 'Tools available', placeholder: 'e.g. chain tool, work stand'),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
                     CatalogField::textarea('correction', 'Anything to correct?', "What's wrong or out of date?", display: false),
                 ],
                 addFields: [
@@ -255,6 +279,7 @@ final class CatalogFormRegistry
                     CatalogField::select('bikesOnBoard', 'Bikes on board', ['Allowed with supplement', 'Allowed, free', 'Restricted at peak', 'Not allowed']),
                     CatalogField::select('stepFree', 'Step-free access', self::UNKNOWN_YES_NO),
                     CatalogField::select('bikeParking', 'Bike parking at station', ['Unknown', 'Covered racks', 'Open racks', 'None']),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
                     CatalogField::textarea('note', 'Note for riders', 'e.g. which platform for the climbs'),
                 ],
                 addFields: [
@@ -268,6 +293,7 @@ final class CatalogFormRegistry
                     CatalogField::select('shelterType', 'Shelter type', ['Refuge / chapel', 'Bus shelter', 'Café (seasonal)', 'Picnic hut']),
                     CatalogField::select('alwaysAccessible', 'Always accessible?', ['Yes — open structure', 'Daytime only', 'Seasonal', 'Unknown']),
                     CatalogField::select('waterNearby', 'Water nearby?', self::UNKNOWN_YES_NO),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
                     CatalogField::textarea('note', 'Note for riders', 'How useful is it in bad weather?'),
                 ],
                 addFields: [
@@ -282,6 +308,7 @@ final class CatalogFormRegistry
                     CatalogField::select('type', 'Type', ['Viewpoint / high point', 'Monument', 'Heritage site', 'Nature reserve']),
                     CatalogField::select('bikeAccess', 'Access for bikes', ['Roadside', 'Short walk', 'Path only']),
                     CatalogField::text('whatYouSee', 'What can you see?'),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
                     CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
                 ],
                 addFields: [
@@ -295,6 +322,7 @@ final class CatalogFormRegistry
                     CatalogField::text('name', 'Name', display: false),
                     CatalogField::select('type', 'Type', ['Heritage site', 'Museum', 'Monument', 'Religious site']),
                     CatalogField::select('bikeParking', 'Bike parking', self::UNKNOWN_YES_NO),
+                    CatalogField::select('condition', 'Still as mapped?', self::CONDITION),
                     CatalogField::textarea('note', 'Anything to add?', 'A useful tip about this spot'),
                 ],
                 addFields: [

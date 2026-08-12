@@ -45,6 +45,13 @@ const _rcTokens={};   // route id → CSRF token from the last snapshot
    Mirrors ItemType::isVotable()/isConfirmable(); keys are CATALOG layer keys. */
 export const CC_VOTABLE=new Set(['climbs','stays','scenic','history']);
 export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter','toilets','scenic','history','stays','climbs']);
+/* Where "out of order" is a thing that can happen. A tap, a pump and a toilet
+   have working parts; a viewpoint does not, and offering a rider a button that
+   cannot be true of what they are looking at teaches them to distrust the rest
+   of the row. Closed and "not there anymore" need no such list - any place can
+   be shut, and any place can be gone. */
+export const CC_BREAKABLE=new Set(['water','services','toilets']);
+
 const _cfTokens={};   // item id → CSRF token from the last confirmations snapshot
 
 /* Flip a loaded feature to verified, in place.

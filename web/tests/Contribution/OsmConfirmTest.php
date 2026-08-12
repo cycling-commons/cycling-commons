@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Contribution;
 
+use App\Catalog\CatalogProvider;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
@@ -176,6 +177,79 @@ final class OsmConfirmTest extends WebTestCase
         self::assertSame('pending_review', $body['error'], 'the second rider is told what happened, not "try again"');
         $em = static::getContainer()->get(EntityManagerInterface::class);
         self::assertSame(1, $em->getRepository(Item::class)->count(['sourceRef' => self::REF]));
+    }
+
+    /**
+     * The three ways a mapped place stops being true (owner 2026-08-12: "we
+     * must also add a button for broken and closed and not there anymore").
+     * They write the edit form's own field, so a rider who then opens the form
+     * finds their answer already chosen instead of a second record of it.
+     */
+    public function testTheThreeStateAnswersWriteTheConditionField(): void
+    {
+        // One client, one place per answer: a kernel is booted once per test,
+        // and one item per OSM ref is the rule the endpoint enforces anyway.
+        $client = static::createClient();
+        $this->login($client, 'states');
+        $this->seedPois();
+        $db = static::getContainer()->get(Connection::class);
+        foreach (['node/531001', 'node/531002'] as $extra) {
+            self::insertCoveragePoi($db, [
+                'ref' => $extra, 'letter' => 'C', 'name' => 'Tap '.$extra,
+                'lat' => 51.07, 'lng' => 3.74, 'country_code' => 'BE',
+            ]);
+        }
+        $token = $this->mapToken($client);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        foreach ([
+            [self::REF, 'out_of_order', 'Out of order'],
+            ['node/531001', 'closed', 'Closed'],
+            ['node/531002', 'gone', 'Not there anymore'],
+        ] as [$ref, $stance, $value]) {
+            $this->post($client, $ref, $stance, $token);
+
+            self::assertResponseIsSuccessful($stance);
+            /** @var Item $item */
+            $item = $em->getRepository(Item::class)->findOneBy(['sourceRef' => $ref]);
+            self::assertSame(['condition' => $value], $item->getAttributes(), $stance);
+            self::assertSame(ItemState::Submitted, $item->getState(), 'a report proposes; a curator decides');
+        }
+    }
+
+    /**
+     * "Not there anymore" is the one with teeth. Once served, the item is NOT
+     * drawn - and its OSM ref stays claimed, so the reference point does not
+     * reappear in the hole it left. Both halves, or the button does nothing a
+     * rider can see.
+     */
+    public function testAPlaceReportedGoneLeavesTheMapAndDoesNotHandItBackToOsm(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'gone');
+        $this->seedPois();
+        $this->post($client, self::REF, 'gone', $this->mapToken($client));
+        self::assertResponseIsSuccessful();
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->findOneBy(['sourceRef' => self::REF]);
+        $item->setState(ItemState::Unverified);   // as approval leaves it
+        $em->flush();
+        $em->clear();
+
+        $payload = static::getContainer()->get(CatalogProvider::class)->payload();
+        self::assertContains(self::REF, $payload['refs'], 'the ref stays claimed, so the OSM point stays hidden');
+
+        $drawn = [];
+        foreach ($payload as $value) {
+            if (\is_array($value) && 'FeatureCollection' === ($value['type'] ?? null)) {
+                foreach ($value['features'] as $feature) {
+                    $drawn[] = $feature['properties']['id'] ?? null;
+                }
+            }
+        }
+        self::assertNotContains($item->getId(), $drawn, 'a place reported gone is not a place on the map');
     }
 
     public function testUnknownRefsAndStancesAreRefused(): void

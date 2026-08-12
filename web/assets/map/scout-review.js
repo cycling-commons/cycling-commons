@@ -230,9 +230,11 @@ function placePasses(radar) {
    press them for, and a rider looking at the ordinary map has no way to tell
    they are not real places.
 
-   Unsent tags are the one thing worth stopping for, so a review with work left
-   in it asks first. Nothing is stored anywhere either way: the file was never
-   uploaded, so "discard" here means the browser forgets it. */
+   Unsent tags are worth pausing for, so a review with work left in it asks
+   first - and says the reassuring half out loud: the tags live in the RIDE
+   FILE, which we never had a copy of and never changed, so opening it here
+   again another day brings all of them back. Only what was already sent is
+   gone from the list, because it is on the server now. */
 function clearRide() {
   passMarkers.forEach(m => m.remove());
   passMarkers = [];
@@ -620,7 +622,7 @@ export function initScoutReview() {
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
       const unsent = tags.filter(x => !x.approved).length;
-      if (unsent > 0 && !window.confirm(tpl(t('scoutCloseUnsent', 'Close the review? {n} tag(s) have not been sent — they are only in this browser and will be gone.'), { n: unsent }))) return;
+      if (unsent > 0 && !window.confirm(tpl(t('scoutCloseUnsent', 'Close the review? {n} tag(s) have not been sent — they stay in your ride file, so you can open it here again later.'), { n: unsent }))) return;
       clearRide();
       panel.hidden = true;
     });

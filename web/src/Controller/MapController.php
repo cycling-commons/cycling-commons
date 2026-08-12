@@ -229,6 +229,11 @@ final class MapController extends AbstractController
             'surfGravel' => 'legend_gravel', 'surfCobbles' => 'legend_cobbles',
             'surfDirt' => 'legend_dirt', 'surfRock' => 'legend_rock',
             'surfUnverified' => 'legend_unverified',
+            // Gap grid: the "surface not recorded" row at planning zoom, where
+            // it draws one square per ~6 km instead of every road.
+            'gapsTitle' => 'd_gaps_title', 'gapsUnrecorded' => 'd_gaps_unrecorded',
+            'gapsShare' => 'd_gaps_share', 'gapsRoads' => 'd_gaps_roads',
+            'gapsHint' => 'd_gaps_hint',
             'surface' => 'd_surface', 'roadType' => 'd_road_type',
             'surfaceConfirm' => 'd_surface_confirm', 'srcScout' => 'd_src_scout',
             // Scout review panel (scout-review.js).
@@ -297,6 +302,7 @@ final class MapController extends AbstractController
             'waterA' => 'd_water_a', 'hereA' => 'd_here_a',
             'confirmHere' => 'd_confirm_here', 'confirmedOne' => 'd_confirmed_one', 'confirmedMany' => 'd_confirmed_many',
             // One-tap confirmation of an OSM place: a receipt, not a tally.
+            'osmBroken' => 'd_osm_broken', 'osmClosed' => 'd_osm_closed', 'osmGone' => 'd_osm_gone',
             'osmSent' => 'd_osm_sent', 'osmAlready' => 'd_osm_already',
             'osmFailed' => 'd_osm_failed', 'osmLogin' => 'd_osm_login',
             'loginConfirm' => 'd_login_confirm',

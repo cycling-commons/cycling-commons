@@ -30,7 +30,7 @@ import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
-import { CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
+import { CC_VOTABLE, CC_CONFIRMABLE, CC_BREAKABLE, routeCommunityPanel, hydrateRouteCommunity,
          hydrateItemConfirm, setPendingShape } from './community.js';
 import { showPendingShape, fitPendingShape, clearPendingShape } from './pending-shape.js';
 import { clearCorrections } from './corrections.js';
@@ -656,6 +656,18 @@ function buildRecord(layer, f){
             ? `<button type="button" class="cc-d-act confirm-osm" data-osm-stance="potable">✓ ${D.waterA||'Drinking water'}</button>`
               + `<button type="button" class="cc-d-act confirm-osm-no" data-osm-stance="not_potable">✕ ${D.notPotable||'Not potable'}</button>`
             : `<button type="button" class="cc-d-act confirm-osm" data-osm-stance="exists">✓ ${D.confirmHere||'Confirm it\u2019s here'}</button>`)
+        /* The other half of the question. "Is it here" has more than one no:
+           a tap can be dead, a shelter shut for the season, a bench simply
+           gone - and a rider who can only answer yes leaves us the wrong map
+           (owner 2026-08-12). Out of order is offered where something can
+           break; closed and gone apply to any place at all. Anything more than
+           the one word goes through the edit form, which offers the same
+           field with the answer already chosen. */
+        + (CC_BREAKABLE.has(layer.key)
+            ? `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="out_of_order">⚠ ${D.osmBroken||'Out of order'}</button>`
+            : '')
+        + `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="closed">⌀ ${D.osmClosed||'Closed'}</button>`
+        + `<button type="button" class="cc-d-act confirm-osm-gone" data-osm-stance="gone">✕ ${D.osmGone||'Not there anymore'}</button>`
       + '</div>')
     : '';
   const act = edit + osmConfirm + vote;

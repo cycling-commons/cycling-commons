@@ -133,6 +133,13 @@ final class CatalogProvider
         if (\in_array($letter, CoverageRetirement::LETTERS, true)) {
             $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
         }
+        /* A place a rider reported gone is not a place. It stays in the table -
+           the report is a record, and a curator may disagree - but it is not
+           drawn, and (deliberately) its ref is STILL claimed by curatedRefs(),
+           so the OSM point it came from does not reappear in the hole it left.
+           That pair is the whole behaviour: gone means gone from the map, not
+           handed back to the reference layer. */
+        $sql .= " AND COALESCE(i.attributes->>'condition', '') <> 'Not there anymore'";
 
         /* @var list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, region_id: int|null, verified: bool}> */
         return $this->db->fetchAllAssociative($sql.' ORDER BY i.id', $params);

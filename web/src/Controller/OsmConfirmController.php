@@ -51,6 +51,13 @@ final class OsmConfirmController extends AbstractController
         'potable' => ['potable' => 'Yes (public supply)'],
         'not_potable' => ['potable' => 'No / non-potable'],
         'exists' => [],
+        /* The three ways a mapped place stops being true (owner 2026-08-12).
+           They write the SAME field the edit form offers, so a rider who wants
+           to add why can open the form and find their own answer already
+           chosen rather than a second, contradictory record of it. */
+        'out_of_order' => ['condition' => 'Out of order'],
+        'closed' => ['condition' => 'Closed'],
+        'gone' => ['condition' => 'Not there anymore'],
     ];
 
     public function __construct(

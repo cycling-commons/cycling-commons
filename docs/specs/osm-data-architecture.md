@@ -257,6 +257,20 @@ Rules:
   - Confirmation tallies still live on the item (`item_confirmation`), never on
     an OSM ref. On approval the submitter's own stance is recorded form-sourced
     and uncounted, so the map never asks them the same question twice.
+  - **Yes is not the only answer** (owner decision 2026-08-12). Alongside the
+    letter's own question - drinkable / still here - the drawer offers *Out of
+    order*, *Closed* and *Not there anymore*. Each writes the `condition` field
+    the edit form itself offers, so a rider who wants to say more opens the form
+    and finds their own answer already chosen rather than a second, contradictory
+    record of it. *Out of order* appears only where something can break (water,
+    bike services, toilets); a viewpoint cannot.
+  - **`condition = 'Not there anymore'` removes a place from the map, without
+    handing it back to OSM.** `CatalogProvider::itemRows()` stops drawing the
+    item; `curatedRefs()` still claims its ref, so the coverage POI it was
+    materialized from stays hidden. Both halves are the behaviour: without the
+    first the report changes nothing, without the second the reference point
+    reappears in the hole the item left. The row itself stays - a curator may
+    disagree, and the report is a record either way.
 - **Approve → stays** as a curated category-2 item.
 - **Reject → retained 3 months**, then the garbage collector deletes it. The
   window exists to handle disputes: we keep the record long enough to review a

@@ -673,8 +673,12 @@
   /* "Not potable" is a warning, not a second recommendation — filled amber on
      filled orange was unreadable (owner-reported 2026-08-12). Outline it: the
      one you are expected to press stays the solid one. */
-  .cc-d-act.confirm-osm-no{background:transparent;color:#F0B45E;border-color:rgba(240,180,94,.6)}
-  .cc-d-act.confirm-osm-no:hover{background:rgba(240,180,94,.14);color:#F7C87E}
+  .cc-d-act.confirm-osm-no,.cc-d-act.confirm-osm-warn{background:transparent;color:#F0B45E;border-color:rgba(240,180,94,.6)}
+  .cc-d-act.confirm-osm-no:hover,.cc-d-act.confirm-osm-warn:hover{background:rgba(240,180,94,.14);color:#F7C87E}
+  /* "Not there anymore" removes a place from the map. It is the heaviest thing
+     a rider can say here, so it does not wear the same amber as "shut today". */
+  .cc-d-act.confirm-osm-gone{background:transparent;color:#E88A7D;border-color:rgba(232,138,125,.55)}
+  .cc-d-act.confirm-osm-gone:hover{background:rgba(232,138,125,.14);color:#F2A79B}
   .cc-d-act.edit{background:transparent;color:var(--paper);border:1px solid rgba(239,230,212,.45)}
   .cc-d-act.edit:hover{border-color:var(--trail);color:var(--trail)}
   .cc-d-act.fixloc{background:transparent;color:rgba(239,230,212,.85);border:1px solid rgba(239,230,212,.3)}
