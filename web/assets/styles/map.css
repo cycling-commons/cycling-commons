@@ -669,7 +669,11 @@
   .cc-osmcf{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem}
   .cc-osmcf .cc-d-act{margin:0;border:1px solid transparent;cursor:pointer;font-family:var(--mono)}
   .cc-osmcf .cc-d-act[disabled]{opacity:.5;cursor:default}
-  .cc-osmcf-done{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:#7fcf9a;padding:.5rem 0}
+  /* The receipt after a tap. Mono green on the drawer's dark green is a
+     low-contrast pair, so it does not also get to be tiny (owner 2026-08-12):
+     bigger, lighter, and with room to breathe under the buttons it replaces. */
+  .cc-osmcf-done{font-family:var(--mono);font-size:.8rem;line-height:1.5;letter-spacing:.04em;
+    color:#A6E3BC;padding:.55rem 0}
   /* "Not potable" is a warning, not a second recommendation — filled amber on
      filled orange was unreadable (owner-reported 2026-08-12). Outline it: the
      one you are expected to press stays the solid one. */
