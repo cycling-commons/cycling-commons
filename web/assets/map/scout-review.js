@@ -22,13 +22,15 @@
    is the one colour the map does not otherwise use for a place, and a rider
    scanning a ride needs to find what still needs them. */
 import { map } from './map-init.js';
-import { D } from './i18n.js';
+import { D, tpl } from './i18n.js';
+import { uSpeed, uM } from './units.js';
 import { parseFit, extractTags, buildSurfaceSegments, countVehicles, MESG, semiToDeg,
          fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY } from '../lib/scout-fit.js';
 
 const RIDE_SRC = 'cc-scout-ride';
 const RIDE_LINE = 'cc-scout-ride-line';
 const RED = '#D92D20';
+let passMarkers = [];
 
 /** Tag markers, in file order. Each is {tag, lngLat, marker, at, approved}. */
 let tags = [];
@@ -167,6 +169,54 @@ function drawRide() {
   const b = new maplibregl.LngLatBounds([track[0].lng, track[0].lat], [track[0].lng, track[0].lat]);
   track.forEach(p => b.extend([p.lng, p.lat]));
   map.fitBounds(b, { padding: 80, duration: 0 });
+}
+
+/* Where a vehicle passed you.
+
+   The overtake count was a number in a box: true, and impossible to act on. On
+   the map it is a place - this corner, that bridge - which is the whole reason
+   a radar reading is worth anything to a rider looking back at a ride.
+
+   Ground speed, not closing speed: what the car was doing, not the difference
+   between it and you. The parser gives closing speed plus the rider's own, so
+   ground is the sum; when the rider's speed is missing there is no honest
+   ground figure and the marker shows the car alone rather than a number that
+   would read as the vehicle's speed and be 20 km/h short of it.
+
+   Measured here, never sent - like the count line, and for the same reason:
+   nothing on the server can hold a measurement yet. */
+function passEl(pass) {
+  const d = document.createElement('div');
+  d.className = 'scout-pass';
+  // A car from the side, small enough to sit under a tag pin without fighting
+  // it: this is context for the ride, not a thing to click through.
+  d.innerHTML = '<svg viewBox="0 0 24 12" width="17" height="9" aria-hidden="true">'
+    + '<path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/>'
+    + '<circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/>'
+    + '</svg>';
+  if (pass.ground != null) {
+    const sp = document.createElement('span');
+    sp.textContent = uSpeed(pass.ground);
+    d.appendChild(sp);
+  }
+  const bits = [];
+  if (pass.ground != null) bits.push(tpl(t('scoutPassSpeed', 'Passed at {s}'), { s: uSpeed(pass.ground) }));
+  if (pass.speed != null) bits.push(tpl(t('scoutPassClosing', 'closing {s} faster than you'), { s: uSpeed(pass.speed) }));
+  if (pass.range != null) bits.push(tpl(t('scoutPassRange', 'nearest {d}'), { d: uM(pass.range) }));
+  d.title = bits.join(' \u00b7 ');
+  return d;
+}
+
+function placePasses(radar) {
+  passMarkers.forEach(m => m.remove());
+  passMarkers = [];
+  if (!radar || !radar.passes) return;
+  radar.passes.forEach(pass => {
+    if (pass.lat == null || pass.lon == null) return;
+    passMarkers.push(new maplibregl.Marker({ element: passEl(pass), anchor: 'bottom' })
+      .setLngLat([pass.lon, pass.lat])
+      .addTo(map));
+  });
 }
 
 function pinEl(entry, index) {
@@ -351,6 +401,13 @@ function renderRideFacts(parsed) {
   const lines = [];
   if (parsed.radar && parsed.radar.total > 0) {
     lines.push(tplCount(t('scoutRadar', '{n} vehicles passed you on this ride — measured, not sent'), parsed.radar.total));
+    /* How many of them we could not place. A rider who counts nine cars on the
+       map and reads fifteen in the line above deserves the difference named,
+       not left to look like a drawing bug. */
+    const placed = parsed.radar.passes.filter(x => x.lat != null && x.lon != null).length;
+    if (placed < parsed.radar.total) {
+      lines.push(tplCount(t('scoutPassNoFix', '{n} of them had no GPS fix, so they are not on the map'), parsed.radar.total - placed));
+    }
   }
   if (parsed.unplaceable > 0) {
     lines.push(tplCount(t('scoutNoFix', '{n} tag(s) had no GPS fix and cannot be placed'), parsed.unplaceable));
@@ -371,6 +428,7 @@ function show(parsed) {
   const panel = el('scoutPanel');
   if (panel) panel.hidden = false;
   renderRideFacts(parsed);
+  placePasses(parsed.radar);
   track = parsed.track;
   tags = parsed.tags.map(w => ({
     ...w,
@@ -527,6 +585,18 @@ export function initScoutReview() {
      away edits the rider has already made. */
   const closeBtn = el('scoutClose');
   if (closeBtn) closeBtn.addEventListener('click', () => { panel.hidden = true; });
+
+  /* Keep the mark square against the text beside it. Its height is whatever the
+     title and lead wrap to - which changes with the locale, the panel width and
+     the mobile layout - and CSS cannot transfer that back into a width here,
+     so it is measured. Cheap: one observer, one custom property. */
+  const markbox = panel.querySelector('.scout-markbox');
+  const headtext = panel.querySelector('.scout-headtext');
+  if (markbox && headtext && typeof ResizeObserver !== 'undefined') {
+    const square = () => markbox.style.setProperty('--scout-mark', headtext.offsetHeight + 'px');
+    new ResizeObserver(square).observe(headtext);
+    square();
+  }
   mountPhotos();
   const sendAllBtn = el('scoutSendAll');
   if (sendAllBtn) sendAllBtn.addEventListener('click', () => sendAll(sendAllBtn));

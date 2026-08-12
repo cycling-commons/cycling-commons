@@ -27,6 +27,7 @@
   // Where feet stop being readable and the long form takes over. A quarter mile
   // is about the same size as the kilometre it replaces.
   var SHORT_LIMIT_M = 'mi' === DIST ? 402.336 : 1000;
+  var SPEED = 'mi' === DIST ? 'mph' : 'km/h';
 
   /** Thousands separated, trailing zeros dropped — "1,240 m", "12 mi". */
   function num(value, decimals) {
@@ -68,6 +69,18 @@
     return num(v, decimals == null ? 0 : decimals) + ' ' + ELEV;
   }
 
+  /* A speed held in km/h.
+
+     There is no separate speed preference and there should not be: a rider who
+     reads miles reads mph, and a second control would only let the two
+     disagree. It follows the DISTANCE unit, which is the one they already set.
+     Whole numbers - a radar reading 31.6 km/h is not that precise. */
+  function ccSpeed(kmh, decimals) {
+    if (!numeric(kmh)) return '';
+    var v = 'mi' === DIST ? Number(kmh) * MI_PER_KM : Number(kmh);
+    return num(v, decimals == null ? 0 : decimals) + ' ' + SPEED;
+  }
+
   /** The bare converted numbers, for axis ticks that write the unit once. */
   function ccKmValue(km, decimals) {
     if (!numeric(km)) return 0;
@@ -102,6 +115,8 @@
   window.ccElevValue = ccElevValue;
   window.ccKmFromValue = ccKmFromValue;
   window.ccElevFromValue = ccElevFromValue;
+  window.ccSpeed = ccSpeed;
   window.ccDistUnit = DIST;
+  window.ccSpeedUnit = SPEED;
   window.ccElevUnit = ELEV;
 })();
