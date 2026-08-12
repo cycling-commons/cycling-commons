@@ -128,14 +128,54 @@ final class ScoutTag
         return self::DETAIL_FIELDS[$type][$detail] ?? [];
     }
 
-    /** Is this letter a legitimate resolution of this tag type? */
+    /**
+     * @var list<string> Every letter a Scout tag may be re-filed onto.
+     *
+     * A mis-tap at 30 km/h is the normal case, not the exception: the menu is
+     * six tiles on a bike computer and the rider is riding. Whatever they meant,
+     * they know it now — so review must let them move a tag ANYWHERE the tag
+     * could have gone, not only within the type they hit by accident (owner:
+     * "I now can't change from scenic view to another category", 2026-08-12).
+     *
+     * `A` is not in the list. Road surface is the one segment-located letter: it
+     * needs a start and an end, and a single tapped point cannot become one. A
+     * surface tag reaches A through its own pairing path.
+     */
+    public const array REFILE_LETTERS = ['C', 'D', 'F', 'H', 'I', 'J'];
+
+    /**
+     * Is this letter a legitimate resolution of this tag type?
+     *
+     * Narrowing (DETAIL_LETTERS) decides what is offered FIRST; it never decides
+     * what is allowed. The rider is correcting their own tag, and a form that
+     * refuses the correction is worse than one that guessed wrong to begin with.
+     */
     public static function allows(string $type, string $letter, ?int $detail = null): bool
     {
-        // The coarse list stays valid whatever the sub-menu said: narrowing is
-        // there to offer the right thing first, not to refuse a rider who
-        // moved their own tag somewhere else deliberately.
-        return \in_array($letter, self::lettersFor($type, $detail), true)
-            || \in_array($letter, self::LETTERS[$type] ?? [], true);
+        // A is not reachable from here at all — see offerFor().
+        return \in_array($letter, self::REFILE_LETTERS, true);
+    }
+
+    /**
+     * The letters to OFFER, best first: what the sub-menu implies, then
+     * everything else a tag can be re-filed onto.
+     *
+     * @return list<string>
+     */
+    public static function offerFor(string $type, ?int $detail = null): array
+    {
+        /* A is deliberately absent from every offer for now: the intake cannot
+           store a segment from a single tapped point, so offering it would end
+           in a refusal at the last step. A surface tag still LISTS — the rider
+           may have meant a viewpoint — it simply cannot become road surface
+           here yet (plan task 6). */
+        $best = array_values(array_filter(
+            self::lettersFor($type, $detail),
+            static fn (string $l): bool => 'A' !== $l,
+        ));
+        $rest = array_values(array_diff(self::REFILE_LETTERS, $best));
+
+        return [...$best, ...$rest];
     }
 
     /** The ItemType for a letter, or null when the letter is not one of ours. */

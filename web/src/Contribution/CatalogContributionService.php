@@ -431,18 +431,38 @@ final class CatalogContributionService implements ContributionStubInterface
         //
         // "Changed" is broader than the field diff: a photo, a photo link and
         // a moved pin are all real contributions on their own.
-        if ([] === $changes
-            && !self::hasMedia($payload)
-            && !self::pinMoved($payload, (float) $lat, (float) $lng)
-        ) {
+        $moved = self::pinMoved($payload, (float) $lat, (float) $lng);
+        if ([] === $changes && !self::hasMedia($payload) && !$moved) {
             $this->reject('contribute.error.nothing_changed', 'details');
+        }
+
+        /* A moved pin is a CHANGE, not merely permission to submit.
+           It used to count only towards "did anything change" and was then
+           thrown away: the submission was filed at the item's OLD point, the
+           diff never mentioned the move, and approving it moved nothing. The
+           rider had done the work and the system agreed to it and dropped it.
+
+           Recorded as a was/now pair like every other field, so the desk shows
+           it, the history records it, and ModerationService applies it. */
+        $newLat = (float) $lat;
+        $newLng = (float) $lng;
+        if ($moved) {
+            $newLat = (float) $payload['lat'];
+            $newLng = (float) $payload['lng'];
+            $changes[Item::LOCATION_FIELD] = [
+                'was' => self::formatPoint((float) $lat, (float) $lng),
+                'now' => self::formatPoint($newLat, $newLng),
+            ];
         }
 
         $draft = new SubmissionDraft(
             type: ItemType::fromParam($item->getLetter()),
             title: $item->getName(),
-            lat: (float) $lat,
-            lng: (float) $lng,
+            // The submission sits where the RIDER put it, not where the item
+            // still is: the desk pins submissions on a map, and a curator
+            // judging a move has to see the proposed spot.
+            lat: $newLat,
+            lng: $newLng,
             attributes: $attributes,
             itemId: $item->getId(),
         );
@@ -676,6 +696,19 @@ final class CatalogContributionService implements ContributionStubInterface
 
         return abs((float) $payload['lat'] - $lat) > 1e-5
             || abs((float) $payload['lng'] - $lng) > 1e-5;
+    }
+
+    /**
+     * A coordinate pair as the desk and the history show it.
+     *
+     * Text rather than an array: `changes` is read by three renderers that all
+     * print was/now, and a bare pair would arrive as "Array". Five decimals is
+     * about a metre — enough to see that a pin moved, and no more precision
+     * than a rider's tap carries.
+     */
+    private static function formatPoint(float $lat, float $lng): string
+    {
+        return \sprintf('%.5f, %.5f', $lat, $lng);
     }
 
     /** Collapse '' / null / [] to null; leave every other value untouched. */

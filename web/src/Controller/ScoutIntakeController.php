@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\LocationMode;
 use App\Catalog\SurfaceVocabulary;
 use App\Contribution\CatalogContributionService;
 use App\Entity\User;
@@ -90,6 +91,20 @@ final class ScoutIntakeController extends AbstractController
         $itemType = ScoutTag::itemTypeFor($letter);
         if (null === $itemType) {
             return new JsonResponse(['error' => 'bad_tag'], 400);
+        }
+
+        /* A · road surface is SEGMENT-located: it needs a start and an end, and
+           this endpoint carries one tapped point. Accepting it would mint an
+           item with Point geometry that CatalogProvider::surfaceSegments()
+           skips by design — a contribution that succeeds, says so, and then
+           never appears anywhere. Refused until the start/END pairing this
+           parser already computes is wired through
+           (Dated/2026-08-09-scout-cc-tagger-plan.md task 6). */
+        if (LocationMode::Segment === $itemType->locationMode()) {
+            return new JsonResponse([
+                'error' => 'segment_not_supported',
+                'detail' => 'A surface stretch needs a start and an end; add it from the map for now.',
+            ], 422);
         }
 
         $lat = $payload['lat'] ?? null;

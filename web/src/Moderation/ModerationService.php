@@ -285,9 +285,30 @@ final class ModerationService
         $changed = false;
         foreach ($submission->getChanges() as $field => $pair) {
             $now = $pair['now'] ?? null;
-            $actualOld = Item::NAME_FIELD === $field ? $item->getName() : ($attributes[$field] ?? null);
-            if ($actualOld === $now) {
-                continue; // nothing left to apply for this field
+            if (Item::LOCATION_FIELD !== $field) {
+                $actualOld = Item::NAME_FIELD === $field ? $item->getName() : ($attributes[$field] ?? null);
+                if ($actualOld === $now) {
+                    continue; // nothing left to apply for this field
+                }
+            } else {
+                $actualOld = null;
+            }
+            if (Item::LOCATION_FIELD === $field) {
+                /* The pin the rider moved. Parsed back from the pair the diff
+                   showed the curator, so what is applied is exactly what they
+                   approved — no second source for the same number. Only a POINT
+                   item moves this way; a segment or a climb carries its shape in
+                   its own field. */
+                $parts = array_map('trim', explode(',', (string) $now));
+                if (2 === \count($parts) && is_numeric($parts[0]) && is_numeric($parts[1])) {
+                    $item->setGeom(json_encode([
+                        'type' => 'Point',
+                        'coordinates' => [(float) $parts[1], (float) $parts[0]],
+                    ], \JSON_THROW_ON_ERROR));
+                    $changed = true;
+                    $this->history($item, $submission, $curator, $field, $pair['was'] ?? null, $now);
+                }
+                continue;
             }
             if (Item::NAME_FIELD === $field) {
                 $item->setName((string) $now);

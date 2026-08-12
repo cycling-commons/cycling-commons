@@ -46,6 +46,18 @@
       <a class="btn-act btn-secondary q-review"
          href="{{ path('map') }}?pending={{ item.id }}"
          target="_blank" rel="noopener">{{ 'moderate.action.review_on_map'|trans }} &#8599;</a>
+      {# Straight to the form. Review-on-the-map answers "is this right"; this
+         answers "fix this typo", and routing a one-word correction through a
+         map, a pin and a drawer is three steps too many (owner 2026-08-12).
+         Only for an EDIT of an existing item — a brand-new place has no item to
+         open, and a button that leads to "pick a place to improve" is a button
+         that lies. #}
+      {% if item.itemId %}
+      <a class="btn-act btn-secondary q-edit"
+         href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}"
+         target="_blank" rel="noopener"
+         title="{{ 'moderate.action.edit_form'|trans }}">✎ {{ 'moderate.action.edit_form'|trans }}</a>
+      {% endif %}
 
       <details class="q-act q-act--message">
         <summary class="btn-act btn-secondary">{{ 'moderate.msg.summary'|trans }}</summary>
@@ -81,7 +93,12 @@
          until it is ticked; the server's own gates are unchanged and remain
          the real ones (a reason here, the typed DELETE for Trash). #}
       <details class="q-act q-act--escalate">
-        <summary class="btn-act btn-secondary">{{ 'moderate.escalate.button'|trans }}</summary>
+        {# Icon, not a word. These two sit at the end of a row a curator reads
+           dozens of times an hour; the verbs they carry are rare and heavy, and
+           spelling them out gave them the same weight as Review. The label
+           stays as the accessible name and the tooltip — shorter, not hidden. #}
+        <summary class="btn-act btn-secondary btn-icon" title="{{ 'moderate.escalate.button'|trans }}"
+                 aria-label="{{ 'moderate.escalate.button'|trans }}">⚑</summary>
         <div class="q-act-panel">
           <form method="post" action="{{ path('moderate_escalate_submission') }}">
             <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
@@ -99,7 +116,8 @@
       </details>
 
       <details class="q-act q-act--trash trash-confirm">
-        <summary class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</summary>
+        <summary class="btn-act btn-secondary btn-icon" title="{{ 'moderate.trash.button'|trans }}"
+                 aria-label="{{ 'moderate.trash.button'|trans }}">🗑</summary>
         <div class="q-act-panel">
           <form method="post" action="{{ path('moderate_trash') }}">
             <input type="hidden" name="_token" value="{{ csrf_token('moderate-trash') }}">

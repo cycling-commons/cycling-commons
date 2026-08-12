@@ -119,6 +119,9 @@ const OFF_SCHEMA_LABELS = {
   grad: () => D.fGrad || 'Gradient profile',
   steep: () => D.fSteep || 'Steepest ramp',
   correction: () => D.fCorrection || 'Anything to correct?',
+  // A moved pin travels as a pseudo-field (Item::LOCATION_FIELD), so it has no
+  // entry in any letter's display schema and would otherwise read as "location".
+  location: () => D.location || 'Location',
 };
 
 /** A field's localised label from the display schema, or the raw name. */

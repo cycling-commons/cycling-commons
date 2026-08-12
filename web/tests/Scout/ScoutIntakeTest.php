@@ -9,6 +9,7 @@ namespace App\Tests\Scout;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
+use App\Catalog\SurfaceVocabulary;
 use App\Entity\User;
 use App\Scout\ScoutTag;
 use Doctrine\ORM\EntityManagerInterface;
@@ -127,19 +128,37 @@ final class ScoutIntakeTest extends WebTestCase
             ->getRepository(Submission::class)->count(['title' => 'Bad corner']));
     }
 
-    public function testATagCannotBecomeALetterItsTypeDoesNotAllow(): void
+    public function testAMisTappedTagCanBeReFiledAsAnythingElse(): void
     {
-        // `scenery` is a view, not a water point. The panel offers only the
-        // letters ScoutTag::LETTERS allows; the server is what enforces it.
+        /* A mis-tap at 30 km/h is the normal case, not the exception — six
+           tiles on a bike computer, and the rider is riding. Whatever they meant
+           they know at home, so review must let them move a tag ANYWHERE, not
+           only within the type they hit by accident (owner 2026-08-12: "I now
+           can't change from scenic view to another category").
+
+           The sub-menu still decides what is offered FIRST. It never decides
+           what is allowed. */
         $client = static::createClient();
         $this->login($client, 'letter');
 
         $this->post($client, [
             'tag' => 'scenery', 'letter' => 'C', 'lat' => 50.5, 'lng' => 6.05,
-            'details' => ['name' => 'Not a fountain'],
+            'details' => ['name' => 'Actually a fountain'],
         ]);
 
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseIsSuccessful();
+        self::assertSame('C', static::getContainer()->get(EntityManagerInterface::class)
+            ->getRepository(Submission::class)->findOneBy(['title' => 'Actually a fountain'])->getLetter());
+    }
+
+    public function testTheOfferLeadsWithWhatTheSubmenuSaidAndStillListsTheRest(): void
+    {
+        // Best first, everything after: the narrowing is guidance, and the
+        // guidance must not become a cage.
+        $offer = ScoutTag::offerFor('scenery', 2);
+        self::assertSame('J', $offer[0], 'SCENERY · HISTORY leads with history & culture');
+        self::assertContains('C', $offer, 'and a mis-tap can still become water & food');
+        self::assertNotContains('A', $offer, 'road surface is not reachable from a single point');
     }
 
     public function testAnUnnamedTagIsRefused(): void
@@ -196,10 +215,16 @@ final class ScoutIntakeTest extends WebTestCase
             ->getRepository(Submission::class)->count(['title' => 'Waterkering']));
     }
 
-    public function testASurfaceTagArrivesWithTheClassPickedOnTheDevice(): void
+    public function testASurfaceStretchIsRefusedRatherThanStoredAsAPoint(): void
     {
-        // Scout writes OSM's own word; the form speaks declarable labels.
-        // Translating server-side saves the rider choosing the same thing twice.
+        /* A · road surface is SEGMENT-located. This endpoint carries one tapped
+           point, and an item minted from it gets Point geometry — which
+           CatalogProvider::surfaceSegments() skips by design. Accepting it would
+           produce a contribution that succeeds, tells the rider so, and then
+           never appears anywhere, which is the worst of the three outcomes.
+
+           Refused until the start/END pairing the parser already computes is
+           wired through (plan task 6). */
         $client = static::createClient();
         $this->login($client, 'osmsurface');
 
@@ -209,32 +234,18 @@ final class ScoutIntakeTest extends WebTestCase
             'osmSurface' => 'cobblestone',
         ]);
 
-        self::assertResponseIsSuccessful();
-        $em = static::getContainer()->get(EntityManagerInterface::class);
-        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Cobbled stretch']);
-        self::assertNotNull($submission);
-        /** @var Item $item */
-        $item = $em->getRepository(Item::class)->find($submission->getItemId());
-        self::assertSame('Sett — pavé', $item->getAttributes()['surface'] ?? null);
+        self::assertResponseStatusCodeSame(400, 'A is not offered from a point at all');
+        self::assertSame(0, static::getContainer()->get(EntityManagerInterface::class)
+            ->getRepository(Submission::class)->count(['title' => 'Cobbled stretch']));
     }
 
-    public function testAnUnknownOsmSurfaceIsDroppedRatherThanGuessed(): void
+    public function testTheDevicesSurfaceWordStillTranslatesForThePointLetters(): void
     {
-        $client = static::createClient();
-        $this->login($client, 'moondust');
-
-        $this->post($client, [
-            'tag' => 'surface', 'letter' => 'A', 'lat' => 52.0, 'lng' => 4.0,
-            'details' => ['name' => 'Moon stretch'],
-            'osmSurface' => 'moon_dust',
-        ]);
-
-        self::assertResponseIsSuccessful();
-        $em = static::getContainer()->get(EntityManagerInterface::class);
-        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Moon stretch']);
-        /** @var Item $item */
-        $item = $em->getRepository(Item::class)->find($submission->getItemId());
-        self::assertArrayNotHasKey('surface', $item->getAttributes(), 'the form asks instead');
+        // The vocabulary mapping is not going anywhere — it is what a surface
+        // stretch will use the moment segments are wired.
+        self::assertSame('Sett — pavé', SurfaceVocabulary::fromOsmValue('cobblestone'));
+        self::assertSame('Gravel', SurfaceVocabulary::fromOsmValue('gravel'));
+        self::assertNull(SurfaceVocabulary::fromOsmValue('moon_dust'), 'no guess');
     }
 
     public function testASceneryTagAboutHistoryBecomesHistoryAndCulture(): void
@@ -292,9 +303,9 @@ final class ScoutIntakeTest extends WebTestCase
 
     public function testASubmenuAnswerNeverFollowsATagToAnotherLetter(): void
     {
-        // A rider may re-file a notice as something else. `hazardType` must not
-        // ride along: the field does not exist on that letter, and the
-        // submission would be refused for an answer they never gave.
+        // Re-filing is allowed; carrying the old answer along is not.
+        // `hazardType` does not exist on I, and the submission would be refused
+        // for something the rider never said.
         $client = static::createClient();
         $this->login($client, 'refiled');
 
@@ -304,6 +315,12 @@ final class ScoutIntakeTest extends WebTestCase
             'details' => ['name' => 'Refiled as a view'],
         ]);
 
-        self::assertResponseStatusCodeSame(400, 'notice does not resolve to I at all');
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Refiled as a view']);
+        self::assertSame('I', $submission->getLetter());
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertArrayNotHasKey('hazardType', $item->getAttributes());
     }
 }

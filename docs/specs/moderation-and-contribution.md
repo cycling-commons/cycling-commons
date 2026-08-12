@@ -1625,6 +1625,42 @@ publicly-served states for everyone else, and the pending drawer was offering an
 that submission on the desk, so nothing is exposed that they cannot see — and
 the alternative was bouncing a typo back to the rider as a needs-info.
 
+### A moved pin is a change (2026-08-12)
+
+It used to count only towards *"did anything change"* and was then thrown away:
+the submission was filed at the item's OLD point, the diff never named the move,
+and approving it moved nothing. The rider did the work, the wizard accepted it,
+and the system dropped it silently — the worst of the three outcomes.
+
+A move now travels as `Item::LOCATION_FIELD` ('location'), a pseudo-field like
+`name`: it is not an attribute, because the position lives in `geom`, but an
+edit has to be able to carry it. It appears in the desk diff as a coordinate
+pair, is applied by `ModerationService::applyEdit` on approve, and lands in the
+item's change history like any other field. The submission itself is filed **at
+the proposed point**, not the current one — the desk pins submissions on a map,
+and a curator judging a move has to see where it is being moved TO.
+
+Moving nothing is still nothing: an edit whose pin has not moved, with no other
+change, is refused as before.
+
+### What a Scout ride carries that intake cannot yet take (2026-08-12)
+
+Stated concretely, because "mostly works" is how a gap survives a release:
+
+| From the ride | Today |
+|---|---|
+| **SURFACE tags (any sub-menu)** | **Refused.** A is segment-located and this endpoint carries one tapped point; an item minted from it gets Point geometry, which `CatalogProvider::surfaceSegments()` skips by design — it would succeed, say so, and never appear. A is not offered and the endpoint returns 422. The panel counts the stretches the parser found and says to add them from the map. |
+| **Start/END stretch pairing** | Computed by the vendored parser (`buildSurfaceSegments`), displayed as a count, **not submitted**. This is plan task 6 and the only thing standing between a Scout surface tag and a real A segment. |
+| **Overtake counts** | Read and **shown to the rider** — their ride, their number — and sent nowhere. There is no table to hold them: measurements live in their own store behind a five-rider gate, moderator-only (plan §2 / D2), and none of that is built. |
+| **Tags with no GPS fix** | Counted and named in the panel. They used to be dropped silently, which meant a rider who tapped thirteen times and saw eleven rows had no way to learn why. |
+| **An unterminated stretch** | The parser closes it at the ride's end and flags it; nothing reads the flag yet. |
+| **A stray END with no start** | Ignored by the parser, as on the device. |
+| **The observation date** | Travels in the submission's raw payload, which the moderator reads. Not yet a first-class attribute (plan task 6a). |
+
+Everything else — NOTICE, CLOSURE, SCENERY, RESUPPLY, OTHER, with or without a
+sub-menu value — goes through the ordinary intake, with the sub-menu deciding
+the letter offered first and filling the fields it answers.
+
 **Open:** the observation date rides in the submission's raw payload (which the
 moderator reads) rather than as a first-class attribute — making it one is task
 6a of the plan and a registry change of its own. And approving every tag by hand

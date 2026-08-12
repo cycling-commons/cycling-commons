@@ -160,9 +160,18 @@ final class MapController extends AbstractController
         // The tag vocabulary and the letters each tag may resolve to, so the
         // review panel offers exactly what the endpoint will accept — one list,
         // not two that drift.
-        $params['scout_tags'] = ScoutTag::LETTERS;
-        // Narrowed by the device's sub-menu: SCENERY · HISTORY is J, not I.
-        $params['scout_details'] = ScoutTag::DETAIL_LETTERS;
+        /* What the review panel offers per tag, best first: the sub-menu's own
+           answer, then every letter the tag can be re-filed onto. A mis-tap on
+           the bars is the normal case, so the list is never a lock. */
+        $offers = [];
+        foreach (ScoutTag::TYPES as $tagType) {
+            $offers[$tagType] = ['' => ScoutTag::offerFor($tagType)];
+            foreach (array_keys(ScoutTag::DETAIL_LETTERS[$tagType] ?? []) as $detail) {
+                $offers[$tagType][(string) $detail] = ScoutTag::offerFor($tagType, $detail);
+            }
+        }
+        $params['scout_tags'] = array_map(static fn (array $byDetail): array => $byDetail[''], $offers);
+        $params['scout_details'] = $offers;
 
         return $this->render('map/index.html.twig', $params);
     }
@@ -196,7 +205,7 @@ final class MapController extends AbstractController
 
         // Drawer namespace: JS-side name => map.d_* translation id.
         $drawer = [
-            'type' => 'd_type', 'town' => 'd_town', 'province' => 'd_province', 'listed' => 'd_listed',
+            'type' => 'd_type', 'location' => 'd_location', 'town' => 'd_town', 'province' => 'd_province', 'listed' => 'd_listed',
             'status' => 'd_status', 'rating' => 'd_rating', 'website' => 'd_website', 'potable' => 'd_potable',
             'verify' => 'd_verify', 'distance' => 'd_distance', 'startsAt' => 'd_starts_at',
             'townsOnRoute' => 'd_towns_on_route', 'surfaces' => 'd_surfaces', 'submittedBy' => 'd_submitted_by', 'itemToday' => 'd_item_today',
@@ -236,6 +245,8 @@ final class MapController extends AbstractController
             'scoutBadFile' => 'd_scout_bad_file', 'scoutNoTags' => 'd_scout_no_tags',
             'scoutNeedFit' => 'd_scout_need_fit',
             'scoutAddPhoto' => 'd_scout_add_photo', 'scoutPhotoAttached' => 'd_scout_photo_attached', 'scoutPhotosAttached' => 'd_scout_photos_attached',
+            'scoutRadar' => 'd_scout_radar', 'scoutNoFix' => 'd_scout_no_fix',
+            'scoutStretches' => 'd_scout_stretches',
             'scoutSendAll' => 'd_scout_send_all',
             'roadMain' => 'd_road_main', 'roadLocal' => 'd_road_local',
             'roadResidential' => 'd_road_residential', 'roadTrack' => 'd_road_track',

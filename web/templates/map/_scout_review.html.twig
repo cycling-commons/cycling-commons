@@ -14,12 +14,18 @@
   </div>
 
   <div class="scout-drop" id="scoutDrop">
+    {# The app's own mark, small: this card is where a Scout ride arrives, and
+       a rider should recognise it as the same thing that was on their bars. #}
+    <img class="scout-mark" src="{{ asset('brand/scout-logo.jpg') }}" alt="" width="28" height="28">
     <input type="file" id="scoutFile" accept=".fit,application/octet-stream" hidden>
     <button type="button" class="scout-pick" id="scoutPick">{{ 'scout.review_pick'|trans }}</button>
     <p class="scout-hint">{{ 'scout.review_hint'|trans }}</p>
   </div>
 
   <p class="scout-msg" id="scoutMsg" role="status" hidden></p>
+  {# What the ride carries beyond its tags: an overtake count, tags with no fix,
+     surface stretches. Facts about THIS file, none of them sent anywhere. #}
+  <div class="scout-facts" id="scoutFacts" hidden></div>
 
   <div class="scout-list" id="scoutList" hidden>
     <div class="scout-count"><b id="scoutDone">0</b> / <span id="scoutTotal">0</span> {{ 'scout.review_approved'|trans }}</div>

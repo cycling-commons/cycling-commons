@@ -120,3 +120,8 @@
   .trash-warn{color:#8b1a1a}
   .trash-type-label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8b1a1a;margin:.5rem 0}
   .trash-type-input{display:block;margin-top:.3rem;font-family:var(--mono);font-size:.85rem;padding:.35rem .5rem;border:1.5px solid #8b1a1a;border-radius:5px;background:transparent;max-width:11rem}
+  /* Icon-only actions: square, so a row of them reads as a toolbar rather than
+     as three more sentences. The word survives as title + aria-label — shorter,
+     not hidden. */
+  .btn-act.btn-icon{min-width:2.2rem;text-align:center;padding-left:.5rem;padding-right:.5rem;
+    font-size:.95rem;line-height:1.1}

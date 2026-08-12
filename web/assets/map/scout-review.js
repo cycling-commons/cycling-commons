@@ -23,8 +23,8 @@
    scanning a ride needs to find what still needs them. */
 import { map } from './map-init.js';
 import { D } from './i18n.js';
-import { parseFit, extractTags, buildSurfaceSegments, MESG, semiToDeg, fitToDate,
-         POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY } from '../lib/scout-fit.js';
+import { parseFit, extractTags, buildSurfaceSegments, countVehicles, MESG, semiToDeg,
+         fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY } from '../lib/scout-fit.js';
 
 const RIDE_SRC = 'cc-scout-ride';
 const RIDE_LINE = 'cc-scout-ride-line';
@@ -66,8 +66,8 @@ const POI_TO_TAG = {
    endpoint refuses. */
 function lettersFor(tag, detail) {
   const byDetail = (window.CC_SCOUT_DETAILS || {})[tag] || {};
-  const narrowed = detail != null ? byDetail[String(detail)] : null;
-  if (narrowed && narrowed.length) return narrowed;
+  const offered = detail != null ? byDetail[String(detail)] : byDetail[''];
+  if (offered && offered.length) return offered;
   return (window.CC_SCOUT_TAGS || {})[tag] || ['C'];
 }
 
@@ -95,6 +95,21 @@ function readFit(buffer) {
 
   const rideEnd = track.length ? track[track.length - 1].at : null;
   const segments = buildSurfaceSegments(raw, rideEnd);
+
+  /* The overtake count, if the rider was carrying a radar. Read and SHOWN,
+     because it is their ride and their number — but not sent anywhere and not
+     stored, because nothing on the server can hold it yet: the plan puts
+     measurements in their own table behind a five-rider gate, visible only to
+     moderators (Dated/2026-08-09-scout-cc-tagger-plan.md §2/D2), and none of
+     that is built. Showing it while saying so is honest; showing it as though
+     it had been recorded would not be. */
+  const radar = countVehicles(parsed);
+
+  /* Tags with no GPS fix. They were dropped silently, which is the failure this
+     project keeps finding: a rider counts thirteen taps on the bars, sees
+     eleven here, and has no way to learn that two were recorded in a tunnel
+     with no lock. Counted and named instead. */
+  const unplaceable = raw.filter(t => !t.cancelled && (t.lat == null || t.lon == null)).length;
 
   /* A cancelled tag is one the rider retracted on the device by tapping the
      same tile twice — Scout's own undo rule, applied by the vendored parser.
@@ -124,7 +139,7 @@ function readFit(buffer) {
       };
     });
 
-  return { track, tags, segments };
+  return { track, tags, segments, radar, unplaceable };
 }
 
 function msg(text, isError) {
@@ -325,7 +340,31 @@ function placeTags() {
   });
 }
 
+function renderRideFacts(parsed) {
+  const box = el('scoutFacts');
+  if (!box) return;
+  box.textContent = '';
+  const lines = [];
+  if (parsed.radar && parsed.radar.total > 0) {
+    lines.push(tplCount(t('scoutRadar', '{n} vehicles passed you on this ride — measured, not sent'), parsed.radar.total));
+  }
+  if (parsed.unplaceable > 0) {
+    lines.push(tplCount(t('scoutNoFix', '{n} tag(s) had no GPS fix and cannot be placed'), parsed.unplaceable));
+  }
+  if (parsed.segments && parsed.segments.length) {
+    lines.push(tplCount(t('scoutStretches', '{n} surface stretch(es) recorded — send these from the map for now'), parsed.segments.length));
+  }
+  lines.forEach(text => {
+    const p = document.createElement('p');
+    p.className = 'scout-fact';
+    p.textContent = text;
+    box.appendChild(p);
+  });
+  box.hidden = !lines.length;
+}
+
 function show(parsed) {
+  renderRideFacts(parsed);
   track = parsed.track;
   tags = parsed.tags.map(w => ({
     ...w,

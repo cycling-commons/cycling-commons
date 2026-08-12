@@ -36,6 +36,18 @@ class Item
      */
     public const string NAME_FIELD = 'name';
 
+    /**
+     * The pseudo-field a MOVED PIN travels as.
+     *
+     * Like NAME_FIELD it is not an attribute — the position lives in `geom` —
+     * but an edit has to be able to carry it, or moving a pin is a change the
+     * rider makes, the wizard accepts, and nothing records (owner-reported
+     * 2026-08-12: "I moved the spot … but this change is not recorded in the
+     * submission"). No letter's vocabulary uses `location`, so there is nothing
+     * to collide with.
+     */
+    public const string LOCATION_FIELD = 'location';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'bigint')]
