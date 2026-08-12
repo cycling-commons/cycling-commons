@@ -134,3 +134,11 @@
      an administrator is not the same act as deleting spam. */
   .btn-act.btn-secondary.btn-alarm{color:#6b21a8;border-color:rgba(107,33,168,.5)}
   .btn-act.btn-secondary.btn-alarm:hover{background:rgba(107,33,168,.1);color:#6b21a8;border-color:#6b21a8}
+  /* Row thumbnail: small, square, and the first thing in the row — a curator
+     scanning a queue reads the picture before the title. */
+  .q-thumb{position:relative;flex:0 0 44px;display:block;border-radius:5px;overflow:hidden;
+    border:1px solid rgba(20,22,14,.18);background:var(--paper-deep);line-height:0}
+  .q-thumb img{width:44px;height:44px;object-fit:cover;display:block}
+  .q-thumb:hover{border-color:var(--trail)}
+  .q-thumb-n{position:absolute;right:0;bottom:0;background:rgba(20,22,14,.78);color:var(--paper);
+    font-family:var(--mono);font-size:.56rem;padding:0 .2rem;border-radius:3px 0 0 0;line-height:1.3}

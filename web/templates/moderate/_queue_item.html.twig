@@ -20,6 +20,18 @@
 #}
 <div class="q-item" data-item-id="{{ item.id }}">
   <div class="q-top">
+    {# The photo, in the row. A curator scanning a queue can tell a real place
+       from a mis-tap or a joke by looking, and a 44px crop answers that faster
+       than the title does (owner 2026-08-12). It opens the full size, because
+       "is anyone identifiable in this" cannot be answered at 44px — the same
+       reason the wizard's own thumbnails link out. #}
+    {% if item.photos|length > 0 %}
+      <a class="q-thumb" href="{{ item.photos[0].lg }}" target="_blank" rel="noopener"
+         title="{{ 'improve.step3.open_full'|trans }}">
+        <img src="{{ item.photos[0].sm }}" alt="" loading="lazy" width="44" height="44">
+        {% if item.photos|length > 1 %}<span class="q-thumb-n">{{ item.photos|length }}</span>{% endif %}
+      </a>
+    {% endif %}
     <div class="q-headwrap">
       <div class="q-head">
         <span class="q-tag q-tag--{{ item.type }}">{{ ('moderate.type.' ~ item.type)|trans }}</span>

@@ -593,6 +593,20 @@ the newest rung of that same ladder.
   highlighted route never buries the surface colours
   (`liftInfoLayersAboveRoutes()`).
 
+### The pending layer is exempt from the region scope (2026-08-12)
+
+A curator's pending layer is a **work queue**, not a view of a region. It is
+already scoped server-side to their own moderation area
+(`SubmissionQueue::pendingForMap` + `ModerationScope`), and running it through
+the map's region gate as well meant a curator whose map happened to be scoped
+elsewhere read "Pending review 0/0" and concluded there was nothing to do — the
+submissions were only findable by arriving from the desk, whose `?pending=`
+link widens the scope to Everywhere as a side effect (owner-reported).
+
+Two scopes for one question is one too many, and the server's is the one with
+authority. `featureVisible()` returns true for `pendingLayer` before any gate,
+and `layerCounts()` counts its whole set.
+
 ## 6. Selection model: tooltip + drawer
 
 ### 6.1 Interaction contract

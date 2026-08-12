@@ -482,6 +482,16 @@ export function prefMatch(f){
   return f.bikeTypes.some(t=>PREFS.bikes.includes(t));
 }
 export function featureVisible(layer, f){
+  /* The PENDING layer is a work queue, not a view of a region. It is already
+     scoped server-side to the curator's own moderation area, and putting it
+     through the map's region gate as well meant a curator whose map happened to
+     be scoped elsewhere saw "Pending review 0/0" and concluded there was
+     nothing to do (owner-reported 2026-08-12: submissions were only findable by
+     arriving from the desk, whose link widens the scope to Everywhere).
+
+     Two scopes for one question is one too many, and the server's is the one
+     with authority. */
+  if(layer.pendingLayer) return true;
   let show = layer.key==='experience' ? (mode()==='all'||f.cur) : ((mode()==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
   if(show) show = inScope(f.rid);   // region scope gate (map-and-search.md §4.5)
   if(show && layer.key==='experience') show = prefMatch(f);
@@ -506,7 +516,9 @@ export function layerCounts(layer){
   // surfaces / 15 climbs leaked into Gelderland's rail as "0/351", "0/15" even
   // though none are in Gelderland (owner-reported 2026-07-24). Everywhere still
   // shows the global total (inScope returns true for every rid there).
-  const curated=layer.features.filter(f=>inScope(f.rid)).length;
+  // The pending layer answers to the curator's moderation area, not the map's
+  // region scope (see featureVisible) — so its total is its whole set.
+  const curated=layer.pendingLayer ? layer.features.length : layer.features.filter(f=>inScope(f.rid)).length;
   const shown=layer.features.filter(f=>featureVisible(layer,f)).length + covShownCount(layer.key);
   return {shown, total:curated+covTotal};
 }

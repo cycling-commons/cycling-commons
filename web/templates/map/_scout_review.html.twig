@@ -8,13 +8,14 @@
    Nothing here uploads the ride. The file is read by scout-review.js in the
    browser; the panel is markup and the map is the map. #}
 <aside class="scout-panel" id="scoutPanel" aria-label="{{ 'scout.review_title'|trans }}">
+  {# The mark sits BESIDE the three lines, not above them: it is a label for the
+     card, and stacked it read as a heading of its own (owner 2026-08-12). #}
   <div class="scout-head">
-    {# The app's own mark leads the card: this is where a Scout ride arrives,
-       and a rider should recognise it as the same thing that was on their bars
-       before they read a word (owner 2026-08-12). #}
-    <img class="scout-mark" src="{{ asset('brand/scout-logo.jpg') }}" alt="" width="32" height="32">
-    <h2>{{ 'scout.review_title'|trans }}</h2>
-    <p class="scout-sub">{{ 'scout.review_lead'|trans }}</p>
+    <img class="scout-mark" src="{{ asset('brand/scout-logo.jpg') }}" alt="" width="34" height="34">
+    <div class="scout-headtext">
+      <h2>{{ 'scout.review_title'|trans }}</h2>
+      <p class="scout-sub">{{ 'scout.review_lead'|trans }}</p>
+    </div>
   </div>
 
   <div class="scout-drop" id="scoutDrop">
