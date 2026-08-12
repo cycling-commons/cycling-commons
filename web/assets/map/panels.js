@@ -31,8 +31,7 @@ import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
 import { mapToast, clearRevealPin } from './drawer.js';
 import { curScope, inScope } from './scope-ui.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
-         toggleSurfaceClass, setStudyMode, studyModeOn,
-         untaggedConfigured, untaggedVisible, setUntaggedTiles } from './surface-tiles.js';
+         toggleSurfaceClass, setStudyMode, studyModeOn } from './surface-tiles.js';
 
 // Bindings a later init reads, so they cannot stay `const` inside the init that
 // looks them up: `app` is assigned by initRailChrome(), the two facet <select>s
@@ -116,15 +115,6 @@ export function initLayerList(){
   if(surfBtn && surfaceTilesConfigured()){
     surfBtn.hidden=false;
     surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); };
-  }
-
-  /* The "needs a tag" arm. Independent of the classified one on purpose: a
-     rider who wants to know what is left to record should not have to switch on
-     381k answered lines to see the unanswered ones. */
-  const untagBtn=document.getElementById('ovUntagged');
-  if(untagBtn && untaggedConfigured()){
-    untagBtn.hidden=false;
-    untagBtn.onclick=()=>{ untagBtn.classList.toggle('on', setUntaggedTiles(!untaggedVisible())); };
   }
 
   // Legend-as-filter + study mode. Both live on the legend because that is

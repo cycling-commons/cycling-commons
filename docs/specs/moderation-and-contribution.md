@@ -1529,10 +1529,12 @@ What that buys over GPX is everything structured: the tag type, its sub-type
 rule for a double-tapped tile, and the surface stretches a start/END pair
 describes. A surface tag therefore arrives carrying the OSM value the rider
 chose on the device, and `SurfaceVocabulary::fromOsmValue()` turns it into the
-declarable label so nobody picks the same thing twice. GPX stays as a second
-door for a rider who has already exported their ride elsewhere; its tags come
-from `<wpt>` names, which is a weaker channel, so it is the fallback and not the
-contract.
+declarable label so nobody picks the same thing twice. **FIT is the only format read**, and deliberately so: no Scout app writes GPX
+(owner, 2026-08-12), so a GPX reader would be a path no real ride can take — and
+one that quietly produced weaker tags, since `<wpt>` names carry no sub-type and
+no surface value. A ride routed through it would arrive stripped of half of what
+the rider recorded, with nothing to say so. Anything that is not `.fit` is
+named as such rather than attempted and failed deep inside a binary parser.
 
 **The ride never reaches the server.** It is read in the rider's own browser
 with `FileReader`, drawn from memory, and what crosses the network is a single

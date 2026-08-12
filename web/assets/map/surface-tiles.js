@@ -120,7 +120,6 @@ export const untaggedConfigured = () =>
   typeof window.CC_SURFACE_UNTAGGED_URL === 'string' && !!window.CC_SURFACE_UNTAGGED_URL;
 
 let untaggedAdded = false;
-let untaggedOn = false;
 
 export function addUntaggedTiles() {
   if (!untaggedConfigured() || untaggedAdded || typeof pmtiles === 'undefined') return;
@@ -159,19 +158,6 @@ export function addUntaggedTiles() {
   untaggedAdded = true;
 }
 
-export const untaggedVisible = () => untaggedOn;
-
-/** Show or hide the "needs a tag" arm. Returns the state it settled on. */
-export function setUntaggedTiles(on) {
-  if (!untaggedAdded) addUntaggedTiles();
-  if (!untaggedAdded) return false;
-  untaggedOn = !!on;
-  map.getStyle().layers
-    .filter(l => l.id.startsWith(UNTAGGED_PREFIX))
-    .forEach(l => map.setLayoutProperty(l.id, 'visibility', untaggedOn ? 'visible' : 'none'));
-  return untaggedOn;
-}
-
 /** Is the layer currently drawn? */
 export const surfaceTilesVisible = () => visible;
 
@@ -179,6 +165,11 @@ export const surfaceTilesVisible = () => visible;
 export function setSurfaceTiles(on) {
   if (!surfaceTilesAvailable()) return false;
   if (!added) addSurfaceTiles();
+  // The untagged arm is part of the same skin, governed by its legend row.
+  // Added lazily and only when it is actually wanted: it is a second artifact,
+  // and mounting its layers for a rider who has ticked the class off would
+  // fetch tiles nobody asked to see.
+  if (on && surfaceClassEnabled('unverified')) addUntaggedTiles();
   visible = !!on;
   applyClassVisibility();   // per-class filters compose with the layer switch
   return visible;
@@ -348,6 +339,16 @@ function applyClassVisibility() {
       const cls = l.id.slice('surftile-'.length).replace(/-[a-z]{2}$/, '');
       map.setLayoutProperty(l.id, 'visibility',
         visible && surfaceClassEnabled(cls) ? 'visible' : 'none');
+    } else if (l.id.startsWith(UNTAGGED_PREFIX)) {
+      /* "Surface not recorded" is a legend CLASS like the other six, not a
+         control of its own (owner, 2026-08-12). It happens to live in a second
+         artifact — the classified tiles carry no untagged ways at all, and our
+         own curated items carry none either — but that is a fact about where
+         the data is stored, and a rider filtering the key should not have to
+         know it. So the row governs these layers exactly as `gravel` governs
+         the gravel ones. */
+      map.setLayoutProperty(l.id, 'visibility',
+        visible && surfaceClassEnabled('unverified') ? 'visible' : 'none');
     } else if (l.id.startsWith('surface-cls-')) {
       // The curated A layer. Hidden per class too, but never gated on the tile
       // toggle — these are our own items and stay on when the skin is off.
@@ -360,6 +361,9 @@ function applyClassVisibility() {
 export function toggleSurfaceClass(cls) {
   if (classesOff.has(cls)) classesOff.delete(cls); else classesOff.add(cls);
   if (!added) addSurfaceTiles();
+  // Ticking "not recorded" back on has to MOUNT its arm, not merely unhide
+  // layers that were never added — the second artifact is loaded on demand.
+  if ('unverified' === cls && surfaceClassEnabled(cls)) addUntaggedTiles();
   applyClassVisibility();
   return surfaceClassEnabled(cls);
 }

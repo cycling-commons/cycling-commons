@@ -38,15 +38,14 @@ const el = id => document.getElementById(id);
 const t = (k, fallback) => (D && D[k]) || fallback;
 
 /* ── reading a ride ────────────────────────────────────────────────────────
-   FIT is the real format: it is what Scout writes into the activity a bike
-   computer was already recording, and it is the only one that carries the tag
-   TYPE, its sub-type and the moment it was dropped as structured fields. The
-   decoder is Scout's own, vendored verbatim (assets/lib/scout-fit.js, MIT).
+   FIT, and only FIT. No Scout app writes GPX (owner, 2026-08-12), so a GPX
+   reader here would be a path no real ride can take — and worse, one that
+   quietly produces weaker tags: `<wpt>` names carry no sub-type and no surface
+   value, so a ride routed through it would arrive stripped of half of what the
+   rider recorded, with nothing to say so.
 
-   GPX is kept as the second door, because a rider who has already exported
-   their ride somewhere else should not have to go back for the original. Its
-   tags come from `<wpt>` names, which is a weaker channel — no sub-type, no
-   surface value — so it is the fallback, not the contract. */
+   The decoder is Scout's own, vendored verbatim (assets/lib/scout-fit.js,
+   MIT). */
 
 /* Scout's poi_type → our tag vocabulary (ScoutTag::TYPES, PHP). The legacy
    spellings matter: before Scout 1.3, water/food/repair were three separate
@@ -114,40 +113,6 @@ function readFit(buffer) {
     });
 
   return { track, tags, segments };
-}
-
-function parseGpx(text) {
-  const doc = new DOMParser().parseFromString(text, 'application/xml');
-  if (doc.querySelector('parsererror')) throw new Error('parse');
-
-  const pts = [...doc.querySelectorAll('trkpt, rtept')].map(p => ({
-    lng: parseFloat(p.getAttribute('lon')),
-    lat: parseFloat(p.getAttribute('lat')),
-    at: (p.querySelector('time') || {}).textContent || '',
-  })).filter(p => isFinite(p.lng) && isFinite(p.lat));
-
-  /* Waypoints are the tags. Scout's own file writes them as FIT course points;
-     a GPX exported from the same ride carries them as <wpt>, whose <sym>/<type>
-     names the tag. An unrecognised name is kept as `other` rather than dropped:
-     a tag the rider deliberately dropped, silently discarded because we did not
-     know the word, is exactly the failure this project keeps finding. */
-  const wpts = [...doc.querySelectorAll('wpt')].map(w => {
-    const name = (w.querySelector('name') || {}).textContent || '';
-    const sym = ((w.querySelector('sym') || {}).textContent || '').toLowerCase();
-    const type = ((w.querySelector('type') || {}).textContent || '').toLowerCase();
-    const raw = sym || type || name.toLowerCase();
-    const known = Object.keys(window.CC_SCOUT_TAGS || {});
-    const tag = known.find(k => raw.includes(k)) || 'other';
-    return {
-      tag,
-      lng: parseFloat(w.getAttribute('lon')),
-      lat: parseFloat(w.getAttribute('lat')),
-      at: (w.querySelector('time') || {}).textContent || '',
-      name: name.trim(),
-    };
-  }).filter(w => isFinite(w.lng) && isFinite(w.lat));
-
-  return { track: pts, tags: wpts };
 }
 
 function msg(text, isError) {
@@ -340,12 +305,17 @@ function show(parsed) {
 
 function loadFile(file) {
   if (!file) return;
-  const isFit = /\.fit$/i.test(file.name);
+  if (!/\.fit$/i.test(file.name)) {
+    // Named rather than silently attempted: handing this a GPX and watching it
+    // fail deep in a binary parser tells a rider nothing about what to do next.
+    msg(t('scoutNeedFit', 'Scout writes .fit files — that is the ride to open here.'), true);
+    return;
+  }
   const reader = new FileReader();
   reader.onload = () => {
     let parsed;
     try {
-      parsed = isFit ? readFit(reader.result) : parseGpx(String(reader.result));
+      parsed = readFit(reader.result);
     } catch (e) {
       /* Loudly, with the decoder's own words. A corrupt FIT and a ride with no
          tags look identical when a parser fails quietly, and that is the one
@@ -357,8 +327,7 @@ function loadFile(file) {
     show(parsed);
   };
   reader.onerror = () => msg(t('scoutBadFile', 'That file could not be read as a ride.'), true);
-  if (isFit) reader.readAsArrayBuffer(file);
-  else reader.readAsText(file);
+  reader.readAsArrayBuffer(file);
 }
 
 /** Mount the panel. A no-op everywhere except /scout/review. */
