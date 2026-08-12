@@ -252,6 +252,53 @@ final class OsmConfirmTest extends WebTestCase
         self::assertNotContains($item->getId(), $drawn, 'a place reported gone is not a place on the map');
     }
 
+    /**
+     * A rejection is a decision about one report, not a life sentence on a
+     * place (owner-reported 2026-08-12: "i rejected in the past because I
+     * wanted to try other things. So we must handle this situation").
+     *
+     * The unique key spans (source, source_ref, letter) and counts rejected
+     * rows, so minting a second item raised a 500 in the rider's face. The row
+     * is revived instead: same id, same history, back in the queue carrying
+     * what this rider said.
+     */
+    public function testAPlaceACuratorTurnedDownCanBeProposedAgain(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'again');
+        $this->seedPois();
+        $token = $this->mapToken($client);
+
+        $this->post($client, self::REF, 'potable', $token);
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->findOneBy(['sourceRef' => self::REF]);
+        $first = (int) $item->getId();
+        // As a curator's "no thanks" leaves it.
+        $item->setState(ItemState::Rejected);
+        $em->flush();
+        $em->clear();
+
+        $this->post($client, self::REF, 'not_potable', $token);
+
+        self::assertResponseIsSuccessful('a later report must not hit the unique key');
+        self::assertSame(
+            1,
+            $em->getRepository(Item::class)->count(['sourceRef' => self::REF]),
+            'the place is one row, whatever was decided about it before',
+        );
+        /** @var Item $revived */
+        $revived = $em->getRepository(Item::class)->find($first);
+        self::assertSame(ItemState::Submitted, $revived->getState(), 'it is back in the queue, not silently live');
+        self::assertSame(['potable' => 'No / non-potable'], $revived->getAttributes(), 'carrying what THIS rider said');
+        self::assertSame(
+            2,
+            $em->getRepository(Submission::class)->count(['itemId' => $first]),
+            'both reports stay attached: the curator can see what was decided before',
+        );
+    }
+
     public function testUnknownRefsAndStancesAreRefused(): void
     {
         $client = static::createClient();

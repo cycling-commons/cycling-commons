@@ -182,9 +182,12 @@ final class OsmConfirmController extends AbstractController
            three identical rows in the queue. One item per OSM ref: after the
            first tap, the rest are answered with what already happened. */
         $existing = $this->db->fetchAssociative(
-            "SELECT id, state FROM item WHERE source_ref = :ref AND letter = :letter AND state <> 'rejected' LIMIT 1",
+            "SELECT id, state FROM item WHERE source_ref = :ref AND letter = :letter
+                 AND state NOT IN ('rejected', 'retired') LIMIT 1",
             ['ref' => $ref, 'letter' => $poi['letter']],
         );
+        // A place a curator turned down may be proposed again - the row is
+        // revived by the intake rather than twinned (CatalogContributionService).
         if (false !== $existing) {
             return $this->json([
                 'error' => ItemState::Submitted->value === $existing['state'] ? 'pending_review' : 'already_materialized',

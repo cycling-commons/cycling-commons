@@ -221,6 +221,16 @@ final class CatalogContributionService implements ContributionStubInterface
             if (null !== $taken) {
                 $this->reject('contribute.error.already_materialized', 'details');
             }
+            /* A REJECTED row is a different case, and used to be a 500. The
+               unique key is (source, source_ref, letter) and it counts rejected
+               rows too, so a place a curator once said no to could never be
+               proposed again: the guard above let the second rider through and
+               the insert hit the constraint (owner-reported 2026-08-12).
+
+               A rejection is a decision about one report, not a permanent
+               silence on a place - the tap may genuinely be there this year. So
+               the existing row is REVIVED by submitDraft() rather than twinned,
+               carrying the new proposal and going back through the queue. */
             $osmRef = $rawRef;
         }
 
@@ -630,11 +640,29 @@ final class CatalogContributionService implements ContributionStubInterface
             $this->em->flush();
 
             if (SubmissionType::NewItem === $type) {
+                /* One row per OSM ref, including the ones a curator turned
+                   down. The unique key spans (source, source_ref, letter) and
+                   does not care about state, so a rejected row still holds the
+                   ref: minting a second item for it raised a constraint error
+                   in the rider's face (owner-reported 2026-08-12).
+
+                   It is revived instead. The row keeps its id and its history -
+                   the earlier report, its rejection, and now this one all hang
+                   off the same place - and goes back to Submitted carrying
+                   what this rider said. */
+                $item = null !== $draft->osmRef
+                    ? $this->em->getRepository(Item::class)->findOneBy([
+                        'sourceRef' => $draft->osmRef,
+                        'letter' => $draft->type->letter(),
+                        'state' => [ItemState::Rejected, ItemState::Retired],
+                    ])
+                    : null;
                 // A materialized OSM object keeps its ref as source_ref
                 // (source `osm`) — honest provenance, and the coverage layer
                 // dedupes on exactly this key so the grey twin disappears
                 // the moment this item serves.
-                $item = (new Item())
+                $item ??= new Item();
+                $item
                     ->setLetter($draft->type->letter())
                     ->setName($draft->title)
                     ->setGeom($itemGeom)

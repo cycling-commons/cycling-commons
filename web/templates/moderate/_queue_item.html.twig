@@ -43,8 +43,15 @@
         <h3 class="q-title">{{ item.title }}</h3>
         <span class="q-when">{{ item.when }}</span>
       </div>
-      <div class="q-submitter">
-        {{ item.who }} &middot; {{ item.lat|number_format(3) }}&deg;N {{ item.lng|number_format(3) }}&deg;E
+      {# WHERE, in words. Three decimal places of latitude tell a curator
+         nothing they can picture (owner 2026-08-12); the region and country do,
+         and the row already carries both. The coordinates stay as the title,
+         for the one case where the exact spot is the question - and the map
+         itself is one click away in the row below. #}
+      <div class="q-submitter" title="{{ item.lat|number_format(4) }}&deg;N {{ item.lng|number_format(4) }}&deg;E">
+        {{ item.who }}
+        {% if item.region %} &middot; {{ item.region }}{% endif %}
+        {% if item.country %} &middot; {{ item.country }}{% endif %}
       </div>
     </div>
 
