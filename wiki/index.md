@@ -16,6 +16,8 @@ The reference documentation for the open cycling-data Commons. The public site
   by riders, refreshed each season. Curation, not overload.
 - **[Contributing](contributing.md)** — how to add a fact, cast a vote, and give data back to
   OpenStreetMap.
+- **[Scout](scout.md)** — the one-tap tagger that records what you notice while
+  you ride, straight into your own ride file, and how a tag becomes a place.
 - **[Location & privacy](location-privacy.md)** — why the map's location guessing and scope memory
   never need a cookie/consent banner.
 - **[Governance](governance.md)** — BikeCoders as steward today, an independent foundation tomorrow,

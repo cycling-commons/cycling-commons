@@ -75,6 +75,7 @@ nav:
   - Curation & voting: curation-and-voting.md
   - How data earns its place: data-priority.md
   - Contributing: contributing.md
+  - Scout — tag while you ride: scout.md
   - Location & privacy: location-privacy.md
   - Governance: governance.md
   - Country onboarding: country-onboarding.md
@@ -104,6 +105,7 @@ nav:
           - Harvesting OSM coverage: developers/data-ops/harvesting.md
           - Onboarding a new country: developers/data-ops/onboarding-a-country.md
           - Building elevation tiles: developers/data-ops/elevation-tiles.md
+          - Building road-surface tiles: developers/data-ops/surface-tiles.md
 
 markdown_extensions:
   - admonition

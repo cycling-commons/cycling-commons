@@ -16,6 +16,12 @@ pieces, the way OpenStreetMap was built.
 | **[vote]** | ranking a region's best climbs, stays, views, and heritage (see [Curation & voting](curation-and-voting.md)) — routes earn their ranking separately, through propose → rode-it-verify → seasonal recommend-vote on the map |
 | **[auto]** | derived automatically and anonymously from aggregate signals — nothing personal |
 
+A **[tap]** does not have to happen at a screen. [Scout](scout.md) records one
+on your bike computer as you ride past, writes it into your own ride file, and
+lets you decide at home which of them to send. The tags that arrive that way go
+through exactly the review below — the point of collecting a fact differently is
+not to judge it differently.
+
 Every field is **optional and additive**. Required fields kill contribution; optional fields let the
 Commons grow one tap at a time. See the full taxonomy in the [Data catalog](data-catalog.md).
 
