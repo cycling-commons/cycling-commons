@@ -1,0 +1,26 @@
+wiki/country-onboarding.md
+  s_bbe01d4f023787::t_393b5dd1562214 21
+wiki/data-catalog.md
+  s_bbe01d4f023787::t_3a12ad43951911 171
+wiki/data-priority.md
+  s_bbe01d4f023787::t_3eea6eb81d7720 85,113-122,195-196,207-212,216,220-230,236-237,240,250,258,313-314
+wiki/curation-and-voting.md
+  s_bbe01d4f023787::t_3a12ad43951911 31,70
+  s_bbe01d4f023787::t_393b5dd1562214 37,50,60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b3bdb51e6e5d5434cef44a395c58f55f2b86b4e2",
+  "prompts": {},
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
