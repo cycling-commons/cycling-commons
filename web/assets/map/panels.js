@@ -98,19 +98,33 @@ export function initLayerList(){
   // offered when an artifact exists; SURFACE_TILES_ON is false when
   // CC_SURFACE_URL is absent, which is every region that has not been built.
   const surfBtn=document.getElementById('ovSurface');
+  const studyBtn=document.getElementById('skeyStudy');
+
+  /* Study mode strips the basemap to leave the surface lines alone on a pale
+     ground. With the surface skin off that is not a study of anything — it is a
+     blank page, and a rider who lands there has no way to tell whether the
+     feature is broken or the layer is missing. So the control follows the layer:
+     disabled while the skin is off, and switched off with it. */
+  const syncStudyGate=()=>{
+    if(!studyBtn) return;
+    const on=surfaceTilesVisible();
+    studyBtn.disabled=!on;
+    if(!on && studyModeOn()){ setStudyMode(false); studyBtn.setAttribute('aria-pressed','false'); }
+  };
+
   if(surfBtn && surfaceTilesConfigured()){
     surfBtn.hidden=false;
-    surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); };
+    surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); };
   }
 
   // Legend-as-filter + study mode. Both live on the legend because that is
-  // where the classes are named; both work with the tile skin off, since the
-  // class filter also governs our own curated A items.
+  // where the classes are named; the class filter works with the tile skin off
+  // too, since it also governs our own curated A items.
   document.querySelectorAll('.skey-row[data-surf-cls]').forEach(b=>{
     b.onclick=()=>{ b.setAttribute('aria-pressed', toggleSurfaceClass(b.dataset.surfCls) ? 'true' : 'false'); };
   });
-  const studyBtn=document.getElementById('skeyStudy');
   if(studyBtn) studyBtn.onclick=()=>{ studyBtn.setAttribute('aria-pressed', setStudyMode(!studyModeOn()) ? 'true' : 'false'); };
+  syncStudyGate();
 
   document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#baseSeg button').forEach(x=>x.classList.remove('on'));

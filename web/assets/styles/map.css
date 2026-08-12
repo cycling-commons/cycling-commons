@@ -108,10 +108,22 @@
   .skey-row:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
   .skey-row[aria-pressed="false"]{opacity:.4}
   .skey-row[aria-pressed="false"] .skey-ln{filter:grayscale(1)}
+  /* A tick before each class, because "these seven lines are buttons" was
+     something a rider had to discover by clicking (owner-reported 2026-08-12).
+     Filled when the class is shown, an empty box when it is filtered out — the
+     same shape either way, so the row does not jump as it toggles. */
+  .skey-row::before{content:'\2713';font-size:.78rem;line-height:1;flex:none;width:.9rem;
+    color:var(--paper);opacity:.85;transition:opacity .12s}
+  .skey-row[aria-pressed="false"]::before{content:'';opacity:0}
+  .skey-row[aria-pressed="false"]{opacity:.45}
+  .skey-row:hover::before{opacity:1}
   .skey-study{margin-top:.7rem;width:100%;background:none;border:1px solid rgba(239,230,212,.28);
     border-radius:5px;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;
     text-transform:uppercase;padding:.45rem .5rem;cursor:pointer;min-height:2rem}
-  .skey-study:hover{border-color:var(--trail)}
+  .skey-study:hover:not(:disabled){border-color:var(--trail)}
+  /* Off with the layer it studies: visibly unavailable rather than silently
+     inert, so nobody presses it twice wondering why nothing happened. */
+  .skey-study:disabled{opacity:.35;cursor:not-allowed}
   .skey-study[aria-pressed="true"]{background:var(--trail);border-color:var(--trail);color:var(--ink)}
   .skey-ln{width:34px;height:4px;border-radius:2px;flex:none;background:var(--sc)}
   /* Gaps are TRANSPARENT, not white.

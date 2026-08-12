@@ -126,6 +126,19 @@ quieter than a secondary road — under three rules:
 `assumedTraffic()` in `web/assets/map/surface-tiles.js` holds the rules;
 unknown highway values return null rather than a nearest guess.
 
+**The course fixture stopped exporting them too** (2026-08-12). `traffic` and
+`smoothness` are dropped in `tools/wallonia/export.py`, not fixed in
+`atlas/demo/surface-data.js`: the fixture is harvested output, and hand-editing
+it is how a re-harvest silently undoes the fix. The 351 imported demo rows were
+deleted the same day, so the catalog's A layer now starts empty and fills only
+with what riders submit.
+
+**Legend affordances** (2026-08-12): each class row carries a ✓ when shown and
+loses it when filtered out, because "these seven rows are buttons" was something
+a rider had to discover by clicking. **Study mode is gated on the surface skin
+being on** — stripping the basemap with no surface lines to study is a blank
+page, so the control disables with the layer and switches off with it.
+
 **Not every class can be confirmed.** `cycleway` says what a way *is*, not what
 it is made of, and `unverified` is the absence of a claim; neither offers the
 confirm action. The other five map to a declarable label in

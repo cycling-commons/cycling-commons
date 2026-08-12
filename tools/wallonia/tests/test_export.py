@@ -31,6 +31,18 @@ def test_surface_feature_converts_path_and_ref():
     assert f["geometry"]["coordinates"][0] == [4.2, 50.1]  # [lat,lng] -> [lng,lat]
 
 
+def test_assumed_fields_are_not_exported():
+    """`traffic` and `smoothness` were a constant keyed on surface class, never
+    a tag — every non-cycleway "Open road", every paved way "Good". Exporting
+    them filled the catalog with an empty field wearing a fact's clothes."""
+    seg = {"name": "Test seg", "surface": "Asphalt", "smoothness": "Good",
+           "traffic": "Open road", "cls": "paved", "path": [[50.1, 4.2], [50.2, 4.3]]}
+    props = export.surface_feature(seg)["properties"]
+    assert "traffic" not in props
+    assert "smoothness" not in props
+    assert props["surface"] == "Asphalt", "the surface tag itself IS observed and stays"
+
+
 def test_surface_feature_synthetic_ref_has_coordinate_discriminator():
     """No wayId -> synthetic ref carries the first path vertex so segments of
     the same route/surface class don't collapse onto one (source, ref) key."""

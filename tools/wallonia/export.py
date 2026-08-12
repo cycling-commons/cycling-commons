@@ -104,8 +104,27 @@ def climb_features():
     return out
 
 
+#: Keys that were never observed, only assumed — see ASSUMED_KEYS' comment.
+ASSUMED_KEYS = ("traffic", "smoothness")
+
+
 def surface_feature(seg):
-    props = {k: v for k, v in seg.items() if k not in ("path", "wayId", "edit", "refBase")}
+    #: `traffic` and `smoothness` are dropped, not exported.
+    #
+    # They come from route_surfaces.py's SURF table, which is a CONSTANT keyed
+    # on surface class: every non-cycleway got "Open road", every cycleway
+    # "Car-free", every paved way "Good". No tag was ever consulted. Imported,
+    # they filled the catalog with an empty field wearing a fact's clothes —
+    # 134 rows saying "Open road" about roads nobody had looked at (owner
+    # review 2026-08-12; the imported rows were deleted the same day).
+    #
+    # Dropped HERE rather than fixed in the fixture, because the fixture is
+    # harvested output and hand-editing it is how a re-harvest silently undoes
+    # the fix. An absent key is honest: the map shows what OSM implies, marked
+    # as an inference (edit-items/A-road-surface.md), and a rider's answer is
+    # the only thing that ever writes these down.
+    props = {k: v for k, v in seg.items()
+             if k not in ("path", "wayId", "edit", "refBase") and k not in ASSUMED_KEYS}
     way = seg.get("wayId")
     props["source"] = "osm" if way else "auto"
     if way:
