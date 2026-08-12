@@ -9,14 +9,15 @@
    browser; the panel is markup and the map is the map. #}
 <aside class="scout-panel" id="scoutPanel" aria-label="{{ 'scout.review_title'|trans }}">
   <div class="scout-head">
+    {# The app's own mark leads the card: this is where a Scout ride arrives,
+       and a rider should recognise it as the same thing that was on their bars
+       before they read a word (owner 2026-08-12). #}
+    <img class="scout-mark" src="{{ asset('brand/scout-logo.jpg') }}" alt="" width="32" height="32">
     <h2>{{ 'scout.review_title'|trans }}</h2>
     <p class="scout-sub">{{ 'scout.review_lead'|trans }}</p>
   </div>
 
   <div class="scout-drop" id="scoutDrop">
-    {# The app's own mark, small: this card is where a Scout ride arrives, and
-       a rider should recognise it as the same thing that was on their bars. #}
-    <img class="scout-mark" src="{{ asset('brand/scout-logo.jpg') }}" alt="" width="28" height="28">
     <input type="file" id="scoutFile" accept=".fit,application/octet-stream" hidden>
     <button type="button" class="scout-pick" id="scoutPick">{{ 'scout.review_pick'|trans }}</button>
     <p class="scout-hint">{{ 'scout.review_hint'|trans }}</p>

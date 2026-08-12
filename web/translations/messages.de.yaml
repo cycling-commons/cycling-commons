@@ -1339,7 +1339,7 @@ scout:
   tag_radar_p: 'Mit gekoppeltem Varia-kompatiblem Radar zählt Scout automatisch die Fahrzeuge, die dich überholen. Das ist das Nächste an einem objektiven Maß dafür, wie viel Verkehr eine Straße wirklich hat.'
   privacy_h: 'Deine Fahrt bleibt deine'
   review_title: 'Eine Fahrt durchsehen'
-  review_lead: 'Öffne die Fahrt, die du getaggt hast. Sie wird hier in deinem Browser gelesen — die Datei wird nie hochgeladen. Jeder Tag erscheint rot auf der Karte; korrigiere, was nötig ist, und schicke sie einzeln.'
+  review_lead: 'Öffne die Fahrt, die du getaggt hast. Sie wird hier in deinem Browser gelesen — die Datei wird nie hochgeladen. Jeder Tag erscheint rot auf der Karte; korrigiere, was nötig ist.'
   review_pick: 'Fahrtdatei wählen'
   review_send_all: 'Den Rest senden'
   review_photo_drop: 'Wähle ein Foto, oder zieh eins hierher'

@@ -1336,7 +1336,7 @@ scout:
   tag_radar_p: 'Avec un radar compatible Varia appairé, Scout compte automatiquement les véhicules qui vous dépassent. C''est ce qui se rapproche le plus d''une mesure objective du trafic réel d''une route.'
   privacy_h: 'Votre sortie reste la vôtre'
   review_title: 'Revoir une sortie'
-  review_lead: 'Ouvrez la sortie que vous avez balisée. Elle est lue ici, dans votre navigateur — le fichier n''est jamais envoyé. Chaque balise apparaît en rouge sur la carte ; corrigez ce qu''il faut et envoyez-les une par une.'
+  review_lead: 'Ouvrez la sortie que vous avez balisée. Elle est lue ici, dans votre navigateur — le fichier n''est jamais envoyé. Chaque balise apparaît en rouge sur la carte ; corrigez ce qu''il faut.'
   review_pick: 'Choisir un fichier'
   review_send_all: 'Envoyer le reste'
   review_photo_drop: 'Choisissez une photo, ou déposez-la ici'

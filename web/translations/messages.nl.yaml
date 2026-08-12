@@ -1336,7 +1336,7 @@ scout:
   tag_radar_p: 'Met een Varia-compatibele radar gekoppeld telt Scout automatisch de voertuigen die je passeren. Dat is het dichtst bij een objectieve maat voor hoe druk een weg echt is.'
   privacy_h: 'Je rit blijft van jou'
   review_title: 'Een rit nakijken'
-  review_lead: 'Open de rit die je getagd hebt. Hij wordt hier in je eigen browser gelezen — het bestand wordt nooit geüpload. Elke tag verschijnt rood op de kaart; verbeter wat nodig is en stuur ze één voor één.'
+  review_lead: 'Open de rit die je getagd hebt. Hij wordt hier in je eigen browser gelezen — het bestand wordt nooit geüpload. Elke tag verschijnt rood op de kaart; verbeter wat nodig is.'
   review_pick: 'Kies een ritbestand'
   review_send_all: 'Stuur de rest'
   review_photo_drop: 'Kies een foto, of sleep er een hierheen'

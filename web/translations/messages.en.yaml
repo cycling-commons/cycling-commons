@@ -1335,7 +1335,7 @@ scout:
   tag_radar_p: 'With a Varia-compatible radar paired, Scout counts the vehicles that pass you, automatically. It is the closest thing there is to an objective measure of how busy a road really feels.'
   privacy_h: 'Your ride stays yours'
   review_title: 'Review a ride'
-  review_lead: 'Open the ride you tagged. It is read here in your browser — the file is never uploaded. Each tag lands on the map in red; fix what needs fixing and send them one at a time.'
+  review_lead: 'Open the ride you tagged. It is read here in your browser — the file is never uploaded. Each tag lands on the map in red; fix what needs fixing.'
   review_pick: 'Choose a ride file'
   review_send_all: 'Send the rest'
   review_photo_drop: 'Choose a photo, or drop one here'

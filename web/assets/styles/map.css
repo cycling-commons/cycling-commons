@@ -450,7 +450,7 @@
   .scout-pick{background:var(--trail);color:#fff;border:none;border-radius:6px;padding:.5rem .9rem;
     font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
   .scout-hint{margin:.6rem 0 0;font-size:.7rem;color:rgba(239,230,212,.6);line-height:1.4}
-  .scout-mark{display:block;margin:0 auto .5rem;border-radius:6px;opacity:.9}
+  .scout-mark{display:block;margin:0 0 .55rem;border-radius:7px}
   /* Before/after for a MOVED PIN. A ring, not a pin: the item's own marker
      stays readable underneath, which is the comparison being asked for. */
   .cc-pending-point{width:26px;height:26px;border-radius:50%;box-sizing:border-box;

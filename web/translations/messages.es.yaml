@@ -1342,7 +1342,7 @@ scout:
   tag_radar_p: 'Con un radar compatible con Varia emparejado, Scout cuenta automáticamente los vehículos que te adelantan. Es lo más parecido que hay a una medida objetiva del tráfico real de una carretera.'
   privacy_h: 'Tu ruta sigue siendo tuya'
   review_title: 'Revisar una salida'
-  review_lead: 'Abre la salida que etiquetaste. Se lee aquí, en tu navegador: el archivo nunca se sube. Cada etiqueta aparece en rojo en el mapa; corrige lo que haga falta y envíalas de una en una.'
+  review_lead: 'Abre la salida que etiquetaste. Se lee aquí, en tu navegador: el archivo nunca se sube. Cada etiqueta aparece en rojo en el mapa; corrige lo que haga falta.'
   review_pick: 'Elegir un archivo'
   review_send_all: 'Enviar el resto'
   review_photo_drop: 'Elige una foto o suéltala aquí'
