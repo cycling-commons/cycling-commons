@@ -267,12 +267,31 @@ the Commons grow one tap at a time.
 # Giving back to OpenStreetMap  *(Phase 2 feature)*
 
 Today the website *uses* OSM tiles (consumes OSM). "Gives back to" is a **committed intention, not yet
-built.** Because the Commons is **ODbL — the same licence as OSM** — data can flow back legally. The flow,
+built.** The **data** is **ODbL — the same licence OSM uses** — so facts can flow back legally by
+construction. Two things travel differently and are worth stating in the same breath: **media** is
+CC BY-SA 4.0 (a creative-works licence, and photographs do not belong in OSM anyway), and the
+**software** is source-available under PolyForm Shield, which governs the platform's code and has no
+bearing on either direction the data moves. The flow,
 lightest to heaviest:
 
-- **Rider nudge (day-one-able).** When a rider adds an OSM-appropriate fact that OSM is missing (water tap,
-  repair station, wrong surface), offer a one-tap *"add to OpenStreetMap too?"* — posted as their own
-  OSM edit. Clean, community-driven, no bulk-edit politics. This is how you become a good OSM citizen.
+- **Rider hand-off (being designed).** When a rider adds a fact OSM is missing (water tap, repair
+  station, wrong surface), the intention is to offer to carry it over — **posted as their own OSM edit**,
+  never as a bulk feed from a project account, which is the kind of contribution OSM reverts and
+  remembers. What that offer says, and what it sends, is deliberately **not settled yet**: a give-back is
+  only worth building once it is well-formed at the other end.
+
+    Three things have to be answered first, and they are the whole difficulty:
+
+    1. **Which fields even map.** `surface` and `smoothness` translate directly. Our `traffic` field
+       does not exist in OSM at all, and a rider's note maps to nothing. Posting our vocabulary into
+       OSM tags would be worse than posting nothing.
+    2. **Whose edit it is.** OSM attributes an edit to an account, so it has to be the rider's, with
+       their consent, in their words.
+    3. **What comes back.** Nothing automatic. OSM changes reach us through the ordinary refresh of our
+       reference data, which is the only path that keeps provenance honest.
+
+    Prior art exists — RideWithGPS ships a contribute-to-OSM flow — and reading it carefully beats
+    guessing at ours.
 - **Curated submission.** Curators review verified facts and submit them properly, with sources, human-in-the-loop.
 - **Formal import (later, heavy).** Bulk contribution needs an OSM *import plan*, community discussion, an
   ODbL-compatible source, and a dedicated account — strict rules; bad imports get reverted. Not a day-one move.

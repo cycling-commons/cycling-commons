@@ -41,10 +41,19 @@ Hazards and closures rot if they never expire. Dynamic data therefore carries a 
 
 ## Giving back to OpenStreetMap
 
-Because the Commons is ODbL — the same licence as OSM — durable infrastructure facts can flow back
-upstream. When you add an OSM-appropriate fact OSM is missing (a water tap, a repair station, a wrong
-surface), the Commons can offer a one-tap *"add to OpenStreetMap too?"* — posted as **your own** OSM
-edit. Curated, attributed, human-reviewed; never a bulk firehose (that gets reverted and resented).
+The Commons **data** is ODbL — the same licence OSM uses — so durable infrastructure facts can flow
+back upstream legally by construction. (Two things travel differently: **media** is CC BY-SA 4.0, a
+creative-works licence, and photographs do not belong in OSM anyway; the **software** is
+source-available under PolyForm Shield, which governs the code and has no bearing on the data.)
+
+The intention is that when you add a fact OSM is missing — a water tap, a repair station, a wrong
+surface — the Commons offers to carry it over as **your own** OSM edit: attributed to you, in your
+words, never a bulk firehose from a project account (that gets reverted and resented).
+
+**It is not built, and the shape is not settled.** Which of our fields even map is a real question —
+`surface` translates, our `traffic` field has no OSM equivalent, and a rider's note maps to nothing —
+and a give-back that posts our vocabulary into OSM tags would be worse than none. So the promise here
+is the direction, not a button that exists today.
 
 What flows back to OSM: durable facts (water, repair stations, bike shops, surface, cycleways,
 barriers). What stays in the Commons: the game, subjective ratings, ephemeral hazards, and anything
