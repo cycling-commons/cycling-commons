@@ -359,7 +359,7 @@ export function photoCap(p){
   return `© ${credit}${license}${source}${taken}`;
 }
 function buildRecord(layer, f){
-  const cur = f.cur ? `<div class="cc-d-cur">▲ ${I18N.curated||'Curated best-of'}</div>` : '';
+  const cur = f.cur ? `<div class="cc-d-cur">▲ ${I18N.curated||'Best of'}</div>` : '';
   const pl = photoList(f);
   // Same edit-bridge rule as the "Edit this item" link below (spec §6/§8):
   // the add-photo CTA only ever binds to the item's real DB id — no id, no

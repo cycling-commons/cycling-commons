@@ -66,6 +66,7 @@ confirmed/curated DOM pins.
 | Pump valve | select(Presta + Schrader / Presta only / Schrader only / No pump) | `[OSM]` |
 | Opening hours | select(Unknown / 24/7 / See website) | `[edit]` |
 | Tools available | input | `[edit]` |
+| Still as mapped? | select(As mapped / Out of order / Closed / Not there anymore) | `[tap]` |
 | Anything to correct? | textarea | `[edit]` |
 
 > **Opening hours — why a 3-option select, not free text:** specific

@@ -23,6 +23,7 @@ Refuges, cabanes and emergency shelter on exposed terrain.
 | Shelter type | select(Refuge / chapel / Bus shelter / Café (seasonal) / Picnic hut) (amenity=shelter) | `[OSM]` |
 | Always accessible? | select(Yes — open structure / Daytime only / Seasonal / Unknown) | `[tap]` |
 | Water nearby? | select(Unknown / Yes / No) | `[tap]` |
+| Still as mapped? | select(As mapped / Out of order / Closed / Not there anymore) | `[tap]` |
 | Note | textarea | `[edit]` |
 
 ### Add missing  (type-specific)

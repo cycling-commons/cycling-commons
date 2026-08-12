@@ -398,7 +398,7 @@ window.CC_VENDOR = {{ {
      decode to the identical JS string either way. #}
   window.CC_MY_AREA = {{ (my_area ?? {})|merge({url: path('map_my_area_set'), token: csrf_token('my-area')})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# View-mode persistence: a
-     logged-in rider's Curated/Everything choice is saved to their PROFILE, not
+     logged-in rider's view-mode choice is saved to their PROFILE, not
      to localStorage, so a shared device never leaks it to the next person.
      Riders-only block — an anonymous visitor gets no endpoint, and panels.js
      falls back to localStorage when this is absent. #}

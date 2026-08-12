@@ -320,6 +320,27 @@ error at the front door, never a passthrough.** The allowlist per letter is
 `AttributeVocabulary::assertValid()` throws listing every unknown key; the
 import transaction rolls back.
 
+### `condition` — the one field that removes a place
+
+Every confirmable point type carries `condition`
+(`CatalogFormRegistry::CONDITION`: *As mapped · Out of order · Closed · Not
+there anymore*), added 2026-08-12 so a rider can say a place has stopped being
+what the map says it is. The map's one-tap answers and the edit form write the
+same key with the same vocabulary, which is what keeps a tap and a form edit
+from becoming two different records of one fact
+([moderation-and-contribution.md](moderation-and-contribution.md) §10.4).
+
+**No default.** A default would make every untouched edit form assert "as
+mapped" about a place its editor never looked at, and turn a no-op edit into a
+change the intake refuses. Silence means nobody has said.
+
+`condition = 'Not there anymore'` is the only attribute value that changes what
+is served: `CatalogProvider::itemRows()` drops the row from the payload while
+`curatedRefs()` still claims its `source_ref`, so the coverage POI it was
+materialized from stays hidden too. A place reported gone leaves the map without
+handing itself back to the reference layer, and the row stays in the table
+because a curator may disagree.
+
 ### The `JSON_PRESERVE_ZERO_FRACTION` gotcha
 
 PHP's `json_encode()` drops the fraction from whole-number floats
@@ -384,7 +405,18 @@ Harvest-side rules that shape what arrives (toolchain:
   (`setMaxAge(3600)` in `MapController::catalog()`), conditional-request 304s.
 - **States served: `unverified` + `verified` only** (via
   `ItemState::servedSqlTuple()`), for items and routes alike. Heat serves
-  `source='auto'` rows only.
+  `source='auto'` rows only. Items carrying `condition = 'Not there anymore'`
+  are dropped from the feature collections while keeping their ref in `refs`
+  (§7).
+- **One item per `(source, source_ref, letter)`, including rejected rows.** The
+  unique key does not care about state, so a rejected materialization still
+  holds its OSM ref: proposing that place again REVIVES the row (back to
+  `submitted`, carrying the new proposal) rather than minting a twin, which used
+  to raise a constraint violation in the rider's face
+  (`CatalogContributionService::submitDraft()`, owner-reported 2026-08-12). A
+  rejection is a decision about one report, not a life sentence on a place — and
+  the surviving row is what lets a curator see the earlier decision they are
+  overturning.
 - **One payload, layers keyed by letter**, in the historical fixture shapes
   (`web/assets/map/catalog-load.js` assigns them to the legacy `window.CC_*`
   globals and injects `map.js`; on fetch failure the map still boots empty):

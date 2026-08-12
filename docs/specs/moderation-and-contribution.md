@@ -620,7 +620,32 @@ at a time, so the row is sized for that:
   escalate it") is now the panel's own heading, read at the moment it applies;
   the button says **Escalate**.
 - **Header on one line**: type tag, title and age share a row, with the
-  pseudonym + coordinates beneath.
+  submitter and **where it is, in words** beneath — the region and country the
+  row already carried, with the exact coordinates on hover (2026-08-12). Three
+  decimals of latitude are not something a curator can picture, and the map is
+  one click away in the same row for the case where the exact spot is the
+  question. A nearby-town label would need a gazetteer we do not hold
+  server-side (town names come from Photon, in the browser); pulling
+  `place=city/town/village` into the coverage extract is the way in if it is
+  ever wanted.
+- **The submitter's chosen name, when they chose one.** `submitterLabel()`
+  honours `public_profile`: a rider who has made their profile public is shown
+  by display name, and everyone else stays `rider#<hash4>`. Showing the
+  pseudonym to a rider who had deliberately gone public read as the setting
+  being broken (owner-reported 2026-08-12).
+- **Thumbnails in the row, in both lists** (2026-08-12). A photo is the fastest
+  thing to judge and the queue row showed none, so a curator had to open the map
+  to learn whether there was one at all. `pendingPhotos()` takes a `settled`
+  flag: the open queue lists photos still awaiting a verdict, the history lists
+  the **approved** ones — those objects are live and are what the row is a
+  record of, while rejected media is deleted on expiry
+  ([photo-uploads.md](photo-uploads.md) §6) and would leave a broken thumbnail
+  on an audit trail.
+- **Cancel actually cancels.** The desk replaces each `<details>` with a button
+  and moves its panel into `.q-panels`, so a cancel handler that walked up to
+  `details.q-act` matched nothing and did nothing (owner-reported 2026-08-12).
+  The handler closes on `.q-act-panel`, which is true in both the enhanced and
+  the JS-less shape.
 - **The history shows trashed submissions too**, rebuilt from the content-free
   audit log (2026-08-03). A curator who trashes something and then cannot find
   it anywhere reasonably wonders whether it worked. The row is deleted, so the
@@ -1282,8 +1307,26 @@ source of truth:
 | Type | Stances (`ConfirmationStance`) | `stanceKind` |
 |---|---|---|
 | C · Water & food | `potable` / `not_potable` | `potability` |
-| D · Services, F · Hazards, G · Getting there, H · Shelter | `exists` | `existence` |
-| A · Road surface, all votable types | none — they vote, or are measured | — |
+| B · Climbs, D · Services, F · Hazards, G · Getting there, H · Shelter, I · Scenic views, J · History & culture, M · Public toilets, W · Where to sleep | `exists` | `existence` |
+| A · Road surface, all remaining votable types | none — they vote, or are measured | — |
+
+**Why the second row grew** (owner decision 2026-08-12). The old test was
+"could this place vanish", which excluded a castle and a mountain. That was the
+wrong question: a confirmation is a rider saying *I was there and this is
+right* — that it exists, that it is where we say, that it is what we call it. A
+climb can be wrong about all three, and an AI-generated photo of a viewpoint is
+exactly what a second rider standing at the spot disproves. Everything a rider
+can stand in front of is confirmable; voting (best-of) remains a separate,
+additional funnel for the types that have it.
+
+**A curator's word settles it.** `ItemConfirmationService::verifyIfCurator()`
+promotes an item from Unverified to Verified on a single Drawer-sourced
+confirmation by a `ROLE_CURATOR`/`ROLE_ADMIN`, writing a `ChangeHistory` row for
+the state change. Three riders should not be needed to agree that a castle is a
+castle. `NotPotable` never promotes: it is a warning, not a verification. The
+POST response carries `verified: true` on the transition so the map can flip the
+"?" badge in place (`markItemVerified()`), instead of leaving a rider looking at
+a payload fetched before their own confirmation.
 
 `ItemType::isConfirmable()` = "has stances". One stance **per rider per item**
 (`item_confirmation`, UNIQUE `(item_id, user_id)`, tally index
@@ -1318,6 +1361,58 @@ panel hydrates async on drawer-open; water shows both tallies, other utilities
 a single confirm; anonymous viewers see the counts plus a "Log in to confirm"
 prompt (counts public, recording gated).
 
+### 10.4 Yes is not the only answer — condition reports
+
+A confirmation says a place is right. Three more answers say it is not, and they
+are **edits, not confirmations**: a claim about the place rather than a vote on
+it, so they travel as ordinary submissions through the ordinary queue (owner
+decision 2026-08-12).
+
+| Button | Writes | Offered on |
+|---|---|---|
+| ⚠ Out of order | `condition = 'Out of order'` | C · water, D · services, M · toilets (`CC_BREAKABLE`) |
+| ⌀ Closed | `condition = 'Closed'` | every confirmable type |
+| ✕ Not there anymore | `condition = 'Not there anymore'` | every confirmable type |
+
+`condition` is a registry field (`CatalogFormRegistry::CONDITION`) on every
+confirmable point type, so the tap and the edit form write the same key with the
+same vocabulary — a rider who wants to say more opens the form and finds their
+own answer already chosen. It carries **no default**: a default would make every
+untouched edit form assert "as mapped" about a place its editor never looked at,
+and turn a no-op edit into a change the intake is meant to refuse.
+
+Two endpoints, one gesture (`App\Controller\OsmConfirmController`):
+
+- `POST /osm/confirm` — for an OSM place we do not hold yet. See
+  [osm-data-architecture.md](osm-data-architecture.md) §6: it fills the letter's
+  own form from the coverage row and files it, so a one-word answer no longer
+  needs a form.
+- `POST /items/{id}/condition` — for a place already ours. Materialising does
+  not freeze a place: a water point added as existing and potable can be shut
+  off, break, or be taken out next season. Files an `improve` submission with
+  the same `condition` change; a second identical report answers `409
+  pending_review`, because the map is not a tally of how many riders watched the
+  same tap break.
+
+Both take the `item-confirm` CSRF token, which the map page carries in its
+**signed-in-riders** block — its absence is the auth signal the drawer reads to
+show "Log in to confirm" rather than a button that cannot work.
+
+A place reported `Not there anymore` leaves the map without handing itself back
+to OSM: `CatalogProvider::itemRows()` stops drawing the item while
+`curatedRefs()` still claims its ref. Both halves, or the report changes nothing
+(first) or is undone a second later by the reference layer (second).
+
+### 10.5 A nameless place can still be reported
+
+`submitImprove()` titles a submission with the item's name and the draft
+requires one — but most coverage-materialised POIs have none, a drinking-water
+node in OSM being nothing but tags. Those reports died on a validation error the
+rider could neither see nor fix. Callers that know a better word for the place
+pass `_title_fallback` (the one-tap report passes the layer's own label). The
+item is **not renamed** by it: the title is what the queue displays and nothing
+else.
+
 ## 11. Curator applications — the two doors an empty map needs
 
 Every country is empty at launch, so `/join/{cc}`
@@ -1336,7 +1431,7 @@ experiential layers (`l.key === 'experience'` or `l.exp`) with `f.cur` set
 count; utility layers (C/D/F/G/H) never carry a `cur` flag and can neither
 suppress nor trigger the invite, so a stray hazard report or an unverified
 route upload never silently hides it. This holds independent of the rider's
-own Curated/Everything view toggle, and is computed once per map load.
+own view-mode toggle, and is computed once per map load.
 
 ### 11.1 `CountryInterest` — the demand signal
 
@@ -1610,6 +1705,48 @@ whatever is still outstanding, in order.
 - **`hazardType` gained Potholes, Junction / crossing and Bad corner**, because
   the device offers them and every notice tapped on the bars was otherwise
   flattened to "Other".
+- **The panel closes, and closing ends the review** (owner 2026-08-12). The card
+  covers the top-left corner of the map, which is exactly where a tag often is.
+  A ✕ in its own corner — sticky, so it does not scroll away behind a long list
+  — hides the card *and* clears the ride: the route line, the numbered pins and
+  the overtake markers all go, and the file input is reset so the same ride can
+  be opened again. A first attempt left a "Review a ride" chip behind, which
+  still occupied the corner and read as not-closed. Nothing is stranded by it:
+  the tags live in the **rider's own ride file**, which we never had a copy of,
+  so opening it again another day brings back everything not yet sent — and the
+  confirm dialog says so, naming how many are outstanding. Reading a new ride
+  clears first, so two rides can never be drawn over each other.
+- **The Scout mark is as tall as the block it labels** — title and lead together
+  — rather than a bullet beside the heading. Its height comes from the flex row
+  and its **width is measured back** into a custom property, because a flex item
+  fixes its width before the stretched height exists; `aspect-ratio` alone
+  leaves a thin sliver. Measuring also keeps it square when the copy wraps
+  differently in another locale.
+- **The category dropdown is opaque.** A translucent control mixed with the
+  system white behind the native popup and rendered pale cream on pale grey;
+  both the closed control and its `option`s now state their own colours.
+
+**The cars that passed you land on the map** (owner 2026-08-12). "15 vehicles
+passed you on this ride" was true and impossible to act on; a radar reading only
+means something as a place — this corner, that bridge. Every counted pass is a
+small car marker at its own coordinates, carrying **ground speed** (the closing
+speed plus the rider's own), because that is what the car was doing rather than
+the difference between it and the rider.
+
+- No tooltip. Closing speed and nearest range are the radar's working, not the
+  fact a rider wants off a map — and hover does not exist on the bike computer
+  the reading came from.
+- A pass with no usable speed shows **`?`** rather than disappearing: it still
+  happened, at a place the rider can point at. The unit goes with the number —
+  "? km/h" reads like a measurement that failed to render, and this one was
+  never taken.
+- Passes with no GPS fix cannot be placed and are **counted in the panel**, so a
+  rider who sees nine cars under a line reading fifteen is told why.
+- Speed follows the rider's **distance** preference
+  ([account-and-auth.md](account-and-auth.md) §9); there is deliberately no
+  separate speed setting.
+- Still **measured, never sent**: nothing on the server can hold a measurement
+  yet, and showing it while saying so is honest.
 
 **Curator-facing naming follows the rider's own choice** (2026-08-12). The desk
 is pseudonymous by default — a decision should turn on the contribution, not on

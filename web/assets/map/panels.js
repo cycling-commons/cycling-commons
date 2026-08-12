@@ -204,7 +204,7 @@ function updateSubtitle(){
   const sub=document.querySelector('.map-top .sub'); if(!sub) return;
   if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full catalog'; return; }
   const bike=boBike==='all' ? (I18N.allBikes||'All bikes') : (CC_BIKE_LABEL[boBike]||boBike);
-  sub.textContent=`${I18N.curated||'Curated best-of'} · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
+  sub.textContent=`${I18N.curated||'Best of'} · ${CC_SEASON_LABEL[boSeason]} · ${bike}`;
 }
 
 function applyBestOf(ids){

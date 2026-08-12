@@ -188,19 +188,27 @@ newest first — visible to everyone including the contributor for their own edi
 
 ## Item lifecycle and votability
 
-Every catalog item moves through a lifecycle. The **map's view-mode toggle (Curated best-of ↔
-Everything — [map-and-search.md](../map-and-search.md) §4.2) is driven by _votability_, not
-verification** — verification is only the gate that lets a votable item start collecting votes.
+Every catalog item moves through a lifecycle. The **map's view-mode toggle (Best of ·
+Confirmed · Everything — [map-and-search.md](../map-and-search.md) §4.2) reads that lifecycle
+from the top down**: its first rung is driven by _votability_ and its second by _verification_,
+which is the gate that also lets a votable item start collecting votes.
 
 ```
 Submitted → [moderation: spam / abuse / duplicate — ROLE_CURATOR]   ← off the public map
    → Unverified  — public but unconfirmed; shows only in Everything as a small
                    "unverified · help confirm" dot; NOT votable
-   → [verification gate: ≥ X independent community confirmations ([tap] "still here / still true")]
+   → [verification gate: ≥ X independent community confirmations ([tap] "still here / still true"),
+      or ONE from a curator — their word settles it (moderation-and-contribution.md §10.1)]
    → Verified    — a full pin.                     ◀── utility / coverage types stop here
+                   also: the rung the map's **Confirmed** mode draws
    → Votable     — votable types only; now accrues votes
-   → Best-of     — top-voted; this is what Curated best-of mode surfaces
+   → Best-of     — top-voted; this is what **Best of** mode surfaces
 ```
+
+The map's three view modes read this ladder from the top down: **Best of**
+(best-of picks), **Confirmed** (anything a rider or curator vouched for),
+**Everything** (all of it, imports included) —
+[map-and-search.md](../map-and-search.md) §4.2.
 
 - **X** (confirmations to verify) is **not one global number** — it's a tier + modifiers model
   (see [Verification threshold (X)](#verification-threshold-x) below).
@@ -211,13 +219,23 @@ Submitted → [moderation: spam / abuse / duplicate — ROLE_CURATOR]   ← off 
 - **Two kinds of "unverified"** collapse to the same on-map treatment (a help-confirm dot in
   Everything): a fresh single-rider submission awaiting corroboration, and a bulk **`[OSM]` import** we
   mirror but haven't confirmed. Neither is votable until it clears the verification gate.
-- Curated best-of surfaces items risen by community **votes**, not editorial hand-picking —
+- Best of surfaces items risen by community **votes**, not editorial hand-picking —
   moderation is a separate spam/abuse gate, not a quality ranking.
+- **Everything a rider can stand in front of is confirmable** (2026-08-12).
+  The old test was "could this place vanish", which excluded castles and
+  mountains; the right test is "was a rider there, and is this right" — which a
+  climb, a viewpoint and a castle can all be wrong about. Confirmable ≠ votable:
+  the votable types collect both.
+- **A confirmation can also be negative.** `condition` (*Out of order · Closed ·
+  Not there anymore*) travels as an ordinary edit, not a stance, and a place
+  reported gone leaves the map without handing itself back to OSM
+  ([catalog-data-model.md](../catalog-data-model.md) §7).
 
-**View modes** (Curated best-of ↔ Everything) are owned by
-[map-and-search.md](../map-and-search.md) §4.2; in these terms, **Curated best-of** surfaces
-top-voted votable items only (the inspiration / trip-planning map) and **Everything** is full
-coverage (the on-the-road / completeness map).
+**View modes** (Best of · Confirmed · Everything) are owned by
+[map-and-search.md](../map-and-search.md) §4.2; in these terms, **Best of** surfaces
+top-voted votable items only (the inspiration / trip-planning map), **Confirmed** everything a
+rider or curator has vouched for, and **Everything** is full coverage (the on-the-road /
+completeness map).
 
 Per-pin state carries the trust/vote signal (unverified dot → verified pin → votable → best-of marker);
 the toggle no longer stands in for "trusted". Each per-type spec below tags its **Lifecycle** row

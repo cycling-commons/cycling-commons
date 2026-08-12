@@ -42,6 +42,7 @@ sourcing rule (Warmshowers/WTMG precedent).
 | `fee` | select | Free · Paid |
 | `wheelchair` | select | Unknown · Yes · No |
 | `openingHours` | text | free text ("24/7", "Apr–Oct daylight") |
+| `condition` | select | As mapped · Out of order · Closed · Not there anymore |
 | `note` | textarea | rider guidance ("behind the beach pavilion; code at the counter") |
 
 ### Add missing

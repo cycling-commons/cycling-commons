@@ -25,6 +25,7 @@ Ride-critical drinking water / refill points (fountains, taps, cemetery taps, ca
 | Type | select(Public fountain / Drinking tap / Cemetery tap / Café — refill point) | `[OSM]` |
 | Potable? | select(Yes — public supply / Unsigned — use judgement / No / non-potable) | `[tap]` |
 | Seasonal availability | select(Year-round / Summer only / Frost-shut in winter / Unknown) | `[tap]` |
+| Still as mapped? | select(As mapped / Out of order / Closed / Not there anymore) | `[tap]` |
 | Note | textarea | `[edit]` |
 
 ### Add missing  (type-specific)

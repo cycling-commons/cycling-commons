@@ -57,7 +57,7 @@ roles.
 | Lockout | `failedLoginAttempts`, `lockedUntil`, `isLocked()` | §3 |
 | Deletion | `deletionCode`, `deletionRequestedAt` | §10 |
 | Governance | `publicProfile` (bool, opt-in, default false) | §7 |
-| Preferences | `bikeTypes` (json), `ridingStyles` (json), `defaultMapMode` (string, default `auto`), `dateFormat`/`timeFormat` (string, default `auto`), `distanceUnit` (string, default `km`), `elevationUnit` (string, default `m`) | §9 |
+| Preferences | `bikeTypes` (json), `ridingStyles` (json), `defaultMapMode` (string, default `auto`; `auto \| everything \| confirmed \| curated`), `dateFormat`/`timeFormat` (string, default `auto`), `distanceUnit` (string, default `km`), `elevationUnit` (string, default `m`) | §9 |
 | Age (GDPR Art. 8) | `ageConfirmedAt` (nullable datetime — when they declared 16+; NULL = predates the gate, or created by an admin/console path) | §2; deliberately **not** a date of birth |
 | Media | `keepMediaCredit` (bool) — the departing rider's credit choice, read at deletion | photo-uploads.md §6 |
 | Base location (optional, account-private) | `basePoint` (geometry GeoJSON Point, coords rounded to 2dp at write — ~1 km precision), `basePlace` (varchar(120), town-level label for the scope line), `baseRadiusKm` (smallint, default 40, clamped [10,150]), `baseRegionIds`/`baseCountryCodes` (json, derived — `App\Service\BaseAreaResolver`, cap 8) | map-and-search.md §4.5 Phase 4; **never** exposed on the public profile (§7 below); no GIST index (nothing queries users spatially) |
@@ -740,9 +740,18 @@ UnitDisplayExtension` exposes it to templates:
 
 A short horizontal distance follows the **distance** preference and lands in
 feet, not fractions of a mile: "820 ft off the track" is a distance somebody can
-picture, "0.16 mi" is not. Areas and densities move in opposite directions — a
-square mile is bigger, so a country covers fewer of them and each holds more
-places.
+picture, "0.16 mi" is not.
+
+**Speed follows the distance preference, and has no control of its own**
+(2026-08-12). A rider who reads miles reads mph; a second setting could only let
+the two disagree. `ccSpeed()` / `uSpeed()` take km/h and write `32 km/h` or
+`20 mph`, whole numbers — a radar reading 31.6 km/h is not that precise. The
+first consumer is Scout's overtake markers
+([moderation-and-contribution.md](moderation-and-contribution.md) — "Scout
+intake").
+
+Areas and densities move in opposite directions — a square mile is bigger, so a
+country covers fewer of them and each holds more places.
 
 **Units left the translated strings.** Messages that used to write their own
 unit (`'{n} m climbing'`, `'%m% m ascent'`, `'Length (km)'`, `'km {a} · {b} m

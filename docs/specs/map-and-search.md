@@ -34,10 +34,10 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 
 1. **The map is the showcase; the rail is the catalog index.** The rail's
    controls expose the full lettered taxonomy as individually toggleable layers
-   with live counts. Search, the Curated/Everything mode, and the filter chips
+   with live counts. Search, the view mode (Best of / Confirmed / Everything), and the filter chips
    *compose* to define the visible feature set — the rail is a navigable index
    of the Commons, not a settings panel.
-2. **Display toggle ≠ discoverability.** The Curated/Everything mode governs
+2. **Display toggle ≠ discoverability.** The view mode governs
    **ambient map density only**. Search and the town card are intent-driven
    surfaces and always reach the **full Commons**; "too much" is solved by
    ranking and collapsing (curated first, community tagged and capped), never
@@ -190,10 +190,34 @@ lazy-firewall caching gotcha — see
   (`CC_PENDING`-driven, red pins) — moderation behaviour is owned by
   [moderation-and-contribution.md](moderation-and-contribution.md).
 
-### 4.2 View mode: Curated best-of ↔ Everything
+### 4.2 View mode: Best of · Confirmed · Everything
 
-- `mode ∈ {curated, all}` (button labels "Curated best-of" / "Everything").
-  The axis is **votability**, not verification — see the funnel in
+- `mode ∈ {curated, confirmed, all}` (button labels "Best of" / "Confirmed" /
+  "Everything"). The wire token for the first stays `curated` — it has been the
+  DOM contract since the HTML demo, and renaming a live contract to match a
+  label is the tail wagging the dog.
+- **Three rungs of human endorsement** (owner decision 2026-08-12). The map had
+  two settings and a gap between them: the editor's best-of, or every import
+  nobody has checked. Confirmed is the question most riders actually have —
+  *show me what somebody has vouched for*.
+
+  | Mode | Draws |
+  |---|---|
+  | Best of | the curated picks (`f.cur`) on experiential layers; utilities as before |
+  | Confirmed | anything carrying `f.v` (a rider confirmation, or a curator's verification) **plus** `f.cur` — a true superset of Best of |
+  | Everything | the whole catalog, including reference coverage |
+
+  `f.v` is the server's own "somebody vouched" flag (`CatalogProvider`), the same
+  one the drawer reads for its "?" badge, so a place cannot be confirmed in one
+  and questioned in the other. **Reference coverage stays out of Confirmed**: it
+  is OpenStreetMap as it stands, which by definition nobody here has vouched for,
+  and a mode meaning "someone checked this" cannot carry the one layer where
+  nobody has. Best of keeps showing utility coverage dimmed — finding water was
+  never an editorial judgement.
+- **It is called "Best of", not "Curated best-of"** (owner 2026-08-12): Confirmed
+  is curated too — a curator verifying a place *is* curation — so putting the
+  word on one rung claimed a difference that is not there.
+- The first rung's axis is **votability**, not verification — see the funnel in
   [edit-items/README.md](edit-items/README.md#item-lifecycle-and-votability).
 - **Experiential layers** (`layer.exp`: climbs, stays, scenic, history) filter
   to `f.cur` in Curated; utility layers always draw their confirmed pins, and
@@ -219,7 +243,17 @@ lazy-firewall caching gotcha — see
   other desk. Load-time precedence: the rider's saved `users.default_map_mode`
   (profile, NOT localStorage — shared devices) → an anonymous visitor's own
   localStorage choice → the active region's flag → Everything. Resolved once at
-  load; a later scope change never re-resolves.
+  load; a later scope change never re-resolves. `MapViewMode::Confirmed` joins
+  the stored preference (`users.default_map_mode`) and the toggle's persistence
+  endpoint; no migration — the column stores the enum's string value.
+- **Confirmed will look thin until riders fill it, and that is honest.**
+  Measured in NL on 2026-08-12: 203 catalog features, 13 with any human
+  endorsement, everything else reference coverage. Unlike the Curated trap
+  above, an empty Confirmed is a true statement about the data rather than a
+  filter hiding data that exists — and it is the one screen that gives a rider a
+  reason to press Confirm. If it ever needs widening, the open alternative is
+  "in the Commons" (our catalog items, confirmed or not), which shows something
+  on day one but stops meaning *someone checked this*.
 - **What `/regions` says about a region — two axes, never one.** The public
   directory answers two questions side by side, in two legend columns:
 
@@ -720,7 +754,7 @@ permanently retired.
 ### 6.3 Drawer anatomy
 
 Header: type chip (letter + localized layer label, layer colour), feature name,
-"▲ Curated best-of" badge when `f.cur`. Body: photo (main image + thumbnail
+"▲ Best of" badge when `f.cur`. Body: photo (main image + thumbnail
 strip, opening a slideshow lightbox with ‹ › buttons and ←/→ keys, per-photo
 credit linking licence deed + source + author, N/M counter — media rules in
 [edit-items/README.md](edit-items/README.md)); or, when the item has a DB id
