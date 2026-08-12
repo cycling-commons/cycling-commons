@@ -90,12 +90,19 @@ export function showPendingShape(shape, side) {
     id: LINE, type: 'line', source: LINE,
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: {
-      // Before is the past: muted, dashed. After is the proposal: solid, and
-      // in the same violet the change history uses for a new value.
-      'line-color': _side === 'before' ? '#8a8d7d' : '#B25BE8',
+      /* Before is the past: muted, dashed. After is the proposal: solid, and
+         in the same violet the change history uses for a new value.
+
+         An UNRECORDED before is a different past — the road was on the map,
+         with no surface anybody had recorded — and it is drawn in exactly the
+         style that state has everywhere else: the legend's red dotted "not
+         recorded" line (SURFACE_STYLE.unverified). Reusing the vocabulary
+         matters more than a consistent grey here: a curator has already
+         learned what red dots mean. */
+      'line-color': 'before' !== _side ? '#B25BE8' : (s.unrecorded ? '#D92D20' : '#8a8d7d'),
       'line-width': 6,
       'line-opacity': 0.95,
-      ...(_side === 'before' ? { 'line-dasharray': [2, 1.6] } : {}),
+      ...(_side === 'before' ? { 'line-dasharray': s.unrecorded ? [2.5, 2.5] : [2, 1.6] } : {}),
     },
   });
 

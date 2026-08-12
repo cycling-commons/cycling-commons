@@ -766,8 +766,23 @@ final class SubmissionQueue
             };
             $before = $seg('was');
             $after = $seg('now');
+            /* A NEW stretch has no previous geometry, so Before used to be
+               unavailable — the switch rendered dead and a curator could not see
+               what the proposal replaces (owner-reported 2026-08-12).
 
-            return (null === $before && null === $after) ? null : ['before' => $before, 'after' => $after];
+               It replaces something: the road as the map drew it, which for a
+               road nobody has recorded a surface for is the red dotted "needs
+               recording" line. Same geometry, marked `unrecorded`, so the
+               drawer can draw it in the vocabulary the legend already uses
+               rather than inventing a second way to say "no answer yet". */
+            if (null === $before && null !== $after) {
+                $before = $after + ['unrecorded' => true];
+            }
+            if (null === $after && null === $before) {
+                return null;
+            }
+
+            return ['before' => $before, 'after' => $after];
         }
 
         if (!isset($changes['route']) && !isset($changes['steep'])) {

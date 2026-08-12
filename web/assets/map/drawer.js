@@ -531,7 +531,13 @@ function buildRecord(layer, f){
        line on the map — see pending-shape.js for why it is a switch and not
        two lines at once. Only rendered when there is a side to switch TO: a
        brand-new climb has no "before", and offering an empty one would be a
-       control that lies. */
+       control that lies.
+
+       A brand-new road SURFACE does have one, and it is not the same kind of
+       nothing: the road was already on the map with no recorded surface, so
+       Before draws it in the legend's "not recorded" style rather than sitting
+       disabled (owner-reported 2026-08-12). SubmissionQueue marks that side
+       `unrecorded`. */
     const hasBefore = !!(s.shape && s.shape.before);
     const hasAfter = !!(s.shape && s.shape.after);
     const shapeSwitch = (hasBefore || hasAfter)

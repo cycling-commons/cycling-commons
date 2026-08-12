@@ -37,7 +37,12 @@ final class SegmentShapeReviewTest extends TestCase
         ]]]);
 
         self::assertIsArray($shape);
-        self::assertNull($shape['before'], 'a new stretch has no previous shape');
+        /* A new stretch HAS a before, and it is the state the map was already
+           drawing: the same road, with no surface anybody recorded (owner
+           2026-08-12). An unavailable Before button told a curator nothing
+           about what the proposal replaces. */
+        self::assertSame($shape['after']['route'], $shape['before']['route'], 'the before side is the same road');
+        self::assertTrue($shape['before']['unrecorded'], 'drawn in the legend\'s "not recorded" style, not as a past shape');
         // Flipped to [lat,lng]: showPendingShape() reads climb order, and one
         // renderer for both is the point.
         self::assertSame([[50.49, 6.04], [50.50, 6.05], [50.51, 6.06]], $shape['after']['route']);
