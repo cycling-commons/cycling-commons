@@ -1625,6 +1625,27 @@ publicly-served states for everyone else, and the pending drawer was offering an
 that submission on the desk, so nothing is exposed that they cannot see — and
 the alternative was bouncing a typo back to the rider as a needs-info.
 
+### Confirming widened, and reached OSM places (2026-08-12)
+
+**A place that can be gone can be confirmed** — not only utilities. A viewpoint
+gets built out, a monument fenced off, a gîte closed, and the rider standing
+there is the only person who knows (owner-reported: a second rider could do
+nothing at a viewpoint). So `ScenicViews`, `HistoryCulture` and `WhereToSleep`
+gained the `Exists` stance, and are now **both votable and confirmable** —
+voting ranks a region's best, confirming says the place is still there, and a
+letter can want both. Climbs stay vote-only: a mountain does not go anywhere.
+`CC_CONFIRMABLE` in the map mirrors it, and had also been missing `toilets`,
+which the server had allowed all along.
+
+**An OSM place can be confirmed too, through the door that already exists.**
+Confirmation is keyed on an item, and an OSM pool point is not one — so the
+drawer said "confirm on the spot" with nothing to press. It now offers *Confirm
+it's here*, which is the same bridge the surface tiles use: the improve wizard,
+prefilled, opening on the details because agreeing includes agreeing with where
+it is. Submitting mints our item carrying the OSM ref, and from then on the
+ordinary one-tap panel applies. No second confirmation store keyed on a ref, and
+no new moderation mechanic.
+
 ### A moved pin is a change (2026-08-12)
 
 It used to count only towards *"did anything change"* and was then thrown away:

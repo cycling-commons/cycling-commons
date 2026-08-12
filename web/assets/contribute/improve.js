@@ -71,6 +71,9 @@
   // them press Next past a map they have already accepted. Only meaningful with
   // a known stretch — without one there is nothing to have confirmed.
   var CONFIRM_SEGMENT = _q.get('confirm') === '1' && hasSegment;
+  // The same shortcut for a POINT: confirming an OSM place means agreeing with
+  // where it is, so the map step is a question already answered.
+  var CONFIRM_POINT = _q.get('confirm') === '1' && !hasSegment;
 
   // "◎ Fix location" bridge from the drawer: open the LOCATE editor directly
   // in expanded (change) mode, because the intent is explicitly to move the pin.
@@ -671,6 +674,10 @@
       // Editing a located point: pre-place the pin at the item's coordinates so
       // the map opens on it. In CONFIRM mode it is a compact, glowing, view-only
       // reassurance; "Change location" expands to the full editor.
+      if (hasCoords && LOCATE === 'point' && CONFIRM_POINT) {
+        // Straight to the details, with the pin already placed below.
+        wmap.on('load', function () { step(2); });
+      }
       if (hasCoords && LOCATE === 'point') {
         if (CONFIRM) {
           if (mapEl) mapEl.classList.add('confirm');

@@ -32,12 +32,18 @@ const CC_SEASONS=['spring','summer','autumn','winter'];
 const CC_REASONS=[['broken-track',D.reasonBroken||'Wrong / broken track'],['trim-privacy',D.reasonPrivacy||'Trim a private start/end'],['duplicate',D.reasonDuplicate||'Duplicate of another route'],['not-rideable',D.reasonNotRideable||'Not actually rideable'],['other',D.reasonOther||'Something else']];
 const _rcTokens={};   // route id → CSRF token from the last snapshot
 
-// Votable point types (climbs/stays/scenic/history) carry the vote CTA;
-// routes (experience) have their own vote block. Non-votable UTILITIES are
-// confirmed, not voted: water carries a potable/not-potable judgement, the
-// rest a plain "still here?" confirmation. Keys match the CATALOG layer keys.
+/* Votable point types carry the vote CTA; routes (experience) have their own
+   vote block. Confirmation is a SEPARATE question and the two overlap: voting
+   ranks a region's best, confirming says the place is still there.
+
+   Scenic views, history and stays are both — a viewpoint gets built out, a
+   monument fenced off, a gîte closed, and the rider standing there is the only
+   one who knows (owner-reported 2026-08-12: a second rider could do nothing at
+   a viewpoint). Climbs stay vote-only: a mountain does not go anywhere.
+
+   Mirrors ItemType::isVotable()/isConfirmable(); keys are CATALOG layer keys. */
 export const CC_VOTABLE=new Set(['climbs','stays','scenic','history']);
-export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter']);
+export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter','toilets','scenic','history','stays']);
 const _cfTokens={};   // item id → CSRF token from the last confirmations snapshot
 
 export function routeCommunityPanel(id, state){

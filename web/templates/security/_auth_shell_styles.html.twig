@@ -27,6 +27,23 @@
   .field input[type=text],
   .field input[type=password]{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none}
   .field input:focus{border-color:var(--trail)}
+  /* The two consent rows. `.field-check` carried no styles at all, so the boxes
+     rendered as the browser's default blue — the one blue on a page of ochre and
+     spruce (owner-reported 2026-08-12). `accent-color` rather than a hand-built
+     box: it keeps the native control, its keyboard behaviour and its
+     indeterminate/disabled states, and it is what the settings page already
+     uses, so the site has one answer instead of two.
+     The label is a real label, so the whole sentence is a hit target. */
+  .field-check{display:flex;align-items:flex-start;gap:.6rem;margin-bottom:.9rem}
+  .field-check input[type=checkbox]{flex:0 0 17px;width:17px;height:17px;margin:.12rem 0 0;
+    accent-color:var(--trail);cursor:pointer}
+  .field-check input[type=checkbox]:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}
+  /* Sentence case, not the uppercase mono of a field label above an input:
+     these read as statements the person is agreeing to. */
+  .field-check label{display:block;margin:0;font-family:var(--sans);font-size:.86rem;
+    line-height:1.45;letter-spacing:0;text-transform:none;color:#3c3f33;cursor:pointer}
+  .field-check label a{color:var(--clay);text-underline-offset:2px}
+  .field-check label a:hover{color:var(--trail)}
   .btn-submit{width:100%;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.88rem;padding:.6rem;border:none;border-radius:5px;cursor:pointer;transition:background .2s}
   .btn-submit:hover{background:#ff703d}
   .reassure{margin-top:1.6rem;font-size:.82rem;color:#5a5d4d;line-height:1.5;border-left:2px solid var(--glacier);padding-left:.8rem}

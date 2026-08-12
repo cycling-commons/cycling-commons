@@ -214,7 +214,17 @@ enum ItemType: string
     {
         return match ($this) {
             self::WaterFood => [ConfirmationStance::Potable, ConfirmationStance::NotPotable],
-            self::BikeServices, self::Hazards, self::GettingThere, self::Shelter, self::PublicToilets => [ConfirmationStance::Exists],
+            /* "Is it still here?" is not a question only utilities can be asked
+               (owner-reported 2026-08-12: a second rider could do nothing at a
+               viewpoint). A view gets built out, a monument gets fenced off, a
+               café closes — and the rider standing there is the only person who
+               knows. Confirming is not voting: voting ranks the best of a
+               region, confirming says the place still exists, and a letter can
+               want both. Climbs are deliberately still out — a mountain does
+               not go anywhere. */
+            self::BikeServices, self::Hazards, self::GettingThere, self::Shelter,
+            self::PublicToilets, self::ScenicViews, self::HistoryCulture,
+            self::WhereToSleep => [ConfirmationStance::Exists],
             default => [],
         };
     }

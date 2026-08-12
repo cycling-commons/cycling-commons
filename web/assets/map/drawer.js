@@ -634,7 +634,21 @@ function buildRecord(layer, f){
   const confirmPanel = (CC_CONFIRMABLE.has(layer.key) && f.id!=null)
     ? `<div class="cc-cf" data-item="${f.id}"><div class="cc-cf-body" data-cf-body></div><div class="cc-cf-login" hidden>${D.loginConfirm||'Log in to confirm'} · <a href="/login">${I18N.login||'Log in'}</a></div></div>`
     : '';
-  const act = edit + vote;
+  /* An OSM point in a confirmable layer has no item id, so the panel above
+     cannot render — confirmations are keyed on an item, and this place is not
+     one yet. That left a drawer saying "confirm on the spot" with nothing to
+     press (owner-reported 2026-08-12: "Can't confirm this one, I checked it
+     myself yesterday").
+
+     The bridge is the one already built for surface lines: confirming is the
+     SAME submission as correcting, one decision shorter. It opens the wizard
+     prefilled from the OSM tags, and submitting mints our item carrying the
+     ref — after which the ordinary one-tap panel above applies. No second
+     confirmation store keyed on an OSM ref, and no new moderation mechanic. */
+  const osmConfirm = (CC_CONFIRMABLE.has(layer.key) && f.id==null && f.osmRef)
+    ? `<a class="cc-d-act confirm-osm" href="/improve?ref=${encodeURIComponent(f.osmRef)}&type=${layer.letter}${ell?`&lat=${ell[0]}&lng=${ell[1]}`:''}&confirm=1">✓ ${D.confirmHere||'Confirm it\u2019s here'}</a>`
+    : '';
+  const act = edit + osmConfirm + vote;
   const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
   // C1-T3 (spec W5): an empty placeholder for the async "Recent changes"
   // section — openDrawer() fetches GET /map/item/{id}/history after this
@@ -988,14 +1002,21 @@ export function openDrawer(layer, f){
     // Pulsing selection halo on the clicked point — curated AND OSM — so the
     // selected place stands out; persists while the drawer is open and is
     // cleared by closeDrawer()/the next open. highlightAt(null) no-ops.
-    // Confirmed items render as bottom-anchored teardrop pins whose icon sits
-    // ~16px above the ground point, so raise the halo to ring the icon; flat
-    // WebGL dots (unverified OSM) are centred on the point → no offset.
-    // PENDING (moderation) pins are bottom-anchored teardrops too → same lift.
-    // Climbs place their pin at the route START (foot), not geom.ll — the
-    // halo must ring the pin the rider actually sees, not the centroid.
+    /* Raise the halo onto the ICON, for everything drawn as a pin.
+
+       The lift used to be gated on `cur || pending`, on the assumption that
+       only those are teardrops. Every CURATED point is one too — render.js
+       mounts them all `anchor:'bottom'` — so an ordinary item got its ring at
+       the ground point, sitting low and to the left of the icon it was meant to
+       circle (owner-reported 2026-08-12). Flat WebGL dots (unverified OSM pool
+       points) really are centred on the point and take no offset; they are the
+       ones WITHOUT an item id.
+
+       Climbs place their pin at the route START (foot), not geom.ll — the halo
+       must ring the pin the rider actually sees, not the centroid. */
     const hlAt = f.route ? f.route[0] : (f.geom && f.geom.ll);   // [lat,lng] arrays both
-    highlightAt(hlAt, (f.cur || f.pending) ? [0,-16] : [0,0]);
+    const isPin = !!(f.cur || f.pending || f.id != null);
+    highlightAt(hlAt, isPin ? [0,-16] : [0,0]);
   }
   renderDrawerBody(layer, f);
   const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');

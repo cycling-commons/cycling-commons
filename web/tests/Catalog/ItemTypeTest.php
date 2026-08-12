@@ -100,4 +100,27 @@ final class ItemTypeTest extends TestCase
         self::assertFalse(ItemType::WaterFood->hasTrackUpload());
         self::assertFalse(ItemType::Climbs->hasTrackUpload());
     }
+
+    public function testAPlaceThatCanBeGoneCanBeConfirmed(): void
+    {
+        /* "Is it still here?" is not a question only utilities can be asked
+           (owner 2026-08-12: a second rider could do nothing at a viewpoint).
+           A view gets built out, a monument fenced off, a gîte closed — and the
+           rider standing there is the only one who knows.
+
+           Confirming is not voting. Voting ranks a region's best; confirming
+           says the place still exists, and a letter can want both. */
+        foreach ([ItemType::ScenicViews, ItemType::HistoryCulture, ItemType::WhereToSleep] as $type) {
+            self::assertTrue($type->isConfirmable(), $type->value.' is a place that can vanish');
+            self::assertTrue($type->isVotable(), 'and one worth ranking — both, not either');
+        }
+    }
+
+    public function testAMountainIsNotConfirmable(): void
+    {
+        // A climb does not go anywhere. Offering "still here?" on one would be
+        // asking a question with only one possible answer.
+        self::assertFalse(ItemType::Climbs->isConfirmable());
+        self::assertTrue(ItemType::Climbs->isVotable());
+    }
 }
