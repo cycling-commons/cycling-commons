@@ -1,0 +1,72 @@
+web/assets/map/scout-review.js
+  s_bbe01d4f023787::t_c9cb64f917e42c 233-237,625
+web/assets/map/community.js
+  s_bbe01d4f023787::t_bcfc2cd7afc296 48-54
+web/translations/messages.de.yaml
+  s_bbe01d4f023787::t_c9cb64f917e42c 1732
+  s_bbe01d4f023787::t_bcfc2cd7afc296 1788-1790
+  s_bbe01d4f023787::t_8768630e690c74 2942,2957,2972-2973,2975
+web/tests/Contribution/OsmConfirmTest.php
+  s_bbe01d4f023787::t_a9a38f75e59122 9
+  s_bbe01d4f023787::t_1cde53a469701f 182-189,204,211-213,215-253
+  s_bbe01d4f023787::t_287dcb2ca5809c 190-203,205-210,214
+  s_bbe01d4f023787::t_c63a1ae644ad8c 254
+web/assets/styles/map.css
+  s_bbe01d4f023787::t_bcfc2cd7afc296 676-681
+web/src/Controller/OsmConfirmController.php
+  s_bbe01d4f023787::t_4f7fa55edfc1bf 54-60
+web/src/Controller/MapController.php
+  s_bbe01d4f023787::t_bcfc2cd7afc296 305
+  s_95012dc2a2124f::t_9038feaf01dfcf 232-236
+web/translations/messages.fr.yaml
+  s_bbe01d4f023787::t_8768630e690c74 2939,2954,2969-2970,2972
+  s_bbe01d4f023787::t_bcfc2cd7afc296 1785-1787
+  s_bbe01d4f023787::t_c9cb64f917e42c 1729
+web/translations/messages.nl.yaml
+  s_bbe01d4f023787::t_c9cb64f917e42c 1729
+  s_bbe01d4f023787::t_bcfc2cd7afc296 1785-1787
+  s_bbe01d4f023787::t_8768630e690c74 2939,2954,2969-2970,2972
+web/src/Catalog/CatalogFormRegistry.php
+  s_bbe01d4f023787::t_ec50f6093fcf76 31-42,48-50
+  s_bbe01d4f023787::t_a406f04318a4de 43-47,169,186,210,282,296,311,325
+  s_bbe01d4f023787::t_53ccb93997613b 30
+web/assets/map/drawer.js
+  s_bbe01d4f023787::t_bcfc2cd7afc296 33
+  s_bbe01d4f023787::t_4f7fa55edfc1bf 659-670
+web/translations/messages.es.yaml
+  s_bbe01d4f023787::t_c9cb64f917e42c 2060
+  s_bbe01d4f023787::t_bcfc2cd7afc296 2116-2118
+  s_bbe01d4f023787::t_8768630e690c74 2980,2995,3010-3011,3013
+web/translations/messages.en.yaml
+  s_bbe01d4f023787::t_8768630e690c74 2965,2980,2995-2996,2998
+  s_bbe01d4f023787::t_c9cb64f917e42c 2047
+  s_bbe01d4f023787::t_bcfc2cd7afc296 2103-2105
+web/src/Catalog/CatalogProvider.php
+  s_bbe01d4f023787::t_4f7fa55edfc1bf 136-142
+docs/specs/osm-data-architecture.md
+  s_bbe01d4f023787::t_a9a38f75e59122 260-273
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "be0999496aec438847f4731b4a7a56f7fe8813a6",
+  "prompts": {},
+  "sessions": {
+    "s_95012dc2a2124f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "334c4e6c-f005-4794-863e-29860877cf2f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
