@@ -92,39 +92,8 @@
          criminal". The tick is a UI speed bump — native `required`, no POST
          until it is ticked; the server's own gates are unchanged and remain
          the real ones (a reason here, the typed DELETE for Trash). #}
-      <details class="q-act q-act--escalate">
-        {# Icon, not a word. These two sit at the end of a row a curator reads
-           dozens of times an hour; the verbs they carry are rare and heavy, and
-           spelling them out gave them the same weight as Review. The label
-           stays as the accessible name and the tooltip — shorter, not hidden. #}
-        <summary class="btn-act btn-secondary btn-icon" title="{{ 'moderate.escalate.button'|trans }}"
-                 aria-label="{{ 'moderate.escalate.button'|trans }}">⚑</summary>
-        <div class="q-act-panel">
-          <form method="post" action="{{ path('moderate_escalate_submission') }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
-            <input type="hidden" name="submission" value="{{ item.id }}">
-            <p class="q-act-head">{{ 'moderate.escalate.summary'|trans }}</p>
-            <p class="q-act-when">{{ 'moderate.escalate.when'|trans }}</p>
-            <p>{{ 'moderate.escalate.help'|trans }}</p>
-            <input type="text" name="reason" maxlength="2000" required
-                   placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
-            <label class="q-act-ack"><input type="checkbox" required>
-              <span>{{ 'moderate.escalate.confirm_check'|trans }}</span></label>
-            {# A way out. Pressing ⚑ again does close it, but only once you have
-               worked out that the flag is a toggle — and a panel that announces
-               "nothing can delete it afterwards" is not one to feel trapped in
-               (owner 2026-08-12). The tick-box stays here: escalation alerts an
-               administrator and cannot be undone by anyone. #}
-            <div class="q-act-buttons">
-              <button type="submit" class="btn-act btn-secondary">{{ 'moderate.escalate.submit'|trans }}</button>
-              <button type="button" class="btn-act btn-quiet q-act-cancel">{{ 'moderate.action.cancel'|trans }}</button>
-            </div>
-          </form>
-        </div>
-      </details>
-
       <details class="q-act q-act--trash trash-confirm">
-        <summary class="btn-act btn-secondary btn-icon" title="{{ 'moderate.trash.button'|trans }}"
+        <summary class="btn-act btn-icon btn-danger-quiet" title="{{ 'moderate.trash.button'|trans }}"
                  aria-label="{{ 'moderate.trash.button'|trans }}">🗑</summary>
         <div class="q-act-panel">
           <form method="post" action="{{ path('moderate_trash') }}">
@@ -155,6 +124,37 @@
           </form>
         </div>
       </details>
+      <details class="q-act q-act--escalate">
+        {# Icon, not a word. These two sit at the end of a row a curator reads
+           dozens of times an hour; the verbs they carry are rare and heavy, and
+           spelling them out gave them the same weight as Review. The label
+           stays as the accessible name and the tooltip — shorter, not hidden. #}
+        <summary class="btn-act btn-icon btn-alarm" title="{{ 'moderate.escalate.button'|trans }}"
+                 aria-label="{{ 'moderate.escalate.button'|trans }}">⚑</summary>
+        <div class="q-act-panel">
+          <form method="post" action="{{ path('moderate_escalate_submission') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('moderate_escalate') }}">
+            <input type="hidden" name="submission" value="{{ item.id }}">
+            <p class="q-act-head">{{ 'moderate.escalate.summary'|trans }}</p>
+            <p class="q-act-when">{{ 'moderate.escalate.when'|trans }}</p>
+            <p>{{ 'moderate.escalate.help'|trans }}</p>
+            <input type="text" name="reason" maxlength="2000" required
+                   placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
+            <label class="q-act-ack"><input type="checkbox" required>
+              <span>{{ 'moderate.escalate.confirm_check'|trans }}</span></label>
+            {# A way out. Pressing ⚑ again does close it, but only once you have
+               worked out that the flag is a toggle — and a panel that announces
+               "nothing can delete it afterwards" is not one to feel trapped in
+               (owner 2026-08-12). The tick-box stays here: escalation alerts an
+               administrator and cannot be undone by anyone. #}
+            <div class="q-act-buttons">
+              <button type="submit" class="btn-act btn-secondary">{{ 'moderate.escalate.submit'|trans }}</button>
+              <button type="button" class="btn-act btn-quiet q-act-cancel">{{ 'moderate.action.cancel'|trans }}</button>
+            </div>
+          </form>
+        </div>
+      </details>
+
     </div>
   </div>
 

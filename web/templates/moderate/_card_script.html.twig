@@ -18,12 +18,31 @@
 document.addEventListener('click', function (e) {
   var btn = e.target.closest && e.target.closest('.q-act-cancel');
   if (!btn) return;
-  var panel = btn.closest('details.q-act');
-  if (!panel) return;
   e.preventDefault();
-  panel.open = false;
-  var summary = panel.querySelector('summary');
-  if (summary) summary.focus();   // back where they were, not adrift on the page
+
+  /* With JS the <details> is REPLACED by a button and its panel is moved into a
+     sibling `.q-panels` host (see the disclosure rewrite below) — so a panel is
+     not inside a <details> at runtime and `closest('details')` finds nothing.
+     That is why the first version of this did nothing at all
+     (owner-reported 2026-08-12), and why it is worth saying here: the markup a
+     template writes is not the markup this handler meets.
+
+     Without JS the <details> is still real, so both shapes are handled. */
+  var panel = btn.closest('.q-act-panel');
+  var native = btn.closest('details.q-act');
+  if (native) {
+    native.open = false;
+    var summary = native.querySelector('summary');
+    if (summary) summary.focus();
+    return;
+  }
+  if (!panel) return;
+  panel.hidden = true;
+  var opener = panel.id ? document.querySelector('[aria-controls="' + panel.id + '"]') : null;
+  if (opener) {
+    opener.setAttribute('aria-expanded', 'false');
+    opener.focus();   // back where they were, not adrift on the page
+  }
 });
 
 /* A decision taken on the map removes its row here, live.
@@ -126,6 +145,12 @@ document.addEventListener('click', function (e) {
       btn.type = 'button';
       btn.className = summary.className + ' q-act-btn ' + d.className.replace('q-act', '').trim();
       btn.textContent = summary.textContent;
+      /* An icon-only summary carries its word in `title`/`aria-label`, and this
+         rewrite used to copy neither — so ⚑ and 🗑 arrived as two unlabelled
+         glyphs for anyone reading with a screen reader or hovering for a hint. */
+      if (summary.title) btn.title = summary.title;
+      var label = summary.getAttribute('aria-label');
+      if (label) btn.setAttribute('aria-label', label);
       btn.setAttribute('aria-expanded', 'false');
       var id = 'qp-' + key + '-' + i;
       panel.id = id;
