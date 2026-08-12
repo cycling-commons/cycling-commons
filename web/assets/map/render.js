@@ -325,7 +325,8 @@ export function drawLine(id, latlngs, color, layer, f){
 }
 // A · Road surface — colour + pattern by surface class (solid paved · dashed gravel · dotted pavé)
 export const SURFACE_STYLE={
-  cycleway:{color:'#3E9C8A'},                        // smooth RAVeL asphalt — solid teal
+  cycleway:{color:'#7A4FCF'},                        // a dedicated cycleway — solid purple, the one hue
+                                                     // paved/gravel/dirt/rock/pavé do not use (2026-08-12)
   paved:{color:'#4E6E66'},                           // asphalt/concrete — solid slate
   gravel:{color:'#C8923A',dash:[2,1.5],cap:'butt'},  // gravel/compacted — dashed ochre
   pave:{color:'#6E7B96',dash:[1,1.5],cap:'butt'},    // sett/cobbles (pavé) — square slate-grey dashes (matches the legend; distinct from brown ground)

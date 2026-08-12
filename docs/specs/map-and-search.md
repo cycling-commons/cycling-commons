@@ -563,7 +563,7 @@ the newest rung of that same ladder.
   class layer, not per feature. Style keys **primarily on `surface=`,
   secondarily on `smoothness=`** (avoiding CyclOSM's known bug that hides
   gravel under `smoothness=intermediate`). Class palette in `SURFACE_STYLE`
-  (map.js): teal cycleway, slate paved, dashed ochre gravel, square slate-grey
+  (map.js): purple cycleway, slate paved, dashed ochre gravel, square slate-grey
   pavé dashes, dashed brown dirt, dotted dark-grey rock, and red dashes for
   `unverified` (no surface tag — "needs a tag"). Re-render is a single
   `setData`; click/hover listeners bind once per class layer and resolve the
@@ -598,19 +598,47 @@ the newest rung of that same ladder.
   class means OSM records no `surface` tag there, and riders are precisely who
   *verifies* things, so the old word claimed the opposite of what it meant
   (owner-reported 2026-08-12).
-- **The untagged arm is served** (2026-08-12), and it is governed by **the
-  legend row**, not by a control of its own. Every line in it is a road OSM has
-  no surface value for — a road somebody could go and record — so it is the
-  **contribution view**: "then people will know what to tag and extend the map
-  knowledge" (owner). It is a class like the other six and behaves like one:
-  ticking *Surface not recorded* shows it, unticking hides it.
+- **The "needs recording" arm is served** (2026-08-12), and it is governed by
+  **the legend row**, not by a control of its own. Every line in it is a road
+  nobody has recorded a surface for — a road somebody could go and record — so
+  it is the **contribution view**: "then people will know what to tag and extend
+  the map knowledge" (owner). It is a class like the other six and behaves like
+  one: ticking *Surface not recorded* shows it, unticking hides it.
   It happens to live in a **second artifact**, because a vector tile is fetched
-  whole and folding ~900k untagged ways into the classified tiles would make
-  every surface tile several times larger for every rider. That is a fact about
-  storage, and a rider filtering the key should not have to know it — so the
-  arm is *mounted lazily*, only when the skin is on and that row is ticked.
-  Drawn thinner and fainter than the classified arm: it is a to-do list, not an
-  answer, and at country zoom a full-weight 900k-line network is a red smear.
+  whole and folding these ways into the classified tiles would make every
+  surface tile larger for every rider. That is a fact about storage, and a rider
+  filtering the key should not have to know it — so the arm is *mounted lazily*,
+  only when the skin is on and that row is ticked. Drawn thinner and fainter
+  than the classified arm: it is a to-do list, not an answer.
+- **It is not every untagged road, and the difference is editorial**
+  (2026-08-12). It was, and that cost as much as the entire classified skin
+  (Belgium: 42 MB against 43). Measured against our own tagged data, a Belgian
+  road somebody HAS tagged is unpaved 0.1 % of the time when it is `primary`,
+  0.5 % `secondary`, 2.5 % `tertiary`, 0.0 % `cycleway` and 7.2 %
+  `residential` — and mappers tag the surprising road first, so an *untagged*
+  one of those is safer still. Drawing them as homework asked riders to go and
+  confirm asphalt. The arm now carries only the classes where nobody can predict
+  the answer — `track` (88 % unpaved when tagged), `path` (a coin flip) and
+  rural `unclassified` lanes — which took the Benelux arm from 119 MB to
+  **34.8 MB** and made the prompt sharper rather than weaker. The set lives in
+  the contract (`surface.todo.highways`), not in the client.
+- **Below z11 the same question is answered by a grid, not by roads**
+  (2026-08-12). `surface-gaps.pmtiles` carries one square per ~6 km (a z12 tile)
+  with the kilometres of unrecorded to-do network inside it, its share of that
+  cell's network, and a road count: **0.6 MB for the Benelux against 34.8 MB of
+  lines**. It is the *planning* half of "what still needs recording" — a rider
+  choosing where to point a Scout ride needs to see which part of the map is
+  dark, not 400,000 line geometries they cannot read at that zoom. Shading is
+  the **share**, not the absolute kilometres, so a dense city cell does not
+  out-shout the empty countryside that actually needs surveying.
+  One legend row drives both: the grid stops at exactly the zoom the lines
+  start (contract `gaps.maxZoom` == `todo.minZoom`, pinned on both sides by
+  `web/tests/js/surface-zooms.test.cjs`), so a rider ticks *Surface not
+  recorded* once and gets squares at country zoom, roads once they zoom in.
+  Clicking a square opens a drawer with the numbers and **no "improve this"
+  bridge** — a square is 6 km of countryside, not a road, and the honest next
+  step is to go and ride it rather than to invent an answer for a road you have
+  not seen.
 - **B · Climbs** with traced geometry draw a gradient-coloured line
   (`line-gradient` over `line-progress`, purple ramp `gradColor()`) plus a
   "steepest pitch" marker; the pin sits at the climb **foot** (first route
