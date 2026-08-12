@@ -30,6 +30,7 @@ import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFe
          openRouteById, openPendingById } from './places.js';
 import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
+import { initScoutReview } from './scout-review.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
          initChips, initViewMode } from './panels.js';
 
@@ -312,6 +313,9 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
   initRideCheck();   // riders-only "what's along my GPX?" rail control (ride-check.js)
 
   initDrawerChrome();   // drawer close affordances (drawer.js)
+  // Scout ride review — a no-op unless #scoutPanel is on the page, which it is
+  // only on /scout/review (scout-review.js).
+  initScoutReview();
   initSheet();       // mobile snap sheet (sheet.js)
   initLightbox();    // lightbox chrome + Escape/arrows (lightbox.js)
 

@@ -86,6 +86,41 @@ English word into a name field for good. Cost: the Belgium artifact went from
 43 MB to **53.9 MB** (418,304 ways) — names are ~25%, and unnamed ways omit the
 key entirely rather than carrying an empty string.
 
+### Why the names stay in the tile, measured (2026-08-12)
+
+The alternative considered was a name table on our side, fetched when a rider
+opens the drawer, keeping the tile lean. Measured before deciding, on the
+Belgium extract:
+
+| | |
+|---|---|
+| ways carrying a `name` tag | **78.6%** (157,259 of a 200,000-line sample) |
+| name share of the raw GeoJSONL | **6.1%** |
+| artifact, before → after | 43 MB → **53.9 MB** (+25%) |
+
+PMTiles are gzipped per tile, so 53.9 MB is already the compressed figure. The
+names cost more in the tile than in the raw data (25% against 6%) because vector
+tiles delta-encode geometry into small integers and compress it hard, while
+strings mostly do not.
+
+**The 25% is nonetheless the wrong number to optimise**, and that is the
+argument: nobody downloads the artifact. Tiles are fetched by range request, a
+handful per viewport, so the cost a rider actually pays is the names *in the
+tiles they look at* — and those are exactly the streets whose names they want.
+
+A name table would trade that for a table of hundreds of millions of rows
+worldwide, a request per drawer open, and a database on the one pipeline that
+was designed to need none — `coverage_poi` is the point index precisely because
+lines need neither SQL nor dedupe, which is what makes country-scale surface
+data cheap. Copying OSM's names into our database also cuts against
+`osm-data-architecture.md`'s rule that we reference upstream rather than
+duplicate it.
+
+**Worth doing instead, if the size ever bites:** carry `name` only at the top
+zoom levels. The drawer opens at z14+ and the name is dead weight at z8, so the
+saving is most of the 25% with no behaviour change. Not built — it is a
+tippecanoe filter and a re-harvest, and the current figure is comfortable.
+
 **Road type is now editable.** The drawer has always shown OSM's `highway` tag
 and the form had no counterpart, which makes a read-only row feel like a locked
 door. The form offers six kinds a rider can tell apart from the saddle;

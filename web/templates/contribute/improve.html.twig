@@ -634,6 +634,12 @@
    Harmless no-op include for non-climb items — the scripts only attach to window.Cc. #}
 <script nonce="{{ csp_nonce() }}">
   window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Satellite, which this wizard was missing while add-climb had it: the base
+     control hides its Satellite button when no key reaches the page, so the
+     imagery a rider needs to check a stretch simply was not on offer here
+     (owner-reported 2026-08-12). Street-level stays — they answer different
+     questions, and one is not a substitute for the other. #}
+  window.CC_ESRI_KEY = {{ esri_api_key|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_BASE_LABELS = {
     map: {{ 'map.base_map'|trans|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }},
     satellite: {{ 'map.base_satellite'|trans|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }},

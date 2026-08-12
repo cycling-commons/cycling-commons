@@ -28,6 +28,12 @@ final class SubmissionQueue
     /** Rows per page on both desks. */
     public const int PER_PAGE = 25;
 
+    /**
+     * Change keys that are GEOMETRY: drawn on the map by the before/after
+     * switch, and never rendered into the textual diff.
+     */
+    private const array SHAPE_FIELDS = ['route', 'grad', 'steep', 'steepPoint', 'segment'];
+
     private ?\Collator $collator = null; // created once and reused, not rebuilt per call
 
     public function __construct(
@@ -643,6 +649,46 @@ final class SubmissionQueue
     {
         /** @var array<string, array{was: mixed, now: mixed}> $changes */
         $changes = json_decode($changesJson, true) ?: [];
+
+        /* A road-surface stretch is a shape too, and it was arriving at the
+           desk as a wall of raw JSON in the diff — a curator cannot review
+           `{"a":[5.265,50.276],"b":…,"line":[[…]]}` (owner-reported
+           2026-08-12). It draws on the map like a redrawn climb, using the same
+           before/after switch: geometry is reviewed by looking at it. */
+        if (isset($changes['segment'])) {
+            $seg = static function (string $key) use ($changes): ?array {
+                $side = $changes['segment'][$key] ?? null;
+                if (!\is_array($side)) {
+                    return null;
+                }
+                // The road-following path when the router found one, else the
+                // two taps — the same fallback the item geometry uses.
+                $line = \is_array($side['line'] ?? null) ? $side['line'] : null;
+                if (null === $line) {
+                    $a = $side['a'] ?? null;
+                    $b = $side['b'] ?? null;
+                    if (!\is_array($a) || !\is_array($b)) {
+                        return null;
+                    }
+                    $line = [$a, $b];
+                }
+                // Stored [lng,lat]; showPendingShape() reads climb order,
+                // [lat,lng]. Flipping here keeps ONE renderer for both.
+                $route = [];
+                foreach ($line as $point) {
+                    if (\is_array($point) && 2 === \count($point) && is_numeric($point[0]) && is_numeric($point[1])) {
+                        $route[] = [(float) $point[1], (float) $point[0]];
+                    }
+                }
+
+                return \count($route) >= 2 ? ['route' => $route, 'grad' => [], 'steep' => null] : null;
+            };
+            $before = $seg('was');
+            $after = $seg('now');
+
+            return (null === $before && null === $after) ? null : ['before' => $before, 'after' => $after];
+        }
+
         if (!isset($changes['route']) && !isset($changes['steep'])) {
             return null;
         }
@@ -682,6 +728,13 @@ final class SubmissionQueue
         $changes = json_decode($changesJson, true) ?: [];
         $out = [];
         foreach ($changes as $field => $pair) {
+            // Geometry is reviewed on the map (shapeSides), never as text. A
+            // stretch printed as raw coordinate JSON is not something a human
+            // can check, and it pushed the fields that ARE checkable off the
+            // card (owner-reported 2026-08-12).
+            if (\in_array($field, self::SHAPE_FIELDS, true)) {
+                continue;
+            }
             // A payload shape that is not {was, now} is not a diff and cannot
             // be rendered as one. Skipping beats guessing.
             if (!\is_array($pair)) {

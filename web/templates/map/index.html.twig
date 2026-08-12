@@ -318,6 +318,7 @@
         <div class="cc-cp-stage"></div>
       </div>
     </div>
+    {% if scout_review|default(false) %}{% include 'map/_scout_review.html.twig' %}{% endif %}
     <section class="mly-dock" id="mlyDock" aria-hidden="true" aria-label="{{ 'map.mly_title'|trans }}">
       <div class="mly-grip" id="mlyGrip" role="separator" aria-orientation="horizontal" tabindex="0"
            aria-label="{{ 'map.mly_resize'|trans }}" title="{{ 'map.mly_resize_hint'|trans }}"></div>
@@ -429,6 +430,10 @@ window.CC_VENDOR = {{ {
      HEX-escaped like the others: the value originates outside the app. #}
   {% if surface_tiles_url %}
   window.CC_SURFACE_URL = {{ surface_tiles_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Scout review: the tag vocabulary with the letters each tag may resolve to,
+     from ScoutTag::LETTERS — the same list the intake endpoint validates
+     against, so the panel can never offer a choice the server refuses. #}
+  window.CC_SCOUT_TAGS = {{ scout_tags|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {% endif %}
 </script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog

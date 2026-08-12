@@ -27,6 +27,7 @@ import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
 import { highlightRoute, clearRouteHighlight } from './render.js';
 import { clearSelectedCoverageIcon, invalidateCoverageDrawer } from './coverage.js';
+import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, bumpPlaceReq } from './places.js';
 import { CC_VOTABLE, CC_CONFIRMABLE, routeCommunityPanel, hydrateRouteCommunity,
@@ -898,6 +899,18 @@ export function renderDrawerBody(layer, f){
   if(pShape){
     const first = pShape.after ? 'after' : 'before';
     if(showPendingShape(pShape, first)) fitPendingShape(pShape, first);
+    /* Judging a road-surface stretch means judging WHICH stretch, and the
+       reference skin is what shows the roads around it — with the layer off, a
+       violet line floats on an empty basemap and a curator cannot tell whether
+       it follows the lane or crosses the field beside it (owner-reported
+       2026-08-12). So the layer comes on with the review. Only for A, and only
+       when an artifact exists; it is left ON afterwards deliberately, because
+       silently undoing a rider's layer choice is worse than an extra layer. */
+    if(f.pending.letter === 'A' && surfaceTilesConfigured() && !surfaceTilesVisible()){
+      setSurfaceTiles(true);
+      const btn = document.getElementById('ovSurface');
+      if(btn){ btn.hidden = false; btn.classList.add('on'); }
+    }
   } else {
     clearPendingShape();
   }

@@ -19,6 +19,7 @@ use App\Coverage\CoverageManifest;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\SubmissionQueue;
+use App\Scout\ScoutTag;
 use App\Security\TwoFactorPolicy;
 use App\Service\BaseAreaResolver;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +28,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -37,8 +39,29 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class MapController extends AbstractController
 {
+    /**
+     * The Scout ride-review screen: the SAME map, with a review panel.
+     *
+     * "Use our own full map with all the options" (owner, 2026-08-12) — so this
+     * is not a stripped editor map with two layers. It is `/map`, with every
+     * layer, the satellite and street-level bases, the surface skin and the
+     * search, plus a panel that reads a ride **in the browser** and puts its
+     * tags on it. A second template would have started as a copy and drifted
+     * within a month.
+     *
+     * The ride file is never posted here or anywhere else: this action renders
+     * a page, and the only thing that ever reaches the server is one approved
+     * tag at a time (ScoutIntakeController).
+     */
+    #[Route('/scout/review', name: 'scout_review')]
+    #[IsGranted('ROLE_USER')]
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions): Response
+    {
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $regions, scoutReview: true);
+    }
+
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, RegionRegistryProvider $regions, bool $scoutReview = false): Response
     {
         $user = $this->getUser();
         $regionRows = array_map(
@@ -133,6 +156,12 @@ final class MapController extends AbstractController
             $params['pending'] = $queue->pendingForMap($scopeProvider->scopeFor($user), $focus > 0 ? $focus : null);
         }
 
+        $params['scout_review'] = $scoutReview;
+        // The tag vocabulary and the letters each tag may resolve to, so the
+        // review panel offers exactly what the endpoint will accept — one list,
+        // not two that drift.
+        $params['scout_tags'] = ScoutTag::LETTERS;
+
         return $this->render('map/index.html.twig', $params);
     }
 
@@ -190,7 +219,20 @@ final class MapController extends AbstractController
             'surfDirt' => 'legend_dirt', 'surfRock' => 'legend_rock',
             'surfUnverified' => 'legend_unverified',
             'surface' => 'd_surface', 'roadType' => 'd_road_type',
-            'surfaceConfirm' => 'd_surface_confirm',
+            'surfaceConfirm' => 'd_surface_confirm', 'srcScout' => 'd_src_scout',
+            // Scout review panel (scout-review.js).
+            'scoutTag_resupply' => 'd_scout_tag_resupply', 'scoutTag_closure' => 'd_scout_tag_closure',
+            'scoutTag_surface' => 'd_scout_tag_surface', 'scoutTag_notice' => 'd_scout_tag_notice',
+            'scoutTag_scenery' => 'd_scout_tag_scenery', 'scoutTag_other' => 'd_scout_tag_other',
+            'scoutLetter_A' => 'd_scout_letter_A', 'scoutLetter_C' => 'd_scout_letter_C',
+            'scoutLetter_D' => 'd_scout_letter_D', 'scoutLetter_F' => 'd_scout_letter_F',
+            'scoutLetter_H' => 'd_scout_letter_H', 'scoutLetter_I' => 'd_scout_letter_I',
+            'scoutLetter_J' => 'd_scout_letter_J',
+            'scoutApprove' => 'd_scout_approve', 'scoutSent' => 'd_scout_sent',
+            'scoutSending' => 'd_scout_sending', 'scoutNamePh' => 'd_scout_name_ph',
+            'scoutNeedName' => 'd_scout_need_name', 'scoutSendFailed' => 'd_scout_send_failed',
+            'scoutBadFile' => 'd_scout_bad_file', 'scoutNoTags' => 'd_scout_no_tags',
+            'scoutFitSoon' => 'd_scout_fit_soon',
             'roadMain' => 'd_road_main', 'roadLocal' => 'd_road_local',
             'roadResidential' => 'd_road_residential', 'roadTrack' => 'd_road_track',
             'roadPath' => 'd_road_path', 'roadCycleway' => 'd_road_cycleway',

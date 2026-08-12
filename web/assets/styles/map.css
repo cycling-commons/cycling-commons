@@ -429,6 +429,42 @@
   }
 
   /* ---------- MAPILLARY VIEWER DOCK ---------- */
+  /* Scout ride review: a panel over the real map, not a page of its own —
+     a rider fixing a tag has to see what is already mapped around it. */
+  .scout-panel{position:absolute;top:1rem;left:1rem;z-index:6;width:min(23rem,calc(100% - 2rem));
+    max-height:calc(100% - 2rem);overflow:auto;background:var(--forest);color:var(--paper);
+    border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.35);padding:1rem}
+  .scout-head h2{margin:0 0 .25rem;font-size:1.05rem}
+  .scout-sub{margin:0 0 .8rem;font-size:.78rem;color:rgba(239,230,212,.7);line-height:1.45}
+  .scout-drop{border:1px dashed rgba(239,230,212,.35);border-radius:8px;padding:.9rem;text-align:center}
+  .scout-drop.over{border-color:var(--trail);background:rgba(255,90,31,.08)}
+  .scout-pick{background:var(--trail);color:#fff;border:none;border-radius:6px;padding:.5rem .9rem;
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  .scout-hint{margin:.6rem 0 0;font-size:.7rem;color:rgba(239,230,212,.6);line-height:1.4}
+  .scout-msg{margin:.7rem 0 0;font-size:.76rem;color:rgba(239,230,212,.8)}
+  .scout-msg.err{color:#E8A33D}
+  .scout-count{margin:.9rem 0 .5rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;
+    text-transform:uppercase;color:rgba(239,230,212,.65)}
+  .scout-list ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.35rem}
+  .scout-tag{border:1px solid rgba(239,230,212,.16);border-radius:7px;overflow:hidden}
+  .scout-tag.done{border-color:rgba(127,207,154,.5)}
+  .scout-tag-head{width:100%;text-align:left;background:none;border:none;color:var(--paper);
+    font-family:inherit;font-size:.8rem;padding:.5rem .6rem;cursor:pointer}
+  .scout-tag.done .scout-tag-head{color:#7fcf9a}
+  .scout-tag-body{display:none;flex-direction:column;gap:.4rem;padding:0 .6rem .6rem}
+  .scout-tag.open .scout-tag-body{display:flex}
+  .scout-letter,.scout-name{background:rgba(0,0,0,.2);border:1px solid rgba(239,230,212,.22);
+    border-radius:5px;color:var(--paper);font-family:inherit;font-size:.78rem;padding:.35rem .45rem}
+  .scout-approve{background:var(--trail);color:#fff;border:none;border-radius:5px;padding:.4rem .6rem;
+    font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  .scout-approve:disabled{background:rgba(127,207,154,.35);cursor:default}
+  /* Red because it is UNRESOLVED, not because it is wrong: red is the one
+     colour the map does not use for a place, so a rider can find what still
+     needs them at a glance. Green once it has gone in. */
+  .scout-pin{width:1.35rem;height:1.35rem;border-radius:50%;background:#D92D20;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.62rem;
+    border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer}
+  .scout-pin.done{background:#2E8B57}
   .mly-dock{position:absolute;left:0;right:0;bottom:0;height:clamp(280px,44vh,480px);z-index:1300;background:var(--ink);
     border-top:1px solid var(--spruce-lift);box-shadow:0 -12px 30px -16px rgba(0,0,0,.6);
     transform:translateY(102%);transition:transform .28s ease, top .28s ease, left .28s ease, right .28s ease, bottom .28s ease;

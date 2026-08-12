@@ -21,6 +21,11 @@ enum ItemSource: string
     case Pivot = 'pivot';
     case Wikidata = 'wikidata';
     case User = 'user';
+    /* Submitted through the Scout flow — a tag dropped while riding, reviewed
+       at home and sent from the ride-review screen. It says HOW it arrived and
+       nothing about verification: the server never saw the ride file and cannot
+       check a thing about it (Dated/2026-08-09-scout-cc-tagger-plan.md §3). */
+    case Scout = 'scout';
     case Manual = 'manual';
     case Auto = 'auto';
 }

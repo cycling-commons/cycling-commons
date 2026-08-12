@@ -556,6 +556,17 @@ the newest rung of that same ladder.
   reading these classes) drops the basemap to a flat light-grey and hides
   satellite and street-level with it, leaving only the surface lines. Turning it
   off restores whatever the style had, rather than forcing everything visible.
+  **It is gated on the surface skin being on**: with the layer off it would strip
+  the basemap to show nothing, and a rider landing on a blank page cannot tell
+  whether the feature is broken or the layer is missing. The control disables
+  with the layer and switches off with it.
+- **`unverified` is labelled "Surface not recorded"**, not "unverified" — the
+  class means OSM records no `surface` tag there, and riders are precisely who
+  *verifies* things, so the old word claimed the opposite of what it meant
+  (owner-reported 2026-08-12). Note that the classified artifact does not carry
+  this class at all: untagged ways are the separate untagged arm, which is not
+  built or served yet, so the legend row currently describes our own curated
+  items only.
 - **B · Climbs** with traced geometry draw a gradient-coloured line
   (`line-gradient` over `line-progress`, purple ramp `gradColor()`) plus a
   "steepest pitch" marker; the pin sits at the climb **foot** (first route

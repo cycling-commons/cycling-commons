@@ -1510,6 +1510,58 @@ trusted moderators later, not built.
   designated machinery; the coverage-side trigger is not yet built
   ([coverage-provider.md](coverage-provider.md)).
 
+## Scout intake — a ride reviewed at home, one tag at a time
+
+**Status: built 2026-08-12** (`/scout/review`, `ScoutIntakeController`,
+`web/assets/map/scout-review.js`). Consolidated from
+`Dated/2026-08-09-scout-cc-tagger-plan.md` tasks 5, 7 and 8; the FIT parser
+(task 1) is not vendored yet, so the screen reads GPX and says so plainly.
+
+**The ride never reaches the server.** It is read in the rider's own browser
+with `FileReader`, drawn from memory, and what crosses the network is a single
+tag the rider has approved. There is no upload, no server-side draft, nothing to
+expire and nothing to delete. That is a property of the code, not a policy:
+`ScoutIntakeController` **refuses** a payload carrying `track`, `polyline`,
+`records`, `coordinates`, `gpx`, `fit` and the rest with a 422, rather than
+ignoring the extra field — ignoring is how a trace starts arriving and nobody
+notices for a year. Four of those keys are covered by tests.
+
+**It runs on the real map**, not a stripped editor map (owner, 2026-08-12): a
+rider fixing a tag needs to see what is already mapped around it — the water
+point twenty metres away that makes theirs a duplicate, the surface line they
+are about to contradict. That judgement is the task.
+
+**Tags are red until they are resolved.** Red is the one colour the map does not
+use for a place, so a rider scanning a ride can find what still needs them; a
+sent tag turns green. Dragging a tag is **clamped to the ride line**, because a
+tag is a point on a ride and letting it drift into the field beside the road is
+how a water point ends up in a hedge.
+
+**One tag, one request, one decision.** No batch verb: a ride is thirty separate
+judgements by the rider, and a bulk call makes partial failure unreportable
+("nine of thirty went in — which nine?"). Every tag becomes an ordinary
+submission in the ordinary queue, and nothing about the moderation side changes
+— *one way to moderate* binds here too.
+
+**Provenance is `scout`**, its own `ItemSource`. It says HOW a contribution
+arrived and deliberately not that anything was checked: the server never saw the
+ride file and cannot verify a thing about it. A Scout tag is worth exactly one
+ordinary submission, and a Scout ride-claim exactly one *I rode this*.
+
+**The tag vocabulary is stated once.** `App\Scout\ScoutTag::LETTERS` maps each
+of Scout's six tag types to the catalog letters it may become, the review panel
+offers exactly that list, and the endpoint validates against the same constant —
+so the panel can never present a choice the server refuses. `resupply` may be
+water or a bike service; `other` may be almost anything, which is why it is
+resolved by the rider rather than guessed by us.
+
+**Open:** the observation date rides in the submission's raw payload (which the
+moderator reads) rather than as a first-class attribute — making it one is task
+6a of the plan and a registry change of its own. And approving every tag by hand
+is the right default for a stranger and the wrong one for a rider with two
+hundred approved submissions behind them; contributor standing is in
+`docs/TODO.md`.
+
 ## 13. Open questions
 
 - **Confirmations vs the verification threshold (X):** whether

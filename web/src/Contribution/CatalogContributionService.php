@@ -224,6 +224,10 @@ final class CatalogContributionService implements ContributionStubInterface
             $osmRef = $rawRef;
         }
 
+        // `via` is the intake channel, and only a value we know is honoured —
+        // a client cannot label its submission anything it likes.
+        $source = 'scout' === ($payload['via'] ?? null) ? ItemSource::Scout : null;
+
         $draft = new SubmissionDraft(
             type: $type,
             title: $name,
@@ -231,6 +235,7 @@ final class CatalogContributionService implements ContributionStubInterface
             lng: (float) $payload['lng'],
             attributes: $attributes,
             osmRef: $osmRef,
+            source: $source,
         );
 
         $submission = $this->submitDraft($draft, SubmissionType::NewItem, $by, $payload);
@@ -608,7 +613,7 @@ final class CatalogContributionService implements ContributionStubInterface
                     ->setCountryCode($geo['countryCode'])
                     ->setRegionId($geo['regionId'])
                     ->setState(ItemState::Submitted)
-                    ->setSource(null !== $draft->osmRef ? ItemSource::Osm : ItemSource::User)
+                    ->setSource($draft->source ?? (null !== $draft->osmRef ? ItemSource::Osm : ItemSource::User))
                     ->setSourceRef($draft->osmRef ?? 'sub:'.(string) $submission->getId())
                     ->setAttributes($draft->attributes);
                 $this->em->persist($item);

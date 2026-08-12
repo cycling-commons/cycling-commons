@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Contribution;
 
+use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -60,6 +61,10 @@ final readonly class SubmissionDraft
          */
         #[Assert\Regex(pattern: '~^(node|way)/\d{1,16}$~')]
         public ?string $osmRef = null,
+        /* Where this came in from, when it is not the ordinary web form.
+           Null keeps the existing rule (an OSM ref means `osm`, otherwise
+           `user`), so every caller that does not care is unaffected. */
+        public ?ItemSource $source = null,
     ) {
     }
 }
