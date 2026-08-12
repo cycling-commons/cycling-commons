@@ -32,7 +32,7 @@ final class SubmissionQueue
      * Change keys that are GEOMETRY: drawn on the map by the before/after
      * switch, and never rendered into the textual diff.
      */
-    private const array SHAPE_FIELDS = ['route', 'grad', 'steep', 'steepPoint', 'segment'];
+    private const array SHAPE_FIELDS = ['route', 'grad', 'steep', 'steepPoint', 'segment', 'location'];
 
     private ?\Collator $collator = null; // created once and reused, not rebuilt per call
 
@@ -681,6 +681,32 @@ final class SubmissionQueue
     {
         /** @var array<string, array{was: mixed, now: mixed}> $changes */
         $changes = json_decode($changesJson, true) ?: [];
+
+        /* A MOVED PIN is a shape as well, and the least readable of all as text:
+           "52.62142, 5.13569 → 52.62117, 5.13448" tells a curator that something
+           moved and nothing about whether it moved to the right place (owner
+           2026-08-12). It goes to the same before/after switch, drawn as two
+           points on the map they are already looking at. */
+        if (isset($changes['location'])) {
+            $point = static function (string $key) use ($changes): ?array {
+                $raw = $changes['location'][$key] ?? null;
+                if (!\is_string($raw)) {
+                    return null;
+                }
+                $parts = array_map('trim', explode(',', $raw));
+                if (2 !== \count($parts) || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
+                    return null;
+                }
+
+                // `point`, not `route`: one position, not a line. The renderer
+                // draws a marker for it and a line for the others.
+                return ['point' => [(float) $parts[0], (float) $parts[1]], 'route' => [], 'grad' => [], 'steep' => null];
+            };
+            $before = $point('was');
+            $after = $point('now');
+
+            return (null === $before && null === $after) ? null : ['before' => $before, 'after' => $after];
+        }
 
         /* A road-surface stretch is a shape too, and it was arriving at the
            desk as a wall of raw JSON in the diff — a curator cannot review

@@ -110,7 +110,15 @@
                    placeholder="{{ 'moderate.escalate.reason_placeholder'|trans }}">
             <label class="q-act-ack"><input type="checkbox" required>
               <span>{{ 'moderate.escalate.confirm_check'|trans }}</span></label>
-            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.escalate.submit'|trans }}</button>
+            {# A way out. Pressing ⚑ again does close it, but only once you have
+               worked out that the flag is a toggle — and a panel that announces
+               "nothing can delete it afterwards" is not one to feel trapped in
+               (owner 2026-08-12). The tick-box stays here: escalation alerts an
+               administrator and cannot be undone by anyone. #}
+            <div class="q-act-buttons">
+              <button type="submit" class="btn-act btn-secondary">{{ 'moderate.escalate.submit'|trans }}</button>
+              <button type="button" class="btn-act btn-quiet q-act-cancel">{{ 'moderate.action.cancel'|trans }}</button>
+            </div>
           </form>
         </div>
       </details>
@@ -133,16 +141,17 @@
             <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong></p>
             <p>{{ 'moderate.trash.confirm_rest'|trans }}</p>
             <p class="q-act-when">{{ 'moderate.trash.when'|trans }}</p>
-            {# Typed confirmation (moderator rulebook): native pattern validation
-               blocks the POST unless the literal word is typed; the server
-               re-checks. Closing the panel/cancelling sends nothing — no record
-               is written for an uncompleted Trash. #}
-            <label class="trash-type-label">{{ 'moderate.trash.type_label'|trans }}
-              <input type="text" name="confirm" required pattern="DELETE" autocomplete="off" spellcheck="false" placeholder="DELETE" class="trash-type-input">
-            </label>
-            <label class="q-act-ack"><input type="checkbox" required>
-              <span>{{ 'moderate.trash.confirm_check'|trans }}</span></label>
-            <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
+            {# The typed DELETE and the tick-box are gone (owner 2026-08-12).
+               Opening this panel and pressing Trash inside it is already two
+               deliberate acts on a control that is one icon among five; a third
+               and fourth were friction a curator learns to type through, which
+               is the opposite of care. The warning above is what does the work.
+               Closing the panel sends nothing — no record is written for an
+               uncompleted Trash. #}
+            <div class="q-act-buttons">
+              <button type="submit" class="btn-act btn-secondary btn-danger">{{ 'moderate.trash.button'|trans }}</button>
+              <button type="button" class="btn-act btn-quiet q-act-cancel">{{ 'moderate.action.cancel'|trans }}</button>
+            </div>
           </form>
         </div>
       </details>

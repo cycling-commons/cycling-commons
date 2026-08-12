@@ -1643,6 +1643,26 @@ and a curator judging a move has to see where it is being moved TO.
 Moving nothing is still nothing: an edit whose pin has not moved, with no other
 change, is refused as before.
 
+**And it is DRAWN, not printed.** "52.62142, 5.13569 → 52.62117, 5.13448" tells
+a curator that something moved and nothing about whether it moved to the right
+place (owner 2026-08-12), so `location` joins the shape fields: it leaves the
+textual diff entirely and feeds the same before/after switch a redrawn climb
+uses. Two rings on the map — dashed grey for where it was, violet for where it
+is proposed — with the map framed on the pair, because a curator flipping
+between two off-screen points learns nothing. A ring rather than a pin so the
+item's own marker stays visible underneath: the comparison is the question.
+
+**The desk's confirmation gates changed** (owner 2026-08-12). Trash no longer
+asks the curator to type DELETE or to tick a box — opening the panel and
+pressing Trash inside it are already two deliberate acts on a control that is
+one icon among five, and a word typed fifty times is a reflex rather than a
+check. The server-side re-check went with it, on both desks, rather than being
+left as a hidden constant that always passes. What protects the row is what
+always did: a valid CSRF token, a POST, and the curator role. Escalation keeps
+its tick-box — it alerts an administrator and cannot be undone by anyone — and
+both panels gained a Cancel, because a panel that says "nothing can delete it
+afterwards" is not one to feel trapped in.
+
 ### What a Scout ride carries that intake cannot yet take (2026-08-12)
 
 Stated concretely, because "mostly works" is how a gap survives a release:

@@ -1911,6 +1911,7 @@ improve:
     label: 'Fotos'
     current_label: 'Aktuelle(s) Foto(s)'
     current_alt: 'Foto von %name%'
+    open_full: 'Foto in voller Größe öffnen'
     photo_label: 'Foto hinzufügen — optional'
     photo_drop: 'Fotos hier ablegen oder klicken zum Auswählen'
     photo_types: 'JPG · PNG · WebP · HEIC · nur deine eigenen Fotos'
@@ -2210,6 +2211,7 @@ moderate:
     decision_label: 'Entscheidung'
     review_on_map: 'Prüfen'
     edit_form: 'Formular bearbeiten'
+    cancel: 'Abbrechen'
     submit: 'Entscheidung erfassen'
     view: 'Auf der Karte ansehen ↗'
   error:

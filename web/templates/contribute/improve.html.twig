@@ -114,8 +114,11 @@
 
   /* C5: read-only strip of the item's existing photo(s), step 3 */
   .cur-photos{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.6rem}
-  .cur-photo{margin:0;width:110px}
-  .cur-photo img{display:block;width:110px;height:82px;object-fit:cover;border-radius:6px;border:1px solid rgba(20,22,14,.18);background:var(--paper-deep)}
+  .cur-photo{margin:0;width:200px}
+  .cur-photo a{display:block;border-radius:6px;overflow:hidden}
+  .cur-photo img{display:block;width:200px;height:150px;object-fit:cover;border-radius:6px;border:1px solid rgba(20,22,14,.18);background:var(--paper-deep);transition:transform .15s}
+  .cur-photo a:hover img{transform:scale(1.02)}
+  .cur-photo a:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
   .cur-photo figcaption{font-family:var(--mono);font-size:.6rem;color:#9a9d8c;margin-top:.3rem;line-height:1.35}
 
   /* upload queue + consent */
@@ -287,7 +290,7 @@
      improve.js step 1: a climb (letter B) mounts the shared three-point
      editor instead of the single-pin Locate (Task 5). Only emitted here —
      the unbound branch above never reaches this template region. #}
-  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   <script nonce="{{ csp_nonce() }}">window.CC_MEDIA = {{ {
     tokenUrl: path('media_token'),
     uploadUrl: path('media_photos_upload'),
@@ -518,7 +521,16 @@
         <div class="cur-photos" id="cur-photos">
           {% for p in currentPhotos %}
             <figure class="cur-photo">
-              <img src="{{ p.sm|default(p.lg|default('')) }}" alt="{{ 'improve.step3.current_alt'|trans({'%name%': current.name|default('')}) }}" loading="lazy" />
+              {# A 110px crop cannot answer the question this step asks — is
+                 this the right photo, is anyone identifiable in it, is it worth
+                 keeping? So the thumbnail opens the full-size file in a new tab
+                 (owner 2026-08-12). A plain link, not a lightbox: it works
+                 without JavaScript, it can be zoomed and saved, and it needs no
+                 new machinery on a page that has enough. #}
+              <a href="{{ p.lg|default(p.sm|default('')) }}" target="_blank" rel="noopener"
+                 title="{{ 'improve.step3.open_full'|trans }}">
+                <img src="{{ p.sm|default(p.lg|default('')) }}" alt="{{ 'improve.step3.current_alt'|trans({'%name%': current.name|default('')}) }}" loading="lazy" />
+              </a>
               {% if p.credit is defined and p.credit %}
                 <figcaption>© {{ p.credit }}{% if p.license is defined and p.license %} · {{ p.license }}{% endif %}</figcaption>
               {% endif %}

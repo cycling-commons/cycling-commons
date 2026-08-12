@@ -55,7 +55,22 @@ export function showPendingShape(shape, side) {
   clearPendingShape();
   _side = side === 'before' ? 'before' : 'after';
   const s = shape && shape[_side];
-  if (!s || !Array.isArray(s.route) || s.route.length < 2) return false;
+  if (!s) return false;
+
+  /* A moved PIN: one position, not a line. Drawn as a ring rather than a
+     marker so the item's own pin stays visible underneath — the question a
+     curator is answering is "from where to where", and hiding one of the two
+     answers it badly. Before is muted and dashed, after is the violet the
+     change history uses for a new value, exactly as the line sides are. */
+  if (Array.isArray(s.point) && s.point.length === 2) {
+    const el = document.createElement('div');
+    el.className = 'cc-pending-point cc-pending-point--' + _side;
+    _marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([+s.point[1], +s.point[0]]).addTo(map);
+    return true;
+  }
+
+  if (!Array.isArray(s.route) || s.route.length < 2) return false;
 
   // Stored [lat,lng]; GeoJSON wants [lng,lat].
   const coords = s.route
@@ -98,6 +113,15 @@ export function showPendingShape(shape, side) {
 /** Fit the map to whichever side is drawn, so the difference is on screen. */
 export function fitPendingShape(shape, side) {
   const s = shape && shape[side === 'before' ? 'before' : 'after'];
+  // A moved pin: both positions matter, so frame the pair rather than one of
+  // them — a curator flipping between two off-screen points learns nothing.
+  if (s && Array.isArray(s.point)) {
+    const other = shape[side === 'before' ? 'after' : 'before'];
+    const b = new maplibregl.LngLatBounds([+s.point[1], +s.point[0]], [+s.point[1], +s.point[0]]);
+    if (other && Array.isArray(other.point)) b.extend([+other.point[1], +other.point[0]]);
+    map.fitBounds(b, { padding: 120, maxZoom: 17, duration: 0 });
+    return;
+  }
   if (!s || !Array.isArray(s.route) || s.route.length < 2) return;
   const lats = s.route.map(p => +p[0]).filter(isFinite);
   const lngs = s.route.map(p => +p[1]).filter(isFinite);

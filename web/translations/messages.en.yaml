@@ -1544,6 +1544,7 @@ improve:
     label: 'Photos'
     current_label: 'Current photo(s)'
     current_alt: 'Photo of %name%'
+    open_full: 'Open the full-size photo'
     photo_label: 'Add a photo — optional'
     photo_drop: 'Drop photos here, or click to choose'
     photo_types: 'JPG · PNG · WebP · HEIC · your own photos only'
@@ -2232,6 +2233,7 @@ moderate:
     view: 'View on map ↗'
     review_on_map: 'Review'
     edit_form: 'Edit the form'
+    cancel: 'Cancel'
   error:
     submission_id_required: 'Submission ID is required.'
     decision_required: 'A decision is required.'

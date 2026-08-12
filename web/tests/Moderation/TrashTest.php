@@ -603,42 +603,49 @@ final class TrashTest extends WebTestCase
      * Without it nothing is deleted and no trash record is written — a
      * cancelled/unconfirmed Trash leaves zero trace.
      */
-    public function testTrashWithoutTypedConfirmationDeletesNothing(): void
+    public function testTrashStillNeedsAValidTokenAndAPost(): void
     {
+        /* The typed DELETE is gone (owner 2026-08-12): opening the panel and
+           pressing Trash inside it are the two deliberate acts, and a word a
+           curator types fifty times is a reflex rather than a check.
+
+           What must still hold is what actually protects the row — a valid CSRF
+           token and a POST. A forged form or a link somebody was sent must
+           destroy nothing. */
         $client = static::createClient();
         $rider = $this->rider('http-noconfirm');
         $sub = $this->seedSubmission((int) $rider->getId());
 
         $client->loginUser($this->curator());
-        $token = $this->submissionTrashToken($client);
 
-        foreach (['', 'delete', 'DELET', null] as $bad) {
-            $post = ['kind' => 'submission', 'id' => (string) $sub->getId(), '_token' => $token];
-            if (null !== $bad) {
-                $post['confirm'] = $bad;
-            }
-            $client->request('POST', '/moderate/trash', $post);
-            self::assertResponseRedirects();
-        }
+        $client->catchExceptions(true);
+        $client->request('POST', '/moderate/trash', [
+            'kind' => 'submission', 'id' => (string) $sub->getId(), '_token' => 'not-a-token',
+        ]);
+        self::assertResponseStatusCodeSame(403, 'a bad token destroys nothing');
+
+        $client->request('GET', '/moderate/trash?kind=submission&id='.$sub->getId());
+        self::assertResponseStatusCodeSame(405, 'and neither does a GET');
 
         $this->em()->clear();
-        self::assertNotNull($this->em()->find(Submission::class, $sub->getId()), 'submission survives every unconfirmed attempt');
+        self::assertNotNull($this->em()->find(Submission::class, $sub->getId()));
     }
 
-    public function testRouteTrashWithoutTypedConfirmationDeletesNothing(): void
+    public function testRouteTrashStillNeedsAValidToken(): void
     {
+        // Same rule as the item desk: the token and the method are what protect
+        // the row, now that the typed word is gone.
         $client = static::createClient();
         $route = $this->route(ItemState::Submitted);
 
         $client->loginUser($this->curator());
-        $token = $this->proposalTrashToken($client, (int) $route->getId());
 
         $client->request('POST', '/moderate/routes/trash', [
             'kind' => 'proposal',
             'id' => (string) $route->getId(),
-            '_token' => $token,
+            '_token' => 'not-a-token',
         ]);
-        self::assertResponseRedirects();
+        self::assertResponseStatusCodeSame(403);
 
         $this->em()->clear();
         self::assertNotNull($this->em()->find(RecommendedRoute::class, $route->getId()));

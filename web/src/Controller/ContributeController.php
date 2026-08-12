@@ -471,6 +471,23 @@ final class ContributeController extends AbstractController
             }
         }
 
+        /* Where the item is, for the wizard's Locate step.
+           It used to come only from `?lat=&lng=` on the link, so a bare
+           `/improve?item=…` — the desk's own edit link, and anything typed or
+           bookmarked — opened with no map and no way to move the pin at all
+           (owner-reported 2026-08-12). The item knows its own position; the URL
+           was never the right place to learn it.
+
+           A segment or a polygon reports its first vertex, the same
+           representative point the edit path already uses elsewhere. */
+        $geom = json_decode((string) $item->getGeom(), true);
+        $point = \is_array($geom) ? ($geom['coordinates'] ?? null) : null;
+        while (\is_array($point) && \is_array($point[0] ?? null)) {
+            $point = $point[0];
+        }
+        $itemLat = \is_array($point) && is_numeric($point[1] ?? null) ? (float) $point[1] : null;
+        $itemLng = \is_array($point) && is_numeric($point[0] ?? null) ? (float) $point[0] : null;
+
         return $this->render('contribute/improve.html.twig', [
             'page_title' => 'meta.improve_title',
             'page_description' => 'meta.improve_description',
@@ -478,6 +495,8 @@ final class ContributeController extends AbstractController
             'item_type' => $type,
             'unbound' => false,
             'edit_name' => $item->getName(),
+            'item_lat' => $itemLat,
+            'item_lng' => $itemLng,
             'receipt' => null,
             'form' => $form,
             // Lets step 3 ("Photos & video") show the item's existing photo(s)

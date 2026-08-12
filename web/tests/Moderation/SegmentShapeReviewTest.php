@@ -70,4 +70,30 @@ final class SegmentShapeReviewTest extends TestCase
     {
         self::assertNull($this->call('shapeSides', ['surface' => ['was' => 'Asphalt', 'now' => 'Gravel']]));
     }
+
+    public function testAMovedPinBecomesTwoDrawablePoints(): void
+    {
+        // "52.62142, 5.13569 → 52.62117, 5.13448" says something moved and
+        // nothing about whether it moved to the right place. The desk draws it
+        // instead, on the map the curator is already looking at.
+        $shape = $this->call('shapeSides', ['location' => [
+            'was' => '52.62142, 5.13569',
+            'now' => '52.62117, 5.13448',
+        ]]);
+
+        self::assertIsArray($shape);
+        self::assertSame([52.62142, 5.13569], $shape['before']['point']);
+        self::assertSame([52.62117, 5.13448], $shape['after']['point']);
+        self::assertSame([], $shape['before']['route'], 'a point is not a line');
+    }
+
+    public function testAMovedPinDoesNotAlsoPrintAsText(): void
+    {
+        $rows = $this->call('changeRows', [
+            'location' => ['was' => '52.62142, 5.13569', 'now' => '52.62117, 5.13448'],
+            'bench' => ['was' => null, 'now' => 'No'],
+        ]);
+
+        self::assertSame(['bench'], array_column($rows, 'key'));
+    }
 }

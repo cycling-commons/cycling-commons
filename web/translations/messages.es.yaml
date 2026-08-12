@@ -1555,6 +1555,7 @@ improve:
     label: 'Fotos'
     current_label: 'Foto(s) actual(es)'
     current_alt: 'Foto de %name%'
+    open_full: 'Abrir la foto a tamaño completo'
     photo_label: 'Añadir una foto — opcional'
     photo_drop: 'Suelta aquí las fotos, o pulsa para elegirlas'
     photo_types: 'JPG · PNG · WebP · HEIC · solo tus propias fotos'
@@ -2245,6 +2246,7 @@ moderate:
     view: 'Ver en el mapa ↗'
     review_on_map: 'Revisar'
     edit_form: 'Editar el formulario'
+    cancel: 'Cancelar'
   error:
     submission_id_required: 'El identificador del envío es obligatorio.'
     decision_required: 'Hace falta una decisión.'

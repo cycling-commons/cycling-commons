@@ -41,8 +41,15 @@
   // An existing item's coordinates, when we arrive from the map's "Edit this
   // item" link (?lat=&lng=). We show the map centred there so the contributor
   // can SEE and correct the location — not just when adding a new place.
+  /* The item's own position, when the server knows it. `?lat=&lng=` still wins
+     — the map's "◎ Fix location" bridge sends the exact pin a rider clicked —
+     but a bare /improve?item=… now opens on the item instead of with no Locate
+     step at all, which is what the desk's edit link produced. */
+  var _itemPos = window.CC_ITEM || {};
   var initLat = parseFloat(_q.get('lat'));
   var initLng = parseFloat(_q.get('lng'));
+  if (isNaN(initLat) && typeof _itemPos.lat === 'number') initLat = _itemPos.lat;
+  if (isNaN(initLng) && typeof _itemPos.lng === 'number') initLng = _itemPos.lng;
   var hasCoords = !isNaN(initLat) && !isNaN(initLng);
 
   // A stretch we already know the ends of (?sa=lng,lat&sb=lng,lat). The map

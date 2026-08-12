@@ -8,6 +8,24 @@
   Spec: moderation-and-contribution.md §5.2.
 #}
 <script nonce="{{ csp_nonce() }}">
+/* Cancel closes the panel it sits in.
+
+   Pressing the ⚑ or 🗑 summary again does close it, but only once a curator has
+   worked out that the control is a toggle — and a panel that announces "nothing
+   can delete it afterwards" is not one to feel trapped in (owner 2026-08-12).
+   Delegated, because rows are re-rendered and a listener per button would leak
+   one per row. */
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest && e.target.closest('.q-act-cancel');
+  if (!btn) return;
+  var panel = btn.closest('details.q-act');
+  if (!panel) return;
+  e.preventDefault();
+  panel.open = false;
+  var summary = panel.querySelector('summary');
+  if (summary) summary.focus();   // back where they were, not adrift on the page
+});
+
 /* A decision taken on the map removes its row here, live.
 
    The desk and the map are two views of one queue, and a curator moves between

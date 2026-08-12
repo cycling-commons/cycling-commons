@@ -1908,6 +1908,7 @@ improve:
     label: 'Foto''s'
     current_label: 'Huidige foto(''s)'
     current_alt: 'Foto van %name%'
+    open_full: 'Open de foto op volledig formaat'
     photo_label: 'Foto toevoegen — optioneel'
     photo_drop: 'Sleep foto''s hierheen, of klik om te kiezen'
     photo_types: 'JPG · PNG · WebP · HEIC · alleen jouw eigen foto''s'
@@ -2207,6 +2208,7 @@ moderate:
     decision_label: 'Beslissing'
     review_on_map: 'Bekijken'
     edit_form: 'Formulier bewerken'
+    cancel: 'Annuleren'
     submit: 'Beslissing registreren'
     view: 'Op de kaart bekijken ↗'
   error:

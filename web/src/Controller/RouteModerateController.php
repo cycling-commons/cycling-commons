@@ -278,15 +278,11 @@ final class RouteModerateController extends AbstractController
     {
         $this->validateCsrf($request, 'route-trash');
 
-        // Typed confirmation (moderator rulebook, same guard as the item
-        // desk): Trash is irreversible — the desk requires the literal word,
-        // this is the server-side re-check. An unconfirmed Trash writes
-        // nothing.
-        if ('DELETE' !== $request->request->get('confirm')) {
-            $this->addFlash('danger', 'moderate.trash.confirm_required');
-
-            return $this->redirectToRoute('moderate_routes');
-        }
+        // The typed-DELETE gate is gone (owner 2026-08-12): opening the
+        // panel and pressing Trash inside it are the two deliberate acts,
+        // and a word a curator types fifty times is a reflex, not a check.
+        // Everything else about Trash is unchanged — irreversible, logged,
+        // content-free record, no message sent.
 
         $kind = (string) $request->request->get('kind');
         $id = (int) $request->request->get('id');
