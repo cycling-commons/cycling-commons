@@ -159,6 +159,7 @@ export const MODE_LS_KEY = 'cc-map-mode';
 export function resolveInitialMode(prefs, scope, registry){
   const p = prefs || {};
   if(p.mapMode === 'curated') return 'curated';
+  if(p.mapMode === 'confirmed') return 'confirmed';
   if(p.mapMode === 'everything') return 'all';
   // Only anonymous visitors fall through to the device: a logged-in rider on
   // 'auto' has deliberately chosen to follow the region.
@@ -166,7 +167,7 @@ export function resolveInitialMode(prefs, scope, registry){
     if(!p.authed){
       let stored = null;
       try { stored = localStorage.getItem(MODE_LS_KEY); } catch(e){ /* private mode */ }
-      if(stored === 'curated' || stored === 'all') return stored;
+      if(stored === 'curated' || stored === 'confirmed' || stored === 'all') return stored;
     }
   }
   // A single named region can carry the flag; a country/Everywhere/My-area

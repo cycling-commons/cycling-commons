@@ -28,6 +28,7 @@ enum MapViewMode: string
 {
     case Auto = 'auto';
     case Everything = 'everything';
+    case Confirmed = 'confirmed';
     case Curated = 'curated';
 
     /**
@@ -36,12 +37,18 @@ enum MapViewMode: string
      * HTML demo, and renaming a live DOM contract to match a new enum would be
      * the tail wagging the dog. `Auto` has no token — it resolves per region at
      * load time, client-side.
+     *
+     * `Confirmed` is the middle rung (owner 2026-08-12): everything a human has
+     * vouched for, whether by standing there and confirming it or by a curator
+     * verifying it, which makes it a true superset of Curated rather than a
+     * third unrelated filter.
      */
     public function clientToken(): ?string
     {
         return match ($this) {
             self::Auto => null,
             self::Everything => 'all',
+            self::Confirmed => 'confirmed',
             self::Curated => 'curated',
         };
     }

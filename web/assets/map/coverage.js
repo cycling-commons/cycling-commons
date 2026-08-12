@@ -175,7 +175,12 @@ export function syncCoverageLayers(){
     // on/off + Curated dim are per-letter decisions; apply them uniformly to
     // every per-country layer of this letter.
     const utility=COV_UTILITY.has(KEY_LETTER[key]);
-    const show=active.has(key) && (mode()==='all' || utility);
+    /* Coverage is the reference layer: OpenStreetMap as it stands, which by
+       definition nobody here has vouched for. So it stays out of Confirmed
+       entirely - a mode that means "someone checked this" cannot carry the
+       one layer where nobody has. Curated keeps showing utilities dimmed,
+       because finding water was never an editorial judgement. */
+    const show=active.has(key) && (mode()==='all' || (utility && mode()==='curated'));
     const dim=(mode()==='curated' && utility)?0.55:1;
     COVERAGE_CCS.forEach(cc=>{
       const id = cc ? key+'-'+cc+'-cov' : key+'-cov'; if(!map.getLayer(id)) return;

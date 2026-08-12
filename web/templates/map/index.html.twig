@@ -136,6 +136,11 @@
            visitor's earlier choice, or a region a moderator has flipped. #}
         <div class="toggle" id="mode">
           <button data-m="curated">{{ 'map.curated'|trans }}</button>
+          {# The middle rung (owner 2026-08-12): everything a human has vouched
+             for. Between the editor's best-of and the raw import, and a true
+             superset of the first - a curated place counts as vouched for even
+             before a rider has stood at it. #}
+          <button data-m="confirmed">{{ 'map.confirmed'|trans }}</button>
           <button class="on" data-m="all">{{ 'map.everything'|trans }}</button>
         </div>
         {# Hidden to match the Everything default above; initViewMode() reveals
@@ -439,7 +444,8 @@ window.CC_VENDOR = {{ {
      HEX-escaped like the others: the value originates outside the app. #}
   {% if surface_tiles_url %}
   window.CC_SURFACE_URL = {{ surface_tiles_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  window.CC_SURFACE_UNTAGGED_URL = {{ surface_untagged_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  window.CC_SURFACE_TODO_URL = {{ surface_todo_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  window.CC_SURFACE_GAPS_URL = {{ surface_gaps_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Scout review: the tag vocabulary with the letters each tag may resolve to,
      from ScoutTag::LETTERS — the same list the intake endpoint validates
      against, so the panel can never offer a choice the server refuses. #}

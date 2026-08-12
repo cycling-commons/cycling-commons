@@ -53,6 +53,7 @@ final class MapViewModeController extends AbstractController
         // the enum value — see MapViewMode::clientToken() for why those differ.
         $mode = match ((string) $request->request->get('mode')) {
             'curated' => MapViewMode::Curated,
+            'confirmed' => MapViewMode::Confirmed,
             'all' => MapViewMode::Everything,
             'auto' => MapViewMode::Auto,
             default => null,

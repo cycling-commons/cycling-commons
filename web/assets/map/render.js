@@ -346,7 +346,7 @@ export const surfaceClsLayerIds=()=>SURFACE_CLS.map(c=>'surface-cls-'+c);
 export function renderSurfaceLayer(layer, visible){
   const feats=[];
   if(visible) layer.features.forEach((f,i)=>{
-    if(!((mode()==='all')||!layer.exp||f.cur)) return;   // same visibility rule as featureVisible()
+    if(!(mode()==='confirmed' ? (f.v||f.cur) : ((mode()==='all')||!layer.exp||f.cur))) return;   // same visibility rule as featureVisible()
     if(!inScope(f.rid)) return;                        // region scope gate (map-and-search.md §4.5)
     feats.push({type:'Feature',
       properties:{idx:i, cls:SURFACE_STYLE[f.surfaceClass]?f.surfaceClass:'other'},
@@ -492,7 +492,19 @@ export function featureVisible(layer, f){
      Two scopes for one question is one too many, and the server's is the one
      with authority. */
   if(layer.pendingLayer) return true;
-  let show = layer.key==='experience' ? (mode()==='all'||f.cur) : ((mode()==='all') || !layer.exp || f.cur);       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
+  /* Three rungs of human endorsement (owner 2026-08-12):
+       all       — everything we hold, including imports nobody has checked;
+       confirmed — anything a human vouched for: a rider who stood there and
+                   confirmed it, a curator who verified it, or a curated pick
+                   (which is why Confirmed CONTAINS Curated rather than sitting
+                   beside it);
+       curated   — the editor's best-of only.
+     `f.v` is the server's own "somebody vouched" flag (CatalogProvider), the
+     same one the drawer reads for the "?" badge, so the filter and the badge
+     can never tell a rider different things. */
+  let show = mode()==='confirmed'
+    ? (!!f.v || !!f.cur)
+    : (layer.key==='experience' ? (mode()==='all'||f.cur) : ((mode()==='all') || !layer.exp || f.cur));       // experiential layers filter to curated; K honours cur in Curated (best-of), all in Everything
   if(show) show = inScope(f.rid);   // region scope gate (map-and-search.md §4.5)
   if(show && layer.key==='experience') show = prefMatch(f);
   if(show && layer.key==='climbs'){

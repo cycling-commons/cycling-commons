@@ -207,6 +207,7 @@ final class SettingsType extends AbstractType
                 'choice_label' => static fn (MapViewMode $m): string => match ($m) {
                     MapViewMode::Auto => 'form.map_mode_auto',
                     MapViewMode::Everything => 'form.map_mode_everything',
+                    MapViewMode::Confirmed => 'form.map_mode_confirmed',
                     MapViewMode::Curated => 'form.map_mode_curated',
                 },
             ])
