@@ -110,11 +110,19 @@ than a missing kilometre.
 
 **The archive is not extendible.** PMTiles is a single immutable file with its
 directory written in one pass, so adding a country means re-running tippecanoe
-over all of them — there is no append. What *is* cached is the expensive half:
-the PBF downloads persist in the pipeline volume ("PBF unchanged, skipping
-download"), so a rebuild re-extracts and re-tiles but does not re-fetch. Adding
-a fourth country today costs one osmium pass for that country plus one tiling
-pass for the set.
+over all of them — there is no append.
+
+**So the per-country extract is cached** (2026-08-12), which is the half worth
+caching: an osmium pass plus a full node-location walk over a national PBF,
+against a tiling run that reads GeoJSONL already on disk. A country is
+re-extracted only when its `.geojsonl` is older than the PBF it came from **or
+older than the tile contract** — the contract matters as much as the data,
+because adding a highway type or a surface class changes what *should* be in the
+extract while leaving the PBF untouched, and a stale file would then be tiled as
+if it were current. An empty extract (what a killed run leaves behind) is never
+reused: it would publish a country with no roads and no error.
+`COVERAGE_FORCE_EXTRACT=1` is the hatch for a pipeline change no timestamp can
+show. Measured on a BE+LU rebuild: both extracts reused, only the tiling ran.
 
 ### Why the names stay in the tile, measured (2026-08-12)
 

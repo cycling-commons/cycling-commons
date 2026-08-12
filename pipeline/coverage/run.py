@@ -116,6 +116,31 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
     )
 
 
+def contract_path() -> pathlib.Path:
+    """Where the tile contract lives, for freshness checks."""
+    return pathlib.Path(__file__).resolve().parents[1] / "contract" / "coverage-contract.json"
+
+
+def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file: pathlib.Path) -> bool:
+    """Is a cached per-country GeoJSONL still good?
+
+    Only when it exists, is not empty, and is newer than every input that
+    decides its content. Deliberately conservative: a false "current" silently
+    ships last month's roads, while a false "stale" costs one extract.
+
+    `COVERAGE_FORCE_EXTRACT=1` skips the cache outright — the hatch for a
+    pipeline change whose effect is not visible in any timestamp.
+    """
+    if os.environ.get("COVERAGE_FORCE_EXTRACT") == "1":
+        return False
+    if not extract.exists() or extract.stat().st_size == 0:
+        return False
+    newest_input = pbf.stat().st_mtime if pbf.exists() else 0.0
+    if contract_file.exists():
+        newest_input = max(newest_input, contract_file.stat().st_mtime)
+    return extract.stat().st_mtime >= newest_input
+
+
 def _run_surface(regions, workdir, contract, *, untagged: bool) -> int:
     """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe. No database at all.
 
@@ -131,10 +156,27 @@ def _run_surface(regions, workdir, contract, *, untagged: bool) -> int:
         try:
             country_code = resolve_country(region)
             pbf = fetch_pbf(region, workdir)
+            out = workdir / f"surface_{country_code.lower()}_{arm}.geojsonl"
+
+            # A PMTiles archive cannot be appended to — adding a country means
+            # tiling the whole set again — so the per-country EXTRACT is the
+            # only part worth caching, and it is by far the expensive one:
+            # osmium plus a full node-location pass over a national PBF, versus
+            # a tiling run that reads GeoJSONL already on disk.
+            #
+            # Reused only when the extract is newer than both the PBF it came
+            # from AND the contract that shaped it. The contract matters as much
+            # as the data: adding a highway type or a surface class changes what
+            # SHOULD be in the file while leaving the PBF untouched, and a stale
+            # extract would then be silently tiled as if it were current.
+            if _extract_is_current(out, pbf, contract_path()):
+                layer_files[country_code] = out
+                print(f"[surface] {region}: extract unchanged, reusing {out.name}")
+                continue
+
             filtered = workdir / (region.replace("/", "-") + "-surface.osm.pbf")
             run_filter(pbf, filtered, surface_selectors(contract))
             ways = parse_surface_ways(filtered, contract, untagged=untagged)
-            out = workdir / f"surface_{country_code.lower()}_{arm}.geojsonl"
             n = write_geojsonl(ways, out, cctok=f"|{country_code}|")
             layer_files[country_code] = out
             print(f"[surface] {region}: {n} ways -> {out.name}")
