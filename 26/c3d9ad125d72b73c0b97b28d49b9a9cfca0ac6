@@ -1,0 +1,44 @@
+web/translations/messages.fr.yaml
+  s_bbe01d4f023787::t_75b5376a96e563 1782-1785
+web/assets/styles/map.css
+  s_bbe01d4f023787::t_75b5376a96e563 449-462,643-654
+web/assets/map/drawer.js
+  s_bbe01d4f023787::t_75b5376a96e563 637,639-648,650-659
+web/src/Controller/MapController.php
+  s_bbe01d4f023787::t_75b5376a96e563 297-299
+web/templates/map/index.html.twig
+  s_bbe01d4f023787::t_75b5376a96e563 371-379
+web/translations/messages.de.yaml
+  s_bbe01d4f023787::t_75b5376a96e563 1785-1788
+web/translations/messages.en.yaml
+  s_bbe01d4f023787::t_75b5376a96e563 2100-2103
+web/translations/messages.es.yaml
+  s_bbe01d4f023787::t_75b5376a96e563 2113-2116
+web/translations/messages.nl.yaml
+  s_bbe01d4f023787::t_75b5376a96e563 1782-1785
+docs/specs/osm-data-architecture.md
+  s_bbe01d4f023787::t_75b5376a96e563 244-259,337-340
+web/assets/map/community.js
+  s_bbe01d4f023787::t_75b5376a96e563 367,386-415
+  s_bbe01d4f023787::t_de87a461cd61ec 416
+web/src/Controller/OsmConfirmController.php
+  s_bbe01d4f023787::t_f060a368bfdc60 1-147
+web/tests/Contribution/OsmConfirmTest.php
+  s_bbe01d4f023787::t_c11df41f5e19e4 1-212
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "26c3d9ad125d72b73c0b97b28d49b9a9cfca0ac6",
+  "prompts": {},
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
