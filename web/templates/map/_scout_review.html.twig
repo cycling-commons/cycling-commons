@@ -7,7 +7,19 @@
 
    Nothing here uploads the ride. The file is read by scout-review.js in the
    browser; the panel is markup and the map is the map. #}
+{# Out of the way, not gone. The panel covers the top-left corner of the map,
+   which is exactly where a tag often is, so a rider needs to be able to push it
+   aside and look — and get it back without re-reading the ride (owner
+   2026-08-12). The pins, the line and every unsent tag survive a close: only
+   this card is hidden. #}
+<button type="button" class="scout-reopen" id="scoutReopen" hidden>
+  <img src="{{ asset('brand/scout-logo.jpg') }}" alt="" width="22" height="22">
+  {{ 'scout.review_reopen'|trans }}
+</button>
+
 <aside class="scout-panel" id="scoutPanel" aria-label="{{ 'scout.review_title'|trans }}">
+  <button type="button" class="scout-close" id="scoutClose"
+          title="{{ 'scout.review_close'|trans }}" aria-label="{{ 'scout.review_close'|trans }}">&times;</button>
   {# The mark sits BESIDE the three lines, not above them: it is a label for the
      card, and stacked it read as a heading of its own (owner 2026-08-12). #}
   <div class="scout-head">

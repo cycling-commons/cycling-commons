@@ -515,6 +515,23 @@ export function initScoutReview() {
     pick.addEventListener('click', () => input.click());
     input.addEventListener('change', () => loadFile(input.files && input.files[0]));
   }
+  /* Close hides the card only. The ride, the pins and every tag's state live in
+     module state and on the map, so reopening shows exactly what was there —
+     re-reading the file would throw away edits the rider has already made. */
+  const closeBtn = el('scoutClose');
+  const reopen = el('scoutReopen');
+  if (closeBtn && reopen) {
+    closeBtn.addEventListener('click', () => {
+      panel.hidden = true;
+      reopen.hidden = false;
+      reopen.focus();
+    });
+    reopen.addEventListener('click', () => {
+      panel.hidden = false;
+      reopen.hidden = true;
+      closeBtn.focus();
+    });
+  }
   mountPhotos();
   const sendAllBtn = el('scoutSendAll');
   if (sendAllBtn) sendAllBtn.addEventListener('click', () => sendAll(sendAllBtn));

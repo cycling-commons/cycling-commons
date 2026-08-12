@@ -1338,6 +1338,8 @@ scout:
   review_title: 'Revoir une sortie'
   review_lead: 'Ouvrez la sortie que vous avez balisée. Elle est lue ici, dans votre navigateur — le fichier n''est jamais envoyé. Chaque balise apparaît en rouge sur la carte ; corrigez ce qu''il faut.'
   review_pick: 'Choisir un fichier'
+  review_close: 'Fermer'
+  review_reopen: 'Relire une sortie'
   review_send_all: 'Envoyer le reste'
   review_photo_drop: 'Choisissez une photo, ou déposez-la ici'
   review_hint: 'Le fichier .fit dans lequel votre sortie a été enregistrée — ou déposez-le ici.'

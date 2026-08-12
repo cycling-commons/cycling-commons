@@ -1344,6 +1344,8 @@ scout:
   review_title: 'Revisar una salida'
   review_lead: 'Abre la salida que etiquetaste. Se lee aquí, en tu navegador: el archivo nunca se sube. Cada etiqueta aparece en rojo en el mapa; corrige lo que haga falta.'
   review_pick: 'Elegir un archivo'
+  review_close: 'Cerrar'
+  review_reopen: 'Revisar una ruta'
   review_send_all: 'Enviar el resto'
   review_photo_drop: 'Elige una foto o suéltala aquí'
   review_hint: 'El archivo .fit en el que se grabó tu salida, o suéltalo aquí.'
