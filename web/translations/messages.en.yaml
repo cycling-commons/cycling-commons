@@ -2035,6 +2035,7 @@ map:
   d_scout_need_fit: 'Scout writes .fit files — that is the ride to open here.'
   d_scout_add_photo: 'Add a photo'
   d_scout_photo_attached: 'Photo attached'
+  d_scout_photos_attached: '{n} photos attached'
   d_scout_send_all: 'Send the rest'
   d_scout_letter_A: 'Road surface'
   d_scout_letter_C: 'Water & food'

@@ -1587,13 +1587,29 @@ whatever is still outstanding, in order.
   ("Scenery", "Surface · gravel") rather than blocking the send or writing
   "Untitled" — the type already says more than a placeholder can, and the rider
   can type over it.
-- **A photo can be attached per tag**, which is the point for a camera that
-  writes no GPS: the tag knows where it was even when the picture does not. One
-  uploader for the panel, not one per row — `media-upload.js` owns the licence
-  consent gate, and consent must fail closed in a single place
-  ([photo-uploads.md](photo-uploads.md)); the row that asked is the row the next
-  completed upload lands on. Ids travel as `mediaIds` and are claimed by the
-  same service every other submission uses.
+- **Photos attach per tag, several per spot.** That is the point for a camera
+  that writes no GPS: the tag knows where it was even when the picture does not.
+  One uploader for the panel, not one per row — `media-upload.js` owns the
+  licence consent gate, and consent must fail closed in a single place
+  ([photo-uploads.md](photo-uploads.md)); every id not yet attributed belongs to
+  the row that asked last, which is how one queue serves many spots. Each chip
+  is stamped with its tag's number, because a filename says nothing about which
+  of thirty places it belongs to. Ids travel as `mediaIds` — a **JSON array**,
+  the shape `MediaClaimService` parses — and are claimed in the same transaction
+  as the facts. The panel's queue cap is 30 (a whole ride); the per-submission
+  cap is unchanged.
+- **The sub-menu decides the letter and fills the fields.** Scout's second tap
+  is the half that says what the rider meant, and it does not always land where
+  the tag type alone would put it: SCENERY · HISTORY and SCENERY · ARCHITECTURE
+  are J, not I. NOTICE · POTHOLES arrives as F with `hazardType` already
+  answered; CLOSURE · WEEKS as F with `closedFor`, which is what lets the map
+  retire it by itself. `ScoutTag::DETAIL_LETTERS` and `DETAIL_FIELDS` own both
+  tables and the panel reads them from the server, so it cannot offer a letter
+  the endpoint refuses. A sub-menu answer never follows a tag the rider re-filed
+  onto another letter — the field would not exist there.
+- **`hazardType` gained Potholes, Junction / crossing and Bad corner**, because
+  the device offers them and every notice tapped on the bars was otherwise
+  flattened to "Other".
 
 **Curator-facing naming follows the rider's own choice** (2026-08-12). The desk
 is pseudonymous by default — a decision should turn on the contribution, not on

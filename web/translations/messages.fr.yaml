@@ -1718,6 +1718,7 @@ map:
   d_scout_need_fit: 'Scout écrit des fichiers .fit — c’est la sortie à ouvrir ici.'
   d_scout_add_photo: 'Ajouter une photo'
   d_scout_photo_attached: 'Photo jointe'
+  d_scout_photos_attached: '{n} photos jointes'
   d_scout_send_all: 'Envoyer le reste'
   d_scout_letter_A: 'Revêtement'
   d_scout_letter_C: 'Eau & ravitaillement'

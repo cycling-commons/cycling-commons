@@ -1718,6 +1718,7 @@ map:
   d_scout_need_fit: 'Scout schrijft .fit-bestanden — dat is de rit die je hier opent.'
   d_scout_add_photo: 'Foto toevoegen'
   d_scout_photo_attached: 'Foto toegevoegd'
+  d_scout_photos_attached: '{n} fotos toegevoegd'
   d_scout_send_all: 'Stuur de rest'
   d_scout_letter_A: 'Wegdek'
   d_scout_letter_C: 'Water & eten'

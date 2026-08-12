@@ -267,6 +267,19 @@ export function submitModeration(btn){
     .then(r=>{ if(!r.ok) throw new Error('decide'); return r.json(); })
     .then(res=>{
       hidePendingPin(id); closeDrawer();
+      /* Tell the desk. A curator reviews on the map and comes back to a
+         /moderate tab that has been open all along, which still lists the row
+         they just decided — the data is correct and the page is a photograph of
+         a minute ago (owner-reported 2026-08-12). Same-origin broadcast rather
+         than a reload: the desk removes that one row and keeps the curator's
+         place in a queue they may be halfway down. */
+      try {
+        if (typeof BroadcastChannel === 'function') {
+          const ch = new BroadcastChannel('cc-moderation');
+          ch.postMessage({ decided: Number(id), decision });
+          ch.close();
+        }
+      } catch (e) { /* a browser without it simply keeps the old behaviour */ }
       /* An approved contribution takes the place of the pin that just went —
          and the curator stays on it. The response carries the item as the
          catalog's own shape, so the change lands on the map AND the drawer

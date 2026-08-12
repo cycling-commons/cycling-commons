@@ -1721,6 +1721,7 @@ map:
   d_scout_need_fit: 'Scout schreibt .fit-Dateien — das ist die Fahrt, die hier gehört.'
   d_scout_add_photo: 'Foto hinzufügen'
   d_scout_photo_attached: 'Foto angehängt'
+  d_scout_photos_attached: '{n} Fotos angehängt'
   d_scout_send_all: 'Den Rest senden'
   d_scout_letter_A: 'Belag'
   d_scout_letter_C: 'Wasser & Essen'

@@ -229,7 +229,13 @@ final class CatalogFormRegistry
                     // the only reason `closedFor` below exists. Scout's Closure
                     // tag lands here too, so a tap on a bike computer and a
                     // typed report decay by the same rule (ClosureLifetime).
-                    CatalogField::select('hazardType', 'Hazard type', ['Crosswind / fog', 'Ice / frost', 'Loose surface / gravel', 'Flooding', 'Roadworks', 'Road closed', 'Other']),
+                    // Potholes / Junction / Bad corner come from Scout's NOTICE
+                    // submenu (POTHOLES · CROSSING · CORNER · OTHER). They were
+                    // missing, so every notice a rider tapped on the bars had to
+                    // land on 'Other' and lose what they actually saw
+                    // (owner 2026-08-12). They are ordinary hazards a typed
+                    // report wants too — the device did not invent them.
+                    CatalogField::select('hazardType', 'Hazard type', ['Crosswind / fog', 'Ice / frost', 'Loose surface / gravel', 'Potholes', 'Junction / crossing', 'Bad corner', 'Flooding', 'Roadworks', 'Road closed', 'Other']),
                     // Only meaningful when the type above is 'Road closed';
                     // ignored otherwise. Choices are Scout's CLOSED FOR? menu.
                     CatalogField::select('closedFor', 'If closed, for how long?', ClosureLifetime::CHOICES, default: 'Unknown'),

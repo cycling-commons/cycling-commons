@@ -296,8 +296,11 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
            viewpoint, a water point, a hazard? (owner-reported 2026-08-12). The
            label is the layer's own, so it reads exactly as the rail and the
            improve form do. */
-        {label:D.type||'Type', value:(LAYER_L10N[(CATALOG.find(l=>l.letter===s.letter)||{}).key] ||
-                                      (CATALOG.find(l=>l.letter===s.letter)||{}).label || s.letter)},
+        (()=>{ // the layer's own icon beside its own name, as the rail draws it
+          const lyr = CATALOG.find(l=>l.letter===s.letter) || {};
+          const name = LAYER_L10N[lyr.key] || lyr.label || s.letter;
+          return {label:D.type||'Type', value:(lyr.icon ? lyr.icon+' ' : '')+name};
+        })(),
         {label:D.submittedBy||'Submitted by', value:s.who},
         {label:D.age||'Age', value:s.when},
         {label:D.where||'Where', value:`${s.region||''} · ${s.country||''}`}

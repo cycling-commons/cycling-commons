@@ -472,7 +472,7 @@
     color:var(--paper);font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;
     text-transform:uppercase;padding:.35rem .5rem;cursor:pointer}
   .scout-photo:hover{border-color:var(--trail)}
-  .scout-sendall{margin-top:.8rem;width:100%;background:var(--trail);color:#fff;border:none;
+  .scout-sendall{margin-top:.8rem;margin-bottom:.2rem;width:100%;background:var(--trail);color:#fff;border:none;
     border-radius:6px;padding:.55rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;
     text-transform:uppercase;cursor:pointer}
   .scout-sendall:disabled{opacity:.5;cursor:default}
@@ -481,6 +481,35 @@
   .scout-media .drop{border:1px dashed rgba(239,230,212,.35);border-radius:8px;padding:.7rem;
     text-align:center;font-size:.74rem;color:rgba(239,230,212,.75);cursor:pointer}
   .scout-media .drop:hover{border-color:var(--trail)}
+  /* media-upload.js's chips are styled INSIDE the improve template's own
+     <style>, so out here they had no size rule at all and a phone photo
+     rendered at its natural width — half a metre of sky above the send button
+     (owner-reported 2026-08-12). Sized here for the panel. */
+  .scout-media .ulq{display:flex;flex-direction:column;gap:.35rem;margin-top:.6rem}
+  .scout-media .chip{position:relative;display:flex;align-items:center;gap:.5rem;
+    background:var(--spruce);border:1px solid rgba(239,230,212,.16);border-radius:6px;
+    padding:.3rem .4rem;font-size:.72rem;color:var(--paper)}
+  .scout-media .chip-thumb{flex:none;width:44px;height:44px;border-radius:4px;overflow:hidden;
+    background:rgba(0,0,0,.25)}
+  .scout-media .chip-thumb img{width:44px;height:44px;object-fit:cover;display:block}
+  .scout-media .chip-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:.68rem;color:rgba(239,230,212,.75)}
+  .scout-media .chip-bar{flex:none;width:56px;height:3px;background:rgba(239,230,212,.2);border-radius:2px}
+  .scout-media .chip-bar i{display:block;height:100%;background:var(--trail);border-radius:2px}
+  .scout-media .chip-x{flex:none;background:none;border:none;color:rgba(239,230,212,.7);
+    font-size:.9rem;line-height:1;cursor:pointer;padding:.1rem .3rem}
+  .scout-media .chip-x:hover{color:var(--trail)}
+  /* Which tag it belongs to, on the picture itself — a ride can carry photos
+     from a dozen spots and a filename says nothing about which. */
+  .scout-media .chip[data-tag-no]::before{content:attr(data-tag-no);position:absolute;
+    left:.3rem;top:.3rem;z-index:1;min-width:1.05rem;height:1.05rem;border-radius:50%;
+    background:#D92D20;color:#fff;font-family:var(--mono);font-size:.56rem;
+    display:flex;align-items:center;justify-content:center;border:1px solid #fff}
+  /* The standing licence notice: one line of context, not a paragraph that
+     outweighs the photos it is about. */
+  .scout-media .consent-gate{font-size:.68rem;line-height:1.4;color:rgba(239,230,212,.62)}
+  .scout-media .consent-gate a,.scout-media .consent-gate summary{color:rgba(239,230,212,.8);font-size:.68rem}
+  .scout-media .consent-gate p{margin:.2rem 0}
   /* Red because it is UNRESOLVED, not because it is wrong: red is the one
      colour the map does not use for a place, so a rider can find what still
      needs them at a glance. Green once it has gone in. */

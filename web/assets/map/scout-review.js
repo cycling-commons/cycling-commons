@@ -56,10 +56,20 @@ const POI_TO_TAG = {
   5: 'closure', 6: 'surface', 7: 'resupply', 8: 'resupply', 9: 'resupply',
 };
 
-/* Which letter a resupply tag lands on. Water and food are one letter here (C);
-   a repair stop is another (D). The rider can still change it — this only
-   decides which is offered first. */
-const RESUPPLY_LETTER = { 1: 'C', 2: 'C', 3: 'D' };
+/* Which letters a tag may become, narrowed by the device's SUB-MENU when that
+   says more than the tag type does.
+
+   SCENERY · HISTORY is history & culture, not a scenic view; RESUPPLY · REPAIR
+   is a bike service, not water. Offering only the coarse answer made the rider
+   re-file their own tag (owner-reported 2026-08-12). The tables come from the
+   server (App\Scout\ScoutTag), so the panel can never offer a letter the
+   endpoint refuses. */
+function lettersFor(tag, detail) {
+  const byDetail = (window.CC_SCOUT_DETAILS || {})[tag] || {};
+  const narrowed = detail != null ? byDetail[String(detail)] : null;
+  if (narrowed && narrowed.length) return narrowed;
+  return (window.CC_SCOUT_TAGS || {})[tag] || ['C'];
+}
 
 function fitTagName(tag, detail) {
   if (tag === 'resupply') return POI_RESUPPLY[detail] || '';
@@ -96,9 +106,8 @@ function readFit(buffer) {
       const legacy = LEGACY_RESUPPLY[t.type];
       const detail = legacy || t.detail;
       const tag = POI_TO_TAG[t.type] || 'other';
-      const letter = tag === 'resupply'
-        ? (RESUPPLY_LETTER[detail] || 'C')
-        : ((window.CC_SCOUT_TAGS || {})[tag] || ['C'])[0];
+      const offered = lettersFor(tag, detail);
+      const letter = offered[0] || 'C';
       return {
         tag,
         letter,
@@ -109,6 +118,9 @@ function readFit(buffer) {
         // Kept so a surface tag can carry the class the rider actually chose on
         // the device rather than making them pick it again.
         osmSurface: tag === 'surface' ? (OSM_SURFACE[detail] || '') : '',
+        // The sub-menu number itself. The server maps it to the fields it
+        // answers — one mapping, in the language that validates it.
+        detail: detail || null,
       };
     });
 
@@ -170,7 +182,6 @@ function renderList() {
   const list = el('scoutTags');
   if (!list) return;
   list.textContent = '';
-  const vocab = window.CC_SCOUT_TAGS || {};
   tags.forEach((entry, i) => {
     const li = document.createElement('li');
     li.className = 'scout-tag' + (entry.approved ? ' done' : '');
@@ -192,7 +203,7 @@ function renderList() {
 
     // What it is: the letters this tag type may become, and nothing else — the
     // same list the server validates against.
-    const letters = vocab[entry.tag] || [];
+    const letters = lettersFor(entry.tag, entry.detail);
     const sel = document.createElement('select');
     sel.className = 'scout-letter';
     letters.forEach(L => {
@@ -365,6 +376,8 @@ function loadFile(file) {
    on. */
 let photoTarget = null;
 let photoButton = null;
+let photoIndex = 0;          // the tag number the queue is currently filling
+const attributed = new Set(); // ids already assigned to a tag
 
 function mountPhotos() {
   const hidden = el('scoutMediaIds');
@@ -372,18 +385,51 @@ function mountPhotos() {
   window.Cc.mountMediaUploads({
     hidden,
     onChange: () => {
-      // The hidden field carries every id the queue holds; the newest belongs
-      // to whoever asked last.
-      const ids = String(hidden.value || '').split(',').map(x => x.trim()).filter(Boolean);
-      const latest = ids[ids.length - 1];
-      if (!latest || !photoTarget) return;
-      if (photoTarget.mediaIds === latest) return;
-      photoTarget.mediaIds = latest;
-      if (photoButton) photoButton.textContent = t('scoutPhotoAttached', 'Photo attached');
-      photoTarget = null;
-      photoButton = null;
+      /* The hidden field carries every id the panel's queue holds, as a JSON
+         ARRAY — media-upload.js writes JSON.stringify(ids), and MediaClaimService
+         parses JSON on the way in. Reading it as a comma-separated list built a
+         string of nested fragments that would have failed on submit. Anything
+         NOT yet attributed belongs to whoever asked last, which is how one spot
+         carries several photos and a ride carries photos from many spots, all
+         in one queue. */
+      let ids = [];
+      try { ids = JSON.parse(hidden.value || '[]'); } catch (e) { ids = []; }
+      if (!Array.isArray(ids)) ids = [];
+      const fresh = ids.filter(id => typeof id === 'string' && !attributed.has(id));
+      if (!fresh.length || !photoTarget) return;
+      fresh.forEach(id => attributed.add(id));
+      let have = [];
+      try { have = JSON.parse(photoTarget.mediaIds || '[]'); } catch (e) { have = []; }
+      if (!Array.isArray(have)) have = [];
+      const all = have.concat(fresh);
+      photoTarget.mediaIds = JSON.stringify(all);
+      const n = all.length;
+      if (photoButton) {
+        photoButton.textContent = n > 1
+          ? tplCount(t('scoutPhotosAttached', '{n} photos attached'), n)
+          : t('scoutPhotoAttached', 'Photo attached');
+      }
+      numberQueue();
     },
   });
+}
+
+/** Stamp each queue chip with the tag it belongs to. */
+function numberQueue() {
+  const rows = [...document.querySelectorAll('#q-photo .chip')];
+  const owners = [];
+  tags.forEach((entry, i) => {
+    let own = [];
+    try { own = JSON.parse(entry.mediaIds || '[]'); } catch (e) { own = []; }
+    (Array.isArray(own) ? own : []).forEach(() => owners.push(i + 1));
+  });
+  rows.forEach((row, i) => {
+    if (owners[i]) row.setAttribute('data-tag-no', String(owners[i]));
+  });
+}
+
+function tplCount(text, n) {
+  return String(text).replace('{n}', String(n));
 }
 
 function requestPhotoFor(entry, button) {
@@ -392,10 +438,16 @@ function requestPhotoFor(entry, button) {
   if (!media || !input) return;
   photoTarget = entry;
   photoButton = button;
+  photoIndex = tags.indexOf(entry) + 1;
   // Revealed rather than always shown: the consent notice and the queue are
   // meaningful only once somebody has asked to add a picture.
   media.hidden = false;
   input.click();
+  /* And bring it into view. The uploader sits below a list that can be twenty
+     rows long, so on a phone a rider tapped "add a photo", chose one, and saw
+     nothing happen — the picture landed off-screen (owner-reported
+     2026-08-12). */
+  setTimeout(() => media.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 250);
 }
 
 /** Send everything still outstanding, in order. */

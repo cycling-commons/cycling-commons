@@ -78,7 +78,13 @@ final class ScoutIntakeController extends AbstractController
 
         $type = (string) ($payload['tag'] ?? '');
         $letter = (string) ($payload['letter'] ?? '');
-        if (!\in_array($type, ScoutTag::TYPES, true) || !ScoutTag::allows($type, $letter)) {
+        // The device's sub-menu value — which POTHOLES, which CLOSED FOR, which
+        // SCENERY. It decides both what the tag may become and what it already
+        // answers, so it travels with the tag rather than being re-asked.
+        $detail = isset($payload['detail']) && is_numeric($payload['detail'])
+            ? (int) $payload['detail']
+            : null;
+        if (!\in_array($type, ScoutTag::TYPES, true) || !ScoutTag::allows($type, $letter, $detail)) {
             return new JsonResponse(['error' => 'bad_tag'], 400);
         }
         $itemType = ScoutTag::itemTypeFor($letter);
@@ -104,6 +110,17 @@ final class ScoutIntakeController extends AbstractController
             $declarable = SurfaceVocabulary::fromOsmValue($osmSurface);
             if (null !== $declarable) {
                 $details['surface'] = $declarable;
+            }
+        }
+
+        /* What the sub-menu already said: a hazard's kind, a closure's duration.
+           Applied only to the letter it belongs to — a rider who re-filed a
+           notice as a scenic view must not carry `hazardType` onto an I item,
+           where the field does not exist and the submission would be refused
+           for an answer they never gave. */
+        foreach (ScoutTag::fieldsFor($type, $detail) as $field => $value) {
+            if ('F' === $letter) {
+                $details[$field] = $value;
             }
         }
         $details[Item::NAME_FIELD] = trim((string) ($details[Item::NAME_FIELD] ?? ''));

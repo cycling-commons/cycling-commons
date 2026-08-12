@@ -435,7 +435,13 @@ window.CC_VENDOR = {{ {
      from ScoutTag::LETTERS — the same list the intake endpoint validates
      against, so the panel can never offer a choice the server refuses. #}
   window.CC_SCOUT_TAGS = {{ scout_tags|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  window.CC_SCOUT_DETAILS = {{ scout_details|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
 </script>
+{# The photo-intake config below is one queue for a WHOLE RIDE, not for one
+   place — a rider reviewing thirty tags may photograph several of them, hence
+   max: 30. Each tag still lands as its own submission under
+   MediaClaimService's own per-submission cap; the wizard's 6 is untouched. #}
 {% if scout_review|default(false) %}
   {# Photo intake config, only on the review screen: /map itself uploads
      nothing, and shipping the consent bag to every map load would be weight
@@ -447,7 +453,7 @@ window.CC_VENDOR = {{ {
     consentCurrentUrl: path('media_consent_current'),
     termsUrl: path('terms'),
     licenceUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
-    max: 6,
+    max: 30,
     i18n: {
       title: 'media.consent.title'|trans,
       intro: 'media.consent.intro'|trans,
@@ -477,9 +483,6 @@ window.CC_VENDOR = {{ {
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   <script src="{{ asset('contribute/media-upload.js') }}"></script>
 {% endif %}
-<script nonce="{{ csp_nonce() }}">
-  {% endif %}
-</script>
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
    globals (catalog-load.js injects it after the fetch resolves), but its
    DOWNLOAD must not sit serialized behind the ~1 MB catalog transfer — the

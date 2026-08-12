@@ -36,7 +36,9 @@
      completed upload to that row. #}
   <div class="scout-media" id="scoutMedia" hidden>
     <div class="consent-gate" id="media-consent"></div>
-    <input type="file" id="file-photo" accept="image/jpeg,image/png,image/webp,image/heic" hidden>
+    {# multiple: one spot can be worth several pictures, and a ride is many
+       spots — the wizard's single-shot input is the wrong shape here. #}
+    <input type="file" id="file-photo" accept="image/jpeg,image/png,image/webp,image/heic" multiple hidden>
     <div class="drop" id="drop-photo" role="button" tabindex="0" aria-controls="file-photo">{{ 'scout.review_photo_drop'|trans }}</div>
     <div class="ulq" id="q-photo"></div>
     <input type="hidden" id="scoutMediaIds">

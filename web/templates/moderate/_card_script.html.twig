@@ -8,6 +8,34 @@
   Spec: moderation-and-contribution.md §5.2.
 #}
 <script nonce="{{ csp_nonce() }}">
+/* A decision taken on the map removes its row here, live.
+
+   The desk and the map are two views of one queue, and a curator moves between
+   them constantly: review on the map, decide there, come back. The tab left
+   behind used to keep the decided row until a reload, so the queue lied about
+   what was left to do — and clicking Review on it led to a submission already
+   settled.
+
+   Removal only, never insertion: a new submission arriving while the desk is
+   open is not urgent, and a row appearing under a curator's cursor mid-decision
+   is worse than one arriving on the next load. */
+(function () {
+  if (typeof BroadcastChannel !== 'function') return;
+  var ch = new BroadcastChannel('cc-moderation');
+  ch.onmessage = function (e) {
+    var id = e && e.data && e.data.decided;
+    if (!id) return;
+    var row = document.querySelector('.q-item[data-item-id="' + String(id).replace(/[^0-9]/g, '') + '"]');
+    if (!row) return;
+    row.remove();
+    // The tab badge counts what is open; it has to agree with the list.
+    document.querySelectorAll('.dtab-count').forEach(function (el) {
+      var n = parseInt(el.textContent, 10);
+      if (!isNaN(n) && n > 0) { el.textContent = String(n - 1); if (n - 1 === 0) el.hidden = true; }
+    });
+  };
+})();
+
 /* Density switch. The bar is unhidden here rather than in the markup so the
    control only exists where it can work. Every `.q-list` on the page folds
    together — the Routes desk has two (proposals and corrections) and a

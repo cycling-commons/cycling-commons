@@ -236,4 +236,74 @@ final class ScoutIntakeTest extends WebTestCase
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
         self::assertArrayNotHasKey('surface', $item->getAttributes(), 'the form asks instead');
     }
+
+    public function testASceneryTagAboutHistoryBecomesHistoryAndCulture(): void
+    {
+        // The device's submenu says which kind of view it was, and HISTORY is
+        // letter J — not the scenic-views letter the tag type alone implies.
+        // Offering only I made the rider re-file their own answer.
+        self::assertSame(['J', 'I'], ScoutTag::lettersFor('scenery', 2));
+        self::assertSame(['I'], ScoutTag::lettersFor('scenery', 4), 'a VIEW is a scenic view');
+        self::assertSame(['D'], ScoutTag::lettersFor('resupply', 3), 'REPAIR is a bike service');
+        self::assertSame(['C'], ScoutTag::lettersFor('resupply', 1), 'WATER is water & food');
+    }
+
+    public function testAClosureArrivesKnowingItsOwnDuration(): void
+    {
+        // CLOSED FOR? WEEKS is the whole reason the map can retire a closure by
+        // itself; asking the rider to pick it again at home would be asking
+        // them to remember what they already answered on the road.
+        $client = static::createClient();
+        $this->login($client, 'closure');
+
+        $this->post($client, [
+            'tag' => 'closure', 'letter' => 'F', 'detail' => 3,
+            'lat' => 52.0, 'lng' => 4.0,
+            'details' => ['name' => 'Dijk dicht'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Dijk dicht']);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertSame('Road closed', $item->getAttributes()['hazardType'] ?? null);
+        self::assertSame('Weeks', $item->getAttributes()['closedFor'] ?? null);
+    }
+
+    public function testANoticeCarriesTheHazardTheRiderPicked(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'potholes');
+
+        $this->post($client, [
+            'tag' => 'notice', 'letter' => 'F', 'detail' => 1,
+            'lat' => 52.0, 'lng' => 4.0,
+            'details' => ['name' => 'Gatenweg'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Gatenweg']);
+        /** @var Item $item */
+        $item = $em->getRepository(Item::class)->find($submission->getItemId());
+        self::assertSame('Potholes', $item->getAttributes()['hazardType'] ?? null);
+    }
+
+    public function testASubmenuAnswerNeverFollowsATagToAnotherLetter(): void
+    {
+        // A rider may re-file a notice as something else. `hazardType` must not
+        // ride along: the field does not exist on that letter, and the
+        // submission would be refused for an answer they never gave.
+        $client = static::createClient();
+        $this->login($client, 'refiled');
+
+        $this->post($client, [
+            'tag' => 'notice', 'letter' => 'I', 'detail' => 1,
+            'lat' => 52.0, 'lng' => 4.0,
+            'details' => ['name' => 'Refiled as a view'],
+        ]);
+
+        self::assertResponseStatusCodeSame(400, 'notice does not resolve to I at all');
+    }
 }

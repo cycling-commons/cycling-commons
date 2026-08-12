@@ -2048,6 +2048,7 @@ map:
   d_scout_need_fit: 'Scout escribe archivos .fit: esa es la salida que se abre aquí.'
   d_scout_add_photo: 'Añadir una foto'
   d_scout_photo_attached: 'Foto adjunta'
+  d_scout_photos_attached: '{n} fotos adjuntas'
   d_scout_send_all: 'Enviar el resto'
   d_scout_letter_A: 'Firme'
   d_scout_letter_C: 'Agua y comida'
