@@ -1338,7 +1338,6 @@ scout:
   review_lead: 'Open the ride you tagged. It is read here in your browser — the file is never uploaded. Each tag lands on the map in red; fix what needs fixing.'
   review_pick: 'Choose a ride file'
   review_close: 'Close'
-  review_reopen: 'Review a ride'
   review_send_all: 'Send the rest'
   review_photo_drop: 'Choose a photo, or drop one here'
   review_hint: 'The .fit file your ride was recorded to — or drop it here.'

@@ -1342,7 +1342,6 @@ scout:
   review_lead: 'Öffne die Fahrt, die du getaggt hast. Sie wird hier in deinem Browser gelesen — die Datei wird nie hochgeladen. Jeder Tag erscheint rot auf der Karte; korrigiere, was nötig ist.'
   review_pick: 'Fahrtdatei wählen'
   review_close: 'Schließen'
-  review_reopen: 'Fahrt prüfen'
   review_send_all: 'Den Rest senden'
   review_photo_drop: 'Wähle ein Foto, oder zieh eins hierher'
   review_hint: 'Die .fit-Datei, in die deine Fahrt aufgezeichnet wurde — oder zieh sie hierher.'

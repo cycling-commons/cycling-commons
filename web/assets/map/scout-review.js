@@ -333,6 +333,10 @@ function placeTags() {
       entry.lat = snapped.lat;
     });
     m.getElement().addEventListener('click', () => {
+      // A pin is the way back in after the panel was closed: the ride is still
+      // here, so clicking its tag reopens the card at that tag.
+      const p = el('scoutPanel');
+      if (p) p.hidden = false;
       const li = el('scoutTags') && el('scoutTags').children[i];
       if (li) { li.classList.add('open'); li.scrollIntoView({ block: 'nearest' }); }
     });
@@ -364,6 +368,8 @@ function renderRideFacts(parsed) {
 }
 
 function show(parsed) {
+  const panel = el('scoutPanel');
+  if (panel) panel.hidden = false;
   renderRideFacts(parsed);
   track = parsed.track;
   tags = parsed.tags.map(w => ({
@@ -515,23 +521,12 @@ export function initScoutReview() {
     pick.addEventListener('click', () => input.click());
     input.addEventListener('change', () => loadFile(input.files && input.files[0]));
   }
-  /* Close hides the card only. The ride, the pins and every tag's state live in
-     module state and on the map, so reopening shows exactly what was there —
-     re-reading the file would throw away edits the rider has already made. */
+  /* Close hides the card and leaves nothing in its place. The ride, the pins
+     and every tag's state live in module state and on the map, so a tag pin
+     brings the card back exactly as it was — re-reading the file would throw
+     away edits the rider has already made. */
   const closeBtn = el('scoutClose');
-  const reopen = el('scoutReopen');
-  if (closeBtn && reopen) {
-    closeBtn.addEventListener('click', () => {
-      panel.hidden = true;
-      reopen.hidden = false;
-      reopen.focus();
-    });
-    reopen.addEventListener('click', () => {
-      panel.hidden = false;
-      reopen.hidden = true;
-      closeBtn.focus();
-    });
-  }
+  if (closeBtn) closeBtn.addEventListener('click', () => { panel.hidden = true; });
   mountPhotos();
   const sendAllBtn = el('scoutSendAll');
   if (sendAllBtn) sendAllBtn.addEventListener('click', () => sendAll(sendAllBtn));
