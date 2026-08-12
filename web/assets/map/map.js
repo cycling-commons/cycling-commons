@@ -76,7 +76,11 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf,
     // applyScope). No moveend/idle refresh: the coverage 'shown' is the
     // scope-aware count (covShownCount), not a viewport-render count, so it
     // never changes on pan/zoom.
-    if(COVERAGE_ON()) fetchCoverageCounts();
+    // A CONST, not a function — every other caller reads it as a value, and
+    // calling it threw a TypeError that killed the rest of this handler, so the
+    // coverage counts never loaded (found 2026-08-12 while reading the console
+    // during a surface probe).
+    if(COVERAGE_ON) fetchCoverageCounts();
     render();
     // Deep links (?feature/?pending/?route) point at a specific object a narrow
     // scope might filter out (map-and-search.md §4.5): widen to Everywhere

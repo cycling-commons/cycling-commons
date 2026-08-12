@@ -40,6 +40,17 @@ final class CatalogFormRegistry
             ItemType::RoadSurface => new ItemFieldSet(
                 fields: [
                     CatalogField::select('surface', 'Surface', SurfaceVocabulary::DECLARABLE),
+                    // What KIND of way this is. The drawer has always shown it
+                    // for a tile line — straight from OSM's `highway` tag — and
+                    // the form had no way to say it was wrong (owner-reported
+                    // 2026-08-12), which is the one gap that makes a read-only
+                    // row feel like a locked door.
+                    //
+                    // Rider words, not OSM's. `unclassified` is a British road
+                    // -class term meaning "a public road below tertiary", and
+                    // nobody outside mapping reads it that way; RoadType owns
+                    // the translation both directions.
+                    CatalogField::select('roadType', 'Road type', RoadType::DECLARABLE),
                     CatalogField::select('smoothness', 'Smoothness', ['Excellent', 'Good', 'Intermediate', 'Bad', 'Very bad']),
                     CatalogField::text('width', 'Width (m)', default: '3.0'),
                     // 'Car-free', not 'Car-free (RAVeL)'. RAVeL is one region's

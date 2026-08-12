@@ -24,7 +24,7 @@
       the vocabulary. */
 import { map, flyToPin } from './map-init.js';
 import { SURFACE_CLS, surfaceStyle } from './render.js';
-import { D } from './i18n.js';
+import { D, trVal } from './i18n.js';
 import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
 
@@ -149,14 +149,68 @@ export function classLabel(cls) {
 export const CONFIRMABLE_CLASSES = ['paved', 'gravel', 'pave', 'dirt', 'rock'];
 const CONFIRMABLE = new Set(CONFIRMABLE_CLASSES);
 
+/* ── What we can infer, kept visibly separate from what we were told ────────
+   The A layer's traffic field has been mostly fiction: the Wallonia harvester
+   wrote 'Open road' on every non-cycleway and 'Car-free' on every cycleway, a
+   constant keyed on surface class, never a tag (owner review 2026-08-12). That
+   is worse than an empty field, because it is an empty field wearing a fact's
+   clothes.
+
+   An inference from `highway` IS worth showing — a residential street really is
+   quieter than a secondary road, and until riders have answered, that is the
+   only thing anyone can say. The rules are conservative and each carries the
+   sentence that justifies it, which the drawer prints beside the value. Nothing
+   here is stored, and nothing here is prefilled into the form: a rider's
+   submission has to be a rider's claim, or the assumption launders itself into
+   data the next person reads as measured. */
+const TRAFFIC_RULES = [
+  { hw: ['cycleway'], value: 'Car-free', why: 'trafficWhyCycleway' },
+  { hw: ['residential', 'living_street'], value: 'Quiet', why: 'trafficWhyResidential' },
+  { hw: ['track', 'path', 'footway', 'bridleway'], value: 'Quiet', why: 'trafficWhyTrack' },
+  { hw: ['primary', 'primary_link', 'secondary', 'secondary_link'], value: 'Busy', why: 'trafficWhyMain' },
+];
+
+/** The traffic level implied by the OSM highway value, with its reason — or null. */
+export function assumedTraffic(hw) {
+  const rule = TRAFFIC_RULES.find(r => r.hw.includes(hw));
+  return rule ? { value: rule.value, why: D[rule.why] || '' } : null;
+}
+
+/* OSM `highway` → the rider-facing kind. Mirrors App\Catalog\RoadType in PHP,
+   which owns the vocabulary the form offers; RoadTypeContractTest fails if the
+   two ever disagree. Unknown values return null rather than a nearest guess. */
+const ROAD_TYPE = {
+  primary: 'roadMain', primary_link: 'roadMain', secondary: 'roadMain', secondary_link: 'roadMain',
+  tertiary: 'roadLocal', tertiary_link: 'roadLocal', unclassified: 'roadLocal', road: 'roadLocal',
+  residential: 'roadResidential', living_street: 'roadResidential',
+  track: 'roadTrack', path: 'roadPath', footway: 'roadPath', bridleway: 'roadPath',
+  cycleway: 'roadCycleway',
+};
+
+export function roadTypeLabel(hw) {
+  const k = ROAD_TYPE[hw];
+  return k ? (D[k] || k) : null;
+}
+
 export function openSurfaceDrawer(p, lngLat, geometry) {
   const layer = layerByKey.surface;
   if (!layer) return;
   const label = classLabel(p.cls);
   const rec = [{ label: D.surface || 'Surface', value: label, method: 'OSM' }];
-  // The raw OSM highway value, unlocalised on purpose: it is the tag, and a
-  // rider following it back to OSM needs the word OSM uses.
-  if (p.hw) rec.push({ label: D.roadType || 'Road type', value: p.hw });
+  /* Road type in the rider's words, with OSM's own word kept beside it: the tag
+     is what a rider needs when they follow the link back to OSM, and
+     'unclassified' is a road CLASS in Britain, not an admission that nobody
+     classified it — showing only the tag taught the wrong thing. */
+  if (p.hw) {
+    const kind = roadTypeLabel(p.hw);
+    rec.push({ label: D.roadType || 'Road type', value: kind ? kind + ' · ' + p.hw : p.hw, method: 'OSM' });
+  }
+  // What the tag implies about traffic — never stored, never prefilled, and
+  // always carrying the reasoning that produced it.
+  const traffic = p.hw ? assumedTraffic(p.hw) : null;
+  if (traffic) {
+    rec.push({ label: D.traffic || 'Traffic', value: trVal(traffic.value), assumed: traffic.why });
+  }
 
   // The way already has ends. Hand them to the wizard so it opens with both
   // pins placed on the stretch the rider clicked, ready to be dragged, instead
@@ -164,9 +218,21 @@ export function openSurfaceDrawer(p, lngLat, geometry) {
   // it away invites a worse answer than the one we already have.
   const ends = segmentEnds(geometry);
 
+  // The street's own name leads when it has one. The basemap has been printing
+  // it under our line all along, so a drawer headlined "Paved · asphalt" on a
+  // way labelled Rue du Puits Saint-Martin looked like we could not read the
+  // map (owner-reported 2026-08-12). The class stays, as the subtitle it is.
+  //
+  // Composed HERE, never in the tile: `p.name` is the OSM tag verbatim and
+  // `label` comes from the locale dictionary, so a Dutch rider reads
+  // "Rue du Puits Saint-Martin · Verhard · asfalt". Gluing them upstream would
+  // freeze one English word into the data.
   openDrawer(layer, {
-    name: label,
-    headline: label + (p.hw ? ' · ' + p.hw : ''),
+    name: p.name || label,
+    headline: p.name ? p.name + ' · ' + label : label + (p.hw ? ' · ' + p.hw : ''),
+    // Handed to the wizard so a rider correcting the surface of a named street
+    // does not retype a name we already know.
+    osmName: p.name || '',
     geom: { ll: [lngLat.lat, lngLat.lng] },
     segmentEnds: ends,
     // Confirming OSM is the same submission as correcting it, with the class

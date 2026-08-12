@@ -72,6 +72,60 @@ line draws on top of the tile line; the tile stays underneath as OSM's answer.
 ends, so `sa`/`sb` place both pins on it, draggable — the rider adjusts rather
 than re-taps from a blank map. A wrong-but-close start beats an empty one.
 
+## Names, road type, and what we are allowed to assume (2026-08-12)
+
+**The tile carries the way's `name`.** The basemap had been printing "Rue du
+Puits Saint-Martin" under our line while the drawer said "Paved · asphalt" and
+the wizard asked the rider to type a name we already had. The drawer now
+headlines with the street name and the class becomes its subtitle; the improve
+link carries `&name=`, and the wizard opens with it filled in. Composition
+happens at RENDER time, never in the tile: `name` is the OSM tag verbatim and
+the class comes from the locale dictionary, so a Dutch rider reads
+"Rue Saint-Géry · Verhard · asfalt". Gluing them upstream would freeze one
+English word into a name field for good. Cost: the Belgium artifact went from
+43 MB to **53.9 MB** (418,304 ways) — names are ~25%, and unnamed ways omit the
+key entirely rather than carrying an empty string.
+
+**Road type is now editable.** The drawer has always shown OSM's `highway` tag
+and the form had no counterpart, which makes a read-only row feel like a locked
+door. The form offers six kinds a rider can tell apart from the saddle;
+`App\Catalog\RoadType` owns the mapping and `RoadTypeContractTest` keeps the
+map module's copy identical. **`unclassified` is not offered**: it is a British
+road CLASS meaning "a public road below tertiary", and every rider outside
+mapping reads it as "nobody classified this", so offering it would collect
+confident wrong answers. The drawer shows both — `Residential street ·
+living_street` — because a rider following the link back to OSM needs OSM's own
+word.
+
+### Assumptions are shown, marked, and never stored
+
+The old harvester wrote `traffic` from a constant keyed on surface class:
+`Open road` on everything that was not a cycleway, `Car-free` on everything that
+was. That is worse than an empty field, because it is an empty field wearing a
+fact's clothes.
+
+What replaces it is an inference from `highway` — a residential street really is
+quieter than a secondary road — under three rules:
+
+1. **It is rendered as an assumption.** An ochre `!` beside the value, next to
+   (never instead of) the glacier-green `[OSM]` badge that means "OSM said so".
+   Hover reveals the reasoning on a pointer; **tap toggles it on a touch
+   screen**, because a tooltip nobody can open is a tooltip that lies.
+2. **The reasoning travels with the value**, so a number can never appear
+   without the sentence that justifies it: *"Not measured — worked out from the
+   map: OpenStreetMap calls this a residential or living street, which normally
+   means local traffic only. Nobody has confirmed it. Ride it and tell us."*
+   Five locales.
+3. **It is never stored and never prefilled into the form.** This is the load-
+   bearing one. A prefilled assumption that a rider submits without touching
+   becomes a rider's *claim*, and a moderator then reads a guess in the same
+   typeface as an observation. Facts prefill (the surface class, the name);
+   inferences do not. That is also why moderator views need no special case —
+   an assumption can never reach them.
+
+`assumedTraffic()` in `web/assets/map/surface-tiles.js` holds the rules;
+unknown highway values return null rather than a nearest guess.
+
 **Not every class can be confirmed.** `cycleway` says what a way *is*, not what
 it is made of, and `unverified` is the absence of a claim; neither offers the
 confirm action. The other five map to a declarable label in
@@ -98,6 +152,7 @@ start, which is what resolves the region); the **item** gets the LineString.
 | Surface | select(Asphalt / Concrete / Paving stones / Sett — pavé / Compacted / Fine gravel / Gravel / Dirt / Rock) | `[OSM]` |
 | Smoothness | select(Excellent / Good / Intermediate / Bad / Very bad) | `[OSM]` |
 | Width (m) | input | `[OSM]` |
+| Road type | select(Main road / Local road / Residential street / Farm or forest track / Path or trail / Cycleway) | `[OSM]` |
 | Traffic | select(Quiet / Moderate / Busy / Car-free) | `[edit]` |
 | Segregated from cars? | select(Unknown / Yes / No) | `[OSM]` |
 | Note | textarea | `[edit]` |

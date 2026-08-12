@@ -43,6 +43,7 @@ class SurfaceWay:
     ref: str                       # 'way/<osm-id>' — item.source_ref format
     cls: str                       # canonical class (SURFACE_STYLE key)
     highway: str                   # raw highway value, for the drawer
+    name: str                      # OSM `name` tag, '' when the way has none
     coords: list[tuple[float, float]]   # [(lon, lat), …] as drawn
 
 
@@ -118,7 +119,16 @@ class _Collector(osmium.SimpleHandler):
         # codebase writes and reads as "way/NNN" (CatalogProvider::curatedRefs,
         # the coverage dedupe, the importer). A second spelling would create
         # items that look right and dedupe against nothing.
-        self.ways.append(SurfaceWay(f"way/{w.id}", cls, highway, coords))
+        # The `name` tag, because a stretch of road is "Rue du Puits
+        # Saint-Martin", not "an unclassified paved way". The basemap has been
+        # printing that name under our line all along while the drawer said
+        # nothing (owner-reported 2026-08-12), and a rider correcting the
+        # surface then had to type a name we already knew.
+        #
+        # The tag verbatim, never composed with a class label: the class is
+        # rendered from a localised dictionary at draw time, so gluing the two
+        # here would freeze one English word into a name field for good.
+        self.ways.append(SurfaceWay(f"way/{w.id}", cls, highway, tags.get("name", ""), coords))
 
 
 def parse_surface_ways(pbf_path: Path, contract: Contract, *, untagged: bool = False) -> list[SurfaceWay]:
@@ -139,10 +149,16 @@ def write_geojsonl(ways: Iterator[SurfaceWay] | list[SurfaceWay], out_path: Path
     n = 0
     with out_path.open("w", encoding="utf-8") as fh:
         for w in ways:
+            props = {"cls": w.cls, "hw": w.highway, "ref": w.ref,
+                     "ridtok": ridtok, "cctok": cctok}
+            # Omitted rather than empty: most ways outside towns are unnamed,
+            # and an empty string per feature is dead weight in every tile a
+            # rider downloads.
+            if w.name:
+                props["name"] = w.name
             fh.write(json.dumps({
                 "type": "Feature",
-                "properties": {"cls": w.cls, "hw": w.highway, "ref": w.ref,
-                               "ridtok": ridtok, "cctok": cctok},
+                "properties": props,
                 "geometry": {"type": "LineString", "coordinates": [[round(x, 6), round(y, 6)] for x, y in w.coords]},
             }, separators=(",", ":")) + "\n")
             n += 1

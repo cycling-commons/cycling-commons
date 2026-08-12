@@ -72,7 +72,7 @@ def test_the_selector_filters_on_highway_not_surface(contract):
 def test_geojsonl_features_carry_the_tile_contract(tmp_path, contract):
     out = tmp_path / "s.geojsonl"
     n = write_geojsonl(
-        [SurfaceWay("way/42", "gravel", "track", [(4.1234567, 50.7654321), (4.2, 50.8)])],
+        [SurfaceWay("way/42", "gravel", "track", "", [(4.1234567, 50.7654321), (4.2, 50.8)])],
         out, ridtok="|7|", cctok="|BE|",
     )
     assert n == 1
@@ -93,3 +93,24 @@ def test_a_surface_value_may_not_sit_in_two_classes(contract):
         for v in values:
             assert v not in seen, f"{v!r} is in both {seen.get(v)!r} and {cls!r}"
             seen[v] = cls
+
+
+def test_a_named_way_carries_its_name(tmp_path):
+    # The drawer headlines with it and the wizard prefills it, so a rider
+    # correcting a street's surface never retypes a name we already have.
+    out = tmp_path / "named.geojsonl"
+    write_geojsonl(
+        [SurfaceWay("way/7", "paved", "unclassified", "Rue du Puits Saint-Martin",
+                    [(4.1, 50.7), (4.2, 50.8)])],
+        out,
+    )
+    props = json.loads(out.read_text().strip())["properties"]
+    assert props["name"] == "Rue du Puits Saint-Martin"
+
+
+def test_an_unnamed_way_omits_the_key_entirely(tmp_path):
+    # Most ways outside towns are unnamed. An empty string on every one of them
+    # is weight in every tile a rider downloads, for nothing.
+    out = tmp_path / "unnamed.geojsonl"
+    write_geojsonl([SurfaceWay("way/8", "gravel", "track", "", [(4.1, 50.7), (4.2, 50.8)])], out)
+    assert "name" not in json.loads(out.read_text().strip())["properties"]

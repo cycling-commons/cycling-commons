@@ -191,7 +191,17 @@ function recRowsHtml(recs){
     // interpolation escPend-escaped (RIDE_CITIES city links, bike-type
     // chips). Raw payload values never take this path — they stay
     // escPend-escaped below (spec §13).
-    return `<li class="${r.empty?'empty':''}${r.changed?' chg':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${links}</span></li>`;
+    /* An ASSUMPTION is not a fact and must never wear the same badge as one.
+       `r.assumed` is the reason we inferred the value; it renders as an
+       exclamation mark that says so on hover and on tap, because on a phone
+       there is no hover and a tooltip nobody can open is a tooltip that lies.
+       The reason travels with the row rather than living in a lookup, so a
+       value can never be shown without the sentence that justifies it. */
+    const assumed = r.assumed
+      ? `<span class="m as" role="button" tabindex="0" aria-expanded="false" aria-label="${escPend(D.assumedAria||'How we worked this out')}">!</span>`
+      : '';
+    const why = r.assumed ? `<p class="cc-d-why" hidden>${escPend(r.assumed)}</p>` : '';
+    return `<li class="${r.empty?'empty':''}${r.changed?' chg':''}"><span class="k">${escPend(r.label)}</span><span class="v${r.warn?' warn':''}">${r.html?r.value:escPend(r.value)}${r.method?`<span class="m">${r.method}</span>`:''}${assumed}${links}</span>${why}</li>`;
   }).join('');
 }
 
@@ -458,6 +468,9 @@ function buildRecord(layer, f){
     // with an empty Surface asks the rider to retype what we just told them in
     // the drawer, and an empty dropdown reads as "we know nothing here".
     if(f.confirmClass) refQ += `&surface=${encodeURIComponent(f.confirmClass)}`;
+    // A named way names itself. Everything else on this form is a guess the
+    // rider has to make; the street name is not one of them.
+    if(f.osmName) refQ += `&name=${encodeURIComponent(f.osmName)}`;
     edit = `<a class="cc-d-act edit" href="/improve?${refQ}">✎ ${D.editItem||'Edit this item'}</a>`;
     // "It is already right" is the SAME submission, one step shorter: the
     // location is being confirmed too, so the wizard opens on the details
@@ -1026,4 +1039,25 @@ export function closeDrawer(){
 export function initDrawerChrome(){
   document.getElementById('drawerClose').onclick=closeDrawer;
   document.getElementById('drawerScrim').onclick=closeDrawer;   // tap the dimmed area above the bottom sheet to close
+
+  /* Delegated, because record rows are rebuilt on every open — binding per row
+     would leak a listener per drawer. Click AND keyboard: the badge is the only
+     way to read the reasoning on a touch screen, so it has to be reachable
+     without a pointer too. */
+  const drawer = document.getElementById('drawer');
+  const toggleWhy = el => {
+    const row = el.closest('li');
+    const why = row && row.querySelector('.cc-d-why');
+    if (!why) return;
+    why.hidden = !why.hidden;
+    el.setAttribute('aria-expanded', why.hidden ? 'false' : 'true');
+  };
+  drawer.addEventListener('click', e => {
+    const badge = e.target.closest('.m.as');
+    if (badge) { e.stopPropagation(); toggleWhy(badge); }
+  });
+  drawer.addEventListener('keydown', e => {
+    const badge = e.target.closest && e.target.closest('.m.as');
+    if (badge && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleWhy(badge); }
+  });
 }

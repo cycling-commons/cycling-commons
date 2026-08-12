@@ -214,7 +214,15 @@ final class ContributeController extends AbstractController
         // translation into the declarable vocabulary. A class that maps to
         // nothing, or a value the registry does not offer, is dropped rather
         // than trusted into the form.
-        $current = [Item::NAME_FIELD => (string) ($poi['name'] ?? '')];   // '' for a segment: the rider names the stretch
+        // A point brings its name from the coverage row; a segment has no
+        // coverage row at all, so a named way hands its `name` tag over in the
+        // query instead. Trimmed and length-capped because it arrives from the
+        // URL bar as much as from our own link, and the form's own validation
+        // is the next gate either way.
+        $osmName = trim((string) $request->query->get('name', ''));
+        $current = [Item::NAME_FIELD => '' !== $osmName
+            ? mb_substr($osmName, 0, 120)
+            : (string) ($poi['name'] ?? '')];
         $prechosen = SurfaceVocabulary::fromTileClass((string) $request->query->get('surface', ''));
         if (null !== $prechosen) {
             foreach ($this->registry->for($type)->all() as $field) {
