@@ -22,8 +22,8 @@
    is the one colour the map does not otherwise use for a place, and a rider
    scanning a ride needs to find what still needs them. */
 import { map } from './map-init.js';
-import { D, tpl } from './i18n.js';
-import { uSpeed, uM } from './units.js';
+import { D } from './i18n.js';
+import { uSpeed } from './units.js';
 import { parseFit, extractTags, buildSurfaceSegments, countVehicles, MESG, semiToDeg,
          fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY } from '../lib/scout-fit.js';
 
@@ -183,6 +183,10 @@ function drawRide() {
    ground figure and the marker shows the car alone rather than a number that
    would read as the vehicle's speed and be 20 km/h short of it.
 
+   The speed is all a marker says. There is no tooltip: closing speed and
+   nearest range are the radar's working, not the fact a rider wants off a map,
+   and hover is not a thing on the bike computer this data came from.
+
    Measured here, never sent - like the count line, and for the same reason:
    nothing on the server can hold a measurement yet. */
 function passEl(pass) {
@@ -194,16 +198,9 @@ function passEl(pass) {
     + '<path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/>'
     + '<circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/>'
     + '</svg>';
-  if (pass.ground != null) {
-    const sp = document.createElement('span');
-    sp.textContent = uSpeed(pass.ground);
-    d.appendChild(sp);
-  }
-  const bits = [];
-  if (pass.ground != null) bits.push(tpl(t('scoutPassSpeed', 'Passed at {s}'), { s: uSpeed(pass.ground) }));
-  if (pass.speed != null) bits.push(tpl(t('scoutPassClosing', 'closing {s} faster than you'), { s: uSpeed(pass.speed) }));
-  if (pass.range != null) bits.push(tpl(t('scoutPassRange', 'nearest {d}'), { d: uM(pass.range) }));
-  d.title = bits.join(' \u00b7 ');
+  const sp = document.createElement('span');
+  sp.textContent = uSpeed(pass.ground);
+  d.appendChild(sp);
   return d;
 }
 
@@ -212,7 +209,10 @@ function placePasses(radar) {
   passMarkers = [];
   if (!radar || !radar.passes) return;
   radar.passes.forEach(pass => {
-    if (pass.lat == null || pass.lon == null) return;
+    // No place or no speed, no marker: the whole point of drawing one is the
+    // number on it, and a car chip with nothing on it says less than the count
+    // line already does. Both cases are counted there instead.
+    if (pass.lat == null || pass.lon == null || pass.ground == null) return;
     passMarkers.push(new maplibregl.Marker({ element: passEl(pass), anchor: 'bottom' })
       .setLngLat([pass.lon, pass.lat])
       .addTo(map));
@@ -404,9 +404,9 @@ function renderRideFacts(parsed) {
     /* How many of them we could not place. A rider who counts nine cars on the
        map and reads fifteen in the line above deserves the difference named,
        not left to look like a drawing bug. */
-    const placed = parsed.radar.passes.filter(x => x.lat != null && x.lon != null).length;
+    const placed = parsed.radar.passes.filter(x => x.lat != null && x.lon != null && x.ground != null).length;
     if (placed < parsed.radar.total) {
-      lines.push(tplCount(t('scoutPassNoFix', '{n} of them had no GPS fix, so they are not on the map'), parsed.radar.total - placed));
+      lines.push(tplCount(t('scoutPassNoFix', '{n} of them could not be placed with a speed, so they are not on the map'), parsed.radar.total - placed));
     }
   }
   if (parsed.unplaceable > 0) {
