@@ -2057,6 +2057,7 @@ map:
   d_scout_no_fix: '{n} etiquetas sin posición GPS: no se pueden situar'
   d_scout_stretches: '{n} tramos de firme registrados: añádelos desde el mapa por ahora'
   d_scout_send_all: 'Enviar el resto'
+  d_scout_close_unsent: 'Cerrar la revisión? {n} etiqueta(s) no se han enviado — solo están en este navegador y se perderán.'
   d_scout_letter_A: 'Firme'
   d_scout_letter_C: 'Agua y comida'
   d_scout_letter_D: 'Servicios de bici'

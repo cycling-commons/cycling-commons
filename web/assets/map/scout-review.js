@@ -22,7 +22,7 @@
    is the one colour the map does not otherwise use for a place, and a rider
    scanning a ride needs to find what still needs them. */
 import { map } from './map-init.js';
-import { D } from './i18n.js';
+import { D, tpl } from './i18n.js';
 import { uSpeed } from './units.js';
 import { parseFit, extractTags, buildSurfaceSegments, countVehicles, MESG, semiToDeg,
          fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY } from '../lib/scout-fit.js';
@@ -224,6 +224,36 @@ function placePasses(radar) {
   });
 }
 
+/* Closing the panel clears the ride off the map with it (owner 2026-08-12):
+   the line, the numbered tag pins and the car markers all go. They belong to a
+   review that is over - leaving them would put pins on a map with nothing to
+   press them for, and a rider looking at the ordinary map has no way to tell
+   they are not real places.
+
+   Unsent tags are the one thing worth stopping for, so a review with work left
+   in it asks first. Nothing is stored anywhere either way: the file was never
+   uploaded, so "discard" here means the browser forgets it. */
+function clearRide() {
+  passMarkers.forEach(m => m.remove());
+  passMarkers = [];
+  tags.forEach(entry => { if (entry.marker) entry.marker.remove(); });
+  tags = [];
+  track = [];
+  if (map.getLayer(RIDE_LINE)) map.removeLayer(RIDE_LINE);
+  if (map.getSource(RIDE_SRC)) map.removeSource(RIDE_SRC);
+  const list = el('scoutList');
+  if (list) list.hidden = true;
+  const tagList = el('scoutTags');
+  if (tagList) tagList.textContent = '';
+  const facts = el('scoutFacts');
+  if (facts) { facts.textContent = ''; facts.hidden = true; }
+  const media = el('scoutMedia');
+  if (media) media.hidden = true;
+  const file = el('scoutFile');
+  if (file) file.value = '';   // the same ride can be opened again
+  msg('');
+}
+
 function pinEl(entry, index) {
   const d = document.createElement('div');
   d.className = 'scout-pin' + (entry.approved ? ' done' : '');
@@ -388,10 +418,6 @@ function placeTags() {
       entry.lat = snapped.lat;
     });
     m.getElement().addEventListener('click', () => {
-      // A pin is the way back in after the panel was closed: the ride is still
-      // here, so clicking its tag reopens the card at that tag.
-      const p = el('scoutPanel');
-      if (p) p.hidden = false;
       const li = el('scoutTags') && el('scoutTags').children[i];
       if (li) { li.classList.add('open'); li.scrollIntoView({ block: 'nearest' }); }
     });
@@ -432,6 +458,8 @@ function renderRideFacts(parsed) {
 function show(parsed) {
   const panel = el('scoutPanel');
   if (panel) panel.hidden = false;
+  // A second ride never draws over the first.
+  clearRide();
   renderRideFacts(parsed);
   placePasses(parsed.radar);
   track = parsed.track;
@@ -589,7 +617,14 @@ export function initScoutReview() {
      brings the card back exactly as it was — re-reading the file would throw
      away edits the rider has already made. */
   const closeBtn = el('scoutClose');
-  if (closeBtn) closeBtn.addEventListener('click', () => { panel.hidden = true; });
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      const unsent = tags.filter(x => !x.approved).length;
+      if (unsent > 0 && !window.confirm(tpl(t('scoutCloseUnsent', 'Close the review? {n} tag(s) have not been sent — they are only in this browser and will be gone.'), { n: unsent }))) return;
+      clearRide();
+      panel.hidden = true;
+    });
+  }
 
   /* Keep the mark square against the text beside it. Its height is whatever the
      title and lead wrap to - which changes with the locale, the panel width and

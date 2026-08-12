@@ -9,10 +9,9 @@
    browser; the panel is markup and the map is the map. #}
 <aside class="scout-panel" id="scoutPanel" aria-label="{{ 'scout.review_title'|trans }}">
   {# Closing leaves NOTHING behind (owner 2026-08-12: "this is not closed, must
-     be gone") — no chip floating over the region banner. The map is what the
-     rider wanted to see, so the map is all that is left. A ride already read
-     is not lost with it: its red pins are still on the map, and clicking one
-     brings the card back at that tag. #}
+     be gone" / "also remove the drawn route and point and cars") — no chip over
+     the region banner, and no ride left drawn on a map that no longer has a
+     panel to act on it. The review ends; the map is what is left. #}
   <button type="button" class="scout-close" id="scoutClose"
           title="{{ 'scout.review_close'|trans }}" aria-label="{{ 'scout.review_close'|trans }}">&times;</button>
   {# The mark sits BESIDE the three lines, not above them: it is a label for the

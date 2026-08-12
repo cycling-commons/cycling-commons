@@ -2044,6 +2044,7 @@ map:
   d_scout_no_fix: '{n} tags had no GPS fix, so they cannot be placed'
   d_scout_stretches: '{n} surface stretches recorded — add these from the map for now'
   d_scout_send_all: 'Send the rest'
+  d_scout_close_unsent: 'Close the review? {n} tag(s) have not been sent — they are only in this browser and will be gone.'
   d_scout_letter_A: 'Road surface'
   d_scout_letter_C: 'Water & food'
   d_scout_letter_D: 'Bike services'

@@ -1726,6 +1726,7 @@ map:
   d_scout_no_fix: '{n} balises sans position GPS : impossible de les placer'
   d_scout_stretches: '{n} tronçons de revêtement enregistrés — ajoutez-les depuis la carte pour l’instant'
   d_scout_send_all: 'Envoyer le reste'
+  d_scout_close_unsent: 'Fermer la relecture ? {n} tag(s) n''ont pas été envoyés — ils n''existent que dans ce navigateur et seront perdus.'
   d_scout_letter_A: 'Revêtement'
   d_scout_letter_C: 'Eau & ravitaillement'
   d_scout_letter_D: 'Services vélo'

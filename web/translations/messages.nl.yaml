@@ -1726,6 +1726,7 @@ map:
   d_scout_no_fix: '{n} tags hadden geen GPS-fix en kunnen niet geplaatst worden'
   d_scout_stretches: '{n} wegdek-stukken opgenomen — voeg die voorlopig via de kaart toe'
   d_scout_send_all: 'Stuur de rest'
+  d_scout_close_unsent: 'Review sluiten? {n} tag(s) zijn niet verstuurd — ze staan alleen in deze browser en zijn dan weg.'
   d_scout_letter_A: 'Wegdek'
   d_scout_letter_C: 'Water & eten'
   d_scout_letter_D: 'Fietsdiensten'
