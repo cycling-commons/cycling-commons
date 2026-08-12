@@ -93,7 +93,7 @@
          until it is ticked; the server's own gates are unchanged and remain
          the real ones (a reason here, the typed DELETE for Trash). #}
       <details class="q-act q-act--trash trash-confirm">
-        <summary class="btn-act btn-icon btn-danger-quiet" title="{{ 'moderate.trash.button'|trans }}"
+        <summary class="btn-act btn-secondary btn-icon" title="{{ 'moderate.trash.button'|trans }}"
                  aria-label="{{ 'moderate.trash.button'|trans }}">🗑</summary>
         <div class="q-act-panel">
           <form method="post" action="{{ path('moderate_trash') }}">
@@ -129,7 +129,7 @@
            dozens of times an hour; the verbs they carry are rare and heavy, and
            spelling them out gave them the same weight as Review. The label
            stays as the accessible name and the tooltip — shorter, not hidden. #}
-        <summary class="btn-act btn-icon btn-alarm" title="{{ 'moderate.escalate.button'|trans }}"
+        <summary class="btn-act btn-secondary btn-icon btn-alarm" title="{{ 'moderate.escalate.button'|trans }}"
                  aria-label="{{ 'moderate.escalate.button'|trans }}">⚑</summary>
         <div class="q-act-panel">
           <form method="post" action="{{ path('moderate_escalate_submission') }}">
