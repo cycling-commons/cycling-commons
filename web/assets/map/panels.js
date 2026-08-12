@@ -33,6 +33,7 @@ import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { curScope, inScope } from './scope-ui.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn } from './surface-tiles.js';
+import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './routes-tiles.js';
 
 // Bindings a later init reads, so they cannot stay `const` inside the init that
 // looks them up: `app` is assigned by initRailChrome(), the two facet <select>s
@@ -116,6 +117,16 @@ export function initLayerList(){
   if(surfBtn && surfaceTilesConfigured()){
     surfBtn.hidden=false;
     surfBtn.onclick=()=>{ surfBtn.classList.toggle('on', setSurfaceTiles(!surfaceTilesVisible())); syncStudyGate(); };
+  }
+
+  // Cycle-route network (routes-tiles.js). Same rules as the surface skin: off
+  // by default (readable-by-default is the brief), offered only when an
+  // artifact exists — a control for tiles that were never built reads as
+  // broken, not absent.
+  const routesBtn=document.getElementById('ovRoutes');
+  if(routesBtn && routesTilesConfigured()){
+    routesBtn.hidden=false;
+    routesBtn.onclick=()=>{ routesBtn.classList.toggle('on', setRoutesTiles(!routesTilesVisible())); };
   }
 
   // Legend-as-filter + study mode. Both live on the legend because that is

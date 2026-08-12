@@ -57,6 +57,12 @@ class Contract:
     # the shape it must agree with is the CLIENT's SURFACE_STYLE, which the
     # cross-language test pins directly.
     surface: dict
+    # The cycle-route NETWORK layer (route=bicycle/mtb relations + knooppunt
+    # nodes — docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md).
+    # Raw mapping for the same reason as `surface`: a value table whose real
+    # counterpart is the client's network styling, pinned cross-language by
+    # routes-zooms.test.cjs.
+    routes: dict
     # The ONLY tag keys parse.py writes into coverage_poi.tags — the serve-set
     # of the narrow serving cache (osm-data-architecture.md §1 principle 4,
     # coverage-provider.md §2). `osmium tags-filter` selects OBJECTS, not keys,
@@ -159,6 +165,23 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
                 f"surface.todo.highways names {hw!r}, which is not in surface.highways — "
                 "the to-do arm is filtered out of the same extract, not selected separately")
 
+    # The quality channel rides the classified arm as `sm`/`mtb` (owner shape,
+    # 2026-08-12): the value list is the gate — an OSM smoothness value not
+    # named here is DROPPED at extract time rather than shipped for the client
+    # to guess a colour for, so the list and the client's tone map have to be
+    # the same set (surface-quality.test.cjs pins them).
+    for required in ("tag", "values", "minZoom"):
+        if required not in surface.get("quality", {}):
+            raise ValueError(f"contract surface.quality section missing {required!r}")
+    if not surface["quality"]["values"]:
+        raise ValueError("contract surface.quality.values must name at least one value")
+    for prop in ("sm", "mtb"):
+        if prop not in surface.get("tileProps", []):
+            raise ValueError(
+                f"surface.tileProps must carry {prop!r} — the quality channel rides the "
+                "classified arm, and a promise the extractor does not emit is a client "
+                "reading absent data as 'nobody has said'")
+
     for required in ("cellZoom", "minZoom", "maxZoom", "tileProps"):
         if required not in surface.get("gaps", {}):
             raise ValueError(f"contract surface.gaps section missing {required!r}")
@@ -171,6 +194,26 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
             f"surface.gaps.maxZoom ({surface['gaps']['maxZoom']}) must equal "
             f"surface.todo.minZoom ({surface['todo']['minZoom']}) — the grid hands over "
             "to the lines at exactly one zoom, with no gap and no overlap")
+
+    if "routes" not in raw:
+        raise ValueError("contract missing top-level \"routes\" key")
+    routes = raw["routes"]
+    for required in ("networks", "minZoom", "maxZoom", "tileProps"):
+        if required not in routes:
+            raise ValueError(f"contract routes section missing {required!r}")
+    if not routes["networks"]:
+        raise ValueError("contract routes.networks must name at least one network")
+    for required in ("minZoom", "tileProps"):
+        if required not in routes.get("nodes", {}):
+            raise ValueError(f"contract routes.nodes section missing {required!r}")
+    # The knooppunt numbers live INSIDE the routes artifact (a per-feature
+    # tippecanoe minzoom, not a second archive), so their floor must sit within
+    # the archive's zoom span or tippecanoe silently clamps and the client's
+    # pinned handover zoom stops being true.
+    if not routes["minZoom"] <= routes["nodes"]["minZoom"] <= routes["maxZoom"]:
+        raise ValueError(
+            f"routes.nodes.minZoom ({routes['nodes']['minZoom']}) must sit within the "
+            f"artifact's z{routes['minZoom']}-{routes['maxZoom']} span")
 
     if "serviceKind" not in raw:
         raise ValueError("contract missing top-level \"serviceKind\" key")
@@ -213,5 +256,6 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
         service_kind=service_kind,
         universal_tile_props=universal,
         surface=surface,
+        routes=routes,
         stored_tag_keys=stored,
     )

@@ -347,8 +347,54 @@
     "tileProps": [
       "cls",
       "hw",
+      "ref",
+      "sm",
+      "mtb"
+    ],
+    "quality": {
+      "_comment": "Surface QUALITY as its own visual channel (owner 2026-08-12): we store smoothness and OSM carries the same vocabulary, but the tiles used to ship only cls/hw/ref, so good pavement and bone-shaking pave drew identically. `sm` carries the raw OSM smoothness value (this list, verbatim - an unlisted value is dropped, not guessed); `mtb` carries mtb:scale. The client draws short coloured ticks above minZoom, ONLY where sm is present - no ticks means nobody has said, the same honesty rule as the red dotted line. Pinned to the client's tone mapping by surface-quality.test.cjs.",
+      "tag": "smoothness",
+      "values": [
+        "excellent",
+        "good",
+        "intermediate",
+        "bad",
+        "very_bad",
+        "horrible",
+        "very_horrible",
+        "impassable"
+      ],
+      "minZoom": 13
+    },
+    "_roadTypeChannel": "Road type is NOT a colour in this scale (owner 2026-08-12). `highway=cycleway` used to override the surface class, which answered two questions with one key. The raw highway value rides every feature as `hw` (tileProps) and the client draws a cycleway as a pale core inside whatever surface colour it has."
+  },
+  "routes": {
+    "_comment": "Cycle-route NETWORK layer (docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md): route=bicycle and route=mtb relations, one line feature per MEMBER WAY plus knooppunt nodes as points. Rendering corridors is borrowed (OpenCycleMap is the benchmark, readable-by-default the brief); what the layer buys us is the loop with the surface skin - a signed way with no recorded surface is homework whatever its highway class, and the extractor's way-id set is what makes the surface to-do arm route-aware. `net` is the relation's network canonicalised to this list (route=mtb is always mtb; an unlisted network on route=bicycle is other); `ref` is the OSM ELEMENT ref (way/NNN - same key, same meaning as every other layer, the /improve and source-link join key); the ROUTE's code (LF-ZZ, 09-80) travels as `rr`; `rk` says route vs node-network segment; `refs` joins every membership when a way carries more than one. Node features ride the same artifact with a per-feature tippecanoe minzoom of nodes.minZoom.",
+    "networks": [
+      "icn",
+      "ncn",
+      "rcn",
+      "lcn",
+      "mtb",
+      "other"
+    ],
+    "minZoom": 8,
+    "maxZoom": 13,
+    "tileProps": [
+      "net",
+      "rr",
+      "rk",
+      "refs",
       "ref"
     ],
-    "_roadTypeChannel": "Road type is NOT a colour in this scale (owner 2026-08-12). `highway=cycleway` used to override the surface class, which answered two questions with one key. The raw highway value rides every feature as `hw` (tileProps) and the client draws a cycleway as a pale core inside whatever surface colour it has."
+    "nodes": {
+      "_comment": "Knooppunten: nodes carrying rcn_ref/lcn_ref, emitted as points with their number in `nr`. minZoom keeps a country's thousands of numbers out of the planning-zoom tiles; the client draws the badges later still (routes-tiles.js), and the two are pinned by routes-zooms.test.cjs.",
+      "minZoom": 11,
+      "tileProps": [
+        "net",
+        "nr",
+        "ref"
+      ]
+    }
   }
 }

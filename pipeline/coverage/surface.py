@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections import defaultdict
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
@@ -54,6 +55,11 @@ from pathlib import Path
 import osmium
 
 from coverage.contract import Contract
+
+# mtb:scale as OSM actually tags it: a 0-6 difficulty with an optional +/-
+# refinement. Anything else ("yes", "hard", a stray unit) is dropped rather
+# than shipped for the client to guess at.
+_MTB_SCALE = re.compile(r"[0-6][+-]?")
 
 
 @dataclass(frozen=True)
@@ -65,6 +71,13 @@ class SurfaceWay:
     highway: str                   # raw highway value, for the drawer
     name: str                      # OSM `name` tag, '' when the way has none
     coords: list[tuple[float, float]]   # [(lon, lat), …] as drawn
+    # The quality channel (contract surface.quality, owner shape 2026-08-12):
+    # the raw OSM smoothness value when it is one the contract names, else ''
+    # — good pavement and bone-shaking pavé used to draw identically, and the
+    # client's ticks are the channel that finally distinguishes them. '' is
+    # honest absence: no tick means nobody has said, never "probably fine".
+    sm: str = ""
+    mtb: str = ""                  # mtb:scale, '0'-'6' with optional +/-
 
 
 def canonical_class(surface: str | None, highway: str, contract: Contract) -> str | None:
@@ -123,6 +136,10 @@ class _Collector(osmium.SimpleHandler):
         super().__init__()
         self._contract = contract
         self._emit = emit
+        # The gate for the quality channel: an OSM smoothness value the
+        # contract does not name is dropped at extract time, not shipped for
+        # the client to invent a colour for (contract surface.quality).
+        self._smoothness = frozenset(contract.surface["quality"]["values"])
 
     def way(self, w) -> None:
         tags = {t.k: t.v for t in w.tags}
@@ -138,6 +155,12 @@ class _Collector(osmium.SimpleHandler):
             return
         if len(coords) < 2:
             return
+        sm = tags.get("smoothness", "")
+        if sm not in self._smoothness:
+            sm = ""
+        mtb = tags.get("mtb:scale", "")
+        if not _MTB_SCALE.fullmatch(mtb):
+            mtb = ""
         # 'way/<id>', NOT the design sketch's 'w<id>'. This ref is what the
         # drawer hands to /improve, and materialize-on-edit then creates an A
         # item carrying it as source_ref — which every other path in the
@@ -153,7 +176,8 @@ class _Collector(osmium.SimpleHandler):
         # The tag verbatim, never composed with a class label: the class is
         # rendered from a localised dictionary at draw time, so gluing the two
         # here would freeze one English word into a name field for good.
-        self._emit(SurfaceWay(f"way/{w.id}", cls, highway, tags.get("name", ""), coords))
+        self._emit(SurfaceWay(f"way/{w.id}", cls, highway, tags.get("name", ""), coords,
+                              sm=sm, mtb=mtb))
 
 
 def stream_surface_ways(pbf_path: Path, contract: Contract,
@@ -180,6 +204,13 @@ def feature_json(way: SurfaceWay, *, ridtok: str = "", cctok: str = "") -> str:
     # empty string per feature is dead weight in every tile a rider downloads.
     if way.name:
         props["name"] = way.name
+    # Same omission rule for the quality channel: absence IS the value — the
+    # client filters its tick layer to features that HAVE sm, so an empty
+    # string would draw a tick claiming a smoothness nobody recorded.
+    if way.sm:
+        props["sm"] = way.sm
+    if way.mtb:
+        props["mtb"] = way.mtb
     return json.dumps({
         "type": "Feature",
         "properties": props,
@@ -305,12 +336,21 @@ class SurfaceCounts:
 
 def extract_region(pbf_path: Path, contract: Contract, *,
                    classified_out: Path, todo_out: Path, gaps_out: Path,
-                   ridtok: str = "", cctok: str = "") -> SurfaceCounts:
+                   ridtok: str = "", cctok: str = "",
+                   route_way_ids: frozenset[int] | set[int] = frozenset()) -> SurfaceCounts:
     """One pass over a filtered PBF -> all three artifacts' GeoJSONL.
 
     Written straight through to disk: a country's ways never accumulate in
     memory, which is what lets a 5 GB France extract run on a host with a few
     spare gigabytes.
+
+    `route_way_ids` makes the to-do arm ROUTE-AWARE (owner decision
+    2026-08-12): an untagged way carrying a signed route or node network is
+    homework whatever its highway class, because a rider will ride it BECAUSE
+    it is signed — the Zuiderdijk's nine untagged tertiary/unclassified ways
+    on LF-ZZ are the worked example. The set comes from the routes extractor's
+    way-id file (routes.load_way_ids); empty means the class gate stands alone,
+    which is what the blanket tertiary+cycleway stopgap was withdrawn for.
     """
     spec = contract.surface
     untagged_class = spec["untaggedClass"]
@@ -325,7 +365,12 @@ def extract_region(pbf_path: Path, contract: Contract, *,
             if not unrecorded:
                 cf.write(feature_json(way, ridtok=ridtok, cctok=cctok) + "\n")
                 counts["classified"] += 1
-            if way.highway in todo_highways:
+            # Homework by CLASS (the answer is unpredictable) or by ROUTE
+            # (somebody signed it, so riders will be on it). The two gates are
+            # a union, not a hierarchy.
+            homework = (way.highway in todo_highways
+                        or int(way.ref.rsplit("/", 1)[1]) in route_way_ids)
+            if homework:
                 # The grid measures the same population the to-do lines draw,
                 # recorded and not, so its percentage means "of the roads worth
                 # recording here, this share has no answer yet".

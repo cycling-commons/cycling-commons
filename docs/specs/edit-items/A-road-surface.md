@@ -127,6 +127,37 @@ riding actually settles something. The set is contract data
 (`surface.todo.highways`), so widening it later is a one-line change plus a
 rebuild — no code, no client release.
 
+**The arm is ROUTE-AWARE since 2026-08-13** (owner decision 2026-08-12; plan:
+`docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md`). The
+class gate above has a second gate beside it, a union not a hierarchy: *an
+untagged way that carries a signed route or node network is homework whatever
+its highway class, because a rider will ride it BECAUSE it is signed.* The
+Zuiderdijk is the worked example — nine untagged tertiary/unclassified ways
+carrying LF-ZZ plus two rcn segments, drawing as a hole in the skin until this
+rule. The way-id sets come from the routes extractor
+(`pipeline/coverage/routes.py`, per-region `routes_<slug>_wayids.txt` in the
+workdir), which is why `coverage.run --routes` runs before `--surface` when
+rebuilding both. A brief 2026-08-12 stopgap that added `tertiary` + `cycleway`
+to `todo.highways` was withdrawn the same night: class was the wrong key, and
+it would have bought back most of the bytes the measurement above saved. The
+gap grid counts route homework too, so the squares and the lines keep
+answering the same question.
+
+**Surface QUALITY has its own channel since 2026-08-13** (owner shape,
+2026-08-12). The classified arm's features carry `sm` (raw OSM `smoothness`,
+gated on contract `surface.quality.values` — an unlisted value is dropped at
+extract time, never guessed into a bucket) and `mtb` (`mtb:scale`), both
+omitted when absent. The client draws short coloured ticks over the class
+lines (green → amber → red, z13+, `surfq-*` layers), **only where `sm`
+exists** — no tick means nobody has said, the same honesty rule as the red
+dotted line — and the legend explains them in a note row that is not a filter.
+The drawer shows the value in the form's five-word vocabulary (OSM's eight
+values collapse for display only; the raw tag stays visible when the collapse
+was lossy) so the word a rider reads is the word the contribute form offers.
+This does NOT change the styling rule below: smoothness is still never a
+styling *key* — the class colour stays `surface=`-keyed, and the ticks are an
+annotation stacked on top.
+
 **The gap grid answers the same question for planning.** Per z12 cell (~6 km):
 kilometres of unrecorded to-do network, its share of that cell's network, and a
 road count. Kilometres rather than ways, because a way is an arbitrary unit — a

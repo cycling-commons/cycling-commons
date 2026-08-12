@@ -84,6 +84,46 @@ const GAPS_FILL = 'surfgaps-fill';
 const GAPS_LINE = 'surfgaps-line';
 export const surfaceTileLayerIds = () => SURFACE_CLS.filter(c => c !== 'other').map(c => 'surftile-' + c);
 
+/* ── The quality channel ───────────────────────────────────────────────────
+   Surface QUALITY finally gets a visual channel (owner shape, 2026-08-12):
+   short coloured ticks drawn over the class lines, green → amber → red, from
+   the OSM `smoothness` the pipeline ships as `sm`. Pattern is a free channel —
+   it stacks on the class colour instead of competing with it — and the ticks
+   obey the same honesty rule as the red dotted line: NO tick means nobody has
+   said, so the layer is filtered to features that HAVE sm, never defaulted.
+
+   The tone map's keys are the full OSM vocabulary and are pinned to contract
+   surface.quality.values by surface-quality.test.cjs: a value the pipeline
+   ships but this map does not name would fall through MapLibre's match to
+   transparent — a tick silently missing — and a value named here but dropped
+   by the pipeline would be a promise nobody keeps. */
+const SM_TONE = {
+  excellent: '#1E8E4F',
+  good: '#5FA845',
+  intermediate: '#D9A62E',
+  bad: '#D4763B',
+  very_bad: '#C2402F',
+  horrible: '#C2402F',
+  very_horrible: '#C2402F',
+  impassable: '#8E2A20',
+};
+/* Raw OSM value → the A form's five-value vocabulary, for the drawer row.
+   The finer OSM values collapse for DISPLAY only — the tile keeps the raw
+   value, so nothing is lost, and the drawer shows the rider the same word the
+   contribute form would ask them to pick (the Scout lesson: the fine values
+   live in the form vocabulary, not the map scale). */
+const SM_LABEL = {
+  excellent: 'Excellent', good: 'Good', intermediate: 'Intermediate',
+  bad: 'Bad', very_bad: 'Very bad', horrible: 'Very bad',
+  very_horrible: 'Very bad', impassable: 'Very bad',
+};
+/* Detail on demand: below this the ticks would be confetti on lines a pixel
+   wide. Pinned to contract surface.quality.minZoom by surface-quality.test.cjs
+   — the build does not stop shipping sm below it, but the CLIENT's floor and
+   the contract's must agree or the legend note lies about when ticks appear. */
+const SM_MIN_ZOOM = 13;
+const QUALITY_PREFIX = 'surfq-';
+
 let added = false;
 let visible = false;
 
@@ -131,8 +171,44 @@ export function addSurfaceTiles() {
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
 
+    // The quality ticks, ABOVE the class lines of the same country (added
+    // after them, same source): short dashes whose colour is the smoothness
+    // tone, spaced ~12 px so they read as a stitch over the class colour
+    // rather than as a second line. Dash units are line-widths, so the
+    // spacing arithmetic lives with the width.
+    const qid = QUALITY_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
+    if (!map.getLayer(qid)) {
+      map.addLayer({
+        id: qid,
+        type: 'line',
+        source: SURFACE_TILE_SOURCE,
+        'source-layer': srcLayer,
+        minzoom: SM_MIN_ZOOM,
+        filter: qualityFilter(),
+        layout: { 'line-cap': 'butt', visibility: 'none' },
+        paint: {
+          'line-color': ['match', ['get', 'sm'],
+            ...Object.entries(SM_TONE).flat(), 'rgba(0,0,0,0)'],
+          'line-width': 3.5,
+          // dash 0.6 + gap 2.8 line-widths ≈ a 2 px tick every 12 px at the
+          // width above.
+          'line-dasharray': [0.6, 2.8],
+          'line-opacity': 0.9,
+        },
+      });
+    }
   });
   added = true;
+}
+
+/* The tick layer's filter: only features that HAVE a smoothness (absence stays
+   absent), minus whatever classes the legend has ticked off — a tick floating
+   over a hidden gravel line would claim a road the rider asked not to see. */
+function qualityFilter() {
+  const off = [...classesOff];
+  return off.length
+    ? ['all', ['has', 'sm'], ['!', ['in', ['get', 'cls'], ['literal', off]]]]
+    : ['has', 'sm'];
 }
 
 /** Is the to-do artifact configured (an URL, not necessarily loaded)? */
@@ -390,6 +466,21 @@ export function openSurfaceDrawer(p, lngLat, geometry) {
   if (!layer) return;
   const label = classLabel(p.cls);
   const rec = [{ label: D.surface || 'Surface', value: label, method: 'OSM' }];
+  // Quality, when OSM has it — the same word the contribute form offers
+  // (SM_LABEL collapses OSM's eight values to the form's five for display;
+  // the raw tag stays visible beside it when the collapse was lossy, so a
+  // rider following the OSM link is never surprised by what they find).
+  if (p.sm && SM_LABEL[p.sm]) {
+    const smLabel = trVal(SM_LABEL[p.sm]);
+    const lossy = p.sm !== SM_LABEL[p.sm].toLowerCase().replace(' ', '_');
+    rec.push({ label: D.smoothness || 'Smoothness',
+               value: lossy ? smLabel + ' · ' + p.sm : smLabel, method: 'OSM' });
+  }
+  if (p.mtb) {
+    // The raw scale value: it is a standard riders look up, not a vocabulary
+    // we translate.
+    rec.push({ label: D.mtbScale || 'MTB scale', value: p.mtb, method: 'OSM' });
+  }
   /* Road type in the rider's words, with OSM's own word kept beside it: the tag
      is what a rider needs when they follow the link back to OSM, and
      'unclassified' is a road CLASS in Britain, not an admission that nobody
@@ -470,6 +561,13 @@ function applyClassVisibility() {
       const cls = l.id.slice('surftile-'.length).replace(/-[a-z]{2}$/, '');
       map.setLayoutProperty(l.id, 'visibility',
         visible && surfaceClassEnabled(cls) ? 'visible' : 'none');
+    } else if (l.id.startsWith(QUALITY_PREFIX)) {
+      /* The ticks ride the skin as a whole — they are an annotation on the
+         class lines, not a class of their own, so there is no legend row to
+         untick. Per-class hiding happens in the FILTER instead: hide gravel
+         and its ticks go with it. */
+      map.setLayoutProperty(l.id, 'visibility', visible ? 'visible' : 'none');
+      map.setFilter(l.id, qualityFilter());
     } else if (l.id === GAPS_FILL || l.id === GAPS_LINE) {
       /* The grid is the to-do arm at planning zoom, so it obeys exactly the
          same row. Its own maxzoom does the rest: tick "not recorded" on and a
@@ -579,8 +677,11 @@ export function setStudyMode(on) {
  * A tile feature can arrive as a LineString or, where the way crosses a tile
  * boundary, a MultiLineString — take the outermost ends of the whole thing so
  * the pins land on the stretch the rider actually sees.
+ *
+ * Exported for routes-tiles.js: a route corridor click opens the same surface
+ * wizard, and its pins deserve the same head start.
  */
-function segmentEnds(geometry) {
+export function segmentEnds(geometry) {
   if (!geometry) return null;
   const parts = geometry.type === 'MultiLineString' ? geometry.coordinates
     : geometry.type === 'LineString' ? [geometry.coordinates] : [];

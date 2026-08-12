@@ -9,7 +9,7 @@ DOCKER_COMP = docker compose -f developers/docker/compose.yaml
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh surface-tiles region-probe region-scaffold course-data
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh surface-tiles routes-tiles region-probe region-scaffold course-data
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -284,3 +284,20 @@ surface-tiles: ## Build + publish the road-surface line, to-do and gap-grid PMTi
 		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
 		$(if $(offline),-e COVERAGE_PBF_OFFLINE=1) \
 		pipeline python -m coverage.run --surface $(ARGS)
+
+# Cycle-route network layer: route=bicycle/mtb relations as corridors plus
+# knooppunt numbers, one routes.pmtiles under its own versioned prefix +
+# manifest (RoutesManifest reads it server-side, same contract as the others).
+# ALSO drops the per-region member way-id sets the surface build reads to make
+# its to-do arm route-aware — when rebuilding both, run routes-tiles FIRST and
+# surface-tiles second, so the surface extracts see fresh way-id files.
+routes-tiles: ## Build + publish the cycle-route network PMTiles (regions=csv)
+	@$(DOCKER_COMP) --profile storage up --detach --wait minio
+	@$(DOCKER_COMP) run --rm \
+		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
+		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
+		-e COVERAGE_S3_SECRET=$${MINIO_ROOT_PASSWORD:-ccadminsecret} \
+		-e COVERAGE_PUBLIC_BASE_URL=http://localhost:9100/cc-maps \
+		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
+		$(if $(offline),-e COVERAGE_PBF_OFFLINE=1) \
+		pipeline python -m coverage.run --routes $(ARGS)

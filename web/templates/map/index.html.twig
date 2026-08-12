@@ -276,6 +276,10 @@
         <button type="button" class="skey-row" data-surf-cls="rock" aria-pressed="true"><span class="skey-ln dot" style="--sc:#5F5A54"></span>{{ 'map.legend_rock'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="unverified" aria-pressed="true"><span class="skey-ln dash" style="--sc:#D92D20"></span>{{ 'map.legend_unverified'|trans }}</button>
       </div>
+      {# Quality ticks are an ANNOTATION on the class lines, not an eighth
+         class: this row explains, it does not filter (surface-tiles.js draws
+         ticks only where OSM smoothness exists, z13+). #}
+      <div class="skey-note"><span class="skey-ticks" aria-hidden="true"></span>{{ 'map.legend_quality'|trans }}</div>
       {# Study mode belongs with the key: it is about reading these classes. #}
       <button type="button" class="skey-study" id="skeyStudy" aria-pressed="false">{{ 'map.study_mode'|trans }}</button>
     </div>
@@ -294,6 +298,9 @@
          built — the same rule the satellite segment follows, and for the same
          reason: a control that does nothing reads as broken, not absent. #}
       <button class="mc-ov" id="ovSurface" hidden><span class="mc-ic">▰</span>{{ 'map.surfaces'|trans }}</button>
+      {# Cycle-route network: signed corridors + knooppunt numbers
+         (routes-tiles.js). Same hidden-until-built rule. #}
+      <button class="mc-ov" id="ovRoutes" hidden><span class="mc-ic">⤳</span>{{ 'map.route_network'|trans }}</button>
     </div>
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">
@@ -453,6 +460,12 @@ window.CC_VENDOR = {{ {
   {% endif %}
   {% if surface_gaps_url %}
   window.CC_SURFACE_GAPS_URL = {{ surface_gaps_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
+  {# Cycle-route network tiles (routes-tiles.js): corridors + knooppunt
+     numbers, one artifact. Absent/empty means the Routes toggle never renders
+     — the same no-control-for-missing-tiles rule as the surface skin. #}
+  {% if routes_tiles_url %}
+  window.CC_ROUTES_URL = {{ routes_tiles_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {% endif %}
   {# Scout review: the tag vocabulary with the letters each tag may resolve to,
      from ScoutTag::LETTERS — the same list the intake endpoint validates

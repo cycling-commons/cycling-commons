@@ -329,6 +329,45 @@ def build_surface_pmtiles(layer_files: dict[str, list[Path]], out_path: Path, co
     _run(cmd)
 
 
+def build_routes_pmtiles(way_files: dict[str, list[Path]], node_files: dict[str, list[Path]],
+                         out_path: Path, contract) -> None:
+    """tippecanoe -> the cycle-route network artifact: `routes_<cc>` line layers
+    plus `knoop_<cc>` point layers, one of each per country.
+
+    The same per-country split as the surface skin, for the same reasons
+    (border clustering, per-country scope filtering). Same line profile too —
+    simplification instead of thinning, because a dropped line is a route that
+    vanishes — and the knooppunt points ride the SAME archive: corridors and
+    numbers are one question, toggled by one control, so a second artifact
+    would cost a second fetch for no rider choice. Their zoom floor is the
+    per-feature tippecanoe minzoom the extractor stamped (contract
+    routes.nodes.minZoom), which tippecanoe honours per feature; the archive's
+    span comes from contract routes.
+
+    `way_files`/`node_files` map a country to a LIST of files because a country
+    can span several Geofabrik extracts — see build_surface_pmtiles.
+    """
+    spec = contract.routes
+    cmd = [
+        "tippecanoe", "-o", str(out_path), "--force", "--quiet",
+        "--minimum-zoom", str(spec["minZoom"]), "--maximum-zoom", str(spec["maxZoom"]),
+        "--simplification", "4",
+        # A dropped LINE is a route that vanishes; a dropped POINT is a
+        # knooppunt a rider is standing at and cannot find. Both stay.
+        "--no-feature-limit", "--no-tile-size-limit",
+        # -r1: retain every knooppunt at its built zooms — the numbers are a
+        # navigation aid, and a thinned sample of them is useless.
+        "-r1",
+    ]
+    for cc in sorted(way_files):
+        for path in way_files[cc]:
+            cmd += ["-L", f"routes_{cc.lower()}:{path}"]
+    for cc in sorted(node_files):
+        for path in node_files[cc]:
+            cmd += ["-L", f"knoop_{cc.lower()}:{path}"]
+    _run(cmd)
+
+
 def build_gaps_pmtiles(files: list[Path], out_path: Path, contract) -> None:
     """tippecanoe -> the gap grid: one square per cell, every country in one layer.
 

@@ -484,6 +484,36 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   (a one-region rebuild would otherwise take eleven countries off the map with
   a zero exit), and pruning removes whole build prefixes rather than individual
   arms.
+  The classified arm additionally carries the **quality channel** since
+  2026-08-13: `sm` (raw OSM `smoothness`, gated on the contract's
+  `surface.quality.values` list — an unlisted value is dropped at extract
+  time, never guessed) and `mtb` (`mtb:scale`, `0`–`6` with optional `+`/`-`),
+  both omitted when absent so absence stays absent.
+- **The cycle-route network has its own artifact and manifest since
+  2026-08-13** (plan:
+  `docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md`):
+  `route=bicycle`/`route=mtb` relations extracted per region by
+  `coverage.run --routes` (`pipeline/coverage/routes.py`, a two-pass walk —
+  relations first for membership, then ways with locations — over the same
+  Geofabrik extracts, zero PostGIS), one line feature per **member way**
+  (props `net`/`rr`/`rk`/`refs` + the element `ref`, contract `routes` key)
+  plus knooppunt nodes as points (`nr`; in-artifact from
+  `routes.nodes.minZoom` via a per-feature tippecanoe floor). Published as
+  `routes/<stamp>/routes.pmtiles` with a stable `routes/manifest.json`
+  (`{"tiles":{"routes":url}, "counts":{"ways":n,"nodes":n},
+  "country_codes":[…]}`), read server-side by `App\Coverage\RoutesManifest`
+  (env pin `ROUTES_TILES_URL` wins; manifest `ROUTES_MANIFEST_URL`) and
+  emitted as `window.CC_ROUTES_URL`. Its **own** manifest rather than a fourth
+  surface arm: the two builds are separate invocations, and a shared manifest
+  would let whichever ran last publish half-updated URLs for the other's arms.
+  Same shrink guard, same whole-prefix pruning (`keep=3`). The routes run also
+  drops per-region `routes_<slug>_wayids.txt` **way-id sets** into the
+  workdir: the surface pass reads them (`surface.extract_region
+  route_way_ids`) so an untagged way carrying a signed route is to-do-arm
+  homework whatever its highway class — which is why `--routes` runs before
+  `--surface` when rebuilding both (the way-id file is named as an extract
+  input, so a fresh routes run invalidates the surface extracts it would
+  change).
 - **Manifest** (stable key `coverage/manifest.json`):
   `{"version":1, "url":"<COVERAGE_PUBLIC_BASE_URL>/coverage/<YYYYMMDD-HHMM>.pmtiles",
   "built_at":"<ISO>", "counts":{"C":n,…}, "regions":[…], "country_codes":[…]}`.

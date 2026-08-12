@@ -124,6 +124,49 @@ def test_an_unnamed_way_omits_the_key_entirely(tmp_path):
     assert "name" not in json.loads(out.read_text().strip())["properties"]
 
 
+# ── The quality channel ──────────────────────────────────────────────────────
+
+def test_a_way_with_smoothness_carries_it(tmp_path):
+    # `sm` is the raw OSM value: the tick colour and the drawer label are the
+    # client's translations of it, and pre-digesting it here would freeze one
+    # rendering decision into every tile.
+    out = tmp_path / "sm.geojsonl"
+    write_geojsonl([SurfaceWay("way/9", "pave", "residential", "",
+                               [(4.1, 50.7), (4.2, 50.8)], sm="bad", mtb="2")], out)
+    props = json.loads(out.read_text().strip())["properties"]
+    assert props["sm"] == "bad"
+    assert props["mtb"] == "2"
+
+
+def test_a_way_without_smoothness_omits_the_keys(tmp_path):
+    # Absence IS the value: the client's tick layer filters on `has sm`, so an
+    # empty string would draw a tick claiming a smoothness nobody recorded —
+    # the same honesty rule as the red dotted line.
+    out = tmp_path / "nosm.geojsonl"
+    write_geojsonl([SurfaceWay("way/10", "gravel", "track", "", [(4.1, 50.7), (4.2, 50.8)])], out)
+    props = json.loads(out.read_text().strip())["properties"]
+    assert "sm" not in props and "mtb" not in props
+
+
+def test_quality_values_are_the_full_osm_smoothness_vocabulary(contract):
+    # All eight OSM values, not our five-value form vocabulary: the tiles carry
+    # what OSM says, and the client collapses for display. A value missing here
+    # is dropped at extract time, so the list must be complete or real data
+    # silently vanishes.
+    values = contract.surface["quality"]["values"]
+    assert values == ["excellent", "good", "intermediate", "bad",
+                      "very_bad", "horrible", "very_horrible", "impassable"]
+    assert contract.surface["quality"]["tag"] == "smoothness"
+    # Ticks are detail-on-demand: above the classified skin's readable zooms,
+    # never at planning scale.
+    assert contract.surface["quality"]["minZoom"] >= contract.surface["todo"]["minZoom"]
+
+
+def test_sm_and_mtb_are_promised_tile_props(contract):
+    for prop in ("sm", "mtb"):
+        assert prop in contract.surface["tileProps"]
+
+
 # ── The to-do arm and the gap grid ─────────────────────────────────────────
 
 def test_the_todo_arm_is_a_subset_of_the_extracted_network(contract):
@@ -135,26 +178,23 @@ def test_the_todo_arm_is_a_subset_of_the_extracted_network(contract):
 
 
 def test_the_todo_arm_carries_the_classes_where_nobody_can_predict(contract):
-    """What counts as "nobody has said", by class.
+    """What counts as "nobody has said", by class — the CLASS half of the rule.
 
-    The measurement stands — on Belgium's tagged ways, primary is unpaved 0.1%
-    of the time, secondary 0.5%, tertiary 2.5%, cycleway 0.0%, residential 7.2%
-    — but it answered the wrong question for two of them. A statistically
-    predictable road still draws as a HOLE when it has no tag and no arm, and a
-    hole reads as a broken layer rather than as an editorial decision: the
-    Zuiderdijk (7 untagged tertiary ways on a dijk) is the case that surfaced
-    it. Tertiary and cycleway are back; the big through-roads and the
-    residential grid stay out, where the hole is not where a rider looks.
+    The measurement stands: on Belgium's tagged ways, primary is unpaved 0.1%
+    of the time, secondary 0.5%, tertiary 2.5%, cycleway 0.0%, residential
+    7.2%. Confirming a primary road is asphalt is not work worth asking for.
+    The gap that briefly put tertiary and cycleway in this list (an untagged
+    tertiary on a signed route — the Zuiderdijk) is real, but class was the
+    wrong key: ROUTE membership is the second gate, and it is tested below
+    (test_a_signed_route_way_is_homework_whatever_its_class).
     """
     todo = set(contract.surface["todo"]["highways"])
     # The genuinely uncertain ones: track is 88% unpaved when tagged, path is a
     # coin flip, and a rural unclassified lane is 6.8%.
     assert {"track", "path", "unclassified"} <= todo
-    # Still out, by CLASS: confirming a primary road is asphalt is not work worth
-    # asking for, and the residential grid is most of the bytes for the least
-    # doubt. Tertiary and cycleway were briefly added and withdrawn — the gap
-    # they addressed is real (an untagged tertiary on a signed route) but the
-    # key is route membership, not class. See the handoff plan.
+    # Still out, by CLASS — a signed route can pull any of them in by ID, which
+    # asks about exactly the untagged tertiary a rider will actually ride and
+    # not about the residential grid nobody navigates by.
     for hw in ("primary", "secondary", "tertiary", "cycleway", "residential"):
         assert hw not in todo, f"{hw} is not homework by CLASS — route-awareness is the rule"
 
@@ -199,6 +239,62 @@ def test_one_pass_splits_the_arms_and_never_writes_a_way_twice(tmp_path, contrac
     # duplicated road would be drawn twice, at two weights, saying two things.
     assert not ({f["properties"]["ref"] for f in classified}
                 & {f["properties"]["ref"] for f in todo})
+
+
+def test_a_signed_route_way_is_homework_whatever_its_class(tmp_path, contract, monkeypatch):
+    """The ROUTE half of the to-do rule (owner decision 2026-08-12).
+
+    The Zuiderdijk in miniature: untagged tertiary ways on a signed national
+    route. By class they are out of the arm; by route membership they are
+    exactly the homework a rider will ride BECAUSE it is signed. The way-id set
+    comes from the routes extractor (routes_<slug>_wayids.txt via
+    routes.load_way_ids), and an untagged tertiary NOT on any route stays out —
+    that hole is the editorial decision, not a bug.
+    """
+    from coverage import surface as mod
+
+    ways = [
+        _way("way/41", "unverified", "tertiary"),    # Zuiderdijk: on LF-ZZ
+        _way("way/42", "unverified", "tertiary"),    # not on any route
+        _way("way/43", "paved", "tertiary"),         # on the route, but recorded
+        _way("way/44", "unverified", "track"),       # homework by class, no route
+    ]
+    monkeypatch.setattr(mod, "stream_surface_ways",
+                        lambda pbf, contract, emit: [emit(w) for w in ways])
+    counts = mod.extract_region(
+        tmp_path / "ignored.pbf", contract,
+        classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
+        gaps_out=tmp_path / "g.geojsonl", cctok="|NL|",
+        route_way_ids=frozenset({41, 43}))
+
+    todo = [json.loads(l)["properties"]["ref"]
+            for l in (tmp_path / "t.geojsonl").read_text().splitlines()]
+    assert counts.todo == 2
+    assert todo == ["way/41", "way/44"], \
+        "route membership pulls 41 in; 42 stays a deliberate hole; 43 is answered"
+    # The recorded route way still draws in the classified skin, once.
+    classified = [json.loads(l)["properties"]["ref"]
+                  for l in (tmp_path / "c.geojsonl").read_text().splitlines()]
+    assert classified == ["way/43"]
+
+
+def test_the_grid_counts_route_homework_too(tmp_path, contract, monkeypatch):
+    # The grid and the lines must keep answering the SAME question after the
+    # route gate: a cell whose only homework is an untagged signed route still
+    # shows as work at planning zoom.
+    from coverage import surface as mod
+
+    monkeypatch.setattr(mod, "stream_surface_ways",
+                        lambda pbf, contract, emit: emit(
+                            _way("way/41", "unverified", "tertiary",
+                                 [(5.10, 52.62), (5.20, 52.62)])))
+    counts = mod.extract_region(
+        tmp_path / "ignored.pbf", contract,
+        classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
+        gaps_out=tmp_path / "g.geojsonl", route_way_ids=frozenset({41}))
+    assert counts.cells == 1
+    props = json.loads((tmp_path / "g.geojsonl").read_text().strip())["properties"]
+    assert props["n"] == 1 and props["pct"] == 100
 
 
 def test_the_grid_counts_kilometres_of_todo_network_only(tmp_path, contract, monkeypatch):

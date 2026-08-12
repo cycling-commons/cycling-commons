@@ -586,6 +586,36 @@ the newest rung of that same ladder.
   gravel-from-one-source. Dash gaps in the key are **transparent**, not cream:
   the curated layer has a white casing and the tile layer has none, so a painted
   gap made the key disagree with the map it was explaining.
+- **Quality ticks** (owner shape, 2026-08-12): surface QUALITY finally has a
+  visual channel of its own — short coloured dashes drawn over the class lines
+  (`surfq-*` layers in `surface-tiles.js`), green → amber → red from the OSM
+  `smoothness` the tiles ship as `sm`, z13+ only, and **only where smoothness
+  is recorded** (the layer filters on `has sm` — no tick means nobody has
+  said, the same honesty rule as the red dotted line). Pattern is a free
+  channel: it stacks on the class colour instead of competing with it. The
+  tone map's keys are the contract's `surface.quality.values` (all eight OSM
+  values; the drawer collapses them to the form's five for display), pinned by
+  `surface-quality.test.cjs`. The legend explains the ticks in one non-filter
+  note row (`.skey-note`); hiding a class hides its ticks via the layer
+  filter, not a legend row of their own.
+- **The cycle-route network layer** (`web/assets/map/routes-tiles.js`, behind
+  the ⤳ Routes control, off by default) draws signed `route=bicycle`/`route=mtb`
+  corridors plus knooppunt number badges from their own PMTiles artifact
+  (`routes_<cc>` line layers + `knoop_<cc>` point layers —
+  [coverage-provider.md](coverage-provider.md) §4). The benchmark is
+  OpenCycleMap and the brief is **readable by default, detail on demand**:
+  three visual families (national icn/ncn purple, regional rcn/lcn/other blue,
+  MTB earth-brown), wide translucent corridor lines so the basemap road stays
+  legible inside them, and number badges only from z13. Clicking a corridor
+  opens the surface drawer for that **way** — the layer exists to close the
+  loop with the surface skin (a signed way with no recorded surface is exactly
+  the road worth asking about), so the improve action is the ordinary
+  `/improve?ref=way/NNN&type=road-surface` bridge, with both wizard pins
+  pre-placed on the clicked stretch. Knooppunt badges open an info-only drawer
+  (a junction number is not a road; there is no surface to offer a wizard
+  for). Network styling keys and badge zoom are pinned to the contract by
+  `routes-zooms.test.cjs`. It stacks above the surface skin (the corridor is
+  the headline the toggle asks for) and below everything curated.
 - **Study mode** (the toggle inside the legend, where it belongs — it is about
   reading these classes) drops the basemap to a flat light-grey and hides
   satellite and street-level with it, leaving only the surface lines. Turning it

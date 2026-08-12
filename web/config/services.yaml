@@ -43,6 +43,11 @@ services:
             $pinnedTodoUrl: '%surface.todo_url%'
             $pinnedGapsUrl: '%surface.gaps_url%'
 
+    App\Coverage\RoutesManifest:
+        arguments:
+            $manifestUrl: '%routes.manifest_url%'
+            $pinnedTilesUrl: '%routes.tiles_url%'
+
     App\EventSubscriber\CspSubscriber:
         arguments:
             $coverageCspHost: '%coverage.csp_host%'

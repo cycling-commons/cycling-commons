@@ -25,12 +25,16 @@ from .contract import load_contract
 from .extract import run_extract, run_filter
 from .load import apply_session_budget, ensure_schema, load_region, resolve_country
 from .parse import parse_pois
-from .publish import (ensure_bucket, prune, prune_surface, published_countries,
-                      upload, upload_surface)
+from .publish import (ROUTES_MANIFEST_KEY, ensure_bucket, prune, prune_routes,
+                      prune_surface, published_countries, upload, upload_routes,
+                      upload_surface)
+from .routes import extract_region as routes_extract_region
+from .routes import load_way_ids
+from .routes import selector_expressions as routes_selectors
 from .surface import extract_region
 from .surface import selector_expressions as surface_selectors
-from .tiles import (build_gaps_pmtiles, build_pmtiles, build_surface_pmtiles,
-                    export_geojsonl, verify_pmtiles)
+from .tiles import (build_gaps_pmtiles, build_pmtiles, build_routes_pmtiles,
+                    build_surface_pmtiles, export_geojsonl, verify_pmtiles)
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 
@@ -165,7 +169,9 @@ def contract_fingerprint(contract_file: pathlib.Path | None = None) -> str:
 
 
 def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file: pathlib.Path,
-                        stamp: pathlib.Path | None = None) -> bool:
+                        stamp: pathlib.Path | None = None, *,
+                        extra_inputs: tuple[pathlib.Path, ...] = (),
+                        allow_empty: bool = False) -> bool:
     """Is a cached per-country GeoJSONL still good?
 
     Only when it exists, is not empty, is newer than the PBF it came from, and
@@ -179,15 +185,25 @@ def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file:
     the extract. A missing stamp means "written before stamps existed", which is
     treated as stale: one extract is a cheap price for not guessing.
 
+    `extra_inputs` are further files the extract was derived from, compared by
+    mtime like the PBF — the surface pass names the routes way-id set here, so
+    a fresh `--routes` run invalidates the surface extracts whose to-do arm it
+    would change. `allow_empty` is for outputs that are legitimately empty (a
+    country with no knooppunten has an empty nodes file, and re-extracting it
+    weekly to rediscover that would be the cache defeating itself).
+
     `COVERAGE_FORCE_EXTRACT=1` skips the cache outright — the hatch for a
     pipeline change whose effect is visible in no timestamp and no hash.
     """
     if os.environ.get("COVERAGE_FORCE_EXTRACT") == "1":
         return False
-    if not extract.exists() or extract.stat().st_size == 0:
+    if not extract.exists() or (not allow_empty and extract.stat().st_size == 0):
         return False
     if pbf.exists() and extract.stat().st_mtime < pbf.stat().st_mtime:
         return False
+    for extra in extra_inputs:
+        if extra.exists() and extract.stat().st_mtime < extra.stat().st_mtime:
+            return False
     if stamp is None:
         # Back-compat for callers that have no stamp to offer (the tests' own
         # temp contracts): fall back to the timestamp rule this replaced.
@@ -251,20 +267,41 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
             # that added the to-do arm to a workdir holding last week's extracts
             # would otherwise reuse them and tile an arm that does not exist.
             stamp = workdir / f"surface_{slug}.stamp"
-            if all(_extract_is_current(f, pbf, contract_path(), stamp)
+            # The routes extract's way-id set, when a `--routes` run has left
+            # one in the workdir: it is what makes the to-do arm route-aware
+            # (an untagged way on a signed route is homework whatever its
+            # class). Named as an extract INPUT too, so a fresh routes run
+            # invalidates the surface extracts it would change.
+            wayids_path = workdir / f"routes_{slug}_wayids.txt"
+            if all(_extract_is_current(f, pbf, contract_path(), stamp,
+                                       extra_inputs=(wayids_path,))
                    for f in (out, todo_out, gaps_out)):
                 print(f"[surface] {region}: extract unchanged, reusing {out.name}")
             else:
                 filtered = workdir / (slug + "-surface.osm.pbf")
                 run_filter(pbf, filtered, surface_selectors(contract))
-                counts = extract_region(
+                route_way_ids = load_way_ids(wayids_path)
+                if not route_way_ids:
+                    # Loudly, not silently: the arm still builds, but a rider
+                    # zooming the Zuiderdijk would see class-gated homework
+                    # only, and nothing else in the log would say why.
+                    print(f"[surface] {region}: no routes extract in the workdir — "
+                          "the to-do arm is class-gated only (run --routes first "
+                          "for route-awareness)")
+                # NOT the manifest `counts` dict: rebinding that name here made
+                # every fresh extract fail at the line-count loop below
+                # ("'SurfaceCounts' object is not subscriptable") while cached
+                # regions sailed through — the first cold build after a cache
+                # wipe would have reported every region failed.
+                fresh = extract_region(
                     filtered, contract, classified_out=out, todo_out=todo_out,
-                    gaps_out=gaps_out, cctok=f"|{country_code}|")
+                    gaps_out=gaps_out, cctok=f"|{country_code}|",
+                    route_way_ids=route_way_ids)
                 # Written only after all three files are complete, so a run
                 # killed mid-extract leaves no stamp and the next one redoes it.
                 stamp.write_text(contract_fingerprint(), encoding="utf-8")
-                print(f"[surface] {region}: {counts.classified} classified, "
-                      f"{counts.todo} to record, {counts.cells} gap cells")
+                print(f"[surface] {region}: {fresh.classified} classified, "
+                      f"{fresh.todo} to record, {fresh.cells} gap cells")
             for key, path in (("classified", out), ("todo", todo_out), ("cells", gaps_out)):
                 with path.open("rb") as fh:
                     counts[key] += sum(1 for _ in fh)
@@ -355,6 +392,91 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
     return 1 if failed else 0
 
 
+def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
+                publish: bool = True) -> int:
+    """The route-network path: PBF -> osmium -> two-pass extract -> tippecanoe.
+
+    No database, same as the surface path and for the same reason. One run
+    produces the routes artifact AND the per-region way-id sets the surface
+    pass reads for route-awareness — which is why `--routes` is the pass to run
+    FIRST when both are being rebuilt: the way-id files it drops in the workdir
+    are newer than the surface extracts, so the surface run re-extracts with
+    them (see _extract_is_current's extra_inputs).
+    """
+    way_files: dict[str, list[pathlib.Path]] = {}
+    node_files: dict[str, list[pathlib.Path]] = {}
+    counts = {"ways": 0, "nodes": 0}
+    allow_shrink = os.environ.get("COVERAGE_ALLOW_SHRINK") == "1"
+    failed = []
+    for region in regions:
+        try:
+            country_code = resolve_country(region)
+            pbf = fetch_pbf(region, workdir)
+            # Keyed by REGION for the same multi-extract-country reason the
+            # surface files are (california + colorado).
+            slug = region.replace("/", "-")
+            ways_out = workdir / f"routes_{slug}_ways.geojsonl"
+            nodes_out = workdir / f"routes_{slug}_knoop.geojsonl"
+            wayids_out = workdir / f"routes_{slug}_wayids.txt"
+            stamp = workdir / f"routes_{slug}.stamp"
+            # allow_empty: a country with no node network has an empty knoop
+            # file, and a country with no signed routes at all (rare, but a
+            # partial extract like a single US state can be) has empty ways —
+            # both are answers, not failures to cache.
+            if all(_extract_is_current(f, pbf, contract_path(), stamp, allow_empty=True)
+                   for f in (ways_out, nodes_out, wayids_out)):
+                print(f"[routes] {region}: extract unchanged, reusing {ways_out.name}")
+            else:
+                filtered = workdir / (slug + "-routes.osm.pbf")
+                run_filter(pbf, filtered, routes_selectors())
+                fresh = routes_extract_region(
+                    filtered, contract, ways_out=ways_out, nodes_out=nodes_out,
+                    wayids_out=wayids_out, cctok=f"|{country_code}|")
+                stamp.write_text(contract_fingerprint(), encoding="utf-8")
+                print(f"[routes] {region}: {fresh.ways} member ways on "
+                      f"{fresh.relations} routes, {fresh.nodes} knooppunten")
+            for key, path in (("ways", ways_out), ("nodes", nodes_out)):
+                with path.open("rb") as fh:
+                    counts[key] += sum(1 for _ in fh)
+            way_files.setdefault(country_code, []).append(ways_out)
+            node_files.setdefault(country_code, []).append(nodes_out)
+        except Exception as exc:  # noqa: BLE001 — one region must not stop the rest
+            print(f"[routes] {region} FAILED: {exc}", file=sys.stderr)
+            failed.append(region)
+
+    if extract_only:
+        print(f"[routes] extract-only: {len(way_files)} country layer(s) ready, not tiling")
+        return 1 if failed else 0
+    if way_files:
+        artifact = workdir / "routes.pmtiles"
+        build_routes_pmtiles(way_files, node_files, artifact, contract)
+        print(f"[routes] {artifact.name}: {artifact.stat().st_size / 1e6:.1f} MB")
+        if publish:
+            try:
+                ensure_bucket()
+                # Same shrink guard as the surface publish, against its own
+                # manifest: `make routes-tiles regions=europe/luxembourg` must
+                # not take eleven countries' corridors off the map silently.
+                live = published_countries(manifest_key=ROUTES_MANIFEST_KEY)
+                built = set(way_files)
+                if live is not None and built < live and not allow_shrink:
+                    raise RuntimeError(
+                        f"refusing to publish {len(built)} countries over the live "
+                        f"{len(live)}: {', '.join(sorted(live - built))} would vanish "
+                        "from the map. Pass every onboarded region, or set "
+                        "COVERAGE_ALLOW_SHRINK=1 if the removal is intended.")
+                url = upload_routes(artifact, {"counts": counts,
+                                               "country_codes": sorted(way_files)})
+                print(f"[routes] published {url}")
+                for key in prune_routes():
+                    print(f"[routes] pruned {key}")
+            except Exception as exc:  # noqa: BLE001
+                # A build that cannot publish is still a build worth keeping.
+                print(f"[routes] publish FAILED: {exc}", file=sys.stderr)
+                failed.append("publish")
+    return 1 if failed else 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Weekly coverage batch (PostGIS index + PMTiles)")
     ap.add_argument("--surface", action="store_true",
@@ -367,13 +489,21 @@ def main(argv=None) -> int:
                          "grid, for planning zoom). Three artifacts because a vector "
                          "tile is fetched whole, so a layer that is off by default must "
                          "not cost its bytes to every rider.")
+    ap.add_argument("--routes", action="store_true",
+                    help="build the cycle-route NETWORK artifact for the given regions "
+                         "(route=bicycle/mtb relations as corridors, knooppunt numbers "
+                         "as points; zero DB rows, its own pmtiles + manifest). Also "
+                         "drops the per-region member way-id sets the --surface pass "
+                         "reads to make its to-do arm route-aware — run --routes "
+                         "BEFORE --surface when rebuilding both.")
     ap.add_argument("--no-publish", action="store_true",
-                    help="with --surface: build the artifacts but do not upload them or "
-                         "move the manifest. For experiments and size measurements; a "
-                         "normal run publishes, so that a rebuild needs no config change.")
+                    help="with --surface/--routes: build the artifacts but do not upload "
+                         "them or move the manifest. For experiments and size "
+                         "measurements; a normal run publishes, so that a rebuild needs "
+                         "no config change.")
     ap.add_argument("--extract-only", action="store_true",
-                    help="with --surface: produce the per-region GeoJSONL and stop, "
-                         "without building any PMTiles. For continental runs done "
+                    help="with --surface/--routes: produce the per-region GeoJSONL and "
+                         "stop, without building any PMTiles. For continental runs done "
                          "one region at a time (so a failure costs one country, not "
                          "the queue); the tiling pass follows once, over all of them.")
     ap.add_argument("--regions",
@@ -387,6 +517,9 @@ def main(argv=None) -> int:
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
     contract = load_contract()
+    if args.routes:
+        return _run_routes(regions, workdir, contract, extract_only=args.extract_only,
+                           publish=not args.no_publish)
     if args.surface:
         return _run_surface(regions, workdir, contract, extract_only=args.extract_only,
                             publish=not args.no_publish)

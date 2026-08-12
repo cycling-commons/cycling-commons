@@ -339,3 +339,28 @@ def test_extra_sql_tag_keys_are_pinned_to_the_contract_constant():
         for key in re.findall(r"tags\s*(?:->>|\?)\s*'([^']+)'", fragment)
     }
     assert read_by_sql == TILE_DERIVED_TAG_KEYS
+
+
+def test_routes_build_command_layers_lines_and_knooppunten(tmp_path, monkeypatch):
+    # One artifact, two layer families: routes_<cc> corridors and knoop_<cc>
+    # numbers, zoomed by the contract. No thinning (a dropped line is a route
+    # that vanishes; a dropped point is a knooppunt a rider cannot find), and
+    # -r1 keeps every number at the built zooms — the badges are a navigation
+    # aid, not a density sample.
+    captured = {}
+    monkeypatch.setattr(tiles, "_run", lambda cmd: captured.setdefault("cmd", cmd))
+    contract = load_contract()
+    tiles.build_routes_pmtiles(
+        {"NL": [tmp_path / "nl_ways.geojsonl"], "BE": [tmp_path / "be_ways.geojsonl"]},
+        {"NL": [tmp_path / "nl_knoop.geojsonl"]},
+        tmp_path / "routes.pmtiles", contract)
+    cmd = captured["cmd"]
+    spec = contract.routes
+    for flag, val in [("--minimum-zoom", str(spec["minZoom"])),
+                      ("--maximum-zoom", str(spec["maxZoom"]))]:
+        assert flag in cmd and cmd[cmd.index(flag) + 1] == val, f"{flag} {val}"
+    layers = [cmd[i + 1] for i, a in enumerate(cmd) if a == "-L"]
+    assert [l.split(":")[0] for l in layers] == ["routes_be", "routes_nl", "knoop_nl"]
+    assert "--no-feature-limit" in cmd and "--no-tile-size-limit" in cmd
+    assert "-r1" in cmd
+    assert "--drop-densest-as-needed" not in cmd

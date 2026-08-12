@@ -117,6 +117,14 @@
   .skey-row[aria-pressed="false"]::before{content:'';opacity:0}
   .skey-row[aria-pressed="false"]{opacity:.45}
   .skey-row:hover::before{opacity:1}
+  /* The quality-tick note: an explanation, not a filter row — dimmer, no
+     checkmark, and a miniature of the ticks themselves (green → amber → red
+     stitches) so the legend teaches what the map shows. */
+  .skey-note{display:flex;align-items:center;gap:.7rem;font-size:.68rem;color:var(--paper);
+    opacity:.75;margin-top:.55rem;padding:0 .3rem;line-height:1.35}
+  .skey-ticks{width:34px;height:4px;border-radius:2px;flex:none;
+    background:linear-gradient(90deg,#1E8E4F 0 3px,transparent 3px 12px,
+      #D9A62E 12px 15px,transparent 15px 23px,#C2402F 23px 26px,transparent 26px 34px)}
   .skey-study{margin-top:.7rem;width:100%;background:none;border:1px solid rgba(239,230,212,.28);
     border-radius:5px;color:var(--paper);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;
     text-transform:uppercase;padding:.45rem .5rem;cursor:pointer;min-height:2rem}
@@ -405,7 +413,7 @@
     /* road-surface legend collapses to an icon, left of the layers icon */
     .legend{bottom:auto;top:.8rem;right:3.3rem;padding:.25rem;min-width:0}
     .legend .lg-toggle{display:flex}
-    .legend:not(.open) h4,.legend:not(.open) .skey{display:none}
+    .legend:not(.open) h4,.legend:not(.open) .skey,.legend:not(.open) .skey-note,.legend:not(.open) .skey-study{display:none}
     .legend.open{right:.8rem;padding:.7rem .9rem}
   }
 

@@ -21,3 +21,8 @@ parameters:
     surface.tiles_url: '%env(SURFACE_TILES_URL)%'
     surface.todo_url: '%env(SURFACE_TODO_URL)%'
     surface.gaps_url: '%env(SURFACE_GAPS_URL)%'
+    # Cycle-route network tiles (route=bicycle/mtb corridors + knooppunten).
+    # Same manifest-or-pin contract as the surface set, its own manifest
+    # because the two builds run as separate invocations.
+    routes.manifest_url: '%env(ROUTES_MANIFEST_URL)%'
+    routes.tiles_url: '%env(ROUTES_TILES_URL)%'

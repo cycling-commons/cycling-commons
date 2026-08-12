@@ -31,6 +31,14 @@ viewpoints, and more. All of it is **community-contributed**, useful to **anyone
 - Path width, barriers, gates, bollards [OSM]
 - Lit / unlit at night [OSM]
 - One-way / cycling-permitted-against-traffic [OSM]
+- Signed cycle routes & node networks — the map can show the signed routes
+  (national long-distance routes, regional routes, MTB loops) and the numbered
+  junction networks riders navigate by, drawn from OpenStreetMap's route
+  relations. The corridors and numbers are OSM's; what we add on top is ours —
+  which stretches of a signed route have a recorded surface, its quality where
+  someone has said, and a one-tap way to fill the gaps. Surfaces on this map
+  are our own recorded answers, not a re-rendering of somebody else's style
+  [tap][OSM]
 
 ## B. Climbs, descents & terrain  *(the layer closed databases lock down)*
 - Climbs / cols / bergs: start & top points, length, elevation gain [auto][edit]

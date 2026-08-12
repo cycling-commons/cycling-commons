@@ -198,6 +198,35 @@ Use `ARGS=--no-publish` for size experiments on one country, and
 `COVERAGE_ALLOW_SHRINK=1` only when dropping a country is what you actually
 mean.
 
+## The routes build, and why it runs first
+
+The cycle-route network layer (signed `route=bicycle`/`route=mtb` corridors
+plus knooppunt numbers) is a sibling build with the same shape — same
+extracts, no database, its own artifact and manifest:
+
+<!-- CODE-ILLUSTRATIVE build and publish the route-network artifact -->
+```bash
+make routes-tiles regions=europe/belgium,europe/netherlands,europe/luxembourg
+```
+
+It differs from the surface build in one structural way: routes are OSM
+**relations**, and a way cannot know its relations, so the extractor walks the
+filtered PBF twice — relations first for membership, then ways with locations
+(`pipeline/coverage/routes.py`). It publishes
+`routes/<stamp>/routes.pmtiles` + `routes/manifest.json` (read by
+`App\Coverage\RoutesManifest`; pin: `ROUTES_TILES_URL`), with the same
+immutable-artifact, shrink-guard and whole-prefix-prune rules as above.
+
+**Order matters when rebuilding both.** The routes run drops a
+`routes_<region>_wayids.txt` per region into the workdir — the set of ways
+that carry a signed route — and the surface build reads it to make its to-do
+arm route-aware (an untagged way on a signed route is homework whatever its
+highway class). The way-id file is a declared input of the surface extract, so
+a fresh routes run automatically invalidates the surface extracts it would
+change; run `make routes-tiles` first, `make surface-tiles` second, and the
+cache does the rest. A surface run with no way-id files still builds — it says
+so in the log, and the to-do arm is class-gated only.
+
 ## Where to go deeper
 
 - [A-road-surface.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/edit-items/A-road-surface.md) — the rider-facing item:

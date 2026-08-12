@@ -16,6 +16,7 @@ use App\Catalog\RidingStyle;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
 use App\Coverage\CoverageManifest;
+use App\Coverage\RoutesManifest;
 use App\Coverage\SurfaceManifest;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
@@ -56,13 +57,13 @@ final class MapController extends AbstractController
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
-    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RegionRegistryProvider $regions): Response
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions): Response
     {
-        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $regions, scoutReview: true);
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, scoutReview: true);
     }
 
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RegionRegistryProvider $regions, bool $scoutReview = false): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, bool $scoutReview = false): Response
     {
         $user = $this->getUser();
         $regionRows = array_map(
@@ -146,6 +147,10 @@ final class MapController extends AbstractController
             'surface_tiles_url' => $surface->classifiedUrl(),
             'surface_todo_url' => $surface->todoUrl(),
             'surface_gaps_url' => $surface->gapsUrl(),
+            // Cycle-route network tiles (corridors + knooppunten), same
+            // manifest-or-pin resolution as the surface arms. Null means the
+            // Routes toggle is simply not offered.
+            'routes_tiles_url' => $routes->tilesUrl(),
         ];
 
         // Curator-only: hand the pending submissions to the map so the moderation
@@ -246,6 +251,16 @@ final class MapController extends AbstractController
             'gapsHint' => 'd_gaps_hint',
             'surface' => 'd_surface', 'roadType' => 'd_road_type',
             'surfaceConfirm' => 'd_surface_confirm', 'srcScout' => 'd_src_scout',
+            // The quality channel: OSM smoothness as ticks on the skin, and
+            // its drawer rows (surface-tiles.js SM_LABEL collapses the OSM
+            // vocabulary to the form's five values for display).
+            'smoothness' => 'd_smoothness', 'mtbScale' => 'd_mtb_scale',
+            // Route-network drawer (routes-tiles.js): corridor + knooppunt.
+            'routeNetwork' => 'd_route_network', 'routeRef' => 'd_route_ref',
+            'routesHere' => 'd_routes_here', 'routeSurfaceHint' => 'd_route_surface_hint',
+            'knoopTitle' => 'd_knoop_title', 'knoopHint' => 'd_knoop_hint',
+            'netIcn' => 'd_net_icn', 'netNcn' => 'd_net_ncn', 'netRcn' => 'd_net_rcn',
+            'netLcn' => 'd_net_lcn', 'netMtb' => 'd_net_mtb', 'netOther' => 'd_net_other',
             // Scout review panel (scout-review.js).
             'scoutTag_resupply' => 'd_scout_tag_resupply', 'scoutTag_closure' => 'd_scout_tag_closure',
             'scoutTag_surface' => 'd_scout_tag_surface', 'scoutTag_notice' => 'd_scout_tag_notice',
